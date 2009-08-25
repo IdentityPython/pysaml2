@@ -442,7 +442,7 @@ class RetrievalMethod(DsBase):
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
     c_attributes['URI'] = 'uri'
-    c_attributes['Type'] = 'typ'
+    c_attributes['Type'] = 'type'
     c_children['{%s}Transforms' % DS_NAMESPACE] = ('transforms', [Transforms])
 
     def __init__(self, transforms=None, uri=None, typ=None, text=None,
@@ -460,7 +460,7 @@ class RetrievalMethod(DsBase):
         DsBase.__init__(self, text, extension_elements, extension_attributes)
         self.transforms = transforms or []
         self.uri = uri
-        self.typ = typ
+        self.type = typ
 
 def retrieval_method_from_string(xml_string):
     """ Create RetrievalMethod instance from an XML string """
