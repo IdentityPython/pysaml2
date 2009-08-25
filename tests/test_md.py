@@ -1,6 +1,7 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 #
-# Copyright (C) 2007 SIOS Technology, Inc.
+# Copyright (C) 2009 Umeå University.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +17,7 @@
 
 """Tests for saml2.md"""
 
-__author__ = 'tmatsuo@sios.com (Takashi MATSUO)'
+__author__ = 'roland.hedberg@umu.se (Roland Hedberg)'
 
 import unittest
 try:
@@ -24,7 +25,8 @@ try:
 except ImportError:
   from elementtree import ElementTree
 import saml2
-from saml2 import saml, samlp, md, md_test_data, ds_test_data
+from saml2 import saml, samlp, md
+import md_data, ds_data
 import xmldsig as ds
 
 class TestEndpoint:
@@ -37,6 +39,7 @@ class TestEndpoint:
     self.endpoint.binding = saml2.BINDING_HTTP_POST
     self.endpoint.location = "http://www.example.com/endpoint"
     self.endpoint.response_location = "http://www.example.com/response"
+    print self.endpoint.__class__.c_attributes.items()
     new_endpoint = md.endpoint_from_string(self.endpoint.to_string())
     assert new_endpoint.binding == saml2.BINDING_HTTP_POST
     assert new_endpoint.location == "http://www.example.com/endpoint"
@@ -44,7 +47,7 @@ class TestEndpoint:
 
   def testUsingTestData(self):
     """Test for endpoint_from_string() using test data."""
-    new_endpoint = md.endpoint_from_string(md_test_data.TEST_ENDPOINT)
+    new_endpoint = md.endpoint_from_string(md_data.TEST_ENDPOINT)
     assert new_endpoint.binding == saml2.BINDING_HTTP_POST
     assert new_endpoint.location == "http://www.example.com/endpoint"
     assert new_endpoint.response_location == "http://www.example.com/response"
@@ -71,7 +74,7 @@ class TestIndexedEndpoint:
 
   def testUsingTestData(self):
     """Test for indexed_endpoint_from_string() using test data."""
-    new_i_e = md.indexed_endpoint_from_string(md_test_data.TEST_INDEXED_ENDPOINT)
+    new_i_e = md.indexed_endpoint_from_string(md_data.TEST_INDEXED_ENDPOINT)
     assert new_i_e.binding == saml2.BINDING_HTTP_POST
     assert new_i_e.location == "http://www.example.com/endpoint"
     assert new_i_e.response_location == "http://www.example.com/response"
@@ -113,7 +116,7 @@ class TestOrganizationName:
   def testUsingTestData(self):
     """Test for organization_name_from_string() using test data."""
     new_organization_name = md.organization_name_from_string(
-      md_test_data.TEST_ORGANIZATION_NAME)
+      md_data.TEST_ORGANIZATION_NAME)
     assert new_organization_name.lang == "en"
     assert new_organization_name.text.strip() == "SIOS Technology, Inc."
 
@@ -135,7 +138,7 @@ class TestOrganizationDisplayName:
   def testUsingTestData(self):
     """Test for organization_display_name_from_string() using test data."""
     new_od_name = md.organization_display_name_from_string(
-      md_test_data.TEST_ORGANIZATION_DISPLAY_NAME)
+      md_data.TEST_ORGANIZATION_DISPLAY_NAME)
     assert new_od_name.lang == "en"
     assert new_od_name.text.strip() == "SIOS"
 
@@ -148,18 +151,18 @@ class TestOrganizationURL:
   def testAccessors(self):
     """Test for OrganizationURL accessors"""
     self.organization_url.lang = "ja"
-    self.organization_url.text = "http://www.sios.com/"
+    self.organization_url.text = "http://www.example.com/"
     new_organization_url = md.organization_url_from_string(
       self.organization_url.to_string())
     assert new_organization_url.lang == "ja"
-    assert new_organization_url.text.strip() == "http://www.sios.com/"
+    assert new_organization_url.text.strip() == "http://www.example.com/"
 
   def testUsingTestData(self):
     """Test for organization_url_from_string() using test data."""
     new_organization_url = md.organization_url_from_string(
-      md_test_data.TEST_ORGANIZATION_URL)
+      md_data.TEST_ORGANIZATION_URL)
     assert new_organization_url.lang == "ja"
-    assert new_organization_url.text.strip() == "http://www.sios.com/"
+    assert new_organization_url.text.strip() == "http://www.example.com/"
 
 
 class TestOrganization:
@@ -171,12 +174,12 @@ class TestOrganization:
     """Test for Organization accessors"""
     self.organization.extensions = md.Extensions()
     self.organization.organization_name.append(
-      md.organization_name_from_string(md_test_data.TEST_ORGANIZATION_NAME))
+      md.organization_name_from_string(md_data.TEST_ORGANIZATION_NAME))
     self.organization.organization_display_name.append(
       md.organization_display_name_from_string(
-      md_test_data.TEST_ORGANIZATION_DISPLAY_NAME))
+      md_data.TEST_ORGANIZATION_DISPLAY_NAME))
     self.organization.organization_url.append(
-      md.organization_url_from_string(md_test_data.TEST_ORGANIZATION_URL))
+      md.organization_url_from_string(md_data.TEST_ORGANIZATION_URL))
     new_organization = md.organization_from_string(self.organization.to_string())
     assert isinstance(new_organization.extensions, md.Extensions)
     assert isinstance(new_organization.organization_name[0],
@@ -189,14 +192,14 @@ class TestOrganization:
     assert new_organization.organization_name[0].lang == "en"
     assert new_organization.organization_display_name[0].text.strip() == "SIOS"
     assert new_organization.organization_display_name[0].lang == "en"
-    assert new_organization.organization_url[0].text.strip() == "http://www.sios.com/"
+    assert new_organization.organization_url[0].text.strip() == "http://www.example.com/"
     assert new_organization.organization_url[0].lang == "ja"
     
 
   def testUsingTestData(self):
     """Test for organization_from_string() using test data."""
     new_organization = md.organization_from_string(
-      md_test_data.TEST_ORGANIZATION)
+      md_data.TEST_ORGANIZATION)
     assert isinstance(new_organization.extensions, md.Extensions)
     assert isinstance(new_organization.organization_name[0],
                             md.OrganizationName)
@@ -208,7 +211,7 @@ class TestOrganization:
     assert new_organization.organization_name[0].lang == "en"
     assert new_organization.organization_display_name[0].text.strip() == "SIOS"
     assert new_organization.organization_display_name[0].lang == "en"
-    assert new_organization.organization_url[0].text.strip() == "http://www.sios.com/"
+    assert new_organization.organization_url[0].text.strip() == "http://www.example.com/"
     assert new_organization.organization_url[0].lang == "ja"
 
 
@@ -225,7 +228,7 @@ class TestContactPerson:
     self.contact_person.given_name = md.GivenName(text="Takashi")
     self.contact_person.sur_name = md.SurName(text="Matsuo")
     self.contact_person.email_address.append(
-      md.EmailAddress(text="tmatsuo@sios.com"))
+      md.EmailAddress(text="tmatsuo@example.com"))
     self.contact_person.email_address.append(
       md.EmailAddress(text="tmatsuo@shehas.net"))
     self.contact_person.telephone_number.append(
@@ -237,20 +240,20 @@ class TestContactPerson:
     assert new_contact_person.company.text.strip() == "SIOS Technology, Inc."
     assert new_contact_person.given_name.text.strip() == "Takashi"
     assert new_contact_person.sur_name.text.strip() == "Matsuo"
-    assert new_contact_person.email_address[0].text.strip() == "tmatsuo@sios.com"
+    assert new_contact_person.email_address[0].text.strip() == "tmatsuo@example.com"
     assert new_contact_person.email_address[1].text.strip() == "tmatsuo@shehas.net"
     assert new_contact_person.telephone_number[0].text.strip() == "00-0000-0000"
 
   def testUsingTestData(self):
     """Test for contact_person_from_string() using test data."""
     new_contact_person = md.contact_person_from_string(
-      md_test_data.TEST_CONTACT_PERSON)
+      md_data.TEST_CONTACT_PERSON)
     assert new_contact_person.contact_type == "technical"
     assert isinstance(new_contact_person.extensions, md.Extensions)
     assert new_contact_person.company.text.strip() == "SIOS Technology, Inc."
     assert new_contact_person.given_name.text.strip() == "Takashi"
     assert new_contact_person.sur_name.text.strip() == "Matsuo"
-    assert new_contact_person.email_address[0].text.strip() == "tmatsuo@sios.com"
+    assert new_contact_person.email_address[0].text.strip() == "tmatsuo@example.com"
     assert new_contact_person.email_address[1].text.strip() == "tmatsuo@shehas.net"
     assert new_contact_person.telephone_number[0].text.strip() == "00-0000-0000"
 
@@ -262,20 +265,20 @@ class TestAdditionalMetadataLocation:
   def testAccessors(self):
     """Test for AdditionalMetadataLocation accessors"""
     self.additional_metadata_location.namespace = (
-      "http://www.sios.com/namespace")
+      "http://www.example.com/namespace")
     self.additional_metadata_location.text = (
-      "http://www.sios.com/AdditionalMetadataLocation")
+      "http://www.example.com/AdditionalMetadataLocation")
     new_additional_metadata_location = md.additional_metadata_location_from_string(
       self.additional_metadata_location.to_string())
-    assert new_additional_metadata_location.namespace == "http://www.sios.com/namespace"
-    assert new_additional_metadata_location.text.strip() == "http://www.sios.com/AdditionalMetadataLocation"
+    assert new_additional_metadata_location.namespace == "http://www.example.com/namespace"
+    assert new_additional_metadata_location.text.strip() == "http://www.example.com/AdditionalMetadataLocation"
 
   def testUsingTestData(self):
     """Test for additional_metadata_location_from_string() using test data."""
     new_additional_metadata_location = md.additional_metadata_location_from_string(
-      md_test_data.TEST_ADDITIONAL_METADATA_LOCATION)
-    assert new_additional_metadata_location.namespace == "http://www.sios.com/namespace"
-    assert new_additional_metadata_location.text.strip() == "http://www.sios.com/AdditionalMetadataLocation"
+      md_data.TEST_ADDITIONAL_METADATA_LOCATION)
+    assert new_additional_metadata_location.namespace == "http://www.example.com/namespace"
+    assert new_additional_metadata_location.text.strip() == "http://www.example.com/AdditionalMetadataLocation"
 
 class TestKeySize:
 
@@ -290,7 +293,7 @@ class TestKeySize:
 
   def testUsingTestData(self):
     """Test for key_size_from_string() using test data."""
-    new_key_size = md.key_size_from_string(md_test_data.TEST_KEY_SIZE)
+    new_key_size = md.key_size_from_string(md_data.TEST_KEY_SIZE)
     assert new_key_size.text.strip() == "128"
     
 
@@ -307,7 +310,7 @@ class TestOAEPparams:
 
   def testUsingTestData(self):
     """Test for oae_pparams_from_string() using test data."""
-    new_oaep_params = md.oae_pparams_from_string(md_test_data.TEST_OAEP_PARAMS)
+    new_oaep_params = md.oae_pparams_from_string(md_data.TEST_OAEP_PARAMS)
     assert new_oaep_params.text.strip() == "9lWu3Q=="
 
 
@@ -332,7 +335,7 @@ class TestEncryptionMethod:
   def testUsingTestData(self):
     """Test for encryption_method_from_string() using test data."""
     new_encryption_method = md.encryption_method_from_string(
-      md_test_data.TEST_ENCRYPTION_METHOD)
+      md_data.TEST_ENCRYPTION_METHOD)
     assert new_encryption_method.algorithm == "http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p"
     assert new_encryption_method.oaep_params.text.strip() == "9lWu3Q=="
     assert new_encryption_method.digest_method.algorithm == "http://www.w3.org/2000/09/xmldsig#sha1"
@@ -348,9 +351,9 @@ class TestKeyDescriptor:
 
     self.key_descriptor.use = "signing"
     self.key_descriptor.key_info = ds.key_info_from_string(
-      ds_test_data.TEST_KEY_INFO)
+      ds_data.TEST_KEY_INFO)
     self.key_descriptor.encryption_method.append(md.encryption_method_from_string(
-      md_test_data.TEST_ENCRYPTION_METHOD))
+      md_data.TEST_ENCRYPTION_METHOD))
     new_key_descriptor = md.key_descriptor_from_string(
       self.key_descriptor.to_string())
     assert new_key_descriptor.use == "signing"
@@ -361,7 +364,7 @@ class TestKeyDescriptor:
   def testUsingTestData(self):
     """Test for key_descriptor_from_string() using test data."""
     new_key_descriptor = md.key_descriptor_from_string(
-      md_test_data.TEST_KEY_DESCRIPTOR)
+      md_data.TEST_KEY_DESCRIPTOR)
     assert new_key_descriptor.use == "signing"
     assert isinstance(new_key_descriptor.key_info, ds.KeyInfo)
     assert isinstance(new_key_descriptor.encryption_method[0],
@@ -378,11 +381,11 @@ class TestRoleDescriptor:
     self.role_descriptor.valid_until = "2008-09-14T01:05:02Z"
     self.role_descriptor.cache_duration = "10:00:00:00"
     self.role_descriptor.protocol_support_enumeration = samlp.SAMLP_NAMESPACE
-    self.role_descriptor.error_url = "http://www.sios.com/errorURL"
+    self.role_descriptor.error_url = "http://www.example.com/errorURL"
     self.role_descriptor.signature = ds.get_empty_signature()
     self.role_descriptor.extensions = md.Extensions()
     self.role_descriptor.key_descriptor.append(md.key_descriptor_from_string(
-      md_test_data.TEST_KEY_DESCRIPTOR))
+      md_data.TEST_KEY_DESCRIPTOR))
     self.role_descriptor.organization = md.Organization()
     self.role_descriptor.contact_person.append(md.ContactPerson())
 
@@ -392,7 +395,7 @@ class TestRoleDescriptor:
     assert new_role_descriptor.valid_until == "2008-09-14T01:05:02Z"
     assert new_role_descriptor.cache_duration == "10:00:00:00"
     assert new_role_descriptor.protocol_support_enumeration == samlp.SAMLP_NAMESPACE
-    assert new_role_descriptor.error_url == "http://www.sios.com/errorURL"
+    assert new_role_descriptor.error_url == "http://www.example.com/errorURL"
     assert isinstance(new_role_descriptor.signature, ds.Signature)
     assert isinstance(new_role_descriptor.extensions, md.Extensions)
     assert isinstance(new_role_descriptor.key_descriptor[0],
@@ -404,12 +407,12 @@ class TestRoleDescriptor:
   def testUsingTestData(self):
     """Test for role_descriptor_from_string() using test data."""
     new_role_descriptor = md.role_descriptor_from_string(
-      md_test_data.TEST_ROLE_DESCRIPTOR)
+      md_data.TEST_ROLE_DESCRIPTOR)
     assert new_role_descriptor.identifier == "ID"
     assert new_role_descriptor.valid_until == "2008-09-14T01:05:02Z"
     assert new_role_descriptor.cache_duration == "10:00:00:00"
     assert new_role_descriptor.protocol_support_enumeration == samlp.SAMLP_NAMESPACE
-    assert new_role_descriptor.error_url == "http://www.sios.com/errorURL"
+    assert new_role_descriptor.error_url == "http://www.example.com/errorURL"
     assert isinstance(new_role_descriptor.signature, ds.Signature)
     assert isinstance(new_role_descriptor.extensions, md.Extensions)
     assert isinstance(new_role_descriptor.key_descriptor[0],
@@ -428,11 +431,11 @@ class TestSSODescriptor:
     self.sso_descriptor.valid_until = "2008-09-14T01:05:02Z"
     self.sso_descriptor.cache_duration = "10:00:00:00"
     self.sso_descriptor.protocol_support_enumeration = samlp.SAMLP_NAMESPACE
-    self.sso_descriptor.error_url = "http://www.sios.com/errorURL"
+    self.sso_descriptor.error_url = "http://www.example.com/errorURL"
     self.sso_descriptor.signature = ds.get_empty_signature()
     self.sso_descriptor.extensions = md.Extensions()
     self.sso_descriptor.key_descriptor.append(md.key_descriptor_from_string(
-      md_test_data.TEST_KEY_DESCRIPTOR))
+      md_data.TEST_KEY_DESCRIPTOR))
     self.sso_descriptor.organization = md.Organization()
     self.sso_descriptor.contact_person.append(md.ContactPerson())
     self.sso_descriptor.artifact_resolution_service.append(
@@ -450,7 +453,7 @@ class TestSSODescriptor:
     assert new_sso_descriptor.valid_until == "2008-09-14T01:05:02Z"
     assert new_sso_descriptor.cache_duration == "10:00:00:00"
     assert new_sso_descriptor.protocol_support_enumeration == samlp.SAMLP_NAMESPACE
-    assert new_sso_descriptor.error_url == "http://www.sios.com/errorURL"
+    assert new_sso_descriptor.error_url == "http://www.example.com/errorURL"
     assert isinstance(new_sso_descriptor.signature, ds.Signature)
     assert isinstance(new_sso_descriptor.extensions, md.Extensions)
     assert isinstance(new_sso_descriptor.key_descriptor[0],
@@ -470,12 +473,12 @@ class TestSSODescriptor:
   def testUsingTestData(self):
     """Test for sso_descriptor_from_string() using test data."""
     new_sso_descriptor = md.sso_descriptor_from_string(
-      md_test_data.TEST_SSO_DESCRIPTOR)
+      md_data.TEST_SSO_DESCRIPTOR)
     assert new_sso_descriptor.identifier == "ID"
     assert new_sso_descriptor.valid_until == "2008-09-14T01:05:02Z"
     assert new_sso_descriptor.cache_duration == "10:00:00:00"
     assert new_sso_descriptor.protocol_support_enumeration == samlp.SAMLP_NAMESPACE
-    assert new_sso_descriptor.error_url == "http://www.sios.com/errorURL"
+    assert new_sso_descriptor.error_url == "http://www.example.com/errorURL"
     assert isinstance(new_sso_descriptor.signature, ds.Signature)
     assert isinstance(new_sso_descriptor.extensions, md.Extensions)
     assert isinstance(new_sso_descriptor.key_descriptor[0],
@@ -515,7 +518,7 @@ class TestArtifactResolutionService:
   def testUsingTestData(self):
     """Test for artifact_resolution_service_from_string() using test data."""
     new_i_e = md.artifact_resolution_service_from_string(
-      md_test_data.TEST_ARTIFACT_RESOLUTION_SERVICE)
+      md_data.TEST_ARTIFACT_RESOLUTION_SERVICE)
     assert new_i_e.binding == saml2.BINDING_HTTP_POST
     assert new_i_e.location == "http://www.example.com/endpoint"
     assert new_i_e.response_location == "http://www.example.com/response"
@@ -541,7 +544,7 @@ class TestSingleLogout:
   def testUsingTestData(self):
     """Test for single_logout_service_from_string() using test data."""
     new_endpoint = md.single_logout_service_from_string(
-      md_test_data.TEST_SINGLE_LOGOUT_SERVICE)
+      md_data.TEST_SINGLE_LOGOUT_SERVICE)
     assert new_endpoint.binding == saml2.BINDING_HTTP_POST
     assert new_endpoint.location == "http://www.example.com/endpoint"
     assert new_endpoint.response_location == "http://www.example.com/response"
@@ -565,7 +568,7 @@ class TestManageNameIDService:
   def testUsingTestData(self):
     """Test for manage_name_id_service_from_string() using test data."""
     new_endpoint = md.manage_name_id_service_from_string(
-      md_test_data.TEST_MANAGE_NAMEID_SERVICE)
+      md_data.TEST_MANAGE_NAMEID_SERVICE)
     assert new_endpoint.binding == saml2.BINDING_HTTP_POST
     assert new_endpoint.location == "http://www.example.com/endpoint"
     assert new_endpoint.response_location == "http://www.example.com/response"
@@ -586,7 +589,7 @@ class TestNameIDFormat:
   def testUsingTestData(self):
     """Test for name_id_format_from_string() using test data."""
     new_name_id_format = md.name_id_format_from_string(
-      md_test_data.TEST_NAME_ID_FORMAT)
+      md_data.TEST_NAME_ID_FORMAT)
     assert new_name_id_format.text.strip() == saml.NAMEID_FORMAT_EMAILADDRESS
   
 
@@ -608,7 +611,7 @@ class TestSingleSignOnService:
   def testUsingTestData(self):
     """Test for SingelSignOn_service_from_string() using test data."""
     new_endpoint = md.single_sign_on_service_from_string(
-      md_test_data.TEST_SINGLE_SIGN_ON_SERVICE)
+      md_data.TEST_SINGLE_SIGN_ON_SERVICE)
     assert new_endpoint.binding == saml2.BINDING_HTTP_POST
     assert new_endpoint.location == "http://www.example.com/endpoint"
     assert new_endpoint.response_location == "http://www.example.com/response"
@@ -631,7 +634,7 @@ class TestNameIDMappingService:
   def testUsingTestData(self):
     """Test for name_id_mapping_service_from_string() using test data."""
     new_endpoint = md.name_id_mapping_service_from_string(
-      md_test_data.TEST_NAME_ID_MAPPING_SERVICE)
+      md_data.TEST_NAME_ID_MAPPING_SERVICE)
     assert new_endpoint.binding == saml2.BINDING_HTTP_POST
     assert new_endpoint.location == "http://www.example.com/endpoint"
     assert new_endpoint.response_location == "http://www.example.com/response"
@@ -655,7 +658,7 @@ class TestAssertionIDRequestService:
   def testUsingTestData(self):
     """Test for assertion_id_request_service_from_string() using test data."""
     new_endpoint = md.assertion_id_request_service_from_string(
-      md_test_data.TEST_ASSERTION_ID_REQUEST_SERVICE)
+      md_data.TEST_ASSERTION_ID_REQUEST_SERVICE)
     assert new_endpoint.binding == saml2.BINDING_HTTP_POST
     assert new_endpoint.location == "http://www.example.com/endpoint"
     assert new_endpoint.response_location == "http://www.example.com/response"
@@ -675,7 +678,7 @@ class TestAttributeProfile:
   def testUsingTestData(self):
     """Test for name_id_format_from_string() using test data."""
     new_attribute_profile = md.attribute_profile_from_string(
-      md_test_data.TEST_ATTRIBUTE_PROFILE)
+      md_data.TEST_ATTRIBUTE_PROFILE)
     assert new_attribute_profile.text.strip() == saml.PROFILE_ATTRIBUTE_BASIC
   
 
@@ -690,11 +693,11 @@ class TestIDPSSODescriptor:
     self.idp_sso_descriptor.cache_duration = "10:00:00:00"
     self.idp_sso_descriptor.protocol_support_enumeration = \
                                                          samlp.SAMLP_NAMESPACE
-    self.idp_sso_descriptor.error_url = "http://www.sios.com/errorURL"
+    self.idp_sso_descriptor.error_url = "http://www.example.com/errorURL"
     self.idp_sso_descriptor.signature = ds.get_empty_signature()
     self.idp_sso_descriptor.extensions = md.Extensions()
     self.idp_sso_descriptor.key_descriptor.append(md.key_descriptor_from_string(
-      md_test_data.TEST_KEY_DESCRIPTOR))
+      md_data.TEST_KEY_DESCRIPTOR))
     self.idp_sso_descriptor.organization = md.Organization()
     self.idp_sso_descriptor.contact_person.append(md.ContactPerson())
     self.idp_sso_descriptor.artifact_resolution_service.append(
@@ -722,7 +725,7 @@ class TestIDPSSODescriptor:
     assert new_idp_sso_descriptor.valid_until == "2008-09-14T01:05:02Z"
     assert new_idp_sso_descriptor.cache_duration == "10:00:00:00"
     assert new_idp_sso_descriptor.protocol_support_enumeration == samlp.SAMLP_NAMESPACE
-    assert new_idp_sso_descriptor.error_url == "http://www.sios.com/errorURL"
+    assert new_idp_sso_descriptor.error_url == "http://www.example.com/errorURL"
     assert isinstance(new_idp_sso_descriptor.signature, ds.Signature)
     assert isinstance(new_idp_sso_descriptor.extensions, md.Extensions)
     assert isinstance(new_idp_sso_descriptor.key_descriptor[0],
@@ -756,12 +759,12 @@ class TestIDPSSODescriptor:
   def testUsingTestData(self):
     """Test for idpsso_descriptor_from_string() using test data."""
     new_idp_sso_descriptor = md.idpsso_descriptor_from_string(
-      md_test_data.TEST_IDP_SSO_DESCRIPTOR)
+      md_data.TEST_IDP_SSO_DESCRIPTOR)
     assert new_idp_sso_descriptor.identifier == "ID"
     assert new_idp_sso_descriptor.valid_until == "2008-09-14T01:05:02Z"
     assert new_idp_sso_descriptor.cache_duration == "10:00:00:00"
     assert new_idp_sso_descriptor.protocol_support_enumeration == samlp.SAMLP_NAMESPACE
-    assert new_idp_sso_descriptor.error_url == "http://www.sios.com/errorURL"
+    assert new_idp_sso_descriptor.error_url == "http://www.example.com/errorURL"
     assert isinstance(new_idp_sso_descriptor.signature, ds.Signature)
     assert isinstance(new_idp_sso_descriptor.extensions, md.Extensions)
     assert isinstance(new_idp_sso_descriptor.key_descriptor[0],
@@ -815,7 +818,7 @@ class TestAssertionConsumerService:
   def testUsingTestData(self):
     """Test for assertion_consumer_service_from_string() using test data."""
     new_i_e = md.assertion_consumer_service_from_string(
-      md_test_data.TEST_ASSERTION_CONSUMER_SERVICE)
+      md_data.TEST_ASSERTION_CONSUMER_SERVICE)
     assert new_i_e.binding == saml2.BINDING_HTTP_POST
     assert new_i_e.location == "http://www.example.com/endpoint"
     assert new_i_e.response_location == "http://www.example.com/response"
@@ -843,7 +846,7 @@ class TestRequestedAttribute:
   def testUsingTestData(self):
     """Test for requested_attribute_from_string() using test data."""
     new_requested_attribute = md.requested_attribute_from_string(
-      md_test_data.TEST_REQUESTED_ATTRIBUTE)
+      md_data.TEST_REQUESTED_ATTRIBUTE)
     assert new_requested_attribute.is_required == "true"
     assert isinstance(new_requested_attribute, saml.Attribute)
     assert isinstance(new_requested_attribute, md.RequestedAttribute)
@@ -864,7 +867,7 @@ class TestServiceName:
 
   def testUsingTestData(self):
     """Test for organization_name_from_string() using test data."""
-    new_service_name = md.service_name_from_string(md_test_data.TEST_SERVICE_NAME)
+    new_service_name = md.service_name_from_string(md_data.TEST_SERVICE_NAME)
     assert new_service_name.lang == "en"
     assert new_service_name.text.strip() == "SIOS mail"
 
@@ -886,7 +889,7 @@ class TestServiceDescription:
   def testUsingTestData(self):
     """Test for organization_name_from_string() using test data."""
     new_service_description = md.service_description_from_string(
-      md_test_data.TEST_SERVICE_DESCRIPTION)
+      md_data.TEST_SERVICE_DESCRIPTION)
     assert new_service_description.lang == "en"
     assert new_service_description.text.strip() == "SIOS mail service"
 
@@ -922,7 +925,7 @@ class TestAttributeConsumingService:
   def testUsingTestData(self):
     """Test for attribute_consuming_service_from_string() using test data."""
     new_attribute_consuming_service = md.attribute_consuming_service_from_string(
-      md_test_data.TEST_ATTRIBUTE_CONSUMING_SERVICE)
+      md_data.TEST_ATTRIBUTE_CONSUMING_SERVICE)
     assert new_attribute_consuming_service.index == "1"
     assert new_attribute_consuming_service.is_default == "true"
     assert isinstance(new_attribute_consuming_service.service_name[0],
@@ -946,11 +949,11 @@ class TestSPSSODescriptor:
     self.sp_sso_descriptor.cache_duration = "10:00:00:00"
     self.sp_sso_descriptor.protocol_support_enumeration = \
                                                          samlp.SAMLP_NAMESPACE
-    self.sp_sso_descriptor.error_url = "http://www.sios.com/errorURL"
+    self.sp_sso_descriptor.error_url = "http://www.example.com/errorURL"
     self.sp_sso_descriptor.signature = ds.get_empty_signature()
     self.sp_sso_descriptor.extensions = md.Extensions()
     self.sp_sso_descriptor.key_descriptor.append(md.key_descriptor_from_string(
-      md_test_data.TEST_KEY_DESCRIPTOR))
+      md_data.TEST_KEY_DESCRIPTOR))
     self.sp_sso_descriptor.organization = md.Organization()
     self.sp_sso_descriptor.contact_person.append(md.ContactPerson())
     self.sp_sso_descriptor.artifact_resolution_service.append(
@@ -974,7 +977,7 @@ class TestSPSSODescriptor:
     assert new_sp_sso_descriptor.valid_until == "2008-09-14T01:05:02Z"
     assert new_sp_sso_descriptor.cache_duration == "10:00:00:00"
     assert new_sp_sso_descriptor.protocol_support_enumeration == samlp.SAMLP_NAMESPACE
-    assert new_sp_sso_descriptor.error_url == "http://www.sios.com/errorURL"
+    assert new_sp_sso_descriptor.error_url == "http://www.example.com/errorURL"
     assert isinstance(new_sp_sso_descriptor.signature, ds.Signature)
     assert isinstance(new_sp_sso_descriptor.extensions, md.Extensions)
     assert isinstance(new_sp_sso_descriptor.key_descriptor[0],
@@ -1004,12 +1007,12 @@ class TestSPSSODescriptor:
   def testUsingTestData(self):
     """Test for spsso_descriptor_from_string() using test data."""
     new_sp_sso_descriptor = md.spsso_descriptor_from_string(
-      md_test_data.TEST_SP_SSO_DESCRIPTOR)
+      md_data.TEST_SP_SSO_DESCRIPTOR)
     assert new_sp_sso_descriptor.identifier == "ID"
     assert new_sp_sso_descriptor.valid_until == "2008-09-14T01:05:02Z"
     assert new_sp_sso_descriptor.cache_duration == "10:00:00:00"
     assert new_sp_sso_descriptor.protocol_support_enumeration == samlp.SAMLP_NAMESPACE
-    assert new_sp_sso_descriptor.error_url == "http://www.sios.com/errorURL"
+    assert new_sp_sso_descriptor.error_url == "http://www.example.com/errorURL"
     assert isinstance(new_sp_sso_descriptor.signature, ds.Signature)
     assert isinstance(new_sp_sso_descriptor.extensions, md.Extensions)
     assert isinstance(new_sp_sso_descriptor.key_descriptor[0],
@@ -1083,7 +1086,7 @@ class TestEntityDescriptor:
   def testUsingTestData(self):
     """Test for entity_descriptor_from_string() using test data."""
     new_entity_descriptor = md.entity_descriptor_from_string(
-      md_test_data.TEST_ENTITY_DESCRIPTOR)
+      md_data.TEST_ENTITY_DESCRIPTOR)
     assert new_entity_descriptor.identifier == "ID"
     assert new_entity_descriptor.entity_id == "entityID"
     assert new_entity_descriptor.valid_until == "2008-09-14T01:05:02Z"
@@ -1137,7 +1140,7 @@ class TestEntitiesDescriptor:
   def testUsingTestData(self):
     """Test for entities_descriptor_from_string() using test data."""
     new_entities_descriptor = md.entities_descriptor_from_string(
-      md_test_data.TEST_ENTITIES_DESCRIPTOR)
+      md_data.TEST_ENTITIES_DESCRIPTOR)
     assert new_entities_descriptor.identifier == "ID"
     assert new_entities_descriptor.name == "name"
     assert new_entities_descriptor.valid_until == "2008-09-14T01:05:02Z"
