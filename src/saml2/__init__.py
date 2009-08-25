@@ -192,7 +192,7 @@ class ExtensionElement(object):
         element_tree.append(new_element)
         self._transfer_to_element_tree(new_element)
 
-    def findc_children(self, tag=None, namespace=None):
+    def find_c_children(self, tag=None, namespace=None):
         """Searches child nodes for objects with the desired tag/namespace.
 
         Returns a list of extension elements within this object whose tag
@@ -298,13 +298,11 @@ class ExtensionContainer(object):
         If you specify only the tag, the result list may contain extension
         elements in multiple namespaces.
 
-        Args:
-            tag: str (optional) The desired tag
-            namespace: str (optional) The desired namespace
+        :param tag: str (optional) The desired tag
+        :param namespace: str (optional) The desired namespace
 
-        Returns:
-            A list of elements whose tag and/or namespace match the parameters
-            values
+        :Return: A list of elements whose tag and/or namespace match the 
+            parameters values
         """
 
         results = []
@@ -334,7 +332,7 @@ class SamlBase(ExtensionContainer):
     c_attributes = {}
     c_child_order = []
     
-    def _get_allc_children_with_order(self):
+    def _get_all_c_children_with_order(self):
         if len(self.c_child_order) > 0:
             for child in self.c_child_order:
                 yield child
@@ -380,7 +378,7 @@ class SamlBase(ExtensionContainer):
         # Convert the members of this class which are XML child nodes. 
         # This uses the class's c_children dictionary to find the members which
         # should become XML child nodes.
-        for member_name in self._get_allc_children_with_order():
+        for member_name in self._get_all_c_children_with_order():
             member = getattr(self, member_name)
             if member is None:
                 pass
@@ -434,4 +432,11 @@ class SamlBase(ExtensionContainer):
     def __str__(self):
         return self.to_string()
 
+    def _init_attribute(self, extension_attribute_id,
+                extension_attribute_name, value=None):
+                
+        self.c_attributes[extension_attribute_id] = extension_attribute_name
+        if value:
+            self.__dict__[extension_attribute_name] = value
+                    
 

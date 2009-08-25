@@ -331,15 +331,15 @@ class NameIDPolicy(SamlBase):
     c_namespace = SAMLP_NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
-    c_attributes['Format'] = 'form'
+    c_attributes['Format'] = 'format'
     c_attributes['SPNameQualifier'] = 'sp_name_qualifier'
     c_attributes['AllowCreate'] = 'allow_create'
 
-    def __init__(self, form=None, sp_name_qualifier=None, allow_create=None,
+    def __init__(self, format=None, sp_name_qualifier=None, allow_create=None,
                 text=None, extension_elements=None, extension_attributes=None):
         """Constructor for NameIDPolicy
 
-        :param form: Format attribute
+        :param format: Format attribute
         :param sp_name_qualifier: SPNameQualifier attribute
         :param allow_create: AllowCreate attribute
         :param text: The text data in the this element
@@ -348,7 +348,7 @@ class NameIDPolicy(SamlBase):
         """
 
         SamlBase.__init__(self, text, extension_elements, extension_attributes)
-        self.form = form
+        self.format = format
         self.sp_name_qualifier = sp_name_qualifier
         self.allow_create = allow_create
 
