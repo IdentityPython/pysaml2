@@ -85,7 +85,7 @@ class AbstractRequest(SamlBase):
     c_namespace = SAMLP_NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
-    c_attributes['ID'] = 'identifier'
+    c_attributes['ID'] = 'id'
     c_attributes['Version'] = 'version'
     c_attributes['IssueInstant'] = 'issue_instant'
     c_attributes['Destination'] = 'destination'
@@ -114,7 +114,7 @@ class AbstractRequest(SamlBase):
         :param extension_attributes: A dictionary of attribute value string pairs
         """
         SamlBase.__init__(self, text, extension_elements, extension_attributes)
-        self.identifier = identifier
+        self.id = identifier
         self.version = version
         self.issue_instant = issue_instant
         self.destination = destination
@@ -223,7 +223,7 @@ class StatusResponse(SamlBase):
     c_namespace = SAMLP_NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
-    c_attributes['ID'] = 'identifier'
+    c_attributes['ID'] = 'id'
     c_attributes['InResponseTo'] = 'in_response_to'
     c_attributes['Version'] = 'version'
     c_attributes['IssueInstant'] = 'issue_instant'
@@ -257,7 +257,7 @@ class StatusResponse(SamlBase):
         """
 
         SamlBase.__init__(self, text, extension_elements, extension_attributes)
-        self.identifier = identifier
+        self.id = identifier
         self.in_response_to = in_response_to
         self.version = version
         self.issue_instant = issue_instant

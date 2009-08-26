@@ -37,7 +37,7 @@ class TestAbstractRequest:
 
     def testAccessors(self):
         """Test for AbstractRequest accessors"""
-        self.ar.identifier = "request id"
+        self.ar.id = "request id"
         self.ar.version = saml.V2
         self.ar.issue_instant = "2007-09-14T01:05:02Z"
         self.ar.destination = "http://www.example.com/Destination"
@@ -47,7 +47,7 @@ class TestAbstractRequest:
         self.ar.extensions = samlp.Extensions()
 
         new_ar = samlp.abstract_request_from_string(self.ar.to_string())
-        assert new_ar.identifier == "request id"
+        assert new_ar.id == "request id"
         assert new_ar.version == saml.V2
         assert new_ar.issue_instant == "2007-09-14T01:05:02Z"
         assert new_ar.destination == "http://www.example.com/Destination"
@@ -139,7 +139,7 @@ class TestStatusResponse:
 
     def testAccessors(self):
         """Test for StatusResponse accessors"""
-        self.sr.identifier = "response id"
+        self.sr.id = "response id"
         self.sr.in_response_to = "request id"
         self.sr.version = saml.V2
         self.sr.issue_instant = "2007-09-14T01:05:02Z"
@@ -151,7 +151,7 @@ class TestStatusResponse:
         self.sr.status = samlp.Status()
 
         new_sr = samlp.status_response_from_string(self.sr.to_string())
-        assert new_sr.identifier == "response id"
+        assert new_sr.id == "response id"
         assert new_sr.in_response_to == "request id"
         assert new_sr.version == saml.V2
         assert new_sr.issue_instant == "2007-09-14T01:05:02Z"
@@ -175,7 +175,7 @@ class TestResponse:
 
     def testAccessors(self):
         """Test for Response accessors"""
-        self.response.identifier = "response id"
+        self.response.id = "response id"
         self.response.in_response_to = "request id"
         self.response.version = saml.V2
         self.response.issue_instant = "2007-09-14T01:05:02Z"
@@ -189,7 +189,7 @@ class TestResponse:
         self.response.encrypted_assertion.append(saml.EncryptedAssertion())
 
         new_response = samlp.response_from_string(self.response.to_string())
-        assert new_response.identifier == "response id"
+        assert new_response.id == "response id"
         assert new_response.in_response_to == "request id"
         assert new_response.version == saml.V2
         assert new_response.issue_instant == "2007-09-14T01:05:02Z"
@@ -354,7 +354,7 @@ class TestAuthnRequest:
 
     def testAccessors(self):
         """Test for AuthnRequest accessors"""
-        self.ar.identifier = "request id"
+        self.ar.id = "request id"
         self.ar.version = saml.V2
         self.ar.issue_instant = "2007-09-14T01:05:02Z"
         self.ar.destination = "http://www.example.com/Destination"
@@ -377,7 +377,7 @@ class TestAuthnRequest:
         self.ar.provider_name = "provider name"
 
         new_ar = samlp.authn_request_from_string(self.ar.to_string())
-        assert new_ar.identifier == "request id"
+        assert new_ar.id == "request id"
         assert new_ar.version == saml.V2
         assert new_ar.issue_instant == "2007-09-14T01:05:02Z"
         assert new_ar.destination == "http://www.example.com/Destination"
@@ -404,7 +404,7 @@ class TestAuthnRequest:
     def testUsingTestData(self):
         """Test for authn_request_from_string() using test data"""
         new_ar = samlp.authn_request_from_string(samlp_data.TEST_AUTHN_REQUEST)
-        assert new_ar.identifier == "request id"
+        assert new_ar.id == "request id"
         assert new_ar.version == saml.V2
         assert new_ar.issue_instant == "2007-09-14T01:05:02Z"
         assert new_ar.destination == "http://www.example.com/Destination"
@@ -436,7 +436,7 @@ class TestLogoutRequest:
 
     def testAccessors(self):
         """Test for LogoutRequest accessors"""
-        self.lr.identifier = "request id"
+        self.lr.id = "request id"
         self.lr.version = saml.V2
         self.lr.issue_instant = "2007-09-14T01:05:02Z"
         self.lr.destination = "http://www.example.com/Destination"
@@ -453,7 +453,7 @@ class TestLogoutRequest:
         self.lr.session_index = samlp.SessionIndex()
 
         new_lr = samlp.logout_request_from_string(self.lr.to_string())
-        assert new_lr.identifier == "request id"
+        assert new_lr.id == "request id"
         assert new_lr.version == saml.V2
         assert new_lr.issue_instant == "2007-09-14T01:05:02Z"
         assert new_lr.destination == "http://www.example.com/Destination"
@@ -471,7 +471,7 @@ class TestLogoutRequest:
     def testUsingTestData(self):
         """Test for logout_request_from_string() using test data"""
         new_lr = samlp.logout_request_from_string(samlp_data.TEST_LOGOUT_REQUEST)
-        assert new_lr.identifier == "request id"
+        assert new_lr.id == "request id"
         assert new_lr.version == saml.V2
         assert new_lr.issue_instant == "2007-09-14T01:05:02Z"
         assert new_lr.destination == "http://www.example.com/Destination"
@@ -495,7 +495,7 @@ class TestLogoutResponse:
 
     def testAccessors(self):
         """Test for LogoutResponse accessors"""
-        self.lr.identifier = "response id"
+        self.lr.id = "response id"
         self.lr.in_response_to = "request id"
         self.lr.version = saml.V2
         self.lr.issue_instant = "2007-09-14T01:05:02Z"
@@ -507,7 +507,7 @@ class TestLogoutResponse:
         self.lr.status = samlp.Status()
 
         new_lr = samlp.logout_response_from_string(self.lr.to_string())
-        assert new_lr.identifier == "response id"
+        assert new_lr.id == "response id"
         assert new_lr.in_response_to == "request id"
         assert new_lr.version == saml.V2
         assert new_lr.issue_instant == "2007-09-14T01:05:02Z"
@@ -522,7 +522,7 @@ class TestLogoutResponse:
         """Test for logout_response_from_string() using test data"""
         new_lr = samlp.logout_response_from_string(
             samlp_data.TEST_LOGOUT_RESPONSE)
-        assert new_lr.identifier == "response id"
+        assert new_lr.id == "response id"
         assert new_lr.in_response_to == "request id"
         assert new_lr.version == saml.V2
         assert new_lr.issue_instant == "2007-09-14T01:05:02Z"
