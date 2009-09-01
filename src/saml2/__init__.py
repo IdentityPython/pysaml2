@@ -29,18 +29,6 @@
     "touch the wire" and are sent over HTTP. For this reason this module 
     provides methods and functions to convert Saml classes to and from strings.
 
-    SamlBase: A foundation class on which Saml classes are built. It 
-        handles the parsing of attributes and children which are common to all
-        Saml classes. By default, the SamlBase class translates all XML child 
-        nodes into ExtensionElements.
-
-    ExtensionElement: XML which is not part of the Saml specification,
-        these are called extension elements. If a classes parser
-        encounters an unexpected XML construct, it is translated into an
-        ExtensionElement instance. ExtensionElement is designed to fully
-        capture the information in the XML. Child nodes in an XML
-        extension are turned into ExtensionElements as well.
-            
 """
 
 try:
@@ -68,7 +56,7 @@ DECISION_TYPE_PERMIT = "Permit"
 DECISION_TYPE_DENY = "Deny"
 DECISION_TYPE_INDETERMINATE = "Indeterminate"
 
-V2 = "2.0"
+VERSION = "2.0"
 
 BINDING_SOAP = 'urn:oasis:names:tc:SAML:2.0:bindings:SOAP'
 BINDING_PAOS = 'urn:oasis:names:tc:SAML:2.0:bindings:PAOS'
@@ -132,7 +120,13 @@ class Error(Exception):
     pass
 
 class ExtensionElement(object):
-    """Represents extra XML elements contained in Saml classes."""
+    """XML which is not part of the Saml specification,
+    these are called extension elements. If a classes parser
+    encounters an unexpected XML construct, it is translated into an
+    ExtensionElement instance. ExtensionElement is designed to fully
+    capture the information in the XML. Child nodes in an XML
+    extension are turned into ExtensionElements as well.
+    """
     
     def __init__(self, tag, namespace=None, attributes=None, 
             children=None, text=None):
