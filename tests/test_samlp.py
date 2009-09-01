@@ -38,7 +38,7 @@ class TestAbstractRequest:
     def testAccessors(self):
         """Test for AbstractRequest accessors"""
         self.ar.id = "request id"
-        self.ar.version = saml.V2
+        self.ar.version = saml2.VERSION
         self.ar.issue_instant = "2007-09-14T01:05:02Z"
         self.ar.destination = "http://www.example.com/Destination"
         self.ar.consent = saml.CONSENT_UNSPECIFIED
@@ -48,7 +48,7 @@ class TestAbstractRequest:
 
         new_ar = samlp.abstract_request_from_string(self.ar.to_string())
         assert new_ar.id == "request id"
-        assert new_ar.version == saml.V2
+        assert new_ar.version == saml2.VERSION
         assert new_ar.issue_instant == "2007-09-14T01:05:02Z"
         assert new_ar.destination == "http://www.example.com/Destination"
         assert new_ar.consent == saml.CONSENT_UNSPECIFIED
@@ -141,7 +141,7 @@ class TestStatusResponse:
         """Test for StatusResponse accessors"""
         self.sr.id = "response id"
         self.sr.in_response_to = "request id"
-        self.sr.version = saml.V2
+        self.sr.version = saml2.VERSION
         self.sr.issue_instant = "2007-09-14T01:05:02Z"
         self.sr.destination = "http://www.example.com/Destination"
         self.sr.consent = saml.CONSENT_UNSPECIFIED
@@ -153,7 +153,7 @@ class TestStatusResponse:
         new_sr = samlp.status_response_from_string(self.sr.to_string())
         assert new_sr.id == "response id"
         assert new_sr.in_response_to == "request id"
-        assert new_sr.version == saml.V2
+        assert new_sr.version == saml2.VERSION
         assert new_sr.issue_instant == "2007-09-14T01:05:02Z"
         assert new_sr.destination == "http://www.example.com/Destination"
         assert new_sr.consent == saml.CONSENT_UNSPECIFIED
@@ -177,7 +177,7 @@ class TestResponse:
         """Test for Response accessors"""
         self.response.id = "response id"
         self.response.in_response_to = "request id"
-        self.response.version = saml.V2
+        self.response.version = saml2.VERSION
         self.response.issue_instant = "2007-09-14T01:05:02Z"
         self.response.destination = "http://www.example.com/Destination"
         self.response.consent = saml.CONSENT_UNSPECIFIED
@@ -191,7 +191,7 @@ class TestResponse:
         new_response = samlp.response_from_string(self.response.to_string())
         assert new_response.id == "response id"
         assert new_response.in_response_to == "request id"
-        assert new_response.version == saml.V2
+        assert new_response.version == saml2.VERSION
         assert new_response.issue_instant == "2007-09-14T01:05:02Z"
         assert new_response.destination == "http://www.example.com/Destination"
         assert new_response.consent == saml.CONSENT_UNSPECIFIED
@@ -355,7 +355,7 @@ class TestAuthnRequest:
     def testAccessors(self):
         """Test for AuthnRequest accessors"""
         self.ar.id = "request id"
-        self.ar.version = saml.V2
+        self.ar.version = saml2.VERSION
         self.ar.issue_instant = "2007-09-14T01:05:02Z"
         self.ar.destination = "http://www.example.com/Destination"
         self.ar.consent = saml.CONSENT_UNSPECIFIED
@@ -378,7 +378,7 @@ class TestAuthnRequest:
 
         new_ar = samlp.authn_request_from_string(self.ar.to_string())
         assert new_ar.id == "request id"
-        assert new_ar.version == saml.V2
+        assert new_ar.version == saml2.VERSION
         assert new_ar.issue_instant == "2007-09-14T01:05:02Z"
         assert new_ar.destination == "http://www.example.com/Destination"
         assert new_ar.consent == saml.CONSENT_UNSPECIFIED
@@ -405,7 +405,7 @@ class TestAuthnRequest:
         """Test for authn_request_from_string() using test data"""
         new_ar = samlp.authn_request_from_string(samlp_data.TEST_AUTHN_REQUEST)
         assert new_ar.id == "request id"
-        assert new_ar.version == saml.V2
+        assert new_ar.version == saml2.VERSION
         assert new_ar.issue_instant == "2007-09-14T01:05:02Z"
         assert new_ar.destination == "http://www.example.com/Destination"
         assert new_ar.consent == saml.CONSENT_UNSPECIFIED
@@ -437,7 +437,7 @@ class TestLogoutRequest:
     def testAccessors(self):
         """Test for LogoutRequest accessors"""
         self.lr.id = "request id"
-        self.lr.version = saml.V2
+        self.lr.version = saml2.VERSION
         self.lr.issue_instant = "2007-09-14T01:05:02Z"
         self.lr.destination = "http://www.example.com/Destination"
         self.lr.consent = saml.CONSENT_UNSPECIFIED
@@ -454,7 +454,7 @@ class TestLogoutRequest:
 
         new_lr = samlp.logout_request_from_string(self.lr.to_string())
         assert new_lr.id == "request id"
-        assert new_lr.version == saml.V2
+        assert new_lr.version == saml2.VERSION
         assert new_lr.issue_instant == "2007-09-14T01:05:02Z"
         assert new_lr.destination == "http://www.example.com/Destination"
         assert new_lr.consent == saml.CONSENT_UNSPECIFIED
@@ -472,7 +472,7 @@ class TestLogoutRequest:
         """Test for logout_request_from_string() using test data"""
         new_lr = samlp.logout_request_from_string(samlp_data.TEST_LOGOUT_REQUEST)
         assert new_lr.id == "request id"
-        assert new_lr.version == saml.V2
+        assert new_lr.version == saml2.VERSION
         assert new_lr.issue_instant == "2007-09-14T01:05:02Z"
         assert new_lr.destination == "http://www.example.com/Destination"
         assert new_lr.consent == saml.CONSENT_UNSPECIFIED
@@ -497,7 +497,7 @@ class TestLogoutResponse:
         """Test for LogoutResponse accessors"""
         self.lr.id = "response id"
         self.lr.in_response_to = "request id"
-        self.lr.version = saml.V2
+        self.lr.version = saml2.VERSION
         self.lr.issue_instant = "2007-09-14T01:05:02Z"
         self.lr.destination = "http://www.example.com/Destination"
         self.lr.consent = saml.CONSENT_UNSPECIFIED
@@ -509,7 +509,7 @@ class TestLogoutResponse:
         new_lr = samlp.logout_response_from_string(self.lr.to_string())
         assert new_lr.id == "response id"
         assert new_lr.in_response_to == "request id"
-        assert new_lr.version == saml.V2
+        assert new_lr.version == saml2.VERSION
         assert new_lr.issue_instant == "2007-09-14T01:05:02Z"
         assert new_lr.destination == "http://www.example.com/Destination"
         assert new_lr.consent == saml.CONSENT_UNSPECIFIED
@@ -524,7 +524,7 @@ class TestLogoutResponse:
             samlp_data.TEST_LOGOUT_RESPONSE)
         assert new_lr.id == "response id"
         assert new_lr.in_response_to == "request id"
-        assert new_lr.version == saml.V2
+        assert new_lr.version == saml2.VERSION
         assert new_lr.issue_instant == "2007-09-14T01:05:02Z"
         assert new_lr.destination == "http://www.example.com/Destination"
         assert new_lr.consent == saml.CONSENT_UNSPECIFIED

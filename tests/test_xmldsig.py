@@ -33,18 +33,18 @@ class TestObject:
 
   def testAccessors(self):
     """Test for Object accessors"""
-    self.object.id = "object_id"
+    self.object.identifier = "object_id"
     self.object.mime_type = "test/plain; charset=UTF-8"
     self.object.encoding = ds.ENCODING_BASE64
     new_object = ds.object_from_string(self.object.to_string())
-    assert new_object.id == "object_id"
+    assert new_object.identifier == "object_id"
     assert new_object.mime_type == "test/plain; charset=UTF-8"
     assert new_object.encoding == ds.ENCODING_BASE64
 
   def testUsingTestData(self):
     """Test for object_from_string() using test data"""
     new_object = ds.object_from_string(ds_data.TEST_OBJECT)
-    assert new_object.id == "object_id"
+    assert new_object.identifier == "object_id"
     assert new_object.encoding == ds.ENCODING_BASE64
     assert new_object.text.strip() == \
                  "V2VkIEp1biAgNCAxMjoxMTowMyBFRFQgMjAwMwo"
@@ -424,7 +424,7 @@ class TestKeyInfo:
       ds.spki_data_from_string(ds_data.TEST_SPKI_DATA))
     self.key_info.mgmt_data.append(
       ds.mgmt_data_from_string(ds_data.TEST_MGMT_DATA))
-    self.key_info.id = "id"
+    self.key_info.identifier = "id"
     new_key_info = ds.key_info_from_string(self.key_info.to_string())
 
     assert isinstance(new_key_info.key_name[0], ds.KeyName)
@@ -435,7 +435,7 @@ class TestKeyInfo:
     assert isinstance(new_key_info.pgp_data[0], ds.PGPData)
     assert isinstance(new_key_info.spki_data[0], ds.SPKIData)
     assert isinstance(new_key_info.mgmt_data[0], ds.MgmtData)
-    assert new_key_info.id == "id"
+    assert new_key_info.identifier == "id"
     
   def testUsingTestData(self):
     """Test for key_info_from_string() using test data"""
@@ -448,7 +448,7 @@ class TestKeyInfo:
     assert isinstance(new_key_info.pgp_data[0], ds.PGPData)
     assert isinstance(new_key_info.spki_data[0], ds.SPKIData)
     assert isinstance(new_key_info.mgmt_data[0], ds.MgmtData)
-    assert new_key_info.id == "id"
+    assert new_key_info.identifier == "id"
   
 
 class TestDigestValue:
@@ -500,14 +500,14 @@ class TestReference:
       ds_data.TEST_DIGEST_METHOD))
     self.reference.digest_value.append(ds.digest_value_from_string(
       ds_data.TEST_DIGEST_VALUE))
-    self.reference.id = "id"
+    self.reference.identifier = "id"
     self.reference.uri = "http://www.example.com/URI"
     self.reference.type = "http://www.example.com/Type"
     new_reference = ds.reference_from_string(self.reference.to_string())
     assert isinstance(new_reference.transforms[0], ds.Transforms)
     assert isinstance(new_reference.digest_method[0], ds.DigestMethod)
     assert isinstance(new_reference.digest_value[0], ds.DigestValue)
-    assert new_reference.id == "id"
+    assert new_reference.identifier == "id"
     assert new_reference.uri == "http://www.example.com/URI"
     assert new_reference.type == "http://www.example.com/Type"
     
@@ -517,7 +517,7 @@ class TestReference:
     assert isinstance(new_reference.transforms[0], ds.Transforms)
     assert isinstance(new_reference.digest_method[0], ds.DigestMethod)
     assert isinstance(new_reference.digest_value[0], ds.DigestValue)
-    assert new_reference.id == "id"
+    assert new_reference.identifier == "id"
     assert new_reference.uri == "http://www.example.com/URI"
     assert new_reference.type == "http://www.example.com/Type"
 
@@ -574,7 +574,7 @@ class TestSignedInfo:
 
   def testAccessors(self):
     """Test for SignedInfo accessors"""
-    self.si.id = "id"
+    self.si.identifier = "id"
     self.si.canonicalization_method = ds.canonicalization_method_from_string(
       ds_data.TEST_CANONICALIZATION_METHOD)
     self.si.signature_method = ds.signature_method_from_string(
@@ -582,7 +582,7 @@ class TestSignedInfo:
     self.si.reference.append(ds.reference_from_string(
       ds_data.TEST_REFERENCE))
     new_si = ds.signed_info_from_string(self.si.to_string())
-    assert new_si.id == "id"
+    assert new_si.identifier == "id"
     assert isinstance(new_si.canonicalization_method,
                             ds.CanonicalizationMethod)
     assert isinstance(new_si.signature_method, ds.SignatureMethod)
@@ -591,7 +591,7 @@ class TestSignedInfo:
   def testUsingTestData(self):
     """Test for signed_info_from_string() using test data"""
     new_si = ds.signed_info_from_string(ds_data.TEST_SIGNED_INFO)
-    assert new_si.id == "id"
+    assert new_si.identifier == "id"
     assert isinstance(new_si.canonicalization_method,
                             ds.CanonicalizationMethod)
     assert isinstance(new_si.signature_method, ds.SignatureMethod)
@@ -604,18 +604,18 @@ class TestSignatureValue:
 
   def testAccessors(self):
     """Test for SignatureValue accessors"""
-    self.signature_value.id = "id"
+    self.signature_value.identifier = "id"
     self.signature_value.text = "signature value"
     new_signature_value = ds.signature_value_from_string(
       self.signature_value.to_string())
-    assert new_signature_value.id == "id"
+    assert new_signature_value.identifier == "id"
     assert new_signature_value.text.strip() == "signature value"
     
   def testUsingTestData(self):
     """Test for signature_value_from_string() using test data"""
     new_signature_value = ds.signature_value_from_string(
       ds_data.TEST_SIGNATURE_VALUE)
-    assert new_signature_value.id == "id"
+    assert new_signature_value.identifier == "id"
     assert new_signature_value.text.strip() == "signature value"
 
 
@@ -626,7 +626,7 @@ class TestSignature:
 
   def testAccessors(self):
     """Test for Signature accessors"""
-    self.signature.id = "id"
+    self.signature.identifier = "id"
     self.signature.signed_info = ds.signed_info_from_string(
       ds_data.TEST_SIGNED_INFO)
     self.signature.signature_value = ds.signature_value_from_string(
@@ -635,7 +635,7 @@ class TestSignature:
     self.signature.object.append(ds.object_from_string(ds_data.TEST_OBJECT))
 
     new_signature = ds.signature_from_string(self.signature.to_string())
-    assert new_signature.id == "id"
+    assert new_signature.identifier == "id"
     assert isinstance(new_signature.signed_info, ds.SignedInfo)
     assert isinstance(new_signature.signature_value, ds.SignatureValue)
     assert isinstance(new_signature.key_info, ds.KeyInfo)
@@ -644,7 +644,7 @@ class TestSignature:
   def testUsingTestData(self):
     """Test for signature_value_from_string() using test data"""
     new_signature = ds.signature_from_string(ds_data.TEST_SIGNATURE)
-    assert new_signature.id == "id"
+    assert new_signature.identifier == "id"
     assert isinstance(new_signature.signed_info, ds.SignedInfo)
     assert isinstance(new_signature.signature_value, ds.SignatureValue)
     assert isinstance(new_signature.key_info, ds.KeyInfo)
