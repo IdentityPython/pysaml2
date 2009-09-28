@@ -17,6 +17,8 @@ FORM_SPEC = """<form method="post" action="%s">
    <input type="submit" value="Submit" />
 </form>"""
 
+LAX = True
+
 def _sid(seed=""):
     """The hash of the server time + seed makes an unique SID for each session.
     """
@@ -145,8 +147,8 @@ class Saml2Client:
         
         log and log.info("response: %s" % (response,))
         try:
-            (ava, name_id) = self.do_response(response, requestor, outstanding, 
-                                                log)
+            (ava, name_id, real_uri) = self.do_response(response, requestor, 
+                                                outstanding, log)
         except AttributeError, exc:
             log and log.error("AttributeError: %s" % (exc,))
             return {}
@@ -161,15 +163,15 @@ class Saml2Client:
         identity.update(ava)
         return identity
   
-    def do_response(self, response, requestor, outstanding, log=None):
+    def do_response(self, response, requestor, outstanding={}, log=None):
         """
         Parse a authentication response, verify that it is a response for me and
         expected by me and that it is correct.
 
         :param response: The response as a structure
         :param requestor: The host (me) that asked for a AuthN response
-        :param outstanding: A dictionary with IdPs as keys and 2-tuples of 
-            session IDs and request URIs.
+        :param outstanding: A dictionary with session ids as keys and request 
+            URIs as values.
         :result: A 2-tuple with attribute value assertions as a dictionary and
             the NameID
         """
@@ -187,15 +189,13 @@ class Saml2Client:
             if status.status_code.value != "urn:oasis:names:tc:SAML:2.0:status:Success":
                 raise Exception("Not successfull according to status code")
             
-        if response.issuer:
-            issuer = response.issuer.text.strip()
-            if issuer not in outstanding:
-                raise Exception("A response from someone I didn't ask for one")
+        if response.in_response_to:
+            if response.in_response_to in outstanding:
+                real_uri = outstanding[response.in_response_to]
+            elif LAX:
+                real_uri = ""
             else:
-                tup = (response.in_response_to, response.destination)
-                if tup not in outstanding[issuer]:
-                    raise Exception(
-                        "Combination of session id and requestURI " +
+                raise Exception("Combination of session id and requestURI " +
                         "in Issuer I don't recall")
                 
         # the assertion MUST contain one AuthNStatement
@@ -215,13 +215,15 @@ class Saml2Client:
         # The assertion must contain a Subject
         assert assertion.subject
         subject = assertion.subject
-        subject_confirmation = subject.subject_confirmation
-        data = subject_confirmation.subject_confirmation_data
-        tup = (data.recipient, data.in_response_to)
-        if tup in outstanding[issuer]:
-            outstanding[issuer].remove(tup)
-        else:
-            raise Exception("Combination of session id and requestURI I don't recall")
+        for subject_confirmation in subject.subject_confirmation:
+            data = subject_confirmation.subject_confirmation_data
+            if data.in_response_to in outstanding:
+                real_uri = outstanding[data.in_response_to]
+                del outstanding[data.in_response_to]
+            elif LAX:
+                real_uri = ""
+            else:
+                raise Exception("Combination of session id and requestURI I don't recall")
         
         # The subject must contain a name_id
         assert subject.name_id
@@ -236,13 +238,14 @@ class Saml2Client:
         now = time.gmtime()
         if time.strptime(condition.not_on_or_after, TIME_FORMAT) < now:
             # To old ignore
-            log and log.info("To old: %s" % condition.not_on_or_after)
-            return None
-        if not for_me(condition, requestor):
+            if not LAX:
+                log and log.info("To old: %s" % condition.not_on_or_after)
+                return None
+        if LAX or not for_me(condition, requestor):
             log and log.info("Not for me!!!")
             return None        # # verify signature
 
-        return (ava, name_id)
+        return (ava, name_id, real_uri)
 
 
 #2009-07-05T15:35:29Z
