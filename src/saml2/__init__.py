@@ -28,7 +28,6 @@
     Conversions to and from XML should only be necessary when the Saml classes
     "touch the wire" and are sent over HTTP. For this reason this module 
     provides methods and functions to convert Saml classes to and from strings.
-
 """
 
 try:
@@ -66,7 +65,7 @@ BINDING_HTTP_ARTIFACT = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact'
 BINDING_URI = 'urn:oasis:names:tc:SAML:2.0:bindings:URI'
 
 def create_class_from_xml_string(target_class, xml_string):
-    """Creates an instance of the target class from the string contents.
+    """Creates an instance of the target class from a string.
     
     :param target_class: The class which will be instantiated and populated
         with the contents of the XML. This class must have a c_tag and a
@@ -321,7 +320,12 @@ class ExtensionContainer(object):
     
 
 class SamlBase(ExtensionContainer):
-
+    """A foundation class on which Saml classes are built. It 
+    handles the parsing of attributes and children which are common to all
+    Saml classes. By default, the SamlBase class translates all XML child 
+    nodes into ExtensionElements.
+    """
+    
     c_children = {}
     c_attributes = {}
     c_child_order = []

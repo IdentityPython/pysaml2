@@ -59,11 +59,7 @@ DECISION_TYPE_INDETERMINATE = "Indeterminate"
 CONSENT_UNSPECIFIED = "urn:oasis:names:tc:SAML:2.0:consent:unspecified"
 
 class BaseID(SamlBase):
-    """A foundation class on which Saml classes are built. It 
-    handles the parsing of attributes and children which are common to all
-    Saml classes. By default, the SamlBase class translates all XML child 
-    nodes into ExtensionElements.
-    """
+    """ The saml:BaseID element """
 
     c_tag = 'BaseID'
     c_namespace = SAML_NAMESPACE

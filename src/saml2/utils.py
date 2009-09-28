@@ -17,7 +17,12 @@
 """Contains utility methods used with SAML-2."""
 
 import saml2
-import libxml2
+try:
+    import libxml2
+    LIBRARY = "libxml2"
+except ImportError:
+    import lxml
+    LIBRARY = "lxml"
 import xmlsec
 import random
 import time
@@ -36,9 +41,10 @@ def get_date_and_time(base=None):
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(base))
 
 def lib_init():
-    # Init libxml library
-    libxml2.initParser()
-    libxml2.substituteEntitiesDefault(1)
+    if LIBRARY == "libxml2":
+        # Init libxml library
+        libxml2.initParser()
+        libxml2.substituteEntitiesDefault(1)
 
     # Init xmlsec library
     if xmlsec.init() < 0:
@@ -67,8 +73,9 @@ def lib_shutdown():
     # Shutdown xmlsec library
     xmlsec.shutdown()
 
-    # Shutdown LibXML2
-    libxml2.cleanupParser()
+    if LIBRARY == "libxml2":
+        # Shutdown LibXML2
+        libxml2.cleanupParser()
 
 def verify(xml, key_file):
     lib_init()
@@ -80,7 +87,11 @@ def verify(xml, key_file):
 # Returns 0 on success or a negative value if an error occurs.
 def verify_xml(xml, key_file):
 
-    doc = libxml2.parseDoc(xml)
+    if LIBRARY == "libxml2":
+        doc = libxml2.parseDoc(xml)
+    else:
+        doc = lxml.etree.fromstring(xml)
+        
     if doc is None or doc.getRootElement() is None:
         cleanup(doc)
         raise saml2.Error("Error: unable to parse file \"%s\"" % xml)
@@ -143,7 +154,10 @@ def sign(xml, key_file, cert_file=None):
 def sign_xml(xml, key_file, cert_file=None):
 
     # Load template
-    doc = libxml2.parseDoc(xml)
+    if LIBRARY == "libxml2":
+        doc = libxml2.parseDoc(xml)
+    else:
+        doc = lxml.etree.fromstring(xml)
     if doc is None or doc.getRootElement() is None:
         cleanup(doc)
         raise saml2.Error("Error: unable to parse string \"%s\"" % xml)
