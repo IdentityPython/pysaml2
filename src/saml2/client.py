@@ -1,7 +1,5 @@
-import sys
 import os
 import urllib
-import re
 import saml2
 import base64
 import time
@@ -81,7 +79,8 @@ class Saml2Client:
         if post.has_key("SAMLResponse"):
             saml_response =  post['SAMLResponse'].value
             if saml_response:
-                identity = self.verify(saml_response, requestor, outstanding, log)
+                identity = self.verify(saml_response, requestor, outstanding, 
+                                        log)
                 # relay_state = self.environ.get("RelayState", "")
                 # if not relay_state:
                 #     relay_state = self.environ.keys()
@@ -90,8 +89,7 @@ class Saml2Client:
             return None
             
     def authenticate(self, spentityid, location="", position="", requestor="",
-                        my_name="", binding=saml2.BINDING_HTTP_REDIRECT, 
-                        debug=False):
+                        my_name="", binding=saml2.BINDING_HTTP_REDIRECT):
         """ Either verifies an authentication Response or if none is present
         send an authentication request.
         
@@ -118,9 +116,6 @@ class Saml2Client:
             response.append("     window.onload = function ()")
             response.append(" { document.forms[0].submit(); ")
             response.append("""</script>""")
-            if debug:
-                print envio
-                print self.environ.keys()
             response.append("</body>")
         elif binding == saml2.BINDING_HTTP_REDIRECT:
             query = "&".join([
@@ -141,23 +136,22 @@ class Saml2Client:
         """ Verify a authentication response
         
         :param xml_response: The response as a XML string
+        :param requestor: The hostname of the machine
+        :param outstanding: A collection of outstanding authentication requests
+        :return: An identity description
         """
         response = samlp.response_from_string(base64.b64decode(xml_response))
         # get list of subjectConfirmationData
-        now = time.gmtime()
-
-        if not self._check_response(response):
-            return {}
         
         log and log.info("response: %s" % (response,))
         try:
-            (ava, name_id) = _parse_authn_response(response, requestor, 
-                                                    outstanding, log)
-        except AttributeError, e:
-            log and log.error("AttributeError: %s" % (e,))
+            (ava, name_id) = self.do_response(response, requestor, outstanding, 
+                                                log)
+        except AttributeError, exc:
+            log and log.error("AttributeError: %s" % (exc,))
             return {}
-        except Exception, e:
-            log and log.error("Exception: %s" % (e,))
+        except Exception, exc:
+            log and log.error("Exception: %s" % (exc,))
                                     
         # should return userid and attribute value assertions
         identity = {}
@@ -165,108 +159,99 @@ class Saml2Client:
         identity["password"] = ""
         identity['repoze.who.userid'] = name_id
         identity.update(ava)
-        # identity['timestamp'] = timestamp
-        # identity['tokens'] = tokens
-        # identity['userdata'] = user_data
         return identity
   
-    def _check_response(self, response):
-        # # verify signature
-        # 
-        # # check age
-        # if time.strptime(response.not_on_or_after, TIME_FORMAT) > now:
-        #     # To old ignore
-        #     return False
-        # # verify recipient
-        # if reponse.recipient != self.service_url:
-        #     # not for me
-        #     return False
-        # # verify inResponseTo if present
-        # qid = reponse.inResponseTo
-        # if qid != None:
-        #     if not self.session.has_keys(qid):
-        #         # unsolicited what TODO
-        #         return False
-        # # check address ?
-        # #addr = confirm.address
-        return True
+    def do_response(self, response, requestor, outstanding, log=None):
+        """
+        Parse a authentication response, verify that it is a response for me and
+        expected by me and that it is correct.
+
+        :param response: The response as a structure
+        :param requestor: The host (me) that asked for a AuthN response
+        :param outstanding: A dictionary with IdPs as keys and 2-tuples of 
+            session IDs and request URIs.
+        :result: A 2-tuple with attribute value assertions as a dictionary and
+            the NameID
+        """
         
-    def service_url(self):
-        """ Produce the service URL """
-        if os.environ.has_key('REQUEST_URI'):
-            ret = 'http://'.join([os.environ['HTTP_HOST'],
-                                    os.environ['REQUEST_URI']])
-            ret = re.sub(r'ticket=[^&]*&?', '', ret)
-            ret = re.sub(r'\?&?$|&$', '', ret)
-            return ret
-            #$url = preg_replace('/ticket=[^&]*&?/', '', $url);
-            #return preg_replace('/?&?$|&$/', '', $url);
-        return "something is badly wrong"
-
-def _parse_authn_response(response, requestor, outstanding={}, log=None):
-
-    log and log.info( "Outstanding: %s" % outstanding)
-    log and log.info( "In response to: %s" % (response.in_response_to,))
-    log and log.info( "Destination: %s" % (response.destination,))
-    log and log.info( "Issuer: %s" % (response.issuer.text.strip(),))
-
-    # MUST contain *one* assertion
-    assert len(response.assertion) == 1
-    assertion = response.assertion[0]
-    # destination
-    # issuer
-    
-    log and log.info("assertion keys: %s" % assertion.__dict__.keys())
-
-    #print assertion.__dict__.keys()
-
-    # the assertion MUST contain one AuthNStatement
-    assert len(assertion.authn_statement) == 1
-    authn_statement = assertion.authn_statement[0]
-    # check authn_statement.session_index
-    
-    # The assertion can contain zero or one attributeStatements
-    assert len(assertion.attribute_statement) <= 1
-    if assertion.attribute_statement:
-        ava = get_attribute_values(assertion.attribute_statement[0])
-    else:
-        ava = {}
-
-    log and log.info("AVA: %s" % (ava,))
-
-    # The assertion must contain a Subject
-    assert assertion.subject
-    subject = assertion.subject
-
-    # The subject must contain a name_id
-    assert subject.name_id
-    name_id = subject.name_id.text.strip()
-
-    log and log.info("NameID: %s" % (name_id,))
-
-    # The Identity Provider MUST include a <saml:Conditions> element
-    #print "Conditions",assertion.conditions
-    assert assertion.conditions
-    condition = assertion.conditions
-    now = time.gmtime()
-    if time.strptime(condition.not_on_or_after, TIME_FORMAT) < now:
-        # To old ignore
-        log and log.info("To old: %s" % condition.not_on_or_after)
-        return None
-    if not for_me(condition, requestor):
-        log and log.info("Not for me!!!")
-        return None
+        log and log.info( "Outstanding: %s" % outstanding)
+        log and log.info( "In response to: %s" % (response.in_response_to,))
+        log and log.info( "Destination: %s" % (response.destination,))
         
-    return (ava, name_id)
+        # MUST contain *one* assertion
+        assert len(response.assertion) == 1
+        assertion = response.assertion[0]
 
-    
+        if response.status:
+            status = response.status
+            if status.status_code.value != "urn:oasis:names:tc:SAML:2.0:status:Success":
+                raise Exception("Not successfull according to status code")
+            
+        if response.issuer:
+            issuer = response.issuer.text.strip()
+            if issuer not in outstanding:
+                raise Exception("A response from someone I didn't ask for one")
+            else:
+                tup = (response.in_response_to, response.destination)
+                if tup not in outstanding[issuer]:
+                    raise Exception(
+                        "Combination of session id and requestURI " +
+                        "in Issuer I don't recall")
+                
+        # the assertion MUST contain one AuthNStatement
+        assert len(assertion.authn_statement) == 1
+        authn_statement = assertion.authn_statement[0]
+        # check authn_statement.session_index
+
+        # The assertion can contain zero or one attributeStatements
+        assert len(assertion.attribute_statement) <= 1
+        if assertion.attribute_statement:
+            ava = get_attribute_values(assertion.attribute_statement[0])
+        else:
+            ava = {}
+
+        log and log.info("AVA: %s" % (ava,))
+
+        # The assertion must contain a Subject
+        assert assertion.subject
+        subject = assertion.subject
+        subject_confirmation = subject.subject_confirmation
+        data = subject_confirmation.subject_confirmation_data
+        tup = (data.recipient, data.in_response_to)
+        if tup in outstanding[issuer]:
+            outstanding[issuer].remove(tup)
+        else:
+            raise Exception("Combination of session id and requestURI I don't recall")
+        
+        # The subject must contain a name_id
+        assert subject.name_id
+        name_id = subject.name_id.text.strip()
+
+        log and log.info("NameID: %s" % (name_id,))
+
+        # The Identity Provider MUST include a <saml:Conditions> element
+        #print "Conditions",assertion.conditions
+        assert assertion.conditions
+        condition = assertion.conditions
+        now = time.gmtime()
+        if time.strptime(condition.not_on_or_after, TIME_FORMAT) < now:
+            # To old ignore
+            log and log.info("To old: %s" % condition.not_on_or_after)
+            return None
+        if not for_me(condition, requestor):
+            log and log.info("Not for me!!!")
+            return None        # # verify signature
+
+        return (ava, name_id)
+
+
 #2009-07-05T15:35:29Z
 TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
-def for_me(condition, me ):
+def for_me(condition, myself ):
     for restriction in condition.audience_restriction:
         audience = restriction.audience
-        if audience.text.strip() == me:
+        if audience.text.strip() == myself:
             return True
 
 def get_attribute_values(attribute_statement):
