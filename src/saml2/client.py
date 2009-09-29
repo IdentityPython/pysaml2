@@ -81,10 +81,10 @@ class Saml2Client:
         if post.has_key("SAMLResponse"):
             saml_response =  post['SAMLResponse'].value
             if saml_response:
-                identity = self.verify(saml_response, requestor, outstanding, 
+                (identity, came_from) = self.verify(saml_response, requestor, outstanding, 
                                         log)
-            relay_state = post["RelayState"].value
-            return (identity, relay_state)
+            #relay_state = post["RelayState"].value
+            return (identity, came_from)
         else:
             return None
             
@@ -119,14 +119,13 @@ class Saml2Client:
             response.append("""</script>""")
             response.append("</body>")
         elif binding == saml2.BINDING_HTTP_REDIRECT:
-            query = "&".join([
-                        "RelayState=%s" % relay_state,
-                        "SAMLRequest=%s" % urllib.quote_plus(
-                                            self._compress_and_encode(
-                                                authen_req)),
-                        "spentityid=%s" % spentityid
-                    ])
-            login_url = "?".join([location, query])
+            lista = ["SAMLRequest=%s" % urllib.quote_plus(
+                                self._compress_and_encode(
+                                    authen_req)),
+                    "spentityid=%s" % spentityid]
+            if relay_state:
+                lista.append("RelayState=%s" % relay_state)
+            login_url = "?".join([location, "&".join(lista)])
             response = ('Location', login_url)
         else:
             raise Exception("Unkown binding type: %s" % binding)
@@ -145,17 +144,17 @@ class Saml2Client:
         
         log and log.info("response: %s" % (response,))
         try:
-            (ava, name_id, real_uri) = self.do_response(response, requestor, 
+            (ava, name_id, came_from) = self.do_response(response, requestor, 
                                                 outstanding, log)
         except AttributeError, exc:
             log and log.error("AttributeError: %s" % (exc,))
-            return {}
+            return ({}, "")
         except Exception, exc:
             log and log.error("Exception: %s" % (exc,))
                                     
         # should return userid and attribute value assertions
         ava["__userid"] = name_id
-        return ava
+        return (ava, came_from)
   
     def do_response(self, response, requestor, outstanding={}, log=None):
         """
@@ -169,11 +168,7 @@ class Saml2Client:
         :result: A 2-tuple with attribute value assertions as a dictionary and
             the NameID
         """
-        
-        log and log.info( "Outstanding: %s" % outstanding)
-        log and log.info( "In response to: %s" % (response.in_response_to,))
-        log and log.info( "Destination: %s" % (response.destination,))
-        
+                
         # MUST contain *one* assertion
         assert len(response.assertion) == 1
         assertion = response.assertion[0]
@@ -185,12 +180,11 @@ class Saml2Client:
             
         if response.in_response_to:
             if response.in_response_to in outstanding:
-                real_uri = outstanding[response.in_response_to]
+                came_from = outstanding[response.in_response_to]
             elif LAX:
-                real_uri = ""
+                came_from = ""
             else:
-                raise Exception("Combination of session id and requestURI " +
-                        "in Issuer I don't recall")
+                raise Exception("Session id I don't recall using")
                 
         # the assertion MUST contain one AuthNStatement
         assert len(assertion.authn_statement) == 1
@@ -212,18 +206,16 @@ class Saml2Client:
         for subject_confirmation in subject.subject_confirmation:
             data = subject_confirmation.subject_confirmation_data
             if data.in_response_to in outstanding:
-                real_uri = outstanding[data.in_response_to]
+                came_from = outstanding[data.in_response_to]
                 del outstanding[data.in_response_to]
             elif LAX:
-                real_uri = ""
+                came_from = ""
             else:
                 raise Exception("Combination of session id and requestURI I don't recall")
         
         # The subject must contain a name_id
         assert subject.name_id
         name_id = subject.name_id.text.strip()
-
-        log and log.info("NameID: %s" % (name_id,))
 
         # The Identity Provider MUST include a <saml:Conditions> element
         #print "Conditions",assertion.conditions
@@ -240,7 +232,7 @@ class Saml2Client:
                 log and log.info("Not for me!!!")
                 return None        # # verify signature
             
-        return (ava, name_id, real_uri)
+        return (ava, name_id, came_from)
 
 
 #2009-07-05T15:35:29Z
