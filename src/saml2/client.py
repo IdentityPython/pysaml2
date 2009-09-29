@@ -36,7 +36,7 @@ class Saml2Client:
         self.session = session or {}
         self.environ = environ
 
-    def create_authn_request(self, query_id, destination, position,
+    def create_authn_request(self, query_id, destination, service_url,
                                 requestor, my_name):
         """ Creates an Authenication Request
         
@@ -48,7 +48,7 @@ class Saml2Client:
         :return: A string representation of the authentication request
         """
         authn_request = samlp.AuthnRequest(query_id)
-        authn_request.assertion_consumer_service_url = position
+        authn_request.assertion_consumer_service_url = service_url
         authn_request.destination = destination
         authn_request.protocol_binding = saml2.BINDING_HTTP_POST
         authn_request.provider_name = my_name
@@ -83,15 +83,14 @@ class Saml2Client:
             if saml_response:
                 identity = self.verify(saml_response, requestor, outstanding, 
                                         log)
-                # relay_state = self.environ.get("RelayState", "")
-                # if not relay_state:
-                #     relay_state = self.environ.keys()
-                return identity
+            relay_state = post["RelayState"].value
+            return (identity, relay_state)
         else:
             return None
             
     def authenticate(self, spentityid, location="", position="", requestor="",
-                        my_name="", binding=saml2.BINDING_HTTP_REDIRECT):
+                        my_name="", relay_state="",
+                        binding=saml2.BINDING_HTTP_REDIRECT):
         """ Either verifies an authentication Response or if none is present
         send an authentication request.
         
@@ -121,8 +120,7 @@ class Saml2Client:
             response.append("</body>")
         elif binding == saml2.BINDING_HTTP_REDIRECT:
             query = "&".join([
-                        "RelayState=%s" % urllib.quote_plus(
-                                            self.environ.get('REQUEST_URI','')),
+                        "RelayState=%s" % relay_state,
                         "SAMLRequest=%s" % urllib.quote_plus(
                                             self._compress_and_encode(
                                                 authen_req)),
@@ -241,10 +239,11 @@ class Saml2Client:
             if not LAX:
                 log and log.info("To old: %s" % condition.not_on_or_after)
                 return None
-        if LAX or not for_me(condition, requestor):
-            log and log.info("Not for me!!!")
-            return None        # # verify signature
-
+        if not for_me(condition, requestor):
+            if not LAX:
+                log and log.info("Not for me!!!")
+                return None        # # verify signature
+            
         return (ava, name_id, real_uri)
 
 
