@@ -154,12 +154,8 @@ class Saml2Client:
             log and log.error("Exception: %s" % (exc,))
                                     
         # should return userid and attribute value assertions
-        identity = {}
-        identity["login"] = name_id
-        identity["password"] = ""
-        identity['repoze.who.userid'] = name_id
-        identity.update(ava)
-        return identity
+        ava["__userid"] = name_id
+        return ava
   
     def do_response(self, response, requestor, outstanding={}, log=None):
         """
