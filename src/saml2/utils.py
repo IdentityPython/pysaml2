@@ -17,12 +17,7 @@
 """Contains utility methods used with SAML-2."""
 
 import saml2
-try:
-    import libxml2
-    LIBRARY = "libxml2"
-except ImportError:
-    import lxml
-    LIBRARY = "lxml"
+import libxml2
 import xmlsec
 import random
 import time
@@ -41,10 +36,9 @@ def get_date_and_time(base=None):
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(base))
 
 def lib_init():
-    if LIBRARY == "libxml2":
-        # Init libxml library
-        libxml2.initParser()
-        libxml2.substituteEntitiesDefault(1)
+    # Init libxml library
+    libxml2.initParser()
+    libxml2.substituteEntitiesDefault(1)
 
     # Init xmlsec library
     if xmlsec.init() < 0:
@@ -73,9 +67,8 @@ def lib_shutdown():
     # Shutdown xmlsec library
     xmlsec.shutdown()
 
-    if LIBRARY == "libxml2":
-        # Shutdown LibXML2
-        libxml2.cleanupParser()
+    # Shutdown LibXML2
+    libxml2.cleanupParser()
 
 def verify(xml, key_file):
     lib_init()
@@ -87,10 +80,7 @@ def verify(xml, key_file):
 # Returns 0 on success or a negative value if an error occurs.
 def verify_xml(xml, key_file):
 
-    if LIBRARY == "libxml2":
-        doc = libxml2.parseDoc(xml)
-    else:
-        doc = lxml.etree.fromstring(xml)
+    doc = libxml2.parseDoc(xml)
         
     if doc is None or doc.getRootElement() is None:
         cleanup(doc)
@@ -106,7 +96,7 @@ def verify_xml(xml, key_file):
         cleanup(doc)
         raise saml2.Error("Error: failed to create signature context")
 
-    # Load public key, assuming that there is not password
+    # Load public key, assuming that there is no password
     if key_file.endswith(".der"):
         key = xmlsec.cryptoAppKeyLoad(key_file, xmlsec.KeyDataFormatDer,
                                         None, None, None)
@@ -142,6 +132,41 @@ def verify_xml(xml, key_file):
     cleanup(doc, dsig_ctx)
     return ret
 
+def verify_xml_with_manager(mngr, xml):
+    assert(mngr)
+    assert(xml)
+
+    doc = libxml2.parseDoc(xml)
+    if doc is None or doc.getRootElement() is None:
+        print "Error: unable to parse xml"
+        return cleanup(doc)
+
+    # Find start node
+    node = xmlsec.findNode(doc.getRootElement(),
+                           xmlsec.NodeSignature, xmlsec.DSigNs)
+    if node is None:
+        print "Error: start node not found in \"%s\"", xml_file
+
+    # Create signature context
+    dsig_ctx = xmlsec.DSigCtx(mngr)
+    if dsig_ctx is None:
+        print "Error: failed to create signature context"
+        return cleanup(doc)
+
+    # Verify signature
+    if dsig_ctx.verify(node) < 0:
+        print "Error: signature verify"
+        return cleanup(doc, dsig_ctx)
+
+    # Print verification result to stdout
+    if dsig_ctx.status == xmlsec.DSigStatusSucceeded:
+        print "Signature is OK"
+    else:
+        print "Signature is INVALID"
+
+    # Success
+    return cleanup(doc, dsig_ctx, 1)
+        
 def sign(xml, key_file, cert_file=None):
     lib_init()
     ret = sign_xml(xml, key_file, cert_file)
@@ -154,10 +179,8 @@ def sign(xml, key_file, cert_file=None):
 def sign_xml(xml, key_file, cert_file=None):
 
     # Load template
-    if LIBRARY == "libxml2":
-        doc = libxml2.parseDoc(xml)
-    else:
-        doc = lxml.etree.fromstring(xml)
+    doc = libxml2.parseDoc(xml)
+
     if doc is None or doc.getRootElement() is None:
         cleanup(doc)
         raise saml2.Error("Error: unable to parse string \"%s\"" % xml)
