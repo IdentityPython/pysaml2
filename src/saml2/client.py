@@ -7,8 +7,10 @@ import hashlib
 import zlib
 
 from saml2 import samlp, saml
-from saml2.utils import create_id
-    
+from saml2.utils import create_id, verify_xml, verify_xml_with_manager
+from saml2.metadata import cert_from_assertion, make_temp
+from saml2.metadata import load_certs_to_manager
+
 DEFAULT_BINDING = "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
 
 FORM_SPEC = """<form method="post" action="%s">
@@ -28,6 +30,38 @@ def _sid(seed=""):
         sid.update(seed)
     return sid.hexdigest()
 
+def correctly_signed_response(decoded_xml, import_mngr=None):
+    response = samlp.response_from_string(decoded_xml)
+    verified = False
+
+        # Try to find the signing cert in the assertion
+    for assertion in response.assertion:
+        if not import_mngr:
+            mngr = load_certs_to_manager(cert_from_assertion(assertion))
+        else:
+            mngr = import_mngr
+            
+        #print assertion
+        #xml_file_pointer, xml_file = make_temp("%s" % assertion)
+
+        verified = verify_xml_with_manager(mngr, "%s" % assertion)
+        if not import_mngr:
+            mngr.destroy()
+        if verified:
+            break
+
+            # verify signature
+            #key_file_pointer, key_file = make_temp(cert,".der")
+            #verified = verify_xml("%s" % assertion, key_file)
+            #key_file_pointer.close()
+        
+        #xml_file_pointer.close()
+    
+    if verified:
+        return response
+    else:
+        return None
+    
 #form = cgi.FieldStorage()
 
 class Saml2Client:
@@ -131,7 +165,7 @@ class Saml2Client:
             raise Exception("Unkown binding type: %s" % binding)
         return (sid, response)
             
-    def verify(self, xml_response, requestor, outstanding, log=None ):
+    def verify(self, xml_response, requestor, outstanding={}, log=None, decode=True ):
         """ Verify a authentication response
         
         :param xml_response: The response as a XML string
@@ -139,9 +173,17 @@ class Saml2Client:
         :param outstanding: A collection of outstanding authentication requests
         :return: An identity description
         """
-        response = samlp.response_from_string(base64.b64decode(xml_response))
-        # get list of subjectConfirmationData
+
+        if decode:
+            decoded_xml = base64.b64decode(xml_response)
+        else:
+            decoded_xml = xml_response
         
+        response = correctly_signed_response(decoded_xml)
+        if not response:
+            log and log.error("Response was not correctly signed")
+            return ({}, "")
+            
         log and log.info("response: %s" % (response,))
         try:
             (ava, name_id, came_from) = self.do_response(response, requestor, 
