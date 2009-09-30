@@ -7,8 +7,8 @@ import hashlib
 import zlib
 
 from saml2 import samlp, saml
-from saml2.utils import create_id, verify_xml, verify_xml_with_manager
-from saml2.metadata import cert_from_assertion, make_temp
+from saml2.utils import create_id, verify_xml_with_manager
+from saml2.metadata import cert_from_assertion
 from saml2.metadata import load_certs_to_manager
 
 DEFAULT_BINDING = "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
@@ -76,7 +76,7 @@ class Saml2Client:
         
         :param query_id: Query identifier
         :param destination: Where to send the request
-        :param position: Where the user should be sent afterwards
+        :param position: The page to where the user should be sent afterwards.
         :param provider: Who I am 
         
         :return: A string representation of the authentication request
@@ -110,13 +110,25 @@ class Saml2Client:
         return base64.b64encode(zlib.compress(packet)[2:-4])
         
     def response(self, post, requestor, outstanding, log=None):
+        """ Deal with the AuthnResponse
         
+        :param post: The reply as a cgi.FieldStorage instance
+        :param requestor: The issuer of the AuthN request
+        :param outstanding: A dictionary with session IDs as keys and 
+            the original web request from the user before redirection
+            as values.
+        :param log: where loggin should go.
+        :return: A 2-tuple of identity information (in the form of a 
+            dictionary) and where the user should really be sent. This
+            might differ from what the IdP thinks since I don't want
+            to reveal verything to it and it might not trust me.
+        """
         # If the request contains a samlResponse, try to validate it
         if post.has_key("SAMLResponse"):
             saml_response =  post['SAMLResponse'].value
             if saml_response:
-                (identity, came_from) = self.verify(saml_response, requestor, outstanding, 
-                                        log)
+                (identity, came_from) = self.verify(saml_response, requestor, 
+                                                    outstanding, log)
             #relay_state = post["RelayState"].value
             return (identity, came_from)
         else:
@@ -128,10 +140,16 @@ class Saml2Client:
         """ Either verifies an authentication Response or if none is present
         send an authentication request.
         
+        :param spentityid: The SP EntityID
         :param binding: How the authentication request should be sent to the 
             IdP
         :param location: Where the IdP is.
-        :return: response
+        :param position: The service URL
+        :param requestor: Issuer of the AuthN request
+        :param my_name: The providers name
+        :param relay_state: To where the user should be returned after 
+            successfull log in.
+        :return: AuthnRequest reponse
         """
         
         sid = create_id()
@@ -165,15 +183,22 @@ class Saml2Client:
             raise Exception("Unkown binding type: %s" % binding)
         return (sid, response)
             
-    def verify(self, xml_response, requestor, outstanding={}, log=None, decode=True ):
+    def verify(self, xml_response, requestor, outstanding=None, log=None, 
+                decode=True ):
         """ Verify a authentication response
         
         :param xml_response: The response as a XML string
         :param requestor: The hostname of the machine
         :param outstanding: A collection of outstanding authentication requests
-        :return: An identity description
+        :param log: Where logging information should be sent
+        :param decode: There for testing purposes
+        :return: A 2-tuple consisting of an identity description and the 
+            real relay-state
         """
 
+        if not outstanding:
+            outstanding = {}
+        
         if decode:
             decoded_xml = base64.b64decode(xml_response)
         else:
@@ -198,7 +223,7 @@ class Saml2Client:
         ava["__userid"] = name_id
         return (ava, came_from)
   
-    def do_response(self, response, requestor, outstanding={}, log=None):
+    def do_response(self, response, requestor, outstanding=None, log=None):
         """
         Parse a authentication response, verify that it is a response for me and
         expected by me and that it is correct.
@@ -210,6 +235,9 @@ class Saml2Client:
         :result: A 2-tuple with attribute value assertions as a dictionary and
             the NameID
         """
+
+        if not outstanding:
+            outstanding = {}
                 
         # MUST contain *one* assertion
         assert len(response.assertion) == 1
@@ -217,7 +245,7 @@ class Saml2Client:
 
         if response.status:
             status = response.status
-            if status.status_code.value != "urn:oasis:names:tc:SAML:2.0:status:Success":
+            if status.status_code.value != samlp.SAMLP_NAMESPACE:
                 raise Exception("Not successfull according to status code")
             
         if response.in_response_to:
@@ -230,7 +258,7 @@ class Saml2Client:
                 
         # the assertion MUST contain one AuthNStatement
         assert len(assertion.authn_statement) == 1
-        authn_statement = assertion.authn_statement[0]
+        # authn_statement = assertion.authn_statement[0]
         # check authn_statement.session_index
 
         # The assertion can contain zero or one attributeStatements
@@ -253,7 +281,8 @@ class Saml2Client:
             elif LAX:
                 came_from = ""
             else:
-                raise Exception("Combination of session id and requestURI I don't recall")
+                raise Exception(
+                    "Combination of session id and requestURI I don't recall")
         
         # The subject must contain a name_id
         assert subject.name_id

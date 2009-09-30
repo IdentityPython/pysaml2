@@ -76,7 +76,7 @@ def verify(xml, key_file):
     lib_shutdown()
     return ret == 0
 
-# Verifies XML signature in xml_file using public key from key_file.
+# Verifies XML signature in xml string using public key from key_file.
 # Returns 0 on success or a negative value if an error occurs.
 def verify_xml(xml, key_file):
 
