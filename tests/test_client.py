@@ -3,9 +3,8 @@
 from saml2.client import Saml2Client
 from saml2 import samlp
 
-XML_RESPONSE_FILE = "saml_response.xml"
-XML_RESPONSE_FILE2 = "saml2_response.xml"
-#XML_RESPONSE_FILE3 = "sun_saml2_response.xml"
+XML_RESPONSE_FILE = "tests/saml_signed.xml"
+XML_RESPONSE_FILE2 = "tests/saml2_response.xml"
 
 def for_me(condition, me ):
     for restriction in condition.audience_restriction:
