@@ -185,7 +185,7 @@ class ExtensionElement(object):
         element_tree.append(new_element)
         self._transfer_to_element_tree(new_element)
 
-    def find_c_children(self, tag=None, namespace=None):
+    def find_children(self, tag=None, namespace=None):
         """Searches child nodes for objects with the desired tag/namespace.
 
         Returns a list of extension elements within this object whose tag
