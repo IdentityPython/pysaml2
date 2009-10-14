@@ -2,8 +2,7 @@
 
 from tempfile import NamedTemporaryFile
 from saml2 import md
-from saml2 import samlp
-import xmlsec
+from saml2 import samlp, BINDING_HTTP_REDIRECT
 import base64
 
 def make_temp(string, suffix="", decode=True):
@@ -27,38 +26,7 @@ def make_temp(string, suffix="", decode=True):
         ntf.write(string)
     ntf.seek(0)
     return ntf, ntf.name
-
-# def check_keys(x509_certificates):
-#     for cert in x509_certificates:
-#         fil, key_file = make_temp(cert,suffix=".der")
-#         key = xmlsec.cryptoAppKeyLoad(key_file, xmlsec.KeyDataFormatDer,
-#                                            None, None, None)
-#         fil.close
     
-def load_certs_to_manager(x509_certificates):
-    """ Creates simple keys manager and loads keys from certificates into it.
-    
-    :param x509_certificates: list of DER formated certificates
-    :return: Manager with the keys loaded.
-    """
-    mngr = xmlsec.KeysMngr()
-    if mngr is None:
-        print "Error: failed to create keys manager."
-        return None
-    if xmlsec.cryptoAppDefaultKeysMngrInit(mngr) < 0:
-        print "Error: failed to initialize keys manager."
-        mngr.destroy()
-        return None
-    for cert in x509_certificates:
-        fil, file_name = make_temp(cert)
-        # Load trusted cert
-        if mngr.certLoad(file_name, xmlsec.KeyDataFormatDer,
-                         xmlsec.KeyDataTypeTrusted) < 0:
-            print "Error: failed to load pem certificate from \"%s\"", file_name
-            mngr.destroy()
-            return None
-        fil.close()
-    return mngr
 
 def cert_from_key_info(key_info):
     """ Get all X509 certs from a KeyInfo instance. Care is taken to make sure
@@ -76,39 +44,90 @@ def cert_from_key_info(key_info):
             keys.append(cert)
     return keys
     
-def import_metadata(xml_str):
-    """ Import information; organization distinguish name, location and
-    certificates from a metadata file.
+class MetaData(dict):
+    """ A class to manage metadata information """
     
-    :param xml_str: The metadata as a XML string.
-    :return: Dictionary with location as keys and 2-tuples of organization
-        distinguised names and certs as values.
-    """
+    def __init_(self, arg=None):
+        dict.__init__(self, arg)
+        
+    def import_metadata(self,xml_str):
+        """ Import information; organization distinguish name, location and
+        certificates from a metadata file.
     
-    idps = {}
-    entities_descriptor = md.entities_descriptor_from_string(xml_str)
-    for entity_descriptor in entities_descriptor.entity_descriptor:
-        organization = entity_descriptor.organization
-        if organization:
-            odn = [dn.text.strip() \
-                        for dn in organization.organization_display_name]
-        else:
-            odn = []
-        for idp in entity_descriptor.idp_sso_descriptor:
-            if idp.protocol_support_enumeration != samlp.SAMLP_NAMESPACE:
-                # Not interested
-                continue
-            location = [sso.location for sso in idp.single_sign_on_service]
-            signing_keys = []
-            for key in idp.key_descriptor:
-                # only interested in keys that can be used for signing
-                if key.use and key.use != "signing": 
+        :param xml_str: The metadata as a XML string.
+        :return: Dictionary with location as keys and 2-tuples of organization
+            distinguised names and certs as values.
+        """
+
+        self._loc_key = {}
+        self._loc_bind = {}
+    
+        entities_descriptor = md.entities_descriptor_from_string(xml_str)
+        for entity_descriptor in entities_descriptor.entity_descriptor:
+            idps = []
+            
+            #print "--",len(entity_descriptor.idp_sso_descriptor)
+            for idp in entity_descriptor.idp_sso_descriptor:
+                if samlp.SAMLP_NAMESPACE not in idp.protocol_support_enumeration.split(" "):
+                    #print "<<<", idp.protocol_support_enumeration
                     continue
-                signing_keys.extend(cert_from_key_info(key.key_info))
-            for loc in location:
-                idps[loc] = (odn, signing_keys)
-    return idps
+                
+                idps.append(idp)
+                certs = []
+                for key_desc in idp.key_descriptor:
+                    certs.extend(cert_from_key_info(key_desc.key_info))
+                
+                certs = [make_temp(c, suffix=".der") for c in certs]
+                for sso in idp.single_sign_on_service:
+                    self._loc_key[sso.location] = certs
+                    
+            if idps == []:
+                #print "IGNORE", entity_descriptor.entity_id
+                continue
+                
+            entity_descriptor.idp_sso_descriptor = idps
+                
+            self[entity_descriptor.entity_id] = entity_descriptor
     
+    def single_sign_on_services(self, entity_id, 
+                                binding = BINDING_HTTP_REDIRECT):
+        """ Get me all single-sign-on services that supports the specified
+        binding version.
+        
+        :param entity_id: The EntityId
+        :param binding: A binding identifier
+        :return: list of single-sign-on service location run by the entity 
+            with the specified EntityId.
+        """
+        try:
+            desc = self[entity_id]
+        except KeyError:
+            return None
+        loc = []
+        for idp in desc.idp_sso_descriptor:
+            for sso in idp.single_sign_on_service:
+                if binding == sso.binding:
+                    loc.append(sso.location)
+        return loc
+        
+    def locations(self):
+        """ Returns all the locations that are know using this metadata file.
+        
+        :return: A list of IdP locations
+        """
+        return self._loc_key.keys()
+        
+    def certs(self, loc):
+        """ Get all certificates that are used by a IdP at the specified
+        location. There can be more than one because of overlapping lifetimes
+        of the certs.
+        
+        :param loc: The location of the IdP
+        :return: a list of 2-tuples (file pointer,file name) that represents
+            certificates used by the IdP at the location loc.
+        """
+        return self._loc_key[loc]
+        
 def cert_from_assertion(assertion):
     """ Find certificates that are part of an assertion
     
@@ -120,4 +139,20 @@ def cert_from_assertion(assertion):
             return cert_from_key_info(assertion.signature.key_info)
     return []
     
+def make_entity_description():
+    org = md.Organization(
+            organization_name = [md.Organization(text="Example Inc.")],
+            organization_url = [md.OrganizationURL(text="http://www.example.com/")])
+            
+    spsso = md.SPSSODescriptor(
+            protocolSupportEnumeration = samlp.SAMLP_NAMESPACE,
+            want_assertions_signed = False,
+            authn_requests_signed = False
+            )
+            
+    return md.EntityDescription(
+        entity_id = "http://xenosmilus.umdc.umu.se:8087/",
+        organization = org,
+        sp_sso_descriptor = [spsso]
+        )
     

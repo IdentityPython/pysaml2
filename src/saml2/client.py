@@ -3,15 +3,20 @@ import urllib
 import saml2
 import base64
 import time
-import hashlib
+try:
+    from hashlib import md5
+except ImportError:
+    from md5 import md5
 import zlib
 
-from saml2 import samlp, saml
-from saml2.utils import create_id, verify_xml_with_manager
-from saml2.metadata import cert_from_assertion
-from saml2.metadata import load_certs_to_manager
+from subprocess import Popen, PIPE
 
-DEFAULT_BINDING = "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
+from saml2 import samlp, saml, metadata
+from saml2.sigver import correctly_signed_response
+from saml2.metadata import cert_from_assertion
+#from saml2.metadata import load_certs_to_manager
+
+DEFAULT_BINDING = saml2.BINDING_HTTP_REDIRECT
 
 FORM_SPEC = """<form method="post" action="%s">
    <input type="hidden" name="SAMLRequest" value="%s" />
@@ -24,51 +29,57 @@ LAX = True
 def _sid(seed=""):
     """The hash of the server time + seed makes an unique SID for each session.
     """
-    sid = hashlib.md5()
+    sid = md5()
     sid.update(repr(time.time()))
     if seed:
         sid.update(seed)
     return sid.hexdigest()
 
-def correctly_signed_response(decoded_xml, import_mngr=None):
-    response = samlp.response_from_string(decoded_xml)
-    verified = False
-
-        # Try to find the signing cert in the assertion
-    for assertion in response.assertion:
-        if not import_mngr:
-            mngr = load_certs_to_manager(cert_from_assertion(assertion))
-        else:
-            mngr = import_mngr
-            
-        #print assertion
-        #xml_file_pointer, xml_file = make_temp("%s" % assertion)
-
-        verified = verify_xml_with_manager(mngr, "%s" % assertion)
-        if not import_mngr:
-            mngr.destroy()
-        if verified:
-            break
-
-            # verify signature
-            #key_file_pointer, key_file = make_temp(cert,".der")
-            #verified = verify_xml("%s" % assertion, key_file)
-            #key_file_pointer.close()
-        
-        #xml_file_pointer.close()
+def get_date_and_time(base=None):
+    if base is None:
+        base = time.time()
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(base))
     
-    if verified:
-        return response
-    else:
-        return None
-    
+# def correctly_signed_response(decoded_xml, import_mngr=None):
+#     response = samlp.response_from_string(decoded_xml)
+#     verified = False
+# 
+#         # Try to find the signing cert in the assertion
+#     for assertion in response.assertion:
+#         if not import_mngr:
+#             mngr = load_certs_to_manager(cert_from_assertion(assertion))
+#         else:
+#             mngr = import_mngr
+#             
+#         #print assertion
+#         #xml_file_pointer, xml_file = make_temp("%s" % assertion)
+# 
+#         verified = verify_xml_with_manager(mngr, "%s" % assertion)
+#         print "Verified", verified
+#         if not import_mngr:
+#             mngr.destroy()
+#         if verified:
+#             break
+# 
+#             # verify signature
+#             #key_file_pointer, key_file = make_temp(cert,".der")
+#             #verified = verify_xml("%s" % assertion, key_file)
+#             #key_file_pointer.close()
+#         
+#         #xml_file_pointer.close()
+#     
+#     if verified:
+#         return response
+#     else:
+#         return None
 #form = cgi.FieldStorage()
 
 class Saml2Client:
     
-    def __init__(self, environ, session=None, service_url=None):
+    def __init__(self, environ, session=None, service_url=None, metadata=None):
         self.session = session or {}
         self.environ = environ
+        self.metadata = metadata
 
     def create_authn_request(self, query_id, destination, service_url,
                                 requestor, my_name):
@@ -152,7 +163,7 @@ class Saml2Client:
         :return: AuthnRequest reponse
         """
         
-        sid = create_id()
+        sid = _sid()
         authen_req = self.create_authn_request(sid, location, position, 
                             requestor, my_name)
         if binding == saml2.BINDING_HTTP_POST:
@@ -207,9 +218,11 @@ class Saml2Client:
         response = correctly_signed_response(decoded_xml)
         if not response:
             log and log.error("Response was not correctly signed")
+            print "Response was not correctly signed"
             return ({}, "")
-            
+
         log and log.info("response: %s" % (response,))
+        print response
         try:
             (ava, name_id, came_from) = self.do_response(response, requestor, 
                                                 outstanding, log)
@@ -245,8 +258,10 @@ class Saml2Client:
 
         if response.status:
             status = response.status
-            if status.status_code.value != samlp.SAMLP_NAMESPACE:
-                raise Exception("Not successfull according to status code")
+            if status.status_code.value != samlp.STATUS_SUCCESS:
+                raise Exception(
+                    "Not successfull according to status code: %s" % \
+                    status.status_code.value)
             
         if response.in_response_to:
             if response.in_response_to in outstanding:
@@ -305,6 +320,99 @@ class Saml2Client:
             
         return (ava, name_id, came_from)
 
+    def init_request(self, request, destination):
+        request.id = _sid()
+        request.version = "2.0"
+        request.issue_instant = date_and_time()
+        request.destination = destination
+        return request
+        
+    def create_attribute_query(self, subject_id, destination, attribute=None,
+            sp_name_qualifier=None, name_qualifier=None):
+        """ Constructs an AttributeQuery 
+        
+        :param subject_id: The identifier of the subject
+        :param destination: To whom the query should be sent
+        :param attribute: A dictionary of attributes and values that is asked for
+        :param sp_name_qualifier: The unique identifier of the 
+            service provider or affiliation of providers for whom the 
+            identifier was generated.
+        :param name_qualifier: The unique identifier of the identity 
+            provider that generated the identifier.
+        :return: An AttributeQuery instance
+        """
+        
+        attr_query = self.init_request(samlp.AttributeQuery())
+        
+        subject = samlp.Subject()
+        name_id = samlp.NameID()
+        name_id.format = NAMEID_FORMAT_PERSISTENT
+        if name_qualifier:
+            name_id.name_qualifier = name_qualifier
+        if sp_name_qualifier:
+            name_id.sp_name_qualifier = sp_name_qualifier
+        name_id.text = subject_id
+        subject.name_id = name_id
+        
+        attr_query.subject = subject
+        if attribute:
+            attrs = []
+            for attr,values in attribute.items():
+                sattr = saml.Attribute()
+                sattr.name = attr
+                #sattr.name_format = NAME_FORMAT_UNSPECIFIED
+                if values:
+                    aval = [saml.AttributeValue(text=val) for val in values]
+                    sattr.attribute_value = aval
+                attrs.append(sattr)
+                    
+            attr_query.attribute = attrs
+        
+        return "%s" % attr_query
+    
+    def attribute_request(self, subject_id, destination, attribute=None,
+                sp_name_qualifier=None, name_qualifier=None):
+        """ Does a attribute request from an attribute authority
+
+        :param subject_id: The identifier of the subject
+        :param destination: To whom the query should be sent
+        :param attribute: A dictionary of attributes and values that is asked for
+        :param sp_name_qualifier: The unique identifier of the 
+            service provider or affiliation of providers for whom the 
+            identifier was generated.
+        :param name_qualifier: The unique identifier of the identity 
+            provider that generated the identifier.
+        :return: The attributes returned
+        """
+        request = self.create_attribute_query()
+        
+    def make_logout_request(self, subject_id, reason=None, 
+                not_on_or_after=None):
+        """ Constructs an LogoutRequest
+
+        :param subject_id: The identifier of the subject
+        :param reason: An indication of the reason for the logout, in the 
+            form of a URI reference.
+        :param not_on_or_after: The time at which the request expires, 
+            after which the recipient may discard the message.
+        :return: An AttributeQuery instance
+        """
+
+        logout_req = self.init_request(samlp.LogoutRequest())
+        logout_req.session_index = _sid()
+        logout_req.base_id = samlp.BaseID(text=subject_id)
+        if reason:
+            logout_req.reason = reason
+        if not_on_or_after:
+            logout_req.not_on_or_after = not_on_or_after
+            
+        return logout_req
+        
+    def logout(self, subject_id, reason=None, not_on_or_after=None):
+        logout_req = self.make_logout_request(subject_id, reason,
+                        not_on_or_after)
+        
+# ----------------------------------------------------------------------
 
 #2009-07-05T15:35:29Z
 TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"

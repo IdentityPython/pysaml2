@@ -17,13 +17,21 @@
 """Contains utility methods used with SAML-2."""
 
 import saml2
-import libxml2
+try:
+    import libxml2 as libxml
+except ImportError:
+    import lxml as libxml
 import xmlsec
 import random
 import time
 
+TEST = True
+
 # TODO: write tests for these methods
 
+class VerifyError(Exception):
+    pass
+    
 def create_id():
     ret = ""
     for _ in range(40):
@@ -37,8 +45,8 @@ def get_date_and_time(base=None):
 
 def lib_init():
     # Init libxml library
-    libxml2.initParser()
-    libxml2.substituteEntitiesDefault(1)
+    libxml.initParser()
+    libxml.substituteEntitiesDefault(1)
 
     # Init xmlsec library
     if xmlsec.init() < 0:
@@ -68,7 +76,7 @@ def lib_shutdown():
     xmlsec.shutdown()
 
     # Shutdown LibXML2
-    libxml2.cleanupParser()
+    libxml.cleanupParser()
 
 def verify(xml, key_file):
     lib_init()
@@ -80,7 +88,7 @@ def verify(xml, key_file):
 # Returns 0 on success or a negative value if an error occurs.
 def verify_xml(xml, key_file):
 
-    doc = libxml2.parseDoc(xml)
+    doc = libxml.parseDoc(xml)
         
     if doc is None or doc.getRootElement() is None:
         cleanup(doc)
@@ -136,37 +144,38 @@ def verify_xml_with_manager(mngr, xml):
     assert(mngr)
     assert(xml)
 
-    doc = libxml2.parseDoc(xml)
+    doc = libxml.parseDoc(xml)
     if doc is None or doc.getRootElement() is None:
-        print "Error: unable to parse xml"
-        return cleanup(doc)
+        cleanup(doc)
+        raise saml2.Error("Error: unable to parse xml")
+
 
     # Find start node
     node = xmlsec.findNode(doc.getRootElement(),
                            xmlsec.NodeSignature, xmlsec.DSigNs)
     if node is None:
-        print "Error: start node not found in \"%s\"", xml_file
-
+        raise saml2.Error("Error: start node not found in xml doc")
+    elif TEST:
+        print "Start node: %s" % (node,)
+        
     # Create signature context
     dsig_ctx = xmlsec.DSigCtx(mngr)
     if dsig_ctx is None:
-        print "Error: failed to create signature context"
-        return cleanup(doc)
+        cleanup(doc)
+        raise saml2.Error("Error: failed to create signature context")
 
     # Verify signature
     if dsig_ctx.verify(node) < 0:
-        print "Error: signature verify"
-        return cleanup(doc, dsig_ctx)
+        cleanup(doc, dsig_ctx)
+        raise saml2.Error( "Error: signature verify")
 
     # Print verification result to stdout
-    if dsig_ctx.status == xmlsec.DSigStatusSucceeded:
-        print "Signature is OK"
-    else:
-        print "Signature is INVALID"
+    if dsig_ctx.status != xmlsec.DSigStatusSucceeded:
+        raise saml2.Error("Signature is INVALID")
 
     # Success
     return cleanup(doc, dsig_ctx, 1)
-        
+
 def sign(xml, key_file, cert_file=None):
     lib_init()
     ret = sign_xml(xml, key_file, cert_file)
@@ -179,7 +188,7 @@ def sign(xml, key_file, cert_file=None):
 def sign_xml(xml, key_file, cert_file=None):
 
     # Load template
-    doc = libxml2.parseDoc(xml)
+    doc = libxml.parseDoc(xml)
 
     if doc is None or doc.getRootElement() is None:
         cleanup(doc)
@@ -235,7 +244,7 @@ def sign_xml(xml, key_file, cert_file=None):
 
     return ret
 
-def cleanup(doc=None, dsig_ctx=None, res=-1):
+def cleanup(doc=None, dsig_ctx=None, res=0):
     if dsig_ctx is not None:
         dsig_ctx.destroy()
     if doc is not None:
