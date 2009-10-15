@@ -4,6 +4,7 @@ from saml2 import samlp
 from tempfile import NamedTemporaryFile
 from subprocess import Popen, PIPE
 import base64
+import random
 
 XMLSEC_BINARY = "/usr/local/bin/xmlsec1"
 ID_ATTR = "ID"
@@ -96,7 +97,8 @@ def correctly_signed_response(decoded_xml):
 
         if _TEST_: 
             print " ".join(com_list)
-        verified = _parse_popen_output(Popen(com_list, stderr=PIPE).communicate()[1])
+        verified = _parse_popen_output(Popen(com_list, 
+                                        stderr=PIPE).communicate()[1])
         if _TEST_:
             print "Verify result: '%s'" % (verified,)
 
@@ -114,8 +116,8 @@ def sign_using_xmlsec(statement, sign_key):
     """xmlsec1 --sign --privkey-pem test.key --id-attr:ID 
         urn:oasis:names:tc:SAML:2.0:assertion:Assertion saml_response.xml"""
         
-    fil_p, fil = make_temp("%s" % statement, decode=False)
-    pem_file_pointer, pem_file = make_temp("%s" % sign_key, ".pem")
+    _, fil = make_temp("%s" % statement, decode=False)
+    _, pem_file = make_temp("%s" % sign_key, ".pem")
     
     com_list = [XMLSEC_BINARY, "--sign", 
                 "--privkey-cert-pem", pem_file, "--id-attr:%s" % ID_ATTR, 

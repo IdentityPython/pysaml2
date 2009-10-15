@@ -34,8 +34,8 @@ except ImportError:
 import saml2
 from saml2 import create_class_from_xml_string
 
-DS_NAMESPACE = 'http://www.w3.org/2000/09/xmldsig#'
-DS_TEMPLATE = '{http://www.w3.org/2000/09/xmldsig#}%s'
+NAMESPACE = 'http://www.w3.org/2000/09/xmldsig#'
+TEMPLATE = '{http://www.w3.org/2000/09/xmldsig#}%s'
 
 ENCODING_BASE64 = 'http://www.w3.org/2000/09/xmldsig#base64'
 DIGEST_SHA1 = 'http://www.w3.org/2000/09/xmldsig#sha1'
@@ -62,7 +62,7 @@ class Object(DsBase):
     """The ds:Object element"""
 
     c_tag = 'Object'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
     c_attributes['Id'] = 'identifier'
@@ -95,7 +95,7 @@ class MgmtData(DsBase):
     """The ds:MgmtData element"""
 
     c_tag = 'MgmtData'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
 
@@ -108,7 +108,7 @@ class SPKISexp(DsBase):
     """The ds:SPKISexp element"""
 
     c_tag = 'SPKISexp'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
 
@@ -121,10 +121,10 @@ class SPKIData(DsBase):
     """The ds:SPKIData element"""
 
     c_tag = 'SPKIData'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
-    c_children['{%s}SPKISexp' % DS_NAMESPACE] = ('spki_sexp', [SPKISexp])
+    c_children['{%s}SPKISexp' % NAMESPACE] = ('spki_sexp', [SPKISexp])
 
     def __init__(self, spki_sexp=None, text=None,
                 extension_elements=None, extension_attributes=None):
@@ -149,7 +149,7 @@ class PGPKeyID(DsBase):
     """The ds:PGPKeyID element"""
 
     c_tag = 'PGPKeyID'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
 
@@ -162,7 +162,7 @@ class PGPKeyPacket(DsBase):
     """The ds:PGPKeyPacket element"""
 
     c_tag = 'PGPKeyPacket'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
 
@@ -175,11 +175,11 @@ class PGPData(DsBase):
     """The ds:PGPData element"""
 
     c_tag = 'PGPData'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
-    c_children['{%s}PGPKeyID' % DS_NAMESPACE] = ('pgp_key_id', PGPKeyID)
-    c_children['{%s}PGPKeyPacket' % DS_NAMESPACE] = (
+    c_children['{%s}PGPKeyID' % NAMESPACE] = ('pgp_key_id', PGPKeyID)
+    c_children['{%s}PGPKeyPacket' % NAMESPACE] = (
         'pgp_key_packet', PGPKeyPacket)
     c_child_order = ['pgp_key_id', 'pgp_key_packet']
 
@@ -208,7 +208,7 @@ class X509IssuerName(DsBase):
     """The ds:X509IssuerName element"""
 
     c_tag = 'X509IssuerName'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
 
@@ -221,7 +221,7 @@ class X509IssuerNumber(DsBase):
     """The ds:X509IssuerNumber element"""
 
     c_tag = 'X509IssuerNumber'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
 
@@ -234,12 +234,12 @@ class X509IssuerSerial(DsBase):
     """The ds:X509IssuerSerial element"""
 
     c_tag = 'X509IssuerSerial'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
-    c_children['{%s}X509IssuerName' % DS_NAMESPACE] = (
+    c_children['{%s}X509IssuerName' % NAMESPACE] = (
         'x509_issuer_name', X509IssuerName)
-    c_children['{%s}X509IssuerNumber' % DS_NAMESPACE] = (
+    c_children['{%s}X509IssuerNumber' % NAMESPACE] = (
         'x509_issuer_number', X509IssuerNumber)
     c_child_order = ['x509_issuer_name', 'x509_issuer_number']
 
@@ -269,7 +269,7 @@ class X509SKI(DsBase):
     """The ds:X509SKI element"""
 
     c_tag = 'X509SKI'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
 
@@ -282,7 +282,7 @@ class X509SubjectName(DsBase):
     """The ds:X509SubjectName element"""
 
     c_tag = 'X509SubjectName'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
 
@@ -295,7 +295,7 @@ class X509Certificate(DsBase):
     """The ds:X509Certificate element"""
 
     c_tag = 'X509Certificate'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
 
@@ -308,7 +308,7 @@ class X509CRL(DsBase):
     """The ds:X509CRL element"""
 
     c_tag = 'X509CRL'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
 
@@ -321,17 +321,17 @@ class X509Data(DsBase):
     """The ds:X509Data element"""
 
     c_tag = 'X509Data'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
-    c_children['{%s}X509IssuerSerial' % DS_NAMESPACE] = (
+    c_children['{%s}X509IssuerSerial' % NAMESPACE] = (
         'x509_issuer_serial', [X509IssuerSerial])
-    c_children['{%s}X509SKI' % DS_NAMESPACE] = ('x509_ski', [X509SKI])
-    c_children['{%s}X509SubjectName' % DS_NAMESPACE] = (
+    c_children['{%s}X509SKI' % NAMESPACE] = ('x509_ski', [X509SKI])
+    c_children['{%s}X509SubjectName' % NAMESPACE] = (
         'x509_subject_name', [X509SubjectName])
-    c_children['{%s}X509Certificate' % DS_NAMESPACE] = (
+    c_children['{%s}X509Certificate' % NAMESPACE] = (
         'x509_certificate', [X509Certificate])
-    c_children['{%s}X509CRL' % DS_NAMESPACE] = ('x509_crl', [X509CRL])
+    c_children['{%s}X509CRL' % NAMESPACE] = ('x509_crl', [X509CRL])
     c_child_order = ['x509_issuer_serial', 'x509_ski', 'x509_subject_name',
                                     'x509_certificate', 'x509_crl']
 
@@ -368,11 +368,11 @@ class XPath(DsBase):
     """The ds:XPath element"""
 
     c_tag = 'XPath'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
 
-def x_path_from_string(xml_string):
+def xpath_from_string(xml_string):
     """ Create XPath instance from an XML string """
     return create_class_from_xml_string(XPath, xml_string)
 
@@ -381,11 +381,11 @@ class Transform(DsBase):
     """The ds:Transform element"""
 
     c_tag = 'Transform'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
     c_attributes['Algorithm'] = 'algorithm'
-    c_children['{%s}XPath' % DS_NAMESPACE] = ('xpath', [XPath])
+    c_children['{%s}XPath' % NAMESPACE] = ('xpath', [XPath])
 
     def __init__(self, xpath=None, algorithm=None, text=None,
                 extension_elements=None, extension_attributes=None):
@@ -411,10 +411,10 @@ class Transforms(DsBase):
     """The ds:Transforms element"""
 
     c_tag = 'Transforms'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
-    c_children['{%s}Transform' % DS_NAMESPACE] = ('transform', [Transform])
+    c_children['{%s}Transform' % NAMESPACE] = ('transform', [Transform])
 
     def __init__(self, transform=None, text=None,
                 extension_elements=None, extension_attributes=None):
@@ -438,12 +438,12 @@ class RetrievalMethod(DsBase):
     """The ds:RetrievalMethod element"""
 
     c_tag = 'RetrievalMethod'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
     c_attributes['URI'] = 'uri'
     c_attributes['Type'] = 'type'
-    c_children['{%s}Transforms' % DS_NAMESPACE] = ('transforms', [Transforms])
+    c_children['{%s}Transforms' % NAMESPACE] = ('transforms', [Transforms])
 
     def __init__(self, transforms=None, uri=None, typ=None, text=None,
                 extension_elements=None, extension_attributes=None):
@@ -471,7 +471,7 @@ class Modulus(DsBase):
     """The ds:Modulus element"""
 
     c_tag = 'Modulus'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
 
@@ -484,7 +484,7 @@ class Exponent(DsBase):
     """The ds:Exponent element"""
 
     c_tag = 'Exponent'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
 
@@ -497,11 +497,11 @@ class RSAKeyValue(DsBase):
     """The ds:RSAKeyValue element"""
 
     c_tag = 'RSAKeyValue'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
-    c_children['{%s}Modulus' % DS_NAMESPACE] = ('modulus', Modulus)
-    c_children['{%s}Exponent' % DS_NAMESPACE] = ('exponent', Exponent)
+    c_children['{%s}Modulus' % NAMESPACE] = ('modulus', Modulus)
+    c_children['{%s}Exponent' % NAMESPACE] = ('exponent', Exponent)
     c_child_order = ['modulus', 'exponent']
 
     def __init__(self, modulus=None, exponent=None, text=None,
@@ -528,7 +528,7 @@ class DsP(DsBase):
     """The ds:P element"""
 
     c_tag = 'P'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
 
@@ -541,7 +541,7 @@ class DsQ(DsBase):
     """The ds:Q element"""
 
     c_tag = 'Q'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
 
@@ -554,7 +554,7 @@ class DsG(DsBase):
     """The ds:G element"""
 
     c_tag = 'G'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
 
@@ -567,7 +567,7 @@ class DsY(DsBase):
     """The ds:Y element"""
 
     c_tag = 'Y'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
 
@@ -580,7 +580,7 @@ class DsJ(DsBase):
     """The ds:J element"""
 
     c_tag = 'J'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
 
@@ -593,7 +593,7 @@ class Seed(DsBase):
     """The ds:Seed element"""
 
     c_tag = 'Seed'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
 
@@ -606,7 +606,7 @@ class PgenCounter(DsBase):
     """The ds:PgenCounter element"""
 
     c_tag = 'PgenCounter'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
 
@@ -619,16 +619,16 @@ class DSAKeyValue(DsBase):
     """The ds:DSAKeyValue element"""
 
     c_tag = 'DSAKeyValue'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
-    c_children['{%s}P' % DS_NAMESPACE] = ('p', DsP)
-    c_children['{%s}Q' % DS_NAMESPACE] = ('q', DsQ)
-    c_children['{%s}G' % DS_NAMESPACE] = ('g', DsG)
-    c_children['{%s}Y' % DS_NAMESPACE] = ('y', DsY)
-    c_children['{%s}J' % DS_NAMESPACE] = ('j', DsJ)
-    c_children['{%s}Seed' % DS_NAMESPACE] = ('seed', Seed)
-    c_children['{%s}PgenCounter' % DS_NAMESPACE] = ('pgen_counter', PgenCounter)
+    c_children['{%s}P' % NAMESPACE] = ('p', DsP)
+    c_children['{%s}Q' % NAMESPACE] = ('q', DsQ)
+    c_children['{%s}G' % NAMESPACE] = ('g', DsG)
+    c_children['{%s}Y' % NAMESPACE] = ('y', DsY)
+    c_children['{%s}J' % NAMESPACE] = ('j', DsJ)
+    c_children['{%s}Seed' % NAMESPACE] = ('seed', Seed)
+    c_children['{%s}PgenCounter' % NAMESPACE] = ('pgen_counter', PgenCounter)
 
     c_child_order = ['p', 'q', 'g', 'y', 'j', 'seed', 'pgen_counter']
 
@@ -667,12 +667,12 @@ class KeyValue(DsBase):
     """The ds:KeyValue element"""
 
     c_tag = 'KeyValue'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
-    c_children['{%s}RSAKeyValue' % DS_NAMESPACE] = ('rsa_key_value', 
+    c_children['{%s}RSAKeyValue' % NAMESPACE] = ('rsa_key_value', 
                                                     RSAKeyValue)
-    c_children['{%s}DSAKeyValue' % DS_NAMESPACE] = ('dsa_key_value', 
+    c_children['{%s}DSAKeyValue' % NAMESPACE] = ('dsa_key_value', 
                                                     DSAKeyValue)
 
     c_child_order = ['rsa_key_value', 'dsa_key_value']
@@ -701,7 +701,7 @@ class KeyName(DsBase):
     """The ds:KeyName element"""
 
     c_tag = 'KeyName'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
 
@@ -714,18 +714,18 @@ class KeyInfo(DsBase):
     """The ds:KeyInfo element"""
 
     c_tag = 'KeyInfo'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
     c_attributes['Id'] = "identifier"
-    c_children['{%s}KeyName' % DS_NAMESPACE] = ('key_name', [KeyName])
-    c_children['{%s}KeyValue' % DS_NAMESPACE] = ('key_value', [KeyValue])
-    c_children['{%s}RetrievalMethod' % DS_NAMESPACE] = (
+    c_children['{%s}KeyName' % NAMESPACE] = ('key_name', [KeyName])
+    c_children['{%s}KeyValue' % NAMESPACE] = ('key_value', [KeyValue])
+    c_children['{%s}RetrievalMethod' % NAMESPACE] = (
         'retrieval_method', [RetrievalMethod])
-    c_children['{%s}X509Data' % DS_NAMESPACE] = ('x509_data', [X509Data])
-    c_children['{%s}PGPData' % DS_NAMESPACE] = ('pgp_data', [PGPData])
-    c_children['{%s}SPKIData' % DS_NAMESPACE] = ('spki_data', [SPKIData])
-    c_children['{%s}MgmtData' % DS_NAMESPACE] = ('mgmt_data', [MgmtData])
+    c_children['{%s}X509Data' % NAMESPACE] = ('x509_data', [X509Data])
+    c_children['{%s}PGPData' % NAMESPACE] = ('pgp_data', [PGPData])
+    c_children['{%s}SPKIData' % NAMESPACE] = ('spki_data', [SPKIData])
+    c_children['{%s}MgmtData' % NAMESPACE] = ('mgmt_data', [MgmtData])
 
     c_child_order = ['key_name', 'key_value', 'retrieval_method', 'x509_data',
                     'pgp_data', 'spki_data', 'mgmt_data']
@@ -768,7 +768,7 @@ class DigestValue(DsBase):
     """The ds:DigestValue element"""
 
     c_tag = 'DigestValue'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
 
@@ -781,7 +781,7 @@ class DigestMethod(DsBase):
     """The ds:DigestMethod element"""
 
     c_tag = 'DigestMethod'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
     c_attributes['Algorithm'] = "algorithm"
@@ -808,16 +808,16 @@ class Reference(DsBase):
     """The ds:Reference element"""
 
     c_tag = 'Reference'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
     c_attributes['Id'] = "identifier"
     c_attributes['URI'] = "uri"
     c_attributes['Type'] = "type"
-    c_children['{%s}Transforms' % DS_NAMESPACE] = ('transforms', [Transforms])
-    c_children['{%s}DigestMethod' % DS_NAMESPACE] = (
+    c_children['{%s}Transforms' % NAMESPACE] = ('transforms', [Transforms])
+    c_children['{%s}DigestMethod' % NAMESPACE] = (
         'digest_method', [DigestMethod])
-    c_children['{%s}DigestValue' % DS_NAMESPACE] = ('digest_value', 
+    c_children['{%s}DigestValue' % NAMESPACE] = ('digest_value', 
                                                     [DigestValue])
     c_child_order = ['transforms', 'digest_method', 'digest_value']
 
@@ -855,7 +855,7 @@ class HMACOutputLength(DsBase):
     """The ds:HMACOutputLength element"""
 
     c_tag = 'HMACOutputLength'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
 
@@ -868,11 +868,11 @@ class SignatureMethod(DsBase):
     """The ds:SignatureMethod element"""
 
     c_tag = 'SignatureMethod'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
     c_attributes['Algorithm'] = "algorithm"
-    c_children['{%s}HMACOutputLength' % DS_NAMESPACE] = (
+    c_children['{%s}HMACOutputLength' % NAMESPACE] = (
         'hmac_output_length', HMACOutputLength)
 
     def __init__(self, algorithm=None, hmac_output_length=None, text=None,
@@ -899,7 +899,7 @@ class CanonicalizationMethod(DsBase):
     """The ds:CanonicalizationMethod element"""
 
     c_tag = 'CanonicalizationMethod'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
     c_attributes['Algorithm'] = "algorithm"
@@ -926,15 +926,15 @@ class SignedInfo(DsBase):
     """The ds:SignedInfo element"""
 
     c_tag = 'SignedInfo'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
     c_attributes['Id'] = "identifier"
-    c_children['{%s}CanonicalizationMethod' % DS_NAMESPACE] = (
+    c_children['{%s}CanonicalizationMethod' % NAMESPACE] = (
         'canonicalization_method', CanonicalizationMethod)
-    c_children['{%s}SignatureMethod' % DS_NAMESPACE] = (
+    c_children['{%s}SignatureMethod' % NAMESPACE] = (
         'signature_method', SignatureMethod)
-    c_children['{%s}Reference' % DS_NAMESPACE] = ('reference', [Reference])
+    c_children['{%s}Reference' % NAMESPACE] = ('reference', [Reference])
     c_child_order = ['canonicalization_method', 'signature_method',
                                     'reference']
 
@@ -967,7 +967,7 @@ class SignatureValue(DsBase):
     """The ds:SignatureValue element"""
 
     c_tag = 'SignatureValue'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
     c_attributes['Id'] = "identifier"
@@ -995,15 +995,15 @@ class Signature(DsBase):
     """The ds:Signature element"""
 
     c_tag = 'Signature'
-    c_namespace = DS_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
     c_attributes['Id'] = "identifier"
-    c_children['{%s}SignedInfo' % DS_NAMESPACE] = ('signed_info', SignedInfo)
-    c_children['{%s}SignatureValue' % DS_NAMESPACE] = (
+    c_children['{%s}SignedInfo' % NAMESPACE] = ('signed_info', SignedInfo)
+    c_children['{%s}SignatureValue' % NAMESPACE] = (
         'signature_value', SignatureValue)
-    c_children['{%s}KeyInfo' % DS_NAMESPACE] = ('key_info', KeyInfo)
-    c_children['{%s}Object' % DS_NAMESPACE] = ('object', [Object])
+    c_children['{%s}KeyInfo' % NAMESPACE] = ('key_info', KeyInfo)
+    c_children['{%s}Object' % NAMESPACE] = ('object', [Object])
     c_child_order = ["signed_info", "signature_value", "key_info", "object"]
 
     def __init__(self, identifier=None, signed_info=None, signature_value=None,
@@ -1056,3 +1056,48 @@ def get_empty_signature(canonicalization_method_algorithm=C14N_WITH_C,
                             key_info=KeyInfo(key_value=KeyValue()))
     return signature
 
+
+ELEMENT_FROM_STRING = {
+    Object.c_tag: object_from_string,
+    MgmtData.c_tag: mgmt_data_from_string,
+    SPKISexp.c_tag: spki_sexp_from_string,
+    SPKIData.c_tag: spki_data_from_string,
+    PGPKeyID.c_tag: pgp_key_id_from_string,
+    PGPKeyPacket.c_tag: pgp_key_packet_from_string,
+    PGPData.c_tag: pgp_data_from_string,
+    X509IssuerName.c_tag: x509_issuer_name_from_string,
+    X509IssuerNumber.c_tag: x509_issuer_number_from_string,
+    X509IssuerSerial.c_tag: x509_issuer_serial_from_string,
+    X509SKI.c_tag: x509_ski_from_string,
+    X509SubjectName.c_tag: x509_subject_name_from_string,
+    X509Certificate.c_tag: x509_certificate_from_string,
+    X509CRL.c_tag: x509_crl_from_string,
+    X509Data.c_tag: x509_data_from_string,
+    XPath.c_tag: xpath_from_string,
+    Transform.c_tag: transform_from_string,
+    Transforms.c_tag: transforms_from_string,
+    RetrievalMethod.c_tag: retrieval_method_from_string,
+    Modulus.c_tag: modulus_from_string,
+    Exponent.c_tag: exponent_from_string,
+    RSAKeyValue.c_tag: rsa_key_value_from_string,
+    DsP.c_tag: p_from_string,
+    DsQ.c_tag: q_from_string,
+    DsG.c_tag: g_from_string,
+    DsY.c_tag: y_from_string,
+    DsJ.c_tag: j_from_string,
+    Seed.c_tag: seed_from_string,
+    PgenCounter.c_tag: pgen_counter_from_string,
+    DSAKeyValue.c_tag: dsa_key_value_from_string,
+    KeyValue.c_tag: key_value_from_string,
+    KeyName.c_tag: key_name_from_string,
+    KeyInfo.c_tag: key_info_from_string,
+    DigestValue.c_tag: digest_value_from_string,
+    DigestMethod.c_tag: digest_method_from_string,
+    Reference.c_tag: reference_from_string,
+    HMACOutputLength.c_tag: hmac_output_length_from_string,
+    SignatureMethod.c_tag: signature_method_from_string,
+    CanonicalizationMethod.c_tag: canonicalization_method_from_string,
+    SignedInfo.c_tag: signed_info_from_string,
+    SignatureValue.c_tag: signature_value_from_string,
+    Signature.c_tag: signature_from_string,
+}

@@ -49,8 +49,10 @@ class MetaData(dict):
     
     def __init_(self, arg=None):
         dict.__init__(self, arg)
+        self._loc_key = {}
+        self._loc_bind = {}
         
-    def import_metadata(self,xml_str):
+    def import_metadata(self, xml_str):
         """ Import information; organization distinguish name, location and
         certificates from a metadata file.
     
@@ -68,7 +70,8 @@ class MetaData(dict):
             
             #print "--",len(entity_descriptor.idp_sso_descriptor)
             for idp in entity_descriptor.idp_sso_descriptor:
-                if samlp.SAMLP_NAMESPACE not in idp.protocol_support_enumeration.split(" "):
+                if samlp.SAMLP_NAMESPACE not in \
+                        idp.protocol_support_enumeration.split(" "):
                     #print "<<<", idp.protocol_support_enumeration
                     continue
                 
@@ -142,7 +145,8 @@ def cert_from_assertion(assertion):
 def make_entity_description():
     org = md.Organization(
             organization_name = [md.Organization(text="Example Inc.")],
-            organization_url = [md.OrganizationURL(text="http://www.example.com/")])
+            organization_url = [md.OrganizationURL(
+                                    text="http://www.example.com/")])
             
     spsso = md.SPSSODescriptor(
             protocolSupportEnumeration = samlp.SAMLP_NAMESPACE,
@@ -150,7 +154,7 @@ def make_entity_description():
             authn_requests_signed = False
             )
             
-    return md.EntityDescription(
+    return md.EntityDescriptor(
         entity_id = "http://xenosmilus.umdc.umu.se:8087/",
         organization = org,
         sp_sso_descriptor = [spsso]

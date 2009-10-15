@@ -93,18 +93,18 @@ class AbstractRequest(SamlBase):
     c_attributes['IssueInstant'] = 'issue_instant'
     c_attributes['Destination'] = 'destination'
     c_attributes['Consent'] = 'consent'
-    c_children['{%s}Issuer' % saml.SAML_NAMESPACE] = ('issuer', saml.Issuer)
-    c_children['{%s}Signature' % ds.DS_NAMESPACE] = ('signature', ds.Signature)
+    c_children['{%s}Issuer' % saml.NAMESPACE] = ('issuer', saml.Issuer)
+    c_children['{%s}Signature' % ds.NAMESPACE] = ('signature', ds.Signature)
     c_children['{%s}Extensions' % SAMLP_NAMESPACE] = ('extensions', Extensions)
     c_child_order = ['issuer', 'signature', 'extensions']
 
-    def __init__(self, identifier=None, version=None, issue_instant=None,
+    def __init__(self, id=None, version=None, issue_instant=None,
                 destination=None, consent=None, issuer=None, signature=None,
                 extensions=None, text=None, extension_elements=None, 
                 extension_attributes=None):
         """Constructor for AbstractRequest
 
-        :param identifier: ID attribute
+        :param id: ID attribute
         :param version: Version attribute
         :param issue_instant: IssueInstant attribute
         :param destination: Destination attribute
@@ -117,7 +117,7 @@ class AbstractRequest(SamlBase):
         :param extension_attributes: A dictionary of attribute value string pairs
         """
         SamlBase.__init__(self, text, extension_elements, extension_attributes)
-        self.id = identifier
+        self.id = id
         self.version = version
         self.issue_instant = issue_instant
         self.destination = destination
@@ -250,23 +250,23 @@ class StatusResponse(SamlBase):
     c_attributes['IssueInstant'] = 'issue_instant'
     c_attributes['Destination'] = 'destination'
     c_attributes['Consent'] = 'consent'
-    c_children['{%s}Issuer' % saml.SAML_NAMESPACE] = (
+    c_children['{%s}Issuer' % saml.NAMESPACE] = (
         'issuer', saml.Issuer)
-    c_children['{%s}Signature' % ds.DS_NAMESPACE] = (
+    c_children['{%s}Signature' % ds.NAMESPACE] = (
         'signature', ds.Signature)
     c_children['{%s}Extensions' % SAMLP_NAMESPACE] = (
         'extensions', Extensions)
     c_children['{%s}Status' % SAMLP_NAMESPACE] = ('status', Status)
     c_child_order = ['issuer', 'signature', 'extensions', 'status']
 
-    def __init__(self, identifier=None, in_response_to=None, version=None,
+    def __init__(self, id=None, in_response_to=None, version=None,
                 issue_instant=None, destination=None, consent=None,
                 issuer=None, signature=None, extensions=None, status=None,
                 text=None, extension_elements=None, 
                 extension_attributes=None):
         """Constructor for StatusResponse
 
-        :param identifier: ID attribute
+        :param id: ID attribute
         :param in_respones_to: InResponseTo attribute
         :param version: Version attribute
         :param issue_instant: IssueInstant attribute
@@ -284,7 +284,7 @@ class StatusResponse(SamlBase):
 
         SamlBase.__init__(self, text, extension_elements, 
                             extension_attributes)
-        self.id = identifier
+        self.id = id
         self.in_response_to = in_response_to
         self.version = version
         self.issue_instant = issue_instant
@@ -313,14 +313,14 @@ class AssertionIDRequest(AbstractRequest):
     c_attributes = AbstractRequest.c_attributes.copy()
     c_attributes["AssertionIDRef"] = 'assertion_id_ref'
 
-    def __init__(self, identifier=None, version=None, issue_instant=None,
+    def __init__(self, id=None, version=None, issue_instant=None,
                 destination=None, consent=None, issuer=None, signature=None,
                 extensions=None, assertion_id_ref=None,
                 text=None, extension_elements=None, 
                 extension_attributes=None):
         """Constructor for AssertionIDRequest
 
-        :param identifier: ID attribute
+        :param id: ID attribute
         :param version: Version attribute
         :param issue_instant: IssueInstant attribute
         :param destination: Destination attribute
@@ -335,7 +335,7 @@ class AssertionIDRequest(AbstractRequest):
             string pairs
         """
 
-        AbstractRequest.__init__(self, identifier, version, issue_instant, 
+        AbstractRequest.__init__(self, id, version, issue_instant, 
                                 destination, consent, issuer, signature, 
                                 extensions, text, extension_elements, 
                                 extension_attributes)
@@ -357,17 +357,17 @@ class SubjectQuery(AbstractRequest):
     c_namespace = SAMLP_NAMESPACE
     c_children = AbstractRequest.c_children.copy()
     c_attributes = AbstractRequest.c_attributes.copy()
-    c_children['{%s}Subject' % saml.SAML_NAMESPACE] = (
+    c_children['{%s}Subject' % saml.NAMESPACE] = (
         'subject', saml.Subject)
 
-    def __init__(self, identifier=None, version=None, issue_instant=None,
+    def __init__(self, id=None, version=None, issue_instant=None,
                 destination=None, consent=None, issuer=None, signature=None,
                 extensions=None, subject=None,
                 text=None, extension_elements=None, 
                 extension_attributes=None):
         """Constructor for SubjectQuery
 
-        :param identifier: ID attribute
+        :param id: ID attribute
         :param version: Version attribute
         :param issue_instant: IssueInstant attribute
         :param destination: Destination attribute
@@ -382,7 +382,7 @@ class SubjectQuery(AbstractRequest):
             string pairs
         """
 
-        AbstractRequest.__init__(self, identifier, version, issue_instant, 
+        AbstractRequest.__init__(self, id, version, issue_instant, 
                                 destination, consent, issuer, signature, 
                                 extensions, text, extension_elements, 
                                 extension_attributes)
@@ -421,14 +421,14 @@ class AuthnQuery(SubjectQuery):
     c_attributes = SubjectQuery.c_attributes.copy()
     c_attributes['SessionIndex'] = 'session_index'
 
-    def __init__(self, identifier=None, version=None, issue_instant=None,
+    def __init__(self, id=None, version=None, issue_instant=None,
                 destination=None, consent=None, issuer=None, signature=None,
                 extensions=None, subject=None,
                 text=None, extension_elements=None, 
                 extension_attributes=None):
         """Constructor for SubjectQuery
 
-        :param identifier: ID attribute
+        :param id: ID attribute
         :param version: Version attribute
         :param issue_instant: IssueInstant attribute
         :param destination: Destination attribute
@@ -443,7 +443,7 @@ class AuthnQuery(SubjectQuery):
             string pairs
         """
 
-        SubjectQuery.__init__(self, identifier, version, issue_instant, 
+        SubjectQuery.__init__(self, id, version, issue_instant, 
                                 destination, consent, issuer, signature, 
                                 extensions, text, extension_elements, 
                                 extension_attributes)
@@ -466,9 +466,9 @@ class RequestedAuthnContext(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['Comparison'] = 'comparison'
-    c_children['{%s}AuthnContextClassRef' % saml.SAML_NAMESPACE] = (
+    c_children['{%s}AuthnContextClassRef' % saml.NAMESPACE] = (
         'authn_context_class_ref', [saml.AuthnContextClassRef])
-    c_children['{%s}AuthnContextDeclRef' % saml.SAML_NAMESPACE] = (
+    c_children['{%s}AuthnContextDeclRef' % saml.NAMESPACE] = (
         'authn_context_decl_ref', [saml.AuthnContextDeclRef])
 
     def __init__(self, comparison=None, authn_context_class_ref=None,
@@ -504,17 +504,17 @@ class AttributeQuery(SubjectQuery):
     c_namespace = SAMLP_NAMESPACE
     c_children = SubjectQuery.c_children.copy()
     c_attributes = SubjectQuery.c_attributes.copy()
-    c_children['{%s}Attribute' % saml.SAML_NAMESPACE] = (
+    c_children['{%s}Attribute' % saml.NAMESPACE] = (
         'attribute', saml.Attribute)
 
-    def __init__(self, identifier=None, version=None, issue_instant=None,
+    def __init__(self, id=None, version=None, issue_instant=None,
                 destination=None, consent=None, issuer=None, signature=None,
                 extensions=None, subject=None, attribute=None,
                 text=None, extension_elements=None, 
                 extension_attributes=None):
         """Constructor for AttributeQuery
 
-        :param identifier: ID attribute
+        :param id: ID attribute
         :param version: Version attribute
         :param issue_instant: IssueInstant attribute
         :param destination: Destination attribute
@@ -531,7 +531,7 @@ class AttributeQuery(SubjectQuery):
             string pairs
         """
 
-        SubjectQuery.__init__(self, identifier, version, issue_instant, 
+        SubjectQuery.__init__(self, id, version, issue_instant, 
                                 destination, consent, issuer, signature, 
                                 extensions, subject, text, extension_elements, 
                                 extension_attributes)
@@ -548,13 +548,13 @@ class Resource(SamlBase):
     """The saml:Resource element"""
 
     c_tag = 'Resource'
-    c_namespace = saml.SAML_NAMESPACE
+    c_namespace = saml.NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
 
 def resource_from_string(xml_string):
     """ Create Resource instance from an XML string """
-    return saml2.create_class_from_xml_string(Resource, xml_string)
+    return create_class_from_xml_string(Resource, xml_string)
 
 # --------------------------------------------------------------------------
 # 3.3.2.4 AuthzDecisionQuery
@@ -567,15 +567,15 @@ class AuthzDecisionQuery(SubjectQuery):
     c_namespace = SAMLP_NAMESPACE
     c_children = SubjectQuery.c_children.copy()
     c_attributes = SubjectQuery.c_attributes.copy()
-    c_children['{%s}Resource' % saml.SAML_NAMESPACE] = (
+    c_children['{%s}Resource' % saml.NAMESPACE] = (
         'resource', Resource)
-    c_children['{%s}Action' % saml.SAML_NAMESPACE] = (
+    c_children['{%s}Action' % saml.NAMESPACE] = (
         'action', saml.Action)
-    c_children['{%s}Evidence' % saml.SAML_NAMESPACE] = (
+    c_children['{%s}Evidence' % saml.NAMESPACE] = (
         'evidence', saml.Evidence)
     c_child_order = ['action', 'evidence', 'resource']
 
-    def __init__(self, identifier=None, version=None, issue_instant=None,
+    def __init__(self, id=None, version=None, issue_instant=None,
                 destination=None, consent=None, issuer=None, signature=None,
                 extensions=None, subject=None, resource=None, 
                 action=None, evidence=None,
@@ -583,7 +583,7 @@ class AuthzDecisionQuery(SubjectQuery):
                 extension_attributes=None):
         """Constructor for AuthzDecisionQuery
 
-        :param identifier: ID attribute
+        :param id: ID attribute
         :param version: Version attribute
         :param issue_instant: IssueInstant attribute
         :param destination: Destination attribute
@@ -603,7 +603,7 @@ class AuthzDecisionQuery(SubjectQuery):
             string pairs
         """
 
-        SubjectQuery.__init__(self, identifier, version, issue_instant, 
+        SubjectQuery.__init__(self, id, version, issue_instant, 
                                 destination, consent, issuer, signature, 
                                 extensions, subject, text, extension_elements, 
                                 extension_attributes)
@@ -612,9 +612,9 @@ class AuthzDecisionQuery(SubjectQuery):
         self.action = action or []
         self.evidence = evidence
         
-def attribute_query_from_string(xml_string):
-    """ Create AttributeQuery instance from an XML string """
-    return create_class_from_xml_string(AttributeQuery, xml_string)
+def authz_decision_query_from_string(xml_string):
+    """ Create AuthzDecisionQuery instance from an XML string """
+    return create_class_from_xml_string(AuthzDecisionQuery, xml_string)
     
 # ==========================================================================
 # 3.3.3 Response
@@ -627,21 +627,21 @@ class Response(StatusResponse):
     c_namespace = SAMLP_NAMESPACE
     c_children = StatusResponse.c_children.copy()
     c_attributes = StatusResponse.c_attributes.copy()
-    c_children['{%s}Assertion' % saml.SAML_NAMESPACE] = (
+    c_children['{%s}Assertion' % saml.NAMESPACE] = (
         'assertion', [saml.Assertion])
-    c_children['{%s}EncryptedAssertion' % saml.SAML_NAMESPACE] = (
+    c_children['{%s}EncryptedAssertion' % saml.NAMESPACE] = (
         'encrypted_assertion', [saml.EncryptedAssertion])
     c_child_order = ['issuer', 'signature', 'extensions', 'status', 
                     'assertion', 'encrypted_assertion']
 
-    def __init__(self, identifier=None, in_response_to=None, version=None,
+    def __init__(self, id=None, in_response_to=None, version=None,
                 issue_instant=None, destination=None, consent=None,
                 issuer=None, signature=None, extensions=None, status=None,
                 assertion=None, encrypted_assertion=None,
                 text=None, extension_elements=None, extension_attributes=None):
         """Constructor for Response
 
-        :param identifier: ID attribute
+        :param id: ID attribute
         :param in_respones_to: InResponseTo attribute
         :param version: Version attribute
         :param issue_instant: IssueInstant attribute
@@ -657,7 +657,7 @@ class Response(StatusResponse):
         :param extension_elements: A list of ExtensionElement instances
         :param extension_attributes: A dictionary of attribute value string pairs
         """
-        StatusResponse.__init__(self, identifier, in_response_to,
+        StatusResponse.__init__(self, id, in_response_to,
                                 version, issue_instant,
                                 destination, consent,
                                 issuer, signature,
@@ -864,10 +864,10 @@ class AuthnRequest(AbstractRequest):
     c_attributes['AssertionConsumingServiceIndex'] = \
                             'assertion_consuming_service_index'
     c_attributes['ProviderName'] = 'provider_name'
-    c_children['{%s}Subject' % saml.SAML_NAMESPACE] = ('subject', saml.Subject)
+    c_children['{%s}Subject' % saml.NAMESPACE] = ('subject', saml.Subject)
     c_children['{%s}NameIDPolicy' % SAMLP_NAMESPACE] = (
                             'name_id_policy', NameIDPolicy)
-    c_children['{%s}Conditions' % saml.SAML_NAMESPACE] = (
+    c_children['{%s}Conditions' % saml.NAMESPACE] = (
                             'conditions', saml.Conditions)
     c_children['{%s}RequestedAuthnContext' % SAMLP_NAMESPACE] = (
                             'requested_authn_context', RequestedAuthnContext)
@@ -876,7 +876,7 @@ class AuthnRequest(AbstractRequest):
                     'name_id_policy', 'conditions', 'requested_authn_context',
                     'scoping']
 
-    def __init__(self, identifier=None, version=None, issue_instant=None,
+    def __init__(self, id=None, version=None, issue_instant=None,
                 destination=None, consent=None, issuer=None, signature=None,
                 extensions=None, subject=None, name_id_policy=None,
                 conditions=None, requested_authn_context=None, scoping=None,
@@ -888,7 +888,7 @@ class AuthnRequest(AbstractRequest):
                 extension_elements=None, extension_attributes=None):
         """Constructor for AuthnRequest
 
-        :param identifier: ID attribute
+        :param id: ID attribute
         :param version: Version attribute
         :param issue_instant: IssueInstant attribute
         :param destination: Destination attribute
@@ -916,7 +916,7 @@ class AuthnRequest(AbstractRequest):
         :param extension_attributes: A dictionary of attribute value string 
                 pairs
         """
-        AbstractRequest.__init__(self, identifier, version, issue_instant, 
+        AbstractRequest.__init__(self, id, version, issue_instant, 
                                 destination, consent, issuer, signature, 
                                 extensions, text, extension_elements, 
                                 extension_attributes)
@@ -970,7 +970,7 @@ def terminate_from_string(xml_string):
 
 class ManageNameIDRequest(AbstractRequest):
     """The samlp:NameIDMappingRequest element
-    To request an alternate name identifier for a principal from an identity
+    To request an alternate name id for a principal from an identity
     provider, a requester sends an NameIDMappingRequest message
     """
 
@@ -979,25 +979,31 @@ class ManageNameIDRequest(AbstractRequest):
     c_children = AbstractRequest.c_children.copy()
     c_attributes = AbstractRequest.c_attributes.copy()
     c_attributes["NewID"] = "new_id"
-    c_children['{%s}NameID' % saml.SAML_NAMESPACE] = ('name_id', saml.NameID)
-    c_children['{%s}EncryptedID' % saml.SAML_NAMESPACE] = (
+    c_children['{%s}NameID' % saml.NAMESPACE] = ('name_id', saml.NameID)
+    c_children['{%s}EncryptedID' % saml.NAMESPACE] = (
         'encrypted_id', saml.EncryptedID)
-    c_children['{%s}NewEncryptedID' % saml.SAML_NAMESPACE] = (
+    c_children['{%s}NewEncryptedID' % saml.NAMESPACE] = (
         'new_encrypted_id', saml.EncryptedID)
     c_children['{%s}Terminate' % SAMLP_NAMESPACE] = (
         'terminate', Terminate)
     c_child_order = ['name_id', 'encrypted_id', 
                     'new_id', 'new_encrypted_id', 'terminate']
 
-    def __init__(self, identifier=None, version=None, issue_instant=None,
+    def __init__(self, new_id=None, name_id=None, encrypted_id=None, 
+                new_encrypted_id=None, terminate=None,
+                id=None, version=None, issue_instant=None,
                 destination=None, consent=None, issuer=None, signature=None,
-                extensions=None,
-                base_id=None, name_id=None, encrypted_id=None,
-                name_id_policy=None, text=None,
+                extensions=None, name_id_policy=None, text=None,
                 extension_elements=None, extension_attributes=None):
         """Constructor for ManageNameIDRequest
 
-        :param identifier: ID attribute
+        :param new_id: The new id value
+        :param name_id: NameID element
+        :param encrypted_id: EncryptedID element
+        :param new_encrypted_id:
+        :param terminate:
+
+        :param id: ID attribute
         :param version: Version attribute
         :param issue_instant: IssueInstant attribute
         :param destination: Destination attribute
@@ -1005,25 +1011,19 @@ class ManageNameIDRequest(AbstractRequest):
         :param issuer: Issuer element
         :param signature: Signature element
         :param extensions: Extensions element
-        :param name_id: NameID element
-        :param encrypted_id: EncryptedID element
-        :param new_id: The new identifier value
-        :param new_encrypted_id:
-        :param terminate:
         :param text: The text data in the this element
         :param extension_elements: A list of ExtensionElement instances
         :param extension_attributes: A dictionary of attribute value string pairs
         """
-        AbstractRequest.__init__(self, identifier, version, issue_instant, 
+        AbstractRequest.__init__(self, id, version, issue_instant, 
                                 destination, consent, issuer, signature, 
                                 extensions, text, extension_elements, 
                                 extension_attributes)
-        self.not_on_or_after = not_on_or_after
-        self.reason = reason
-        self.base_id = base_id
+        self.new_id = new_id
         self.name_id = name_id
         self.encrypted_id = encrypted_id
-        self.session_index = session_index
+        self.new_encrypted_id = new_encrypted_id
+        self.terminate = terminate
 
 def manage_name_id_request_from_string(xml_string):
     """ Create ManageNameIDRequest instance from an XML string """
@@ -1060,16 +1060,16 @@ class LogoutRequest(AbstractRequest):
     c_attributes = AbstractRequest.c_attributes.copy()
     c_attributes['NotOnOrAfter'] = 'not_on_or_after'
     c_attributes['Reason'] = 'reason'
-    c_children['{%s}BaseID' % saml.SAML_NAMESPACE] = ('base_id', saml.BaseID)
-    c_children['{%s}NameID' % saml.SAML_NAMESPACE] = ('name_id', saml.NameID)
-    c_children['{%s}EncryptedID' % saml.SAML_NAMESPACE] = (
+    c_children['{%s}BaseID' % saml.NAMESPACE] = ('base_id', saml.BaseID)
+    c_children['{%s}NameID' % saml.NAMESPACE] = ('name_id', saml.NameID)
+    c_children['{%s}EncryptedID' % saml.NAMESPACE] = (
         'encrypted_id', saml.EncryptedID)
     c_children['{%s}SessionIndex' % SAMLP_NAMESPACE] = (
         'session_index', SessionIndex)
     c_child_order = ['issuer', 'signature', 'extensions', 'base_id', 
                         'name_id', 'encrypted_id', 'session_index']
 
-    def __init__(self, identifier=None, version=None, issue_instant=None,
+    def __init__(self, id=None, version=None, issue_instant=None,
                 destination=None, consent=None, issuer=None, signature=None,
                 extensions=None, not_on_or_after=None, reason=None,
                 base_id=None, name_id=None, encrypted_id=None,
@@ -1077,7 +1077,7 @@ class LogoutRequest(AbstractRequest):
                 extension_elements=None, extension_attributes=None):
         """Constructor for LogoutRequest
 
-        :param identifier: ID attribute
+        :param id: ID attribute
         :param version: Version attribute
         :param issue_instant: IssueInstant attribute
         :param destination: Destination attribute
@@ -1095,7 +1095,7 @@ class LogoutRequest(AbstractRequest):
         :param extension_elements: A list of ExtensionElement instances
         :param extension_attributes: A dictionary of attribute value string pairs
         """
-        AbstractRequest.__init__(self, identifier, version, issue_instant, 
+        AbstractRequest.__init__(self, id, version, issue_instant, 
                                 destination, consent, issuer, signature, 
                                 extensions, text, extension_elements, 
                                 extension_attributes)
@@ -1133,7 +1133,7 @@ def logout_response_from_string(xml_string):
 
 class NameIDMappingRequest(AbstractRequest):
     """The samlp:NameIDMappingRequest element
-    To request an alternate name identifier for a principal from an identity
+    To request an alternate name id for a principal from an identity
     provider, a requester sends an NameIDMappingRequest message
     """
 
@@ -1141,23 +1141,29 @@ class NameIDMappingRequest(AbstractRequest):
     c_namespace = SAMLP_NAMESPACE
     c_children = AbstractRequest.c_children.copy()
     c_attributes = AbstractRequest.c_attributes.copy()
-    c_children['{%s}BaseID' % saml.SAML_NAMESPACE] = ('base_id', saml.BaseID)
-    c_children['{%s}NameID' % saml.SAML_NAMESPACE] = ('name_id', saml.NameID)
-    c_children['{%s}EncryptedID' % saml.SAML_NAMESPACE] = (
+    c_children['{%s}BaseID' % saml.NAMESPACE] = ('base_id', saml.BaseID)
+    c_children['{%s}NameID' % saml.NAMESPACE] = ('name_id', saml.NameID)
+    c_children['{%s}EncryptedID' % saml.NAMESPACE] = (
         'encrypted_id', saml.EncryptedID)
     c_children['{%s}NameIDPolicy' % SAMLP_NAMESPACE] = (
         'name_id_policy', NameIDPolicy)
     c_child_order = ['base_id', 'name_id', 'encrypted_id', 'name_id_policy']
 
-    def __init__(self, identifier=None, version=None, issue_instant=None,
+    def __init__(self, base_id=None, name_id=None, encrypted_id=None,
+                name_id_policy=None,
+                id=None, version=None, issue_instant=None,
                 destination=None, consent=None, issuer=None, signature=None,
                 extensions=None,
-                base_id=None, name_id=None, encrypted_id=None,
-                name_id_policy=None, text=None,
+                text=None,
                 extension_elements=None, extension_attributes=None):
         """Constructor for LogoutRequest
 
-        :param identifier: ID attribute
+        :param base_id: BaseID element
+        :param name_id: NameID element
+        :param encrypted_id: EncryptedID element
+        :param name_id_policy: The requirements regarding the format and
+            optional name qualifier for the id to be returned.
+        :param id: ID attribute
         :param version: Version attribute
         :param issue_instant: IssueInstant attribute
         :param destination: Destination attribute
@@ -1165,25 +1171,18 @@ class NameIDMappingRequest(AbstractRequest):
         :param issuer: Issuer element
         :param signature: Signature element
         :param extensions: Extensions element
-        :param base_id: BaseID element
-        :param name_id: NameID element
-        :param encrypted_id: EncryptedID element
-        :param name_id_policy: The requirements regarding the format and
-            optional name qualifier for the identifier to be returned.
         :param text: The text data in the this element
         :param extension_elements: A list of ExtensionElement instances
         :param extension_attributes: A dictionary of attribute value string pairs
         """
-        AbstractRequest.__init__(self, identifier, version, issue_instant, 
+        AbstractRequest.__init__(self, id, version, issue_instant, 
                                 destination, consent, issuer, signature, 
                                 extensions, text, extension_elements, 
                                 extension_attributes)
-        self.not_on_or_after = not_on_or_after
-        self.reason = reason
         self.base_id = base_id
         self.name_id = name_id
         self.encrypted_id = encrypted_id
-        self.session_index = session_index
+        self.name_id_policy = name_id_policy
 
 def name_id_mapping_request_from_string(xml_string):
     """ Create NameIDMappingRequest instance from an XML string """
@@ -1201,21 +1200,24 @@ class NameIDMappingResponse(StatusResponse):
     c_namespace = SAMLP_NAMESPACE
     c_children = StatusResponse.c_children.copy()
     c_attributes = StatusResponse.c_attributes.copy()
-    c_children['{%s}NameID' % saml.SAML_NAMESPACE] = (
+    c_children['{%s}NameID' % saml.NAMESPACE] = (
         'name_id', saml.NameID)
-    c_children['{%s}EncryptedID' % saml.SAML_NAMESPACE] = (
+    c_children['{%s}EncryptedID' % saml.NAMESPACE] = (
         'encrypted_id', saml.EncryptedID)
     c_child_order = ['name_id', 'encrypted_id']
 
-    def __init__(self, identifier=None, in_response_to=None,
+    def __init__(self, name_id=None, encrypted_id=None,
+                id=None, in_response_to=None,
                 version=None, issue_instant=None,
                 destination=None, consent=None, issuer=None, signature=None,
                 extensions=None, status=None,
-                base_id=None, name_id=None, text=None,
+                text=None,
                 extension_elements=None, extension_attributes=None):
         """Constructor for NameIDMappingResponse
 
-        :param identifier: ID attribute
+        :param name_id: The id
+        :param encrypted_id: associated descriptive data
+        :param id: ID attribute
         :param in_respones_to: InResponseTo attribute
         :param version: Version attribute
         :param issue_instant: IssueInstant attribute
@@ -1225,22 +1227,18 @@ class NameIDMappingResponse(StatusResponse):
         :param signature: Signature element
         :param extensions: Extensions element
         :param status: Status element
-        :param base_id: associated descriptive data
-        :param name_id: The identifier
         :param text: The text data in the this element
         :param extension_elements: A list of ExtensionElement instances
         :param extension_attributes: A dictionary of attribute value 
             string pairs
         """
-        StatusResponse.__init__(self, identifier, in_response_to, 
+        StatusResponse.__init__(self, id, in_response_to, 
                 version, issue_instant, destination, consent,
                 issuer, signature, extensions, status,
                 text, extension_elements, extension_attributes)
 
-        self.not_on_or_after = not_on_or_after
-        self.reason = reason
-        self.base_id = base_id
         self.name_id = name_id
+        self.encrypted_id = encrypted_id
 
 def name_id_mapping_response_from_string(xml_string):
     """ Create NameIDMappingResponse instance from an XML string """

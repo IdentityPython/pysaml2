@@ -38,9 +38,9 @@ except ImportError:
     except ImportError:
         from elementtree import ElementTree
 
-SAML_NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:assertion'
-SAML_TEMPLATE = '{urn:oasis:names:tc:SAML:2.0:assertion}%s'
-XSI_NAMESPACE = 'http://www.w3.org/2001/XMLSchema-instance'
+NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:assertion'
+#TEMPLATE = '{urn:oasis:names:tc:SAML:2.0:assertion}%s'
+#XSI_NAMESPACE = 'http://www.w3.org/2001/XMLSchema-instance'
 
 NAMEID_FORMAT_EMAILADDRESS = (
     "urn:oasis:names:tc:SAML:2.0:nameid-format:emailAddress")
@@ -438,3 +438,14 @@ class SamlBase(ExtensionContainer):
             self.__dict__[extension_attribute_name] = value
                     
 
+def extension_element_to_element(extension_element, element_to_string,
+                                    namespace=None):
+    if extension_element.namespace == namespace:
+        try:
+            ets = element_to_string[extension_element.tag]
+            return ets(extension_element.to_string())
+        except KeyError:
+            pass
+            
+    return None
+        

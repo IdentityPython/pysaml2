@@ -24,18 +24,20 @@
 
 from saml2 import saml, SamlBase, create_class_from_xml_string
 from saml2.saml import Attribute
+from saml2.saml import NAMESPACE as SAML_NAMESPACE
 import xmldsig as ds
+from xmldsig import NAMESPACE as DS_NAMESPACE
+from xmlenc import NAMESPACE as XMLENC_NAMESPACE
 
-MD_NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:metadata'
-MD_TEMPLATE = '{urn:oasis:names:tc:SAML:2.0:metadata}%s'
-XMLENC_NAMESPACE = 'http://www.w3.org/2001/04/xmlenc#'
+NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:metadata'
+#MD_TEMPLATE = '{urn:oasis:names:tc:SAML:2.0:metadata}%s'
 XML_TEMPLATE = '{http://www.w3.org/XML/1998/namespace}%s'
 
 class Extensions(SamlBase):
     """The md:Extensions element"""
 
     c_tag = 'Extensions'
-    c_namespace = MD_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
 
@@ -46,7 +48,7 @@ def extensions_from_string(xml_string):
 class LocalizedName(SamlBase):
     """The md:LocalizedName abstract type"""
     c_tag = 'LocalizedName'
-    c_namespace = MD_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes[XML_TEMPLATE % 'lang'] = 'lang'
@@ -71,7 +73,7 @@ def localized_name_from_string(xml_string):
 class LocalizedURI(SamlBase):
     """The md:LocalizedURI abstract type"""
     c_tag = 'LocalizedURI'
-    c_namespace = MD_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes[XML_TEMPLATE % 'lang'] = 'lang'
@@ -97,7 +99,7 @@ def localized_uri_from_string(xml_string):
 class OrganizationName(LocalizedName):
     """The md:OrganizationName element"""
     c_tag = 'OrganizationName'
-    c_namespace = MD_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = LocalizedName.c_children.copy()
     c_attributes = LocalizedName.c_attributes.copy()
 
@@ -123,7 +125,7 @@ def organization_name_from_string(xml_string):
 class OrganizationDisplayName(LocalizedName):
     """The md:OrganizationDisplayName element"""
     c_tag = 'OrganizationDisplayName'
-    c_namespace = MD_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = LocalizedName.c_children.copy()
     c_attributes = LocalizedName.c_attributes.copy()
 
@@ -149,7 +151,7 @@ def organization_display_name_from_string(xml_string):
 class OrganizationURL(LocalizedURI):
     """The md:OrganizationURL element"""
     c_tag = 'OrganizationURL'
-    c_namespace = MD_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = LocalizedURI.c_children.copy()
     c_attributes = LocalizedURI.c_attributes.copy()
 
@@ -176,15 +178,15 @@ class Organization(SamlBase):
     """The md:Organization base type"""
 
     c_tag = 'Organization'
-    c_namespace = MD_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
-    c_children['{%s}Extensions' % MD_NAMESPACE] = ('extensions', Extensions)
-    c_children['{%s}OrganizationName' % MD_NAMESPACE] = (
+    c_children['{%s}Extensions' % NAMESPACE] = ('extensions', Extensions)
+    c_children['{%s}OrganizationName' % NAMESPACE] = (
         'organization_name', [OrganizationName])
-    c_children['{%s}OrganizationDisplayName' % MD_NAMESPACE] = (
+    c_children['{%s}OrganizationDisplayName' % NAMESPACE] = (
         'organization_display_name', [OrganizationDisplayName])
-    c_children['{%s}OrganizationURL' % MD_NAMESPACE] = (
+    c_children['{%s}OrganizationURL' % NAMESPACE] = (
         'organization_url', [OrganizationURL])
     child_order = ['extensions', 'organization_name',
                     'organization_display_name', 'organization_url']
@@ -218,7 +220,7 @@ class Endpoint(SamlBase):
     """The md:Endpoint base type"""
 
     c_tag = 'Endpoint'
-    c_namespace = MD_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['Binding'] = 'binding'
@@ -251,7 +253,7 @@ class IndexedEndpoint(Endpoint):
     """The md:IndexedEndpoint base type"""
 
     c_tag = 'IndexedEndpoint'
-    c_namespace = MD_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = Endpoint.c_children.copy()
     c_attributes = Endpoint.c_attributes.copy()
     c_attributes['index'] = 'index'
@@ -286,7 +288,7 @@ class Company(SamlBase):
     """The md:Company element"""
 
     c_tag = 'Company'
-    c_namespace = MD_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
 
@@ -299,7 +301,7 @@ class GivenName(SamlBase):
     """The md:GivenName element"""
 
     c_tag = 'GivenName'
-    c_namespace = MD_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
 
@@ -312,7 +314,7 @@ class SurName(SamlBase):
     """The md:SurName element"""
 
     c_tag = 'SurName'
-    c_namespace = MD_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
 
@@ -325,7 +327,7 @@ class EmailAddress(SamlBase):
     """The md:EmailAddress element"""
 
     c_tag = 'EmailAddress'
-    c_namespace = MD_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
 
@@ -338,7 +340,7 @@ class TelephoneNumber(SamlBase):
     """The md:TelephoneNumber element"""
 
     c_tag = 'TelephoneNumber'
-    c_namespace = MD_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
 
@@ -351,17 +353,17 @@ class ContactPerson(SamlBase):
     """The md:ContactPerson element"""
 
     c_tag = 'ContactPerson'
-    c_namespace = MD_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['contactType'] = 'contact_type'
-    c_children['{%s}Extensions' % MD_NAMESPACE] = ('extensions', Extensions)
-    c_children['{%s}Company' % MD_NAMESPACE] = ('company', Company)
-    c_children['{%s}GivenName' % MD_NAMESPACE] = ('given_name', GivenName)
-    c_children['{%s}SurName' % MD_NAMESPACE] = ('sur_name', SurName)
-    c_children['{%s}EmailAddress' % MD_NAMESPACE] = (
+    c_children['{%s}Extensions' % NAMESPACE] = ('extensions', Extensions)
+    c_children['{%s}Company' % NAMESPACE] = ('company', Company)
+    c_children['{%s}GivenName' % NAMESPACE] = ('given_name', GivenName)
+    c_children['{%s}SurName' % NAMESPACE] = ('sur_name', SurName)
+    c_children['{%s}EmailAddress' % NAMESPACE] = (
         'email_address', [EmailAddress])
-    c_children['{%s}TelephoneNumber' % MD_NAMESPACE] = (
+    c_children['{%s}TelephoneNumber' % NAMESPACE] = (
         'telephone_number', [TelephoneNumber])
     c_child_order = ['extensions', 'company', 'given_name', 'sur_name',
                                     'email_address', 'telephone_number']
@@ -402,7 +404,7 @@ class AdditionalMetadataLocation(SamlBase):
     """The md:AdditionalMetadataLocation element"""
 
     c_tag = 'AdditionalMetadataLocation'
-    c_namespace = MD_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['namespace'] = 'namespace'
@@ -455,14 +457,14 @@ class EncryptionMethod(SamlBase):
     """The md:EncryptionMethod element"""
 
     c_tag = 'EncryptionMethod'
-    c_namespace = MD_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['Algorithm'] = 'algorithm'
     c_children['{%s}KeySize' % XMLENC_NAMESPACE] = ('key_size', KeySize)
     c_children['{%s}OAEPparams' % XMLENC_NAMESPACE] = (
                     'oaep_params', OAEPparams)
-    c_children['{%s}DigestMethod' % ds.DS_NAMESPACE] = (
+    c_children['{%s}DigestMethod' % DS_NAMESPACE] = (
                     'digest_method', ds.DigestMethod)
     c_child_order = ['key_size', 'oaep_params', 'digest_method']
 
@@ -495,12 +497,12 @@ class KeyDescriptor(SamlBase):
     """The md:KeyDescriptor element"""
 
     c_tag = 'KeyDescriptor'
-    c_namespace = MD_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['use'] = 'use'
-    c_children['{%s}KeyInfo' % ds.DS_NAMESPACE] = ('key_info', ds.KeyInfo)
-    c_children['{%s}EncryptionMethod' % MD_NAMESPACE] = (
+    c_children['{%s}KeyInfo' % DS_NAMESPACE] = ('key_info', ds.KeyInfo)
+    c_children['{%s}EncryptionMethod' % NAMESPACE] = (
         'encryption_method', [EncryptionMethod])
     c_child_order = ['key_info', 'encryption_method']
 
@@ -531,7 +533,7 @@ class RoleDescriptor(SamlBase):
     """The md:RoleDescriptor element"""
 
     c_tag = 'RoleDescriptor'
-    c_namespace = MD_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['ID'] = 'identifier'
@@ -539,13 +541,13 @@ class RoleDescriptor(SamlBase):
     c_attributes['cacheDuration'] = 'cache_duration'
     c_attributes['protocolSupportEnumeration'] = 'protocol_support_enumeration'
     c_attributes['errorURL'] = 'error_url'
-    c_children['{%s}Signature' % ds.DS_NAMESPACE] = ('signature', ds.Signature)
-    c_children['{%s}Extensions' % MD_NAMESPACE] = ('extensions', Extensions)
-    c_children['{%s}KeyDescriptor' % MD_NAMESPACE] = (
+    c_children['{%s}Signature' % DS_NAMESPACE] = ('signature', ds.Signature)
+    c_children['{%s}Extensions' % NAMESPACE] = ('extensions', Extensions)
+    c_children['{%s}KeyDescriptor' % NAMESPACE] = (
                         'key_descriptor', [KeyDescriptor])
-    c_children['{%s}Organization' % MD_NAMESPACE] = (
+    c_children['{%s}Organization' % NAMESPACE] = (
                         'organization', Organization)
-    c_children['{%s}ContactPerson' % MD_NAMESPACE] = (
+    c_children['{%s}ContactPerson' % NAMESPACE] = (
                         'contact_person', [ContactPerson])
     c_child_order = ['signature', 'extensions', 'key_descriptor', 
                         'organization', 'contact_person']
@@ -629,7 +631,7 @@ class NameIDFormat(SamlBase):
     """The md:NameIDFormat element"""
     
     c_tag = 'NameIDFormat'
-    c_namespace = MD_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
 
@@ -642,16 +644,16 @@ class SSODescriptor(RoleDescriptor):
     """The md:SSODescriptor element"""
 
     c_tag = 'SSODescriptor'
-    c_namespace = MD_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = RoleDescriptor.c_children.copy()
     c_attributes = RoleDescriptor.c_attributes.copy()
-    c_children['{%s}ArtifactResolutionService' % MD_NAMESPACE] = (
+    c_children['{%s}ArtifactResolutionService' % NAMESPACE] = (
         'artifact_resolution_service', [ArtifactResolutionService])
-    c_children['{%s}SingleLogoutService' % MD_NAMESPACE] = (
+    c_children['{%s}SingleLogoutService' % NAMESPACE] = (
         'single_logout_service', [SingleLogoutService])
-    c_children['{%s}ManageNameIDService' % MD_NAMESPACE] = (
+    c_children['{%s}ManageNameIDService' % NAMESPACE] = (
         'manage_name_id_service', [ManageNameIDService])
-    c_children['{%s}NameIDFormat' % MD_NAMESPACE] = (
+    c_children['{%s}NameIDFormat' % NAMESPACE] = (
         'name_id_format', [NameIDFormat])
 
     c_child_order = ['signature', 'extensions', 'key_descriptor', 
@@ -734,7 +736,7 @@ class AttributeProfile(SamlBase):
     """The md:AttributeProfile element"""
     
     c_tag = 'AttributeProfile'
-    c_namespace = MD_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
 
@@ -747,19 +749,19 @@ class IDPSSODescriptor(SSODescriptor):
     """The md:IDPSSODescriptor element"""
 
     c_tag = 'IDPSSODescriptor'
-    c_namespace = MD_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SSODescriptor.c_children.copy()
     c_attributes = SSODescriptor.c_attributes.copy()
     c_attributes['WantAuthnRequestsSigned'] = 'want_authn_requests_signed'
-    c_children['{%s}SingleSignOnService' % MD_NAMESPACE] = (
+    c_children['{%s}SingleSignOnService' % NAMESPACE] = (
         'single_sign_on_service', [SingleSignOnService])
-    c_children['{%s}NameIDMappingService' % MD_NAMESPACE] = (
+    c_children['{%s}NameIDMappingService' % NAMESPACE] = (
         'name_id_mapping_service', [NameIDMappingService])
-    c_children['{%s}AssertionIDRequestService' % MD_NAMESPACE] = (
+    c_children['{%s}AssertionIDRequestService' % NAMESPACE] = (
         'assertion_id_request_service', [AssertionIDRequestService])
-    c_children['{%s}AttributeProfile' % MD_NAMESPACE] = (
+    c_children['{%s}AttributeProfile' % NAMESPACE] = (
         'attribute_profile', [AttributeProfile])
-    c_children['{%s}Attribute' % saml.SAML_NAMESPACE] = (
+    c_children['{%s}Attribute' % SAML_NAMESPACE] = (
         'attribute', [Attribute])
 
     c_child_order = ['signature', 'extensions', 'key_descriptor', 
@@ -831,7 +833,7 @@ def idpsso_descriptor_from_string(xml_string):
 class RequestedAttribute(Attribute):
 
     c_tag = 'RequestedAttribute'
-    c_namespace = MD_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = Attribute.c_children.copy()
     c_attributes = Attribute.c_attributes.copy()
     c_attributes['isRequired'] = 'is_required'
@@ -864,7 +866,7 @@ def requested_attribute_from_string(xml_string):
 class ServiceName(LocalizedName):
     """The md:ServiceName element"""
     c_tag = 'ServiceName'
-    c_namespace = MD_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = LocalizedName.c_children.copy()
     c_attributes = LocalizedName.c_attributes.copy()
 
@@ -889,7 +891,7 @@ def service_name_from_string(xml_string):
 class ServiceDescription(LocalizedName):
     """The md:ServiceDescription element"""
     c_tag = 'ServiceDescription'
-    c_namespace = MD_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = LocalizedName.c_children.copy()
     c_attributes = LocalizedName.c_attributes.copy()
 
@@ -915,16 +917,16 @@ class AttributeConsumingService(SamlBase):
     """The md:AttributeConsumingService element"""
     
     c_tag = 'AttributeConsumingService'
-    c_namespace = MD_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['index'] = 'index'
     c_attributes['isDefault'] = 'is_default'
-    c_children['{%s}ServiceName' % MD_NAMESPACE] = (
+    c_children['{%s}ServiceName' % NAMESPACE] = (
                     'service_name', [ServiceName])
-    c_children['{%s}ServiceDescription' % MD_NAMESPACE] = (
+    c_children['{%s}ServiceDescription' % NAMESPACE] = (
                     'service_description', [ServiceDescription])
-    c_children['{%s}RequestedAttribute' % MD_NAMESPACE] = (
+    c_children['{%s}RequestedAttribute' % NAMESPACE] = (
                     'requested_attribute', [RequestedAttribute])
     c_child_order = ['service_name', 'service_description', 
                     'requested_attribute']
@@ -961,14 +963,14 @@ class SPSSODescriptor(SSODescriptor):
     """The md:SPSSODescriptor element"""
 
     c_tag = 'SPSSODescriptor'
-    c_namespace = MD_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SSODescriptor.c_children.copy()
     c_attributes = SSODescriptor.c_attributes.copy()
     c_attributes['AuthnRequestsSigned'] = 'authn_requests_signed'
     c_attributes['WantAssertionsSigned'] = 'want_assertions_signed'
-    c_children['{%s}AssertionConsumerService' % MD_NAMESPACE] = (
+    c_children['{%s}AssertionConsumerService' % NAMESPACE] = (
         'assertion_consumer_service', [AssertionConsumerService])
-    c_children['{%s}AttributeConsumingService' % MD_NAMESPACE] = (
+    c_children['{%s}AttributeConsumingService' % NAMESPACE] = (
         'attribute_consuming_service', [AttributeConsumingService])
     
     c_child_order = ['signature', 'extensions', 'key_descriptor', 
@@ -994,7 +996,8 @@ class SPSSODescriptor(SSODescriptor):
         :param identifier: ID attribute
         :param valid_until: validUntil attribute
         :param cache_duration: cacheDuration attribute
-        :param protocol_support_enumeration: protocolSupportEnumeration attribute
+        :param protocol_support_enumeration: protocolSupportEnumeration 
+            attribute
         :param error_url: errorURL attribute
         :param signature: ds:Signature element
         :param extensions: Extensions element
@@ -1011,12 +1014,14 @@ class SPSSODescriptor(SSODescriptor):
         :param attribute_consuming_service: AttributeConsumingService elements
         :param text: The text data in the this element
         :param extension_elements: A list of ExtensionElement instances
-        :param extension_attributes: A dictionary of attribute value string pairs
+        :param extension_attributes: A dictionary of attribute value string 
+            pairs
         """
         SSODescriptor.__init__(self, artifact_resolution_service,
                         single_logout_service, manage_name_id_service,
-                        name_id_format, identifier, valid_until, cache_duration, 
-                        protocol_support_enumeration, error_url, signature, 
+                        name_id_format, identifier, valid_until, 
+                        cache_duration, protocol_support_enumeration, 
+                        error_url, signature, 
                         extensions, key_descriptor, organization, 
                         contact_person, text, extension_elements, 
                         extension_attributes)
@@ -1038,28 +1043,28 @@ class EntityDescriptor(SamlBase):
     # AffiliationDescriptor is not implemented yet
 
     c_tag = 'EntityDescriptor'
-    c_namespace = MD_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['entityID'] = 'entity_id'
     c_attributes['ID'] = 'identifier'
     c_attributes['validUntil'] = 'valid_until'
     c_attributes['cacheDuration'] = 'cache_duration'
-    c_children['{%s}Signature' % ds.DS_NAMESPACE] = ('signature', ds.Signature)
-    c_children['{%s}Extensions' % MD_NAMESPACE] = ('extensions', Extensions)
-    c_children['{%s}RoleDescriptor' % MD_NAMESPACE] = (
+    c_children['{%s}Signature' % DS_NAMESPACE] = ('signature', ds.Signature)
+    c_children['{%s}Extensions' % NAMESPACE] = ('extensions', Extensions)
+    c_children['{%s}RoleDescriptor' % NAMESPACE] = (
                                     'role_descriptor', [RoleDescriptor])
-    c_children['{%s}IDPSSODescriptor' % MD_NAMESPACE] = (
+    c_children['{%s}IDPSSODescriptor' % NAMESPACE] = (
                                     'idp_sso_descriptor', [IDPSSODescriptor])
-    c_children['{%s}SPSSODescriptor' % MD_NAMESPACE] = (
+    c_children['{%s}SPSSODescriptor' % NAMESPACE] = (
                                     'sp_sso_descriptor', [SPSSODescriptor])
-    c_children['{%s}Organization' % MD_NAMESPACE] = (
+    c_children['{%s}Organization' % NAMESPACE] = (
                                     'organization', Organization)
-    c_children['{%s}ContactPerson' % MD_NAMESPACE] = (
+    c_children['{%s}ContactPerson' % NAMESPACE] = (
                                     'contact_person', [ContactPerson])
-    c_children['{%s}ContactPerson' % MD_NAMESPACE] = (
+    c_children['{%s}ContactPerson' % NAMESPACE] = (
                                     'contact_person', [ContactPerson])
-    c_children['{%s}AdditionalMetadataLocation' % MD_NAMESPACE] = (
+    c_children['{%s}AdditionalMetadataLocation' % NAMESPACE] = (
                 'additional_metadata_location', [AdditionalMetadataLocation])
     c_child_order = ['signature', 'extensions', 'role_descriptor',
                     'idp_sso_descriptor', 'sp_sso_descriptor', 'organization', 
@@ -1113,16 +1118,16 @@ class EntitiesDescriptor(SamlBase):
     """The md:EntitiesDescriptor element"""
 
     c_tag = 'EntitiesDescriptor'
-    c_namespace = MD_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['name'] = 'name'
     c_attributes['ID'] = 'identifier'
     c_attributes['validUntil'] = 'valid_until'
     c_attributes['cacheDuration'] = 'cache_duration'
-    c_children['{%s}Signature' % ds.DS_NAMESPACE] = ('signature', ds.Signature)
-    c_children['{%s}Extensions' % MD_NAMESPACE] = ('extensions', Extensions)
-    c_children['{%s}EntityDescriptor' % MD_NAMESPACE] = (
+    c_children['{%s}Signature' % DS_NAMESPACE] = ('signature', ds.Signature)
+    c_children['{%s}Extensions' % NAMESPACE] = ('extensions', Extensions)
+    c_children['{%s}EntityDescriptor' % NAMESPACE] = (
         'entity_descriptor', [EntityDescriptor])
     c_child_order = ['signature', 'extensions', 'entity_descriptor',
                                     'entities_descriptor']
@@ -1156,7 +1161,7 @@ class EntitiesDescriptor(SamlBase):
         self.entity_descriptor = entity_descriptor or []
         self.entities_descriptor = entities_descriptor or []
 
-EntitiesDescriptor.c_children['{%s}EntitiesDescriptor' % MD_NAMESPACE] = (
+EntitiesDescriptor.c_children['{%s}EntitiesDescriptor' % NAMESPACE] = (
         'entities_descriptor', [EntitiesDescriptor])
     
 def entities_descriptor_from_string(xml_string):

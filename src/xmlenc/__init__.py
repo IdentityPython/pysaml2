@@ -37,8 +37,8 @@ from saml2 import create_class_from_xml_string
 
 import xmldsig as ds
 
-ENC_NAMESPACE = 'http://www.w3.org/2001/04/xmlenc#'
-ENC_TEMPLATE = '{http://www.w3.org/2001/04/xmlenc#}%s'
+NAMESPACE = 'http://www.w3.org/2001/04/xmlenc#'
+#TEMPLATE = '{http://www.w3.org/2001/04/xmlenc#}%s'
 
 class EncBase(saml2.SamlBase):
     """The enc:EncBase element"""
@@ -53,7 +53,7 @@ class EncBase(saml2.SamlBase):
 class KeySize(EncBase):
 
     c_tag = 'KeySize'
-    c_namespace = ENC_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = EncBase.c_children.copy()
     c_attributes = EncBase.c_attributes.copy()
 
@@ -68,7 +68,7 @@ def key_size_from_string(xml_string):
 class OAEPparams(EncBase):
 
     c_tag = 'OAEPparams'
-    c_namespace = ENC_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = EncBase.c_children.copy()
     c_attributes = EncBase.c_attributes.copy()
 
@@ -84,13 +84,13 @@ class EncryptionMethod(EncBase):
     """The enc:EncryptionMethod element"""
 
     c_tag = 'EncryptionMethod'
-    c_namespace = ENC_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = EncBase.c_children.copy()
     c_attributes = EncBase.c_attributes.copy()
     c_attributes['Algorithm'] = 'algorithm'
-    c_children['{%s}KeySize' % ENC_NAMESPACE] = (
+    c_children['{%s}KeySize' % NAMESPACE] = (
         'key_size', [KeySize])
-    c_children['{%s}OAEPparams' % ENC_NAMESPACE] = (
+    c_children['{%s}OAEPparams' % NAMESPACE] = (
         'oaep_params', [OAEPparams])
 
     def __init__(self, algorithm=None, key_size=None, oaep_params=None,
@@ -122,7 +122,7 @@ def encryption_method_from_string(xml_string):
 class CipherValue(EncBase):
 
     c_tag = 'CipherValue'
-    c_namespace = ENC_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = EncBase.c_children.copy()
     c_attributes = EncBase.c_attributes.copy()
 
@@ -139,10 +139,10 @@ def cipher_value_from_string(xml_string):
 class Transforms(EncBase):
 
     c_tag = 'Transforms'
-    c_namespace = ENC_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = EncBase.c_children.copy()
     c_attributes = EncBase.c_attributes.copy()
-    c_children['{%s}Transform' % ds.DS_NAMESPACE] = (
+    c_children['{%s}Transform' % ds.NAMESPACE] = (
         'transform', [ds.Transform])
 
     def __init__(self, transform=None,
@@ -170,11 +170,11 @@ def transforms_from_string(xml_string):
 class CipherReference(EncBase):
 
     c_tag = 'CipherReference'
-    c_namespace = ENC_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = EncBase.c_children.copy()
     c_attributes = EncBase.c_attributes.copy()
     c_attributes['URI'] = 'uri'    
-    c_children['{%s}Transforms' % ENC_NAMESPACE] = (
+    c_children['{%s}Transforms' % NAMESPACE] = (
         'transforms', [Transforms])
     
     def __init__(self, uri=None, transforms=None, 
@@ -205,12 +205,12 @@ class CipherData(EncBase):
     """The enc:CipherData element"""
 
     c_tag = 'CipherData'
-    c_namespace = ENC_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = EncBase.c_children.copy()
     c_attributes = EncBase.c_attributes.copy()
-    c_children['{%s}CipherValue' % ENC_NAMESPACE] = (
+    c_children['{%s}CipherValue' % NAMESPACE] = (
         'cipher_value', [CipherValue])
-    c_children['{%s}CipherReference' % ENC_NAMESPACE] = (
+    c_children['{%s}CipherReference' % NAMESPACE] = (
         'cipher_reference', [CipherReference])
     c_child_order = ['cipher_value', 'cipher_reference']
 
@@ -231,6 +231,10 @@ class CipherData(EncBase):
         self.cipher_value = cipher_value
         self.cipher_reference = cipher_reference
 
+def cipher_data_from_string(xml_string):
+    """ Create CipherData instance from an XML string """
+    return create_class_from_xml_string(CipherData, xml_string)
+
 # ---------------------------------------------------------------------------
 # EncryptionProperty
 # ---------------------------------------------------------------------------
@@ -238,7 +242,7 @@ class CipherData(EncBase):
 class EncryptionProperty(EncBase):
 
     c_tag = 'EncryptionProperty'
-    c_namespace = ENC_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = EncBase.c_children.copy()
     c_attributes = EncBase.c_attributes.copy()
     c_attributes['Target'] = 'target'
@@ -271,11 +275,11 @@ def encryption_property_from_string(xml_string):
 class EncryptionProperties(EncBase):
 
     c_tag = 'EncryptionProperties'
-    c_namespace = ENC_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = EncBase.c_children.copy()
     c_attributes = EncBase.c_attributes.copy()
     c_attributes['Id'] = 'identifier'
-    c_children['{%s}EncryptionProperty' % ENC_NAMESPACE] = (
+    c_children['{%s}EncryptionProperty' % NAMESPACE] = (
         'encryption_property', [EncryptionProperty])
 
     def __init__(self, identifier=None, encryption_property=None, 
@@ -306,20 +310,20 @@ class EncryptedType(EncBase):
     """The enc:EncryptedType element"""
 
     c_tag = 'EncryptedType'
-    c_namespace = ENC_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = EncBase.c_children.copy()
     c_attributes = EncBase.c_attributes.copy()
     c_attributes['Id'] = 'identifier'
     c_attributes['Type'] = 'typ'
     c_attributes['MimeType'] = 'mime_type'
     c_attributes['Encoding'] = 'encoding'
-    c_children['{%s}EncryptionMethod' % ENC_NAMESPACE] = (
+    c_children['{%s}EncryptionMethod' % NAMESPACE] = (
         'encryption_method', [EncryptionMethod])
-    c_children['{%s}KeyInfo' % ds.DS_NAMESPACE] = (
+    c_children['{%s}KeyInfo' % ds.NAMESPACE] = (
         'key_info', [ds.KeyInfo])
-    c_children['{%s}CipherData' % ENC_NAMESPACE] = (
+    c_children['{%s}CipherData' % NAMESPACE] = (
         'cipher_data', [CipherData])
-    c_children['{%s}EncryptionProperties' % ENC_NAMESPACE] = (
+    c_children['{%s}EncryptionProperties' % NAMESPACE] = (
         'encryption_properties', [EncryptionProperties])
     c_child_order = ['encryption_method', 'key_info',
                     'cipher_data','encryption_properties']
@@ -366,7 +370,7 @@ class EncryptedData(EncryptedType):
     """The enc:EncryptedData element"""
 
     c_tag = 'EncryptedData'
-    c_namespace = ENC_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = EncryptedType.c_children.copy()
     c_attributes = EncryptedType.c_attributes.copy()
 
@@ -381,7 +385,7 @@ def encrypted_data_from_string(xml_string):
 class ReferenceType(EncBase):
 
     c_tag = 'ReferenceType'
-    c_namespace = ENC_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = EncBase.c_children.copy()
     c_attributes = EncBase.c_attributes.copy()
     c_attributes['URI'] = 'uri'
@@ -411,9 +415,13 @@ def reference_type_from_string(xml_string):
 class DataReference(ReferenceType):
 
     c_tag = 'DataReference'
-    c_namespace = ENC_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = ReferenceType.c_children.copy()
     c_attributes = ReferenceType.c_attributes.copy()
+
+def data_reference_from_string(xml_string):
+    """ Create DataReference instance from an XML string """
+    return create_class_from_xml_string(DataReference, xml_string)
 
 # ---------------------------------------------------------------------------
 # KeyReference
@@ -422,9 +430,13 @@ class DataReference(ReferenceType):
 class KeyReference(ReferenceType):
 
     c_tag = 'KeyReference'
-    c_namespace = ENC_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = ReferenceType.c_children.copy()
     c_attributes = ReferenceType.c_attributes.copy()
+
+def key_reference_from_string(xml_string):
+    """ Create KeyReference instance from an XML string """
+    return create_class_from_xml_string(KeyReference, xml_string)
 
 # ---------------------------------------------------------------------------
 # ReferenceList
@@ -433,12 +445,12 @@ class KeyReference(ReferenceType):
 class ReferenceList(EncBase):
 
     c_tag = 'ReferenceList'
-    c_namespace = ENC_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = EncBase.c_children.copy()
     c_attributes = EncBase.c_attributes.copy()
-    c_children['{%s}DataReference' % ENC_NAMESPACE] = (
+    c_children['{%s}DataReference' % NAMESPACE] = (
         'data_reference', [DataReference])
-    c_children['{%s}KeyReference' % ENC_NAMESPACE] = (
+    c_children['{%s}KeyReference' % NAMESPACE] = (
         'key_reference', [KeyReference])
 
     def __init__(self, data_reference=None, key_reference=None, 
@@ -468,7 +480,7 @@ def reference_list_from_string(xml_string):
 class CarriedKeyName(EncBase):
 
     c_tag = 'CarriedKeyName'
-    c_namespace = ENC_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = EncBase.c_children.copy()
     c_attributes = EncBase.c_attributes.copy()
 
@@ -484,13 +496,13 @@ class EncryptedKey(EncryptedType):
     """The enc:EncryptedKey element"""
 
     c_tag = 'EncryptedKey'
-    c_namespace = ENC_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = EncryptedType.c_children.copy()
     c_attributes = EncryptedType.c_attributes.copy()
     c_attributes['Recipient'] = 'recipient'
-    c_children['{%s}ReferenceList' % ENC_NAMESPACE] = (
+    c_children['{%s}ReferenceList' % NAMESPACE] = (
         'reference_list', [ReferenceList])
-    c_children['{%s}CarriedKeyName' % ENC_NAMESPACE] = (
+    c_children['{%s}CarriedKeyName' % NAMESPACE] = (
         'carried_key_name', [CarriedKeyName])
 
     def __init__(self, recipient=None, reference_list=None, 
@@ -529,3 +541,22 @@ def encrypted_key_from_string(xml_string):
     """ Create EncryptedKey instance from an XML string """
     return create_class_from_xml_string(EncryptedKey, xml_string)
 
+ELEMENT_TO_STRING = {
+    KeySize: key_size_from_string,
+    OAEPparams: oaep_params_from_string,
+    EncryptionMethod: encryption_method_from_string,
+    CipherValue: cipher_value_from_string,
+    Transforms: transforms_from_string,
+    CipherReference: cipher_reference_from_string,
+    CipherData: cipher_data_from_string,
+    EncryptionProperty: encryption_property_from_string,
+    EncryptionProperties: encryption_properties_from_string,
+    EncryptedType: encrypted_type_from_string,
+    EncryptedData: encrypted_data_from_string,
+    ReferenceType: reference_type_from_string,
+    DataReference: data_reference_from_string,
+    KeyReference: key_reference_from_string,
+    ReferenceList: reference_list_from_string,
+    CarriedKeyName: carried_key_name_from_string,
+    EncryptedKey: encrypted_key_from_string,
+}

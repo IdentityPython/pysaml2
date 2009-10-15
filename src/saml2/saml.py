@@ -29,8 +29,7 @@ import xmldsig as ds
 import saml2
 from saml2 import SamlBase
 
-SAML_NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:assertion'
-SAML_TEMPLATE = '{urn:oasis:names:tc:SAML:2.0:assertion}%s'
+NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:assertion'
 XSI_NAMESPACE = 'http://www.w3.org/2001/XMLSchema-instance'
 
 NAMEID_FORMAT_EMAILADDRESS = (
@@ -66,7 +65,7 @@ class BaseID(SamlBase):
     """ The saml:BaseID element """
 
     c_tag = 'BaseID'
-    c_namespace = SAML_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['NameQualifier'] = 'name_qualifier'
@@ -103,7 +102,7 @@ class NameID(BaseID):
     """The saml:NameID element"""
 
     c_tag = 'NameID'
-    c_namespace = SAML_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = BaseID.c_children.copy()
     c_attributes = BaseID.c_attributes.copy()
     c_attributes['Format'] = 'name_format'
@@ -144,7 +143,7 @@ def name_id_from_string(xml_string):
 class EncryptedID(SamlBase):
     """The saml:EncryptedID element"""
     c_tag = 'EncryptedID'
-    c_namespace = SAML_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
 
@@ -178,7 +177,7 @@ class AssertionIDRef(SamlBase):
     """The saml:AssertionIDRef element makes a reference to a SAML assertion 
     by its unique identifier."""
     c_tag = 'AssertionIDRef'
-    c_namespace = SAML_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
 
@@ -194,7 +193,7 @@ class AssertionURIRef(SamlBase):
     """The saml:AssertionURIRef element makes a reference to a SAML assertion 
     by URI reference."""
     c_tag = 'AssertionURIRef'
-    c_namespace = SAML_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
 
@@ -212,7 +211,7 @@ class EncryptedAssertion(SamlBase):
     Processing specification"""
     
     c_tag = 'EncryptedAssertion'
-    c_namespace = SAML_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
 
@@ -233,7 +232,7 @@ class SubjectConfirmationData(SamlBase):
     under which the act of subject confirmation can take place"""
 
     c_tag = 'SubjectConfirmationData'
-    c_namespace = SAML_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['NotBefore'] = 'not_before'
@@ -293,25 +292,25 @@ class SubjectConfirmation(SamlBase):
     the party with whom the relying party is communicating."""
 
     c_tag = 'SubjectConfirmation'
-    c_namespace = SAML_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['Method'] = 'method'
-    c_children['{%s}BaseID' % SAML_NAMESPACE] = ('base_id', BaseID)
-    c_children['{%s}NameID' % SAML_NAMESPACE] = ('name_id', NameID)
-    c_children['{%s}EncryptedID' % SAML_NAMESPACE] = ('encrypted_id', 
+    c_children['{%s}BaseID' % NAMESPACE] = ('base_id', BaseID)
+    c_children['{%s}NameID' % NAMESPACE] = ('name_id', NameID)
+    c_children['{%s}EncryptedID' % NAMESPACE] = ('encrypted_id', 
         EncryptedID)
-    c_children['{%s}SubjectConfirmationData' % SAML_NAMESPACE] = (
+    c_children['{%s}SubjectConfirmationData' % NAMESPACE] = (
         'subject_confirmation_data', SubjectConfirmationData)
     c_child_order = ['base_id', 'name_id', 'encrypted_id', 
                     'subject_confirmation_data']
 
-    def __init__(self, method=None, name_id=None, 
+    def __init__(self, base_id=None, name_id=None, encrypted_id=None,
                     subject_confirmation_data=None, text=None, 
                     extension_elements=None, extension_attributes=None):
         """Constructor for SubjectConfirmation
 
-        :param method: Method attribute
+        :param base_id: Method attribute
         :param name_id: NameID element
         :param subject_confirmation_data: SubjectConfirmationData element
         :param text: The text data in this element
@@ -321,8 +320,9 @@ class SubjectConfirmation(SamlBase):
         """
 
         SamlBase.__init__(self, text, extension_elements, extension_attributes)
-        self.method = method
+        self.base_id = base_id
         self.name_id = name_id
+        self.encrypted_id = encrypted_id
         self.subject_confirmation_data = subject_confirmation_data
 
 def subject_confirmation_from_string(xml_string):
@@ -335,14 +335,13 @@ def subject_confirmation_from_string(xml_string):
 
 class Subject(SamlBase):
     """The saml:Subject element"""
-    # TODO: BaseID, EncryptedID element
 
     c_tag = 'Subject'
-    c_namespace = SAML_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
-    c_children['{%s}NameID' % SAML_NAMESPACE] = ('name_id', NameID)
-    c_children['{%s}SubjectConfirmation' % SAML_NAMESPACE] = (
+    c_children['{%s}NameID' % NAMESPACE] = ('name_id', NameID)
+    c_children['{%s}SubjectConfirmation' % NAMESPACE] = (
         'subject_confirmation', [SubjectConfirmation])
     c_child_order = ['name_id', 'subject_confirmation']
 
@@ -375,7 +374,7 @@ class Condition(SamlBase):
     """The saml:Condition element"""
 
     c_tag = 'Condition'
-    c_namespace = SAML_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
 
@@ -393,7 +392,7 @@ class Audience(SamlBase):
     audience."""
 
     c_tag = 'Audience'
-    c_namespace = SAML_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
 
@@ -411,10 +410,10 @@ class AudienceRestriction(Condition):
     elements."""
 
     c_tag = 'AudienceRestriction'
-    c_namespace = SAML_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = Condition.c_children.copy()
     c_attributes = Condition.c_attributes.copy()
-    c_children['{%s}Audience' % SAML_NAMESPACE] = ('audience', Audience)
+    c_children['{%s}Audience' % NAMESPACE] = ('audience', Audience)
 
     def __init__(self, audience=None, text=None,
                     extension_elements=None, extension_attributes=None):
@@ -427,7 +426,7 @@ class AudienceRestriction(Condition):
             pairs
         """
 
-        Condition.__init__(self, text,extension_elements, 
+        Condition.__init__(self, text, extension_elements, 
             extension_attributes)
         self.audience = audience
 
@@ -465,11 +464,11 @@ class ProxyRestriction(Condition):
     of the information contained in the original assertion."""
 
     c_tag = 'ProxyRestriction'
-    c_namespace = SAML_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = Condition.c_children.copy()
     c_attributes = Condition.c_attributes.copy()
     c_attributes['Count'] = 'count'
-    c_children['{%s}Audience' % SAML_NAMESPACE] = ('audience', [Audience])
+    c_children['{%s}Audience' % NAMESPACE] = ('audience', [Audience])
 
     def __init__(self, count=None, audience=None, text=None,
                     extension_elements=None, extension_attributes=None):
@@ -501,17 +500,17 @@ class Conditions(SamlBase):
     """The saml:Conditions element"""
 
     c_tag = 'Conditions'
-    c_namespace = SAML_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()    
     c_attributes['NotBefore'] = 'not_before'
     c_attributes['NotOnOrAfter'] = 'not_on_or_after'
-    c_children['{%s}Condition' % SAML_NAMESPACE] = ('condition', [Condition])
-    c_children['{%s}AudienceRestriction' % SAML_NAMESPACE] = (
+    c_children['{%s}Condition' % NAMESPACE] = ('condition', [Condition])
+    c_children['{%s}AudienceRestriction' % NAMESPACE] = (
         'audience_restriction', [AudienceRestriction])
-    c_children['{%s}OneTimeUse' % SAML_NAMESPACE] = (
+    c_children['{%s}OneTimeUse' % NAMESPACE] = (
         'one_time_use', [OneTimeUse])
-    c_children['{%s}ProxyRestriction' % SAML_NAMESPACE] = (
+    c_children['{%s}ProxyRestriction' % NAMESPACE] = (
         'proxy_restriction', [ProxyRestriction])
     c_child_order = ['condition', 'audience_restriction', 'one_time_use',
                                     'proxy_restriction']
@@ -565,7 +564,7 @@ class Statement(SamlBase):
     assertion-based applications to reuse the SAML assertion framework."""
 
     c_tag = 'Statement'
-    c_namespace = SAML_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     
@@ -581,7 +580,7 @@ class SubjectLocality(SamlBase):
     """The saml:SubjectLocality element"""
 
     c_tag = 'SubjectLocality'
-    c_namespace = SAML_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['Address'] = 'address'
@@ -613,7 +612,7 @@ class AuthnContextClassRef(SamlBase):
     """The saml:AuthnContextClassRef element"""
 
     c_tag = 'AuthnContextClassRef'
-    c_namespace = SAML_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
 
@@ -626,7 +625,7 @@ class AuthnContextDeclRef(SamlBase):
     """The saml:AuthnContextDeclRef element"""
 
     c_tag = 'AuthnContextDeclRef'
-    c_namespace = SAML_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
 
@@ -639,7 +638,7 @@ class AuthnContextDecl(SamlBase):
     """The saml:AuthnContextDecl element"""
 
     c_tag = 'AuthnContextDecl'
-    c_namespace = SAML_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
 
@@ -652,7 +651,7 @@ class AuthenticatingAuthority(SamlBase):
     """The saml:AuthenticatingAuthority element"""
 
     c_tag = 'AuthenticatingAuthority'
-    c_namespace = SAML_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
 
@@ -666,16 +665,16 @@ class AuthnContext(SamlBase):
     """The saml:AuthnContext element"""
 
     c_tag = 'AuthnContext'
-    c_namespace = SAML_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
-    c_children['{%s}AuthnContextClassRef' % SAML_NAMESPACE] = (
+    c_children['{%s}AuthnContextClassRef' % NAMESPACE] = (
         'authn_context_class_ref', AuthnContextClassRef)
-    c_children['{%s}AuthnContextDeclRef' % SAML_NAMESPACE] = (
+    c_children['{%s}AuthnContextDeclRef' % NAMESPACE] = (
         'authn_context_decl_ref', AuthnContextDeclRef)
-    c_children['{%s}AuthnContextDecl' % SAML_NAMESPACE] = (
+    c_children['{%s}AuthnContextDecl' % NAMESPACE] = (
         'authn_context_decl', AuthnContextDecl)
-    c_children['{%s}AuthenticatingAuthority' % SAML_NAMESPACE] = (
+    c_children['{%s}AuthenticatingAuthority' % NAMESPACE] = (
         'authenticating_authority', [AuthenticatingAuthority])
     c_child_order = ['authn_context_class_ref', 
                     'authn_context_decl', 'authn_context_decl_ref',
@@ -725,15 +724,15 @@ class AuthnStatement(Statement):
     """The saml:AuthnStatement element"""
 
     c_tag = 'AuthnStatement'
-    c_namespace = SAML_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = Statement.c_children.copy()
     c_attributes = Statement.c_attributes.copy()
     c_attributes['AuthnInstant'] = 'authn_instant'
     c_attributes['SessionIndex'] = 'session_index'
     c_attributes['SessionNotOnOrAfter'] = 'session_not_on_or_after'
-    c_children['{%s}SubjectLocality' % SAML_NAMESPACE] = (
+    c_children['{%s}SubjectLocality' % NAMESPACE] = (
         'subject_locality', SubjectLocality)
-    c_children['{%s}AuthnContext' % SAML_NAMESPACE] = (
+    c_children['{%s}AuthnContext' % NAMESPACE] = (
         'authn_context', AuthnContext)
     c_child_order = ['subject_locality', 'authn_context']
     
@@ -784,7 +783,7 @@ class AttributeValue(SamlBase):
     attribute."""
 
     c_tag = 'AttributeValue'
-    c_namespace = SAML_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
 
@@ -803,7 +802,7 @@ class EncryptedAttribute(SamlBase):
     specification."""
 
     c_tag = 'EncryptedAttribute'
-    c_namespace = SAML_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
 
@@ -819,13 +818,13 @@ class Attribute(SamlBase):
     """The saml:Attribute element"""
 
     c_tag = 'Attribute'
-    c_namespace = SAML_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['Name'] = 'name'
     c_attributes['NameFormat'] = 'name_format'
     c_attributes['FriendlyName'] = 'friendly_name'
-    c_children['{%s}AttributeValue' % SAML_NAMESPACE] = ('attribute_value', 
+    c_children['{%s}AttributeValue' % NAMESPACE] = ('attribute_value', 
                                                         [AttributeValue])
     
     def __init__(self, name=None, name_format=None, friendly_name=None,
@@ -868,13 +867,12 @@ class AttributeStatement(Statement):
     authority asserting that the assertion subject is associated with the 
     specified attributes."""
 
-    # TODO: EncryptedAttribute
     c_tag = 'AttributeStatement'
-    c_namespace = SAML_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = Statement.c_children.copy()
     c_attributes = Statement.c_attributes.copy()
-    c_children['{%s}Attribute' % SAML_NAMESPACE] = ('attribute', [Attribute])
-    c_children['{%s}EncryptedAttribute' % SAML_NAMESPACE] = (
+    c_children['{%s}Attribute' % NAMESPACE] = ('attribute', [Attribute])
+    c_children['{%s}EncryptedAttribute' % NAMESPACE] = (
             'encrypted_attribute', [EncryptedAttribute])
     c_child_order = ['attribute', 'encrypted_attribute']
     
@@ -908,7 +906,7 @@ class Action(SamlBase):
     for which permission is sought."""
 
     c_tag = 'Action'
-    c_namespace = SAML_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['Namespace'] = 'namespace'
@@ -943,16 +941,16 @@ class Evidence(SamlBase):
     the authorization decision."""
 
     c_tag = 'Evidence'
-    c_namespace = SAML_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
-    c_children['{%s}AssertionIDRef' % SAML_NAMESPACE] = ('assertion_id_ref', 
+    c_children['{%s}AssertionIDRef' % NAMESPACE] = ('assertion_id_ref', 
                                                         [AssertionIDRef])
-    c_children['{%s}AssertionURIRef' % SAML_NAMESPACE] = ('assertion_uri_ref', 
+    c_children['{%s}AssertionURIRef' % NAMESPACE] = ('assertion_uri_ref', 
                                                         [AssertionURIRef])
-    c_children['{%s}EncryptedAssertion' % SAML_NAMESPACE] = (
+    c_children['{%s}EncryptedAssertion' % NAMESPACE] = (
         'encrypted_assertion', [EncryptedAssertion])
-    c_child_order = ['assertion_id_ref', 'assertion_uri_ref',
+    c_child_order = ['assertion_id_ref', 'assertion_uri_ref', 'assertion',
                     'encrypted_assertion']
     
     def __init__(self, assertion_id_ref=None, assertion_uri_ref=None,
@@ -992,14 +990,14 @@ class AuthzDecisionStatement(Statement):
     decision on the basis of some optionally specified evidence."""
 
     c_tag = 'AuthzDecisionStatement'
-    c_namespace = SAML_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = Statement.c_children.copy()
     c_attributes = Statement.c_attributes.copy()
 
     c_attributes['Resource'] = 'resource'
     c_attributes['Decision'] = 'decision'
-    c_children['{%s}Action' % SAML_NAMESPACE] = ('action', [Action])
-    c_children['{%s}Evidence' % SAML_NAMESPACE] = ('evidence', [Evidence])
+    c_children['{%s}Action' % NAMESPACE] = ('action', [Action])
+    c_children['{%s}Evidence' % NAMESPACE] = ('evidence', [Evidence])
     c_child_order = ['action', 'evidence']
 
     def __init__(self, resource=None, decision=None, action=None,
@@ -1041,23 +1039,23 @@ def authz_decision_statement_from_string(xml_string):
 class Assertion(SamlBase):
     """The saml:Assertion element"""
     c_tag = 'Assertion'
-    c_namespace = SAML_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['Version'] = 'version'
     c_attributes['ID'] = 'identifier'
     c_attributes['IssueInstant'] = 'issue_instant'
-    c_children['{%s}Issuer' % SAML_NAMESPACE] = ('issuer', Issuer)
-    c_children['{%s}Signature' % ds.DS_NAMESPACE] = ('signature', ds.Signature)
-    c_children['{%s}Subject' % SAML_NAMESPACE] = ('subject', Subject)
-    c_children['{%s}Conditions' % SAML_NAMESPACE] = ('conditions', Conditions)
-    #c_children['{%s}Advice' % SAML_NAMESPACE] = ('advice', Advice)
-    c_children['{%s}Statement' % SAML_NAMESPACE] = ('statement', [Statement])
-    c_children['{%s}AuthnStatement' % SAML_NAMESPACE] = (
+    c_children['{%s}Issuer' % NAMESPACE] = ('issuer', Issuer)
+    c_children['{%s}Signature' % ds.NAMESPACE] = ('signature', ds.Signature)
+    c_children['{%s}Subject' % NAMESPACE] = ('subject', Subject)
+    c_children['{%s}Conditions' % NAMESPACE] = ('conditions', Conditions)
+    #c_children['{%s}Advice' % NAMESPACE] = ('advice', Advice)
+    c_children['{%s}Statement' % NAMESPACE] = ('statement', [Statement])
+    c_children['{%s}AuthnStatement' % NAMESPACE] = (
         'authn_statement', [AuthnStatement])
-    c_children['{%s}AuthzDecisionStatement' % SAML_NAMESPACE] = (
+    c_children['{%s}AuthzDecisionStatement' % NAMESPACE] = (
         'authz_decision_statement', [AuthzDecisionStatement])
-    c_children['{%s}AttributeStatement' % SAML_NAMESPACE] = (
+    c_children['{%s}AttributeStatement' % NAMESPACE] = (
         'attribute_statement', [AttributeStatement])
     c_child_order = ['issuer', 'signature', 'subject', 'conditions', 'advice',
                     'statement', 'authn_statement', 'authz_decision_statement',
@@ -1124,7 +1122,7 @@ def assertion_from_string(xml_string):
     """ Create Assertion instance from an XML string """
     return saml2.create_class_from_xml_string(Assertion, xml_string)
 
-Evidence.c_children['{%s}Assertion' % SAML_NAMESPACE] = (
+Evidence.c_children['{%s}Assertion' % NAMESPACE] = (
     'assertion', [Assertion])
 
 # ---------------------------------------------------------------------------
@@ -1136,18 +1134,18 @@ class Advice(SamlBase):
     SAML authority wishes to provide."""
 
     c_tag = 'Advice'
-    c_namespace = SAML_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
-    c_children['{%s}AssertionIDRef' % SAML_NAMESPACE] = ('assertion_id_ref', 
+    c_children['{%s}AssertionIDRef' % NAMESPACE] = ('assertion_id_ref', 
                                                         [AssertionIDRef])
-    c_children['{%s}AssertionURIRef' % SAML_NAMESPACE] = ('assertion_uri_ref', 
+    c_children['{%s}AssertionURIRef' % NAMESPACE] = ('assertion_uri_ref', 
                                                         [AssertionURIRef])
-    c_children['{%s}Assertion' % SAML_NAMESPACE] = ('assertion', [Assertion])
-    c_children['{%s}EncryptedAssertion' % SAML_NAMESPACE] = (
+    c_children['{%s}Assertion' % NAMESPACE] = ('assertion', [Assertion])
+    c_children['{%s}EncryptedAssertion' % NAMESPACE] = (
             'encrypted_assertion', [EncryptedAssertion])
     c_child_order = ['assertion_id_ref', 'assertion_uri_ref',
-                    'statement', 'encrypted_assertion']
+                    'assertion', 'encrypted_assertion']
 
     def __init__(self, assertion_id_ref=None, assertion_uri_ref=None,
                     assertion=None, encrypted_assertion=None, text=None,
@@ -1174,4 +1172,41 @@ def advice_from_string(xml_string):
     """ Create Advice instance from an XML string """
     return saml2.create_class_from_xml_string(Advice, xml_string)
 
-Assertion.c_children['{%s}Advice' % SAML_NAMESPACE] = ('advice', Advice)
+Assertion.c_children['{%s}Advice' % NAMESPACE] = ('advice', Advice)
+Evidence.c_children['{%s}Assertion' % NAMESPACE] = ('assertion', [Assertion])
+
+ELEMENT_FROM_STRING = {
+    BaseID.c_tag: base_id_from_string,
+    NameID.c_tag: name_id_from_string,
+    EncryptedID.c_tag: encrypted_id_from_string,
+    Issuer.c_tag: issuer_from_string,
+    AssertionIDRef.c_tag: assertion_id_ref_from_string,
+    AssertionURIRef.c_tag: assertion_uri_ref_from_string,
+    EncryptedAssertion.c_tag: encrypted_assertion_from_string,
+    SubjectConfirmationData.c_tag: subject_confirmation_data_from_string,
+    SubjectConfirmation.c_tag: subject_confirmation_from_string,
+    Subject.c_tag: subject_from_string,
+    Condition.c_tag: condition_from_string,
+    Audience.c_tag: audience_from_string,
+    AudienceRestriction.c_tag: audience_restriction_from_string,
+    OneTimeUse.c_tag: one_time_use_from_string,
+    ProxyRestriction.c_tag: proxy_restriction_from_string,
+    Conditions.c_tag: conditions_from_string,
+    Statement.c_tag: statement_from_string,
+    SubjectLocality.c_tag: subject_locality_from_string,
+    AuthnContextClassRef.c_tag: authn_context_class_ref_from_string,
+    AuthnContextDeclRef.c_tag: authn_context_decl_ref_from_string,
+    AuthnContextDecl.c_tag: authn_context_decl_from_string,
+    AuthenticatingAuthority.c_tag: authenticating_authority_from_string,
+    AuthnContext.c_tag: authn_context_from_string,
+    AuthnStatement(Statement): authn_statement_from_string,
+    AttributeValue.c_tag: attribute_value_from_string,
+    EncryptedAttribute.c_tag: encrypted_attribute_from_string,
+    Attribute.c_tag: attribute_from_string,
+    AttributeStatement(Statement): attribute_statement_from_string,
+    Action.c_tag: action_from_string,
+    Evidence.c_tag: evidence_from_string,
+    AuthzDecisionStatement(Statement): authz_decision_statement_from_string,
+    Assertion.c_tag: assertion_from_string,
+    Advice.c_tag: advice_from_string,
+}

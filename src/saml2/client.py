@@ -9,12 +9,8 @@ except ImportError:
     from md5 import md5
 import zlib
 
-from subprocess import Popen, PIPE
-
-from saml2 import samlp, saml, metadata
+from saml2 import samlp, saml
 from saml2.sigver import correctly_signed_response
-from saml2.metadata import cert_from_assertion
-#from saml2.metadata import load_certs_to_manager
 
 DEFAULT_BINDING = saml2.BINDING_HTTP_REDIRECT
 
@@ -323,7 +319,7 @@ class Saml2Client:
     def init_request(self, request, destination):
         request.id = _sid()
         request.version = "2.0"
-        request.issue_instant = date_and_time()
+        request.issue_instant = get_date_and_time()
         request.destination = destination
         return request
         
@@ -342,11 +338,11 @@ class Saml2Client:
         :return: An AttributeQuery instance
         """
         
-        attr_query = self.init_request(samlp.AttributeQuery())
+        attr_query = self.init_request(samlp.AttributeQuery(), destination)
         
-        subject = samlp.Subject()
-        name_id = samlp.NameID()
-        name_id.format = NAMEID_FORMAT_PERSISTENT
+        subject = saml.Subject()
+        name_id = saml.NameID()
+        name_id.format = saml.NAMEID_FORMAT_PERSISTENT
         if name_qualifier:
             name_id.name_qualifier = name_qualifier
         if sp_name_qualifier:
@@ -357,7 +353,7 @@ class Saml2Client:
         attr_query.subject = subject
         if attribute:
             attrs = []
-            for attr,values in attribute.items():
+            for attr, values in attribute.items():
                 sattr = saml.Attribute()
                 sattr.name = attr
                 #sattr.name_format = NAME_FORMAT_UNSPECIFIED
@@ -400,7 +396,7 @@ class Saml2Client:
 
         logout_req = self.init_request(samlp.LogoutRequest())
         logout_req.session_index = _sid()
-        logout_req.base_id = samlp.BaseID(text=subject_id)
+        logout_req.base_id = saml.BaseID(text=subject_id)
         if reason:
             logout_req.reason = reason
         if not_on_or_after:
