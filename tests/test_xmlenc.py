@@ -1,4 +1,4 @@
-
+import saml2
 import xmlenc
 import xmldsig
 
@@ -163,7 +163,9 @@ def test_6():
     ee = dr.extension_elements[0]
     assert ee.tag == "Transforms"
     assert ee.namespace == "http://www.w3.org/2000/09/xmldsig#"
-    trs = xmldsig.transforms_from_string(ee.to_string())
+    trs = saml2.extension_element_to_element(ee, xmldsig.ELEMENT_FROM_STRING,
+                                        namespace=xmldsig.NAMESPACE)
+    
     assert trs
     assert len(trs.transform) == 1
     tr = trs.transform[0]

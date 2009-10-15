@@ -768,12 +768,15 @@ class TestEvidence:
         self.evidence.assertion.append(saml.Assertion())
         self.evidence.encrypted_assertion.append(saml.EncryptedAssertion())
         new_evidence = saml.evidence_from_string(self.evidence.to_string())
+        print new_evidence
         assert self.evidence.to_string() == new_evidence.to_string()
         assert isinstance(new_evidence.assertion_id_ref[0],
                                                         saml.AssertionIDRef)
         assert isinstance(new_evidence.assertion_uri_ref[0],
                                                         saml.AssertionURIRef)
+        assert len(new_evidence.assertion) == 1
         assert isinstance(new_evidence.assertion[0], saml.Assertion)
+        assert len(new_evidence.encrypted_assertion) == 1
         assert isinstance(new_evidence.encrypted_assertion[0],
                                                         saml.EncryptedAssertion)
 
