@@ -69,6 +69,7 @@ class MetaData(dict):
             idps = []
             
             #print "--",len(entity_descriptor.idp_sso_descriptor)
+            # If not SAML2.0, drop it !
             for idp in entity_descriptor.idp_sso_descriptor:
                 if samlp.SAMLP_NAMESPACE not in \
                         idp.protocol_support_enumeration.split(" "):
