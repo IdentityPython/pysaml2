@@ -6,6 +6,18 @@ from saml2 import samlp
 XML_RESPONSE_FILE = "tests/saml_signed.xml"
 XML_RESPONSE_FILE2 = "tests/saml2_response.xml"
 
+import os
+
+try:
+    XMLSEC_BINARY = "/usr/local/bin/xmlsec1"
+    os.stat(XMLSEC_BINARY)
+except IOError:
+    try:
+        XMLSEC_BINARY = "/usr/bin/xmlsec1"
+        os.stat(XMLSEC_BINARY)
+    except IOError:
+        raise
+        
 def for_me(condition, me ):
     for restriction in condition.audience_restriction:
         audience = restriction.audience
@@ -24,7 +36,7 @@ def ava(attribute_statement):
 
 def test_verify_1():
     xml_response = open(XML_RESPONSE_FILE).read()
-    client = Saml2Client({})
+    client = Saml2Client({}, xmlsec_binary=XMLSEC_BINARY)
     (ava, came_from) = \
             client.verify(xml_response, "xenosmilus.umdc.umu.se",decode=False)
     assert ava == {'__userid': '_cddc88563d433f556d4cc70c3162deabddea3b5019', 
@@ -34,7 +46,7 @@ def test_verify_1():
 def test_parse_1():
     xml_response = open(XML_RESPONSE_FILE).read()
     response = samlp.response_from_string(xml_response)
-    client = Saml2Client({})
+    client = Saml2Client({}, xmlsec_binary=XMLSEC_BINARY)
     (ava, name_id, real_uri) = \
             client.do_response(response, "xenosmilus.umdc.umu.se")
     assert ava == {'eduPersonAffiliation': ['member', 'student'], 'uid': ['student']}
@@ -43,7 +55,7 @@ def test_parse_1():
 def test_parse_2():
     xml_response = open(XML_RESPONSE_FILE2).read()
     response = samlp.response_from_string(xml_response)
-    client = Saml2Client({})
+    client = Saml2Client({}, xmlsec_binary=XMLSEC_BINARY)
     (ava, name_id, real_uri) = \
             client.do_response(response, "xenosmilus.umdc.umu.se")
     assert ava == {'uid': ['andreas'], 
