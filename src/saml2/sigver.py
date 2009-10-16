@@ -75,7 +75,7 @@ def _parse_popen_output(output):
             return False
     return False
         
-def correctly_signed_response(decoded_xml):
+def correctly_signed_response(decoded_xml, xmlsec_binary=XMLSEC_BINARY):
     response = samlp.response_from_string(decoded_xml)
     verified = False
 
@@ -91,7 +91,7 @@ def correctly_signed_response(decoded_xml):
         #signed_file.write(decoded_xml)
         #signed_file.seek(0)
         fil_p, fil = make_temp("%s" % decoded_xml, decode=False)
-        com_list = [XMLSEC_BINARY, "--verify", 
+        com_list = [xmlsec_binary, "--verify", 
                     "--pubkey-cert-der", der_file, "--id-attr:%s" % ID_ATTR, 
                     NODE_NAME, fil]
 
