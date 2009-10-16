@@ -25,8 +25,8 @@
 from saml2 import saml, SamlBase, create_class_from_xml_string
 import xmldsig as ds
 
-SAMLP_NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:protocol'
-SAMLP_TEMPLATE = '{urn:oasis:names:tc:SAML:2.0:protocol}%s'
+NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:protocol'
+TEMPLATE = '{urn:oasis:names:tc:SAML:2.0:protocol}%s'
 
 STATUS_SUCCESS = 'urn:oasis:names:tc:SAML:2.0:status:Success'
 STATUS_REQUESTER = 'urn:oasis:names:tc:SAML:2.0:status:Requester'
@@ -69,7 +69,7 @@ class Extensions(SamlBase):
     """The samlp:Extensions element"""
 
     c_tag = 'Extensions'
-    c_namespace = SAMLP_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
 
@@ -85,7 +85,7 @@ class AbstractRequest(SamlBase):
     """The samlp:RequestAbstractType element"""
 
     c_tag = 'AbstractRequest'
-    c_namespace = SAMLP_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['ID'] = 'id'
@@ -95,7 +95,7 @@ class AbstractRequest(SamlBase):
     c_attributes['Consent'] = 'consent'
     c_children['{%s}Issuer' % saml.NAMESPACE] = ('issuer', saml.Issuer)
     c_children['{%s}Signature' % ds.NAMESPACE] = ('signature', ds.Signature)
-    c_children['{%s}Extensions' % SAMLP_NAMESPACE] = ('extensions', Extensions)
+    c_children['{%s}Extensions' % NAMESPACE] = ('extensions', Extensions)
     c_child_order = ['issuer', 'signature', 'extensions']
 
     def __init__(self, id=None, version=None, issue_instant=None,
@@ -137,7 +137,7 @@ def abstract_request_from_string(xml_string):
 class StatusCode(SamlBase):
     """The samlp:StatusCode element"""
     c_tag = 'StatusCode'
-    c_namespace = SAMLP_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['Value'] = 'value'
@@ -160,7 +160,7 @@ def status_code_from_string(xml_string):
     """ Create StatusCode instance from an XML string """
     return create_class_from_xml_string(StatusCode, xml_string)
 
-StatusCode.c_children['{%s}StatusCode' % SAMLP_NAMESPACE] = (
+StatusCode.c_children['{%s}StatusCode' % NAMESPACE] = (
     'status_code', StatusCode)
 
 # --------------------------------------------------------------------------
@@ -170,7 +170,7 @@ StatusCode.c_children['{%s}StatusCode' % SAMLP_NAMESPACE] = (
 class StatusMessage(SamlBase):
     """The samlp:StatusMessage element"""
     c_tag = 'StatusMessage'
-    c_namespace = SAMLP_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
 
@@ -185,7 +185,7 @@ def status_message_from_string(xml_string):
 class StatusDetail(SamlBase):
     """The samlp:StatusDetail element"""
     c_tag = 'StatusDetail'
-    c_namespace = SAMLP_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
 
@@ -201,13 +201,13 @@ class Status(SamlBase):
     """The samlp:Status element"""
 
     c_tag = 'Status'
-    c_namespace = SAMLP_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
-    c_children['{%s}StatusCode' % SAMLP_NAMESPACE] = ('status_code', StatusCode)
-    c_children['{%s}StatusMessage' % SAMLP_NAMESPACE] = (
+    c_children['{%s}StatusCode' % NAMESPACE] = ('status_code', StatusCode)
+    c_children['{%s}StatusMessage' % NAMESPACE] = (
         'status_message', StatusMessage)
-    c_children['{%s}StatusDetail' % SAMLP_NAMESPACE] = (
+    c_children['{%s}StatusDetail' % NAMESPACE] = (
         'status_detail', StatusDetail)
     c_child_order = ['status_code', 'status_message', 'status_detail']
 
@@ -241,7 +241,7 @@ class StatusResponse(SamlBase):
     """The samlp:StatusResponse element"""
 
     c_tag = 'StatusResponse'
-    c_namespace = SAMLP_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['ID'] = 'id'
@@ -254,9 +254,9 @@ class StatusResponse(SamlBase):
         'issuer', saml.Issuer)
     c_children['{%s}Signature' % ds.NAMESPACE] = (
         'signature', ds.Signature)
-    c_children['{%s}Extensions' % SAMLP_NAMESPACE] = (
+    c_children['{%s}Extensions' % NAMESPACE] = (
         'extensions', Extensions)
-    c_children['{%s}Status' % SAMLP_NAMESPACE] = ('status', Status)
+    c_children['{%s}Status' % NAMESPACE] = ('status', Status)
     c_child_order = ['issuer', 'signature', 'extensions', 'status']
 
     def __init__(self, id=None, in_response_to=None, version=None,
@@ -308,7 +308,7 @@ class AssertionIDRequest(AbstractRequest):
     """The samlp:AssertionIDRequest element"""
 
     c_tag = 'AssertionIDRequest'
-    c_namespace = SAMLP_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = AbstractRequest.c_children.copy()
     c_attributes = AbstractRequest.c_attributes.copy()
     c_attributes["AssertionIDRef"] = 'assertion_id_ref'
@@ -354,7 +354,7 @@ class SubjectQuery(AbstractRequest):
     """The samlp:SubjectQuery element"""
 
     c_tag = 'SubjectQuery'
-    c_namespace = SAMLP_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = AbstractRequest.c_children.copy()
     c_attributes = AbstractRequest.c_attributes.copy()
     c_children['{%s}Subject' % saml.NAMESPACE] = (
@@ -400,7 +400,7 @@ def subject_query_from_string(xml_string):
 class SessionIndex(SamlBase):
     """The samlp:SessionIndex element"""
     c_tag = 'SessionIndex'
-    c_namespace = SAMLP_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
 
@@ -416,7 +416,7 @@ class AuthnQuery(SubjectQuery):
     """The samlp:AuthnQuery element"""
 
     c_tag = 'SubjectQuery'
-    c_namespace = SAMLP_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SubjectQuery.c_children.copy()
     c_attributes = SubjectQuery.c_attributes.copy()
     c_attributes['SessionIndex'] = 'session_index'
@@ -462,7 +462,7 @@ class RequestedAuthnContext(SamlBase):
     """The samlp:RequestedAuthnContext element"""
 
     c_tag = 'RequestedAuthnContext'
-    c_namespace = SAMLP_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['Comparison'] = 'comparison'
@@ -501,7 +501,7 @@ class AttributeQuery(SubjectQuery):
     """The samlp:AttributeQuery element"""
 
     c_tag = 'AttributeQuery'
-    c_namespace = SAMLP_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SubjectQuery.c_children.copy()
     c_attributes = SubjectQuery.c_attributes.copy()
     c_children['{%s}Attribute' % saml.NAMESPACE] = (
@@ -564,7 +564,7 @@ class AuthzDecisionQuery(SubjectQuery):
     """The samlp:AuthzDecisionQuery element"""
 
     c_tag = 'AuthzDecisionQuery'
-    c_namespace = SAMLP_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SubjectQuery.c_children.copy()
     c_attributes = SubjectQuery.c_attributes.copy()
     c_children['{%s}Resource' % saml.NAMESPACE] = (
@@ -624,7 +624,7 @@ class Response(StatusResponse):
     """The samlp:Response element"""
 
     c_tag = 'Response'
-    c_namespace = SAMLP_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = StatusResponse.c_children.copy()
     c_attributes = StatusResponse.c_attributes.copy()
     c_children['{%s}Assertion' % saml.NAMESPACE] = (
@@ -678,7 +678,7 @@ class NameIDPolicy(SamlBase):
     """The samlp:NameIDPolicy element"""
 
     c_tag = 'NameIDPolicy'
-    c_namespace = SAMLP_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['Format'] = 'format'
@@ -711,7 +711,7 @@ def name_id_policy_from_string(xml_string):
 class RequesterID(SamlBase):
     """The samlp:RequesterID element"""
     c_tag = 'RequesterID'
-    c_namespace = SAMLP_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
 
@@ -727,7 +727,7 @@ class IDPEntry(SamlBase):
     """The samlp:IDPEntry element"""
 
     c_tag = 'IDPEntry'
-    c_namespace = SAMLP_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['ProviderID'] = 'provider_id'
@@ -761,7 +761,7 @@ class GetComplete(SamlBase):
     """The samlp:GetComplete element"""
 
     c_tag = 'GetComplete'
-    c_namespace = SAMLP_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
 
@@ -777,11 +777,11 @@ class IDPList(SamlBase):
     """The samlp:IDPList element"""
 
     c_tag = 'IDPList'
-    c_namespace = SAMLP_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
-    c_children['{%s}IDPEntry' % SAMLP_NAMESPACE] = ('idp_entry', [IDPEntry])
-    c_children['{%s}GetComplete' % SAMLP_NAMESPACE] = (
+    c_children['{%s}IDPEntry' % NAMESPACE] = ('idp_entry', [IDPEntry])
+    c_children['{%s}GetComplete' % NAMESPACE] = (
         'get_complete', GetComplete)
     c_child_order = ['idp_entry', 'get_complete']
 
@@ -812,12 +812,12 @@ class Scoping(SamlBase):
     """The samlp:Scoping element"""
 
     c_tag = 'Scoping'
-    c_namespace = SAMLP_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['ProxyCount'] = 'proxy_count'
-    c_children['{%s}IDPList' % SAMLP_NAMESPACE] = ('idp_list', IDPList)
-    c_children['{%s}RequesterID' % SAMLP_NAMESPACE] = (
+    c_children['{%s}IDPList' % NAMESPACE] = ('idp_list', IDPList)
+    c_children['{%s}RequesterID' % NAMESPACE] = (
         'requester_id', [RequesterID])
     c_child_order = ['idp_list', 'requester_id']
 
@@ -851,7 +851,7 @@ class AuthnRequest(AbstractRequest):
     """The samlp:AuthnRequest element"""
 
     c_tag = 'AuthnRequest'
-    c_namespace = SAMLP_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = AbstractRequest.c_children.copy()
     c_attributes = AbstractRequest.c_attributes.copy()
     c_attributes['ForceAuthn'] = 'force_authn'
@@ -865,13 +865,13 @@ class AuthnRequest(AbstractRequest):
                             'assertion_consuming_service_index'
     c_attributes['ProviderName'] = 'provider_name'
     c_children['{%s}Subject' % saml.NAMESPACE] = ('subject', saml.Subject)
-    c_children['{%s}NameIDPolicy' % SAMLP_NAMESPACE] = (
+    c_children['{%s}NameIDPolicy' % NAMESPACE] = (
                             'name_id_policy', NameIDPolicy)
     c_children['{%s}Conditions' % saml.NAMESPACE] = (
                             'conditions', saml.Conditions)
-    c_children['{%s}RequestedAuthnContext' % SAMLP_NAMESPACE] = (
+    c_children['{%s}RequestedAuthnContext' % NAMESPACE] = (
                             'requested_authn_context', RequestedAuthnContext)
-    c_children['{%s}Scoping' % SAMLP_NAMESPACE] = ('scoping', Scoping)
+    c_children['{%s}Scoping' % NAMESPACE] = ('scoping', Scoping)
     c_child_order = ['issuer', 'signature', 'extensions', 'subject',
                     'name_id_policy', 'conditions', 'requested_authn_context',
                     'scoping']
@@ -956,7 +956,7 @@ class Terminate(SamlBase):
     """The samlp:Terminate element"""
 
     c_tag = 'Terminate'
-    c_namespace = SAMLP_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
 
@@ -975,7 +975,7 @@ class ManageNameIDRequest(AbstractRequest):
     """
 
     c_tag = 'ManageNameIDRequest'
-    c_namespace = SAMLP_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = AbstractRequest.c_children.copy()
     c_attributes = AbstractRequest.c_attributes.copy()
     c_attributes["NewID"] = "new_id"
@@ -984,7 +984,7 @@ class ManageNameIDRequest(AbstractRequest):
         'encrypted_id', saml.EncryptedID)
     c_children['{%s}NewEncryptedID' % saml.NAMESPACE] = (
         'new_encrypted_id', saml.EncryptedID)
-    c_children['{%s}Terminate' % SAMLP_NAMESPACE] = (
+    c_children['{%s}Terminate' % NAMESPACE] = (
         'terminate', Terminate)
     c_child_order = ['name_id', 'encrypted_id', 
                     'new_id', 'new_encrypted_id', 'terminate']
@@ -1038,7 +1038,7 @@ class ManageNameIDResponse(StatusResponse):
     """The samlp:ManageNameIDResponse element"""
 
     c_tag = 'ManageNameIDResponse'
-    c_namespace = SAMLP_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = StatusResponse.c_children.copy()
     c_attributes = StatusResponse.c_attributes.copy()
 
@@ -1055,7 +1055,7 @@ class LogoutRequest(AbstractRequest):
     """The samlp:LogoutRequest element"""
 
     c_tag = 'LogoutRequest'
-    c_namespace = SAMLP_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = AbstractRequest.c_children.copy()
     c_attributes = AbstractRequest.c_attributes.copy()
     c_attributes['NotOnOrAfter'] = 'not_on_or_after'
@@ -1064,7 +1064,7 @@ class LogoutRequest(AbstractRequest):
     c_children['{%s}NameID' % saml.NAMESPACE] = ('name_id', saml.NameID)
     c_children['{%s}EncryptedID' % saml.NAMESPACE] = (
         'encrypted_id', saml.EncryptedID)
-    c_children['{%s}SessionIndex' % SAMLP_NAMESPACE] = (
+    c_children['{%s}SessionIndex' % NAMESPACE] = (
         'session_index', SessionIndex)
     c_child_order = ['issuer', 'signature', 'extensions', 'base_id', 
                         'name_id', 'encrypted_id', 'session_index']
@@ -1119,7 +1119,7 @@ class LogoutResponse(StatusResponse):
     """The samlp:LogoutResponse element"""
 
     c_tag = 'LogoutResponse'
-    c_namespace = SAMLP_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = StatusResponse.c_children.copy()
     c_attributes = StatusResponse.c_attributes.copy()
 
@@ -1138,14 +1138,14 @@ class NameIDMappingRequest(AbstractRequest):
     """
 
     c_tag = 'NameIDMappingRequest'
-    c_namespace = SAMLP_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = AbstractRequest.c_children.copy()
     c_attributes = AbstractRequest.c_attributes.copy()
     c_children['{%s}BaseID' % saml.NAMESPACE] = ('base_id', saml.BaseID)
     c_children['{%s}NameID' % saml.NAMESPACE] = ('name_id', saml.NameID)
     c_children['{%s}EncryptedID' % saml.NAMESPACE] = (
         'encrypted_id', saml.EncryptedID)
-    c_children['{%s}NameIDPolicy' % SAMLP_NAMESPACE] = (
+    c_children['{%s}NameIDPolicy' % NAMESPACE] = (
         'name_id_policy', NameIDPolicy)
     c_child_order = ['base_id', 'name_id', 'encrypted_id', 'name_id_policy']
 
@@ -1197,7 +1197,7 @@ class NameIDMappingResponse(StatusResponse):
     """The samlp:NameIDMappingResponse element"""
 
     c_tag = 'NameIDMappingResponse'
-    c_namespace = SAMLP_NAMESPACE
+    c_namespace = NAMESPACE
     c_children = StatusResponse.c_children.copy()
     c_attributes = StatusResponse.c_attributes.copy()
     c_children['{%s}NameID' % saml.NAMESPACE] = (
