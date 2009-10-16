@@ -71,7 +71,7 @@ class MetaData(dict):
             #print "--",len(entity_descriptor.idp_sso_descriptor)
             # If not SAML2.0, drop it !
             for idp in entity_descriptor.idp_sso_descriptor:
-                if samlp.SAMLP_NAMESPACE not in \
+                if samlp.NAMESPACE not in \
                         idp.protocol_support_enumeration.split(" "):
                     #print "<<<", idp.protocol_support_enumeration
                     continue
@@ -150,7 +150,7 @@ def make_entity_description():
                                     text="http://www.example.com/")])
             
     spsso = md.SPSSODescriptor(
-            protocolSupportEnumeration = samlp.SAMLP_NAMESPACE,
+            protocolSupportEnumeration = samlp.NAMESPACE,
             want_assertions_signed = False,
             authn_requests_signed = False
             )
