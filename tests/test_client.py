@@ -11,11 +11,11 @@ import os
 try:
     XMLSEC_BINARY = "/usr/local/bin/xmlsec1"
     os.stat(XMLSEC_BINARY)
-except IOError:
+except OSError:
     try:
         XMLSEC_BINARY = "/usr/bin/xmlsec1"
         os.stat(XMLSEC_BINARY)
-    except IOError:
+    except OSError:
         raise
         
 def for_me(condition, me ):
