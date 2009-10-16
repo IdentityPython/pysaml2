@@ -36,46 +36,14 @@ def get_date_and_time(base=None):
         base = time.time()
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(base))
     
-# def correctly_signed_response(decoded_xml, import_mngr=None):
-#     response = samlp.response_from_string(decoded_xml)
-#     verified = False
-# 
-#         # Try to find the signing cert in the assertion
-#     for assertion in response.assertion:
-#         if not import_mngr:
-#             mngr = load_certs_to_manager(cert_from_assertion(assertion))
-#         else:
-#             mngr = import_mngr
-#             
-#         #print assertion
-#         #xml_file_pointer, xml_file = make_temp("%s" % assertion)
-# 
-#         verified = verify_xml_with_manager(mngr, "%s" % assertion)
-#         print "Verified", verified
-#         if not import_mngr:
-#             mngr.destroy()
-#         if verified:
-#             break
-# 
-#             # verify signature
-#             #key_file_pointer, key_file = make_temp(cert,".der")
-#             #verified = verify_xml("%s" % assertion, key_file)
-#             #key_file_pointer.close()
-#         
-#         #xml_file_pointer.close()
-#     
-#     if verified:
-#         return response
-#     else:
-#         return None
-#form = cgi.FieldStorage()
-
 class Saml2Client:
     
-    def __init__(self, environ, session=None, service_url=None, metadata=None):
+    def __init__(self, environ, session=None, service_url=None, metadata=None,
+                    xmlsec_binary=None):
         self.session = session or {}
         self.environ = environ
         self.metadata = metadata
+        self.xmlsec_binary = xmlsec_binary
 
     def create_authn_request(self, query_id, destination, service_url,
                                 requestor, my_name):
@@ -211,7 +179,7 @@ class Saml2Client:
         else:
             decoded_xml = xml_response
         
-        response = correctly_signed_response(decoded_xml)
+        response = correctly_signed_response(decoded_xml, self.xmlsec_binary)
         if not response:
             log and log.error("Response was not correctly signed")
             print "Response was not correctly signed"
