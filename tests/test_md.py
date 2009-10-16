@@ -380,7 +380,7 @@ class TestRoleDescriptor:
     self.role_descriptor.identifier = "ID"
     self.role_descriptor.valid_until = "2008-09-14T01:05:02Z"
     self.role_descriptor.cache_duration = "10:00:00:00"
-    self.role_descriptor.protocol_support_enumeration = samlp.SAMLP_NAMESPACE
+    self.role_descriptor.protocol_support_enumeration = samlp.NAMESPACE
     self.role_descriptor.error_url = "http://www.example.com/errorURL"
     self.role_descriptor.signature = ds.get_empty_signature()
     self.role_descriptor.extensions = md.Extensions()
@@ -394,7 +394,7 @@ class TestRoleDescriptor:
     assert new_role_descriptor.identifier == "ID"
     assert new_role_descriptor.valid_until == "2008-09-14T01:05:02Z"
     assert new_role_descriptor.cache_duration == "10:00:00:00"
-    assert new_role_descriptor.protocol_support_enumeration == samlp.SAMLP_NAMESPACE
+    assert new_role_descriptor.protocol_support_enumeration == samlp.NAMESPACE
     assert new_role_descriptor.error_url == "http://www.example.com/errorURL"
     assert isinstance(new_role_descriptor.signature, ds.Signature)
     assert isinstance(new_role_descriptor.extensions, md.Extensions)
@@ -411,7 +411,7 @@ class TestRoleDescriptor:
     assert new_role_descriptor.identifier == "ID"
     assert new_role_descriptor.valid_until == "2008-09-14T01:05:02Z"
     assert new_role_descriptor.cache_duration == "10:00:00:00"
-    assert new_role_descriptor.protocol_support_enumeration == samlp.SAMLP_NAMESPACE
+    assert new_role_descriptor.protocol_support_enumeration == samlp.NAMESPACE
     assert new_role_descriptor.error_url == "http://www.example.com/errorURL"
     assert isinstance(new_role_descriptor.signature, ds.Signature)
     assert isinstance(new_role_descriptor.extensions, md.Extensions)
@@ -430,7 +430,7 @@ class TestSSODescriptor:
     self.sso_descriptor.identifier = "ID"
     self.sso_descriptor.valid_until = "2008-09-14T01:05:02Z"
     self.sso_descriptor.cache_duration = "10:00:00:00"
-    self.sso_descriptor.protocol_support_enumeration = samlp.SAMLP_NAMESPACE
+    self.sso_descriptor.protocol_support_enumeration = samlp.NAMESPACE
     self.sso_descriptor.error_url = "http://www.example.com/errorURL"
     self.sso_descriptor.signature = ds.get_empty_signature()
     self.sso_descriptor.extensions = md.Extensions()
@@ -452,7 +452,7 @@ class TestSSODescriptor:
     assert new_sso_descriptor.identifier == "ID"
     assert new_sso_descriptor.valid_until == "2008-09-14T01:05:02Z"
     assert new_sso_descriptor.cache_duration == "10:00:00:00"
-    assert new_sso_descriptor.protocol_support_enumeration == samlp.SAMLP_NAMESPACE
+    assert new_sso_descriptor.protocol_support_enumeration == samlp.NAMESPACE
     assert new_sso_descriptor.error_url == "http://www.example.com/errorURL"
     assert isinstance(new_sso_descriptor.signature, ds.Signature)
     assert isinstance(new_sso_descriptor.extensions, md.Extensions)
@@ -477,7 +477,7 @@ class TestSSODescriptor:
     assert new_sso_descriptor.identifier == "ID"
     assert new_sso_descriptor.valid_until == "2008-09-14T01:05:02Z"
     assert new_sso_descriptor.cache_duration == "10:00:00:00"
-    assert new_sso_descriptor.protocol_support_enumeration == samlp.SAMLP_NAMESPACE
+    assert new_sso_descriptor.protocol_support_enumeration == samlp.NAMESPACE
     assert new_sso_descriptor.error_url == "http://www.example.com/errorURL"
     assert isinstance(new_sso_descriptor.signature, ds.Signature)
     assert isinstance(new_sso_descriptor.extensions, md.Extensions)
@@ -692,7 +692,7 @@ class TestIDPSSODescriptor:
     self.idp_sso_descriptor.valid_until = "2008-09-14T01:05:02Z"
     self.idp_sso_descriptor.cache_duration = "10:00:00:00"
     self.idp_sso_descriptor.protocol_support_enumeration = \
-                                                         samlp.SAMLP_NAMESPACE
+                                                         samlp.NAMESPACE
     self.idp_sso_descriptor.error_url = "http://www.example.com/errorURL"
     self.idp_sso_descriptor.signature = ds.get_empty_signature()
     self.idp_sso_descriptor.extensions = md.Extensions()
@@ -724,7 +724,7 @@ class TestIDPSSODescriptor:
     assert new_idp_sso_descriptor.identifier == "ID"
     assert new_idp_sso_descriptor.valid_until == "2008-09-14T01:05:02Z"
     assert new_idp_sso_descriptor.cache_duration == "10:00:00:00"
-    assert new_idp_sso_descriptor.protocol_support_enumeration == samlp.SAMLP_NAMESPACE
+    assert new_idp_sso_descriptor.protocol_support_enumeration == samlp.NAMESPACE
     assert new_idp_sso_descriptor.error_url == "http://www.example.com/errorURL"
     assert isinstance(new_idp_sso_descriptor.signature, ds.Signature)
     assert isinstance(new_idp_sso_descriptor.extensions, md.Extensions)
@@ -763,7 +763,7 @@ class TestIDPSSODescriptor:
     assert new_idp_sso_descriptor.identifier == "ID"
     assert new_idp_sso_descriptor.valid_until == "2008-09-14T01:05:02Z"
     assert new_idp_sso_descriptor.cache_duration == "10:00:00:00"
-    assert new_idp_sso_descriptor.protocol_support_enumeration == samlp.SAMLP_NAMESPACE
+    assert new_idp_sso_descriptor.protocol_support_enumeration == samlp.NAMESPACE
     assert new_idp_sso_descriptor.error_url == "http://www.example.com/errorURL"
     assert isinstance(new_idp_sso_descriptor.signature, ds.Signature)
     assert isinstance(new_idp_sso_descriptor.extensions, md.Extensions)
@@ -948,7 +948,7 @@ class TestSPSSODescriptor:
     self.sp_sso_descriptor.valid_until = "2008-09-14T01:05:02Z"
     self.sp_sso_descriptor.cache_duration = "10:00:00:00"
     self.sp_sso_descriptor.protocol_support_enumeration = \
-                                                         samlp.SAMLP_NAMESPACE
+                                                         samlp.NAMESPACE
     self.sp_sso_descriptor.error_url = "http://www.example.com/errorURL"
     self.sp_sso_descriptor.signature = ds.get_empty_signature()
     self.sp_sso_descriptor.extensions = md.Extensions()
@@ -976,7 +976,7 @@ class TestSPSSODescriptor:
     assert new_sp_sso_descriptor.identifier == "ID"
     assert new_sp_sso_descriptor.valid_until == "2008-09-14T01:05:02Z"
     assert new_sp_sso_descriptor.cache_duration == "10:00:00:00"
-    assert new_sp_sso_descriptor.protocol_support_enumeration == samlp.SAMLP_NAMESPACE
+    assert new_sp_sso_descriptor.protocol_support_enumeration == samlp.NAMESPACE
     assert new_sp_sso_descriptor.error_url == "http://www.example.com/errorURL"
     assert isinstance(new_sp_sso_descriptor.signature, ds.Signature)
     assert isinstance(new_sp_sso_descriptor.extensions, md.Extensions)
@@ -1011,7 +1011,7 @@ class TestSPSSODescriptor:
     assert new_sp_sso_descriptor.identifier == "ID"
     assert new_sp_sso_descriptor.valid_until == "2008-09-14T01:05:02Z"
     assert new_sp_sso_descriptor.cache_duration == "10:00:00:00"
-    assert new_sp_sso_descriptor.protocol_support_enumeration == samlp.SAMLP_NAMESPACE
+    assert new_sp_sso_descriptor.protocol_support_enumeration == samlp.NAMESPACE
     assert new_sp_sso_descriptor.error_url == "http://www.example.com/errorURL"
     assert isinstance(new_sp_sso_descriptor.signature, ds.Signature)
     assert isinstance(new_sp_sso_descriptor.extensions, md.Extensions)
