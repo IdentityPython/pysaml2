@@ -38,7 +38,8 @@ def test_verify_1():
     xml_response = open(XML_RESPONSE_FILE).read()
     client = Saml2Client({}, xmlsec_binary=XMLSEC_BINARY)
     (ava, came_from) = \
-            client.verify(xml_response, "xenosmilus.umdc.umu.se",decode=False)
+            client.verify(xml_response, "xenosmilus.umdc.umu.se", 
+                            decode=False)
     assert ava == {'__userid': '_cddc88563d433f556d4cc70c3162deabddea3b5019', 
                     'eduPersonAffiliation': ['member', 'student'], 
                     'uid': ['student']}
@@ -49,7 +50,8 @@ def test_parse_1():
     client = Saml2Client({}, xmlsec_binary=XMLSEC_BINARY)
     (ava, name_id, real_uri) = \
             client.do_response(response, "xenosmilus.umdc.umu.se")
-    assert ava == {'eduPersonAffiliation': ['member', 'student'], 'uid': ['student']}
+    assert ava == {'eduPersonAffiliation': ['member', 'student'],
+                    'uid': ['student']}
     assert name_id == "_cddc88563d433f556d4cc70c3162deabddea3b5019"
 
 def test_parse_2():
@@ -62,7 +64,8 @@ def test_parse_2():
                     'mobile': ['+4741107700'], 
                     'edupersonnickname': ['erlang'], 
                     'o': ['Feide RnD'], 
-                    'edupersonentitlement': ['urn:mace:feide.no:entitlement:test'], 
+                    'edupersonentitlement': [
+                            'urn:mace:feide.no:entitlement:test'], 
                     'edupersonaffiliation': ['employee'], 
                     'eduPersonPrincipalName': ['andreas@rnd.feide.no'], 
                     'sn': ['Solberg'], 
