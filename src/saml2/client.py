@@ -51,8 +51,9 @@ class Saml2Client:
         
         :param query_id: Query identifier
         :param destination: Where to send the request
-        :param position: The page to where the user should be sent afterwards.
-        :param provider: Who I am 
+        :param service_url: The page to where the response MUST be sent.
+        :param requestor: My official name
+        :param my_name: Who I am 
         
         :return: A string representation of the authentication request
         """
@@ -109,8 +110,8 @@ class Saml2Client:
         else:
             return None
             
-    def authenticate(self, spentityid, location="", position="", requestor="",
-                        my_name="", relay_state="",
+    def authenticate(self, spentityid, location="", service_url="", 
+                        requestor="", my_name="", relay_state="",
                         binding=saml2.BINDING_HTTP_REDIRECT):
         """ Either verifies an authentication Response or if none is present
         send an authentication request.
@@ -119,7 +120,7 @@ class Saml2Client:
         :param binding: How the authentication request should be sent to the 
             IdP
         :param location: Where the IdP is.
-        :param position: The service URL
+        :param service_url: The service URL
         :param requestor: Issuer of the AuthN request
         :param my_name: The providers name
         :param relay_state: To where the user should be returned after 
@@ -128,7 +129,7 @@ class Saml2Client:
         """
         
         sid = _sid()
-        authen_req = self.create_authn_request(sid, location, position, 
+        authen_req = self.create_authn_request(sid, location, service_url, 
                             requestor, my_name)
         if binding == saml2.BINDING_HTTP_POST:
             # No valid ticket; Send a form to the client
