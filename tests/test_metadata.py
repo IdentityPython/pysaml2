@@ -2,6 +2,7 @@ from saml2 import metadata
 
 SWAMI_METADATA = "tests/urn-mace-swami.se-swamid-test-1.0-metadata.xml"
 INCOMMON_METADATA = "tests/InCommon-metadata.xml"
+EXAMPLE_METADATA = "tests/metadata_example.xml"
 
 def test_swami_1():
     md = metadata.MetaData()
@@ -29,7 +30,22 @@ def test_incommon_1():
     assert len(idp_sso) == 1
     print idp_sso
     assert idp_sso == ['https://idp.alaska.edu/idp/profile/SAML2/Redirect/SSO']
-    redirect_idps = [eid for eid in md.keys() if len( md.single_sign_on_services(eid))]
+    redirect_idps = [
+        eid for eid in md.keys() if len( md.single_sign_on_services(eid))]
     print redirect_idps
     assert len(redirect_idps) == 8 # !!!!????
+
+def test_example():
+    md = metadata.MetaData()
+    md.import_metadata(open(EXAMPLE_METADATA).read())
+    print len(md)
+    assert len(md) == 1
+    print md.keys()
+    assert md.keys() == [
+            'http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php']
+    certs = md.certs(
+            'http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php')
+    assert len(certs) == 1
+    assert isinstance(certs[0], tuple)
+    assert len(certs[0]) == 2
         
