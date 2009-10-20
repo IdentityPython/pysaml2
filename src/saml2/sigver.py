@@ -75,42 +75,69 @@ def _parse_popen_output(output):
             return False
     return False
         
-def correctly_signed_response(decoded_xml, xmlsec_binary=XMLSEC_BINARY):
+def correctly_signed_response(decoded_xml, xmlsec_binary=XMLSEC_BINARY,
+        metadata=None):
+    """ Check if a response is correctly signed, if we have metadata for
+    the IdP that sent the info use that, if not use the key that are in 
+    the message if any.
+    
+    :param decode_xml: The SAML message as a XML string
+    :param xmlsec_binary: Where the xmlsec1 binary can be found on this
+        system.
+    :param metadata: Metadata information
+    :return: None if the signature can not be verified otherwise 
+        response as a samlp.Response instance
+    """
     response = samlp.response_from_string(decoded_xml)
     verified = False
 
-        # Try to find the signing cert in the assertion
+    # Try to find the signing cert in the assertion
     for assertion in response.assertion:
-        cert = cert_from_assertion(assertion)
-        if not cert:
+        if not assertion.signature:
+            if _TEST_:
+                print "unsigned"
             continue
-        #print cert
-        #print assertion
-        der_file_pointer, der_file = make_temp("%s" % cert[0], ".der")
-        #signed_file = open("signed.file","w")
-        #signed_file.write(decoded_xml)
-        #signed_file.seek(0)
-        fil_p, fil = make_temp("%s" % decoded_xml, decode=False)
-        com_list = [xmlsec_binary, "--verify", 
-                    "--pubkey-cert-der", der_file, "--id-attr:%s" % ID_ATTR, 
-                    NODE_NAME, fil]
-
-        if _TEST_: 
-            print " ".join(com_list)
-        verified = _parse_popen_output(Popen(com_list, 
-                                        stderr=PIPE).communicate()[1])
+        else:
+            if _TEST_:
+                print "signed"
+        
+        issuer = assertion.issuer.text.strip()
         if _TEST_:
-            print "Verify result: '%s'" % (verified,)
+            print "issuer: %s" % issuer
+        if metadata:
+            certs = metadata.certs(issuer)
+        else:
+            certs = []
+        if not certs:
+            certs = [make_temp("%s" % cert, ".der") \
+                        for cert in cert_from_assertion(assertion)]
+        if not certs:
+            continue
 
-        der_file_pointer.close()
-        fil_p.close()
-        if verified:
-            break
+        for _, der_file in certs:
+            if _TEST_: 
+                print " ".join(der_file)
+            fil_p, fil = make_temp("%s" % decoded_xml, decode=False)
+            com_list = [xmlsec_binary, "--verify", 
+                        "--pubkey-cert-der", der_file, 
+                        "--id-attr:%s" % ID_ATTR, 
+                        NODE_NAME, fil]
 
-    if verified:
-        return response
-    else:
-        return None
+            if _TEST_: 
+                print " ".join(com_list)
+            verified = _parse_popen_output(Popen(com_list, 
+                                            stderr=PIPE).communicate()[1])
+            if _TEST_:
+                print "Verify result: '%s'" % (verified,)
+
+            fil_p.close()
+            if verified:
+                break
+
+        if not verified:
+            return None
+
+    return response
         
 def sign_using_xmlsec(statement, sign_key):
     """xmlsec1 --sign --privkey-pem test.key --id-attr:ID 
