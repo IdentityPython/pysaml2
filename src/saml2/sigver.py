@@ -6,7 +6,7 @@ from subprocess import Popen, PIPE
 import base64
 import random
 
-XMLSEC_BINARY = "/usr/local/bin/xmlsec1"
+XMLSEC_BINARY = "/opt/local/bin/xmlsec1"
 ID_ATTR = "ID"
 NODE_NAME = "urn:oasis:names:tc:SAML:2.0:assertion:Assertion"
 
@@ -88,6 +88,8 @@ def correctly_signed_response(decoded_xml, xmlsec_binary=XMLSEC_BINARY,
     :return: None if the signature can not be verified otherwise 
         response as a samlp.Response instance
     """
+    if not xmlsec_binary:
+        xmlsec_binary = XMLSEC_BINARY
     response = samlp.response_from_string(decoded_xml)
     verified = False
 
@@ -116,7 +118,7 @@ def correctly_signed_response(decoded_xml, xmlsec_binary=XMLSEC_BINARY,
 
         for _, der_file in certs:
             if _TEST_: 
-                print " ".join(der_file)
+                print "".join(der_file)
             fil_p, fil = make_temp("%s" % decoded_xml, decode=False)
             com_list = [xmlsec_binary, "--verify", 
                         "--pubkey-cert-der", der_file, 
