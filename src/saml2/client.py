@@ -11,6 +11,7 @@ import zlib
 
 from saml2 import samlp, saml
 from saml2.sigver import correctly_signed_response
+from saml2.soap import SOAPClient
 
 DEFAULT_BINDING = saml2.BINDING_HTTP_REDIRECT
 
@@ -45,33 +46,48 @@ class Saml2Client:
         self.metadata = metadata
         self.xmlsec_binary = xmlsec_binary
 
+    def _init_request(self, request, destination):
+        #request.id = _sid()
+        request.version = "2.0"
+        request.issue_instant = get_date_and_time()
+        request.destination = destination
+        return request        
+
     def create_authn_request(self, query_id, destination, service_url,
-                                requestor, my_name):
+                                requestor, my_name, sp_name_qualifier=None):
         """ Creates an Authenication Request
         
         :param query_id: Query identifier
         :param destination: Where to send the request
         :param service_url: The page to where the response MUST be sent.
         :param requestor: My official name
-        :param my_name: Who I am 
+        :param my_name: Who I am
+        :param sp_name_qualifier: The domain in which the name should be
+            valid
         
-        :return: A string representation of the authentication request
+        :return: An authentication request
         """
-        authn_request = samlp.AuthnRequest(query_id)
+        
+        authn_request = self._init_request(samlp.AuthnRequest(query_id),
+                                            destination)
+
         authn_request.assertion_consumer_service_url = service_url
-        authn_request.destination = destination
         authn_request.protocol_binding = saml2.BINDING_HTTP_POST
         authn_request.provider_name = my_name
 
         name_id_policy = samlp.NameIDPolicy()
-        name_id_policy.format = saml.NAMEID_FORMAT_EMAILADDRESS
-        name_id_policy.sp_name_qualifier = saml.NAMEID_FORMAT_PERSISTENT
         name_id_policy.allow_create = 'true'
+        if sp_name_qualifier:
+            name_id_policy.format = saml.NAMEID_FORMAT_PERSISTENT
+            name_id_policy.sp_name_qualifier = sp_name_qualifier
+        else:
+            name_id_policy.format = saml.NAMEID_FORMAT_TRANSIENT
+
 
         authn_request.name_id_policy = name_id_policy
         authn_request.issuer = saml.Issuer(text=requestor)
         
-        return "%s" % authn_request
+        return authn_request
            
     def _compress_and_encode(self, packet):
         """ Information packets must be compressed and base64 encoded before 
@@ -103,8 +119,9 @@ class Saml2Client:
         if post.has_key("SAMLResponse"):
             saml_response =  post['SAMLResponse'].value
             if saml_response:
-                (identity, came_from) = self.verify(saml_response, requestor, 
-                                                    outstanding, log)
+                (identity, came_from) = self.verify_response(
+                                            saml_response, requestor, 
+                                            outstanding, log)
             #relay_state = post["RelayState"].value
             return (identity, came_from)
         else:
@@ -129,8 +146,8 @@ class Saml2Client:
         """
         
         sid = _sid()
-        authen_req = self.create_authn_request(sid, location, service_url, 
-                            requestor, my_name)
+        authen_req = "%s" % self.create_authn_request(sid, location, 
+                                service_url, requestor, my_name)
         if binding == saml2.BINDING_HTTP_POST:
             # No valid ticket; Send a form to the client
             # THIS IS NOT TO BE USED RIGHT NOW
@@ -159,9 +176,9 @@ class Saml2Client:
             raise Exception("Unkown binding type: %s" % binding)
         return (sid, response)
             
-    def verify(self, xml_response, requestor, outstanding=None, log=None, 
-                decode=True ):
-        """ Verify a authentication response
+    def verify_response(self, xml_response, requestor, outstanding=None, 
+                log=None, decode=True ):
+        """ Verify a response
         
         :param xml_response: The response as a XML string
         :param requestor: The hostname of the machine
@@ -189,8 +206,8 @@ class Saml2Client:
         log and log.info("response: %s" % (response,))
         print response
         try:
-            (ava, name_id, came_from) = self.do_response(response, requestor, 
-                                                outstanding, log)
+            (ava, name_id, came_from) = self.do_response(response, 
+                                                requestor, outstanding, log)
         except AttributeError, exc:
             log and log.error("AttributeError: %s" % (exc,))
             return ({}, "")
@@ -201,9 +218,10 @@ class Saml2Client:
         ava["__userid"] = name_id
         return (ava, came_from)
   
-    def do_response(self, response, requestor, outstanding=None, log=None):
+    def do_response(self, response, requestor, outstanding=None, 
+                            log=None):
         """
-        Parse a authentication response, verify that it is a response for me and
+        Parse a response, verify that it is a response for me and
         expected by me and that it is correct.
 
         :param response: The response as a structure
@@ -285,15 +303,8 @@ class Saml2Client:
             
         return (ava, name_id, came_from)
 
-    def init_request(self, request, destination):
-        request.id = _sid()
-        request.version = "2.0"
-        request.issue_instant = get_date_and_time()
-        request.destination = destination
-        return request
-        
-    def create_attribute_query(self, subject_id, destination, attribute=None,
-            sp_name_qualifier=None, name_qualifier=None):
+    def create_attribute_request(self, sid, subject_id, destination, 
+            attribute=None, sp_name_qualifier=None, name_qualifier=None):
         """ Constructs an AttributeQuery 
         
         :param subject_id: The identifier of the subject
@@ -307,7 +318,8 @@ class Saml2Client:
         :return: An AttributeQuery instance
         """
         
-        attr_query = self.init_request(samlp.AttributeQuery(), destination)
+        attr_query = self._init_request(samlp.AttributeQuery(sid), 
+                                        destination)
         
         subject = saml.Subject()
         name_id = saml.NameID()
@@ -320,6 +332,7 @@ class Saml2Client:
         subject.name_id = name_id
         
         attr_query.subject = subject
+
         if attribute:
             attrs = []
             for attr, values in attribute.items():
@@ -333,10 +346,10 @@ class Saml2Client:
                     
             attr_query.attribute = attrs
         
-        return "%s" % attr_query
+        return attr_query
     
     def attribute_request(self, subject_id, destination, attribute=None,
-                sp_name_qualifier=None, name_qualifier=None):
+                sp_name_qualifier=None, name_qualifier=None, log=None):
         """ Does a attribute request from an attribute authority
 
         :param subject_id: The identifier of the subject
@@ -349,7 +362,24 @@ class Saml2Client:
             provider that generated the identifier.
         :return: The attributes returned
         """
-        request = self.create_attribute_query()
+        
+        sid = _sid()
+        request = self.create_attribute_request(sid, subject_id, destination,
+                    attribute, sp_name_qualifier, name_qualifier )
+        
+        soapclient = SOAPClient(destination)
+        try:
+            response = soapclient.send(request)
+            if response:
+                (identity, came_from) = verify_response(response, requestor,
+                                                    outstanding={sid:""}, 
+                                                    log=log, decode=True)
+                return identity
+            else:
+                return None
+        except Exception, e:
+            log and log.info("Exception caught: %s" % (e,))
+            return None
         
     def make_logout_request(self, subject_id, reason=None, 
                 not_on_or_after=None):
@@ -363,7 +393,7 @@ class Saml2Client:
         :return: An AttributeQuery instance
         """
 
-        logout_req = self.init_request(samlp.LogoutRequest())
+        logout_req = self._init_request(samlp.LogoutRequest())
         logout_req.session_index = _sid()
         logout_req.base_id = saml.BaseID(text=subject_id)
         if reason:
