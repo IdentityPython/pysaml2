@@ -11,11 +11,12 @@ except ImportError:
     except ImportError:
         from elementtree import ElementTree
 
+#from saml2 import client
 
 NAMESPACE = "http://schemas.xmlsoap.org/soap/envelope/"
 
 class _Http(object):
-    """ For writing to a HTTP server using PUT """
+    """ For writing to a HTTP server using POST """
     def __init__(self, path, key_file=None, cert_file=None):
         self.path = path
         self.server = httplib2.Http()
@@ -41,7 +42,7 @@ class SOAPClient(object):
             return self.parse_soap_enveloped_saml_response(response)
 
     def parse_soap_enveloped_saml_response(self, text):
-        envelope = ElementTree.fromstring(example)
+        envelope = ElementTree.fromstring(text)
         assert envelope.tag == '{%s}Envelope' % NAMESPACE
         
         assert len(envelope) == 1
@@ -50,11 +51,12 @@ class SOAPClient(object):
         assert len(body) == 1
         saml_part = body[0]
         if saml_part.tag == '{%s}Response' % SAMLP_NAMESPACE:
-            return samlp.response_from_string(
-                        ElementTree.tostring(saml_part, encoding="UTF-8"))
-
+            return ElementTree.tostring(saml_part, encoding="UTF-8")
+        else:
+            return ""
+            
     def make_soap_enveloped_saml_request(self, request):
-        """ Returns the soap envelope containing a SAML request
+        """ Returns a soap envelope containing a SAML request
         as a text string.
         
         :param request: The SAML request
@@ -67,7 +69,6 @@ class SOAPClient(object):
         body.tag = '{%s}Body' % NAMESPACE
         envelope.append(body)
 
-        response = samlp.Response()
-        response.become_child_element(body)
+        request.become_child_element(body)
 
         return ElementTree.tostring(envelope, encoding="UTF-8")
