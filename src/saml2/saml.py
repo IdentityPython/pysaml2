@@ -40,6 +40,8 @@ NAMEID_FORMAT_ENCRYPTED = (
     "urn:oasis:names:tc:SAML:2.0:nameid-format:encrypted")
 NAMEID_FORMAT_PERSISTENT = (
     "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent")
+NAMEID_FORMAT_TRANSIENT = (
+    "urn:oasis:names:tc:SAML:2.0:nameid-format:transient")
 
 PROFILE_ATTRIBUTE_BASIC = (
     "urn:oasis:names:tc:SAML:2.0:profiles:attribute:basic")
@@ -734,7 +736,8 @@ class AuthnStatement(Statement):
         'subject_locality', SubjectLocality)
     c_children['{%s}AuthnContext' % NAMESPACE] = (
         'authn_context', AuthnContext)
-    c_child_order = ['subject_locality', 'authn_context']
+    c_child_order = Statement.c_child_order[:]
+    c_child_order.extend(['subject_locality', 'authn_context'])
     
     def __init__(self, authn_instant=None, session_index=None,
                     session_not_on_or_after=None, subject_locality=None,
@@ -874,7 +877,8 @@ class AttributeStatement(Statement):
     c_children['{%s}Attribute' % NAMESPACE] = ('attribute', [Attribute])
     c_children['{%s}EncryptedAttribute' % NAMESPACE] = (
             'encrypted_attribute', [EncryptedAttribute])
-    c_child_order = ['attribute', 'encrypted_attribute']
+    c_child_order = Statement.c_child_order[:]
+    c_child_order.extend(['attribute', 'encrypted_attribute'])
     
     def __init__(self, attribute=None, encrypted_attribute=None, 
                     text=None, extension_elements=None,
@@ -998,7 +1002,8 @@ class AuthzDecisionStatement(Statement):
     c_attributes['Decision'] = 'decision'
     c_children['{%s}Action' % NAMESPACE] = ('action', [Action])
     c_children['{%s}Evidence' % NAMESPACE] = ('evidence', [Evidence])
-    c_child_order = ['action', 'evidence']
+    c_child_order = Statement.c_child_order[:]
+    c_child_order.extend(['action', 'evidence'])
 
     def __init__(self, resource=None, decision=None, action=None,
                     evidence=None, text=None, extension_elements=None,
