@@ -2,6 +2,7 @@
 
 from saml2.client import Saml2Client
 from saml2 import samlp
+from saml2 import saml
 
 XML_RESPONSE_FILE = "tests/saml_signed.xml"
 XML_RESPONSE_FILE2 = "tests/saml2_response.xml"
@@ -87,17 +88,17 @@ def test_parse_2():
 #     assert False
 
 REQ1 = """<?xml version='1.0' encoding='UTF-8'?>
-<ns0:AttributeQuery Destination="https://idp.example.com/idp/" ID="1" IssueInstant="%s" Version="2.0" xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns1:Subject xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion"><ns1:NameID SPNameQualifier="http://vo.example.org/biomed">E8042FB4-4D5B-48C3-8E14-8EDD852790DD</ns1:NameID></ns1:Subject></ns0:AttributeQuery>"""
+<ns0:AttributeQuery Destination="https://idp.example.com/idp/" ID="1" IssueInstant="%s" Version="2.0" xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns1:Issuer xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion">http://vo.example.com/sp1</ns1:Issuer><ns1:Subject xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion"><ns1:NameID>E8042FB4-4D5B-48C3-8E14-8EDD852790DD</ns1:NameID></ns1:Subject></ns0:AttributeQuery>"""
 
 class TestClient:
     def setup_class(self):
         self.client = Saml2Client({}, xmlsec_binary=XMLSEC_BINARY)
     
-    def test_create_attribute_query(self):
+    def test_create_attribute_query1(self):
         req = self.client.create_attribute_request("1", 
-            subject_id = "E8042FB4-4D5B-48C3-8E14-8EDD852790DD", 
-            destination = "https://idp.example.com/idp/", 
-            sp_name_qualifier="http://vo.example.org/biomed")
+            "E8042FB4-4D5B-48C3-8E14-8EDD852790DD",
+            "http://vo.example.com/sp1",
+            "https://idp.example.com/idp/" )
         str = "%s" % req.to_string()
         print str
         assert str == REQ1 % req.issue_instant
@@ -106,6 +107,46 @@ class TestClient:
         assert req.version == "2.0"
         subject = req.subject
         name_id = subject.name_id
-        assert name_id.sp_name_qualifier == "http://vo.example.org/biomed"
+        assert name_id.format == saml.NAMEID_FORMAT_PERSISTENT
         assert name_id.text == "E8042FB4-4D5B-48C3-8E14-8EDD852790DD"
         
+    def test_create_attribute_query2(self):
+        req = self.client.create_attribute_request("1", 
+            "E8042FB4-4D5B-48C3-8E14-8EDD852790DD", 
+            "http://vo.example.com/sp1",
+            "https://idp.example.com/idp/",
+            attribute={
+                ("urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+                "urn:oid:2.5.4.42","givenName"):None,
+                ("urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+                "urn:oid:2.5.4.4","surname"):None,
+                ("urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+                "urn:oid:1.2.840.113549.1.9.1"):None,
+                })
+                
+        print req.to_string()
+        assert req.destination == "https://idp.example.com/idp/"
+        assert req.id == "1"
+        assert req.version == "2.0"
+        subject = req.subject
+        name_id = subject.name_id
+        assert name_id.format == saml.NAMEID_FORMAT_PERSISTENT
+        assert name_id.text == "E8042FB4-4D5B-48C3-8E14-8EDD852790DD"
+        assert len(req.attribute) == 3
+        # one is givenName
+        seen = []
+        for attribute in req.attribute:
+            if attribute.name == "urn:oid:2.5.4.42":
+                assert attribute.name_format == saml.NAME_FORMAT_URI
+                assert attribute.friendly_name == "givenName"
+                seen.append("givenName")
+            elif attribute.name == "urn:oid:2.5.4.4":
+                assert attribute.name_format == saml.NAME_FORMAT_URI
+                assert attribute.friendly_name == "surname"
+                seen.append("surname")
+            elif attribute.name == "urn:oid:1.2.840.113549.1.9.1":
+                assert attribute.name_format == saml.NAME_FORMAT_URI
+                if getattr(attribute,"friendly_name"):
+                    assert False
+                seen.append("email")
+        assert set(seen) == set(["givenName","surname","email"])
