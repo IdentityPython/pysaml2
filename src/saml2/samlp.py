@@ -99,9 +99,9 @@ class AbstractRequest(SamlBase):
     c_child_order = ['issuer', 'signature', 'extensions']
 
     def __init__(self, id=None, version=None, issue_instant=None,
-                destination=None, consent=None, issuer=None, signature=None,
-                extensions=None, text=None, extension_elements=None, 
-                extension_attributes=None):
+                destination=None, consent=None, issuer=None, 
+                signature=None, extensions=None, 
+                text=None, extension_elements=None, extension_attributes=None):
         """Constructor for AbstractRequest
 
         :param id: ID attribute
@@ -116,7 +116,8 @@ class AbstractRequest(SamlBase):
         :param extension_elements: A list of ExtensionElement instances
         :param extension_attributes: A dictionary of attribute value string pairs
         """
-        SamlBase.__init__(self, text, extension_elements, extension_attributes)
+        SamlBase.__init__(self, 
+                            text, extension_elements, extension_attributes)
         self.id = id
         self.version = version
         self.issue_instant = issue_instant
@@ -311,11 +312,15 @@ class AssertionIDRequest(AbstractRequest):
     c_namespace = NAMESPACE
     c_children = AbstractRequest.c_children.copy()
     c_attributes = AbstractRequest.c_attributes.copy()
+    c_child_order = AbstractRequest.c_child_order[:]
     c_attributes["AssertionIDRef"] = 'assertion_id_ref'
 
     def __init__(self, id=None, version=None, issue_instant=None,
-                destination=None, consent=None, issuer=None, signature=None,
-                extensions=None, assertion_id_ref=None,
+                destination=None, consent=None, issuer=None, 
+                signature=None, extensions=None, 
+                # new for this class
+                assertion_id_ref=None,
+                # ------------------
                 text=None, extension_elements=None, 
                 extension_attributes=None):
         """Constructor for AssertionIDRequest
@@ -359,10 +364,15 @@ class SubjectQuery(AbstractRequest):
     c_attributes = AbstractRequest.c_attributes.copy()
     c_children['{%s}Subject' % saml.NAMESPACE] = (
         'subject', saml.Subject)
-
+    c_child_order = AbstractRequest.c_child_order[:]
+    c_child_order.append("subject")
+    
     def __init__(self, id=None, version=None, issue_instant=None,
-                destination=None, consent=None, issuer=None, signature=None,
-                extensions=None, subject=None,
+                destination=None, consent=None, issuer=None, 
+                signature=None, extensions=None, 
+                #------------
+                subject=None,
+                #------------
                 text=None, extension_elements=None, 
                 extension_attributes=None):
         """Constructor for SubjectQuery
@@ -477,14 +487,18 @@ class RequestedAuthnContext(SamlBase):
         """Constructor for RequestedAuthnContext
 
         :param comparison: Comparison attribute
-        :param authn_context_class_ref: list A list of AuthnContextClassRef instances
-        :param authn_context_decl_ref: list A list of AuthnContextDeclRef instances
+        :param authn_context_class_ref: list A list of AuthnContextClassRef
+            instances
+        :param authn_context_decl_ref: list A list of AuthnContextDeclRef
+            instances
         :param text: The text data in the this element
         :param extension_elements: A list of ExtensionElement instances
-        :param extension_attributes: A dictionary of attribute value string pairs
+        :param extension_attributes: A dictionary of attribute value string
+            pairs
         """
 
-        SamlBase.__init__(self, text, extension_elements, extension_attributes)
+        SamlBase.__init__(self, 
+                            text, extension_elements, extension_attributes)
         self.comparison = comparison
         self.authn_context_class_ref = authn_context_class_ref or []
         self.authn_context_decl_ref = authn_context_decl_ref or []
@@ -509,7 +523,10 @@ class AttributeQuery(SubjectQuery):
 
     def __init__(self, id=None, version=None, issue_instant=None,
                 destination=None, consent=None, issuer=None, signature=None,
-                extensions=None, subject=None, attribute=None,
+                extensions=None, subject=None, 
+                #--------------
+                attribute=None,
+                #--------------
                 text=None, extension_elements=None, 
                 extension_attributes=None):
         """Constructor for AttributeQuery
@@ -532,9 +549,9 @@ class AttributeQuery(SubjectQuery):
         """
 
         SubjectQuery.__init__(self, id, version, issue_instant, 
-                                destination, consent, issuer, signature, 
-                                extensions, subject, text, extension_elements, 
-                                extension_attributes)
+                            destination, consent, issuer, signature, 
+                            extensions, subject, 
+                            text, extension_elements, extension_attributes)
 
         self.attribute = attribute
         
@@ -573,7 +590,8 @@ class AuthzDecisionQuery(SubjectQuery):
         'action', saml.Action)
     c_children['{%s}Evidence' % saml.NAMESPACE] = (
         'evidence', saml.Evidence)
-    c_child_order = ['action', 'evidence', 'resource']
+    c_child_order = SubjectQuery.c_child_order[:]
+    c_child_order.extend(['action', 'evidence', 'resource'])
 
     def __init__(self, id=None, version=None, issue_instant=None,
                 destination=None, consent=None, issuer=None, signature=None,
@@ -631,8 +649,9 @@ class Response(StatusResponse):
         'assertion', [saml.Assertion])
     c_children['{%s}EncryptedAssertion' % saml.NAMESPACE] = (
         'encrypted_assertion', [saml.EncryptedAssertion])
-    c_child_order = ['issuer', 'signature', 'extensions', 'status', 
-                    'assertion', 'encrypted_assertion']
+    c_child_order = StatusResponse.c_child_order[:]    
+    c_child_order.extend(['issuer', 'signature', 'extensions', 'status', 
+                    'assertion', 'encrypted_assertion'])
 
     def __init__(self, id=None, in_response_to=None, version=None,
                 issue_instant=None, destination=None, consent=None,
@@ -872,20 +891,26 @@ class AuthnRequest(AbstractRequest):
     c_children['{%s}RequestedAuthnContext' % NAMESPACE] = (
                             'requested_authn_context', RequestedAuthnContext)
     c_children['{%s}Scoping' % NAMESPACE] = ('scoping', Scoping)
-    c_child_order = ['issuer', 'signature', 'extensions', 'subject',
+
+    c_child_order = AbstractRequest.c_child_order[:]
+    c_child_order.extend(['issuer', 'signature', 'extensions', 'subject',
                     'name_id_policy', 'conditions', 'requested_authn_context',
-                    'scoping']
+                    'scoping'])
 
     def __init__(self, id=None, version=None, issue_instant=None,
                 destination=None, consent=None, issuer=None, signature=None,
-                extensions=None, subject=None, name_id_policy=None,
+                extensions=None, 
+                # ------------------------------
+                subject=None, name_id_policy=None,
                 conditions=None, requested_authn_context=None, scoping=None,
                 force_authn=None, is_passive=None,
                 assertion_consumer_service_index=None,
                 assertion_consumer_service_url=None,
                 protocol_binding=None, assertion_consuming_service_index=None,
-                provider_name=None, text=None,
-                extension_elements=None, extension_attributes=None):
+                provider_name=None,
+                # ------------------------------
+                text=None, extension_elements=None, 
+                extension_attributes=None):
         """Constructor for AuthnRequest
 
         :param id: ID attribute
@@ -922,8 +947,6 @@ class AuthnRequest(AbstractRequest):
                                 extension_attributes)
         self.subject = subject
         self.name_id_policy = name_id_policy
-        self.conditions = conditions
-        self.requested_authn_context = requested_authn_context
         self.conditions = conditions
         self.requested_authn_context = requested_authn_context
         self.scoping = scoping
@@ -986,8 +1009,9 @@ class ManageNameIDRequest(AbstractRequest):
         'new_encrypted_id', saml.EncryptedID)
     c_children['{%s}Terminate' % NAMESPACE] = (
         'terminate', Terminate)
-    c_child_order = ['name_id', 'encrypted_id', 
-                    'new_id', 'new_encrypted_id', 'terminate']
+    c_child_order = AbstractRequest.c_child_order[:]
+    c_child_order.extend(['name_id', 'encrypted_id', 
+                    'new_id', 'new_encrypted_id', 'terminate'])
 
     def __init__(self, new_id=None, name_id=None, encrypted_id=None, 
                 new_encrypted_id=None, terminate=None,
@@ -1066,8 +1090,9 @@ class LogoutRequest(AbstractRequest):
         'encrypted_id', saml.EncryptedID)
     c_children['{%s}SessionIndex' % NAMESPACE] = (
         'session_index', SessionIndex)
-    c_child_order = ['issuer', 'signature', 'extensions', 'base_id', 
-                        'name_id', 'encrypted_id', 'session_index']
+    c_child_order = AbstractRequest.c_child_order[:]
+    c_child_order.extend(['issuer', 'signature', 'extensions', 'base_id', 
+                        'name_id', 'encrypted_id', 'session_index'])
 
     def __init__(self, id=None, version=None, issue_instant=None,
                 destination=None, consent=None, issuer=None, signature=None,
@@ -1147,7 +1172,9 @@ class NameIDMappingRequest(AbstractRequest):
         'encrypted_id', saml.EncryptedID)
     c_children['{%s}NameIDPolicy' % NAMESPACE] = (
         'name_id_policy', NameIDPolicy)
-    c_child_order = ['base_id', 'name_id', 'encrypted_id', 'name_id_policy']
+    c_child_order = AbstractRequest.c_child_order[:]
+    c_child_order.extend(['base_id', 'name_id', 'encrypted_id', 
+                        'name_id_policy'])
 
     def __init__(self, base_id=None, name_id=None, encrypted_id=None,
                 name_id_policy=None,
@@ -1204,7 +1231,8 @@ class NameIDMappingResponse(StatusResponse):
         'name_id', saml.NameID)
     c_children['{%s}EncryptedID' % saml.NAMESPACE] = (
         'encrypted_id', saml.EncryptedID)
-    c_child_order = ['name_id', 'encrypted_id']
+    c_child_order = StatusResponse.c_child_order[:]
+    c_child_order.extend(['name_id', 'encrypted_id'])
 
     def __init__(self, name_id=None, encrypted_id=None,
                 id=None, in_response_to=None,
