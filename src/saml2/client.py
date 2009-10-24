@@ -303,8 +303,9 @@ class Saml2Client:
             
         return (ava, name_id, came_from)
 
-    def create_attribute_request(self, sid, subject_id, destination, 
-            attribute=None, sp_name_qualifier=None, name_qualifier=None):
+    def create_attribute_request(self, sid, subject_id, issuer, destination, 
+            attribute=None, sp_name_qualifier=None, name_qualifier=None,
+            format=None):
         """ Constructs an AttributeQuery 
         
         :param subject_id: The identifier of the subject
@@ -323,7 +324,10 @@ class Saml2Client:
         
         subject = saml.Subject()
         name_id = saml.NameID()
-        name_id.format = saml.NAMEID_FORMAT_PERSISTENT
+        if format:
+            name_id.format = format
+        else:
+            name_id.format = saml.NAMEID_FORMAT_PERSISTENT
         if name_qualifier:
             name_id.name_qualifier = name_qualifier
         if sp_name_qualifier:
@@ -332,13 +336,28 @@ class Saml2Client:
         subject.name_id = name_id
         
         attr_query.subject = subject
+        attr_query.issuer = saml.Issuer(text=issuer)
 
         if attribute:
             attrs = []
-            for attr, values in attribute.items():
+            for attr_tup, values in attribute.items():
+                format = friendly = ""
+                if isinstance(attr_tup, tuple):
+                    if len(attr_tup) == 3:
+                        (format,name,friendly) = attr_tup
+                    elif len(attr_tup) == 2:
+                        (format,name) = attr_tup
+                    elif len(attr_tup) == 1:
+                        (name) = attr_tup
+                elif isinstance(attr_tup, basestring):
+                    name = attr_tup
                 sattr = saml.Attribute()
-                sattr.name = attr
-                #sattr.name_format = NAME_FORMAT_UNSPECIFIED
+                sattr.name = name
+                if format:
+                    sattr.name_format = format
+                if friendly:
+                    sattr.friendly_name = friendly
+
                 if values:
                     aval = [saml.AttributeValue(text=val) for val in values]
                     sattr.attribute_value = aval
@@ -348,8 +367,9 @@ class Saml2Client:
         
         return attr_query
     
-    def attribute_request(self, subject_id, destination, attribute=None,
-                sp_name_qualifier=None, name_qualifier=None, log=None):
+    def attribute_request(self, subject_id, issuer, destination, 
+                attribute=None, sp_name_qualifier=None, name_qualifier=None, 
+                format=None, log=None):
         """ Does a attribute request from an attribute authority
 
         :param subject_id: The identifier of the subject
@@ -364,8 +384,8 @@ class Saml2Client:
         """
         
         sid = _sid()
-        request = self.create_attribute_request(sid, subject_id, destination,
-                    attribute, sp_name_qualifier, name_qualifier )
+        request = self.create_attribute_request(sid, subject_id, issuer,
+                    destination, attribute, sp_name_qualifier, name_qualifier)
         
         soapclient = SOAPClient(destination)
         try:
