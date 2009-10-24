@@ -38,7 +38,7 @@ def test_verify_1():
     xml_response = open(XML_RESPONSE_FILE).read()
     client = Saml2Client({}, xmlsec_binary=XMLSEC_BINARY)
     (ava, came_from) = \
-            client.verify(xml_response, "xenosmilus.umdc.umu.se", 
+            client.verify_response(xml_response, "xenosmilus.umdc.umu.se", 
                             decode=False)
     assert ava == {'__userid': '_cddc88563d433f556d4cc70c3162deabddea3b5019', 
                     'eduPersonAffiliation': ['member', 'student'], 
@@ -85,3 +85,27 @@ def test_parse_2():
 #     print 40*","
 #     print name_id
 #     assert False
+
+REQ1 = """<?xml version='1.0' encoding='UTF-8'?>
+<ns0:AttributeQuery Destination="https://idp.example.com/idp/" ID="1" IssueInstant="%s" Version="2.0" xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns1:Subject xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion"><ns1:NameID SPNameQualifier="http://vo.example.org/biomed">E8042FB4-4D5B-48C3-8E14-8EDD852790DD</ns1:NameID></ns1:Subject></ns0:AttributeQuery>"""
+
+class TestClient:
+    def setup_class(self):
+        self.client = Saml2Client({}, xmlsec_binary=XMLSEC_BINARY)
+    
+    def test_create_attribute_query(self):
+        req = self.client.create_attribute_request("1", 
+            subject_id = "E8042FB4-4D5B-48C3-8E14-8EDD852790DD", 
+            destination = "https://idp.example.com/idp/", 
+            sp_name_qualifier="http://vo.example.org/biomed")
+        str = "%s" % req.to_string()
+        print str
+        assert str == REQ1 % req.issue_instant
+        assert req.destination == "https://idp.example.com/idp/"
+        assert req.id == "1"
+        assert req.version == "2.0"
+        subject = req.subject
+        name_id = subject.name_id
+        assert name_id.sp_name_qualifier == "http://vo.example.org/biomed"
+        assert name_id.text == "E8042FB4-4D5B-48C3-8E14-8EDD852790DD"
+        
