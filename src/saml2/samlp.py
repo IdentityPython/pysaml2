@@ -518,8 +518,10 @@ class AttributeQuery(SubjectQuery):
     c_namespace = NAMESPACE
     c_children = SubjectQuery.c_children.copy()
     c_attributes = SubjectQuery.c_attributes.copy()
+    c_child_order = SubjectQuery.c_child_order[:]
     c_children['{%s}Attribute' % saml.NAMESPACE] = (
         'attribute', saml.Attribute)
+    c_child_order.append("attribute")
 
     def __init__(self, id=None, version=None, issue_instant=None,
                 destination=None, consent=None, issuer=None, signature=None,
