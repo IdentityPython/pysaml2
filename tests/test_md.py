@@ -971,8 +971,10 @@ class TestSPSSODescriptor:
     self.sp_sso_descriptor.attribute_consuming_service.append(
       md.AttributeConsumingService())
 
+    print self.sp_sso_descriptor
     new_sp_sso_descriptor = md.spsso_descriptor_from_string(
       self.sp_sso_descriptor.to_string())
+    print new_sp_sso_descriptor
     assert new_sp_sso_descriptor.identifier == "ID"
     assert new_sp_sso_descriptor.valid_until == "2008-09-14T01:05:02Z"
     assert new_sp_sso_descriptor.cache_duration == "10:00:00:00"

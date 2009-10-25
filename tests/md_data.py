@@ -114,7 +114,8 @@ TEST_ATTRIBUTE_PROFILE = """<?xml version="1.0" encoding="utf-8"?>
 """
 
 TEST_ORGANIZATION_NAME = """<?xml version="1.0" encoding="utf-8"?>
-<OrganizationName xmlns="urn:oasis:names:tc:SAML:2.0:metadata" xml:lang="en">
+<OrganizationName xmlns="urn:oasis:names:tc:SAML:2.0:metadata" 
+    ns1:lang="en" xmlns:ns1="http:#www.w3.org/XML/1998/namespace">
   SIOS Technology, Inc.
 </OrganizationName>
 """
@@ -122,13 +123,14 @@ TEST_ORGANIZATION_NAME = """<?xml version="1.0" encoding="utf-8"?>
 TEST_ORGANIZATION_DISPLAY_NAME = """<?xml version="1.0" encoding="utf-8"?>
 <OrganizationDisplayName
   xmlns="urn:oasis:names:tc:SAML:2.0:metadata"
-  xml:lang="en">
+  ns1:lang="en" xmlns:ns1="http:#www.w3.org/XML/1998/namespace">
   SIOS
 </OrganizationDisplayName>
 """
 
 TEST_ORGANIZATION_URL = """<?xml version="1.0" encoding="utf-8"?>
-<OrganizationURL xmlns="urn:oasis:names:tc:SAML:2.0:metadata" xml:lang="ja">
+<OrganizationURL xmlns="urn:oasis:names:tc:SAML:2.0:metadata" 
+    ns1:lang="ja" xmlns:ns1="http:#www.w3.org/XML/1998/namespace">
   http://www.example.com/
 </OrganizationURL>
 """
@@ -138,13 +140,16 @@ TEST_ORGANIZATION = """<?xml version="1.0" encoding="utf-8"?>
   <Extensions>
     <hoge xmlns="http://hoge.example.com/">hogehoge</hoge>
   </Extensions>
-  <OrganizationName xml:lang="en">
+  <OrganizationName 
+    ns1:lang="en" xmlns:ns1="http:#www.w3.org/XML/1998/namespace">
     SIOS Technology, Inc.
   </OrganizationName>
-  <OrganizationDisplayName xml:lang="en">
+  <OrganizationDisplayName ns1:lang="en" 
+    xmlns:ns1="http:#www.w3.org/XML/1998/namespace">
     SIOS
   </OrganizationDisplayName>
-  <OrganizationURL xml:lang="ja">
+  <OrganizationURL 
+    ns1:lang="ja" xmlns:ns1="http:#www.w3.org/XML/1998/namespace">
     http://www.example.com/
   </OrganizationURL>
 </Organization>
@@ -882,13 +887,15 @@ TEST_REQUESTED_ATTRIBUTE = """<?xml version="1.0" encoding="utf-8"?>
 """
 
 TEST_SERVICE_NAME = """<?xml version="1.0" encoding="utf-8"?>
-<ServiceName xmlns="urn:oasis:names:tc:SAML:2.0:metadata" xml:lang="en">
+<ServiceName xmlns="urn:oasis:names:tc:SAML:2.0:metadata" 
+    ns1:lang="en" xmlns:ns1="http:#www.w3.org/XML/1998/namespace">
   SIOS mail
 </ServiceName>
 """
 
 TEST_SERVICE_DESCRIPTION = """<?xml version="1.0" encoding="utf-8"?>
-<ServiceDescription xmlns="urn:oasis:names:tc:SAML:2.0:metadata" xml:lang="en">
+<ServiceDescription xmlns="urn:oasis:names:tc:SAML:2.0:metadata" 
+    ns1:lang="en" xmlns:ns1="http:#www.w3.org/XML/1998/namespace">
   SIOS mail service
 </ServiceDescription>
 """

@@ -81,7 +81,7 @@ TEST_ATTRIBUTE_VALUE = """<?xml version="1.0" encoding="utf-8"?>
 
 TEST_ATTRIBUTE = """<?xml version="1.0" encoding="utf-8"?>
 <Attribute Name="testAttribute"
-  NameFormat="urn:oasis:names:tc:SAML:2.0:attrnam-format:unspecified"
+  NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:unspecified"
   FriendlyName="test attribute"
   xmlns="urn:oasis:names:tc:SAML:2.0:assertion">
   <AttributeValue >value1 of test attribute</AttributeValue>
@@ -92,13 +92,13 @@ TEST_ATTRIBUTE = """<?xml version="1.0" encoding="utf-8"?>
 TEST_ATTRIBUTE_STATEMENT = """<?xml version="1.0" encoding="utf-8"?>
 <AttributeStatement xmlns="urn:oasis:names:tc:SAML:2.0:assertion">
   <Attribute Name="testAttribute"
-    NameFormat="urn:oasis:names:tc:SAML:2.0:attrnam-format:unspecified"
+    NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:unspecified"
     FriendlyName="test attribute">
     <AttributeValue >value1 of test attribute</AttributeValue>
     <AttributeValue >value2 of test attribute</AttributeValue>
   </Attribute>
   <Attribute Name="http://www.example.com/testAttribute2"
-    NameFormat="urn:oasis:names:tc:SAML:2.0:attrnam-format:uri"
+    NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
     FriendlyName="test attribute2">
     <AttributeValue >value1 of test attribute2</AttributeValue>
     <AttributeValue >value2 of test attribute2</AttributeValue>
