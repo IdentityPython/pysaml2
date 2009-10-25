@@ -310,7 +310,12 @@ class Saml2Client:
         
         :param subject_id: The identifier of the subject
         :param destination: To whom the query should be sent
-        :param attribute: A dictionary of attributes and values that is asked for
+        :param attribute: A dictionary of attributes and values that is 
+            asked for. The key are one of 4 variants:
+            3-tuple of name_format,name and friendly_name,
+            2-tuple of name_format and name,
+            1-tuple with name or 
+            just the name as a string.
         :param sp_name_qualifier: The unique identifier of the 
             service provider or affiliation of providers for whom the 
             identifier was generated.
@@ -427,6 +432,7 @@ class Saml2Client:
         logout_req = self.make_logout_request(subject_id, reason,
                         not_on_or_after)
         
+
 # ----------------------------------------------------------------------
 
 #2009-07-05T15:35:29Z
