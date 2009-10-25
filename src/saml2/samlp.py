@@ -589,7 +589,7 @@ class AuthzDecisionQuery(SubjectQuery):
     c_children['{%s}Resource' % saml.NAMESPACE] = (
         'resource', Resource)
     c_children['{%s}Action' % saml.NAMESPACE] = (
-        'action', saml.Action)
+        'action', [saml.Action])
     c_children['{%s}Evidence' % saml.NAMESPACE] = (
         'evidence', saml.Evidence)
     c_child_order = SubjectQuery.c_child_order[:]
