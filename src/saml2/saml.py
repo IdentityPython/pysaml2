@@ -952,6 +952,8 @@ class Evidence(SamlBase):
                                                         [AssertionIDRef])
     c_children['{%s}AssertionURIRef' % NAMESPACE] = ('assertion_uri_ref', 
                                                         [AssertionURIRef])
+    # Can't do this here since Assertion isn't defined                                                    
+    #c_children['{%s}Assertion' % NAMESPACE] = ('assertion', [Assertion])
     c_children['{%s}EncryptedAssertion' % NAMESPACE] = (
         'encrypted_assertion', [EncryptedAssertion])
     c_child_order = ['assertion_id_ref', 'assertion_uri_ref', 'assertion',
