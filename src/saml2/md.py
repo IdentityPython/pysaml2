@@ -688,10 +688,9 @@ class SSODescriptor(RoleDescriptor):
     c_children['{%s}NameIDFormat' % NAMESPACE] = (
         'name_id_format', [NameIDFormat])
     c_child_order = RoleDescriptor.c_child_order[:]
-    c_child_order.extend(['signature', 'extensions', 'key_descriptor', 
-                    'organization', 'contact_person', 
-                    'artifact_resolution_service', 'single_logout_service', 
-                    'manage_name_id_service', 'name_id_format'])
+    c_child_order.extend(['artifact_resolution_service', 
+                    'single_logout_service', 'manage_name_id_service', 
+                    'name_id_format'])
 
     def __init__(self, artifact_resolution_service=None,
                     single_logout_service=None, manage_name_id_service=None,
@@ -1013,8 +1012,8 @@ class SPSSODescriptor(SSODescriptor):
         'attribute_consuming_service', [AttributeConsumingService])
 
     c_child_order = SSODescriptor.c_child_order[:]    
-    c_child_order = ['assertion_consumer_service', 
-                    'attribute_consuming_service']
+    c_child_order.extend(['assertion_consumer_service', 
+                    'attribute_consuming_service'])
 
     def __init__(self, identifier=None, valid_until=None, cache_duration=None,
                     protocol_support_enumeration=None, error_url=None,
