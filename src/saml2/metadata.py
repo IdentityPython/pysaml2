@@ -190,22 +190,49 @@ def cert_from_assertion(assertion):
     return []
     
 def make_contact_person(spec):
-    contact = md.ContactPerson()
-    for prop, klass in md.ContactPerson.c_children.values():
-        #print prop
-        #print klass
+    return make_xyz(md.ContactPerson, spec)
+
+def _make_vals(xyz_inst, val, prop, klass, part=False):
+    ci = None
+    if isinstance(val, basestring):
+        ci = klass(text=val)
+    elif isinstance(val, dict):
+        ci = make_xyz(klass, val)
+    elif not part:
+        cis = [_make_vals(xyz_inst, sval, prop, klass, True) for sval in val]
+        setattr(xyz_inst, prop, cis)
+    else:
+        raise ValueError()
+        
+    if part:
+        return ci
+    else:        
+        if ci:
+            cis = [ci]
+        setattr(xyz_inst, prop, cis)
+    
+def make_xyz(xyz, spec):
+    #print "Make", xyz
+    #print "Spec", spec
+    xyz_inst = xyz()
+    for prop in xyz.c_attributes.values():
+        if prop in spec:
+            setattr(xyz_inst,prop,spec[prop])
+    if "text" in spec:
+        setattr(xyz_inst,"text",spec["text"])
+        
+    for prop, klass in xyz.c_children.values():
+        #print "Prop",prop
+        #print "Class",klass
         if prop in spec:
             if isinstance(klass, list): # means there can be a list of values
-                if isinstance(spec[prop], basestring):
-                    ci = klass[0](text=spec[prop])
-                    setattr(contact, prop, [ci])
-                else: # assume list !?
-                    cis = [klass[0](text=val) for val in spec[prop]]
-                    setattr(contact, prop, cis)
+                #print "Possible list of values"
+                _make_vals(xyz_inst, spec[prop], prop, klass[0])
             else:
-                ci = klass(text=spec[prop])
-                setattr(contact, prop, ci)
-    return contact
+                #print "Single value"
+                ci = _make_vals(xyz_inst, spec[prop], prop, klass, True)
+                setattr(xyz_inst, prop, ci)
+    return xyz_inst
     
 def make_spsso_descriptor(spec):
     spsso = md.SPSSODescriptor(
