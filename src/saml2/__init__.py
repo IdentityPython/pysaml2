@@ -437,7 +437,9 @@ class SamlBase(ExtensionContainer):
         if value:
             self.__dict__[extension_attribute_name] = value
                     
-
+    def keyswv(self):
+        return [key for key,val in self.__dict__.items() if val]
+        
 def extension_element_to_element(extension_element, element_to_string,
                                     namespace=None):
     if extension_element.namespace == namespace:
