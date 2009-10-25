@@ -445,7 +445,7 @@ class RetrievalMethod(DsBase):
     c_attributes['Type'] = 'type'
     c_children['{%s}Transforms' % NAMESPACE] = ('transforms', [Transforms])
 
-    def __init__(self, transforms=None, uri=None, typ=None, text=None,
+    def __init__(self, transforms=None, uri=None, type=None, text=None,
                 extension_elements=None, extension_attributes=None):
         """Constructor for RetrievalMethod
 
@@ -454,13 +454,14 @@ class RetrievalMethod(DsBase):
         :param typ: Type attribute
         :param text: The text data in the this element
         :param extension_elements: A list of ExtensionElement instances
-        :param extension_attributes: A dictionary of attribute value string pairs
+        :param extension_attributes: A dictionary of attribute value string 
+            pairs
         """
 
         DsBase.__init__(self, text, extension_elements, extension_attributes)
-        self.transforms = transforms or []
         self.uri = uri
-        self.type = typ
+        self.type = type
+        self.transforms = transforms or []
 
 def retrieval_method_from_string(xml_string):
     """ Create RetrievalMethod instance from an XML string """
