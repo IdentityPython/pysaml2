@@ -4,6 +4,9 @@ import saml2
 import base64
 import time
 import re
+from datetime import timedelta
+from saml2.time_util import str_to_time, add_duration
+
 try:
     from hashlib import md5
 except ImportError:
@@ -42,6 +45,7 @@ def get_date_and_time(base=None):
     if base is None:
         base = time.time()
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(base))
+    
     
 class Saml2Client:
     
@@ -274,15 +278,8 @@ class Saml2Client:
         #print "Conditions",assertion.conditions
         assert assertion.conditions
         condition = assertion.conditions
-        now = time.gmtime()
-
-        try:
-            not_on_or_after = time.strptime(condition.not_on_or_after, 
-                                            TIME_FORMAT)
-        except Exception: # assume it's a format problem
-            m = TIME_FORMAT_WITH_FRAGMENT.match(condition.not_on_or_after)
-            not_on_or_after = time.strptime(m.groups()[0]+"Z", TIME_FORMAT)
-        
+        now = time.gmtime()        
+        not_on_or_after = str_to_time(condition.not_on_or_after)        
         if not_on_or_after < now:
             # To old ignore
             if not LAX:
