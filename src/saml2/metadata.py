@@ -1,9 +1,11 @@
 #!/iusr/bin/env python
 
+import base64
+import time
 from tempfile import NamedTemporaryFile
 from saml2 import md
 from saml2 import samlp, BINDING_HTTP_REDIRECT, BINDING_SOAP
-import base64
+from saml2.time_util import str_to_time
 
 def make_temp(string, suffix="", decode=True):
     """ xmlsec needs files in some cases and I have string hence the
@@ -52,6 +54,8 @@ class MetaData(object):
         self._loc_bind = {}
         self.idp = {}
         self.aad = {}
+        self.valid_to = None
+        self.cache_until = None
         
     def _idp_metadata(self, entity_descriptor):
 
@@ -133,7 +137,15 @@ class MetaData(object):
             distinguised names and certs as values.
         """
 
+        now = time.gmtime()
+        
         entities_descriptor = md.entities_descriptor_from_string(xml_str)
+
+        try:
+            valid_until = str_to_time(entities_descriptor.valid_until)
+        except AttributeError:
+            valid_until = None
+            
         for entity_descriptor in entities_descriptor.entity_descriptor:
             self._idp_metadata(entity_descriptor)
             self._aad_metadata(entity_descriptor)
