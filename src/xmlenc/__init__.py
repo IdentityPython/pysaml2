@@ -541,6 +541,11 @@ def encrypted_key_from_string(xml_string):
     """ Create EncryptedKey instance from an XML string """
     return create_class_from_xml_string(EncryptedKey, xml_string)
 
+ds.KeyInfo.c_children['{%s}EncryptedKey' % NAMESPACE] = (
+                        'encrypted_key', [EncryptedKey])
+
+# =========================================
+
 ELEMENT_TO_STRING = {
     KeySize: key_size_from_string,
     OAEPparams: oaep_params_from_string,
