@@ -32,6 +32,7 @@ except ImportError:
     except ImportError:
         from elementtree import ElementTree
 import saml2
+#import xmlenc
 from saml2 import create_class_from_xml_string
 
 NAMESPACE = 'http://www.w3.org/2000/09/xmldsig#'
@@ -727,13 +728,16 @@ class KeyInfo(DsBase):
     c_children['{%s}PGPData' % NAMESPACE] = ('pgp_data', [PGPData])
     c_children['{%s}SPKIData' % NAMESPACE] = ('spki_data', [SPKIData])
     c_children['{%s}MgmtData' % NAMESPACE] = ('mgmt_data', [MgmtData])
+#    c_children['{%s}EncryptedKey' % xmlenc.NAMESPACE] = (
+#                        'encrypted_key', [xmlenc.EncryptedKey])
 
     c_child_order = ['key_name', 'key_value', 'retrieval_method', 'x509_data',
-                    'pgp_data', 'spki_data', 'mgmt_data']
+                    'pgp_data', 'spki_data', 'mgmt_data',
+                    'encrypted_key']
 
     def __init__(self, key_name=None, key_value=None, retrieval_method=None,
                 x509_data=None, pgp_data=None, spki_data=None, mgmt_data=None,
-                identifier=None, text=None,
+                encrypted_key=None, identifier=None, text=None,
                 extension_elements=None, extension_attributes=None):
         """Constructor for DSAKeyValue
 
@@ -758,6 +762,7 @@ class KeyInfo(DsBase):
         self.pgp_data = pgp_data or []
         self.spki_data = spki_data or []
         self.mgmt_data = mgmt_data or []
+        self.encrypted_key = encrypted_key or []
         self.identifier = identifier
 
 def key_info_from_string(xml_string):
