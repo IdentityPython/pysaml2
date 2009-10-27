@@ -26,6 +26,7 @@
 """
 
 import xmldsig as ds
+import xmlenc
 import saml2
 from saml2 import SamlBase
 
@@ -204,18 +205,68 @@ def assertion_uri_ref_from_string(xml_string):
     return saml2.create_class_from_xml_string(AssertionURIRef, xml_string)
 
 # ---------------------------------------------------------------------------
+# EncryptedElement
+# ---------------------------------------------------------------------------
+
+class EncryptedElement(SamlBase):
+
+    c_tag = 'EncryptedElement'
+    c_namespace = NAMESPACE
+    c_children = SamlBase.c_children.copy()
+    c_attributes = SamlBase.c_attributes.copy()
+
+    c_children['{%s}EncryptedData' % xmlenc.NAMESPACE] = (
+                        'encrypted_data', xmlenc.EncryptedData)
+    c_children['{%s}EncryptedKey' % xmlenc.NAMESPACE] = (
+                        'encrypted_key', xmlenc.EncryptedKey)
+    c_child_order = ["encrypted_data", "encrypted_key", "encrypted_id"]
+    
+    def __init__(self, encrypted_data=None, encrypted_key=None, 
+                encrypted_id=None,
+                text=None,
+                extension_elements=None, 
+                extension_attributes=None):
+
+        SamlBase.__init__(self, text, extension_elements, extension_attributes)
+        self.encrypted_data = encrypted_data
+        self.encrypted_key = encrypted_key
+        self.encrypted_id = encrypted_id
+
+def encrypted_element_from_string(xml_string):
+    """ Create EncryptedElement instance from an XML string """
+    return saml2.create_class_from_xml_string(EncryptedElement, xml_string)
+
+# ---------------------------------------------------------------------------
+# EncryptedID
+# ---------------------------------------------------------------------------
+
+class EncryptedID(EncryptedElement):
+    c_tag = 'EncryptedID'
+    c_namespace = NAMESPACE
+    c_children = EncryptedElement.c_children.copy()
+    c_attributes = EncryptedElement.c_attributes.copy()
+
+def encrypted_id_from_string(xml_string):
+    """ Create EncryptedID instance from an XML string """
+    return saml2.create_class_from_xml_string(EncryptedID, xml_string)
+
+
+EncryptedElement.c_children['{%s}EncryptedID' % NAMESPACE] = (
+                        'encrypted_id', EncryptedID)
+                        
+# ---------------------------------------------------------------------------
 # EncryptedAssertion
 # ---------------------------------------------------------------------------
 
-class EncryptedAssertion(SamlBase):
+class EncryptedAssertion(EncryptedElement):
     """The saml:EncryptedAssertion element represents an assertion in 
     encrypted fashion, as defined by the XML Encryption Syntax and 
     Processing specification"""
     
     c_tag = 'EncryptedAssertion'
     c_namespace = NAMESPACE
-    c_children = SamlBase.c_children.copy()
-    c_attributes = SamlBase.c_attributes.copy()
+    c_children = EncryptedElement.c_children.copy()
+    c_attributes = EncryptedElement.c_attributes.copy()
 
     # TODO: This is just a skelton yet.
 
