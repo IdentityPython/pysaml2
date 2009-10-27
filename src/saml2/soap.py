@@ -11,18 +11,18 @@ except ImportError:
     except ImportError:
         from elementtree import ElementTree
 
-#from saml2 import client
+from saml2.samlp import NAMESPACE as SAMLP_NAMESPACE
 
 NAMESPACE = "http://schemas.xmlsoap.org/soap/envelope/"
 
 class _Http(object):
     """ For writing to a HTTP server using POST """
-    def __init__(self, path, key_file=None, cert_file=None):
+    def __init__(self, path, keyfile=None, certfile=None):
         self.path = path
         self.server = httplib2.Http()
-        if key_file:
-            self.server.add_certificate(key_file, cert_file, "")
-        
+        if keyfile:
+            self.server.add_certificate(keyfile, certfile, "")
+
     def write(self, data):
         (response, content) = self.server.request(self.path, "POST", data)
         if response.status == 200:
@@ -32,8 +32,8 @@ class _Http(object):
 
 class SOAPClient(object):
     
-    def __init__(self, server_url, key_file=None, cert_file=None):
-        self.server = _Http(server_url, key_file, cert_file)
+    def __init__(self, server_url, keyfile=None, certfile=None):
+        self.server = _Http(server_url, keyfile, certfile)
         
     def send(self, request):
         soap_message = self.make_soap_enveloped_saml_request(request)
