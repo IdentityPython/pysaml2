@@ -88,7 +88,7 @@ def test_parse_2():
 #     assert False
 
 REQ1 = """<?xml version='1.0' encoding='UTF-8'?>
-<ns0:AttributeQuery Destination="https://idp.example.com/idp/" ID="1" IssueInstant="%s" Version="2.0" xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns1:Issuer xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion">http://vo.example.com/sp1</ns1:Issuer><ns1:Subject xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion"><ns1:NameID>E8042FB4-4D5B-48C3-8E14-8EDD852790DD</ns1:NameID></ns1:Subject></ns0:AttributeQuery>"""
+<ns0:AttributeQuery Destination="https://idp.example.com/idp/" ID="1" IssueInstant="%s" Version="2.0" xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns1:Issuer xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion">http://vo.example.com/sp1</ns1:Issuer><ns1:Subject xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion"><ns1:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent">E8042FB4-4D5B-48C3-8E14-8EDD852790DD</ns1:NameID></ns1:Subject></ns0:AttributeQuery>"""
 
 class TestClient:
     def setup_class(self):
@@ -107,8 +107,10 @@ class TestClient:
         assert req.version == "2.0"
         subject = req.subject
         name_id = subject.name_id
-        assert name_id.format == saml.NAMEID_FORMAT_PERSISTENT
+        assert name_id.name_format == saml.NAMEID_FORMAT_PERSISTENT
         assert name_id.text == "E8042FB4-4D5B-48C3-8E14-8EDD852790DD"
+        issuer = req.issuer
+        assert issuer.text == "http://vo.example.com/sp1"
         
     def test_create_attribute_query2(self):
         req = self.client.create_attribute_request("1", 
@@ -130,7 +132,7 @@ class TestClient:
         assert req.version == "2.0"
         subject = req.subject
         name_id = subject.name_id
-        assert name_id.format == saml.NAMEID_FORMAT_PERSISTENT
+        assert name_id.name_format == saml.NAMEID_FORMAT_PERSISTENT
         assert name_id.text == "E8042FB4-4D5B-48C3-8E14-8EDD852790DD"
         assert len(req.attribute) == 3
         # one is givenName
@@ -150,3 +152,20 @@ class TestClient:
                     assert False
                 seen.append("email")
         assert set(seen) == set(["givenName","surname","email"])
+        
+    def test_create_attribute_query_3(self):
+        req = self.client.create_attribute_request("1",
+                "_e7b68a04488f715cda642fbdd90099f5", 
+                "urn:mace:umu.se:saml/rolandsp",
+                "https://aai-demo-idp.switch.ch/idp/shibboleth",
+                format=saml.NAMEID_FORMAT_TRANSIENT )
+                
+        assert isinstance(req, samlp.AttributeQuery)
+        assert req.destination == "https://aai-demo-idp.switch.ch/idp/shibboleth"
+        assert req.id == "1"
+        assert req.version == "2.0"
+        assert req.issue_instant
+        assert req.issuer.text == "urn:mace:umu.se:saml/rolandsp"
+        nameid = req.subject.name_id
+        assert nameid.name_format == saml.NAMEID_FORMAT_TRANSIENT
+        assert nameid.text == "_e7b68a04488f715cda642fbdd90099f5"
