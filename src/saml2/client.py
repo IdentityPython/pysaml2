@@ -40,11 +40,13 @@ def get_date_and_time(base=None):
 class Saml2Client:
     
     def __init__(self, environ, session=None, service_url=None, metadata=None,
-                    xmlsec_binary=None):
+                    xmlsec_binary=None, key_file=None, cert_file=None):
         self.session = session or {}
         self.environ = environ
         self.metadata = metadata
         self.xmlsec_binary = xmlsec_binary
+        self.key_file = key_file
+        self.cert_file = cert_file
 
     def _init_request(self, request, destination):
         #request.id = _sid()
@@ -54,13 +56,13 @@ class Saml2Client:
         return request        
 
     def create_authn_request(self, query_id, destination, service_url,
-                                requestor, my_name, sp_name_qualifier=None):
+                                spentityid, my_name, sp_name_qualifier=None):
         """ Creates an Authenication Request
         
         :param query_id: Query identifier
         :param destination: Where to send the request
         :param service_url: The page to where the response MUST be sent.
-        :param requestor: My official name
+        :param spentityid: My official name
         :param my_name: Who I am
         :param sp_name_qualifier: The domain in which the name should be
             valid
@@ -85,7 +87,7 @@ class Saml2Client:
 
 
         authn_request.name_id_policy = name_id_policy
-        authn_request.issuer = saml.Issuer(text=requestor)
+        authn_request.issuer = saml.Issuer(text=spentityid)
         
         return authn_request
            
@@ -147,7 +149,7 @@ class Saml2Client:
         
         sid = _sid()
         authen_req = "%s" % self.create_authn_request(sid, location, 
-                                service_url, requestor, my_name)
+                                service_url, spentityid, my_name)
         if binding == saml2.BINDING_HTTP_POST:
             # No valid ticket; Send a form to the client
             # THIS IS NOT TO BE USED RIGHT NOW
@@ -197,14 +199,15 @@ class Saml2Client:
         else:
             decoded_xml = xml_response
         
-        response = correctly_signed_response(decoded_xml, self.xmlsec_binary)
+        log and log.info("verify correct signature")
+        response = correctly_signed_response(decoded_xml, self.xmlsec_binary,
+                        log=log)
         if not response:
             log and log.error("Response was not correctly signed")
             print "Response was not correctly signed"
             return ({}, "")
 
         log and log.info("response: %s" % (response,))
-        print response
         try:
             (ava, name_id, came_from) = self.do_response(response, 
                                                 requestor, outstanding, log)
@@ -213,6 +216,7 @@ class Saml2Client:
             return ({}, "")
         except Exception, exc:
             log and log.error("Exception: %s" % (exc,))
+            return ({}, "")
                                     
         # should return userid and attribute value assertions
         ava["__userid"] = name_id
@@ -234,17 +238,18 @@ class Saml2Client:
 
         if not outstanding:
             outstanding = {}
-                
-        # MUST contain *one* assertion
-        assert len(response.assertion) == 1
-        assertion = response.assertion[0]
 
         if response.status:
             status = response.status
             if status.status_code.value != samlp.STATUS_SUCCESS:
+                log and log.info("Not successfull operation: %s" % status)
                 raise Exception(
-                    "Not successfull according to status code: %s" % \
+                    "Not successfull according to: %s" % \
                     status.status_code.value)
+                
+        # MUST contain *one* assertion
+        assert len(response.assertion) == 1
+        assertion = response.assertion[0]
             
         if response.in_response_to:
             if response.in_response_to in outstanding:
@@ -252,6 +257,7 @@ class Saml2Client:
             elif LAX:
                 came_from = ""
             else:
+                log and log.info("Session id I don't recall using")
                 raise Exception("Session id I don't recall using")
                 
         # the assertion MUST contain one AuthNStatement
@@ -330,9 +336,9 @@ class Saml2Client:
         subject = saml.Subject()
         name_id = saml.NameID()
         if format:
-            name_id.format = format
+            name_id.name_format = format
         else:
-            name_id.format = saml.NAMEID_FORMAT_PERSISTENT
+            name_id.name_format = saml.NAMEID_FORMAT_PERSISTENT
         if name_qualifier:
             name_id.name_qualifier = name_qualifier
         if sp_name_qualifier:
@@ -390,20 +396,30 @@ class Saml2Client:
         
         sid = _sid()
         request = self.create_attribute_request(sid, subject_id, issuer,
-                    destination, attribute, sp_name_qualifier, name_qualifier)
+                    destination, attribute, sp_name_qualifier, name_qualifier,
+                    format=format)
         
-        soapclient = SOAPClient(destination)
+        log and log.info("Request, created: %s" % request)
+        
+        soapclient = SOAPClient(destination, self.key_file, self.cert_file)
+        log and log.info("SOAP client initiated")
         try:
             response = soapclient.send(request)
-            if response:
-                (identity, came_from) = verify_response(response, requestor,
-                                                    outstanding={sid:""}, 
-                                                    log=log, decode=True)
-                return identity
-            else:
-                return None
         except Exception, e:
-            log and log.info("Exception caught: %s" % (e,))
+            log and log.info("SoapClient exception: %s" % (e,))
+            return None
+
+        log and log.info("SOAP request sent and got response")
+        if response:
+            log and log.info("Verifying response")
+            (identity, came_from) = self.verify_response(response, 
+                                                issuer,
+                                                outstanding={sid:""}, 
+                                                log=log, decode=False)
+            log and log.info("identity: %s" % identity)
+            return identity
+        else:
+            log and log.info("No response")
             return None
         
     def make_logout_request(self, subject_id, reason=None, 
