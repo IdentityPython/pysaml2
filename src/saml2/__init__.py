@@ -442,7 +442,8 @@ class SamlBase(ExtensionContainer):
         
 def extension_element_to_element(extension_element, element_to_string,
                                     namespace=None):
-    if extension_element.namespace == namespace:
+    element_namespace = extension_element.namespace
+    if element_namespace == namespace:
         try:
             ets = element_to_string[extension_element.tag]
             return ets(extension_element.to_string())
