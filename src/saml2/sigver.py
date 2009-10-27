@@ -76,7 +76,7 @@ def _parse_popen_output(output):
     return False
         
 def correctly_signed_response(decoded_xml, xmlsec_binary=XMLSEC_BINARY,
-        metadata=None):
+        metadata=None, log=None):
     """ Check if a response is correctly signed, if we have metadata for
     the IdP that sent the info use that, if not use the key that are in 
     the message if any.
@@ -90,6 +90,7 @@ def correctly_signed_response(decoded_xml, xmlsec_binary=XMLSEC_BINARY,
     """
     if not xmlsec_binary:
         xmlsec_binary = XMLSEC_BINARY
+    log and log.info("Decoded response: %s" % decoded_xml)
     response = samlp.response_from_string(decoded_xml)
     verified = False
 
