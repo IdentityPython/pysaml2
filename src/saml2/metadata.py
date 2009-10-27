@@ -152,7 +152,7 @@ class MetaData(object):
         try:
             idps = self.idp[entity_id]
         except KeyError:
-            return None
+            return []
         loc = []
         for idp in idps:
             for sso in idp.single_sign_on_service:
@@ -160,6 +160,12 @@ class MetaData(object):
                     loc.append(sso.location)
         return loc
         
+    def attribute_services(self, entity_id):
+        try:
+            return self.aad[entity_id]
+        except KeyError:
+            return []
+            
     def locations(self):
         """ Returns all the locations that are know using this metadata file.
         
@@ -194,7 +200,12 @@ def make_contact_person(spec):
 
 def _make_vals(xyz_inst, val, prop, klass, part=False):
     ci = None
-    if isinstance(val, basestring):
+    #print "_make_val: %s %s (%s)" % (prop,val,klass)
+    if isinstance(val, bool):
+        ci = klass(text="%s" % val)
+    elif isinstance(val, int):
+        ci = klass(text="%d" % val)
+    elif isinstance(val, basestring):
         ci = klass(text=val)
     elif isinstance(val, dict):
         ci = make_xyz(klass, val)
@@ -217,7 +228,12 @@ def make_xyz(xyz, spec):
     xyz_inst = xyz()
     for prop in xyz.c_attributes.values():
         if prop in spec:
-            setattr(xyz_inst,prop,spec[prop])
+            if isinstance(spec[prop],bool):
+                setattr(xyz_inst,prop,"%s" % spec[prop])
+            elif isinstance(spec[prop], int):
+                setattr(xyz_inst,prop,"%d" % spec[prop])
+            else:
+                setattr(xyz_inst,prop,spec[prop])
     if "text" in spec:
         setattr(xyz_inst,"text",spec["text"])
         
