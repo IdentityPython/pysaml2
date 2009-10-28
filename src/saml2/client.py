@@ -4,7 +4,6 @@ import saml2
 import base64
 import time
 import re
-from datetime import timedelta
 from saml2.time_util import str_to_time, add_duration
 
 try:
@@ -133,7 +132,8 @@ class Saml2Client:
             if saml_response:
                 (identity, came_from) = self.verify_response(
                                             saml_response, requestor, 
-                                            outstanding, log)
+                                            outstanding, log, 
+                                            context="AuthNReq")
             #relay_state = post["RelayState"].value
             return (identity, came_from)
         else:
@@ -195,7 +195,7 @@ class Saml2Client:
         return (sid, response)
             
     def verify_response(self, xml_response, requestor, outstanding=None, 
-                log=None, decode=True ):
+                log=None, decode=True, context=""):
         """ Verify a response
         
         :param xml_response: The response as a XML string
@@ -215,6 +215,8 @@ class Saml2Client:
         else:
             decoded_xml = xml_response
         
+        # own copy
+        xmlstr = decoded_xml[:]
         log and log.info("verify correct signature")
         response = correctly_signed_response(decoded_xml, self.xmlsec_binary,
                         log=log)
@@ -222,12 +224,16 @@ class Saml2Client:
             log and log.error("Response was not correctly signed")
             print "Response was not correctly signed"
             return ({}, "")
-
+        else:
+            log and log.error("Response was correctly signed or nor signed")
+            
         log and log.info("response: %s" % (response,))
         try:
             (ava, name_id, came_from) = self.do_response(response, 
-                                                requestor, outstanding, 
-                                                decoded_xml, log)
+                                                requestor, 
+                                                outstanding=outstanding, 
+                                                xmlstr=xmlstr, 
+                                                log=log, context=context)
         except AttributeError, exc:
             log and log.error("AttributeError: %s" % (exc,))
             return ({}, "")
@@ -239,13 +245,44 @@ class Saml2Client:
         ava["__userid"] = name_id
         return (ava, came_from)
   
-    def _assertion(self, assertion, outstanding, requestor, log):
-        """ """
+    def _verify_condition(self, assertion, requestor):
+            # The Identity Provider MUST include a <saml:Conditions> element
+        #print "Conditions",assertion.conditions
+        assert assertion.conditions
+        condition = assertion.conditions
+        now = time.gmtime()        
+        not_on_or_after = str_to_time(condition.not_on_or_after)        
+        if not_on_or_after < now:
+            # To old ignore
+            if not LAX:
+                raise Exception("To old can't use it")
 
+        not_before = str_to_time(condition.not_before)        
+        if not_before > now:
+            # Can't use it yet
+            if not LAX:
+                raise Exception("Can't use it yet")
+
+        if not for_me(condition, requestor):
+            if not LAX:
+                raise Exception("Not for me!!!")
+
+    def _websso(self, assertion, outstanding, requestor, log):
         # the assertion MUST contain one AuthNStatement
         assert len(assertion.authn_statement) == 1
         # authn_statement = assertion.authn_statement[0]
         # check authn_statement.session_index
+        
+        
+    def _assertion(self, assertion, outstanding, requestor, log, context):
+        """ """        
+        if context == "AuthNReq":
+            self._websso(assertion, outstanding, requestor, log)
+
+        # The Identity Provider MUST include a <saml:Conditions> element
+        #print "Conditions",assertion.conditions
+        assert assertion.conditions
+        self._verify_condition(assertion, requestor)
 
         # The assertion can contain zero or one attributeStatements
         assert len(assertion.attribute_statement) <= 1
@@ -273,30 +310,19 @@ class Saml2Client:
         # The subject must contain a name_id
         assert subject.name_id
         name_id = subject.name_id.text.strip()
-
-        # The Identity Provider MUST include a <saml:Conditions> element
-        #print "Conditions",assertion.conditions
-        assert assertion.conditions
-        condition = assertion.conditions
-        now = time.gmtime()        
-        not_on_or_after = str_to_time(condition.not_on_or_after)        
-        if not_on_or_after < now:
-            # To old ignore
-            if not LAX:
-                log and log.info("To old: %s" % condition.not_on_or_after)
-                return None
-        if not for_me(condition, requestor):
-            if not LAX:
-                log and log.info("Not for me!!!")
-                return None        # # verify signature
         
         return (ava, name_id, came_from)
 
     def _encrypted_assertion(self, xmlstr, outstanding, requestor, log):
-        decrypt_xml = decrypt(xmlstr, self.key_file, self.xmlsec_binary)
+        log and log.debug("Decrypt message")        
+        decrypt_xml = decrypt(xmlstr, self.key_file, self.xmlsec_binary, 
+                                log=log)
+        log and log.debug("Decryption successfull")
+        
         response = samlp.response_from_string(decrypt_xml)
-        ee = response.encrypted_assertion[0].extension_elements[0]
-            
+        log and log.debug("Parsed decrypted assertion successfull")
+        
+        ee = response.encrypted_assertion[0].extension_elements[0]            
         assertion = extension_element_to_element(
                         ee, 
                         saml.ELEMENT_FROM_STRING,
@@ -305,7 +331,7 @@ class Saml2Client:
         return self._assertion(assertion, outstanding, requestor, log)
         
     def do_response(self, response, requestor, outstanding=None, 
-                        xmlstr="", log=None):
+                        xmlstr="", log=None, context=""):
         """
         Parse a response, verify that it is a response for me and
         expected by me and that it is correct.
@@ -314,8 +340,8 @@ class Saml2Client:
         :param requestor: The host (me) that asked for a AuthN response
         :param outstanding: A dictionary with session ids as keys and request 
             URIs as values.
-        :result: A 2-tuple with attribute value assertions as a dictionary and
-            the NameID
+        :result: A 2-tuple with attribute value assertions as a dictionary 
+            as one part and the NameID as the other.
         """
 
         if not outstanding:
@@ -339,15 +365,20 @@ class Saml2Client:
                 raise Exception("Session id I don't recall using")
 
         # MUST contain *one* assertion
-        assert len(response.assertion) == 1 or \
-                len(response.encrypted_assertion) == 1
+        try:
+            assert len(response.assertion) == 1 or \
+                    len(response.encrypted_assertion) == 1
+        except AssertionError:
+            raise Exception("No assertion part")
 
-        if response.assertion:            
+        if response.assertion:         
+            log and log.info("***Unencrypted response***")
             return self._assertion(response.assertion[0], outstanding, 
-                                    requestor, log)
+                                    requestor, log, context)
         else:
+            log and log.info("***Encrypted response***")
             return self._encrypted_assertion(xmlstr, outstanding, 
-                                                requestor, log)
+                                                requestor, log, context)
 
     def create_attribute_request(self, sid, subject_id, issuer, destination, 
             attribute=None, sp_name_qualifier=None, name_qualifier=None,
@@ -449,13 +480,14 @@ class Saml2Client:
             log and log.info("SoapClient exception: %s" % (e,))
             return None
 
-        log and log.info("SOAP request sent and got response")
+        log and log.info("SOAP request sent and got response: %s" % response)
         if response:
             log and log.info("Verifying response")
             (identity, came_from) = self.verify_response(response, 
                                                 issuer,
                                                 outstanding={sid:""}, 
-                                                log=log, decode=False)
+                                                log=log, decode=False,
+                                                context="AttrReq")
             log and log.info("identity: %s" % identity)
             return identity
         else:
