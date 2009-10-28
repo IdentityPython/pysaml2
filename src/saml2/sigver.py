@@ -11,19 +11,22 @@ ID_ATTR = "ID"
 NODE_NAME = "urn:oasis:names:tc:SAML:2.0:assertion:Assertion"
 ENC_NODE_NAME = "urn:oasis:names:tc:SAML:2.0:assertion:EncryptedAssertion"
 
-_TEST_ = True
+_TEST_ = False
 
-def decrypt( input, key_file, xmlsec_binary):
+def decrypt( input, key_file, xmlsec_binary, log=None):
+    log and log.info("input len: %d" % len(input))
     fil_p, fil = make_temp("%s" % input, decode=False)
     ntf = NamedTemporaryFile()
-    
+    log and log.info("xmlsec binary: %s" % xmlsec_binary)
     com_list = [xmlsec_binary, "--decrypt", 
                  "--privkey-pem", key_file, 
                  "--output", ntf.name,
                  "--id-attr:%s" % ID_ATTR, 
                  ENC_NODE_NAME, fil]
 
+    log and log.info("Decrypt command: %s" % " ".join(com_list))
     result = Popen(com_list, stderr=PIPE).communicate()
+    log and log.info("Decrypt result: %s" % (result,))
     ntf.seek(0)
     return ntf.read()
 
@@ -169,11 +172,11 @@ def correctly_signed_response(decoded_xml, xmlsec_binary=XMLSEC_BINARY,
     for assertion in response.assertion:
         if not assertion.signature:
             if _TEST_:
-                print "unsigned"
+                log and log.info("unsigned")
             continue
         else:
             if _TEST_:
-                print "signed"
+                log and log.info("signed")
         
         issuer = assertion.issuer.text.strip()
         if _TEST_:
