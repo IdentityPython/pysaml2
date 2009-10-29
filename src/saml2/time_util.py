@@ -9,6 +9,8 @@ http://www.w3.org/TR/2001/REC-xmlschema-2-20010502/#adding-durations-to-dateTime
 
 import re
 import time
+from datetime import timedelta
+from datetime import datetime
 
 TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 TIME_FORMAT_WITH_FRAGMENT = re.compile(
@@ -153,4 +155,8 @@ def add_duration(tid, duration):
     
     return time.localtime(time.mktime((year, month, days, hour, minutes, 
                             secs, 0, 0, -1)))
-
+def in_a_while(*args):
+    now = datetime.now()
+    t = timedelta(*args)
+    soon = now + t
+    return soon.strftime(TIME_FORMAT)
