@@ -54,9 +54,25 @@ class MetaData(object):
         self._loc_bind = {}
         self.idp = {}
         self.aad = {}
+        self.vo = {}
         self.valid_to = None
         self.cache_until = None
         
+    def _vo_metadata(self, entity_descriptor):
+        """ gather the members of VOs """
+        try:
+            afd = entity_descriptor.affiliation_descriptor
+        except AttributeError:
+            return
+        
+        members = []
+        for tafd in afd: # should really never be more than one        
+            members.extend(
+                [member.text.strip() for member in tafd.affiliate_member])
+                
+        if members != []:
+            self.vo[entity_descriptor.entity_id] = members
+    
     def _idp_metadata(self, entity_descriptor):
 
         try:
@@ -149,6 +165,7 @@ class MetaData(object):
         for entity_descriptor in entities_descriptor.entity_descriptor:
             self._idp_metadata(entity_descriptor)
             self._aad_metadata(entity_descriptor)
+            self._vo_metadata(entity_descriptor)
 
                     
     def single_sign_on_services(self, entity_id, 
@@ -195,7 +212,13 @@ class MetaData(object):
             certificates used by the IdP at the location loc.
         """
         return self._loc_key[loc]
-        
+    
+    def vo_members(self, entity_id):
+        try:
+            return self.vo[entity_id]
+        except KeyError:
+            return []
+    
 def cert_from_assertion(assertion):
     """ Find certificates that are part of an assertion
     
