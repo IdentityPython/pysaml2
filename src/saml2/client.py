@@ -313,7 +313,8 @@ class Saml2Client:
         
         return (ava, name_id, came_from)
 
-    def _encrypted_assertion(self, xmlstr, outstanding, requestor, log):
+    def _encrypted_assertion(self, xmlstr, outstanding, requestor, 
+            log=None, context=""):
         log and log.debug("Decrypt message")        
         decrypt_xml = decrypt(xmlstr, self.key_file, self.xmlsec_binary, 
                                 log=log)
@@ -328,7 +329,8 @@ class Saml2Client:
                         saml.ELEMENT_FROM_STRING,
                         namespace=saml.NAMESPACE)
         log and log.info("Decrypted Assertion: %s" % assertion)
-        return self._assertion(assertion, outstanding, requestor, log)
+        return self._assertion(assertion, outstanding, requestor, log,
+                                context)
         
     def do_response(self, response, requestor, outstanding=None, 
                         xmlstr="", log=None, context=""):
