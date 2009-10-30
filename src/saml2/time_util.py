@@ -1,10 +1,23 @@
 #!/usr/bin/env python
-""" Implements some usefull functions when dealing with validity of 
+# -*- coding: utf-8 -*-
+#
+# Copyright (C) 2006 Google Inc.
+# Copyright (C) 2009 Umeå University
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#            http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+""" 
+Implements some usefull functions when dealing with validity of 
 different types of information.
-I'm sure this is implemeted somewhere else cann't find it now though, so I
-made an attempt.
-Implemeted according to 
-http://www.w3.org/TR/2001/REC-xmlschema-2-20010502/#adding-durations-to-dateTimes
 """
 
 import re
@@ -16,9 +29,15 @@ TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 TIME_FORMAT_WITH_FRAGMENT = re.compile(
     "^(\d{4,4}-\d{2,2}-\d{2,2}T\d{2,2}:\d{2,2}:\d{2,2})\.\d*Z$")
 
+# ---------------------------------------------------------------------------
+#I'm sure this is implemeted somewhere else cann't find it now though, so I
+#made an attempt.
+#Implemented according to 
+#http://www.w3.org/TR/2001/REC-xmlschema-2-20010502/#adding-durations-to-dateTimes
+
 def f_quotient(a, b, c=0):
     if c:
-        return f_quotient(a-b, c-b)
+        return int((a-b)/(c-b))
     elif a == 0:
         return 0
     else:
@@ -26,9 +45,9 @@ def f_quotient(a, b, c=0):
 
 def modulo(a, b, c=0):
     if c:
-        return modulo(a - b, c - b) + b
+        return ((a - b)%(c - b)) + b
     else:
-        return a - (f_quotient(a,b) * b)
+        return a%b
 
 DAYS_IN_MONTH = {
     1: 31,
@@ -59,21 +78,6 @@ def maximum_day_in_month_for(yearValue, monthValue):
         return DAYS_IN_MONTH[m]
     except KeyError:
         return days_in_february(y)
-
-def str_to_time(timestr):
-    if not timestr:
-        return 0
-    try:
-        then = time.strptime(timestr, TIME_FORMAT)
-    except Exception: # assume it's a format problem
-        try:
-            m = TIME_FORMAT_WITH_FRAGMENT.match(timestr)
-        except Exception, e:
-            print "Exception: %s on %s" % (e,timestr)
-            raise
-        then = time.strptime(m.groups()[0]+"Z", TIME_FORMAT)
-        
-    return then
           
 D_FORMAT = [
     ("Y", "tm_year"),
@@ -155,8 +159,37 @@ def add_duration(tid, duration):
     
     return time.localtime(time.mktime((year, month, days, hour, minutes, 
                             secs, 0, 0, -1)))
+
+# ---------------------------------------------------------------------------
+
 def in_a_while(*args):
+    """
+    format of timedelta:
+        timedelta([days[, seconds[, microseconds[, milliseconds[,
+                    minutes[, hours[, weeks]]]]]]])
+    """
     now = datetime.now()
     t = timedelta(*args)
     soon = now + t
     return soon.strftime(TIME_FORMAT)
+
+# ---------------------------------------------------------------------------
+
+def str_to_time(timestr):
+    if not timestr:
+        return 0
+    try:
+        then = time.strptime(timestr, TIME_FORMAT)
+    except Exception: # assume it's a format problem
+        try:
+            m = TIME_FORMAT_WITH_FRAGMENT.match(timestr)
+        except Exception, e:
+            print "Exception: %s on %s" % (e,timestr)
+            raise
+        then = time.strptime(m.groups()[0]+"Z", TIME_FORMAT)
+        
+    return then
+
+def instant():
+    return datetime.now().strftime(TIME_FORMAT)
+    
