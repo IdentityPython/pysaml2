@@ -1,6 +1,26 @@
-""" functions connected to signing and verifying """
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+#
+# Copyright (C) 2009 Umeå University
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#            http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+""" Functions connected to signing and verifying.
+Based on the use of xmlsec1 binaries and not the python xmlsec module.
+"""
 
 from saml2 import samlp
+import xmldsig as ds
 from tempfile import NamedTemporaryFile
 from subprocess import Popen, PIPE
 import base64
@@ -14,9 +34,18 @@ ENC_NODE_NAME = "urn:oasis:names:tc:SAML:2.0:assertion:EncryptedAssertion"
 _TEST_ = False
 
 def decrypt( input, key_file, xmlsec_binary, log=None):
+    """ Decrypting an encrypted text by the use of a private key.
+    
+    :param input: The encrypted text as a string
+    :param key_file: The name of the key file
+    :param xmlsec_binary: Where on the computer the xmlsec binary is.
+    :param log: A reference to a logging instance.
+    :return: The decrypted text
+    """
     log and log.info("input len: %d" % len(input))
     fil_p, fil = make_temp("%s" % input, decode=False)
     ntf = NamedTemporaryFile()
+
     log and log.info("xmlsec binary: %s" % xmlsec_binary)
     com_list = [xmlsec_binary, "--decrypt", 
                  "--privkey-pem", key_file, 
@@ -27,27 +56,33 @@ def decrypt( input, key_file, xmlsec_binary, log=None):
     log and log.info("Decrypt command: %s" % " ".join(com_list))
     result = Popen(com_list, stderr=PIPE).communicate()
     log and log.info("Decrypt result: %s" % (result,))
+
     ntf.seek(0)
     return ntf.read()
 
 def create_id():
+    """ Create a string of 40 random characters from the set [a-p], 
+    can be used as a unique identifier of objects.
+    
+    :return: The string of random characters
+    """
     ret = ""
     for _ in range(40):
         ret = ret + chr(random.randint(0, 15) + ord('a'))
     return ret
     
 def make_temp(string, suffix="", decode=True):
-    """ xmlsec needs files in some cases and I have string hence the
-    need for this function, that creates as temporary file with the
+    """ xmlsec needs files in some cases where only strings exist, hence the
+    need for this function. It creates a temporary file with the
     string as only content.
     
     :param string: The information to be placed in the file
     :param suffix: The temporary file might have to have a specific 
         suffix in certain circumstances.
     :param decode: The input string might be base64 coded. If so it 
-        must be decoded before placed in the file.
+        must, in some cases, be decoded before placed in the file.
     :return: 2-tuple with file pointer ( so the calling function can
-        close the file) and filename (which is then needed by the 
+        close the file) and filename (which is for instance needed by the 
         xmlsec function).
     """
     ntf = NamedTemporaryFile(suffix=suffix)
@@ -57,40 +92,7 @@ def make_temp(string, suffix="", decode=True):
         ntf.write(string)
     ntf.seek(0)
     return ntf, ntf.name
-
-def cert_from_encrypted_assertion(enc_assertion):
-#  <saml2:EncryptedAssertion xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion">
-#    <xenc:EncryptedData xmlns:xenc="http://www.w3.org/2001/04/xmlenc#" 
-#      Id="_e569196d0d66132d3091a75b54d97ccd" 
-#      Type="http://www.w3.org/2001/04/xmlenc#Element">
-#      <xenc:EncryptionMethod 
-#        Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc" 
-#        xmlns:xenc="http://www.w3.org/2001/04/xmlenc#"/>
-#        <ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
-#          <xenc:EncryptedKey Id="_e413a3473a60aaa6148664f3b535681f" xmlns:xenc="http://www.w3.org/2001/04/xmlenc#">
-#            <xenc:EncryptionMethod 
-#              Algorithm="http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p" 
-#              xmlns:xenc="http://www.w3.org/2001/04/xmlenc#">
-#              <ds:DigestMethod 
-#                Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" 
-#                xmlns:ds="http://www.w3.org/2000/09/xmldsig#"/>
-#            </xenc:EncryptionMethod>
-#            <ds:KeyInfo>
-#              <ds:X509Data>
-#                <ds:X509Certificate>
-    data = enc_assertion.encrypted_data
     
-def cert_from_assertion(assertion):
-    """ Find certificates that are part of an assertion
-
-    :param assertion: A saml.Assertion instance
-    :return: possible empty list of certificates
-    """
-    if assertion.signature:
-        if assertion.signature.key_info:
-            return cert_from_key_info(assertion.signature.key_info)
-    return []
-
 def cert_from_key_info(key_info):
     """ Get all X509 certs from a KeyInfo instance. Care is taken to make sure
     that the certs are continues sequences of bytes.
@@ -107,24 +109,24 @@ def cert_from_key_info(key_info):
             keys.append(cert)
     return keys
 
-def encrypted_cert_from_key_info(key_info):
-    """ Get all encrypted X509 certs from a KeyInfo instance. 
-    Care is taken to make sure
-    that the certs are continues sequences of bytes.
+def cert_from_assertion(assertion):
+    """ Find certificates that are part of an assertion
 
-    :param key_info: The KeyInfo instance
-    :return: A possibly empty list of certs
+    :param assertion: A saml.Assertion instance
+    :return: possible empty list of certificates
     """
-    keys = []
-    for x509_data in key_info.x509_data:
-        #print "X509Data",x509_data
-        for x509_certificate in x509_data.x509_certificate:
-            cert = x509_certificate.text.strip()
-            cert = "".join([s.strip() for s in cert.split("\n")])
-            keys.append(cert)
-    return keys
+    if assertion.signature:
+        if assertion.signature.key_info:
+            return cert_from_key_info(assertion.signature.key_info)
+    return []
 
-def _parse_popen_output(output):
+def _parse_xmlsec_output(output):
+    """ Parse the output from xmlsec to try to find out if the 
+    command was successfull or not.
+    
+    :param output: The output from POpen
+    :return: A boolean; True if the command was a success otherwise False
+    """ 
     for line in output.split("\n"):
         if line == "OK":
             return True
@@ -132,8 +134,14 @@ def _parse_popen_output(output):
             return False
     return False
         
-def _verify_signature(xmlsec_binary, input, der_file):
-        
+def verify_signature(xmlsec_binary, input, der_file):
+    """ Verifies the signature of a XML document.
+    
+    :param xmlsec_binary: The xmlsec1 binaries to be used
+    :param input: The XML document as a string
+    :param der_file: The public key that was used to sign the document
+    :return: Boolean True if the signature was correct otherwise False.
+    """
     fil_p, fil = make_temp("%s" % input, decode=False)
     
     com_list = [xmlsec_binary, "--verify",
@@ -143,7 +151,7 @@ def _verify_signature(xmlsec_binary, input, der_file):
 
     if _TEST_: 
         print " ".join(com_list)
-    verified = _parse_popen_output(Popen(com_list, 
+    verified = _parse_xmlsec_output(Popen(com_list, 
                                     stderr=PIPE).communicate()[1])
     if _TEST_:
         print "Verify result: '%s'" % (verified,)
@@ -193,7 +201,7 @@ def correctly_signed_response(decoded_xml, xmlsec_binary=XMLSEC_BINARY,
 
         verified = False
         for _, der_file in certs:
-            if _verify_signature(xmlsec_binary, decoded_xml, der_file):
+            if verify_signature(xmlsec_binary, decoded_xml, der_file):
                 verified = True
                 break
                     
@@ -201,20 +209,86 @@ def correctly_signed_response(decoded_xml, xmlsec_binary=XMLSEC_BINARY,
             return None
 
     return response
+
+#----------------------------------------------------------------------------
+# SIGNATURE PART
+#----------------------------------------------------------------------------
         
-def sign_using_xmlsec(statement, sign_key, xmlsec_binary):
-    """xmlsec1 --sign --privkey-pem test.key --id-attr:ID 
-        urn:oasis:names:tc:SAML:2.0:assertion:Assertion saml_response.xml"""
+def sign_assertion_using_xmlsec(statement, xmlsec_binary, key=None, 
+                                    key_file=None):
+    """Sign a SAML statement using xmlsec.
+    
+    :param statement: The statement to be signed
+    :param key: The key to be used for the signing, either this or
+    :param key_File: The file where the key can be found
+    :param xmlsec_binary: The xmlsec1 binaries used to do the signing.
+    :return: The signed statement
+    """
         
     _, fil = make_temp("%s" % statement, decode=False)
-    _, pem_file = make_temp("%s" % sign_key, ".pem")
+
+    if key:
+        _, key_file = make_temp("%s" % key, ".pem")
+    ntf = NamedTemporaryFile()
     
     com_list = [xmlsec_binary, "--sign", 
-                "--privkey-cert-pem", pem_file, "--id-attr:%s" % ID_ATTR, 
+                "--output", ntf.name,
+                "--privkey-pem", key_file, 
+                "--id-attr:%s" % ID_ATTR, 
                 "urn:oasis:names:tc:SAML:2.0:assertion:Assertion",
                 fil]
 
     #print " ".join(com_list)
 
-    return _parse_popen_output(Popen(com_list, stdout=PIPE).communicate()[0])
-        
+    if Popen(com_list, stdout=PIPE).communicate()[0] == "":
+        ntf.seek(0)
+        return ntf.read()
+    else:
+        raise Exception("Signing failed")
+
+PRE_SIGNATURE = {
+    "signed_info": {
+        "signature_method": {
+            "algorithm": ds.SIG_RSA_SHA1
+        },
+        "canonicalization_method": { 
+            "algorithm": ds.ALG_EXC_C14N
+        },
+        "reference": {
+            # must be replace by a uriref based on the assertion ID
+            "uri": "#%s", 
+            "transforms": {
+                "transform": [{
+                    "algorithm": ds.TRANSFORM_ENVELOPED,
+                },
+                {  
+                    "algorithm": ds.ALG_EXC_C14N,
+                    "inclusive_namespaces": {
+                        "prefix_list": "ds saml2 saml2p xenc",
+                    }   
+                }
+                ]
+            },
+            "digest_method":{
+                "algorithm": ds.DIGEST_SHA1,
+            },
+            "digest_value": "",
+        }
+    },
+    "signature_value": None,
+}
+
+def pre_signature_part(id):
+    """
+    If an assertion is to be signed the signature part has to be preset
+    with to algorithms to be used, this function returns such a
+    preset part.
+    
+    :param id: The identifier of the assertion, so you know which assertion
+        was signed
+    :return: A preset signature part
+    """
+    
+    presig = PRE_SIGNATURE
+    presig["signed_info"]["reference"]["uri"] = "#%s" % id
+    return presig
