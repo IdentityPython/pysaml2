@@ -1,5 +1,9 @@
 from saml2 import metadata
-from saml2 import md
+from saml2 import NAMESPACE as SAML2_NAMESPACE
+from saml2 import BINDING_SOAP
+from saml2 import md, saml
+from saml2 import time_util
+from saml2.saml import NAMEID_FORMAT_TRANSIENT
 
 SWAMI_METADATA = "tests/urn-mace-swami.se-swamid-test-1.0-metadata.xml"
 INCOMMON_METADATA = "tests/InCommon-metadata.xml"
@@ -16,7 +20,8 @@ def test_swami_1():
     assert len(md.idp) == 1
     print md.idp.keys()
     assert md.idp.keys() == ['https://idp.umu.se/saml2/idp/metadata.php']
-    idp_sso = md.single_sign_on_services('https://idp.umu.se/saml2/idp/metadata.php')
+    idp_sso = md.single_sign_on_services(
+                    'https://idp.umu.se/saml2/idp/metadata.php')
     assert len(idp_sso) == 1
     assert idp_sso == ['https://idp.umu.se/saml2/idp/SSOService.php']
     ssocerts =  md.certs('https://idp.umu.se/saml2/idp/SSOService.php')
@@ -79,8 +84,66 @@ def test_switch_1():
     assert len(aad.attribute_service) == 1
     assert len(aad.name_id_format) == 2
 
+# ------------ Constructing metaval ----------------------------------------
+
+def test_construct_organisation_name():
+    o = md.Organization()
+    metadata.make_vals({"text":"Exempel AB", "lang":"se"},
+                        md.OrganizationName, o, "organization_name")
+    print o
+    assert str(o) == """<?xml version='1.0' encoding='UTF-8'?>
+<ns0:Organization xmlns:ns0="urn:oasis:names:tc:SAML:2.0:metadata"><ns0:OrganizationName ns1:lang="se" xmlns:ns1="http:#www.w3.org/XML/1998/namespace">Exempel AB</ns0:OrganizationName></ns0:Organization>"""
+
+def test_make_int_value():
+    val = metadata.make_vals( 1, saml.AttributeValue, part=True) 
+    assert isinstance(val, saml.AttributeValue)
+    assert val.text == "1"
+
+def test_make_true_value():
+    val = metadata.make_vals( True, saml.AttributeValue, part=True ) 
+    assert isinstance(val, saml.AttributeValue)
+    assert val.text == "True"
+
+def test_make_false_value():
+    val = metadata.make_vals( False, saml.AttributeValue, part=True ) 
+    assert isinstance(val, saml.AttributeValue)
+    assert val.text == "False"
+
+NO_VALUE = """<?xml version='1.0' encoding='UTF-8'?>
+<ns0:AttributeValue xmlns:ns0="urn:oasis:names:tc:SAML:2.0:assertion" />"""
+
+def test_make_no_value():
+    val = metadata.make_vals( None, saml.AttributeValue, part=True ) 
+    assert isinstance(val, saml.AttributeValue)
+    assert val.text == None
+    print val
+    assert "%s" % val == NO_VALUE
+
+def test_make_string():
+    val = metadata.make_vals( "example", saml.AttributeValue, part=True ) 
+    assert isinstance(val, saml.AttributeValue)
+    assert val.text == "example"
+
+def test_make_list_of_strings():
+    attr = saml.Attribute()
+    vals = ["foo", "bar"]
+    val = metadata.make_vals(vals, saml.AttributeValue, attr, 
+                                "attribute_value") 
+    assert attr.keyswv() == ["attribute_value"]
+    print attr.attribute_value
+    assert _eq([val.text for val in attr.attribute_value], vals)
+
+def test_make_dict():
+    vals = ["foo", "bar"]
+    attrval = { "attribute_value": vals}
+    attr = metadata.make_vals(attrval, saml.Attribute, part=True) 
+    assert attr.keyswv() == ["attribute_value"]
+    assert _eq([val.text for val in attr.attribute_value], vals)
+
+# ------------ Constructing metadata ----------------------------------------
+
 def test_construct_contact():
-    c = metadata.make_contact_person({
+    c = metadata.make_instance(md.ContactPerson, {
         "given_name":"Roland",
         "sur_name": "Hedberg",
         "email_address": "roland@catalogix.se",
@@ -91,15 +154,9 @@ def test_construct_contact():
     assert c.email_address[0].text == "roland@catalogix.se"    
     assert _eq(c.keyswv(), ["given_name","sur_name","email_address"])
 
-def test_construct_organisation_name():
-    o = md.Organization()
-    metadata._make_vals(o, {"text":"Exempel AB", "lang":"se"}, 
-            "organization_name", md.OrganizationName)
-    assert str(o) == """<?xml version='1.0' encoding='UTF-8'?>
-<ns0:Organization xmlns:ns0="urn:oasis:names:tc:SAML:2.0:metadata"><ns0:OrganizationName ns1:lang="se" xmlns:ns1="http:#www.w3.org/XML/1998/namespace">Exempel AB</ns0:OrganizationName></ns0:Organization>"""
             
 def test_construct_organisation():
-    c = metadata.make_xyz( md.Organization, {
+    c = metadata.make_instance( md.Organization, {
             "organization_name": ["Example Co.",
                     {"text":"Exempel AB", "lang":"se"}],
             "organization_url": "http://www.example.com/"
@@ -112,7 +169,7 @@ def test_construct_organisation():
     assert len(c.organization_url) == 1
     
 def test_construct_entity_descr_1():
-    ed = metadata.make_xyz(md.EntityDescriptor,
+    ed = metadata.make_instance(md.EntityDescriptor,
         {"organization": {
             "organization_name":"Catalogix", 
             "organization_url": "http://www.catalogix.se/"},
@@ -127,7 +184,7 @@ def test_construct_entity_descr_1():
     assert org.organization_url[0].text == "http://www.catalogix.se/"
 
 def test_construct_entity_descr_2():
-    ed = metadata.make_xyz(md.EntityDescriptor,
+    ed = metadata.make_instance(md.EntityDescriptor,
         {"organization": {
             "organization_name":"Catalogix", 
             "organization_url": "http://www.catalogix.se/"},
@@ -146,4 +203,95 @@ def test_construct_entity_descr_2():
     assert len(org.organization_name) == 1
     assert org.organization_name[0].text == "Catalogix"
     assert org.organization_url[0].text == "http://www.catalogix.se/"
+    assert len(ed.contact_person) == 1
+    c = ed.contact_person[0]
+    assert c.given_name.text == "Roland"
+    assert c.sur_name.text == "Hedberg"
+    assert c.email_address[0].text == "roland@catalogix.se"    
+    assert _eq(c.keyswv(), ["given_name","sur_name","email_address"])
+
+def test_construct_key_descriptor():
+    cert = "".join(open("tests/test.pem").readlines()[1:-1]).strip()
+    spec = {
+        "use": "signing",
+        "key_info" : {
+            "x509_data": {
+                "x509_certificate": cert
+            }
+        }
+    }
+    kd = metadata.make_instance(md.KeyDescriptor, spec)
+    assert _eq(kd.keyswv(), ["use", "key_info"])
+    assert kd.use == "signing"
+    ki = kd.key_info
+    assert _eq(ki.keyswv(), ["x509_data"])
+    assert len(ki.x509_data) == 1
+    data = ki.x509_data[0]
+    assert _eq(data.keyswv(), ["x509_certificate"])
+    assert len(data.x509_certificate) == 1
+    assert len(data.x509_certificate[0].text.strip()) == len(cert)
+
+def test_construct_key_descriptor_with_key_name():
+    cert = "".join(open("tests/test.pem").readlines()[1:-1]).strip()
+    spec = {
+        "use": "signing",
+        "key_info" : {
+            "key_name": "example.com",
+            "x509_data": {
+                "x509_certificate": cert
+            }
+        }
+    }
+    kd = metadata.make_instance(md.KeyDescriptor, spec)
+    assert _eq(kd.keyswv(), ["use", "key_info"])
+    assert kd.use == "signing"
+    ki = kd.key_info
+    assert _eq(ki.keyswv(), ["x509_data", "key_name"])
+    assert len(ki.key_name) == 1
+    assert ki.key_name[0].text.strip() == "example.com"
+    assert len(ki.x509_data) == 1
+    data = ki.x509_data[0]
+    assert _eq(data.keyswv(), ["x509_certificate"])
+    assert len(data.x509_certificate) == 1
+    assert len(data.x509_certificate[0].text.strip()) == len(cert)
     
+def test_construct_AttributeAuthorityDescriptor():
+    aad = metadata.make_instance(
+            md.AttributeAuthorityDescriptor, {
+                "valid_until": time_util.in_a_while(30), # 30 days from now
+                "identifier": "aad.example.com",
+                "protocol_support_enumeration": SAML2_NAMESPACE,
+                "attribute_service": {
+                    "binding": BINDING_SOAP,
+                    "location": "http://example.com:6543/saml2/aad",
+                },
+                "name_id_format":[
+                    NAMEID_FORMAT_TRANSIENT,
+                ],
+                "key_descriptor": {
+                    "use": "signing",
+                    "key_info" : {
+                        "key_name": "example.com",
+                    }
+                }
+            })
+
+    print aad
+    assert _eq(aad.keyswv(),["valid_until", "identifier", "attribute_service",
+                            "name_id_format", "key_descriptor",
+                            "protocol_support_enumeration"])
+    assert time_util.str_to_time(aad.valid_until)
+    assert aad.identifier == "aad.example.com"
+    assert aad.protocol_support_enumeration == SAML2_NAMESPACE
+    assert len(aad.attribute_service) == 1
+    atsr = aad.attribute_service[0]
+    assert _eq(atsr.keyswv(),["binding", "location"])
+    assert atsr.binding == BINDING_SOAP
+    assert atsr.location == "http://example.com:6543/saml2/aad"
+    assert len(aad.name_id_format) == 1
+    nif = aad.name_id_format[0]
+    assert nif.text.strip() == NAMEID_FORMAT_TRANSIENT
+    assert len(aad.key_descriptor) == 1
+    kdesc = aad.key_descriptor[0]
+    assert kdesc.use == "signing"
+    assert kdesc.key_info.key_name[0].text.strip() == "example.com"
