@@ -35,45 +35,6 @@ def ava(attribute_statement):
             result[name].append(value.text.strip())
     return result
 
-def test_verify_1():
-    xml_response = open(XML_RESPONSE_FILE).read()
-    client = Saml2Client({}, xmlsec_binary=XMLSEC_BINARY)
-    (ava, came_from) = \
-            client.verify_response(xml_response, "xenosmilus.umdc.umu.se", 
-                            decode=False)
-    assert ava == {'__userid': '_cddc88563d433f556d4cc70c3162deabddea3b5019', 
-                    'eduPersonAffiliation': ['member', 'student'], 
-                    'uid': ['student']}
-    
-def test_parse_1():
-    xml_response = open(XML_RESPONSE_FILE).read()
-    response = samlp.response_from_string(xml_response)
-    client = Saml2Client({}, xmlsec_binary=XMLSEC_BINARY)
-    (ava, name_id, real_uri) = \
-            client.do_response(response, "xenosmilus.umdc.umu.se")
-    assert ava == {'eduPersonAffiliation': ['member', 'student'],
-                    'uid': ['student']}
-    assert name_id == "_cddc88563d433f556d4cc70c3162deabddea3b5019"
-
-def test_parse_2():
-    xml_response = open(XML_RESPONSE_FILE2).read()
-    response = samlp.response_from_string(xml_response)
-    client = Saml2Client({}, xmlsec_binary=XMLSEC_BINARY)
-    (ava, name_id, real_uri) = \
-            client.do_response(response, "xenosmilus.umdc.umu.se")
-    assert ava == {'uid': ['andreas'], 
-                    'mobile': ['+4741107700'], 
-                    'edupersonnickname': ['erlang'], 
-                    'o': ['Feide RnD'], 
-                    'edupersonentitlement': [
-                            'urn:mace:feide.no:entitlement:test'], 
-                    'edupersonaffiliation': ['employee'], 
-                    'eduPersonPrincipalName': ['andreas@rnd.feide.no'], 
-                    'sn': ['Solberg'], 
-                    'mail': ['andreas@uninett.no'], 
-                    'ou': ['Guests'], 
-                    'cn': ['Andreas Solberg']}
-    assert name_id == "_242f88493449e639aab95dd9b92b1d04234ab84fd8"
         
 # def test_parse_3():
 #     xml_response = open(XML_RESPONSE_FILE3).read()
@@ -94,6 +55,44 @@ class TestClient:
     def setup_class(self):
         self.client = Saml2Client({}, xmlsec_binary=XMLSEC_BINARY)
     
+    def test_verify_1(self):
+        xml_response = open(XML_RESPONSE_FILE).read()
+        (ava, came_from) = \
+            self.client.verify_response(xml_response, 
+                                "xenosmilus.umdc.umu.se", 
+                                decode=False)
+        assert ava == {'__userid': '_cddc88563d433f556d4cc70c3162deabddea3b5019', 
+                        'eduPersonAffiliation': ['member', 'student'], 
+                        'uid': ['student']}
+    
+    def test_parse_1(self):
+        xml_response = open(XML_RESPONSE_FILE).read()
+        response = samlp.response_from_string(xml_response)
+        (ava, name_id, real_uri) = \
+            self.client.do_response(response, "xenosmilus.umdc.umu.se")
+        assert ava == {'eduPersonAffiliation': ['member', 'student'],
+                        'uid': ['student']}
+        assert name_id == "_cddc88563d433f556d4cc70c3162deabddea3b5019"
+
+    def test_parse_2(self):
+        xml_response = open(XML_RESPONSE_FILE2).read()
+        response = samlp.response_from_string(xml_response)
+        (ava, name_id, real_uri) = \
+            self.client.do_response(response, "xenosmilus.umdc.umu.se")
+        assert ava == {'uid': ['andreas'], 
+                        'mobile': ['+4741107700'], 
+                        'edupersonnickname': ['erlang'], 
+                        'o': ['Feide RnD'], 
+                        'edupersonentitlement': [
+                                'urn:mace:feide.no:entitlement:test'], 
+                        'edupersonaffiliation': ['employee'], 
+                        'eduPersonPrincipalName': ['andreas@rnd.feide.no'], 
+                        'sn': ['Solberg'], 
+                        'mail': ['andreas@uninett.no'], 
+                        'ou': ['Guests'], 
+                        'cn': ['Andreas Solberg']}
+        assert name_id == "_242f88493449e639aab95dd9b92b1d04234ab84fd8"
+
     def test_create_attribute_query1(self):
         req = self.client.create_attribute_request("1", 
             "E8042FB4-4D5B-48C3-8E14-8EDD852790DD",
