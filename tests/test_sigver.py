@@ -10,7 +10,7 @@ SIGNED = "tests/saml_signed.xml"
 UNSIGNED = "tests/saml_unsigned.xml"
 FALSE_SIGNED = "tests/saml_false_signed.xml"
 XMLSEC = "/opt/local/bin/xmlsec1"
-PUB_KEY = "tests/test.pem"
+#PUB_KEY = "tests/test.pem"
 PRIV_KEY = "tests/test.key"
 
 def _eq(l1,l2):
