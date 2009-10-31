@@ -36,6 +36,7 @@ class MetaData(object):
         self.idp = {}
         self.aad = {}
         self.vo = {}
+        self.sp = {}
         self.valid_to = None
         self.cache_until = None
         
@@ -59,6 +60,39 @@ class MetaData(object):
                 
         if members != []:
             self.vo[entity_descriptor.entity_id] = members
+    
+    def _sp_metadata(self, entity_descriptor):
+        """
+        Pick out the SP SSO descriptors from an entity
+        descriptor and store the information in a way which is easily
+        accessible.
+        
+        :param entity_descriptor: A EntityDescriptor instance
+        """
+        try:
+            ssd = entity_descriptor.sp_sso_descriptor
+        except AttributeError:
+            return
+        
+        ssds = []
+        for tssd in ssd:
+            # Only want to talk to SAML 2.0 entities
+            if samlp.NAMESPACE not in \
+                    tssd.protocol_support_enumeration.split(" "):
+                #print "<<<", idp.protocol_support_enumeration
+                continue
+            
+            ssds.append(tssd)
+            certs = []
+            for key_desc in tssd.key_descriptor:
+                certs.extend(cert_from_key_info(key_desc.key_info))
+            
+            certs = [make_temp(c, suffix=".der") for c in certs]
+            for sso in tssd.single_sign_on_service:
+                self._loc_key[sso.location] = certs
+                
+        if ssds != []:            
+            self.sp[entity_descriptor.entity_id] = ssds
     
     def _idp_metadata(self, entity_descriptor):
         """
@@ -248,7 +282,7 @@ def make_vals(val, klass, klass_inst=None, prop=None, part=False):
         cis = [make_vals(sval, klass, klass_inst, prop, True) for sval in val]
         setattr(klass_inst, prop, cis)
     else:
-        raise ValueError()
+        raise ValueError("strange instance type: %s on %s" % (type(val),val))
         
     if part:
         return ci
