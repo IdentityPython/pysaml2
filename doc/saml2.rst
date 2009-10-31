@@ -1,20 +1,27 @@
-******************************************
-Base classes representing Saml2.0 elements
-******************************************
+.. _base:
 
-:mod: 'saml2' -- saml2
-
-=====================================================
+****************************************
+Base classes representing basic elements
+****************************************
 
 :Author: Roland Hedberg
 :Version: |version|
 
-.. module:: saml2
-   :synopsis: Base classes representing Saml2.0 elements.
+.. module:: Base
+   :synopsis: Base classes.
 
+.. toctree::
+   :maxdepth: 2
+
+   saml
+   samlp
+   metadata
+   xmldsig
+   xmlenc
+   
 Module
 ==========
 
-.. automodule:: pysaml.saml2
+.. automodule:: saml2
    :members: 
 

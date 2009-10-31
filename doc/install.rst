@@ -15,8 +15,14 @@ a 2.X version, where X > 4 .
 Prerequisites
 ^^^^^^^^^^^^^
 
-You have to download and install the following packages.
+You have to have ElementTree, which is either part of your Python distribution
+if it's recent enough. Or if the Python is too old you have to install it,
+for instance by getting it from the Python Package Instance by using 
+easy_install.
 
+You also need xmlsec which you can download from http://www.aleksey.com/xmlsec/
+
+If you're on OS X you can get it from MacPorts or Fink.
 
 
 Quick build instructions
@@ -33,5 +39,5 @@ Quick build instructions
   
     py.test tests
     
-  is what you should use.
+  is what you should use. If you don't have py.test, get it ! It's good !
 

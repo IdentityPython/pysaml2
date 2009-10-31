@@ -5,8 +5,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to pysaml2's documentation!
-===================================
+Welcome to the documentation of pysaml2!
+========================================
 
 :Release: |version|
 :Date: |today|
@@ -14,10 +14,11 @@ Welcome to pysaml2's documentation!
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
+   install
+   howto
    saml2
-   xmldsig
    
 Indices and tables
 ==================
