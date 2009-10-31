@@ -94,7 +94,7 @@ class TestNameID:
     def testname_id_from_string(self):
         """Test name_id_from_string() using test data"""
         name_id = saml.name_id_from_string(saml2_data.TEST_NAME_ID)
-        assert name_id.name_format == saml.NAMEID_FORMAT_EMAILADDRESS
+        assert name_id.format == saml.NAMEID_FORMAT_EMAILADDRESS
         assert name_id.text.strip() == "tmatsuo@example.com"
         assert name_id.sp_provided_id == "sp provided id"
 
@@ -538,7 +538,7 @@ class TestSubject:
         new_subject = saml.subject_from_string(self.subject.to_string())
         assert new_subject.name_id.sp_provided_id == "sp provided id"
         assert new_subject.name_id.text.strip() == "tmatsuo@example.com"
-        assert new_subject.name_id.name_format == saml.NAMEID_FORMAT_EMAILADDRESS
+        assert new_subject.name_id.format == saml.NAMEID_FORMAT_EMAILADDRESS
         assert isinstance(new_subject.subject_confirmation[0],
                             saml.SubjectConfirmation)
 
@@ -548,7 +548,7 @@ class TestSubject:
         subject = saml.subject_from_string(saml2_data.TEST_SUBJECT)
         assert subject.name_id.sp_provided_id == "sp provided id"
         assert subject.name_id.text.strip() == "tmatsuo@example.com"
-        assert subject.name_id.name_format == saml.NAMEID_FORMAT_EMAILADDRESS
+        assert subject.name_id.format == saml.NAMEID_FORMAT_EMAILADDRESS
         assert isinstance(subject.subject_confirmation[0],
                             saml.SubjectConfirmation)
 

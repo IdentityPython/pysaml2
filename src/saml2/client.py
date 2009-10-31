@@ -418,9 +418,9 @@ class Saml2Client:
         subject = saml.Subject()
         name_id = saml.NameID()
         if format:
-            name_id.name_format = format
+            name_id.format = format
         else:
-            name_id.name_format = saml.NAMEID_FORMAT_PERSISTENT
+            name_id.format = saml.NAMEID_FORMAT_PERSISTENT
         if name_qualifier:
             name_id.name_qualifier = name_qualifier
         if sp_name_qualifier:

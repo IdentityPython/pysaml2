@@ -18,13 +18,13 @@
 """Contains classes and functions that a SAML2.0 Identity provider (IdP) 
 or attribute authority (AA) may use to conclude its tasks.
 """
-import saml2.saml
+from saml2 import saml
 
 class Server(object):
     def __init__(self, environ, config ):
         self.environ = environ
         if config:
-            self.verify(config)
+            self.verify_conf(config)
 
     def verify_conf(self, conf_file):
         """ """

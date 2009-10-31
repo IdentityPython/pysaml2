@@ -106,7 +106,7 @@ class TestClient:
         assert req.version == "2.0"
         subject = req.subject
         name_id = subject.name_id
-        assert name_id.name_format == saml.NAMEID_FORMAT_PERSISTENT
+        assert name_id.format == saml.NAMEID_FORMAT_PERSISTENT
         assert name_id.text == "E8042FB4-4D5B-48C3-8E14-8EDD852790DD"
         issuer = req.issuer
         assert issuer.text == "http://vo.example.com/sp1"
@@ -131,7 +131,7 @@ class TestClient:
         assert req.version == "2.0"
         subject = req.subject
         name_id = subject.name_id
-        assert name_id.name_format == saml.NAMEID_FORMAT_PERSISTENT
+        assert name_id.format == saml.NAMEID_FORMAT_PERSISTENT
         assert name_id.text == "E8042FB4-4D5B-48C3-8E14-8EDD852790DD"
         assert len(req.attribute) == 3
         # one is givenName
@@ -166,5 +166,5 @@ class TestClient:
         assert req.issue_instant
         assert req.issuer.text == "urn:mace:umu.se:saml/rolandsp"
         nameid = req.subject.name_id
-        assert nameid.name_format == saml.NAMEID_FORMAT_TRANSIENT
+        assert nameid.format == saml.NAMEID_FORMAT_TRANSIENT
         assert nameid.text == "_e7b68a04488f715cda642fbdd90099f5"

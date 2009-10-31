@@ -111,11 +111,11 @@ class NameID(BaseID):
     c_namespace = NAMESPACE
     c_children = BaseID.c_children.copy()
     c_attributes = BaseID.c_attributes.copy()
-    c_attributes['Format'] = 'name_format'
+    c_attributes['Format'] = 'format'
     c_attributes['SPProvidedID'] = 'sp_provided_id'
 
     def __init__(self, name_qualifier=None, sp_name_qualifier=None, 
-                    name_format=None, sp_provided_id=None, 
+                    format=None, sp_provided_id=None, 
                     text=None, extension_elements=None,
                     extension_attributes=None):
         """Constructor for NameID
@@ -135,7 +135,7 @@ class NameID(BaseID):
         BaseID.__init__(self, name_qualifier, sp_name_qualifier, text,
                                  extension_elements, extension_attributes)
         
-        self.name_format = name_format
+        self.format = format
         self.sp_provided_id = sp_provided_id
 
 def name_id_from_string(xml_string):
