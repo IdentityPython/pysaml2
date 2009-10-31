@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from saml2 import sigver
-from saml2 import metadata
+from saml2 import utils
 from saml2 import time_util
 from saml2 import saml
 import xmldsig as ds
@@ -39,9 +39,9 @@ XVjksKECcqmf10k/2C3oJfaEOaM4w0DgVLXeuJU08irXfdHcoe1g3276F1If1Kh7
 DIGEST_VALUE = "9cQ0c72QfbQr1KkH9MCwL5Wm1EQ="
 
 def test_sign():
-    ass = metadata.make_instance(saml.Assertion, {
+    ass = utils.make_instance(saml.Assertion, {
         "version": "2.0",
-        "identifier": "11111",
+        "id": "11111",
         "issue_instant": "2009-10-30T13:20:28Z",
         "signature": sigver.pre_signature_part("11111"),
         "attribute_statement": {
@@ -63,9 +63,9 @@ def test_sign():
     sass = saml.assertion_from_string(sign_ass)
     print sass
     assert _eq(sass.keyswv(), ['attribute_statement', 'issue_instant', 
-                            'version', 'signature', 'identifier'])
+                            'version', 'signature', 'id'])
     assert sass.version == "2.0"
-    assert sass.identifier == "11111"
+    assert sass.id == "11111"
     assert time_util.str_to_time(sass.issue_instant)
     sig = sass.signature
     assert sig.signature_value.text == SIGNED_VALUE

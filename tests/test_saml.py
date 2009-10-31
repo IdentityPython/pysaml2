@@ -850,7 +850,7 @@ class TestAssertion:
 
     def testAccessors(self):
         """Test for Assertion accessors"""
-        self.assertion.identifier = "assertion id"
+        self.assertion.id = "assertion id"
         self.assertion.version = saml2.VERSION
         self.assertion.issue_instant = "2007-08-31T01:05:02Z"
         self.assertion.issuer = saml.issuer_from_string(saml2_data.TEST_ISSUER)
@@ -870,7 +870,7 @@ class TestAssertion:
             saml2_data.TEST_ATTRIBUTE_STATEMENT))
 
         new_assertion = saml.assertion_from_string(self.assertion.to_string())
-        assert new_assertion.identifier == "assertion id"
+        assert new_assertion.id == "assertion id"
         assert new_assertion.version == saml2.VERSION
         assert new_assertion.issue_instant == "2007-08-31T01:05:02Z"
         assert isinstance(new_assertion.issuer, saml.Issuer)

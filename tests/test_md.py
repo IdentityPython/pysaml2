@@ -377,7 +377,7 @@ class TestRoleDescriptor:
 
   def testAccessors(self):
     """Test for RoleDescriptor accessors"""
-    self.role_descriptor.identifier = "ID"
+    self.role_descriptor.id = "ID"
     self.role_descriptor.valid_until = "2008-09-14T01:05:02Z"
     self.role_descriptor.cache_duration = "10:00:00:00"
     self.role_descriptor.protocol_support_enumeration = samlp.NAMESPACE
@@ -391,7 +391,7 @@ class TestRoleDescriptor:
 
     new_role_descriptor = md.role_descriptor_from_string(
       self.role_descriptor.to_string())
-    assert new_role_descriptor.identifier == "ID"
+    assert new_role_descriptor.id == "ID"
     assert new_role_descriptor.valid_until == "2008-09-14T01:05:02Z"
     assert new_role_descriptor.cache_duration == "10:00:00:00"
     assert new_role_descriptor.protocol_support_enumeration == samlp.NAMESPACE
@@ -408,7 +408,7 @@ class TestRoleDescriptor:
     """Test for role_descriptor_from_string() using test data."""
     new_role_descriptor = md.role_descriptor_from_string(
       md_data.TEST_ROLE_DESCRIPTOR)
-    assert new_role_descriptor.identifier == "ID"
+    assert new_role_descriptor.id == "ID"
     assert new_role_descriptor.valid_until == "2008-09-14T01:05:02Z"
     assert new_role_descriptor.cache_duration == "10:00:00:00"
     assert new_role_descriptor.protocol_support_enumeration == samlp.NAMESPACE
@@ -427,7 +427,7 @@ class TestSSODescriptor:
 
   def testAccessors(self):
     """Test for SSODescriptor accessors"""
-    self.sso_descriptor.identifier = "ID"
+    self.sso_descriptor.id = "ID"
     self.sso_descriptor.valid_until = "2008-09-14T01:05:02Z"
     self.sso_descriptor.cache_duration = "10:00:00:00"
     self.sso_descriptor.protocol_support_enumeration = samlp.NAMESPACE
@@ -449,7 +449,7 @@ class TestSSODescriptor:
 
     new_sso_descriptor = md.sso_descriptor_from_string(
       self.sso_descriptor.to_string())
-    assert new_sso_descriptor.identifier == "ID"
+    assert new_sso_descriptor.id == "ID"
     assert new_sso_descriptor.valid_until == "2008-09-14T01:05:02Z"
     assert new_sso_descriptor.cache_duration == "10:00:00:00"
     assert new_sso_descriptor.protocol_support_enumeration == samlp.NAMESPACE
@@ -474,7 +474,7 @@ class TestSSODescriptor:
     """Test for sso_descriptor_from_string() using test data."""
     new_sso_descriptor = md.sso_descriptor_from_string(
       md_data.TEST_SSO_DESCRIPTOR)
-    assert new_sso_descriptor.identifier == "ID"
+    assert new_sso_descriptor.id == "ID"
     assert new_sso_descriptor.valid_until == "2008-09-14T01:05:02Z"
     assert new_sso_descriptor.cache_duration == "10:00:00:00"
     assert new_sso_descriptor.protocol_support_enumeration == samlp.NAMESPACE
@@ -688,7 +688,7 @@ class TestIDPSSODescriptor:
 
   def testAccessors(self):
     """Test for IDPSSODescriptor accessors"""
-    self.idp_sso_descriptor.identifier = "ID"
+    self.idp_sso_descriptor.id = "ID"
     self.idp_sso_descriptor.valid_until = "2008-09-14T01:05:02Z"
     self.idp_sso_descriptor.cache_duration = "10:00:00:00"
     self.idp_sso_descriptor.protocol_support_enumeration = \
@@ -721,7 +721,7 @@ class TestIDPSSODescriptor:
 
     new_idp_sso_descriptor = md.idpsso_descriptor_from_string(
       self.idp_sso_descriptor.to_string())
-    assert new_idp_sso_descriptor.identifier == "ID"
+    assert new_idp_sso_descriptor.id == "ID"
     assert new_idp_sso_descriptor.valid_until == "2008-09-14T01:05:02Z"
     assert new_idp_sso_descriptor.cache_duration == "10:00:00:00"
     assert new_idp_sso_descriptor.protocol_support_enumeration == samlp.NAMESPACE
@@ -760,7 +760,7 @@ class TestIDPSSODescriptor:
     """Test for idpsso_descriptor_from_string() using test data."""
     new_idp_sso_descriptor = md.idpsso_descriptor_from_string(
       md_data.TEST_IDP_SSO_DESCRIPTOR)
-    assert new_idp_sso_descriptor.identifier == "ID"
+    assert new_idp_sso_descriptor.id == "ID"
     assert new_idp_sso_descriptor.valid_until == "2008-09-14T01:05:02Z"
     assert new_idp_sso_descriptor.cache_duration == "10:00:00:00"
     assert new_idp_sso_descriptor.protocol_support_enumeration == samlp.NAMESPACE
@@ -944,7 +944,7 @@ class TestSPSSODescriptor:
 
   def testAccessors(self):
     """Test for SPSSODescriptor accessors"""
-    self.sp_sso_descriptor.identifier = "ID"
+    self.sp_sso_descriptor.id = "ID"
     self.sp_sso_descriptor.valid_until = "2008-09-14T01:05:02Z"
     self.sp_sso_descriptor.cache_duration = "10:00:00:00"
     self.sp_sso_descriptor.protocol_support_enumeration = \
@@ -975,7 +975,7 @@ class TestSPSSODescriptor:
     new_sp_sso_descriptor = md.spsso_descriptor_from_string(
       self.sp_sso_descriptor.to_string())
     print new_sp_sso_descriptor
-    assert new_sp_sso_descriptor.identifier == "ID"
+    assert new_sp_sso_descriptor.id == "ID"
     assert new_sp_sso_descriptor.valid_until == "2008-09-14T01:05:02Z"
     assert new_sp_sso_descriptor.cache_duration == "10:00:00:00"
     assert new_sp_sso_descriptor.protocol_support_enumeration == samlp.NAMESPACE
@@ -1010,7 +1010,7 @@ class TestSPSSODescriptor:
     """Test for spsso_descriptor_from_string() using test data."""
     new_sp_sso_descriptor = md.spsso_descriptor_from_string(
       md_data.TEST_SP_SSO_DESCRIPTOR)
-    assert new_sp_sso_descriptor.identifier == "ID"
+    assert new_sp_sso_descriptor.id == "ID"
     assert new_sp_sso_descriptor.valid_until == "2008-09-14T01:05:02Z"
     assert new_sp_sso_descriptor.cache_duration == "10:00:00:00"
     assert new_sp_sso_descriptor.protocol_support_enumeration == samlp.NAMESPACE
@@ -1048,7 +1048,7 @@ class TestEntityDescriptor:
 
   def testAccessors(self):
     """Test for RoleDescriptor accessors"""
-    self.entity_descriptor.identifier = "ID"
+    self.entity_descriptor.id = "ID"
     self.entity_descriptor.entity_id = "entityID"
     self.entity_descriptor.valid_until = "2008-09-14T01:05:02Z"
     self.entity_descriptor.cache_duration = "10:00:00:00"
@@ -1065,7 +1065,7 @@ class TestEntityDescriptor:
 
     new_entity_descriptor = md.entity_descriptor_from_string(
       self.entity_descriptor.to_string())
-    assert new_entity_descriptor.identifier == "ID"
+    assert new_entity_descriptor.id == "ID"
     assert new_entity_descriptor.entity_id == "entityID"
     assert new_entity_descriptor.valid_until == "2008-09-14T01:05:02Z"
     assert new_entity_descriptor.cache_duration == "10:00:00:00"
@@ -1089,7 +1089,7 @@ class TestEntityDescriptor:
     """Test for entity_descriptor_from_string() using test data."""
     new_entity_descriptor = md.entity_descriptor_from_string(
       md_data.TEST_ENTITY_DESCRIPTOR)
-    assert new_entity_descriptor.identifier == "ID"
+    assert new_entity_descriptor.id == "ID"
     assert new_entity_descriptor.entity_id == "entityID"
     assert new_entity_descriptor.valid_until == "2008-09-14T01:05:02Z"
     assert new_entity_descriptor.cache_duration == "10:00:00:00"
@@ -1115,7 +1115,7 @@ class TestEntitiesDescriptor:
 
   def testAccessors(self):
     """Test for EntitiesDescriptor accessors"""
-    self.entities_descriptor.identifier = "ID"
+    self.entities_descriptor.id = "ID"
     self.entities_descriptor.name = "name"
     self.entities_descriptor.valid_until = "2008-09-14T01:05:02Z"
     self.entities_descriptor.cache_duration = "10:00:00:00"
@@ -1128,7 +1128,7 @@ class TestEntitiesDescriptor:
 
     new_entities_descriptor = md.entities_descriptor_from_string(
       self.entities_descriptor.to_string())
-    assert new_entities_descriptor.identifier == "ID"
+    assert new_entities_descriptor.id == "ID"
     assert new_entities_descriptor.name == "name"
     assert new_entities_descriptor.valid_until == "2008-09-14T01:05:02Z"
     assert new_entities_descriptor.cache_duration == "10:00:00:00"
@@ -1143,7 +1143,7 @@ class TestEntitiesDescriptor:
     """Test for entities_descriptor_from_string() using test data."""
     new_entities_descriptor = md.entities_descriptor_from_string(
       md_data.TEST_ENTITIES_DESCRIPTOR)
-    assert new_entities_descriptor.identifier == "ID"
+    assert new_entities_descriptor.id == "ID"
     assert new_entities_descriptor.name == "name"
     assert new_entities_descriptor.valid_until == "2008-09-14T01:05:02Z"
     assert new_entities_descriptor.cache_duration == "10:00:00:00"

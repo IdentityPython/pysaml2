@@ -1,4 +1,4 @@
-from saml2 import metadata
+from saml2 import metadata, utils
 from saml2 import NAMESPACE as SAML2_NAMESPACE
 from saml2 import BINDING_SOAP
 from saml2 import md, saml, samlp
@@ -88,24 +88,24 @@ def test_switch_1():
 
 def test_construct_organisation_name():
     o = md.Organization()
-    metadata.make_vals({"text":"Exempel AB", "lang":"se"},
+    utils.make_vals({"text":"Exempel AB", "lang":"se"},
                         md.OrganizationName, o, "organization_name")
     print o
     assert str(o) == """<?xml version='1.0' encoding='UTF-8'?>
 <ns0:Organization xmlns:ns0="urn:oasis:names:tc:SAML:2.0:metadata"><ns0:OrganizationName ns1:lang="se" xmlns:ns1="http:#www.w3.org/XML/1998/namespace">Exempel AB</ns0:OrganizationName></ns0:Organization>"""
 
 def test_make_int_value():
-    val = metadata.make_vals( 1, saml.AttributeValue, part=True) 
+    val = utils.make_vals( 1, saml.AttributeValue, part=True) 
     assert isinstance(val, saml.AttributeValue)
     assert val.text == "1"
 
 def test_make_true_value():
-    val = metadata.make_vals( True, saml.AttributeValue, part=True ) 
+    val = utils.make_vals( True, saml.AttributeValue, part=True ) 
     assert isinstance(val, saml.AttributeValue)
     assert val.text == "True"
 
 def test_make_false_value():
-    val = metadata.make_vals( False, saml.AttributeValue, part=True ) 
+    val = utils.make_vals( False, saml.AttributeValue, part=True ) 
     assert isinstance(val, saml.AttributeValue)
     assert val.text == "False"
 
@@ -113,21 +113,21 @@ NO_VALUE = """<?xml version='1.0' encoding='UTF-8'?>
 <ns0:AttributeValue xmlns:ns0="urn:oasis:names:tc:SAML:2.0:assertion" />"""
 
 def test_make_no_value():
-    val = metadata.make_vals( None, saml.AttributeValue, part=True ) 
+    val = utils.make_vals( None, saml.AttributeValue, part=True ) 
     assert isinstance(val, saml.AttributeValue)
     assert val.text == None
     print val
     assert "%s" % val == NO_VALUE
 
 def test_make_string():
-    val = metadata.make_vals( "example", saml.AttributeValue, part=True ) 
+    val = utils.make_vals( "example", saml.AttributeValue, part=True ) 
     assert isinstance(val, saml.AttributeValue)
     assert val.text == "example"
 
 def test_make_list_of_strings():
     attr = saml.Attribute()
     vals = ["foo", "bar"]
-    val = metadata.make_vals(vals, saml.AttributeValue, attr, 
+    val = utils.make_vals(vals, saml.AttributeValue, attr, 
                                 "attribute_value") 
     assert attr.keyswv() == ["attribute_value"]
     print attr.attribute_value
@@ -136,14 +136,14 @@ def test_make_list_of_strings():
 def test_make_dict():
     vals = ["foo", "bar"]
     attrval = { "attribute_value": vals}
-    attr = metadata.make_vals(attrval, saml.Attribute, part=True) 
+    attr = utils.make_vals(attrval, saml.Attribute, part=True) 
     assert attr.keyswv() == ["attribute_value"]
     assert _eq([val.text for val in attr.attribute_value], vals)
 
 # ------------ Constructing metadata ----------------------------------------
 
 def test_construct_contact():
-    c = metadata.make_instance(md.ContactPerson, {
+    c = utils.make_instance(md.ContactPerson, {
         "given_name":"Roland",
         "sur_name": "Hedberg",
         "email_address": "roland@catalogix.se",
@@ -156,7 +156,7 @@ def test_construct_contact():
 
             
 def test_construct_organisation():
-    c = metadata.make_instance( md.Organization, {
+    c = utils.make_instance( md.Organization, {
             "organization_name": ["Example Co.",
                     {"text":"Exempel AB", "lang":"se"}],
             "organization_url": "http://www.example.com/"
@@ -169,7 +169,7 @@ def test_construct_organisation():
     assert len(c.organization_url) == 1
     
 def test_construct_entity_descr_1():
-    ed = metadata.make_instance(md.EntityDescriptor,
+    ed = utils.make_instance(md.EntityDescriptor,
         {"organization": {
             "organization_name":"Catalogix", 
             "organization_url": "http://www.catalogix.se/"},
@@ -184,7 +184,7 @@ def test_construct_entity_descr_1():
     assert org.organization_url[0].text == "http://www.catalogix.se/"
 
 def test_construct_entity_descr_2():
-    ed = metadata.make_instance(md.EntityDescriptor,
+    ed = utils.make_instance(md.EntityDescriptor,
         {"organization": {
             "organization_name":"Catalogix", 
             "organization_url": "http://www.catalogix.se/"},
@@ -220,7 +220,7 @@ def test_construct_key_descriptor():
             }
         }
     }
-    kd = metadata.make_instance(md.KeyDescriptor, spec)
+    kd = utils.make_instance(md.KeyDescriptor, spec)
     assert _eq(kd.keyswv(), ["use", "key_info"])
     assert kd.use == "signing"
     ki = kd.key_info
@@ -242,7 +242,7 @@ def test_construct_key_descriptor_with_key_name():
             }
         }
     }
-    kd = metadata.make_instance(md.KeyDescriptor, spec)
+    kd = utils.make_instance(md.KeyDescriptor, spec)
     assert _eq(kd.keyswv(), ["use", "key_info"])
     assert kd.use == "signing"
     ki = kd.key_info
@@ -256,10 +256,10 @@ def test_construct_key_descriptor_with_key_name():
     assert len(data.x509_certificate[0].text.strip()) == len(cert)
     
 def test_construct_AttributeAuthorityDescriptor():
-    aad = metadata.make_instance(
+    aad = utils.make_instance(
             md.AttributeAuthorityDescriptor, {
                 "valid_until": time_util.in_a_while(30), # 30 days from now
-                "identifier": "aad.example.com",
+                "id": "aad.example.com",
                 "protocol_support_enumeration": SAML2_NAMESPACE,
                 "attribute_service": {
                     "binding": BINDING_SOAP,
@@ -277,11 +277,11 @@ def test_construct_AttributeAuthorityDescriptor():
             })
 
     print aad
-    assert _eq(aad.keyswv(),["valid_until", "identifier", "attribute_service",
+    assert _eq(aad.keyswv(),["valid_until", "id", "attribute_service",
                             "name_id_format", "key_descriptor",
                             "protocol_support_enumeration"])
     assert time_util.str_to_time(aad.valid_until)
-    assert aad.identifier == "aad.example.com"
+    assert aad.id == "aad.example.com"
     assert aad.protocol_support_enumeration == SAML2_NAMESPACE
     assert len(aad.attribute_service) == 1
     atsr = aad.attribute_service[0]
@@ -310,6 +310,6 @@ def test_status():
         },
         "status_message": "Error resolving principal",
         }
-    status_text = "%s" % metadata.make_instance( samlp.Status, input)
+    status_text = "%s" % utils.make_instance( samlp.Status, input)
     assert status_text == STATUS_RESULT
     
