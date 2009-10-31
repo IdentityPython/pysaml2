@@ -24,7 +24,7 @@ import saml2
 import base64
 import time
 import re
-from saml2.time_util import str_to_time, add_duration
+from saml2.time_util import str_to_time, add_duration, instant
 
 try:
     from hashlib import md5
@@ -37,11 +37,6 @@ from saml2.sigver import correctly_signed_response, decrypt
 from saml2.soap import SOAPClient
 
 DEFAULT_BINDING = saml2.BINDING_HTTP_REDIRECT
-# 2009-07-05T15:35:29Z
-TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
-# 2009-10-27T09:00:27.604Z
-TIME_FORMAT_WITH_FRAGMENT = re.compile(
-    "^(\d{4,4}-\d{2,2}-\d{2,2}T\d{2,2}:\d{2,2}:\d{2,2})\.\d*Z$")
 
 FORM_SPEC = """<form method="post" action="%s">
    <input type="hidden" name="SAMLRequest" value="%s" />
@@ -59,12 +54,6 @@ def _sid(seed=""):
     if seed:
         sid.update(seed)
     return sid.hexdigest()
-
-def get_date_and_time(base=None):
-    if base is None:
-        base = time.time()
-    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(base))
-    
     
 class Saml2Client:
     
@@ -80,7 +69,7 @@ class Saml2Client:
     def _init_request(self, request, destination):
         #request.id = _sid()
         request.version = "2.0"
-        request.issue_instant = get_date_and_time()
+        request.issue_instant = instant()
         request.destination = destination
         return request        
 
