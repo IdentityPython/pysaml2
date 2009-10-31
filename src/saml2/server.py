@@ -170,11 +170,10 @@ class Server(object):
             "issue_instant" : instant(),
             "issuer": self._issuer(),
             "destination": destination,
+            "status": status,
         }
         if signature:
             spec["signature"] = sigver.pre_signature_part(spec["id"])
-        if conditions:
-            spec["consent"] = consent
         if assertion:
             spec["assertion"] = assertion
         
