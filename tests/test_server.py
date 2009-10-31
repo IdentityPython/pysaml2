@@ -19,8 +19,10 @@ class TestServer():
 
     def test_success_status(self):
         stat = self.server._status(samlp.STATUS_SUCCESS)            
-        status_text = "%s" % make_instance( samlp.Status, stat )
+        status = make_instance( samlp.Status, stat )
+        status_text = "%s" % status
         assert status_text == SUCCESS_STATUS
+        assert status.status_code.value == samlp.STATUS_SUCCESS
         
     def test_error_status(self):
         stat = self.server._status(samlp.STATUS_RESPONDER,
@@ -140,3 +142,56 @@ class TestServer():
         assertion = make_instance(saml.Assertion, tmp)
         assert _eq(assertion.keyswv(),['attribute_statement', 'issuer', 'id',
                                     'subject', 'issue_instant', 'version'])
+        assert assertion.version == "2.0"
+        assert assertion.issuer.text == "urn:mace:umu.se:saml:rolandsp"
+        #
+        assert len(assertion.attribute_statement) == 1
+        attribute_statement = assertion.attribute_statement[0]
+        assert len(attribute_statement.attribute) == 2
+        attr0 = attribute_statement.attribute[0]
+        attr1 = attribute_statement.attribute[1]
+        if attr0.attribute_value[0].text == "Derek":
+            assert attr0.friendly_name == "givenName"
+            assert attr1.friendly_name == "surName"
+            assert attr1.attribute_value[0].text == "Jeter"
+        else:
+            assert attr1.friendly_name == "givenName"
+            assert attr1.attribute_value[0].text == "Derek"
+            assert attr0.friendly_name == "surName"
+            assert attr0.attribute_value[0].text == "Jeter"
+        # 
+        subject = assertion.subject
+        assert _eq(subject.keyswv(),["text", "name_id"])
+        assert subject.text == "_aaa"
+        assert subject.name_id.text == saml.NAMEID_FORMAT_TRANSIENT
+        
+    def test_response(self):
+        tmp = self.server._response(
+                in_response_to="_012345",
+                destination="https://www.example.com",
+                status=self.server._status(samlp.STATUS_SUCCESS),
+                assertion=self.server._assertion(
+                    subject = self.server._subject("_aaa",
+                                        name_id=saml.NAMEID_FORMAT_TRANSIENT),
+                    attribute_statement = self.server._attribute_statement([
+                        self.server._attribute("Derek", 
+                                                friendly_name="givenName"),
+                        self.server._attribute("Jeter", 
+                                                friendly_name="surName"),
+                    ])
+                )
+            )
+            
+        response = make_instance(samlp.Response, tmp)
+        print response.keyswv()
+        assert _eq(response.keyswv(),['destination', 'assertion','status', 
+                                    'in_response_to', 'issue_instant', 
+                                    'version', 'issuer', 'id'])
+        assert response.version == "2.0"
+        assert response.issuer.text == "urn:mace:umu.se:saml:rolandsp"
+        assert response.destination == "https://www.example.com"
+        assert response.in_response_to == "_012345"
+        #
+        status = response.status
+        print status
+        assert status.status_code.value == samlp.STATUS_SUCCESS
