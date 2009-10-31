@@ -1,7 +1,7 @@
 from saml2 import metadata
 from saml2 import NAMESPACE as SAML2_NAMESPACE
 from saml2 import BINDING_SOAP
-from saml2 import md, saml
+from saml2 import md, saml, samlp
 from saml2 import time_util
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 
@@ -295,3 +295,21 @@ def test_construct_AttributeAuthorityDescriptor():
     kdesc = aad.key_descriptor[0]
     assert kdesc.use == "signing"
     assert kdesc.key_info.key_name[0].text.strip() == "example.com"
+    
+STATUS_RESULT = """<?xml version='1.0' encoding='UTF-8'?>
+<ns0:Status xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns0:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Responder"><ns0:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:UnknownPrincipal" /></ns0:StatusCode><ns0:StatusMessage>Error resolving principal</ns0:StatusMessage></ns0:Status>"""
+
+def test_status():
+    input = {
+        "status_code": {
+            "value": samlp.STATUS_RESPONDER,
+            "status_code":
+                {
+                "value": samlp.STATUS_UNKNOWN_PRINCIPAL,
+                },
+        },
+        "status_message": "Error resolving principal",
+        }
+    status_text = "%s" % metadata.make_instance( samlp.Status, input)
+    assert status_text == STATUS_RESULT
+    
