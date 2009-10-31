@@ -538,7 +538,7 @@ class RoleDescriptor(SamlBase):
     c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
-    c_attributes['ID'] = 'identifier'
+    c_attributes['ID'] = 'id'
     c_attributes['validUntil'] = 'valid_until'
     c_attributes['cacheDuration'] = 'cache_duration'
     c_attributes['protocolSupportEnumeration'] = 'protocol_support_enumeration'
@@ -554,7 +554,7 @@ class RoleDescriptor(SamlBase):
     c_child_order = ['signature', 'extensions', 'key_descriptor', 
                         'organization', 'contact_person']
 
-    def __init__(self, identifier=None, valid_until=None, cache_duration=None,
+    def __init__(self, id=None, valid_until=None, cache_duration=None,
                     protocol_support_enumeration=None, error_url=None,
                     signature=None, extensions=None, key_descriptor=None,
                     organization=None, contact_person=None,
@@ -562,7 +562,7 @@ class RoleDescriptor(SamlBase):
                     extension_attributes=None):
         """Constructor for RoleDescriptor
 
-        :param identifier: ID attribute
+        :param id: ID attribute
         :param valid_until: validUntil attribute
         :param cache_duration: cacheDuration attribute
         :param protocol_support_enumeration: protocolSupportEnumeration attribute
@@ -577,7 +577,7 @@ class RoleDescriptor(SamlBase):
         :param extension_attributes: A dictionary of attribute value string pairs
         """
         SamlBase.__init__(self, text, extension_elements, extension_attributes)
-        self.identifier = identifier
+        self.id = id
         self.valid_until = valid_until
         self.cache_duration = cache_duration
         self.protocol_support_enumeration = protocol_support_enumeration
@@ -696,7 +696,7 @@ class SSODescriptor(RoleDescriptor):
 
     def __init__(self, artifact_resolution_service=None,
                     single_logout_service=None, manage_name_id_service=None,
-                    name_id_format=None, identifier=None, valid_until=None, 
+                    name_id_format=None, id=None, valid_until=None, 
                     cache_duration=None, protocol_support_enumeration=None, 
                     error_url=None, signature=None, extensions=None, 
                     key_descriptor=None, organization=None, 
@@ -708,7 +708,7 @@ class SSODescriptor(RoleDescriptor):
         :param single_logout_service: SingleLogoutService elements
         :param manage_name_id_service: ManageNameIDService elements
         :param name_id_format: NameIDFormat elements
-        :param identifier: ID attribute
+        :param id: ID attribute
         :param valid_until: validUntil attribute
         :param cache_duration: cacheDuration attribute
         :param protocol_support_enumeration: protocolSupportEnumeration attribute
@@ -722,7 +722,7 @@ class SSODescriptor(RoleDescriptor):
         :param extension_elements: A list of ExtensionElement instances
         :param extension_attributes: A dictionary of attribute value string pairs
         """
-        RoleDescriptor.__init__(self, identifier, valid_until, cache_duration,
+        RoleDescriptor.__init__(self, id, valid_until, cache_duration,
                         protocol_support_enumeration, error_url, signature, 
                         extensions, key_descriptor, organization, 
                         contact_person, text, extension_elements, 
@@ -818,7 +818,7 @@ class IDPSSODescriptor(SSODescriptor):
                     attribute=None, artifact_resolution_service=None,
                     single_logout_service=None, manage_name_id_service=None,
                     name_id_format=None,
-                    identifier=None, valid_until=None, cache_duration=None,
+                    id=None, valid_until=None, cache_duration=None,
                     protocol_support_enumeration=None, error_url=None,
                     signature=None, extensions=None, key_descriptor=None,
                     organization=None, contact_person=None,
@@ -836,7 +836,7 @@ class IDPSSODescriptor(SSODescriptor):
         :param single_logout_service: SingleLogoutService elements
         :param manage_name_id_service: ManageNameIDService elements
         :param name_id_format: NameIDFormat elements
-        :param identifier: ID attribute
+        :param id: ID attribute
         :param valid_until: validUntil attribute
         :param cache_duration: cacheDuration attribute
         :param protocol_support_enumeration: protocolSupportEnumeration attribute
@@ -852,7 +852,7 @@ class IDPSSODescriptor(SSODescriptor):
         """
         SSODescriptor.__init__(self, artifact_resolution_service,
                         single_logout_service, manage_name_id_service,
-                        name_id_format, identifier, valid_until, 
+                        name_id_format, id, valid_until, 
                         cache_duration, protocol_support_enumeration, 
                         error_url, signature, extensions, key_descriptor, 
                         organization, contact_person, text, extension_elements, 
@@ -1017,7 +1017,7 @@ class SPSSODescriptor(SSODescriptor):
     c_child_order.extend(['assertion_consumer_service', 
                     'attribute_consuming_service'])
 
-    def __init__(self, identifier=None, valid_until=None, cache_duration=None,
+    def __init__(self, id=None, valid_until=None, cache_duration=None,
                     protocol_support_enumeration=None, error_url=None,
                     signature=None, extensions=None, key_descriptor=None,
                     organization=None, contact_person=None,
@@ -1030,7 +1030,7 @@ class SPSSODescriptor(SSODescriptor):
                     extension_elements=None, extension_attributes=None):
         """Constructor for IDPSSODescriptor
 
-        :param identifier: ID attribute
+        :param id: ID attribute
         :param valid_until: validUntil attribute
         :param cache_duration: cacheDuration attribute
         :param protocol_support_enumeration: protocolSupportEnumeration 
@@ -1056,7 +1056,7 @@ class SPSSODescriptor(SSODescriptor):
         """
         SSODescriptor.__init__(self, artifact_resolution_service,
                         single_logout_service, manage_name_id_service,
-                        name_id_format, identifier, valid_until, 
+                        name_id_format, id, valid_until, 
                         cache_duration, protocol_support_enumeration, 
                         error_url, signature, 
                         extensions, key_descriptor, organization, 
@@ -1101,7 +1101,7 @@ class AttributeAuthorityDescriptor(RoleDescriptor):
     def __init__(self, attribute_service=None,
                     assertion_id_request_service=None, name_id_format=None,
                     attribute_profile=None, attribute=None,
-                    identifier=None, valid_until=None, 
+                    id=None, valid_until=None, 
                     cache_duration=None, protocol_support_enumeration=None, 
                     error_url=None, signature=None, extensions=None, 
                     key_descriptor=None, organization=None, 
@@ -1114,7 +1114,7 @@ class AttributeAuthorityDescriptor(RoleDescriptor):
         :param name_id_format: NameIDFormat elements
         :param attribute_profile: 
         :param attribute:
-        :param identifier: ID attribute
+        :param id: ID attribute
         :param valid_until: validUntil attribute
         :param cache_duration: cacheDuration attribute
         :param protocol_support_enumeration: protocolSupportEnumeration attribute
@@ -1128,7 +1128,7 @@ class AttributeAuthorityDescriptor(RoleDescriptor):
         :param extension_elements: A list of ExtensionElement instances
         :param extension_attributes: A dictionary of attribute value string pairs
         """
-        RoleDescriptor.__init__(self, identifier, valid_until, cache_duration,
+        RoleDescriptor.__init__(self, id, valid_until, cache_duration,
                         protocol_support_enumeration, error_url, signature, 
                         extensions, key_descriptor, organization, 
                         contact_person, text, extension_elements, 
@@ -1154,7 +1154,7 @@ class AffiliationDescriptor(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['affiliationOwnerID'] = 'affiliation_owner_id'
-    c_attributes['ID'] = 'identifier'
+    c_attributes['ID'] = 'id'
     c_attributes['validUntil'] = 'valid_until'
     c_attributes['cacheDuration'] = 'cache_duration'
     c_children['{%s}Signature' % DS_NAMESPACE] = ('signature', ds.Signature)
@@ -1166,7 +1166,7 @@ class AffiliationDescriptor(SamlBase):
     c_child_order = ['signature', 'extensions', 'affiliate_member',
                     'key_descriptor']
  
-    def __init__(self, affiliation_owner_id=None, identifier=None, 
+    def __init__(self, affiliation_owner_id=None, id=None, 
                     valid_until=None, cache_duration=None, 
                     signature=None, extensions=None, 
                     affiliate_member=None, key_descriptor=None, 
@@ -1175,7 +1175,7 @@ class AffiliationDescriptor(SamlBase):
         """Constructor for AffiliationDescriptor
 
         :param affiliation_owner_id: entityID attribute
-        :param identifier: ID attribute
+        :param id: ID attribute
         :param valid_until: validUntil attribute
         :param cache_duration: cacheDuration attribute
         :param signature: ds:Signature element
@@ -1188,7 +1188,7 @@ class AffiliationDescriptor(SamlBase):
         """
         SamlBase.__init__(self, text, extension_elements, extension_attributes)
         self.affiliation_owner_id = affiliation_owner_id
-        self.identifier = identifier
+        self.id = id
         self.valid_until = valid_until
         self.cache_duration = cache_duration
         self.signature = signature
@@ -1214,7 +1214,7 @@ class EntityDescriptor(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['entityID'] = 'entity_id'
-    c_attributes['ID'] = 'identifier'
+    c_attributes['ID'] = 'id'
     c_attributes['validUntil'] = 'valid_until'
     c_attributes['cacheDuration'] = 'cache_duration'
     c_children['{%s}Signature' % DS_NAMESPACE] = ('signature', ds.Signature)
@@ -1241,7 +1241,7 @@ class EntityDescriptor(SamlBase):
                     'attribute_authority_descriptor',
                     'affiliation_descriptor']
 
-    def __init__(self, entity_id=None, identifier=None, valid_until=None,
+    def __init__(self, entity_id=None, id=None, valid_until=None,
                     cache_duration=None, signature=None, extensions=None, 
                     role_descriptor=None, idp_sso_descriptor=None, 
                     sp_sso_descriptor=None, organization=None, 
@@ -1253,7 +1253,7 @@ class EntityDescriptor(SamlBase):
         """Constructor for EntityDescriptor
 
         :param entity_id: entityID attribute
-        :param identifier: ID attribute
+        :param id: ID attribute
         :param valid_until: validUntil attribute
         :param cache_duration: cacheDuration attribute
         :param signature: ds:Signature element
@@ -1271,7 +1271,7 @@ class EntityDescriptor(SamlBase):
         """
         SamlBase.__init__(self, text, extension_elements, extension_attributes)
         self.entity_id = entity_id
-        self.identifier = identifier
+        self.id = id
         self.valid_until = valid_until
         self.cache_duration = cache_duration
         self.signature = signature
@@ -1298,7 +1298,7 @@ class EntitiesDescriptor(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['name'] = 'name'
-    c_attributes['ID'] = 'identifier'
+    c_attributes['ID'] = 'id'
     c_attributes['validUntil'] = 'valid_until'
     c_attributes['cacheDuration'] = 'cache_duration'
     c_children['{%s}Signature' % DS_NAMESPACE] = ('signature', ds.Signature)
@@ -1309,7 +1309,7 @@ class EntitiesDescriptor(SamlBase):
     c_child_order = ['signature', 'extensions', 'entity_descriptor',
                                     'entities_descriptor']
 
-    def __init__(self, name=None, identifier=None, valid_until=None, 
+    def __init__(self, name=None, id=None, valid_until=None, 
                     cache_duration=None, signature=None, extensions=None,
                     entity_descriptor=None, entities_descriptor=None,
                     text=None, extension_elements=None, 
@@ -1317,7 +1317,7 @@ class EntitiesDescriptor(SamlBase):
         """Constructor for EntitiesDescriptor
 
         :param name: name attribute
-        :param identifier: ID attribute
+        :param id: ID attribute
         :param valid_until: validUntil attribute
         :param cache_duration: cacheDuration attribute
         :param signature: ds:Signature element
@@ -1330,7 +1330,7 @@ class EntitiesDescriptor(SamlBase):
         """
         SamlBase.__init__(self, text, extension_elements, extension_attributes)
         self.name = name
-        self.identifier = identifier
+        self.id = id
         self.valid_until = valid_until
         self.cache_duration = cache_duration
         self.signature = signature

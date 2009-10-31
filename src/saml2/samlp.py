@@ -655,8 +655,7 @@ class Response(StatusResponse):
     c_children['{%s}EncryptedAssertion' % saml.NAMESPACE] = (
         'encrypted_assertion', [saml.EncryptedAssertion])
     c_child_order = StatusResponse.c_child_order[:]    
-    c_child_order.extend(['issuer', 'signature', 'extensions', 'status', 
-                    'assertion', 'encrypted_assertion'])
+    c_child_order.extend(['assertion', 'encrypted_assertion'])
 
     def __init__(self, id=None, in_response_to=None, version=None,
                 issue_instant=None, destination=None, consent=None,

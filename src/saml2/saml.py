@@ -1104,7 +1104,7 @@ class Assertion(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['Version'] = 'version'
-    c_attributes['ID'] = 'identifier'
+    c_attributes['ID'] = 'id'
     c_attributes['IssueInstant'] = 'issue_instant'
     c_children['{%s}Issuer' % NAMESPACE] = ('issuer', Issuer)
     c_children['{%s}Signature' % ds.NAMESPACE] = ('signature', ds.Signature)
@@ -1122,7 +1122,7 @@ class Assertion(SamlBase):
                     'statement', 'authn_statement', 'authz_decision_statement',
                     'attribute_statement']
 
-    def __init__(self, version=None, identifier=None, issue_instant=None, 
+    def __init__(self, version=None, id=None, issue_instant=None, 
                     issuer=None, signature=None, subject=None, conditions=None, 
                     advice=None, statement=None, authn_statement=None,
                     authz_decision_statement=None, attribute_statement=None,
@@ -1133,7 +1133,7 @@ class Assertion(SamlBase):
         :param version: Version attribute; The version of this assertion. 
             The identifier for the version of SAML defined in this 
             specification is "2.0".
-        :param identifier: ID attribute, The identifier for this assertion.
+        :param id: ID attribute, The identifier for this assertion.
         :param issue_instant: IssueInstant attribute; The time instant of 
             issue in UTC.
         :param issuer: Issuer element; The SAML authority that is making 
@@ -1167,7 +1167,7 @@ class Assertion(SamlBase):
 
         SamlBase.__init__(self, text, extension_elements, extension_attributes)
         self.version = version
-        self.identifier = identifier
+        self.id = id
         self.issue_instant = issue_instant
         self.issuer = issuer
         self.signature = signature

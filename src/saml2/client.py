@@ -25,11 +25,8 @@ import base64
 import time
 import re
 from saml2.time_util import str_to_time, add_duration, instant
+from saml2.utils import sid
 
-try:
-    from hashlib import md5
-except ImportError:
-    from md5 import md5
 import zlib
 
 from saml2 import samlp, saml, extension_element_to_element
@@ -45,15 +42,6 @@ FORM_SPEC = """<form method="post" action="%s">
 </form>"""
 
 LAX = True
-
-def _sid(seed=""):
-    """The hash of the server time + seed makes an unique SID for each session.
-    """
-    sid = md5()
-    sid.update(repr(time.time()))
-    if seed:
-        sid.update(seed)
-    return sid.hexdigest()
     
 class Saml2Client:
     
@@ -67,7 +55,7 @@ class Saml2Client:
         self.cert_file = cert_file
 
     def _init_request(self, request, destination):
-        #request.id = _sid()
+        #request.id = sid()
         request.version = "2.0"
         request.issue_instant = instant()
         request.destination = destination
@@ -170,7 +158,7 @@ class Saml2Client:
             log.info("location: %s" % location)
             log.info("service_url: %s" % service_url)
             log.info("my_name: %s" % my_name)
-        sid = _sid()
+        sid = sid()
         authen_req = "%s" % self.create_authn_request(sid, location, 
                                 service_url, spentityid, my_name)
         log and log.info("AuthNReq: %s" % authen_req)
@@ -476,7 +464,7 @@ class Saml2Client:
         :return: The attributes returned
         """
         
-        sid = _sid()
+        sid = sid()
         request = self.create_attribute_request(sid, subject_id, issuer,
                     destination, attribute, sp_name_qualifier, name_qualifier,
                     format=format)
@@ -518,7 +506,7 @@ class Saml2Client:
         """
 
         logout_req = self._init_request(samlp.LogoutRequest())
-        logout_req.session_index = _sid()
+        logout_req.session_index = sid()
         logout_req.base_id = saml.BaseID(text=subject_id)
         if reason:
             logout_req.reason = reason
