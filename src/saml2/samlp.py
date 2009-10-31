@@ -143,7 +143,9 @@ class StatusCode(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['Value'] = 'value'
-    
+    # should be here but will be found further down 
+    #c_children['{%s}StatusCode' % NAMESPACE] = ('status_code', StatusCode)
+
     def __init__(self, value=None, status_code=None,
                 text=None, extension_elements=None, extension_attributes=None):
         """Constructor for Status
