@@ -44,6 +44,8 @@ NAMEID_FORMAT_PERSISTENT = (
     "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent")
 NAMEID_FORMAT_TRANSIENT = (
     "urn:oasis:names:tc:SAML:2.0:nameid-format:transient")
+NAMEID_FORMAT_ENTITY = (
+    "urn:oasis:names:tc:SAML:2.0:nameid-format:entity")
 
 PROFILE_ATTRIBUTE_BASIC = (
     "urn:oasis:names:tc:SAML:2.0:profiles:attribute:basic")
