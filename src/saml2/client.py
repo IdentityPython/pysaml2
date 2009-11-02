@@ -25,9 +25,7 @@ import base64
 import time
 import re
 from saml2.time_util import str_to_time, add_duration, instant
-from saml2.utils import sid
-
-import zlib
+from saml2.utils import sid, deflate_and_base64_encode
 
 from saml2 import samlp, saml, extension_element_to_element
 from saml2.sigver import correctly_signed_response, decrypt
@@ -96,19 +94,7 @@ class Saml2Client:
         authn_request.issuer = saml.Issuer(text=spentityid)
         
         return authn_request
-           
-    def _compress_and_encode(self, packet):
-        """ Information packets must be compressed and base64 encoded before 
-        sent.
-        Due to the fact that zlib adds a zlib header/tail (RFC1950), those has
-        to be remove before the packet can be base64 encoded. Using [2:-4] is 
-        supposedly safe.
-        
-        :param packet: The information that should be compressed and encoded
-        :returns: compressed and encoded information
-        """
-        return base64.b64encode(zlib.compress(packet)[2:-4])
-        
+                   
     def response(self, post, requestor, outstanding, log=None):
         """ Deal with the AuthnResponse
         
@@ -180,7 +166,7 @@ class Saml2Client:
             response.append("</body>")
         elif binding == saml2.BINDING_HTTP_REDIRECT:
             lista = ["SAMLRequest=%s" % urllib.quote_plus(
-                                self._compress_and_encode(
+                                deflate_and_base64_encode(
                                     authen_req)),
                     "spentityid=%s" % spentityid]
             if relay_state:
