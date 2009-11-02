@@ -15,25 +15,25 @@ def _eq(l1,l2):
 
 class TestServer():
     def setup_class(self):
-        self.server = Server({},"tests/server.config")
+        self.server = Server("tests/server.config")
 
     def test_success_status(self):
-        stat = self.server._status(samlp.STATUS_SUCCESS)            
+        stat = self.server.status(samlp.STATUS_SUCCESS)            
         status = make_instance( samlp.Status, stat )
         status_text = "%s" % status
         assert status_text == SUCCESS_STATUS
         assert status.status_code.value == samlp.STATUS_SUCCESS
         
     def test_error_status(self):
-        stat = self.server._status(samlp.STATUS_RESPONDER,
+        stat = self.server.status(samlp.STATUS_RESPONDER,
             message="Error resolving principal",
-            status_code=self.server._status(samlp.STATUS_UNKNOWN_PRINCIPAL))
+            status_code=self.server.status(samlp.STATUS_UNKNOWN_PRINCIPAL))
             
         status_text = "%s" % make_instance( samlp.Status, stat )
         assert status_text == ERROR_STATUS
 
     def test_issuer(self):
-        issuer = make_instance( saml.Issuer, self.server._issuer())
+        issuer = make_instance( saml.Issuer, self.server.issuer())
         assert isinstance(issuer, saml.Issuer)
         assert _eq(issuer.keyswv(), ["text","format"])
         assert issuer.format == saml.NAMEID_FORMAT_ENTITY
@@ -41,15 +41,15 @@ class TestServer():
         
     def test_audience(self):
         aud_restr = make_instance( saml.AudienceRestriction, 
-                self.server._audience_restriction("urn:foo:bar"))
+                self.server.audience_restriction("urn:foo:bar"))
                 
         assert aud_restr.keyswv() == ["audience"]
         assert aud_restr.audience.text == "urn:foo:bar"
         
     def test_conditions(self):
-        conds_dict = self.server._conditions("2009-10-30T07:58:10.852Z",
+        conds_dict = self.server.conditions("2009-10-30T07:58:10.852Z",
                         "2009-10-30T08:03:10.852Z", 
-                        self.server._audience_restriction("urn:foo:bar"))
+                        self.server.audience_restriction("urn:foo:bar"))
                         
         conditions = make_instance(saml.Conditions, conds_dict)
         assert _eq(conditions.keyswv(), ["not_before", "not_on_or_after",
@@ -61,7 +61,7 @@ class TestServer():
     def test_value_1(self):
         #FriendlyName="givenName" Name="urn:oid:2.5.4.42" 
         # NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
-        adict = self.server._attribute(name="urn:oid:2.5.4.42",
+        adict = self.server.attribute(name="urn:oid:2.5.4.42",
                                         name_format=saml.NAME_FORMAT_URI)
         attribute = make_instance(saml.Attribute, adict)
         assert _eq(attribute.keyswv(),["name","name_format"])
@@ -69,7 +69,7 @@ class TestServer():
         assert attribute.name_format == saml.NAME_FORMAT_URI
 
     def test_value_2(self):
-        adict = self.server._attribute(name="urn:oid:2.5.4.42",
+        adict = self.server.attribute(name="urn:oid:2.5.4.42",
                                         name_format=saml.NAME_FORMAT_URI,
                                         friendly_name="givenName")
         attribute = make_instance(saml.Attribute, adict)
@@ -79,7 +79,7 @@ class TestServer():
         assert attribute.friendly_name == "givenName"
 
     def test_value_3(self):
-        adict = self.server._attribute("Derek",name="urn:oid:2.5.4.42",
+        adict = self.server.attribute("Derek",name="urn:oid:2.5.4.42",
                                         name_format=saml.NAME_FORMAT_URI,
                                         friendly_name="givenName")
         attribute = make_instance(saml.Attribute, adict)
@@ -92,7 +92,7 @@ class TestServer():
         assert attribute.attribute_value[0].text == "Derek"
 
     def test_value_4(self):
-        adict = self.server._attribute("Derek",
+        adict = self.server.attribute("Derek",
                                         friendly_name="givenName")
         attribute = make_instance(saml.Attribute, adict)
         assert _eq(attribute.keyswv(),["friendly_name", "attribute_value"])
@@ -101,10 +101,10 @@ class TestServer():
         assert attribute.attribute_value[0].text == "Derek"
 
     def test_attribute_statement(self):
-        asdict = self.server._attribute_statement([
-                        self.server._attribute("Derek", 
+        asdict = self.server.attribute_statement([
+                        self.server.attribute("Derek", 
                                                 friendly_name="givenName"),
-                        self.server._attribute("Jeter", 
+                        self.server.attribute("Jeter", 
                                                 friendly_name="surName"),
                             ])
         attribute_statement = make_instance(saml.AttributeStatement,asdict)
@@ -122,7 +122,7 @@ class TestServer():
             assert attr0.attribute_value[0].text == "Jeter"
             
     def test_subject(self):
-        adict = self.server._subject("_aaa",
+        adict = self.server.subject("_aaa",
                                         name_id=saml.NAMEID_FORMAT_TRANSIENT)
         subject = make_instance(saml.Subject, adict)
         assert _eq(subject.keyswv(),["text", "name_id"])
@@ -130,12 +130,12 @@ class TestServer():
         assert subject.name_id.text == saml.NAMEID_FORMAT_TRANSIENT
         
     def test_assertion(self):
-        tmp = self.server._assertion(
-            subject= self.server._subject("_aaa",
+        tmp = self.server.assertion(
+            subject= self.server.subject("_aaa",
                                         name_id=saml.NAMEID_FORMAT_TRANSIENT),
-            attribute_statement = self.server._attribute_statement([
-                self.server._attribute("Derek", friendly_name="givenName"),
-                self.server._attribute("Jeter", friendly_name="surName"),
+            attribute_statement = self.server.attribute_statement([
+                self.server.attribute("Derek", friendly_name="givenName"),
+                self.server.attribute("Jeter", friendly_name="surName"),
                 ])
             )
             
@@ -166,17 +166,17 @@ class TestServer():
         assert subject.name_id.text == saml.NAMEID_FORMAT_TRANSIENT
         
     def test_response(self):
-        tmp = self.server._response(
+        tmp = self.server.response(
                 in_response_to="_012345",
                 destination="https://www.example.com",
-                status=self.server._status(samlp.STATUS_SUCCESS),
-                assertion=self.server._assertion(
-                    subject = self.server._subject("_aaa",
+                status=self.server.status(samlp.STATUS_SUCCESS),
+                assertion=self.server.assertion(
+                    subject = self.server.subject("_aaa",
                                         name_id=saml.NAMEID_FORMAT_TRANSIENT),
-                    attribute_statement = self.server._attribute_statement([
-                        self.server._attribute("Derek", 
+                    attribute_statement = self.server.attribute_statement([
+                        self.server.attribute("Derek", 
                                                 friendly_name="givenName"),
-                        self.server._attribute("Jeter", 
+                        self.server.attribute("Jeter", 
                                                 friendly_name="surName"),
                     ])
                 )
