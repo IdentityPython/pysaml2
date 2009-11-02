@@ -22,7 +22,7 @@ Contains classes and functions to alleviate the handling of SAML metadata
 import base64
 import time
 from tempfile import NamedTemporaryFile
-from saml2 import md
+from saml2 import md, BINDING_HTTP_POST
 from saml2 import samlp, BINDING_HTTP_REDIRECT, BINDING_SOAP
 from saml2.time_util import str_to_time
 from saml2.sigver import make_temp, cert_from_key_info
@@ -30,7 +30,7 @@ from saml2.sigver import make_temp, cert_from_key_info
 class MetaData(object):
     """ A class to manage metadata information """
     
-    def __init__(self):
+    def __init__(self, log=None):
         self._loc_key = {}
         self._loc_bind = {}
         self.idp = {}
@@ -39,6 +39,7 @@ class MetaData(object):
         self.sp = {}
         self.valid_to = None
         self.cache_until = None
+        self.log = log
         
     def _vo_metadata(self, entity_descriptor):
         """
@@ -88,8 +89,8 @@ class MetaData(object):
                 certs.extend(cert_from_key_info(key_desc.key_info))
             
             certs = [make_temp(c, suffix=".der") for c in certs]
-            for sso in tssd.single_sign_on_service:
-                self._loc_key[sso.location] = certs
+            for acs in tssd.assertion_consumer_service:
+                self._loc_key[acs.location] = certs
                 
         if ssds != []:            
             self.sp[entity_descriptor.entity_id] = ssds
@@ -199,7 +200,7 @@ class MetaData(object):
             self._idp_metadata(entity_descriptor)
             self._aad_metadata(entity_descriptor)
             self._vo_metadata(entity_descriptor)
-
+            self._sp_metadata(entity_descriptor)
                     
     def single_sign_on_services(self, entity_id, 
                                 binding = BINDING_HTTP_REDIRECT):
@@ -252,3 +253,22 @@ class MetaData(object):
         except KeyError:
             return []
         
+    def consumer_url(self, entity_id, binding = BINDING_HTTP_POST):
+        try:
+            ssos = self.sp[entity_id]
+        except KeyError:
+            log and log.info("%s" % (self.sp.keys(),))
+            raise
+            
+        # any default ?
+        for sso in ssos:
+            for acs in sso.assertion_consumer_service:
+                if acs.binding == binding:
+                    if acs.is_default:
+                        return acs.location
+            # No default, grab the first in the sequence
+            for acs in sso.assertion_consumer_service:
+                if acs.binding == binding:
+                    return acs.location
+        
+        return None
