@@ -1,11 +1,35 @@
 #!/usr/bin/env python
 
 import time
+import base64
+
 try:
     from hashlib import md5
 except ImportError:
     from md5 import md5
+import zlib
 
+import zlib
+import base64
+
+def decode_base64_and_inflate( string ):
+    """ base64 decodes and then inflates according to RFC1951 
+    
+    :param string: a deflated and encoded string
+    :return: the string after decoding and inflating
+    """
+
+    return zlib.decompress( base64.b64decode( string ) , -15)
+
+def deflate_and_base64_encode( string_val ):
+    """
+    Deflates and the base64 encodes a string
+    
+    :param string_val: The string to deflate and encode
+    :return: The deflated and encoded string
+    """
+    return base64.b64encode( zlib.compress( string_val )[2:-4] )
+    
 def sid(seed=""):
     """The hash of the server time + seed makes an unique SID for each session.
     """
