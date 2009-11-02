@@ -18,9 +18,25 @@
 """Contains classes and functions that a SAML2.0 Identity provider (IdP) 
 or attribute authority (AA) may use to conclude its tasks.
 """
-from saml2 import saml
-from saml2.utils import sid
+from saml2 import saml, samlp
+from saml2.utils import sid, decode_base64_and_inflate
 from saml2.time_util import instant
+from saml2.metadata import MetaData
+
+class VersionMismatch(Exception):
+    pass
+    
+class UnknownPricipal(Exception):
+    pass
+    
+class UnsupportedBinding(Exception):
+    pass
+    
+EXCEPTION2STATUS = {
+    VersionMismatch: samlp.STATUS_VERSION_MISMATCH,
+    UnknownPricipal: samlp.STATUS_UNKNOWN_PRINCIPAL,
+    UnsupportedBinding: samlp.STATUS_UNSUPPORTED_BINDING,
+}
 
 def properties(klass):
     props = [val[0] for key,val in klass.c_children.items()]
@@ -28,10 +44,10 @@ def properties(klass):
     return props
     
 class Server(object):
-    def __init__(self, environ, config ):
-        self.environ = environ
+    def __init__(self, config, log=None):
         if config:
             self.verify_conf(config)
+        self.log = log
 
     def verify_conf(self, conf_file):
         """ """
@@ -40,7 +56,7 @@ class Server(object):
         
         # check for those that have to be there
         assert "xmlsec_binary" in self.conf
-        assert "service_url" in self.conf
+        #assert "service_url" in self.conf
         assert "entityid" in self.conf
         
         if "my_key" not in self.conf:
@@ -63,13 +79,24 @@ class Server(object):
 
         print "Configuration: %s" % (self.conf,)
         
-    def _issuer(self):
+    def issuer(self):
         return {
             "format": saml.NAMEID_FORMAT_ENTITY,
             "text": self.conf["entityid"]
         }
         
-    def _status(self, status, message=None, status_code=None):
+    def status_from_exception(self, exception):
+        return {
+            "status_code": {
+                "value": STATUS_RESPONDER,
+                "status_code": {
+                    "value": EXCEPTION2STATUS( exception),
+                },
+                "message": exception.args[0],
+            }
+        }
+        
+    def status(self, status, message=None, status_code=None):
         res = {
             "status_code": {
                 "value": status,
@@ -81,10 +108,10 @@ class Server(object):
             res["status_code"].update(status_code)
         return res
         
-    def _audience_restriction(self, audience):
+    def audience_restriction(self, audience):
         return { "audience": audience }
 
-    def _conditions(self, not_before=None, not_on_or_after=None, 
+    def conditions(self, not_before=None, not_on_or_after=None, 
                     audience_restriction=None, condition=None,
                     one_time_use=None, proxy_restriction=None):
                     
@@ -105,7 +132,7 @@ class Server(object):
         
         return res
         
-    def _attribute(self, value="", name="", name_format="", friendly_name=""):
+    def attribute(self, value="", name="", name_format="", friendly_name=""):
         dic = {}
         if value:
             dic["attribute_value"] = value
@@ -117,10 +144,10 @@ class Server(object):
             dic["friendly_name"] = friendly_name
         return dic
         
-    def _attribute_statement(self, attribute):
+    def attribute_statement(self, attribute):
         return { "attribute": attribute }
     
-    def _subject(self, name, name_id, subject_confirmation=None):
+    def subject(self, name, name_id, subject_confirmation=None):
         spec = {
             "text": name,
             "name_id": name_id,
@@ -129,7 +156,7 @@ class Server(object):
             spec["subject_confirmation"] = subject_confirmation
         return spec
         
-    def _assertion(self, subject, signature=False,
+    def assertion(self, subject, signature=False,
                             conditions=None, advice=None, statement=None,
                             authn_statement=None, authz_desc_statement=None,
                             attribute_statement=None):
@@ -138,7 +165,7 @@ class Server(object):
             "version": "2.0",
             "id" : sid(),
             "issue_instant" : instant(),
-            "issuer": self._issuer(),
+            "issuer": self.issuer(),
             "subject": subject,
         }
         
@@ -159,7 +186,7 @@ class Server(object):
         
         return spec
         
-    def _response(self, in_response_to, destination, status,
+    def response(self, in_response_to, destination, status,
                         consent=None, signature=False, assertion=None,
                         encrypt=False):
 
@@ -168,7 +195,7 @@ class Server(object):
             "in_response_to": in_response_to,
             "version": "2.0",
             "issue_instant" : instant(),
-            "issuer": self._issuer(),
+            "issuer": self.issuer(),
             "destination": destination,
             "status": status,
         }
@@ -179,3 +206,29 @@ class Server(object):
         
         return spec
     
+    def parse_request(self, enc_request):
+        request_xml = decode_base64_and_inflate(enc_request)
+        request = samlp.authn_request_from_string(request_xml)
+        
+        return_destination = request.assertion_consumer_service_url
+        # request.destination should be me 
+        id = request.id # put in in_reply_to
+        if request.version != "2.0":
+            raise VersionMismatch(
+                        "can't work with version %s" % request.version)
+        spentityid = request.issuer.text
+        # used to find return address in metadata
+        try:
+            consumer_url = self.metadata.consumer_url(spentityid)
+        except KeyError:
+            raise UnknownPricipal(spentityid)
+        if not consumer_url: # what to do ?
+            raise UnsupportedBinding(spentityid)
+
+        policy = request.name_id_policy
+        if policy.allow_create.lower() == "true" and \
+            policy.format == saml.NAMEID_FORMAT_TRANSIENT:
+            name_id_policies = policy.format
+                
+        return (consumer_url, id, name_id_policies)
+        
