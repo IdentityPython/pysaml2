@@ -25,9 +25,9 @@ import base64
 import time
 import re
 from saml2.time_util import str_to_time, add_duration, instant
-from saml2.utils import sid, deflate_and_base64_encode
+from saml2.utils import sid, deflate_and_base64_encode, make_instance
 
-from saml2 import samlp, saml, extension_element_to_element
+from saml2 import samlp, saml, extension_element_to_element, metadata
 from saml2.sigver import correctly_signed_response, decrypt
 from saml2.soap import SOAPClient
 
@@ -40,17 +40,36 @@ FORM_SPEC = """<form method="post" action="%s">
 </form>"""
 
 LAX = True
+
+def verify_idp_conf(config_file):
+    config = eval(open(conf_file).read())
     
+    # check for those that have to be there
+    assert "xmlsec_binary" in config
+    #assert "service_url" in config
+    assert "entityid" in config
+    
+    if "key_file" in config:
+        # If you have a key file you have to have a cert file
+        assert "cert_file" in config
+    else:
+        config["key_file"] = None
+        
+    if "metadata" in config:
+        md = MetaData()
+        for mdfile in config["metadata"]:
+            md.import_metadata(open(mdfile).read())
+        config["metadata"] = md
+    
+    return config
+
 class Saml2Client:
     
-    def __init__(self, environ, session=None, service_url=None, metadata=None,
-                    xmlsec_binary=None, key_file=None, cert_file=None):
-        self.session = session or {}
+    def __init__(self, environ, config=None):
         self.environ = environ
-        self.metadata = metadata
-        self.xmlsec_binary = xmlsec_binary
-        self.key_file = key_file
-        self.cert_file = cert_file
+        self.config = config
+        if "metadata" in config:
+            self.metadata = config["metadata"]
 
     def _init_request(self, request, destination):
         #request.id = sid()
@@ -59,8 +78,33 @@ class Saml2Client:
         request.destination = destination
         return request        
 
+    def idp_entry(self, name=None, location=None, provider_id=None):
+        res = {}
+        if name: 
+            res["name"] = name
+        if location: 
+            res["loc"] = location
+        if provider_id: 
+            res["provider_id"] = provider_id
+        if res:
+            return res
+        else:
+            return None
+        
+    def scoping(self, idp_ents):
+        return {
+            "idp_list": {
+                "idp_entry": idp_ents
+            }
+        }
+
+    def scoping_from_metadata(self, entityid, location):
+        name = metadata.name(entityid)
+        return make_instance(self.scoping([self.idp_entry(name, location)]))
+
     def create_authn_request(self, query_id, destination, service_url,
-                                spentityid, my_name, sp_name_qualifier=None):
+                                spentityid, my_name, sp_name_qualifier=None,
+                                scoping=None):
         """ Creates an Authenication Request
         
         :param query_id: Query identifier
@@ -70,6 +114,7 @@ class Saml2Client:
         :param my_name: Who I am
         :param sp_name_qualifier: The domain in which the name should be
             valid
+        :param scoping: For which IdPs this query are aimed.
         
         :return: An authentication request
         """
@@ -80,7 +125,9 @@ class Saml2Client:
         authn_request.assertion_consumer_service_url = service_url
         authn_request.protocol_binding = saml2.BINDING_HTTP_POST
         authn_request.provider_name = my_name
-
+        if scoping:
+            authn_request.scoping = scoping
+            
         name_id_policy = samlp.NameIDPolicy()
         name_id_policy.allow_create = 'true'
         if sp_name_qualifier:
@@ -124,7 +171,8 @@ class Saml2Client:
             
     def authenticate(self, spentityid, location="", service_url="", 
                         my_name="", relay_state="",
-                        binding=saml2.BINDING_HTTP_REDIRECT, log=None):
+                        binding=saml2.BINDING_HTTP_REDIRECT, log=None,
+                        scoping=None):
         """ Either verifies an authentication Response or if none is present
         send an authentication request.
         
@@ -136,6 +184,10 @@ class Saml2Client:
         :param my_name: The providers name
         :param relay_state: To where the user should be returned after 
             successfull log in.
+        :param binding: Which binding to use for sending the request
+        :param log: Where to write log messages
+        :param scoping: For which IdPs this query are aimed.
+            
         :return: AuthnRequest reponse
         """
         
@@ -146,7 +198,7 @@ class Saml2Client:
             log.info("my_name: %s" % my_name)
         sid = sid()
         authen_req = "%s" % self.create_authn_request(sid, location, 
-                                service_url, spentityid, my_name)
+                                service_url, spentityid, my_name, scoping)
         log and log.info("AuthNReq: %s" % authen_req)
         
         if binding == saml2.BINDING_HTTP_POST:
@@ -201,8 +253,8 @@ class Saml2Client:
         # own copy
         xmlstr = decoded_xml[:]
         log and log.info("verify correct signature")
-        response = correctly_signed_response(decoded_xml, self.xmlsec_binary,
-                        log=log)
+        response = correctly_signed_response(decoded_xml, 
+                        self.config["xmlsec_binary"], log=log)
         if not response:
             log and log.error("Response was not correctly signed")
             print "Response was not correctly signed"
@@ -299,8 +351,8 @@ class Saml2Client:
     def _encrypted_assertion(self, xmlstr, outstanding, requestor, 
             log=None, context=""):
         log and log.debug("Decrypt message")        
-        decrypt_xml = decrypt(xmlstr, self.key_file, self.xmlsec_binary, 
-                                log=log)
+        decrypt_xml = decrypt(xmlstr, self.config["key_file"],
+                                self.config["xmlsec_binary"], log=log)
         log and log.debug("Decryption successfull")
         
         response = samlp.response_from_string(decrypt_xml)
@@ -457,7 +509,8 @@ class Saml2Client:
         
         log and log.info("Request, created: %s" % request)
         
-        soapclient = SOAPClient(destination, self.key_file, self.cert_file)
+        soapclient = SOAPClient(destination, self.config["key_file"], 
+                                self.config["cert_file"])
         log and log.info("SOAP client initiated")
         try:
             response = soapclient.send(request)
@@ -569,3 +622,50 @@ def print_response(resp):
     print _print_statement(resp)
     print resp.to_string()
     
+
+def d_init_request(id, destination):
+    return {
+        "id": id,
+        "version": "2.0",
+        "issue_instant": instant(),
+        "destination": destination,
+    }
+
+def d_authn_request(query_id, destination, service_url,
+                        spentityid, my_name, sp_name_qualifier=None,
+                        scoping=None):
+        """ Creates an Authenication Request
+        
+        :param query_id: Query identifier
+        :param destination: Where to send the request
+        :param service_url: The page to where the response MUST be sent.
+        :param spentityid: My official name
+        :param my_name: Who I am
+        :param sp_name_qualifier: The domain in which the name should be
+            valid
+        :param scoping: For which IdPs this query are aimed.
+        
+        :return: An authentication request
+        """
+        
+        authn_request = d_init_request(query_id, destination)
+        authn_request["assertion_consumer_service_url"] = service_url
+        authn_request["protocol_binding"] = saml2.BINDING_HTTP_POST
+        authn_request["provider_name"] = my_name
+        if scoping:
+            authn_request["scoping"] = scoping
+            
+        name_id_policy = {
+            "allow_create": 'true'
+        }
+        if sp_name_qualifier:
+            name_id_policy["format"] = saml.NAMEID_FORMAT_PERSISTENT
+            name_id_policy["sp_name_qualifier"] = sp_name_qualifier
+        else:
+            name_id_policy["format"] = saml.NAMEID_FORMAT_TRANSIENT
+
+
+        authn_request["name_id_policy"] = name_id_policy
+        authn_request["issuer"] = spentityid
+        
+        return make_instance(samlp.AuthnRequest,authn_request)
