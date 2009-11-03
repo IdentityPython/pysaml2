@@ -1,8 +1,10 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-from saml2.server import Server
-from saml2 import samlp, saml
+from saml2.server import Server, OtherError
+from saml2 import samlp, saml, client, utils
 from saml2.utils import make_instance
+from py.test import raises
 
 SUCCESS_STATUS = """<?xml version=\'1.0\' encoding=\'UTF-8\'?>
 <ns0:Status xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns0:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success" /></ns0:Status>"""
@@ -195,3 +197,61 @@ class TestServer():
         status = response.status
         print status
         assert status.status_code.value == samlp.STATUS_SUCCESS
+
+    def test_parse_faulty_request(self):
+        authn_request = client.d_authn_request(
+                            query_id = "1",
+                            destination = "http://www.example.com",
+                            service_url = "http://www.example.org",
+                            spentityid = "urn:mace:umu.se:saml:rolandsp",
+                            my_name = "My real name",
+                        )
+                        
+        intermed = utils.deflate_and_base64_encode("%s" % authn_request)
+        # should raise an error
+        raises(OtherError,self.server.parse_request,intermed)
+        
+    def test_parse_faulty_request_to_err_status(self):
+        authn_request = client.d_authn_request(
+                            query_id = "1",
+                            destination = "http://www.example.com",
+                            service_url = "http://www.example.org",
+                            spentityid = "urn:mace:umu.se:saml:rolandsp",
+                            my_name = "My real name",
+                        )
+                        
+        intermed = utils.deflate_and_base64_encode("%s" % authn_request)
+        try:
+            self.server.parse_request(intermed)
+            status = None
+        except OtherError, oe:
+            print oe.args
+            status = utils.make_instance(samlp.Status,
+                            self.server.status_from_exception(oe))
+            
+        assert status
+        print status
+        assert _eq(status.keyswv(), ["status_code", "status_message"])
+        assert status.status_message.text == (
+                        'ConsumerURL and return destination mismatch')
+        status_code = status.status_code
+        assert _eq(status_code.keyswv(), ["status_code","value"])
+        assert status_code.value == samlp.STATUS_RESPONDER
+        assert status_code.status_code.value == samlp.STATUS_UNKNOWN_PRINCIPAL
+
+    def test_parse_ok_request(self):
+        authn_request = client.d_authn_request(
+                            query_id = "1",
+                            destination = "http://www.example.com",
+                            service_url = "http://lingon.catalogix.se:8087/",
+                            spentityid = "urn:mace:umu.se:saml:rolandsp",
+                            my_name = "My real name",
+                        )
+                        
+        intermed = utils.deflate_and_base64_encode("%s" % authn_request)
+        (consumer_url, id, name_id_policies) = self.server.parse_request(
+                                                    intermed)
+                                                    
+        assert consumer_url == "http://lingon.catalogix.se:8087/"
+        assert id == "1"
+        assert name_id_policies == saml.NAMEID_FORMAT_TRANSIENT

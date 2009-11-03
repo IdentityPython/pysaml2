@@ -1,3 +1,4 @@
+
 from saml2 import metadata, utils
 from saml2 import NAMESPACE as SAML2_NAMESPACE
 from saml2 import BINDING_SOAP
@@ -16,12 +17,16 @@ def _eq(l1,l2):
 def test_swami_1():
     md = metadata.MetaData()
     md.import_metadata(open(SWAMI_METADATA).read())
-    print len(md.idp)
-    assert len(md.idp) == 1
-    print md.idp.keys()
-    assert md.idp.keys() == ['https://idp.umu.se/saml2/idp/metadata.php']
+    print len(md.entity)
+    assert len(md.entity) == 58
+    idps = dict([(id,ent["idp_sso"]) for id,ent in md.entity.items() \
+                if "idp_sso" in ent])
+    print idps
+    assert idps.keys() == ['https://idp.umu.se/saml2/idp/metadata.php']
     idp_sso = md.single_sign_on_services(
                     'https://idp.umu.se/saml2/idp/metadata.php')
+    assert md.name('https://idp.umu.se/saml2/idp/metadata.php') == (
+        u'Ume\xe5 university (New SAML2)')
     assert len(idp_sso) == 1
     assert idp_sso == ['https://idp.umu.se/saml2/idp/SSOService.php']
     ssocerts =  md.certs('https://idp.umu.se/saml2/idp/SSOService.php')
@@ -31,27 +36,27 @@ def test_swami_1():
 def test_incommon_1():
     md = metadata.MetaData()
     md.import_metadata(open(INCOMMON_METADATA).read())
-    print len(md.idp)
-    assert len(md.idp) == 35
-    print md.idp.keys()
+    print len(md.entity)
+    assert len(md.entity) == 366
+    idps = dict([
+        (id,ent["idp_sso"]) for id,ent in md.entity.items() if "idp_sso" in ent])
+    print idps.keys()
+    assert len(idps) == 35 # !!!!???? < 10%
     idp_sso = md.single_sign_on_services('urn:mace:incommon:uiuc.edu')
     assert idp_sso == []
     idp_sso = md.single_sign_on_services('urn:mace:incommon:alaska.edu')
     assert len(idp_sso) == 1
     print idp_sso
     assert idp_sso == ['https://idp.alaska.edu/idp/profile/SAML2/Redirect/SSO']
-    redirect_idps = [
-        eid for eid in md.idp.keys() if len( md.single_sign_on_services(eid))]
-    print redirect_idps
-    assert len(redirect_idps) == 8 # !!!!????
 
 def test_example():
     md = metadata.MetaData()
     md.import_metadata(open(EXAMPLE_METADATA).read())
-    print len(md.idp)
-    assert len(md.idp) == 1
-    print md.idp.keys()
-    assert md.idp.keys() == [
+    print len(md.entity)
+    assert len(md.entity) == 1
+    idps = dict([(id,ent["idp_sso"]) for id,ent in md.entity.items() \
+                if "idp_sso" in ent])
+    assert idps.keys() == [
             'http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php']
     certs = md.certs(
             'http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php')
@@ -62,27 +67,30 @@ def test_example():
 def test_switch_1():
     md = metadata.MetaData()
     md.import_metadata(open(SWITCH_METADATA).read())
-    print len(md.idp)
-    assert len(md.idp) == 16
-    print len(md.aad)
-    assert len(md.aad) == 16
-    print md.idp.keys()
+    print len(md.entity)
+    assert len(md.entity) == 90
+    idps = dict([(id,ent["idp_sso"]) for id,ent in md.entity.items() \
+                if "idp_sso" in ent])
+    print idps.keys()
     idp_sso = md.single_sign_on_services(
         'https://aai-demo-idp.switch.ch/idp/shibboleth')
     assert len(idp_sso) == 1
     print idp_sso
     assert idp_sso == [
         'https://aai-demo-idp.switch.ch/idp/profile/SAML2/Redirect/SSO']
-    redirect_idps = [
-        eid for eid in md.idp.keys() if len( md.single_sign_on_services(eid))]
-    print redirect_idps
-    assert len(redirect_idps) == 16
-    print md.aad.keys()
-    aads = md.aad['https://aai-demo-idp.switch.ch/idp/shibboleth']
+    assert len(idps) == 16
+    aas = dict([(id,ent["attribute_authority"]) for id,ent in md.entity.items() \
+                if "attribute_authority" in ent])
+    print aas.keys()
+    aads = aas['https://aai-demo-idp.switch.ch/idp/shibboleth']
     assert len(aads) == 1
     aad = aads[0]
     assert len(aad.attribute_service) == 1
     assert len(aad.name_id_format) == 2
+    dual = dict([(id,ent) for id,ent in md.entity.items() \
+                if "idp_sso" in ent and "sp_sso" in ent])
+    print len(dual)
+    assert len(dual) == 0
 
 # ------------ Constructing metaval ----------------------------------------
 

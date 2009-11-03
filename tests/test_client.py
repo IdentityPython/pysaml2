@@ -1,8 +1,9 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from saml2.client import Saml2Client
 from saml2 import samlp
-from saml2 import saml
+from saml2 import saml, utils
 
 XML_RESPONSE_FILE = "tests/saml_signed.xml"
 XML_RESPONSE_FILE2 = "tests/saml2_response.xml"
@@ -168,3 +169,22 @@ class TestClient:
         nameid = req.subject.name_id
         assert nameid.format == saml.NAMEID_FORMAT_TRANSIENT
         assert nameid.text == "_e7b68a04488f715cda642fbdd90099f5"
+
+    def test_idp_entry(self):
+        idp_entry = utils.make_instance( samlp.IDPEntry,
+                            self.client.idp_entry(name="Umeå Universitet",
+                            location="https://idp.umu.se/"))
+        
+        assert idp_entry.name == "Umeå Universitet"
+        assert idp_entry.loc == "https://idp.umu.se/"
+        
+    def test_scope(self):
+        scope = utils.make_instance(samlp.Scoping, self.client.scoping(
+                                [self.client.idp_entry(name="Umeå Universitet",
+                                    location="https://idp.umu.se/")]))
+        
+        assert scope.idp_list
+        assert len(scope.idp_list.idp_entry) == 1
+        idp_entry = scope.idp_list.idp_entry[0]
+        assert idp_entry.name == "Umeå Universitet"
+        assert idp_entry.loc == "https://idp.umu.se/"
