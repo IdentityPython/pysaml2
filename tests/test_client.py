@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from saml2.client import Saml2Client
-from saml2 import samlp
+from saml2 import samlp, client
 from saml2 import saml, utils
 
 XML_RESPONSE_FILE = "tests/saml_signed.xml"
@@ -54,7 +54,8 @@ REQ1 = """<?xml version='1.0' encoding='UTF-8'?>
 
 class TestClient:
     def setup_class(self):
-        self.client = Saml2Client({}, xmlsec_binary=XMLSEC_BINARY)
+        conf = client.verify_idp_conf("tests/server.config")
+        self.client = Saml2Client({},conf)
     
     def test_verify_1(self):
         xml_response = open(XML_RESPONSE_FILE).read()

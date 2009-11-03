@@ -42,7 +42,7 @@ FORM_SPEC = """<form method="post" action="%s">
 LAX = True
 
 def verify_idp_conf(config_file):
-    config = eval(open(conf_file).read())
+    config = eval(open(config_file).read())
     
     # check for those that have to be there
     assert "xmlsec_binary" in config
@@ -56,7 +56,7 @@ def verify_idp_conf(config_file):
         config["key_file"] = None
         
     if "metadata" in config:
-        md = MetaData()
+        md = metadata.MetaData()
         for mdfile in config["metadata"]:
             md.import_metadata(open(mdfile).read())
         config["metadata"] = md
