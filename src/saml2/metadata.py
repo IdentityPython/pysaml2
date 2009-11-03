@@ -33,15 +33,12 @@ class MetaData(object):
     def __init__(self, log=None):
         self._loc_key = {}
         self._loc_bind = {}
-        self.idp = {}
-        self.aad = {}
-        self.vo = {}
-        self.sp = {}
+        self.entity = {}
         self.valid_to = None
         self.cache_until = None
         self.log = log
         
-    def _vo_metadata(self, entity_descriptor):
+    def _vo_metadata(self, entity_descriptor, entity, tag):
         """
         Pick out the Affiliation descriptors from an entity
         descriptor and store the information in a way which is easily
@@ -60,9 +57,9 @@ class MetaData(object):
                 [member.text.strip() for member in tafd.affiliate_member])
                 
         if members != []:
-            self.vo[entity_descriptor.entity_id] = members
+            entity[tag] = members
     
-    def _sp_metadata(self, entity_descriptor):
+    def _sp_metadata(self, entity_descriptor, entity, tag):
         """
         Pick out the SP SSO descriptors from an entity
         descriptor and store the information in a way which is easily
@@ -92,10 +89,10 @@ class MetaData(object):
             for acs in tssd.assertion_consumer_service:
                 self._loc_key[acs.location] = certs
                 
-        if ssds != []:            
-            self.sp[entity_descriptor.entity_id] = ssds
+        if ssds:
+            entity[tag] = ssds
     
-    def _idp_metadata(self, entity_descriptor):
+    def _idp_metadata(self, entity_descriptor, entity, tag):
         """
         Pick out the IdP SSO descriptors from an entity
         descriptor and store the information in a way which is easily
@@ -124,10 +121,10 @@ class MetaData(object):
             for sso in tidp.single_sign_on_service:
                 self._loc_key[sso.location] = certs
                 
-        if idps != []:            
-            self.idp[entity_descriptor.entity_id] = idps
+        if idps:
+            entity[tag] = idps
     
-    def _aad_metadata(self,entity_descriptor):
+    def _aad_metadata(self, entity_descriptor, entity, tag):
         """
         Pick out the attribute authority descriptors from an entity
         descriptor and store the information in a way which is easily
@@ -176,7 +173,7 @@ class MetaData(object):
             aads.append(taad)
 
         if aads != []:            
-            self.aad[entity_descriptor.entity_id] = aads
+            entity[tag] = aads
             
     def import_metadata(self, xml_str):
         """ Import information; organization distinguish name, location and
@@ -197,10 +194,20 @@ class MetaData(object):
             valid_until = None
             
         for entity_descriptor in entities_descriptor.entity_descriptor:
-            self._idp_metadata(entity_descriptor)
-            self._aad_metadata(entity_descriptor)
-            self._vo_metadata(entity_descriptor)
-            self._sp_metadata(entity_descriptor)
+            entity = self.entity[entity_descriptor.entity_id] = {}
+            self._idp_metadata(entity_descriptor, entity, "idp_sso")
+            self._sp_metadata(entity_descriptor, entity, "sp_sso")
+            self._aad_metadata(entity_descriptor, entity, 
+                                "attribute_authority")
+            self._vo_metadata(entity_descriptor, entity, "affiliation")
+            try:
+                entity["organization"] = entity_descriptor.organization
+            except:
+                pass
+            try:
+                entity["contact"] = entity_descriptor.contact
+            except:
+                pass
                     
     def single_sign_on_services(self, entity_id, 
                                 binding = BINDING_HTTP_REDIRECT):
@@ -213,7 +220,7 @@ class MetaData(object):
             with the specified EntityId.
         """
         try:
-            idps = self.idp[entity_id]
+            idps = self.entity[entity_id]["idp_sso"]
         except KeyError:
             return []
         loc = []
@@ -225,7 +232,7 @@ class MetaData(object):
         
     def attribute_services(self, entity_id):
         try:
-            return self.aad[entity_id]
+            return self.entity[entity_id]["attribute_authority"]
         except KeyError:
             return []
             
@@ -249,13 +256,13 @@ class MetaData(object):
     
     def vo_members(self, entity_id):
         try:
-            return self.vo[entity_id]
+            return self.entity[entity_id]["affiliation"]
         except KeyError:
             return []
         
     def consumer_url(self, entity_id, binding = BINDING_HTTP_POST):
         try:
-            ssos = self.sp[entity_id]
+            ssos = self.entity[entity_id]["sp_sso"]
         except KeyError:
             log and log.info("%s" % (self.sp.keys(),))
             raise
@@ -272,3 +279,30 @@ class MetaData(object):
                     return acs.location
         
         return None
+        
+    def name(self, entityid):
+        """ Find a name from the metadata about this entity id.
+        The name is either the display name, the name or the url
+        ,in that order, for the organization.
+        
+        :param entityid: The Entity ID
+        :return: A name 
+        """
+        try:
+            org = self.entity[entityid]["organization"]
+            try:
+                names = org.organization_display_name
+            except KeyError:
+                try:
+                    names = org.organization_name
+                except KeyError:
+                    try:
+                        names = org.organization_url
+                    except KeyError:
+                        names = None
+            if names:
+                name = names[0].text
+        except KeyError:
+            name = ""
+            
+        return name
