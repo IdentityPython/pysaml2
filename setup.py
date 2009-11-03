@@ -31,9 +31,9 @@ python-saml2 is a library for SAML Version 2.
     author_email='roland.hedberg@adm.umu.se',
     license='Apache 2.0',
     url='http://code.google.com/p/python-saml2/',
-    packages=['saml2', 'xmldsig', 'xmlenc', 'saml2_repoze', 
-                'saml2_repoze.plugins'],
+    packages=['saml2', 'xmldsig', 'xmlenc', 's2repoze', 
+                's2repoze.plugins'],
     package_dir = {'saml2':'src/saml2', 'xmldsig':'src/xmldsig',
                     'xmlenc': 'src/xmlenc', 
-                    'saml2_repoze': 'src/saml2_repoze'}
+                    's2repoze': 'src/s2repoze'}
 )
