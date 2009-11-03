@@ -170,7 +170,6 @@ class OrganizationURL(LocalizedURI):
         LocalizedURI.__init__(self, lang, text, extension_elements, 
                                 extension_attributes)
 
-
 def organization_url_from_string(xml_string):
     """ Create OrganizationURL instance from an XML string """
     return create_class_from_xml_string(OrganizationURL, xml_string)
@@ -1205,9 +1204,8 @@ def affiliation_descriptor_from_string(xml_string):
 
 class EntityDescriptor(SamlBase):
     """The md:EntityDescriptor element"""
-    #TODO: AuthnAuthorityDescriptor, AttributeAuthorityDescriptor, 
+    # TODO: AuthnAuthorityDescriptor, AttributeAuthorityDescriptor, 
     # PDPDescriptor,
-    # AffiliationDescriptor is not implemented yet
 
     c_tag = 'EntityDescriptor'
     c_namespace = NAMESPACE
