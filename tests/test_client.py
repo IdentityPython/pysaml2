@@ -54,7 +54,7 @@ REQ1 = """<?xml version='1.0' encoding='UTF-8'?>
 
 class TestClient:
     def setup_class(self):
-        conf = client.verify_idp_conf("tests/server.config")
+        conf = client.verify_sp_conf("tests/server.config")
         self.client = Saml2Client({},conf)
     
     def test_verify_1(self):
