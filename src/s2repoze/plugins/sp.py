@@ -43,7 +43,7 @@ from repoze.who.interfaces import IChallenger, IIdentifier, IAuthenticator
 from repoze.who.interfaces import IMetadataProvider
 from repoze.who.plugins.form import FormPluginBase
 
-from saml2.client import Saml2Client
+from saml2.client import Saml2Client, verify_sp_conf
 from saml2.attribute_resolver import AttributeResolver
 from saml2.metadata import MetaData
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
@@ -72,9 +72,11 @@ class SAML2Plugin(FormPluginBase):
         self.path_toskip = path_toskip
         self.debug = debug        
         
-        self.conf = {}
-        self.verify_conf(saml_conf_file)
-
+        self.conf = verify_sp_conf(saml_conf_file)
+        try:
+            self.metadata = self.conf["metadata"]
+        except KeyError:
+            self.metadata = None
         self.outstanding_authn = {}
         self.iam = os.uname()[1]
         
@@ -83,47 +85,6 @@ class SAML2Plugin(FormPluginBase):
         elif store==u"mem":
             self.store = {}
          
-    def verify_conf(self, conf_file):
-        """ """
-        
-        self.conf = eval(open(conf_file).read())
-        
-        # check for those that have to be there
-        assert "xmlsec_binary" in self.conf
-        assert "service_url" in self.conf
-        assert "sp_entityid" in self.conf
-        
-        if "my_name" not in self.conf:
-            self.conf["my_name"] = "MY NAME"
-        if "my_key" not in self.conf:
-            self.conf["my_key"] = None
-        else:
-            # If you have a key file you have to have a cert file
-            assert "my_cert" in self.conf
-            
-        if "metadata" in self.conf:
-            md = MetaData()
-            for mdfile in self.conf["metadata"]:
-                md.import_metadata(open(mdfile).read())
-            self.metadata = md
-
-            # if metadata is defined, the IdP url should be gotten from there
-            if "md_idp" in self.conf:
-                self.conf["idp_url"] = self.metadata.single_sign_on_services(
-                                            self.conf["md_idp"])[0]
-        else:
-            assert "idp_url" in self.conf
-            if "virtual_organization" in self.conf:
-                raise Exception(
-                    "Can't deal with virtual organization without metadata")
-            self.metadata = None
-        
-        if "virtual_organization" in self.conf:
-            if "nameid_format" not in self.conf:
-                self.conf["nameid_format"] = NAMEID_FORMAT_TRANSIENT
-
-        print "Configuration: %s" % (self.conf,)
-        
     #### IChallenger ####
     def challenge(self, environ, status, app_headers, forget_headers):
 
@@ -136,14 +97,11 @@ class SAML2Plugin(FormPluginBase):
         # ELSE, perform a real challenge => asking for loggin
         # here by redirecting the user to a IdP.
 
-        cl = Saml2Client(environ, 
-                            metadata = self.metadata,
-                            key_file=self.conf["my_key"], 
-                            xmlsec_binary=self.conf["xmlsec_binary"])
+        cl = Saml2Client(environ, self.conf)
         came_from = construct_came_from(environ)
         if self.debug:
             logger and logger.info("RelayState >> %s" % came_from)
-        (sid, result) = cl.authenticate(self.conf["sp_entityid"], 
+        (sid, result) = cl.authenticate(self.conf["entityid"], 
                                         self.conf["idp_url"], 
                                         self.conf["service_url"], 
                                         self.conf["my_name"], 
@@ -215,13 +173,10 @@ class SAML2Plugin(FormPluginBase):
             logger and logger.info('identify post keys: %s' % (post.keys(),))
 
         # check for SAML2 authN
-        cl = Saml2Client(environ, 
-                            metadata = self.metadata,
-                            key_file = self.conf["my_key"], 
-                            xmlsec_binary = self.conf["xmlsec_binary"])
+        cl = Saml2Client(environ, self.conf)
         try:
             (ava, came_from) = cl.response(post, 
-                                            self.conf["sp_entityid"], 
+                                            self.conf["entityid"], 
                                             self.outstanding_authn,
                                             logger)
             name_id = ava["__userid"]
@@ -277,8 +232,8 @@ class SAML2Plugin(FormPluginBase):
                 logger and logger.info("SubjectID: %s" % subject_id)
                 ar = AttributeResolver(environ, self.metadata, 
                                         self.conf["xmlsec_binary"],
-                                        self.conf["my_key"],
-                                        self.conf["my_cert"])
+                                        self.conf["key_file"],
+                                        self.conf["cert_file"])
                 vo_members = [
                             member for member in self.metadata.vo_members(
                                 self.conf["virtual_organization"])\
@@ -287,7 +242,7 @@ class SAML2Plugin(FormPluginBase):
 
                 if vo_members:
                     extra = ar.extend(subject_id, 
-                            self.conf["sp_entityid"], 
+                            self.conf["entityid"], 
                             vo_members, 
                             self.conf["nameid_format"],
                             log=logger)
