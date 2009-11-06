@@ -361,7 +361,8 @@ class SubjectConfirmation(SamlBase):
     c_child_order = ['base_id', 'name_id', 'encrypted_id', 
                     'subject_confirmation_data']
 
-    def __init__(self, base_id=None, name_id=None, encrypted_id=None,
+    def __init__(self, method=None, base_id=None, name_id=None, 
+                    encrypted_id=None,
                     subject_confirmation_data=None, text=None, 
                     extension_elements=None, extension_attributes=None):
         """Constructor for SubjectConfirmation
@@ -376,6 +377,7 @@ class SubjectConfirmation(SamlBase):
         """
 
         SamlBase.__init__(self, text, extension_elements, extension_attributes)
+        self.method = method
         self.base_id = base_id
         self.name_id = name_id
         self.encrypted_id = encrypted_id
