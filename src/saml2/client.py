@@ -41,7 +41,7 @@ FORM_SPEC = """<form method="post" action="%s">
 
 LAX = True
 
-def verify_idp_conf(config_file):
+def verify_sp_conf(config_file):
     config = eval(open(config_file).read())
     
     # check for those that have to be there
@@ -60,6 +60,20 @@ def verify_idp_conf(config_file):
         for mdfile in config["metadata"]:
             md.import_metadata(open(mdfile).read())
         config["metadata"] = md
+        if "idp_entity_id" in config:
+            try:
+                config["idp_url"] = md.single_sign_on_services(
+                                    config["idp_entity_id"])[0]
+            except Exception:
+                print "idp_entity_id",config["idp_entity_id"]
+                print "idps in metadata", \
+                       [e for e,d in md.entity.items() if "idp_sso" in d]
+                print "metadata entities", md.entity.keys()
+                for ent, dic in md.entity.items():
+                    print ent, dic.keys()
+                raise
+                
+    assert config["idp_url"]
     
     return config
 
@@ -196,8 +210,8 @@ class Saml2Client:
             log.info("location: %s" % location)
             log.info("service_url: %s" % service_url)
             log.info("my_name: %s" % my_name)
-        sid = sid()
-        authen_req = "%s" % self.create_authn_request(sid, location, 
+        session_id = sid()
+        authen_req = "%s" % self.create_authn_request(session_id, location, 
                                 service_url, spentityid, my_name, scoping)
         log and log.info("AuthNReq: %s" % authen_req)
         
@@ -227,7 +241,7 @@ class Saml2Client:
             response = ('Location', login_url)
         else:
             raise Exception("Unkown binding type: %s" % binding)
-        return (sid, response)
+        return (session_id, response)
             
     def verify_response(self, xml_response, requestor, outstanding=None, 
                 log=None, decode=True, context=""):
@@ -280,11 +294,12 @@ class Saml2Client:
         ava["__userid"] = name_id
         return (ava, came_from)
   
-    def _verify_condition(self, assertion, requestor):
-            # The Identity Provider MUST include a <saml:Conditions> element
+    def _verify_condition(self, assertion, requestor, log):
+        # The Identity Provider MUST include a <saml:Conditions> element
         #print "Conditions",assertion.conditions
         assert assertion.conditions
         condition = assertion.conditions
+        log and log.info("condition: %s" % condition)
         now = time.gmtime()        
         not_on_or_after = str_to_time(condition.not_on_or_after)        
         if not_on_or_after < now:
@@ -311,13 +326,19 @@ class Saml2Client:
         
     def _assertion(self, assertion, outstanding, requestor, log, context):
         """ """        
+        if log:
+            log.info("assertion context: %s" % (context,))
+            log.info("assertion keys: %s" % (assertion.keyswv()))
+            log.info("outstanding: %s" % (outstanding))
+        
         if context == "AuthNReq":
             self._websso(assertion, outstanding, requestor, log)
 
         # The Identity Provider MUST include a <saml:Conditions> element
         #print "Conditions",assertion.conditions
         assert assertion.conditions
-        self._verify_condition(assertion, requestor)
+        log and log.info("verify_condition")
+        self._verify_condition(assertion, requestor, log)
 
         # The assertion can contain zero or one attributeStatements
         assert len(assertion.attribute_statement) <= 1
@@ -417,9 +438,9 @@ class Saml2Client:
             return self._encrypted_assertion(xmlstr, outstanding, 
                                                 requestor, log, context)
 
-    def create_attribute_request(self, sid, subject_id, issuer, destination, 
-            attribute=None, sp_name_qualifier=None, name_qualifier=None,
-            format=None):
+    def create_attribute_request(self, session_id, subject_id, issuer, 
+            destination, attribute=None, sp_name_qualifier=None, 
+            name_qualifier=None, format=None):
         """ Constructs an AttributeQuery 
         
         :param subject_id: The identifier of the subject
@@ -438,7 +459,7 @@ class Saml2Client:
         :return: An AttributeQuery instance
         """
         
-        attr_query = self._init_request(samlp.AttributeQuery(sid), 
+        attr_query = self._init_request(samlp.AttributeQuery(session_id), 
                                         destination)
         
         subject = saml.Subject()
@@ -502,10 +523,10 @@ class Saml2Client:
         :return: The attributes returned
         """
         
-        sid = sid()
-        request = self.create_attribute_request(sid, subject_id, issuer,
-                    destination, attribute, sp_name_qualifier, name_qualifier,
-                    format=format)
+        session_id = sid()
+        request = self.create_attribute_request(session_id, subject_id, 
+                    issuer, destination, attribute, sp_name_qualifier, 
+                    name_qualifier, format=format)
         
         log and log.info("Request, created: %s" % request)
         
@@ -523,7 +544,7 @@ class Saml2Client:
             log and log.info("Verifying response")
             (identity, came_from) = self.verify_response(response, 
                                                 issuer,
-                                                outstanding={sid:""}, 
+                                                outstanding={session_id:""}, 
                                                 log=log, decode=False,
                                                 context="AttrReq")
             log and log.info("identity: %s" % identity)
