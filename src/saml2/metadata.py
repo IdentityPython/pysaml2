@@ -224,8 +224,11 @@ class MetaData(object):
         except KeyError:
             return []
         loc = []
+        #print idps
         for idp in idps:
+            #print "==",idp.keyswv()
             for sso in idp.single_sign_on_service:
+                #print "SSO",sso
                 if binding == sso.binding:
                     loc.append(sso.location)
         return loc
@@ -260,7 +263,7 @@ class MetaData(object):
         except KeyError:
             return []
         
-    def consumer_url(self, entity_id, binding = BINDING_HTTP_POST):
+    def consumer_url(self, entity_id, binding=BINDING_HTTP_POST, log=None):
         try:
             ssos = self.entity[entity_id]["sp_sso"]
         except KeyError:
