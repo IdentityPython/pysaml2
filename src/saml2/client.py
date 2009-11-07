@@ -28,6 +28,7 @@ from saml2.time_util import str_to_time, add_duration, instant
 from saml2.utils import sid, deflate_and_base64_encode, make_instance
 
 from saml2 import samlp, saml, extension_element_to_element, metadata
+from saml2 import VERSION
 from saml2.sigver import correctly_signed_response, decrypt
 from saml2.soap import SOAPClient
 
@@ -41,53 +42,19 @@ FORM_SPEC = """<form method="post" action="%s">
 
 LAX = True
 
-def verify_sp_conf(config_file):
-    config = eval(open(config_file).read())
-    
-    # check for those that have to be there
-    assert "xmlsec_binary" in config
-    #assert "service_url" in config
-    assert "entityid" in config
-    
-    if "key_file" in config:
-        # If you have a key file you have to have a cert file
-        assert "cert_file" in config
-    else:
-        config["key_file"] = None
-        
-    if "metadata" in config:
-        md = metadata.MetaData()
-        for mdfile in config["metadata"]:
-            md.import_metadata(open(mdfile).read())
-        config["metadata"] = md
-        if "idp_entity_id" in config:
-            try:
-                config["idp_url"] = md.single_sign_on_services(
-                                    config["idp_entity_id"])[0]
-            except Exception:
-                print "idp_entity_id",config["idp_entity_id"]
-                print "idps in metadata", \
-                       [e for e,d in md.entity.items() if "idp_sso" in d]
-                print "metadata entities", md.entity.keys()
-                for ent, dic in md.entity.items():
-                    print ent, dic.keys()
-                raise
-                
-    assert config["idp_url"]
-    
-    return config
 
 class Saml2Client:
     
     def __init__(self, environ, config=None):
         self.environ = environ
-        self.config = config
-        if "metadata" in config:
-            self.metadata = config["metadata"]
+        if config:
+            self.config = config
+            if "metadata" in config:
+                self.metadata = config["metadata"]
 
     def _init_request(self, request, destination):
         #request.id = sid()
-        request.version = "2.0"
+        request.version = VERSION
         request.issue_instant = instant()
         request.destination = destination
         return request        
@@ -438,7 +405,7 @@ class Saml2Client:
             return self._encrypted_assertion(xmlstr, outstanding, 
                                                 requestor, log, context)
 
-    def create_attribute_request(self, session_id, subject_id, issuer, 
+    def create_attribute_query(self, session_id, subject_id, issuer, 
             destination, attribute=None, sp_name_qualifier=None, 
             name_qualifier=None, format=None):
         """ Constructs an AttributeQuery 
@@ -507,7 +474,7 @@ class Saml2Client:
         
         return attr_query
     
-    def attribute_request(self, subject_id, issuer, destination, 
+    def attribute_query(self, subject_id, issuer, destination, 
                 attribute=None, sp_name_qualifier=None, name_qualifier=None, 
                 format=None, log=None):
         """ Does a attribute request from an attribute authority
@@ -524,7 +491,7 @@ class Saml2Client:
         """
         
         session_id = sid()
-        request = self.create_attribute_request(session_id, subject_id, 
+        request = self.create_attribute_query(session_id, subject_id, 
                     issuer, destination, attribute, sp_name_qualifier, 
                     name_qualifier, format=format)
         
@@ -647,7 +614,7 @@ def print_response(resp):
 def d_init_request(id, destination):
     return {
         "id": id,
-        "version": "2.0",
+        "version": VERSION,
         "issue_instant": instant(),
         "destination": destination,
     }
