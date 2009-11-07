@@ -134,7 +134,13 @@ def _parse_xmlsec_output(output):
             return False
     return False
         
-def verify_signature(xmlsec_binary, input, der_file):
+def verify_signature_assertion(xmlsec_binary, input, cert_file):
+    return verify_signature(xmlsec_binary, input, cert_file,
+                            "der",
+                            "urn:oasis:names:tc:SAML:2.0:assertion:Assertion")
+    
+def verify_signature(xmlsec_binary, input, cert_file, 
+                        cert_type="der", node_name=NODE_NAME):
     """ Verifies the signature of a XML document.
     
     :param xmlsec_binary: The xmlsec1 binaries to be used
@@ -145,16 +151,21 @@ def verify_signature(xmlsec_binary, input, der_file):
     fil_p, fil = make_temp("%s" % input, decode=False)
     
     com_list = [xmlsec_binary, "--verify",
-                "--pubkey-cert-der", der_file, 
+                "--pubkey-cert-%s" % cert_type, cert_file, 
                 "--id-attr:%s" % ID_ATTR, 
-                NODE_NAME, fil]
+                node_name, fil]
 
     if _TEST_: 
         print " ".join(com_list)
-    verified = _parse_xmlsec_output(Popen(com_list, 
-                                    stderr=PIPE).communicate()[1])
+
+    output = Popen(com_list, stderr=PIPE).communicate()[1]
+    verified = _parse_xmlsec_output(output)
+
     if _TEST_:
+        print output
         print "Verify result: '%s'" % (verified,)
+        fil_p.seek(0)
+        print fil_p.read()
 
     return verified
     
