@@ -18,10 +18,11 @@
 """Contains classes and functions that a SAML2.0 Identity provider (IdP) 
 or attribute authority (AA) may use to conclude its tasks.
 """
-from saml2 import saml, samlp
+from saml2 import saml, samlp, VERSION
 from saml2.utils import sid, decode_base64_and_inflate, make_instance
 from saml2.time_util import instant, in_a_while
 from saml2.metadata import MetaData
+from saml2.config import Config
 
 class VersionMismatch(Exception):
     pass
@@ -60,40 +61,12 @@ def klassdict(klass, text=None, **kwargs):
     return spec
     
 class Server(object):
-    def __init__(self, config, log=None):
-        if config:
-            self.verify_conf(config)
+    def __init__(self, config_file, log=None):
+        if config_file:
+            self.conf = Config()
+            self.conf.load_file(config_file)
+            self.metadata = self.conf["metadata"]
         self.log = log
-
-    def verify_conf(self, conf_file):
-        """ """
-        
-        self.conf = eval(open(conf_file).read())
-        
-        # check for those that have to be there
-        assert "xmlsec_binary" in self.conf
-        #assert "service_url" in self.conf
-        assert "entityid" in self.conf
-        
-        if "key_file" not in self.conf:
-            self.conf["key_file"] = None
-        else:
-            # If you have a key file you have to have a cert file
-            assert "cert_file" in self.conf
-            
-        if "metadata" in self.conf:
-            md = MetaData()
-            for mdfile in self.conf["metadata"]:
-                md.import_metadata(open(mdfile).read())
-            self.metadata = md
-        else:
-            self.metadata = None
-        
-        if "virtual_organization" in self.conf:
-            if "nameid_format" not in self.conf:
-                self.conf["nameid_format"] = NAMEID_FORMAT_TRANSIENT
-
-        print "Configuration: %s" % (self.conf,)
         
     def issuer(self):
         return klassdict( saml.Issuer, self.conf["entityid"],
@@ -154,7 +127,7 @@ class Server(object):
         
     def assertion(self, text="", **kwargs):
         kwargs.update({
-            "version": "2.0",
+            "version": VERSION,
             "id" : sid(),
             "issue_instant" : instant(),
         })
@@ -164,7 +137,7 @@ class Server(object):
 
         kwargs.update({
             "id" : sid(),
-            "version": "2.0",
+            "version": VERSION,
             "issue_instant" : instant(),
         })
         if signature:
@@ -172,14 +145,14 @@ class Server(object):
         
         return kwargs
     
-    def parse_request(self, enc_request):
+    def parse_authn_request(self, enc_request):
         request_xml = decode_base64_and_inflate(enc_request)
         request = samlp.authn_request_from_string(request_xml)
         
         return_destination = request.assertion_consumer_service_url
         # request.destination should be me 
         id = request.id # put in in_reply_to
-        if request.version != "2.0":
+        if request.version != VERSION:
             raise VersionMismatch(
                         "can't work with version %s" % request.version)
         spentityid = request.issuer.text
@@ -206,6 +179,11 @@ class Server(object):
             name_id_policies = policy.format
                 
         return (consumer_url, id, name_id_policies, spentityid)
+        
+    def parse_attribute_query(self, xml_string):
+        query = samlp.attribute_query_from_string(xml_string)
+        assert query.version == VERSION
+        assert query.destination == self.conf["service_url"]
         
     def do_attribute_statement(self, identity):
         """
