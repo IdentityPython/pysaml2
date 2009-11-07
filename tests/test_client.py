@@ -3,7 +3,7 @@
 
 from saml2.client import Saml2Client
 from saml2 import samlp, client
-from saml2 import saml, utils
+from saml2 import saml, utils, config
 
 XML_RESPONSE_FILE = "tests/saml_signed.xml"
 XML_RESPONSE_FILE2 = "tests/saml2_response.xml"
@@ -54,7 +54,8 @@ REQ1 = """<?xml version='1.0' encoding='UTF-8'?>
 
 class TestClient:
     def setup_class(self):
-        conf = client.verify_sp_conf("tests/server.config")
+        conf = config.Config()
+        conf.load_file("tests/server.config")
         self.client = Saml2Client({},conf)
     
     def test_verify_1(self):
@@ -96,7 +97,7 @@ class TestClient:
         assert name_id == "_242f88493449e639aab95dd9b92b1d04234ab84fd8"
 
     def test_create_attribute_query1(self):
-        req = self.client.create_attribute_request("1", 
+        req = self.client.create_attribute_query("1", 
             "E8042FB4-4D5B-48C3-8E14-8EDD852790DD",
             "http://vo.example.com/sp1",
             "https://idp.example.com/idp/" )
@@ -114,7 +115,7 @@ class TestClient:
         assert issuer.text == "http://vo.example.com/sp1"
         
     def test_create_attribute_query2(self):
-        req = self.client.create_attribute_request("1", 
+        req = self.client.create_attribute_query("1", 
             "E8042FB4-4D5B-48C3-8E14-8EDD852790DD", 
             "http://vo.example.com/sp1",
             "https://idp.example.com/idp/",
@@ -155,7 +156,7 @@ class TestClient:
         assert set(seen) == set(["givenName","surname","email"])
         
     def test_create_attribute_query_3(self):
-        req = self.client.create_attribute_request("1",
+        req = self.client.create_attribute_query("1",
                 "_e7b68a04488f715cda642fbdd90099f5", 
                 "urn:mace:umu.se:saml/rolandsp",
                 "https://aai-demo-idp.switch.ch/idp/shibboleth",

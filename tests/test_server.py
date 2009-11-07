@@ -283,7 +283,7 @@ class TestServer():
                         
         intermed = utils.deflate_and_base64_encode("%s" % authn_request)
         # should raise an error because faulty spentityid
-        raises(OtherError,self.server.parse_request,intermed)
+        raises(OtherError,self.server.parse_authn_request,intermed)
         
     def test_parse_faulty_request_to_err_status(self):
         authn_request = client.d_authn_request(
@@ -296,7 +296,7 @@ class TestServer():
                         
         intermed = utils.deflate_and_base64_encode("%s" % authn_request)
         try:
-            self.server.parse_request(intermed)
+            self.server.parse_authn_request(intermed)
             status = None
         except OtherError, oe:
             print oe.args
@@ -323,9 +323,9 @@ class TestServer():
                         )
                         
         intermed = utils.deflate_and_base64_encode("%s" % authn_request)
-        (consumer_url, id, name_id_policies, sp) = self.server.parse_request(
-                                                    intermed)
-                                                    
+        (consumer_url, id, name_id_policies, 
+                            sp) = self.server.parse_authn_request(intermed)
+                                                        
         assert consumer_url == "http://localhost:8087/"
         assert id == "1"
         assert name_id_policies == saml.NAMEID_FORMAT_TRANSIENT
