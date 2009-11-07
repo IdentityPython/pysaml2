@@ -25,19 +25,23 @@ from tempfile import NamedTemporaryFile
 from saml2 import md, BINDING_HTTP_POST
 from saml2 import samlp, BINDING_HTTP_REDIRECT, BINDING_SOAP
 from saml2.time_util import str_to_time
-from saml2.sigver import make_temp, cert_from_key_info
-    
+from saml2.sigver import make_temp, cert_from_key_info, verify_signature
+import httplib2
+import hashlib
+        
 class MetaData(object):
     """ A class to manage metadata information """
     
-    def __init__(self, log=None):
+    def __init__(self, xmlsec_binary=None, log=None):
         self._loc_key = {}
         self._loc_bind = {}
         self.entity = {}
         self.valid_to = None
         self.cache_until = None
         self.log = log
-        
+        self.xmlsec_binary = xmlsec_binary
+        self.http = httplib2.Http()
+
     def _vo_metadata(self, entity_descriptor, entity, tag):
         """
         Pick out the Affiliation descriptors from an entity
@@ -180,8 +184,6 @@ class MetaData(object):
         certificates from a metadata file.
     
         :param xml_str: The metadata as a XML string.
-        :return: Dictionary with location as keys and 2-tuples of organization
-            distinguised names and certs as values.
         """
 
         now = time.gmtime()
@@ -208,7 +210,28 @@ class MetaData(object):
                 entity["contact"] = entity_descriptor.contact
             except:
                 pass
-                    
+                   
+    def import_external_metadata(self, url, cert=None):
+        """ Imports metadata by the use of HTTP GET.
+        If the fingerprint is known the file will be checked for
+        compliance before it is imported.
+        
+        :param url: The URL pointing to the metadata
+        :param hexdigest: A 40 character long hexdigest
+        :return: True if the import worked out, otherwise False
+        """
+        (response, content) = self.http.request(url, "GET")
+        if response.status == 200:
+            if verify_signature(self.xmlsec_binary, content, cert, "pem",
+                    "%s:%s" % (md.EntitiesDescriptor.c_namespace,
+                            md.EntitiesDescriptor.c_tag)):
+                self.import_metadata(content)
+                return True
+        else:
+            print "Response status", response.status
+        return False
+
+
     def single_sign_on_services(self, entity_id, 
                                 binding = BINDING_HTTP_REDIRECT):
         """ Get me all single-sign-on services that supports the specified
