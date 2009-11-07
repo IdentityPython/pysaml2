@@ -60,7 +60,7 @@ class AttributeResolver():
                 for attr_serv in ass.attribute_service:
                     log and log.info("Send attribute request to %s" % \
                                         attr_serv.location)
-                    resp = self.saml2client.attribute_request(subject_id, 
+                    resp = self.saml2client.attribute_query(subject_id, 
                                 issuer, 
                                 attr_serv.location, 
                                 format=nameid_format, log=log)
