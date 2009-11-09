@@ -82,6 +82,9 @@ class Server(object):
             status_message=exception.args[0],
         )
         
+    def name_id(self, text="", **kwargs):
+        return klassdict(saml.NameID, text, **kwargs)
+
     def status_message(self, text="", **kwargs):
         return klassdict(samlp.StatusMessage, text, **kwargs)
 
@@ -180,10 +183,22 @@ class Server(object):
                 
         return (consumer_url, id, name_id_policies, spentityid)
         
+    def allowed_issuer(self, issuer):
+        return True
+        
     def parse_attribute_query(self, xml_string):
         query = samlp.attribute_query_from_string(xml_string)
         assert query.version == VERSION
         assert query.destination == self.conf["service_url"]
+
+        self.allowed_issuer(query.issuer)
+        
+        # verify signature
+        
+        return (subject, attribute)
+        
+    def find_subject(self, subject, attribute=None):
+        pass
         
     def do_attribute_statement(self, identity):
         """
@@ -234,8 +249,9 @@ class Server(object):
             destination=consumer_url,
             status=self.success_status(),
             assertion=self.assertion(
-                subject = self.subject(subject_id,
-                    name_id=saml.NAMEID_FORMAT_TRANSIENT,
+                subject = self.subject(
+                    name_id=self.name_id(subject_id,
+                        format=saml.NAMEID_FORMAT_TRANSIENT),
                     method=saml.SUBJECT_CONFIRMATION_METHOD_BEARER,
                     subject_confirmation=self.subject_confirmation(
                         subject_confirmation_data=self.subject_confirmation_data(
