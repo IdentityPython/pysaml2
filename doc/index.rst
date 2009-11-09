@@ -19,6 +19,7 @@ Contents:
    install
    howto
    saml2
+   examples/index
    
 Indices and tables
 ==================

@@ -19,13 +19,22 @@ conenction you have to the AttributeAuthority.
 
 But anyway, you get may get my point. This is middleware stuff here !
 
-Supposted to be used built-in in a webapplication.
-To be more specific it is built to fit into a 
+Pysaml2 is built to fit into a 
 `WSGI  <http://www.python.org/dev/peps/pep-0333/>`_ application
 
-So to get an example of where PySAML2 could fit in, you should download 
-my repoze.who.plugin.saml2 package which you can find here:
+There are more than one WSGI framework out there, so when I started this work
+I just picked one I liked, namely `Repoze <http://repoze.org/>`_ .
+Or to be more specific I choose to work within the context of
+`Repoze.who <http://static.repoze.org/whodocs/>`_.
 
-bzr branch lp:~roland-hedberg/repoze.who.plugins.saml2/main
+So, in order to get something up and running for you to play with, I've
+put a couple of examples in this package all of them based on the use of
+Pysaml2 together with Repoze.
 
-and go from there.
+You can easily get repoze.who from
+`PyPi <http://pypi.python.org/pypi/repoze.who>`_ 
+preferrably by uing easy_install.
+
+And now on to the examples:
+    
+    SAML2 Service provider :ref:`sp`
