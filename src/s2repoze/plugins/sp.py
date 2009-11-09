@@ -43,10 +43,11 @@ from repoze.who.interfaces import IChallenger, IIdentifier, IAuthenticator
 from repoze.who.interfaces import IMetadataProvider
 from repoze.who.plugins.form import FormPluginBase
 
-from saml2.client import Saml2Client, verify_sp_conf
+from saml2.client import Saml2Client
 from saml2.attribute_resolver import AttributeResolver
 from saml2.metadata import MetaData
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
+from saml2.config import Config
 
 def construct_came_from(environ):
     """ The URL that the user used when the process where interupted 
@@ -72,7 +73,9 @@ class SAML2Plugin(FormPluginBase):
         self.path_toskip = path_toskip
         self.debug = debug        
         
-        self.conf = verify_sp_conf(saml_conf_file)
+        self.conf = Config()
+        self.conf.load_file(saml_conf_file)
+        
         try:
             self.metadata = self.conf["metadata"]
         except KeyError:
@@ -201,7 +204,7 @@ class SAML2Plugin(FormPluginBase):
         identity["login"] = name_id
         identity["password"] = ""
         identity['repoze.who.userid'] = name_id
-        identity.update(ava)
+        identity["user"] = ava
         if self.debug:
             logger and logger.info("Identity: %s" % identity)
         return identity
@@ -216,7 +219,7 @@ class SAML2Plugin(FormPluginBase):
             ava = self.store[identity['repoze.who.userid']]
             if self.debug:
                 logger and logger.info("Adding %s" % ava)
-            identity.update(ava)
+            identity["user"].update(ava)
             self.store[identity['repoze.who.userid']] = identity
         except KeyError:
             pass
@@ -226,7 +229,8 @@ class SAML2Plugin(FormPluginBase):
             if "virtual_organization" in self.conf:
                 logger and logger.info("** Do VO aggregation **")
                 try:
-                    subject_id = identity[self.conf["common_identifier"]][0]
+                    subject_id = identity["user"][
+                                        self.conf["common_identifier"]][0]
                 except KeyError:
                     return
                 logger and logger.info("SubjectID: %s" % subject_id)
@@ -250,9 +254,9 @@ class SAML2Plugin(FormPluginBase):
                     for attr,val in extra.items():
                         try:
                             # might lead to duplicates !
-                            identity[attr].extend(val)
+                            identity["user"][attr].extend(val)
                         except KeyError:
-                            identity[attr] = val
+                            identity["user"][attr] = val
 
                     # Only do this once
                     identity["pysaml2_vo_expanded"] = 1
