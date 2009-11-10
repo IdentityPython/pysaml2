@@ -69,9 +69,16 @@ def entity_descriptor(confd):
             
     return ed
 
+def entities_descriptor(eds):
+    return utils.make_instance(md.EntitiesDescriptor,{
+        "name": "urn:mace:umu.se:saml:test",
+        "valid_until": in_a_while(30),
+        "entity_descriptor": eds})
+
 if __name__ == "__main__":
     import sys
+    eds = []
     for conf in sys.argv[1:]:
         confd = eval(open(conf).read())
-        print utils.make_instance(md.EntityDescriptor, 
-                                    entity_descriptor(confd))
+        eds.append(entity_descriptor(confd))
+    print entities_descriptor(eds)
