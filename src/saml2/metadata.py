@@ -27,7 +27,10 @@ from saml2 import samlp, BINDING_HTTP_REDIRECT, BINDING_SOAP
 from saml2.time_util import str_to_time
 from saml2.sigver import make_temp, cert_from_key_info, verify_signature
 import httplib2
-import hashlib
+try:
+    from hashlib import md5
+except ImportError:
+    from md5 import md5
         
 class MetaData(object):
     """ A class to manage metadata information """
