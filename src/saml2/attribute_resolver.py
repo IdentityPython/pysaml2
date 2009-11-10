@@ -31,7 +31,8 @@ from saml2.client import Saml2Client
 
 DEFAULT_BINDING = saml2.BINDING_HTTP_REDIRECT
 
-class AttributeResolver():
+class AttributeResolver(object):
+
     def __init__(self, environ, metadata=None, xmlsec_binary=None,
                         key_file=None, cert_file=None):
         self.metadata = metadata
