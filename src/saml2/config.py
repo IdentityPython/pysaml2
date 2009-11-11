@@ -6,20 +6,21 @@ from saml2 import metadata
 
 class Config(dict):
     def sp_check(self, config):
-        md = config["metadata"]
-        
-        if "idp_entity_id" in config:
-            try:
-                config["idp_url"] = md.single_sign_on_services(
-                                config["idp_entity_id"])[0]
-            except Exception:
-                print "idp_entity_id",config["idp_entity_id"]
-                print ("idps in metadata",
-                    [e for e,d in md.entity.items() if "idp_sso" in d])
-                print "metadata entities", md.entity.keys()
-                for ent, dic in md.entity.items():
-                    print ent, dic.keys()
-                raise
+        if "metadata" in config:
+            md = config["metadata"]
+            
+            if "idp_entity_id" in config:
+                try:
+                    config["idp_url"] = md.single_sign_on_services(
+                                    config["idp_entity_id"])[0]
+                except Exception:
+                    print "idp_entity_id",config["idp_entity_id"]
+                    print ("idps in metadata",
+                        [e for e,d in md.entity.items() if "idp_sso" in d])
+                    print "metadata entities", md.entity.keys()
+                    for ent, dic in md.entity.items():
+                        print ent, dic.keys()
+                    raise
                 
         assert config["idp_url"]
     
