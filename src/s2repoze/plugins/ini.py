@@ -2,39 +2,36 @@ import ConfigParser, os
 
 from zope.interface import implements
 
-from repoze.who.interfaces import IChallenger, IIdentifier, IAuthenticator
+#from repoze.who.interfaces import IChallenger, IIdentifier, IAuthenticator
 from repoze.who.interfaces import IMetadataProvider
 
 class INIMetadataProvider(object):
     
     implements(IMetadataProvider)
     
-    def __init__(self, ini_file):
+    def __init__(self, ini_file, key_attribute):
 
         self.users = ConfigParser.ConfigParser()
         self.users.readfp(open(ini_file))
+        self.key_attribute = key_attribute
         
-#    def authenticate(self, environ, identity):
-#        try:
-#            username = identity['login']
-#            password = identity['password']
-#        except KeyError:
-#            return None
-#        
-#        success = User.authenticate(username, password)
-#        
-#        return success
-
     def add_metadata(self, environ, identity):
         logger = environ.get('repoze.who.logger','')
 
-        username = identity.get('repoze.who.userid')
-        logger and logger.info("Identity: %s (before)" % (identity.items(),))
+        key = identity.get('repoze.who.userid')
+        #logger and logger.info("Identity: %s (before)" % (identity.items(),))
         try:
-            identity["user"] = self.users.items(username)
-            logger and logger.info("Identity: %s (after)" % (identity.items(),))
+            if self.key_attribute:
+                for sec in self.users.sections():
+                    if self.users.has_option(sec,self.key_attribute):
+                        if key in self.users.get(sec, self.key_attribute):
+                            identity["user"] = dict(self.users.items(sec))
+                            break
+            else:
+                identity["user"] = dict(self.users.items(key))
+            #logger and logger.info("Identity: %s (after)" % (identity.items(),))
         except ValueError:
             pass
         
-def make_plugin(ini_file):
-    return INIMetadataProvider(ini_file)
+def make_plugin(ini_file, key_attribute=""):
+    return INIMetadataProvider(ini_file, key_attribute)

@@ -4,26 +4,39 @@
 
 from saml2 import metadata
 
+def entity_id2url(md, entity_id):
+    try:
+        # grab the first one
+        return md.single_sign_on_services(entity_id)[0]
+    except Exception:
+        print "idp_entity_id",entity_id
+        print ("idps in metadata",
+            [e for e,d in md.entity.items() if "idp_sso" in d])
+        print "metadata entities", md.entity.keys()
+        for ent, dic in md.entity.items():
+            print ent, dic.keys()
+        return None
+
 class Config(dict):
     def sp_check(self, config):
+        assert "idp" in config
+        
         if "metadata" in config:
             md = config["metadata"]
             
-            if "idp_entity_id" in config:
-                try:
-                    config["idp_url"] = md.single_sign_on_services(
-                                    config["idp_entity_id"])[0]
-                except Exception:
-                    print "idp_entity_id",config["idp_entity_id"]
-                    print ("idps in metadata",
-                        [e for e,d in md.entity.items() if "idp_sso" in d])
-                    print "metadata entities", md.entity.keys()
-                    for ent, dic in md.entity.items():
-                        print ent, dic.keys()
-                    raise
+            if "entity_id" in config["idp"]:
+                if not "url" in config["idp"]:
+                    config["idp"]["url"] = []
+                urls = config["idp"]["url"]
+                for eid in config["idp"]["entity_id"]:
+                    url = entity_id2url(md, eid)
+                    if url:
+                        if url not in urls:
+                            urls.append(url)
                 
-        assert config["idp_url"]
-    
+        assert "sp" in config["service"]
+        assert "url" in config["service"]["sp"]
+            
     def idp_check(self, config):
         pass
         
@@ -50,7 +63,6 @@ class Config(dict):
         assert "xmlsec_binary" in config
         assert "service" in config
         assert "entityid" in config
-        assert "service_url" in config
         
         if "key_file" in config:
             # If you have a key file you have to have a cert file

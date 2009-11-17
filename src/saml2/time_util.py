@@ -162,7 +162,7 @@ def add_duration(tid, duration):
 
 # ---------------------------------------------------------------------------
 
-def in_a_while(days=0, seconds=0, microseconds=0, milliseconds=0,
+def time_in_a_while(days=0, seconds=0, microseconds=0, milliseconds=0,
                 minutes=0, hours=0, weeks=0):
     """
     format of timedelta:
@@ -173,7 +173,17 @@ def in_a_while(days=0, seconds=0, microseconds=0, milliseconds=0,
     t = timedelta(*[days,seconds,microseconds,milliseconds,minutes,
                     hours,weeks])
     soon = now + t
-    return soon.strftime(TIME_FORMAT)
+    return soon
+
+def in_a_while(days=0, seconds=0, microseconds=0, milliseconds=0,
+                minutes=0, hours=0, weeks=0):
+    """
+    format of timedelta:
+        timedelta([days[, seconds[, microseconds[, milliseconds[,
+                    minutes[, hours[, weeks]]]]]]])
+    """
+    return time_in_a_while(days, seconds, microseconds, milliseconds,
+                minutes, hours, weeks).strftime(TIME_FORMAT)
 
 # ---------------------------------------------------------------------------
 

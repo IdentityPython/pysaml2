@@ -1,15 +1,68 @@
 #!/usr/bin/env python
 import os 
 from saml2 import utils, md, samlp, BINDING_HTTP_POST, BINDING_HTTP_REDIRECT
+from saml2 import BINDING_SOAP
 from saml2.time_util import in_a_while
 
+
+def do_sp_sso_descriptor(sp, cert):
+    return {
+        "protocol_support_enumeration": samlp.NAMESPACE,
+        "want_assertions_signed": True,
+        "authn_requests_signed": False,
+        "assertion_consumer_service": {
+            "binding": BINDING_HTTP_POST ,
+            "location": sp["url"],
+            "index": 0,
+            },
+        "key_descriptor":{
+            "key_info": {
+                "x509_data": {
+                    "x509_certificate": cert
+                    }
+                }
+            },
+        }
+
+def do_idp_sso_descriptor(idp, cert):
+    return {
+        "protocol_support_enumeration": samlp.NAMESPACE,
+        "want_authn_requests_signed": True,
+        "single_sign_on_service": {
+            "binding": BINDING_HTTP_REDIRECT ,
+            "location": idp["url"],
+            },
+        "key_descriptor":{
+            "key_info": {
+                "x509_data": {
+                    "x509_certificate": cert
+                    }
+                }
+            },
+        }
+
+def do_aa_descriptor(aa, cert):
+    return {
+        "protocol_support_enumeration": samlp.NAMESPACE,
+        "attribute_service": {
+            "binding": BINDING_SOAP ,
+            "location": aa["url"],
+            },
+        "key_descriptor":{
+            "key_info": {
+                "x509_data": {
+                    "x509_certificate": cert
+                    }
+                }
+            },
+        }
 
 def entity_descriptor(confd):
     mycert = "".join(open(confd["cert_file"]).readlines()[1:-1])
     
     ed = {
         "name": "http://%s/saml/test" % os.uname()[1],
-        "valid_until": in_a_while(days=30),
+        "valid_until": in_a_while(hours=96),
         "entity_id": confd["entityid"],
     }
 
@@ -33,46 +86,21 @@ def entity_descriptor(confd):
         
     if "sp" in confd["service"]:
         # The SP
-        ed["sp_sso_descriptor"] = {
-            "protocol_support_enumeration": samlp.NAMESPACE,
-            "want_assertions_signed": True,
-            "authn_requests_signed": False,
-            "assertion_consumer_service": {
-                "binding": BINDING_HTTP_POST ,
-                "location": confd["service_url"],
-                "index": 0,
-                },
-            "key_descriptor":{
-                "key_info": {
-                    "x509_data": {
-                        "x509_certificate": mycert
-                        }
-                    }
-                },
-            }
-    elif "idp" in confd["service"]:
-        ed["idp_sso_descriptor"] = {
-            "protocol_support_enumeration": samlp.NAMESPACE,
-            "want_authn_requests_signed": True,
-            "single_sign_on_service": {
-                "binding": BINDING_HTTP_REDIRECT ,
-                "location": confd["service_url"],
-                },
-            "key_descriptor":{
-                "key_info": {
-                    "x509_data": {
-                        "x509_certificate": mycert
-                        }
-                    }
-                },
-            }
+        ed["sp_sso_descriptor"] = do_sp_sso_descriptor(confd["service"]["sp"],
+                                    mycert)
+    if "idp" in confd["service"]:
+        ed["idp_sso_descriptor"] = do_idp_sso_descriptor(
+                                            confd["service"]["idp"],mycert)
+    if "aa" in confd["service"]:
+        ed["attribute_authority_descriptor"] = do_aa_descriptor(
+                                            confd["service"]["aa"],mycert)
             
     return ed
 
 def entities_descriptor(eds):
     return utils.make_instance(md.EntitiesDescriptor,{
         "name": "urn:mace:umu.se:saml:test",
-        "valid_until": in_a_while(30),
+        "valid_until": in_a_while(hours=96),
         "entity_descriptor": eds})
 
 if __name__ == "__main__":

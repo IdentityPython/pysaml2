@@ -23,6 +23,7 @@ import urlparse
 import urllib
 import cgi
 import os
+import time
 
 from paste.httpheaders import CONTENT_LENGTH
 from paste.httpheaders import CONTENT_TYPE
@@ -48,6 +49,7 @@ from saml2.attribute_resolver import AttributeResolver
 from saml2.metadata import MetaData
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.config import Config
+from saml2.cache import Cache
 
 def construct_came_from(environ):
     """ The URL that the user used when the process where interupted 
@@ -65,8 +67,8 @@ class SAML2Plugin(FormPluginBase):
 
     implements(IChallenger, IIdentifier, IAuthenticator, IMetadataProvider)
     
-    def __init__(self, rememberer_name, saml_conf_file, store,
-                path_logout, path_toskip, debug):
+    def __init__(self, rememberer_name, saml_conf_file, virtual_organization,
+                cache, path_logout, path_toskip, debug):
         
         self.rememberer_name = rememberer_name
         self.path_logout = path_logout
@@ -75,7 +77,17 @@ class SAML2Plugin(FormPluginBase):
         
         self.conf = Config()
         self.conf.load_file(saml_conf_file)
-        
+        self.sp = self.conf["service"]["sp"]
+        if virtual_organization:
+            self.vo = virtual_organization
+            try:
+                self.vo_conf = self.conf[
+                                "virtual_organization"][virtual_organization]
+            except KeyError:
+                self.vo = None
+        else:
+            self.vo = None
+            
         try:
             self.metadata = self.conf["metadata"]
         except KeyError:
@@ -83,10 +95,10 @@ class SAML2Plugin(FormPluginBase):
         self.outstanding_authn = {}
         self.iam = os.uname()[1]
         
-        if store==u"file":
-            self.store = shelve.open(store_filename)
-        elif store==u"mem":
-            self.store = {}
+        if cache:
+            self.cache = Cache(cache)
+        else:
+            self.cache = Cache()
          
     #### IChallenger ####
     def challenge(self, environ, status, app_headers, forget_headers):
@@ -104,11 +116,20 @@ class SAML2Plugin(FormPluginBase):
         came_from = construct_came_from(environ)
         if self.debug:
             logger and logger.info("RelayState >> %s" % came_from)
+        
+        try:
+            vo = environ["myapp.vo"]
+        except KeyError:
+            vo = self.vo
+        logger and logger.info("VO: %s" % vo)
+        # If more than one idp, I have to do wayf
         (sid, result) = cl.authenticate(self.conf["entityid"], 
-                                        self.conf["idp_url"], 
-                                        self.conf["service_url"], 
-                                        self.conf["my_name"], 
-                                        relay_state=came_from, log=logger)
+                                        self.conf["idp"]["url"][0], 
+                                        self.sp["url"], 
+                                        self.sp["my_name"], 
+                                        relay_state=came_from, 
+                                        log=logger,
+                                        vo=vo)
         self.outstanding_authn[sid] = came_from
             
         if self.debug:
@@ -116,7 +137,7 @@ class SAML2Plugin(FormPluginBase):
         if isinstance(result, tuple):
             return HTTPTemporaryRedirect(headers=[result])
         else :
-            # possible to normally not used
+            # possible though normally not used
             body = "\n".join(result)
             def auth_form(environ, start_response):
                 content_length = CONTENT_LENGTH.tuples(str(len(result)))
@@ -133,8 +154,8 @@ class SAML2Plugin(FormPluginBase):
         
         uri = environ.get('REQUEST_URI',construct_url(environ))
         if self.debug:
-            logger and logger.info("environ.keys(): %s" % environ.keys())
-            logger and logger.info("Environment: %s" % environ)
+            #logger and logger.info("environ.keys(): %s" % environ.keys())
+            #logger and logger.info("Environment: %s" % environ)
             logger and logger.info('identify uri: %s' % (uri,))
 
         query = parse_dict_querystring(environ)
@@ -166,6 +187,13 @@ class SAML2Plugin(FormPluginBase):
 
         post_env = environ.copy()
         post_env['QUERY_STRING'] = ''
+        
+        if environ["CONTENT_LENGTH"]:
+            body = environ["wsgi.input"].read(int(environ["CONTENT_LENGTH"]))
+            from StringIO import StringIO
+            environ['wsgi.input'] = StringIO(body)
+            environ['s2repoze.body'] = body
+
         post = cgi.FieldStorage(
             fp=environ['wsgi.input'],
             environ=post_env,
@@ -173,18 +201,26 @@ class SAML2Plugin(FormPluginBase):
         )
 
         if self.debug:
-            logger and logger.info('identify post keys: %s' % (post.keys(),))
+            logger and logger.info('identify post: %s' % (post,))
 
+        try:
+            if not post.has_key("SAMLResponse"):
+                environ["post.fieldstorage"] = post
+                return {}
+        except TypeError:
+            environ["post.fieldstorage"] = post
+            return {}
+            
         # check for SAML2 authN
         cl = Saml2Client(environ, self.conf)
         try:
-            (ava, came_from) = cl.response(post, 
+            (ava, came_from, issuer, not_on_or_after) = cl.response(post, 
                                             self.conf["entityid"], 
                                             self.outstanding_authn,
                                             logger)
             name_id = ava["__userid"]
             del ava["__userid"]
-            self.store[name_id] = ava
+            self.cache.set( name_id, issuer, ava, not_on_or_after)
             if self.debug:
                 logger and logger.info("stored %s with key %s" % (ava, name_id))
         except TypeError:
@@ -205,62 +241,94 @@ class SAML2Plugin(FormPluginBase):
         identity["password"] = ""
         identity['repoze.who.userid'] = name_id
         identity["user"] = ava
+        #identity["issuer"] = issuer
         if self.debug:
             logger and logger.info("Identity: %s" % identity)
         return identity
 
     # IMetadataProvider
     def add_metadata(self, environ, identity):
+        subject_id = identity['repoze.who.userid']
+
         if self.debug:
             logger = environ.get('repoze.who.logger','')
-            logger and logger.info(
-                "add_metadata for %s" % identity['repoze.who.userid'])
+            if logger:
+                logger.info(
+                    "add_metadata for %s" % subject_id)
+                logger.info(
+                    "Known subjects: %s" % self.cache.subjects())
+                try:
+                    logger.info(
+                        "Issuers: %s" % self.cache.issuers(subject_id))
+                except KeyError:
+                    pass
+            
+        if "user" not in identity:
+            identity["user"] = {}
         try:
-            ava = self.store[identity['repoze.who.userid']]
+            (ava, old) = self.cache.get_all(subject_id)
+            now = time.gmtime()        
             if self.debug:
                 logger and logger.info("Adding %s" % ava)
             identity["user"].update(ava)
-            self.store[identity['repoze.who.userid']] = identity
         except KeyError:
             pass
 
         if "pysaml2_vo_expanded" not in identity:
             # is this a Virtual Organization situation
-            if "virtual_organization" in self.conf:
+            if self.vo:
                 logger and logger.info("** Do VO aggregation **")
-                try:
-                    subject_id = identity["user"][
-                                        self.conf["common_identifier"]][0]
-                except KeyError:
-                    return
-                logger and logger.info("SubjectID: %s" % subject_id)
-                ar = AttributeResolver(environ, self.metadata, 
-                                        self.conf["xmlsec_binary"],
-                                        self.conf["key_file"],
-                                        self.conf["cert_file"])
+                #try:
+                    # This ought to be caseignore 
+                    #subject_id = identity["user"][
+                    #                    self.vo_conf["common_identifier"]][0]
+                #except KeyError:
+                #    logger and logger.error("** No common identifier **")
+                #    return
+                logger and logger.info(
+                    "SubjectID: %s, VO:%s" % (subject_id, self.vo))
+                
                 vo_members = [
-                            member for member in self.metadata.vo_members(
-                                self.conf["virtual_organization"])\
-                                if member != self.conf["md_idp"]]
+                    member for member in self.metadata.vo_members(self.vo)\
+                        if member not in self.conf["idp"]["entity_id"]]
+                    
                 logger and logger.info("VO members: %s" % vo_members)
+                vo_members = [m for m in vo_members \
+                                if not self.cache.active(subject_id, m)]
+                logger and logger.info(
+                                "VO members (not cached): %s" % vo_members)
 
                 if vo_members:
+                    ar = AttributeResolver(environ, self.metadata, self.conf)
+                
+                    if "name_id_format" in self.vo_conf:
+                        name_id_format = self.vo_conf["name_id_format"]
+                        sp_name_qualifier=""
+                    else:
+                        sp_name_qualifier=self.vo
+                        name_id_format = ""
+                    
                     extra = ar.extend(subject_id, 
                             self.conf["entityid"], 
                             vo_members, 
-                            self.conf["nameid_format"],
+                            name_id_format=name_id_format,
+                            sp_name_qualifier=sp_name_qualifier,
                             log=logger)
 
-                    for attr,val in extra.items():
-                        try:
-                            # might lead to duplicates !
-                            identity["user"][attr].extend(val)
-                        except KeyError:
-                            identity["user"][attr] = val
+                    for issuer, tup in extra.items():
+                        (not_on_or_after, resp) = tup
+                        self.cache.set(subject_id, issuer, resp, 
+                                            not_on_or_after)
 
+                    logger.info(
+                        ">Issuers: %s" % self.cache.issuers(subject_id))
+                    logger.info(
+                        "AVA: %s" % (self.cache.get_all(subject_id),))
+                    identity["user"] = self.cache.get_all(subject_id)[0]
                     # Only do this once
                     identity["pysaml2_vo_expanded"] = 1
-                    self.store[identity['repoze.who.userid']] = identity
+                    #self.store[identity['repoze.who.userid']] = (
+                    #                        not_on_or_after, identity)
         
 # @return
 # used 2 times : one to get the ticket, the other to validate it
@@ -277,7 +345,9 @@ class SAML2Plugin(FormPluginBase):
 
 
 def make_plugin(rememberer_name=None, # plugin for remember
-                 store= "mem", # store for remember
+                 cache= "", # cache
+                 # Which virtual organization to support
+                 virtual_organization="", 
                  path_logout='', # regex url to logout
                  path_toskip='',  # regex url to skip
                  saml_conf="",
@@ -294,7 +364,8 @@ def make_plugin(rememberer_name=None, # plugin for remember
     path_logout = path_logout.lstrip().split('\n');
     path_toskip = path_toskip.lstrip().splitlines()
 
-    plugin = SAML2Plugin(rememberer_name, saml_conf, store,
+    plugin = SAML2Plugin(rememberer_name, saml_conf, 
+                virtual_organization, cache,
                 path_logout, path_toskip, debug)
     return plugin
 

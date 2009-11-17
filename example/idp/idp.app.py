@@ -2,9 +2,9 @@
 
 import re
 import base64
-from cgi import escape
+from cgi import escape, parse_qs
 import urllib
-import urlparse
+#import urlparse
 
 from saml2 import server
 from saml2.utils import make_instance, sid, decode_base64_and_inflate
@@ -76,7 +76,7 @@ def sso(environ, start_response, user, logger):
     logger and logger.info("Environ keys: %s" % environ.keys())
     if "QUERY_STRING" in environ:
         logger and logger.info("Query string: %s" % environ["QUERY_STRING"])
-        query = urlparse.parse_qs(environ["QUERY_STRING"])
+        query = parse_qs(environ["QUERY_STRING"])
     elif "s2repoze.qinfo" in environ:
         query = environ["s2repoze.qinfo"]
     # base 64 encoded request
@@ -125,7 +125,7 @@ def not_found(environ, start_response, logger):
 
 def not_authn(environ, start_response, logger):
     if "QUERY_STRING" in environ:
-        query = urlparse.parse_qs(environ["QUERY_STRING"])
+        query = parse_qs(environ["QUERY_STRING"])
         logger and logger.info("query: %s" % query)
     start_response('401 Unauthorized', [('Content-Type', 'text/plain')])
     return ['Unknown user']

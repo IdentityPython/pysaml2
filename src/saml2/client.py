@@ -46,6 +46,10 @@ LAX = True
 class Saml2Client:
     
     def __init__(self, environ, config=None):
+        """
+        :param environ:
+        :param config: A saml2.config.Config instance
+        """
         self.environ = environ
         if config:
             self.config = config
@@ -82,47 +86,7 @@ class Saml2Client:
     def scoping_from_metadata(self, entityid, location):
         name = metadata.name(entityid)
         return make_instance(self.scoping([self.idp_entry(name, location)]))
-
-    def create_authn_request(self, query_id, destination, service_url,
-                                spentityid, my_name, sp_name_qualifier=None,
-                                scoping=None):
-        """ Creates an Authenication Request
-        
-        :param query_id: Query identifier
-        :param destination: Where to send the request
-        :param service_url: The page to where the response MUST be sent.
-        :param spentityid: My official name
-        :param my_name: Who I am
-        :param sp_name_qualifier: The domain in which the name should be
-            valid
-        :param scoping: For which IdPs this query are aimed.
-        
-        :return: An authentication request
-        """
-        
-        authn_request = self._init_request(samlp.AuthnRequest(query_id),
-                                            destination)
-
-        authn_request.assertion_consumer_service_url = service_url
-        authn_request.protocol_binding = saml2.BINDING_HTTP_POST
-        authn_request.provider_name = my_name
-        if scoping:
-            authn_request.scoping = scoping
-            
-        name_id_policy = samlp.NameIDPolicy()
-        name_id_policy.allow_create = 'true'
-        if sp_name_qualifier:
-            name_id_policy.format = saml.NAMEID_FORMAT_PERSISTENT
-            name_id_policy.sp_name_qualifier = sp_name_qualifier
-        else:
-            name_id_policy.format = saml.NAMEID_FORMAT_TRANSIENT
-
-
-        authn_request.name_id_policy = name_id_policy
-        authn_request.issuer = saml.Issuer(text=spentityid)
-        
-        return authn_request
-                   
+                           
     def response(self, post, requestor, outstanding, log=None):
         """ Deal with the AuthnResponse
         
@@ -141,19 +105,54 @@ class Saml2Client:
         if post.has_key("SAMLResponse"):
             saml_response =  post['SAMLResponse'].value
             if saml_response:
-                (identity, came_from) = self.verify_response(
+                (identity, came_from, 
+                    not_on_or_after, response_issuer) = self.verify_response(
                                             saml_response, requestor, 
                                             outstanding, log, 
                                             context="AuthNReq")
             #relay_state = post["RelayState"].value
-            return (identity, came_from)
+            return (identity, came_from, response_issuer, not_on_or_after)
         else:
             return None
             
+    def authn_request(self, query_id, destination, service_url, spentityid, 
+                        my_name, vo="", scoping=None):
+
+        res = {
+            "id": query_id,
+            "version": VERSION,
+            "issue_instant": instant(),
+            "destination": destination,
+            "assertion_consumer_service_url": service_url,
+            "protocol_binding": saml2.BINDING_HTTP_POST,
+            "provider_name": my_name,
+        }
+        
+        if scoping:
+            res["scoping"] = scoping
+            
+        name_id_policy = {
+            "allow_create": "true"
+        }
+        
+        name_id_policy["format"] = saml.NAMEID_FORMAT_TRANSIENT
+        if vo:
+            try:
+                #if vo in self.config["virtual_organization"]:
+                name_id_policy["sp_name_qualifier"] = vo
+                name_id_policy["format"] = saml.NAMEID_FORMAT_PERSISTENT
+            except KeyError:
+                pass
+        
+        res["name_id_policy"] = name_id_policy
+        res["issuer"] = { "text": spentityid }
+        
+        return make_instance(samlp.AuthnRequest, res)
+
     def authenticate(self, spentityid, location="", service_url="", 
                         my_name="", relay_state="",
                         binding=saml2.BINDING_HTTP_REDIRECT, log=None,
-                        scoping=None):
+                        vo="", scoping=None):
         """ Either verifies an authentication Response or if none is present
         send an authentication request.
         
@@ -161,15 +160,16 @@ class Saml2Client:
         :param binding: How the authentication request should be sent to the 
             IdP
         :param location: Where the IdP is.
-        :param service_url: The service URL
+        :param service_url: The SP's service URL
         :param my_name: The providers name
         :param relay_state: To where the user should be returned after 
             successfull log in.
         :param binding: Which binding to use for sending the request
         :param log: Where to write log messages
+        :param vo: The entity_id of the virtual organization I'm a member of
         :param scoping: For which IdPs this query are aimed.
             
-        :return: AuthnRequest reponse
+        :return: AuthnRequest response
         """
         
         if log:
@@ -178,8 +178,8 @@ class Saml2Client:
             log.info("service_url: %s" % service_url)
             log.info("my_name: %s" % my_name)
         session_id = sid()
-        authen_req = "%s" % self.create_authn_request(session_id, location, 
-                                service_url, spentityid, my_name, scoping)
+        authen_req = "%s" % self.authn_request(session_id, location, 
+                                service_url, spentityid, my_name, vo, scoping)
         log and log.info("AuthNReq: %s" % authen_req)
         
         if binding == saml2.BINDING_HTTP_POST:
@@ -237,29 +237,32 @@ class Saml2Client:
         response = correctly_signed_response(decoded_xml, 
                         self.config["xmlsec_binary"], log=log)
         if not response:
-            log and log.error("Response was not correctly signed")
-            print "Response was not correctly signed"
+            if log:
+                log.error("Response was not correctly signed")
+                log.info(decoded_xml)
             return ({}, "")
         else:
             log and log.error("Response was correctly signed or nor signed")
             
         log and log.info("response: %s" % (response,))
         try:
-            (ava, name_id, came_from) = self.do_response(response, 
+            (ava, name_id, came_from, not_on_or_after) = self.do_response(
+                                                response, 
                                                 requestor, 
                                                 outstanding=outstanding, 
                                                 xmlstr=xmlstr, 
                                                 log=log, context=context)
+            issuer = response.issuer.text
         except AttributeError, exc:
             log and log.error("AttributeError: %s" % (exc,))
-            return ({}, "")
+            return ({}, "", 0, "")
         except Exception, exc:
             log and log.error("Exception: %s" % (exc,))
-            return ({}, "")
+            return ({}, "", 0, "")
                                     
         # should return userid and attribute value assertions
         ava["__userid"] = name_id
-        return (ava, came_from)
+        return (ava, came_from, not_on_or_after, issuer)
   
     def _verify_condition(self, assertion, requestor, log):
         # The Identity Provider MUST include a <saml:Conditions> element
@@ -283,7 +286,9 @@ class Saml2Client:
         if not for_me(condition, requestor):
             if not LAX:
                 raise Exception("Not for me!!!")
-
+        
+        return not_on_or_after
+        
     def _websso(self, assertion, outstanding, requestor, log):
         # the assertion MUST contain one AuthNStatement
         assert len(assertion.authn_statement) == 1
@@ -305,7 +310,7 @@ class Saml2Client:
         #print "Conditions",assertion.conditions
         assert assertion.conditions
         log and log.info("verify_condition")
-        self._verify_condition(assertion, requestor, log)
+        not_on_or_after = self._verify_condition(assertion, requestor, log)
 
         # The assertion can contain zero or one attributeStatements
         assert len(assertion.attribute_statement) <= 1
@@ -334,7 +339,7 @@ class Saml2Client:
         assert subject.name_id
         name_id = subject.name_id.text.strip()
         
-        return (ava, name_id, came_from)
+        return (ava, name_id, came_from, not_on_or_after)
 
     def _encrypted_assertion(self, xmlstr, outstanding, requestor, 
             log=None, context=""):
@@ -388,7 +393,7 @@ class Saml2Client:
             else:
                 log and log.info("Session id I don't recall using")
                 raise Exception("Session id I don't recall using")
-
+        
         # MUST contain *one* assertion
         try:
             assert len(response.assertion) == 1 or \
@@ -509,13 +514,15 @@ class Saml2Client:
         log and log.info("SOAP request sent and got response: %s" % response)
         if response:
             log and log.info("Verifying response")
-            (identity, came_from) = self.verify_response(response, 
+            (identity, came_from, not_on_or_after,
+                response_issuer) = self.verify_response(
+                                                response, 
                                                 issuer,
                                                 outstanding={session_id:""}, 
                                                 log=log, decode=False,
                                                 context="AttrReq")
             log and log.info("identity: %s" % identity)
-            return identity
+            return (identity, response_issuer, not_on_or_after)
         else:
             log and log.info("No response")
             return None
@@ -610,50 +617,3 @@ def print_response(resp):
     print _print_statement(resp)
     print resp.to_string()
     
-
-def d_init_request(id, destination):
-    return {
-        "id": id,
-        "version": VERSION,
-        "issue_instant": instant(),
-        "destination": destination,
-    }
-
-def d_authn_request(query_id, destination, service_url,
-                        spentityid, my_name, sp_name_qualifier=None,
-                        scoping=None):
-        """ Creates an Authenication Request
-        
-        :param query_id: Query identifier
-        :param destination: Where to send the request
-        :param service_url: The page to where the response MUST be sent.
-        :param spentityid: My official name
-        :param my_name: Who I am
-        :param sp_name_qualifier: The domain in which the name should be
-            valid
-        :param scoping: For which IdPs this query are aimed.
-        
-        :return: An authentication request
-        """
-        
-        authn_request = d_init_request(query_id, destination)
-        authn_request["assertion_consumer_service_url"] = service_url
-        authn_request["protocol_binding"] = saml2.BINDING_HTTP_POST
-        authn_request["provider_name"] = my_name
-        if scoping:
-            authn_request["scoping"] = scoping
-            
-        name_id_policy = {
-            "allow_create": 'true'
-        }
-        if sp_name_qualifier:
-            name_id_policy["format"] = saml.NAMEID_FORMAT_PERSISTENT
-            name_id_policy["sp_name_qualifier"] = sp_name_qualifier
-        else:
-            name_id_policy["format"] = saml.NAMEID_FORMAT_TRANSIENT
-
-
-        authn_request["name_id_policy"] = name_id_policy
-        authn_request["issuer"] = spentityid
-        
-        return make_instance(samlp.AuthnRequest,authn_request)

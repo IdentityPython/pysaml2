@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from saml2.client import Saml2Client
-from saml2 import samlp, client
+from saml2 import samlp, client, BINDING_HTTP_POST
 from saml2 import saml, utils, config
 
 XML_RESPONSE_FILE = "tests/saml_signed.xml"
@@ -190,3 +190,45 @@ class TestClient:
         idp_entry = scope.idp_list.idp_entry[0]
         assert idp_entry.name == "Umeå Universitet"
         assert idp_entry.loc == "https://idp.umu.se/"
+    
+    def test_create_auth_request_0(self):
+        ar = self.client.authn_request("1",
+                                    "http://www.example.com/sso",
+                                    "http://www.example.org/service",
+                                    "urn:mace:example.org:saml:sp",
+                                    "My Name")
+              
+        print ar
+        assert ar.assertion_consumer_service_url == "http://www.example.org/service"
+        assert ar.destination == "http://www.example.com/sso"
+        assert ar.protocol_binding == BINDING_HTTP_POST
+        assert ar.version == "2.0"
+        assert ar.provider_name == "My Name"
+        assert ar.issuer.text == "urn:mace:example.org:saml:sp"
+        nid_policy = ar.name_id_policy
+        assert nid_policy.allow_create == "true"
+        assert nid_policy.format == saml.NAMEID_FORMAT_TRANSIENT
+
+    def test_create_auth_request_vo(self):
+        assert self.client.config["virtual_organization"].keys() == [
+                                    "urn:mace:example.com:it:tek"]
+                                    
+        ar = self.client.authn_request("1",
+                                    "http://www.example.com/sso",
+                                    "http://www.example.org/service",
+                                    "urn:mace:example.org:saml:sp",
+                                    "My Name",
+                                    vo="urn:mace:example.com:it:tek")
+              
+        print ar
+        assert ar.assertion_consumer_service_url == "http://www.example.org/service"
+        assert ar.destination == "http://www.example.com/sso"
+        assert ar.protocol_binding == BINDING_HTTP_POST
+        assert ar.version == "2.0"
+        assert ar.provider_name == "My Name"
+        assert ar.issuer.text == "urn:mace:example.org:saml:sp"
+        nid_policy = ar.name_id_policy
+        assert nid_policy.allow_create == "true"
+        assert nid_policy.format == saml.NAMEID_FORMAT_PERSISTENT
+        assert nid_policy.sp_name_qualifier == "urn:mace:example.com:it:tek"
+        

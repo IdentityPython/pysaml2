@@ -18,6 +18,8 @@
 """Contains classes and functions that a SAML2.0 Identity provider (IdP) 
 or attribute authority (AA) may use to conclude its tasks.
 """
+import shelve
+
 from saml2 import saml, samlp, VERSION
 from saml2.utils import sid, decode_base64_and_inflate, make_instance
 from saml2.time_util import instant, in_a_while
@@ -60,95 +62,219 @@ def klassdict(klass, text=None, **kwargs):
             spec[key] = val
     return spec
     
+def kd_status_from_exception(exception):
+    return klassdict(samlp.Status,
+        status_code=klassdict(samlp.StatusCode,
+            value=samlp.STATUS_RESPONDER,
+            status_code=klassdict(samlp.StatusCode,
+                            value=EXCEPTION2STATUS[exception.__class__])
+            ),
+        status_message=exception.args[0],
+    )
+    
+def kd_name_id(text="", **kwargs):
+    return klassdict(saml.NameID, text, **kwargs)
+
+def kd_status_message(text="", **kwargs):
+    return klassdict(samlp.StatusMessage, text, **kwargs)
+
+def kd_status_code(text="", **kwargs):
+    return klassdict(samlp.StatusCode, text, **kwargs)
+
+def kd_status(text="", **kwargs):
+    return klassdict(samlp.Status, text, **kwargs)
+    
+def kd_success_status():
+    return kd_status(status_code=kd_status_code(value=samlp.STATUS_SUCCESS))
+                            
+def kd_audience(text="", **kwargs):
+    return klassdict(saml.Audience, text, **kwargs)
+
+def kd_audience_restriction(text="", **kwargs):
+    return klassdict(saml.AudienceRestriction, text, **kwargs)
+
+def kd_conditions(text="", **kwargs):
+    return klassdict(saml.Conditions, text, **kwargs)
+    
+def kd_attribute(text="", **kwargs):
+    return klassdict(saml.Attribute, text, **kwargs)
+
+def kd_attribute_value(text="", **kwargs):
+    return klassdict(saml.AttributeValue, text, **kwargs)
+        
+def kd_attribute_statement(text="", **kwargs):
+    return klassdict(saml.AttributeStatement, text, **kwargs)
+
+def kd_subject_confirmation_data(text="", **kwargs):
+    return klassdict(saml.SubjectConfirmationData, text, **kwargs)
+    
+def kd_subject_confirmation(text="", **kwargs):
+    return klassdict(saml.SubjectConfirmation, text, **kwargs)        
+    
+def kd_subject(text="", **kwargs):
+    return klassdict(saml.Subject, text, **kwargs)        
+
+def kd_authn_statement(text="", **kwargs):
+    return klassdict(saml.Subject, text, **kwargs)        
+    
+def kd_assertion(text="", **kwargs):
+    kwargs.update({
+        "version": VERSION,
+        "id" : sid(),
+        "issue_instant" : instant(),
+    })
+    return klassdict(saml.Assertion, text, **kwargs)        
+    
+def kd_response(signature=False, encrypt=False, **kwargs):
+
+    kwargs.update({
+        "id" : sid(),
+        "version": VERSION,
+        "issue_instant" : instant(),
+    })
+    if signature:
+        kwargs["signature"] = sigver.pre_signature_part(kwargs["id"])
+    
+    return kwargs
+
+def do_attribute_statement(identity):
+    """
+    :param identity: A dictionary with fiendly names as keys
+    :return:
+    """
+    attrs = []
+    for key, val in identity.items():
+        dic = {}
+        if isinstance(val,basestring):
+            attrval = kd_attribute_value(val)
+        elif isinstance(val,list):
+            attrval = [kd_attribute_value(v) for v in val]
+        else:
+            raise OtherError("strange value type on: %s" % val)
+        dic["attribute_value"] = attrval
+        if isinstance(key, basestring):
+            dic["name"] = key
+        elif isinstance(key, tuple): # 3-tuple
+            (name,format,friendly) = key
+            if name:
+                dic["name"] = name
+            if format:
+                dic["name_format"] = format
+            if friendly:
+                dic["friendly_name"] = friendly
+        attrs.append(kd_attribute(**dic))
+
+    return kd_attribute_statement(attribute=attrs)
+
+def kd_issuer(text, **kwargs):
+    return klassdict(saml.Issuer, text, **kwargs)        
+
+def do_aa_response(consumer_url, in_response_to,
+                    sp_entity_id, identity, name_id_policies=None, 
+                    name_id=None, ip_address="", issuer=None ):
+
+    attr_statement = do_attribute_statement(identity)
+    
+    # start using now and for a hour
+    conds = kd_conditions(
+                    not_before=instant(), 
+                    # an hour from now
+                    not_on_or_after=in_a_while(hours=1), 
+                    audience_restriction=kd_audience_restriction(
+                            audience=kd_audience(sp_entity_id)))
+
+    # temporary identifier or ??
+    if not name_id:
+        name_id = kd_name_id(sid(), format=saml.NAMEID_FORMAT_TRANSIENT)
+        
+    tmp = kd_response(
+        issuer=issuer,
+        in_response_to=in_response_to,
+        destination=consumer_url,
+        status=kd_success_status(),
+        assertion=kd_assertion(
+            subject = kd_subject(
+                name_id=name_id,
+                method=saml.SUBJECT_CONFIRMATION_METHOD_BEARER,
+                subject_confirmation=kd_subject_confirmation(
+                    subject_confirmation_data=kd_subject_confirmation_data(
+                            in_response_to=in_response_to,
+                            not_on_or_after=in_a_while(hours=1),
+                            address=ip_address,
+                            recipient=consumer_url))),
+            attribute_statement = attr_statement,
+            authn_statement= kd_authn_statement(
+                        authn_instant=instant(),
+                        session_index=sid()),
+            conditions=conds,
+            ),
+        )
+
+    return make_instance(samlp.Response, tmp)
+
 class Server(object):
-    def __init__(self, config_file, log=None):
+    def __init__(self, config_file="", config=None, log=None, debug=0):
         if config_file:
             self.conf = Config()
             self.conf.load_file(config_file)
             self.metadata = self.conf["metadata"]
+            if "subject_data" in self.conf:
+                self.id_map = shelve.open(self.conf["subject_data"],
+                                            writeback=True)
+            else:
+                self.id_map = None
+        elif config:
+            self.conf = config
+            self.metadata = self.conf["metadata"]
+
         self.log = log
+        self.debug = debug
         
     def issuer(self):
-        return klassdict( saml.Issuer, self.conf["entityid"],
-            format=saml.NAMEID_FORMAT_ENTITY)
+        return kd_issuer( self.conf["entityid"], 
+                        format=saml.NAMEID_FORMAT_ENTITY)
         
-    def status_from_exception(self, exception):
-        return klassdict(samlp.Status,
-            status_code=klassdict(samlp.StatusCode,
-                value=samlp.STATUS_RESPONDER,
-                status_code=klassdict(samlp.StatusCode,
-                                value=EXCEPTION2STATUS[exception.__class__])
-                ),
-            status_message=exception.args[0],
-        )
-        
-    def name_id(self, text="", **kwargs):
-        return klassdict(saml.NameID, text, **kwargs)
-
-    def status_message(self, text="", **kwargs):
-        return klassdict(samlp.StatusMessage, text, **kwargs)
-
-    def status_code(self, text="", **kwargs):
-        return klassdict(samlp.StatusCode, text, **kwargs)
-
-    def status(self, text="", **kwargs):
-        return klassdict(samlp.Status, text, **kwargs)
-        
-    def success_status(self):
-        return self.status(status_code=self.status_code(
-                                value=samlp.STATUS_SUCCESS))
-                                
-    def audience(self, text="", **kwargs):
-        return klassdict(saml.Audience, text, **kwargs)
-
-    def audience_restriction(self, text="", **kwargs):
-        return klassdict(saml.AudienceRestriction, text, **kwargs)
-
-    def conditions(self, text="", **kwargs):
-        return klassdict(saml.Conditions, text, **kwargs)
-        
-    def attribute(self, text="", **kwargs):
-        return klassdict(saml.Attribute, text, **kwargs)
-
-    def attribute_value(self, text="", **kwargs):
-        return klassdict(saml.AttributeValue, text, **kwargs)
+    def persistent_id(self, entity_id, subject_id):
+        """ 
+        :param entity_id: SP entity ID or VO entity ID
+        :param subject_id: The local identifier of the subject
+        :return: A arbitrary identifier for the subject unique to the
+            entity_id
+        """
+        if self.debug:
+            self.log and self.log.debug("Id map keys: %s" % self.id_map.keys())
             
-    def attribute_statement(self, text="", **kwargs):
-        return klassdict(saml.AttributeStatement, text, **kwargs)
-    
-    def subject_confirmation_data(self, text="", **kwargs):
-        return klassdict(saml.SubjectConfirmationData, text, **kwargs)
-        
-    def subject_confirmation(self, text="", **kwargs):
-        return klassdict(saml.SubjectConfirmation, text, **kwargs)        
-        
-    def subject(self, text="", **kwargs):
-        return klassdict(saml.Subject, text, **kwargs)        
+        try:
+            map = self.id_map[entity_id]
+        except KeyError:
+            map = self.id_map[entity_id] = {"forward":{}, "backward":{}}
 
-    def authn_statement(self, text="", **kwargs):
-        return klassdict(saml.Subject, text, **kwargs)        
+        try:
+            if self.debug:
+                self.log.debug("map forward keys: %s" % map["forward"].keys())
+            return map["forward"][subject_id]
+        except KeyError:
+            while True:
+                temp_id = sid()
+                if temp_id not in map["backward"]:
+                    break
+            map["forward"][subject_id] = temp_id
+            map["backward"][temp_id] = subject_id
+            self.id_map[entity_id]= map
+            self.id_map.sync()
+            
+            return temp_id
         
-    def assertion(self, text="", **kwargs):
-        kwargs.update({
-            "version": VERSION,
-            "id" : sid(),
-            "issue_instant" : instant(),
-        })
-        return klassdict(saml.Assertion, text, **kwargs)        
-        
-    def response(self, signature=False, encrypt=False, **kwargs):
-
-        kwargs.update({
-            "id" : sid(),
-            "version": VERSION,
-            "issue_instant" : instant(),
-        })
-        if signature:
-            kwargs["signature"] = sigver.pre_signature_part(kwargs["id"])
-        
-        return kwargs
-    
     def parse_authn_request(self, enc_request):
+        """Parse a Authentication Request
+        
+        :param enc_request: The request in its transport format
+        :return: A tuple of
+            consumer_url - as gotten from the SPs entity_id and the metadata
+            id - the id of the request
+            name_id_policy - how to chose the subjects identifier
+            spentityid - the entity id of the SP
+        """
         request_xml = decode_base64_and_inflate(enc_request)
         request = samlp.authn_request_from_string(request_xml)
         
@@ -175,92 +301,77 @@ class Server(object):
                             return_destination))
             print "%s != %s" % (consumer_url, return_destination)
             raise OtherError("ConsumerURL and return destination mismatch")
-            
-        policy = request.name_id_policy
-        if policy.allow_create.lower() == "true" and \
-            policy.format == saml.NAMEID_FORMAT_TRANSIENT:
-            name_id_policies = policy.format
-                
-        return (consumer_url, id, name_id_policies, spentityid)
+               
+        self.log and self.log.info("AuthNRequest: %s" % request)
+        return (consumer_url, id, request.name_id_policy, spentityid)
         
     def allowed_issuer(self, issuer):
+        """ """
         return True
         
     def parse_attribute_query(self, xml_string):
         query = samlp.attribute_query_from_string(xml_string)
         assert query.version == VERSION
-        assert query.destination == self.conf["service_url"]
+        self.log and self.log.info(
+            "%s ?= %s" % (query.destination,self.conf["service"]["aa"]["url"]))
+        assert query.destination == self.conf["service"]["aa"]["url"]
 
         self.allowed_issuer(query.issuer)
         
         # verify signature
         
-        return (subject, attribute)
+        subject = query.subject.name_id.text
+        if query.attribute:
+            attribute = query.attribute
+        else:
+            attribute = None
+        return (subject, attribute, query)
         
     def find_subject(self, subject, attribute=None):
         pass
-        
-    def do_attribute_statement(self, identity):
-        """
-        :param identity: A dictionary with fiendly names as keys
-        :return:
-        """
-        attrs = []
-        for key, val in identity.items():
-            dic = {}
-            if isinstance(val,basestring):
-                attrval = self.attribute_value(val)
-            elif isinstance(val,list):
-                attrval = [self.attribute_value(v) for v in val]
-            else:
-                raise OtherError("strange value type on: %s" % val)
-            dic["attribute_value"] = attrval
-            if isinstance(key, basestring):
-                dic["name"] = key
-            elif isinstance(key, tuple): # 3-tuple
-                (name,format,friendly) = key
-                if name:
-                    dic["name"] = name
-                if format:
-                    dic["name_format"] = format
-                if friendly:
-                    dic["friendly_name"] = friendly
-            attrs.append(self.attribute(**dic))
-
-        return self.attribute_statement(attribute=attrs)
-        
+                
     def do_sso_response(self, consumer_url, in_response_to,
-                        sp_entity_id, identity, name_id_policies=None, 
-                        subject_id=None ):
+                        sp_entity_id, identity, name_id=None ):
     
-        attribute_statement = self.do_attribute_statement(identity)
+        attr_statement = do_attribute_statement(identity)
         
         # start using now and for a hour
-        conditions = self.conditions(
+        conds = kd_conditions(
                         not_before=instant(), 
                         # an hour from now
                         not_on_or_after=in_a_while(0,0,0,0,0,1), 
-                        audience_restriction=self.audience_restriction(
-                                audience=self.audience(sp_entity_id)))
+                        audience_restriction=kd_audience_restriction(
+                                audience=kd_audience(sp_entity_id)))
         # temporary identifier or ??
-        subject_id = sid()
-        tmp = self.response(
+        if not name_id:
+            name_id = kd_name_id(sid(), format=saml.NAMEID_FORMAT_TRANSIENT)
+            
+        tmp = kd_response(
+            issuer=self.issuer(),
             in_response_to=in_response_to,
             destination=consumer_url,
-            status=self.success_status(),
-            assertion=self.assertion(
-                subject = self.subject(
-                    name_id=self.name_id(subject_id,
-                        format=saml.NAMEID_FORMAT_TRANSIENT),
-                    method=saml.SUBJECT_CONFIRMATION_METHOD_BEARER,
-                    subject_confirmation=self.subject_confirmation(
-                        subject_confirmation_data=self.subject_confirmation_data(
-                                in_response_to=in_response_to))),
-                attribute_statement = attribute_statement,
-                authn_statement= self.authn_statement(
+            status=kd_success_status(),
+            assertion=kd_assertion(
+                attribute_statement = attr_statement,
+                authn_statement= kd_authn_statement(
                             authn_instant=instant(),
                             session_index=sid()),
-                conditions=conditions,
+                conditions=conds,
+                subject=kd_subject(
+                    name_id=name_id,
+                    method=saml.SUBJECT_CONFIRMATION_METHOD_BEARER,
+                    subject_confirmation=kd_subject_confirmation(
+                        subject_confirmation_data=kd_subject_confirmation_data(
+                                in_response_to=in_response_to))),
                 ),
             )
         return make_instance(samlp.Response, tmp)
+
+    def do_aa_response(self, consumer_url, in_response_to,
+                        sp_entity_id, identity, name_id_policies=None, 
+                        subject_id=None, ip_address=""):
+    
+        return do_aa_response(consumer_url, in_response_to,
+                        sp_entity_id, identity, name_id_policies, 
+                        subject_id, ip_address, self.issuer())
+

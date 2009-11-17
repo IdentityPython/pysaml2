@@ -33,16 +33,16 @@ DEFAULT_BINDING = saml2.BINDING_HTTP_REDIRECT
 
 class AttributeResolver(object):
 
-    def __init__(self, environ, metadata=None, xmlsec_binary=None,
-                        key_file=None, cert_file=None):
+    def __init__(self, environ, metadata=None, config=None, saml2client=None):
         self.metadata = metadata
-        self.saml2client = Saml2Client(environ, metadata=metadata,
-                            xmlsec_binary=xmlsec_binary,
-                            key_file=key_file,
-                            cert_file=cert_file)
+
+        if saml2client:
+            self.saml2client = saml2client
+        else:
+            self.saml2client = Saml2Client(environ, config)
         
-    def extend(self, subject_id, issuer, vo_members, nameid_format,
-                log=None):
+    def extend(self, subject_id, issuer, vo_members, name_id_format=None,
+                sp_name_qualifier=None, log=None):
         """ 
         :param subject_id: The identifier by which the subject is know
             among all the participents of the VO
@@ -61,17 +61,15 @@ class AttributeResolver(object):
                 for attr_serv in ass.attribute_service:
                     log and log.info("Send attribute request to %s" % \
                                         attr_serv.location)
-                    resp = self.saml2client.attribute_query(subject_id, 
+                    (resp, issuer, 
+                        not_on_or_after) = self.saml2client.attribute_query(
+                                subject_id, 
                                 issuer, 
                                 attr_serv.location, 
-                                format=nameid_format, log=log)
+                                sp_name_qualifier=sp_name_qualifier,
+                                format=name_id_format, log=log)
                     if resp:
                         # unnecessary
                         del resp["__userid"]
-                        for attr,val in resp.items():
-                            try:
-                                extended_identity[attr].extend(val)
-                            except KeyError:
-                                extended_identity[attr] = val
-                    
+                        extended_identity[issuer] = (not_on_or_after, resp)                    
         return extended_identity

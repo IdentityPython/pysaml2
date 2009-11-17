@@ -36,9 +36,13 @@ NAMESPACE = "http://schemas.xmlsoap.org/soap/envelope/"
 
 def parse_soap_enveloped_saml_response(text):
     expected_tag = '{%s}Response' % SAMLP_NAMESPACE
-    return parse_soap_enveloped_saml_thing(text, expected_tag)
-    
-def parse_soap_enveloped_saml_thing(text, expected_tag):
+    return parse_soap_enveloped_saml_thingy(text, expected_tag)
+
+def parse_soap_enveloped_saml_attribute_query(text):
+    expected_tag = '{%s}AttributeQuery' % SAMLP_NAMESPACE
+    return parse_soap_enveloped_saml_thingy(text, expected_tag)
+
+def parse_soap_enveloped_saml_thingy(text, expected_tag):
     """Parses a SOAP enveloped SAML thing and returns the thing as
     a string.
     
@@ -59,7 +63,7 @@ def parse_soap_enveloped_saml_thing(text, expected_tag):
     else:
         return ""
 
-def make_soap_enveloped_saml_thingy(self, thingy):
+def make_soap_enveloped_saml_thingy(thingy):
     """ Returns a soap envelope containing a SAML request
     as a text string.
     
@@ -86,7 +90,9 @@ class _Http(object):
             self.server.add_certificate(keyfile, certfile, "")
 
     def write(self, data):
-        (response, content) = self.server.request(self.path, "POST", data)
+        (response, content) = self.server.request(self.path, 
+                            "POST", data,
+                            headers={"content-type": "application/soap+xml"})
         if response.status == 200:
             return content
         else:
@@ -98,7 +104,7 @@ class SOAPClient(object):
         self.server = _Http(server_url, keyfile, certfile)
         
     def send(self, request):
-        soap_message = make_soap_enveloped_saml_request(request)
+        soap_message = make_soap_enveloped_saml_thingy(request)
         response = self.server.write(soap_message)
         if response:
             return parse_soap_enveloped_saml_response(response)

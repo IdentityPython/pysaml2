@@ -897,9 +897,8 @@ class AuthnRequest(AbstractRequest):
     c_children['{%s}Scoping' % NAMESPACE] = ('scoping', Scoping)
 
     c_child_order = AbstractRequest.c_child_order[:]
-    c_child_order.extend(['issuer', 'signature', 'extensions', 'subject',
-                    'name_id_policy', 'conditions', 'requested_authn_context',
-                    'scoping'])
+    c_child_order.extend(['subject', 'name_id_policy', 'conditions', 
+                    'requested_authn_context', 'scoping'])
 
     def __init__(self, id=None, version=None, issue_instant=None,
                 destination=None, consent=None, issuer=None, signature=None,
