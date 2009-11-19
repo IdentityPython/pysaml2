@@ -60,29 +60,30 @@ class TestClient:
     
     def test_verify_1(self):
         xml_response = open(XML_RESPONSE_FILE).read()
-        (ava, came_from) = \
-            self.client.verify_response(xml_response, 
+        session_info = self.client.verify_response(xml_response, 
                                 "xenosmilus.umdc.umu.se", 
                                 decode=False)
-        assert ava == {'__userid': '_cddc88563d433f556d4cc70c3162deabddea3b5019', 
-                        'eduPersonAffiliation': ['member', 'student'], 
-                        'uid': ['student']}
+        assert session_info["ava"] == {
+            '__userid': '_cddc88563d433f556d4cc70c3162deabddea3b5019', 
+            'eduPersonAffiliation': ['member', 'student'], 
+            'uid': ['student']}
     
     def test_parse_1(self):
         xml_response = open(XML_RESPONSE_FILE).read()
         response = samlp.response_from_string(xml_response)
-        (ava, name_id, real_uri) = \
-            self.client.do_response(response, "xenosmilus.umdc.umu.se")
-        assert ava == {'eduPersonAffiliation': ['member', 'student'],
-                        'uid': ['student']}
-        assert name_id == "_cddc88563d433f556d4cc70c3162deabddea3b5019"
+        session_info = self.client.do_response(response, 
+                                                "xenosmilus.umdc.umu.se")
+        assert session_info["ava"] == {
+                                'eduPersonAffiliation': ['member', 'student'],
+                                'uid': ['student']}
+        assert session_info["name_id"] == "_cddc88563d433f556d4cc70c3162deabddea3b5019"
 
     def test_parse_2(self):
         xml_response = open(XML_RESPONSE_FILE2).read()
         response = samlp.response_from_string(xml_response)
-        (ava, name_id, real_uri) = \
-            self.client.do_response(response, "xenosmilus.umdc.umu.se")
-        assert ava == {'uid': ['andreas'], 
+        session_info = self.client.do_response(response, "xenosmilus.umdc.umu.se")
+        
+        assert session_info["ava"] == {'uid': ['andreas'], 
                         'mobile': ['+4741107700'], 
                         'edupersonnickname': ['erlang'], 
                         'o': ['Feide RnD'], 
@@ -94,7 +95,9 @@ class TestClient:
                         'mail': ['andreas@uninett.no'], 
                         'ou': ['Guests'], 
                         'cn': ['Andreas Solberg']}
-        assert name_id == "_242f88493449e639aab95dd9b92b1d04234ab84fd8"
+        assert session_info["name_id"] == "_242f88493449e639aab95dd9b92b1d04234ab84fd8"
+        assert session_info.keys() == ['came_from', 'name_id', 'ava', 
+                                        'not_on_or_after']
 
     def test_create_attribute_query1(self):
         req = self.client.create_attribute_query("1", 
