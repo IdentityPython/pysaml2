@@ -42,6 +42,9 @@ FORM_SPEC = """<form method="post" action="%s">
 
 LAX = True
 
+SESSION_INFO = {"ava":{}, "came from":"", "not_on_or_after":0,
+                    "issuer":"", "session_id":-1}
+
 
 class Saml2Client:
     
@@ -105,15 +108,10 @@ class Saml2Client:
         if post.has_key("SAMLResponse"):
             saml_response =  post['SAMLResponse'].value
             if saml_response:
-                (identity, came_from, 
-                    not_on_or_after, response_issuer) = self.verify_response(
-                                            saml_response, requestor, 
+                return self.verify_response(saml_response, requestor, 
                                             outstanding, log, 
                                             context="AuthNReq")
-            #relay_state = post["RelayState"].value
-            return (identity, came_from, response_issuer, not_on_or_after)
-        else:
-            return None
+        return None
             
     def authn_request(self, query_id, destination, service_url, spentityid, 
                         my_name, vo="", scoping=None):
@@ -222,7 +220,7 @@ class Saml2Client:
         :return: A 2-tuple consisting of an identity description and the 
             real relay-state
         """
-
+        
         if not outstanding:
             outstanding = {}
         
@@ -240,29 +238,28 @@ class Saml2Client:
             if log:
                 log.error("Response was not correctly signed")
                 log.info(decoded_xml)
-            return ({}, "")
+            return None
         else:
             log and log.error("Response was correctly signed or nor signed")
             
         log and log.info("response: %s" % (response,))
         try:
-            (ava, name_id, came_from, not_on_or_after) = self.do_response(
-                                                response, 
+            session_info = self.do_response(response, 
                                                 requestor, 
                                                 outstanding=outstanding, 
                                                 xmlstr=xmlstr, 
                                                 log=log, context=context)
-            issuer = response.issuer.text
+            session_info["issuer"] = response.issuer.text
+            session_info["session_id"] = response.in_response_to
         except AttributeError, exc:
             log and log.error("AttributeError: %s" % (exc,))
-            return ({}, "", 0, "")
+            return None
         except Exception, exc:
             log and log.error("Exception: %s" % (exc,))
-            return ({}, "", 0, "")
+            return None
                                     
-        # should return userid and attribute value assertions
-        ava["__userid"] = name_id
-        return (ava, came_from, not_on_or_after, issuer)
+        session_info["ava"]["__userid"] = session_info["name_id"]
+        return session_info
   
     def _verify_condition(self, assertion, requestor, log):
         # The Identity Provider MUST include a <saml:Conditions> element
@@ -339,7 +336,8 @@ class Saml2Client:
         assert subject.name_id
         name_id = subject.name_id.text.strip()
         
-        return (ava, name_id, came_from, not_on_or_after)
+        return {"ava":ava, "name_id":name_id, "came_from":came_from,
+                 "not_on_or_after":not_on_or_after}
 
     def _encrypted_assertion(self, xmlstr, outstanding, requestor, 
             log=None, context=""):
@@ -514,15 +512,13 @@ class Saml2Client:
         log and log.info("SOAP request sent and got response: %s" % response)
         if response:
             log and log.info("Verifying response")
-            (identity, came_from, not_on_or_after,
-                response_issuer) = self.verify_response(
-                                                response, 
+            session_info = self.verify_response(response, 
                                                 issuer,
                                                 outstanding={session_id:""}, 
                                                 log=log, decode=False,
                                                 context="AttrReq")
             log and log.info("identity: %s" % identity)
-            return (identity, response_issuer, not_on_or_after)
+            return session_info
         else:
             log and log.info("No response")
             return None
