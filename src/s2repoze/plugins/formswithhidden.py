@@ -53,7 +53,7 @@ _DEFAULT_FORM = """
 </html>
 """
 
-hidden_pre_line = """<input type=hidden name=%s value="%s">"""
+hidden_pre_line = """<input type=hidden name="%s" value="%s">"""
 
 class FormHiddenPlugin(FormPlugin):
 
@@ -113,7 +113,7 @@ class FormHiddenPlugin(FormPlugin):
         for key,val in query.items():
             hidden.append(hidden_pre_line % ("_%s_" % key, val))
 
-        logger and logger.info("hidden",hidden)
+        logger and logger.info("hidden: %s" % (hidden,))
         form = self.formbody or _DEFAULT_FORM
         form = form % "\n".join(hidden)
             
