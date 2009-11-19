@@ -171,7 +171,7 @@ def kd_issuer(text, **kwargs):
 
 def do_aa_response(consumer_url, in_response_to,
                     sp_entity_id, identity, name_id_policies=None, 
-                    name_id=None, ip_address="", issuer=None ):
+                    name_id=None, ip_address="", issuer=None, cache=None ):
 
     attr_statement = do_attribute_statement(identity)
     
@@ -186,38 +186,44 @@ def do_aa_response(consumer_url, in_response_to,
     # temporary identifier or ??
     if not name_id:
         name_id = kd_name_id(sid(), format=saml.NAMEID_FORMAT_TRANSIENT)
+
+    assertion=kd_assertion(
+        subject = kd_subject(
+            name_id=name_id,
+            method=saml.SUBJECT_CONFIRMATION_METHOD_BEARER,
+            subject_confirmation=kd_subject_confirmation(
+                subject_confirmation_data=kd_subject_confirmation_data(
+                        in_response_to=in_response_to,
+                        not_on_or_after=in_a_while(hours=1),
+                        address=ip_address,
+                        recipient=consumer_url))),
+        attribute_statement = attr_statement,
+        authn_statement= kd_authn_statement(
+                    authn_instant=instant(),
+                    session_index=sid()),
+        conditions=conds,
+        )
+        
+    if cache: 
+        cache.set(name_id["text"], sp_entity_id, assertion, 
+                        conds["not_on_or_after"])
         
     tmp = kd_response(
         issuer=issuer,
         in_response_to=in_response_to,
         destination=consumer_url,
         status=kd_success_status(),
-        assertion=kd_assertion(
-            subject = kd_subject(
-                name_id=name_id,
-                method=saml.SUBJECT_CONFIRMATION_METHOD_BEARER,
-                subject_confirmation=kd_subject_confirmation(
-                    subject_confirmation_data=kd_subject_confirmation_data(
-                            in_response_to=in_response_to,
-                            not_on_or_after=in_a_while(hours=1),
-                            address=ip_address,
-                            recipient=consumer_url))),
-            attribute_statement = attr_statement,
-            authn_statement= kd_authn_statement(
-                        authn_instant=instant(),
-                        session_index=sid()),
-            conditions=conds,
-            ),
+        assertion=assertion,
         )
 
     return make_instance(samlp.Response, tmp)
 
 class Server(object):
-    def __init__(self, config_file="", config=None, log=None, debug=0):
+    def __init__(self, config_file="", config=None, cache="",
+                    log=None, debug=0):
         if config_file:
             self.conf = Config()
             self.conf.load_file(config_file)
-            self.metadata = self.conf["metadata"]
             if "subject_data" in self.conf:
                 self.id_map = shelve.open(self.conf["subject_data"],
                                             writeback=True)
@@ -225,8 +231,12 @@ class Server(object):
                 self.id_map = None
         elif config:
             self.conf = config
-            self.metadata = self.conf["metadata"]
-
+        
+        self.metadata = self.conf["metadata"]
+        if cache:
+            self.cache=Cache(cache)
+        else:
+            self.cache=Cache()
         self.log = log
         self.debug = debug
         
@@ -235,7 +245,9 @@ class Server(object):
                         format=saml.NAMEID_FORMAT_ENTITY)
         
     def persistent_id(self, entity_id, subject_id):
-        """ 
+        """ Keeps the link between a permanent identifier and a 
+        temporary/pseudotemporary identifier for a subject
+        
         :param entity_id: SP entity ID or VO entity ID
         :param subject_id: The local identifier of the subject
         :return: A arbitrary identifier for the subject unique to the
@@ -313,7 +325,8 @@ class Server(object):
         query = samlp.attribute_query_from_string(xml_string)
         assert query.version == VERSION
         self.log and self.log.info(
-            "%s ?= %s" % (query.destination,self.conf["service"]["aa"]["url"]))
+            "%s ?= %s" % (query.destination, 
+                            self.conf["service"]["aa"]["url"]))
         assert query.destination == self.conf["service"]["aa"]["url"]
 
         self.allowed_issuer(query.issuer)
@@ -332,7 +345,16 @@ class Server(object):
                 
     def do_sso_response(self, consumer_url, in_response_to,
                         sp_entity_id, identity, name_id=None ):
-    
+        """ Create a Response the follows the ??? profile.
+        
+        :param consumer_url: The URL which should receive the response
+        :param in_response_to: The session identifier of the request
+        :param sp_entity_id: The entity identifier of the SP
+        :param identity: A dictionary with attributes and values that are
+            expected to be the bases for the assertion in the response.
+        :param name_id: The identifier of the subject 
+        :return: A Response instance
+        """
         attr_statement = do_attribute_statement(identity)
         
         # start using now and for a hour
@@ -345,26 +367,34 @@ class Server(object):
         # temporary identifier or ??
         if not name_id:
             name_id = kd_name_id(sid(), format=saml.NAMEID_FORMAT_TRANSIENT)
+
+        assertion=kd_assertion(
+            attribute_statement = attr_statement,
+            authn_statement= kd_authn_statement(
+                        authn_instant=instant(),
+                        session_index=sid()),
+            conditions=conds,
+            subject=kd_subject(
+                name_id=name_id,
+                method=saml.SUBJECT_CONFIRMATION_METHOD_BEARER,
+                subject_confirmation=kd_subject_confirmation(
+                    subject_confirmation_data=kd_subject_confirmation_data(
+                            in_response_to=in_response_to))),
+            ),
             
         tmp = kd_response(
             issuer=self.issuer(),
             in_response_to=in_response_to,
             destination=consumer_url,
             status=kd_success_status(),
-            assertion=kd_assertion(
-                attribute_statement = attr_statement,
-                authn_statement= kd_authn_statement(
-                            authn_instant=instant(),
-                            session_index=sid()),
-                conditions=conds,
-                subject=kd_subject(
-                    name_id=name_id,
-                    method=saml.SUBJECT_CONFIRMATION_METHOD_BEARER,
-                    subject_confirmation=kd_subject_confirmation(
-                        subject_confirmation_data=kd_subject_confirmation_data(
-                                in_response_to=in_response_to))),
-                ),
+            assertion=assertion,
             )
+        
+        # Store which assertion that has been sent to which SP about which
+        # subject.
+        self.cache.set(name_id["text"], sp_entity_id, assertion, 
+                        conds["not_on_or_after"])
+                        
         return make_instance(samlp.Response, tmp)
 
     def do_aa_response(self, consumer_url, in_response_to,
@@ -373,5 +403,5 @@ class Server(object):
     
         return do_aa_response(consumer_url, in_response_to,
                         sp_entity_id, identity, name_id_policies, 
-                        subject_id, ip_address, self.issuer())
+                        subject_id, ip_address, self.issuer(), self.cache)
 
