@@ -214,34 +214,39 @@ class SAML2Plugin(FormPluginBase):
         # check for SAML2 authN
         cl = Saml2Client(environ, self.conf)
         try:
-            (ava, came_from, issuer, not_on_or_after) = cl.response(post, 
+            session_info = cl.response(post, 
                                             self.conf["entityid"], 
                                             self.outstanding_authn,
                                             logger)
-            name_id = ava["__userid"]
-            del ava["__userid"]
-            self.cache.set( name_id, issuer, ava, not_on_or_after)
+            name_id = session_info["ava"]["__userid"]
+            del session_info["ava"]["__userid"]
+            issuer = session_info["issuer"]
+            del session_info["issuer"]
+            self.cache.set(name_id, issuer, session_info, 
+                            session_info["not_on_or_after"])
             if self.debug:
-                logger and logger.info("stored %s with key %s" % (ava, name_id))
+                logger and logger.info("stored %s with key %s" % (
+                                        session_info, name_id))
         except TypeError:
             return None
                                         
-        if came_from:
+        if session_info["came_from"]:
             if self.debug:
-                logger and logger.info("came_from << %s" % came_from)
+                logger and logger.info(
+                            "came_from << %s" % session_info["came_from"])
             try:
-                path, query = came_from.split('?')
+                path, query = session_info["came_from"].split('?')
                 environ["PATH_INFO"] = path
                 environ["QUERY_STRING"] = query
             except ValueError:
-                environ["PATH_INFO"] = came_from
+                environ["PATH_INFO"] = session_info["came_from"]
         
         identity = {}
         identity["login"] = name_id
         identity["password"] = ""
         identity['repoze.who.userid'] = name_id
-        identity["user"] = ava
-        #identity["issuer"] = issuer
+        identity["user"] = session_info["ava"]
+        environ["s2repoze.sessioninfo"] = session_info
         if self.debug:
             logger and logger.info("Identity: %s" % identity)
         return identity
@@ -266,7 +271,7 @@ class SAML2Plugin(FormPluginBase):
         if "user" not in identity:
             identity["user"] = {}
         try:
-            (ava, old) = self.cache.get_all(subject_id)
+            (ava, old) = self.cache.get_identity(subject_id)
             now = time.gmtime()        
             if self.debug:
                 logger and logger.info("Adding %s" % ava)
@@ -323,8 +328,8 @@ class SAML2Plugin(FormPluginBase):
                     logger.info(
                         ">Issuers: %s" % self.cache.issuers(subject_id))
                     logger.info(
-                        "AVA: %s" % (self.cache.get_all(subject_id),))
-                    identity["user"] = self.cache.get_all(subject_id)[0]
+                        "AVA: %s" % (self.cache.get_identity(subject_id),))
+                    identity["user"] = self.cache.get_identity(subject_id)[0]
                     # Only do this once
                     identity["pysaml2_vo_expanded"] = 1
                     #self.store[identity['repoze.who.userid']] = (
