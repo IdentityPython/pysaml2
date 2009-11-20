@@ -100,6 +100,15 @@ class SAML2Plugin(FormPluginBase):
         else:
             self.cache = Cache()
          
+    def _cache_session(self, session_info):
+        name_id = session_info["ava"]["__userid"]
+        del session_info["ava"]["__userid"]
+        issuer = session_info["issuer"]
+        del session_info["issuer"]
+        self.cache.set(name_id, issuer, session_info, 
+                        session_info["not_on_or_after"])
+        return name_id
+        
     #### IChallenger ####
     def challenge(self, environ, status, app_headers, forget_headers):
 
@@ -218,12 +227,7 @@ class SAML2Plugin(FormPluginBase):
                                             self.conf["entityid"], 
                                             self.outstanding_authn,
                                             logger)
-            name_id = session_info["ava"]["__userid"]
-            del session_info["ava"]["__userid"]
-            issuer = session_info["issuer"]
-            del session_info["issuer"]
-            self.cache.set(name_id, issuer, session_info, 
-                            session_info["not_on_or_after"])
+            name_id = self._cache_session(session_info)
             if self.debug:
                 logger and logger.info("stored %s with key %s" % (
                                         session_info, name_id))
@@ -264,7 +268,7 @@ class SAML2Plugin(FormPluginBase):
                     "Known subjects: %s" % self.cache.subjects())
                 try:
                     logger.info(
-                        "Issuers: %s" % self.cache.issuers(subject_id))
+                        "Issuers: %s" % self.cache.entities(subject_id))
                 except KeyError:
                     pass
             
@@ -320,13 +324,11 @@ class SAML2Plugin(FormPluginBase):
                             sp_name_qualifier=sp_name_qualifier,
                             log=logger)
 
-                    for issuer, tup in extra.items():
-                        (not_on_or_after, resp) = tup
-                        self.cache.set(subject_id, issuer, resp, 
-                                            not_on_or_after)
+                    for session_info in extra:
+                        nid = self._cache_session(session_info)
 
                     logger.info(
-                        ">Issuers: %s" % self.cache.issuers(subject_id))
+                        ">Issuers: %s" % self.cache.entities(subject_id))
                     logger.info(
                         "AVA: %s" % (self.cache.get_identity(subject_id),))
                     identity["user"] = self.cache.get_identity(subject_id)[0]
