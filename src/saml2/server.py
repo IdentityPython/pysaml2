@@ -25,6 +25,7 @@ from saml2.utils import sid, decode_base64_and_inflate, make_instance
 from saml2.time_util import instant, in_a_while
 from saml2.metadata import MetaData
 from saml2.config import Config
+from saml2.cache import Cache
 
 class VersionMismatch(Exception):
     pass
@@ -169,54 +170,6 @@ def do_attribute_statement(identity):
 def kd_issuer(text, **kwargs):
     return klassdict(saml.Issuer, text, **kwargs)        
 
-def do_aa_response(consumer_url, in_response_to,
-                    sp_entity_id, identity, name_id_policies=None, 
-                    name_id=None, ip_address="", issuer=None, cache=None ):
-
-    attr_statement = do_attribute_statement(identity)
-    
-    # start using now and for a hour
-    conds = kd_conditions(
-                    not_before=instant(), 
-                    # an hour from now
-                    not_on_or_after=in_a_while(hours=1), 
-                    audience_restriction=kd_audience_restriction(
-                            audience=kd_audience(sp_entity_id)))
-
-    # temporary identifier or ??
-    if not name_id:
-        name_id = kd_name_id(sid(), format=saml.NAMEID_FORMAT_TRANSIENT)
-
-    assertion=kd_assertion(
-        subject = kd_subject(
-            name_id=name_id,
-            method=saml.SUBJECT_CONFIRMATION_METHOD_BEARER,
-            subject_confirmation=kd_subject_confirmation(
-                subject_confirmation_data=kd_subject_confirmation_data(
-                        in_response_to=in_response_to,
-                        not_on_or_after=in_a_while(hours=1),
-                        address=ip_address,
-                        recipient=consumer_url))),
-        attribute_statement = attr_statement,
-        authn_statement= kd_authn_statement(
-                    authn_instant=instant(),
-                    session_index=sid()),
-        conditions=conds,
-        )
-        
-    if cache: 
-        cache.set(name_id["text"], sp_entity_id, assertion, 
-                        conds["not_on_or_after"])
-        
-    tmp = kd_response(
-        issuer=issuer,
-        in_response_to=in_response_to,
-        destination=consumer_url,
-        status=kd_success_status(),
-        assertion=assertion,
-        )
-
-    return make_instance(samlp.Response, tmp)
 
 class Server(object):
     def __init__(self, config_file="", config=None, cache="",
@@ -317,9 +270,27 @@ class Server(object):
         self.log and self.log.info("AuthNRequest: %s" % request)
         return (consumer_url, id, request.name_id_policy, spentityid)
         
-    def allowed_issuer(self, issuer):
+    def assertion_rule(self, issuer):
         """ """
-        return True
+        try:
+            assertion_rules = self.conf["assertions"]
+        except KeyError:
+            return None
+            
+        try:
+            return assertion_rules[issuer]
+        except KeyError:
+            try:
+                return assertion_rules["default"]
+            except KeyError:
+                return {}
+                
+    def wants(self, sp_entity_id):
+        """
+        :param sp_entity_id: The entity id of the SP
+        :return: 2-tuple, list of required and list of optional attributes
+        """
+        return self.metadata.requests(sp_entity_id)
         
     def parse_attribute_query(self, xml_string):
         query = samlp.attribute_query_from_string(xml_string)
@@ -329,7 +300,7 @@ class Server(object):
                             self.conf["service"]["aa"]["url"]))
         assert query.destination == self.conf["service"]["aa"]["url"]
 
-        self.allowed_issuer(query.issuer)
+        arule = self.assertion_rule(query.issuer)
         
         # verify signature
         
@@ -343,6 +314,21 @@ class Server(object):
     def find_subject(self, subject, attribute=None):
         pass
                 
+    def _not_on_or_after(self, sp_entity_id):
+        if "assertions" in self.conf:
+            try:
+                spec = self.conf["assertions"][sp_entity_id]["lifetime"]
+                return in_a_while(**spec)
+            except KeyError:
+                try:
+                    spec = self.conf["assertions"]["default"]["lifetime"]
+                    return in_a_while(**spec)
+                except KeyError:
+                    pass
+        
+        # default is a hour
+        return in_a_while(0,0,0,0,0,1)
+            
     def do_sso_response(self, consumer_url, in_response_to,
                         sp_entity_id, identity, name_id=None ):
         """ Create a Response the follows the ??? profile.
@@ -357,11 +343,12 @@ class Server(object):
         """
         attr_statement = do_attribute_statement(identity)
         
+        
         # start using now and for a hour
         conds = kd_conditions(
                         not_before=instant(), 
                         # an hour from now
-                        not_on_or_after=in_a_while(0,0,0,0,0,1), 
+                        not_on_or_after=self._not_on_or_after(sp_entity_id), 
                         audience_restriction=kd_audience_restriction(
                                 audience=kd_audience(sp_entity_id)))
         # temporary identifier or ??
@@ -399,9 +386,48 @@ class Server(object):
 
     def do_aa_response(self, consumer_url, in_response_to,
                         sp_entity_id, identity, name_id_policies=None, 
-                        subject_id=None, ip_address=""):
-    
-        return do_aa_response(consumer_url, in_response_to,
-                        sp_entity_id, identity, name_id_policies, 
-                        subject_id, ip_address, self.issuer(), self.cache)
+                        name_id=None, ip_address="", issuer=None):
 
+        attr_statement = do_attribute_statement(identity)
+        
+        # start using now and for a hour
+        conds = kd_conditions(
+                        not_before=instant(), 
+                        # an hour from now
+                        not_on_or_after=in_a_while(hours=1), 
+                        audience_restriction=kd_audience_restriction(
+                                audience=kd_audience(sp_entity_id)))
+
+        # temporary identifier or ??
+        if not name_id:
+            name_id = kd_name_id(sid(), format=saml.NAMEID_FORMAT_TRANSIENT)
+
+        assertion=kd_assertion(
+            subject = kd_subject(
+                name_id=name_id,
+                method=saml.SUBJECT_CONFIRMATION_METHOD_BEARER,
+                subject_confirmation=kd_subject_confirmation(
+                    subject_confirmation_data=kd_subject_confirmation_data(
+                            in_response_to=in_response_to,
+                            not_on_or_after=in_a_while(hours=1),
+                            address=ip_address,
+                            recipient=consumer_url))),
+            attribute_statement = attr_statement,
+            authn_statement= kd_authn_statement(
+                        authn_instant=instant(),
+                        session_index=sid()),
+            conditions=conds,
+            )
+            
+        self.cache.set(name_id["text"], sp_entity_id, assertion, 
+                            conds["not_on_or_after"])
+            
+        tmp = kd_response(
+            issuer=issuer,
+            in_response_to=in_response_to,
+            destination=consumer_url,
+            status=kd_success_status(),
+            assertion=assertion,
+            )
+
+        return make_instance(samlp.Response, tmp)

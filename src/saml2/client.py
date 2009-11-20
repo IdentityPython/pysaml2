@@ -517,7 +517,7 @@ class Saml2Client:
                                                 outstanding={session_id:""}, 
                                                 log=log, decode=False,
                                                 context="AttrReq")
-            log and log.info("identity: %s" % identity)
+            log and log.info("session: %s" % session_info)
             return session_info
         else:
             log and log.info("No response")

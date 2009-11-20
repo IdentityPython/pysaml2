@@ -106,3 +106,23 @@ def make_instance(klass, spec):
                 ci = make_vals(spec[prop], klass, klass_inst, prop, True)
                 setattr(klass_inst, prop, ci)
     return klass_inst
+
+def parse_attribute_map(filenames):
+    """
+    Expects a file with each line being composed of the oid for the attribute
+    exactly one space and then a user friendly name of the attribute
+    
+    :param filename: List of filenames on mapfiles.
+    :return: A 2-tuple, one dictionary with the oid as keys and the friendly 
+        names as values, the other one the other way around.
+    """
+    forward = {}
+    backward = {}
+    for filename in filenames:
+        for line in open(filename).readlines():
+            (name, friendly_name) = line.strip().split(" ")
+            forward[name] = friendly_name
+            backward[friendly_name] = name
+        
+    return (forward, backward)
+

@@ -335,3 +335,26 @@ class MetaData(object):
             name = ""
             
         return name
+
+    def requests(self, entityid):
+        try:
+            ssos = self.entity[entity_id]["sp_sso"]
+        except KeyError:
+            ([],[])
+            
+        try:
+            requested = ssos["attribute_consuming_service"][
+                                                    "requested_attribute"]
+        except KeyError:
+            ([],[])
+            
+        required = []
+        optional = []
+        for attr in requested:
+            if "is_required" in attr and attr["is_required"] == "true":
+                required.append(attr)
+            else:
+                optional.append(attr)
+    
+        return (required, optional)
+        
