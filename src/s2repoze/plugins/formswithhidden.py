@@ -23,28 +23,58 @@ from repoze.who.plugins.form import FormPlugin
 _DEFAULT_FORM = """
 <html>
 <head>
-  <title>GUI Log In</title>
+  <title>Demo Organization Log In</title>
 </head>
 <body>
-  <div>
-     <b>GUI Log In</b>
-  </div>
-  <br/>
-  <form method="POST" action="?__do_login=true">
-    <table border="0">
-    <tr>
-      <td>User Name</td>
-      <td><input type="text" name="login"></input></td>
-    </tr>
-    <tr>
-      <td>Password</td>
-      <td><input type="password" name="password"></input></td>
-    </tr>
-    <tr>
-      <td></td>
-      <td><input type="submit" name="submit" value="Log In"/></td>
-    </tr>
-    </table>
+    <div>
+        <b>Demo Organization Log In</b>
+    </div>
+    <br/>
+    <form method="POST" action="?__do_login=true">
+        <table width="350" border="0" cellspacing="0" cellpadding="1">
+            <tr>
+                <td bgcolor="#999999">
+                    <table width="350" border="0" 
+                        cellpadding="3" cellspacing="0" bgcolor="#e6e6e6">
+                        <tr>
+                            <td colspan="2">
+                                <img src="images/transp_pixel.gif" 
+                                    width="10" height="3">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td width="85">
+                                <font color="#CC3300" >
+                                    <strong>
+                                        &nbsp;Anv&auml;ndarnamn/Username:&nbsp;
+                                    </strong>
+                                </font>
+                            </td>
+                            <td width="295">
+                                <input type="text" name="login">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td width="85">
+                                <font color="#CC3300">
+                                    <strong>
+                                        &nbsp;L&ouml;senord/Password:
+                                    </strong>
+                                </font>
+                            </td>
+                            <td width="295">
+                                <input type="password" name="password">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">&nbsp;
+                                <input name="submit" type="submit" value="Logga in">
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+		 	</tr>
+	 	</table>
     %s
   </form>
   <pre>
