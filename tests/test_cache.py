@@ -44,8 +44,8 @@ class TestClass:
         assert _eq(ava.keys(), ["surName"])
         assert ava["surName"] == ["Jeter"]
         
-    def test_issuers(self):
-        assert _eq(self.cache.issuers("1234"), ["abcd", "bcde"])
+    def test_entities(self):
+        assert _eq(self.cache.entities("1234"), ["abcd", "bcde"])
         
     def test_4(self):
         self.cache.reset("1234", "bcde")
