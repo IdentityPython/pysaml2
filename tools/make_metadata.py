@@ -48,7 +48,7 @@ def do_sp_sso_descriptor(sp, cert, backward_map):
             "requested_attribute": requested_attribute,
             "service_name": {
                 "lang":"en",
-                "text":sp["my_name"],
+                "text":sp["name"],
             }
         }
         
