@@ -327,7 +327,7 @@ class Server(object):
                     pass
         
         # default is a hour
-        return in_a_while(0,0,0,0,0,1)
+        return in_a_while(**{"hours":1})
             
     def do_sso_response(self, consumer_url, in_response_to,
                         sp_entity_id, identity, name_id=None ):
@@ -347,10 +347,11 @@ class Server(object):
         # start using now and for a hour
         conds = kd_conditions(
                         not_before=instant(), 
-                        # an hour from now
+                        # How long might depend on who's getting it
                         not_on_or_after=self._not_on_or_after(sp_entity_id), 
                         audience_restriction=kd_audience_restriction(
                                 audience=kd_audience(sp_entity_id)))
+                                
         # temporary identifier or ??
         if not name_id:
             name_id = kd_name_id(sid(), format=saml.NAMEID_FORMAT_TRANSIENT)
@@ -394,7 +395,7 @@ class Server(object):
         conds = kd_conditions(
                         not_before=instant(), 
                         # an hour from now
-                        not_on_or_after=in_a_while(hours=1), 
+                        not_on_or_after=self._not_on_or_after(sp_entity_id), 
                         audience_restriction=kd_audience_restriction(
                                 audience=kd_audience(sp_entity_id)))
 
@@ -408,10 +409,10 @@ class Server(object):
                 method=saml.SUBJECT_CONFIRMATION_METHOD_BEARER,
                 subject_confirmation=kd_subject_confirmation(
                     subject_confirmation_data=kd_subject_confirmation_data(
-                            in_response_to=in_response_to,
-                            not_on_or_after=in_a_while(hours=1),
-                            address=ip_address,
-                            recipient=consumer_url))),
+                        in_response_to=in_response_to,
+                        not_on_or_after=self._not_on_or_after(sp_entity_id),
+                        address=ip_address,
+                        recipient=consumer_url))),
             attribute_statement = attr_statement,
             authn_statement= kd_authn_statement(
                         authn_instant=instant(),
