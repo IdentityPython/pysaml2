@@ -135,7 +135,7 @@ class SAML2Plugin(FormPluginBase):
         (sid, result) = cl.authenticate(self.conf["entityid"], 
                                         self.conf["idp"]["url"][0], 
                                         self.sp["url"], 
-                                        self.sp["my_name"], 
+                                        self.sp["name"], 
                                         relay_state=came_from, 
                                         log=logger,
                                         vo=vo)
