@@ -19,26 +19,26 @@ class Cache(object):
             self._db = {}
             self._sync = False
         
-    def get_identity(self, subject_id, entity_ids=[]):
+    def get_identity(self, subject_id, entities=[]):
         """ Get all the identity information that has been received and 
         are still valid about the subject.
         
         :param subject_id: The identifier of the subject
-        :param issuers: The identifiers of the issuers whoes assertions are
-            interesting. If the list is empty all issuers are interesting.
+        :param entities: The identifiers of the entities whoes assertions are
+            interesting. If the list is empty all entities are interesting.
         :return: A 2-tuple consisting of the identity information (a
-            dictionary of attributes and values) and the list of issuers 
+            dictionary of attributes and values) and the list of entities 
             whoes information has timed out.
         """
-        if not entity_ids:
+        if not entities:
             try:
-                entity_ids = self._db[subject_id].keys()
+                entities = self._db[subject_id].keys()
             except KeyError:
                 return ({},[])
             
         res = {}
         oldees = []
-        for entity_id in entity_ids:
+        for entity_id in entities:
             try:
                 info = self.get(subject_id, entity_id)
             except To_old:
@@ -57,7 +57,7 @@ class Cache(object):
         assertion was received from an IdP or an AA or sent to a SP.
         
         :param subject_id: The identifier of the subject
-        :param issuer: The identifier of the issuer
+        :param entity_id: The identifier of the entity_id
         :return: The session information
         """
         (not_on_or_after, info) = self._db[subject_id][entity_id]
@@ -72,7 +72,7 @@ class Cache(object):
         """ Stores session information in the cache
         
         :param subject_id: The subjects identifier
-        :param entity_id: The identifier of the issuer/receiver of an assertion
+        :param entity_id: The identifier of the entity_id/receiver of an assertion
         :param info: The session info, the assertion is part of this
         :param not_on_or_after: A time after which the assertion is not valid.
         """
@@ -87,18 +87,18 @@ class Cache(object):
         """ Scrap the assertions received from a IdP or an AA.
         
         :param subject_id: The subjects identifier
-        :param issuer: The identifier of the issuer of the assertion
+        :param entity_id: The identifier of the entity_id of the assertion
         :return:
         """
-        if issuer:
+        if entity_id:
             self.set(subject_id, entity_id, {}, 0)
         else:
             self._db[subject_id] = {}
             if self._sync:
                 self._db.sync()
             
-    def issuers(self, subject_id):
-        """ Returns all the issuers of assertions for a subject, disregarding
+    def entities(self, subject_id):
+        """ Returns all the entities of assertions for a subject, disregarding
         whether the assertion still is valid or not.
         
         :param subject_id: The identifier of the subject
@@ -107,13 +107,13 @@ class Cache(object):
         return self._db[subject_id].keys()
         
     def receivers(self, subject_id):
-        return issuers(subject_id)
+        return entities(subject_id)
         
     def active(self, subject_id, entity_id):
-        """ Returns the status of assertions from a specific issuer.
+        """ Returns the status of assertions from a specific entity_id.
         
         :param subject_id: The ID of the subject
-        :param issuer: The entity ID of the issuer of the assertion
+        :param entity_id: The entity ID of the entity_id of the assertion
         :return: True or False depending on if the assertion is still
             valid or not.
         """
