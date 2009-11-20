@@ -55,21 +55,18 @@ class AttributeResolver(object):
         :return: A dictionary with all the collected information about the
             subject
         """
-        extended_identity = {}
+        result = []
         for member in vo_members:            
             for ass in self.metadata.attribute_services(member):
                 for attr_serv in ass.attribute_service:
                     log and log.info("Send attribute request to %s" % \
                                         attr_serv.location)
-                    (resp, issuer, 
-                        not_on_or_after) = self.saml2client.attribute_query(
+                    session_info = self.saml2client.attribute_query(
                                 subject_id, 
                                 issuer, 
                                 attr_serv.location, 
                                 sp_name_qualifier=sp_name_qualifier,
                                 format=name_id_format, log=log)
-                    if resp:
-                        # unnecessary
-                        del resp["__userid"]
-                        extended_identity[issuer] = (not_on_or_after, resp)                    
-        return extended_identity
+                    if session_info:
+                        result.append(session_info)
+        return result
