@@ -35,6 +35,91 @@ NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:metadata'
 #MD_TEMPLATE = '{urn:oasis:names:tc:SAML:2.0:metadata}%s'
 XML_TEMPLATE = '{http:#www.w3.org/XML/1998/namespace}%s'
 
+DESCRIPTOR_CHOICE = ["role_descriptor", "idp_sso_descriptor", 
+    "sp_sso_descriptor", 
+#    "authn_authority_descriptor",
+    "attribute_authority_descriptor", 
+    "pdp_descriptor"
+    ]
+    
+def correct(element):
+    """ Checks whether an element instance adhers to the standard 
+    
+    :param element: The element instance
+    :return: Boolean True if it is according to the standard specification
+        otherwise False.
+    """
+    
+    if hasattr(element, "c_required_attributes"):
+        for attr in element.c_required_attributes:
+            if getattr(element,attr) == None:
+                return False
+    
+    # go through the children
+    
+    if isinstance(element, EntitiesDescriptor):
+        # The has to be at least one 
+        if len(element.entity_descriptor) == 0 and \
+            len(element.entities_descriptor) == 0:
+            return False
+    elif isinstance(element, EntityDescriptor):
+        if len(element.affiliation_descriptor) > 1:
+            return False
+        elif len(element.affiliation_descriptor) == 1:
+            for descriptor in DESCRIPTOR_CHOICE:
+                if getattr(element, descriptor) != []:
+                    return False
+            return True
+        else:
+            for descriptor in DESCRIPTOR_CHOICE:
+                if getattr(element, descriptor) != []:
+                    return True
+            return False
+    elif isinstance(element, Organization):
+        for prop in ["organizational_name","organizational_display_name",
+                        "organization_url"]:
+            if getattr(element, prop) == []:
+                return False
+    elif isinstance(element, ContactPerson):
+        for child in ["company", "givenname", "surname"]:
+            if len(getattr(element, child)) > 1:
+                return False
+    elif isinstance(element, RoleDescriptor):
+        for child in ["signature", "extensions", "organization"]:
+            if len(getattr(element, child)) > 1:
+                return False
+    elif isinstance(element, KeyDescriptor):
+        if element.key_info == []:
+            return False
+    elif isinstance(element, IDPSSODescriptor):
+        if element.single_sign_on_service == []:
+            return False
+    elif isinstance(element, SPSSODescriptor):
+        if element.assertion_consumer_service == []:
+            return False
+    elif isinstance(element, AttributeConsumingService):
+        if element.service_name == []:
+            return False
+        if element.requested_attribute == []:
+            return False
+#    elif isinstance(element, AuthnAuthorityDescriptor):
+#        if element.authn_query_service == []:
+#            return False
+    elif isinstance(element, PDPDescriptor):
+        if element.authz_service == []:
+            return False
+    elif isinstance(element, AttributeAuthorityDescriptor):
+        if element.attribute_service == []:
+            return False
+    elif isinstance(element, AffiliationDescriptor):
+        if element.affiliate_member == []:
+            return False
+        if len(element.signature) > 1:
+            return False
+        if len(element.extensions) > 1:
+            return False
+    return True
+            
 class Extensions(SamlBase):
     """The md:Extensions element"""
 
@@ -54,6 +139,7 @@ class LocalizedName(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes[XML_TEMPLATE % 'lang'] = 'lang'
+    c_required_attributes = ["lang"]
 
     def __init__(self, lang=None, text=None, extension_elements=None, 
                     extension_attributes=None):
@@ -79,7 +165,8 @@ class LocalizedURI(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes[XML_TEMPLATE % 'lang'] = 'lang'
-
+    c_required_attributes = ["lang"]
+    
     def __init__(self, lang=None, text=None, extension_elements=None, 
                     extension_attributes=None):
         """Constructor for LocalizedURI
@@ -104,7 +191,7 @@ class OrganizationName(LocalizedName):
     c_namespace = NAMESPACE
     c_children = LocalizedName.c_children.copy()
     c_attributes = LocalizedName.c_attributes.copy()
-
+    
     def __init__(self, lang=None, text=None, extension_elements=None, 
                 extension_attributes=None):
         """Constructor for OrganizationName
@@ -227,7 +314,7 @@ class Endpoint(SamlBase):
     c_attributes['Binding'] = 'binding'
     c_attributes['Location'] = 'location'
     c_attributes['ResponseLocation'] = 'response_location'
-
+    c_required_attributes = ["binding", "location"]
     def __init__(self, binding=None, location=None, response_location=None,
                 text=None, extension_elements=None, extension_attributes=None):
         """Constructor for Endpoint
@@ -250,6 +337,8 @@ def endpoint_from_string(xml_string):
     return create_class_from_xml_string(Endpoint, xml_string)
 
 
+# ---------------------------------------------------------------------------
+
 class IndexedEndpoint(Endpoint):
     """The md:IndexedEndpoint base type"""
 
@@ -259,7 +348,9 @@ class IndexedEndpoint(Endpoint):
     c_attributes = Endpoint.c_attributes.copy()
     c_attributes['index'] = 'index'
     c_attributes['isDefault'] = 'is_default'
-
+    c_required_attributes = Endpoint.c_required_attributes[:]
+    c_required_attributes.append("index")
+    
     def __init__(self, index=None, is_default=None, binding=None, 
                 location=None, response_location=None, text=None,
                 extension_elements=None, extension_attributes=None):
@@ -284,6 +375,64 @@ def indexed_endpoint_from_string(xml_string):
     """ Create IndexedEndpoint instance from an XML string """
     return create_class_from_xml_string(IndexedEndpoint, xml_string)
 
+# ---------------------------------------------------------------------------
+
+class AuthzService(Endpoint):
+
+    c_tag = 'AuthzService'
+    c_namespace = NAMESPACE
+    c_children = Endpoint.c_children.copy()
+    c_attributes = Endpoint.c_attributes.copy()
+
+    def __init__(self, binding=None, 
+                location=None, response_location=None, text=None,
+                extension_elements=None, extension_attributes=None):
+        """Constructor for IndexedEndpoint
+
+        :param index: index attribute
+        :param is_default: isDefault attribute
+        :param binding: Binding attribute
+        :param location: Location attribute
+        :param response_location: ResponseLocation attribute
+        :param text: The text data in the this element
+        :param extension_elements: A list of ExtensionElement instances
+        :param extension_attributes: A dictionary of attribute value string pairs
+        """
+
+        Endpoint.__init__(self, binding, location, response_location,
+                            text, extension_elements, extension_attributes)
+
+def authz_service_from_string(xml_string):
+    """ Create AuthzService instance from an XML string """
+    return create_class_from_xml_string(AuthzService, xml_string)
+
+# ---------------------------------------------------------------------------
+
+class AssertionIDRequestService(Endpoint):
+
+    c_tag = 'AssertionIDRequestService'
+    c_namespace = NAMESPACE
+    c_children = Endpoint.c_children.copy()
+    c_attributes = Endpoint.c_attributes.copy()
+
+def assertion_id_request_service_from_string(xml_string):
+    """ Create AssertionIDRequestService instance from an XML string """
+    return create_class_from_xml_string(AssertionIDRequestService, xml_string)
+
+# ---------------------------------------------------------------------------
+
+class AuthnQueryService(Endpoint):
+
+    c_tag = 'AuthnQueryService'
+    c_namespace = NAMESPACE
+    c_children = Endpoint.c_children.copy()
+    c_attributes = Endpoint.c_attributes.copy()
+
+def authn_query_service_from_string(xml_string):
+    """ Create AuthnQueryService instance from an XML string """
+    return create_class_from_xml_string(AuthnQueryService, xml_string)
+
+# ---------------------------------------------------------------------------
     
 class Company(SamlBase):
     """The md:Company element"""
@@ -297,6 +446,7 @@ def company_from_string(xml_string):
     """ Create Company instance from an XML string """
     return create_class_from_xml_string(Company, xml_string)
 
+# ---------------------------------------------------------------------------
 
 class GivenName(SamlBase):
     """The md:GivenName element"""
@@ -358,6 +508,7 @@ class ContactPerson(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['contactType'] = 'contact_type'
+    c_required_attributes = ["contact_type"]
     c_children['{%s}Extensions' % NAMESPACE] = ('extensions', Extensions)
     c_children['{%s}Company' % NAMESPACE] = ('company', Company)
     c_children['{%s}GivenName' % NAMESPACE] = ('given_name', GivenName)
@@ -409,7 +560,8 @@ class AdditionalMetadataLocation(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['namespace'] = 'namespace'
-
+    c_required_attributes = ["namespace"]
+    
     def __init__(self, namespace=None, text=None, extension_elements=None, 
                 extension_attributes=None):
         """Constructor for AdditionalMetadataLocation
@@ -506,6 +658,7 @@ class KeyDescriptor(SamlBase):
     c_children['{%s}EncryptionMethod' % NAMESPACE] = (
         'encryption_method', [EncryptionMethod])
     c_child_order = ['key_info', 'encryption_method']
+    c_required_child = ["key_info"]
 
     def __init__(self, use=None, key_info=None, encryption_method=None,
                     text=None, extension_elements=None, 
@@ -542,6 +695,7 @@ class RoleDescriptor(SamlBase):
     c_attributes['cacheDuration'] = 'cache_duration'
     c_attributes['protocolSupportEnumeration'] = 'protocol_support_enumeration'
     c_attributes['errorURL'] = 'error_url'
+    c_required_attributes = ["protocol_support_enumeration"]
     c_children['{%s}Signature' % DS_NAMESPACE] = ('signature', ds.Signature)
     c_children['{%s}Extensions' % NAMESPACE] = ('extensions', Extensions)
     c_children['{%s}KeyDescriptor' % NAMESPACE] = (
@@ -670,6 +824,67 @@ class AffiliateMember(EntityIDType):
 def affiliate_member_from_string(xml_string):
     """ Create AffiliateMember instance from an XML string """
     return create_class_from_xml_string(AffiliateMember, xml_string)
+
+# ---------------------------------------------------------------------------
+
+class PDPDescriptor(RoleDescriptor):
+    """The md:PDPDescriptor element"""
+
+    c_tag = 'PDPDescriptor'
+    c_namespace = NAMESPACE
+    c_children = RoleDescriptor.c_children.copy()
+    c_attributes = RoleDescriptor.c_attributes.copy()
+    c_children['{%s}AuthnQueryService' % NAMESPACE] = (
+        'authn_query_service', [AuthnQueryService])
+    c_children['{%s}AssertionIDRequestService' % NAMESPACE] = (
+        'assertion_id_request_service', [AssertionIDRequestService])
+    c_children['{%s}NameIDFormat' % NAMESPACE] = (
+        'name_id_format', [NameIDFormat])
+    c_child_order = RoleDescriptor.c_child_order[:]
+    c_child_order.extend(['authn_query_service', 
+                    'assertion_id_request_service',
+                    'name_id_format'])
+
+    def __init__(self, authn_query_service=None,
+                    assertion_id_request_service=None,
+                    name_id_format=None, id=None, valid_until=None, 
+                    cache_duration=None, protocol_support_enumeration=None, 
+                    error_url=None, signature=None, extensions=None, 
+                    key_descriptor=None, organization=None, 
+                    contact_person=None, text=None, extension_elements=None, 
+                    extension_attributes=None):
+        """Constructor for SSODescriptor
+
+        :param authn_query_service: ArtifactResolutionService elements
+        :param assertion_id_request_service: SingleLogoutService elements
+        :param name_id_format: NameIDFormat elements
+        :param id: ID attribute
+        :param valid_until: validUntil attribute
+        :param cache_duration: cacheDuration attribute
+        :param protocol_support_enumeration: protocolSupportEnumeration attribute
+        :param error_url: errorURL attribute
+        :param signature: ds:Signature element
+        :param extensions: Extensions element
+        :param key_descriptor: KeyDescriptor elements
+        :param organization: Organization element
+        :param contact_person: ContactPerson elements
+        :param text: The text data in the this element
+        :param extension_elements: A list of ExtensionElement instances
+        :param extension_attributes: A dictionary of attribute value string pairs
+        """
+        RoleDescriptor.__init__(self, id, valid_until, cache_duration,
+                        protocol_support_enumeration, error_url, signature, 
+                        extensions, key_descriptor, organization, 
+                        contact_person, text, extension_elements, 
+                        extension_attributes)
+        
+        self.authn_query_service = authn_query_service or []
+        self.assertion_id_request_service = assertion_id_request_service or []
+        self.name_id_format = name_id_format or []
+
+def pdp_descriptor_from_string(xml_string):
+    """ Create PDPDescriptor instance from an XML string """
+    return create_class_from_xml_string(PDPDescriptor, xml_string)
 
 # ---------------------------------------------------------------------------
 
@@ -961,6 +1176,7 @@ class AttributeConsumingService(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_attributes['index'] = 'index'
     c_attributes['isDefault'] = 'is_default'
+    c_required_attributes = ["index"]
     c_children['{%s}ServiceName' % NAMESPACE] = (
                     'service_name', [ServiceName])
     c_children['{%s}ServiceDescription' % NAMESPACE] = (
@@ -1156,6 +1372,7 @@ class AffiliationDescriptor(SamlBase):
     c_attributes['ID'] = 'id'
     c_attributes['validUntil'] = 'valid_until'
     c_attributes['cacheDuration'] = 'cache_duration'
+    c_required_attributes = ["affiliation_owner_id"]
     c_children['{%s}Signature' % DS_NAMESPACE] = ('signature', ds.Signature)
     c_children['{%s}Extensions' % NAMESPACE] = ('extensions', Extensions)
     c_children['{%s}AffiliateMember' % NAMESPACE] = (
@@ -1201,6 +1418,70 @@ def affiliation_descriptor_from_string(xml_string):
 
 # ---------------------------------------------------------------------------
 
+class AuthnAuthorityDescriptor(RoleDescriptor):
+
+    c_tag = 'AuthnAuthorityDescriptor'
+    c_namespace = NAMESPACE
+    c_children = RoleDescriptor.c_children.copy()
+    c_attributes = RoleDescriptor.c_attributes.copy()
+
+
+    c_children['{%s}AuthnQueryService' % NAMESPACE] = (
+            'authn_query_service', AuthnQueryService)
+    c_children['{%s}AssertionIDRequestService' % NAMESPACE] = (
+            'assertion_id_request_service', AssertionIDRequestService)
+    c_children['{%s}NameIDFormat' % NAMESPACE] = (
+            'name_id_format', NameIDFormat)
+    c_child_order = RoleDescriptor.c_child_order[:]
+    c_child_order.extend(["authn_query_service",
+            "assertion_id_request_service", "name_id_format"])
+    
+    def __init__(self, authn_query_service=None,
+                    assertion_id_request_service=None, name_id_format=None,
+                    attribute_profile=None, attribute=None,
+                    id=None, valid_until=None, 
+                    cache_duration=None, protocol_support_enumeration=None, 
+                    error_url=None, signature=None, extensions=None, 
+                    key_descriptor=None, organization=None, 
+                    contact_person=None, text=None, extension_elements=None, 
+                    extension_attributes=None):
+        """Constructor for AttributeAuthorityDescriptor
+
+        :param authn_query_service: ArtifactResolutionService elements
+        :param assertion_id_request_service: SingleLogoutService elements
+        :param name_id_format: NameIDFormat elements
+        :param attribute_profile: 
+        :param attribute:
+        :param id: ID attribute
+        :param valid_until: validUntil attribute
+        :param cache_duration: cacheDuration attribute
+        :param protocol_support_enumeration: protocolSupportEnumeration attribute
+        :param error_url: errorURL attribute
+        :param signature: ds:Signature element
+        :param extensions: Extensions element
+        :param key_descriptor: KeyDescriptor elements
+        :param organization: Organization element
+        :param contact_person: ContactPerson elements
+        :param text: The text data in the this element
+        :param extension_elements: A list of ExtensionElement instances
+        :param extension_attributes: A dictionary of attribute value string pairs
+        """
+        RoleDescriptor.__init__(self, id, valid_until, cache_duration,
+                        protocol_support_enumeration, error_url, signature, 
+                        extensions, key_descriptor, organization, 
+                        contact_person, text, extension_elements, 
+                        extension_attributes)
+
+        self.authn_query_service = authn_query_service or []
+        self.assertion_id_request_service = assertion_id_request_service or []
+        self.name_id_format = name_id_format or []
+        
+def authn_authority_descriptor_from_string(xml_string):
+    """ Create AuthnAuthorityDescriptor instance from an XML string """
+    return create_class_from_xml_string(AuthnAuthorityDescriptor, xml_string)
+
+# ---------------------------------------------------------------------------
+
 
 class EntityDescriptor(SamlBase):
     """The md:EntityDescriptor element"""
@@ -1215,6 +1496,7 @@ class EntityDescriptor(SamlBase):
     c_attributes['ID'] = 'id'
     c_attributes['validUntil'] = 'valid_until'
     c_attributes['cacheDuration'] = 'cache_duration'
+    c_required_attributes = ["entity_id"]
     c_children['{%s}Signature' % DS_NAMESPACE] = ('signature', ds.Signature)
     c_children['{%s}Extensions' % NAMESPACE] = ('extensions', Extensions)
     c_children['{%s}RoleDescriptor' % NAMESPACE] = (
@@ -1282,7 +1564,7 @@ class EntityDescriptor(SamlBase):
         self.additional_metadata_location = additional_metadata_location or []
         self.attribute_authority_descriptor = attribute_authority_descriptor or []
         self.affiliation_descriptor = affiliation_descriptor or []
-    
+        
 def entity_descriptor_from_string(xml_string):
     """ Create EntityDescriptor instance from an XML string """
     return create_class_from_xml_string(EntityDescriptor, xml_string)
@@ -1306,7 +1588,8 @@ class EntitiesDescriptor(SamlBase):
     # Entities desciption further down
     c_child_order = ['signature', 'extensions', 'entity_descriptor',
                                     'entities_descriptor']
-
+    c_required_child = ["entity_descriptor"]
+    
     def __init__(self, name=None, id=None, valid_until=None, 
                     cache_duration=None, signature=None, extensions=None,
                     entity_descriptor=None, entities_descriptor=None,
