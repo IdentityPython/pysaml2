@@ -114,7 +114,7 @@ class Saml2Client:
         return None
             
     def authn_request(self, query_id, destination, service_url, spentityid, 
-                        my_name, vo="", scoping=None):
+                        my_name, vo="", scoping=None, log=None):
 
         res = {
             "id": query_id,
@@ -136,7 +136,6 @@ class Saml2Client:
         name_id_policy["format"] = saml.NAMEID_FORMAT_TRANSIENT
         if vo:
             try:
-                #if vo in self.config["virtual_organization"]:
                 name_id_policy["sp_name_qualifier"] = vo
                 name_id_policy["format"] = saml.NAMEID_FORMAT_PERSISTENT
             except KeyError:
@@ -145,6 +144,8 @@ class Saml2Client:
         res["name_id_policy"] = name_id_policy
         res["issuer"] = { "text": spentityid }
         
+        if log:
+            log.info("DICT VERSION: %s" % res)
         return make_instance(samlp.AuthnRequest, res)
 
     def authenticate(self, spentityid, location="", service_url="", 
@@ -177,7 +178,8 @@ class Saml2Client:
             log.info("my_name: %s" % my_name)
         session_id = sid()
         authen_req = "%s" % self.authn_request(session_id, location, 
-                                service_url, spentityid, my_name, vo, scoping)
+                                service_url, spentityid, my_name, vo, 
+                                scoping, log)
         log and log.info("AuthNReq: %s" % authen_req)
         
         if binding == saml2.BINDING_HTTP_POST:
