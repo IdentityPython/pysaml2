@@ -126,3 +126,44 @@ def parse_attribute_map(filenames):
         
     return (forward, backward)
 
+def filter_attribute_value_assertions(ava, attribute_restrictions=None):
+    """ Will weed out attribute values and values according to the 
+    rules defined in the attribute restrictions. If filtering results in 
+    an attribute without values, then the attribute is removed from the
+    assertion.
+    
+    :param ava: The incoming attribute value assertion
+    :param attribute_restrictions: The rules that govern which attributes
+        and values that are allowed.
+    :return: A attribute value assertion
+    """
+    if not attribute_restrictions:
+        return ava
+        
+    resava = {}
+    for attr,vals in ava.items():
+        if attr in attribute_restrictions:
+            if attribute_restrictions[attr] == None:
+                resava[attr] = vals
+            else:    
+                rvals = []
+                for restr in attribute_restrictions[attr]:
+                    for val in vals:
+                        if restr.match(val):
+                            rvals.append(val)
+                
+                if rvals:
+                    resava[attr] = list(set(rvals))
+    return resava
+    
+def identity_attribute(form, attribute, forward_map=None):
+    if form == "friendly":
+        if attribute.friendly_name:
+            return attribute.friendly_name
+        elif forward_map:
+            try:
+                return forward_map[attribute.name]
+            except KeyError:
+                return attribute.name
+    # default is name
+    return attribute.name
