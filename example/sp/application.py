@@ -110,7 +110,7 @@ def application(environ, start_response):
 from repoze.who.config import make_middleware_with_config
 
 app_with_auth = make_middleware_with_config(application, {"here":"."}, 
-                        './who_saml2.ini', log_file="repo.log")
+                        './who.ini', log_file="repo.log")
 
 # ----------------------------------------------------------------------------
 
