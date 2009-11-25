@@ -68,11 +68,9 @@ class SAML2Plugin(FormPluginBase):
     implements(IChallenger, IIdentifier, IAuthenticator, IMetadataProvider)
     
     def __init__(self, rememberer_name, saml_conf_file, virtual_organization,
-                cache, path_logout, path_toskip, debug):
+                cache, debug):
         
         self.rememberer_name = rememberer_name
-        self.path_logout = path_logout
-        self.path_toskip = path_toskip
         self.debug = debug        
         
         self.conf = Config()
@@ -186,29 +184,6 @@ class SAML2Plugin(FormPluginBase):
         if self.debug:
             logger and logger.info('identify query: %s' % (query,))
         
-        # path_logout for every app. 
-        for regex in self.path_logout:
-           if re.match(regex, uri) != None:
-               if self.debug : 
-                   logger and logger.info("LOGOUT #### ")
-               # we've been asked to perform a logout
-
-               # use all except : POST
-               # trigger the challenge and tells the challenge this is a logout
-               query['bhp'] = 'go'
-               environ['rwpc.logout'] = \
-                    self._serviceURL(environ,urllib.urlencode(query))
-               
-               return None
-
-        # skipping, whatever it is (loggin, validating ticket etc.)
-        # except for logout (see above)
-        for regex in self.path_toskip:
-            if re.match(regex, uri) != None:
-                if self.debug : 
-                       logger and logger.info("########### SKIPPING")
-                return None
-
         post_env = environ.copy()
         post_env['QUERY_STRING'] = ''
         
@@ -370,8 +345,6 @@ def make_plugin(rememberer_name=None, # plugin for remember
                  cache= "", # cache
                  # Which virtual organization to support
                  virtual_organization="", 
-                 path_logout='', # regex url to logout
-                 path_toskip='',  # regex url to skip
                  saml_conf="",
                  debug=0,
                  ):
@@ -383,12 +356,9 @@ def make_plugin(rememberer_name=None, # plugin for remember
     if rememberer_name is None:
         raise ValueError(
              'must include rememberer_name in configuration')
-    path_logout = path_logout.lstrip().split('\n');
-    path_toskip = path_toskip.lstrip().splitlines()
 
     plugin = SAML2Plugin(rememberer_name, saml_conf, 
-                virtual_organization, cache,
-                path_logout, path_toskip, debug)
+                virtual_organization, cache, debug)
     return plugin
 
 # came_from = re.sub(r'ticket=[^&]*&?', '', came_from)
