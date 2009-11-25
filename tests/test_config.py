@@ -10,6 +10,9 @@ sp1 = {
         "sp": {
             "url" : "http://lingon.catalogix.se:8087/",
             "name": "test",
+            "idp" : {
+                "urn:mace:example.com:saml:roland:idp":None,
+            },
         }
     },
     "key_file" : "tests/mykey.pem",
@@ -18,15 +21,6 @@ sp1 = {
     "metadata": { 
         "local": ["tests/metadata.xml", 
                     "tests/urn-mace-swami.se-swamid-test-1.0-metadata.xml"],
-    #    "remote":{
-    #        "edugain":{
-    #            "url": "https://www.example.com/?id=edugain&set=saml2",
-    #            "cert": "./edugain.pem",
-    #         }
-    #    }
-    },
-    "idp" : {
-        "entity_id": ["urn:mace:umu.se:saml:roland:idp"],
     },
     "virtual_organization" : {
         "http://vo.example.org/biomed":{
@@ -39,3 +33,6 @@ sp1 = {
 def test_1():
     c = Config()
     c.load(sp1)
+    
+    print c
+    assert False
