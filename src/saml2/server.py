@@ -315,6 +315,11 @@ class Server(object):
         pass
                 
     def _not_on_or_after(self, sp_entity_id):
+        """ When the assertion stops being valid, should not be
+        used after this time.
+        
+        :return: String representation of the time
+        """
         if "assertions" in self.conf:
             try:
                 spec = self.conf["assertions"][sp_entity_id]["lifetime"]
