@@ -3,6 +3,7 @@
 # 
 
 from saml2 import metadata
+import re
 
 def entity_id2url(md, entity_id):
     try:
@@ -17,31 +18,55 @@ def entity_id2url(md, entity_id):
             print ent, dic.keys()
         return None
 
-class Config(dict):
-    def sp_check(self, config):
-        assert "idp" in config
-        
-        if "metadata" in config:
-            md = config["metadata"]
+def do_assertions(assertions):
+    for id, spec in assertions.items():
+        try:
+            restr = spec["attribute_restrictions"]
+        except:
+            continue
             
-            if "entity_id" in config["idp"]:
-                if not "url" in config["idp"]:
-                    config["idp"]["url"] = []
-                urls = config["idp"]["url"]
-                for eid in config["idp"]["entity_id"]:
-                    url = entity_id2url(md, eid)
-                    if url:
-                        if url not in urls:
-                            urls.append(url)
+        if restr == None:
+            continue
+            
+        for key, values in restr.items():
+            if not values:
+                spec["attribute_restrictions"][key] = None
+                continue
                 
-        assert "sp" in config["service"]
-        assert "url" in config["service"]["sp"]
+            rev = []
+            for value in values:
+                rev.append(re.compile(value))
+            spec["attribute_restrictions"][key] = rev
+    
+    return assertions
+    
+class Config(dict):
+    def sp_check(self, config, md=None):
+        assert "idp" in config
+        assert len(config["idp"]) > 0
+
+        if md:
+            
+            if len(config["idp"]) == 0:
+                eids = [e for e,d in md.entity.items() if "idp_sso" in d]
+                for eid in eids:
+                    config["idp"][eid] = entity_id2url(md, eid)
+            else:
+                for eid, url in config["idp"].items():
+                    if not url:
+                        config["idp"][eid] = entity_id2url(md, eid)
+        
+        assert "url" in config
             
     def idp_check(self, config):
-        pass
+        assert "url" in config
+        if "assertions" in config:
+            config["assertions"] = do_assertions(config["assertions"])
         
     def aa_check(self, config):
-        pass
+        assert "url" in config
+        if "assertions" in config:
+            config["assertions"] = do_assertions(config["assertions"])
         
     def load_metadata(self, metadata_conf):
         """ """
@@ -74,12 +99,14 @@ class Config(dict):
             config["metadata"] = self.load_metadata(config["metadata"])
             
         if "sp" in config["service"]:
-            self.sp_check(config)
+            if "metadata" in config:
+                self.sp_check(config["service"]["sp"], config["metadata"])
+            else:
+                self.sp_check(config["service"]["sp"])
         if "idp" in config["service"]:
-            self.idp_check(config)
+            self.idp_check(config["service"]["idp"])
         if "aa" in config["service"]:
-            self.aa_check(config)
-                    
-        
+            self.aa_check(config["service"]["aa"])
+                            
         for key, val in config.items():
             self[key] = val
