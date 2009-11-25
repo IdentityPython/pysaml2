@@ -17,7 +17,7 @@ Contents:
    :maxdepth: 1
 
    install
-   howto
+   howto/index
    saml2
    examples/index
    

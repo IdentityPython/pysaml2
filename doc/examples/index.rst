@@ -1,6 +1,6 @@
 .. _example_index:
 
-These are examples of the usage of pysaml2!
+These are examples of the usage of pySAML2!
 ===========================================
 
 :Release: |version|
