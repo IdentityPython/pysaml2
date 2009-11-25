@@ -78,13 +78,15 @@ class SAML2Plugin(FormPluginBase):
         self.conf = Config()
         self.conf.load_file(saml_conf_file)
         self.sp = self.conf["service"]["sp"]
+
         if virtual_organization:
             self.vo = virtual_organization
-            try:
-                self.vo_conf = self.conf[
-                                "virtual_organization"][virtual_organization]
-            except KeyError:
-                self.vo = None
+            self.vo_conf = None
+#            try:
+#                self.vo_conf = self.conf[
+#                                "virtual_organization"][virtual_organization]
+#            except KeyError:
+#                self.vo = None
         else:
             self.vo = None
             
@@ -131,9 +133,22 @@ class SAML2Plugin(FormPluginBase):
         except KeyError:
             vo = self.vo
         logger and logger.info("VO: %s" % vo)
+
         # If more than one idp, I have to do wayf
+        logger and logger.info("IdP URL: %s" % self.sp["idp"].values())
+        if len( self.sp["idp"] ) == 1:
+            idp_url = self.sp["idp"].values()[0]
+        elif len( self.sp["idp"] ) == 0:
+            start_response('500 Internal Server Error', 
+                                [('Content-Type', 'text/plain')])
+            return ['Misconfiguration']
+        else:
+            start_response('501 Not Implemented', 
+                                [('Content-Type', 'text/plain')])
+            return ['WAYF not implemented yet!']
+            
         (sid, result) = cl.authenticate(self.conf["entityid"], 
-                                        self.conf["idp"]["url"][0], 
+                                        idp_url, 
                                         self.sp["url"], 
                                         self.sp["name"], 
                                         relay_state=came_from, 
@@ -299,7 +314,7 @@ class SAML2Plugin(FormPluginBase):
                 
                 vo_members = [
                     member for member in self.metadata.vo_members(self.vo)\
-                        if member not in self.conf["idp"]["entity_id"]]
+                        if member not in self.sp["idp"].keys()]
                     
                 logger and logger.info("VO members: %s" % vo_members)
                 vo_members = [m for m in vo_members \
@@ -310,7 +325,7 @@ class SAML2Plugin(FormPluginBase):
                 if vo_members:
                     ar = AttributeResolver(environ, self.metadata, self.conf)
                 
-                    if "name_id_format" in self.vo_conf:
+                    if self.vo_conf and "name_id_format" in self.vo_conf:
                         name_id_format = self.vo_conf["name_id_format"]
                         sp_name_qualifier=""
                     else:
