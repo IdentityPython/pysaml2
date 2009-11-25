@@ -440,6 +440,19 @@ class SamlBase(ExtensionContainer):
     def keyswv(self):
         return [key for key,val in self.__dict__.items() if val]
         
+    def children_with_values(self):
+        childs = []
+        for _, values in self.__class__.c_children.iteritems():
+            member = getattr(self, values[0])
+            if member is None or member == []:
+                pass
+            elif isinstance(member, list):
+                for instance in member:
+                    childs.append(instance)
+            else:
+                childs.append(member)
+        return childs
+        
 def extension_element_to_element(extension_element, element_to_string,
                                     namespace=None):
     element_namespace = extension_element.namespace
