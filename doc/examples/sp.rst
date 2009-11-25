@@ -3,6 +3,31 @@
 An extremly simple example of a SAML2 service provider.
 =======================================================
 
+How it works
+------------
+
+A SP works with authentication and possibly attribute aggregation.
+Both of these functions can be seen as parts of the normal Repoze.who
+setup. Namely the Challenger, Identifier and MetadataProvider parts.
+
+Normal for Repoze.who Identifier and MetadataProvider plugins are that
+they place information in environment variables. The convention is to place
+identity information in environ["repoze.who.identity"].
+This is a dictionary with keys like 'login', and 'repoze.who.userid'.
+
+The SP follows this pattern and places the information gathered from 
+the IdP that handled the authentication and possible extra information
+received from attribute authorities in the above mentioned dictionary under
+the key 'user'.
+
+So in environ["repoze.who.identity"] you will find a dictionary with 
+attributes and values, the attribute names used depends on what's returned
+from the IdP/AA. If there exists both a name and a friendly name, for
+instance, the friendly name is used as the key.
+
+Setup
+-----
+
 I you look in the example/sp directory of the distribution you will see
 the necessary files:
 
@@ -20,6 +45,13 @@ And then there are two files with certificates, mykey.pem with the private
 certificate and mycert.pem with the public part.
 
 I'll go through these step by step.
+
+The application
+---------------
+
+Build to use the wsgiref's simple_server, which is find for testing but
+not for production.
+
 
 SP configuration
 ----------------
