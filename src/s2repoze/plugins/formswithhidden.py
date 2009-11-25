@@ -38,8 +38,6 @@ _DEFAULT_FORM = """
                         cellpadding="3" cellspacing="0" bgcolor="#e6e6e6">
                         <tr>
                             <td colspan="2">
-                                <img src="images/transp_pixel.gif" 
-                                    width="10" height="3">
                             </td>
                         </tr>
                         <tr>
