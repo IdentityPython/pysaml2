@@ -437,3 +437,35 @@ class Server(object):
             )
 
         return make_instance(samlp.Response, tmp)
+
+    def authn_response(self, identity, in_response_to, destination, spid,
+                    name_id_policy, userid):
+        """
+        """
+        namn_id = None
+        if name_id_policy.sp_name_qualifier:
+            try:
+                vo_conf = self.conf["virtual_organization"][
+                                name_id_policy.sp_name_qualifier]
+                subj_id = identity[vo_conf["common_identifier"]]
+            except KeyError:
+                self.log.info(
+                    "Get persistent ID (%s,%s)" % (
+                                    name_id_policy.sp_name_qualifier,userid))
+                subj_id = self.persistent_id(name_id_policy.sp_name_qualifier, 
+                                            userid)
+                self.log.info("=> %s" % subj_id)
+                
+            namn_id = kd_name_id(subj_id, 
+                        format=saml.NAMEID_FORMAT_PERSISTENT,
+                        sp_name_qualifier=name_id_policy.sp_name_qualifier)
+                
+        resp = self.do_sso_response(
+                            destination,    # consumer_url
+                            in_response_to, # in_response_to
+                            spid,           # sp_entity_id
+                            identity,       # identity as dictionary
+                            namn_id,
+                        )
+        
+        return ("%s" % resp).split("\n")
