@@ -91,7 +91,7 @@ class FormHiddenPlugin(FormPlugin):
     def identify(self, environ):
         logger = environ.get('repoze.who.logger','')
         logger and logger.info("formplugin identify")
-        logger and logger.info("environ keys: %s" % environ.keys())
+        #logger and logger.info("environ keys: %s" % environ.keys())
         query = parse_dict_querystring(environ)
         # If the extractor finds a special query string on any request,
         # it will attempt to find the values in the input body.
