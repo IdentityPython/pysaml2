@@ -41,7 +41,9 @@ DESCRIPTOR_CHOICE = ["role_descriptor", "idp_sso_descriptor",
     "attribute_authority_descriptor", 
     "pdp_descriptor"
     ]
-    
+   
+CONTACT_TYPES = ["technical", "support", "administrative", "billing", "other"]
+
 def correct(element):
     """ Checks whether an element instance adhers to the standard 
     
@@ -56,7 +58,10 @@ def correct(element):
                 return False
     
     # go through the children
-    
+    for child in element.children_with_values():
+        if correct(child) == False:
+            return False
+            
     if isinstance(element, EntitiesDescriptor):
         # The has to be at least one 
         if len(element.entity_descriptor) == 0 and \
@@ -84,6 +89,8 @@ def correct(element):
         for child in ["company", "givenname", "surname"]:
             if len(getattr(element, child)) > 1:
                 return False
+        if element.contact_type not in CONTACT_TYPES:
+            return False
     elif isinstance(element, RoleDescriptor):
         for child in ["signature", "extensions", "organization"]:
             if len(getattr(element, child)) > 1:
