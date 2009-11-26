@@ -26,6 +26,7 @@ import time
 import re
 from saml2.time_util import str_to_time, add_duration, instant
 from saml2.utils import sid, deflate_and_base64_encode, make_instance
+from saml2.utils import kd_name_id, kd_subject, do_attributes
 
 from saml2 import samlp, saml, extension_element_to_element, metadata
 from saml2 import VERSION
@@ -410,32 +411,9 @@ class Saml2Client:
             return self._encrypted_assertion(xmlstr, outstanding, 
                                                 requestor, log, context)
 
-    def _attribute_query(self, session_id, subject_id, issuer, 
-            destination, attribute=None, sp_name_qualifier=None, 
-            name_qualifier=None, format=None, sign=False):
-    
-        name_id = server.kd_name_id(subject_id, format=format,
-                    sp_name_qualifier=sp_name_qualifier,
-                    name_qualifier=name_qualifier)
-        subject = server.kd_subject(
-                    name_id = name_id,
-                    method=saml.SUBJECT_CONFIRMATION_METHOD_BEARER
-                    )
-        query = {
-            "id": session_id,
-            "version": VERSION,
-            "issue_instant": instant(),
-            "destination": destination,
-            "issuer": issuer,
-            "subject":subject,
-        }
-        if sign:
-            query["signature"] = sigver.pre_signature_part(query["id"])
-        
-
     def create_attribute_query(self, session_id, subject_id, issuer, 
             destination, attribute=None, sp_name_qualifier=None, 
-            name_qualifier=None, format=None):
+            name_qualifier=None, format=None, sign=False):
         """ Constructs an AttributeQuery 
         
         :param subject_id: The identifier of the subject
@@ -453,55 +431,34 @@ class Saml2Client:
             provider that generated the identifier.
         :return: An AttributeQuery instance
         """
-        
-        attr_query = self._init_request(samlp.AttributeQuery(session_id), 
-                                        destination)
-        
-        subject = saml.Subject()
-        name_id = saml.NameID()
-        if format:
-            name_id.format = format
-        else:
-            name_id.format = saml.NAMEID_FORMAT_PERSISTENT
-        if name_qualifier:
-            name_id.name_qualifier = name_qualifier
-        if sp_name_qualifier:
-            name_id.sp_name_qualifier = sp_name_qualifier
-        name_id.text = subject_id
-        subject.name_id = name_id
-        
-        attr_query.subject = subject
-        attr_query.issuer = saml.Issuer(text=issuer)
 
-        if attribute:
-            attrs = []
-            for attr_tup, values in attribute.items():
-                format = friendly = ""
-                if isinstance(attr_tup, tuple):
-                    if len(attr_tup) == 3:
-                        (format,name,friendly) = attr_tup
-                    elif len(attr_tup) == 2:
-                        (format,name) = attr_tup
-                    elif len(attr_tup) == 1:
-                        (name) = attr_tup
-                elif isinstance(attr_tup, basestring):
-                    name = attr_tup
-                sattr = saml.Attribute()
-                sattr.name = name
-                if format:
-                    sattr.name_format = format
-                if friendly:
-                    sattr.friendly_name = friendly
-
-                if values:
-                    aval = [saml.AttributeValue(text=val) for val in values]
-                    sattr.attribute_value = aval
-                attrs.append(sattr)
-                    
-            attr_query.attribute = attrs
-        
-        return attr_query
     
+        name_id = kd_name_id(subject_id, format=format,
+                    sp_name_qualifier=sp_name_qualifier,
+                    name_qualifier=name_qualifier)
+        subject = kd_subject(
+                    name_id = name_id,
+                    method=saml.SUBJECT_CONFIRMATION_METHOD_BEARER
+                    )
+        
+        query = {
+            "id": session_id,
+            "version": VERSION,
+            "issue_instant": instant(),
+            "destination": destination,
+            "issuer": issuer,
+            "subject":subject,
+        }
+        
+        if sign:
+            query["signature"] = sigver.pre_signature_part(query["id"])
+        
+        if attribute:
+            query["attribute"] = do_attributes(attribute)
+            
+        print query
+        return make_instance(samlp.AttributeQuery, query)
+            
     def attribute_query(self, subject_id, issuer, destination, 
                 attribute=None, sp_name_qualifier=None, name_qualifier=None, 
                 format=None, log=None):

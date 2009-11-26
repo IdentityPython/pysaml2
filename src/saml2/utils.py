@@ -283,11 +283,7 @@ def kd_response(signature=False, encrypt=False, **kwargs):
     
     return kwargs
 
-def do_attribute_statement(identity):
-    """
-    :param identity: A dictionary with fiendly names as keys
-    :return:
-    """
+def do_attributes(identity):
     attrs = []
     for key, val in identity.items():
         dic = {}
@@ -295,13 +291,20 @@ def do_attribute_statement(identity):
             attrval = kd_attribute_value(val)
         elif isinstance(val,list):
             attrval = [kd_attribute_value(v) for v in val]
+        elif val == None:
+            attrval = None
         else:
             raise OtherError("strange value type on: %s" % val)
-        dic["attribute_value"] = attrval
+        if attrval:
+            dic["attribute_value"] = attrval
         if isinstance(key, basestring):
             dic["name"] = key
         elif isinstance(key, tuple): # 3-tuple
-            (name,format,friendly) = key
+            try:
+                (name, format, friendly) = key
+            except ValueError:
+                (name, format) = key
+                friendly = ""
             if name:
                 dic["name"] = name
             if format:
@@ -309,8 +312,14 @@ def do_attribute_statement(identity):
             if friendly:
                 dic["friendly_name"] = friendly
         attrs.append(kd_attribute(**dic))
-
-    return kd_attribute_statement(attribute=attrs)
+    return attrs
+    
+def do_attribute_statement(identity):
+    """
+    :param identity: A dictionary with fiendly names as keys
+    :return:
+    """
+    return kd_attribute_statement(attribute=do_attributes(identity))
 
 def kd_issuer(text, **kwargs):
     return klassdict(saml.Issuer, text, **kwargs)        

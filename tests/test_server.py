@@ -180,7 +180,7 @@ def test_do_attribute_statement():
     
 def test_do_attribute_statement_multi():
     astat = do_attribute_statement(
-                {("urn:oid:1.3.6.1.4.1.5923.1.1.1.7",
+                {( "urn:oid:1.3.6.1.4.1.5923.1.1.1.7",
                     "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
                     "eduPersonEntitlement"):"Jeter"})
     statement = make_instance(saml.AttributeStatement,astat)

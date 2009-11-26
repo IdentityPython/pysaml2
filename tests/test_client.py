@@ -103,7 +103,8 @@ class TestClient:
         req = self.client.create_attribute_query("1", 
             "E8042FB4-4D5B-48C3-8E14-8EDD852790DD",
             "http://vo.example.com/sp1",
-            "https://idp.example.com/idp/" )
+            "https://idp.example.com/idp/",
+            format=saml.NAMEID_FORMAT_PERSISTENT)
         str = "%s" % req.to_string()
         print str
         assert str == REQ1 % req.issue_instant
@@ -123,13 +124,16 @@ class TestClient:
             "http://vo.example.com/sp1",
             "https://idp.example.com/idp/",
             attribute={
-                ("urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
-                "urn:oid:2.5.4.42","givenName"):None,
-                ("urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
-                "urn:oid:2.5.4.4","surname"):None,
-                ("urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
-                "urn:oid:1.2.840.113549.1.9.1"):None,
-                })
+                ("urn:oid:2.5.4.42",
+                "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+                "givenName"):None,
+                ("urn:oid:2.5.4.4",
+                "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+                "surname"):None,
+                ("urn:oid:1.2.840.113549.1.9.1",
+                "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"):None,
+                },
+            format=saml.NAMEID_FORMAT_PERSISTENT)
                 
         print req.to_string()
         assert req.destination == "https://idp.example.com/idp/"
