@@ -31,7 +31,7 @@ from saml2 import samlp, saml, extension_element_to_element
 from saml2 import VERSION, class_name
 from saml2.sigver import correctly_signed_response, decrypt
 from saml2.sigver import pre_signature_part, sign_assertion_using_xmlsec
-from saml2.sigver import sign_X_using_xmlsec
+from saml2.sigver import sign_statement_using_xmlsec
 from saml2.soap import SOAPClient
 
 DEFAULT_BINDING = saml2.BINDING_HTTP_REDIRECT
@@ -165,7 +165,7 @@ class Saml2Client:
             
         request = make_instance(samlp.AuthnRequest, prel)
         if sign:
-            return sign_X_using_xmlsec("%s" % request, class_name(request),
+            return sign_statement_using_xmlsec("%s" % request, class_name(request),
                                     self.config["xmlsec_binary"], 
                                     key_file=self.config["key_file"])
             #return samlp.authn_request_from_string(sreq)

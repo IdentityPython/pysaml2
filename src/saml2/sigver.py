@@ -37,7 +37,7 @@ _TEST_ = True
 class SignatureError(Exception):
     pass
     
-def decrypt( input, key_file, xmlsec_binary, log=None):
+def decrypt( enctext, key_file, xmlsec_binary, log=None):
     """ Decrypting an encrypted text by the use of a private key.
     
     :param input: The encrypted text as a string
@@ -46,8 +46,8 @@ def decrypt( input, key_file, xmlsec_binary, log=None):
     :param log: A reference to a logging instance.
     :return: The decrypted text
     """
-    log and log.info("input len: %d" % len(input))
-    fil_p, fil = make_temp("%s" % input, decode=False)
+    log and log.info("input len: %d" % len(enctext))
+    _, fil = make_temp("%s" % enctext, decode=False)
     ntf = NamedTemporaryFile()
 
     log and log.info("xmlsec binary: %s" % xmlsec_binary)
@@ -138,12 +138,12 @@ def _parse_xmlsec_output(output):
             return False
     return False
         
-def verify_signature_assertion(xmlsec_binary, input, cert_file):
-    return verify_signature(xmlsec_binary, input, cert_file,
+def verify_signature_assertion(xmlsec_binary, enctext, cert_file):
+    return verify_signature(xmlsec_binary, enctext, cert_file,
                             "der",
                             "urn:oasis:names:tc:SAML:2.0:assertion:Assertion")
     
-def verify_signature(xmlsec_binary, input, cert_file, 
+def verify_signature(xmlsec_binary, enctext, cert_file, 
                         cert_type="der", node_name=NODE_NAME):
     """ Verifies the signature of a XML document.
     
@@ -152,7 +152,7 @@ def verify_signature(xmlsec_binary, input, cert_file,
     :param der_file: The public key that was used to sign the document
     :return: Boolean True if the signature was correct otherwise False.
     """
-    fil_p, fil = make_temp("%s" % input, decode=False)
+    _, fil = make_temp("%s" % enctext, decode=False)
     
     com_list = [xmlsec_binary, "--verify",
                 "--pubkey-cert-%s" % cert_type, cert_file, 
@@ -281,7 +281,7 @@ def correctly_signed_response(decoded_xml,
 # SIGNATURE PART
 #----------------------------------------------------------------------------
         
-def sign_X_using_xmlsec(statement, xtype, xmlsec_binary, key=None, 
+def sign_statement_using_xmlsec(statement, xtype, xmlsec_binary, key=None, 
                                     key_file=None):
     """Sign a SAML statement using xmlsec.
     
@@ -377,17 +377,17 @@ PRE_SIGNATURE = {
     "signature_value": None,
 }
 
-def pre_signature_part(id):
+def pre_signature_part(ident):
     """
     If an assertion is to be signed the signature part has to be preset
     with which algorithms to be used, this function returns such a
     preset part.
     
-    :param id: The identifier of the assertion, so you know which assertion
+    :param ident: The identifier of the assertion, so you know which assertion
         was signed
     :return: A preset signature part
     """
     
     presig = PRE_SIGNATURE
-    presig["signed_info"]["reference"]["uri"] = "#%s" % id
+    presig["signed_info"]["reference"]["uri"] = "#%s" % ident
     return presig

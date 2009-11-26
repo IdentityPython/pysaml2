@@ -33,21 +33,22 @@ TIME_FORMAT_WITH_FRAGMENT = re.compile(
 #I'm sure this is implemeted somewhere else cann't find it now though, so I
 #made an attempt.
 #Implemented according to 
-#http://www.w3.org/TR/2001/REC-xmlschema-2-20010502/#adding-durations-to-dateTimes
+#http://www.w3.org/TR/2001/REC-xmlschema-2-20010502/
+#adding-durations-to-dateTimes
 
-def f_quotient(a, b, c=0):
-    if c:
-        return int((a-b)/(c-b))
-    elif a == 0:
+def f_quotient(arg0, arg1, arg2=0):
+    if arg2:
+        return int((arg0-arg1)/(arg2-arg1))
+    elif arg0 == 0:
         return 0
     else:
-        return int(a/b)
+        return int(arg0/arg1)
 
-def modulo(a, b, c=0):
-    if c:
-        return ((a - b)%(c - b)) + b
+def modulo(arg0, arg1, arg2=0):
+    if arg2:
+        return ((arg0 - arg1) % (arg2 - arg1)) + arg1
     else:
-        return a%b
+        return arg0 % arg1
 
 DAYS_IN_MONTH = {
     1: 31,
@@ -63,21 +64,21 @@ DAYS_IN_MONTH = {
     12: 31,
     }
     
-def days_in_february(y):
-    if modulo(y, 400) == 0:
+def days_in_february(year):
+    if modulo(year, 400) == 0:
         return 29
-    elif (modulo(y, 100) != 0) and (modulo(y, 4) == 0):
+    elif (modulo(year, 100) != 0) and (modulo(year, 4) == 0):
         return 29
     else:
         return 28
 
-def maximum_day_in_month_for(yearValue, monthValue):
-    m = modulo(monthValue, 1, 13)
-    y = yearValue + f_quotient(monthValue, 1, 13)
+def maximum_day_in_month_for(year_value, month_value):
+    month = modulo(month_value, 1, 13)
+    year = year_value + f_quotient(month_value, 1, 13)
     try: 
-        return DAYS_IN_MONTH[m]
+        return DAYS_IN_MONTH[month]
     except KeyError:
-        return days_in_february(y)
+        return days_in_february(year)
           
 D_FORMAT = [
     ("Y", "tm_year"),
@@ -92,28 +93,27 @@ D_FORMAT = [
 def parse_duration(duration):
     # PnYnMnDTnHnMnS
     assert duration[0] == "P"
-    n = 1
-    d = {}
+    index = 1
+    dic = {}
     for code, typ in D_FORMAT:
-        print duration[n:], code        
+        print duration[index:], code        
         if code == "T":
-            if duration[n] == "T":
-                n += 1
+            if duration[index] == "T":
+                index += 1
             else:
                 raise Exception("Missing T")
         else:
             try:
-                m = duration[n:].index(code)
+                mod = duration[index:].index(code)
                 try:
-                    d[typ] = int(duration[n:n+m])
+                    dic[typ] = int(duration[index:index+mod])
                 except ValueError:
-                    d[typ] = float(duration[n:n+m])
-                n = m+n+1
+                    dic[typ] = float(duration[index:index+mod])
+                index = mod+index+1
             except ValueError:
-                d[typ] = 0
-                pass
+                dic[typ] = 0
     
-    return d
+    return dic
     
 def add_duration(tid, duration):
     
@@ -170,9 +170,9 @@ def time_in_a_while(days=0, seconds=0, microseconds=0, milliseconds=0,
                     minutes[, hours[, weeks]]]]]]])
     """
     now = datetime.now()
-    t = timedelta(*[days,seconds,microseconds,milliseconds,minutes,
-                    hours,weeks])
-    soon = now + t
+    delta = timedelta(*[days, seconds, microseconds, milliseconds, minutes,
+                    hours, weeks])
+    soon = now + delta
     return soon
 
 def in_a_while(days=0, seconds=0, microseconds=0, milliseconds=0,
@@ -194,11 +194,11 @@ def str_to_time(timestr):
         then = time.strptime(timestr, TIME_FORMAT)
     except Exception: # assume it's a format problem
         try:
-            m = TIME_FORMAT_WITH_FRAGMENT.match(timestr)
-        except Exception, e:
-            print "Exception: %s on %s" % (e,timestr)
+            elem = TIME_FORMAT_WITH_FRAGMENT.match(timestr)
+        except Exception, exc:
+            print "Exception: %s on %s" % (exc, timestr)
             raise
-        then = time.strptime(m.groups()[0]+"Z", TIME_FORMAT)
+        then = time.strptime(elem.groups()[0]+"Z", TIME_FORMAT)
         
     return then
 

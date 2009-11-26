@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2007 SIOS Technology, Inc.
 # Copyright (C) 2009 Umeå University
@@ -1008,7 +1009,7 @@ class Evidence(SamlBase):
                                                         [AssertionIDRef])
     c_children['{%s}AssertionURIRef' % NAMESPACE] = ('assertion_uri_ref', 
                                                         [AssertionURIRef])
-    # Can't do this here since Assertion isn't defined                                                    
+    # Can't do this here since Assertion isn't defined
     #c_children['{%s}Assertion' % NAMESPACE] = ('assertion', [Assertion])
     c_children['{%s}EncryptedAssertion' % NAMESPACE] = (
         'encrypted_assertion', [EncryptedAssertion])

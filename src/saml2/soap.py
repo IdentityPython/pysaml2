@@ -20,7 +20,6 @@ Suppport for the client part of the SAML2.0 SOAP binding.
 """
 
 import httplib2
-import urllib
 
 try:
     from xml.etree import cElementTree as ElementTree

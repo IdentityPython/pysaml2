@@ -26,14 +26,15 @@ from saml2.utils import kd_issuer, kd_conditions, kd_audience_restriction
 from saml2.utils import sid, decode_base64_and_inflate, make_instance
 from saml2.utils import kd_audience, kd_name_id, kd_assertion
 from saml2.utils import kd_subject, kd_subject_confirmation, kd_response
-from saml2.utils import kd_assertion, kd_authn_statement
+from saml2.utils import kd_authn_statement
 from saml2.utils import kd_subject_confirmation_data, kd_success_status
 from saml2.utils import filter_attribute_value_assertions
 from saml2.utils import OtherError, do_attribute_statement
+from saml2.utils import VersionMismatch, UnknownPrincipal, UnsupportedBinding
 
-from saml2.sigver import correctly_signed_authn_request, decrypt
+from saml2.sigver import correctly_signed_authn_request
+from saml2.sigver import pre_signature_part
 from saml2.time_util import instant, in_a_while
-from saml2.metadata import MetaData
 from saml2.config import Config
 from saml2.cache import Cache    
 
@@ -54,9 +55,9 @@ class Server(object):
         
         self.metadata = self.conf["metadata"]
         if cache:
-            self.cache=Cache(cache)
+            self.cache = Cache(cache)
         else:
-            self.cache=Cache()
+            self.cache = Cache()
         self.log = log
         self.debug = debug
         
@@ -77,22 +78,22 @@ class Server(object):
             self.log and self.log.debug("Id map keys: %s" % self.id_map.keys())
             
         try:
-            map = self.id_map[entity_id]
+            emap = self.id_map[entity_id]
         except KeyError:
-            map = self.id_map[entity_id] = {"forward":{}, "backward":{}}
+            emap = self.id_map[entity_id] = {"forward":{}, "backward":{}}
 
         try:
             if self.debug:
-                self.log.debug("map forward keys: %s" % map["forward"].keys())
-            return map["forward"][subject_id]
+                self.log.debug("map forward keys: %s" % emap["forward"].keys())
+            return emap["forward"][subject_id]
         except KeyError:
             while True:
                 temp_id = sid()
-                if temp_id not in map["backward"]:
+                if temp_id not in emap["backward"]:
                     break
-            map["forward"][subject_id] = temp_id
-            map["backward"][temp_id] = subject_id
-            self.id_map[entity_id]= map
+            emap["forward"][subject_id] = temp_id
+            emap["backward"][temp_id] = subject_id
+            self.id_map[entity_id] = emap
             self.id_map.sync()
             
             return temp_id
@@ -134,7 +135,7 @@ class Server(object):
         except KeyError:
             self.log and self.log.info(
                     "entities: %s" % self.metadata.entity.keys())
-            raise UnknownPricipal(sp_entityid)
+            raise UnknownPrincipal(sp_entityid)
         if not consumer_url: # what to do ?
             raise UnsupportedBinding(sp_entityid)
 
@@ -256,7 +257,7 @@ class Server(object):
         return make_instance(samlp.Response, tmp)
 
     def do_aa_response(self, consumer_url, in_response_to,
-                        sp_entity_id, identity, name_id_policies=None, 
+                        sp_entity_id, identity, 
                         name_id=None, ip_address="", issuer=None, sign=False):
 
         attr_statement = do_attribute_statement(identity)
@@ -273,30 +274,30 @@ class Server(object):
         if not name_id:
             name_id = kd_name_id(sid(), format=saml.NAMEID_FORMAT_TRANSIENT)
 
-        assertion=kd_assertion(
+        assertion = kd_assertion(
             subject = kd_subject(
-                name_id=name_id,
-                method=saml.SUBJECT_CONFIRMATION_METHOD_BEARER,
-                subject_confirmation=kd_subject_confirmation(
-                    subject_confirmation_data=kd_subject_confirmation_data(
-                        in_response_to=in_response_to,
-                        not_on_or_after=self._not_on_or_after(sp_entity_id),
-                        address=ip_address,
-                        recipient=consumer_url))),
+                name_id = name_id,
+                method = saml.SUBJECT_CONFIRMATION_METHOD_BEARER,
+                subject_confirmation = kd_subject_confirmation(
+                    subject_confirmation_data = kd_subject_confirmation_data(
+                        in_response_to = in_response_to,
+                        not_on_or_after = self._not_on_or_after(sp_entity_id),
+                        address = ip_address,
+                        recipient = consumer_url))),
             attribute_statement = attr_statement,
-            authn_statement= kd_authn_statement(
-                        authn_instant=instant(),
-                        session_index=sid()),
+            authn_statement = kd_authn_statement(
+                        authn_instant = instant(),
+                        session_index = sid()),
             conditions=conds,
             )
             
         if sign:
-            assertion["signature"] = sigver.pre_signature_part(assertion["id"])
+            assertion["signature"] = pre_signature_part(assertion["id"])
             
         self.cache.set(name_id["text"], sp_entity_id, assertion, 
                             conds["not_on_or_after"])
             
-        tmp = response(
+        tmp = kd_response(
             issuer=issuer,
             in_response_to=in_response_to,
             destination=consumer_url,
@@ -333,9 +334,18 @@ class Server(object):
         
     def authn_response(self, identity, in_response_to, destination, spid,
                     name_id_policy, userid):
+        """ Constructs an AuthenticationResponse
+        
+        :param identity: Information about an user
+        :param in_response_to: The identifier of the authentication request
+            this response is an answer to.
+        :param destination: Where the response should be sent
+        :param sid: The entity identifier of the Service Provider
+        :param name_id_policy: ...
+        :param userid: The subject identifier
+        :return: A XML string representing an authentication response
         """
-        """
-        namn_id = None
+        name_id = None
         if name_id_policy.sp_name_qualifier:
             try:
                 vo_conf = self.conf["virtual_organization"][
@@ -349,7 +359,7 @@ class Server(object):
                                             userid)
                 self.log.info("=> %s" % subj_id)
                 
-            namn_id = name_id(subj_id, 
+            name_id = kd_name_id(subj_id, 
                         format=saml.NAMEID_FORMAT_PERSISTENT,
                         sp_name_qualifier=name_id_policy.sp_name_qualifier)
         
@@ -361,7 +371,7 @@ class Server(object):
                             in_response_to, # in_response_to
                             spid,           # sp_entity_id
                             identity,       # identity as dictionary
-                            namn_id,
+                            name_id,
                         )
         
         return ("%s" % resp).split("\n")
