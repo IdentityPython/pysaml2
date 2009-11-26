@@ -114,7 +114,7 @@ class Saml2Client:
         return None
             
     def authn_request(self, query_id, destination, service_url, spentityid, 
-                        my_name, vo="", scoping=None, log=None):
+                        my_name, vo="", scoping=None, log=None, sign=False):
 
         res = {
             "id": query_id,
@@ -409,6 +409,29 @@ class Saml2Client:
             log and log.info("***Encrypted response***")
             return self._encrypted_assertion(xmlstr, outstanding, 
                                                 requestor, log, context)
+
+    def _attribute_query(self, session_id, subject_id, issuer, 
+            destination, attribute=None, sp_name_qualifier=None, 
+            name_qualifier=None, format=None, sign=False):
+    
+        name_id = server.kd_name_id(subject_id, format=format,
+                    sp_name_qualifier=sp_name_qualifier,
+                    name_qualifier=name_qualifier)
+        subject = server.kd_subject(
+                    name_id = name_id,
+                    method=saml.SUBJECT_CONFIRMATION_METHOD_BEARER
+                    )
+        query = {
+            "id": session_id,
+            "version": VERSION,
+            "issue_instant": instant(),
+            "destination": destination,
+            "issuer": issuer,
+            "subject":subject,
+        }
+        if sign:
+            query["signature"] = sigver.pre_signature_part(query["id"])
+        
 
     def create_attribute_query(self, session_id, subject_id, issuer, 
             destination, attribute=None, sp_name_qualifier=None, 

@@ -25,6 +25,7 @@ from tempfile import NamedTemporaryFile
 from subprocess import Popen, PIPE
 import base64
 import random
+import os
 
 XMLSEC_BINARY = "/opt/local/bin/xmlsec1"
 ID_ATTR = "ID"
@@ -33,6 +34,9 @@ ENC_NODE_NAME = "urn:oasis:names:tc:SAML:2.0:assertion:EncryptedAssertion"
 
 _TEST_ = False
 
+class SignatureError(Exception):
+    pass
+    
 def decrypt( input, key_file, xmlsec_binary, log=None):
     """ Decrypting an encrypted text by the use of a private key.
     
@@ -100,24 +104,24 @@ def cert_from_key_info(key_info):
     :param key_info: The KeyInfo instance
     :return: A possibly empty list of certs
     """
-    keys = []
+    res = []
     for x509_data in key_info.x509_data:
         #print "X509Data",x509_data
         for x509_certificate in x509_data.x509_certificate:
             cert = x509_certificate.text.strip()
             cert = "".join([s.strip() for s in cert.split("\n")])
-            keys.append(cert)
-    return keys
+            res.append(cert)
+    return res
 
-def cert_from_assertion(assertion):
-    """ Find certificates that are part of an assertion
+def cert_from_instance(instance):
+    """ Find certificates that are part of an instance
 
-    :param assertion: A saml.Assertion instance
+    :param assertion: An instance
     :return: possible empty list of certificates
     """
-    if assertion.signature:
-        if assertion.signature.key_info:
-            return cert_from_key_info(assertion.signature.key_info)
+    if instance.signature:
+        if instance.signature.key_info:
+            return cert_from_key_info(instance.signature.key_info)
     return []
 
 def _parse_xmlsec_output(output):
@@ -163,16 +167,17 @@ def verify_signature(xmlsec_binary, input, cert_file,
 
     if _TEST_:
         print output
+        print os.stat(cert_file)
         print "Verify result: '%s'" % (verified,)
         fil_p.seek(0)
         print fil_p.read()
 
     return verified
-    
-def correctly_signed_response(decoded_xml, xmlsec_binary=XMLSEC_BINARY,
-        metadata=None, log=None):
-    """ Check if a response is correctly signed, if we have metadata for
-    the IdP that sent the info use that, if not use the key that are in 
+
+def correctly_signed_authn_request(decoded_xml, xmlsec_binary=XMLSEC_BINARY,
+        metadata=None, log=None, must=False):
+    """ Check if a request is correctly signed, if we have metadata for
+    the SP that sent the info use that, if not use the key that are in 
     the message if any.
     
     :param decode_xml: The SAML message as a XML string
@@ -180,18 +185,64 @@ def correctly_signed_response(decoded_xml, xmlsec_binary=XMLSEC_BINARY,
         system.
     :param metadata: Metadata information
     :return: None if the signature can not be verified otherwise 
-        response as a samlp.Response instance
+        request as a samlp.Request instance
     """
+    request = samlp.authn_request_from_string(decoded_xml)
+
+    if not request.signature:
+        if must:
+            raise SignatureError("Missing must signature")
+        else:
+            return request
+        
+    issuer = request.issuer.text.strip()
+
+    if metadata:
+        certs = metadata.certs(issuer)
+    else:
+        certs = []
+    if not certs:
+        certs = [make_temp("%s" % cert, ".der") \
+                    for cert in cert_from_instance(request)]
+    if not certs:
+        raise SignatureError("Missing signing certificate")
+
+    verified = False
+    for _, der_file in certs:
+        if verify_signature(xmlsec_binary, decoded_xml, der_file):
+            verified = True
+            break
+                
+    if not verified:
+        raise SignatureError("Failed to verify signature")
+
+    return request
+
+def correctly_signed_response(decoded_xml, 
+        xmlsec_binary=XMLSEC_BINARY, metadata=None, log=None, must=False):
+    """ Check if a instance is correctly signed, if we have metadata for
+    the IdP that sent the info use that, if not use the key that are in 
+    the message if any.
+    
+    :param decode_xml: The SAML message as a XML string
+    :param xmlsec_binary: Where the xmlsec1 binary can be found on this
+        system.
+    :param metadata: Metadata information
+    :return: None if the signature can not be verified otherwise an instance
+    """
+    
+    response = samlp.response_from_string(decoded_xml)
+
     if not xmlsec_binary:
         xmlsec_binary = XMLSEC_BINARY
-    #log and log.info("Decoded response: %s" % decoded_xml)
-    response = samlp.response_from_string(decoded_xml)
 
     # Try to find the signing cert in the assertion
     for assertion in response.assertion:
         if not assertion.signature:
             if _TEST_:
                 log and log.info("unsigned")
+            if must:
+                raise SignatureError("Signature missing")
             continue
         else:
             if _TEST_:
@@ -204,11 +255,15 @@ def correctly_signed_response(decoded_xml, xmlsec_binary=XMLSEC_BINARY,
             certs = metadata.certs(issuer)
         else:
             certs = []
+
+        if _TEST_:
+            print "metadata certs: %s" % certs
+
         if not certs:
             certs = [make_temp("%s" % cert, ".der") \
-                        for cert in cert_from_assertion(assertion)]
+                        for cert in cert_from_instance(assertion)]
         if not certs:
-            continue
+            raise SignatureError("Missing certificate")
 
         verified = False
         for _, der_file in certs:
@@ -217,7 +272,7 @@ def correctly_signed_response(decoded_xml, xmlsec_binary=XMLSEC_BINARY,
                 break
                     
         if not verified:
-            return None
+            raise SignatureError("Could not verify")
 
     return response
 
@@ -292,7 +347,7 @@ PRE_SIGNATURE = {
 def pre_signature_part(id):
     """
     If an assertion is to be signed the signature part has to be preset
-    with to algorithms to be used, this function returns such a
+    with which algorithms to be used, this function returns such a
     preset part.
     
     :param id: The identifier of the assertion, so you know which assertion

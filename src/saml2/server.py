@@ -21,154 +21,21 @@ or attribute authority (AA) may use to conclude its tasks.
 import shelve
 
 from saml2 import saml, samlp, VERSION
+
+from saml2.utils import kd_issuer, kd_conditions, kd_audience_restriction
 from saml2.utils import sid, decode_base64_and_inflate, make_instance
+from saml2.utils import kd_audience, kd_name_id, kd_assertion
+from saml2.utils import kd_subject, kd_subject_confirmation, kd_response
+from saml2.utils import kd_assertion, kd_authn_statement
+from saml2.utils import kd_subject_confirmation_data, kd_success_status
+from saml2.utils import filter_attribute_value_assertions
+from saml2.utils import OtherError, do_attribute_statement
+
+from saml2.sigver import correctly_signed_authn_request, decrypt
 from saml2.time_util import instant, in_a_while
 from saml2.metadata import MetaData
 from saml2.config import Config
-from saml2.cache import Cache
-
-class VersionMismatch(Exception):
-    pass
-    
-class UnknownPricipal(Exception):
-    pass
-    
-class UnsupportedBinding(Exception):
-    pass
-
-class OtherError(Exception):
-    pass
-    
-EXCEPTION2STATUS = {
-    VersionMismatch: samlp.STATUS_VERSION_MISMATCH,
-    UnknownPricipal: samlp.STATUS_UNKNOWN_PRINCIPAL,
-    UnsupportedBinding: samlp.STATUS_UNSUPPORTED_BINDING,
-    OtherError: samlp.STATUS_UNKNOWN_PRINCIPAL,
-}
-
-def properties(klass):
-    props = [val[0] for key,val in klass.c_children.items()]
-    props.extend(klass.c_attributes.values())
-    return props
-    
-def klassdict(klass, text=None, **kwargs):
-    spec = {}
-    if text:
-        spec["text"] = text
-    props = properties(klass)
-    #print props
-    for key, val in kwargs.items():
-        #print "?",key
-        if key in props:
-            spec[key] = val
-    return spec
-    
-def kd_status_from_exception(exception):
-    return klassdict(samlp.Status,
-        status_code=klassdict(samlp.StatusCode,
-            value=samlp.STATUS_RESPONDER,
-            status_code=klassdict(samlp.StatusCode,
-                            value=EXCEPTION2STATUS[exception.__class__])
-            ),
-        status_message=exception.args[0],
-    )
-    
-def kd_name_id(text="", **kwargs):
-    return klassdict(saml.NameID, text, **kwargs)
-
-def kd_status_message(text="", **kwargs):
-    return klassdict(samlp.StatusMessage, text, **kwargs)
-
-def kd_status_code(text="", **kwargs):
-    return klassdict(samlp.StatusCode, text, **kwargs)
-
-def kd_status(text="", **kwargs):
-    return klassdict(samlp.Status, text, **kwargs)
-    
-def kd_success_status():
-    return kd_status(status_code=kd_status_code(value=samlp.STATUS_SUCCESS))
-                            
-def kd_audience(text="", **kwargs):
-    return klassdict(saml.Audience, text, **kwargs)
-
-def kd_audience_restriction(text="", **kwargs):
-    return klassdict(saml.AudienceRestriction, text, **kwargs)
-
-def kd_conditions(text="", **kwargs):
-    return klassdict(saml.Conditions, text, **kwargs)
-    
-def kd_attribute(text="", **kwargs):
-    return klassdict(saml.Attribute, text, **kwargs)
-
-def kd_attribute_value(text="", **kwargs):
-    return klassdict(saml.AttributeValue, text, **kwargs)
-        
-def kd_attribute_statement(text="", **kwargs):
-    return klassdict(saml.AttributeStatement, text, **kwargs)
-
-def kd_subject_confirmation_data(text="", **kwargs):
-    return klassdict(saml.SubjectConfirmationData, text, **kwargs)
-    
-def kd_subject_confirmation(text="", **kwargs):
-    return klassdict(saml.SubjectConfirmation, text, **kwargs)        
-    
-def kd_subject(text="", **kwargs):
-    return klassdict(saml.Subject, text, **kwargs)        
-
-def kd_authn_statement(text="", **kwargs):
-    return klassdict(saml.Subject, text, **kwargs)        
-    
-def kd_assertion(text="", **kwargs):
-    kwargs.update({
-        "version": VERSION,
-        "id" : sid(),
-        "issue_instant" : instant(),
-    })
-    return klassdict(saml.Assertion, text, **kwargs)        
-    
-def kd_response(signature=False, encrypt=False, **kwargs):
-
-    kwargs.update({
-        "id" : sid(),
-        "version": VERSION,
-        "issue_instant" : instant(),
-    })
-    if signature:
-        kwargs["signature"] = sigver.pre_signature_part(kwargs["id"])
-    
-    return kwargs
-
-def do_attribute_statement(identity):
-    """
-    :param identity: A dictionary with fiendly names as keys
-    :return:
-    """
-    attrs = []
-    for key, val in identity.items():
-        dic = {}
-        if isinstance(val,basestring):
-            attrval = kd_attribute_value(val)
-        elif isinstance(val,list):
-            attrval = [kd_attribute_value(v) for v in val]
-        else:
-            raise OtherError("strange value type on: %s" % val)
-        dic["attribute_value"] = attrval
-        if isinstance(key, basestring):
-            dic["name"] = key
-        elif isinstance(key, tuple): # 3-tuple
-            (name,format,friendly) = key
-            if name:
-                dic["name"] = name
-            if format:
-                dic["name_format"] = format
-            if friendly:
-                dic["friendly_name"] = friendly
-        attrs.append(kd_attribute(**dic))
-
-    return kd_attribute_statement(attribute=attrs)
-
-def kd_issuer(text, **kwargs):
-    return klassdict(saml.Issuer, text, **kwargs)        
+from saml2.cache import Cache    
 
 
 class Server(object):
@@ -234,31 +101,44 @@ class Server(object):
         """Parse a Authentication Request
         
         :param enc_request: The request in its transport format
-        :return: A tuple of
+        :return: A dictionary with keys:
             consumer_url - as gotten from the SPs entity_id and the metadata
             id - the id of the request
             name_id_policy - how to chose the subjects identifier
-            spentityid - the entity id of the SP
+            sp_entityid - the entity id of the SP
         """
-        request_xml = decode_base64_and_inflate(enc_request)
-        request = samlp.authn_request_from_string(request_xml)
         
+        response = {}
+        request_xml = decode_base64_and_inflate(enc_request)
+        try:
+            request = correctly_signed_authn_request(request_xml, 
+                        self.conf["xmlsec_binary"], log=self.log)
+            if self.log and self.debug:
+                self.log.error("Request was correctly signed")
+        except Exception:
+            if self.log:
+                self.log.error("Request was not correctly signed")
+                self.log.info(request_xml)
+            raise
+                        
         return_destination = request.assertion_consumer_service_url
         # request.destination should be me 
-        id = request.id # put in in_reply_to
+        response["id"] = request.id # put in in_reply_to
         if request.version != VERSION:
             raise VersionMismatch(
                         "can't work with version %s" % request.version)
-        spentityid = request.issuer.text
+        sp_entityid = request.issuer.text
         # used to find return address in metadata
         try:
-            consumer_url = self.metadata.consumer_url(spentityid)
+            consumer_url = self.metadata.consumer_url(sp_entityid)
         except KeyError:
             self.log and self.log.info(
                     "entities: %s" % self.metadata.entity.keys())
-            raise UnknownPricipal(spentityid)
+            raise UnknownPricipal(sp_entityid)
         if not consumer_url: # what to do ?
-            raise UnsupportedBinding(spentityid)
+            raise UnsupportedBinding(sp_entityid)
+
+        response["sp_entityid"] = sp_entityid
 
         if consumer_url != return_destination:
             # serious error on someones behalf
@@ -266,25 +146,12 @@ class Server(object):
                             return_destination))
             print "%s != %s" % (consumer_url, return_destination)
             raise OtherError("ConsumerURL and return destination mismatch")
-               
-        self.log and self.log.info("AuthNRequest: %s" % request)
-        return (consumer_url, id, request.name_id_policy, spentityid)
         
-    def assertion_rule(self, issuer):
-        """ """
-        try:
-            assertion_rules = self.conf["assertions"]
-        except KeyError:
-            return None
-            
-        try:
-            return assertion_rules[issuer]
-        except KeyError:
-            try:
-                return assertion_rules["default"]
-            except KeyError:
-                return {}
-                
+        response["consumer_url"] = consumer_url
+        response["request"] = request
+        self.log and self.log.info("AuthNRequest: %s" % request)
+        return response
+                        
     def wants(self, sp_entity_id):
         """
         :param sp_entity_id: The entity id of the SP
@@ -299,8 +166,6 @@ class Server(object):
             "%s ?= %s" % (query.destination, 
                             self.conf["service"]["aa"]["url"]))
         assert query.destination == self.conf["service"]["aa"]["url"]
-
-        arule = self.assertion_rule(query.issuer)
         
         # verify signature
         
@@ -361,7 +226,7 @@ class Server(object):
         if not name_id:
             name_id = kd_name_id(sid(), format=saml.NAMEID_FORMAT_TRANSIENT)
 
-        assertion=kd_assertion(
+        assertion = kd_assertion(
             attribute_statement = attr_statement,
             authn_statement= kd_authn_statement(
                         authn_instant=instant(),
@@ -392,7 +257,7 @@ class Server(object):
 
     def do_aa_response(self, consumer_url, in_response_to,
                         sp_entity_id, identity, name_id_policies=None, 
-                        name_id=None, ip_address="", issuer=None):
+                        name_id=None, ip_address="", issuer=None, sign=False):
 
         attr_statement = do_attribute_statement(identity)
         
@@ -425,10 +290,13 @@ class Server(object):
             conditions=conds,
             )
             
+        if sign:
+            assertion["signature"] = sigver.pre_signature_part(assertion["id"])
+            
         self.cache.set(name_id["text"], sp_entity_id, assertion, 
                             conds["not_on_or_after"])
             
-        tmp = kd_response(
+        tmp = response(
             issuer=issuer,
             in_response_to=in_response_to,
             destination=consumer_url,
@@ -438,6 +306,31 @@ class Server(object):
 
         return make_instance(samlp.Response, tmp)
 
+    def filter_ava(self, ava, sp_entity_id, request=None, role=""):
+        """ What attribute and attribute values returns depends on what
+        the SP has said it wants in the request or in the metadata file and
+        what the IdP/AA wants to release. An assumption is that what the SP
+        asks for overrides whatever is in the metadata.        
+        """
+        
+        if not request:
+            #any rules for this SP ?
+            try:
+                restrictions = self.conf["service"][role][sp_entity_id][
+                                    "attribute_restrictions"]
+            except KeyError:
+                try:
+                    restrictions = self.conf["service"][role]["default"][
+                                    "attribute_restrictions"]
+                except KeyError:
+                    restrictions = None
+                    
+            if restrictions:
+                ava = filter_attribute_value_assertions(ava,
+                                                                restrictions)
+    
+        return ava
+        
     def authn_response(self, identity, in_response_to, destination, spid,
                     name_id_policy, userid):
         """
@@ -456,10 +349,13 @@ class Server(object):
                                             userid)
                 self.log.info("=> %s" % subj_id)
                 
-            namn_id = kd_name_id(subj_id, 
+            namn_id = name_id(subj_id, 
                         format=saml.NAMEID_FORMAT_PERSISTENT,
                         sp_name_qualifier=name_id_policy.sp_name_qualifier)
-                
+        
+        # Do attribute filtering
+        identity = self.filter_ava( identity, spid, None,"idp")
+        
         resp = self.do_sso_response(
                             destination,    # consumer_url
                             in_response_to, # in_response_to

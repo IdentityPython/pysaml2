@@ -2,6 +2,8 @@
 
 import time
 import base64
+from saml2 import samlp, saml, VERSION
+from saml2.time_util import instant, in_a_while
 
 try:
     from hashlib import md5
@@ -11,6 +13,25 @@ import zlib
 
 import zlib
 import base64
+
+class VersionMismatch(Exception):
+    pass
+    
+class UnknownPricipal(Exception):
+    pass
+    
+class UnsupportedBinding(Exception):
+    pass
+
+class OtherError(Exception):
+    pass
+
+EXCEPTION2STATUS = {
+    VersionMismatch: samlp.STATUS_VERSION_MISMATCH,
+    UnknownPricipal: samlp.STATUS_UNKNOWN_PRINCIPAL,
+    UnsupportedBinding: samlp.STATUS_UNSUPPORTED_BINDING,
+    OtherError: samlp.STATUS_UNKNOWN_PRINCIPAL,
+}
 
 def decode_base64_and_inflate( string ):
     """ base64 decodes and then inflates according to RFC1951 
@@ -167,3 +188,130 @@ def identity_attribute(form, attribute, forward_map=None):
                 return attribute.name
     # default is name
     return attribute.name
+
+#----------------------------------------------------------------------------
+
+def properties(klass):
+    props = [val[0] for key,val in klass.c_children.items()]
+    props.extend(klass.c_attributes.values())
+    return props
+    
+def klassdict(klass, text=None, **kwargs):
+    spec = {}
+    if text:
+        spec["text"] = text
+    props = properties(klass)
+    #print props
+    for key, val in kwargs.items():
+        #print "?",key
+        if key in props:
+            spec[key] = val
+    return spec
+    
+def kd_status_from_exception(exception):
+    return klassdict(samlp.Status,
+        status_code=klassdict(samlp.StatusCode,
+            value=samlp.STATUS_RESPONDER,
+            status_code=klassdict(samlp.StatusCode,
+                            value=EXCEPTION2STATUS[exception.__class__])
+            ),
+        status_message=exception.args[0],
+    )
+    
+def kd_name_id(text="", **kwargs):
+    return klassdict(saml.NameID, text, **kwargs)
+
+def kd_status_message(text="", **kwargs):
+    return klassdict(samlp.StatusMessage, text, **kwargs)
+
+def kd_status_code(text="", **kwargs):
+    return klassdict(samlp.StatusCode, text, **kwargs)
+
+def kd_status(text="", **kwargs):
+    return klassdict(samlp.Status, text, **kwargs)
+    
+def kd_success_status():
+    return kd_status(status_code=kd_status_code(value=samlp.STATUS_SUCCESS))
+                            
+def kd_audience(text="", **kwargs):
+    return klassdict(saml.Audience, text, **kwargs)
+
+def kd_audience_restriction(text="", **kwargs):
+    return klassdict(saml.AudienceRestriction, text, **kwargs)
+
+def kd_conditions(text="", **kwargs):
+    return klassdict(saml.Conditions, text, **kwargs)
+    
+def kd_attribute(text="", **kwargs):
+    return klassdict(saml.Attribute, text, **kwargs)
+
+def kd_attribute_value(text="", **kwargs):
+    return klassdict(saml.AttributeValue, text, **kwargs)
+        
+def kd_attribute_statement(text="", **kwargs):
+    return klassdict(saml.AttributeStatement, text, **kwargs)
+
+def kd_subject_confirmation_data(text="", **kwargs):
+    return klassdict(saml.SubjectConfirmationData, text, **kwargs)
+    
+def kd_subject_confirmation(text="", **kwargs):
+    return klassdict(saml.SubjectConfirmation, text, **kwargs)        
+    
+def kd_subject(text="", **kwargs):
+    return klassdict(saml.Subject, text, **kwargs)        
+
+def kd_authn_statement(text="", **kwargs):
+    return klassdict(saml.Subject, text, **kwargs)        
+    
+def kd_assertion(text="", **kwargs):
+    kwargs.update({
+        "version": VERSION,
+        "id" : sid(),
+        "issue_instant" : instant(),
+    })
+    return klassdict(saml.Assertion, text, **kwargs)        
+    
+def kd_response(signature=False, encrypt=False, **kwargs):
+
+    kwargs.update({
+        "id" : sid(),
+        "version": VERSION,
+        "issue_instant" : instant(),
+    })
+    if signature:
+        kwargs["signature"] = sigver.pre_signature_part(kwargs["id"])
+    
+    return kwargs
+
+def do_attribute_statement(identity):
+    """
+    :param identity: A dictionary with fiendly names as keys
+    :return:
+    """
+    attrs = []
+    for key, val in identity.items():
+        dic = {}
+        if isinstance(val,basestring):
+            attrval = kd_attribute_value(val)
+        elif isinstance(val,list):
+            attrval = [kd_attribute_value(v) for v in val]
+        else:
+            raise OtherError("strange value type on: %s" % val)
+        dic["attribute_value"] = attrval
+        if isinstance(key, basestring):
+            dic["name"] = key
+        elif isinstance(key, tuple): # 3-tuple
+            (name,format,friendly) = key
+            if name:
+                dic["name"] = name
+            if format:
+                dic["name_format"] = format
+            if friendly:
+                dic["friendly_name"] = friendly
+        attrs.append(kd_attribute(**dic))
+
+    return kd_attribute_statement(attribute=attrs)
+
+def kd_issuer(text, **kwargs):
+    return klassdict(saml.Issuer, text, **kwargs)        
+
