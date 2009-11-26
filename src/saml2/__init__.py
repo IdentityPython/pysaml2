@@ -441,7 +441,7 @@ class SamlBase(ExtensionContainer):
             self.__dict__[extension_attribute_name] = value
                     
     def keyswv(self):
-        return [key for key,val in self.__dict__.items() if val]
+        return [key for key, val in self.__dict__.items() if val]
         
     def children_with_values(self):
         childs = []

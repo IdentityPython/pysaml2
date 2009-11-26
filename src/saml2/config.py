@@ -5,24 +5,24 @@
 from saml2 import metadata
 import re
 
-def entity_id2url(md, entity_id):
+def entity_id2url(meta, entity_id):
     try:
         # grab the first one
-        return md.single_sign_on_services(entity_id)[0]
+        return meta.single_sign_on_services(entity_id)[0]
     except Exception:
-        print "idp_entity_id",entity_id
+        print "idp_entity_id", entity_id
         print ("idps in metadata",
-            [e for e,d in md.entity.items() if "idp_sso" in d])
-        print "metadata entities", md.entity.keys()
-        for ent, dic in md.entity.items():
+            [e for e, d in meta.entity.items() if "idp_sso" in d])
+        print "metadata entities", meta.entity.keys()
+        for ent, dic in meta.entity.items():
             print ent, dic.keys()
         return None
 
 def do_assertions(assertions):
-    for id, spec in assertions.items():
+    for _, spec in assertions.items():
         try:
             restr = spec["attribute_restrictions"]
-        except:
+        except KeyError:
             continue
             
         if restr == None:
@@ -41,20 +41,19 @@ def do_assertions(assertions):
     return assertions
     
 class Config(dict):
-    def sp_check(self, config, md=None):
+    def sp_check(self, config, metad=None):
         assert "idp" in config
         assert len(config["idp"]) > 0
 
-        if md:
-            
+        if metad:
             if len(config["idp"]) == 0:
-                eids = [e for e,d in md.entity.items() if "idp_sso" in d]
+                eids = [e for e, d in metad.entity.items() if "idp_sso" in d]
                 for eid in eids:
-                    config["idp"][eid] = entity_id2url(md, eid)
+                    config["idp"][eid] = entity_id2url(metad, eid)
             else:
                 for eid, url in config["idp"].items():
                     if not url:
-                        config["idp"][eid] = entity_id2url(md, eid)
+                        config["idp"][eid] = entity_id2url(metad, eid)
         
         assert "url" in config
             
@@ -69,15 +68,15 @@ class Config(dict):
             config["assertions"] = do_assertions(config["assertions"])
         
     def load_metadata(self, metadata_conf):
-        """ """
-        md = metadata.MetaData()
+        """ Loads metadata into an internal structure """
+        metad = metadata.MetaData()
         if "local" in metadata_conf:
             for mdfile in metadata_conf["local"]:
-                md.import_metadata(open(mdfile).read())
+                metad.import_metadata(open(mdfile).read())
         if "remote" in metadata_conf:
-            for key,val in metadata_conf["remote"].items():
-                md.import_external_metadata(val["url"],val["cert"])
-        return md
+            for _, val in metadata_conf["remote"].items():
+                metad.import_external_metadata(val["url"], val["cert"])
+        return metad
                 
     def load_file(self, config_file):
         self.load(eval(open(config_file).read()))

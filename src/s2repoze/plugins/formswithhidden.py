@@ -1,18 +1,13 @@
-import urlparse
 import urllib
-import cgi
 
 from paste.httpheaders import CONTENT_LENGTH
 from paste.httpheaders import CONTENT_TYPE
 from paste.httpheaders import LOCATION
 from paste.httpexceptions import HTTPFound
-from paste.httpexceptions import HTTPUnauthorized
 
 from paste.request import parse_dict_querystring
 from paste.request import parse_formvars
 from paste.request import construct_url
-
-from paste.response import header_value
 
 from zope.interface import implements
 
@@ -81,7 +76,7 @@ _DEFAULT_FORM = """
 </html>
 """
 
-hidden_pre_line = """<input type=hidden name="%s" value="%s">"""
+HIDDEN_PRE_LINE = """<input type=hidden name="%s" value="%s">"""
 
 class FormHiddenPlugin(FormPlugin):
 
@@ -98,14 +93,14 @@ class FormHiddenPlugin(FormPlugin):
         if query.get(self.login_form_qs): 
             form = parse_formvars(environ)
             from StringIO import StringIO
-            # XXX we need to replace wsgi.input because we've read it
+            # we need to replace wsgi.input because we've read it
             # this smells funny
             environ['wsgi.input'] = StringIO()
             form.update(query)
             qinfo = {}
-            for k, v in form.items():
-                if k.startswith("_") and k.endswith("_"):
-                    qinfo[k[1:-1]] = v
+            for key, val in form.items():
+                if key.startswith("_") and key.endswith("_"):
+                    qinfo[key[1:-1]] = val
             if qinfo:
                 environ["s2repoze.qinfo"] = qinfo
             try:
@@ -138,8 +133,8 @@ class FormHiddenPlugin(FormPlugin):
                 
         query = parse_dict_querystring(environ)
         hidden = []
-        for key,val in query.items():
-            hidden.append(hidden_pre_line % ("_%s_" % key, val))
+        for key, val in query.items():
+            hidden.append(HIDDEN_PRE_LINE % ("_%s_" % key, val))
 
         logger and logger.info("hidden: %s" % (hidden,))
         form = self.formbody or _DEFAULT_FORM

@@ -23,16 +23,15 @@ import urllib
 import saml2
 import base64
 import time
-import re
-from saml2.time_util import str_to_time, add_duration, instant
+from saml2.time_util import str_to_time, instant
 from saml2.utils import sid, deflate_and_base64_encode, make_instance
 from saml2.utils import kd_name_id, kd_subject, do_attributes
 
-from saml2 import samlp, saml, extension_element_to_element, metadata
+from saml2 import samlp, saml, extension_element_to_element
 from saml2 import VERSION, class_name
 from saml2.sigver import correctly_signed_response, decrypt
 from saml2.sigver import pre_signature_part, sign_assertion_using_xmlsec
-from saml2.sigver import sign_X_using_xmlsec, verify_signature
+from saml2.sigver import sign_X_using_xmlsec
 from saml2.soap import SOAPClient
 
 DEFAULT_BINDING = saml2.BINDING_HTTP_REDIRECT
@@ -90,7 +89,7 @@ class Saml2Client:
         }
 
     def scoping_from_metadata(self, entityid, location):
-        name = metadata.name(entityid)
+        name = self.metadata.name(entityid)
         return make_instance(self.scoping([self.idp_entry(name, location)]))
                            
     def response(self, post, requestor, outstanding, log=None):
@@ -117,8 +116,19 @@ class Saml2Client:
         return None
             
     def authn_request(self, query_id, destination, service_url, spentityid, 
-                        my_name, vo="", scoping=None, log=None, sign=False):
-
+                        my_name, vorg="", scoping=None, log=None, sign=False):
+        """ Creates an authentication request.
+        
+        :param query_id: The identifier for this request
+        :param destination: Where the request should be sent.
+        :param service_url: Where the reply should be sent.
+        :param spentityid: The entity identifier for this service.
+        :param my_name: The name of this service.
+        :param vorg: The vitual organization the service belongs to.
+        :param scoping: The scope of the request
+        :param log: A service to which logs should be written
+        :param sign: Whether the request should be signed or not.
+        """
         prel = {
             "id": query_id,
             "version": VERSION,
@@ -137,9 +147,9 @@ class Saml2Client:
         }
         
         name_id_policy["format"] = saml.NAMEID_FORMAT_TRANSIENT
-        if vo:
+        if vorg:
             try:
-                name_id_policy["sp_name_qualifier"] = vo
+                name_id_policy["sp_name_qualifier"] = vorg
                 name_id_policy["format"] = saml.NAMEID_FORMAT_PERSISTENT
             except KeyError:
                 pass
@@ -151,22 +161,21 @@ class Saml2Client:
         prel["issuer"] = { "text": spentityid }
         
         if log:
-            log.info("DICT VERSION: %s" % res)
+            log.info("DICT VERSION: %s" % prel)
             
         request = make_instance(samlp.AuthnRequest, prel)
         if sign:
-            print "config: %s" % self.config
-            sreq = sign_X_using_xmlsec("%s" % request, class_name(request),
+            return sign_X_using_xmlsec("%s" % request, class_name(request),
                                     self.config["xmlsec_binary"], 
                                     key_file=self.config["key_file"])
-            return samlp.authn_request_from_string(sreq)
+            #return samlp.authn_request_from_string(sreq)
         else:
-            return request
+            return "%s" % request
 
     def authenticate(self, spentityid, location="", service_url="", 
                         my_name="", relay_state="",
                         binding=saml2.BINDING_HTTP_REDIRECT, log=None,
-                        vo="", scoping=None):
+                        vorg="", scoping=None):
         """ Either verifies an authentication Response or if none is present
         send an authentication request.
         
@@ -180,7 +189,7 @@ class Saml2Client:
             successfull log in.
         :param binding: Which binding to use for sending the request
         :param log: Where to write log messages
-        :param vo: The entity_id of the virtual organization I'm a member of
+        :param vorg: The entity_id of the virtual organization I'm a member of
         :param scoping: For which IdPs this query are aimed.
             
         :return: AuthnRequest response
@@ -192,8 +201,8 @@ class Saml2Client:
             log.info("service_url: %s" % service_url)
             log.info("my_name: %s" % my_name)
         session_id = sid()
-        authen_req = "%s" % self.authn_request(session_id, location, 
-                                service_url, spentityid, my_name, vo, 
+        authen_req = self.authn_request(session_id, location, 
+                                service_url, spentityid, my_name, vorg, 
                                 scoping, log)
         log and log.info("AuthNReq: %s" % authen_req)
         
@@ -303,7 +312,7 @@ class Saml2Client:
         
         return not_on_or_after
         
-    def _websso(self, assertion, outstanding, requestor, log):
+    def _websso(self, assertion, _outstanding, _requestor, _log=None):
         # the assertion MUST contain one AuthNStatement
         assert len(assertion.authn_statement) == 1
         # authn_statement = assertion.authn_statement[0]
@@ -311,7 +320,6 @@ class Saml2Client:
         
         
     def _assertion(self, assertion, outstanding, requestor, log, context):
-        """ """        
         if log:
             log.info("assertion context: %s" % (context,))
             log.info("assertion keys: %s" % (assertion.keyswv()))
@@ -366,9 +374,9 @@ class Saml2Client:
         response = samlp.response_from_string(decrypt_xml)
         log and log.debug("Parsed decrypted assertion successfull")
         
-        ee = response.encrypted_assertion[0].extension_elements[0]            
+        enc = response.encrypted_assertion[0].extension_elements[0]            
         assertion = extension_element_to_element(
-                        ee, 
+                        enc, 
                         saml.ELEMENT_FROM_STRING,
                         namespace=saml.NAMESPACE)
         log and log.info("Decrypted Assertion: %s" % assertion)
@@ -399,16 +407,7 @@ class Saml2Client:
                 raise Exception(
                     "Not successfull according to: %s" % \
                     status.status_code.value)
-                
-        if response.in_response_to:
-            if response.in_response_to in outstanding:
-                came_from = outstanding[response.in_response_to]
-            elif LAX:
-                came_from = ""
-            else:
-                log and log.info("Session id I don't recall using")
-                raise Exception("Session id I don't recall using")
-        
+
         # MUST contain *one* assertion
         try:
             assert len(response.assertion) == 1 or \
@@ -427,7 +426,7 @@ class Saml2Client:
 
     def create_attribute_query(self, session_id, subject_id, issuer, 
             destination, attribute=None, sp_name_qualifier=None, 
-            name_qualifier=None, format=None, sign=False):
+            name_qualifier=None, nameformat=None, sign=False):
         """ Constructs an AttributeQuery 
         
         :param subject_id: The identifier of the subject
@@ -447,12 +446,10 @@ class Saml2Client:
         """
 
     
-        name_id = kd_name_id(subject_id, format=format,
-                    sp_name_qualifier=sp_name_qualifier,
-                    name_qualifier=name_qualifier)
         subject = kd_subject(
-                    name_id = name_id,
-                    method=saml.SUBJECT_CONFIRMATION_METHOD_BEARER
+                    name_id = kd_name_id(subject_id, format=nameformat,
+                                sp_name_qualifier=sp_name_qualifier,
+                                name_qualifier=name_qualifier),
                     )
         
         prequery = {
@@ -465,17 +462,18 @@ class Saml2Client:
         }
         
         if sign:
-            prequery["signature"] = pre_signature_part(query["id"])
+            prequery["signature"] = pre_signature_part(prequery["id"])
         
         if attribute:
             prequery["attribute"] = do_attributes(attribute)
             
-        print prequery
         request = make_instance(samlp.AttributeQuery, prequery)
         if sign:
-            return sign_assertion_using_xmlsec("%s" % request, 
+            signed_req = sign_assertion_using_xmlsec("%s" % request, 
                                     self.config["xmlsec_binary"], 
                                     key_file=self.config["key_file"])
+            return samlp.attribute_query_from_string(signed_req)
+
         else:
             return request
 
@@ -508,8 +506,8 @@ class Saml2Client:
         log and log.info("SOAP client initiated")
         try:
             response = soapclient.send(request)
-        except Exception, e:
-            log and log.info("SoapClient exception: %s" % (e,))
+        except Exception, exc:
+            log and log.info("SoapClient exception: %s" % (exc,))
             return None
 
         log and log.info("SOAP request sent and got response: %s" % response)
@@ -526,9 +524,9 @@ class Saml2Client:
             log and log.info("No response")
             return None
         
-    def make_logout_request(self, subject_id, reason=None, 
-                not_on_or_after=None):
-        """ Constructs an LogoutRequest
+    def make_logout_request(self, session_id, destination, issuer,
+                reason=None, not_on_or_after=None):
+        """ Constructs a LogoutRequest
 
         :param subject_id: The identifier of the subject
         :param reason: An indication of the reason for the logout, in the 
@@ -538,27 +536,28 @@ class Saml2Client:
         :return: An AttributeQuery instance
         """
 
-        logout_req = self._init_request(samlp.LogoutRequest())
-        logout_req.session_index = sid()
-        logout_req.base_id = saml.BaseID(text=subject_id)
+        prel = {
+            "id": sid(),
+            "version": VERSION,
+            "issue_instant": instant(),
+            "destination": destination,
+            "issuer": issuer,
+            "session_index": session_id,
+        }
+    
         if reason:
-            logout_req.reason = reason
-        if not_on_or_after:
-            logout_req.not_on_or_after = not_on_or_after
+            prel["reason"] = reason
             
-        return logout_req
+        if not_on_or_after:
+            prel["not_on_or_after"] = not_on_or_after
+            
+        return make_instance(samlp.LogoutRequest, prel)
         
-    def logout(self, subject_id, reason=None, not_on_or_after=None):
-        logout_req = self.make_logout_request(subject_id, reason,
-                        not_on_or_after)
+    def logout(self, session_id, destination,
+                    issuer, reason="", not_on_or_after=None):        
+        return self.make_logout_request(session_id, destination,
+                    issuer, reason, not_on_or_after)
         
-
-    def _verify_signature(self, statement):
-        return verify_signature(self.config["xmlsec_binary"], 
-                                "%s" % statement,
-                                self.config["cert_file"],
-                                cert_type="pem",
-                                node_name=class_name(statement))
     
 # ----------------------------------------------------------------------
 

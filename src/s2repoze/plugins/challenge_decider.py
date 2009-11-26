@@ -1,12 +1,10 @@
 from paste.request import construct_url
 import zope.interface
 from repoze.who.interfaces import IRequestClassifier
-from repoze.who.interfaces import IChallengeDecider
 
 from paste.httpheaders import REQUEST_METHOD
 from paste.httpheaders import CONTENT_TYPE
 from paste.httpheaders import USER_AGENT
-from paste.httpheaders import WWW_AUTHENTICATE
 
 import re 
 
@@ -55,10 +53,10 @@ def my_request_classifier(environ):
 
 zope.interface.directlyProvides(my_request_classifier, IRequestClassifier)
 
-class my_challenge_decider:
-    def __init__(self,path_login=""):
+class MyChallengeDecider:
+    def __init__(self, path_login=""):
         self.path_login = path_login
-    def __call__(self, environ, status, headers):
+    def __call__(self, environ, status, _headers):
         if status.startswith('401 '):
             return True
         else:
@@ -91,12 +89,12 @@ def make_plugin(path_login = None):
 
 # make regexp out of string passed via the config file
     list_login = []
-    for a in path_login.splitlines():
-        u = a.lstrip()
-        if u != '':
-            list_login.append(re.compile(u))
+    for arg in path_login.splitlines():
+        carg = arg.lstrip()
+        if carg != '':
+            list_login.append(re.compile(carg))
 
-    plugin = my_challenge_decider(list_login)
+    plugin = MyChallengeDecider(list_login)
 
     return plugin
 

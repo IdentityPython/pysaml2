@@ -19,18 +19,11 @@
 Contains classes and functions to alleviate the handling of SAML metadata
 """
 
-import base64
-import time
-from tempfile import NamedTemporaryFile
 from saml2 import md, BINDING_HTTP_POST
 from saml2 import samlp, BINDING_HTTP_REDIRECT, BINDING_SOAP
-from saml2.time_util import str_to_time
+#from saml2.time_util import str_to_time
 from saml2.sigver import make_temp, cert_from_key_info, verify_signature
 import httplib2
-try:
-    from hashlib import md5
-except ImportError:
-    from md5 import md5
         
 class MetaData(object):
     """ A class to manage metadata information """
@@ -189,14 +182,14 @@ class MetaData(object):
         :param xml_str: The metadata as a XML string.
         """
 
-        now = time.gmtime()
+        # now = time.gmtime()
         
         entities_descriptor = md.entities_descriptor_from_string(xml_str)
 
-        try:
-            valid_until = str_to_time(entities_descriptor.valid_until)
-        except AttributeError:
-            valid_until = None
+        # try:
+        #     valid_until = str_to_time(entities_descriptor.valid_until)
+        # except AttributeError:
+        #     valid_until = None
             
         for entity_descriptor in entities_descriptor.entity_descriptor:
             entity = self.entity[entity_descriptor.entity_id] = {}
@@ -207,11 +200,11 @@ class MetaData(object):
             self._vo_metadata(entity_descriptor, entity, "affiliation")
             try:
                 entity["organization"] = entity_descriptor.organization
-            except:
+            except AttributeError:
                 pass
             try:
                 entity["contact"] = entity_descriptor.contact
-            except:
+            except AttributeError:
                 pass
                    
     def import_external_metadata(self, url, cert=None):
@@ -292,11 +285,10 @@ class MetaData(object):
         except KeyError:
             return []
         
-    def consumer_url(self, entity_id, binding=BINDING_HTTP_POST, log=None):
+    def consumer_url(self, entity_id, binding=BINDING_HTTP_POST, _log=None):
         try:
             ssos = self.entity[entity_id]["sp_sso"]
         except KeyError:
-            log and log.info("%s" % (self.sp.keys(),))
             raise
             
         # any default ?
@@ -339,17 +331,17 @@ class MetaData(object):
             
         return name
 
-    def requests(self, entityid):
+    def requests(self, entity_id):
         try:
             ssos = self.entity[entity_id]["sp_sso"]
         except KeyError:
-            ([],[])
+            return ([], [])
             
         try:
             requested = ssos["attribute_consuming_service"][
                                                     "requested_attribute"]
         except KeyError:
-            ([],[])
+            return ([], [])
             
         required = []
         optional = []

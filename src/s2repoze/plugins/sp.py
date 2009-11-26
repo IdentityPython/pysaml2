@@ -18,25 +18,14 @@ and SAML2 attribute aggregations as metadata collector in your
 WSGI application.
 
 """
-import re
-import urlparse
-import urllib
 import cgi
 import os
-import time
 
-from paste.httpheaders import CONTENT_LENGTH
-from paste.httpheaders import CONTENT_TYPE
-from paste.httpheaders import LOCATION
-from paste.httpexceptions import HTTPFound
-from paste.httpexceptions import HTTPUnauthorized
 from paste.httpexceptions import HTTPTemporaryRedirect
+from paste.httpexceptions import HTTPNotImplemented
+from paste.httpexceptions import HTTPInternalServerError
 from paste.request import parse_dict_querystring
-from paste.request import parse_formvars
 from paste.request import construct_url
-from paste.request import parse_querystring
-
-from paste.response import header_value
 
 from zope.interface import implements
 
@@ -46,8 +35,6 @@ from repoze.who.plugins.form import FormPluginBase
 
 from saml2.client import Saml2Client
 from saml2.attribute_resolver import AttributeResolver
-from saml2.metadata import MetaData
-from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.config import Config
 from saml2.cache import Cache
 
@@ -56,9 +43,9 @@ def construct_came_from(environ):
     for single-sign-on processing. """
     
     came_from = environ.get("PATH_INFO") 
-    qs = environ.get("QUERY_STRING","")
-    if qs:
-        came_from += '?' + qs
+    qstr = environ.get("QUERY_STRING","")
+    if qstr:
+        came_from += '?' + qstr
     return came_from
     
 # FormPluginBase defines the methods remember and forget
@@ -69,24 +56,24 @@ class SAML2Plugin(FormPluginBase):
     
     def __init__(self, rememberer_name, saml_conf_file, virtual_organization,
                 cache, debug):
-        
+        FormPluginBase.__init__(self, rememberer_name)
         self.rememberer_name = rememberer_name
         self.debug = debug        
         
         self.conf = Config()
         self.conf.load_file(saml_conf_file)
-        self.sp = self.conf["service"]["sp"]
+        self.srv = self.conf["service"]["sp"]
 
         if virtual_organization:
-            self.vo = virtual_organization
-            self.vo_conf = None
+            self.vorg = virtual_organization
+            self.vorg_conf = None
 #            try:
-#                self.vo_conf = self.conf[
+#                self.vorg_conf = self.conf[
 #                                "virtual_organization"][virtual_organization]
 #            except KeyError:
-#                self.vo = None
+#                self.vorg = None
         else:
-            self.vo = None
+            self.vorg = None
             
         try:
             self.metadata = self.conf["metadata"]
@@ -110,7 +97,7 @@ class SAML2Plugin(FormPluginBase):
         return name_id
         
     #### IChallenger ####
-    def challenge(self, environ, status, app_headers, forget_headers):
+    def challenge(self, environ, _status, _app_headers, _forget_headers):
 
         # this challenge consist in loggin out
         if environ.has_key('rwpc.logout'): 
@@ -121,37 +108,33 @@ class SAML2Plugin(FormPluginBase):
         # ELSE, perform a real challenge => asking for loggin
         # here by redirecting the user to a IdP.
 
-        cl = Saml2Client(environ, self.conf)
+        scl = Saml2Client(environ, self.conf)
         came_from = construct_came_from(environ)
         if self.debug:
             logger and logger.info("RelayState >> %s" % came_from)
         
         try:
-            vo = environ["myapp.vo"]
+            vorg = environ["myapp.vo"]
         except KeyError:
-            vo = self.vo
-        logger and logger.info("VO: %s" % vo)
+            vorg = self.vorg
+        logger and logger.info("VO: %s" % vorg)
 
         # If more than one idp, I have to do wayf
-        logger and logger.info("IdP URL: %s" % self.sp["idp"].values())
-        if len( self.sp["idp"] ) == 1:
-            idp_url = self.sp["idp"].values()[0]
-        elif len( self.sp["idp"] ) == 0:
-            start_response('500 Internal Server Error', 
-                                [('Content-Type', 'text/plain')])
-            return ['Misconfiguration']
+        logger and logger.info("IdP URL: %s" % self.srv["idp"].values())
+        if len( self.srv["idp"] ) == 1:
+            idp_url = self.srv["idp"].values()[0]
+        elif len( self.srv["idp"] ) == 0:
+            HTTPInternalServerError(detail='Misconfiguration')
         else:
-            start_response('501 Not Implemented', 
-                                [('Content-Type', 'text/plain')])
-            return ['WAYF not implemented yet!']
+            HTTPNotImplemented(detail='WAYF not implemented yet!')
             
-        (sid, result) = cl.authenticate(self.conf["entityid"], 
+        (sid, result) = scl.authenticate(self.conf["entityid"], 
                                         idp_url, 
-                                        self.sp["url"], 
-                                        self.sp["name"], 
+                                        self.srv["url"], 
+                                        self.srv["name"], 
                                         relay_state=came_from, 
                                         log=logger,
-                                        vo=vo)
+                                        vo=vorg)
         self.outstanding_authn[sid] = came_from
             
         if self.debug:
@@ -159,22 +142,13 @@ class SAML2Plugin(FormPluginBase):
         if isinstance(result, tuple):
             return HTTPTemporaryRedirect(headers=[result])
         else :
-            # possible though normally not used
-            body = "\n".join(result)
-            def auth_form(environ, start_response):
-                content_length = CONTENT_LENGTH.tuples(str(len(result)))
-                content_type = CONTENT_TYPE.tuples('text/html')
-                headers = content_length + content_type + forget_headers
-                start_response('200 OK', headers)
-                return [result]
-
-            return auth_form
+            HTTPInternalServerError(detail='Incorrect returned data')
 
     #### IIdentifier ####
     def identify(self, environ):
         logger = environ.get('repoze.who.logger','')
         
-        uri = environ.get('REQUEST_URI',construct_url(environ))
+        uri = environ.get('REQUEST_URI', construct_url(environ))
         if self.debug:
             #logger and logger.info("environ.keys(): %s" % environ.keys())
             #logger and logger.info("Environment: %s" % environ)
@@ -211,9 +185,9 @@ class SAML2Plugin(FormPluginBase):
             return {}
             
         # check for SAML2 authN
-        cl = Saml2Client(environ, self.conf)
+        scl = Saml2Client(environ, self.conf)
         try:
-            session_info = cl.response(post, 
+            session_info = scl.response(post, 
                                             self.conf["entityid"], 
                                             self.outstanding_authn,
                                             logger)
@@ -265,8 +239,8 @@ class SAML2Plugin(FormPluginBase):
         if "user" not in identity:
             identity["user"] = {}
         try:
-            (ava, old) = self.cache.get_identity(subject_id)
-            now = time.gmtime()        
+            (ava, _) = self.cache.get_identity(subject_id)
+            #now = time.gmtime()        
             if self.debug:
                 logger and logger.info("Adding %s" % ava)
             identity["user"].update(ava)
@@ -275,21 +249,21 @@ class SAML2Plugin(FormPluginBase):
 
         if "pysaml2_vo_expanded" not in identity:
             # is this a Virtual Organization situation
-            if self.vo:
+            if self.vorg:
                 logger and logger.info("** Do VO aggregation **")
                 #try:
                     # This ought to be caseignore 
                     #subject_id = identity["user"][
-                    #                    self.vo_conf["common_identifier"]][0]
+                    #                    self.vorg_conf["common_identifier"]][0]
                 #except KeyError:
                 #    logger and logger.error("** No common identifier **")
                 #    return
                 logger and logger.info(
-                    "SubjectID: %s, VO:%s" % (subject_id, self.vo))
+                    "SubjectID: %s, VO:%s" % (subject_id, self.vorg))
                 
                 vo_members = [
-                    member for member in self.metadata.vo_members(self.vo)\
-                        if member not in self.sp["idp"].keys()]
+                    member for member in self.metadata.vo_members(self.vorg)\
+                        if member not in self.srv["idp"].keys()]
                     
                 logger and logger.info("VO members: %s" % vo_members)
                 vo_members = [m for m in vo_members \
@@ -298,24 +272,24 @@ class SAML2Plugin(FormPluginBase):
                                 "VO members (not cached): %s" % vo_members)
 
                 if vo_members:
-                    ar = AttributeResolver(environ, self.metadata, self.conf)
+                    resolver = AttributeResolver(environ, self.metadata, self.conf)
                 
-                    if self.vo_conf and "name_id_format" in self.vo_conf:
-                        name_id_format = self.vo_conf["name_id_format"]
-                        sp_name_qualifier=""
+                    if self.vorg_conf and "name_id_format" in self.vorg_conf:
+                        name_id_format = self.vorg_conf["name_id_format"]
+                        sp_name_qualifier = ""
                     else:
-                        sp_name_qualifier=self.vo
+                        sp_name_qualifier = self.vorg
                         name_id_format = ""
                     
-                    extra = ar.extend(subject_id, 
-                            self.conf["entityid"], 
-                            vo_members, 
-                            name_id_format=name_id_format,
-                            sp_name_qualifier=sp_name_qualifier,
-                            log=logger)
+                    extra = resolver.extend(subject_id, 
+                                self.conf["entityid"], 
+                                vo_members, 
+                                name_id_format=name_id_format,
+                                sp_name_qualifier=sp_name_qualifier,
+                                log=logger)
 
                     for session_info in extra:
-                        nid = self._cache_session(session_info)
+                        _ignore = self._cache_session(session_info)
 
                     logger.info(
                         ">Issuers: %s" % self.cache.entities(subject_id))
@@ -329,16 +303,19 @@ class SAML2Plugin(FormPluginBase):
         
 # @return
 # used 2 times : one to get the ticket, the other to validate it
-    def _serviceURL(self,environ,qs=None):
-        if qs != None:
-            url = construct_url(environ, querystring=qs)
+    def _serviceURL(self, environ, qstr=None):
+        if qstr != None:
+            url = construct_url(environ, querystring=qstr)
         else:
             url = construct_url(environ)
         return url
 
     #### IAuthenticatorPlugin #### 
-    def authenticate(self, environ, identity={}):
-        return identity.get('login',None)
+    def authenticate(self, environ, identity=None):
+        if identity:
+            return identity.get('login', None)
+        else:
+            return None
 
 
 def make_plugin(rememberer_name=None, # plugin for remember

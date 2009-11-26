@@ -1,4 +1,4 @@
-import ConfigParser, os
+import ConfigParser
 
 from zope.interface import implements
 
@@ -15,21 +15,19 @@ class INIMetadataProvider(object):
         self.users.readfp(open(ini_file))
         self.key_attribute = key_attribute
         
-    def add_metadata(self, environ, identity):
-        logger = environ.get('repoze.who.logger','')
+    def add_metadata(self, _environ, identity):
+        #logger = environ.get('repoze.who.logger','')
 
         key = identity.get('repoze.who.userid')
-        #logger and logger.info("Identity: %s (before)" % (identity.items(),))
         try:
             if self.key_attribute:
                 for sec in self.users.sections():
-                    if self.users.has_option(sec,self.key_attribute):
+                    if self.users.has_option(sec, self.key_attribute):
                         if key in self.users.get(sec, self.key_attribute):
                             identity["user"] = dict(self.users.items(sec))
                             break
             else:
                 identity["user"] = dict(self.users.items(key))
-            #logger and logger.info("Identity: %s (after)" % (identity.items(),))
         except ValueError:
             pass
         

@@ -54,7 +54,7 @@ def correct(element):
     
     if hasattr(element, "c_required_attributes"):
         for attr in element.c_required_attributes:
-            if getattr(element,attr) == None:
+            if getattr(element, attr) == None:
                 return False
     
     # go through the children
@@ -81,7 +81,7 @@ def correct(element):
                     return True
             return False
     elif isinstance(element, Organization):
-        for prop in ["organizational_name","organizational_display_name",
+        for prop in ["organizational_name", "organizational_display_name",
                         "organization_url"]:
             if getattr(element, prop) == []:
                 return False
@@ -1364,7 +1364,8 @@ class AttributeAuthorityDescriptor(RoleDescriptor):
 
 def attribute_authority_descriptor_from_string(xml_string):
     """ Create AttributeAuthorityDescriptor instance from an XML string """
-    return create_class_from_xml_string(AttributeAuthorityDescriptor, xml_string)
+    return create_class_from_xml_string(AttributeAuthorityDescriptor, 
+                                        xml_string)
 
 # ---------------------------------------------------------------------------
 
@@ -1519,7 +1520,8 @@ class EntityDescriptor(SamlBase):
     c_children['{%s}AdditionalMetadataLocation' % NAMESPACE] = (
                 'additional_metadata_location', [AdditionalMetadataLocation])
     c_children['{%s}AttributeAuthorityDescriptor' % NAMESPACE] = (
-                'attribute_authority_descriptor', [AttributeAuthorityDescriptor])
+                'attribute_authority_descriptor', 
+                [AttributeAuthorityDescriptor])
     c_children['{%s}AffiliationDescriptor' % NAMESPACE] = (
                 'affiliation_descriptor', [AffiliationDescriptor])
     c_child_order = ['signature', 'extensions', 'role_descriptor',
@@ -1569,7 +1571,8 @@ class EntityDescriptor(SamlBase):
         self.organization = organization
         self.contact_person = contact_person or []
         self.additional_metadata_location = additional_metadata_location or []
-        self.attribute_authority_descriptor = attribute_authority_descriptor or []
+        self.attribute_authority_descriptor = \
+                attribute_authority_descriptor or []
         self.affiliation_descriptor = affiliation_descriptor or []
         
 def entity_descriptor_from_string(xml_string):

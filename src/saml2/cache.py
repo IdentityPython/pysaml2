@@ -7,7 +7,7 @@ import time
 # gathered from several different sources, all with their own
 # timeout time.
 
-class To_old(Exception):
+class ToOld(Exception):
     pass
     
 class Cache(object):
@@ -19,7 +19,7 @@ class Cache(object):
             self._db = {}
             self._sync = False
         
-    def get_identity(self, subject_id, entities=[]):
+    def get_identity(self, subject_id, entities=None):
         """ Get all the identity information that has been received and 
         are still valid about the subject.
         
@@ -34,14 +34,14 @@ class Cache(object):
             try:
                 entities = self._db[subject_id].keys()
             except KeyError:
-                return ({},[])
+                return ({}, [])
             
         res = {}
         oldees = []
         for entity_id in entities:
             try:
                 info = self.get(subject_id, entity_id)
-            except To_old:
+            except ToOld:
                 oldees.append(entity_id)
                 continue
             for key, vals in info["ava"].items():            
@@ -64,7 +64,7 @@ class Cache(object):
         now = time.gmtime()
         if not_on_or_after < now:
             self.reset(subject_id, entity_id)
-            raise To_old()
+            raise ToOld()
         else:
             return info
     
@@ -107,7 +107,7 @@ class Cache(object):
         return self._db[subject_id].keys()
         
     def receivers(self, subject_id):
-        return entities(subject_id)
+        return self.entities(subject_id)
         
     def active(self, subject_id, entity_id):
         """ Returns the status of assertions from a specific entity_id.

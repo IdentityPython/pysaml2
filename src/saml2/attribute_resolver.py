@@ -19,14 +19,7 @@
 Contains classes and functions that a SAML2.0 Service Provider (SP) may use
 to do attribute aggregation.
 """
-import os
-import urllib
 import saml2
-import base64
-
-from saml2 import samlp, saml
-from saml2.sigver import correctly_signed_response
-from saml2.soap import SOAPClient
 from saml2.client import Saml2Client
 
 DEFAULT_BINDING = saml2.BINDING_HTTP_REDIRECT

@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import shelve
-import os
 
 from zope.interface import implements
 
@@ -39,15 +38,17 @@ class EntitlementMetadataProvider(object):
     def get_entitlement(self, user, virtualorg):
         try:
             return self._store[user]["entitlement"][virtualorg]
-        except KeyError,e:
+        except KeyError:
             return []
             
-    def store_entitlement(self, user, virtualorg, entitlement=[]):
+    def store_entitlement(self, user, virtualorg, entitlement=None):
         if user not in self._store:
             self._store[user] = {"entitlement":{}}
         elif "entitlement" not in self._store[user]:
             self._store[user]["entitlement"] = {}
 
+        if entitlement == None:
+            entitlement = []
         self._store[user]["entitlement"][virtualorg] = entitlement
         self._store.sync()
             
@@ -59,17 +60,17 @@ class EntitlementMetadataProvider(object):
             return
             
         try:
-            vo = environ["myapp.vo"]
+            vorg = environ["myapp.vo"]
             try:
-                ents = user["entitlement"][vo]
+                ents = user["entitlement"][vorg]
                 identity["user"] = {
-                            "entitlement": ["%s:%s" % (vo,e) for e in ents]}
+                            "entitlement": ["%s:%s" % (vorg,e) for e in ents]}
             except KeyError:
                 pass
         except KeyError:
             res = []
-            for vo, ents in user["entitlement"].items():
-                res.extend(["%s:%s" % (vo,e) for e in ents])
+            for vorg, ents in user["entitlement"].items():
+                res.extend(["%s:%s" % (vorg, e) for e in ents])
             identity["user"] = res
         
 def make_plugin(filename, key_attribute=""):
