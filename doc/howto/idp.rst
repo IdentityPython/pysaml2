@@ -7,7 +7,7 @@ To make an SAML2 identity provider is a bit tricker than doing a service
 provider. You have to understand how repoze.who works in order to understand
 how the identity provider is supposted to work.
 
-So this is the outline:
+So in broad terms this is what happens:
 
 A GET request is received for /sso
     
@@ -17,7 +17,7 @@ A GET request is received for /sso
 - The application states that a 401 reponse should be returned if a
     user can not be identified.
     
-- The egress challenger, in this case the plugin form, is activated.
+- The egress challenger, in this case the plugin 'form', is activated.
     The configuration of this plugin is::
     
         [plugin:form]
@@ -39,7 +39,7 @@ A GET request is received for /sso
     mdprovider plugin defined it will now add extra information about the 
     individual. After this the control is passed on to the application.
     
-- The function sso() now gets to act. This just the main points:
+- The function sso() now gets to act. This just the main outline:
     *   It finds the query parameters in the 
         environment and parses it::
     
