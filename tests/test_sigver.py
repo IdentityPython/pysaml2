@@ -5,6 +5,7 @@ from saml2 import utils
 from saml2 import time_util
 from saml2 import saml
 import xmldsig as ds
+from py.test import raises
 
 SIGNED = "tests/saml_signed.xml"
 UNSIGNED = "tests/saml_unsigned.xml"
@@ -29,8 +30,7 @@ def test_non_verify_1():
 
 def test_non_verify_2():
     xml_response = open(FALSE_SIGNED).read()
-    response = sigver.correctly_signed_response(xml_response)
-    assert response == None
+    raises(sigver.SignatureError,sigver.correctly_signed_response,xml_response)
 
 SIGNED_VALUE= """Y88SEXrU3emeoaTgEqUKYAvDtWiLpPMx1sClw0GJV98O6A5QRvB14vNs8xnXNFFZ
 XVjksKECcqmf10k/2C3oJfaEOaM4w0DgVLXeuJU08irXfdHcoe1g3276F1If1Kh7

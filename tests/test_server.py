@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from saml2.server import Server, OtherError, UnknownPricipal
+from saml2.server import Server
 from saml2 import server
 from saml2 import samlp, saml, client, utils
-from saml2.utils import make_instance
+from saml2.utils import make_instance, OtherError, UnknownPricipal
+from saml2.utils import do_attribute_statement
 from py.test import raises
 import shelve
 
@@ -18,8 +19,8 @@ def _eq(l1,l2):
     return set(l1) == set(l2)
 
 def test_status_success():
-    stat = server.kd_status(
-            status_code=server.kd_status_code(
+    stat = utils.kd_status(
+            status_code=utils.kd_status_code(
                             value=samlp.STATUS_SUCCESS))
     status = make_instance( samlp.Status, stat)
     status_text = "%s" % status
@@ -27,19 +28,19 @@ def test_status_success():
     assert status.status_code.value == samlp.STATUS_SUCCESS
     
 def test_success_status():
-    stat = server.kd_success_status()
+    stat = utils.kd_success_status()
     status = make_instance(samlp.Status, stat)
     status_text = "%s" % status
     assert status_text == SUCCESS_STATUS
     assert status.status_code.value == samlp.STATUS_SUCCESS
 
 def test_error_status():
-    stat = server.kd_status(
-        status_message=server.kd_status_message(
+    stat = utils.kd_status(
+        status_message=utils.kd_status_message(
                                 "Error resolving principal"),
-        status_code=server.kd_status_code(
+        status_code=utils.kd_status_code(
                         value=samlp.STATUS_RESPONDER,
-                        status_code=server.kd_status_code(
+                        status_code=utils.kd_status_code(
                             value=samlp.STATUS_UNKNOWN_PRINCIPAL)))
         
     status_text = "%s" % make_instance( samlp.Status, stat )
@@ -48,13 +49,13 @@ def test_error_status():
 
 def test_status_from_exception():
     e = UnknownPricipal("Error resolving principal")
-    stat = server.kd_status_from_exception(e)
+    stat = utils.kd_status_from_exception(e)
     status_text = "%s" % make_instance( samlp.Status, stat )
     
     assert status_text == ERROR_STATUS
     
 def test_attribute_statement():
-    astat = server.do_attribute_statement({"surName":"Jeter",
+    astat = do_attribute_statement({"surName":"Jeter",
                                         "givenName":"Derek"})
     statement = make_instance(saml.AttributeStatement,astat)
     assert statement.keyswv() == ["attribute"]
@@ -77,18 +78,18 @@ def test_attribute_statement():
 
 def test_audience():
     aud_restr = make_instance( saml.AudienceRestriction, 
-            server.kd_audience_restriction(
-                    audience=server.kd_audience("urn:foo:bar")))
+            utils.kd_audience_restriction(
+                    audience=utils.kd_audience("urn:foo:bar")))
             
     assert aud_restr.keyswv() == ["audience"]
     assert aud_restr.audience.text == "urn:foo:bar"
     
 def test_conditions():
-    conds_dict = server.kd_conditions(
+    conds_dict = utils.kd_conditions(
                     not_before="2009-10-30T07:58:10.852Z",
                     not_on_or_after="2009-10-30T08:03:10.852Z", 
-                    audience_restriction=server.kd_audience_restriction(
-                        audience=server.kd_audience("urn:foo:bar")))
+                    audience_restriction=utils.kd_audience_restriction(
+                        audience=utils.kd_audience("urn:foo:bar")))
                     
     conditions = make_instance(saml.Conditions, conds_dict)
     assert _eq(conditions.keyswv(), ["not_before", "not_on_or_after",
@@ -100,7 +101,7 @@ def test_conditions():
 def test_value_1():
     #FriendlyName="givenName" Name="urn:oid:2.5.4.42" 
     # NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
-    adict = server.kd_attribute(name="urn:oid:2.5.4.42",
+    adict = utils.kd_attribute(name="urn:oid:2.5.4.42",
                                     name_format=saml.NAME_FORMAT_URI)
     attribute = make_instance(saml.Attribute, adict)
     assert _eq(attribute.keyswv(),["name","name_format"])
@@ -108,7 +109,7 @@ def test_value_1():
     assert attribute.name_format == saml.NAME_FORMAT_URI
 
 def test_value_2():
-    adict = server.kd_attribute(name="urn:oid:2.5.4.42",
+    adict = utils.kd_attribute(name="urn:oid:2.5.4.42",
                                     name_format=saml.NAME_FORMAT_URI,
                                     friendly_name="givenName")
     attribute = make_instance(saml.Attribute, adict)
@@ -118,7 +119,7 @@ def test_value_2():
     assert attribute.friendly_name == "givenName"
 
 def test_value_3():
-    adict = server.kd_attribute(attribute_value="Derek",
+    adict = utils.kd_attribute(attribute_value="Derek",
                                     name="urn:oid:2.5.4.42",
                                     name_format=saml.NAME_FORMAT_URI,
                                     friendly_name="givenName")
@@ -132,7 +133,7 @@ def test_value_3():
     assert attribute.attribute_value[0].text == "Derek"
 
 def test_value_4():
-    adict = server.kd_attribute(attribute_value="Derek",
+    adict = utils.kd_attribute(attribute_value="Derek",
                                     friendly_name="givenName")
     attribute = make_instance(saml.Attribute, adict)
     assert _eq(attribute.keyswv(),["friendly_name", "attribute_value"])
@@ -141,7 +142,7 @@ def test_value_4():
     assert attribute.attribute_value[0].text == "Derek"
 
 def test_do_attribute_statement_0():
-    astat = server.do_attribute_statement({"vo_attr":"foobar"})
+    astat = do_attribute_statement({"vo_attr":"foobar"})
     statement = make_instance(saml.AttributeStatement,astat)
     assert statement.keyswv() == ["attribute"]
     assert len(statement.attribute) == 1
@@ -152,7 +153,7 @@ def test_do_attribute_statement_0():
     assert attr0.attribute_value[0].text == "foobar"
 
 def test_do_attribute_statement():
-    astat = server.do_attribute_statement({"surName":"Jeter",
+    astat = do_attribute_statement({"surName":"Jeter",
                                         "givenName":["Derek","Sanderson"]})
     statement = make_instance(saml.AttributeStatement,astat)
     assert statement.keyswv() == ["attribute"]
@@ -178,7 +179,7 @@ def test_do_attribute_statement():
                     ["Derek","Sanderson"])
     
 def test_do_attribute_statement_multi():
-    astat = server.do_attribute_statement(
+    astat = do_attribute_statement(
                 {("urn:oid:1.3.6.1.4.1.5923.1.1.1.7",
                     "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
                     "eduPersonEntitlement"):"Jeter"})
@@ -194,7 +195,7 @@ def test_do_attribute_statement_multi():
     assert attribute.friendly_name == "eduPersonEntitlement"
 
 def test_subject():
-    adict = server.kd_subject("_aaa", name_id=saml.NAMEID_FORMAT_TRANSIENT)
+    adict = utils.kd_subject("_aaa", name_id=saml.NAMEID_FORMAT_TRANSIENT)
     subject = make_instance(saml.Subject, adict)
     assert _eq(subject.keyswv(),["text", "name_id"])
     assert subject.text == "_aaa"
@@ -214,14 +215,14 @@ class TestServer():
         
 
     def test_assertion(self):
-        tmp = server.kd_assertion(
-            subject= server.kd_subject("_aaa",
+        tmp = utils.kd_assertion(
+            subject= utils.kd_subject("_aaa",
                                 name_id=saml.NAMEID_FORMAT_TRANSIENT),
-            attribute_statement = server.kd_attribute_statement(
+            attribute_statement = utils.kd_attribute_statement(
                 attribute=[
-                    server.kd_attribute(attribute_value="Derek", 
+                    utils.kd_attribute(attribute_value="Derek", 
                                         friendly_name="givenName"),
-                    server.kd_attribute(attribute_value="Jeter", 
+                    utils.kd_attribute(attribute_value="Jeter", 
                                         friendly_name="surName"),
                 ]),
             issuer=self.server.issuer(),
@@ -254,17 +255,17 @@ class TestServer():
         assert subject.name_id.text == saml.NAMEID_FORMAT_TRANSIENT
         
     def test_response(self):
-        tmp = server.kd_response(
+        tmp = utils.kd_response(
                 in_response_to="_012345",
                 destination="https:#www.example.com",
-                status=server.kd_success_status(),
-                assertion=server.kd_assertion(
-                    subject = server.kd_subject("_aaa",
+                status=utils.kd_success_status(),
+                assertion=utils.kd_assertion(
+                    subject = utils.kd_subject("_aaa",
                                         name_id=saml.NAMEID_FORMAT_TRANSIENT),
-                    attribute_statement = server.kd_attribute_statement([
-                        server.kd_attribute(attribute_value="Derek", 
+                    attribute_statement = utils.kd_attribute_statement([
+                        utils.kd_attribute(attribute_value="Derek", 
                                                 friendly_name="givenName"),
-                        server.kd_attribute(attribute_value="Jeter", 
+                        utils.kd_attribute(attribute_value="Jeter", 
                                                 friendly_name="surName"),
                     ]),
                     issuer=self.server.issuer(),
@@ -317,7 +318,7 @@ class TestServer():
         except OtherError, oe:
             print oe.args
             status = utils.make_instance(samlp.Status,
-                            server.kd_status_from_exception(oe))
+                            utils.kd_status_from_exception(oe))
             
         assert status
         print status
@@ -341,14 +342,14 @@ class TestServer():
                         
         print authn_request
         intermed = utils.deflate_and_base64_encode("%s" % authn_request)
-        (consumer_url, id, name_id_policy, 
-                            sp) = self.server.parse_authn_request(intermed)
+        response = self.server.parse_authn_request(intermed)
                                                         
-        assert consumer_url == "http://localhost:8087/"
-        assert id == "1"
+        assert response["consumer_url"] == "http://localhost:8087/"
+        assert response["id"] == "1"
+        name_id_policy = response["request"].name_id_policy
         assert _eq(name_id_policy.keyswv(), ["format", "allow_create"])
         assert name_id_policy.format == saml.NAMEID_FORMAT_TRANSIENT
-        assert sp == "urn:mace:example.com:saml:roland:sp"
+        assert response["sp_entityid"] == "urn:mace:example.com:saml:roland:sp"
 
     def test_sso_response(self):
         resp = self.server.do_sso_response(
