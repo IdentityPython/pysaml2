@@ -4,6 +4,7 @@
 from saml2.client import Saml2Client
 from saml2 import samlp, client, BINDING_HTTP_POST
 from saml2 import saml, utils, config
+from saml2.sigver import correctly_signed_authn_request
 
 XML_RESPONSE_FILE = "tests/saml_signed.xml"
 XML_RESPONSE_FILE2 = "tests/saml2_response.xml"
@@ -239,3 +240,27 @@ class TestClient:
         assert nid_policy.format == saml.NAMEID_FORMAT_PERSISTENT
         assert nid_policy.sp_name_qualifier == "urn:mace:example.com:it:tek"
         
+    def test_sign_auth_request_0(self):
+        #print self.client.config
+        
+        request = self.client.authn_request("1",
+                                    "http://www.example.com/sso",
+                                    "http://www.example.org/service",
+                                    "urn:mace:example.org:saml:sp",
+                                    "My Name", sign=True)
+                                    
+        assert request
+        assert request.signature
+        assert request.signature.signature_value
+        signed_info = request.signature.signed_info
+        #print signed_info
+        assert len(signed_info.reference) == 1
+        assert signed_info.reference[0].uri == "#1"
+        assert signed_info.reference[0].digest_value
+        print "------------------------------------------------"
+        try:
+            assert correctly_signed_authn_request("%s" % request,
+                    self.client.config["xmlsec_binary"],
+                    self.client.config["metadata"])
+        except Exception: # missing certificate
+            self.client._verify_signature(request)

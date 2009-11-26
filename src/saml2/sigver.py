@@ -32,7 +32,7 @@ ID_ATTR = "ID"
 NODE_NAME = "urn:oasis:names:tc:SAML:2.0:assertion:Assertion"
 ENC_NODE_NAME = "urn:oasis:names:tc:SAML:2.0:assertion:EncryptedAssertion"
 
-_TEST_ = False
+_TEST_ = True
 
 class SignatureError(Exception):
     pass
@@ -169,8 +169,8 @@ def verify_signature(xmlsec_binary, input, cert_file,
         print output
         print os.stat(cert_file)
         print "Verify result: '%s'" % (verified,)
-        fil_p.seek(0)
-        print fil_p.read()
+        #fil_p.seek(0)
+        #print fil_p.read()
 
     return verified
 
@@ -201,6 +201,7 @@ def correctly_signed_authn_request(decoded_xml, xmlsec_binary=XMLSEC_BINARY,
         certs = metadata.certs(issuer)
     else:
         certs = []
+        
     if not certs:
         certs = [make_temp("%s" % cert, ".der") \
                     for cert in cert_from_instance(request)]
@@ -280,6 +281,38 @@ def correctly_signed_response(decoded_xml,
 # SIGNATURE PART
 #----------------------------------------------------------------------------
         
+def sign_X_using_xmlsec(statement, xtype, xmlsec_binary, key=None, 
+                                    key_file=None):
+    """Sign a SAML statement using xmlsec.
+    
+    :param statement: The statement to be signed
+    :param key: The key to be used for the signing, either this or
+    :param key_File: The file where the key can be found
+    :param xmlsec_binary: The xmlsec1 binaries used to do the signing.
+    :return: The signed statement
+    """
+        
+    _, fil = make_temp("%s" % statement, decode=False)
+
+    if key:
+        _, key_file = make_temp("%s" % key, ".pem")
+    ntf = NamedTemporaryFile()
+    
+    com_list = [xmlsec_binary, "--sign", 
+                "--output", ntf.name,
+                "--privkey-pem", key_file, 
+                "--id-attr:%s" % ID_ATTR, 
+                xtype,
+                fil]
+
+    #print " ".join(com_list)
+
+    if Popen(com_list, stdout=PIPE).communicate()[0] == "":
+        ntf.seek(0)
+        return ntf.read()
+    else:
+        raise Exception("Signing failed")
+
 def sign_assertion_using_xmlsec(statement, xmlsec_binary, key=None, 
                                     key_file=None):
     """Sign a SAML statement using xmlsec.

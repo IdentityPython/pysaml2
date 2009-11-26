@@ -64,6 +64,9 @@ BINDING_HTTP_POST = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST'
 BINDING_HTTP_ARTIFACT = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact'
 BINDING_URI = 'urn:oasis:names:tc:SAML:2.0:bindings:URI'
 
+def class_name(instance):
+    return "%s:%s" % (instance.c_namespace, instance.c_tag)
+
 def create_class_from_xml_string(target_class, xml_string):
     """Creates an instance of the target class from a string.
     

@@ -29,8 +29,10 @@ from saml2.utils import sid, deflate_and_base64_encode, make_instance
 from saml2.utils import kd_name_id, kd_subject, do_attributes
 
 from saml2 import samlp, saml, extension_element_to_element, metadata
-from saml2 import VERSION
+from saml2 import VERSION, class_name
 from saml2.sigver import correctly_signed_response, decrypt
+from saml2.sigver import pre_signature_part, sign_assertion_using_xmlsec
+from saml2.sigver import sign_X_using_xmlsec, verify_signature
 from saml2.soap import SOAPClient
 
 DEFAULT_BINDING = saml2.BINDING_HTTP_REDIRECT
@@ -117,7 +119,7 @@ class Saml2Client:
     def authn_request(self, query_id, destination, service_url, spentityid, 
                         my_name, vo="", scoping=None, log=None, sign=False):
 
-        res = {
+        prel = {
             "id": query_id,
             "version": VERSION,
             "issue_instant": instant(),
@@ -128,7 +130,7 @@ class Saml2Client:
         }
         
         if scoping:
-            res["scoping"] = scoping
+            prel["scoping"] = scoping
             
         name_id_policy = {
             "allow_create": "true"
@@ -142,12 +144,24 @@ class Saml2Client:
             except KeyError:
                 pass
         
-        res["name_id_policy"] = name_id_policy
-        res["issuer"] = { "text": spentityid }
+        if sign:
+            prel["signature"] = pre_signature_part(prel["id"])
+
+        prel["name_id_policy"] = name_id_policy
+        prel["issuer"] = { "text": spentityid }
         
         if log:
             log.info("DICT VERSION: %s" % res)
-        return make_instance(samlp.AuthnRequest, res)
+            
+        request = make_instance(samlp.AuthnRequest, prel)
+        if sign:
+            print "config: %s" % self.config
+            sreq = sign_X_using_xmlsec("%s" % request, class_name(request),
+                                    self.config["xmlsec_binary"], 
+                                    key_file=self.config["key_file"])
+            return samlp.authn_request_from_string(sreq)
+        else:
+            return request
 
     def authenticate(self, spentityid, location="", service_url="", 
                         my_name="", relay_state="",
@@ -441,7 +455,7 @@ class Saml2Client:
                     method=saml.SUBJECT_CONFIRMATION_METHOD_BEARER
                     )
         
-        query = {
+        prequery = {
             "id": session_id,
             "version": VERSION,
             "issue_instant": instant(),
@@ -451,13 +465,20 @@ class Saml2Client:
         }
         
         if sign:
-            query["signature"] = sigver.pre_signature_part(query["id"])
+            prequery["signature"] = pre_signature_part(query["id"])
         
         if attribute:
-            query["attribute"] = do_attributes(attribute)
+            prequery["attribute"] = do_attributes(attribute)
             
-        print query
-        return make_instance(samlp.AttributeQuery, query)
+        print prequery
+        request = make_instance(samlp.AttributeQuery, prequery)
+        if sign:
+            return sign_assertion_using_xmlsec("%s" % request, 
+                                    self.config["xmlsec_binary"], 
+                                    key_file=self.config["key_file"])
+        else:
+            return request
+
             
     def attribute_query(self, subject_id, issuer, destination, 
                 attribute=None, sp_name_qualifier=None, name_qualifier=None, 
@@ -532,6 +553,13 @@ class Saml2Client:
                         not_on_or_after)
         
 
+    def _verify_signature(self, statement):
+        return verify_signature(self.config["xmlsec_binary"], 
+                                "%s" % statement,
+                                self.config["cert_file"],
+                                cert_type="pem",
+                                node_name=class_name(statement))
+    
 # ----------------------------------------------------------------------
 
 def for_me(condition, myself ):

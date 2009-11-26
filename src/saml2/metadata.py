@@ -281,7 +281,10 @@ class MetaData(object):
         :return: a list of 2-tuples (file pointer,file name) that represents
             certificates used by the IdP at the location loc.
         """
-        return self._loc_key[loc]
+        try:
+            return self._loc_key[loc]
+        except KeyError:
+            return []
     
     def vo_members(self, entity_id):
         try:

@@ -72,3 +72,4 @@ def test_sign():
     assert len(sig.signed_info.reference) == 1
     assert len(sig.signed_info.reference[0].digest_value) == 1
     assert sig.signed_info.reference[0].digest_value[0].text == DIGEST_VALUE
+    
