@@ -297,7 +297,7 @@ class TestServer():
                             my_name = "My real name",
                         )
                         
-        intermed = utils.deflate_and_base64_encode("%s" % authn_request)
+        intermed = utils.deflate_and_base64_encode(authn_request)
         # should raise an error because faulty spentityid
         raises(OtherError,self.server.parse_authn_request,intermed)
         
@@ -311,7 +311,7 @@ class TestServer():
                             my_name = "My real name",
                         )
                         
-        intermed = utils.deflate_and_base64_encode("%s" % authn_request)
+        intermed = utils.deflate_and_base64_encode(authn_request)
         try:
             self.server.parse_authn_request(intermed)
             status = None
@@ -341,7 +341,7 @@ class TestServer():
                         )
                         
         print authn_request
-        intermed = utils.deflate_and_base64_encode("%s" % authn_request)
+        intermed = utils.deflate_and_base64_encode(authn_request)
         response = self.server.parse_authn_request(intermed)
                                                         
         assert response["consumer_url"] == "http://localhost:8087/"

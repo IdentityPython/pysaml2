@@ -3,8 +3,8 @@
 
 from saml2.client import Saml2Client
 from saml2 import samlp, client, BINDING_HTTP_POST
-from saml2 import saml, utils, config
-from saml2.sigver import correctly_signed_authn_request
+from saml2 import saml, utils, config, class_name
+from saml2.sigver import correctly_signed_authn_request, verify_signature
 
 XML_RESPONSE_FILE = "tests/saml_signed.xml"
 XML_RESPONSE_FILE2 = "tests/saml2_response.xml"
@@ -105,7 +105,7 @@ class TestClient:
             "E8042FB4-4D5B-48C3-8E14-8EDD852790DD",
             "http://vo.example.com/sp1",
             "https://idp.example.com/idp/",
-            format=saml.NAMEID_FORMAT_PERSISTENT)
+            nameformat=saml.NAMEID_FORMAT_PERSISTENT)
         str = "%s" % req.to_string()
         print str
         assert str == REQ1 % req.issue_instant
@@ -134,7 +134,7 @@ class TestClient:
                 ("urn:oid:1.2.840.113549.1.9.1",
                 "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"):None,
                 },
-            format=saml.NAMEID_FORMAT_PERSISTENT)
+            nameformat=saml.NAMEID_FORMAT_PERSISTENT)
                 
         print req.to_string()
         assert req.destination == "https://idp.example.com/idp/"
@@ -168,7 +168,7 @@ class TestClient:
                 "_e7b68a04488f715cda642fbdd90099f5", 
                 "urn:mace:umu.se:saml/rolandsp",
                 "https://aai-demo-idp.switch.ch/idp/shibboleth",
-                format=saml.NAMEID_FORMAT_TRANSIENT )
+                nameformat=saml.NAMEID_FORMAT_TRANSIENT )
                 
         assert isinstance(req, samlp.AttributeQuery)
         assert req.destination == "https://aai-demo-idp.switch.ch/idp/shibboleth"
@@ -200,12 +200,12 @@ class TestClient:
         assert idp_entry.loc == "https://idp.umu.se/"
     
     def test_create_auth_request_0(self):
-        ar = self.client.authn_request("1",
+        ar_str = self.client.authn_request("1",
                                     "http://www.example.com/sso",
                                     "http://www.example.org/service",
                                     "urn:mace:example.org:saml:sp",
                                     "My Name")
-              
+        ar = samlp.authn_request_from_string(ar_str)
         print ar
         assert ar.assertion_consumer_service_url == "http://www.example.org/service"
         assert ar.destination == "http://www.example.com/sso"
@@ -221,13 +221,14 @@ class TestClient:
         assert self.client.config["virtual_organization"].keys() == [
                                     "urn:mace:example.com:it:tek"]
                                     
-        ar = self.client.authn_request("1",
+        ar_str = self.client.authn_request("1",
                                     "http://www.example.com/sso",
                                     "http://www.example.org/service",
                                     "urn:mace:example.org:saml:sp",
                                     "My Name",
-                                    vo="urn:mace:example.com:it:tek")
+                                    vorg="urn:mace:example.com:it:tek")
               
+        ar = samlp.authn_request_from_string(ar_str)
         print ar
         assert ar.assertion_consumer_service_url == "http://www.example.org/service"
         assert ar.destination == "http://www.example.com/sso"
@@ -243,24 +244,30 @@ class TestClient:
     def test_sign_auth_request_0(self):
         #print self.client.config
         
-        request = self.client.authn_request("1",
+        ar_str = self.client.authn_request("1",
                                     "http://www.example.com/sso",
                                     "http://www.example.org/service",
                                     "urn:mace:example.org:saml:sp",
                                     "My Name", sign=True)
                                     
-        assert request
-        assert request.signature
-        assert request.signature.signature_value
-        signed_info = request.signature.signed_info
+        ar = samlp.authn_request_from_string(ar_str)
+
+        assert ar
+        assert ar.signature
+        assert ar.signature.signature_value
+        signed_info = ar.signature.signed_info
         #print signed_info
         assert len(signed_info.reference) == 1
         assert signed_info.reference[0].uri == "#1"
         assert signed_info.reference[0].digest_value
         print "------------------------------------------------"
         try:
-            assert correctly_signed_authn_request("%s" % request,
+            assert correctly_signed_authn_request(ar_str,
                     self.client.config["xmlsec_binary"],
                     self.client.config["metadata"])
         except Exception: # missing certificate
-            self.client._verify_signature(request)
+            verify_signature(self.client.config["xmlsec_binary"], 
+                                ar_str,
+                                self.client.config["cert_file"],
+                                cert_type="pem",
+                                node_name=class_name(ar))
