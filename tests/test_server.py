@@ -4,207 +4,18 @@
 from saml2.server import Server
 from saml2 import server
 from saml2 import samlp, saml, client, utils
-from saml2.utils import make_instance, OtherError, UnknownPricipal
+from saml2.utils import make_instance, OtherError
 from saml2.utils import do_attribute_statement
 from py.test import raises
 import shelve
-
-SUCCESS_STATUS = """<?xml version=\'1.0\' encoding=\'UTF-8\'?>
-<ns0:Status xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns0:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success" /></ns0:Status>"""
-
-ERROR_STATUS = """<?xml version='1.0' encoding='UTF-8'?>
-<ns0:Status xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns0:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Responder"><ns0:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:UnknownPrincipal" /></ns0:StatusCode><ns0:StatusMessage>Error resolving principal</ns0:StatusMessage></ns0:Status>"""
+import re
 
 def _eq(l1,l2):
     return set(l1) == set(l2)
 
-def test_status_success():
-    stat = utils.kd_status(
-            status_code=utils.kd_status_code(
-                            value=samlp.STATUS_SUCCESS))
-    status = make_instance( samlp.Status, stat)
-    status_text = "%s" % status
-    assert status_text == SUCCESS_STATUS
-    assert status.status_code.value == samlp.STATUS_SUCCESS
-    
-def test_success_status():
-    stat = utils.kd_success_status()
-    status = make_instance(samlp.Status, stat)
-    status_text = "%s" % status
-    assert status_text == SUCCESS_STATUS
-    assert status.status_code.value == samlp.STATUS_SUCCESS
-
-def test_error_status():
-    stat = utils.kd_status(
-        status_message=utils.kd_status_message(
-                                "Error resolving principal"),
-        status_code=utils.kd_status_code(
-                        value=samlp.STATUS_RESPONDER,
-                        status_code=utils.kd_status_code(
-                            value=samlp.STATUS_UNKNOWN_PRINCIPAL)))
-        
-    status_text = "%s" % make_instance( samlp.Status, stat )
-    print status_text
-    assert status_text == ERROR_STATUS
-
-def test_status_from_exception():
-    e = UnknownPricipal("Error resolving principal")
-    stat = utils.kd_status_from_exception(e)
-    status_text = "%s" % make_instance( samlp.Status, stat )
-    
-    assert status_text == ERROR_STATUS
-    
-def test_attribute_statement():
-    astat = do_attribute_statement({"surName":"Jeter",
-                                        "givenName":"Derek"})
-    statement = make_instance(saml.AttributeStatement,astat)
-    assert statement.keyswv() == ["attribute"]
-    assert len(statement.attribute) == 2
-    attr0 = statement.attribute[0]
-    assert _eq(attr0.keyswv(), ["name","attribute_value"])
-    assert len(attr0.attribute_value) == 1
-    attr1 = statement.attribute[1]
-    assert _eq(attr1.keyswv(), ["name","attribute_value"])
-    assert len(attr1.attribute_value) == 1
-    if attr0.name == "givenName":
-        assert attr0.attribute_value[0].text == "Derek"
-        assert attr1.name == "surName"
-        assert attr1.attribute_value[0].text == "Jeter"
-    else:
-        assert attr0.name == "surName"
-        assert attr0.attribute_value[0].text == "Jeter"
-        assert attr1.name == "givenName"
-        assert attr1.attribute_value[0].text == "Derek"
-
-def test_audience():
-    aud_restr = make_instance( saml.AudienceRestriction, 
-            utils.kd_audience_restriction(
-                    audience=utils.kd_audience("urn:foo:bar")))
-            
-    assert aud_restr.keyswv() == ["audience"]
-    assert aud_restr.audience.text == "urn:foo:bar"
-    
-def test_conditions():
-    conds_dict = utils.kd_conditions(
-                    not_before="2009-10-30T07:58:10.852Z",
-                    not_on_or_after="2009-10-30T08:03:10.852Z", 
-                    audience_restriction=utils.kd_audience_restriction(
-                        audience=utils.kd_audience("urn:foo:bar")))
-                    
-    conditions = make_instance(saml.Conditions, conds_dict)
-    assert _eq(conditions.keyswv(), ["not_before", "not_on_or_after",
-                                "audience_restriction"])
-    assert conditions.not_before == "2009-10-30T07:58:10.852Z" 
-    assert conditions.not_on_or_after == "2009-10-30T08:03:10.852Z"
-    assert conditions.audience_restriction[0].audience.text == "urn:foo:bar"
-    
-def test_value_1():
-    #FriendlyName="givenName" Name="urn:oid:2.5.4.42" 
-    # NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
-    adict = utils.kd_attribute(name="urn:oid:2.5.4.42",
-                                    name_format=saml.NAME_FORMAT_URI)
-    attribute = make_instance(saml.Attribute, adict)
-    assert _eq(attribute.keyswv(),["name","name_format"])
-    assert attribute.name == "urn:oid:2.5.4.42"
-    assert attribute.name_format == saml.NAME_FORMAT_URI
-
-def test_value_2():
-    adict = utils.kd_attribute(name="urn:oid:2.5.4.42",
-                                    name_format=saml.NAME_FORMAT_URI,
-                                    friendly_name="givenName")
-    attribute = make_instance(saml.Attribute, adict)
-    assert _eq(attribute.keyswv(),["name","name_format","friendly_name"])
-    assert attribute.name == "urn:oid:2.5.4.42"
-    assert attribute.name_format == saml.NAME_FORMAT_URI
-    assert attribute.friendly_name == "givenName"
-
-def test_value_3():
-    adict = utils.kd_attribute(attribute_value="Derek",
-                                    name="urn:oid:2.5.4.42",
-                                    name_format=saml.NAME_FORMAT_URI,
-                                    friendly_name="givenName")
-    attribute = make_instance(saml.Attribute, adict)
-    assert _eq(attribute.keyswv(),["name", "name_format",
-                                    "friendly_name", "attribute_value"])
-    assert attribute.name == "urn:oid:2.5.4.42"
-    assert attribute.name_format == saml.NAME_FORMAT_URI
-    assert attribute.friendly_name == "givenName"
-    assert len(attribute.attribute_value) == 1
-    assert attribute.attribute_value[0].text == "Derek"
-
-def test_value_4():
-    adict = utils.kd_attribute(attribute_value="Derek",
-                                    friendly_name="givenName")
-    attribute = make_instance(saml.Attribute, adict)
-    assert _eq(attribute.keyswv(),["friendly_name", "attribute_value"])
-    assert attribute.friendly_name == "givenName"
-    assert len(attribute.attribute_value) == 1
-    assert attribute.attribute_value[0].text == "Derek"
-
-def test_do_attribute_statement_0():
-    astat = do_attribute_statement({"vo_attr":"foobar"})
-    statement = make_instance(saml.AttributeStatement,astat)
-    assert statement.keyswv() == ["attribute"]
-    assert len(statement.attribute) == 1
-    attr0 = statement.attribute[0]
-    assert _eq(attr0.keyswv(), ["name","attribute_value"])
-    assert attr0.name == "vo_attr"
-    assert len(attr0.attribute_value) == 1
-    assert attr0.attribute_value[0].text == "foobar"
-
-def test_do_attribute_statement():
-    astat = do_attribute_statement({"surName":"Jeter",
-                                        "givenName":["Derek","Sanderson"]})
-    statement = make_instance(saml.AttributeStatement,astat)
-    assert statement.keyswv() == ["attribute"]
-    assert len(statement.attribute) == 2
-    attr0 = statement.attribute[0]
-    assert _eq(attr0.keyswv(), ["name","attribute_value"])
-    attr1 = statement.attribute[1]
-    assert _eq(attr1.keyswv(), ["name","attribute_value"])
-    if attr0.name == "givenName":
-        assert len(attr0.attribute_value) == 2
-        assert _eq([av.text for av in attr0.attribute_value],
-                    ["Derek","Sanderson"])
-        assert attr1.name == "surName"
-        assert attr1.attribute_value[0].text == "Jeter"
-        assert len(attr1.attribute_value) == 1
-    else:
-        assert attr0.name == "surName"
-        assert attr0.attribute_value[0].text == "Jeter"
-        assert len(attr0.attribute_value) == 1
-        assert attr1.name == "givenName"
-        assert len(attr1.attribute_value) == 2
-        assert _eq([av.text for av in attr1.attribute_value],
-                    ["Derek","Sanderson"])
-    
-def test_do_attribute_statement_multi():
-    astat = do_attribute_statement(
-                {( "urn:oid:1.3.6.1.4.1.5923.1.1.1.7",
-                    "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
-                    "eduPersonEntitlement"):"Jeter"})
-    statement = make_instance(saml.AttributeStatement,astat)
-    assert statement.keyswv() == ["attribute"]
-    assert len(statement.attribute)
-    assert _eq(statement.attribute[0].keyswv(),
-                ["name","name_format","friendly_name","attribute_value"])
-    attribute = statement.attribute[0]
-    assert attribute.name == "urn:oid:1.3.6.1.4.1.5923.1.1.1.7"
-    assert attribute.name_format == (
-                "urn:oasis:names:tc:SAML:2.0:attrname-format:uri")
-    assert attribute.friendly_name == "eduPersonEntitlement"
-
-def test_subject():
-    adict = utils.kd_subject("_aaa", name_id=saml.NAMEID_FORMAT_TRANSIENT)
-    subject = make_instance(saml.Subject, adict)
-    assert _eq(subject.keyswv(),["text", "name_id"])
-    assert subject.text == "_aaa"
-    assert subject.name_id.text == saml.NAMEID_FORMAT_TRANSIENT
-    
-
 class TestServer():
     def setup_class(self):
-        self.server = Server("tests/server.config")
+        self.server = Server("tests/idp.config")
         
     def test_issuer(self):
         issuer = make_instance( saml.Issuer, self.server.issuer())
@@ -232,7 +43,7 @@ class TestServer():
         assert _eq(assertion.keyswv(),['attribute_statement', 'issuer', 'id',
                                     'subject', 'issue_instant', 'version'])
         assert assertion.version == "2.0"
-        assert assertion.issuer.text == "urn:mace:example.com:saml:roland:sp"
+        assert assertion.issuer.text == "urn:mace:example.com:saml:roland:idp"
         #
         assert len(assertion.attribute_statement) == 1
         attribute_statement = assertion.attribute_statement[0]
@@ -279,7 +90,7 @@ class TestServer():
                                     'in_response_to', 'issue_instant', 
                                     'version', 'issuer', 'id'])
         assert response.version == "2.0"
-        assert response.issuer.text == "urn:mace:example.com:saml:roland:sp"
+        assert response.issuer.text == "urn:mace:example.com:saml:roland:idp"
         assert response.destination == "https:#www.example.com"
         assert response.in_response_to == "_012345"
         #
@@ -392,3 +203,89 @@ class TestServer():
 
         print pid1, pid2
         assert pid1 == pid2
+
+    def test_filter_ava_0(self):
+        ava = { "givenName": ["Derek"], "surName": ["Jeter"], 
+                "mail": ["derek@nyy.mlb.com"]}
+        
+        # No restrictions apply
+        ava = self.server.filter_ava(ava, 
+                                    "urn:mace:example.com:saml:roland:sp",
+                                    [], [], "idp")
+                                    
+        assert _eq(ava.keys(), ["givenName", "surName", "mail"])
+        assert ava["givenName"] == ["Derek"]
+        assert ava["surName"] == ["Jeter"]
+        assert ava["mail"] == ["derek@nyy.mlb.com"]
+        
+        
+    def test_filter_ava_1(self):
+        """ No mail address returned """
+        self.server.conf["service"]["idp"]["assertions"][
+                            "urn:mace:example.com:saml:roland:sp"] = {
+                    "lifetime": {"minutes": 5},
+                    "attribute_restrictions":{
+                        "givenName": None,
+                        "surName": None,
+                    }
+                }
+
+        print self.server.conf["service"]["idp"]["assertions"]
+        
+        ava = { "givenName": ["Derek"], "surName": ["Jeter"], 
+                "mail": ["derek@nyy.mlb.com"]}
+        
+        # No restrictions apply
+        ava = self.server.filter_ava(ava, 
+                                    "urn:mace:example.com:saml:roland:sp",
+                                    [], [], "idp")
+                                    
+        assert _eq(ava.keys(), ["givenName", "surName"])
+        assert ava["givenName"] == ["Derek"]
+        assert ava["surName"] == ["Jeter"]
+
+    def test_filter_ava_2(self):
+        """ Only mail returned """
+        self.server.conf["service"]["idp"]["assertions"][
+                            "urn:mace:example.com:saml:roland:sp"] = {
+                    "lifetime": {"minutes": 5},
+                    "attribute_restrictions":{
+                        "mail": None,
+                    }
+                }
+
+        print self.server.conf["service"]["idp"]["assertions"]
+        
+        ava = { "givenName": ["Derek"], "surName": ["Jeter"], 
+                "mail": ["derek@nyy.mlb.com"]}
+        
+        # No restrictions apply
+        ava = self.server.filter_ava(ava, 
+                                    "urn:mace:example.com:saml:roland:sp",
+                                    [], [], "idp")
+                                    
+        assert _eq(ava.keys(), ["mail"])
+        assert ava["mail"] == ["derek@nyy.mlb.com"]
+
+    def test_filter_ava_3(self):
+        """ Only example.com mail addresses returned """
+        self.server.conf["service"]["idp"]["assertions"][
+                            "urn:mace:example.com:saml:roland:sp"] = {
+                    "lifetime": {"minutes": 5},
+                    "attribute_restrictions":{
+                        "mail": [re.compile(".*@example\.com$")],
+                    }
+                }
+
+        print self.server.conf["service"]["idp"]["assertions"]
+        
+        ava = { "givenName": ["Derek"], "surName": ["Jeter"], 
+                "mail": ["derek@nyy.mlb.com", "dj@example.com"]}
+        
+        # No restrictions apply
+        ava = self.server.filter_ava(ava, 
+                                    "urn:mace:example.com:saml:roland:sp",
+                                    [], [], "idp")
+                                    
+        assert _eq(ava.keys(), ["mail"])
+        assert ava["mail"] == ["dj@example.com"]

@@ -180,6 +180,16 @@ class TestClient:
         assert nameid.format == saml.NAMEID_FORMAT_TRANSIENT
         assert nameid.text == "_e7b68a04488f715cda642fbdd90099f5"
 
+    def test_attribute_query(self):
+        req = self.client.attribute_query( 
+                "_e7b68a04488f715cda642fbdd90099f5", 
+                "urn:mace:umu.se:saml/rolandsp",
+                "https://aai-demo-idp.switch.ch/idp/shibboleth", 
+                format=saml.NAMEID_FORMAT_TRANSIENT)
+
+        # since no one is answering on the other end
+        assert req == None
+                
     def test_idp_entry(self):
         idp_entry = utils.make_instance( samlp.IDPEntry,
                             self.client.idp_entry(name="Umeå Universitet",

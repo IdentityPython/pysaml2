@@ -23,6 +23,9 @@ class UnsupportedBinding(Exception):
 class OtherError(Exception):
     pass
 
+class MissingValue(Exception):
+    pass
+    
 EXCEPTION2STATUS = {
     VersionMismatch: samlp.STATUS_VERSION_MISMATCH,
     UnknownPrincipal: samlp.STATUS_UNKNOWN_PRINCIPAL,
@@ -72,7 +75,7 @@ def make_vals(val, klass, klass_inst=None, prop=None, part=False):
     :return: Value class instance
     """
     cinst = None
-    #print "_make_val: %s %s (%s)" % (prop,val,klass)
+    #print "_make_val: %s %s (%s) [%s]" % (prop,val,klass,part)
     if isinstance(val, bool):
         cinst = klass(text="%s" % val)
     elif isinstance(val, int):
@@ -92,9 +95,9 @@ def make_vals(val, klass, klass_inst=None, prop=None, part=False):
     if part:
         return cinst
     else:        
-        if cis:
+        if cinst:
             cis = [cinst]
-        setattr(klass_inst, prop, cis)
+            setattr(klass_inst, prop, cis)
     
 def make_instance(klass, spec):
     """
@@ -104,8 +107,11 @@ def make_instance(klass, spec):
     :param spec: Information to be placed in the instance
     :return: The instance
     """
+    #print "----- %s -----" % klass
+    #print "..... %s ....." % spec
     klass_inst = klass()
     for prop in klass.c_attributes.values():
+        #print "# %s" % (prop)
         if prop in spec:
             if isinstance(spec[prop], bool):
                 setattr(klass_inst, prop,"%s" % spec[prop])
@@ -117,12 +123,15 @@ def make_instance(klass, spec):
         setattr(klass_inst, "text", spec["text"])
         
     for prop, klass in klass.c_children.values():
+        #print "## %s, %s" % (prop, klass)
         if prop in spec:
+            #print "%s" % spec[prop]
             if isinstance(klass, list): # means there can be a list of values
                 make_vals(spec[prop], klass[0], klass_inst, prop)
             else:
                 cis = make_vals(spec[prop], klass, klass_inst, prop, True)
                 setattr(klass_inst, prop, cis)
+    #+print ">>> %s <<<" % klass_inst
     return klass_inst
 
 def parse_attribute_map(filenames):
@@ -185,6 +194,68 @@ def identity_attribute(form, attribute, forward_map=None):
                 return attribute.name
     # default is name
     return attribute.name
+
+def filter_values(vals, attributes, required=True):
+    reqval = []
+    for rval in attributes:
+        for val in vals:
+            if rval.text == val:
+                reqval.append(val)
+                break
+                
+    if required:
+        if len(reqval) == len(attributes):
+            return reqval
+        else:
+            raise MissingValue("Required attribute value missing")
+    else:
+        return reqval
+    
+def filter_required(ava, required):
+    """
+    :param required: list of RequestedAttribute instances
+    """
+    res = {}
+    for attr in required:
+        if attr.name in ava:
+            if required.attribute_value:
+                res[attr.name] = filter_values(ava[attr.name], 
+                                            required.attribute_value)
+            else:
+                res[attr.name] = ava[attr.name]
+        elif attr.friendly_name in ava:
+            if attr.attribute_value:
+                res[attr.friendly_name] = filter_values(
+                                            ava[attr.friendly_name], 
+                                            attr.attribute_value)
+            else:
+                res[attr.friendly_name] = ava[attr.friendly_name]
+        else:
+            raise MissingValue("Required attribute missing")
+    
+    return res
+    
+def filter_optional(ava, optional):
+    """
+    :param optional: list of RequestedAttribute instances
+    """
+    res = {}
+    for attr in optional:
+        if attr.name in ava:
+            if optional.attribute_value:
+                res[attr.name] = filter_values(ava[attr.name], 
+                                            optional.attribute_value, False)
+            else:
+                res[attr.name] = ava[attr.name]
+        elif attr.friendly_name in ava:
+            if attr.attribute_value:
+                res[attr.friendly_name] = filter_values(
+                                            ava[attr.friendly_name], 
+                                            attr.attribute_value, False)
+            else:
+                res[attr.friendly_name] = ava[attr.friendly_name]
+    
+    return res
 
 #----------------------------------------------------------------------------
 
@@ -285,7 +356,7 @@ def do_attributes(identity):
     for key, val in identity.items():
         dic = {}
         if isinstance(val, basestring):
-            attrval = kd_attribute_value(val)
+            attrval = [kd_attribute_value(val)]
         elif isinstance(val, list):
             attrval = [kd_attribute_value(v) for v in val]
         elif val == None:

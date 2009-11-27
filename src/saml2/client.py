@@ -497,7 +497,7 @@ class Saml2Client:
         session_id = sid()
         request = self.create_attribute_query(session_id, subject_id, 
                     issuer, destination, attribute, sp_name_qualifier, 
-                    name_qualifier, format=format)
+                    name_qualifier, nameformat=format)
         
         log and log.info("Request, created: %s" % request)
         

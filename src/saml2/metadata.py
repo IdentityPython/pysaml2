@@ -331,25 +331,21 @@ class MetaData(object):
             
         return name
 
-    def requests(self, entity_id):
+    def attribute_consumer(self, entity_id):
         try:
             ssos = self.entity[entity_id]["sp_sso"]
         except KeyError:
             return ([], [])
             
-        try:
-            requested = ssos["attribute_consuming_service"][
-                                                    "requested_attribute"]
-        except KeyError:
-            return ([], [])
-            
         required = []
         optional = []
-        for attr in requested:
-            if "is_required" in attr and attr["is_required"] == "true":
-                required.append(attr)
-            else:
-                optional.append(attr)
+        # What if there is more than one ? Can't be ?
+        for acs in ssos[0].attribute_consuming_service:
+            for attr in acs.requested_attribute:
+                if attr.is_required == "true":
+                    required.append(attr)
+                else:
+                    optional.append(attr)
     
         return (required, optional)
         

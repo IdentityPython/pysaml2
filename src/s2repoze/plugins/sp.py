@@ -56,7 +56,7 @@ class SAML2Plugin(FormPluginBase):
     
     def __init__(self, rememberer_name, saml_conf_file, virtual_organization,
                 cache, debug):
-        FormPluginBase.__init__(self, rememberer_name)
+        FormPluginBase.__init__(self)
         self.rememberer_name = rememberer_name
         self.debug = debug        
         
@@ -134,7 +134,7 @@ class SAML2Plugin(FormPluginBase):
                                         self.srv["name"], 
                                         relay_state=came_from, 
                                         log=logger,
-                                        vo=vorg)
+                                        vorg=vorg)
         self.outstanding_authn[sid] = came_from
             
         if self.debug:

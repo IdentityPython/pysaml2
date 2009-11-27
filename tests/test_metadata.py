@@ -10,6 +10,7 @@ SWAMI_METADATA = "tests/urn-mace-swami.se-swamid-test-1.0-metadata.xml"
 INCOMMON_METADATA = "tests/InCommon-metadata.xml"
 EXAMPLE_METADATA = "tests/metadata_example.xml"
 SWITCH_METADATA = "tests/metadata.aaitest.xml"
+SP_METADATA = "tests/metasp.xml"
 
 def _eq(l1,l2):
     return set(l1) == set(l2)
@@ -91,6 +92,26 @@ def test_switch_1():
                 if "idp_sso" in ent and "sp_sso" in ent])
     print len(dual)
     assert len(dual) == 0
+
+def test_sp_metadata():
+    md = metadata.MetaData()
+    md.import_metadata(open(SP_METADATA).read())
+    
+    print md.entity
+    assert len(md.entity) == 1
+    assert md.entity.keys() == ['urn:mace:umu.se:saml:roland:sp']
+    assert md.entity['urn:mace:umu.se:saml:roland:sp'].keys() == [
+                                                    "organization","sp_sso"]
+    print md.entity['urn:mace:umu.se:saml:roland:sp']["sp_sso"][0].keyswv()
+    (req,opt) = md.attribute_consumer('urn:mace:umu.se:saml:roland:sp')
+    print req
+    assert len(req) == 3
+    assert len(opt) == 1
+    assert opt[0].name == 'urn:oid:2.5.4.12'
+    assert opt[0].friendly_name == 'title'
+    assert _eq([n.name for n in req],['urn:oid:2.5.4.4', 'urn:oid:2.5.4.42', 
+                                        'urn:oid:0.9.2342.19200300.100.1.3'])
+    assert _eq([n.friendly_name for n in req],['surName', 'givenName', 'mail'])
 
 # ------------ Constructing metaval ----------------------------------------
 

@@ -214,7 +214,6 @@ class Server(object):
         """
         attr_statement = do_attribute_statement(identity)
         
-        
         # start using now and for a hour
         conds = kd_conditions(
                         not_before=instant(), 
@@ -307,29 +306,34 @@ class Server(object):
 
         return make_instance(samlp.Response, tmp)
 
-    def filter_ava(self, ava, sp_entity_id, request=None, role=""):
+    def filter_ava(self, ava, sp_entity_id, required, optional, role=""):
         """ What attribute and attribute values returns depends on what
         the SP has said it wants in the request or in the metadata file and
         what the IdP/AA wants to release. An assumption is that what the SP
         asks for overrides whatever is in the metadata.        
         """
+
+        #print self.conf["service"][role]
+        #print self.conf["service"][role]["assertions"][sp_entity_id]
         
-        if not request:
-            #any rules for this SP ?
+        try:
+            restrictions = self.conf["service"][role][
+                                "assertions"][sp_entity_id][
+                                    "attribute_restrictions"]
+        except KeyError:
             try:
-                restrictions = self.conf["service"][role][sp_entity_id][
-                                    "attribute_restrictions"]
+                restrictions = self.conf["service"][role]["assertions"][
+                                "default"]["attribute_restrictions"]
             except KeyError:
-                try:
-                    restrictions = self.conf["service"][role]["default"][
-                                    "attribute_restrictions"]
-                except KeyError:
-                    restrictions = None
-                    
-            if restrictions:
-                ava = filter_attribute_value_assertions(ava,
-                                                                restrictions)
-    
+                restrictions = None
+                
+        #print restrictions
+        if restrictions:
+            ava = filter_attribute_value_assertions(ava, restrictions)
+
+        if required:
+            pass
+            
         return ava
         
     def authn_response(self, identity, in_response_to, destination, spid,
@@ -364,7 +368,8 @@ class Server(object):
                         sp_name_qualifier=name_id_policy.sp_name_qualifier)
         
         # Do attribute filtering
-        identity = self.filter_ava( identity, spid, None,"idp")
+        (required,optional) = self.conf["metadata"].attribute_consumer(spid)
+        identity = self.filter_ava( identity, spid, required, optional, "idp")
         
         resp = self.do_sso_response(
                             destination,    # consumer_url
