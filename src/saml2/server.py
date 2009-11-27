@@ -26,11 +26,12 @@ from saml2.utils import kd_issuer, kd_conditions, kd_audience_restriction
 from saml2.utils import sid, decode_base64_and_inflate, make_instance
 from saml2.utils import kd_audience, kd_name_id, kd_assertion
 from saml2.utils import kd_subject, kd_subject_confirmation, kd_response
-from saml2.utils import kd_authn_statement
+from saml2.utils import kd_authn_statement, MissingValue
 from saml2.utils import kd_subject_confirmation_data, kd_success_status
 from saml2.utils import filter_attribute_value_assertions
 from saml2.utils import OtherError, do_attribute_statement
 from saml2.utils import VersionMismatch, UnknownPrincipal, UnsupportedBinding
+from saml2.utils import filter_on_attributes
 
 from saml2.sigver import correctly_signed_authn_request
 from saml2.sigver import pre_signature_part
@@ -201,7 +202,7 @@ class Server(object):
         return in_a_while(**{"hours":1})
             
     def do_sso_response(self, consumer_url, in_response_to,
-                        sp_entity_id, identity, name_id=None ):
+                        sp_entity_id, identity, name_id=None, status=None ):
         """ Create a Response the follows the ??? profile.
         
         :param consumer_url: The URL which should receive the response
@@ -240,11 +241,14 @@ class Server(object):
                             in_response_to=in_response_to))),
             ),
             
+        if not status:
+            status = kd_success_status()
+            
         tmp = kd_response(
             issuer=self.issuer(),
-            in_response_to=in_response_to,
-            destination=consumer_url,
-            status=kd_success_status(),
+            in_response_to = in_response_to,
+            destination = consumer_url,
+            status = status,
             assertion=assertion,
             )
         
@@ -306,7 +310,8 @@ class Server(object):
 
         return make_instance(samlp.Response, tmp)
 
-    def filter_ava(self, ava, sp_entity_id, required, optional, role=""):
+    def filter_ava(self, ava, sp_entity_id, required=None, optional=None, 
+                    role=""):
         """ What attribute and attribute values returns depends on what
         the SP has said it wants in the request or in the metadata file and
         what the IdP/AA wants to release. An assumption is that what the SP
@@ -331,8 +336,8 @@ class Server(object):
         if restrictions:
             ava = filter_attribute_value_assertions(ava, restrictions)
 
-        if required:
-            pass
+        if required or optional:
+            ava = filter_on_attributes(ava, required, optional)
             
         return ava
         
@@ -368,15 +373,25 @@ class Server(object):
                         sp_name_qualifier=name_id_policy.sp_name_qualifier)
         
         # Do attribute filtering
-        (required,optional) = self.conf["metadata"].attribute_consumer(spid)
-        identity = self.filter_ava( identity, spid, required, optional, "idp")
-        
-        resp = self.do_sso_response(
+        (required, optional) = self.conf["metadata"].attribute_consumer(spid)
+        try:
+            identity = self.filter_ava( identity, spid, required, 
+                                        optional, "idp")
+            resp = self.do_sso_response(
                             destination,    # consumer_url
                             in_response_to, # in_response_to
                             spid,           # sp_entity_id
                             identity,       # identity as dictionary
                             name_id,
                         )
+        except MissingValue:
+            resp = self.do_sso_response(
+                            destination,    # consumer_url
+                            in_response_to, # in_response_to
+                            spid,           # sp_entity_id
+                            name_id,
+                        )
+            
+        
         
         return ("%s" % resp).split("\n")

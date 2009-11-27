@@ -377,25 +377,39 @@ def test_identity_attribute_4():
     # if there would be a map it would be serialNumber
     assert utils.identity_attribute("friendly",a) == "serialNumber"
     
-def test_filter_values_req_0():
+def test_combine_0():
+    r = Attribute(name="urn:oid:2.5.4.5", name_format=NAME_FORMAT_URI,
+                    friendly_name="serialNumber")    
+    o = Attribute(name="urn:oid:2.5.4.4", name_format=NAME_FORMAT_URI,
+                    friendly_name="surName")
+
+    comb = utils.combine([r],[o])
+    print comb
+    assert _eq(comb.keys(), [('urn:oid:2.5.4.5', 'serialNumber'), 
+                                ('urn:oid:2.5.4.4', 'surName')])
+    assert comb[('urn:oid:2.5.4.5', 'serialNumber')] == ([], [])
+    assert comb[('urn:oid:2.5.4.4', 'surName')] == ([], [])
+    
+
+def test_filter_on_attributes_0():
     a = Attribute(name="urn:oid:2.5.4.5", name_format=NAME_FORMAT_URI,
                     friendly_name="serialNumber")    
     
     required = [a]
     ava = { "serialNumber": ["12345"]}
     
-    ava = utils.filter_required(ava, required)
+    ava = utils.filter_on_attributes(ava, required)
     assert ava.keys() == ["serialNumber"]
     assert ava["serialNumber"] == ["12345"]
 
-def test_filter_values_req_1():
+def test_filter_on_attributes_1():
     a = Attribute(name="urn:oid:2.5.4.5", name_format=NAME_FORMAT_URI,
                     friendly_name="serialNumber")    
     
     required = [a]
     ava = { "serialNumber": ["12345"], "givenName":["Lars"]}
     
-    ava = utils.filter_required(ava, required)
+    ava = utils.filter_on_attributes(ava, required)
     assert ava.keys() == ["serialNumber"]
     assert ava["serialNumber"] == ["12345"]
 
@@ -408,7 +422,7 @@ def test_filter_values_req_2():
     required = [a1,a2]
     ava = { "serialNumber": ["12345"], "givenName":["Lars"]}
     
-    raises(utils.MissingValue, utils.filter_required, ava, required)
+    raises(utils.MissingValue, utils.filter_on_attributes, ava, required)
 
 def test_filter_values_req_3():
     a = Attribute(name="urn:oid:2.5.4.5", name_format=NAME_FORMAT_URI,
@@ -418,7 +432,7 @@ def test_filter_values_req_3():
     required = [a]
     ava = { "serialNumber": ["12345"]}
     
-    ava = utils.filter_required(ava, required)
+    ava = utils.filter_on_attributes(ava, required)
     assert ava.keys() == ["serialNumber"]
     assert ava["serialNumber"] == ["12345"]
 
@@ -430,7 +444,7 @@ def test_filter_values_req_4():
     required = [a]
     ava = { "serialNumber": ["12345"]}
     
-    raises(utils.MissingValue, utils.filter_required, ava, required)
+    raises(utils.MissingValue, utils.filter_on_attributes, ava, required)
 
 def test_filter_values_req_5():
     a = Attribute(name="urn:oid:2.5.4.5", name_format=NAME_FORMAT_URI,
@@ -440,7 +454,7 @@ def test_filter_values_req_5():
     required = [a]
     ava = { "serialNumber": ["12345", "54321"]}
     
-    ava = utils.filter_required(ava, required)
+    ava = utils.filter_on_attributes(ava, required)
     assert ava.keys() == ["serialNumber"]
     assert ava["serialNumber"] == ["12345"]
 
@@ -452,6 +466,35 @@ def test_filter_values_req_6():
     required = [a]
     ava = { "serialNumber": ["12345", "54321"]}
     
-    ava = utils.filter_required(ava, required)
+    ava = utils.filter_on_attributes(ava, required)
     assert ava.keys() == ["serialNumber"]
     assert ava["serialNumber"] == ["54321"]
+
+def test_filter_values_req_opt_0():
+    r = Attribute(name="urn:oid:2.5.4.5", name_format=NAME_FORMAT_URI,
+                    friendly_name="serialNumber", attribute_value=[
+                        AttributeValue(text="54321")])    
+    o = Attribute(name="urn:oid:2.5.4.5", name_format=NAME_FORMAT_URI,
+                    friendly_name="serialNumber", attribute_value=[
+                        AttributeValue(text="12345")])    
+    
+    ava = { "serialNumber": ["12345", "54321"]}
+    
+    ava = utils.filter_on_attributes(ava, [r], [o])
+    assert ava.keys() == ["serialNumber"]
+    assert _eq(ava["serialNumber"], ["12345","54321"])
+
+def test_filter_values_req_opt_1():
+    r = Attribute(name="urn:oid:2.5.4.5", name_format=NAME_FORMAT_URI,
+                    friendly_name="serialNumber", attribute_value=[
+                        AttributeValue(text="54321")])    
+    o = Attribute(name="urn:oid:2.5.4.5", name_format=NAME_FORMAT_URI,
+                    friendly_name="serialNumber", attribute_value=[
+                        AttributeValue(text="12345"),
+                        AttributeValue(text="abcd0")])    
+    
+    ava = { "serialNumber": ["12345", "54321"]}
+    
+    ava = utils.filter_on_attributes(ava, [r], [o])
+    assert ava.keys() == ["serialNumber"]
+    assert _eq(ava["serialNumber"], ["12345","54321"])

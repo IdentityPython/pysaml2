@@ -53,6 +53,9 @@ def deflate_and_base64_encode( string_val ):
     
 def sid(seed=""):
     """The hash of the server time + seed makes an unique SID for each session.
+    
+    :param seed: A seed string
+    :return: The hex version of the digest
     """
     ident = md5()
     ident.update(repr(time.time()))
@@ -195,67 +198,83 @@ def identity_attribute(form, attribute, forward_map=None):
     # default is name
     return attribute.name
 
-def filter_values(vals, attributes, required=True):
-    reqval = []
-    for rval in attributes:
-        for val in vals:
-            if rval.text == val:
-                reqval.append(val)
-                break
-                
+def filter_values(vals, required=None, optional=None):
+    """ Removes values from *val* that does not appear in *attributes*.
+    
+    :param val: The values that are to be filtered
+    :param required: The requires values
+    :param optional: The optional values
+    :return: The set of values after filtering
+    """
+
+    if not required and not optional:
+        return vals
+        
+    valr = []
+    valo = []
     if required:
-        if len(reqval) == len(attributes):
-            return reqval
+        rvals = [v.text for v in required]
+    else:
+        rvals = []
+    if optional:
+        ovals = [v.text for v in optional]
+    else:
+        ovals = []
+    for val in vals:
+        if val in rvals:
+            valr.append(val)
+        elif val in ovals:
+            valo.append(val)
+
+    valo.extend(valr)
+    if rvals:
+        if len(rvals) == len(valr):
+            return valo
         else:
             raise MissingValue("Required attribute value missing")
     else:
-        return reqval
+        return valo
     
-def filter_required(ava, required):
-    """
+def combine(required=None, optional=None):
+    res = {}
+    if not required:
+        required = []
+    if not optional:
+        optional = []
+    for attr in required:
+        part = None
+        for oat in optional:
+            if attr.name == oat.name:
+                part = (attr.attribute_value, oat.attribute_value)
+                break
+        if part:
+            res[(attr.name, attr.friendly_name)] = part
+        else:
+            res[(attr.name, attr.friendly_name)] = (attr.attribute_value, [])
+
+    for oat in optional:
+        tag = (oat.name, oat.friendly_name)
+        if tag not in res:
+            res[tag] = ([], oat.attribute_value)
+            
+    return res
+    
+def filter_on_attributes(ava, required=None, optional=None):
+    """ Filter
     :param required: list of RequestedAttribute instances
     """
     res = {}
-    for attr in required:
-        if attr.name in ava:
-            if required.attribute_value:
-                res[attr.name] = filter_values(ava[attr.name], 
-                                            required.attribute_value)
-            else:
-                res[attr.name] = ava[attr.name]
-        elif attr.friendly_name in ava:
-            if attr.attribute_value:
-                res[attr.friendly_name] = filter_values(
-                                            ava[attr.friendly_name], 
-                                            attr.attribute_value)
-            else:
-                res[attr.friendly_name] = ava[attr.friendly_name]
+    comb = combine(required, optional)
+    for attr, vals in comb.items():
+        if attr[0] in ava:
+            res[attr[0]] = filter_values(ava[attr[0]], vals[0], vals[1])
+        elif attr[1] in ava:
+            res[attr[1]] = filter_values(ava[attr[1]], vals[0], vals[1])
         else:
             raise MissingValue("Required attribute missing")
     
     return res
     
-def filter_optional(ava, optional):
-    """
-    :param optional: list of RequestedAttribute instances
-    """
-    res = {}
-    for attr in optional:
-        if attr.name in ava:
-            if optional.attribute_value:
-                res[attr.name] = filter_values(ava[attr.name], 
-                                            optional.attribute_value, False)
-            else:
-                res[attr.name] = ava[attr.name]
-        elif attr.friendly_name in ava:
-            if attr.attribute_value:
-                res[attr.friendly_name] = filter_values(
-                                            ava[attr.friendly_name], 
-                                            attr.attribute_value, False)
-            else:
-                res[attr.friendly_name] = ava[attr.friendly_name]
-    
-    return res
 
 #----------------------------------------------------------------------------
 

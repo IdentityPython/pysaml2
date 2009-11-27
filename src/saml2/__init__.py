@@ -16,19 +16,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Contains base classes representing Saml elements.
+"""Contains base classes representing SAML elements.
 
     These codes were originally written by Jeffrey Scudder for
     representing Atom elements. Takashi Matsuo had added some codes, and
     changed some. Roland Hedberg changed and added some more.
 
-    Module objective: provide data classes for Saml constructs. These
-    classes hide the XML-ness of Saml and provide a set of native Python
+    Module objective: provide data classes for SAML constructs. These
+    classes hide the XML-ness of SAML and provide a set of native Python
     classes to interact with.
 
-    Conversions to and from XML should only be necessary when the Saml classes
+    Conversions to and from XML should only be necessary when the SAML classes
     "touch the wire" and are sent over HTTP. For this reason this module 
-    provides methods and functions to convert Saml classes to and from strings.
+    provides methods and functions to convert SAML classes to and from strings.
 """
 
 try:
@@ -123,7 +123,7 @@ class Error(Exception):
     pass
 
 class ExtensionElement(object):
-    """XML which is not part of the Saml specification,
+    """XML which is not part of the SAML specification,
     these are called extension elements. If a classes parser
     encounters an unexpected XML construct, it is translated into an
     ExtensionElement instance. ExtensionElement is designed to fully
@@ -324,9 +324,9 @@ class ExtensionContainer(object):
     
 
 class SamlBase(ExtensionContainer):
-    """A foundation class on which Saml classes are built. It 
+    """A foundation class on which SAML classes are built. It 
     handles the parsing of attributes and children which are common to all
-    Saml classes. By default, the SamlBase class translates all XML child 
+    SAML classes. By default, the SamlBase class translates all XML child 
     nodes into ExtensionElements.
     """
     
