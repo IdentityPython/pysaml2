@@ -289,3 +289,37 @@ class TestServer():
                                     
         assert _eq(ava.keys(), ["mail"])
         assert ava["mail"] == ["dj@example.com"]
+
+    def test_authn_response_0(self):
+        # reset 
+        del self.server.conf["service"]["idp"]["assertions"][
+                            "urn:mace:example.com:saml:roland:sp"]
+
+        ava = { "givenName": ["Derek"], "surName": ["Jeter"], 
+                "mail": ["derek@nyy.mlb.com"]}
+
+        resp_str = self.server.authn_response(ava, 
+                    "1", "http://local:8087/", 
+                    "urn:mace:example.com:saml:roland:sp",
+                    utils.make_instance(samlp.NameIDPolicy,
+                                utils.kd_name_id_policy(
+                                        format=saml.NAMEID_FORMAT_TRANSIENT,
+                                        allow_create="true")),
+                    "foba0001@example.com")
+                   
+        response = samlp.response_from_string("\n".join(resp_str))
+        print response.keyswv()
+        assert _eq(response.keyswv(),['status', 'destination', 'assertion', 
+                        'in_response_to', 'issue_instant', 'version', 
+                        'issuer', 'id'])
+        print response.assertion[0].keyswv()
+        assert len(response.assertion) == 1
+        assert _eq(response.assertion[0].keyswv(), ['authn_statement', 
+                        'attribute_statement', 'subject', 'issue_instant', 
+                        'version', 'conditions', 'id'])
+        assertion = response.assertion[0]
+        assert len(assertion.attribute_statement) == 1
+        astate = assertion.attribute_statement[0]
+        print astate
+        assert len(astate.attribute) == 3
+        

@@ -498,3 +498,31 @@ def test_filter_values_req_opt_1():
     ava = utils.filter_on_attributes(ava, [r], [o])
     assert ava.keys() == ["serialNumber"]
     assert _eq(ava["serialNumber"], ["12345","54321"])
+
+def _givenName(a):
+    assert a["name"] == "urn:oid:2.5.4.42"
+    assert a["friendly_name"] == "givenName"
+    assert len(a["attribute_value"]) == 1
+    assert a["attribute_value"] == [{"text":"Derek"}]
+
+def _surName(a):
+    assert a["name"] == "urn:oid:2.5.4.4"
+    assert a["friendly_name"] == "surName"
+    assert len(a["attribute_value"]) == 1
+    assert a["attribute_value"] == [{"text":"Jeter"}]
+
+def test_ava_to_attributes():
+    (forward, backward) = utils.parse_attribute_map(["tests/attribute.map"])
+    attrs = utils.ava_to_attributes(AVA[0], backward)
+    
+    assert len(attrs) == 2
+    a = attrs[0]
+    if a["name"] == "urn:oid:2.5.4.42":
+        _givenName(a)
+        _surName(attrs[1])
+    elif a["name"] == "urn:oid:2.5.4.4":
+        _surName(a)
+        _givenName(attrs[1])
+    else:
+        print a
+        assert False

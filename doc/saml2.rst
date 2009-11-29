@@ -18,6 +18,8 @@ Base classes representing basic elements
    metadata
    xmldsig
    xmlenc
+   client
+   server
    
 Module
 ==========

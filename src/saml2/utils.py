@@ -2,7 +2,7 @@
 
 import time
 import base64
-from saml2 import samlp, saml, VERSION, sigver
+from saml2 import samlp, saml, VERSION, sigver, NAME_FORMAT_URI
 from saml2.time_util import instant
 
 try:
@@ -350,6 +350,9 @@ def kd_subject(text="", **kwargs):
 def kd_authn_statement(text="", **kwargs):
     return klassdict(saml.Subject, text, **kwargs)        
     
+def kd_name_id_policy(text="", **kwargs):
+    return klassdict(samlp.NameIDPolicy, text, **kwargs)
+    
 def kd_assertion(text="", **kwargs):
     kwargs.update({
         "version": VERSION,
@@ -370,20 +373,42 @@ def kd_response(signature=False, encrypt=False, **kwargs):
         pass
     return kwargs
 
+def _attrval(val):
+    if isinstance(val, basestring):
+        attrval = [kd_attribute_value(val)]
+    elif isinstance(val, list):
+        attrval = [kd_attribute_value(v) for v in val]
+    elif val == None:
+        attrval = None
+    else:
+        raise OtherError("strange value type on: %s" % val)
+
+    return attrval
+
+def ava_to_attributes(ava, bmap):
+    attrs = []
+    
+    for key, val in ava.items():
+        dic = {}
+        attrval = _attrval(val)
+        if attrval:
+            dic["attribute_value"] = attrval
+        
+        dic["friendly_name"] = key
+        dic["name"] = bmap[key]
+        dic["name_format"] = NAME_FORMAT_URI
+        attrs.append(kd_attribute(**dic))
+    return attrs
+
 def do_attributes(identity):
     attrs = []
     for key, val in identity.items():
         dic = {}
-        if isinstance(val, basestring):
-            attrval = [kd_attribute_value(val)]
-        elif isinstance(val, list):
-            attrval = [kd_attribute_value(v) for v in val]
-        elif val == None:
-            attrval = None
-        else:
-            raise OtherError("strange value type on: %s" % val)
+
+        attrval = _attrval(val)
         if attrval:
             dic["attribute_value"] = attrval
+
         if isinstance(key, basestring):
             dic["name"] = key
         elif isinstance(key, tuple): # 3-tuple

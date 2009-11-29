@@ -18,6 +18,7 @@
 """Contains classes and functions that a SAML2.0 Identity provider (IdP) 
 or attribute authority (AA) may use to conclude its tasks.
 """
+
 import shelve
 
 from saml2 import saml, samlp, VERSION
@@ -41,6 +42,7 @@ from saml2.cache import Cache
 
 
 class Server(object):
+    """ A class that does things that IdPs or AAs do """
     def __init__(self, config_file="", config=None, cache="",
                     log=None, debug=0):
         if config_file:
@@ -384,12 +386,14 @@ class Server(object):
                             identity,       # identity as dictionary
                             name_id,
                         )
-        except MissingValue:
+        except MissingValue, exc:
+            
             resp = self.do_sso_response(
                             destination,    # consumer_url
                             in_response_to, # in_response_to
                             spid,           # sp_entity_id
                             name_id,
+                            status = kd_status_from_exception(exc)
                         )
             
         

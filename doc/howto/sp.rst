@@ -9,7 +9,8 @@ How it works
 A SP handles authentication, by the use of an Identity Provider, and possibly 
 attribute aggregation.
 Both of these functions can be seen as parts of the normal Repoze.who
-setup. Namely the Challenger, Identifier and MetadataProvider parts.
+setup. Namely the Challenger, Identifier and MetadataProvider parts so that
+is how it is thought to be implemented.
 
 Normal for Repoze.who Identifier and MetadataProvider plugins are that
 they place information they gather in environment variables. The convention is 
@@ -40,8 +41,9 @@ The set up
 There are two configuration files you have to deal with, first the 
 pySAML2 configuration file which you can read more about here 
 :ref:`howto_config` and secondly the repoze.who configuration file.
+And it is the later one I will deal with here.
 
-The plugin configuration has the following arguments
+The **sp** plugin configuration has the following arguments
 
 use
     Which module to use and which factory function in that module that should 
@@ -57,10 +59,10 @@ virtual_organization
     Which virtual organization this SP belongs to, can only be none or one.
     
 debug
-    Debug state, and integer. Presently just on/off.
+    Debug state, an integer. Presently just on (!= 0)/off (0) is supported.
     
 cache
-    If no cache file is defined, a in memory cache will be used to 
+    If no cache file is defined, an in-memory cache will be used to 
     remember information received from IdPs and AAs. If a file name
     is given that file will be used for persistent storage of the cache.
     
@@ -68,14 +70,17 @@ An example::
 
     [plugin:saml2sp]
     use = s2repoze.plugins.sp:make_plugin
+    rememberer_name = auth_tkt
     saml_conf = sp.conf
     virtual_organization=urn:mace:umu.se:vo:it-enheten:cms
-    rememberer_name = auth_tkt
     debug = 1
+    cache = /tmp/sp.cache
 
 Once you have configured the plugin you have to tell the server to use the
 plugin in different ingress and egress operations as specified in
 `Middleware responsibilities <http://docs.repoze.org/who/narr.html>`_ ::
+
+A typical SP configuration would be to use it in all aspects::
 
     [identifiers]
     plugins =

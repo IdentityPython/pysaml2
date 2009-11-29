@@ -42,13 +42,14 @@ FORM_SPEC = """<form method="post" action="%s">
    <input type="submit" value="Submit" />
 </form>"""
 
-LAX = True
+LAX = False
 
 SESSION_INFO = {"ava":{}, "came from":"", "not_on_or_after":0,
                     "issuer":"", "session_id":-1}
 
 
-class Saml2Client:
+class Saml2Client(object):
+    """ The basic pySAML2 service provider class """
     
     def __init__(self, environ, config=None):
         """

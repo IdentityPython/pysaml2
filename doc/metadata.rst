@@ -1,7 +1,7 @@
 .. _metadata:
 
 ***************************************************
-Base classes representing Saml2.0 protocol elements
+Base classes representing Saml2.0 MetaData elements
 ***************************************************
 
 :Author: Roland Hedberg
