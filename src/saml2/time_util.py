@@ -203,5 +203,5 @@ def str_to_time(timestr):
     return then
 
 def instant():
-    return datetime.now().strftime(TIME_FORMAT)
+    return datetime.utcnow().strftime(TIME_FORMAT)
     

@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
+import time
 from saml2.time_util import f_quotient, modulo, parse_duration, add_duration
-from saml2.time_util import str_to_time
+from saml2.time_util import str_to_time, instant
 
 def test_f_quotient():
     assert f_quotient(-1,3) == -1
@@ -63,4 +64,16 @@ def test_add_duration_2():
     assert t.tm_hour == 9
     assert t.tm_min == 0
     assert t.tm_sec == 0
+    
+def test_str_to_time():
+    t = time.mktime(str_to_time("2000-01-12T00:00:00Z"))
+    assert t == 947631600.0
+    
+def test_instant():
+    inst = str_to_time(instant())
+    print inst
+    now = time.gmtime()
+    print now
+    
+    assert now >= inst
     
