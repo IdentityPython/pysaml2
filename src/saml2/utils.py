@@ -31,6 +31,7 @@ EXCEPTION2STATUS = {
     UnknownPrincipal: samlp.STATUS_UNKNOWN_PRINCIPAL,
     UnsupportedBinding: samlp.STATUS_UNSUPPORTED_BINDING,
     OtherError: samlp.STATUS_UNKNOWN_PRINCIPAL,
+    MissingValue: samlp.STATUS_REQUEST_UNSUPPORTED,
 }
 
 def decode_base64_and_inflate( string ):
@@ -402,6 +403,8 @@ def ava_to_attributes(ava, bmap):
 
 def do_attributes(identity):
     attrs = []
+    if not identity:
+        return attrs
     for key, val in identity.items():
         dic = {}
 

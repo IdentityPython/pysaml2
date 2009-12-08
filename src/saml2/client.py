@@ -42,7 +42,7 @@ FORM_SPEC = """<form method="post" action="%s">
    <input type="submit" value="Submit" />
 </form>"""
 
-LAX = True
+LAX = False
 
 SESSION_INFO = {"ava":{}, "came from":"", "not_on_or_after":0,
                     "issuer":"", "session_id":-1}
@@ -295,7 +295,7 @@ class Saml2Client(object):
         condition = assertion.conditions
         log and log.info("condition: %s" % condition)
         now = time.gmtime()
-        log and log.info("now: %s" % time.mktime(now))
+        #log and log.info("now: %s" % time.mktime(now))
         not_on_or_after = str_to_time(condition.not_on_or_after)        
         if not_on_or_after < now:
             # To old ignore
@@ -303,7 +303,7 @@ class Saml2Client(object):
                 raise Exception("To old can't use it")
 
         not_before = str_to_time(condition.not_before)        
-        log and log.info("not_before: %s" % time.mktime(not_before))
+        #log and log.info("not_before: %s" % time.mktime(not_before))
         if not_before > now:
             # Can't use it yet
             if not LAX:

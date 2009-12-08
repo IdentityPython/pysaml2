@@ -305,7 +305,7 @@ class SAML2Plugin(FormPluginBase):
 # used 2 times : one to get the ticket, the other to validate it
     def _serviceURL(self, environ, qstr=None):
         if qstr != None:
-            url = construct_url(environ, querystring=qstr)
+            url = construct_url(environ, querystring = qstr)
         else:
             url = construct_url(environ)
         return url

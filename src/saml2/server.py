@@ -32,7 +32,7 @@ from saml2.utils import kd_subject_confirmation_data, kd_success_status
 from saml2.utils import filter_attribute_value_assertions
 from saml2.utils import OtherError, do_attribute_statement
 from saml2.utils import VersionMismatch, UnknownPrincipal, UnsupportedBinding
-from saml2.utils import filter_on_attributes
+from saml2.utils import filter_on_attributes, kd_status_from_exception
 
 from saml2.sigver import correctly_signed_authn_request
 from saml2.sigver import pre_signature_part
