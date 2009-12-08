@@ -28,20 +28,35 @@ def do_sp_sso_descriptor(sp, cert, backward_map):
     requested_attribute = []
     if "required_attributes" in sp:
         for attr in sp["required_attributes"]:
-            requested_attribute.append({
-                "is_required": "true",
-                "friendly_name": attr,
-                "name_format": NAME_FORMAT_URI,
-                "name": backward_map[attr]
-            })
+            try:
+                requested_attribute.append({
+                    "is_required": "true",
+                    "friendly_name": attr,
+                    "name_format": NAME_FORMAT_URI,
+                    "name": backward_map[attr]
+                })
+            except KeyError:
+                requested_attribute.append({
+                    "is_required": "true",
+                    "friendly_name": attr,
+                    "name_format": NAME_FORMAT_URI,
+                    "name": attr
+                })
         
     if "optional_attributes" in sp:
         for attr in sp["optional_attributes"]:
-            requested_attribute.append({
-                "friendly_name": attr,
-                "name_format": NAME_FORMAT_URI,
-                "name": backward_map[attr]
-            })
+            try:
+                requested_attribute.append({
+                    "friendly_name": attr,
+                    "name_format": NAME_FORMAT_URI,
+                    "name": backward_map[attr]
+                })
+            except KeyError:
+                requested_attribute.append({
+                    "friendly_name": attr,
+                    "name_format": NAME_FORMAT_URI,
+                    "name": attr
+                })
     
     if requested_attribute:
         desc["attribute_consuming_service"] = {
@@ -90,10 +105,11 @@ def do_aa_descriptor(aa, cert):
 def entity_descriptor(confd):
     mycert = "".join(open(confd["cert_file"]).readlines()[1:-1])
     
-    backward_map = {}
     if "attribute_maps" in confd:
         (forward,backward) = parse_attribute_map(confd["attribute_maps"])
-            
+    else:
+        backward = {}
+        
     ed = {
         "name": "http://%s/saml/test" % os.uname()[1],
         "valid_until": in_a_while(hours=96),
