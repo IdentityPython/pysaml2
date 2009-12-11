@@ -27,7 +27,13 @@ import base64
 import random
 import os
 
-XMLSEC_BINARY = "/opt/local/bin/xmlsec1"
+def get_xmlsec_binary():		
+    for path in ('/opt/local/bin/xmlsec1',
+                 '/usr/bin/xmlsec1'):
+        if os.path.exists(path):
+            return path
+
+XMLSEC_BINARY = get_xmlsec_binary()
 ID_ATTR = "ID"
 NODE_NAME = "urn:oasis:names:tc:SAML:2.0:assertion:Assertion"
 ENC_NODE_NAME = "urn:oasis:names:tc:SAML:2.0:assertion:EncryptedAssertion"
