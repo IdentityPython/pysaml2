@@ -307,7 +307,7 @@ class Saml2Client(object):
         if not_before > now:
             # Can't use it yet
             if not LAX:
-                raise Exception("Can't use it yet %s <= %s" (
+                raise Exception("Can't use it yet %s <= %s" % (
                                 time.mktime(not_before), time.mktime(now)))
 
         if not for_me(condition, requestor):
