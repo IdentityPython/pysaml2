@@ -1,10 +1,30 @@
 #!/usr/bin/env python
 import os 
+import getopt
 from saml2 import utils, md, samlp, BINDING_HTTP_POST, BINDING_HTTP_REDIRECT
-from saml2 import BINDING_SOAP
+from saml2 import BINDING_SOAP, class_name
 from saml2.time_util import in_a_while
 from saml2.utils import parse_attribute_map
 from saml2.saml import NAME_FORMAT_URI
+from saml2.sigver import pre_signature_part, sign_statement_using_xmlsec
+
+HELP_MESSAGE = """
+Usage: make_metadata [options] 1*configurationfile
+
+Valid options:
+hi:k:sv:x:
+  -h            : Print this help message
+  -i id         : The ID of the entities descriptor
+  -k keyfile    : A file with a key to sign the metadata with
+  -s            : sign the metadta
+  -v            : How long, in days, the metadata is valid from the 
+                    time of creation
+  -x            : xmlsec1 binaries to be used for the signing
+"""
+
+class Usage(Exception):
+    def __init__(self, msg):
+        self.msg = msg
 
 def do_sp_sso_descriptor(sp, cert, backward_map):
     desc = {
@@ -102,7 +122,7 @@ def do_aa_descriptor(aa, cert):
             },
         }
 
-def entity_descriptor(confd):
+def entity_descriptor(confd, valid_for):
     mycert = "".join(open(confd["cert_file"]).readlines()[1:-1])
     
     if "attribute_maps" in confd:
@@ -111,10 +131,10 @@ def entity_descriptor(confd):
         backward = {}
         
     ed = {
-        "name": "http://%s/saml/test" % os.uname()[1],
-        "valid_until": in_a_while(hours=96),
         "entity_id": confd["entityid"],
     }
+    if valid_for:
+        ed["valid_until"] = in_a_while(hours=valid_for)
 
     if "organization" in confd:
         org = {}
@@ -147,16 +167,75 @@ def entity_descriptor(confd):
             
     return ed
 
-def entities_descriptor(eds):
-    return utils.make_instance(md.EntitiesDescriptor,{
-        "name": "urn:mace:umu.se:saml:test",
-        "valid_until": in_a_while(hours=96),
-        "entity_descriptor": eds})
+def entities_descriptor(eds, valid_for, name, id, sign, xmlsec, keyfile):
+    d = {"entity_descriptor": eds}
+    if valid_for:
+        d["valid_until"] = in_a_while(hours=valid_for)
+    if name:
+        d["name"] = name
+    if id:
+        d["id"] = id
 
+    if sign:
+            d["signature"] = pre_signature_part(d["id"])
+
+    statement = utils.make_instance(md.EntitiesDescriptor, d)
+    if sign:
+            statement = sign_statement_using_xmlsec("%s" % statement, 
+                                    class_name(statement),
+                                    xmlsec, key_file=keyfile)
+    return statement
+
+    
+def main(args):
+    try:
+        opts, args = getopt.getopt(args, "hi:k:sv:x:", 
+                        ["help", "name", "id", "keyfile", "sign", 
+                        "valid", "xmlsec"])
+    except getopt.GetoptError, err:
+        # print help information and exit:
+        raise Usage(err) # will print something like "option -a not recognized"
+        sys.exit(2)
+        
+    output = None
+    verbose = False
+    valid_for = 0
+    name = ""
+    id = ""
+    sign = False
+    xmlsec = ""
+    keyfile = ""
+    
+    try:
+        for o, a in opts:
+            if o in ("-v", "--valid"):
+                valid_for = int(a) * 24
+            elif o in ("-h", "--help"):
+                raise Usage(HELP_MESSAGE)
+            elif o in ("-n", "--name"):
+                name = a
+            elif o in ("-i", "--id"):
+                id = a
+            elif o in ("-s", "--sign"):
+                sign = True
+            elif o in ("-x", "--xmlsec"):
+                xmlsec = a
+            elif o in ("-k", "--keyfile"):
+                keyfile = a
+            else:
+                assert False, "unhandled option %s" % o
+    except Usage, err:
+        print >> sys.stderr, sys.argv[0].split("/")[-1] + ": " + str(err.msg)
+        print >> sys.stderr, "\t for help use --help"
+        return 2
+
+    eds = []
+    for conf in args:
+        confd = eval(open(conf).read())
+        eds.append(entity_descriptor(confd, valid_for))
+    print entities_descriptor(eds, valid_for, name, id, sign, xmlsec, keyfile)
+    
 if __name__ == "__main__":
     import sys
-    eds = []
-    for conf in sys.argv[1:]:
-        confd = eval(open(conf).read())
-        eds.append(entity_descriptor(confd))
-    print entities_descriptor(eds)
+    
+    main(sys.argv[1:])
