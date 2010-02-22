@@ -161,11 +161,15 @@ class SAML2Plugin(FormPluginBase):
         post_env = environ.copy()
         post_env['QUERY_STRING'] = ''
         
-        if environ["CONTENT_LENGTH"]:
-            body = environ["wsgi.input"].read(int(environ["CONTENT_LENGTH"]))
-            from StringIO import StringIO
-            environ['wsgi.input'] = StringIO(body)
-            environ['s2repoze.body'] = body
+        try:
+            if environ["CONTENT_LENGTH"]:
+                len = int(environ["CONTENT_LENGTH"])
+                body = environ["wsgi.input"].read(len)
+                from StringIO import StringIO
+                environ['wsgi.input'] = StringIO(body)
+                environ['s2repoze.body'] = body
+        except KeyError:
+            pass
 
         post = cgi.FieldStorage(
             fp=environ['wsgi.input'],
