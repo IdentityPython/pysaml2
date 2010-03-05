@@ -26,11 +26,54 @@ class Usage(Exception):
     def __init__(self, msg):
         self.msg = msg
 
+DEFAULTS = {
+    "want_assertions_signed": "true",
+    "authn_requests_signed": "false",
+}
+
+ORG_ATTR_TRANSL = {
+    "organization_name": "name",
+    "organization_display_name": "display_name",
+    "organization_url": "url",
+}
+
+PERSON_ATTR_TRANSL = {
+    "company": "company",
+    "given_name": "givenname",
+    "sur_name": "surname",
+    "email_address": "mail",
+    "telephone_number": "phone",
+}
+
+def do_organization_info(conf, desc):
+    try:
+        corg =  conf["organization"]                
+        dorg = desc["organization"] = {}
+        
+        for (dkey, ckey) in ORG_ATTR_TRANSL.items():
+            try:
+                dorg[dkey] = corg[ckey]
+            except KeyError:
+                pass
+    except KeyError:
+        pass
+
+def do_contact_person_info(conf, desc):
+    try:
+        corg =  conf["contact_person"]                
+        dorg = desc["contact_person"] = {}
+        
+        for (dkey, ckey) in PERSON_ATTR_TRANSL.items():
+            try:
+                dorg[dkey] = corg[ckey]
+            except:
+                pass
+    except KeyError:
+        pass
+        
 def do_sp_sso_descriptor(sp, cert, backward_map):
     desc = {
         "protocol_support_enumeration": samlp.NAMESPACE,
-        "want_assertions_signed": True,
-        "authn_requests_signed": False,
         "assertion_consumer_service": {
             "binding": BINDING_HTTP_POST ,
             "location": sp["url"],
@@ -44,6 +87,12 @@ def do_sp_sso_descriptor(sp, cert, backward_map):
                 }
             },
         }
+        
+    for key in ["want_assertions_signed", "authn_requests_signed"]:
+        try:
+            desc[key] = "%s" % sp[key]
+        except KeyError:
+            desc[key] = DEFAULTS[key]
         
     requested_attribute = []
     if "required_attributes" in sp:
@@ -136,23 +185,8 @@ def entity_descriptor(confd, valid_for):
     if valid_for:
         ed["valid_until"] = in_a_while(hours=valid_for)
 
-    if "organization" in confd:
-        org = {}
-        for prop in ["name","display_name","url"]:
-            if prop in confd["organization"]:
-                org["organization_%s" % prop] = confd["organization"][prop]
-        ed["organization"] = org
-
-    if "contact" in confd:
-        contacts = []
-        for dic in confd["contact"]:
-            cont = {}
-            for prop in ["given_name","sur_name","email_address",
-                        "contact_type","company","telephone_number"]:
-                if prop in dic:
-                    cont[prop] = dic[prop]
-            contacts.append(cont)
-        ed["contact_person"] = contacts
+    do_organization_info(confd, ed)
+    do_contact_person_info(confd, ed)
         
     if "sp" in confd["service"]:
         # The SP
