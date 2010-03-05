@@ -205,3 +205,21 @@ def str_to_time(timestr):
 def instant():
     return datetime.utcnow().strftime(TIME_FORMAT)
     
+# ---------------------------------------------------------------------------
+
+def valid( valid_until ):
+    """ Checks whether a valid_until specification is still valid
+    :param valid_until: The string representation of a time
+    :return: True if the time specified in valid_until is now or sometime 
+        in the future. Otherwise False.
+    """
+    if not valid_until:
+        return True
+        
+    then = str_to_time( valid_until )
+    now = time.gmtime()
+    
+    if now <= then:
+        return True
+    else:
+        return False
