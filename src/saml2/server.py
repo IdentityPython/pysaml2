@@ -46,13 +46,7 @@ class Server(object):
     def __init__(self, config_file="", config=None, cache="",
                     log=None, debug=0):
         if config_file:
-            self.conf = Config()
-            self.conf.load_file(config_file)
-            if "subject_data" in self.conf:
-                self.id_map = shelve.open(self.conf["subject_data"],
-                                            writeback=True)
-            else:
-                self.id_map = None
+            self.load_config(config_file)
         elif config:
             self.conf = config
         
@@ -64,6 +58,15 @@ class Server(object):
         self.log = log
         self.debug = debug
         
+    def load_config(self, config_file):
+        self.conf = Config()
+        self.conf.load_file(config_file)
+        if "subject_data" in self.conf:
+            self.id_map = shelve.open(self.conf["subject_data"],
+                                        writeback=True)
+        else:
+            self.id_map = None
+    
     def issuer(self):
         return kd_issuer( self.conf["entityid"], 
                         format=saml.NAMEID_FORMAT_ENTITY)
