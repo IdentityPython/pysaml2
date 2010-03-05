@@ -2,7 +2,7 @@
 
 import time
 from saml2.time_util import f_quotient, modulo, parse_duration, add_duration
-from saml2.time_util import str_to_time, instant
+from saml2.time_util import str_to_time, instant, valid, in_a_while
 
 def test_f_quotient():
     assert f_quotient(-1,3) == -1
@@ -77,3 +77,11 @@ def test_instant():
     
     assert now >= inst
     
+def test_valid():
+    assert valid("2000-01-12T00:00:00Z") == False
+    assert valid("2011-01-12T00:00:00Z") == True
+    this_instance = instant()
+    print this_instance
+    assert valid(this_instance) == False # unless on a very fast machine :-)
+    soon = in_a_while(seconds=10)
+    assert valid(soon) == True
