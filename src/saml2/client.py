@@ -23,6 +23,7 @@ import urllib
 import saml2
 import base64
 import time
+import sys
 from saml2.time_util import str_to_time, instant
 from saml2.utils import sid, deflate_and_base64_encode, make_instance
 from saml2.utils import kd_name_id, kd_subject, do_attributes
@@ -47,6 +48,24 @@ LAX = False
 SESSION_INFO = {"ava":{}, "came from":"", "not_on_or_after":0,
                     "issuer":"", "session_id":-1}
 
+
+def _use_on_or_after(condition, slack):
+    now = time.mktime(time.gmtime())
+    not_on_or_after = time.mktime(str_to_time(condition.not_on_or_after))
+    if not_on_or_after < now + slack:
+        # To old ignore
+        raise Exception("To old can't use it")
+    return not_on_or_after
+
+def _use_before(condition, slack):
+    not_before = time.mktime(str_to_time(condition.not_before))
+    now = time.mktime(time.gmtime())
+        
+    if not_before > now + slack:
+        # Can't use it yet
+        raise Exception("Can't use it yet %s <= %s" % (not_before, now))
+    
+    return True
 
 class Saml2Client(object):
     """ The basic pySAML2 service provider class """
@@ -236,7 +255,7 @@ class Saml2Client(object):
         return (session_id, response)
             
     def verify_response(self, xml_response, requestor, outstanding=None, 
-                log=None, decode=True, context=""):
+                log=None, decode=True, context="", lax=False):
         """ Verify a response
         
         :param xml_response: The response as a XML string
@@ -244,6 +263,7 @@ class Saml2Client(object):
         :param outstanding: A collection of outstanding authentication requests
         :param log: Where logging information should be sent
         :param decode: There for testing purposes
+        :param lax: Accept things you normally shouldn't
         :return: A 2-tuple consisting of an identity description and the 
             real relay-state
         """
@@ -275,43 +295,44 @@ class Saml2Client(object):
                                                 requestor, 
                                                 outstanding=outstanding, 
                                                 xmlstr=xmlstr, 
-                                                log=log, context=context)
+                                                log=log, context=context,
+                                                lax=lax)
             session_info["issuer"] = response.issuer.text
             session_info["session_id"] = response.in_response_to
         except AttributeError, exc:
-            log and log.error("AttributeError: %s" % (exc,))
+            if log:
+                log.error("AttributeError: %s" % (exc,))
+            else:
+                print >> sys.stderr, "AttributeError: %s" % (exc,)
             return None
         except Exception, exc:
-            log and log.error("Exception: %s" % (exc,))
+            if log:
+                log.error("Exception: %s" % (exc,))
+            else:
+                print >> sys.stderr, "Exception: %s" % (exc,)
             return None
                                     
         session_info["ava"]["__userid"] = session_info["name_id"]
         return session_info
-  
-    def _verify_condition(self, assertion, requestor, log):
+          
+    def _verify_condition(self, assertion, requestor, log, lax=False, 
+                            slack=0):
         # The Identity Provider MUST include a <saml:Conditions> element
         #print "Conditions",assertion.conditions
         assert assertion.conditions
         condition = assertion.conditions
         log and log.info("condition: %s" % condition)
-        now = time.gmtime()
-        #log and log.info("now: %s" % time.mktime(now))
-        not_on_or_after = str_to_time(condition.not_on_or_after)        
-        if not_on_or_after < now:
-            # To old ignore
-            if not LAX:
-                raise Exception("To old can't use it")
 
-        not_before = str_to_time(condition.not_before)        
-        #log and log.info("not_before: %s" % time.mktime(not_before))
-        if not_before > now:
-            # Can't use it yet
-            if not LAX:
-                raise Exception("Can't use it yet %s <= %s" % (
-                                time.mktime(not_before), time.mktime(now)))
+        try:
+            slack = self.config["accept_time_diff"]
+        except KeyError:
+            slack = 0
 
+        not_on_or_after = _use_on_or_after(condition, slack)
+        _use_before(condition, slack)
+        
         if not for_me(condition, requestor):
-            if not LAX:
+            if not LAX and not lax:
                 raise Exception("Not for me!!!")
         
         return not_on_or_after
@@ -323,7 +344,8 @@ class Saml2Client(object):
         # check authn_statement.session_index
         
         
-    def _assertion(self, assertion, outstanding, requestor, log, context):
+    def _assertion(self, assertion, outstanding, requestor, log, context, 
+                    lax):
         if log:
             log.info("assertion context: %s" % (context,))
             log.info("assertion keys: %s" % (assertion.keyswv()))
@@ -336,7 +358,8 @@ class Saml2Client(object):
         #print "Conditions",assertion.conditions
         assert assertion.conditions
         log and log.info("verify_condition")
-        not_on_or_after = self._verify_condition(assertion, requestor, log)
+        not_on_or_after = self._verify_condition(assertion, requestor, log, 
+                                                lax)
 
         # The assertion can contain zero or one attributeStatements
         assert len(assertion.attribute_statement) <= 1
@@ -358,6 +381,7 @@ class Saml2Client(object):
             elif LAX:
                 came_from = ""
             else:
+                print data.in_response_to, outstanding.keys()
                 raise Exception(
                     "Combination of session id and requestURI I don't recall")
         
@@ -388,7 +412,7 @@ class Saml2Client(object):
                                 context)
         
     def do_response(self, response, requestor, outstanding=None, 
-                        xmlstr="", log=None, context=""):
+                        xmlstr="", log=None, context="", lax=False):
         """
         Parse a response, verify that it is a response for me and
         expected by me and that it is correct.
@@ -397,6 +421,7 @@ class Saml2Client(object):
         :param requestor: The host (me) that asked for a AuthN response
         :param outstanding: A dictionary with session ids as keys and request 
             URIs as values.
+        :param lax: Accept things you normally shouldn't
         :result: A 2-tuple with attribute value assertions as a dictionary 
             as one part and the NameID as the other.
         """
@@ -422,7 +447,7 @@ class Saml2Client(object):
         if response.assertion:         
             log and log.info("***Unencrypted response***")
             return self._assertion(response.assertion[0], outstanding, 
-                                    requestor, log, context)
+                                    requestor, log, context, lax)
         else:
             log and log.info("***Encrypted response***")
             return self._encrypted_assertion(xmlstr, outstanding, 
