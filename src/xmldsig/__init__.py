@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2007 SIOS Technology, Inc.
 # Copyright (C) 2009 Umeå University
