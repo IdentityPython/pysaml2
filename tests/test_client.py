@@ -5,6 +5,7 @@ from saml2.client import Saml2Client
 from saml2 import samlp, client, BINDING_HTTP_POST
 from saml2 import saml, utils, config, class_name
 from saml2.sigver import correctly_signed_authn_request, verify_signature
+from saml2.server import Server
 
 XML_RESPONSE_FILE = "tests/saml_signed.xml"
 XML_RESPONSE_FILE2 = "tests/saml2_response.xml"
@@ -52,32 +53,52 @@ def ava(attribute_statement):
 
 REQ1 = """<?xml version='1.0' encoding='UTF-8'?>
 <ns0:AttributeQuery Destination="https://idp.example.com/idp/" ID="1" IssueInstant="%s" Version="2.0" xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns1:Issuer xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion">http://vo.example.com/sp1</ns1:Issuer><ns1:Subject xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion"><ns1:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent">E8042FB4-4D5B-48C3-8E14-8EDD852790DD</ns1:NameID></ns1:Subject></ns0:AttributeQuery>"""
-
+    
+    
 class TestClient:
     def setup_class(self):
+        server = Server("idp.config")
+        self._resp_ = server.do_sso_response(
+                    "http://lingon.catalogix.se:8087/",   # consumer_url
+                    "12",                       # in_response_to
+                    "urn:mace:example.com:saml:roland:sp", # sp_entity_id
+                    {("urn:oid:1.3.6.1.4.1.5923.1.1.1.7",
+                        "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+                        "eduPersonEntitlement"):"Jeter"}
+                )
+
         conf = config.Config()
-        conf.load_file("tests/server.config")
+        try:
+            conf.load_file("tests/server.config")
+        except IOError:
+            conf.load_file("server.config")
         self.client = Saml2Client({},conf)
     
     def test_verify_1(self):
-        xml_response = open(XML_RESPONSE_FILE).read()
+        xml_response = ("%s" % (self._resp_,)).split("\n")[1]
+        outstanding = {"12": "http://localhost:8088/sso"}
         session_info = self.client.verify_response(xml_response, 
-                                "xenosmilus.umdc.umu.se", 
+                                "urn:mace:example.com:saml:roland:sp", 
+                                outstanding=outstanding,
                                 decode=False)
-        assert session_info["ava"] == {
-            '__userid': '_cddc88563d433f556d4cc70c3162deabddea3b5019', 
-            'eduPersonAffiliation': ['member', 'student'], 
-            'uid': ['student']}
+        del session_info["name_id"]
+        del session_info["not_on_or_after"]
+        del session_info["ava"]["__userid"]
+        print session_info
+        assert session_info == {'session_id': '12', 
+            'came_from': 'http://localhost:8088/sso', 
+            'ava': {'eduPersonEntitlement': ['Jeter'] }, 
+            'issuer': 'urn:mace:example.com:saml:roland:idp'}
     
     def test_parse_1(self):
-        xml_response = open(XML_RESPONSE_FILE).read()
-        response = samlp.response_from_string(xml_response)
+        xml_response = ("%s" % (self._resp_,)).split("\n")[1]
+        response = correctly_signed_response(decoded_xml, 
+                        self.config["xmlsec_binary"], log=log)
+        outstanding = {"12": "http://localhost:8088/sso"}
         session_info = self.client.do_response(response, 
-                                                "xenosmilus.umdc.umu.se")
-        assert session_info["ava"] == {
-                                'eduPersonAffiliation': ['member', 'student'],
-                                'uid': ['student']}
-        assert session_info["name_id"] == "_cddc88563d433f556d4cc70c3162deabddea3b5019"
+                                "urn:mace:example.com:saml:roland:sp",
+                                outstanding=outstanding)
+        assert session_info["ava"]["eduPersonEntitlement"] == ["Jeter"]
 
     def test_parse_2(self):
         xml_response = open(XML_RESPONSE_FILE2).read()
