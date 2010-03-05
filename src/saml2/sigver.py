@@ -167,6 +167,8 @@ def verify_signature(xmlsec_binary, enctext, cert_file,
 
     if _TEST_: 
         print " ".join(com_list)
+        print "%s: %s" % (cert_file, os.access(cert_file, os.F_OK))
+        print "%s: %s" % (fil, os.access(fil, os.F_OK))
 
     output = Popen(com_list, stderr=PIPE).communicate()[1]
     verified = _parse_xmlsec_output(output)
