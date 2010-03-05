@@ -19,12 +19,15 @@
 Contains classes and functions to alleviate the handling of SAML metadata
 """
 
+import httplib2
+import sys        
+
 from saml2 import md, BINDING_HTTP_POST
 from saml2 import samlp, BINDING_HTTP_REDIRECT, BINDING_SOAP
 #from saml2.time_util import str_to_time
 from saml2.sigver import make_temp, cert_from_key_info, verify_signature
-import httplib2
-        
+from saml2.time_util import valid
+
 class MetaData(object):
     """ A class to manage metadata information """
     
@@ -186,12 +189,25 @@ class MetaData(object):
         
         entities_descriptor = md.entities_descriptor_from_string(xml_str)
 
-        # try:
-        #     valid_until = str_to_time(entities_descriptor.valid_until)
-        # except AttributeError:
-        #     valid_until = None
+        try:
+            valid(entities_descriptor.valid_until)
+        except AttributeError:
+            pass
             
         for entity_descriptor in entities_descriptor.entity_descriptor:
+            try:
+                if not valid(entity_descriptor.valid_until):
+                    if self.log:
+                        self.log.info(
+                            "Entity descriptor (entity id:%s) to old" % \
+                            entity_descriptor.entity_id)
+                    else:
+                        print >> sys.stderr, \
+                            "Entity descriptor (entity id:%s) to old" % \
+                            entity_descriptor.entity_id
+                    continue
+            except AttributeError:
+                pass
             entity = self.entity[entity_descriptor.entity_id] = {}
             self._idp_metadata(entity_descriptor, entity, "idp_sso")
             self._sp_metadata(entity_descriptor, entity, "sp_sso")
