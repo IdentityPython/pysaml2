@@ -324,7 +324,7 @@ def test_filter_attribute_value_assertions_2():
     assert ava["givenName"] == ["Roland"]
 
 def test_parse_attribute_map():
-    (forward, backward) = utils.parse_attribute_map(["tests/attribute.map"])
+    (forward, backward) = utils.parse_attribute_map(["attribute.map"])
     
     assert _eq(forward.keys(), backward.values())
     assert _eq(forward.values(), backward.keys())
@@ -340,7 +340,7 @@ def test_parse_attribute_map():
                                     
 
 def test_identity_attribute_0():
-    (forward, backward) = utils.parse_attribute_map(["tests/attribute.map"])
+    (forward, backward) = utils.parse_attribute_map(["attribute.map"])
     a = Attribute(name="urn:oid:2.5.4.4", name_format=NAME_FORMAT_URI,
                     friendly_name="surName")
     
@@ -348,14 +348,14 @@ def test_identity_attribute_0():
     assert utils.identity_attribute("friendly",a,forward) == "surName"
                                     
 def test_identity_attribute_1():
-    (forward, backward) = utils.parse_attribute_map(["tests/attribute.map"])
+    (forward, backward) = utils.parse_attribute_map(["attribute.map"])
     a = Attribute(name="urn:oid:2.5.4.4")
     
     assert utils.identity_attribute("name",a,forward) == "urn:oid:2.5.4.4"
     assert utils.identity_attribute("friendly",a,forward) == "surName"
 
 def test_identity_attribute_2():
-    (forward, backward) = utils.parse_attribute_map(["tests/attribute.map"])
+    (forward, backward) = utils.parse_attribute_map(["attribute.map"])
     a = Attribute(name="urn:oid:2.5.4.5")
     
     assert utils.identity_attribute("name",a,forward) == "urn:oid:2.5.4.5"
@@ -512,7 +512,7 @@ def _surName(a):
     assert a["attribute_value"] == [{"text":"Jeter"}]
 
 def test_ava_to_attributes():
-    (forward, backward) = utils.parse_attribute_map(["tests/attribute.map"])
+    (forward, backward) = utils.parse_attribute_map(["attribute.map"])
     attrs = utils.ava_to_attributes(AVA[0], backward)
     
     assert len(attrs) == 2

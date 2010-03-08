@@ -5,10 +5,11 @@ from saml2.client import Saml2Client
 from saml2 import samlp, client, BINDING_HTTP_POST
 from saml2 import saml, utils, config, class_name
 from saml2.sigver import correctly_signed_authn_request, verify_signature
+from saml2.sigver import correctly_signed_response
 from saml2.server import Server
 
-XML_RESPONSE_FILE = "tests/saml_signed.xml"
-XML_RESPONSE_FILE2 = "tests/saml2_response.xml"
+XML_RESPONSE_FILE = "saml_signed.xml"
+XML_RESPONSE_FILE2 = "saml2_response.xml"
 
 import os
 
@@ -92,8 +93,8 @@ class TestClient:
     
     def test_parse_1(self):
         xml_response = ("%s" % (self._resp_,)).split("\n")[1]
-        response = correctly_signed_response(decoded_xml, 
-                        self.config["xmlsec_binary"], log=log)
+        response = correctly_signed_response(xml_response, 
+                        self.client.config["xmlsec_binary"])
         outstanding = {"12": "http://localhost:8088/sso"}
         session_info = self.client.do_response(response, 
                                 "urn:mace:example.com:saml:roland:sp",
@@ -103,7 +104,12 @@ class TestClient:
     def test_parse_2(self):
         xml_response = open(XML_RESPONSE_FILE2).read()
         response = samlp.response_from_string(xml_response)
-        session_info = self.client.do_response(response, "xenosmilus.umdc.umu.se")
+        outstanding = {"_ae0216740b5baa4b13c79ffdb2baa82572788fd9a3": 
+                            "http://localhost:8088/sso"}
+        session_info = self.client.do_response(response, 
+                                                "xenosmilus.umdc.umu.se",
+                                                outstanding=outstanding,
+                                                lax=True)
         
         assert session_info["ava"] == {'uid': ['andreas'], 
                         'mobile': ['+4741107700'], 

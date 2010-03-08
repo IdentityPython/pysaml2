@@ -7,30 +7,31 @@ from saml2 import saml
 import xmldsig as ds
 from py.test import raises
 
-SIGNED = "tests/saml_signed.xml"
-UNSIGNED = "tests/saml_unsigned.xml"
-FALSE_SIGNED = "tests/saml_false_signed.xml"
-XMLSEC = "/opt/local/bin/xmlsec1"
-#PUB_KEY = "tests/test.pem"
-PRIV_KEY = "tests/test.key"
+SIGNED = "saml_signed.xml"
+UNSIGNED = "saml_unsigned.xml"
+FALSE_SIGNED = "saml_false_signed.xml"
+XMLSEC_BINARY = "/usr/local/bin/xmlsec1"
+#PUB_KEY = "test.pem"
+PRIV_KEY = "test.key"
 
 def _eq(l1,l2):
     return set(l1) == set(l2)
 
 def test_verify_1():
     xml_response = open(SIGNED).read()
-    response = sigver.correctly_signed_response(xml_response)
+    response = sigver.correctly_signed_response(xml_response, XMLSEC_BINARY)
     assert response
 
 def test_non_verify_1():
     """ unsigned is OK if not good """
     xml_response = open(UNSIGNED).read()
-    response = sigver.correctly_signed_response(xml_response)
+    response = sigver.correctly_signed_response(xml_response, XMLSEC_BINARY)
     assert response
 
 def test_non_verify_2():
     xml_response = open(FALSE_SIGNED).read()
-    raises(sigver.SignatureError,sigver.correctly_signed_response,xml_response)
+    raises(sigver.SignatureError,sigver.correctly_signed_response,
+            xml_response, XMLSEC_BINARY)
 
 SIGNED_VALUE= """Y88SEXrU3emeoaTgEqUKYAvDtWiLpPMx1sClw0GJV98O6A5QRvB14vNs8xnXNFFZ
 XVjksKECcqmf10k/2C3oJfaEOaM4w0DgVLXeuJU08irXfdHcoe1g3276F1If1Kh7
@@ -58,7 +59,7 @@ def test_sign():
         })
         
     print ass
-    sign_ass = sigver.sign_assertion_using_xmlsec("%s" % ass, XMLSEC, 
+    sign_ass = sigver.sign_assertion_using_xmlsec("%s" % ass, XMLSEC_BINARY, 
                                                     key_file=PRIV_KEY)
     sass = saml.assertion_from_string(sign_ass)
     print sass
