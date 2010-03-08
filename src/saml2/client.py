@@ -328,9 +328,15 @@ class Saml2Client(object):
         except KeyError:
             slack = 0
 
-        not_on_or_after = _use_on_or_after(condition, slack)
-        _use_before(condition, slack)
-        
+        try:
+            not_on_or_after = _use_on_or_after(condition, slack)
+            _use_before(condition, slack)
+        except Exception:
+            if not lax:
+                raise
+            else:
+                not_on_or_after = 0
+                
         if not for_me(condition, requestor):
             if not LAX and not lax:
                 raise Exception("Not for me!!!")
