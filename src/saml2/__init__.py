@@ -19,7 +19,7 @@
 """Contains base classes representing SAML elements.
 
     These codes were originally written by Jeffrey Scudder for
-    representing Atom elements. Takashi Matsuo had added some codes, and
+    representing Saml elements. Takashi Matsuo had added some codes, and
     changed some. Roland Hedberg changed and added some more.
 
     Module objective: provide data classes for SAML constructs. These
@@ -153,13 +153,15 @@ class ExtensionElement(object):
         
     def to_string(self):
         """ Serialize the object into a XML string """
-        element_tree = self._transfer_to_element_tree(ElementTree.Element(''))
+        element_tree = self.transfer_to_element_tree()
         return ElementTree.tostring(element_tree, encoding="UTF-8")
         
-    def _transfer_to_element_tree(self, element_tree):
+    def transfer_to_element_tree(self):
         if self.tag is None:
             return None
             
+        element_tree = ElementTree.Element('')
+
         if self.namespace is not None:
             element_tree.tag = '{%s}%s' % (self.namespace, self.tag)
         else:
@@ -177,7 +179,7 @@ class ExtensionElement(object):
 
     def become_child_element(self, element_tree):
         """Converts this object into an etree element and adds it as a child 
-        node.
+        node in an etree element.
 
         Adds self to the ElementTree. This method is required to avoid verbose 
         XML which constantly redefines the namespace.
@@ -185,9 +187,8 @@ class ExtensionElement(object):
         :param element_tree: ElementTree._Element The element to which this 
             object's XML will be added.
         """
-        new_element = ElementTree.Element('')
+        new_element = self.transfer_to_element_tree()
         element_tree.append(new_element)
-        self._transfer_to_element_tree(new_element)
 
     def find_children(self, tag=None, namespace=None):
         """Searches child nodes for objects with the desired tag/namespace.
@@ -372,6 +373,7 @@ class SamlBase(ExtensionContainer):
             # member to the desired value (using self.__dict__).
             setattr(self, self.__class__.c_attributes[attribute], value)
         else:
+            # If it doesn't appear in the attribute list it's an extension
             ExtensionContainer._convert_element_attribute_to_member(self, 
                                                             attribute, value)
 
@@ -404,8 +406,8 @@ class SamlBase(ExtensionContainer):
         """
 
         Note: Only for use with classes that have a c_tag and c_namespace class 
-        member. It is in AtomBase so that it can be inherited but it should
-        not be called on instances of AtomBase.
+        member. It is in SamlBase so that it can be inherited but it should
+        not be called on instances of SamlBase.
         
         """
         new_child = ElementTree.Element('')
@@ -418,7 +420,7 @@ class SamlBase(ExtensionContainer):
         """
 
         Note, this method is designed to be used only with classes that have a 
-        c_tag and c_namespace. It is placed in AtomBase for inheritance but should
+        c_tag and c_namespace. It is placed in SamlBase for inheritance but should
         not be called on this class.
 
         """
@@ -428,7 +430,7 @@ class SamlBase(ExtensionContainer):
         return new_tree
 
     def to_string(self):
-        """Converts the Atom object to a string containing XML."""
+        """Converts the Saml object to a string containing XML."""
         return ElementTree.tostring(self._to_element_tree(), encoding="UTF-8")
 
     def __str__(self):
@@ -443,6 +445,12 @@ class SamlBase(ExtensionContainer):
                     
     def keyswv(self):
         return [key for key, val in self.__dict__.items() if val]
+
+    def keys(self):
+        keys = ['text']
+        keys.extend(self.c_attributes.values())
+        keys.extend([v[1] for v in self.c_children.values()])
+        return keys
         
     def children_with_values(self):
         childs = []
