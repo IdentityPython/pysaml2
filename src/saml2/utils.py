@@ -42,8 +42,9 @@ GENERIC_DOMAINS = "aero", "asia", "biz", "cat", "com", "coop", \
 def valid_email(emailaddress, domains = GENERIC_DOMAINS):
     """Checks for a syntactically valid email address."""
 
-    # Email address must be 7 characters in total.
-    if len(emailaddress) < 7:
+    # Email address must be at least 6 characters in total.
+    # Assuming noone may have addresses of the type a@com
+    if len(emailaddress) < 6:
         return False # Address too short.
 
     # Split up email address into parts.
