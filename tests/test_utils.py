@@ -532,5 +532,7 @@ def test_ava_to_attributes():
         
 def test_nameformat_email():
     assert utils.valid_email("foo@example.com")
+    assert utils.valid_email("a@b.com")
+    assert utils.valid_email("a@b.se")
     assert utils.valid_email("john@doe@johndoe.com") == False
     
