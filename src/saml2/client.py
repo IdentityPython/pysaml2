@@ -45,10 +45,6 @@ FORM_SPEC = """<form method="post" action="%s">
 
 LAX = False
 
-SESSION_INFO = {"ava":{}, "came from":"", "not_on_or_after":0,
-                    "issuer":"", "session_id":-1}
-
-
 def _use_on_or_after(condition, slack):
     now = time.mktime(time.gmtime())
     not_on_or_after = time.mktime(str_to_time(condition.not_on_or_after))
