@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import time
-
+import py
 from saml2.cache import Cache
 from saml2.time_util import in_a_while, str_to_time
 
@@ -18,7 +18,7 @@ class TestClass:
         self.cache = Cache()
         
         
-    def test_0(self):
+    def test_set(self):
         not_on_or_after = str_to_time(in_a_while(days=1))
         session_info = SESSION_INFO_PATTERN.copy()
         session_info["ava"] = {"givenName":["Derek"]}
@@ -55,6 +55,7 @@ class TestClass:
         
     def test_entities(self):
         assert _eq(self.cache.entities("1234"), ["abcd", "bcde"])
+        py.test.raises(Exception, "self.cache.entities('6666')")
         
     def test_remove_info(self):
         self.cache.reset("1234", "bcde")
@@ -65,6 +66,10 @@ class TestClass:
         assert inactive == ['bcde']
         assert _eq(ava.keys(), ["givenName"])
         assert ava["givenName"] == ["Derek"]
+    
+    def test_active(self):
+        assert self.cache.active("1234", "bcde") == False
+        assert self.cache.active("1234", "abcd")
         
     def test_subjects(self):
         assert self.cache.subjects() == ["1234"]
