@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2009 Umeå University.
+# Copyright (C) 2010 Umeå University.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -430,7 +430,8 @@ class TestAttributeStatement:
 
     def testUsingTestData(self):
         """Test attribute_statement_from_string() using test data"""
-        attr_statem = saml.attribute_statement_from_string(saml2_data.TEST_ATTRIBUTE_STATEMENT)
+        attr_statem = saml.attribute_statement_from_string( \
+                                    saml2_data.TEST_ATTRIBUTE_STATEMENT)
         assert attr_statem.attribute[0].name == "testAttribute"
         assert attr_statem.attribute[0].name_format == saml.NAME_FORMAT_UNSPECIFIED
         assert attr_statem.attribute[0].friendly_name == "test attribute"

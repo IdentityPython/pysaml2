@@ -21,6 +21,16 @@ ERROR_STATUS = """<?xml version='1.0' encoding='UTF-8'?>
 def _eq(l1,l2):
     return set(l1) == set(l2)
 
+def test_inflate_then_deflate():
+    str = """Selma Lagerlöf (1858-1940) was born in Östra Emterwik, Värmland, 
+    Sweden. She was brought up on Mårbacka, the family estate, which she did 
+    not leave until 1881, when she went to a teachers' college at Stockholm"""
+    
+    interm = utils.deflate_and_base64_encode(str)
+    bis = utils.decode_base64_and_inflate(interm)
+    
+    assert bis == str
+    
 def test_status_success():
     stat = utils.kd_status(
             status_code=utils.kd_status_code(
@@ -217,12 +227,6 @@ def test_subject():
     assert subject.name_id.text == saml.NAMEID_FORMAT_TRANSIENT
     
 
-def test_encode_decode():
-    package = "1234567890abcdefghijklmnopqrstuvxyzåäö"
-
-    intermediate = utils.deflate_and_base64_encode(package)
-    res = utils.decode_base64_and_inflate(intermediate)
-    assert package == res
 
 AVA = [
     {
