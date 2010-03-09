@@ -85,3 +85,8 @@ def test_valid():
     assert valid(this_instance) == False # unless on a very fast machine :-)
     soon = in_a_while(seconds=10)
     assert valid(soon) == True
+    
+def test_timeout():
+    soon = in_a_while(seconds=1)
+    time.sleep(2)
+    assert valid(soon) == False
