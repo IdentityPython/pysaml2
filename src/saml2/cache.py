@@ -110,6 +110,7 @@ class Cache(object):
         return self._db[subject_id].keys()
         
     def receivers(self, subject_id):
+        """ Another name just to make it more logic in the IdP scenario """
         return self.entities(subject_id)
         
     def active(self, subject_id, entity_id):
