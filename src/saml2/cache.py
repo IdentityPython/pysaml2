@@ -62,6 +62,7 @@ class Cache(object):
         """
         (not_on_or_after, info) = self._db[subject_id][entity_id]
         now = time.gmtime()
+
         if not_on_or_after < now:
             self.reset(subject_id, entity_id)
             raise ToOld()
@@ -72,7 +73,8 @@ class Cache(object):
         """ Stores session information in the cache
         
         :param subject_id: The subjects identifier
-        :param entity_id: The identifier of the entity_id/receiver of an assertion
+        :param entity_id: The identifier of the entity_id/receiver of an 
+            assertion
         :param info: The session info, the assertion is part of this
         :param not_on_or_after: A time after which the assertion is not valid.
         """
@@ -84,7 +86,8 @@ class Cache(object):
             self._db.sync()
             
     def reset(self, subject_id, entity_id=None):
-        """ Scrap the assertions received from a IdP or an AA.
+        """ Scrap the assertions received from a IdP or an AA.about a special
+        subject.
         
         :param subject_id: The subjects identifier
         :param entity_id: The identifier of the entity_id of the assertion
