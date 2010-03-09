@@ -147,7 +147,11 @@ def test_create_class_from_xml_string_subject_confirmation():
     assert class_name(kl) == \
                 "urn:oasis:names:tc:SAML:2.0:assertion:SubjectConfirmation"
 
-
+def test_create_class_from_xml_string_wrong_class_spec():
+    kl = create_class_from_xml_string(SubjectConfirmationData, 
+                                        ITEMS[SubjectConfirmation])
+    assert kl == None
+    
 def test_ee_1():
     ee = saml2.extension_element_from_string(
         """<?xml version='1.0' encoding='UTF-8'?><foo>bar</foo>""")
@@ -341,4 +345,24 @@ def test_subject_confirmation_with_extension():
     assert ee.tag == "Trustlevel"
     assert ee.namespace == "urn:mace:example.com:saml:assertion"
     assert ee.text.strip() == "Excellent"
+    
+def test_to_fro_string_1():
+    kl = create_class_from_xml_string(SubjectConfirmation,  
+                                    SUBJECT_CONFIRMATION_WITH_MEMBER_EXTENSION)
+    str = kl.to_string()
+    cpy = create_class_from_xml_string(SubjectConfirmation, str)
+    
+    print kl.__dict__
+    print cpy.__dict__
+    
+    assert kl.text.strip() == cpy.text.strip()    
+    assert _eq(kl.keyswv(), cpy.keyswv())
+    assert len(kl.extension_elements) == len(cpy.extension_elements)
+    klee = kl.extension_elements[0]    
+    cpyee = cpy.extension_elements[0]
+    assert klee.text.strip() == cpyee.text.strip()
+    assert klee.tag == cpyee.tag
+    assert klee.namespace == cpyee.namespace
+
+
     
