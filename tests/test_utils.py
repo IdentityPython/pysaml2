@@ -30,8 +30,6 @@ def test_inflate_then_deflate():
     bis = utils.decode_base64_and_inflate(interm)    
     assert bis == str
     
-def test_make_vals():
-    
 def test_status_success():
     stat = utils.kd_status(
             status_code=utils.kd_status_code(
@@ -531,3 +529,8 @@ def test_ava_to_attributes():
     else:
         print a
         assert False
+        
+def test_nameformat_email():
+    assert utils.valid_email("foo@example.com")
+    assert utils.valid_email("john@doe@johndoe.com") == False
+    
