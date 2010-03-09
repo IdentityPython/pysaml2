@@ -169,7 +169,7 @@ def time_in_a_while(days=0, seconds=0, microseconds=0, milliseconds=0,
         timedelta([days[, seconds[, microseconds[, milliseconds[,
                     minutes[, hours[, weeks]]]]]]])
     """
-    now = datetime.now()
+    now = datetime.utcnow()
     delta = timedelta(*[days, seconds, microseconds, milliseconds, minutes,
                     hours, weeks])
     soon = now + delta
