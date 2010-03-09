@@ -76,7 +76,7 @@ def make_soap_enveloped_saml_thingy(thingy):
     body.tag = '{%s}Body' % NAMESPACE
     envelope.append(body)
 
-    thingy.become_child_element(body)
+    thingy.become_child_element_of(body)
 
     return ElementTree.tostring(envelope, encoding="UTF-8")
 

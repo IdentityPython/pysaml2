@@ -249,7 +249,7 @@ def test_ee_6():
         <educause xmlns="urn:mace:example.com:saml:cu">rev</educause>""")
     
     et = ee.transfer_to_element_tree()
-    ce.become_child_element(et)
+    ce.become_child_element_of(et)
     
     pee = saml2._extension_element_from_element_tree(et)
     

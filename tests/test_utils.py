@@ -27,9 +27,10 @@ def test_inflate_then_deflate():
     not leave until 1881, when she went to a teachers' college at Stockholm"""
     
     interm = utils.deflate_and_base64_encode(str)
-    bis = utils.decode_base64_and_inflate(interm)
-    
+    bis = utils.decode_base64_and_inflate(interm)    
     assert bis == str
+    
+def test_make_vals():
     
 def test_status_success():
     stat = utils.kd_status(

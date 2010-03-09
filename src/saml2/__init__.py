@@ -171,13 +171,13 @@ class ExtensionElement(object):
             element_tree.attrib[key] = value
             
         for child in self.children:
-            child.become_child_element(element_tree)
+            child.become_child_element_of(element_tree)
             
         element_tree.text = self.text
             
         return element_tree
 
-    def become_child_element(self, element_tree):
+    def become_child_element_of(self, element_tree):
         """Converts this object into an etree element and adds it as a child 
         node in an etree element.
 
@@ -282,7 +282,7 @@ class ExtensionContainer(object):
     # One method to create an ElementTree from an object
     def _add_members_to_element_tree(self, tree):
         for child in self.extension_elements:
-            child.become_child_element(tree)
+            child.become_child_element_of(tree)
         for attribute, value in self.extension_attributes.iteritems():
             tree.attrib[attribute] = value
         tree.text = self.text
@@ -388,9 +388,9 @@ class SamlBase(ExtensionContainer):
                 pass
             elif isinstance(member, list):
                 for instance in member:
-                    instance.become_child_element(tree)
+                    instance.become_child_element_of(tree)
             else:
-                member.become_child_element(tree)
+                member.become_child_element_of(tree)
         # Convert the members of this class which are XML attributes.
         for xml_attribute, member_name in \
                     self.__class__.c_attributes.iteritems():
@@ -402,7 +402,7 @@ class SamlBase(ExtensionContainer):
         ExtensionContainer._add_members_to_element_tree(self, tree)
         
     
-    def become_child_element(self, tree):
+    def become_child_element_of(self, tree):
         """
 
         Note: Only for use with classes that have a c_tag and c_namespace class 
@@ -410,18 +410,15 @@ class SamlBase(ExtensionContainer):
         not be called on instances of SamlBase.
         
         """
-        new_child = ElementTree.Element('')
+        new_child = self._to_element_tree()
         tree.append(new_child)
-        new_child.tag = '{%s}%s' % (self.__class__.c_namespace,
-                                    self.__class__.c_tag)
-        self._add_members_to_element_tree(new_child)
 
     def _to_element_tree(self):
         """
 
         Note, this method is designed to be used only with classes that have a 
-        c_tag and c_namespace. It is placed in SamlBase for inheritance but should
-        not be called on this class.
+        c_tag and c_namespace. It is placed in SamlBase for inheritance but 
+        should not be called on in this class.
 
         """
         new_tree = ElementTree.Element('{%s}%s' % (self.__class__.c_namespace,
@@ -465,12 +462,13 @@ class SamlBase(ExtensionContainer):
                 childs.append(member)
         return childs
         
-def extension_element_to_element(extension_element, element_to_string,
+def extension_element_to_element(extension_element, translation_function,
                                     namespace=None):
+    """ """
     element_namespace = extension_element.namespace
     if element_namespace == namespace:
         try:
-            ets = element_to_string[extension_element.tag]
+            ets = translation_function[extension_element.tag]
             return ets(extension_element.to_string())
         except KeyError:
             pass
