@@ -23,16 +23,16 @@ import shelve
 
 from saml2 import saml, samlp, VERSION
 
-from saml2.utils import kd_issuer, kd_conditions, kd_audience_restriction
+from saml2.utils import issuer_factory, conditions_factory, audience_restriction_factory
 from saml2.utils import sid, decode_base64_and_inflate, make_instance
-from saml2.utils import kd_audience, kd_name_id, kd_assertion
-from saml2.utils import kd_subject, kd_subject_confirmation, kd_response
-from saml2.utils import kd_authn_statement, MissingValue
-from saml2.utils import kd_subject_confirmation_data, kd_success_status
+from saml2.utils import audience_factory, name_id_factory, assertion_factory
+from saml2.utils import subject_factory, subject_confirmation_factory, response_factory
+from saml2.utils import authn_statement_factory, MissingValue
+from saml2.utils import subject_confirmation_data_factory, success_status_factory
 from saml2.utils import filter_attribute_value_assertions
 from saml2.utils import OtherError, do_attribute_statement
 from saml2.utils import VersionMismatch, UnknownPrincipal, UnsupportedBinding
-from saml2.utils import filter_on_attributes, kd_status_from_exception
+from saml2.utils import filter_on_attributes, status_from_exception_factory
 
 from saml2.sigver import correctly_signed_authn_request
 from saml2.sigver import pre_signature_part
@@ -68,7 +68,7 @@ class Server(object):
             self.id_map = None
     
     def issuer(self):
-        return kd_issuer( self.conf["entityid"], 
+        return issuer_factory( self.conf["entityid"], 
                         format=saml.NAMEID_FORMAT_ENTITY)
         
     def persistent_id(self, entity_id, subject_id):
@@ -221,35 +221,35 @@ class Server(object):
         attr_statement = do_attribute_statement(identity)
         
         # start using now and for a hour
-        conds = kd_conditions(
+        conds = conditions_factory(
                         not_before=instant(), 
                         # How long might depend on who's getting it
                         not_on_or_after=self._not_on_or_after(sp_entity_id), 
-                        audience_restriction=kd_audience_restriction(
-                                audience=kd_audience(sp_entity_id)))
+                        audience_restriction=audience_restriction_factory(
+                                audience=audience_factory(sp_entity_id)))
                                 
         # temporary identifier or ??
         if not name_id:
-            name_id = kd_name_id(sid(), format=saml.NAMEID_FORMAT_TRANSIENT)
+            name_id = name_id_factory(sid(), format=saml.NAMEID_FORMAT_TRANSIENT)
 
-        assertion = kd_assertion(
+        assertion = assertion_factory(
             attribute_statement = attr_statement,
-            authn_statement= kd_authn_statement(
+            authn_statement= authn_statement_factory(
                         authn_instant=instant(),
                         session_index=sid()),
             conditions=conds,
-            subject=kd_subject(
+            subject=subject_factory(
                 name_id=name_id,
                 method=saml.SUBJECT_CONFIRMATION_METHOD_BEARER,
-                subject_confirmation=kd_subject_confirmation(
-                    subject_confirmation_data=kd_subject_confirmation_data(
+                subject_confirmation=subject_confirmation_factory(
+                    subject_confirmation_data=subject_confirmation_data_factory(
                             in_response_to=in_response_to))),
             ),
             
         if not status:
-            status = kd_success_status()
+            status = success_status_factory()
             
-        tmp = kd_response(
+        tmp = response_factory(
             issuer=self.issuer(),
             in_response_to = in_response_to,
             destination = consumer_url,
@@ -271,29 +271,29 @@ class Server(object):
         attr_statement = do_attribute_statement(identity)
         
         # start using now and for a hour
-        conds = kd_conditions(
+        conds = conditions_factory(
                         not_before=instant(), 
                         # an hour from now
                         not_on_or_after=self._not_on_or_after(sp_entity_id), 
-                        audience_restriction=kd_audience_restriction(
-                                audience=kd_audience(sp_entity_id)))
+                        audience_restriction=audience_restriction_factory(
+                                audience=audience_factory(sp_entity_id)))
 
         # temporary identifier or ??
         if not name_id:
-            name_id = kd_name_id(sid(), format=saml.NAMEID_FORMAT_TRANSIENT)
+            name_id = name_id_factory(sid(), format=saml.NAMEID_FORMAT_TRANSIENT)
 
-        assertion = kd_assertion(
-            subject = kd_subject(
+        assertion = assertion_factory(
+            subject = subject_factory(
                 name_id = name_id,
                 method = saml.SUBJECT_CONFIRMATION_METHOD_BEARER,
-                subject_confirmation = kd_subject_confirmation(
-                    subject_confirmation_data = kd_subject_confirmation_data(
+                subject_confirmation = subject_confirmation_factory(
+                    subject_confirmation_data = subject_confirmation_data_factory(
                         in_response_to = in_response_to,
                         not_on_or_after = self._not_on_or_after(sp_entity_id),
                         address = ip_address,
                         recipient = consumer_url))),
             attribute_statement = attr_statement,
-            authn_statement = kd_authn_statement(
+            authn_statement = authn_statement_factory(
                         authn_instant = instant(),
                         session_index = sid()),
             conditions=conds,
@@ -305,11 +305,11 @@ class Server(object):
         self.cache.set(name_id["text"], sp_entity_id, assertion, 
                             conds["not_on_or_after"])
             
-        tmp = kd_response(
+        tmp = response_factory(
             issuer=issuer,
             in_response_to=in_response_to,
             destination=consumer_url,
-            status=kd_success_status(),
+            status=success_status_factory(),
             assertion=assertion,
             )
 
@@ -373,7 +373,7 @@ class Server(object):
                                             userid)
                 self.log.info("=> %s" % subj_id)
                 
-            name_id = kd_name_id(subj_id, 
+            name_id = name_id_factory(subj_id, 
                         format=saml.NAMEID_FORMAT_PERSISTENT,
                         sp_name_qualifier=name_id_policy.sp_name_qualifier)
         
@@ -396,7 +396,7 @@ class Server(object):
                             in_response_to, # in_response_to
                             spid,           # sp_entity_id
                             name_id,
-                            status = kd_status_from_exception(exc)
+                            status = status_from_exception_factory(exc)
                         )
             
         
