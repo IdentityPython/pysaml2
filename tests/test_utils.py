@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from saml2 import utils, saml, samlp
-from saml2.utils import do_attribute_statement, make_instance
 import zlib
 import base64
 import gzip
+
+from saml2 import utils, saml, samlp, md
+from saml2.utils import do_attribute_statement, make_instance
 from saml2.sigver import make_temp
 from saml2.config import do_assertions
 from saml2.saml import Attribute, NAME_FORMAT_URI, AttributeValue
@@ -31,8 +32,8 @@ def test_inflate_then_deflate():
     assert bis == str
     
 def test_status_success():
-    stat = utils.kd_status(
-            status_code=utils.kd_status_code(
+    stat = utils.status_factory(
+            status_code=utils.status_code_factory(
                             value=samlp.STATUS_SUCCESS))
     status = make_instance( samlp.Status, stat)
     status_text = "%s" % status
@@ -40,19 +41,19 @@ def test_status_success():
     assert status.status_code.value == samlp.STATUS_SUCCESS
     
 def test_success_status():
-    stat = utils.kd_success_status()
+    stat = utils.success_status_factory()
     status = make_instance(samlp.Status, stat)
     status_text = "%s" % status
     assert status_text == SUCCESS_STATUS
     assert status.status_code.value == samlp.STATUS_SUCCESS
 
 def test_error_status():
-    stat = utils.kd_status(
-        status_message=utils.kd_status_message(
+    stat = utils.status_factory(
+        status_message=utils.status_message_factory(
                                 "Error resolving principal"),
-        status_code=utils.kd_status_code(
+        status_code=utils.status_code_factory(
                         value=samlp.STATUS_RESPONDER,
-                        status_code=utils.kd_status_code(
+                        status_code=utils.status_code_factory(
                             value=samlp.STATUS_UNKNOWN_PRINCIPAL)))
         
     status_text = "%s" % make_instance( samlp.Status, stat )
@@ -61,10 +62,39 @@ def test_error_status():
 
 def test_status_from_exception():
     e = utils.UnknownPrincipal("Error resolving principal")
-    stat = utils.kd_status_from_exception(e)
+    stat = utils.status_from_exception_factory(e)
     status_text = "%s" % make_instance( samlp.Status, stat )
     
     assert status_text == ERROR_STATUS
+    
+def test_make_vals_str():
+    kl = utils.make_vals("Jeter",md.GivenName, part=True)
+    assert isinstance(kl, md.GivenName)
+    assert kl.text == "Jeter"
+
+def test_make_vals_int():
+    kl = utils.make_vals(1024,md.KeySize, part=True)
+    assert isinstance(kl, md.KeySize)
+    assert kl.text == "1024"
+
+def test_exception_make_vals_int_not_part():
+    raises(TypeError, "utils.make_vals(1024,md.KeySize)")
+    raises(TypeError, "utils.make_vals(1024,md.KeySize,md.EncryptionMethod())")
+    raises(AttributeError, "utils.make_vals(1024,md.KeySize,prop='key_size')")
+    
+def test_make_vals_list_of_ints():
+    em = md.EncryptionMethod()
+    utils.make_vals([1024,2048], md.KeySize, em, "key_size")
+    assert len(em.key_size) == 2    
+
+def test_make_vals_list_of_strs():
+    cp = md.ContactPerson()
+    utils.make_vals(["Derek","Sanderson"], md.GivenName, cp, "given_name")
+    assert len(cp.given_name) == 2
+    assert _eq([i.text for i in cp.given_name],["Sanderson","Derek"])
+
+def test_exception_make_vals_value_error():
+    raises(ValueError, "utils.make_vals((1024,'xyz'), md.KeySize, part=True)")
     
 def test_attribute():
     attr = utils.do_attributes({"surName":"Jeter"})
@@ -102,18 +132,18 @@ def test_attribute_statement():
 
 def test_audience():
     aud_restr = make_instance( saml.AudienceRestriction, 
-            utils.kd_audience_restriction(
-                    audience=utils.kd_audience("urn:foo:bar")))
+            utils.audience_restriction_factory(
+                    audience=utils.audience_factory("urn:foo:bar")))
             
     assert aud_restr.keyswv() == ["audience"]
     assert aud_restr.audience.text == "urn:foo:bar"
     
 def test_conditions():
-    conds_dict = utils.kd_conditions(
+    conds_dict = utils.conditions_factory(
                     not_before="2009-10-30T07:58:10.852Z",
                     not_on_or_after="2009-10-30T08:03:10.852Z", 
-                    audience_restriction=utils.kd_audience_restriction(
-                        audience=utils.kd_audience("urn:foo:bar")))
+                    audience_restriction=utils.audience_restriction_factory(
+                        audience=utils.audience_factory("urn:foo:bar")))
                     
     conditions = make_instance(saml.Conditions, conds_dict)
     assert _eq(conditions.keyswv(), ["not_before", "not_on_or_after",
@@ -125,7 +155,7 @@ def test_conditions():
 def test_value_1():
     #FriendlyName="givenName" Name="urn:oid:2.5.4.42" 
     # NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
-    adict = utils.kd_attribute(name="urn:oid:2.5.4.42",
+    adict = utils.attribute_factory(name="urn:oid:2.5.4.42",
                                     name_format=NAME_FORMAT_URI)
     attribute = make_instance(saml.Attribute, adict)
     assert _eq(attribute.keyswv(),["name","name_format"])
@@ -133,7 +163,7 @@ def test_value_1():
     assert attribute.name_format == saml.NAME_FORMAT_URI
 
 def test_value_2():
-    adict = utils.kd_attribute(name="urn:oid:2.5.4.42",
+    adict = utils.attribute_factory(name="urn:oid:2.5.4.42",
                                     name_format=NAME_FORMAT_URI,
                                     friendly_name="givenName")
     attribute = make_instance(saml.Attribute, adict)
@@ -143,7 +173,7 @@ def test_value_2():
     assert attribute.friendly_name == "givenName"
 
 def test_value_3():
-    adict = utils.kd_attribute(attribute_value="Derek",
+    adict = utils.attribute_factory(attribute_value="Derek",
                                     name="urn:oid:2.5.4.42",
                                     name_format=NAME_FORMAT_URI,
                                     friendly_name="givenName")
@@ -157,7 +187,7 @@ def test_value_3():
     assert attribute.attribute_value[0].text == "Derek"
 
 def test_value_4():
-    adict = utils.kd_attribute(attribute_value="Derek",
+    adict = utils.attribute_factory(attribute_value="Derek",
                                     friendly_name="givenName")
     attribute = make_instance(saml.Attribute, adict)
     assert _eq(attribute.keyswv(),["friendly_name", "attribute_value"])
@@ -179,7 +209,7 @@ def test_do_attribute_statement_0():
 def test_do_attribute_statement():
     astat = do_attribute_statement({"surName":"Jeter",
                                         "givenName":["Derek","Sanderson"]})
-    statement = make_instance(saml.AttributeStatement,astat)
+    statement = make_instance(saml.AttributeStatement, astat)
     assert statement.keyswv() == ["attribute"]
     assert len(statement.attribute) == 2
     attr0 = statement.attribute[0]
@@ -219,7 +249,7 @@ def test_do_attribute_statement_multi():
     assert attribute.friendly_name == "eduPersonEntitlement"
 
 def test_subject():
-    adict = utils.kd_subject("_aaa", name_id=saml.NAMEID_FORMAT_TRANSIENT)
+    adict = utils.subject_factory("_aaa", name_id=saml.NAMEID_FORMAT_TRANSIENT)
     subject = make_instance(saml.Subject, adict)
     assert _eq(subject.keyswv(),["text", "name_id"])
     assert subject.text == "_aaa"
@@ -386,7 +416,7 @@ def test_combine_0():
     o = Attribute(name="urn:oid:2.5.4.4", name_format=NAME_FORMAT_URI,
                     friendly_name="surName")
 
-    comb = utils.combine([r],[o])
+    comb = utils._combine([r],[o])
     print comb
     assert _eq(comb.keys(), [('urn:oid:2.5.4.5', 'serialNumber'), 
                                 ('urn:oid:2.5.4.4', 'surName')])
@@ -536,3 +566,93 @@ def test_nameformat_email():
     assert utils.valid_email("a@b.se")
     assert utils.valid_email("john@doe@johndoe.com") == False
     
+def test_name_id_factory():
+    n = utils.name_id_factory("foo", name_qualifier="urn:mace:example.com:nq")
+    assert _eq(n.keys(), ["text","name_qualifier"])
+    assert n["text"] == "foo"
+    assert n["name_qualifier"] == "urn:mace:example.com:nq"
+    
+def test_audience_factory():
+    a = utils.audience_factory("http://example.com/sp", foo="bar")
+    assert _eq(a.keys(), ["text"])
+    assert a["text"] == "http://example.com/sp"
+
+def test_attribute_value_factory():
+    a = utils.attribute_value_factory("member@example.com")
+    assert _eq(a.keys(), ["text"])
+    assert a["text"] == "member@example.com"
+    
+def test_attribute_factory():
+    a = utils.attribute_factory(friendly_name="eduPersonScopedAffiliation",    
+        name="urn:oid:1.3.6.1.4.1.5923.1.1.1.9",
+        name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri")
+        
+    assert _eq(a.keys(), ["friendly_name","name", "name_format"])
+
+    a = utils.attribute_factory(friendly_name="eduPersonScopedAffiliation",    
+        name="urn:oid:1.3.6.1.4.1.5923.1.1.1.9",
+        name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+        attribute_value=utils.attribute_value_factory("member@example.com"))
+        
+    assert _eq(a.keys(), ["friendly_name","name", "name_format",
+                            "attribute_value"])
+                            
+def test_attribute_statement_factory():
+    a = utils.attribute_statement_factory(
+                attribute=[
+                    utils.attribute_factory(attribute_value="Derek", 
+                                        friendly_name="givenName"),
+                    utils.attribute_factory(attribute_value="Jeter", 
+                                        friendly_name="surName"),
+                ])
+    assert a.keys() == ["attribute"]
+    assert len(a["attribute"]) == 2
+    
+def test_subject_confirmation_data_factory():
+    s = utils.subject_confirmation_data_factory(
+                in_response_to="_12345678", 
+                not_before="2010-02-11T07:30:00Z",
+                not_on_or_after="2010-02-11T07:35:00Z",
+                recipient="http://example.com/sp/",
+                address="192.168.0.10")
+                
+    assert _eq(s.keys(),["in_response_to","not_before","not_on_or_after",
+                        "recipient", "address"])
+    
+def test_subject_confirmation_factory():
+    s = utils.subject_confirmation_factory(
+                    method="urn:oasis:names:tc:SAML:2.0:profiles:SSO:browser",
+                    base_id="1234",
+                    name_id="abcd",
+                    subject_confirmation_data=utils.subject_confirmation_data_factory(
+                            in_response_to="_1234567890",
+                            recipient="http://example.com/sp/"))
+
+    assert _eq(s.keys(),
+                ["method","base_id","name_id","subject_confirmation_data"])
+    assert s["method"] == "urn:oasis:names:tc:SAML:2.0:profiles:SSO:browser"
+    
+
+def test_authn_context_class_ref_factory():
+    a = utils.authn_context_class_ref_factory(
+            "urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified")
+    assert a.keys() == ["text"]
+    assert a["text"] == "urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified"
+            
+def test_authn_context_factory():
+    accr = utils.authn_context_class_ref_factory(
+            "urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified")
+    a = utils.authn_context_factory(authn_context_class_ref=accr)
+
+    assert a.keys() == ["authn_context_class_ref"]
+    
+def test_authn_statement_factory():
+    accr = utils.authn_context_class_ref_factory(
+            "urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified")
+    ac = utils.authn_context_factory(authn_context_class_ref=accr)
+    a = utils.authn_statement_factory(
+                        authn_instant="2010-03-10T12:33:00Z",
+                        session_index="_12345",
+                        session_not_on_or_after="2010-03-11T12:00:00Z",
+                        authn_context=ac
+                        )

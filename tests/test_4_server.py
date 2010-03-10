@@ -30,14 +30,14 @@ class TestServer():
         
 
     def test_assertion(self):
-        tmp = utils.kd_assertion(
-            subject= utils.kd_subject("_aaa",
+        tmp = utils.assertion_factory(
+            subject= utils.subject_factory("_aaa",
                                 name_id=saml.NAMEID_FORMAT_TRANSIENT),
-            attribute_statement = utils.kd_attribute_statement(
+            attribute_statement = utils.attribute_statement_factory(
                 attribute=[
-                    utils.kd_attribute(attribute_value="Derek", 
+                    utils.attribute_factory(attribute_value="Derek", 
                                         friendly_name="givenName"),
-                    utils.kd_attribute(attribute_value="Jeter", 
+                    utils.attribute_factory(attribute_value="Jeter", 
                                         friendly_name="surName"),
                 ]),
             issuer=self.server.issuer(),
@@ -70,17 +70,17 @@ class TestServer():
         assert subject.name_id.text == saml.NAMEID_FORMAT_TRANSIENT
         
     def test_response(self):
-        tmp = utils.kd_response(
+        tmp = utils.response_factory(
                 in_response_to="_012345",
                 destination="https:#www.example.com",
-                status=utils.kd_success_status(),
-                assertion=utils.kd_assertion(
-                    subject = utils.kd_subject("_aaa",
+                status=utils.success_status_factory(),
+                assertion=utils.assertion_factory(
+                    subject = utils.subject_factory("_aaa",
                                         name_id=saml.NAMEID_FORMAT_TRANSIENT),
-                    attribute_statement = utils.kd_attribute_statement([
-                        utils.kd_attribute(attribute_value="Derek", 
+                    attribute_statement = utils.attribute_statement_factory([
+                        utils.attribute_factory(attribute_value="Derek", 
                                                 friendly_name="givenName"),
-                        utils.kd_attribute(attribute_value="Jeter", 
+                        utils.attribute_factory(attribute_value="Jeter", 
                                                 friendly_name="surName"),
                     ]),
                     issuer=self.server.issuer(),
@@ -133,7 +133,7 @@ class TestServer():
         except OtherError, oe:
             print oe.args
             status = utils.make_instance(samlp.Status,
-                            utils.kd_status_from_exception(oe))
+                            utils.status_from_exception_factory(oe))
             
         assert status
         print status
@@ -306,7 +306,7 @@ class TestServer():
                     "1", "http://local:8087/", 
                     "urn:mace:example.com:saml:roland:sp",
                     utils.make_instance(samlp.NameIDPolicy,
-                                utils.kd_name_id_policy(
+                                utils.name_id_policy_factory(
                                         format=saml.NAMEID_FORMAT_TRANSIENT,
                                         allow_create="true")),
                     "foba0001@example.com")
