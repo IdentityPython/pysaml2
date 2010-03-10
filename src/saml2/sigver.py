@@ -28,11 +28,13 @@ import random
 import os
 
 def get_xmlsec_binary():		
-    for path in ('/opt/local/bin/xmlsec1',
-                 '/usr/bin/xmlsec1'):
-        if os.path.exists(path):
-            return path
+    for path in os.environ["PATH"]:
+        fil = os.path.join(os.path.dirname(path), "xmlsec1")
+        if os.access(fil):
+            return fil
 
+    raise Exception("Can't find xmlsec1")
+    
 XMLSEC_BINARY = get_xmlsec_binary()
 ID_ATTR = "ID"
 NODE_NAME = "urn:oasis:names:tc:SAML:2.0:assertion:Assertion"
