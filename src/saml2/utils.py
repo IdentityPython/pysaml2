@@ -103,11 +103,11 @@ def make_vals(val, klass, klass_inst=None, prop=None, part=False):
     Creates a class instance with a specified value, the specified
     class instance are a value on a property in a defined class instance.
     
+    :param val: The value
+    :param klass: The value class
     :param klass_inst: The class instance which has a property on which 
         what this function returns is a value.
-    :param val: The value
     :param prop: The property which the value should be assigned to.
-    :param klass: The value class
     :param part: If the value is one of a possible list of values it should be
         handled slightly different compared to if it isn't.
     :return: Value class instance
@@ -133,7 +133,7 @@ def make_vals(val, klass, klass_inst=None, prop=None, part=False):
     if part:
         return cinst
     else:        
-        if cinst:
+        if cinst:            
             cis = [cinst]
             setattr(klass_inst, prop, cis)
     
@@ -142,7 +142,7 @@ def make_instance(klass, spec):
     Constructs a class instance containing the specified information
     
     :param klass: The class
-    :param spec: Information to be placed in the instance
+    :param spec: Information to be placed in the instance (a dictionary)
     :return: The instance
     """
     #print "----- %s -----" % klass
@@ -233,11 +233,11 @@ def identity_attribute(form, attribute, forward_map=None):
     # default is name
     return attribute.name
 
-def filter_values(vals, required=None, optional=None):
+def _filter_values(vals, required=None, optional=None):
     """ Removes values from *val* that does not appear in *attributes*.
     
     :param val: The values that are to be filtered
-    :param required: The requires values
+    :param required: The required values
     :param optional: The optional values
     :return: The set of values after filtering
     """
@@ -270,7 +270,7 @@ def filter_values(vals, required=None, optional=None):
     else:
         return valo
     
-def combine(required=None, optional=None):
+def _combine(required=None, optional=None):
     res = {}
     if not required:
         required = []
@@ -299,12 +299,12 @@ def filter_on_attributes(ava, required=None, optional=None):
     :param required: list of RequestedAttribute instances
     """
     res = {}
-    comb = combine(required, optional)
+    comb = _combine(required, optional)
     for attr, vals in comb.items():
         if attr[0] in ava:
-            res[attr[0]] = filter_values(ava[attr[0]], vals[0], vals[1])
+            res[attr[0]] = _filter_values(ava[attr[0]], vals[0], vals[1])
         elif attr[1] in ava:
-            res[attr[1]] = filter_values(ava[attr[1]], vals[0], vals[1])
+            res[attr[1]] = _filter_values(ava[attr[1]], vals[0], vals[1])
         else:
             raise MissingValue("Required attribute missing")
     
@@ -313,16 +313,16 @@ def filter_on_attributes(ava, required=None, optional=None):
 
 #----------------------------------------------------------------------------
 
-def properties(klass):
+def _properties(klass):
     props = [val[0] for _, val in klass.c_children.items()]
     props.extend(klass.c_attributes.values())
     return props
     
-def klassdict(klass, text=None, **kwargs):
+def _klassdict(klass, text=None, **kwargs):
     spec = {}
     if text:
         spec["text"] = text
-    props = properties(klass)
+    props = _properties(klass)
     #print props
     for key, val in kwargs.items():
         #print "?",key
@@ -330,73 +330,80 @@ def klassdict(klass, text=None, **kwargs):
             spec[key] = val
     return spec
     
-def kd_status_from_exception(exception):
-    return klassdict(samlp.Status,
-        status_code=klassdict(samlp.StatusCode,
+def status_from_exception_factory(exception):
+    return _klassdict(samlp.Status,
+        status_code=_klassdict(samlp.StatusCode,
             value=samlp.STATUS_RESPONDER,
-            status_code=klassdict(samlp.StatusCode,
+            status_code=_klassdict(samlp.StatusCode,
                             value=EXCEPTION2STATUS[exception.__class__])
             ),
         status_message=exception.args[0],
     )
     
-def kd_name_id(text="", **kwargs):
-    return klassdict(saml.NameID, text, **kwargs)
+def name_id_factory(text="", **kwargs):
+    return _klassdict(saml.NameID, text, **kwargs)
 
-def kd_status_message(text="", **kwargs):
-    return klassdict(samlp.StatusMessage, text, **kwargs)
+def status_message_factory(text="", **kwargs):
+    return _klassdict(samlp.StatusMessage, text, **kwargs)
 
-def kd_status_code(text="", **kwargs):
-    return klassdict(samlp.StatusCode, text, **kwargs)
+def status_code_factory(text="", **kwargs):
+    return _klassdict(samlp.StatusCode, text, **kwargs)
 
-def kd_status(text="", **kwargs):
-    return klassdict(samlp.Status, text, **kwargs)
+def status_factory(text="", **kwargs):
+    return _klassdict(samlp.Status, text, **kwargs)
     
-def kd_success_status():
-    return kd_status(status_code=kd_status_code(value=samlp.STATUS_SUCCESS))
+def success_status_factory():
+    return status_factory(status_code=status_code_factory(
+                                            value=samlp.STATUS_SUCCESS))
                             
-def kd_audience(text="", **kwargs):
-    return klassdict(saml.Audience, text, **kwargs)
+def audience_factory(text="", **kwargs):
+    return _klassdict(saml.Audience, text, **kwargs)
 
-def kd_audience_restriction(text="", **kwargs):
-    return klassdict(saml.AudienceRestriction, text, **kwargs)
+def audience_restriction_factory(text="", **kwargs):
+    return _klassdict(saml.AudienceRestriction, text, **kwargs)
 
-def kd_conditions(text="", **kwargs):
-    return klassdict(saml.Conditions, text, **kwargs)
+def conditions_factory(text="", **kwargs):
+    return _klassdict(saml.Conditions, text, **kwargs)
     
-def kd_attribute(text="", **kwargs):
-    return klassdict(saml.Attribute, text, **kwargs)
+def attribute_factory(text="", **kwargs):
+    return _klassdict(saml.Attribute, text, **kwargs)
 
-def kd_attribute_value(text="", **kwargs):
-    return klassdict(saml.AttributeValue, text, **kwargs)
+def attribute_value_factory(text="", **kwargs):
+    return _klassdict(saml.AttributeValue, text, **kwargs)
         
-def kd_attribute_statement(text="", **kwargs):
-    return klassdict(saml.AttributeStatement, text, **kwargs)
+def attribute_statement_factory(text="", **kwargs):
+    return _klassdict(saml.AttributeStatement, text, **kwargs)
 
-def kd_subject_confirmation_data(text="", **kwargs):
-    return klassdict(saml.SubjectConfirmationData, text, **kwargs)
+def subject_confirmation_data_factory(text="", **kwargs):
+    return _klassdict(saml.SubjectConfirmationData, text, **kwargs)
     
-def kd_subject_confirmation(text="", **kwargs):
-    return klassdict(saml.SubjectConfirmation, text, **kwargs)        
+def subject_confirmation_factory(text="", **kwargs):
+    return _klassdict(saml.SubjectConfirmation, text, **kwargs)        
     
-def kd_subject(text="", **kwargs):
-    return klassdict(saml.Subject, text, **kwargs)        
+def subject_factory(text="", **kwargs):
+    return _klassdict(saml.Subject, text, **kwargs)        
 
-def kd_authn_statement(text="", **kwargs):
-    return klassdict(saml.Subject, text, **kwargs)        
+def authn_context_class_ref_factory(text="", **kwargs):
+    return _klassdict(saml.AuthnContextClassRef, text, **kwargs)        
+
+def authn_context_factory(text="", **kwargs):
+    return _klassdict(saml.AuthnContext, text, **kwargs)        
+
+def authn_statement_factory(text="", **kwargs):
+    return _klassdict(saml.AuthnStatement, text, **kwargs)        
     
-def kd_name_id_policy(text="", **kwargs):
-    return klassdict(samlp.NameIDPolicy, text, **kwargs)
+def name_id_policy_factory(text="", **kwargs):
+    return _klassdict(samlp.NameIDPolicy, text, **kwargs)
     
-def kd_assertion(text="", **kwargs):
+def assertion_factory(text="", **kwargs):
     kwargs.update({
         "version": VERSION,
         "id" : sid(),
         "issue_instant" : instant(),
     })
-    return klassdict(saml.Assertion, text, **kwargs)        
+    return _klassdict(saml.Assertion, text, **kwargs)        
     
-def kd_response(signature=False, encrypt=False, **kwargs):
+def response_factory(signature=False, encrypt=False, **kwargs):
     kwargs.update({
         "id" : sid(),
         "version": VERSION,
@@ -410,9 +417,9 @@ def kd_response(signature=False, encrypt=False, **kwargs):
 
 def _attrval(val):
     if isinstance(val, basestring):
-        attrval = [kd_attribute_value(val)]
+        attrval = [attribute_value_factory(val)]
     elif isinstance(val, list):
-        attrval = [kd_attribute_value(v) for v in val]
+        attrval = [attribute_value_factory(v) for v in val]
     elif val == None:
         attrval = None
     else:
@@ -432,7 +439,7 @@ def ava_to_attributes(ava, bmap):
         dic["friendly_name"] = key
         dic["name"] = bmap[key]
         dic["name_format"] = NAME_FORMAT_URI
-        attrs.append(kd_attribute(**dic))
+        attrs.append(attribute_factory(**dic))
     return attrs
 
 def do_attributes(identity):
@@ -460,7 +467,7 @@ def do_attributes(identity):
                 dic["name_format"] = nformat
             if friendly:
                 dic["friendly_name"] = friendly
-        attrs.append(kd_attribute(**dic))
+        attrs.append(attribute_factory(**dic))
     return attrs
     
 def do_attribute_statement(identity):
@@ -468,8 +475,8 @@ def do_attribute_statement(identity):
     :param identity: A dictionary with fiendly names as keys
     :return:
     """
-    return kd_attribute_statement(attribute=do_attributes(identity))
+    return attribute_statement_factory(attribute=do_attributes(identity))
 
-def kd_issuer(text, **kwargs):
-    return klassdict(saml.Issuer, text, **kwargs)        
+def issuer_factory(text, **kwargs):
+    return _klassdict(saml.Issuer, text, **kwargs)        
 
