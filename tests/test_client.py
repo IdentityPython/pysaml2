@@ -12,16 +12,6 @@ XML_RESPONSE_FILE = "saml_signed.xml"
 XML_RESPONSE_FILE2 = "saml2_response.xml"
 
 import os
-
-try:
-    XMLSEC_BINARY = "/usr/local/bin/xmlsec1"
-    os.stat(XMLSEC_BINARY)
-except OSError:
-    try:
-        XMLSEC_BINARY = "/usr/bin/xmlsec1"
-        os.stat(XMLSEC_BINARY)
-    except OSError:
-        raise
         
 def for_me(condition, me ):
     for restriction in condition.audience_restriction:
