@@ -3,6 +3,7 @@
 
 from saml2.config import Config
 from saml2.metadata import MetaData
+from py.test import raises
 
 sp1 = {
     "entityid" : "urn:mace:umu.se:saml:roland:sp",
@@ -80,3 +81,73 @@ def test_2():
     assert sp["idp"].keys() == [""]
     assert sp["idp"].values() == [
                             "https://example.com/saml2/idp/SSOService.php"]
+
+def test_missing_must():
+    no_service = {
+        "entityid" : "urn:mace:umu.se:saml:roland:sp",
+        "xmlsec_binary" : "/opt/local/bin/xmlsec1",
+    }
+
+    no_entity_id = {
+        "service": {
+            "sp": {
+                "url" : "http://lingon.catalogix.se:8087/",
+                "name" : "test"
+            }
+        },
+        "xmlsec_binary" : "/opt/local/bin/xmlsec1",
+    }
+
+    no_xmlsec = {
+        "entityid" : "urn:mace:umu.se:saml:roland:sp",
+        "service": {
+            "sp": {
+                "url" : "http://lingon.catalogix.se:8087/",
+                "name" : "test"
+            }
+        },
+    }
+    
+    c = Config()
+    raises(AssertionError, "c.load(no_service)")
+    raises(AssertionError, "c.load(no_entity_id)")
+    raises(AssertionError, "c.load(no_xmlsec)")
+    
+def test_minimum():
+    minimum = {
+        "entityid" : "urn:mace:example.com:saml:roland:sp",
+        "service": {
+            "sp": {
+                "url" : "http://sp.example.org/",
+                "name" : "test",
+                "idp": {
+                    "" : "https://example.com/idp/SSOService.php",
+                },
+            }
+        },
+        "xmlsec_binary" : "/usr/local/bin/xmlsec1",
+    }
+
+    c = Config().load(minimum)
+    
+    assert c != None
+
+def test_():
+    minimum = {
+        "entityid" : "urn:mace:example.com:saml:roland:sp",
+        "service": {
+            "sp": {
+                "url" : "http://sp.example.org/",
+                "name" : "test",
+                "idp": {
+                    "" : "https://example.com/idp/SSOService.php",
+                },
+            }
+        },
+        "xmlsec_binary" : "/usr/local/bin/xmlsec1",
+    }
+
+    c = Config().load(minimum)
+    
+    assert c != None
+    
