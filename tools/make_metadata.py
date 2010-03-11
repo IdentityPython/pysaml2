@@ -102,7 +102,7 @@ def do_sp_sso_descriptor(sp, cert, backward_map):
                     "is_required": "true",
                     "friendly_name": attr,
                     "name_format": NAME_FORMAT_URI,
-                    "name": backward_map[attr]
+                    "name": backward_map[attr][0]
                 })
             except KeyError:
                 requested_attribute.append({
@@ -118,7 +118,7 @@ def do_sp_sso_descriptor(sp, cert, backward_map):
                 requested_attribute.append({
                     "friendly_name": attr,
                     "name_format": NAME_FORMAT_URI,
-                    "name": backward_map[attr]
+                    "name": backward_map[attr][0]
                 })
             except KeyError:
                 requested_attribute.append({
