@@ -23,10 +23,12 @@ import shelve
 
 from saml2 import saml, samlp, VERSION
 
-from saml2.utils import issuer_factory, conditions_factory, audience_restriction_factory
+from saml2.utils import issuer_factory, conditions_factory
+from saml2.utils import audience_restriction_factory
 from saml2.utils import sid, decode_base64_and_inflate, make_instance
 from saml2.utils import audience_factory, name_id_factory, assertion_factory
-from saml2.utils import subject_factory, subject_confirmation_factory, response_factory
+from saml2.utils import subject_factory, subject_confirmation_factory
+from saml2.utils import response_factory, do_ava_statement
 from saml2.utils import authn_statement_factory, MissingValue
 from saml2.utils import subject_confirmation_data_factory, success_status_factory
 from saml2.utils import filter_attribute_value_assertions
@@ -205,115 +207,6 @@ class Server(object):
         
         # default is a hour
         return in_a_while(**{"hours":1})
-            
-    def do_sso_response(self, consumer_url, in_response_to,
-                        sp_entity_id, identity, name_id=None, status=None ):
-        """ Create a Response the follows the ??? profile.
-        
-        :param consumer_url: The URL which should receive the response
-        :param in_response_to: The session identifier of the request
-        :param sp_entity_id: The entity identifier of the SP
-        :param identity: A dictionary with attributes and values that are
-            expected to be the bases for the assertion in the response.
-        :param name_id: The identifier of the subject 
-        :return: A Response instance
-        """
-        attr_statement = do_attribute_statement(identity)
-        
-        # start using now and for a hour
-        conds = conditions_factory(
-                        not_before=instant(), 
-                        # How long might depend on who's getting it
-                        not_on_or_after=self._not_on_or_after(sp_entity_id), 
-                        audience_restriction=audience_restriction_factory(
-                                audience=audience_factory(sp_entity_id)))
-                                
-        # temporary identifier or ??
-        if not name_id:
-            name_id = name_id_factory(sid(), format=saml.NAMEID_FORMAT_TRANSIENT)
-
-        assertion = assertion_factory(
-            attribute_statement = attr_statement,
-            authn_statement= authn_statement_factory(
-                        authn_instant=instant(),
-                        session_index=sid()),
-            conditions=conds,
-            subject=subject_factory(
-                name_id=name_id,
-                method=saml.SUBJECT_CONFIRMATION_METHOD_BEARER,
-                subject_confirmation=subject_confirmation_factory(
-                    subject_confirmation_data=subject_confirmation_data_factory(
-                            in_response_to=in_response_to))),
-            ),
-            
-        if not status:
-            status = success_status_factory()
-            
-        tmp = response_factory(
-            issuer=self.issuer(),
-            in_response_to = in_response_to,
-            destination = consumer_url,
-            status = status,
-            assertion=assertion,
-            )
-        
-        # Store which assertion that has been sent to which SP about which
-        # subject.
-        self.cache.set(name_id["text"], sp_entity_id, assertion, 
-                        conds["not_on_or_after"])
-                        
-        return make_instance(samlp.Response, tmp)
-
-    def do_aa_response(self, consumer_url, in_response_to,
-                        sp_entity_id, identity, 
-                        name_id=None, ip_address="", issuer=None, sign=False):
-
-        attr_statement = do_attribute_statement(identity)
-        
-        # start using now and for a hour
-        conds = conditions_factory(
-                        not_before=instant(), 
-                        # an hour from now
-                        not_on_or_after=self._not_on_or_after(sp_entity_id), 
-                        audience_restriction=audience_restriction_factory(
-                                audience=audience_factory(sp_entity_id)))
-
-        # temporary identifier or ??
-        if not name_id:
-            name_id = name_id_factory(sid(), format=saml.NAMEID_FORMAT_TRANSIENT)
-
-        assertion = assertion_factory(
-            subject = subject_factory(
-                name_id = name_id,
-                method = saml.SUBJECT_CONFIRMATION_METHOD_BEARER,
-                subject_confirmation = subject_confirmation_factory(
-                    subject_confirmation_data = subject_confirmation_data_factory(
-                        in_response_to = in_response_to,
-                        not_on_or_after = self._not_on_or_after(sp_entity_id),
-                        address = ip_address,
-                        recipient = consumer_url))),
-            attribute_statement = attr_statement,
-            authn_statement = authn_statement_factory(
-                        authn_instant = instant(),
-                        session_index = sid()),
-            conditions=conds,
-            )
-            
-        if sign:
-            assertion["signature"] = pre_signature_part(assertion["id"])
-            
-        self.cache.set(name_id["text"], sp_entity_id, assertion, 
-                            conds["not_on_or_after"])
-            
-        tmp = response_factory(
-            issuer=issuer,
-            in_response_to=in_response_to,
-            destination=consumer_url,
-            status=success_status_factory(),
-            assertion=assertion,
-            )
-
-        return make_instance(samlp.Response, tmp)
 
     def filter_ava(self, ava, sp_entity_id, required=None, optional=None,
                     typ="idp"):
@@ -345,15 +238,164 @@ class Server(object):
                     restrictions = None
         except KeyError:
             restrictions = None
-                
+                                
         if restrictions:
+            print restrictions
             ava = filter_attribute_value_assertions(ava, restrictions)
 
         if required or optional:
             ava = filter_on_attributes(ava, required, optional)
             
         return ava
+
+    def restrict_ava(self, identity, spid):
+        """ Identity attribute names are expected to be expressed in 
+        the local lingo (== friendlyName)
         
+        :param identity: A dictionary with attributes and values
+        :return: A filtered ava according to the IdPs/AAs rules and
+            the list of required/optional attributes according to the SP.
+            If the requirements can't be met an exception is raised.
+        """
+        (required, optional) = self.conf["metadata"].attribute_consumer(spid)
+        return self.filter_ava(identity, spid, required, optional)
+
+    def _conditions(self, sp_entity_id):
+        return conditions_factory(
+                        not_before=instant(), 
+                        # How long might depend on who's getting it
+                        not_on_or_after=self._not_on_or_after(sp_entity_id), 
+                        audience_restriction=audience_restriction_factory(
+                                audience=audience_factory(sp_entity_id)))
+
+    def _authn_statement(self):
+        return authn_statement_factory(authn_instant = instant(),
+                                        session_index = sid()),
+
+    def do_response(self, consumer_url, in_response_to,
+                        sp_entity_id, identity=None, name_id=None, 
+                        status=None ):
+        """ Create a Response that adhers to the ??? profile.
+        
+        :param consumer_url: The URL which should receive the response
+        :param in_response_to: The session identifier of the request
+        :param sp_entity_id: The entity identifier of the SP
+        :param identity: A dictionary with attributes and values that are
+            expected to be the bases for the assertion in the response.
+        :param name_id: The identifier of the subject 
+        :return: A Response instance
+        """
+        
+        
+
+        if not status:
+            status = success_status_factory()
+            
+        tmp = response_factory(
+            issuer=self.issuer(),
+            in_response_to = in_response_to,
+            destination = consumer_url,
+            status = status,
+            )
+
+        if identity:
+            attr_statement = do_ava_statement(identity, 
+                                                self.conf["am_backward"])
+
+            # temporary identifier or ??
+            if not name_id:
+                name_id = name_id_factory(sid(), 
+                                        format=saml.NAMEID_FORMAT_TRANSIENT)
+
+            # start using now and for a hour
+            conds = self._conditions(sp_entity_id)
+            
+            assertion = assertion_factory(
+                attribute_statement = attr_statement,
+                authn_statement = self._authn_statement(),
+                conditions = conds,
+                subject=subject_factory(
+                    name_id=name_id,
+                    method=saml.SUBJECT_CONFIRMATION_METHOD_BEARER,
+                    subject_confirmation=subject_confirmation_factory(
+                        subject_confirmation_data = \
+                            subject_confirmation_data_factory(
+                                in_response_to=in_response_to))),
+                ),
+            
+            # Store which assertion that has been sent to which SP about which
+            # subject.
+            self.cache.set(name_id["text"], sp_entity_id, assertion, 
+                            conds["not_on_or_after"])
+            
+            tmp.update({"assertion":assertion})
+            
+        return make_instance(samlp.Response, tmp)
+
+    # ----------------------------
+    
+    def error_response(self, destination, in_response_to, spid, exc, 
+                        name_id = None):
+        return self.do_response(
+                        destination,    # consumer_url
+                        in_response_to, # in_response_to
+                        spid,           # sp_entity_id
+                        name_id,
+                        status = status_from_exception_factory(exc)
+                        )
+
+    def do_aa_response(self, consumer_url, in_response_to,
+                        sp_entity_id, identity, 
+                        name_id=None, ip_address="", issuer=None, sign=False):
+
+        try:
+            identity = self.restrict_ava(identity, sp_entity_id)
+        except MissingValue, exc:
+            tmp = self.error_response( consumer_url, in_response_to, 
+                                        sp_entity_id, exc, name_id)
+            return make_instance(samlp.Response, tmp)
+            
+        attr_statement = do_ava_statement(identity, self.conf["am_backward"])
+        
+        # temporary identifier or ??
+        if not name_id:
+            name_id = name_id_factory(sid(), format=saml.NAMEID_FORMAT_TRANSIENT)
+
+        conds = self._conditions(sp_entity_id)
+        assertion = assertion_factory(
+            subject = subject_factory(
+                name_id = name_id,
+                method = saml.SUBJECT_CONFIRMATION_METHOD_BEARER,
+                subject_confirmation = subject_confirmation_factory(
+                    subject_confirmation_data = \
+                        subject_confirmation_data_factory(
+                        in_response_to = in_response_to,
+                        not_on_or_after = self._not_on_or_after(sp_entity_id),
+                        address = ip_address,
+                        recipient = consumer_url))),
+            attribute_statement = attr_statement,
+            authn_statement = self._authn_statement(),
+            conditions = conds
+            )
+            
+        if sign:
+            assertion["signature"] = pre_signature_part(assertion["id"])
+            
+        print name_id
+        print conds
+        self.cache.set(name_id["text"], sp_entity_id, assertion, 
+                            conds["not_on_or_after"])
+            
+        tmp = response_factory(
+            issuer=issuer,
+            in_response_to=in_response_to,
+            destination=consumer_url,
+            status=success_status_factory(),
+            assertion=assertion,
+            )
+
+        return make_instance(samlp.Response, tmp)
+
     def authn_response(self, identity, in_response_to, destination, spid,
                     name_id_policy, userid):
         """ Constructs an AuthenticationResponse
@@ -367,6 +409,7 @@ class Server(object):
         :param userid: The subject identifier
         :return: A XML string representing an authentication response
         """
+        
         name_id = None
         if name_id_policy.sp_name_qualifier:
             try:
@@ -385,11 +428,10 @@ class Server(object):
                         format=saml.NAMEID_FORMAT_PERSISTENT,
                         sp_name_qualifier=name_id_policy.sp_name_qualifier)
         
-        # Do attribute filtering
-        (required, optional) = self.conf["metadata"].attribute_consumer(spid)
+        # Do attribute-value filtering
         try:
-            identity = self.filter_ava( identity, spid, required, optional)
-            resp = self.do_sso_response(
+            identity = self.restrict_ava(identity, spid)
+            resp = self.do_response(
                             destination,    # consumer_url
                             in_response_to, # in_response_to
                             spid,           # sp_entity_id
@@ -397,15 +439,8 @@ class Server(object):
                             name_id,
                         )
         except MissingValue, exc:
-            
-            resp = self.do_sso_response(
-                            destination,    # consumer_url
-                            in_response_to, # in_response_to
-                            spid,           # sp_entity_id
-                            name_id,
-                            status = status_from_exception_factory(exc)
-                        )
-            
+            resp = self.error_response( destination, in_response_to, spid,
+                                        exc, name_id)
         
-        
+
         return ("%s" % resp).split("\n")
