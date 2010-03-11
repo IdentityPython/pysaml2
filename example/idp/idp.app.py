@@ -13,7 +13,7 @@ from saml2.time_util import in_a_while, instant
 
 def authn_response(identity, in_response_to, destination, spid):
     global idp
-    resp = idp.do_sso_response(
+    resp = idp.do_response(
                         destination,    # consumer_url
                         in_response_to, # in_response_to
                         spid,           # sp_entity_id
