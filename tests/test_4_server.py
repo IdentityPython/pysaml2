@@ -14,7 +14,7 @@ def _eq(l1,l2):
     return set(l1) == set(l2)
 
 
-class TestServer():
+class TestServer1():
     def setup_class(self):
         try:
             self.server = Server("idp.config")
@@ -166,14 +166,12 @@ class TestServer():
         assert name_id_policy.format == saml.NAMEID_FORMAT_TRANSIENT
         assert response["sp_entityid"] == "urn:mace:example.com:saml:roland:sp"
 
-    def test_sso_response(self):
-        resp = self.server.do_sso_response(
+    def test_sso_response_with_identity(self):
+        resp = self.server.do_response(
                     "http://localhost:8087/",   # consumer_url
                     "12",                       # in_response_to
                     "urn:mace:example.com:saml:roland:sp", # sp_entity_id
-                    {("urn:oid:1.3.6.1.4.1.5923.1.1.1.7",
-                        "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
-                        "eduPersonEntitlement"):"Jeter"}
+                    { "eduPersonEntitlement": "Bat"}
                 )
                 
         print resp.keyswv()
@@ -198,6 +196,43 @@ class TestServer():
         print confirmation.subject_confirmation_data
         assert confirmation.subject_confirmation_data.in_response_to == "12"
 
+    def test_sso_response_without_identity(self):
+        resp = self.server.do_response(
+                    "http://localhost:8087/",   # consumer_url
+                    "12",                       # in_response_to
+                    "urn:mace:example.com:saml:roland:sp", # sp_entity_id
+                )
+                
+        print resp.keyswv()
+        assert _eq(resp.keyswv(),['status', 'destination', 'in_response_to', 
+                                  'issue_instant', 'version', 'id', 'issuer'])
+        assert resp.destination == "http://localhost:8087/"
+        assert resp.in_response_to == "12"
+        assert resp.status
+        assert resp.status.status_code.value == samlp.STATUS_SUCCESS
+        assert resp.issuer.text == "urn:mace:example.com:saml:roland:idp"
+        assert not resp.assertion 
+
+    def test_sso_failure_response(self):
+        exc = utils.MissingValue("eduPersonAffiliation missing")
+        resp = self.server.error_response( "http://localhost:8087/", "12", 
+                        "urn:mace:example.com:saml:roland:sp", exc )
+                
+        print resp.keyswv()
+        assert _eq(resp.keyswv(),['status', 'destination', 'in_response_to', 
+                                  'issue_instant', 'version', 'id', 'issuer'])
+        assert resp.destination == "http://localhost:8087/"
+        assert resp.in_response_to == "12"
+        assert resp.status
+        print resp.status
+        assert resp.status.status_code.value == samlp.STATUS_RESPONDER
+        assert resp.status.status_code.status_code.value == \
+                                        samlp.STATUS_REQUEST_UNSUPPORTED
+        assert resp.status.status_message.text == \
+                                        "eduPersonAffiliation missing"
+        assert resp.issuer.text == "urn:mace:example.com:saml:roland:idp"
+        assert not resp.assertion 
+
     def test_persistence_0(self):
         pid1 = self.server.persistent_id(
                     "urn:mace:example.com:saml:roland:sp", "jeter")
@@ -215,7 +250,7 @@ class TestServer():
         # No restrictions apply
         ava = self.server.filter_ava(ava, 
                                     "urn:mace:example.com:saml:roland:sp",
-                                    [], [], "idp")
+                                    [], [])
                                     
         assert _eq(ava.keys(), ["givenName", "surName", "mail"])
         assert ava["givenName"] == ["Derek"]
@@ -242,7 +277,7 @@ class TestServer():
         # No restrictions apply
         ava = self.server.filter_ava(ava, 
                                     "urn:mace:example.com:saml:roland:sp",
-                                    [], [], "idp")
+                                    [], [])
                                     
         assert _eq(ava.keys(), ["givenName", "surName"])
         assert ava["givenName"] == ["Derek"]
@@ -266,7 +301,7 @@ class TestServer():
         # No restrictions apply
         ava = self.server.filter_ava(ava, 
                                     "urn:mace:example.com:saml:roland:sp",
-                                    [], [], "idp")
+                                    [], [])
                                     
         assert _eq(ava.keys(), ["mail"])
         assert ava["mail"] == ["derek@nyy.mlb.com"]
@@ -289,7 +324,7 @@ class TestServer():
         # No restrictions apply
         ava = self.server.filter_ava(ava, 
                                     "urn:mace:example.com:saml:roland:sp",
-                                    [], [], "idp")
+                                    [], [])
                                     
         assert _eq(ava.keys(), ["mail"])
         assert ava["mail"] == ["dj@example.com"]
@@ -326,4 +361,53 @@ class TestServer():
         astate = assertion.attribute_statement[0]
         print astate
         assert len(astate.attribute) == 3
+        
+
+IDENTITY = {"eduPersonAffiliation": ["staff", "member"],
+            "surName": ["Jeter"], "givenName": ["Derek"],
+            "mail": ["foo@gmail.com"]}
+
+class TestServer2():
+    def setup_class(self):
+        try:
+            self.server = Server("restrictive_idp.config")
+        except IOError, e:
+            self.server = Server("tests/restrictive_idp.config")
+            
+    
+    def test_0(self):
+                
+        ident = self.server.restrict_ava(IDENTITY.copy(), 
+                                        "urn:mace:example.com:saml:roland:sp")
+        assert len(ident) == 3
+        assert ident == {'eduPersonAffiliation': ['staff'], 
+                        'givenName': ['Derek'], 'surName': ['Jeter']}
+                        
+        print self.server.conf.keys()
+        attr = utils.ava_to_attributes(ident, self.server.conf["am_backward"])
+        assert len(attr) == 3
+        assert {'attribute_value': [{'text': 'staff'}], 
+                'friendly_name': 'eduPersonAffiliation', 
+                'name': 'urn:oid:1.3.6.1.4.1.5923.1.1.1.1', 
+                'name_format': 'urn:oasis:names:tc:SAML:2.0:attrname-format:uri'} in attr
+
+    def test_do_aa_reponse(self):
+        response = self.server.do_aa_response( "http://example.com/sp/", "aaa",
+                        "urn:mace:example.com:sp:1", IDENTITY.copy(), 
+                        issuer = self.server.conf["entityid"])
+
+        assert response != None
+        assert response.destination == "http://example.com/sp/"
+        assert response.in_response_to == "aaa"
+        assert response.version == "2.0"
+        assert response.issuer.text == "urn:mace:example.com:saml:roland:idpr"
+        assert response.status.status_code.value == samlp.STATUS_SUCCESS
+        assert len(response.assertion) == 1
+        assertion = response.assertion[0]
+        assert assertion.version == "2.0"
+        subject = assertion.subject
+        assert subject.name_id.format == saml.NAMEID_FORMAT_TRANSIENT
+        assert len(subject.subject_confirmation) == 1
+        subject_confirmation = subject.subject_confirmation[0]
+        assert subject_confirmation.subject_confirmation_data.in_response_to == "aaa"
         
