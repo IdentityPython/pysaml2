@@ -254,10 +254,10 @@ class MetaData(object):
         :return: list of single-sign-on service location run by the entity 
             with the specified EntityId.
         """
-        try:
-            idps = self.entity[entity_id]["idp_sso"]
-        except KeyError:
-            return []
+
+        # May raise KeyError
+        idps = self.entity[entity_id]["idp_sso"]
+
         loc = []
         #print idps
         for idp in idps:
