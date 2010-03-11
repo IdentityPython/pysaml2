@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # 
 
-from saml2 import metadata
+from saml2 import metadata, utils
 import re
 
 class MissingValue(Exception):
@@ -49,7 +49,6 @@ def do_assertions(assertions):
                 
             rev = []
             for value in values:
-                print "#",value
                 rev.append(re.compile(value))
             spec["attribute_restrictions"][key] = rev
     
@@ -120,6 +119,12 @@ class Config(dict):
         if "metadata" in config:
             config["metadata"] = self.load_metadata(config["metadata"])
             
+        if "attribute_maps" in config:
+            (forward, backward) = utils.parse_attribute_map(config[
+                                                            "attribute_maps"])
+            config["am_forward"] = forward
+            config["am_backward"] = backward
+
         if "sp" in config["service"]:
             if "metadata" in config:
                 self.sp_check(config["service"]["sp"], config["metadata"])
