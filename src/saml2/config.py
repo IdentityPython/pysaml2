@@ -20,7 +20,20 @@ def entity_id2url(meta, entity_id):
     return meta.single_sign_on_services(entity_id)[0]
 
 def do_assertions(assertions):
+    """ This is only for IdPs or AAs, and it's about limiting what
+    is returned to the SP. 
+    In the configuration file, restrictions on which values that 
+    can be returned are specified with the help of regular expressions.
+    This function goes through and pre-compile the regular expressions.
+    
+    :param assertions:
+    :return: The assertion with the string specification replaced with
+        a compiled regular expression.
+    """
     for _, spec in assertions.items():
+        if spec == None:
+            continue
+            
         try:
             restr = spec["attribute_restrictions"]
         except KeyError:
@@ -36,6 +49,7 @@ def do_assertions(assertions):
                 
             rev = []
             for value in values:
+                print "#",value
                 rev.append(re.compile(value))
             spec["attribute_restrictions"][key] = rev
     
