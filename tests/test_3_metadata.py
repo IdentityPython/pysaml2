@@ -6,6 +6,7 @@ from saml2 import BINDING_SOAP
 from saml2 import md, saml, samlp
 from saml2 import time_util
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
+from py.test import raises
 
 SWAMI_METADATA = "swamid-kalmar-1.0.xml"
 INCOMMON_METADATA = "InCommon-metadata.xml"
@@ -58,8 +59,7 @@ def test_incommon_1():
         (id,ent["idp_sso"]) for id,ent in md.entity.items() if "idp_sso" in ent])
     print idps.keys()
     assert len(idps) == 53 # !!!!???? < 10%
-    idp_sso = md.single_sign_on_services('urn:mace:incommon:uiuc.edu')
-    assert idp_sso == []
+    raises(KeyError, "md.single_sign_on_services('urn:mace:incommon:uiuc.edu')")
     idp_sso = md.single_sign_on_services('urn:mace:incommon:alaska.edu')
     assert len(idp_sso) == 1
     print idp_sso
