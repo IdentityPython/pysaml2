@@ -22,6 +22,18 @@ ERROR_STATUS = """<?xml version='1.0' encoding='UTF-8'?>
 def _eq(l1,l2):
     return set(l1) == set(l2)
 
+def _oeq(l1,l2):
+    if len(l1) != len(l2):
+        print "Different number of items"
+        return False
+    for item in l1:
+        if item not in l2:
+            print "%s not in l2" % (item,)
+            for ite in l2:
+                print "\t%s" % (ite,)
+            return False
+    return True
+    
 def test_inflate_then_deflate():
     str = """Selma Lagerlöf (1858-1940) was born in Östra Emterwik, Värmland, 
     Sweden. She was brought up on Mårbacka, the family estate, which she did 
@@ -361,12 +373,23 @@ def test_parse_attribute_map():
     
     assert _eq(forward.keys(), backward.values())
     assert _eq(forward.values(), backward.keys())
-    assert _eq(forward.keys(), ["urn:oid:2.5.4.4","urn:oid:2.5.4.42",
-                    "urn:oid:2.5.4.12","urn:oid:2.5.4.12",
-                    "urn:oid:0.9.2342.19200300.100.1.1",
-                    "urn:oid:0.9.2342.19200300.100.1.3",
-                    "urn:oid:1.3.6.1.4.1.5923.1.1.1.1",
-                    "urn:oid:1.3.6.1.4.1.5923.1.1.1.7"])
+    print forward.keys()
+    assert _oeq(forward.keys(), [
+            ('urn:oid:1.3.6.1.4.1.5923.1.1.1.7', NAME_FORMAT_URI), 
+            ('urn:oid:0.9.2342.19200300.100.1.1', NAME_FORMAT_URI), 
+            ('urn:oid:1.3.6.1.4.1.5923.1.1.1.1', NAME_FORMAT_URI), 
+            ('urn:oid:2.5.4.42', NAME_FORMAT_URI),
+            ('urn:oid:2.5.4.4', NAME_FORMAT_URI),
+            ('urn:oid:0.9.2342.19200300.100.1.3', NAME_FORMAT_URI), 
+            ('urn:oid:2.5.4.12', NAME_FORMAT_URI)])
+    assert _eq(forward.keys(), [
+            ('urn:oid:1.3.6.1.4.1.5923.1.1.1.7', NAME_FORMAT_URI), 
+            ('urn:oid:0.9.2342.19200300.100.1.1', NAME_FORMAT_URI), 
+            ('urn:oid:1.3.6.1.4.1.5923.1.1.1.1', NAME_FORMAT_URI), 
+            ('urn:oid:2.5.4.42', NAME_FORMAT_URI),
+            ('urn:oid:2.5.4.4', NAME_FORMAT_URI),
+            ('urn:oid:0.9.2342.19200300.100.1.3', NAME_FORMAT_URI), 
+            ('urn:oid:2.5.4.12', NAME_FORMAT_URI)])
     assert _eq(backward.keys(),["surName","givenName","title","uid","mail",
                                     "eduPersonAffiliation",
                                     "eduPersonEntitlement"])
@@ -382,21 +405,21 @@ def test_identity_attribute_0():
                                     
 def test_identity_attribute_1():
     (forward, backward) = utils.parse_attribute_map(["attribute.map"])
-    a = Attribute(name="urn:oid:2.5.4.4")
+    a = Attribute(name="urn:oid:2.5.4.4", name_format=NAME_FORMAT_URI)
     
     assert utils.identity_attribute("name",a,forward) == "urn:oid:2.5.4.4"
     assert utils.identity_attribute("friendly",a,forward) == "surName"
 
 def test_identity_attribute_2():
     (forward, backward) = utils.parse_attribute_map(["attribute.map"])
-    a = Attribute(name="urn:oid:2.5.4.5")
+    a = Attribute(name="urn:oid:2.5.4.5", name_format=NAME_FORMAT_URI)
     
     assert utils.identity_attribute("name",a,forward) == "urn:oid:2.5.4.5"
     # if there would be a map it would be serialNumber
     assert utils.identity_attribute("friendly",a,forward) == "urn:oid:2.5.4.5"
 
 def test_identity_attribute_3():
-    a = Attribute(name="urn:oid:2.5.4.5")
+    a = Attribute(name="urn:oid:2.5.4.5", name_format=NAME_FORMAT_URI)
     
     assert utils.identity_attribute("name",a) == "urn:oid:2.5.4.5"
     # if there would be a map it would be serialNumber
