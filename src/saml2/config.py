@@ -5,18 +5,19 @@
 from saml2 import metadata
 import re
 
+class MissingValue(Exception):
+    pass
+    
 def entity_id2url(meta, entity_id):
-    try:
-        # grab the first one
-        return meta.single_sign_on_services(entity_id)[0]
-    except Exception:
-        print "idp_entity_id", entity_id
-        print ("idps in metadata",
-            [e for e, d in meta.entity.items() if "idp_sso" in d])
-        print "metadata entities", meta.entity.keys()
-        for ent, dic in meta.entity.items():
-            print ent, dic.keys()
-        return None
+    """ Grab the first endpoint if there are more than one, 
+        raises IndexError if the function returns an empty list.
+     
+    :param meta: MetaData instance
+    :param entity_id: The entity id of the entity for which an
+        endpoint is sought
+    :return: An endpoint (URL)
+    """
+    return meta.single_sign_on_services(entity_id)[0]
 
 def do_assertions(assertions):
     for _, spec in assertions.items():
@@ -41,21 +42,29 @@ def do_assertions(assertions):
     return assertions
     
 class Config(dict):
-    def sp_check(self, config, metad=None):
-        assert "idp" in config
-        assert len(config["idp"]) > 0
-
-        if metad:
-            if len(config["idp"]) == 0:
-                eids = [e for e, d in metad.entity.items() if "idp_sso" in d]
+    def sp_check(self, config, metadata=None):
+        """ config["idp"] is a dictionary with entity_ids as keys and
+        urls as values
+        """
+        if metadata:
+            if "idp" not in config or len(config["idp"]) == 0:
+                eids = [e for e, d in metadata.entity.items() if "idp_sso" in d]
                 for eid in eids:
-                    config["idp"][eid] = entity_id2url(metad, eid)
+                    try:
+                        config["idp"][eid] = entity_id2url(metadata, eid)
+                    except IndexError, KeyError:
+                        if not config["idp"][eid]:
+                            raise MissingValue
             else:
                 for eid, url in config["idp"].items():
                     if not url:
-                        config["idp"][eid] = entity_id2url(metad, eid)
+                        config["idp"][eid] = entity_id2url(metadata, eid)
+        else:
+            assert "idp" in config
+            assert len(config["idp"]) > 0
         
         assert "url" in config
+        assert "name" in config
             
     def idp_check(self, config):
         assert "url" in config
@@ -79,7 +88,7 @@ class Config(dict):
         return metad
                 
     def load_file(self, config_file):
-        self.load(eval(open(config_file).read()))
+        return self.load(eval(open(config_file).read()))
         
     def load(self, config):
     
@@ -109,3 +118,5 @@ class Config(dict):
                             
         for key, val in config.items():
             self[key] = val
+        
+        return self
