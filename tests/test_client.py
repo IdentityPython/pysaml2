@@ -49,13 +49,11 @@ REQ1 = """<?xml version='1.0' encoding='UTF-8'?>
 class TestClient:
     def setup_class(self):
         server = Server("idp.config")
-        self._resp_ = server.do_sso_response(
+        self._resp_ = server.do_response(
                     "http://lingon.catalogix.se:8087/",   # consumer_url
                     "12",                       # in_response_to
                     "urn:mace:example.com:saml:roland:sp", # sp_entity_id
-                    {("urn:oid:1.3.6.1.4.1.5923.1.1.1.7",
-                        "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
-                        "eduPersonEntitlement"):"Jeter"}
+                    {"eduPersonEntitlement":"Jeter"}
                 )
 
         conf = config.Config()
