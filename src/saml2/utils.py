@@ -175,7 +175,8 @@ def make_instance(klass, spec):
 def parse_attribute_map(filenames):
     """
     Expects a file with each line being composed of the oid for the attribute
-    exactly one space and then a user friendly name of the attribute
+    exactly one space, a user friendly name of the attribute and then
+    the type specification of the name.
     
     :param filename: List of filenames on mapfiles.
     :return: A 2-tuple, one dictionary with the oid as keys and the friendly 
@@ -185,9 +186,9 @@ def parse_attribute_map(filenames):
     backward = {}
     for filename in filenames:
         for line in open(filename).readlines():
-            (name, friendly_name) = line.strip().split(" ")
-            forward[name] = friendly_name
-            backward[friendly_name] = name
+            (name, friendly_name, name_format) = line.strip().split()
+            forward[(name, name_format)] = friendly_name
+            backward[friendly_name] = (name, name_format)
         
     return (forward, backward)
 
@@ -227,7 +228,7 @@ def identity_attribute(form, attribute, forward_map=None):
             return attribute.friendly_name
         elif forward_map:
             try:
-                return forward_map[attribute.name]
+                return forward_map[(attribute.name, attribute.name_format)]
             except KeyError:
                 return attribute.name
     # default is name
@@ -430,15 +431,14 @@ def _attrval(val):
 def ava_to_attributes(ava, bmap):
     attrs = []
     
-    for key, val in ava.items():
+    for friendly_name, val in ava.items():
         dic = {}
         attrval = _attrval(val)
         if attrval:
             dic["attribute_value"] = attrval
         
-        dic["friendly_name"] = key
-        dic["name"] = bmap[key]
-        dic["name_format"] = NAME_FORMAT_URI
+        dic["friendly_name"] = friendly_name
+        (dic["name"], dic["name_format"]) = bmap[friendly_name]
         attrs.append(attribute_factory(**dic))
     return attrs
 
