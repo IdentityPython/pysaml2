@@ -614,7 +614,10 @@ def get_attribute_values(attribute_statement):
             name = attribute.name.strip()
         result[name] = []
         for value in attribute.attribute_value:
-            result[name].append(value.text.strip())
+            if not value.text:
+                result[name].append('')
+            else:
+                result[name].append(value.text.strip())    
     return result
 
 ROW = """<tr><td>%s</td><td>%s</td></tr>"""
