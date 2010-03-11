@@ -315,29 +315,37 @@ class Server(object):
 
         return make_instance(samlp.Response, tmp)
 
-    def filter_ava(self, ava, sp_entity_id, required=None, optional=None, 
-                    role=""):
+    def filter_ava(self, ava, sp_entity_id, required=None, optional=None,
+                    typ="idp"):
         """ What attribute and attribute values returns depends on what
         the SP has said it wants in the request or in the metadata file and
         what the IdP/AA wants to release. An assumption is that what the SP
-        asks for overrides whatever is in the metadata.        
+        asks for overrides whatever is in the metadata. But of course the 
+        IdP never releases anything it doesn't want to.    
+        
+        :param ava: All the attributes and values that are available
+        :param sp_entity_id: The entity ID of the SP
+        :param required: Attributes that the SP requires in the assertion
+        :param optional: Attributes that the SP thinks is optional
+        :param typ: IdPs and AAs does this, and they have different parts
+            of the configuration.
+        :return: A possibly modified AVA
         """
 
-        #print self.conf["service"][role]
-        #print self.conf["service"][role]["assertions"][sp_entity_id]
-        
         try:
-            restrictions = self.conf["service"][role][
-                                "assertions"][sp_entity_id][
-                                    "attribute_restrictions"]
-        except KeyError:
+            assertions = self.conf["service"][typ]["assertions"]
             try:
-                restrictions = self.conf["service"][role]["assertions"][
-                                "default"]["attribute_restrictions"]
+                restrictions = assertions[sp_entity_id][
+                                                "attribute_restrictions"]
             except KeyError:
-                restrictions = None
+                try:
+                    restrictions = assertions["default"][
+                                                "attribute_restrictions"]
+                except KeyError:
+                    restrictions = None
+        except KeyError:
+            restrictions = None
                 
-        #print restrictions
         if restrictions:
             ava = filter_attribute_value_assertions(ava, restrictions)
 
@@ -380,8 +388,7 @@ class Server(object):
         # Do attribute filtering
         (required, optional) = self.conf["metadata"].attribute_consumer(spid)
         try:
-            identity = self.filter_ava( identity, spid, required, 
-                                        optional, "idp")
+            identity = self.filter_ava( identity, spid, required, optional)
             resp = self.do_sso_response(
                             destination,    # consumer_url
                             in_response_to, # in_response_to
