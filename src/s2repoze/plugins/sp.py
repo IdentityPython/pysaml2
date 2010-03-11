@@ -122,6 +122,7 @@ class SAML2Plugin(FormPluginBase):
         # If more than one idp, I have to do wayf
         logger and logger.info("IdP URL: %s" % self.srv["idp"].values())
         if len( self.srv["idp"] ) == 1:
+            # Keys are entity_ids and values are urls
             idp_url = self.srv["idp"].values()[0]
         elif len( self.srv["idp"] ) == 0:
             HTTPInternalServerError(detail='Misconfiguration')
