@@ -47,12 +47,33 @@ sp2 = {
     "xmlsec_binary" : "/opt/local/bin/xmlsec1",
 }
 
+IDP1 = {
+    "entityid" : "urn:mace:umu.se:saml:roland:idp",
+    "service": {
+        "idp":{
+            "name" : "Rolands IdP",
+            "url" : "http://localhost:8088/",
+            "assertions":{
+                "default": {
+                    "attribute_restrictions": {
+                        "givenName": None,
+                        "surName": None,
+                        "eduPersonAffiliation": ["(member|staff)"],
+                        "mail": [".*@example.com"],
+                    }
+                },
+                "urn:mace:umu.se:saml:roland:sp": None
+            }
+        }
+    },
+    "xmlsec_binary" : "/usr/local/bin/xmlsec1",
+}
+
 def _eq(l1,l2):
     return set(l1) == set(l2)
 
 def test_1():
-    c = Config()
-    c.load(sp1)
+    c = Config().load(sp1)
     
     print c
     service = c["service"]
@@ -67,8 +88,7 @@ def test_1():
     assert sp["idp"].values() == ["http://localhost:8088/sso/"]
 
 def test_2():
-    c = Config()
-    c.load(sp2)
+    c = Config().load(sp2)
     
     print c
     service = c["service"]
@@ -131,23 +151,22 @@ def test_minimum():
     c = Config().load(minimum)
     
     assert c != None
-
-def test_():
-    minimum = {
-        "entityid" : "urn:mace:example.com:saml:roland:sp",
-        "service": {
-            "sp": {
-                "url" : "http://sp.example.org/",
-                "name" : "test",
-                "idp": {
-                    "" : "https://example.com/idp/SSOService.php",
-                },
-            }
-        },
-        "xmlsec_binary" : "/usr/local/bin/xmlsec1",
-    }
-
-    c = Config().load(minimum)
     
-    assert c != None
+def test_idp():
+    c = Config().load(IDP1)
+    
+    print c
+    service = c["service"]
+    
+    assert service.keys() == ["idp"]
+    idp = service["idp"] 
+    assert _eq(idp.keys(),['url', 'name', 'assertions'])
+    
+    assert idp["url"] == "http://localhost:8088/"
+
+    default_attribute_restrictions = idp["assertions"]["default"][
+                                            "attribute_restrictions"]
+    
+    assert default_attribute_restrictions[
+                    "eduPersonAffiliation"][0].match("staff")
     
