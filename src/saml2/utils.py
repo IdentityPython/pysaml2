@@ -320,6 +320,7 @@ def _properties(klass):
     return props
     
 def _klassdict(klass, text=None, **kwargs):
+    """ Does not remove attributes with no values """
     spec = {}
     if text:
         spec["text"] = text
@@ -414,7 +415,7 @@ def response_factory(signature=False, encrypt=False, **kwargs):
         kwargs["signature"] = sigver.pre_signature_part(kwargs["id"])
     if encrypt:
         pass
-    return kwargs
+    return _klassdict(samlp.Response, **kwargs)        
 
 def _attrval(val):
     if isinstance(val, basestring):
@@ -428,7 +429,7 @@ def _attrval(val):
 
     return attrval
 
-def ava_to_attributes(ava, bmap):
+def ava_to_attributes(ava, bmap=None):
     attrs = []
     
     for friendly_name, val in ava.items():
@@ -438,9 +439,21 @@ def ava_to_attributes(ava, bmap):
             dic["attribute_value"] = attrval
         
         dic["friendly_name"] = friendly_name
-        (dic["name"], dic["name_format"]) = bmap[friendly_name]
+        if bmap:
+            try:
+                (dic["name"], dic["name_format"]) = bmap[friendly_name]
+            except KeyError:
+                pass
         attrs.append(attribute_factory(**dic))
     return attrs
+
+def do_ava_statement(identity, bmap):
+    """
+    :param identity: A dictionary with fiendly names as keys
+    :return:
+    """
+    return attribute_statement_factory(
+                    attribute=ava_to_attributes(identity, bmap))
 
 def do_attributes(identity):
     attrs = []
