@@ -27,10 +27,10 @@ import base64
 import random
 import os
 
-def get_xmlsec_binary():		
-    for path in os.environ["PATH"]:
-        fil = os.path.join(os.path.dirname(path), "xmlsec1")
-        if os.access(fil):
+def get_xmlsec_binary():
+    for path in os.environ["PATH"].split(":"):
+        fil = os.path.join(path, "xmlsec1")
+        if os.access(fil,os.X_OK):
             return fil
 
     raise Exception("Can't find xmlsec1")
