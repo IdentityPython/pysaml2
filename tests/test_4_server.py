@@ -31,13 +31,13 @@ class TestServer1():
 
     def test_assertion(self):
         tmp = utils.assertion_factory(
-            subject= utils.subject_factory("_aaa",
+            subject= utils.args2dict("_aaa",
                                 name_id=saml.NAMEID_FORMAT_TRANSIENT),
-            attribute_statement = utils.attribute_statement_factory(
+            attribute_statement = utils.args2dict(
                 attribute=[
-                    utils.attribute_factory(attribute_value="Derek", 
+                    utils.args2dict(attribute_value="Derek", 
                                         friendly_name="givenName"),
-                    utils.attribute_factory(attribute_value="Jeter", 
+                    utils.args2dict(attribute_value="Jeter", 
                                         friendly_name="surName"),
                 ]),
             issuer=self.server.issuer(),
@@ -75,12 +75,12 @@ class TestServer1():
                 destination="https:#www.example.com",
                 status=utils.success_status_factory(),
                 assertion=utils.assertion_factory(
-                    subject = utils.subject_factory("_aaa",
+                    subject = utils.args2dict("_aaa",
                                         name_id=saml.NAMEID_FORMAT_TRANSIENT),
-                    attribute_statement = utils.attribute_statement_factory([
-                        utils.attribute_factory(attribute_value="Derek", 
+                    attribute_statement = utils.args2dict([
+                        utils.args2dict(attribute_value="Derek", 
                                                 friendly_name="givenName"),
-                        utils.attribute_factory(attribute_value="Jeter", 
+                        utils.args2dict(attribute_value="Jeter", 
                                                 friendly_name="surName"),
                     ]),
                     issuer=self.server.issuer(),
@@ -341,7 +341,7 @@ class TestServer1():
                     "1", "http://local:8087/", 
                     "urn:mace:example.com:saml:roland:sp",
                     utils.make_instance(samlp.NameIDPolicy,
-                                utils.name_id_policy_factory(
+                                utils.args2dict(
                                         format=saml.NAMEID_FORMAT_TRANSIENT,
                                         allow_create="true")),
                     "foba0001@example.com")

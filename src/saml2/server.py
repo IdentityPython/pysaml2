@@ -23,14 +23,10 @@ import shelve
 
 from saml2 import saml, samlp, VERSION
 
-from saml2.utils import issuer_factory, conditions_factory
-from saml2.utils import audience_restriction_factory
 from saml2.utils import sid, decode_base64_and_inflate, make_instance
-from saml2.utils import audience_factory, name_id_factory, assertion_factory
-from saml2.utils import subject_factory, subject_confirmation_factory
 from saml2.utils import response_factory, do_ava_statement
-from saml2.utils import authn_statement_factory, MissingValue
-from saml2.utils import subject_confirmation_data_factory, success_status_factory
+from saml2.utils import MissingValue, args2dict
+from saml2.utils import success_status_factory, assertion_factory
 from saml2.utils import filter_attribute_value_assertions
 from saml2.utils import OtherError, do_attribute_statement
 from saml2.utils import VersionMismatch, UnknownPrincipal, UnsupportedBinding
@@ -70,7 +66,7 @@ class Server(object):
             self.id_map = None
     
     def issuer(self):
-        return issuer_factory( self.conf["entityid"], 
+        return args2dict( self.conf["entityid"], 
                         format=saml.NAMEID_FORMAT_ENTITY)
         
     def persistent_id(self, entity_id, subject_id):
@@ -261,15 +257,15 @@ class Server(object):
         return self.filter_ava(identity, spid, required, optional)
 
     def _conditions(self, sp_entity_id):
-        return conditions_factory(
+        return args2dict(
                         not_before=instant(), 
                         # How long might depend on who's getting it
                         not_on_or_after=self._not_on_or_after(sp_entity_id), 
-                        audience_restriction=audience_restriction_factory(
-                                audience=audience_factory(sp_entity_id)))
+                        audience_restriction=args2dict(
+                                audience=args2dict(sp_entity_id)))
 
     def _authn_statement(self):
-        return authn_statement_factory(authn_instant = instant(),
+        return args2dict(authn_instant = instant(),
                                         session_index = sid()),
 
     def do_response(self, consumer_url, in_response_to,
@@ -304,8 +300,7 @@ class Server(object):
 
             # temporary identifier or ??
             if not name_id:
-                name_id = name_id_factory(sid(), 
-                                        format=saml.NAMEID_FORMAT_TRANSIENT)
+                name_id = args2dict(sid(),format=saml.NAMEID_FORMAT_TRANSIENT)
 
             # start using now and for a hour
             conds = self._conditions(sp_entity_id)
@@ -314,13 +309,12 @@ class Server(object):
                 attribute_statement = attr_statement,
                 authn_statement = self._authn_statement(),
                 conditions = conds,
-                subject=subject_factory(
+                subject=args2dict(
                     name_id=name_id,
                     method=saml.SUBJECT_CONFIRMATION_METHOD_BEARER,
-                    subject_confirmation=subject_confirmation_factory(
+                    subject_confirmation=args2dict(
                         subject_confirmation_data = \
-                            subject_confirmation_data_factory(
-                                in_response_to=in_response_to))),
+                            args2dict(in_response_to=in_response_to))),
                 ),
             
             # Store which assertion that has been sent to which SP about which
@@ -359,16 +353,16 @@ class Server(object):
         
         # temporary identifier or ??
         if not name_id:
-            name_id = name_id_factory(sid(), format=saml.NAMEID_FORMAT_TRANSIENT)
+            name_id = args2dict(sid(), format=saml.NAMEID_FORMAT_TRANSIENT)
 
         conds = self._conditions(sp_entity_id)
         assertion = assertion_factory(
-            subject = subject_factory(
+            subject = args2dict(
                 name_id = name_id,
                 method = saml.SUBJECT_CONFIRMATION_METHOD_BEARER,
-                subject_confirmation = subject_confirmation_factory(
+                subject_confirmation = args2dict(
                     subject_confirmation_data = \
-                        subject_confirmation_data_factory(
+                        args2dict(
                         in_response_to = in_response_to,
                         not_on_or_after = self._not_on_or_after(sp_entity_id),
                         address = ip_address,
@@ -424,7 +418,7 @@ class Server(object):
                                             userid)
                 self.log.info("=> %s" % subj_id)
                 
-            name_id = name_id_factory(subj_id, 
+            name_id = args2dict(subj_id, 
                         format=saml.NAMEID_FORMAT_PERSISTENT,
                         sp_name_qualifier=name_id_policy.sp_name_qualifier)
         

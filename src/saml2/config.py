@@ -124,8 +124,12 @@ class Config(dict):
                                                             "attribute_maps"])
             config["am_forward"] = forward
             config["am_backward"] = backward
-
+        else:
+            config["am_forward"] = None
+            config["am_backward"] = None
+        
         if "sp" in config["service"]:
+            print config["service"]["sp"]
             if "metadata" in config:
                 self.sp_check(config["service"]["sp"], config["metadata"])
             else:

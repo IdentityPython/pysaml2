@@ -319,6 +319,12 @@ def _properties(klass):
     props.extend(klass.c_attributes.values())
     return props
     
+def args2dict(text=None, **kwargs):
+    spec = kwargs.copy()
+    if text:
+        spec["text"] = text
+    return spec
+
 def _klassdict(klass, text=None, **kwargs):
     """ Does not remove attributes with no values """
     spec = {}
@@ -333,77 +339,25 @@ def _klassdict(klass, text=None, **kwargs):
     return spec
     
 def status_from_exception_factory(exception):
-    return _klassdict(samlp.Status,
-        status_code=_klassdict(samlp.StatusCode,
+    msg = exception.args[0]
+    return args2dict(
+        status_message=msg,
+        status_code=args2dict(
             value=samlp.STATUS_RESPONDER,
-            status_code=_klassdict(samlp.StatusCode,
-                            value=EXCEPTION2STATUS[exception.__class__])
+            status_code=args2dict(value=EXCEPTION2STATUS[exception.__class__])
             ),
-        status_message=exception.args[0],
     )
-    
-def name_id_factory(text="", **kwargs):
-    return _klassdict(saml.NameID, text, **kwargs)
-
-def status_message_factory(text="", **kwargs):
-    return _klassdict(samlp.StatusMessage, text, **kwargs)
-
-def status_code_factory(text="", **kwargs):
-    return _klassdict(samlp.StatusCode, text, **kwargs)
-
-def status_factory(text="", **kwargs):
-    return _klassdict(samlp.Status, text, **kwargs)
-    
-def success_status_factory():
-    return status_factory(status_code=status_code_factory(
-                                            value=samlp.STATUS_SUCCESS))
-                            
-def audience_factory(text="", **kwargs):
-    return _klassdict(saml.Audience, text, **kwargs)
-
-def audience_restriction_factory(text="", **kwargs):
-    return _klassdict(saml.AudienceRestriction, text, **kwargs)
-
-def conditions_factory(text="", **kwargs):
-    return _klassdict(saml.Conditions, text, **kwargs)
-    
-def attribute_factory(text="", **kwargs):
-    return _klassdict(saml.Attribute, text, **kwargs)
-
-def attribute_value_factory(text="", **kwargs):
-    return _klassdict(saml.AttributeValue, text, **kwargs)
         
-def attribute_statement_factory(text="", **kwargs):
-    return _klassdict(saml.AttributeStatement, text, **kwargs)
-
-def subject_confirmation_data_factory(text="", **kwargs):
-    return _klassdict(saml.SubjectConfirmationData, text, **kwargs)
-    
-def subject_confirmation_factory(text="", **kwargs):
-    return _klassdict(saml.SubjectConfirmation, text, **kwargs)        
-    
-def subject_factory(text="", **kwargs):
-    return _klassdict(saml.Subject, text, **kwargs)        
-
-def authn_context_class_ref_factory(text="", **kwargs):
-    return _klassdict(saml.AuthnContextClassRef, text, **kwargs)        
-
-def authn_context_factory(text="", **kwargs):
-    return _klassdict(saml.AuthnContext, text, **kwargs)        
-
-def authn_statement_factory(text="", **kwargs):
-    return _klassdict(saml.AuthnStatement, text, **kwargs)        
-    
-def name_id_policy_factory(text="", **kwargs):
-    return _klassdict(samlp.NameIDPolicy, text, **kwargs)
-    
+def success_status_factory():
+    return args2dict(status_code=args2dict(value=samlp.STATUS_SUCCESS))
+                                
 def assertion_factory(text="", **kwargs):
     kwargs.update({
         "version": VERSION,
         "id" : sid(),
         "issue_instant" : instant(),
     })
-    return _klassdict(saml.Assertion, text, **kwargs)        
+    return args2dict(text, **kwargs)        
     
 def response_factory(signature=False, encrypt=False, **kwargs):
     kwargs.update({
@@ -415,13 +369,13 @@ def response_factory(signature=False, encrypt=False, **kwargs):
         kwargs["signature"] = sigver.pre_signature_part(kwargs["id"])
     if encrypt:
         pass
-    return _klassdict(samlp.Response, **kwargs)        
+    return args2dict(**kwargs)        
 
 def _attrval(val):
     if isinstance(val, basestring):
-        attrval = [attribute_value_factory(val)]
+        attrval = [args2dict(val)]
     elif isinstance(val, list):
-        attrval = [attribute_value_factory(v) for v in val]
+        attrval = [args2dict(v) for v in val]
     elif val == None:
         attrval = None
     else:
@@ -444,7 +398,7 @@ def ava_to_attributes(ava, bmap=None):
                 (dic["name"], dic["name_format"]) = bmap[friendly_name]
             except KeyError:
                 pass
-        attrs.append(attribute_factory(**dic))
+        attrs.append(args2dict(**dic))
     return attrs
 
 def do_ava_statement(identity, bmap):
@@ -452,8 +406,7 @@ def do_ava_statement(identity, bmap):
     :param identity: A dictionary with fiendly names as keys
     :return:
     """
-    return attribute_statement_factory(
-                    attribute=ava_to_attributes(identity, bmap))
+    return args2dict(attribute=ava_to_attributes(identity, bmap))
 
 def do_attributes(identity):
     attrs = []
@@ -480,7 +433,7 @@ def do_attributes(identity):
                 dic["name_format"] = nformat
             if friendly:
                 dic["friendly_name"] = friendly
-        attrs.append(attribute_factory(**dic))
+        attrs.append(args2dict(**dic))
     return attrs
     
 def do_attribute_statement(identity):
@@ -488,8 +441,5 @@ def do_attribute_statement(identity):
     :param identity: A dictionary with fiendly names as keys
     :return:
     """
-    return attribute_statement_factory(attribute=do_attributes(identity))
-
-def issuer_factory(text, **kwargs):
-    return _klassdict(saml.Issuer, text, **kwargs)        
+    return args2dict(attribute=do_attributes(identity))
 

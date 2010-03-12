@@ -26,7 +26,7 @@ import time
 import sys
 from saml2.time_util import str_to_time, instant
 from saml2.utils import sid, deflate_and_base64_encode, make_instance
-from saml2.utils import name_id_factory, subject_factory, do_attributes
+from saml2.utils import do_attributes, args2dict
 
 from saml2 import samlp, saml, extension_element_to_element
 from saml2 import VERSION, class_name
@@ -477,8 +477,8 @@ class Saml2Client(object):
         """
 
     
-        subject = subject_factory(
-                    name_id = name_id_factory(subject_id, format=nameformat,
+        subject = args2dict(
+                    name_id = args2dict(subject_id, format=nameformat,
                                 sp_name_qualifier=sp_name_qualifier,
                                 name_qualifier=name_qualifier),
                     )
