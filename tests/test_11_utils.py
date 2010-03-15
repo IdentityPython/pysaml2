@@ -152,7 +152,7 @@ def test_attribute_base64():
     assert inst.name == "name"
     assert len(inst.attribute_value) == 1
     av = inst.attribute_value[0]
-    assert av.type == "http://schemas.xmlsoap.org/soap/encoding/base64"
+    assert av.type == "xs:base64Binary"
     assert av.text.strip() == "U2VsbWEgTGFnZXJsw7Zm"
     
 def test_attribute_statement():

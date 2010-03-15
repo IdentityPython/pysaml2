@@ -855,7 +855,7 @@ def _decode_attribute_value(typ, text):
         return str(float(text))
     if typ == XSD + "boolean":
         return "%s" % (text == "true")
-    if typ == NS_SOAP_ENC + "base64":
+    if typ == XSD + "base64Binary":
         import base64
         return base64.decodestring(text)
     raise ValueError("type %s not supported" % type)

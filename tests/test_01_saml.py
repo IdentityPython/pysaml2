@@ -400,7 +400,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic"
 Name="FirstName">
 <AttributeValue 
-xsi:type="http://schemas.xmlsoap.org/soap/encoding/base64">VU5JTkVUVA==</AttributeValue>
+xsi:type="xs:base64Binary">VU5JTkVUVA==</AttributeValue>
 </Attribute>"""
 
 X500_AV = """<?xml version="1.0" encoding="utf-8"?>

@@ -168,7 +168,7 @@ def make_instance(klass, spec, base64encode=False):
             if base64encode:
                 import base64
                 val = base64.encodestring(val)
-                setattr(klass_inst, "type", saml.NS_SOAP_ENC + "base64")
+                setattr(klass_inst, "type", "xs:base64Binary")
             else:
                 if isinstance(val, basestring):
                     print "basestring"
