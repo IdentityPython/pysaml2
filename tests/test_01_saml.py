@@ -28,6 +28,8 @@ from saml2 import saml
 import saml2_data, ds_data
 import xmldsig as ds
 
+from py.test import raises
+
 class TestNameID:
 
     def setup_class(self):
@@ -352,7 +354,72 @@ class TestAttributeValue:
             saml2_data.TEST_ATTRIBUTE_VALUE)
         assert attribute_value.text.strip() == self.text
 
+BASIC_STR_AV = """<?xml version="1.0" encoding="utf-8"?>
+<Attribute xmlns="urn:oasis:names:tc:SAML:2.0:assertion"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic"
+Name="FirstName">
+<AttributeValue xsi:type="xs:string">By-Tor</AttributeValue>
+</Attribute>"""
 
+BASIC_INT_AV = """<?xml version="1.0" encoding="utf-8"?>
+<Attribute xmlns="urn:oasis:names:tc:SAML:2.0:assertion"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic"
+Name="age">
+<AttributeValue xsi:type="xs:int">23</AttributeValue>
+</Attribute>"""
+
+BASIC_NOT_INT_AV = """<?xml version="1.0" encoding="utf-8"?>
+<Attribute xmlns="urn:oasis:names:tc:SAML:2.0:assertion"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic"
+Name="age">
+<AttributeValue xsi:type="xs:int">foo</AttributeValue>
+</Attribute>"""
+
+BASIC_BOOLEAN_TRUE_AV = """<?xml version="1.0" encoding="utf-8"?>
+<Attribute xmlns="urn:oasis:names:tc:SAML:2.0:assertion"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic"
+Name="on-off">
+<AttributeValue xsi:type="xs:boolean">true</AttributeValue>
+</Attribute>"""
+
+BASIC_BOOLEAN_FALSE_AV = """<?xml version="1.0" encoding="utf-8"?>
+<Attribute xmlns="urn:oasis:names:tc:SAML:2.0:assertion"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic"
+Name="on-off">
+<AttributeValue xsi:type="xs:boolean">false</AttributeValue>
+</Attribute>"""
+
+BASIC_BASE64_AV = """<?xml version="1.0" encoding="utf-8"?>
+<Attribute xmlns="urn:oasis:names:tc:SAML:2.0:assertion"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic"
+Name="FirstName">
+<AttributeValue 
+xsi:type="http://schemas.xmlsoap.org/soap/encoding/base64">VU5JTkVUVA==</AttributeValue>
+</Attribute>"""
+
+X500_AV = """<?xml version="1.0" encoding="utf-8"?>
+<Attribute xmlns="urn:oasis:names:tc:SAML:2.0:assertion"
+xmlns:x500="urn:oasis:names:tc:SAML:2.0:profiles:attribute:X500"
+NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
+Name="urn:oid:2.5.4.42" FriendlyName="givenName">
+<AttributeValue xsi:type="xs:string" x500:Encoding="LDAP">Steven
+</AttributeValue>
+</Attribute>"""
+
+UUID_AV = """<?xml version="1.0" encoding="utf-8"?>
+<Attribute xmlns="urn:oasis:names:tc:SAML:2.0:assertion"
+NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
+Name="urn:uuid:6c9d0ec8-dd2d-11cc-abdd-080009353559"
+FriendlyName="pre_auth_req">
+<AttributeValue xsi:type="xs:integer">1</AttributeValue>
+</Attribute>"""
+    
 class TestAttribute:
 
     def setup_class(self):
@@ -391,6 +458,33 @@ class TestAttribute:
         assert attribute.attribute_value[0].text.strip() == self.text[1]
         assert attribute.attribute_value[1].text.strip() == self.text[2]
 
+    def test_basic_str(self):
+        attribute = saml.attribute_from_string(BASIC_STR_AV)
+        print attribute
+        assert attribute.attribute_value[0].text.strip() == "By-Tor"
+
+    def test_basic_int(self):
+        attribute = saml.attribute_from_string(BASIC_INT_AV)
+        print attribute
+        assert attribute.attribute_value[0].text == "23"
+
+    def test_basic_not_int(self):
+        raises(ValueError, "saml.attribute_from_string(BASIC_NOT_INT_AV)")
+
+    def test_basic_base64(self):
+        attribute = saml.attribute_from_string(BASIC_BASE64_AV)
+        print attribute
+        assert attribute.attribute_value[0].text == "UNINETT"
+
+    def test_basic_boolean_true(self):
+        attribute = saml.attribute_from_string(BASIC_BOOLEAN_TRUE_AV)
+        print attribute
+        assert attribute.attribute_value[0].text == "True"
+
+    def test_basic_boolean_false(self):
+        attribute = saml.attribute_from_string(BASIC_BOOLEAN_FALSE_AV)
+        print attribute
+        assert attribute.attribute_value[0].text == "False"
 
 class TestAttributeStatement:
 

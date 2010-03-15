@@ -98,7 +98,8 @@ def sid(seed=""):
         ident.update(seed)
     return ident.hexdigest()
 
-def make_vals(val, klass, klass_inst=None, prop=None, part=False):
+def make_vals(val, klass, klass_inst=None, prop=None, part=False,
+                base64encode=False):
     """
     Creates a class instance with a specified value, the specified
     class instance are a value on a property in a defined class instance.
@@ -123,9 +124,10 @@ def make_vals(val, klass, klass_inst=None, prop=None, part=False):
     elif val == None:
         cinst = klass()
     elif isinstance(val, dict):
-        cinst = make_instance(klass, val)
+        cinst = make_instance(klass, val, base64encode=base64encode)
     elif not part:
-        cis = [make_vals(sval, klass, klass_inst, prop, True) for sval in val]
+        cis = [make_vals(sval, klass, klass_inst, prop, True, 
+                        base64encode) for sval in val]
         setattr(klass_inst, prop, cis)
     else:
         raise ValueError("strange instance type: %s on %s" % (type(val), val))
@@ -137,7 +139,7 @@ def make_vals(val, klass, klass_inst=None, prop=None, part=False):
             cis = [cinst]
             setattr(klass_inst, prop, cis)
     
-def make_instance(klass, spec):
+def make_instance(klass, spec, base64encode=False):
     """
     Constructs a class instance containing the specified information
     
@@ -157,17 +159,47 @@ def make_instance(klass, spec):
                 setattr(klass_inst, prop, "%d" % spec[prop])
             else:
                 setattr(klass_inst, prop, spec[prop])
+
     if "text" in spec:
-        setattr(klass_inst, "text", spec["text"])
+        val = spec["text"]
+        print "<<", klass
+        if klass == saml.AttributeValue:
+            print ">> AVA"
+            if base64encode:
+                import base64
+                val = base64.encodestring(val)
+                setattr(klass_inst, "type", saml.NS_SOAP_ENC + "base64")
+            else:
+                if isinstance(val, basestring):
+                    print "basestring"
+                    setattr(klass_inst, "type", "xs:string")
+                    print klass_inst.__dict__
+                elif isinstance(val, bool):
+                    print "boolean", val
+                    if val:
+                        val = "true"
+                    else:
+                        val = "false"
+                    setattr(klass_inst, "type", "xs:boolean")
+                elif isinstance(val, int):
+                    val = str(val)
+                    setattr(klass_inst, "type", "xs:integer")
+                elif isinstance(val, float):
+                    val = str(val)
+                    setattr(klass_inst, "type", "xs:float")
+            
+        setattr(klass_inst, "text", val)
         
     for prop, klass in klass.c_children.values():
         #print "## %s, %s" % (prop, klass)
         if prop in spec:
             #print "%s" % spec[prop]
             if isinstance(klass, list): # means there can be a list of values
-                make_vals(spec[prop], klass[0], klass_inst, prop)
+                make_vals(spec[prop], klass[0], klass_inst, prop,
+                            base64encode=base64encode)
             else:
-                cis = make_vals(spec[prop], klass, klass_inst, prop, True)
+                cis = make_vals(spec[prop], klass, klass_inst, prop, True,
+                            base64encode)
                 setattr(klass_inst, prop, cis)
     #+print ">>> %s <<<" % klass_inst
     return klass_inst
@@ -321,7 +353,7 @@ def _properties(klass):
     
 def args2dict(text=None, **kwargs):
     spec = kwargs.copy()
-    if text:
+    if text != None:
         spec["text"] = text
     return spec
 
@@ -372,10 +404,27 @@ def response_factory(signature=False, encrypt=False, **kwargs):
     return args2dict(**kwargs)        
 
 def _attrval(val):
-    if isinstance(val, basestring):
-        attrval = [args2dict(val)]
-    elif isinstance(val, list):
+    if isinstance(val, list) or isinstance(val,set):
         attrval = [args2dict(v) for v in val]
+    elif val == None:
+        attrval = None
+    else:
+        attrval = [args2dict(val)]
+
+    return attrval
+
+# --- attribute profiles -----
+
+# xmlns:xs="http://www.w3.org/2001/XMLSchema"
+# xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+
+def _basic_val(val):
+    if isinstance(val, basestring):
+        attrval = [args2dict(val, type="xs:string")]
+    elif isinstance(val, int):
+        attrval = [args2dict(val, type="xs:integer")]
+    elif isinstance(val, list):
+        attrval = [_basic_val(v) for v in val]
     elif val == None:
         attrval = None
     else:
@@ -383,6 +432,17 @@ def _attrval(val):
 
     return attrval
 
+def basic_attribute(attribute, value):
+    """<saml:Attribute NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic" Name="cn">
+                <saml:AttributeValue xsi:type="xs:string">Andreas Solberg</saml:AttributeValue>
+            </saml:Attribute>
+    """
+    attr = {}
+    attr["name_format"] = NAME_FORMAT_BASIC
+    attr["name"] = attribute
+    
+    return attr
+    
 def ava_to_attributes(ava, bmap=None):
     attrs = []
     

@@ -107,7 +107,7 @@ def test_make_vals_list_of_strs():
 def test_exception_make_vals_value_error():
     raises(ValueError, "utils.make_vals((1024,'xyz'), md.KeySize, part=True)")
     
-def test_attribute():
+def test_attribute_sn():
     attr = utils.do_attributes({"surName":"Jeter"})
     
     assert len(attr) == 1
@@ -115,7 +115,45 @@ def test_attribute():
     print inst
     assert inst.name == "surName"
     assert len(inst.attribute_value) == 1
-    assert inst.attribute_value[0].text == "Jeter"
+    av = inst.attribute_value[0]
+    assert av.text == "Jeter"
+    assert av.type == "xs:string"
+
+def test_attribute_age():
+    attr = utils.do_attributes({"age":37})
+    
+    assert len(attr) == 1
+    inst = make_instance(saml.Attribute, attr[0])
+    print inst
+    assert inst.name == "age"
+    assert len(inst.attribute_value) == 1
+    av = inst.attribute_value[0]
+    assert av.text == "37"
+    assert av.type == "xs:integer"
+
+def test_attribute_onoff():
+    attr = utils.do_attributes({"onoff":False})
+    
+    assert len(attr) == 1
+    inst = make_instance(saml.Attribute, attr[0])
+    print inst
+    assert inst.name == "onoff"
+    assert len(inst.attribute_value) == 1
+    av = inst.attribute_value[0]
+    assert av.text == "false"
+    assert av.type == "xs:boolean"
+
+def test_attribute_base64():
+    attr = utils.do_attributes({"name":"Selma Lagerlöf"})
+    
+    assert len(attr) == 1
+    inst = make_instance(saml.Attribute, attr[0], True)
+    print inst
+    assert inst.name == "name"
+    assert len(inst.attribute_value) == 1
+    av = inst.attribute_value[0]
+    assert av.type == "http://schemas.xmlsoap.org/soap/encoding/base64"
+    assert av.text.strip() == "U2VsbWEgTGFnZXJsw7Zm"
     
 def test_attribute_statement():
     astat = do_attribute_statement({"surName":"Jeter",

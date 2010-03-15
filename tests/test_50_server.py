@@ -16,10 +16,10 @@ def _eq(l1,l2):
 
 class TestServer1():
     def setup_class(self):
-        try:
+#        try:
             self.server = Server("idp.config")
-        except IOError, e:
-            self.server = Server("tests/idp.config")
+#        except IOError, e:
+#            self.server = Server("tests/idp.config")
         
     def test_issuer(self):
         issuer = make_instance( saml.Issuer, self.server.issuer())
