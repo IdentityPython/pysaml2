@@ -33,7 +33,11 @@ import saml2
 from saml2 import SamlBase
 
 NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:assertion'
+
 XSI_NAMESPACE = 'http://www.w3.org/2001/XMLSchema-instance'
+XS_NAMESPACE = 'http://www.w3.org/2001/XMLSchema'
+
+XSI_TYPE = '{%s}type' % XSI_NAMESPACE
 
 NAMEID_FORMAT_EMAILADDRESS = (
     "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress")
@@ -838,6 +842,24 @@ def authn_statement_from_string(xml_string):
 # AttributeValue
 # ---------------------------------------------------------------------------
 
+XSD = "xs:"
+NS_SOAP_ENC = "http://schemas.xmlsoap.org/soap/encoding/"
+
+def _decode_attribute_value(typ, text):
+
+    if typ == XSD + "string":
+        return text or ""
+    if typ == XSD + "integer" or typ == XSD + "int":
+        return str(int(text))
+    if typ == XSD + "float" or typ == XSD + "double":
+        return str(float(text))
+    if typ == XSD + "boolean":
+        return "%s" % (text == "true")
+    if typ == NS_SOAP_ENC + "base64":
+        import base64
+        return base64.decodestring(text)
+    raise ValueError("type %s not supported" % type)
+
 class AttributeValue(SamlBase):
     """The saml:AttributeValue element supplies the value of a specified SAML 
     attribute."""
@@ -846,7 +868,20 @@ class AttributeValue(SamlBase):
     c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
+    c_attributes[XSI_TYPE] = 'type'
 
+    def __init__(self, type=None, text=None, extension_elements=None, 
+                    extension_attributes=None):
+        SamlBase.__init__(self, text, extension_elements, extension_attributes)
+        self.type = type
+
+    def harvest_element_tree(self, tree):
+        typ = tree.attrib.get(XSI_TYPE)
+        if (typ):
+            self.text = _decode_attribute_value(typ, tree.text)
+        else:
+            self.text = tree.text
+                        
 def attribute_value_from_string(xml_string):
     """ Create AttributeValue instance from an XML string """
     return saml2.create_class_from_xml_string(AttributeValue, xml_string)
