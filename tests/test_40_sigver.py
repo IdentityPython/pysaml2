@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from saml2 import sigver
+from saml2 import sigver, make_instance
 from saml2 import utils
 from saml2 import time_util
 from saml2 import saml
@@ -32,14 +32,14 @@ def test_non_verify_2(xmlsec):
     raises(sigver.SignatureError,sigver.correctly_signed_response,
             xml_response, xmlsec)
 
-SIGNED_VALUE= """Y88SEXrU3emeoaTgEqUKYAvDtWiLpPMx1sClw0GJV98O6A5QRvB14vNs8xnXNFFZ
-XVjksKECcqmf10k/2C3oJfaEOaM4w0DgVLXeuJU08irXfdHcoe1g3276F1If1Kh7
-63F7ihzh2ZeWV9OOO8tXofR9GCLIpPECbK+3/D4eEDY="""
+SIGNED_VALUE= """AS1kHHtA4eTOU2XLTWhLMSJQ6V+TSDymRoTF78CqjrYURNLk9wjdPjAReNn9eykv
+ryFiHNk0p9wMBknha5pH8aeCI/LmcVhLa5xteGZrtE/Udh5vv8z4kRQX51Uz/5x8
+ToiobGw83MEW6A0dRUn0O20NBMMTaFZZPXye7RvVlHY="""
 
-DIGEST_VALUE = "9cQ0c72QfbQr1KkH9MCwL5Wm1EQ="
+DIGEST_VALUE = "WFRXmImfoO3M6JOLE6BGGpU9Ud0="
 
 def test_sign(xmlsec):
-    ass = utils.make_instance(saml.Assertion, {
+    ass = make_instance(saml.Assertion, {
         "version": "2.0",
         "id": "11111",
         "issue_instant": "2009-10-30T13:20:28Z",

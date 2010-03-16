@@ -21,9 +21,9 @@ or attribute authority (AA) may use to conclude its tasks.
 
 import shelve
 
-from saml2 import saml, samlp, VERSION
+from saml2 import saml, samlp, VERSION, make_instance
 
-from saml2.utils import sid, decode_base64_and_inflate, make_instance
+from saml2.utils import sid, decode_base64_and_inflate
 from saml2.utils import response_factory, do_ava_statement
 from saml2.utils import MissingValue, args2dict
 from saml2.utils import success_status_factory, assertion_factory

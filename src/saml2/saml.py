@@ -854,7 +854,7 @@ def _decode_attribute_value(typ, text):
     if typ == XSD + "float" or typ == XSD + "double":
         return str(float(text))
     if typ == XSD + "boolean":
-        return "%s" % (text == "true")
+        return "%s" % (text == "true" or text == "True")
     if typ == XSD + "base64Binary":
         import base64
         return base64.decodestring(text)
@@ -881,7 +881,36 @@ class AttributeValue(SamlBase):
             self.text = _decode_attribute_value(typ, tree.text)
         else:
             self.text = tree.text
-                        
+                  
+    def set_text(self, val, base64encode=False):
+        print "AV.set_text(%s)" % (val,)
+        if base64encode:
+            import base64
+            val = base64.encodestring(val)
+            setattr(self, "type", "xs:base64Binary")
+        else:
+            if isinstance(val, basestring):
+                setattr(self, "type", "xs:string")
+            elif isinstance(val, bool):
+                if val:
+                    val = "true"
+                else:
+                    val = "false"
+                setattr(self, "type", "xs:boolean")
+            elif isinstance(val, int):
+                val = str(val)
+                setattr(self, "type", "xs:integer")
+            elif isinstance(val, float):
+                val = str(val)
+                setattr(self, "type", "xs:float")
+            elif val == None:
+                val = ""
+            else:
+                raise ValueError
+                
+        setattr(self, "text", val)
+        return self
+        
 def attribute_value_from_string(xml_string):
     """ Create AttributeValue instance from an XML string """
     return saml2.create_class_from_xml_string(AttributeValue, xml_string)

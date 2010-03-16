@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 from saml2.server import Server
-from saml2 import server
+from saml2 import server, make_instance
 from saml2 import samlp, saml, client, utils
-from saml2.utils import make_instance, OtherError
+from saml2.utils import OtherError
 from saml2.utils import do_attribute_statement
 from py.test import raises
 import shelve
@@ -77,12 +77,12 @@ class TestServer1():
                 assertion=utils.assertion_factory(
                     subject = utils.args2dict("_aaa",
                                         name_id=saml.NAMEID_FORMAT_TRANSIENT),
-                    attribute_statement = utils.args2dict([
+                    attribute_statement = [
                         utils.args2dict(attribute_value="Derek", 
                                                 friendly_name="givenName"),
                         utils.args2dict(attribute_value="Jeter", 
                                                 friendly_name="surName"),
-                    ]),
+                    ],
                     issuer=self.server.issuer(),
                 ),
                 issuer=self.server.issuer(),
@@ -132,7 +132,7 @@ class TestServer1():
             status = None
         except OtherError, oe:
             print oe.args
-            status = utils.make_instance(samlp.Status,
+            status = make_instance(samlp.Status,
                             utils.status_from_exception_factory(oe))
             
         assert status
@@ -188,6 +188,18 @@ class TestServer1():
         assert len(assertion.authn_statement) == 1
         assert assertion.conditions
         assert len(assertion.attribute_statement) == 1
+        attribute_statement = assertion.attribute_statement[0]
+        print attribute_statement
+        #<ns0:AttributeStatement xmlns:ns0="urn:oasis:names:tc:SAML:2.0:assertion"><ns0:Attribute FriendlyName="eduPersonEntitlement" Name="urn:oid:1.3.6.1.4.1.5923.1.1.1.7" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"><ns0:AttributeValue ns1:type="xs:string" xmlns:ns1="http://www.w3.org/2001/XMLSchema-instance">Bat</ns0:AttributeValue></ns0:Attribute></ns0:AttributeStatement>
+        assert len(attribute_statement.attribute) == 1
+        attribute = attribute_statement.attribute[0]
+        assert len(attribute.attribute_value) == 1
+        assert attribute.friendly_name == "eduPersonEntitlement"
+        assert attribute.name == "urn:oid:1.3.6.1.4.1.5923.1.1.1.7"
+        assert attribute.name_format == "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
+        value = attribute.attribute_value[0]
+        assert value.text.strip() == "Bat"
+        assert value.type == "xs:string"
         assert assertion.subject
         assert assertion.subject.name_id
         assert len(assertion.subject.subject_confirmation) == 1
@@ -340,7 +352,7 @@ class TestServer1():
         resp_str = self.server.authn_response(ava, 
                     "1", "http://local:8087/", 
                     "urn:mace:example.com:saml:roland:sp",
-                    utils.make_instance(samlp.NameIDPolicy,
+                    make_instance(samlp.NameIDPolicy,
                                 utils.args2dict(
                                         format=saml.NAMEID_FORMAT_TRANSIENT,
                                         allow_create="true")),

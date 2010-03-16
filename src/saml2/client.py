@@ -18,6 +18,7 @@
 """Contains classes and functions that a SAML2.0 Service Provider (SP) may use
 to conclude its tasks.
 """
+
 import os
 import urllib
 import saml2
@@ -25,11 +26,11 @@ import base64
 import time
 import sys
 from saml2.time_util import str_to_time, instant
-from saml2.utils import sid, deflate_and_base64_encode, make_instance
+from saml2.utils import sid, deflate_and_base64_encode
 from saml2.utils import do_attributes, args2dict
 
 from saml2 import samlp, saml, extension_element_to_element
-from saml2 import VERSION, class_name
+from saml2 import VERSION, class_name, make_instance
 from saml2.sigver import correctly_signed_response, decrypt
 from saml2.sigver import pre_signature_part, sign_assertion_using_xmlsec
 from saml2.sigver import sign_statement_using_xmlsec

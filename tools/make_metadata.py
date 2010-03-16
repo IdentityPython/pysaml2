@@ -2,7 +2,7 @@
 import os 
 import getopt
 from saml2 import utils, md, samlp, BINDING_HTTP_POST, BINDING_HTTP_REDIRECT
-from saml2 import BINDING_SOAP, class_name
+from saml2 import BINDING_SOAP, class_name, make_instance
 from saml2.time_util import in_a_while
 from saml2.utils import parse_attribute_map
 from saml2.saml import NAME_FORMAT_URI
@@ -213,7 +213,7 @@ def entities_descriptor(eds, valid_for, name, id, sign, xmlsec, keyfile):
     if sign:
             d["signature"] = pre_signature_part(d["id"])
 
-    statement = utils.make_instance(md.EntitiesDescriptor, d)
+    statement = make_instance(md.EntitiesDescriptor, d)
     if sign:
             statement = sign_statement_using_xmlsec("%s" % statement, 
                                     class_name(statement),

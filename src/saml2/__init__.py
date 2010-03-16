@@ -323,6 +323,60 @@ class ExtensionContainer(object):
 
         return results
     
+def make_vals(val, klass, klass_inst=None, prop=None, part=False,
+                base64encode=False):
+    """
+    Creates a class instance with a specified value, the specified
+    class instance may be a value on a property in a defined class instance.
+    
+    :param val: The value
+    :param klass: The value class
+    :param klass_inst: The class instance which has a property on which 
+        what this function returns is a value.
+    :param prop: The property which the value should be assigned to.
+    :param part: If the value is one of a possible list of values it should be
+        handled slightly different compared to if it isn't.
+    :return: Value class instance
+    """
+    cinst = None
+
+    print "make_vals(%s, %s)" % (val, klass)
+    
+    if isinstance(val, dict):
+        print "+"
+        cinst = klass().loadd(val, base64encode=base64encode)
+    else:
+        print "++"
+        try:
+            cinst = klass().set_text(val)
+        except ValueError, excp:
+            print "!! %s" % (excp,)
+            if not part:
+                cis = [make_vals(sval, klass, klass_inst, prop, True, 
+                        base64encode) for sval in val]
+                setattr(klass_inst, prop, cis)
+            else:
+                raise
+        
+    print "CINST: %s, part: %s" % (cinst,part)
+    
+    if part:
+        return cinst
+    else:        
+        if cinst:            
+            cis = [cinst]
+            setattr(klass_inst, prop, cis)
+    
+def make_instance(klass, spec, base64encode=False):
+    """
+    Constructs a class instance containing the specified information
+    
+    :param klass: The class
+    :param spec: Information to be placed in the instance (a dictionary)
+    :return: The instance
+    """
+
+    return klass().loadd(spec, base64encode)
 
 class SamlBase(ExtensionContainer):
     """A foundation class on which SAML classes are built. It 
@@ -461,6 +515,54 @@ class SamlBase(ExtensionContainer):
             else:
                 childs.append(member)
         return childs
+        
+    def set_text(self, val, base64encode=False):
+        """ """
+        print "set_text: %s" % (val,)
+        if isinstance(val, bool):
+            if val:
+                setattr(self, "text", "true")
+            else:
+                setattr(self, "text", "false")
+        elif isinstance(val, int):
+            setattr(self, "text", "%d" % val)
+        elif isinstance(val, basestring):
+            setattr(self, "text", val)
+        elif val == None:
+            pass
+        else:
+            raise ValueError( "Type it shouldn't be '%s'" % (val,))
+        
+        return self
+        
+    def loadd(self, ava, base64encode=False):
+        """ """
+        for prop in self.c_attributes.values():
+            print "# %s" % (prop)
+            if prop in ava:
+                if isinstance(ava[prop], bool):
+                    setattr(self, prop, "%s" % ava[prop])
+                elif isinstance(ava[prop], int):
+                    setattr(self, prop, "%d" % ava[prop])
+                else:
+                    setattr(self, prop, ava[prop])
+
+        if "text" in ava:
+            self.set_text(ava["text"], base64encode)
+            
+        for prop, klassdef in self.c_children.values():
+            print "## %s, %s" % (prop, klassdef)
+            if prop in ava:
+                print "### %s" % ava[prop]
+                if isinstance(klassdef, list): # means there can be a list of values
+                    make_vals(ava[prop], klassdef[0], self, prop,
+                                base64encode=base64encode)
+                else:
+                    cis = make_vals(ava[prop], klassdef, self, prop, True,
+                                base64encode)
+                    setattr(self, prop, cis)
+
+        return self
         
 def extension_element_to_element(extension_element, translation_function,
                                     namespace=None):

@@ -3,7 +3,7 @@
 
 from saml2.client import Saml2Client
 from saml2 import samlp, client, BINDING_HTTP_POST
-from saml2 import saml, utils, config, class_name
+from saml2 import saml, utils, config, class_name, make_instance
 from saml2.sigver import correctly_signed_authn_request, verify_signature
 from saml2.sigver import correctly_signed_response
 from saml2.server import Server
@@ -206,7 +206,7 @@ class TestClient:
         assert req == None
                 
     def test_idp_entry(self):
-        idp_entry = utils.make_instance( samlp.IDPEntry,
+        idp_entry = make_instance( samlp.IDPEntry,
                             self.client.idp_entry(name="Umeå Universitet",
                             location="https://idp.umu.se/"))
         
@@ -214,7 +214,7 @@ class TestClient:
         assert idp_entry.loc == "https://idp.umu.se/"
         
     def test_scope(self):
-        scope = utils.make_instance(samlp.Scoping, self.client.scoping(
+        scope = make_instance(samlp.Scoping, self.client.scoping(
                                 [self.client.idp_entry(name="Umeå Universitet",
                                     location="https://idp.umu.se/")]))
         

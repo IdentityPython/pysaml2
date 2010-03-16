@@ -5,8 +5,8 @@ import zlib
 import base64
 import gzip
 
-from saml2 import utils, saml, samlp, md
-from saml2.utils import do_attribute_statement, make_instance
+from saml2 import utils, saml, samlp, md, make_instance
+from saml2.utils import do_attribute_statement
 from saml2.sigver import make_temp
 from saml2.config import do_assertions
 from saml2.saml import Attribute, NAME_FORMAT_URI, AttributeValue
@@ -78,39 +78,11 @@ def test_status_from_exception():
     print status_text
     assert status_text == ERROR_STATUS
     
-def test_make_vals_str():
-    kl = utils.make_vals("Jeter",md.GivenName, part=True)
-    assert isinstance(kl, md.GivenName)
-    assert kl.text == "Jeter"
-
-def test_make_vals_int():
-    kl = utils.make_vals(1024,md.KeySize, part=True)
-    assert isinstance(kl, md.KeySize)
-    assert kl.text == "1024"
-
-def test_exception_make_vals_int_not_part():
-    raises(TypeError, "utils.make_vals(1024,md.KeySize)")
-    raises(TypeError, "utils.make_vals(1024,md.KeySize,md.EncryptionMethod())")
-    raises(AttributeError, "utils.make_vals(1024,md.KeySize,prop='key_size')")
-    
-def test_make_vals_list_of_ints():
-    em = md.EncryptionMethod()
-    utils.make_vals([1024,2048], md.KeySize, em, "key_size")
-    assert len(em.key_size) == 2    
-
-def test_make_vals_list_of_strs():
-    cp = md.ContactPerson()
-    utils.make_vals(["Derek","Sanderson"], md.GivenName, cp, "given_name")
-    assert len(cp.given_name) == 2
-    assert _eq([i.text for i in cp.given_name],["Sanderson","Derek"])
-
-def test_exception_make_vals_value_error():
-    raises(ValueError, "utils.make_vals((1024,'xyz'), md.KeySize, part=True)")
-    
 def test_attribute_sn():
     attr = utils.do_attributes({"surName":"Jeter"})
     
     assert len(attr) == 1
+    print attr
     inst = make_instance(saml.Attribute, attr[0])
     print inst
     assert inst.name == "surName"
