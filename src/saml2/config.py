@@ -129,7 +129,7 @@ class Config(dict):
             config["am_backward"] = None
         
         if "sp" in config["service"]:
-            print config["service"]["sp"]
+            #print config["service"]["sp"]
             if "metadata" in config:
                 self.sp_check(config["service"]["sp"], config["metadata"])
             else:

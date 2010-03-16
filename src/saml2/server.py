@@ -147,9 +147,10 @@ class Server(object):
 
         if consumer_url != return_destination:
             # serious error on someones behalf
-            self.log and self.log.info("%s != %s" % (consumer_url,
-                            return_destination))
-            print "%s != %s" % (consumer_url, return_destination)
+            if self.log:
+                self.log.info("%s != %s" % (consumer_url, return_destination))
+            else:
+                print "%s != %s" % (consumer_url, return_destination)
             raise OtherError("ConsumerURL and return destination mismatch")
         
         response["consumer_url"] = consumer_url
@@ -236,7 +237,7 @@ class Server(object):
             restrictions = None
                                 
         if restrictions:
-            print restrictions
+            #print restrictions
             ava = filter_attribute_value_assertions(ava, restrictions)
 
         if required or optional:
@@ -375,8 +376,8 @@ class Server(object):
         if sign:
             assertion["signature"] = pre_signature_part(assertion["id"])
             
-        print name_id
-        print conds
+        #print name_id
+        #print conds
         self.cache.set(name_id["text"], sp_entity_id, assertion, 
                             conds["not_on_or_after"])
             

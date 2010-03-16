@@ -240,7 +240,7 @@ class MetaData(object):
                 self.import_metadata(content)
                 return True
         else:
-            print "Response status", response.status
+            self.log and self.log.info("Response status: %s" % response.status)
         return False
 
 

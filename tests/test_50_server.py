@@ -190,7 +190,6 @@ class TestServer1():
         assert len(assertion.attribute_statement) == 1
         attribute_statement = assertion.attribute_statement[0]
         print attribute_statement
-        #<ns0:AttributeStatement xmlns:ns0="urn:oasis:names:tc:SAML:2.0:assertion"><ns0:Attribute FriendlyName="eduPersonEntitlement" Name="urn:oid:1.3.6.1.4.1.5923.1.1.1.7" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"><ns0:AttributeValue ns1:type="xs:string" xmlns:ns1="http://www.w3.org/2001/XMLSchema-instance">Bat</ns0:AttributeValue></ns0:Attribute></ns0:AttributeStatement>
         assert len(attribute_statement.attribute) == 1
         attribute = attribute_statement.attribute[0]
         assert len(attribute.attribute_value) == 1

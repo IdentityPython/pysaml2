@@ -340,26 +340,21 @@ def make_vals(val, klass, klass_inst=None, prop=None, part=False,
     """
     cinst = None
 
-    print "make_vals(%s, %s)" % (val, klass)
+    #print "make_vals(%s, %s)" % (val, klass)
     
     if isinstance(val, dict):
-        print "+"
         cinst = klass().loadd(val, base64encode=base64encode)
     else:
-        print "++"
         try:
             cinst = klass().set_text(val)
         except ValueError, excp:
-            print "!! %s" % (excp,)
             if not part:
                 cis = [make_vals(sval, klass, klass_inst, prop, True, 
                         base64encode) for sval in val]
                 setattr(klass_inst, prop, cis)
             else:
                 raise
-        
-    print "CINST: %s, part: %s" % (cinst,part)
-    
+            
     if part:
         return cinst
     else:        
@@ -518,7 +513,7 @@ class SamlBase(ExtensionContainer):
         
     def set_text(self, val, base64encode=False):
         """ """
-        print "set_text: %s" % (val,)
+        #print "set_text: %s" % (val,)
         if isinstance(val, bool):
             if val:
                 setattr(self, "text", "true")
@@ -538,7 +533,7 @@ class SamlBase(ExtensionContainer):
     def loadd(self, ava, base64encode=False):
         """ """
         for prop in self.c_attributes.values():
-            print "# %s" % (prop)
+            #print "# %s" % (prop)
             if prop in ava:
                 if isinstance(ava[prop], bool):
                     setattr(self, prop, "%s" % ava[prop])
@@ -551,9 +546,9 @@ class SamlBase(ExtensionContainer):
             self.set_text(ava["text"], base64encode)
             
         for prop, klassdef in self.c_children.values():
-            print "## %s, %s" % (prop, klassdef)
+            #print "## %s, %s" % (prop, klassdef)
             if prop in ava:
-                print "### %s" % ava[prop]
+                #print "### %s" % ava[prop]
                 if isinstance(klassdef, list): # means there can be a list of values
                     make_vals(ava[prop], klassdef[0], self, prop,
                                 base64encode=base64encode)
