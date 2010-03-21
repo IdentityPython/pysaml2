@@ -168,7 +168,14 @@ def verify_signature(xmlsec_binary, enctext, cert_file,
                 node_name, fil]
 
     if _TEST_: 
-        print " ".join(com_list)
+        try:
+            print " ".join(com_list)
+        except TypeError:
+            print "cert_type", cert_type
+            print "cert_file", cert_file
+            print "node_name", node_name
+            print "fil", fil
+            raise
         print "%s: %s" % (cert_file, os.access(cert_file, os.F_OK))
         print "%s: %s" % (fil, os.access(fil, os.F_OK))
 

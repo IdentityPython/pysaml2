@@ -90,16 +90,19 @@ class Config(dict):
         if "assertions" in config:
             config["assertions"] = do_assertions(config["assertions"])
         
-    def load_metadata(self, metadata_conf):
+    def load_metadata(self, metadata_conf, xmlsec_binary):
         """ Loads metadata into an internal structure """
-        metad = metadata.MetaData()
+        metad = metadata.MetaData(xmlsec_binary)
         if "local" in metadata_conf:
             for mdfile in metadata_conf["local"]:
-                metad.import_metadata(open(mdfile).read(), 
-                                        "local:%s" % mdfile)
+                metad.import_metadata(open(mdfile).read(), mdfile)
         if "remote" in metadata_conf:
-            for _, val in metadata_conf["remote"].items():
-                metad.import_external_metadata(val["url"], val["cert"])
+            for spec in metadata_conf["remote"]:
+                try:
+                    cert = spec["cert"]
+                except KeyError:
+                    cert = None
+                metad.import_external_metadata(spec["url"], cert)
         return metad
                 
     def load_file(self, config_file):
@@ -119,7 +122,8 @@ class Config(dict):
             config["key_file"] = None
             
         if "metadata" in config:
-            config["metadata"] = self.load_metadata(config["metadata"])
+            config["metadata"] = self.load_metadata(config["metadata"],
+                                                    config["xmlsec_binary"])
             
         if "attribute_maps" in config:
             (forward, backward) = utils.parse_attribute_map(config[

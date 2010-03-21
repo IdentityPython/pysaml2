@@ -196,10 +196,12 @@ class MetaData(object):
         for source, eids in self._import.items():
             if entity_id in eids:
                 self.clear_from_source(source)
-                if source.startswith("local:"):
-                    f = open(source[6:])
+                if isinstance(source, basestring):
+                    f = open(source)
                     self.import_metadata( f.read(), source)
                     f.close()
+                else:                    
+                    self.import_external_metadata(source[0],source[1])
     
     def import_metadata(self, xml_str, source):
         """ Import information; organization distinguish name, location and
@@ -267,7 +269,7 @@ class MetaData(object):
             if verify_signature(self.xmlsec_binary, content, cert, "pem",
                     "%s:%s" % (md.EntitiesDescriptor.c_namespace,
                             md.EntitiesDescriptor.c_tag)):
-                self.import_metadata(content, url)
+                self.import_metadata(content, (url,cert))
                 return True
         else:
             self.log and self.log.info("Response status: %s" % response.status)
