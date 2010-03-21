@@ -883,7 +883,7 @@ class AttributeValue(SamlBase):
             self.text = tree.text
                   
     def set_text(self, val, base64encode=False):
-        print "AV.set_text(%s)" % (val,)
+        #print "AV.set_text(%s)" % (val,)
         if base64encode:
             import base64
             val = base64.encodestring(val)
