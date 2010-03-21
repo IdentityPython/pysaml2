@@ -55,10 +55,11 @@ class SAML2Plugin(FormPluginBase):
     implements(IChallenger, IIdentifier, IAuthenticator, IMetadataProvider)
     
     def __init__(self, rememberer_name, saml_conf_file, virtual_organization,
-                cache, debug):
+                wayf, cache, debug):
         FormPluginBase.__init__(self)
         self.rememberer_name = rememberer_name
         self.debug = debug        
+        self.wayf = wayf
         
         self.conf = Config()
         self.conf.load_file(saml_conf_file)
@@ -127,7 +128,17 @@ class SAML2Plugin(FormPluginBase):
         elif len( self.srv["idp"] ) == 0:
             HTTPInternalServerError(detail='Misconfiguration')
         else:
-            HTTPNotImplemented(detail='WAYF not implemented yet!')
+            if self.wayf:
+                wayf_selected = environ.get('s2repose.wayf_selected','')
+                if not wayf_selected:
+                    logger.info("env, keys: %s" % (environ.keys()))
+                    return HTTPTemporaryRedirect(headers = [('Location', 
+                                                            self.wayf)])
+                else:
+                    logger.info("Choosen IdP: '%s'" % wayf_selected)
+                    idp_url = self.srv["idp"][wayf_selected]
+            else:
+                HTTPNotImplemented(detail='No WAYF present!')
             
         (sid, result) = scl.authenticate(self.conf["entityid"], 
                                         idp_url, 
@@ -328,6 +339,7 @@ def make_plugin(rememberer_name=None, # plugin for remember
                  # Which virtual organization to support
                  virtual_organization="", 
                  saml_conf="",
+                 wayf="",
                  debug=0,
                  ):
     
@@ -340,7 +352,7 @@ def make_plugin(rememberer_name=None, # plugin for remember
              'must include rememberer_name in configuration')
 
     plugin = SAML2Plugin(rememberer_name, saml_conf, 
-                virtual_organization, cache, debug)
+                virtual_organization, wayf, cache, debug)
     return plugin
 
 # came_from = re.sub(r'ticket=[^&]*&?', '', came_from)
