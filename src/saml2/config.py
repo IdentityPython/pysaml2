@@ -62,6 +62,7 @@ class Config(dict):
         if metadata:
             if "idp" not in config or len(config["idp"]) == 0:
                 eids = [e for e, d in metadata.entity.items() if "idp_sso" in d]
+                config["idp"] = {}
                 for eid in eids:
                     try:
                         config["idp"][eid] = entity_id2url(metadata, eid)
@@ -94,7 +95,8 @@ class Config(dict):
         metad = metadata.MetaData()
         if "local" in metadata_conf:
             for mdfile in metadata_conf["local"]:
-                metad.import_metadata(open(mdfile).read())
+                metad.import_metadata(open(mdfile).read(), 
+                                        "local:%s" % mdfile)
         if "remote" in metadata_conf:
             for _, val in metadata_conf["remote"].items():
                 metad.import_external_metadata(val["url"], val["cert"])
