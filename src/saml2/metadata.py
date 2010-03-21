@@ -21,12 +21,21 @@ Contains classes and functions to alleviate the handling of SAML metadata
 
 import httplib2
 import sys        
+from decorator import decorator
 
 from saml2 import md, BINDING_HTTP_POST
 from saml2 import samlp, BINDING_HTTP_REDIRECT, BINDING_SOAP
 #from saml2.time_util import str_to_time
 from saml2.sigver import make_temp, cert_from_key_info, verify_signature
 from saml2.time_util import valid
+
+@decorator
+def keep_updated(f, self, entity_id, *args, **kwargs):
+    #print "In keep_updated"
+    if not valid(self.entity[entity_id]["valid_until"]):
+        self.reload_entity(entity_id)
+
+    return f(self, entity_id, *args, **kwargs)
 
 class MetaData(object):
     """ A class to manage metadata information """
@@ -40,6 +49,7 @@ class MetaData(object):
         self.log = log
         self.xmlsec_binary = xmlsec_binary
         self.http = httplib2.Http()
+        self._import = {}
 
     def _vo_metadata(self, entity_descriptor, entity, tag):
         """
@@ -178,7 +188,20 @@ class MetaData(object):
         if aads != []:            
             entity[tag] = aads
             
-    def import_metadata(self, xml_str):
+    def clear_from_source(self, source):
+        for eid in self._import[source]:
+            del self.entity[eid]
+    
+    def reload_entity(self, entity_id):
+        for source, eids in self._import.items():
+            if entity_id in eids:
+                self.clear_from_source(source)
+                if source.startswith("local:"):
+                    f = open(source[6:])
+                    self.import_metadata( f.read(), source)
+                    f.close()
+    
+    def import_metadata(self, xml_str, source):
         """ Import information; organization distinguish name, location and
         certificates from a metadata file.
     
@@ -208,7 +231,14 @@ class MetaData(object):
                     continue
             except AttributeError:
                 pass
+                
+            try:
+                self._import[source].append(entity_descriptor.entity_id)
+            except KeyError:
+                self._import[source] = [entity_descriptor.entity_id]
+            
             entity = self.entity[entity_descriptor.entity_id] = {}
+            entity["valid_until"] = entities_descriptor.valid_until
             self._idp_metadata(entity_descriptor, entity, "idp_sso")
             self._sp_metadata(entity_descriptor, entity, "sp_sso")
             self._aad_metadata(entity_descriptor, entity, 
@@ -237,13 +267,14 @@ class MetaData(object):
             if verify_signature(self.xmlsec_binary, content, cert, "pem",
                     "%s:%s" % (md.EntitiesDescriptor.c_namespace,
                             md.EntitiesDescriptor.c_tag)):
-                self.import_metadata(content)
+                self.import_metadata(content, url)
                 return True
         else:
             self.log and self.log.info("Response status: %s" % response.status)
         return False
 
 
+    @keep_updated
     def single_sign_on_services(self, entity_id, 
                                 binding = BINDING_HTTP_REDIRECT):
         """ Get me all single-sign-on services that supports the specified
@@ -268,6 +299,7 @@ class MetaData(object):
                     loc.append(sso.location)
         return loc
         
+    @keep_updated
     def attribute_services(self, entity_id):
         try:
             return self.entity[entity_id]["attribute_authority"]
@@ -295,12 +327,14 @@ class MetaData(object):
         except KeyError:
             return []
     
+    @keep_updated
     def vo_members(self, entity_id):
         try:
             return self.entity[entity_id]["affiliation"]
         except KeyError:
             return []
         
+    @keep_updated
     def consumer_url(self, entity_id, binding=BINDING_HTTP_POST, _log=None):
         try:
             ssos = self.entity[entity_id]["sp_sso"]
@@ -320,7 +354,8 @@ class MetaData(object):
         
         return None
         
-    def name(self, entityid):
+    @keep_updated
+    def name(self, entity_id):
         """ Find a name from the metadata about this entity id.
         The name is either the display name, the name or the url
         ,in that order, for the organization.
@@ -329,7 +364,7 @@ class MetaData(object):
         :return: A name 
         """
         try:
-            org = self.entity[entityid]["organization"]
+            org = self.entity[entity_id]["organization"]
             try:
                 names = org.organization_display_name
             except KeyError:
@@ -347,6 +382,7 @@ class MetaData(object):
             
         return name
 
+    @keep_updated
     def attribute_consumer(self, entity_id):
         try:
             ssos = self.entity[entity_id]["sp_sso"]
@@ -365,3 +401,41 @@ class MetaData(object):
     
         return (required, optional)
         
+    def _orgname(self, org, lang="en"):
+        if not org:
+            return ""
+        for ll in [lang,None]:
+            for name in org.organization_display_name:
+                if name.lang == ll:
+                    return name.text.strip()
+            for name in org.organization_name:
+                if name.lang == ll:
+                    return name.text.strip()
+            for name in org.organization_url:
+                if name.lang == ll:
+                    return name.text.strip()
+        return ""
+        
+    def _location(self, idpsso):
+        loc = []
+        for idp in idpsso:
+            for sso in idp.single_sign_on_service:
+                loc.append(sso.location)
+                
+        return loc
+        
+    @keep_updated
+    def _valid(self, entity_id):
+        return True
+        
+    def idps(self):
+        idps = {}
+        for entity_id, edict in self.entity.items():
+            if "idp_sso" in edict:
+                self._valid(entity_id)
+                if "organization" in edict:
+                    name = self._orgname(edict["organization"],"en")
+                if not name:
+                    name = self._location(edict["idp_sso"])[0]
+                idps[entity_id] = (name, edict["idp_sso"])
+        return idps
