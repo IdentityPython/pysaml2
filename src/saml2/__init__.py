@@ -562,10 +562,16 @@ class SamlBase(ExtensionContainer):
 def extension_element_to_element(extension_element, translation_function,
                                     namespace=None):
     """ """
-    element_namespace = extension_element.namespace
+    try:
+        element_namespace = extension_element.namespace
+    except AttributeError:
+        element_namespace = extension_element.c_namespace
     if element_namespace == namespace:
         try:
-            ets = translation_function[extension_element.tag]
+            try:
+                ets = translation_function[extension_element.tag]
+            except AttributeError:
+                ets = translation_function[extension_element.c_tag]
             return ets(extension_element.to_string())
         except KeyError:
             pass
