@@ -161,8 +161,8 @@ def test_6():
     assert dr.uri == "#invoice34"
     assert len(dr.extension_elements) == 1
     ee = dr.extension_elements[0]
-    assert ee.tag == "Transforms"
-    assert ee.namespace == "http://www.w3.org/2000/09/xmldsig#"
+    assert ee.c_tag == "Transforms"
+    assert ee.c_namespace == "http://www.w3.org/2000/09/xmldsig#"
     trs = saml2.extension_element_to_element(ee, xmldsig.ELEMENT_FROM_STRING,
                                         namespace=xmldsig.NAMESPACE)
     
