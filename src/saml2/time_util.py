@@ -96,7 +96,7 @@ def parse_duration(duration):
     index = 1
     dic = {}
     for code, typ in D_FORMAT:
-        print duration[index:], code        
+        #print duration[index:], code        
         if code == "T":
             if duration[index] == "T":
                 index += 1
