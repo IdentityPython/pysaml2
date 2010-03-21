@@ -1687,3 +1687,4 @@ ELEMENT_FROM_STRING = {
     EntityDescriptor.c_tag: entity_descriptor_from_string,
     EntitiesDescriptor.c_tag: entities_descriptor_from_string,
 }
+
