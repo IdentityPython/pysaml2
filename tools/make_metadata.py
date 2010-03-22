@@ -4,7 +4,7 @@ import getopt
 from saml2 import utils, md, samlp, BINDING_HTTP_POST, BINDING_HTTP_REDIRECT
 from saml2 import BINDING_SOAP, class_name, make_instance
 from saml2.time_util import in_a_while
-from saml2.utils import parse_attribute_map
+from saml2.utils import parse_attribute_map, args2dict
 from saml2.saml import NAME_FORMAT_URI
 from saml2.sigver import pre_signature_part, sign_statement_using_xmlsec
 
@@ -43,33 +43,43 @@ PERSON_ATTR_TRANSL = {
     "sur_name": "surname",
     "email_address": "mail",
     "telephone_number": "phone",
+    "type": "type",
 }
 
 def do_organization_info(conf, desc):
+    """ """
     try:
         corg =  conf["organization"]                
         dorg = desc["organization"] = {}
         
         for (dkey, ckey) in ORG_ATTR_TRANSL.items():
             try:
-                dorg[dkey] = corg[ckey]
+                dorg[dkey] = []
+                for val in corg[ckey]:
+                    if isinstance(val,tuple):
+                        if val[1]:
+                            dorg[dkey].append(args2dict(val[0],lang=val[1]))
+                        else:
+                            dorg[dkey].append(val[0])
+                    else:
+                        dorg[dkey].append(val)
             except KeyError:
+                del dorg[dkey]
                 pass
     except KeyError:
         pass
 
 def do_contact_person_info(conf, desc):
-    try:
-        corg =  conf["contact_person"]                
-        dorg = desc["contact_person"] = {}
-        
-        for (dkey, ckey) in PERSON_ATTR_TRANSL.items():
-            try:
-                dorg[dkey] = corg[ckey]
-            except:
-                pass
-    except KeyError:
-        pass
+    if "contact_person" in desc:
+        desc["contact_person"] = []
+        for corg in conf["contact_person"]:
+            dorg = {}            
+            for (dkey, ckey) in PERSON_ATTR_TRANSL.items():
+                try:
+                    dorg[dkey] = corg[ckey]
+                except:
+                    pass
+            desc["contact_person"].append(dorg)
         
 def do_sp_sso_descriptor(sp, cert, backward_map):
     desc = {
