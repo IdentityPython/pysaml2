@@ -34,7 +34,19 @@ like this::
 
     user_info = environ["repoze.who.identity"]["user"]
 
+If a WAYF is going to be used, then the pattern is the following:
 
+unauthenticated user + no IdP selected
+    In this case, if there is a WAYF page specified in the 
+    SP part of the repoze.who configuration file, 
+    the user is redirected to that page. If no page is known an exception
+    is raised.
+    
+unauthenticated user + selected IdP
+    This is after the WAYF has been used, the entity ID of the selected IdP
+    is expected to be in the environment variable *s2repose.wayf_selected*.
+    If so the user is redirected to that IdP.
+    
 The set up
 ----------
 
@@ -66,6 +78,9 @@ cache
     remember information received from IdPs and AAs. If a file name
     is given that file will be used for persistent storage of the cache.
     
+wayf
+    The webpage where the WAYF service is situated.
+    
 An example::
 
     [plugin:saml2sp]
@@ -75,10 +90,11 @@ An example::
     virtual_organization=urn:mace:umu.se:vo:it-enheten:cms
     debug = 1
     cache = /tmp/sp.cache
+    wayf = wayf.html
 
 Once you have configured the plugin you have to tell the server to use the
 plugin in different ingress and egress operations as specified in
-`Middleware responsibilities <http://docs.repoze.org/who/narr.html>`_ ::
+`Middleware responsibilities <http://docs.repoze.org/who/narr.html>`_
 
 A typical SP configuration would be to use it in all aspects::
 
@@ -95,3 +111,17 @@ A typical SP configuration would be to use it in all aspects::
 
     [mdproviders]
     plugins = saml2sp
+
+Other information
+-----------------
+
+The SP keeps tabs on all outstanding authentication requests it has. 
+This is kept in the local variable *outstanding_authn*.
+Presently if an authentication reponse is received that does not match an
+outstanding request the reponse is ignored. This is going to change in the
+future.
+
+The format of *outstanding_auth* is a dictionary with the session IDs as
+keys and which URL that was accessed that triggered the SP to send the
+request.
+

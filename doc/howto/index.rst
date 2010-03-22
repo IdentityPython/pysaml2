@@ -7,7 +7,7 @@ How to use PySAML2
 :Date: |today|
 
 Before you can use Pysaml2, you'll need to get it installed. 
-If you have done it yet, read the :ref:`install`
+If you have not done it yet, read the :ref:`install`
 
 Well, now you have it installed and you want to do something.
 

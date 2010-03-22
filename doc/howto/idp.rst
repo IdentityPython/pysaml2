@@ -7,7 +7,7 @@ To make an SAML2 identity provider is a bit tricker than doing a service
 provider, mainly because you have to divide the functionality between
 the application and the plugins. 
 Now, to do that you have to understand how repoze.who works.
-Basically on every request; the ingress plugins first gets to do there stuff,
+Basically on every request; the ingress plugins first gets to do their stuff,
 then the application and finally the egress plugins.
 
 So in broad terms this is what happens:
@@ -45,8 +45,8 @@ So in broad terms this is what happens:
         environment variable ('s2repoze.qinfo').
         If the login and password was correct a cookie is issued. If there is
         a mdprovider plugin defined it will now add extra information about 
-        the individual. After this the control is passed on to the 
-        application.
+        the individual from some external source. 
+        After this the control is passed on to the application.
     
     2.2 The function that is bound to the path of the IdP now gets to act. 
         This is just the main outline:
