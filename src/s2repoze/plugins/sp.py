@@ -64,7 +64,8 @@ class SAML2Plugin(FormPluginBase):
         self.conf = Config()
         self.conf.load_file(saml_conf_file)
         self.srv = self.conf["service"]["sp"]
-
+        self.log = None
+        
         if virtual_organization:
             self.vorg = virtual_organization
             self.vorg_conf = None
@@ -97,31 +98,12 @@ class SAML2Plugin(FormPluginBase):
                         session_info["not_on_or_after"])
         return name_id
         
-    #### IChallenger ####
-    def challenge(self, environ, _status, _app_headers, _forget_headers):
-
-        # this challenge consist in loggin out
-        if environ.has_key('rwpc.logout'): 
-            # TODO
-            pass
-
-        logger = environ.get('repoze.who.logger','')
-        # ELSE, perform a real challenge => asking for loggin
-        # here by redirecting the user to a IdP.
-
-        scl = Saml2Client(environ, self.conf)
-        came_from = construct_came_from(environ)
-        if self.debug:
-            logger and logger.info("RelayState >> %s" % came_from)
+    def _pick_idp(self):
+        """ 
+        If more than one idp and if none is selected, I have to do wayf
+        """
         
-        try:
-            vorg = environ["myapp.vo"]
-        except KeyError:
-            vorg = self.vorg
-        logger and logger.info("VO: %s" % vorg)
-
-        # If more than one idp, I have to do wayf
-        logger and logger.info("IdP URL: %s" % self.srv["idp"].values())
+        self.log and self.log.info("IdP URL: %s" % self.srv["idp"].values())
         if len( self.srv["idp"] ) == 1:
             # Keys are entity_ids and values are urls
             idp_url = self.srv["idp"].values()[0]
@@ -131,45 +113,64 @@ class SAML2Plugin(FormPluginBase):
             if self.wayf:
                 wayf_selected = environ.get('s2repose.wayf_selected','')
                 if not wayf_selected:
-                    logger.info("env, keys: %s" % (environ.keys()))
+                    #self.log.info("env, keys: %s" % (environ.keys()))
                     return HTTPTemporaryRedirect(headers = [('Location', 
                                                             self.wayf)])
                 else:
-                    logger.info("Choosen IdP: '%s'" % wayf_selected)
+                    self.log.info("Choosen IdP: '%s'" % wayf_selected)
                     idp_url = self.srv["idp"][wayf_selected]
             else:
                 HTTPNotImplemented(detail='No WAYF present!')
+
+        return idp_url
+        
+    #### IChallenger ####
+    def challenge(self, environ, _status, _app_headers, _forget_headers):
+
+        # this challenge consist in loggin out
+        if environ.has_key('rwpc.logout'): 
+            # TODO
+            pass
+
+        self.log = environ.get('repoze.who.logger','')
+
+        # Which page was accessed to get here
+        came_from = construct_came_from(environ)
+        if self.debug:
+            self.log and self.log.info("RelayState >> %s" % came_from)
+        
+        # Am I part of a virtual organization ?
+        try:
+            vorg = environ["myapp.vo"]
+        except KeyError:
+            vorg = self.vorg
+        self.log and self.log.info("VO: %s" % vorg)
+
+        # If more than one idp and if none is selected, I have to do wayf
+        idp_url = self._pick_idp()
             
+        # Do the AuthnRequest
+        scl = Saml2Client(environ, self.conf)        
         (sid, result) = scl.authenticate(self.conf["entityid"], 
                                         idp_url, 
                                         self.srv["url"], 
                                         self.srv["name"], 
                                         relay_state=came_from, 
-                                        log=logger,
+                                        log=self.log,
                                         vorg=vorg)
+        
+        # remember the request
         self.outstanding_authn[sid] = came_from
             
         if self.debug:
-            logger and logger.info('sc returned: %s' % (result,))
+            self.log and self.log.info('sc returned: %s' % (result,))
         if isinstance(result, tuple):
             return HTTPTemporaryRedirect(headers=[result])
         else :
             HTTPInternalServerError(detail='Incorrect returned data')
 
-    #### IIdentifier ####
-    def identify(self, environ):
-        logger = environ.get('repoze.who.logger','')
-        
-        uri = environ.get('REQUEST_URI', construct_url(environ))
-        if self.debug:
-            #logger and logger.info("environ.keys(): %s" % environ.keys())
-            #logger and logger.info("Environment: %s" % environ)
-            logger and logger.info('identify uri: %s' % (uri,))
-
-        query = parse_dict_querystring(environ)
-        if self.debug:
-            logger and logger.info('identify query: %s' % (query,))
-        
+    def _get_post(self):
+        """ Get the posted information """
         post_env = environ.copy()
         post_env['QUERY_STRING'] = ''
         
@@ -190,8 +191,37 @@ class SAML2Plugin(FormPluginBase):
         )
 
         if self.debug:
-            logger and logger.info('identify post: %s' % (post,))
+            self.log and self.log.info('identify post: %s' % (post,))
+            
+        return post
+    
+    def _construct_identity(self, name_id, session_info):
+        identity = {}
+        identity["login"] = name_id
+        identity["password"] = ""
+        identity['repoze.who.userid'] = name_id
+        identity["user"] = session_info["ava"]
+        if self.debug:
+            self.log and self.log.info("Identity: %s" % identity)
+        return identity
+        
+    #### IIdentifier ####
+    def identify(self, environ):
+        self.log = environ.get('repoze.who.logger','')
+        
+        uri = environ.get('REQUEST_URI', construct_url(environ))
+        if self.debug:
+            #self.log and self.log.info("environ.keys(): %s" % environ.keys())
+            #self.log and self.log.info("Environment: %s" % environ)
+            self.log and self.log.info('identify uri: %s' % (uri,))
 
+        query = parse_dict_querystring(environ)
+        if self.debug:
+            self.log and self.log.info('identify query: %s' % (query,))
+        
+        post = self._get_post()
+        
+        # Not for me, put the post back where next in line can find it
         try:
             if not post.has_key("SAMLResponse"):
                 environ["post.fieldstorage"] = post
@@ -200,23 +230,24 @@ class SAML2Plugin(FormPluginBase):
             environ["post.fieldstorage"] = post
             return {}
             
-        # check for SAML2 authN
+        # check for SAML2 authN response
         scl = Saml2Client(environ, self.conf)
         try:
-            session_info = scl.response(post, 
-                                            self.conf["entityid"], 
-                                            self.outstanding_authn,
-                                            logger)
+            # Evaluate the response
+            session_info = scl.response(post, self.conf["entityid"], 
+                                        self.outstanding_authn,
+                                        self.log)
+            # Cache it
             name_id = self._cache_session(session_info)
             if self.debug:
-                logger and logger.info("stored %s with key %s" % (
+                self.log and self.log.info("stored %s with key %s" % (
                                         session_info, name_id))
         except TypeError:
             return None
                                         
         if session_info["came_from"]:
             if self.debug:
-                logger and logger.info(
+                self.log and self.log.info(
                             "came_from << %s" % session_info["came_from"])
             try:
                 path, query = session_info["came_from"].split('?')
@@ -225,32 +256,78 @@ class SAML2Plugin(FormPluginBase):
             except ValueError:
                 environ["PATH_INFO"] = session_info["came_from"]
         
-        identity = {}
-        identity["login"] = name_id
-        identity["password"] = ""
-        identity['repoze.who.userid'] = name_id
-        identity["user"] = session_info["ava"]
         environ["s2repoze.sessioninfo"] = session_info
-        if self.debug:
-            logger and logger.info("Identity: %s" % identity)
-        return identity
 
+        # contruct and return the identity
+        return self._construct_identity(name_id, session_info)
+
+    def _vo_members_to_ask(self, subject_id):
+        # Find the member of the Virtual Organization that I haven't 
+        # alrady spoken too 
+        vo_members = [
+            member for member in self.metadata.vo_members(self.vorg)\
+                if member not in self.srv["idp"].keys()]
+            
+        self.log and self.log.info("VO members: %s" % vo_members)
+
+        # Remove the ones I have cached data from about this subject
+        vo_members = [m for m in vo_members \
+                        if not self.cache.active(subject_id, m)]                        
+        self.log and self.log.info(
+                        "VO members (not cached): %s" % vo_members)
+        return vo_members
+        
+    def _do_vo_aggregation(self, subject_id):
+        
+        if self.log:
+            self.log.info("** Do VO aggregation **")
+            self.log.info("SubjectID: %s, VO:%s" % (subject_id, self.vorg))
+        
+        vo_members = self._vo_members_to_ask(subject_id)
+        
+        if vo_members:
+            # Find the NameIDFormat and the SPNameQualifier
+            if self.vorg_conf and "name_id_format" in self.vorg_conf:
+                name_id_format = self.vorg_conf["name_id_format"]
+                sp_name_qualifier = ""
+            else:
+                sp_name_qualifier = self.vorg
+                name_id_format = ""
+            
+            resolver = AttributeResolver(environ, self.metadata, self.conf)
+            # extends returns a list of session_infos      
+            for session_info in resolver.extend(subject_id, 
+                                    self.conf["entityid"], vo_members, 
+                                    name_id_format=name_id_format,
+                                    sp_name_qualifier=sp_name_qualifier, 
+                                    log=self.log):
+                _ignore = self._cache_session(session_info)
+
+            self.log.info(
+                ">Issuers: %s" % self.cache.entities(subject_id))
+            self.log.info(
+                "AVA: %s" % (self.cache.get_identity(subject_id),))
+            
+            return True
+        else:
+            return False
+                    
     # IMetadataProvider
     def add_metadata(self, environ, identity):
+        """ Add information to the knowledge I have about the user """
         subject_id = identity['repoze.who.userid']
 
-        if self.debug:
-            logger = environ.get('repoze.who.logger','')
-            if logger:
-                logger.info(
-                    "add_metadata for %s" % subject_id)
-                logger.info(
-                    "Known subjects: %s" % self.cache.subjects())
-                try:
-                    logger.info(
-                        "Issuers: %s" % self.cache.entities(subject_id))
-                except KeyError:
-                    pass
+        self.log = environ.get('repoze.who.logger','')
+        if self.debug and self.log:
+            self.log.info(
+                "add_metadata for %s" % subject_id)
+            self.log.info(
+                "Known subjects: %s" % self.cache.subjects())
+            try:
+                self.log.info(
+                    "Issuers: %s" % self.cache.entities(subject_id))
+            except KeyError:
+                pass
             
         if "user" not in identity:
             identity["user"] = {}
@@ -258,7 +335,7 @@ class SAML2Plugin(FormPluginBase):
             (ava, _) = self.cache.get_identity(subject_id)
             #now = time.gmtime()        
             if self.debug:
-                logger and logger.info("Adding %s" % ava)
+                self.log and self.log.info("Adding %s" % ava)
             identity["user"].update(ava)
         except KeyError:
             pass
@@ -266,57 +343,13 @@ class SAML2Plugin(FormPluginBase):
         if "pysaml2_vo_expanded" not in identity:
             # is this a Virtual Organization situation
             if self.vorg:
-                logger and logger.info("** Do VO aggregation **")
-                #try:
-                    # This ought to be caseignore 
-                    #subject_id = identity["user"][
-                    #                    self.vorg_conf["common_identifier"]][0]
-                #except KeyError:
-                #    logger and logger.error("** No common identifier **")
-                #    return
-                logger and logger.info(
-                    "SubjectID: %s, VO:%s" % (subject_id, self.vorg))
-                
-                vo_members = [
-                    member for member in self.metadata.vo_members(self.vorg)\
-                        if member not in self.srv["idp"].keys()]
-                    
-                logger and logger.info("VO members: %s" % vo_members)
-                vo_members = [m for m in vo_members \
-                                if not self.cache.active(subject_id, m)]
-                logger and logger.info(
-                                "VO members (not cached): %s" % vo_members)
-
-                if vo_members:
-                    resolver = AttributeResolver(environ, self.metadata, self.conf)
-                
-                    if self.vorg_conf and "name_id_format" in self.vorg_conf:
-                        name_id_format = self.vorg_conf["name_id_format"]
-                        sp_name_qualifier = ""
-                    else:
-                        sp_name_qualifier = self.vorg
-                        name_id_format = ""
-                    
-                    extra = resolver.extend(subject_id, 
-                                self.conf["entityid"], 
-                                vo_members, 
-                                name_id_format=name_id_format,
-                                sp_name_qualifier=sp_name_qualifier,
-                                log=logger)
-
-                    for session_info in extra:
-                        _ignore = self._cache_session(session_info)
-
-                    logger.info(
-                        ">Issuers: %s" % self.cache.entities(subject_id))
-                    logger.info(
-                        "AVA: %s" % (self.cache.get_identity(subject_id),))
+                if self._do_vo_aggregation(subject_id):
+                    # Get the extended identity
                     identity["user"] = self.cache.get_identity(subject_id)[0]
-                    # Only do this once
+                    # Only do this once, mark that the identity has been 
+                    # expanded
                     identity["pysaml2_vo_expanded"] = 1
-                    #self.store[identity['repoze.who.userid']] = (
-                    #                        not_on_or_after, identity)
-        
+
 # @return
 # used 2 times : one to get the ticket, the other to validate it
     def _serviceURL(self, environ, qstr=None):
