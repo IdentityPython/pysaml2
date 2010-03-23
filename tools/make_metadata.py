@@ -46,33 +46,40 @@ PERSON_ATTR_TRANSL = {
     "type": "type",
 }
 
+def _localized_name(tup):
+    if tup[1]:
+        return args2dict(tup[0],lang=tup[1])
+    else:
+        return tup[0]
+
 def do_organization_info(conf, desc):
     """ """
     try:
-        corg =  conf["organization"]                
+        corg = conf["organization"]                
         dorg = desc["organization"] = {}
         
         for (dkey, ckey) in ORG_ATTR_TRANSL.items():
-            try:
+            if ckey not in corg:
+                continue
+            if isinstance(corg[ckey], basestring):
+                dorg[dkey] = [corg[ckey]]
+            elif isinstance(corg[ckey], tuple):
+                dorg[dkey] = [_localized_name(corg[ckey])]
+            else:
                 dorg[dkey] = []
                 for val in corg[ckey]:
                     if isinstance(val,tuple):
-                        if val[1]:
-                            dorg[dkey].append(args2dict(val[0],lang=val[1]))
-                        else:
-                            dorg[dkey].append(val[0])
+                        dorg[dkey].append(_localized_name(val))
                     else:
                         dorg[dkey].append(val)
-            except KeyError:
-                del dorg[dkey]
-                pass
     except KeyError:
         pass
 
 def do_contact_person_info(conf, desc):
-    if "contact_person" in desc:
+    if "contact_person" in conf:
         desc["contact_person"] = []
         for corg in conf["contact_person"]:
+            print corg
             dorg = {}            
             for (dkey, ckey) in PERSON_ATTR_TRANSL.items():
                 try:
