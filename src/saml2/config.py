@@ -3,6 +3,8 @@
 # 
 
 from saml2 import metadata, utils
+from saml2.assertion import Policy
+from saml2.attribute_converter import ac_factory, AttributeConverter
 import re
 
 class MissingValue(Exception):
@@ -18,41 +20,6 @@ def entity_id2url(meta, entity_id):
     :return: An endpoint (URL)
     """
     return meta.single_sign_on_services(entity_id)[0]
-
-def do_assertions(assertions):
-    """ This is only for IdPs or AAs, and it's about limiting what
-    is returned to the SP. 
-    In the configuration file, restrictions on which values that 
-    can be returned are specified with the help of regular expressions.
-    This function goes through and pre-compile the regular expressions.
-    
-    :param assertions:
-    :return: The assertion with the string specification replaced with
-        a compiled regular expression.
-    """
-    for _, spec in assertions.items():
-        if spec == None:
-            continue
-            
-        try:
-            restr = spec["attribute_restrictions"]
-        except KeyError:
-            continue
-            
-        if restr == None:
-            continue
-            
-        for key, values in restr.items():
-            if not values:
-                spec["attribute_restrictions"][key] = None
-                continue
-                
-            rev = []
-            for value in values:
-                rev.append(re.compile(value))
-            spec["attribute_restrictions"][key] = rev
-    
-    return assertions
     
 class Config(dict):
     def sp_check(self, config, metadata=None):
@@ -80,16 +47,14 @@ class Config(dict):
         assert "url" in config
         assert "name" in config
             
-    def idp_check(self, config):
+    def idp_aa_check(self, config):
         assert "url" in config
         if "assertions" in config:
-            config["assertions"] = do_assertions(config["assertions"])
-        
-    def aa_check(self, config):
-        assert "url" in config
-        if "assertions" in config:
-            config["assertions"] = do_assertions(config["assertions"])
-        
+            config["policy"] = Policy(config["assertions"])
+            del config["assertions"]
+        elif "policy" in config:
+            config["policy"] = Policy(config["policy"])
+                
     def load_metadata(self, metadata_conf, xmlsec_binary):
         """ Loads metadata into an internal structure """
         metad = metadata.MetaData(xmlsec_binary)
@@ -125,14 +90,11 @@ class Config(dict):
             config["metadata"] = self.load_metadata(config["metadata"],
                                                     config["xmlsec_binary"])
             
-        if "attribute_maps" in config:
-            (forward, backward) = utils.parse_attribute_map(config[
-                                                            "attribute_maps"])
-            config["am_forward"] = forward
-            config["am_backward"] = backward
+        if "attribute_map_dir" in config:
+            config["attrconverters"] = ac_factory(
+                                                config["attribute_map_dir"])
         else:
-            config["am_forward"] = None
-            config["am_backward"] = None
+            config["attrconverters"] = [AttributeConverter()]
         
         if "sp" in config["service"]:
             #print config["service"]["sp"]
@@ -141,11 +103,38 @@ class Config(dict):
             else:
                 self.sp_check(config["service"]["sp"])
         if "idp" in config["service"]:
-            self.idp_check(config["service"]["idp"])
+            self.idp_aa_check(config["service"]["idp"])
         if "aa" in config["service"]:
-            self.aa_check(config["service"]["aa"])
+            self.idp_aa_check(config["service"]["aa"])
                             
         for key, val in config.items():
             self[key] = val
         
         return self
+    
+    def services(self):
+        return self["service"].keys()
+        
+    def idp_policy(self):
+        try:
+            return self["service"]["idp"]["policy"]
+        except KeyError:
+            return Policy()
+        
+    def aa_policy(self):
+        try:
+            return self["service"]["aa"]["policy"]
+        except KeyError:
+            return Policy()
+            
+    def aa_url(self):
+        return self["service"]["aa"]["url"]
+
+    def idp_url(self):
+        return self["service"]["idp"]["url"]
+        
+    def vo_conf(self, name):
+        return self.conf["vitual_organization"][name]
+
+    def attribute_converters(self):
+        return self["attrconverters"]

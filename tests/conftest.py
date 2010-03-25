@@ -7,3 +7,23 @@ def pytest_funcarg__xmlsec(request):
             return fil
 
     raise Exception("Can't find xmlsec1")
+    
+def pytest_funcarg__AVA(request):
+    return [
+        {
+            "surName": ["Jeter"],
+            "givenName": ["Derek"],
+        },
+        {
+            "surName": ["Howard"],
+            "givenName": ["Ryan"],
+        },
+        {
+            "surName": ["Suzuki"],
+            "givenName": ["Ischiro"],
+        },
+        {
+            "surName": ["Hedberg"],
+            "givenName": ["Roland"],
+        },
+    ]    

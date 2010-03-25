@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from saml2.server import Server
+from saml2.server import Server, IdentifierMap
 from saml2 import server, make_instance
 from saml2 import samlp, saml, client, utils
 from saml2.utils import OtherError
@@ -13,6 +13,14 @@ import re
 def _eq(l1,l2):
     return set(l1) == set(l2)
 
+def test_persistence_0():
+    id = IdentifierMap("subject_data.db")
+    
+    pid1 = id.persistent("urn:mace:example.com:saml:roland:sp", "jeter")
+    pid2 = id.persistent("urn:mace:example.com:saml:roland:sp", "jeter")
+
+    print pid1, pid2
+    assert pid1 == pid2
 
 class TestServer1():
     def setup_class(self):
@@ -171,7 +179,7 @@ class TestServer1():
                     "http://localhost:8087/",   # consumer_url
                     "12",                       # in_response_to
                     "urn:mace:example.com:saml:roland:sp", # sp_entity_id
-                    { "eduPersonEntitlement": "Bat"}
+                    { "eduPersonEntitlement": "Short stop"}
                 )
                 
         print resp.keyswv()
@@ -197,7 +205,7 @@ class TestServer1():
         assert attribute.name == "urn:oid:1.3.6.1.4.1.5923.1.1.1.7"
         assert attribute.name_format == "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
         value = attribute.attribute_value[0]
-        assert value.text.strip() == "Bat"
+        assert value.text.strip() == "Short stop"
         assert value.type == "xs:string"
         assert assertion.subject
         assert assertion.subject.name_id
@@ -244,107 +252,7 @@ class TestServer1():
         assert resp.issuer.text == "urn:mace:example.com:saml:roland:idp"
         assert not resp.assertion 
 
-    def test_persistence_0(self):
-        pid1 = self.server.persistent_id(
-                    "urn:mace:example.com:saml:roland:sp", "jeter")
-
-        pid2 = self.server.persistent_id(
-                    "urn:mace:example.com:saml:roland:sp", "jeter")
-
-        print pid1, pid2
-        assert pid1 == pid2
-
-    def test_filter_ava_0(self):
-        ava = { "givenName": ["Derek"], "surName": ["Jeter"], 
-                "mail": ["derek@nyy.mlb.com"]}
-        
-        # No restrictions apply
-        ava = self.server.filter_ava(ava, 
-                                    "urn:mace:example.com:saml:roland:sp",
-                                    [], [])
-                                    
-        assert _eq(ava.keys(), ["givenName", "surName", "mail"])
-        assert ava["givenName"] == ["Derek"]
-        assert ava["surName"] == ["Jeter"]
-        assert ava["mail"] == ["derek@nyy.mlb.com"]
-        
-        
-    def test_filter_ava_1(self):
-        """ No mail address returned """
-        self.server.conf["service"]["idp"]["assertions"][
-                            "urn:mace:example.com:saml:roland:sp"] = {
-                    "lifetime": {"minutes": 5},
-                    "attribute_restrictions":{
-                        "givenName": None,
-                        "surName": None,
-                    }
-                }
-
-        print self.server.conf["service"]["idp"]["assertions"]
-        
-        ava = { "givenName": ["Derek"], "surName": ["Jeter"], 
-                "mail": ["derek@nyy.mlb.com"]}
-        
-        # No restrictions apply
-        ava = self.server.filter_ava(ava, 
-                                    "urn:mace:example.com:saml:roland:sp",
-                                    [], [])
-                                    
-        assert _eq(ava.keys(), ["givenName", "surName"])
-        assert ava["givenName"] == ["Derek"]
-        assert ava["surName"] == ["Jeter"]
-
-    def test_filter_ava_2(self):
-        """ Only mail returned """
-        self.server.conf["service"]["idp"]["assertions"][
-                            "urn:mace:example.com:saml:roland:sp"] = {
-                    "lifetime": {"minutes": 5},
-                    "attribute_restrictions":{
-                        "mail": None,
-                    }
-                }
-
-        print self.server.conf["service"]["idp"]["assertions"]
-        
-        ava = { "givenName": ["Derek"], "surName": ["Jeter"], 
-                "mail": ["derek@nyy.mlb.com"]}
-        
-        # No restrictions apply
-        ava = self.server.filter_ava(ava, 
-                                    "urn:mace:example.com:saml:roland:sp",
-                                    [], [])
-                                    
-        assert _eq(ava.keys(), ["mail"])
-        assert ava["mail"] == ["derek@nyy.mlb.com"]
-
-    def test_filter_ava_3(self):
-        """ Only example.com mail addresses returned """
-        self.server.conf["service"]["idp"]["assertions"][
-                            "urn:mace:example.com:saml:roland:sp"] = {
-                    "lifetime": {"minutes": 5},
-                    "attribute_restrictions":{
-                        "mail": [re.compile(".*@example\.com$")],
-                    }
-                }
-
-        print self.server.conf["service"]["idp"]["assertions"]
-        
-        ava = { "givenName": ["Derek"], "surName": ["Jeter"], 
-                "mail": ["derek@nyy.mlb.com", "dj@example.com"]}
-        
-        # No restrictions apply
-        ava = self.server.filter_ava(ava, 
-                                    "urn:mace:example.com:saml:roland:sp",
-                                    [], [])
-                                    
-        assert _eq(ava.keys(), ["mail"])
-        assert ava["mail"] == ["dj@example.com"]
-
     def test_authn_response_0(self):
-        # reset 
-        del self.server.conf["service"]["idp"]["assertions"][
-                            "urn:mace:example.com:saml:roland:sp"]
-
         ava = { "givenName": ["Derek"], "surName": ["Jeter"], 
                 "mail": ["derek@nyy.mlb.com"]}
 
@@ -384,25 +292,11 @@ class TestServer2():
             self.server = Server("restrictive_idp.config")
         except IOError, e:
             self.server = Server("tests/restrictive_idp.config")
-            
-    
-    def test_0(self):
                 
-        ident = self.server.restrict_ava(IDENTITY.copy(), 
-                                        "urn:mace:example.com:saml:roland:sp")
-        assert len(ident) == 3
-        assert ident == {'eduPersonAffiliation': ['staff'], 
-                        'givenName': ['Derek'], 'surName': ['Jeter']}
-                        
-        print self.server.conf.keys()
-        attr = utils.ava_to_attributes(ident, self.server.conf["am_backward"])
-        assert len(attr) == 3
-        assert {'attribute_value': [{'text': 'staff'}], 
-                'friendly_name': 'eduPersonAffiliation', 
-                'name': 'urn:oid:1.3.6.1.4.1.5923.1.1.1.1', 
-                'name_format': 'urn:oasis:names:tc:SAML:2.0:attrname-format:uri'} in attr
-
     def test_do_aa_reponse(self):
+        aa_policy = self.server.conf.aa_policy()
+        print aa_policy.__dict__
+        print self.server.conf["service"]
         response = self.server.do_aa_response( "http://example.com/sp/", "aaa",
                         "urn:mace:example.com:sp:1", IDENTITY.copy(), 
                         issuer = self.server.conf["entityid"])

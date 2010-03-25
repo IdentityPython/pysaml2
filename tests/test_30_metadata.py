@@ -33,7 +33,7 @@ def _read_lines(name):
         
 def test_swami_1():
     md = metadata.MetaData()
-    md.import_metadata(_read_file(SWAMI_METADATA))
+    md.import_metadata(_read_file(SWAMI_METADATA),"-")
     print len(md.entity)
     assert len(md.entity)
     idps = dict([(id,ent["idp_sso"]) for id,ent in md.entity.items() \
@@ -52,7 +52,7 @@ def test_swami_1():
     
 def test_incommon_1():
     md = metadata.MetaData()
-    md.import_metadata(_read_file(INCOMMON_METADATA))
+    md.import_metadata(_read_file(INCOMMON_METADATA),"-")
     print len(md.entity)
     assert len(md.entity) == 442
     idps = dict([
@@ -67,7 +67,7 @@ def test_incommon_1():
 
 def test_example():
     md = metadata.MetaData()
-    md.import_metadata(_read_file(EXAMPLE_METADATA))
+    md.import_metadata(_read_file(EXAMPLE_METADATA), "-")
     print len(md.entity)
     assert len(md.entity) == 1
     idps = dict([(id,ent["idp_sso"]) for id,ent in md.entity.items() \
@@ -82,7 +82,7 @@ def test_example():
         
 def test_switch_1():
     md = metadata.MetaData()
-    md.import_metadata(_read_file(SWITCH_METADATA))
+    md.import_metadata(_read_file(SWITCH_METADATA), "-")
     print len(md.entity)
     assert len(md.entity) == 90
     idps = dict([(id,ent["idp_sso"]) for id,ent in md.entity.items() \
@@ -110,13 +110,13 @@ def test_switch_1():
 
 def test_sp_metadata():
     md = metadata.MetaData()
-    md.import_metadata(_read_file(SP_METADATA))
+    md.import_metadata(_read_file(SP_METADATA), "-")
     
     print md.entity
     assert len(md.entity) == 1
     assert md.entity.keys() == ['urn:mace:umu.se:saml:roland:sp']
     assert md.entity['urn:mace:umu.se:saml:roland:sp'].keys() == [
-                                                    "organization","sp_sso"]
+                                    'valid_until',"organization","sp_sso"]
     print md.entity['urn:mace:umu.se:saml:roland:sp']["sp_sso"][0].keyswv()
     (req,opt) = md.attribute_consumer('urn:mace:umu.se:saml:roland:sp')
     print req

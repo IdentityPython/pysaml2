@@ -156,17 +156,9 @@ def test_idp():
     c = Config().load(IDP1)
     
     print c
-    service = c["service"]
-    
-    assert service.keys() == ["idp"]
-    idp = service["idp"] 
-    assert _eq(idp.keys(),['url', 'name', 'assertions'])
-    
-    assert idp["url"] == "http://localhost:8088/"
+    assert c.services() == ["idp"]
+    assert c.idp_url() == "http://localhost:8088/"
 
-    default_attribute_restrictions = idp["assertions"]["default"][
-                                            "attribute_restrictions"]
-    
-    assert default_attribute_restrictions[
-                    "eduPersonAffiliation"][0].match("staff")
+    attribute_restrictions = c.idp_policy().get_attribute_restriction("")
+    assert attribute_restrictions["eduPersonAffiliation"][0].match("staff")
     

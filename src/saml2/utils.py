@@ -26,6 +26,7 @@ class OtherError(Exception):
 
 class MissingValue(Exception):
     pass
+
     
 EXCEPTION2STATUS = {
     VersionMismatch: samlp.STATUS_VERSION_MISMATCH,
@@ -117,36 +118,6 @@ def parse_attribute_map(filenames):
             backward[friendly_name] = (name, name_format)
         
     return (forward, backward)
-
-def filter_attribute_value_assertions(ava, attribute_restrictions=None):
-    """ Will weed out attribute values and values according to the 
-    rules defined in the attribute restrictions. If filtering results in 
-    an attribute without values, then the attribute is removed from the
-    assertion.
-    
-    :param ava: The incoming attribute value assertion
-    :param attribute_restrictions: The rules that govern which attributes
-        and values that are allowed.
-    :return: A attribute value assertion
-    """
-    if not attribute_restrictions:
-        return ava
-        
-    resava = {}
-    for attr, vals in ava.items():
-        if attr in attribute_restrictions:
-            if attribute_restrictions[attr] == None:
-                resava[attr] = vals
-            else:    
-                rvals = []
-                for restr in attribute_restrictions[attr]:
-                    for val in vals:
-                        if restr.match(val):
-                            rvals.append(val)
-                
-                if rvals:
-                    resava[attr] = list(set(rvals))
-    return resava
     
 def identity_attribute(form, attribute, forward_map=None):
     if form == "friendly":
@@ -158,85 +129,7 @@ def identity_attribute(form, attribute, forward_map=None):
             except KeyError:
                 return attribute.name
     # default is name
-    return attribute.name
-
-def _filter_values(vals, required=None, optional=None):
-    """ Removes values from *val* that does not appear in *attributes*.
-    
-    :param val: The values that are to be filtered
-    :param required: The required values
-    :param optional: The optional values
-    :return: The set of values after filtering
-    """
-
-    if not required and not optional:
-        return vals
-        
-    valr = []
-    valo = []
-    if required:
-        rvals = [v.text for v in required]
-    else:
-        rvals = []
-    if optional:
-        ovals = [v.text for v in optional]
-    else:
-        ovals = []
-    for val in vals:
-        if val in rvals:
-            valr.append(val)
-        elif val in ovals:
-            valo.append(val)
-
-    valo.extend(valr)
-    if rvals:
-        if len(rvals) == len(valr):
-            return valo
-        else:
-            raise MissingValue("Required attribute value missing")
-    else:
-        return valo
-    
-def _combine(required=None, optional=None):
-    res = {}
-    if not required:
-        required = []
-    if not optional:
-        optional = []
-    for attr in required:
-        part = None
-        for oat in optional:
-            if attr.name == oat.name:
-                part = (attr.attribute_value, oat.attribute_value)
-                break
-        if part:
-            res[(attr.name, attr.friendly_name)] = part
-        else:
-            res[(attr.name, attr.friendly_name)] = (attr.attribute_value, [])
-
-    for oat in optional:
-        tag = (oat.name, oat.friendly_name)
-        if tag not in res:
-            res[tag] = ([], oat.attribute_value)
-            
-    return res
-    
-def filter_on_attributes(ava, required=None, optional=None):
-    """ Filter
-    :param required: list of RequestedAttribute instances
-    """
-    res = {}
-    comb = _combine(required, optional)
-    for attr, vals in comb.items():
-        if attr[0] in ava:
-            res[attr[0]] = _filter_values(ava[attr[0]], vals[0], vals[1])
-        elif attr[1] in ava:
-            res[attr[1]] = _filter_values(ava[attr[1]], vals[0], vals[1])
-        else:
-            raise MissingValue("Required attribute missing")
-    
-    return res
-    
+    return attribute.name        
 
 #----------------------------------------------------------------------------
 
@@ -325,43 +218,7 @@ def _basic_val(val):
         raise OtherError("strange value type on: %s" % val)
 
     return attrval
-
-def basic_attribute(attribute, value):
-    """<saml:Attribute NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic" Name="cn">
-                <saml:AttributeValue xsi:type="xs:string">Andreas Solberg</saml:AttributeValue>
-            </saml:Attribute>
-    """
-    attr = {}
-    attr["name_format"] = NAME_FORMAT_BASIC
-    attr["name"] = attribute
     
-    return attr
-    
-def ava_to_attributes(ava, bmap=None):
-    attrs = []
-    
-    for friendly_name, val in ava.items():
-        dic = {}
-        attrval = _attrval(val)
-        if attrval:
-            dic["attribute_value"] = attrval
-        
-        dic["friendly_name"] = friendly_name
-        if bmap:
-            try:
-                (dic["name"], dic["name_format"]) = bmap[friendly_name]
-            except KeyError:
-                pass
-        attrs.append(args2dict(**dic))
-    return attrs
-
-def do_ava_statement(identity, bmap):
-    """
-    :param identity: A dictionary with fiendly names as keys
-    :return:
-    """
-    return args2dict(attribute=ava_to_attributes(identity, bmap))
-
 def do_attributes(identity):
     attrs = []
     if not identity:

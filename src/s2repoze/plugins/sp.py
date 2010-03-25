@@ -98,7 +98,7 @@ class SAML2Plugin(FormPluginBase):
                         session_info["not_on_or_after"])
         return name_id
         
-    def _pick_idp(self):
+    def _pick_idp(self, environ):
         """ 
         If more than one idp and if none is selected, I have to do wayf
         """
@@ -147,7 +147,7 @@ class SAML2Plugin(FormPluginBase):
         self.log and self.log.info("VO: %s" % vorg)
 
         # If more than one idp and if none is selected, I have to do wayf
-        idp_url = self._pick_idp()
+        idp_url = self._pick_idp(environ)
             
         # Do the AuthnRequest
         scl = Saml2Client(environ, self.conf)        
@@ -169,7 +169,7 @@ class SAML2Plugin(FormPluginBase):
         else :
             HTTPInternalServerError(detail='Incorrect returned data')
 
-    def _get_post(self):
+    def _get_post(self, environ):
         """ Get the posted information """
         post_env = environ.copy()
         post_env['QUERY_STRING'] = ''
@@ -219,7 +219,7 @@ class SAML2Plugin(FormPluginBase):
         if self.debug:
             self.log and self.log.info('identify query: %s' % (query,))
         
-        post = self._get_post()
+        post = self._get_post(environ)
         
         # Not for me, put the post back where next in line can find it
         try:

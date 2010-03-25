@@ -24,54 +24,29 @@ import shelve
 from saml2 import saml, samlp, VERSION, make_instance
 
 from saml2.utils import sid, decode_base64_and_inflate
-from saml2.utils import response_factory, do_ava_statement
+from saml2.utils import response_factory
 from saml2.utils import MissingValue, args2dict
 from saml2.utils import success_status_factory, assertion_factory
-from saml2.utils import filter_attribute_value_assertions
 from saml2.utils import OtherError, do_attribute_statement
 from saml2.utils import VersionMismatch, UnknownPrincipal, UnsupportedBinding
-from saml2.utils import filter_on_attributes, status_from_exception_factory
+from saml2.utils import status_from_exception_factory
 
 from saml2.sigver import correctly_signed_authn_request
 from saml2.sigver import pre_signature_part
 from saml2.time_util import instant, in_a_while
 from saml2.config import Config
-from saml2.cache import Cache    
+from saml2.cache import Cache 
+from saml2.assertion import Assertion, Policy   
 
-
-class Server(object):
-    """ A class that does things that IdPs or AAs do """
-    def __init__(self, config_file="", config=None, cache="",
-                    log=None, debug=0):
-        if config_file:
-            self.load_config(config_file)
-        elif config:
-            self.conf = config
-        
-        self.metadata = self.conf["metadata"]
-        if cache:
-            self.cache = Cache(cache)
-        else:
-            self.cache = Cache()
-        self.log = log
+class IdentifierMap(object):
+    def __init__(self, dbname, debug=0, log=None):
+        self.map = shelve.open(dbname,writeback=True)
         self.debug = debug
-        
-    def load_config(self, config_file):
-        self.conf = Config()
-        self.conf.load_file(config_file)
-        if "subject_data" in self.conf:
-            self.id_map = shelve.open(self.conf["subject_data"],
-                                        writeback=True)
-        else:
-            self.id_map = None
+        self.log = log
     
-    def issuer(self):
-        return args2dict( self.conf["entityid"], 
-                        format=saml.NAMEID_FORMAT_ENTITY)
-        
-    def persistent_id(self, entity_id, subject_id):
+    def persistent(self, entity_id, subject_id):
         """ Keeps the link between a permanent identifier and a 
-        temporary/pseudotemporary identifier for a subject
+        temporary/pseudo-temporary identifier for a subject
         
         :param entity_id: SP entity ID or VO entity ID
         :param subject_id: The local identifier of the subject
@@ -79,12 +54,12 @@ class Server(object):
             entity_id
         """
         if self.debug:
-            self.log and self.log.debug("Id map keys: %s" % self.id_map.keys())
+            self.log and self.log.debug("Id map keys: %s" % self.map.keys())
             
         try:
-            emap = self.id_map[entity_id]
+            emap = self.map[entity_id]
         except KeyError:
-            emap = self.id_map[entity_id] = {"forward":{}, "backward":{}}
+            emap = self.map[entity_id] = {"forward":{}, "backward":{}}
 
         try:
             if self.debug:
@@ -97,10 +72,42 @@ class Server(object):
                     break
             emap["forward"][subject_id] = temp_id
             emap["backward"][temp_id] = subject_id
-            self.id_map[entity_id] = emap
-            self.id_map.sync()
+            self.map[entity_id] = emap
+            self.map.sync()
             
             return temp_id
+        
+class Server(object):
+    """ A class that does things that IdPs or AAs do """
+    def __init__(self, config_file="", config=None, cache="",
+                    log=None, debug=0):
+
+        self.log = log
+        self.debug = debug
+        if config_file:
+            self.load_config(config_file)
+        elif config:
+            self.conf = config
+        
+        self.metadata = self.conf["metadata"]
+        if cache:
+            self.cache = Cache(cache)
+        else:
+            self.cache = Cache()
+        
+    def load_config(self, config_file):
+        self.conf = Config()
+        self.conf.load_file(config_file)
+        if "subject_data" in self.conf:
+            self.id = IdentifierMap(self.conf["subject_data"],
+                                        self.debug, self.log)
+        else:
+            self.id = None
+    
+    def issuer(self):
+        return args2dict( self.conf["entityid"], 
+                        format=saml.NAMEID_FORMAT_ENTITY)
+        
         
     def parse_authn_request(self, enc_request):
         """Parse a Authentication Request
@@ -169,9 +176,8 @@ class Server(object):
         query = samlp.attribute_query_from_string(xml_string)
         assert query.version == VERSION
         self.log and self.log.info(
-            "%s ?= %s" % (query.destination, 
-                            self.conf["service"]["aa"]["url"]))
-        assert query.destination == self.conf["service"]["aa"]["url"]
+            "%s ?= %s" % (query.destination, self.conf.aa_url))
+        assert query.destination == self.conf.aa_url
         
         # verify signature
         
@@ -185,93 +191,11 @@ class Server(object):
     def find_subject(self, subject, attribute=None):
         pass
                 
-    def _not_on_or_after(self, sp_entity_id):
-        """ When the assertion stops being valid, should not be
-        used after this time.
-        
-        :return: String representation of the time
-        """
-        if "assertions" in self.conf:
-            try:
-                spec = self.conf["assertions"][sp_entity_id]["lifetime"]
-                return in_a_while(**spec)
-            except KeyError:
-                try:
-                    spec = self.conf["assertions"]["default"]["lifetime"]
-                    return in_a_while(**spec)
-                except KeyError:
-                    pass
-        
-        # default is a hour
-        return in_a_while(**{"hours":1})
-
-    def filter_ava(self, ava, sp_entity_id, required=None, optional=None,
-                    typ="idp"):
-        """ What attribute and attribute values returns depends on what
-        the SP has said it wants in the request or in the metadata file and
-        what the IdP/AA wants to release. An assumption is that what the SP
-        asks for overrides whatever is in the metadata. But of course the 
-        IdP never releases anything it doesn't want to.    
-        
-        :param ava: All the attributes and values that are available
-        :param sp_entity_id: The entity ID of the SP
-        :param required: Attributes that the SP requires in the assertion
-        :param optional: Attributes that the SP thinks is optional
-        :param typ: IdPs and AAs does this, and they have different parts
-            of the configuration.
-        :return: A possibly modified AVA
-        """
-
-        try:
-            assertions = self.conf["service"][typ]["assertions"]
-            try:
-                restrictions = assertions[sp_entity_id][
-                                                "attribute_restrictions"]
-            except KeyError:
-                try:
-                    restrictions = assertions["default"][
-                                                "attribute_restrictions"]
-                except KeyError:
-                    restrictions = None
-        except KeyError:
-            restrictions = None
-                                
-        if restrictions:
-            #print restrictions
-            ava = filter_attribute_value_assertions(ava, restrictions)
-
-        if required or optional:
-            ava = filter_on_attributes(ava, required, optional)
-            
-        return ava
-
-    def restrict_ava(self, identity, spid):
-        """ Identity attribute names are expected to be expressed in 
-        the local lingo (== friendlyName)
-        
-        :param identity: A dictionary with attributes and values
-        :return: A filtered ava according to the IdPs/AAs rules and
-            the list of required/optional attributes according to the SP.
-            If the requirements can't be met an exception is raised.
-        """
-        (required, optional) = self.conf["metadata"].attribute_consumer(spid)
-        return self.filter_ava(identity, spid, required, optional)
-
-    def _conditions(self, sp_entity_id):
-        return args2dict(
-                        not_before=instant(), 
-                        # How long might depend on who's getting it
-                        not_on_or_after=self._not_on_or_after(sp_entity_id), 
-                        audience_restriction=args2dict(
-                                audience=args2dict(sp_entity_id)))
-
-    def _authn_statement(self):
-        return args2dict(authn_instant = instant(),
-                                        session_index = sid()),
-
-    def do_response(self, consumer_url, in_response_to,
-                        sp_entity_id, identity=None, name_id=None, 
-                        status=None ):
+    # ------------------------------------------------------------------------
+    
+    def _response(self, consumer_url, in_response_to, sp_entity_id, 
+                    identity=None, name_id=None, status=None, sign=False,
+                    policy=Policy()):
         """ Create a Response that adhers to the ??? profile.
         
         :param consumer_url: The URL which should receive the response
@@ -279,117 +203,87 @@ class Server(object):
         :param sp_entity_id: The entity identifier of the SP
         :param identity: A dictionary with attributes and values that are
             expected to be the bases for the assertion in the response.
-        :param name_id: The identifier of the subject 
+        :param name_id: The identifier of the subject
+        :param status: The status of the response
+        :param sign: Whether the assertion should be signed or not 
+        :param policy: The attribute release policy for this instance
         :return: A Response instance
         """
-        
         
 
         if not status:
             status = success_status_factory()
             
-        tmp = response_factory(
+        response = response_factory(
             issuer=self.issuer(),
             in_response_to = in_response_to,
             destination = consumer_url,
             status = status,
             )
 
-        if identity:
-            attr_statement = do_ava_statement(identity, 
-                                                self.conf["am_backward"])
+        if identity:            
+            ast = Assertion(identity)
+            try:
+                ast.apply_policy(sp_entity_id, policy, self.metadata)
+            except MissingValue, exc:
+                response = self.error_response(consumer_url, in_response_to, 
+                                               sp_entity_id, exc, name_id)
+                return make_instance(samlp.Response, response)
 
-            # temporary identifier or ??
-            if not name_id:
-                name_id = args2dict(sid(),format=saml.NAMEID_FORMAT_TRANSIENT)
+            assertion = ast.construct(sp_entity_id, in_response_to, name_id,
+                                        self.conf.attribute_converters(), 
+                                        policy)
+            
+            if sign:
+                assertion["signature"] = pre_signature_part(assertion["id"])
 
-            # start using now and for a hour
-            conds = self._conditions(sp_entity_id)
-            
-            assertion = assertion_factory(
-                attribute_statement = attr_statement,
-                authn_statement = self._authn_statement(),
-                conditions = conds,
-                subject=args2dict(
-                    name_id=name_id,
-                    method=saml.SUBJECT_CONFIRMATION_METHOD_BEARER,
-                    subject_confirmation=args2dict(
-                        subject_confirmation_data = \
-                            args2dict(in_response_to=in_response_to))),
-                ),
-            
             # Store which assertion that has been sent to which SP about which
             # subject.
-            self.cache.set(name_id["text"], sp_entity_id, assertion, 
-                            conds["not_on_or_after"])
+            print assertion
             
-            tmp.update({"assertion":assertion})
+            self.cache.set(assertion["subject"]["name_id"]["text"], 
+                            sp_entity_id, assertion, 
+                            assertion["conditions"]["not_on_or_after"])
             
-        return make_instance(samlp.Response, tmp)
+            response.update({"assertion":assertion})
+            
+        return make_instance(samlp.Response, response)
 
-    # ----------------------------
+    # ------------------------------------------------------------------------
+    
+    def do_response(self, consumer_url, in_response_to,
+                        sp_entity_id, identity=None, name_id=None, 
+                        status=None, sign=False ):
+
+        return self._response(consumer_url, in_response_to,
+                        sp_entity_id, identity, name_id, 
+                        status, sign, self.conf.idp_policy())
+                        
+    # ------------------------------------------------------------------------
     
     def error_response(self, destination, in_response_to, spid, exc, 
-                        name_id = None):
-        return self.do_response(
+                        name_id=None):
+                        
+        return self._response(
                         destination,    # consumer_url
                         in_response_to, # in_response_to
                         spid,           # sp_entity_id
+                        None,           # identity
                         name_id,
                         status = status_from_exception_factory(exc)
                         )
 
-    def do_aa_response(self, consumer_url, in_response_to,
-                        sp_entity_id, identity, 
-                        name_id=None, ip_address="", issuer=None, sign=False):
+    # ------------------------------------------------------------------------
+    
+    def do_aa_response(self, consumer_url, in_response_to, sp_entity_id, 
+                        identity=None, name_id=None, ip_address="", 
+                        issuer=None, status=None, sign=False):
 
-        try:
-            identity = self.restrict_ava(identity, sp_entity_id)
-        except MissingValue, exc:
-            tmp = self.error_response( consumer_url, in_response_to, 
-                                        sp_entity_id, exc, name_id)
-            return make_instance(samlp.Response, tmp)
-            
-        attr_statement = do_ava_statement(identity, self.conf["am_backward"])
-        
-        # temporary identifier or ??
-        if not name_id:
-            name_id = args2dict(sid(), format=saml.NAMEID_FORMAT_TRANSIENT)
+        return self._response(consumer_url, in_response_to,
+                        sp_entity_id, identity, name_id, 
+                        status, sign, policy=self.conf.aa_policy())
 
-        conds = self._conditions(sp_entity_id)
-        assertion = assertion_factory(
-            subject = args2dict(
-                name_id = name_id,
-                method = saml.SUBJECT_CONFIRMATION_METHOD_BEARER,
-                subject_confirmation = args2dict(
-                    subject_confirmation_data = \
-                        args2dict(
-                        in_response_to = in_response_to,
-                        not_on_or_after = self._not_on_or_after(sp_entity_id),
-                        address = ip_address,
-                        recipient = consumer_url))),
-            attribute_statement = attr_statement,
-            authn_statement = self._authn_statement(),
-            conditions = conds
-            )
-            
-        if sign:
-            assertion["signature"] = pre_signature_part(assertion["id"])
-            
-        #print name_id
-        #print conds
-        self.cache.set(name_id["text"], sp_entity_id, assertion, 
-                            conds["not_on_or_after"])
-            
-        tmp = response_factory(
-            issuer=issuer,
-            in_response_to=in_response_to,
-            destination=consumer_url,
-            status=success_status_factory(),
-            assertion=assertion,
-            )
-
-        return make_instance(samlp.Response, tmp)
+    # ------------------------------------------------------------------------
 
     def authn_response(self, identity, in_response_to, destination, spid,
                     name_id_policy, userid):
@@ -408,14 +302,13 @@ class Server(object):
         name_id = None
         if name_id_policy.sp_name_qualifier:
             try:
-                vo_conf = self.conf["virtual_organization"][
-                                name_id_policy.sp_name_qualifier]
+                vo_conf = self.conf.vo_conf(name_id_policy.sp_name_qualifier)
                 subj_id = identity[vo_conf["common_identifier"]]
             except KeyError:
                 self.log.info(
                     "Get persistent ID (%s,%s)" % (
                                     name_id_policy.sp_name_qualifier,userid))
-                subj_id = self.persistent_id(name_id_policy.sp_name_qualifier, 
+                subj_id = self.id.persistent(name_id_policy.sp_name_qualifier, 
                                             userid)
                 self.log.info("=> %s" % subj_id)
                 
@@ -423,9 +316,7 @@ class Server(object):
                         format=saml.NAMEID_FORMAT_PERSISTENT,
                         sp_name_qualifier=name_id_policy.sp_name_qualifier)
         
-        # Do attribute-value filtering
         try:
-            identity = self.restrict_ava(identity, spid)
             resp = self.do_response(
                             destination,    # consumer_url
                             in_response_to, # in_response_to

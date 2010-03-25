@@ -36,6 +36,8 @@ from saml2.sigver import pre_signature_part, sign_assertion_using_xmlsec
 from saml2.sigver import sign_statement_using_xmlsec
 from saml2.soap import SOAPClient
 
+from saml2.attribute_converter import to_local
+
 DEFAULT_BINDING = saml2.BINDING_HTTP_REDIRECT
 
 FORM_SPEC = """<form method="post" action="%s">
@@ -365,11 +367,12 @@ class Saml2Client(object):
                                                 lax)
 
         # The assertion can contain zero or one attributeStatements
-        assert len(assertion.attribute_statement) <= 1
-        if assertion.attribute_statement:
-            ava = get_attribute_values(assertion.attribute_statement[0])
-        else:
+        if not assertion.attribute_statement:
             ava = {}
+        else:
+            assert len(assertion.attribute_statement) == 1
+            ava = to_local(self.config.attribute_converters(),
+                            assertion.attribute_statement[0])
 
         log and log.info("AVA: %s" % (ava,))
 
@@ -391,7 +394,7 @@ class Saml2Client(object):
         # The subject must contain a name_id
         assert subject.name_id
         name_id = subject.name_id.text.strip()
-        
+                
         return {"ava":ava, "name_id":name_id, "came_from":came_from,
                  "not_on_or_after":not_on_or_after}
 
@@ -598,28 +601,6 @@ def for_me(condition, myself ):
         audience = restriction.audience
         if audience.text.strip() == myself:
             return True
-
-def get_attribute_values(attribute_statement):
-    """ Get the attributes and the attribute values 
-    
-    :param response: The AttributeStatement.
-    :return: A dictionary containing attributes and values
-    """
-    
-    result = {}
-    for attribute in attribute_statement.attribute:
-        # Check name_format ??
-        try:
-            name = attribute.friendly_name.strip()
-        except AttributeError:
-            name = attribute.name.strip()
-        result[name] = []
-        for value in attribute.attribute_value:
-            if not value.text:
-                result[name].append('')
-            else:
-                result[name].append(value.text.strip())    
-    return result
 
 ROW = """<tr><td>%s</td><td>%s</td></tr>"""
 

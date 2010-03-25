@@ -32,8 +32,11 @@ from saml2.time_util import valid
 @decorator
 def keep_updated(f, self, entity_id, *args, **kwargs):
     #print "In keep_updated"
-    if not valid(self.entity[entity_id]["valid_until"]):
-        self.reload_entity(entity_id)
+    try:
+        if not valid(self.entity[entity_id]["valid_until"]):
+            self.reload_entity(entity_id)
+    except KeyError:
+        pass
 
     return f(self, entity_id, *args, **kwargs)
 
@@ -195,6 +198,8 @@ class MetaData(object):
     def reload_entity(self, entity_id):
         for source, eids in self._import.items():
             if entity_id in eids:
+                if source == "-":
+                    return
                 self.clear_from_source(source)
                 if isinstance(source, basestring):
                     f = open(source)

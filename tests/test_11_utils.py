@@ -8,7 +8,6 @@ import gzip
 from saml2 import utils, saml, samlp, md, make_instance
 from saml2.utils import do_attribute_statement
 from saml2.sigver import make_temp
-from saml2.config import do_assertions
 from saml2.saml import Attribute, NAME_FORMAT_URI, AttributeValue
 from py.test import raises
 
@@ -278,104 +277,6 @@ def test_subject():
     
 
 
-AVA = [
-    {
-        "surName": ["Jeter"],
-        "givenName": ["Derek"],
-    },
-    {
-        "surName": ["Howard"],
-        "givenName": ["Ryan"],
-    },
-    {
-        "surName": ["Suzuki"],
-        "givenName": ["Ischiro"],
-    },
-    {
-        "surName": ["Hedberg"],
-        "givenName": ["Roland"],
-    },
-]    
-
-def test_filter_attribute_value_assertions_0():
-    assertion = {
-        "default": {
-            "attribute_restrictions": {
-                "surName": [".*berg"],
-            }
-        }
-    }
-    
-    ass = do_assertions(assertion)
-    print ass
-    
-    ava = utils.filter_attribute_value_assertions(AVA[3], 
-                ass["default"]["attribute_restrictions"])
-    
-    print ava
-    assert ava.keys() == ["surName"]
-    assert ava["surName"] == ["Hedberg"]
-
-def test_filter_attribute_value_assertions_1():
-    assertion = {
-        "default": {
-            "attribute_restrictions": {
-                "surName": None,
-                "givenName": [".*er.*"],
-            }
-        }
-    }
-    
-    ass = do_assertions(assertion)
-    print ass
-    
-    ava = utils.filter_attribute_value_assertions(AVA[0], 
-                ass["default"]["attribute_restrictions"])
-    
-    print ava
-    assert _eq(ava.keys(), ["givenName","surName"])
-    assert ava["surName"] == ["Jeter"]
-    assert ava["givenName"] == ["Derek"]
-
-    ava = utils.filter_attribute_value_assertions(AVA[1],
-                ass["default"]["attribute_restrictions"])
-    
-    print ava
-    assert _eq(ava.keys(), ["surName"])
-    assert ava["surName"] == ["Howard"]
-    
-    
-def test_filter_attribute_value_assertions_2():
-    assertion = {
-        "default": {
-            "attribute_restrictions": {
-                "givenName": ["^R.*"],
-            }
-        }
-    }
-    
-    ass = do_assertions(assertion)
-    print ass
-
-    ava = utils.filter_attribute_value_assertions(AVA[0], 
-                ass["default"]["attribute_restrictions"])
-    
-    print ava
-    assert _eq(ava.keys(), [])
-    
-    ava = utils.filter_attribute_value_assertions(AVA[1], 
-                ass["default"]["attribute_restrictions"])
-    
-    print ava
-    assert _eq(ava.keys(), ["givenName"])
-    assert ava["givenName"] == ["Ryan"]
-
-    ava = utils.filter_attribute_value_assertions(AVA[3], 
-                ass["default"]["attribute_restrictions"])
-    
-    print ava
-    assert _eq(ava.keys(), ["givenName"])
-    assert ava["givenName"] == ["Roland"]
 
 def test_parse_attribute_map():
     (forward, backward) = utils.parse_attribute_map(["attribute.map"])
@@ -441,129 +342,7 @@ def test_identity_attribute_4():
     assert utils.identity_attribute("name",a) == "urn:oid:2.5.4.5"
     # if there would be a map it would be serialNumber
     assert utils.identity_attribute("friendly",a) == "serialNumber"
-    
-def test_combine_0():
-    r = Attribute(name="urn:oid:2.5.4.5", name_format=NAME_FORMAT_URI,
-                    friendly_name="serialNumber")    
-    o = Attribute(name="urn:oid:2.5.4.4", name_format=NAME_FORMAT_URI,
-                    friendly_name="surName")
-
-    comb = utils._combine([r],[o])
-    print comb
-    assert _eq(comb.keys(), [('urn:oid:2.5.4.5', 'serialNumber'), 
-                                ('urn:oid:2.5.4.4', 'surName')])
-    assert comb[('urn:oid:2.5.4.5', 'serialNumber')] == ([], [])
-    assert comb[('urn:oid:2.5.4.4', 'surName')] == ([], [])
-    
-
-def test_filter_on_attributes_0():
-    a = Attribute(name="urn:oid:2.5.4.5", name_format=NAME_FORMAT_URI,
-                    friendly_name="serialNumber")    
-    
-    required = [a]
-    ava = { "serialNumber": ["12345"]}
-    
-    ava = utils.filter_on_attributes(ava, required)
-    assert ava.keys() == ["serialNumber"]
-    assert ava["serialNumber"] == ["12345"]
-
-def test_filter_on_attributes_1():
-    a = Attribute(name="urn:oid:2.5.4.5", name_format=NAME_FORMAT_URI,
-                    friendly_name="serialNumber")    
-    
-    required = [a]
-    ava = { "serialNumber": ["12345"], "givenName":["Lars"]}
-    
-    ava = utils.filter_on_attributes(ava, required)
-    assert ava.keys() == ["serialNumber"]
-    assert ava["serialNumber"] == ["12345"]
-
-def test_filter_values_req_2():
-    a1 = Attribute(name="urn:oid:2.5.4.5", name_format=NAME_FORMAT_URI,
-                    friendly_name="serialNumber")    
-    a2 = Attribute(name="urn:oid:2.5.4.4", name_format=NAME_FORMAT_URI,
-                    friendly_name="surName")
-    
-    required = [a1,a2]
-    ava = { "serialNumber": ["12345"], "givenName":["Lars"]}
-    
-    raises(utils.MissingValue, utils.filter_on_attributes, ava, required)
-
-def test_filter_values_req_3():
-    a = Attribute(name="urn:oid:2.5.4.5", name_format=NAME_FORMAT_URI,
-                    friendly_name="serialNumber", attribute_value=[
-                        AttributeValue(text="12345")])    
-    
-    required = [a]
-    ava = { "serialNumber": ["12345"]}
-    
-    ava = utils.filter_on_attributes(ava, required)
-    assert ava.keys() == ["serialNumber"]
-    assert ava["serialNumber"] == ["12345"]
-
-def test_filter_values_req_4():
-    a = Attribute(name="urn:oid:2.5.4.5", name_format=NAME_FORMAT_URI,
-                    friendly_name="serialNumber", attribute_value=[
-                        AttributeValue(text="54321")])    
-    
-    required = [a]
-    ava = { "serialNumber": ["12345"]}
-    
-    raises(utils.MissingValue, utils.filter_on_attributes, ava, required)
-
-def test_filter_values_req_5():
-    a = Attribute(name="urn:oid:2.5.4.5", name_format=NAME_FORMAT_URI,
-                    friendly_name="serialNumber", attribute_value=[
-                        AttributeValue(text="12345")])    
-    
-    required = [a]
-    ava = { "serialNumber": ["12345", "54321"]}
-    
-    ava = utils.filter_on_attributes(ava, required)
-    assert ava.keys() == ["serialNumber"]
-    assert ava["serialNumber"] == ["12345"]
-
-def test_filter_values_req_6():
-    a = Attribute(name="urn:oid:2.5.4.5", name_format=NAME_FORMAT_URI,
-                    friendly_name="serialNumber", attribute_value=[
-                        AttributeValue(text="54321")])    
-    
-    required = [a]
-    ava = { "serialNumber": ["12345", "54321"]}
-    
-    ava = utils.filter_on_attributes(ava, required)
-    assert ava.keys() == ["serialNumber"]
-    assert ava["serialNumber"] == ["54321"]
-
-def test_filter_values_req_opt_0():
-    r = Attribute(name="urn:oid:2.5.4.5", name_format=NAME_FORMAT_URI,
-                    friendly_name="serialNumber", attribute_value=[
-                        AttributeValue(text="54321")])    
-    o = Attribute(name="urn:oid:2.5.4.5", name_format=NAME_FORMAT_URI,
-                    friendly_name="serialNumber", attribute_value=[
-                        AttributeValue(text="12345")])    
-    
-    ava = { "serialNumber": ["12345", "54321"]}
-    
-    ava = utils.filter_on_attributes(ava, [r], [o])
-    assert ava.keys() == ["serialNumber"]
-    assert _eq(ava["serialNumber"], ["12345","54321"])
-
-def test_filter_values_req_opt_1():
-    r = Attribute(name="urn:oid:2.5.4.5", name_format=NAME_FORMAT_URI,
-                    friendly_name="serialNumber", attribute_value=[
-                        AttributeValue(text="54321")])    
-    o = Attribute(name="urn:oid:2.5.4.5", name_format=NAME_FORMAT_URI,
-                    friendly_name="serialNumber", attribute_value=[
-                        AttributeValue(text="12345"),
-                        AttributeValue(text="abcd0")])    
-    
-    ava = { "serialNumber": ["12345", "54321"]}
-    
-    ava = utils.filter_on_attributes(ava, [r], [o])
-    assert ava.keys() == ["serialNumber"]
-    assert _eq(ava["serialNumber"], ["12345","54321"])
-
+        
 def _givenName(a):
     assert a["name"] == "urn:oid:2.5.4.42"
     assert a["friendly_name"] == "givenName"
@@ -575,22 +354,6 @@ def _surName(a):
     assert a["friendly_name"] == "surName"
     assert len(a["attribute_value"]) == 1
     assert a["attribute_value"] == [{"text":"Jeter"}]
-
-def test_ava_to_attributes():
-    (forward, backward) = utils.parse_attribute_map(["attribute.map"])
-    attrs = utils.ava_to_attributes(AVA[0], backward)
-    
-    assert len(attrs) == 2
-    a = attrs[0]
-    if a["name"] == "urn:oid:2.5.4.42":
-        _givenName(a)
-        _surName(attrs[1])
-    elif a["name"] == "urn:oid:2.5.4.4":
-        _surName(a)
-        _givenName(attrs[1])
-    else:
-        print a
-        assert False
         
 def test_nameformat_email():
     assert utils.valid_email("foo@example.com")
