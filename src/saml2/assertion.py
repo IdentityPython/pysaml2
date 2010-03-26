@@ -136,9 +136,6 @@ def filter_attribute_value_assertions(ava, attribute_restrictions=None):
             del ava[attr]
     return ava
     
-def temporary_identifier():
-    return args2dict(sid(), format=saml.NAMEID_FORMAT_TRANSIENT)
-
 class Policy(object):
     """ handles restrictions on assertions """
     
@@ -183,6 +180,17 @@ class Policy(object):
                         [re.compile(value) for value in values]
         
         return self._restrictions
+
+    def get_nameid_format(self, sp_entity_id):
+        try:
+            form = self._restrictions[sp_entity_id]["nameid_format"]
+        except KeyError:
+            try:
+                form = self._restrictions["default"]["nameid_format"]
+            except KeyError:
+                form = saml.NAMEID_FORMAT_TRANSIENT
+                
+        return form
     
     def get_name_form(self, sp_entity_id):
         form = ""
@@ -286,7 +294,7 @@ class Policy(object):
                         not_on_or_after=self._not_on_or_after(sp_entity_id), 
                         audience_restriction=args2dict(
                                 audience=args2dict(sp_entity_id)))
-    
+
 class Assertion(dict):
     """ Handles assertions about subjects """
     
@@ -299,15 +307,8 @@ class Assertion(dict):
     def construct(self, sp_entity_id, in_response_to, name_id, attrconvs, 
                     policy):
     
-        print ">",attrconvs
-        print ">",policy.__dict__
-        print ">",policy.get_name_form(sp_entity_id)
         attr_statement = from_local(attrconvs, self,
                                     policy.get_name_form(sp_entity_id))
-        print ">>",attr_statement
-        # temporary identifier or ??
-        if not name_id:
-            name_id = temporary_identifier()
 
         # start using now and for a hour
         conds = policy.conditions(sp_entity_id)
