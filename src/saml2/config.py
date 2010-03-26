@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # 
 
-from saml2 import metadata, utils
+from saml2 import metadata, utils, saml
 from saml2.assertion import Policy
 from saml2.attribute_converter import ac_factory, AttributeConverter
 import re
@@ -134,7 +134,8 @@ class Config(dict):
         return self["service"]["idp"]["url"]
         
     def vo_conf(self, name):
-        return self.conf["vitual_organization"][name]
+        return self["virtual_organization"][name]
 
     def attribute_converters(self):
         return self["attrconverters"]
+
