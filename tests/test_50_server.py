@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from saml2.server import Server, IdentifierMap
+from saml2.server import Server, Identifier
 from saml2 import server, make_instance
 from saml2 import samlp, saml, client, utils
 from saml2.utils import OtherError
@@ -12,15 +12,6 @@ import re
 
 def _eq(l1,l2):
     return set(l1) == set(l2)
-
-def test_persistence_0():
-    id = IdentifierMap("subject_data.db")
-    
-    pid1 = id.persistent("urn:mace:example.com:saml:roland:sp", "jeter")
-    pid2 = id.persistent("urn:mace:example.com:saml:roland:sp", "jeter")
-
-    print pid1, pid2
-    assert pid1 == pid2
 
 class TestServer1():
     def setup_class(self):
@@ -175,11 +166,13 @@ class TestServer1():
         assert response["sp_entityid"] == "urn:mace:example.com:saml:roland:sp"
 
     def test_sso_response_with_identity(self):
+        name_id = self.server.id.temporary_nameid()
         resp = self.server.do_response(
                     "http://localhost:8087/",   # consumer_url
                     "12",                       # in_response_to
                     "urn:mace:example.com:saml:roland:sp", # sp_entity_id
-                    { "eduPersonEntitlement": "Short stop"}
+                    { "eduPersonEntitlement": "Short stop"}, # identity
+                    name_id
                 )
                 
         print resp.keyswv()
