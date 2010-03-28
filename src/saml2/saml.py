@@ -372,6 +372,7 @@ class SubjectConfirmation(SamlBase):
                     extension_elements=None, extension_attributes=None):
         """Constructor for SubjectConfirmation
 
+        :param method: Subject confirmation method
         :param base_id: Method attribute
         :param name_id: NameID element
         :param subject_confirmation_data: SubjectConfirmationData element

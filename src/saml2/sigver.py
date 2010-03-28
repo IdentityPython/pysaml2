@@ -19,7 +19,7 @@
 Based on the use of xmlsec1 binaries and not the python xmlsec module.
 """
 
-from saml2 import samlp
+from saml2 import samlp, class_name, saml
 import xmldsig as ds
 from tempfile import NamedTemporaryFile
 from subprocess import Popen, PIPE
@@ -44,33 +44,6 @@ _TEST_ = True
 
 class SignatureError(Exception):
     pass
-    
-def decrypt( enctext, key_file, xmlsec_binary, log=None):
-    """ Decrypting an encrypted text by the use of a private key.
-    
-    :param input: The encrypted text as a string
-    :param key_file: The name of the key file
-    :param xmlsec_binary: Where on the computer the xmlsec binary is.
-    :param log: A reference to a logging instance.
-    :return: The decrypted text
-    """
-    log and log.info("input len: %d" % len(enctext))
-    _, fil = make_temp("%s" % enctext, decode=False)
-    ntf = NamedTemporaryFile()
-
-    log and log.info("xmlsec binary: %s" % xmlsec_binary)
-    com_list = [xmlsec_binary, "--decrypt", 
-                 "--privkey-pem", key_file, 
-                 "--output", ntf.name,
-                 "--id-attr:%s" % ID_ATTR, 
-                 ENC_NODE_NAME, fil]
-
-    log and log.info("Decrypt command: %s" % " ".join(com_list))
-    result = Popen(com_list, stderr=PIPE).communicate()
-    log and log.info("Decrypt result: %s" % (result,))
-
-    ntf.seek(0)
-    return ntf.read()
 
 def create_id():
     """ Create a string of 40 random characters from the set [a-p], 
@@ -145,14 +118,9 @@ def _parse_xmlsec_output(output):
         elif line == "FALSE":
             return False
     return False
-        
-def verify_signature_assertion(xmlsec_binary, enctext, cert_file):
-    return verify_signature(xmlsec_binary, enctext, cert_file,
-                            "der",
-                            "urn:oasis:names:tc:SAML:2.0:assertion:Assertion")
-    
-def verify_signature(xmlsec_binary, enctext, cert_file, 
-                        cert_type="der", node_name=NODE_NAME):
+
+def verify_signature(enctext, xmlsec_binary, cert_file=None, cert_type="", 
+                        node_name=NODE_NAME, debug=False):
     """ Verifies the signature of a XML document.
     
     :param xmlsec_binary: The xmlsec1 binaries to be used
@@ -160,6 +128,7 @@ def verify_signature(xmlsec_binary, enctext, cert_file,
     :param der_file: The public key that was used to sign the document
     :return: Boolean True if the signature was correct otherwise False.
     """
+        
     _, fil = make_temp("%s" % enctext, decode=False)
     
     com_list = [xmlsec_binary, "--verify",
@@ -167,7 +136,7 @@ def verify_signature(xmlsec_binary, enctext, cert_file,
                 "--id-attr:%s" % ID_ATTR, 
                 node_name, fil]
 
-    if _TEST_: 
+    if debug: 
         try:
             print " ".join(com_list)
         except TypeError:
@@ -182,7 +151,7 @@ def verify_signature(xmlsec_binary, enctext, cert_file,
     output = Popen(com_list, stderr=PIPE).communicate()[1]
     verified = _parse_xmlsec_output(output)
 
-    if _TEST_:
+    if debug:
         print output
         print os.stat(cert_file)
         print "Verify result: '%s'" % (verified,)
@@ -191,176 +160,229 @@ def verify_signature(xmlsec_binary, enctext, cert_file,
 
     return verified
 
-def correctly_signed_authn_request(decoded_xml, xmlsec_binary=XMLSEC_BINARY,
-        metadata=None, log=None, must=False):
-    """ Check if a request is correctly signed, if we have metadata for
-    the SP that sent the info use that, if not use the key that are in 
-    the message if any.
-    
-    :param decode_xml: The SAML message as a XML string
-    :param xmlsec_binary: Where the xmlsec1 binary can be found on this
-        system.
-    :param metadata: Metadata information
-    :return: None if the signature can not be verified otherwise 
-        request as a samlp.Request instance
-    """
-    request = samlp.authn_request_from_string(decoded_xml)
+# ---------------------------------------------------------------------------
 
-    if not request.signature:
-        if must:
-            raise SignatureError("Missing must signature")
-        else:
-            return request
+def security_context(conf, log=None):
+    if not conf:
+        return None
         
-    issuer = request.issuer.text.strip()
-
-    if metadata:
-        certs = metadata.certs(issuer)
-    else:
-        certs = []
+    try:
+        debug = conf["debug"]
+    except KeyError:
+        debug = 0
         
-    if not certs:
-        certs = [make_temp("%s" % cert, ".der") \
-                    for cert in cert_from_instance(request)]
-    if not certs:
-        raise SignatureError("Missing signing certificate")
+    return SecurityContext(conf.xmlsec(), conf["key_file"], "pem",
+                            conf["cert_file"], "pem", conf["metadata"],
+                            log=log, debug=debug)
 
-    verified = False
-    for _, der_file in certs:
-        if verify_signature(xmlsec_binary, decoded_xml, der_file):
-            verified = True
-            break
-                
-    if not verified:
-        raise SignatureError("Failed to verify signature")
+class SecurityContext(object):
+    def __init__(self, xmlsec_binary, key_file="", key_type= "", cert_file="", 
+                    cert_type="", metadata=None, log=None, debug=False):
+        self.xmlsec = xmlsec_binary
+        self.key_file = key_file
+        self.cert_file = cert_file
+        self.cert_type = cert_type
+        self.metadata = metadata
+        self.log = log
+        self.debug = debug
 
-    return request
+        if self.debug and not self.log:
+            self.debug = 0
+            
+    def correctly_signed(self, xml, must=False):
+        self.log and self.log.info("verify correct signature")
+        return self.correctly_signed_response(xml, must)
 
-def correctly_signed_response(decoded_xml, 
-        xmlsec_binary=XMLSEC_BINARY, metadata=None, log=None, must=False):
-    """ Check if a instance is correctly signed, if we have metadata for
-    the IdP that sent the info use that, if not use the key that are in 
-    the message if any.
+    def decrypt(self, enctext):
+        """ Decrypting an encrypted text by the use of a private key.
+        
+        :param enctext: The encrypted text as a string
+        :return: The decrypted text
+        """
+        self.log and self.log.info("input len: %d" % len(enctext))
+        _, fil = make_temp("%s" % enctext, decode=False)
+        ntf = NamedTemporaryFile()
+
+        com_list = [self.xmlsec, "--decrypt", 
+                     "--privkey-pem", key_file, 
+                     "--output", ntf.name,
+                     "--id-attr:%s" % ID_ATTR, 
+                     ENC_NODE_NAME, fil]
+
+        if self.debug:
+            self.log.debug("Decrypt command: %s" % " ".join(com_list))
+            
+        result = Popen(com_list, stderr=PIPE).communicate()
+        
+        if self.debug:
+            self.log.debug("Decrypt result: %s" % (result,))
+
+        ntf.seek(0)
+        return ntf.read()
+
     
-    :param decode_xml: The SAML message as a XML string
-    :param xmlsec_binary: Where the xmlsec1 binary can be found on this
-        system.
-    :param metadata: Metadata information
-    :return: None if the signature can not be verified otherwise an instance
-    """
-    
-    response = samlp.response_from_string(decoded_xml)
+        
+    def verify_signature(self, enctext, cert_file=None, cert_type="pem", 
+                            node_name=NODE_NAME):
+        """ Verifies the signature of a XML document.
+        
+        :param enctext: The XML document as a string
+        :param der_file: The public key that was used to sign the document
+        :return: Boolean True if the signature was correct otherwise False.
+        """
+        if not cert_file:
+            cert_file = self.cert_file
+            cert_type = self.cert_type
+            
+        return verify_signature(enctext, self.xmlsec, cert_file, cert_type,
+                                node_name, True)
+        
+    def correctly_signed_authn_request(self, decoded_xml, must=False):
+        """ Check if a request is correctly signed, if we have metadata for
+        the SP that sent the info use that, if not use the key that are in 
+        the message if any.
+        
+        :param decode_xml: The SAML message as a XML string
+        :param must: Whether there must be a signature
+        :return: None if the signature can not be verified otherwise 
+            request as a samlp.Request instance
+        """
+        request = samlp.authn_request_from_string(decoded_xml)
 
-    if not xmlsec_binary:
-        xmlsec_binary = XMLSEC_BINARY
-
-    # Try to find the signing cert in the assertion
-    for assertion in response.assertion:
-        if not assertion.signature:
-            if _TEST_:
-                log and log.info("unsigned")
+        if not request.signature:
             if must:
-                raise SignatureError("Signature missing")
-            continue
-        else:
-            if _TEST_:
-                log and log.info("signed")
-        
-        issuer = assertion.issuer.text.strip()
-        if _TEST_:
-            print "issuer: %s" % issuer
-        if metadata:
-            certs = metadata.certs(issuer)
+                raise SignatureError("Missing must signature")
+            else:
+                return request
+            
+        issuer = request.issuer.text.strip()
+
+        if self.metadata:
+            certs = self.metadata.certs(issuer)
         else:
             certs = []
-
-        if _TEST_:
-            print "metadata certs: %s" % certs
-
+            
         if not certs:
             certs = [make_temp("%s" % cert, ".der") \
-                        for cert in cert_from_instance(assertion)]
+                        for cert in cert_from_instance(request)]
         if not certs:
-            raise SignatureError("Missing certificate")
+            raise SignatureError("Missing signing certificate")
 
         verified = False
         for _, der_file in certs:
-            if verify_signature(xmlsec_binary, decoded_xml, der_file):
+            if verify_signature(self.xmlsec, decoded_xml, der_file):
                 verified = True
                 break
                     
         if not verified:
-            raise SignatureError("Could not verify")
+            raise SignatureError("Failed to verify signature")
 
-    return response
+        return request
 
-#----------------------------------------------------------------------------
-# SIGNATURE PART
-#----------------------------------------------------------------------------
+    def correctly_signed_response(self, decoded_xml, must=False):
+        """ Check if a instance is correctly signed, if we have metadata for
+        the IdP that sent the info use that, if not use the key that are in 
+        the message if any.
         
-def sign_statement_using_xmlsec(statement, xtype, xmlsec_binary, key=None, 
+        :param decode_xml: The SAML message as a XML string
+        :param must: Whether there must be a signature
+        :return: None if the signature can not be verified otherwise an instance
+        """
+        
+        response = samlp.response_from_string(decoded_xml)
+
+        # Try to find the signing cert in the assertion
+        for assertion in response.assertion:
+            if not assertion.signature:
+                if self.debug:
+                    self.log.debug("unsigned")
+                if must:
+                    raise SignatureError("Signature missing")
+                continue
+            else:
+                if self.debug:
+                    self.log.debug("signed")
+            
+            issuer = assertion.issuer.text.strip()
+
+            if self.debug:
+                self.log.debug("issuer: %s" % issuer)
+
+            if self.metadata:
+                certs = self.metadata.certs(issuer)
+            else:
+                certs = []
+
+            if self.debug:
+                self.log.debug("metadata certs: %s" % certs)
+
+            if not certs:
+                certs = [make_temp("%s" % cert, ".der") \
+                            for cert in cert_from_instance(assertion)]
+            if not certs:
+                raise SignatureError("Missing certificate")
+
+            verified = False
+            for _, der_file in certs:
+                if self.verify_signature(decoded_xml, der_file, "der"):
+                    verified = True
+                    break
+                        
+            if not verified:
+                raise SignatureError("Could not verify")
+
+        return response
+
+    #----------------------------------------------------------------------------
+    # SIGNATURE PART
+    #----------------------------------------------------------------------------
+            
+    def sign_statement_using_xmlsec(self, statement, class_name, key=None, 
                                     key_file=None):
-    """Sign a SAML statement using xmlsec.
-    
-    :param statement: The statement to be signed
-    :param key: The key to be used for the signing, either this or
-    :param key_File: The file where the key can be found
-    :param xmlsec_binary: The xmlsec1 binaries used to do the signing.
-    :return: The signed statement
-    """
+        """Sign a SAML statement using xmlsec.
         
-    _, fil = make_temp("%s" % statement, decode=False)
-
-    if key:
-        _, key_file = make_temp("%s" % key, ".pem")
-    ntf = NamedTemporaryFile()
-    
-    com_list = [xmlsec_binary, "--sign", 
-                "--output", ntf.name,
-                "--privkey-pem", key_file, 
-                "--id-attr:%s" % ID_ATTR, 
-                xtype,
-                fil]
-
-    #print " ".join(com_list)
-
-    if Popen(com_list, stdout=PIPE).communicate()[0] == "":
-        ntf.seek(0)
-        return ntf.read()
-    else:
-        raise Exception("Signing failed")
-
-def sign_assertion_using_xmlsec(statement, xmlsec_binary, key=None, 
-                                    key_file=None):
-    """Sign a SAML statement using xmlsec.
-    
-    :param statement: The statement to be signed
-    :param key: The key to be used for the signing, either this or
-    :param key_File: The file where the key can be found
-    :param xmlsec_binary: The xmlsec1 binaries used to do the signing.
-    :return: The signed statement
-    """
+        :param statement: The statement to be signed
+        :param key: The key to be used for the signing, either this or
+        :param key_File: The file where the key can be found
+        :return: The signed statement
+        """
         
-    _, fil = make_temp("%s" % statement, decode=False)
+        if not key and not key_file:
+            key_file = self.key_file
+            
+        _, fil = make_temp("%s" % statement, decode=False)
 
-    if key:
-        _, key_file = make_temp("%s" % key, ".pem")
-    ntf = NamedTemporaryFile()
-    
-    com_list = [xmlsec_binary, "--sign", 
-                "--output", ntf.name,
-                "--privkey-pem", key_file, 
-                "--id-attr:%s" % ID_ATTR, 
-                "urn:oasis:names:tc:SAML:2.0:assertion:Assertion",
-                fil]
+        if key:
+            _, key_file = make_temp("%s" % key, ".pem")
+            
+        ntf = NamedTemporaryFile()
+        
+        com_list = [self.xmlsec, "--sign", 
+                    "--output", ntf.name,
+                    "--privkey-pem", key_file, 
+                    "--id-attr:%s" % ID_ATTR, 
+                    class_name,
+                    fil]
 
-    #print " ".join(com_list)
+        if Popen(com_list, stdout=PIPE).communicate()[0] == "":
+            ntf.seek(0)
+            return ntf.read()
+        else:
+            raise Exception("Signing failed")
 
-    if Popen(com_list, stdout=PIPE).communicate()[0] == "":
-        ntf.seek(0)
-        return ntf.read()
-    else:
-        raise Exception("Signing failed")
+    def sign_assertion_using_xmlsec(self, statement, key=None, key_file=None):
+        """Sign a SAML assertion using xmlsec.
+        
+        :param statement: The statement to be signed
+        :param key: The key to be used for the signing, either this or
+        :param key_File: The file where the key can be found
+        :return: The signed statement
+        """
+
+        return self.sign_statement_using_xmlsec( statement,
+                        class_name(saml.Assertion()), key=None, key_file=None)
+
+# ===========================================================================
 
 PRE_SIGNATURE = {
     "signed_info": {

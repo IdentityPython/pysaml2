@@ -157,13 +157,13 @@ class TestServer1():
         print authn_request
         intermed = utils.deflate_and_base64_encode(authn_request)
         response = self.server.parse_authn_request(intermed)
-                                                        
+        print response
         assert response["consumer_url"] == "http://localhost:8087/"
         assert response["id"] == "1"
         name_id_policy = response["request"].name_id_policy
         assert _eq(name_id_policy.keyswv(), ["format", "allow_create"])
         assert name_id_policy.format == saml.NAMEID_FORMAT_TRANSIENT
-        assert response["sp_entityid"] == "urn:mace:example.com:saml:roland:sp"
+        assert response["sp_entity_id"] == "urn:mace:example.com:saml:roland:sp"
 
     def test_sso_response_with_identity(self):
         name_id = self.server.id.temporary_nameid()

@@ -31,7 +31,7 @@ from saml2.utils import OtherError, do_attribute_statement
 from saml2.utils import VersionMismatch, UnknownPrincipal, UnsupportedBinding
 from saml2.utils import status_from_exception_factory
 
-from saml2.sigver import correctly_signed_authn_request
+from saml2.sigver import security_context
 from saml2.sigver import pre_signature_part
 from saml2.time_util import instant, in_a_while
 from saml2.config import Config
@@ -42,21 +42,26 @@ class UnknownVO(Exception):
     pass
     
 class Identifier(object):
+    """ A class that handles identifiers of objects """
     def __init__(self, dbname, entityid, voconf=None, debug=0, log=None):
         self.map = shelve.open(dbname,writeback=True)
         self.entityid = entityid
         self.voconf = voconf
         self.debug = debug
         self.log = log
-    
+        
     def persistent(self, entity_id, subject_id):
         """ Keeps the link between a permanent identifier and a 
         temporary/pseudo-temporary identifier for a subject
         
+        The store supports look-up both ways: from a permanent local
+        identifier to a identifier used talking to a SP and from an
+        identifier given back by an SP to the local permanent.
+        
         :param entity_id: SP entity ID or VO entity ID
-        :param subject_id: The local identifier of the subject
+        :param subject_id: The local permanent identifier of the subject
         :return: An arbitrary identifier for the subject unique to the
-            entity_id
+            service/group of services/VO with a given entity_id
         """
         if self.debug:
             self.log and self.log.debug("Id map keys: %s" % self.map.keys())
@@ -104,12 +109,30 @@ class Identifier(object):
                             sp_name_qualifier=sp_name_qualifier)
     
     def persistent_nameid(self, sp_name_qualifier, userid):
+        """ Get or create a persistent identifier for this object to be used
+        when communicating with servers using a specific SPNameQualifier
+        
+        :param sp_name_qualifier: An identifier for a 'context'
+        :param userid: The local permanent identifier of the object 
+        :return: A persistent random identifier.
+        """
         subj_id = self.persistent(sp_name_qualifier, userid)
         return args2dict(subj_id, format=saml.NAMEID_FORMAT_PERSISTENT,
                                 sp_name_qualifier=sp_name_qualifier)    
 
     def construct_nameid(self, local_policy, userid, sp_entity_id,
                         identity=None, name_id_policy=None):
+        """ Returns a name_id for the object. How the name_id is 
+        constructed depends on the context.
+        
+        :param local_policy: The policy the server is configured to follow
+        :param user: The local permanent identifier of the object
+        :param sp_entity_id: The 'user' of the name_id
+        :param identity: Attribute/value pairs describing the object
+        :param name_id_policy: The policy the server on the other side wants
+            us to follow.
+        :return: NameID instance precursor
+        """
         if name_id_policy and name_id_policy.sp_name_qualifier:
             return self._get_vo_identifier(name_id_policy.sp_name_qualifier,
                                             userid, identity)
@@ -121,6 +144,7 @@ class Identifier(object):
                 return self.temporary_nameid()
                 
     def temporary_nameid(self):
+        """ Returns a random one-time identifier """
         return args2dict(sid(), format=saml.NAMEID_FORMAT_TRANSIENT)
         
         
@@ -137,12 +161,14 @@ class Server(object):
             self.conf = config
         
         self.metadata = self.conf["metadata"]
+        self.sc = security_context(self.conf, log)
         if cache:
             self.cache = Cache(cache)
         else:
             self.cache = Cache()
         
     def load_config(self, config_file):
+        
         self.conf = Config()
         self.conf.load_file(config_file)
         if "subject_data" in self.conf:
@@ -153,8 +179,9 @@ class Server(object):
             self.id = None
     
     def issuer(self):
+        """ Return an Issuer precursor """
         return args2dict( self.conf["entityid"], 
-                        format=saml.NAMEID_FORMAT_ENTITY)
+                            format=saml.NAMEID_FORMAT_ENTITY)
         
         
     def parse_authn_request(self, enc_request):
@@ -164,15 +191,14 @@ class Server(object):
         :return: A dictionary with keys:
             consumer_url - as gotten from the SPs entity_id and the metadata
             id - the id of the request
-            name_id_policy - how to chose the subjects identifier
-            sp_entityid - the entity id of the SP
+            sp_entity_id - the entity id of the SP
+            request - The verified request
         """
         
         response = {}
         request_xml = decode_base64_and_inflate(enc_request)
         try:
-            request = correctly_signed_authn_request(request_xml, 
-                        self.conf["xmlsec_binary"], log=self.log)
+            request = self.sc.correctly_signed_authn_request(request_xml)
             if self.log and self.debug:
                 self.log.error("Request was correctly signed")
         except Exception:
@@ -187,18 +213,20 @@ class Server(object):
         if request.version != VERSION:
             raise VersionMismatch(
                         "can't work with version %s" % request.version)
-        sp_entityid = request.issuer.text
+                        
+        sp_entity_id = request.issuer.text
         # used to find return address in metadata
         try:
-            consumer_url = self.metadata.consumer_url(sp_entityid)
+            consumer_url = self.metadata.consumer_url(sp_entity_id)
         except KeyError:
             self.log and self.log.info(
                     "entities: %s" % self.metadata.entity.keys())
-            raise UnknownPrincipal(sp_entityid)
+            raise UnknownPrincipal(sp_entity_id)
+            
         if not consumer_url: # what to do ?
-            raise UnsupportedBinding(sp_entityid)
+            raise UnsupportedBinding(sp_entity_id)
 
-        response["sp_entityid"] = sp_entityid
+        response["sp_entity_id"] = sp_entity_id
 
         if consumer_url != return_destination:
             # serious error on someones behalf
@@ -214,17 +242,30 @@ class Server(object):
         return response
                         
     def wants(self, sp_entity_id):
-        """
+        """ Returns what attributes this SP requiers and which are optional
+        if any such demands are registered in the Metadata.
+        
         :param sp_entity_id: The entity id of the SP
         :return: 2-tuple, list of required and list of optional attributes
         """
         return self.metadata.requests(sp_entity_id)
         
     def parse_attribute_query(self, xml_string):
+        """ Parse an attribute query
+        
+        :param xml_string: The Attribute Query as an XML string
+        :return: 3-Tuple containing:
+            subject - identifier of the subject
+            attribute - which attributes that the requestor wants back
+            query - the whole query
+        """
         query = samlp.attribute_query_from_string(xml_string)
+        # Check that it's 
         assert query.version == VERSION
+        
         self.log and self.log.info(
             "%s ?= %s" % (query.destination, self.conf.aa_url))
+        # Is it for me ?
         assert query.destination == self.conf.aa_url
         
         # verify signature
@@ -235,10 +276,7 @@ class Server(object):
         else:
             attribute = None
         return (subject, attribute, query)
-        
-    def find_subject(self, subject, attribute=None):
-        pass
-    
+            
     # ------------------------------------------------------------------------
 
     def _response(self, consumer_url, in_response_to, sp_entity_id, 

@@ -31,12 +31,12 @@ from saml2.utils import do_attributes, args2dict
 
 from saml2 import samlp, saml, extension_element_to_element
 from saml2 import VERSION, class_name, make_instance
-from saml2.sigver import correctly_signed_response, decrypt
-from saml2.sigver import pre_signature_part, sign_assertion_using_xmlsec
-from saml2.sigver import sign_statement_using_xmlsec
+from saml2.sigver import pre_signature_part
+from saml2.sigver import security_context
 from saml2.soap import SOAPClient
 
 from saml2.attribute_converter import to_local
+from saml2.authnresponse import authn_response
 
 DEFAULT_BINDING = saml2.BINDING_HTTP_REDIRECT
 
@@ -47,24 +47,6 @@ FORM_SPEC = """<form method="post" action="%s">
 </form>"""
 
 LAX = False
-
-def _use_on_or_after(condition, slack):
-    now = time.mktime(time.gmtime())
-    not_on_or_after = time.mktime(str_to_time(condition.not_on_or_after))
-    if not_on_or_after < now + slack:
-        # To old ignore
-        raise Exception("To old can't use it")
-    return not_on_or_after
-
-def _use_before(condition, slack):
-    not_before = time.mktime(str_to_time(condition.not_before))
-    now = time.mktime(time.gmtime())
-        
-    if not_before > now + slack:
-        # Can't use it yet
-        raise Exception("Can't use it yet %s <= %s" % (not_before, now))
-    
-    return True
 
 class Saml2Client(object):
     """ The basic pySAML2 service provider class """
@@ -79,7 +61,8 @@ class Saml2Client(object):
             self.config = config
             if "metadata" in config:
                 self.metadata = config["metadata"]
-
+            self.sc = security_context(config)
+            
     def _init_request(self, request, destination):
         #request.id = sid()
         request.version = VERSION
@@ -129,9 +112,10 @@ class Saml2Client(object):
         if post.has_key("SAMLResponse"):
             saml_response =  post['SAMLResponse'].value
             if saml_response:
-                return self.verify_response(saml_response, requestor, 
-                                            outstanding, log, 
-                                            context="AuthNReq")
+                ar = authn_response(self.conf, requestor, outstanding, log)
+                ar.loads(saml_response)
+                return ar.verify()
+                
         return None
             
     def authn_request(self, query_id, destination, service_url, spentityid, 
@@ -184,9 +168,8 @@ class Saml2Client(object):
             
         request = make_instance(samlp.AuthnRequest, prel)
         if sign:
-            return sign_statement_using_xmlsec("%s" % request, class_name(request),
-                                    self.config["xmlsec_binary"], 
-                                    key_file=self.config["key_file"])
+            return self.sc.sign_statement_using_xmlsec("%s" % request, 
+                                    class_name(request))
             #return samlp.authn_request_from_string(sreq)
         else:
             return "%s" % request
@@ -195,8 +178,7 @@ class Saml2Client(object):
                         my_name="", relay_state="",
                         binding=saml2.BINDING_HTTP_REDIRECT, log=None,
                         vorg="", scoping=None):
-        """ Either verifies an authentication Response or if none is present
-        send an authentication request.
+        """ Sends an authentication request.
         
         :param spentityid: The SP EntityID
         :param binding: How the authentication request should be sent to the 
@@ -253,211 +235,6 @@ class Saml2Client(object):
             raise Exception("Unkown binding type: %s" % binding)
         return (session_id, response)
             
-    def verify_response(self, xml_response, requestor, outstanding=None, 
-                log=None, decode=True, context="", lax=False):
-        """ Verify a response
-        
-        :param xml_response: The response as a XML string
-        :param requestor: The hostname of the machine
-        :param outstanding: A collection of outstanding authentication requests
-        :param log: Where logging information should be sent
-        :param decode: There for testing purposes
-        :param lax: Accept things you normally shouldn't
-        :return: A 2-tuple consisting of an identity description and the 
-            real relay-state
-        """
-        
-        if not outstanding:
-            outstanding = {}
-        
-        if decode:
-            decoded_xml = base64.b64decode(xml_response)
-        else:
-            decoded_xml = xml_response
-        
-        # own copy
-        xmlstr = decoded_xml[:]
-        log and log.info("verify correct signature")
-        response = correctly_signed_response(decoded_xml, 
-                        self.config["xmlsec_binary"], log=log)
-        if not response:
-            if log:
-                log.error("Response was not correctly signed")
-                log.info(decoded_xml)
-            return None
-        else:
-            log and log.error("Response was correctly signed or nor signed")
-            
-        log and log.info("response: %s" % (response,))
-        try:
-            session_info = self.do_response(response, 
-                                                requestor, 
-                                                outstanding=outstanding, 
-                                                xmlstr=xmlstr, 
-                                                log=log, context=context,
-                                                lax=lax)
-            session_info["issuer"] = response.issuer.text
-            session_info["session_id"] = response.in_response_to
-        except AttributeError, exc:
-            if log:
-                log.error("AttributeError: %s" % (exc,))
-            else:
-                print >> sys.stderr, "AttributeError: %s" % (exc,)
-            return None
-        except Exception, exc:
-            if log:
-                log.error("Exception: %s" % (exc,))
-            else:
-                print >> sys.stderr, "Exception: %s" % (exc,)
-            return None
-                                    
-        session_info["ava"]["__userid"] = session_info["name_id"]
-        return session_info
-          
-    def _verify_condition(self, assertion, requestor, log, lax=False, 
-                            slack=0):
-        # The Identity Provider MUST include a <saml:Conditions> element
-        #print "Conditions",assertion.conditions
-        assert assertion.conditions
-        condition = assertion.conditions
-        log and log.info("condition: %s" % condition)
-
-        try:
-            slack = self.config["accept_time_diff"]
-        except KeyError:
-            slack = 0
-
-        try:
-            not_on_or_after = _use_on_or_after(condition, slack)
-            _use_before(condition, slack)
-        except Exception:
-            if not lax:
-                raise
-            else:
-                not_on_or_after = 0
-                
-        if not for_me(condition, requestor):
-            if not LAX and not lax:
-                raise Exception("Not for me!!!")
-        
-        return not_on_or_after
-        
-    def _websso(self, assertion, _outstanding, _requestor, _log=None):
-        # the assertion MUST contain one AuthNStatement
-        assert len(assertion.authn_statement) == 1
-        # authn_statement = assertion.authn_statement[0]
-        # check authn_statement.session_index
-        
-        
-    def _assertion(self, assertion, outstanding, requestor, log, context, 
-                    lax):
-        if log:
-            log.info("assertion context: %s" % (context,))
-            log.info("assertion keys: %s" % (assertion.keyswv()))
-            log.info("outstanding: %s" % (outstanding))
-        
-        if context == "AuthNReq":
-            self._websso(assertion, outstanding, requestor, log)
-
-        # The Identity Provider MUST include a <saml:Conditions> element
-        #print "Conditions",assertion.conditions
-        assert assertion.conditions
-        log and log.info("verify_condition")
-        not_on_or_after = self._verify_condition(assertion, requestor, log, 
-                                                lax)
-
-        # The assertion can contain zero or one attributeStatements
-        if not assertion.attribute_statement:
-            ava = {}
-        else:
-            assert len(assertion.attribute_statement) == 1
-            ava = to_local(self.config.attribute_converters(),
-                            assertion.attribute_statement[0])
-
-        log and log.info("AVA: %s" % (ava,))
-
-        # The assertion must contain a Subject
-        assert assertion.subject
-        subject = assertion.subject
-        for subject_confirmation in subject.subject_confirmation:
-            data = subject_confirmation.subject_confirmation_data
-            if data.in_response_to in outstanding:
-                came_from = outstanding[data.in_response_to]
-                del outstanding[data.in_response_to]
-            elif LAX:
-                came_from = ""
-            else:
-                print data.in_response_to, outstanding.keys()
-                raise Exception(
-                    "Combination of session id and requestURI I don't recall")
-        
-        # The subject must contain a name_id
-        assert subject.name_id
-        name_id = subject.name_id.text.strip()
-                
-        return {"ava":ava, "name_id":name_id, "came_from":came_from,
-                 "not_on_or_after":not_on_or_after}
-
-    def _encrypted_assertion(self, xmlstr, outstanding, requestor, 
-            log=None, context=""):
-        log and log.debug("Decrypt message")        
-        decrypt_xml = decrypt(xmlstr, self.config["key_file"],
-                                self.config["xmlsec_binary"], log=log)
-        log and log.debug("Decryption successfull")
-        
-        response = samlp.response_from_string(decrypt_xml)
-        log and log.debug("Parsed decrypted assertion successfull")
-        
-        enc = response.encrypted_assertion[0].extension_elements[0]            
-        assertion = extension_element_to_element(
-                        enc, 
-                        saml.ELEMENT_FROM_STRING,
-                        namespace=saml.NAMESPACE)
-        log and log.info("Decrypted Assertion: %s" % assertion)
-        return self._assertion(assertion, outstanding, requestor, log,
-                                context)
-        
-    def do_response(self, response, requestor, outstanding=None, 
-                        xmlstr="", log=None, context="", lax=False):
-        """
-        Parse a response, verify that it is a response for me and
-        expected by me and that it is correct.
-
-        :param response: The response as a structure
-        :param requestor: The host (me) that asked for a AuthN response
-        :param outstanding: A dictionary with session ids as keys and request 
-            URIs as values.
-        :param lax: Accept things you normally shouldn't
-        :result: A 2-tuple with attribute value assertions as a dictionary 
-            as one part and the NameID as the other.
-        """
-
-        if not outstanding:
-            outstanding = {}
-
-        if response.status:
-            status = response.status
-            if status.status_code.value != samlp.STATUS_SUCCESS:
-                log and log.info("Not successfull operation: %s" % status)
-                raise Exception(
-                    "Not successfull according to: %s" % \
-                    status.status_code.value)
-
-        # MUST contain *one* assertion
-        try:
-            assert len(response.assertion) == 1 or \
-                    len(response.encrypted_assertion) == 1
-        except AssertionError:
-            raise Exception("No assertion part")
-
-        if response.assertion:         
-            log and log.info("***Unencrypted response***")
-            return self._assertion(response.assertion[0], outstanding, 
-                                    requestor, log, context, lax)
-        else:
-            log and log.info("***Encrypted response***")
-            return self._encrypted_assertion(xmlstr, outstanding, 
-                                                requestor, log, context)
 
     def create_attribute_query(self, session_id, subject_id, issuer, 
             destination, attribute=None, sp_name_qualifier=None, 
@@ -504,9 +281,7 @@ class Saml2Client(object):
             
         request = make_instance(samlp.AttributeQuery, prequery)
         if sign:
-            signed_req = sign_assertion_using_xmlsec("%s" % request, 
-                                    self.config["xmlsec_binary"], 
-                                    key_file=self.config["key_file"])
+            signed_req = self.sc.sign_assertion_using_xmlsec("%s" % request)
             return samlp.attribute_query_from_string(signed_req)
 
         else:
@@ -596,12 +371,6 @@ class Saml2Client(object):
     
 # ----------------------------------------------------------------------
 
-def for_me(condition, myself ):
-    for restriction in condition.audience_restriction:
-        audience = restriction.audience
-        if audience.text.strip() == myself:
-            return True
-
 ROW = """<tr><td>%s</td><td>%s</td></tr>"""
 
 def _print_statement(statem):
@@ -637,4 +406,3 @@ def _print_statements(states):
 def print_response(resp):
     print _print_statement(resp)
     print resp.to_string()
-    

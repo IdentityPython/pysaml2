@@ -4,9 +4,8 @@
 from saml2.client import Saml2Client
 from saml2 import samlp, client, BINDING_HTTP_POST
 from saml2 import saml, utils, config, class_name, make_instance
-from saml2.sigver import correctly_signed_authn_request, verify_signature
-from saml2.sigver import correctly_signed_response
-from saml2.server import Server
+#from saml2.sigver import correctly_signed_authn_request, verify_signature
+#from saml2.server import Server
 
 XML_RESPONSE_FILE = "saml_signed.xml"
 XML_RESPONSE_FILE2 = "saml2_response.xml"
@@ -48,17 +47,6 @@ REQ1 = """<?xml version='1.0' encoding='UTF-8'?>
     
 class TestClient:
     def setup_class(self):
-        server = Server("idp.config")
-        name_id = server.id.temporary_nameid()
-
-        self._resp_ = server.do_response(
-                    "http://lingon.catalogix.se:8087/",   # consumer_url
-                    "12",                       # in_response_to
-                    "urn:mace:example.com:saml:roland:sp", # sp_entity_id
-                    {"eduPersonEntitlement":"Jeter"},
-                    name_id = name_id
-                )
-
         conf = config.Config()
         try:
             conf.load_file("tests/server.config")
@@ -66,58 +54,6 @@ class TestClient:
             conf.load_file("server.config")
         self.client = Saml2Client({},conf)
     
-    def test_verify_1(self):
-        xml_response = ("%s" % (self._resp_,)).split("\n")[1]
-        outstanding = {"12": "http://localhost:8088/sso"}
-        session_info = self.client.verify_response(xml_response, 
-                                "urn:mace:example.com:saml:roland:sp", 
-                                outstanding=outstanding,
-                                decode=False)
-        del session_info["name_id"]
-        del session_info["not_on_or_after"]
-        del session_info["ava"]["__userid"]
-        print session_info
-        assert session_info == {'session_id': '12', 
-            'came_from': 'http://localhost:8088/sso', 
-            'ava': {'eduPersonEntitlement': ['Jeter'] }, 
-            'issuer': 'urn:mace:example.com:saml:roland:idp'}
-    
-    def test_parse_1(self):
-        xml_response = ("%s" % (self._resp_,)).split("\n")[1]
-        response = correctly_signed_response(xml_response, 
-                        self.client.config["xmlsec_binary"])
-        outstanding = {"12": "http://localhost:8088/sso"}
-        session_info = self.client.do_response(response, 
-                                "urn:mace:example.com:saml:roland:sp",
-                                outstanding=outstanding)
-        assert session_info["ava"]["eduPersonEntitlement"] == ["Jeter"]
-
-    def test_parse_2(self):
-        xml_response = open(XML_RESPONSE_FILE2).read()
-        response = samlp.response_from_string(xml_response)
-        outstanding = {"_ae0216740b5baa4b13c79ffdb2baa82572788fd9a3": 
-                            "http://localhost:8088/sso"}
-        session_info = self.client.do_response(response, 
-                                                "xenosmilus.umdc.umu.se",
-                                                outstanding=outstanding,
-                                                lax=True)
-        
-        assert session_info["ava"] == {'uid': ['andreas'], 
-                        'mobile': ['+4741107700'], 
-                        'edupersonnickname': ['erlang'], 
-                        'o': ['Feide RnD'], 
-                        'edupersonentitlement': [
-                                'urn:mace:feide.no:entitlement:test'], 
-                        'edupersonaffiliation': ['employee'], 
-                        'eduPersonPrincipalName': ['andreas@rnd.feide.no'], 
-                        'sn': ['Solberg'], 
-                        'mail': ['andreas@uninett.no'], 
-                        'ou': ['Guests'], 
-                        'cn': ['Andreas Solberg']}
-        assert session_info["name_id"] == "_242f88493449e639aab95dd9b92b1d04234ab84fd8"
-        assert session_info.keys() == ['came_from', 'name_id', 'ava', 
-                                        'not_on_or_after']
-
     def test_create_attribute_query1(self):
         req = self.client.create_attribute_query("1", 
             "E8042FB4-4D5B-48C3-8E14-8EDD852790DD",
@@ -294,8 +230,4 @@ class TestClient:
                     self.client.config["xmlsec_binary"],
                     self.client.config["metadata"])
         except Exception: # missing certificate
-            verify_signature(self.client.config["xmlsec_binary"], 
-                                ar_str,
-                                self.client.config["cert_file"],
-                                cert_type="pem",
-                                node_name=class_name(ar))
+            self.client.sc.verify_signature(ar_str, node_name=class_name(ar))

@@ -112,6 +112,9 @@ class Config(dict):
         
         return self
     
+    def xmlsec(self):
+        return self["xmlsec_binary"]
+        
     def services(self):
         return self["service"].keys()
         
