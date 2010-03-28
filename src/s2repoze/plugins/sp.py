@@ -233,12 +233,12 @@ class SAML2Plugin(FormPluginBase):
         # check for SAML2 authN response
         scl = Saml2Client(environ, self.conf)
         try:
-            # Evaluate the response
-            session_info = scl.response(post, self.conf["entityid"], 
+            # Evaluate the response, returns a AuthnResponse instance
+            ar = scl.response(post, self.conf["entityid"], 
                                         self.outstanding_authn,
                                         self.log)
             # Cache it
-            name_id = self._cache_session(session_info)
+            name_id = self._cache_session(ar.session_info())
             if self.debug:
                 self.log and self.log.info("stored %s with key %s" % (
                                         session_info, name_id))

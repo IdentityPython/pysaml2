@@ -323,11 +323,10 @@ class Saml2Client(object):
         log and log.info("SOAP request sent and got response: %s" % response)
         if response:
             log and log.info("Verifying response")
-            session_info = self.verify_response(response, 
-                                                issuer,
-                                                outstanding={session_id:""}, 
-                                                log=log, decode=False,
-                                                context="AttrReq")
+            
+            ar = authn_response(self.conf, issuer, {session_id:""}, log)            
+            session_info = ar.loads(response).verify().session_info()
+            
             log and log.info("session: %s" % session_info)
             return session_info
         else:

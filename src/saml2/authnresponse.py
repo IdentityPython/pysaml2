@@ -112,6 +112,8 @@ class AuthnResponse(object):
 
         if self.debug:
             self.log.debug("response: %s" % (response,))
+
+        return self
         
     def clear(self):
         self.xmlstr = ""
@@ -263,6 +265,11 @@ class AuthnResponse(object):
     def id(self):
         return self.response.id
 
+    def session_info(self):
+        return { "ava": self.ava, "name_id": name_id, 
+                "came_from": self.came_from, "issuer": self.issuer(),
+                "not_on_or_after": self.not_on_or_after }
+    
 # ======================================================================
                                     
    # session_info["ava"]["__userid"] = session_info["name_id"]
