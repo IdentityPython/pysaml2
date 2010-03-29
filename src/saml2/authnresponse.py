@@ -29,19 +29,23 @@ from saml2.attribute_converter import to_local
 
 def _use_on_or_after(condition, slack):
     now = time.mktime(time.gmtime())
+    #print "NOW: %d" % now
     not_on_or_after = time.mktime(str_to_time(condition.not_on_or_after))
+    #print "not_on_or_after: %d" % not_on_or_after
     # slack is +-
     high = not_on_or_after+slack
     if now > high:
         # To old ignore
-        print "(%d > %d)" % (now,high)
+        #print "(%d > %d)" % (now,high)
         raise Exception("To old can't use it!")
     return not_on_or_after
 
 def _use_before(condition, slack):
-    not_before = time.mktime(str_to_time(condition.not_before))
     now = time.mktime(time.gmtime())
-        
+    #print "NOW: %s" % now
+    not_before = time.mktime(str_to_time(condition.not_before))
+    #print "not_before: %d" % not_before
+
     if not_before > now + slack:
         # Can't use it yet
         raise Exception("Can't use it yet %s <= %s" % (not_before, now))
@@ -54,8 +58,11 @@ def for_me(condition, myself ):
         if audience.text.strip() == myself:
             return True
         else:
-            print "%s != %s" % (audience.text.strip(), myself)
-
+            #print "Not for me: %s != %s" % (audience.text.strip(), myself)
+            pass
+    
+    return False
+    
 # ---------------------------------------------------------------------------
 
 class IncorrectlySigned(Exception):
@@ -64,7 +71,7 @@ class IncorrectlySigned(Exception):
 # ---------------------------------------------------------------------------
     
 def authn_response(conf, requestor, outstanding_queries=None, log=None, 
-                    timeslack=0):
+                    timeslack=0, debug=0):
     sec = security_context(conf)
     if not timeslack:
         try:
@@ -73,7 +80,7 @@ def authn_response(conf, requestor, outstanding_queries=None, log=None,
             pass
             
     return AuthnResponse(sec, conf.attribute_converters, requestor, 
-                            outstanding_queries, log, timeslack)
+                            outstanding_queries, log, timeslack, debug)
     
 class AuthnResponse(object):
     
@@ -95,6 +102,8 @@ class AuthnResponse(object):
         self.clear()
         
     def loads(self, xmldata, decode=True):
+        if self.debug:
+            self.log.info("--- Loads AuthnResponse ---")
         if decode:
             decoded_xml = base64.b64decode(xmldata)
         else:
@@ -102,7 +111,13 @@ class AuthnResponse(object):
         
         # own copy
         self.xmlstr = decoded_xml[:]        
-        self.response = self.sc.correctly_signed_response(decoded_xml)
+        if self.debug:
+            self.log.info("xmlstr: %s" % (self.xmlstr,))
+        try:
+            self.response = self.sc.correctly_signed_response(decoded_xml)
+        except Exception, excp:
+            self.log.info("EXCEPTION: %s", excp)
+            raise
         
         if not self.response:
             if self.log:
@@ -111,7 +126,7 @@ class AuthnResponse(object):
             raise IncorrectlySigned()
 
         if self.debug:
-            self.log.debug("response: %s" % (response,))
+            self.log.info("response: %s" % (self.response,))
 
         return self
         
@@ -127,6 +142,7 @@ class AuthnResponse(object):
     def status_ok(self):
         if self.response.status:
             status = self.response.status
+            self.log.info("status: %s" % (status,))
             if status.status_code.value != samlp.STATUS_SUCCESS:
                 if self.log:
                     self.log.info("Not successfull operation: %s" % status)
@@ -151,7 +167,8 @@ class AuthnResponse(object):
         try:
             self.not_on_or_after = _use_on_or_after(condition, self.timeslack)
             _use_before(condition, self.timeslack)
-        except Exception:
+        except Exception,excp:
+            self.log.error("Exception on condition: %s" % (excp,))
             if not lax:
                 raise
             else:
@@ -166,9 +183,14 @@ class AuthnResponse(object):
     def get_identity(self):
         # The assertion can contain zero or one attributeStatements
         if not self.assertion.attribute_statement:
+            self.log.error("Missing Attribute Statement")
             ava = {}
         else:
             assert len(self.assertion.attribute_statement) == 1
+            self.log.info("Attribute Statement: %s" % (
+                                    self.assertion.attribute_statement[0],))
+            for ac in self.attribute_converters():
+                self.log.info("Converts name format: %s" % (ac.format,))
             ava = to_local(self.attribute_converters(),
                             self.assertion.attribute_statement[0])
         return ava
@@ -179,11 +201,11 @@ class AuthnResponse(object):
         subject = self.assertion.subject
         for subject_confirmation in subject.subject_confirmation:
             data = subject_confirmation.subject_confirmation_data
-            if data.in_response_to in self.outstanding:
-                self.came_from = self.outstanding[data.in_response_to]
-                del self.outstanding[data.in_response_to]
+            if data.in_response_to in self.outstanding_queries:
+                self.came_from = self.outstanding_queries[data.in_response_to]
+                del self.outstanding_queries[data.in_response_to]
             else:
-                print data.in_response_to, self.outstanding.keys()
+                print data.in_response_to, self.outstanding_queries.keys()
                 raise Exception(
                     "Combination of session id and requestURI I don't recall")
         
@@ -195,9 +217,10 @@ class AuthnResponse(object):
         self.assertion = assertion
         
         if self.debug:
-            self.log.info("assertion context: %s" % (context,))
+            self.log.info("assertion context: %s" % (self.context,))
             self.log.info("assertion keys: %s" % (assertion.keyswv()))
-            self.log.info("outstanding: %s" % (outstanding))
+            self.log.info("outstanding_queries: %s" % (
+                                                    self.outstanding_queries))
         
         if self.context == "AuthNReq":
             self.authn_statement_ok()
@@ -205,10 +228,13 @@ class AuthnResponse(object):
         if not self.condition_ok():
             return None
             
+        if self.debug:
+            self.log.info("--- Getting Identity ---")
+            
         self.ava = self.get_identity()
         
         if self.debug:
-            self.log.debug("AVA: %s" % (self.ava,))
+            self.log.info("--- AVA: %s" % (self.ava,))
 
         self.get_subject()
          
@@ -218,18 +244,18 @@ class AuthnResponse(object):
         decrypt_xml = self.sc.decrypt(self.xmlstr)
         
         if self.debug:
-            self.log.debug("Decryption successfull")
+            self.log.info("Decryption successfull")
         
         self.response = samlp.response_from_string(decrypt_xml)
         if self.debug:
-            self.log.debug("Parsed decrypted assertion successfull")
+            self.log.info("Parsed decrypted assertion successfull")
         
         enc = self.response.encrypted_assertion[0].extension_elements[0]            
         assertion = extension_element_to_element(enc, 
                                                 saml.ELEMENT_FROM_STRING,
                                                 namespace=saml.NAMESPACE)
         if self.debug:
-            self.log.debug("Decrypted Assertion: %s" % assertion)
+            self.log.info("Decrypted Assertion: %s" % assertion)
         return self._assertion(assertion)
 
     def parse_assertion(self):
@@ -240,11 +266,12 @@ class AuthnResponse(object):
             raise Exception("No assertion part")
 
         if self.response.assertion:         
-            self.debug and self.log.debug("***Unencrypted response***")
+            self.debug and self.log.info("***Unencrypted response***")
             return self._assertion(self.response.assertion[0])
         else:
             self.debug and self.log.info("***Encrypted response***")
-            return self._encrypted_assertion(outstanding)
+            return self._encrypted_assertion(
+                                        self.response.encrypted_assertion[0])
             
         return True
         
@@ -266,7 +293,7 @@ class AuthnResponse(object):
         return self.response.id
 
     def session_info(self):
-        return { "ava": self.ava, "name_id": name_id, 
+        return { "ava": self.ava, "name_id": self.name_id, 
                 "came_from": self.came_from, "issuer": self.issuer(),
                 "not_on_or_after": self.not_on_or_after }
     

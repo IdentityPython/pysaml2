@@ -51,7 +51,7 @@ LAX = False
 class Saml2Client(object):
     """ The basic pySAML2 service provider class """
     
-    def __init__(self, environ, config=None):
+    def __init__(self, environ, config=None, debug=0):
         """
         :param environ:
         :param config: A saml2.config.Config instance
@@ -62,7 +62,9 @@ class Saml2Client(object):
             if "metadata" in config:
                 self.metadata = config["metadata"]
             self.sc = security_context(config)
-            
+        
+        self.debug = debug
+        
     def _init_request(self, request, destination):
         #request.id = sid()
         request.version = VERSION
@@ -112,7 +114,8 @@ class Saml2Client(object):
         if post.has_key("SAMLResponse"):
             saml_response =  post['SAMLResponse'].value
             if saml_response:
-                ar = authn_response(self.conf, requestor, outstanding, log)
+                ar = authn_response(self.config, requestor, outstanding, log,
+                                    debug=self.debug)
                 ar.loads(saml_response)
                 return ar.verify()
                 
@@ -324,7 +327,7 @@ class Saml2Client(object):
         if response:
             log and log.info("Verifying response")
             
-            ar = authn_response(self.conf, issuer, {session_id:""}, log)            
+            ar = authn_response(self.config, issuer, {session_id:""}, log)            
             session_info = ar.loads(response).verify().session_info()
             
             log and log.info("session: %s" % session_info)

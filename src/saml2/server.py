@@ -200,7 +200,7 @@ class Server(object):
         try:
             request = self.sc.correctly_signed_authn_request(request_xml)
             if self.log and self.debug:
-                self.log.error("Request was correctly signed")
+                self.log.info("Request was correctly signed")
         except Exception:
             if self.log:
                 self.log.error("Request was not correctly signed")
@@ -238,7 +238,7 @@ class Server(object):
         
         response["consumer_url"] = consumer_url
         response["request"] = request
-        self.log and self.log.info("AuthNRequest: %s" % request)
+
         return response
                         
     def wants(self, sp_entity_id):
@@ -407,8 +407,7 @@ class Server(object):
                             in_response_to, # in_response_to
                             sp_entity_id,   # sp_entity_id
                             identity,       # identity as dictionary
-                            name_id,
-                            userid
+                            name_id
                         )
         except MissingValue, exc:
             response = self.error_response(destination, in_response_to, 
