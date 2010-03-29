@@ -90,8 +90,7 @@ class SAML2Plugin(FormPluginBase):
             self.cache = Cache()
          
     def _cache_session(self, session_info):
-        name_id = session_info["ava"]["__userid"]
-        del session_info["ava"]["__userid"]
+        name_id = session_info["name_id"]
         issuer = session_info["issuer"]
         del session_info["issuer"]
         self.cache.set(name_id, issuer, session_info, 
@@ -209,6 +208,9 @@ class SAML2Plugin(FormPluginBase):
     def identify(self, environ):
         self.log = environ.get('repoze.who.logger','')
         
+        self.log.info("ENVIRON: %s" % environ)
+        self.log.info("self: %s" % (self.__dict__,))
+        
         uri = environ.get('REQUEST_URI', construct_url(environ))
         if self.debug:
             #self.log and self.log.info("environ.keys(): %s" % environ.keys())
@@ -226,23 +228,35 @@ class SAML2Plugin(FormPluginBase):
             if not post.has_key("SAMLResponse"):
                 environ["post.fieldstorage"] = post
                 return {}
-        except TypeError:
+            else:
+                self.log.info("--- SAMLResponse ---")
+        except TypeError, exc:
+            self.log.error("Exception: %s" % (exc,))
             environ["post.fieldstorage"] = post
             return {}
             
         # check for SAML2 authN response
-        scl = Saml2Client(environ, self.conf)
+        #if self.debug:
+        self.log.debug("Got AuthN response, checking..")
+        scl = Saml2Client(environ, self.conf, self.debug)
         try:
             # Evaluate the response, returns a AuthnResponse instance
-            ar = scl.response(post, self.conf["entityid"], 
+            try:
+                ar = scl.response(post, self.conf["entityid"], 
                                         self.outstanding_authn,
                                         self.log)
+            except Exception, excp:
+                self.log.error("Exception: %s" % (excp,))
+                raise
+                
+            session_info = ar.session_info()
             # Cache it
-            name_id = self._cache_session(ar.session_info())
+            name_id = self._cache_session(session_info)
             if self.debug:
                 self.log and self.log.info("stored %s with key %s" % (
-                                        session_info, name_id))
-        except TypeError:
+                                            session_info, name_id))
+        except TypeError, excp:
+            self.log.error("Exception: %s" % (excp,))
             return None
                                         
         if session_info["came_from"]:
