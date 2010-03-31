@@ -176,8 +176,9 @@ def security_context(conf, log=None):
                             log=log, debug=debug)
 
 class SecurityContext(object):
-    def __init__(self, xmlsec_binary, key_file="", key_type= "", cert_file="", 
-                    cert_type="", metadata=None, log=None, debug=False):
+    def __init__(self, xmlsec_binary, key_file="", key_type= "pem", 
+                    cert_file="", cert_type="pem", metadata=None, log=None, 
+                    debug=False):
         self.xmlsec = xmlsec_binary
         self.key_file = key_file
         self.cert_file = cert_file
