@@ -448,3 +448,94 @@ def test_ee_7():
     assert _eq(nid.attributes.keys(),["Format"])
     assert nid.text.strip() == "http://federationX.org"
 
+
+def test_extension_element_loadd():
+    ava = {'attributes': {}, 
+        'tag': 'ExternalEntityAttributeAuthority', 
+        'namespace': 'urn:oasis:names:tc:SAML:metadata:dynamicsaml', 
+        'children': [{
+            "tag": "AssertingEntity",
+            "namespace": "urn:oasis:names:tc:SAML:metadata:dynamicsaml",
+            "children": [{
+                "tag":"NameID",
+                "namespace": "urn:oasis:names:tc:SAML:metadata:dynamicsaml",
+                "text": "http://federationX.org",
+                "attributes":{ 
+                    "Format":"urn:oasis:names:tc:SAML:2.0:nameid-format:entity"
+                    },
+                }]
+            }, {
+            "tag":"RetrievalEndpoint",
+            "namespace": "urn:oasis:names:tc:SAML:metadata:dynamicsaml",
+            "text":"https://federationX.org/?ID=a87s76a5765da76576a57as",
+        }], 
+        }
+        
+    ee = saml2.ExtensionElement(ava["tag"]).loadd(ava)
+    print ee.__dict__
+    assert len(ee.children) == 2
+    for child in ee.children:
+        assert child.namespace == "urn:oasis:names:tc:SAML:metadata:dynamicsaml"
+    assert _eq(["AssertingEntity","RetrievalEndpoint"],
+                [c.tag for c in ee.children])
+    aes = [c for c in ee.children if c.tag == "AssertingEntity"]
+    assert len(aes) == 1
+    assert len(aes[0].children) == 1
+    assert _eq(aes[0].attributes.keys(),[])
+    nid = aes[0].children[0]
+    assert nid.tag == "NameID"
+    assert nid.namespace == "urn:oasis:names:tc:SAML:metadata:dynamicsaml"
+    assert len(nid.children) == 0
+    assert _eq(nid.attributes.keys(),["Format"])
+    assert nid.text.strip() == "http://federationX.org"
+        
+def test_extensions_loadd():
+    ava = {"extension_elements":[{'attributes': {}, 
+        'tag': 'ExternalEntityAttributeAuthority', 
+        'namespace': 'urn:oasis:names:tc:SAML:metadata:dynamicsaml', 
+        'children': [{
+            "tag": "AssertingEntity",
+            "namespace": "urn:oasis:names:tc:SAML:metadata:dynamicsaml",
+            "children": [{
+                "tag":"NameID",
+                "namespace": "urn:oasis:names:tc:SAML:metadata:dynamicsaml",
+                "text": "http://federationX.org",
+                "attributes":{ 
+                    "Format":"urn:oasis:names:tc:SAML:2.0:nameid-format:entity"
+                    },
+                }]
+            }, {
+            "tag":"RetrievalEndpoint",
+            "namespace": "urn:oasis:names:tc:SAML:metadata:dynamicsaml",
+            "text":"https://federationX.org/?ID=a87s76a5765da76576a57as",
+        }], 
+        }],
+        "extension_attributes": {
+            "foo":"bar",
+            }
+        }
+
+    extension = saml2.SamlBase()
+    extension.loadd(ava)
+    
+    print extension.__dict__
+    assert len(extension.extension_elements) == 1
+    ee = extension.extension_elements[0]
+    assert len(ee.children) == 2
+    for child in ee.children:
+        assert child.namespace == "urn:oasis:names:tc:SAML:metadata:dynamicsaml"
+    assert _eq(["AssertingEntity","RetrievalEndpoint"],
+                [c.tag for c in ee.children])
+    aes = [c for c in ee.children if c.tag == "AssertingEntity"]
+    assert len(aes) == 1
+    assert len(aes[0].children) == 1
+    assert _eq(aes[0].attributes.keys(),[])
+    nid = aes[0].children[0]
+    assert nid.tag == "NameID"
+    assert nid.namespace == "urn:oasis:names:tc:SAML:metadata:dynamicsaml"
+    assert len(nid.children) == 0
+    assert _eq(nid.attributes.keys(),["Format"])
+    assert nid.text.strip() == "http://federationX.org"
+        
+    assert extension.extension_attributes.keys() == ["foo"]
+    assert extension.extension_attributes["foo"] == "bar"
