@@ -559,7 +559,22 @@ class SamlBase(ExtensionContainer):
 
         return self
         
-def extension_element_to_element(extension_element, translation_function,
+        
+def element_to_extension_element(element):
+    ee = ExtensionElement(element.c_tag, element.c_namespace, 
+                            text=element.text)
+    
+    for xml_attribute, member_name in element.c_attributes.iteritems():
+        member_value = getattr(element, member_name)
+        if member_value is not None:
+            ee.attributes[xml_attribute] = member_value
+                
+    ee.children = [element_to_extension_element(c) \
+                        for c in element.children_with_values()]
+    
+    return ee
+    
+def extension_element_to_element(extension_element, translation_functions,
                                     namespace=None):
     """ """
     try:
@@ -569,9 +584,9 @@ def extension_element_to_element(extension_element, translation_function,
     if element_namespace == namespace:
         try:
             try:
-                ets = translation_function[extension_element.tag]
+                ets = translation_functions[extension_element.tag]
             except AttributeError:
-                ets = translation_function[extension_element.c_tag]
+                ets = translation_functions[extension_element.c_tag]
             return ets(extension_element.to_string())
         except KeyError:
             pass
