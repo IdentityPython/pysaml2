@@ -3,8 +3,10 @@
 from saml2 import create_class_from_xml_string, class_name, make_vals, md
 from saml2.saml import NameID, Issuer, SubjectLocality, AuthnContextClassRef
 from saml2.saml import SubjectConfirmationData, SubjectConfirmation
+from saml2.saml import Attribute
 import saml2
 from py.test import raises
+import saml2_data
 
 try:
     from xml.etree import cElementTree as ElementTree
@@ -395,3 +397,54 @@ def test_make_vals_list_of_strs():
 def test_exception_make_vals_value_error():
     raises(ValueError, "make_vals((1024,'xyz'), md.KeySize, part=True)")
     
+
+def test_attribute_element_to_extension_element():
+    attr = create_class_from_xml_string(Attribute, saml2_data.TEST_ATTRIBUTE)
+    ee = saml2.element_to_extension_element(attr)
+    print ee.__dict__
+    assert ee.tag == "Attribute"
+    assert ee.namespace == 'urn:oasis:names:tc:SAML:2.0:assertion'
+    assert _eq(ee.attributes.keys(),['FriendlyName', 'Name', 'NameFormat'])
+    assert ee.attributes["FriendlyName"] == 'test attribute'
+    assert ee.attributes["Name"] == "testAttribute"
+    assert ee.attributes["NameFormat"] == \
+                'urn:oasis:names:tc:SAML:2.0:attrname-format:unspecified'
+    assert len(ee.children) == 2
+    for child in ee.children:
+        # children are also extension element instances
+        assert child.namespace == 'urn:oasis:names:tc:SAML:2.0:assertion'
+        assert child.tag == "AttributeValue"
+        
+def test_ee_7():
+    ee = saml2.extension_element_from_string(
+        """<?xml version='1.0' encoding='UTF-8'?>
+   <ExternalEntityAttributeAuthority
+       xmlns="urn:oasis:names:tc:SAML:metadata:dynamicsaml">
+       <AssertingEntity>
+           <NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:entity">
+               http://federationX.org
+           </NameID>
+       </AssertingEntity>
+       <RetrievalEndpoint>
+           https://federationX.org/?ID=a87s76a5765da76576a57as
+       </RetrievalEndpoint>
+   </ExternalEntityAttributeAuthority>
+""")
+
+    print ee.__dict__
+    assert len(ee.children) == 2
+    for child in ee.children:
+        assert child.namespace == "urn:oasis:names:tc:SAML:metadata:dynamicsaml"
+    assert _eq(["AssertingEntity","RetrievalEndpoint"],
+                [c.tag for c in ee.children])
+    aes = [c for c in ee.children if c.tag == "AssertingEntity"]
+    assert len(aes) == 1
+    assert len(aes[0].children) == 1
+    assert _eq(aes[0].attributes.keys(),[])
+    nid = aes[0].children[0]
+    assert nid.tag == "NameID"
+    assert nid.namespace == "urn:oasis:names:tc:SAML:metadata:dynamicsaml"
+    assert len(nid.children) == 0
+    assert _eq(nid.attributes.keys(),["Format"])
+    assert nid.text.strip() == "http://federationX.org"
+
