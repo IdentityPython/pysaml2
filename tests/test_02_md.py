@@ -1025,9 +1025,6 @@ class TestSPSSODescriptor:
         dp = extension_element_to_element(eelem, md.ELEMENT_FROM_STRING,
                                             md.IDPDISC)
         print "DP",dp.c_tag, dp.c_namespace,dp.__dict__
-        ee = element_to_extension_element(dp)
-        print "ee",ee.__dict__
-        assert False
         assert isinstance(dp, md.DiscoveryResponse)
     assert isinstance(new_sp_sso_descriptor.key_descriptor[0],
                             md.KeyDescriptor)
