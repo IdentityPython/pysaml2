@@ -394,10 +394,8 @@ class AuthzService(Endpoint):
     def __init__(self, binding=None, 
                 location=None, response_location=None, text=None,
                 extension_elements=None, extension_attributes=None):
-        """Constructor for IndexedEndpoint
+        """Constructor for AuthzService
 
-        :param index: index attribute
-        :param is_default: isDefault attribute
         :param binding: Binding attribute
         :param location: Location attribute
         :param response_location: ResponseLocation attribute
@@ -1636,7 +1634,23 @@ def entities_descriptor_from_string(xml_string):
     """ Create EntitiesDescriptor instance from an XML string """
     return create_class_from_xml_string(EntitiesDescriptor, xml_string)
 
+# ---------------------------------------------------------------------------
+
+IDPDISC = "urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol"
+
+class DiscoveryResponse(IndexedEndpoint):
+    """The idpdisc:DiscoveryResponse element"""
+    c_tag = 'DiscoveryResponse'
+    c_namespace = IDPDISC
+    
+def discovery_response_from_string(xml_string):
+    """ Create DiscoveryResponse instance from an XML string """
+    return create_class_from_xml_string(DiscoveryResponse, xml_string)
+
+# ---------------------------------------------------------------------------
+
 ELEMENT_FROM_STRING = {
+    DiscoveryResponse.c_tag: discovery_response_from_string,
     Extensions.c_tag: extensions_from_string,
     LocalizedName.c_tag: localized_name_from_string,
     LocalizedURI.c_tag: localized_uri_from_string,
