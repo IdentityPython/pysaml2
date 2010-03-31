@@ -1011,7 +1011,16 @@ TEST_SP_SSO_DESCRIPTOR = """<?xml version="1.0" encoding="utf-8"?>
   </Object>
 </Signature>
 <Extensions>
-  <foo xmlns="http://www.example.com/someNameSpace">bar</foo>
+  <idpdisc:DiscoveryResponse 
+    xmlns:idpdisc="urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol"
+    index="1"
+    Binding="urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol"
+    Location="http://geneva.rutgers.edu/Shibboleth.sso/DS"/>
+  <idpdisc:DiscoveryResponse 
+    xmlns:idpdisc="urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol"
+    index="2" 
+    Binding="urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol"
+    Location="https://geneva.rutgers.edu/Shibboleth.sso/DS"/>
 </Extensions>
 <KeyDescriptor
   use="signing"
