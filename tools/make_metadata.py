@@ -6,7 +6,7 @@ from saml2 import BINDING_SOAP, class_name, make_instance
 from saml2.time_util import in_a_while
 from saml2.utils import parse_attribute_map, args2dict
 from saml2.saml import NAME_FORMAT_URI
-from saml2.sigver import pre_signature_part, sign_statement_using_xmlsec
+from saml2.sigver import pre_signature_part, SecurityContext
 
 HELP_MESSAGE = """
 Usage: make_metadata [options] 1*configurationfile
@@ -153,6 +153,19 @@ def do_sp_sso_descriptor(sp, cert, backward_map):
             }
         }
         
+    if "discovery_service" in sp:        
+        desc["extensions"] = {"extension_elements":[
+            {
+            "tag":"DiscoveryResponse",
+            "namespace":md.IDPDISC,
+            "attributes": {
+                "index":"1",
+                "binding": md.IDPDISC,
+                "location":sp["url"]
+                }
+            }
+        ]}
+        
     return desc
 
 def do_idp_sso_descriptor(idp, cert):
@@ -218,7 +231,7 @@ def entity_descriptor(confd, valid_for):
             
     return ed
 
-def entities_descriptor(eds, valid_for, name, id, sign, xmlsec, keyfile):
+def entities_descriptor(eds, valid_for, name, id, sign, sc):
     d = {"entity_descriptor": eds}
     if valid_for:
         d["valid_until"] = in_a_while(hours=valid_for)
@@ -232,9 +245,8 @@ def entities_descriptor(eds, valid_for, name, id, sign, xmlsec, keyfile):
 
     statement = make_instance(md.EntitiesDescriptor, d)
     if sign:
-            statement = sign_statement_using_xmlsec("%s" % statement, 
-                                    class_name(statement),
-                                    xmlsec, key_file=keyfile)
+            statement = sc.sign_statement_using_xmlsec("%s" % statement, 
+                                    class_name(statement))
     return statement
 
     
@@ -284,7 +296,9 @@ def main(args):
     for conf in args:
         confd = eval(open(conf).read())
         eds.append(entity_descriptor(confd, valid_for))
-    print entities_descriptor(eds, valid_for, name, id, sign, xmlsec, keyfile)
+    
+    sc = SecurityContext(xmlsec, keyfile) 
+    print entities_descriptor(eds, valid_for, name, id, sign, sc)
     
 if __name__ == "__main__":
     import sys
