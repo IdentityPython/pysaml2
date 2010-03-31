@@ -25,7 +25,8 @@ try:
 except ImportError:
   from elementtree import ElementTree
 import saml2
-from saml2 import saml, samlp, md
+from saml2 import saml, samlp, md, extension_element_to_element
+from saml2 import element_to_extension_element
 import md_data, ds_data
 import xmldsig as ds
 
@@ -1017,6 +1018,17 @@ class TestSPSSODescriptor:
     assert new_sp_sso_descriptor.error_url == "http://www.example.com/errorURL"
     assert isinstance(new_sp_sso_descriptor.signature, ds.Signature)
     assert isinstance(new_sp_sso_descriptor.extensions, md.Extensions)
+    print new_sp_sso_descriptor.extensions.__dict__
+    assert len(new_sp_sso_descriptor.extensions.extension_elements) == 2
+    for eelem in new_sp_sso_descriptor.extensions.extension_elements:
+        print "EE",eelem.__dict__
+        dp = extension_element_to_element(eelem, md.ELEMENT_FROM_STRING,
+                                            md.IDPDISC)
+        print "DP",dp.c_tag, dp.c_namespace,dp.__dict__
+        ee = element_to_extension_element(dp)
+        print "ee",ee.__dict__
+        assert False
+        assert isinstance(dp, md.DiscoveryResponse)
     assert isinstance(new_sp_sso_descriptor.key_descriptor[0],
                             md.KeyDescriptor)
     assert isinstance(new_sp_sso_descriptor.organization,
