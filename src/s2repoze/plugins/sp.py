@@ -99,7 +99,8 @@ class SAML2Plugin(FormPluginBase):
         
     def _pick_idp(self, environ):
         """ 
-        If more than one idp and if none is selected, I have to do wayf
+        If more than one idp and if none is selected, I have to do wayf or 
+        disco
         """
         
         self.log and self.log.info("IdP URL: %s" % self.srv["idp"].values())
