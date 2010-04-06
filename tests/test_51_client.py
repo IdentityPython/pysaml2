@@ -7,9 +7,6 @@ from saml2 import saml, utils, config, class_name, make_instance
 #from saml2.sigver import correctly_signed_authn_request, verify_signature
 #from saml2.server import Server
 
-XML_RESPONSE_FILE = "saml_signed.xml"
-XML_RESPONSE_FILE2 = "saml2_response.xml"
-
 import os
         
 def for_me(condition, me ):
