@@ -305,7 +305,7 @@ class Assertion(dict):
         return args2dict(authn_instant=instant(), session_index=sid())
 
     def construct(self, sp_entity_id, in_response_to, name_id, attrconvs, 
-                    policy):
+                    policy, issuer, sign):
     
         attr_statement = from_local(attrconvs, self,
                                     policy.get_name_form(sp_entity_id))
@@ -314,6 +314,7 @@ class Assertion(dict):
         conds = policy.conditions(sp_entity_id)
         
         return assertion_factory(
+            issuer=issuer,
             attribute_statement = attr_statement,
             authn_statement = self._authn_statement(),
             conditions = conds,
