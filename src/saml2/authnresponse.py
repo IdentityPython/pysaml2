@@ -116,7 +116,7 @@ class AuthnResponse(object):
         try:
             self.response = self.sc.correctly_signed_response(decoded_xml)
         except Exception, excp:
-            self.log.info("EXCEPTION: %s", excp)
+            self.log and self.log.info("EXCEPTION: %s", excp)
             raise
         
         if not self.response:
@@ -142,7 +142,8 @@ class AuthnResponse(object):
     def status_ok(self):
         if self.response.status:
             status = self.response.status
-            self.log.info("status: %s" % (status,))
+            if self.log:
+                self.log.info("status: %s" % (status,))
             if status.status_code.value != samlp.STATUS_SUCCESS:
                 if self.log:
                     self.log.info("Not successfull operation: %s" % status)
@@ -187,10 +188,13 @@ class AuthnResponse(object):
             ava = {}
         else:
             assert len(self.assertion.attribute_statement) == 1
-            self.log.info("Attribute Statement: %s" % (
+            
+            if self.debug:
+                self.log.info("Attribute Statement: %s" % (
                                     self.assertion.attribute_statement[0],))
-            for ac in self.attribute_converters():
-                self.log.info("Converts name format: %s" % (ac.format,))
+                for ac in self.attribute_converters():
+                    self.log.info("Converts name format: %s" % (ac.format,))
+                    
             ava = to_local(self.attribute_converters(),
                             self.assertion.attribute_statement[0])
         return ava
