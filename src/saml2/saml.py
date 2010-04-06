@@ -100,7 +100,7 @@ class BaseID(SamlBase):
         SamlBase.__init__(self, text, extension_elements, extension_attributes)
         self.name_qualifier = name_qualifier
         self.sp_name_qualifier = sp_name_qualifier
-
+    
 def base_id_from_string(xml_string):
     """ Create BaseID instance from an XML string """
     return saml2.create_class_from_xml_string(BaseID, xml_string)

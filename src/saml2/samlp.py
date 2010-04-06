@@ -1276,6 +1276,3 @@ def name_id_mapping_response_from_string(xml_string):
     """ Create NameIDMappingResponse instance from an XML string """
     return create_class_from_xml_string(NameIDMappingResponse, xml_string)
 
-
-
-
