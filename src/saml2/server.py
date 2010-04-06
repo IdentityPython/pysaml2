@@ -300,8 +300,10 @@ class Server(object):
         if not status:
             status = success_status_factory()
             
+        _issuer = self.issuer()
+        
         response = response_factory(
-            issuer=self.issuer(),
+            issuer=_issuer,
             in_response_to = in_response_to,
             destination = consumer_url,
             status = status,
@@ -318,7 +320,7 @@ class Server(object):
 
             assertion = ast.construct(sp_entity_id, in_response_to, name_id,
                                         self.conf.attribute_converters(), 
-                                        policy)
+                                        policy, issuer=_issuer)
             
             if sign:
                 assertion["signature"] = pre_signature_part(assertion["id"])
@@ -379,7 +381,7 @@ class Server(object):
     # ------------------------------------------------------------------------
 
     def authn_response(self, identity, in_response_to, destination, 
-                        sp_entity_id, name_id_policy, userid):
+                        sp_entity_id, name_id_policy, userid, sign=False):
         """ Constructs an AuthenticationResponse
         
         :param identity: Information about an user
@@ -407,11 +409,21 @@ class Server(object):
                             in_response_to, # in_response_to
                             sp_entity_id,   # sp_entity_id
                             identity,       # identity as dictionary
-                            name_id
+                            name_id,
+                            sign=sign
                         )
         except MissingValue, exc:
             response = self.error_response(destination, in_response_to, 
                                         sp_entity_id, exc, name_id)
         
 
-        return ("%s" % response).split("\n")
+        if sign:
+            try:
+                return self.sc.sign_statement_using_xmlsec(response,
+                                                        class_name(response))
+            except Exception, exc:
+                response = self.error_response(destination, in_response_to, 
+                                                sp_entity_id, exc, name_id)
+                return ("%s" % response).split("\n")
+        else:
+            return ("%s" % response).split("\n")
