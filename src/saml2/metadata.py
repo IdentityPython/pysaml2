@@ -271,7 +271,7 @@ class MetaData(object):
         """
         (response, content) = self.http.request(url, "GET")
         if response.status == 200:
-            if verify_signature(self.xmlsec_binary, content, cert, "pem",
+            if verify_signature(content, self.xmlsec_binary, cert, "pem",
                     "%s:%s" % (md.EntitiesDescriptor.c_namespace,
                             md.EntitiesDescriptor.c_tag)):
                 self.import_metadata(content, (url,cert))
