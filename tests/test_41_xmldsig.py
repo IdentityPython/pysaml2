@@ -626,7 +626,7 @@ class TestSignature:
 
   def testAccessors(self):
     """Test for Signature accessors"""
-    self.signature.identifier = "id"
+    self.signature.id = "id"
     self.signature.signed_info = ds.signed_info_from_string(
       ds_data.TEST_SIGNED_INFO)
     self.signature.signature_value = ds.signature_value_from_string(
@@ -635,7 +635,7 @@ class TestSignature:
     self.signature.object.append(ds.object_from_string(ds_data.TEST_OBJECT))
 
     new_signature = ds.signature_from_string(self.signature.to_string())
-    assert new_signature.identifier == "id"
+    assert new_signature.id == "id"
     assert isinstance(new_signature.signed_info, ds.SignedInfo)
     assert isinstance(new_signature.signature_value, ds.SignatureValue)
     assert isinstance(new_signature.key_info, ds.KeyInfo)
@@ -644,7 +644,7 @@ class TestSignature:
   def testUsingTestData(self):
     """Test for signature_value_from_string() using test data"""
     new_signature = ds.signature_from_string(ds_data.TEST_SIGNATURE)
-    assert new_signature.identifier == "id"
+    assert new_signature.id == "id"
     assert isinstance(new_signature.signed_info, ds.SignedInfo)
     assert isinstance(new_signature.signature_value, ds.SignatureValue)
     assert isinstance(new_signature.key_info, ds.KeyInfo)

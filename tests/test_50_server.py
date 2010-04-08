@@ -3,7 +3,7 @@
 
 from saml2.server import Server, Identifier
 from saml2 import server, make_instance
-from saml2 import samlp, saml, client, utils
+from saml2 import samlp, saml, client, utils, config
 from saml2.utils import OtherError
 from saml2.utils import do_attribute_statement
 from py.test import raises
@@ -15,11 +15,15 @@ def _eq(l1,l2):
 
 class TestServer1():
     def setup_class(self):
-#        try:
-            self.server = Server("idp.config")
-#        except IOError, e:
-#            self.server = Server("tests/idp.config")
+        self.server = Server("idp.config")
         
+        conf = config.Config()
+        try:
+            conf.load_file("tests/server.config")
+        except IOError:
+            conf.load_file("server.config")
+        self.client = client.Saml2Client({},conf)
+
     def test_issuer(self):
         issuer = make_instance( saml.Issuer, self.server.issuer())
         assert isinstance(issuer, saml.Issuer)
@@ -102,8 +106,7 @@ class TestServer1():
         assert status.status_code.value == samlp.STATUS_SUCCESS
 
     def test_parse_faulty_request(self):
-        sc = client.Saml2Client({},None)
-        authn_request = sc.authn_request(
+        authn_request = self.client.authn_request(
                             query_id = "1",
                             destination = "http://www.example.com",
                             service_url = "http://www.example.org",
@@ -116,8 +119,7 @@ class TestServer1():
         raises(OtherError,self.server.parse_authn_request,intermed)
         
     def test_parse_faulty_request_to_err_status(self):
-        sc = client.Saml2Client({},None)
-        authn_request = sc.authn_request(
+        authn_request = self.client.authn_request(
                             query_id = "1",
                             destination = "http://www.example.com",
                             service_url = "http://www.example.org",
@@ -145,8 +147,7 @@ class TestServer1():
         assert status_code.status_code.value == samlp.STATUS_UNKNOWN_PRINCIPAL
 
     def test_parse_ok_request(self):
-        sc = client.Saml2Client({},None)
-        authn_request = sc.authn_request(
+        authn_request = self.client.authn_request(
                             query_id = "1",
                             destination = "http://www.example.com",
                             service_url = "http://localhost:8087/",
@@ -266,14 +267,38 @@ class TestServer1():
         print response.assertion[0].keyswv()
         assert len(response.assertion) == 1
         assert _eq(response.assertion[0].keyswv(), ['authn_statement', 
-                        'attribute_statement', 'subject', 'issue_instant', 
-                        'version', 'conditions', 'id'])
+                    'attribute_statement', 'subject', 'issue_instant', 
+                    'version', 'issuer', 'conditions', 'id'])
         assertion = response.assertion[0]
         assert len(assertion.attribute_statement) == 1
         astate = assertion.attribute_statement[0]
         print astate
         assert len(astate.attribute) == 3
         
+    def test_signed_response(self):
+        name_id = self.server.id.temporary_nameid()
+                
+        signed_resp = self.server.do_response(
+                    "http://lingon.catalogix.se:8087/",   # consumer_url
+                    "12",                       # in_response_to
+                    "urn:mace:example.com:saml:roland:sp", # sp_entity_id
+                    {"eduPersonEntitlement":"Jeter"},
+                    name_id = name_id,
+                    sign=True
+                )
+
+        print "%s" % signed_resp
+        assert signed_resp
+        
+        # It's the assertions that are signed not the response per se
+        assert len(signed_resp.assertion) == 1
+        assertion = signed_resp.assertion[0]
+
+        # Since the reponse is created dynamically I don't know the signature
+        # value. Just that there should be one
+        assert assertion.signature.signature_value.text != ""
+
+#------------------------------------------------------------------------
 
 IDENTITY = {"eduPersonAffiliation": ["staff", "member"],
             "surName": ["Jeter"], "givenName": ["Derek"],

@@ -474,17 +474,18 @@ class TestAttribute:
     def test_basic_base64(self):
         attribute = saml.attribute_from_string(BASIC_BASE64_AV)
         print attribute
-        assert attribute.attribute_value[0].text == "UNINETT"
+        assert attribute.attribute_value[0].text == "VU5JTkVUVA=="
+        assert attribute.attribute_value[0].type == "xs:base64Binary"
 
     def test_basic_boolean_true(self):
         attribute = saml.attribute_from_string(BASIC_BOOLEAN_TRUE_AV)
         print attribute
-        assert attribute.attribute_value[0].text == "True"
+        assert attribute.attribute_value[0].text.lower() == "true"
 
     def test_basic_boolean_false(self):
         attribute = saml.attribute_from_string(BASIC_BOOLEAN_FALSE_AV)
         print attribute
-        assert attribute.attribute_value[0].text == "False"
+        assert attribute.attribute_value[0].text.lower() == "false"
 
 class TestAttributeStatement:
 
