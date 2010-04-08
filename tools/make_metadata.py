@@ -79,7 +79,6 @@ def do_contact_person_info(conf, desc):
     if "contact_person" in conf:
         desc["contact_person"] = []
         for corg in conf["contact_person"]:
-            print corg
             dorg = {}            
             for (dkey, ckey) in PERSON_ATTR_TRANSL.items():
                 try:
