@@ -16,6 +16,7 @@
 # limitations under the License.
 
 import re
+import sys
 
 from saml2 import saml
 
@@ -100,7 +101,7 @@ def filter_on_attributes(ava, required=None, optional=None):
         elif attr[1] in ava:
             res[attr[1]] = _filter_values(ava[attr[1]], vals[0], vals[1])
         else:
-            print ava.keys()
+            print >> sys.stderr, ava.keys()
             raise MissingValue("Required attribute missing: '%s'" % (attr,))
     
     return res
@@ -305,7 +306,7 @@ class Assertion(dict):
         return args2dict(authn_instant=instant(), session_index=sid())
 
     def construct(self, sp_entity_id, in_response_to, name_id, attrconvs, 
-                    policy, issuer, sign):
+                    policy, issuer):
     
         attr_statement = from_local(attrconvs, self,
                                     policy.get_name_form(sp_entity_id))
