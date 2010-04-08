@@ -37,7 +37,7 @@ def _use_on_or_after(condition, slack):
     if now > high:
         # To old ignore
         #print "(%d > %d)" % (now,high)
-        raise Exception("To old can't use it!")
+        raise Exception("To old can't use it! %d" % (now-high,))
     return not_on_or_after
 
 def _use_before(condition, slack):
