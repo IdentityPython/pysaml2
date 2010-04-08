@@ -207,11 +207,11 @@ class SAML2Plugin(FormPluginBase):
             
         return post
     
-    def _construct_identity(self, name_id, session_info):
+    def _construct_identity(self, session_info):
         identity = {}
-        identity["login"] = name_id
+        identity["login"] = session_info["name_id"]
         identity["password"] = ""
-        identity['repoze.who.userid'] = name_id
+        identity['repoze.who.userid'] = session_info["name_id"]
         identity["user"] = session_info["ava"]
         if self.debug and self.log:
             self.log.info("Identity: %s" % identity)
@@ -289,13 +289,13 @@ class SAML2Plugin(FormPluginBase):
             
         # check for SAML2 authN response
         #if self.debug:
-        session_info = _eval_authn_response(self, environ,  
+        session_info = self._eval_authn_response(environ,  
                                             cgi_fieldStorage_to_dict(post))
         if session_info:        
             environ["s2repoze.sessioninfo"] = session_info
 
             # contruct and return the identity
-            return self._construct_identity(name_id, session_info)
+            return self._construct_identity(session_info)
         else:
             return None
 
