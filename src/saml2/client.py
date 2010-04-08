@@ -99,7 +99,7 @@ class Saml2Client(object):
     def response(self, post, requestor, outstanding, log=None):
         """ Deal with the AuthnResponse
         
-        :param post: The reply as a cgi.FieldStorage instance
+        :param post: The reply as a dictionary
         :param requestor: The issuer of the AuthN request
         :param outstanding: A dictionary with session IDs as keys and 
             the original web request from the user before redirection
@@ -111,15 +111,18 @@ class Saml2Client(object):
             to reveal verything to it and it might not trust me.
         """
         # If the request contains a samlResponse, try to validate it
-        if post.has_key("SAMLResponse"):
-            saml_response =  post['SAMLResponse'].value
-            if saml_response:
-                ar = authn_response(self.config, requestor, outstanding, log,
+        try:
+            saml_response = post['SAMLResponse']
+        except KeyError:
+            return None
+            
+        if saml_response:
+            ar = authn_response(self.config, requestor, outstanding, log,
                                     debug=self.debug)
-                ar.loads(saml_response)
-                if self.debug:
-                    log and log.info(ar)
-                return ar.verify()
+            ar.loads(saml_response)
+            if self.debug:
+                log and log.info(ar)
+            return ar.verify()
                 
         return None
             
