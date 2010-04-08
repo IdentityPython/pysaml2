@@ -24,11 +24,12 @@ from saml2 import samlp, saml
 from saml2.sigver import security_context
 
 from saml2.attribute_converter import to_local
+from saml2.time_util import daylight_corrected_now
 
 # ---------------------------------------------------------------------------
 
 def _use_on_or_after(condition, slack):
-    now = time.mktime(time.gmtime())
+    now = daylight_corrected_now()
     #print "NOW: %d" % now
     not_on_or_after = time.mktime(str_to_time(condition.not_on_or_after))
     #print "not_on_or_after: %d" % not_on_or_after
@@ -41,7 +42,7 @@ def _use_on_or_after(condition, slack):
     return not_on_or_after
 
 def _use_before(condition, slack):
-    now = time.mktime(time.gmtime())
+    now = daylight_corrected_now()
     #print "NOW: %s" % now
     not_before = time.mktime(str_to_time(condition.not_before))
     #print "not_before: %d" % not_before
@@ -100,6 +101,7 @@ class AuthnResponse(object):
         if self.debug and not self.log:
             self.debug = 0
         self.clear()
+        self.xmlstr = ""
         
     def loads(self, xmldata, decode=True):
         if self.debug:
@@ -304,6 +306,9 @@ class AuthnResponse(object):
                 "came_from": self.came_from, "issuer": self.issuer(),
                 "not_on_or_after": self.not_on_or_after }
     
+    def __str__(self):
+        return "%s" % self.xmlstr
+        
 # ======================================================================
                                     
    # session_info["ava"]["__userid"] = session_info["name_id"]

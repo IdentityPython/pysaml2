@@ -207,6 +207,13 @@ def instant():
     
 # ---------------------------------------------------------------------------
 
+def daylight_corrected_now():
+    lgmt = list(time.gmtime())
+    lgmt[8] = time.daylight
+    return time.mktime(lgmt)    
+    
+# ---------------------------------------------------------------------------
+
 def valid( valid_until ):
     """ Checks whether a valid_until specification is still valid
     :param valid_until: The string representation of a time
