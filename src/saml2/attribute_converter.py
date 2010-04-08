@@ -48,9 +48,9 @@ def to_local(acs, statement):
 
 def from_local(acs, ava, name_format):
     for ac in acs:
-        print ac.format, name_format
+        #print ac.format, name_format
         if ac.format == name_format:
-            print "Found a name_form converter"
+            #print "Found a name_form converter"
             return ac.to(ava)
             
     return None
