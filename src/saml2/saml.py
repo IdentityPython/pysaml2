@@ -861,6 +861,26 @@ def _decode_attribute_value(typ, text):
         return base64.decodestring(text)
     raise ValueError("type %s not supported" % type)
 
+def _verify_value_type(typ, val):
+    #print "verify value type: %s, %s" % (typ, val)
+    if typ == XSD + "string":
+        try:
+            return str(val)
+        except UnicodeEncodeError:
+            return unicode(val)
+    if typ == XSD + "integer" or typ == XSD + "int":
+        return int(val)
+    if typ == XSD + "float" or typ == XSD + "double":
+        return float(val)
+    if typ == XSD + "boolean":
+        if (val.lower() == "true" or val.lower() == "false"):
+            pass
+        else:
+            raise ValueError("Faulty boolean value")
+    if typ == XSD + "base64Binary":
+        import base64
+        return base64.decodestring(val)
+    
 class AttributeValue(SamlBase):
     """The saml:AttributeValue element supplies the value of a specified SAML 
     attribute."""
@@ -884,26 +904,37 @@ class AttributeValue(SamlBase):
             self.text = tree.text
                   
     def set_text(self, val, base64encode=False):
-        #print "AV.set_text(%s)" % (val,)
+        try:
+            typ = getattr(self, "type")
+        except:
+            typ = None
+
+        #print "AV.set_text('%s', %s) [%s]" % (val,base64encode,typ)
+
         if base64encode:
             import base64
             val = base64.encodestring(val)
-            setattr(self, "type", "xs:base64Binary")
+            if not typ:
+                setattr(self, "type", "xs:base64Binary")
         else:
             if isinstance(val, basestring):
-                setattr(self, "type", "xs:string")
+                if not typ:
+                    setattr(self, "type", "xs:string")
             elif isinstance(val, bool):
                 if val:
                     val = "true"
                 else:
                     val = "false"
-                setattr(self, "type", "xs:boolean")
+                if not typ:
+                    setattr(self, "type", "xs:boolean")
             elif isinstance(val, int):
                 val = str(val)
-                setattr(self, "type", "xs:integer")
+                if not typ:
+                    setattr(self, "type", "xs:integer")
             elif isinstance(val, float):
                 val = str(val)
-                setattr(self, "type", "xs:float")
+                if not typ:
+                    setattr(self, "type", "xs:float")
             elif val == None:
                 val = ""
             else:
@@ -911,7 +942,19 @@ class AttributeValue(SamlBase):
                 
         setattr(self, "text", val)
         return self
-        
+
+    def harvest_element_tree(self, tree):
+        # Fill in the instance members from the contents of the XML tree.
+        for child in tree:
+            self._convert_element_tree_to_member(child)
+        for attribute, value in tree.attrib.iteritems():
+            self._convert_element_attribute_to_member(attribute, value)
+        if tree.text:
+            #print "set_text:", tree.text
+            self.set_text(tree.text)
+            _x = _verify_value_type(getattr(self,"type"), getattr(self,"text"))
+            #print _x
+
 def attribute_value_from_string(xml_string):
     """ Create AttributeValue instance from an XML string """
     return saml2.create_class_from_xml_string(AttributeValue, xml_string)
