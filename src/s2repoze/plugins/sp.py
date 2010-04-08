@@ -108,21 +108,22 @@ class SAML2Plugin(FormPluginBase):
             # Keys are entity_ids and values are urls
             idp_url = self.srv["idp"].values()[0]
         elif len( self.srv["idp"] ) == 0:
-            HTTPInternalServerError(detail='Misconfiguration')
+            return (1,HTTPInternalServerError(detail='Misconfiguration'))
         else:
             if self.wayf:
                 wayf_selected = environ.get('s2repose.wayf_selected','')
                 if not wayf_selected:
-                    #self.log.info("env, keys: %s" % (environ.keys()))
-                    return HTTPTemporaryRedirect(headers = [('Location', 
-                                                            self.wayf)])
+                    self.log.info("Redirect to WAYF function: %s" % self.wayf)
+                    self.log.info("env, keys: %s" % (environ.keys()))
+                    return (1,HTTPTemporaryRedirect(headers = [('Location', 
+                                                            self.wayf)]))
                 else:
                     self.log.info("Choosen IdP: '%s'" % wayf_selected)
                     idp_url = self.srv["idp"][wayf_selected]
             else:
-                HTTPNotImplemented(detail='No WAYF present!')
+                return (1,HTTPNotImplemented(detail='No WAYF present!'))
 
-        return idp_url
+        return (0,idp_url)
         
     #### IChallenger ####
     def challenge(self, environ, _status, _app_headers, _forget_headers):
@@ -147,27 +148,30 @@ class SAML2Plugin(FormPluginBase):
         self.log and self.log.info("VO: %s" % vorg)
 
         # If more than one idp and if none is selected, I have to do wayf
-        idp_url = self._pick_idp(environ)
+        (done, response) = self._pick_idp(environ)
+        if done:
+            return response
+        else:
+            idp_url = response
+            # Do the AuthnRequest
+            scl = Saml2Client(environ, self.conf)        
+            (sid, result) = scl.authenticate(self.conf["entityid"], 
+                                            idp_url, 
+                                            self.srv["url"], 
+                                            self.srv["name"], 
+                                            relay_state=came_from, 
+                                            log=self.log,
+                                            vorg=vorg)
             
-        # Do the AuthnRequest
-        scl = Saml2Client(environ, self.conf)        
-        (sid, result) = scl.authenticate(self.conf["entityid"], 
-                                        idp_url, 
-                                        self.srv["url"], 
-                                        self.srv["name"], 
-                                        relay_state=came_from, 
-                                        log=self.log,
-                                        vorg=vorg)
-        
-        # remember the request
-        self.outstanding_authn[sid] = came_from
-            
-        if self.debug:
-            self.log and self.log.info('sc returned: %s' % (result,))
-        if isinstance(result, tuple):
-            return HTTPTemporaryRedirect(headers=[result])
-        else :
-            HTTPInternalServerError(detail='Incorrect returned data')
+            # remember the request
+            self.outstanding_authn[sid] = came_from
+                
+            if self.debug:
+                self.log and self.log.info('sc returned: %s' % (result,))
+            if isinstance(result, tuple):
+                return HTTPTemporaryRedirect(headers=[result])
+            else :
+                return HTTPInternalServerError(detail='Incorrect returned data')
 
     def _get_post(self, environ):
         """ Get the posted information """
