@@ -37,6 +37,9 @@ def ac_factory(path):
     return acs
     
 def to_local(acs, statement):
+    if not acs:
+        acs = [AttributeConverter()]
+        
     ava = []
     for ac in acs:
         try:
@@ -81,6 +84,23 @@ class AttributeConverter(object):
         if self._to == None and self.fro != None:
             self._to = dict([(value, key) for key, value in self._fro.items()])
     
+    def fail_safe_fro(self, statement):
+        """ In case there is not formats defined """
+        result = {}
+        for attribute in statement.attribute:
+            try:
+                name = attribute.friendly_name.strip()
+            except AttributeError:
+                name = attribute.name.strip()
+
+            result[name] = []
+            for value in attribute.attribute_value:
+                if not value.text:
+                    result[name].append('')
+                else:
+                    result[name].append(value.text.strip())    
+        return result
+        
     def fro(self, statement):
         """ Get the attributes and the attribute values 
         
@@ -88,9 +108,13 @@ class AttributeConverter(object):
         :return: A dictionary containing attributes and values
         """
         
+        if not self.format:
+            return self.fail_safe_fro(statement)
+            
         result = {}
         for attribute in statement.attribute:
-            if self.format and attribute.name_format != self.format:
+            if attribute.name_format and self.format and \
+                attribute.name_format != self.format:
                 raise UnknownNameFormat
                 
             try:
@@ -107,7 +131,11 @@ class AttributeConverter(object):
                     result[name].append('')
                 else:
                     result[name].append(value.text.strip())    
-        return result
+        
+        if not result:
+            return self.fail_safe_fro(statement) 
+        else:
+            return result
         
     def to(self, ava):
         attributes = []
