@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import base64
+
 from saml2.client import Saml2Client
 from saml2 import samlp, client, BINDING_HTTP_POST
 from saml2 import saml, utils, config, class_name, make_instance
 #from saml2.sigver import correctly_signed_authn_request, verify_signature
-#from saml2.server import Server
+from saml2.server import Server
 
 import os
         
@@ -44,6 +46,8 @@ REQ1 = """<?xml version='1.0' encoding='UTF-8'?>
     
 class TestClient:
     def setup_class(self):
+        self.server = Server("idp.config")
+
         conf = config.Config()
         try:
             conf.load_file("tests/server.config")
@@ -228,3 +232,28 @@ class TestClient:
                     self.client.config["metadata"])
         except Exception: # missing certificate
             self.client.sc.verify_signature(ar_str, node_name=class_name(ar))
+
+    def test_response(self):
+        ava = { "givenName": ["Derek"], "surname": ["Jeter"], 
+                "mail": ["derek@nyy.mlb.com"]}
+
+        resp_str = "\n".join(self.server.authn_response(ava, 
+                    "1", "http://local:8087/", 
+                    "urn:mace:example.com:saml:roland:sp",
+                    make_instance(samlp.NameIDPolicy,
+                                utils.args2dict(
+                                        format=saml.NAMEID_FORMAT_TRANSIENT,
+                                        allow_create="true")),
+                    "foba0001@example.com"))
+
+        resp_str = base64.encodestring(resp_str)
+        
+        authn_response = self.client.response({"SAMLResponse":resp_str},
+                            "urn:mace:example.com:saml:roland:sp",
+                            {"1":"http://foo.example.com/service"})
+                            
+        assert authn_response != None
+        session_info = authn_response.session_info()
+        assert session_info["ava"] != []
+        response = samlp.response_from_string(authn_response.xmlstr)        
+        assert response.destination == "http://local:8087/"
