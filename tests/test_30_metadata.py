@@ -128,6 +128,21 @@ def test_sp_metadata():
                                         'urn:oid:0.9.2342.19200300.100.1.3'])
     assert _eq([n.friendly_name for n in req],['surName', 'givenName', 'mail'])
 
+KALMAR2_URL = "https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2"
+KALMAR2_CERT = "kalmar2.pem"
+
+def test_import_external_metadata(xmlsec):
+    md = metadata.MetaData(xmlsec)
+    md.import_external_metadata(KALMAR2_URL, KALMAR2_CERT)
+    
+    print len(md.entity)
+    assert len(md.entity) > 20
+    idps = dict([
+        (id,ent["idp_sso"]) for id,ent in md.entity.items() if "idp_sso" in ent])
+    print idps.keys()
+    assert len(idps) > 1
+    assert "https://idp.umu.se/saml2/idp/metadata.php" in idps
+    
 # ------------ Constructing metaval ----------------------------------------
 
 def test_construct_organisation_name():
