@@ -234,7 +234,7 @@ class Server(object):
             if self.log:
                 self.log.info("%s != %s" % (consumer_url, return_destination))
             else:
-                print >> sys.stderr,
+                print >> sys.stderr, \
                             "%s != %s" % (consumer_url, return_destination)
             raise OtherError("ConsumerURL and return destination mismatch")
         
