@@ -20,6 +20,7 @@ or attribute authority (AA) may use to conclude its tasks.
 """
 
 import shelve
+import sys
 
 from saml2 import saml, samlp, VERSION, make_instance
 
@@ -31,7 +32,7 @@ from saml2.utils import OtherError, do_attribute_statement
 from saml2.utils import VersionMismatch, UnknownPrincipal, UnsupportedBinding
 from saml2.utils import status_from_exception_factory
 
-from saml2.sigver import security_context
+from saml2.sigver import security_context, signed_instance_factory
 from saml2.sigver import pre_signature_part
 from saml2.time_util import instant, in_a_while
 from saml2.config import Config
@@ -233,7 +234,8 @@ class Server(object):
             if self.log:
                 self.log.info("%s != %s" % (consumer_url, return_destination))
             else:
-                print "%s != %s" % (consumer_url, return_destination)
+                print >> sys.stderr,
+                            "%s != %s" % (consumer_url, return_destination)
             raise OtherError("ConsumerURL and return destination mismatch")
         
         response["consumer_url"] = consumer_url
@@ -295,8 +297,7 @@ class Server(object):
         :param policy: The attribute release policy for this instance
         :return: A Response instance
         """
-        
-
+                
         if not status:
             status = success_status_factory()
             
@@ -323,19 +324,19 @@ class Server(object):
                                         policy, issuer=_issuer)
             
             if sign:
-                assertion["signature"] = pre_signature_part(assertion["id"])
+                assertion["signature"] = pre_signature_part(assertion["id"],
+                                                        self.sc.my_cert, 1)
 
             # Store which assertion that has been sent to which SP about which
             # subject.
-            print assertion
             
             self.cache.set(assertion["subject"]["name_id"]["text"], 
                             sp_entity_id, assertion, 
                             assertion["conditions"]["not_on_or_after"])
             
             response.update({"assertion":assertion})
-            
-        return make_instance(samlp.Response, response)
+                
+        return signed_instance_factory(samlp.Response, response, self.sc)
 
     # ------------------------------------------------------------------------
     
