@@ -117,6 +117,8 @@ class Saml2Client(object):
                 ar = authn_response(self.config, requestor, outstanding, log,
                                     debug=self.debug)
                 ar.loads(saml_response)
+                if self.debug:
+                    log and log.info(ar)
                 return ar.verify()
                 
         return None
