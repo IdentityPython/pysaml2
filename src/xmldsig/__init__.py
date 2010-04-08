@@ -1006,7 +1006,7 @@ class Signature(DsBase):
     c_namespace = NAMESPACE
     c_children = DsBase.c_children.copy()
     c_attributes = DsBase.c_attributes.copy()
-    c_attributes['Id'] = "identifier"
+    c_attributes['Id'] = "id"
     c_children['{%s}SignedInfo' % NAMESPACE] = ('signed_info', SignedInfo)
     c_children['{%s}SignatureValue' % NAMESPACE] = (
         'signature_value', SignatureValue)
@@ -1014,7 +1014,7 @@ class Signature(DsBase):
     c_children['{%s}Object' % NAMESPACE] = ('object', [Object])
     c_child_order = ["signed_info", "signature_value", "key_info", "object"]
 
-    def __init__(self, identifier=None, signed_info=None, signature_value=None,
+    def __init__(self, id=None, signed_info=None, signature_value=None,
                     key_info=None, objects=None, text=None,
                     extension_elements=None, extension_attributes=None):
         """Constructor for Signature
@@ -1030,7 +1030,7 @@ class Signature(DsBase):
         """
 
         DsBase.__init__(self, text, extension_elements, extension_attributes)
-        self.identifier = identifier
+        self.id = id
         self.signed_info = signed_info
         self.signature_value = signature_value
         self.key_info = key_info
