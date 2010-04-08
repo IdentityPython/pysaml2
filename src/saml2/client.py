@@ -32,7 +32,7 @@ from saml2.utils import do_attributes, args2dict
 from saml2 import samlp, saml, extension_element_to_element
 from saml2 import VERSION, class_name, make_instance
 from saml2.sigver import pre_signature_part
-from saml2.sigver import security_context
+from saml2.sigver import security_context, signed_instance_factory
 from saml2.soap import SOAPClient
 
 from saml2.attribute_converter import to_local
@@ -161,7 +161,8 @@ class Saml2Client(object):
                 pass
         
         if sign:
-            prel["signature"] = pre_signature_part(prel["id"])
+            prel["signature"] = pre_signature_part(prel["id"], 
+                                                    self.sc.my_cert, id=1)
 
         prel["name_id_policy"] = name_id_policy
         prel["issuer"] = { "text": spentityid }
@@ -169,14 +170,9 @@ class Saml2Client(object):
         if log:
             log.info("DICT VERSION: %s" % prel)
             
-        request = make_instance(samlp.AuthnRequest, prel)
-        if sign:
-            return self.sc.sign_statement_using_xmlsec("%s" % request, 
-                                    class_name(request))
-            #return samlp.authn_request_from_string(sreq)
-        else:
-            return "%s" % request
-
+        return "%s" % signed_instance_factory(samlp.AuthnRequest, prel, 
+                                                self.sc)
+        
     def authenticate(self, spentityid, location="", service_url="", 
                         my_name="", relay_state="",
                         binding=saml2.BINDING_HTTP_REDIRECT, log=None,
@@ -277,7 +273,8 @@ class Saml2Client(object):
         }
         
         if sign:
-            prequery["signature"] = pre_signature_part(prequery["id"])
+            prequery["signature"] = pre_signature_part(prequery["id"], 
+                                                        self.sc.my_cert, 1)
         
         if attribute:
             prequery["attribute"] = do_attributes(attribute)
