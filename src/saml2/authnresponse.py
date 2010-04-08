@@ -209,7 +209,10 @@ class AuthnResponse(object):
                 self.came_from = self.outstanding_queries[data.in_response_to]
                 del self.outstanding_queries[data.in_response_to]
             else:
-                print data.in_response_to, self.outstanding_queries.keys()
+                if self.debug:
+                    self.log.info("in response to: %s" % data.in_response_to)
+                    self.log.info("outstanding queries: %s" % \
+                                        self.outstanding_queries.keys()
                 raise Exception(
                     "Combination of session id and requestURI I don't recall")
         
