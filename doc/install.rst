@@ -10,8 +10,8 @@ Install Pysaml2
 ---------------
 
 For all this to work you need to have Python installed. 
-The development has been done using 2.6, but it might work with earlier 
-versions. There is no 3.X version yet.
+The development has been done using 2.6.
+There is no 3.X version yet.
 
 Prerequisites
 ^^^^^^^^^^^^^
@@ -38,7 +38,9 @@ will install the basic code.
 After this you ought to be able to run the tests without an hitch.
 The tests are based on the pypy test environment, so::
 
-    py.test tests
+    cd tests
+    py.test 
 
-is what you should use. If you don't have py.test, get it ! It's good !
+is what you should use. If you don't have py.test, get it ! 
+It's really good !
 

@@ -10,7 +10,7 @@ A SP handles authentication, by the use of an Identity Provider, and possibly
 attribute aggregation.
 Both of these functions can be seen as parts of the normal Repoze.who
 setup. Namely the Challenger, Identifier and MetadataProvider parts so that
-is how it is thought to be implemented.
+is also how it is implemented.
 
 Normal for Repoze.who Identifier and MetadataProvider plugins are that
 they place information they gather in environment variables. The convention is 
@@ -19,7 +19,7 @@ to place identity information in the environment under the key
 The information is structured as a dictionary with keys like *login*, and 
 *repoze.who.userid*.
 
-The SP follows this pattern and places the information gathered from 
+This SP follows this pattern and places the information gathered from 
 the Identity Provider that handled the authentication and possible extra 
 information received from attribute authorities in the above mentioned 
 dictionary under the key *user*.
@@ -39,7 +39,7 @@ If a WAYF is going to be used, then the pattern is the following:
 unauthenticated user + no IdP selected
     In this case, if there is a WAYF page specified in the 
     SP part of the repoze.who configuration file, 
-    the user is redirected to that page. If no page is known an exception
+    the user is redirected to that page. If no WAYF page is known an exception
     is raised.
     
 unauthenticated user + selected IdP
@@ -116,12 +116,12 @@ Other information
 -----------------
 
 The SP keeps tabs on all outstanding authentication requests it has. 
-This is kept in the local variable *outstanding_authn*.
+This is kept in the local variable *outstanding_queries*.
 Presently if an authentication reponse is received that does not match an
 outstanding request the reponse is ignored. This is going to change in the
 future.
 
-The format of *outstanding_auth* is a dictionary with the session IDs as
+The format of *outstanding_queries* is a dictionary with the session IDs as
 keys and which URL that was accessed that triggered the SP to send the
 request.
 
