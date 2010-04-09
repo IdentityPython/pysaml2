@@ -315,9 +315,8 @@ class Server(object):
             try:
                 ast.apply_policy(sp_entity_id, policy, self.metadata)
             except MissingValue, exc:
-                response = self.error_response(consumer_url, in_response_to, 
+                return self.error_response(consumer_url, in_response_to, 
                                                sp_entity_id, exc, name_id)
-                return make_instance(samlp.Response, response)
 
             assertion = ast.construct(sp_entity_id, in_response_to, name_id,
                                         self.conf.attribute_converters(), 
