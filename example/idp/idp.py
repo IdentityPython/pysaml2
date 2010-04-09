@@ -2,25 +2,8 @@
 
 import re
 import base64
-from cgi import escape, parse_qs
-import urllib
-#import urlparse
-
+from cgi import parse_qs
 from saml2 import server
-from saml2.utils import make_instance, sid, decode_base64_and_inflate
-from saml2 import samlp, saml
-from saml2.time_util import in_a_while, instant
-
-def authn_response(identity, in_response_to, destination, spid):
-    global idp
-    resp = idp.do_response(
-                        destination,    # consumer_url
-                        in_response_to, # in_response_to
-                        spid,           # sp_entity_id
-                        identity        # identity as dictionary
-                    )
-    
-    return ("%s" % resp).split("\n")
     
 # -----------------------------------------------------------------------------
 def dict_to_table(ava, lev=0, width=1):
@@ -35,11 +18,11 @@ def dict_to_table(ava, lev=0, width=1):
             except AttributeError:
                 txt.append("<td>%s</td>\n" % valarr)
         elif isinstance(valarr, list):
-            i = 0
-            n = len(valarr)       
+            index = 0
+            num = len(valarr)       
             for val in valarr:
-                if i == 0:
-                    txt.append("<th rowspan=%d>%s</td>\n" % (len(valarr),prop))
+                if index == 0:
+                    txt.append("<th rowspan=%d>%s</td>\n" % (len(valarr), prop))
                 else:
                     txt.append("<tr>\n")
                 if isinstance(val, dict):
@@ -51,10 +34,10 @@ def dict_to_table(ava, lev=0, width=1):
                         txt.append("<td>%s</td>\n" % val.encode("utf8"))
                     except AttributeError:
                         txt.append("<td>%s</td>\n" % val)
-                if n > 1:
+                if num > 1:
                     txt.append("</tr>\n")
-                n -= 1
-                i += 1
+                num -= 1
+                index += 1
         elif isinstance(valarr, dict):
             txt.append("<th>%s</th>\n" % prop)
             txt.append("<td>\n")
@@ -73,38 +56,49 @@ FORM_SPEC = """<form name="myform" method="post" action="%s">
 def sso(environ, start_response, user, logger):
     """ Supposted to return a POST """
     #edict = dict_to_table(environ)
-    logger and logger.info("Environ keys: %s" % environ.keys())
+    #logger and logger.info("Environ keys: %s" % environ.keys())
+    logger.info("--- In SSO ---")
     if "QUERY_STRING" in environ:
         logger and logger.info("Query string: %s" % environ["QUERY_STRING"])
         query = parse_qs(environ["QUERY_STRING"])
     elif "s2repoze.qinfo" in environ:
         query = environ["s2repoze.qinfo"]
+
     # base 64 encoded request
-    (consumer, identifier, policies, 
-        spid) = idp.parse_authn_request(query["SAMLRequest"][0])
-    spentityid = query["spentityid"][0]
-    try:
-        relayState = query["RelayState"][0]
-    except (KeyError, AttributeError):
-        relayState = "/"
-    start_response('200 OK', [('Content-Type', 'text/html')])
+    req_info = IDP.parse_authn_request(query["SAMLRequest"][0])
+    logger.info("parsed OK")
+    logger.info("%s" % req_info)
+
     identity = dict(environ["repoze.who.identity"]["user"])
+    logger.info("Identity: %s" % (identity,))
+    userid = environ["repoze.who.identity"]['repoze.who.userid']
     if REPOZE_ID_EQUIVALENT:
-        identity[REPOZE_ID_EQUIVALENT] = (
-                environ["repoze.who.identity"]['repoze.who.userid'])
-    authn_resp = authn_response(identity, identifier, consumer, spid)
+        identity[REPOZE_ID_EQUIVALENT] = userid
+    try:
+        authn_resp = IDP.authn_response(identity, 
+                                        req_info["id"], 
+                                        req_info["consumer_url"], 
+                                        req_info["sp_entity_id"], 
+                                        req_info["request"].name_id_policy, 
+                                        userid)
+    except Exception, excp:
+        logger and logger.error("Exception: %s" % (excp,))
+        raise
+        
     logger and logger.info("AuthNResponse: %s" % authn_resp)
+
     response = []
     response.append("<head>")
     response.append("<title>SAML 2.0 POST</title>")
     response.append("</head><body>")
-    #login_url = location + '?spentityid=' + "lingon.catalogix.se"
-    response.append(FORM_SPEC % (consumer, 
+    response.append(FORM_SPEC % (req_info["consumer_url"], 
                                     base64.b64encode("".join(authn_resp)),"/"))
     response.append("""<script type="text/javascript" language="JavaScript">""")
     response.append("     document.myform.submit();")
     response.append("""</script>""")
     response.append("</body>")
+
+    start_response('200 OK', [('Content-Type', 'text/html')])
     return response
     
 def whoami(environ, start_response, user, logger):
@@ -129,11 +123,11 @@ def not_authn(environ, start_response, logger):
         logger and logger.info("query: %s" % query)
     start_response('401 Unauthorized', [('Content-Type', 'text/plain')])
     return ['Unknown user']
-    
+
 # ----------------------------------------------------------------------------
 
 # map urls to functions
-urls = [
+URLS = [
     (r'whoami$', whoami),
     (r'whoami/(.*)$', whoami),
     (r'sso$', sso),
@@ -163,7 +157,7 @@ def application(environ, start_response):
     path = environ.get('PATH_INFO', '').lstrip('/')
     logger = environ.get('repoze.who.logger')
     logger and logger.info( "<application> PATH: %s" % path)
-    for regex, callback in urls:
+    for regex, callback in URLS:
         if user:
             match = re.search(regex, path)
             if match is not None:
@@ -171,6 +165,7 @@ def application(environ, start_response):
                     environ['myapp.url_args'] = match.groups()[0]
                 except IndexError:
                     environ['myapp.url_args'] = path
+                logger and logger.info("callback: %s" % (callback,))
                 return callback(environ, start_response, user, logger)
         else:
             logger and logger.info("-- No USER --")
@@ -181,8 +176,8 @@ def application(environ, start_response):
 
 from repoze.who.config import make_middleware_with_config
 
-app_with_auth = make_middleware_with_config(application, {"here":"."}, 
-                        './who.ini', log_file="idpapp.log")
+APP_WITH_AUTH = make_middleware_with_config(application, {"here":"."}, 
+                        './who.ini', log_file="who.log")
 
 # ----------------------------------------------------------------------------
 
@@ -193,9 +188,9 @@ if __name__ == '__main__':
     LOG_FILENAME = "./idp.log"
     PORT = 8088
     
-    logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG)    
+    logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG)    
     
-    idp = server.Server(sys.argv[1], logging)
-    srv = make_server('localhost', PORT, app_with_auth)
-    print "listening on port: %s" % PORT
-    srv.serve_forever()
+    IDP = server.Server(sys.argv[1], log=logging, debug=1)
+    SRV = make_server('localhost', PORT, APP_WITH_AUTH)
+    print "IdP listening on port: %s" % PORT
+    SRV.serve_forever()

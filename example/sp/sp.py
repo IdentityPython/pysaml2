@@ -50,7 +50,8 @@ def dict_to_table(ava, width=1):
 def whoami(environ, start_response, user, logger):
     start_response('200 OK', [('Content-Type', 'text/html')])
     identity = environ["repoze.who.identity"]["user"]
-    response = dict_to_table(identity)
+    response = ["<h2>Your identity are supposed to be</h2>"]
+    response.extend(dict_to_table(identity))
     return response[:]
     
 def not_found(environ, start_response):
@@ -110,11 +111,13 @@ def application(environ, start_response):
 from repoze.who.config import make_middleware_with_config
 
 app_with_auth = make_middleware_with_config(application, {"here":"."}, 
-                        './who.ini', log_file="repo.log")
+                        './who.ini', log_file="who.log")
 
 # ----------------------------------------------------------------------------
+PORT = 8087
 
 if __name__ == '__main__':
     from wsgiref.simple_server import make_server
-    srv = make_server('localhost', 8087, app_with_auth)
+    srv = make_server('localhost', PORT, app_with_auth)
+    print "SP listening on port: %s" % PORT
     srv.serve_forever()
