@@ -107,7 +107,8 @@ class MetaData(object):
             for key_desc in tssd.key_descriptor:
                 certs.extend(cert_from_key_info(key_desc.key_info))
             
-            certs = [make_temp(c, suffix=".der") for c in certs]
+            certs = [make_temp(pem_format(cert), ".pem", 
+                                                False) for c in certs]
             
             for acs in tssd.attribute_consuming_service:
                 for attr in acs.requested_attribute:
