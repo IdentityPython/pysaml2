@@ -24,7 +24,7 @@ setup(
     name='python-saml2',
     version='0.0.6',
     description='Python library for SAML Version 2',
-    long_description = read("README"),
+#    long_description = read("README"),
     author='Roland Hedberg',
     author_email='roland.hedberg@adm.umu.se',
     license='Apache 2.0',
