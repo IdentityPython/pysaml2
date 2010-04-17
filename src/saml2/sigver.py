@@ -254,7 +254,7 @@ def _parse_xmlsec_output(output):
 
 __DEBUG = 1
 
-def verify_signature(enctext, xmlsec_binary, cert_file=None, cert_type="", 
+def verify_signature(enctext, xmlsec_binary, cert_file=None, cert_type="pem",
                         node_name=NODE_NAME, debug=False, node_id=None):
     """ Verifies the signature of a XML document.
     
