@@ -2,10 +2,9 @@
 # -*- coding: utf-8 -*-
 # 
 
-from saml2 import metadata, utils, saml
+from saml2 import metadata
 from saml2.assertion import Policy
 from saml2.attribute_converter import ac_factory, AttributeConverter
-import re
 
 class MissingValue(Exception):
     pass
@@ -22,24 +21,24 @@ def entity_id2url(meta, entity_id):
     return meta.single_sign_on_services(entity_id)[0]
     
 class Config(dict):
-    def sp_check(self, config, metadata=None):
-        """ config["idp"] is a dictionary with entity_ids as keys and
-        urls as values
+    def _sp_check(self, config, metadat=None):
+        """ Verify that the SP configuration part is correct.
+        
         """
-        if metadata:
+        if metadat:
             if "idp" not in config or len(config["idp"]) == 0:
-                eids = [e for e, d in metadata.entity.items() if "idp_sso" in d]
+                eids = [e for e, d in metadat.entity.items() if "idp_sso" in d]
                 config["idp"] = {}
                 for eid in eids:
                     try:
-                        config["idp"][eid] = entity_id2url(metadata, eid)
-                    except IndexError, KeyError:
+                        config["idp"][eid] = entity_id2url(metadat, eid)
+                    except (IndexError, KeyError):
                         if not config["idp"][eid]:
                             raise MissingValue
             else:
                 for eid, url in config["idp"].items():
                     if not url:
-                        config["idp"][eid] = entity_id2url(metadata, eid)
+                        config["idp"][eid] = entity_id2url(metadat, eid)
         else:
             assert "idp" in config
             assert len(config["idp"]) > 0
@@ -47,7 +46,7 @@ class Config(dict):
         assert "url" in config
         assert "name" in config
             
-    def idp_aa_check(self, config):
+    def _idp_aa_check(self, config):
         assert "url" in config
         if "assertions" in config:
             config["policy"] = Policy(config["assertions"])
@@ -55,9 +54,9 @@ class Config(dict):
         elif "policy" in config:
             config["policy"] = Policy(config["policy"])
                 
-    def load_metadata(self, metadata_conf, xmlsec_binary):
+    def load_metadata(self, metadata_conf, xmlsec_binary, acs):
         """ Loads metadata into an internal structure """
-        metad = metadata.MetaData(xmlsec_binary)
+        metad = metadata.MetaData(xmlsec_binary, acs)
         if "local" in metadata_conf:
             for mdfile in metadata_conf["local"]:
                 metad.import_metadata(open(mdfile).read(), mdfile)
@@ -86,26 +85,27 @@ class Config(dict):
         else:
             config["key_file"] = None
             
-        if "metadata" in config:
-            config["metadata"] = self.load_metadata(config["metadata"],
-                                                    config["xmlsec_binary"])
-            
         if "attribute_map_dir" in config:
             config["attrconverters"] = ac_factory(
                                                 config["attribute_map_dir"])
         else:
             config["attrconverters"] = [AttributeConverter()]
-        
+
+        if "metadata" in config:
+            config["metadata"] = self.load_metadata(config["metadata"],
+                                                    config["xmlsec_binary"],
+                                                    config["attrconverters"])
+                    
         if "sp" in config["service"]:
             #print config["service"]["sp"]
             if "metadata" in config:
-                self.sp_check(config["service"]["sp"], config["metadata"])
+                self._sp_check(config["service"]["sp"], config["metadata"])
             else:
-                self.sp_check(config["service"]["sp"])
+                self._sp_check(config["service"]["sp"])
         if "idp" in config["service"]:
-            self.idp_aa_check(config["service"]["idp"])
+            self._idp_aa_check(config["service"]["idp"])
         if "aa" in config["service"]:
-            self.idp_aa_check(config["service"]["aa"])
+            self._idp_aa_check(config["service"]["aa"])
                             
         for key, val in config.items():
             self[key] = val

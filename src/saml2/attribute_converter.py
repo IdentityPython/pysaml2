@@ -17,6 +17,7 @@
 
 import os
 from saml2.utils import args2dict
+from saml2.saml import NAME_FORMAT_URI
 
 class UnknownNameFormat(Exception):
     pass
@@ -26,44 +27,82 @@ def ac_factory(path):
 
     for tup in os.walk(path):
         if tup[2]:
-            ac = AttributeConverter(os.path.basename(tup[0]))
+            atco = AttributeConverter(os.path.basename(tup[0]))
             for name in tup[2]:
                 fname = os.path.join(tup[0], name)
                 if name.endswith(".py"):
                     name = name[:-3]
-                ac.set(name,fname)
-            ac.adjust()
-            acs.append(ac)
+                atco.set(name, fname)
+            atco.adjust()
+            acs.append(atco)
     return acs
     
+def ava_fro(acs, statement):
+    """ translates attributes according to their name_formats """
+    if statement == []:
+        return {}
+        
+    acsdic = dict([(ac.format, ac) for ac in acs])
+    acsdic[None] = acsdic[NAME_FORMAT_URI]    
+    return dict([acsdic[a.name_format].ava_fro(a) for a in statement])
+
 def to_local(acs, statement):
     if not acs:
         acs = [AttributeConverter()]
         
     ava = []
-    for ac in acs:
+    for aconv in acs:
         try:
-            ava = ac.fro(statement)
+            ava = aconv.fro(statement)
             break
         except UnknownNameFormat:
             pass
     return ava
 
 def from_local(acs, ava, name_format):
-    for ac in acs:
+    for aconv in acs:
         #print ac.format, name_format
-        if ac.format == name_format:
+        if aconv.format == name_format:
             #print "Found a name_form converter"
-            return ac.to(ava)
+            return aconv.to(ava)
             
     return None
+    
+def from_local_name(acs, attr, name_format):
+    """
+    :param acs: List of AttributeConverter instances
+    :param attr: attribute name as string
+    :param name_format: Which name-format it should be translated to
+    :return: A dictionary suitable to feed to make_instance
+    """
+    for aconv in acs:
+        #print ac.format, name_format
+        if aconv.format == name_format:
+            #print "Found a name_form converter"
+            return aconv.to_format(attr)
+    return attr
+    
+def to_local_name(acs, attr):
+    """
+    :param acs: List of AttributeConverter instances
+    :param attr: an Attribute instance
+    :return: The local attribute name
+    """
+    for aconv in acs:
+        lattr = aconv.from_format(attr)
+        if lattr:
+            return lattr
+
+    return attr.friendly_name
     
 class AttributeConverter(object):
     """ Converts from an attribute statement to a key,value dictionary and
         vice-versa """
         
-    def __init__(self, format=""):
-        self.format = format
+    def __init__(self, name_format=""):
+        self.name_format = name_format
+        self._to = None
+        self._fro = None
         
     def set(self, name, filename):
         if name == "to":
@@ -101,6 +140,24 @@ class AttributeConverter(object):
                     result[name].append(value.text.strip())    
         return result
         
+    def ava_fro(self, attribute):
+        try:
+            attr = self._fro[attribute.name.strip()]
+        except (AttributeError, KeyError):
+            try:
+                attr = attribute.friendly_name.strip()
+            except AttributeError:
+                attr = attribute.name.strip()
+
+        val = []
+        for value in attribute.attribute_value:
+            if not value.text:
+                val.append('')
+            else:
+                val.append(value.text.strip())
+
+        return (attr, val)
+        
     def fro(self, statement):
         """ Get the attributes and the attribute values 
         
@@ -108,41 +165,48 @@ class AttributeConverter(object):
         :return: A dictionary containing attributes and values
         """
         
-        if not self.format:
+        if not self.name_format:
             return self.fail_safe_fro(statement)
             
         result = {}
         for attribute in statement.attribute:
-            if attribute.name_format and self.format and \
-                attribute.name_format != self.format:
+            if attribute.name_format and self.name_format and \
+                attribute.name_format != self.name_format:
                 raise UnknownNameFormat
                 
-            try:
-                name = self._fro[attribute.name.strip()]
-            except (AttributeError, KeyError):
-                try:
-                    name = attribute.friendly_name.strip()
-                except AttributeError:
-                    name = attribute.name.strip()
-
-            result[name] = []
-            for value in attribute.attribute_value:
-                if not value.text:
-                    result[name].append('')
-                else:
-                    result[name].append(value.text.strip())    
-        
+            (key, val) = self.ava_fro(attribute)
+            result[key] = val
+            
         if not result:
             return self.fail_safe_fro(statement) 
         else:
             return result
+        
+    def to_format(self, attr):
+        try:
+            return args2dict(name=self._to[attr], name_format=self.name_format,
+                                friendly_name=attr)
+        except KeyError:
+            return args2dict(name=attr)
+    
+    def from_format(self, attr):
+        """
+        :param attr: An saml.Attribute instance
+        :return: The local attribute name or "" if no mapping could be made
+        """
+        if self.name_format == attr.name_format:
+            try:
+                return self._fro[attr.name]
+            except KeyError:
+                pass
+        return ""
         
     def to(self, ava):
         attributes = []
         for key, value in ava.items():
             try:
                 attributes.append(args2dict(name=self._to[key],
-                                            name_format=self.format,
+                                            name_format=self.name_format,
                                             friendly_name=key,
                                             attribute_value=value))
             except KeyError:

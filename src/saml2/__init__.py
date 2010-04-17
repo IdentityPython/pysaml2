@@ -376,7 +376,7 @@ def make_vals(val, klass, klass_inst=None, prop=None, part=False,
     else:
         try:
             cinst = klass().set_text(val)
-        except ValueError, excp:
+        except ValueError:
             if not part:
                 cis = [make_vals(sval, klass, klass_inst, prop, True, 
                         base64encode) for sval in val]
@@ -482,11 +482,11 @@ class SamlBase(ExtensionContainer):
     
     def become_child_element_of(self, tree):
         """
-
         Note: Only for use with classes that have a c_tag and c_namespace class 
         member. It is in SamlBase so that it can be inherited but it should
         not be called on instances of SamlBase.
         
+        :param tree: The tree to which this instance should be a child
         """
         new_child = self._to_element_tree()
         tree.append(new_child)
@@ -519,15 +519,28 @@ class SamlBase(ExtensionContainer):
             self.__dict__[extension_attribute_name] = value
                     
     def keyswv(self):
+        """ Return the keys of attributes or children that has values
+        
+        :return: list of keys
+        """
         return [key for key, val in self.__dict__.items() if val]
 
     def keys(self):
+        """ Return all the keys that represent possible attributes and 
+        children.
+        
+        :return: list of keys
+        """
         keys = ['text']
         keys.extend(self.c_attributes.values())
         keys.extend([v[1] for v in self.c_children.values()])
         return keys
         
     def children_with_values(self):
+        """ Returns all children that has values
+        
+        :return: Possibly empty list of children.
+        """
         childs = []
         for _, values in self.__class__.c_children.iteritems():
             member = getattr(self, values[0])
@@ -541,7 +554,13 @@ class SamlBase(ExtensionContainer):
         return childs
         
     def set_text(self, val, base64encode=False):
-        """ """
+        """ Sets the text property of this instance.
+        
+        :param val: The value of the text property
+        :param base64encode: Whether the value should be base64encoded
+        :return: The instance
+        """
+        
         #print "set_text: %s" % (val,)
         if isinstance(val, bool):
             if val:
@@ -560,7 +579,19 @@ class SamlBase(ExtensionContainer):
         return self
         
     def loadd(self, ava, base64encode=False):
-        """ """
+        """ 
+        Sets attributes, children, extension elements and extension 
+        attributes of this element instance depending on what is in 
+        the given dictionary. If there are already values on properties
+        those will be overwritten. If the keys in the dictionary does
+        not correspond to known attributes/children/.. they are ignored.
+        
+        :param ava: The dictionary
+        :param base64encode: Whether the values on attributes or texts on
+            children shoule be base64encoded.
+        :return: The instance
+        """
+        
         for prop in self.c_attributes.values():
             #print "# %s" % (prop)
             if prop in ava:
@@ -578,7 +609,8 @@ class SamlBase(ExtensionContainer):
             #print "## %s, %s" % (prop, klassdef)
             if prop in ava:
                 #print "### %s" % ava[prop]
-                if isinstance(klassdef, list): # means there can be a list of values
+                # means there can be a list of values
+                if isinstance(klassdef, list): 
                     make_vals(ava[prop], klassdef[0], self, prop,
                                 base64encode=base64encode)
                 else:
@@ -588,7 +620,8 @@ class SamlBase(ExtensionContainer):
 
         if "extension_elements" in ava:
             for item in ava["extension_elements"]:
-                self.extension_elements.append(ExtensionElement(item["tag"]).loadd(item))
+                self.extension_elements.append(ExtensionElement(
+                                                item["tag"]).loadd(item))
             
         if "extension_attributes" in ava:
             for key, val in ava["extension_attributes"].items():
@@ -598,22 +631,39 @@ class SamlBase(ExtensionContainer):
         
         
 def element_to_extension_element(element):
-    ee = ExtensionElement(element.c_tag, element.c_namespace, 
+    """
+    Convert an element into a extension element
+    
+    :param element: The element instance
+    :return: An extension element instance
+    """
+    
+    exel = ExtensionElement(element.c_tag, element.c_namespace, 
                             text=element.text)
     
     for xml_attribute, member_name in element.c_attributes.iteritems():
         member_value = getattr(element, member_name)
         if member_value is not None:
-            ee.attributes[xml_attribute] = member_value
+            exel.attributes[xml_attribute] = member_value
                 
-    ee.children = [element_to_extension_element(c) \
+    exel.children = [element_to_extension_element(c) \
                         for c in element.children_with_values()]
     
-    return ee
+    return exel
     
 def extension_element_to_element(extension_element, translation_functions,
                                     namespace=None):
-    """ """
+    """ Convert an extension element to a normal element.
+    In order to do this you need to have an idea of what type of 
+    element it is. Or rather which module it belongs to.
+    
+    :param extension_element: The extension element
+    :prama translation_functions: A dictionary which klass identifiers
+        as keys and string-to-element translations functions as values
+    :param namespace: The namespace of the translation functions.
+    :return: An element instance or None
+    """
+    
     try:
         element_namespace = extension_element.namespace
     except AttributeError:

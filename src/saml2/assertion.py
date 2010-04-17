@@ -35,10 +35,10 @@ def _filter_values(vals, required=None, optional=None):
     :param optional: The optional values
     :return: The set of values after filtering
     """
-
+    
     if not required and not optional:
         return vals
-        
+    
     valr = []
     valo = []
     if required:
@@ -54,17 +54,17 @@ def _filter_values(vals, required=None, optional=None):
             valr.append(val)
         elif val in ovals:
             valo.append(val)
-
+    
     valo.extend(valr)
     if rvals:
         if len(rvals) == len(valr):
             return valo
         else:
-            a = set(rvals)
+            _ = set(rvals)
             raise MissingValue("Required attribute value missing")
     else:
         return valo
-    
+
 def _combine(required=None, optional=None):
     res = {}
     if not required:
@@ -81,12 +81,12 @@ def _combine(required=None, optional=None):
             res[(attr.name, attr.friendly_name)] = part
         else:
             res[(attr.name, attr.friendly_name)] = (attr.attribute_value, [])
-
+    
     for oat in optional:
         tag = (oat.name, oat.friendly_name)
         if tag not in res:
             res[tag] = ([], oat.attribute_value)
-            
+    
     return res
 
 def filter_on_attributes(ava, required=None, optional=None):
@@ -102,24 +102,48 @@ def filter_on_attributes(ava, required=None, optional=None):
             res[attr[1]] = _filter_values(ava[attr[1]], vals[0], vals[1])
         else:
             print >> sys.stderr, ava.keys()
-            raise MissingValue("Required attribute missing: '%s'" % (attr,))
+            raise MissingValue("Required attribute missing: '%s'" % (attr[0],))
     
     return res
 
+def filter_on_demands(ava, required={}, optional={}):
+    """ Never return more than is needed """
+    
+    # Is all what's required there:
+    
+    for attr, vals in required.items():
+        if attr in ava:
+            if vals:
+                for val in vals:
+                    if val not in ava[attr]:
+                        raise MissingValue(
+                            "Required attribute value missing: %s,%s" % (attr,
+                                                                        val))
+        else:
+            raise MissingValue("Required attribute missing: %s" % (attr,))
+    
+    # OK, so I can imaging releasing values that are not absolutely necessary
+    # but not attributes
+    for attr, vals in ava.items():
+        if attr not in required and attr not in optional:
+            del ava[attr]
+    
+    return ava
+
 def filter_attribute_value_assertions(ava, attribute_restrictions=None):
-    """ Will weed out attribute values and values according to the 
-    rules defined in the attribute restrictions. If filtering results in 
+    """ Will weed out attribute values and values according to the
+    rules defined in the attribute restrictions. If filtering results in
     an attribute without values, then the attribute is removed from the
     assertion.
     
-    :param ava: The incoming attribute value assertion
+    :param ava: The incoming attribute value assertion (dictionary)
     :param attribute_restrictions: The rules that govern which attributes
-        and values that are allowed.
+        and values that are allowed. (dictionary)
     :return: The modified attribute value assertion
     """
     if not attribute_restrictions:
         return ava
-        
+    
     for attr, vals in ava.items():
         if attr in attribute_restrictions:
             if attribute_restrictions[attr]:
@@ -136,7 +160,7 @@ def filter_attribute_value_assertions(ava, attribute_restrictions=None):
         else:
             del ava[attr]
     return ava
-    
+
 class Policy(object):
     """ handles restrictions on assertions """
     
@@ -145,11 +169,11 @@ class Policy(object):
             self.compile(restrictions)
         else:
             self._restrictions = None
-            
+    
     def compile(self, restrictions):
         """ This is only for IdPs or AAs, and it's about limiting what
-        is returned to the SP. 
-        In the configuration file, restrictions on which values that 
+        is returned to the SP.
+        In the configuration file, restrictions on which values that
         can be returned are specified with the help of regular expressions.
         This function goes through and pre-compiles the regular expressions.
         
@@ -163,25 +187,25 @@ class Policy(object):
         for _, spec in self._restrictions.items():
             if spec == None:
                 continue
-                
+            
             try:
                 restr = spec["attribute_restrictions"]
             except KeyError:
                 continue
-                
+            
             if restr == None:
                 continue
-                
+            
             for key, values in restr.items():
                 if not values:
                     spec["attribute_restrictions"][key] = None
                     continue
-                                    
+                
                 spec["attribute_restrictions"][key] = \
                         [re.compile(value) for value in values]
         
         return self._restrictions
-
+    
     def get_nameid_format(self, sp_entity_id):
         try:
             form = self._restrictions[sp_entity_id]["nameid_format"]
@@ -190,7 +214,7 @@ class Policy(object):
                 form = self._restrictions["default"]["nameid_format"]
             except KeyError:
                 form = saml.NAMEID_FORMAT_TRANSIENT
-                
+        
         return form
     
     def get_name_form(self, sp_entity_id):
@@ -203,7 +227,7 @@ class Policy(object):
                 form = self._restrictions["default"]["name_form"]
             except KeyError:
                 pass
-                
+        
         return form
     
     def get_lifetime(self, sp_entity_id):
@@ -211,7 +235,7 @@ class Policy(object):
         spec = {"hours":1}
         if not self._restrictions:
             return spec
-            
+        
         try:
             spec = self._restrictions[sp_entity_id]["lifetime"]
         except KeyError:
@@ -219,13 +243,13 @@ class Policy(object):
                 spec = self._restrictions["default"]["lifetime"]
             except KeyError:
                 pass
-                
-        return spec
         
+        return spec
+    
     def get_attribute_restriction(self, sp_entity_id):
         if not self._restrictions:
             return None
-            
+        
         try:
             try:
                 restrictions = self._restrictions[sp_entity_id][
@@ -238,9 +262,9 @@ class Policy(object):
                     restrictions = None
         except KeyError:
             restrictions = None
-
-        return restrictions
         
+        return restrictions
+    
     def _not_on_or_after(self, sp_entity_id):
         """ When the assertion stops being valid, should not be
         used after this time.
@@ -249,13 +273,13 @@ class Policy(object):
         """
         
         return in_a_while(**self.get_lifetime(sp_entity_id))
-
+    
     def filter(self, ava, sp_entity_id, required=None, optional=None):
         """ What attribute and attribute values returns depends on what
         the SP has said it wants in the request or in the metadata file and
         what the IdP/AA wants to release. An assumption is that what the SP
-        asks for overrides whatever is in the metadata. But of course the 
-        IdP never releases anything it doesn't want to.    
+        asks for overrides whatever is in the metadata. But of course the
+        IdP never releases anything it doesn't want to.
         
         :param ava: The information about the subject as a dictionary
         :param sp_entity_id: The entity ID of the SP
@@ -263,18 +287,18 @@ class Policy(object):
         :param optional: Attributes that the SP thinks is optional
         :return: A possibly modified AVA
         """
-
                                 
-        ava = filter_attribute_value_assertions(ava, 
-                                    self.get_attribute_restriction(sp_entity_id))
-
+        
+        ava = filter_attribute_value_assertions(ava,
+                                self.get_attribute_restriction(sp_entity_id))
+        
         if required or optional:
             ava = filter_on_attributes(ava, required, optional)
-            
+        
         return ava
-
+    
     def restrict(self, ava, sp_entity_id, metadata=None):
-        """ Identity attribute names are expected to be expressed in 
+        """ Identity attribute names are expected to be expressed in
         the local lingo (== friendlyName)
         
         :return: A filtered ava according to the IdPs/AAs rules and
@@ -283,16 +307,17 @@ class Policy(object):
         """
         if metadata:
             (required, optional) = metadata.attribute_consumer(sp_entity_id)
+            #(required, optional) = metadata.wants(sp_entity_id)
         else:
             required = optional = None
-            
+        
         return self.filter(ava, sp_entity_id, required, optional)
     
     def conditions(self, sp_entity_id):
         return args2dict(
-                        not_before=instant(), 
+                        not_before=instant(),
                         # How long might depend on who's getting it
-                        not_on_or_after=self._not_on_or_after(sp_entity_id), 
+                        not_on_or_after=self._not_on_or_after(sp_entity_id),
                         audience_restriction=args2dict(
                                 audience=args2dict(sp_entity_id)))
 
@@ -301,16 +326,16 @@ class Assertion(dict):
     
     def __init__(self, dic=None):
         dict.__init__(self, dic)
-        
+    
     def _authn_statement(self):
         return args2dict(authn_instant=instant(), session_index=sid())
-
-    def construct(self, sp_entity_id, in_response_to, name_id, attrconvs, 
-                    policy, issuer):
     
+    def construct(self, sp_entity_id, in_response_to, name_id, attrconvs,
+                    policy, issuer):
+        
         attr_statement = from_local(attrconvs, self,
                                     policy.get_name_form(sp_entity_id))
-
+        
         # start using now and for a hour
         conds = policy.conditions(sp_entity_id)
         
@@ -326,6 +351,6 @@ class Assertion(dict):
                     subject_confirmation_data = \
                         args2dict(in_response_to=in_response_to))),
             )
-                    
+    
     def apply_policy(self, sp_entity_id, policy, metadata=None):
         return policy.restrict(self, sp_entity_id, metadata)

@@ -230,3 +230,10 @@ def valid( valid_until ):
         return True
     else:
         return False
+
+def later_than(then, that):
+    then = str_to_time( then )
+    then = str_to_time( that )
+    
+    return then >= that
+    

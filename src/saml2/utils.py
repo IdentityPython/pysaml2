@@ -2,8 +2,7 @@
 
 import time
 import base64
-import re
-from saml2 import samlp, saml, VERSION, sigver, NAME_FORMAT_URI
+from saml2 import samlp, VERSION, sigver
 from saml2.time_util import instant
 
 try:
@@ -191,7 +190,7 @@ def response_factory(signature=False, encrypt=False, **kwargs):
     return args2dict(**kwargs)        
 
 def _attrval(val):
-    if isinstance(val, list) or isinstance(val,set):
+    if isinstance(val, list) or isinstance(val, set):
         attrval = [args2dict(v) for v in val]
     elif val == None:
         attrval = None

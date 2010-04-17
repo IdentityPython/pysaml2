@@ -22,19 +22,18 @@ or attribute authority (AA) may use to conclude its tasks.
 import shelve
 import sys
 
-from saml2 import saml, samlp, VERSION, make_instance
+from saml2 import saml, samlp, VERSION, class_name
 
 from saml2.utils import sid, decode_base64_and_inflate
 from saml2.utils import response_factory
 from saml2.utils import MissingValue, args2dict
-from saml2.utils import success_status_factory, assertion_factory
-from saml2.utils import OtherError, do_attribute_statement
+from saml2.utils import success_status_factory
+from saml2.utils import OtherError
 from saml2.utils import VersionMismatch, UnknownPrincipal, UnsupportedBinding
 from saml2.utils import status_from_exception_factory
 
 from saml2.sigver import security_context, signed_instance_factory
 from saml2.sigver import pre_signature_part
-from saml2.time_util import instant, in_a_while
 from saml2.config import Config
 from saml2.cache import Cache 
 from saml2.assertion import Assertion, Policy   
@@ -45,7 +44,7 @@ class UnknownVO(Exception):
 class Identifier(object):
     """ A class that handles identifiers of objects """
     def __init__(self, dbname, entityid, voconf=None, debug=0, log=None):
-        self.map = shelve.open(dbname,writeback=True)
+        self.map = shelve.open(dbname, writeback=True)
         self.entityid = entityid
         self.voconf = voconf
         self.debug = debug
@@ -102,11 +101,11 @@ class Identifier(object):
             raise UnknownVO("%s" % sp_name_qualifier)
         
         try:
-            format = vo_conf["nameid_format"]
+            nameid_format = vo_conf["nameid_format"]
         except KeyError:
-            format = saml.NAMEID_FORMAT_PERSISTENT
+            nameid_format = saml.NAMEID_FORMAT_PERSISTENT
             
-        return args2dict(subj_id, format=format,
+        return args2dict(subj_id, format=nameid_format,
                             sp_name_qualifier=sp_name_qualifier)
     
     def persistent_nameid(self, sp_name_qualifier, userid):
@@ -156,13 +155,14 @@ class Server(object):
 
         self.log = log
         self.debug = debug
+        self.ident = None
         if config_file:
             self.load_config(config_file)
         elif config:
             self.conf = config
         
         self.metadata = self.conf["metadata"]
-        self.sc = security_context(self.conf, log)
+        self.sec = security_context(self.conf, log)
         if cache:
             self.cache = Cache(cache)
         else:
@@ -173,11 +173,11 @@ class Server(object):
         self.conf = Config()
         self.conf.load_file(config_file)
         if "subject_data" in self.conf:
-            self.id = Identifier(self.conf["subject_data"], 
+            self.ident = Identifier(self.conf["subject_data"], 
                                     self.conf["entityid"], self.conf.vo_conf,
                                     self.debug, self.log)
         else:
-            self.id = None
+            self.ident = None
     
     def issuer(self):
         """ Return an Issuer precursor """
@@ -199,7 +199,7 @@ class Server(object):
         response = {}
         request_xml = decode_base64_and_inflate(enc_request)
         try:
-            request = self.sc.correctly_signed_authn_request(request_xml)
+            request = self.sec.correctly_signed_authn_request(request_xml)
             if self.log and self.debug:
                 self.log.info("Request was correctly signed")
         except Exception:
@@ -324,7 +324,7 @@ class Server(object):
             
             if sign:
                 assertion["signature"] = pre_signature_part(assertion["id"],
-                                                        self.sc.my_cert, 1)
+                                                        self.sec.my_cert, 1)
 
             # Store which assertion that has been sent to which SP about which
             # subject.
@@ -335,7 +335,7 @@ class Server(object):
             
             response.update({"assertion":assertion})
                 
-        return signed_instance_factory(samlp.Response, response, self.sc)
+        return signed_instance_factory(samlp.Response, response, self.sec)
 
     # ------------------------------------------------------------------------
     
@@ -364,13 +364,12 @@ class Server(object):
     # ------------------------------------------------------------------------
     
     def do_aa_response(self, consumer_url, in_response_to, sp_entity_id, 
-                        identity=None, userid="", name_id=None, ip_address="", 
-                        issuer=None, status=None, sign=False, 
-                        name_id_policy=None):
+                        identity=None, userid="", name_id=None, status=None, 
+                        sign=False, name_id_policy=None):
 
-        name_id = self.id.construct_nameid(self.conf.aa_policy(), userid, 
+        name_id = self.ident.construct_nameid(self.conf.aa_policy(), userid, 
                                             sp_entity_id, identity)
-                                            
+        
         return self._response(consumer_url, in_response_to,
                         sp_entity_id, identity, name_id, 
                         status, sign, policy=self.conf.aa_policy())
@@ -395,7 +394,7 @@ class Server(object):
         """
         
         try:
-            name_id = self.id.construct_nameid(self.conf.idp_policy(),
+            name_id = self.ident.construct_nameid(self.conf.idp_policy(),
                                   userid, sp_entity_id, identity,
                                   name_id_policy)
         except IOError, exc:
@@ -419,7 +418,7 @@ class Server(object):
 
         if sign:
             try:
-                return self.sc.sign_statement_using_xmlsec(response,
+                return self.sec.sign_statement_using_xmlsec(response,
                                                         class_name(response))
             except Exception, exc:
                 response = self.error_response(destination, in_response_to, 

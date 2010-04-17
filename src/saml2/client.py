@@ -23,19 +23,17 @@ import os
 import urllib
 import saml2
 import base64
-import time
-import sys
-from saml2.time_util import str_to_time, instant
+
+from saml2.time_util import instant
 from saml2.utils import sid, deflate_and_base64_encode
 from saml2.utils import do_attributes, args2dict
 
-from saml2 import samlp, saml, extension_element_to_element
-from saml2 import VERSION, class_name, make_instance
+from saml2 import samlp, saml
+from saml2 import VERSION, make_instance
 from saml2.sigver import pre_signature_part
 from saml2.sigver import security_context, signed_instance_factory
 from saml2.soap import SOAPClient
 
-from saml2.attribute_converter import to_local
 from saml2.authnresponse import authn_response
 
 DEFAULT_BINDING = saml2.BINDING_HTTP_REDIRECT
@@ -61,51 +59,52 @@ class Saml2Client(object):
             self.config = config
             if "metadata" in config:
                 self.metadata = config["metadata"]
-            self.sc = security_context(config)
+            self.sec = security_context(config)
         
         self.debug = debug
-        
+    
     def _init_request(self, request, destination):
         #request.id = sid()
         request.version = VERSION
         request.issue_instant = instant()
         request.destination = destination
-        return request        
-
+        return request
+    
     def idp_entry(self, name=None, location=None, provider_id=None):
         res = {}
-        if name: 
+        if name:
             res["name"] = name
-        if location: 
+        if location:
             res["loc"] = location
-        if provider_id: 
+        if provider_id:
             res["provider_id"] = provider_id
         if res:
             return res
         else:
             return None
-        
+    
     def scoping(self, idp_ents):
         return {
             "idp_list": {
                 "idp_entry": idp_ents
             }
         }
-
+    
     def scoping_from_metadata(self, entityid, location):
         name = self.metadata.name(entityid)
-        return make_instance(self.scoping([self.idp_entry(name, location)]))
-                           
+        return make_instance(samlp.Scoping,
+                            self.scoping([self.idp_entry(name, location)]))
+    
     def response(self, post, requestor, outstanding, log=None):
         """ Deal with the AuthnResponse
         
         :param post: The reply as a dictionary
         :param requestor: The issuer of the AuthN request
-        :param outstanding: A dictionary with session IDs as keys and 
+        :param outstanding: A dictionary with session IDs as keys and
             the original web request from the user before redirection
             as values.
         :param log: where loggin should go.
-        :return: A 2-tuple of identity information (in the form of a 
+        :return: A 2-tuple of identity information (in the form of a
             dictionary) and where the user should really be sent. This
             might differ from what the IdP thinks since I don't want
             to reveal verything to it and it might not trust me.
@@ -115,18 +114,18 @@ class Saml2Client(object):
             saml_response = post['SAMLResponse']
         except KeyError:
             return None
-            
+        
         if saml_response:
-            ar = authn_response(self.config, requestor, outstanding, log,
+            aresp = authn_response(self.config, requestor, outstanding, log,
                                     debug=self.debug)
-            ar.loads(saml_response)
+            aresp.loads(saml_response)
             if self.debug:
-                log and log.info(ar)
-            return ar.verify()
-                
+                log and log.info(aresp)
+            return aresp.verify()
+        
         return None
-            
-    def authn_request(self, query_id, destination, service_url, spentityid, 
+    
+    def authn_request(self, query_id, destination, service_url, spentityid,
                         my_name, vorg="", scoping=None, log=None, sign=False):
         """ Creates an authentication request.
         
@@ -152,7 +151,7 @@ class Saml2Client(object):
         
         if scoping:
             prel["scoping"] = scoping
-            
+        
         name_id_policy = {
             "allow_create": "true"
         }
@@ -166,37 +165,37 @@ class Saml2Client(object):
                 pass
         
         if sign:
-            prel["signature"] = pre_signature_part(prel["id"], 
-                                                    self.sc.my_cert, id=1)
-
+            prel["signature"] = pre_signature_part(prel["id"],
+                                                    self.sec.my_cert, id=1)
+        
         prel["name_id_policy"] = name_id_policy
         prel["issuer"] = { "text": spentityid }
         
         if log:
             log.info("DICT VERSION: %s" % prel)
-            
-        return "%s" % signed_instance_factory(samlp.AuthnRequest, prel, 
-                                                self.sc)
         
-    def authenticate(self, spentityid, location="", service_url="", 
+        return "%s" % signed_instance_factory(samlp.AuthnRequest, prel,
+                                                self.sec)
+    
+    def authenticate(self, spentityid, location="", service_url="",
                         my_name="", relay_state="",
                         binding=saml2.BINDING_HTTP_REDIRECT, log=None,
                         vorg="", scoping=None):
         """ Sends an authentication request.
         
         :param spentityid: The SP EntityID
-        :param binding: How the authentication request should be sent to the 
+        :param binding: How the authentication request should be sent to the
             IdP
         :param location: Where the IdP is.
         :param service_url: The SP's service URL
         :param my_name: The providers name
-        :param relay_state: To where the user should be returned after 
+        :param relay_state: To where the user should be returned after
             successfull log in.
         :param binding: Which binding to use for sending the request
         :param log: Where to write log messages
         :param vorg: The entity_id of the virtual organization I'm a member of
         :param scoping: For which IdPs this query are aimed.
-            
+        
         :return: AuthnRequest response
         """
         
@@ -206,8 +205,8 @@ class Saml2Client(object):
             log.info("service_url: %s" % service_url)
             log.info("my_name: %s" % my_name)
         session_id = sid()
-        authen_req = self.authn_request(session_id, location, 
-                                service_url, spentityid, my_name, vorg, 
+        authen_req = self.authn_request(session_id, location,
+                                service_url, spentityid, my_name, vorg,
                                 scoping, log)
         log and log.info("AuthNReq: %s" % authen_req)
         
@@ -238,32 +237,34 @@ class Saml2Client(object):
         else:
             raise Exception("Unkown binding type: %s" % binding)
         return (session_id, response)
-            
 
-    def create_attribute_query(self, session_id, subject_id, issuer, 
-            destination, attribute=None, sp_name_qualifier=None, 
-            name_qualifier=None, nameformat=None, sign=False):
-        """ Constructs an AttributeQuery 
+    
+    def create_attribute_query(self, session_id, subject_id, issuer,
+            destination, attribute=None, sp_name_qualifier=None,
+            name_qualifier=None, nameid_format=None, sign=False):
+        """ Constructs an AttributeQuery
         
         :param subject_id: The identifier of the subject
         :param destination: To whom the query should be sent
-        :param attribute: A dictionary of attributes and values that is 
+        :param attribute: A dictionary of attributes and values that is
             asked for. The key are one of 4 variants:
             3-tuple of name_format,name and friendly_name,
             2-tuple of name_format and name,
-            1-tuple with name or 
+            1-tuple with name or
             just the name as a string.
-        :param sp_name_qualifier: The unique identifier of the 
-            service provider or affiliation of providers for whom the 
+        :param sp_name_qualifier: The unique identifier of the
+            service provider or affiliation of providers for whom the
             identifier was generated.
-        :param name_qualifier: The unique identifier of the identity 
+        :param name_qualifier: The unique identifier of the identity
             provider that generated the identifier.
+        :param nameid_format: The format of the name ID
+        :param sign: Whether the query should be signed or not.
         :return: An AttributeQuery instance
         """
-
     
+        
         subject = args2dict(
-                    name_id = args2dict(subject_id, format=nameformat,
+                    name_id = args2dict(subject_id, format=nameid_format,
                                 sp_name_qualifier=sp_name_qualifier,
                                 name_qualifier=name_qualifier),
                     )
@@ -278,45 +279,46 @@ class Saml2Client(object):
         }
         
         if sign:
-            prequery["signature"] = pre_signature_part(prequery["id"], 
-                                                        self.sc.my_cert, 1)
+            prequery["signature"] = pre_signature_part(prequery["id"],
+                                                        self.sec.my_cert, 1)
         
         if attribute:
             prequery["attribute"] = do_attributes(attribute)
-            
+        
         request = make_instance(samlp.AttributeQuery, prequery)
         if sign:
-            signed_req = self.sc.sign_assertion_using_xmlsec("%s" % request)
+            signed_req = self.sec.sign_assertion_using_xmlsec("%s" % request)
             return samlp.attribute_query_from_string(signed_req)
-
+        
         else:
             return request
-
             
-    def attribute_query(self, subject_id, issuer, destination, 
-                attribute=None, sp_name_qualifier=None, name_qualifier=None, 
-                format=None, log=None):
+    
+    def attribute_query(self, subject_id, issuer, destination,
+                attribute=None, sp_name_qualifier=None, name_qualifier=None,
+                nameid_format=None, log=None):
         """ Does a attribute request from an attribute authority
-
+        
         :param subject_id: The identifier of the subject
         :param destination: To whom the query should be sent
         :param attribute: A dictionary of attributes and values that is asked for
-        :param sp_name_qualifier: The unique identifier of the 
-            service provider or affiliation of providers for whom the 
+        :param sp_name_qualifier: The unique identifier of the
+            service provider or affiliation of providers for whom the
             identifier was generated.
-        :param name_qualifier: The unique identifier of the identity 
+        :param name_qualifier: The unique identifier of the identity
             provider that generated the identifier.
+        :param nameid_format: The format of the name ID
         :return: The attributes returned
         """
         
         session_id = sid()
-        request = self.create_attribute_query(session_id, subject_id, 
-                    issuer, destination, attribute, sp_name_qualifier, 
-                    name_qualifier, nameformat=format)
+        request = self.create_attribute_query(session_id, subject_id,
+                    issuer, destination, attribute, sp_name_qualifier,
+                    name_qualifier, nameid_format=nameid_format)
         
         log and log.info("Request, created: %s" % request)
         
-        soapclient = SOAPClient(destination, self.config["key_file"], 
+        soapclient = SOAPClient(destination, self.config["key_file"],
                                 self.config["cert_file"])
         log and log.info("SOAP client initiated")
         try:
@@ -324,32 +326,32 @@ class Saml2Client(object):
         except Exception, exc:
             log and log.info("SoapClient exception: %s" % (exc,))
             return None
-
+        
         log and log.info("SOAP request sent and got response: %s" % response)
         if response:
             log and log.info("Verifying response")
             
-            ar = authn_response(self.config, issuer, {session_id:""}, log)            
-            session_info = ar.loads(response).verify().session_info()
+            aresp = authn_response(self.config, issuer, {session_id:""}, log)
+            session_info = aresp.loads(response).verify().session_info()
             
             log and log.info("session: %s" % session_info)
             return session_info
         else:
             log and log.info("No response")
             return None
-        
+    
     def make_logout_request(self, session_id, destination, issuer,
                 reason=None, not_on_or_after=None):
         """ Constructs a LogoutRequest
-
+        
         :param subject_id: The identifier of the subject
-        :param reason: An indication of the reason for the logout, in the 
+        :param reason: An indication of the reason for the logout, in the
             form of a URI reference.
-        :param not_on_or_after: The time at which the request expires, 
+        :param not_on_or_after: The time at which the request expires,
             after which the recipient may discard the message.
         :return: An AttributeQuery instance
         """
-
+        
         prel = {
             "id": sid(),
             "version": VERSION,
@@ -358,21 +360,21 @@ class Saml2Client(object):
             "issuer": issuer,
             "session_index": session_id,
         }
-    
+        
         if reason:
             prel["reason"] = reason
-            
+        
         if not_on_or_after:
             prel["not_on_or_after"] = not_on_or_after
-            
-        return make_instance(samlp.LogoutRequest, prel)
         
+        return make_instance(samlp.LogoutRequest, prel)
+    
     def logout(self, session_id, destination,
-                    issuer, reason="", not_on_or_after=None):        
+                    issuer, reason="", not_on_or_after=None):
         return self.make_logout_request(session_id, destination,
                     issuer, reason, not_on_or_after)
-        
     
+
 # ----------------------------------------------------------------------
 
 ROW = """<tr><td>%s</td><td>%s</td></tr>"""
@@ -396,7 +398,7 @@ def _print_statement(statem):
                 txt.append(ROW % (key, _print_statement(val)))
             else:
                 txt.append(ROW % (key, val))
-                
+    
     txt.append("</table>")
     return "\n".join(txt)
 

@@ -20,7 +20,10 @@ import time
 
 from saml2.time_util import str_to_time
 
-from saml2 import samlp, saml
+from saml2 import samlp
+from saml2 import saml
+from saml2 import extension_element_to_element
+
 from saml2.sigver import security_context
 
 from saml2.attribute_converter import to_local
@@ -46,7 +49,7 @@ def _use_before(condition, slack):
     #print "NOW: %s" % now
     not_before = time.mktime(str_to_time(condition.not_before))
     #print "not_before: %d" % not_before
-
+    
     if not_before > now + slack:
         # Can't use it yet
         raise Exception("Can't use it yet %s <= %s" % (not_before, now))
@@ -63,15 +66,15 @@ def for_me(condition, myself ):
             pass
     
     return False
-    
+
 # ---------------------------------------------------------------------------
 
 class IncorrectlySigned(Exception):
     pass
-    
+
 # ---------------------------------------------------------------------------
-    
-def authn_response(conf, requestor, outstanding_queries=None, log=None, 
+
+def authn_response(conf, requestor, outstanding_queries=None, log=None,
                     timeslack=0, debug=0):
     sec = security_context(conf)
     if not timeslack:
@@ -79,15 +82,15 @@ def authn_response(conf, requestor, outstanding_queries=None, log=None,
             timeslack = int(conf["timeslack"])
         except KeyError:
             pass
-            
-    return AuthnResponse(sec, conf.attribute_converters, requestor, 
-                            outstanding_queries, log, timeslack, debug)
     
+    return AuthnResponse(sec, conf.attribute_converters, requestor,
+                            outstanding_queries, log, timeslack, debug)
+
 class AuthnResponse(object):
     
-    def __init__(self, security_context, attribute_converters, requestor, 
+    def __init__(self, sec_context, attribute_converters, requestor,
                     outstanding_queries=None, log=None, timeslack=0, debug=0):
-        self.sc = security_context
+        self.sec = sec_context
         self.attribute_converters = attribute_converters
         self.requestor = requestor
         if outstanding_queries:
@@ -100,9 +103,15 @@ class AuthnResponse(object):
         self.debug = debug
         if self.debug and not self.log:
             self.debug = 0
-        self.clear()
-        self.xmlstr = ""
         
+        self.xmlstr = ""
+        self.came_from = ""
+        self.name_id = ""
+        self.ava = None
+        self.response = None
+        self.not_on_or_after = 0
+        self.assertion = None
+    
     def loads(self, xmldata, decode=True):
         if self.debug:
             self.log.info("--- Loads AuthnResponse ---")
@@ -112,11 +121,11 @@ class AuthnResponse(object):
             decoded_xml = xmldata
         
         # own copy
-        self.xmlstr = decoded_xml[:]        
+        self.xmlstr = decoded_xml[:]
         if self.debug:
             self.log.info("xmlstr: %s" % (self.xmlstr,))
         try:
-            self.response = self.sc.correctly_signed_response(decoded_xml)
+            self.response = self.sec.correctly_signed_response(decoded_xml)
         except Exception, excp:
             self.log and self.log.info("EXCEPTION: %s", excp)
             raise
@@ -126,12 +135,12 @@ class AuthnResponse(object):
                 self.log.error("Response was not correctly signed")
                 self.log.info(decoded_xml)
             raise IncorrectlySigned()
-
+        
         if self.debug:
             self.log.info("response: %s" % (self.response,))
-
-        return self
         
+        return self
+    
     def clear(self):
         self.xmlstr = ""
         self.came_from = ""
@@ -140,7 +149,7 @@ class AuthnResponse(object):
         self.response = None
         self.not_on_or_after = 0
         self.assertion = None
-        
+    
     def status_ok(self):
         if self.response.status:
             status = self.response.status
@@ -152,13 +161,13 @@ class AuthnResponse(object):
                 raise Exception(
                     "Not successfull according to: %s" % \
                     status.status_code.value)
-
+    
     def authn_statement_ok(self):
         # the assertion MUST contain one AuthNStatement
         assert len(self.assertion.authn_statement) == 1
         # authn_statement = assertion.authn_statement[0]
         # check authn_statement.session_index
-
+    
     def condition_ok(self, lax=False):
         # The Identity Provider MUST include a <saml:Conditions> element
         #print "Conditions",assertion.conditions
@@ -166,23 +175,23 @@ class AuthnResponse(object):
         condition = self.assertion.conditions
         if self.debug:
             self.log.info("condition: %s" % condition)
-
+        
         try:
             self.not_on_or_after = _use_on_or_after(condition, self.timeslack)
             _use_before(condition, self.timeslack)
-        except Exception,excp:
+        except Exception, excp:
             self.log.error("Exception on condition: %s" % (excp,))
             if not lax:
                 raise
             else:
                 self.not_on_or_after = 0
-                
+        
         if not for_me(condition, self.requestor):
             if not lax:
                 raise Exception("Not for me!!!")
         
         return True
-        
+    
     def get_identity(self):
         # The assertion can contain zero or one attributeStatements
         if not self.assertion.attribute_statement:
@@ -194,13 +203,13 @@ class AuthnResponse(object):
             if self.debug:
                 self.log.info("Attribute Statement: %s" % (
                                     self.assertion.attribute_statement[0],))
-                for ac in self.attribute_converters():
-                    self.log.info("Converts name format: %s" % (ac.format,))
-                    
+                for aconv in self.attribute_converters():
+                    self.log.info("Converts name format: %s" % (aconv.format,))
+            
             ava = to_local(self.attribute_converters(),
                             self.assertion.attribute_statement[0])
         return ava
-     
+    
     def get_subject(self):
         # The assertion must contain a Subject
         assert self.assertion.subject
@@ -221,7 +230,7 @@ class AuthnResponse(object):
         # The subject must contain a name_id
         assert subject.name_id
         self.name_id = subject.name_id.text.strip()
-
+    
     def _assertion(self, assertion):
         self.assertion = assertion
         
@@ -233,24 +242,24 @@ class AuthnResponse(object):
         
         if self.context == "AuthNReq":
             self.authn_statement_ok()
-
+        
         if not self.condition_ok():
             return None
-            
+        
         if self.debug:
             self.log.info("--- Getting Identity ---")
-            
+        
         self.ava = self.get_identity()
         
         if self.debug:
             self.log.info("--- AVA: %s" % (self.ava,))
-
+        
         self.get_subject()
-         
+        
         return True
-
+    
     def _encrypted_assertion(self, xmlstr):
-        decrypt_xml = self.sc.decrypt(self.xmlstr)
+        decrypt_xml = self.sec.decrypt(xmlstr)
         
         if self.debug:
             self.log.info("Decryption successfull")
@@ -259,57 +268,66 @@ class AuthnResponse(object):
         if self.debug:
             self.log.info("Parsed decrypted assertion successfull")
         
-        enc = self.response.encrypted_assertion[0].extension_elements[0]            
-        assertion = extension_element_to_element(enc, 
+        enc = self.response.encrypted_assertion[0].extension_elements[0]
+        assertion = extension_element_to_element(enc,
                                                 saml.ELEMENT_FROM_STRING,
                                                 namespace=saml.NAMESPACE)
         if self.debug:
             self.log.info("Decrypted Assertion: %s" % assertion)
         return self._assertion(assertion)
-
+    
     def parse_assertion(self):
         try:
             assert len(self.response.assertion) == 1 or \
                     len(self.response.encrypted_assertion) == 1
         except AssertionError:
             raise Exception("No assertion part")
-
-        if self.response.assertion:         
+        
+        if self.response.assertion:
             self.debug and self.log.info("***Unencrypted response***")
             return self._assertion(self.response.assertion[0])
         else:
             self.debug and self.log.info("***Encrypted response***")
             return self._encrypted_assertion(
                                         self.response.encrypted_assertion[0])
-            
-        return True
         
+        return True
+    
     def verify(self):
-        """ """
+        """ Verify that the assertion is syntaktically correct and
+        the signature is correct if present."""
+        
         self.status_ok()
         if self.parse_assertion():
             return self
         else:
             return None
-        
+    
     def issuer(self):
+        """ Return the issuer of the reponse """
         return self.response.issuer.text
-        
+    
     def session_id(self):
+        """ Returns the SessionID of the response """ 
         return self.response.in_response_to
-        
+    
     def id(self):
+        """ Return the ID of the response """
         return self.response.id
-
+    
     def session_info(self):
-        return { "ava": self.ava, "name_id": self.name_id, 
+        """ Returns a predefined set of information gleened from the 
+        response.
+        :returns: Dictionary with information
+        """
+        return { "ava": self.ava, "name_id": self.name_id,
                 "came_from": self.came_from, "issuer": self.issuer(),
                 "not_on_or_after": self.not_on_or_after }
     
     def __str__(self):
         return "%s" % self.xmlstr
-        
+
 # ======================================================================
-                                    
+   
    # session_info["ava"]["__userid"] = session_info["name_id"]
    # return session_info
