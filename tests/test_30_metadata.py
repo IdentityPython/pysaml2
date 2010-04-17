@@ -6,6 +6,8 @@ from saml2 import BINDING_SOAP
 from saml2 import md, saml, samlp
 from saml2 import time_util
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
+from saml2.attribute_converter import ac_factory
+
 from py.test import raises
 
 SWAMI_METADATA = "swamid-kalmar-1.0.xml"
@@ -31,8 +33,10 @@ def _read_lines(name):
         name = "tests/"+name
         return open(name).readlines()
         
+ATTRCONV = ac_factory("attributemaps")
+
 def test_swami_1():
-    md = metadata.MetaData()
+    md = metadata.MetaData(attrconv=ATTRCONV)
     md.import_metadata(_read_file(SWAMI_METADATA),"-")
     print len(md.entity)
     assert len(md.entity)
@@ -49,9 +53,19 @@ def test_swami_1():
     ssocerts =  md.certs('https://idp.umu.se/saml2/idp/SSOService.php')
     print ssocerts
     assert len(ssocerts) == 1
-    
+    print md.wants
+    assert _eq(md._wants.keys(),['https://connect.sunet.se/shibboleth',
+                            'https://sp.swamid.se/shibboleth'])
+    assert _eq(md.wants('https://sp.swamid.se/shibboleth')[1].keys(),
+                ["eduPersonPrincipalName"])
+    assert md.wants('https://sp.swamid.se/shibboleth')[0] == {}
+    assert _eq(md.wants('https://connect.sunet.se/shibboleth')[1].keys(),
+                ['mail', 'givenName', 'eduPersonPrincipalName', 'sn',
+                'eduPersonScopedAffiliation'])
+    assert md.wants('https://connect.sunet.se/shibboleth')[0] == {}
+                
 def test_incommon_1():
-    md = metadata.MetaData()
+    md = metadata.MetaData(attrconv=ATTRCONV)
     md.import_metadata(_read_file(INCOMMON_METADATA),"-")
     print len(md.entity)
     assert len(md.entity) == 442
@@ -63,10 +77,11 @@ def test_incommon_1():
     idp_sso = md.single_sign_on_services('urn:mace:incommon:alaska.edu')
     assert len(idp_sso) == 1
     print idp_sso
+    print md.wants
     assert idp_sso == ['https://idp.alaska.edu/idp/profile/SAML2/Redirect/SSO']
-
+    
 def test_example():
-    md = metadata.MetaData()
+    md = metadata.MetaData(attrconv=ATTRCONV)
     md.import_metadata(_read_file(EXAMPLE_METADATA), "-")
     print len(md.entity)
     assert len(md.entity) == 1
@@ -81,7 +96,7 @@ def test_example():
     assert len(certs[0]) == 2
         
 def test_switch_1():
-    md = metadata.MetaData()
+    md = metadata.MetaData(attrconv=ATTRCONV)
     md.import_metadata(_read_file(SWITCH_METADATA), "-")
     print len(md.entity)
     assert len(md.entity) == 90
@@ -109,7 +124,7 @@ def test_switch_1():
     assert len(dual) == 0
 
 def test_sp_metadata():
-    md = metadata.MetaData()
+    md = metadata.MetaData(attrconv=ATTRCONV)
     md.import_metadata(_read_file(SP_METADATA), "-")
     
     print md.entity
@@ -127,12 +142,20 @@ def test_sp_metadata():
     assert _eq([n.name for n in req],['urn:oid:2.5.4.4', 'urn:oid:2.5.4.42', 
                                         'urn:oid:0.9.2342.19200300.100.1.3'])
     assert _eq([n.friendly_name for n in req],['surName', 'givenName', 'mail'])
+    print md.wants
+
+    assert md._wants.keys() == ['urn:mace:umu.se:saml:roland:sp']
+    assert _eq(md.wants('urn:mace:umu.se:saml:roland:sp')[0].keys(),
+                ["mail", "givenName", "sn"])
+    assert _eq(md.wants('urn:mace:umu.se:saml:roland:sp')[1].keys(),
+                ["title"])
+
 
 KALMAR2_URL = "https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2"
 KALMAR2_CERT = "kalmar2.pem"
 
 def test_import_external_metadata(xmlsec):
-    md = metadata.MetaData(xmlsec)
+    md = metadata.MetaData(xmlsec,attrconv=ATTRCONV)
     md.import_external_metadata(KALMAR2_URL, KALMAR2_CERT)
     
     print len(md.entity)

@@ -167,7 +167,7 @@ class TestServer1():
         assert response["sp_entity_id"] == "urn:mace:example.com:saml:roland:sp"
 
     def test_sso_response_with_identity(self):
-        name_id = self.server.id.temporary_nameid()
+        name_id = self.server.ident.temporary_nameid()
         resp = self.server.do_response(
                     "http://localhost:8087/",   # consumer_url
                     "12",                       # in_response_to
@@ -276,7 +276,7 @@ class TestServer1():
         assert len(astate.attribute) == 3
         
     def test_signed_response(self):
-        name_id = self.server.id.temporary_nameid()
+        name_id = self.server.ident.temporary_nameid()
                 
         signed_resp = self.server.do_response(
                     "http://lingon.catalogix.se:8087/",   # consumer_url
@@ -316,8 +316,7 @@ class TestServer2():
         print aa_policy.__dict__
         print self.server.conf["service"]
         response = self.server.do_aa_response( "http://example.com/sp/", "aaa",
-                        "urn:mace:example.com:sp:1", IDENTITY.copy(), 
-                        issuer = self.server.conf["entityid"])
+                        "urn:mace:example.com:sp:1", IDENTITY.copy())
 
         assert response != None
         assert response.destination == "http://example.com/sp/"

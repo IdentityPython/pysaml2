@@ -42,7 +42,7 @@ def ava_fro(acs, statement):
     if statement == []:
         return {}
         
-    acsdic = dict([(ac.format, ac) for ac in acs])
+    acsdic = dict([(ac.name_format, ac) for ac in acs])
     acsdic[None] = acsdic[NAME_FORMAT_URI]    
     return dict([acsdic[a.name_format].ava_fro(a) for a in statement])
 
@@ -62,7 +62,7 @@ def to_local(acs, statement):
 def from_local(acs, ava, name_format):
     for aconv in acs:
         #print ac.format, name_format
-        if aconv.format == name_format:
+        if aconv.name_format == name_format:
             #print "Found a name_form converter"
             return aconv.to(ava)
             
@@ -77,7 +77,7 @@ def from_local_name(acs, attr, name_format):
     """
     for aconv in acs:
         #print ac.format, name_format
-        if aconv.format == name_format:
+        if aconv.name_format == name_format:
             #print "Found a name_form converter"
             return aconv.to_format(attr)
     return attr

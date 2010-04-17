@@ -27,6 +27,7 @@ from saml2 import md, BINDING_HTTP_POST
 from saml2 import samlp, BINDING_HTTP_REDIRECT, BINDING_SOAP
 #from saml2.time_util import str_to_time
 from saml2.sigver import make_temp, cert_from_key_info, verify_signature
+from saml2.sigver import pem_format
 from saml2.time_util import valid
 from saml2.attribute_converter import ava_fro
 
@@ -107,8 +108,7 @@ class MetaData(object):
             for key_desc in tssd.key_descriptor:
                 certs.extend(cert_from_key_info(key_desc.key_info))
             
-            certs = [make_temp(pem_format(cert), ".pem", 
-                                                False) for c in certs]
+            certs = [make_temp(pem_format(c), ".pem", False) for c in certs]
             
             for acs in tssd.attribute_consuming_service:
                 for attr in acs.requested_attribute:

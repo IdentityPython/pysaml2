@@ -3,6 +3,7 @@ from saml2.saml import Attribute, NAME_FORMAT_URI, AttributeValue
 from saml2.assertion import Policy, Assertion, filter_on_attributes
 from saml2.assertion import filter_attribute_value_assertions
 from saml2.utils import MissingValue
+from saml2 import attribute_converter
 
 from py.test import raises
 
@@ -357,6 +358,52 @@ def test_filter_values_req_opt_1():
     ava = filter_on_attributes(ava, [r], [o])
     assert ava.keys() == ["serialNumber"]
     assert _eq(ava["serialNumber"], ["12345","54321"])
+
+def test_filter_values_req_opt_2():
+    r = [Attribute(friendly_name="surName", 
+                name="urn:oid:2.5.4.4",
+                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"),
+        Attribute(friendly_name="givenName", 
+                name="urn:oid:2.5.4.42",
+                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"),
+        Attribute(friendly_name="mail", 
+                name="urn:oid:0.9.2342.19200300.100.1.3",
+                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri")]
+    o = [Attribute(friendly_name="title", 
+                name="urn:oid:2.5.4.12",
+                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri")]
+                    
+    
+    ava = { "surname":["Hedberg"], "givenName":["Roland"],
+            "eduPersonAffiliation":["staff"],"uid":["rohe0002"]}
+    
+    raises(MissingValue, "filter_on_attributes(ava, r, o)")
+
+# ---------------------------------------------------------------------------
+
+def test_filter_values_req_opt_4():
+    r = [Attribute(friendly_name="surName", 
+                name="urn:oid:2.5.4.4",
+                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"),
+        Attribute(friendly_name="givenName", 
+                name="urn:oid:2.5.4.42",
+                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri")]
+    o = [Attribute(friendly_name="title", 
+                name="urn:oid:2.5.4.12",
+                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri")]
+
+    acs = attribute_converter.ac_factory("attributemaps")
+                    
+    rava = attribute_converter.ava_fro(acs, r)
+    oava = attribute_converter.ava_fro(acs, o)
+    
+    ava = { "sn":["Hedberg"], "givenName":["Roland"],
+            "eduPersonAffiliation":["staff"],"uid":["rohe0002"]}
+    
+    ava = assertion.filter_on_demands(ava, rava, oava)
+    print ava
+    assert _eq(ava.keys(), ['givenName', 'sn'])
+    assert ava == {'givenName': ['Roland'], 'sn': ['Hedberg']}
     
 # ---------------------------------------------------------------------------
 
@@ -455,3 +502,26 @@ def test_filter_ava_3():
                                 
     assert _eq(ava.keys(), ["mail"])
     assert ava["mail"] == ["dj@example.com"]
+
+def test_filter_ava_4():
+    """ Return everything as default policy is used """
+    policy = Policy({
+            "default": {
+                "lifetime": {"minutes":15},
+                "attribute_restrictions": None # means all I have
+            },
+            "urn:mace:example.com:saml:roland:sp": {
+                "lifetime": {"minutes": 5},
+                "attribute_restrictions":{
+                    "mail": [".*@example\.com$"],
+                }
+            }})
+    
+    ava = { "givenName": ["Derek"], "surName": ["Jeter"], 
+            "mail": ["derek@nyy.mlb.com", "dj@example.com"]}
+    
+    # No restrictions apply
+    ava = policy.filter(ava, "urn:mace:example.com:saml:curt:sp", [], [])
+                                
+    assert _eq(ava.keys(), ['mail', 'givenName', 'surName'])
+    assert _eq(ava["mail"], ["derek@nyy.mlb.com", "dj@example.com"])

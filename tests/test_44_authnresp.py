@@ -17,7 +17,7 @@ def _eq(l1,l2):
 class TestAuthnResponse:
     def setup_class(self):
         server = Server("idp.config")
-        name_id = server.id.temporary_nameid()
+        name_id = server.ident.temporary_nameid()
 
         self._resp_ = server.do_response(
                     "http://lingon.catalogix.se:8087/",   # consumer_url

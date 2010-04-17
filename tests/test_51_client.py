@@ -60,7 +60,7 @@ class TestClient:
             "E8042FB4-4D5B-48C3-8E14-8EDD852790DD",
             "http://vo.example.com/sp1",
             "https://idp.example.com/idp/",
-            nameformat=saml.NAMEID_FORMAT_PERSISTENT)
+            nameid_format=saml.NAMEID_FORMAT_PERSISTENT)
         str = "%s" % req.to_string()
         print str
         assert str == REQ1 % req.issue_instant
@@ -89,7 +89,7 @@ class TestClient:
                 ("urn:oid:1.2.840.113549.1.9.1",
                 "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"):None,
                 },
-            nameformat=saml.NAMEID_FORMAT_PERSISTENT)
+            nameid_format=saml.NAMEID_FORMAT_PERSISTENT)
                 
         print req.to_string()
         assert req.destination == "https://idp.example.com/idp/"
@@ -123,7 +123,7 @@ class TestClient:
                 "_e7b68a04488f715cda642fbdd90099f5", 
                 "urn:mace:umu.se:saml/rolandsp",
                 "https://aai-demo-idp.switch.ch/idp/shibboleth",
-                nameformat=saml.NAMEID_FORMAT_TRANSIENT )
+                nameid_format=saml.NAMEID_FORMAT_TRANSIENT )
                 
         assert isinstance(req, samlp.AttributeQuery)
         assert req.destination == "https://aai-demo-idp.switch.ch/idp/shibboleth"
@@ -140,7 +140,7 @@ class TestClient:
                 "_e7b68a04488f715cda642fbdd90099f5", 
                 "urn:mace:umu.se:saml/rolandsp",
                 "https://aai-demo-idp.switch.ch/idp/shibboleth", 
-                format=saml.NAMEID_FORMAT_TRANSIENT)
+                nameid_format=saml.NAMEID_FORMAT_TRANSIENT)
 
         # since no one is answering on the other end
         assert req == None
@@ -231,7 +231,7 @@ class TestClient:
                     self.client.config["xmlsec_binary"],
                     self.client.config["metadata"])
         except Exception: # missing certificate
-            self.client.sc.verify_signature(ar_str, node_name=class_name(ar))
+            self.client.sec.verify_signature(ar_str, node_name=class_name(ar))
 
     def test_response(self):
         ava = { "givenName": ["Derek"], "surname": ["Jeter"], 

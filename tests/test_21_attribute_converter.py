@@ -16,7 +16,7 @@ class TestAC():
         
     def test_setup(self):
         assert len(self.acs) == 2
-        assert _eq([a.format for a in self.acs],[BASIC_NF, URI_NF] )
+        assert _eq([a.name_format for a in self.acs],[BASIC_NF, URI_NF] )
 
         
     def test_ava_fro_1(self):
@@ -98,3 +98,35 @@ class TestAC():
         else:
             assert False
                 
+    def test_to_local_name(self):
+    
+        attr = [saml.Attribute(friendly_name="surName", 
+                name="urn:oid:2.5.4.4",
+                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"),
+            saml.Attribute(friendly_name="efternamn", 
+                name="urn:oid:2.5.4.42",
+                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"),
+            saml.Attribute(friendly_name="titel", 
+                name="urn:oid:2.5.4.12",
+                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri")]
+                
+        lan = [attribute_converter.to_local_name(self.acs, a) for a in attr]
+        
+        assert _eq(lan, ['sn', 'givenName', 'title'])
+
+    def test_ava_fro_1(self):
+    
+        attr = [saml.Attribute(friendly_name="surName", 
+                name="urn:oid:2.5.4.4",
+                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"),
+            saml.Attribute(friendly_name="efternamn", 
+                name="urn:oid:2.5.4.42",
+                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"),
+            saml.Attribute(friendly_name="titel", 
+                name="urn:oid:2.5.4.12",
+                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri")]
+            
+        result = attribute_converter.ava_fro(self.acs, attr)
+        
+        print result
+        assert result == {'givenName': [], 'sn': [], 'title': []}
