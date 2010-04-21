@@ -112,7 +112,7 @@ class MetaData(object):
             
             for acs in tssd.attribute_consuming_service:
                 for attr in acs.requested_attribute:
-                    print "==", attr
+                    #print "==", attr
                     if attr.is_required == "true":
                         required.append(attr)
                     else:
