@@ -204,7 +204,7 @@ class AuthnResponse(object):
                 self.log.info("Attribute Statement: %s" % (
                                     self.assertion.attribute_statement[0],))
                 for aconv in self.attribute_converters():
-                    self.log.info("Converts name format: %s" % (aconv.format,))
+                    self.log.info("Converts name format: %s" % (aconv.name_format,))
             
             ava = to_local(self.attribute_converters(),
                             self.assertion.attribute_statement[0])
