@@ -22,8 +22,8 @@ from distutils.core import setup
 
 setup(
     name='python-saml2',
-    version='0.0.6',
-    description='Python library for SAML Version 2',
+    version='0.1.0',
+    description='Python implementation of SAML Version 2 to be used with WSGI applications',
 #    long_description = read("README"),
     author='Roland Hedberg',
     author_email='roland.hedberg@adm.umu.se',
