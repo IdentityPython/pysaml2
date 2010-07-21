@@ -4,9 +4,10 @@ import os
 import base64
 
 from saml2 import sigver, make_instance
-from saml2 import utils, class_name
+from saml2 import class_name
 from saml2 import time_util
 from saml2 import saml, samlp
+from saml2.s_utils import factory, do_attribute_statement
 import xmldsig as ds
 from py.test import raises
 
@@ -21,11 +22,11 @@ PRIV_KEY = "test.key"
 def _eq(l1,l2):
     return set(l1) == set(l2)
 
-SIGNED_VALUE= """AS1kHHtA4eTOU2XLTWhLMSJQ6V+TSDymRoTF78CqjrYURNLk9wjdPjAReNn9eykv
-ryFiHNk0p9wMBknha5pH8aeCI/LmcVhLa5xteGZrtE/Udh5vv8z4kRQX51Uz/5x8
-ToiobGw83MEW6A0dRUn0O20NBMMTaFZZPXye7RvVlHY="""
+SIGNED_VALUE= """kMuyOK17nyp4CbA1v7KE32rX4+NQQ8EvdglTK61uIMEo3ax0PgFU7bgZGey+Aj8H
+hTPVyAzWmBDxHpSCFe050PTtNoKHx7nXprLfhuQXsPq8s0KBoZR+2qYfVCkWYVX7
+T3zG/Tn+fesBA1zLo4lYdAovol7C35KAsAWoknmZdOE="""
 
-DIGEST_VALUE = "WFRXmImfoO3M6JOLE6BGGpU9Ud0="
+DIGEST_VALUE = "SXw3kqTf+PtTiUnI8nQ6xmrM3qw="
 
 def get_xmlsec():
     for path in os.environ["PATH"].split(":"):
@@ -94,24 +95,16 @@ class TestSecurity():
         self.sec = sigver.SecurityContext(get_xmlsec(), PRIV_KEY, "pem",
                                             PUB_KEY, "pem", debug=1)
         
-        self._assertion = {
-            "version": "2.0",
-            "id": "11111",
-            "issue_instant": "2009-10-30T13:20:28Z",
-            "signature": sigver.pre_signature_part("11111", self.sec.my_cert, 
-                                                    1),
-            "attribute_statement": {
-                "attribute": [{
-                        "friendly_name": "surName",
-                        "attribute_value": "Foo",
-                    },
-                    {
-                        "friendly_name": "givenName",
-                        "attribute_value": "Bar",
-                    }
-                    ]
-                }
-            }
+        self._assertion = factory( saml.Assertion,
+            version="2.0",
+            id="11111",
+            issue_instant="2009-10-30T13:20:28Z",
+            signature=sigver.pre_signature_part("11111", self.sec.my_cert, 1),
+            attribute_statement=do_attribute_statement({
+                    ("","","surName"): ("Foo",""),
+                    ("","","givenName") :("Bar",""),
+                })
+            )
 
     def test_verify_1(self):
         xml_response = open(SIGNED).read()
@@ -130,10 +123,10 @@ class TestSecurity():
                 xml_response)
 
     def test_sign_assertion(self):
-        ass = make_instance(saml.Assertion, self._assertion)
-            
+        ass = self._assertion
+        print ass
         sign_ass = self.sec.sign_assertion_using_xmlsec("%s" % ass, nodeid=ass.id)
-        
+        print sign_ass
         sass = saml.assertion_from_string(sign_ass)
         print sass
         assert _eq(sass.keyswv(), ['attribute_statement', 'issue_instant', 
@@ -144,15 +137,18 @@ class TestSecurity():
         sig = sass.signature
         assert sig.signature_value.text == SIGNED_VALUE
         assert len(sig.signed_info.reference) == 1
-        assert len(sig.signed_info.reference[0].digest_value) == 1
-        assert sig.signed_info.reference[0].digest_value[0].text == DIGEST_VALUE
+        assert sig.signed_info.reference[0].digest_value
+        assert sig.signed_info.reference[0].digest_value.text == DIGEST_VALUE
         
     def test_sign_response(self):
-        s_response = sigver.signed_instance_factory(samlp.Response, {
-                "assertion" : self._assertion,
-                "id": "22222",
-                "signature": sigver.pre_signature_part("22222"),
-            }, self.sec)
+        response = factory(samlp.Response,
+                assertion=self._assertion,
+                id="22222",
+                signature=sigver.pre_signature_part("22222", self.sec.my_cert))
+        
+        to_sign = [(class_name(self._assertion), self._assertion.id),
+                    (class_name(response), response.id)]
+        s_response = sigver.signed_instance_factory( response, self.sec, to_sign)
             
         assert s_response != None
         print s_response
@@ -166,38 +162,34 @@ class TestSecurity():
         assert sass.id == "11111"
         assert time_util.str_to_time(sass.issue_instant)
         sig = sass.signature
-        assert sig.signature_value.text == """xObs8g6Kr11NopsCxv9IXPQZ4Qfxag3zZrxcza+NBZwQ2JIXEw6vQDmu/OG+EgUP\n2miVoAY4nbklsiwXZfjXYU3OOUDJr7UDhAHUuki/kcKCV6SMEUFlOcEzDFVg+Fr+\nFsPJhsmit5uRRP5rYA92y1fKf42vViw8LFj+LqlTv2Y="""
+        assert sig.signature_value.text == """upeKPE1pkzXLy9BvKFOSTnjn4du59lQQ74TN5CqDGae9D21uY/zLuOWql7LiSTSi\nC945F0WrOvG7s0eZnpuNPZobdfdeCOffCMMrq5RQ2+abPFBamkjmceuEKGdO5PWQ\nt7B1GkzXAMMgeMuU+YmvIJkHbbv5Yn6M0/ICE/COaKQ="""
         
         assert len(sig.signed_info.reference) == 1
-        assert len(sig.signed_info.reference[0].digest_value) == 1
-        digest = sig.signed_info.reference[0].digest_value[0].text
-        assert digest == """z6O3mlLmX1a6Wk1F4cgMsAXdA6Q="""
+        assert sig.signed_info.reference[0].digest_value
+        digest = sig.signed_info.reference[0].digest_value.text
+        assert digest == """uX92C/YDroqITDfDY1IeekGtZac="""
 
     def test_sign_response_2(self):
-        assertion2 = {
-            "version": "2.0",
-            "id": "11122",
-            "issue_instant": "2009-10-30T13:20:28Z",
-            "signature": sigver.pre_signature_part("11122"),
-            "attribute_statement": {
-                "attribute": [{
-                        "friendly_name": "surName",
-                        "attribute_value": "Fox",
-                    },
-                    {
-                        "friendly_name": "givenName",
-                        "attribute_value": "Bear",
-                    }
-                    ]
-                }
-            }
+        assertion2 = factory( saml.Assertion,
+            version= "2.0",
+            id= "11122",
+            issue_instant= "2009-10-30T13:20:28Z",
+            signature= sigver.pre_signature_part("11122", self.sec.my_cert),
+            attribute_statement=do_attribute_statement({
+                    ("","","surName"): ("Fox",""),
+                    ("","","givenName") :("Bear",""),
+                })
+            )
+        response = factory(samlp.Response,
+                assertion=assertion2,
+                id="22233",
+                signature=sigver.pre_signature_part("22233"))
 
-        s_response = sigver.signed_instance_factory(samlp.Response, {
-                "assertion" : [self._assertion,assertion2],
-                "id": "22233",
-                "signature": sigver.pre_signature_part("22233"),
-            }, self.sec)
-            
+        to_sign = [(class_name(assertion2), assertion2.id),
+                    (class_name(response), response.id)]
+
+        s_response = sigver.signed_instance_factory( response, self.sec, to_sign)
+
         assert s_response != None
         print s_response
         print
@@ -207,23 +199,26 @@ class TestSecurity():
         assert _eq(sass.keyswv(), ['attribute_statement', 'issue_instant', 
                                 'version', 'signature', 'id'])
         assert sass.version == "2.0"
-        assert sass.id == "11111"
+        assert sass.id == "11122"
         assert time_util.str_to_time(sass.issue_instant)
         sig = sass.signature
-        assert sig.signature_value.text == """xObs8g6Kr11NopsCxv9IXPQZ4Qfxag3zZrxcza+NBZwQ2JIXEw6vQDmu/OG+EgUP\n2miVoAY4nbklsiwXZfjXYU3OOUDJr7UDhAHUuki/kcKCV6SMEUFlOcEzDFVg+Fr+\nFsPJhsmit5uRRP5rYA92y1fKf42vViw8LFj+LqlTv2Y="""
+        assert sig.signature_value.text == """xHECLk1jj4NBvk1jhGrb2mwnrLFKXk6JN3NogjMVMtnnarg9vtk7jYzy1M9RPWdj\nRSa2Jph7yVZJENm4bGuBkT91w+FYm2X4jREULPUsnupPHTQyhJEVZ07EhnluOWa3\n95KkqnZ5gbnTxn1ZvpsANzThLmYY3eSGzNXz+S7758M="""
         
         assert len(sig.signed_info.reference) == 1
-        assert len(sig.signed_info.reference[0].digest_value) == 1
-        digest = sig.signed_info.reference[0].digest_value[0].text
-        assert digest == """z6O3mlLmX1a6Wk1F4cgMsAXdA6Q="""
+        assert sig.signed_info.reference[0].digest_value
+        digest = sig.signed_info.reference[0].digest_value.text
+        assert digest == """l36wHa6Lyed9ZeAZ3jFL77wPVQ4="""
 
     def test_sign_verify(self):        
-        s_response = sigver.signed_instance_factory(samlp.Response, {
-                "assertion" : self._assertion,
-                "id": "22222",
-                "signature": sigver.pre_signature_part("22222",
-                                                        self.sec.my_cert),
-            }, self.sec)
+        response = factory(samlp.Response,
+                assertion=self._assertion,
+                id="22233",
+                signature=sigver.pre_signature_part("22233", self.sec.my_cert))
+
+        to_sign = [(class_name(self._assertion), self._assertion.id),
+                    (class_name(response), response.id)]
+
+        s_response = sigver.signed_instance_factory(response, self.sec, to_sign)
 
         print s_response
         res = self.sec.verify_signature("%s" % s_response, 
@@ -233,16 +228,25 @@ class TestSecurity():
         assert res
 
     def test_sign_verify_with_cert_from_instance(self):
-        s_response = sigver.signed_instance_factory(samlp.Response, {
-                "assertion" : self._assertion,
-                "id": "22222",
-                "signature": sigver.pre_signature_part("22222",
-                                                        self.sec.my_cert),
-            }, self.sec)
-            
-        print s_response
+        response = factory(samlp.Response,
+                assertion=self._assertion,
+                id="22222",
+                signature=sigver.pre_signature_part("22222", self.sec.my_cert))
 
+        to_sign = [(class_name(self._assertion), self._assertion.id),
+                    (class_name(response), response.id)]
+
+        s_response = sigver.signed_instance_factory(response, self.sec, to_sign)
+
+        print s_response.keyswv()
+        print s_response.signature.keyswv()
+        print s_response.signature.key_info.keyswv()
+        
         ci = "".join(sigver.cert_from_instance(s_response)[0].split())
+        
+        print ci
+        print self.sec.my_cert
+        
         assert ci == self.sec.my_cert
         
         res = self.sec.verify_signature("%s" % s_response, 
@@ -254,26 +258,19 @@ class TestSecurity():
         assert res == s_response
                 
     def test_sign_verify_assertion_with_cert_from_instance(self):
-        assertion = {
-            "version": "2.0",
-            "id": "11111",
-            "issue_instant": "2009-10-30T13:20:28Z",
-            "signature": sigver.pre_signature_part("11111", self.sec.my_cert),
-            "attribute_statement": {
-                "attribute": [{
-                        "friendly_name": "surName",
-                        "attribute_value": "Foo",
-                    },
-                    {
-                        "friendly_name": "givenName",
-                        "attribute_value": "Bar",
-                    }
-                    ]
-                }
-            }
+        assertion = factory( saml.Assertion,
+            version= "2.0",
+            id= "11100",
+            issue_instant= "2009-10-30T13:20:28Z",
+            signature= sigver.pre_signature_part("11100", self.sec.my_cert),
+            attribute_statement=do_attribute_statement({
+                    ("","","surName"): ("Fox",""),
+                    ("","","givenName") :("Bear",""),
+                })
+            )
 
-        s_assertion = sigver.signed_instance_factory(saml.Assertion, 
-                                                    assertion, self.sec)                                                                
+        to_sign = [(class_name(assertion), assertion.id)]
+        s_assertion = sigver.signed_instance_factory(assertion, self.sec, to_sign)
         print s_assertion
         
         ci = "".join(sigver.cert_from_instance(s_assertion)[0].split())
@@ -289,30 +286,25 @@ class TestSecurity():
         assert res
 
     def test_exception_sign_verify_with_cert_from_instance(self):
-        assertion = {
-            "version": "2.0",
-            "id": "11111",
-            "issue_instant": "2009-10-30T13:20:28Z",
-            #"signature": sigver.pre_signature_part("11111"),
-            "attribute_statement": {
-                "attribute": [{
-                        "friendly_name": "surName",
-                        "attribute_value": "Foo",
-                    },
-                    {
-                        "friendly_name": "givenName",
-                        "attribute_value": "Bar",
-                    }
-                    ]
-                }
-            }
+        assertion = factory( saml.Assertion,
+            version= "2.0",
+            id= "11100",
+            issue_instant= "2009-10-30T13:20:28Z",
+            #signature= sigver.pre_signature_part("11100", self.sec.my_cert),
+            attribute_statement=do_attribute_statement({
+                    ("","","surName"): ("Foo",""),
+                    ("","","givenName") :("Bar",""),
+                })
+            )
 
-        s_response = sigver.signed_instance_factory(samlp.Response, {
-                "assertion" : assertion,
-                "id": "22222",
-                "signature": sigver.pre_signature_part("22222", 
-                                                        self.sec.my_cert),
-            }, self.sec)
+        response = factory(samlp.Response,
+                assertion=assertion,
+                id="22222",
+                signature=sigver.pre_signature_part("22222", self.sec.my_cert))
+
+        to_sign = [(class_name(response), response.id)]
+                    
+        s_response = sigver.signed_instance_factory(response, self.sec, to_sign)
             
 
         # Change something that should make everything fail
@@ -320,16 +312,3 @@ class TestSecurity():
         raises(sigver.SignatureError, self.sec._check_signature,
                 "%s" % s_response, s_response, class_name(s_response))
         
-#    def test_sign_verify_assertion_in_response(self):        
-#        s_response = sigver.signed_instance_factory(samlp.Response, {
-#                "assertion" : self._assertion,
-#                "id": "22222",
-#                "signature": sigver.pre_signature_part("22222",
-#                                                        self.sec.my_cert, 2),
-#            }, self.sec)
-#
-#        print s_response
-#        res = self.sec.correctly_signed_response("%s" % s_response)
-#
-#        print res        
-#        assert res

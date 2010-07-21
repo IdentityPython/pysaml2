@@ -19,7 +19,7 @@
 __author__ = 'tmatsuo@example.com (Takashi MATSUO)'
 
 TEST_ENDPOINT = """<?xml version="1.0" encoding="utf-8"?>
-<Endpoint xmlns="urn:oasis:names:tc:SAML:2.0:metadata"
+<EndpointType xmlns="urn:oasis:names:tc:SAML:2.0:metadata"
   Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
   Location="http://www.example.com/endpoint"
   ResponseLocation = "http://www.example.com/response"
@@ -72,7 +72,7 @@ TEST_ASSERTION_ID_REQUEST_SERVICE = """<?xml version="1.0" encoding="utf-8"?>
 
 
 TEST_INDEXED_ENDPOINT = """<?xml version="1.0" encoding="utf-8"?>
-<IndexedEndpoint xmlns="urn:oasis:names:tc:SAML:2.0:metadata"
+<IndexedEndpointType xmlns="urn:oasis:names:tc:SAML:2.0:metadata"
   index="1"
   isDefault="false"
   Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
@@ -115,22 +115,20 @@ TEST_ATTRIBUTE_PROFILE = """<?xml version="1.0" encoding="utf-8"?>
 
 TEST_ORGANIZATION_NAME = """<?xml version="1.0" encoding="utf-8"?>
 <OrganizationName xmlns="urn:oasis:names:tc:SAML:2.0:metadata" 
-    ns1:lang="en" xmlns:ns1="http:#www.w3.org/XML/1998/namespace">
-  SIOS Technology, Inc.
+    xml:lang="se">
+  Catalogix
 </OrganizationName>
 """
 
-TEST_ORGANIZATION_DISPLAY_NAME = """<?xml version="1.0" encoding="utf-8"?>
-<OrganizationDisplayName
-  xmlns="urn:oasis:names:tc:SAML:2.0:metadata"
-  ns1:lang="en" xmlns:ns1="http:#www.w3.org/XML/1998/namespace">
-  SIOS
-</OrganizationDisplayName>
+TEST_ORGANIZATION_DISPLAY_NAME = """<?xml version='1.0' encoding='UTF-8'?>
+<ns0:OrganizationDisplayName xml:lang="se" xmlns:ns0="urn:oasis:names:tc:SAML:2.0:metadata">
+Catalogix
+</ns0:OrganizationDisplayName>
 """
 
 TEST_ORGANIZATION_URL = """<?xml version="1.0" encoding="utf-8"?>
 <OrganizationURL xmlns="urn:oasis:names:tc:SAML:2.0:metadata" 
-    ns1:lang="ja" xmlns:ns1="http:#www.w3.org/XML/1998/namespace">
+    xml:lang="no">
   http://www.example.com/
 </OrganizationURL>
 """
@@ -141,15 +139,14 @@ TEST_ORGANIZATION = """<?xml version="1.0" encoding="utf-8"?>
     <hoge xmlns="http://hoge.example.com/">hogehoge</hoge>
   </Extensions>
   <OrganizationName 
-    ns1:lang="en" xmlns:ns1="http:#www.w3.org/XML/1998/namespace">
-    SIOS Technology, Inc.
+    xml:lang="se">
+    Catalogix AB
   </OrganizationName>
-  <OrganizationDisplayName ns1:lang="en" 
-    xmlns:ns1="http:#www.w3.org/XML/1998/namespace">
-    SIOS
+  <OrganizationDisplayName xml:lang="no">
+    Catalogix AS
   </OrganizationDisplayName>
   <OrganizationURL 
-    ns1:lang="ja" xmlns:ns1="http:#www.w3.org/XML/1998/namespace">
+    xml:lang="en">
     http://www.example.com/
   </OrganizationURL>
 </Organization>
@@ -447,7 +444,7 @@ TEST_ROLE_DESCRIPTOR = """<?xml version="1.0" encoding="utf-8"?>
 
 
 TEST_SSO_DESCRIPTOR = """<?xml version="1.0" encoding="utf-8"?>
-<SSODescriptor
+<SSODescriptorType
   xmlns="urn:oasis:names:tc:SAML:2.0:metadata"
   ID="ID"
   validUntil="2008-09-14T01:05:02Z"
@@ -642,7 +639,7 @@ TEST_SSO_DESCRIPTOR = """<?xml version="1.0" encoding="utf-8"?>
 <NameIDFormat xmlns="urn:oasis:names:tc:SAML:2.0:metadata">
   urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress
 </NameIDFormat>
-</SSODescriptor>
+</SSODescriptorType>
 """
 
 
@@ -888,15 +885,15 @@ TEST_REQUESTED_ATTRIBUTE = """<?xml version="1.0" encoding="utf-8"?>
 
 TEST_SERVICE_NAME = """<?xml version="1.0" encoding="utf-8"?>
 <ServiceName xmlns="urn:oasis:names:tc:SAML:2.0:metadata" 
-    ns1:lang="en" xmlns:ns1="http:#www.w3.org/XML/1998/namespace">
-  SIOS mail
+    xml:lang="en">
+  Catalogix Whois
 </ServiceName>
 """
 
 TEST_SERVICE_DESCRIPTION = """<?xml version="1.0" encoding="utf-8"?>
 <ServiceDescription xmlns="urn:oasis:names:tc:SAML:2.0:metadata" 
-    ns1:lang="en" xmlns:ns1="http:#www.w3.org/XML/1998/namespace">
-  SIOS mail service
+    xml:lang="en">
+Catalogix Whois Service
 </ServiceDescription>
 """
 
@@ -1283,7 +1280,7 @@ TEST_ENTITY_DESCRIPTOR = """<?xml version="1.0" encoding="utf-8"?>
 TEST_ENTITIES_DESCRIPTOR = """<?xml version="1.0" encoding="utf-8"?>
 <EntitiesDescriptor
   xmlns="urn:oasis:names:tc:SAML:2.0:metadata"
-  name="name"
+  Name="name"
   ID="ID"
   validUntil="2008-09-14T01:05:02Z"
   cacheDuration="10:00:00:00">

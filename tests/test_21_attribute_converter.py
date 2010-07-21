@@ -57,21 +57,21 @@ class TestAC():
         statement = attribute_converter.from_local(self.acs, ava, BASIC_NF)
         
         assert statement != None
-        assert len(statement["attribute"]) == 2
-        a0 = statement["attribute"][0]
-        a1 = statement["attribute"][1]
-        if a0["friendly_name"] == 'sn':
-            assert a0["name"] == 'urn:mace:dir:attribute-def:sn'
-            assert a0["name_format"] == BASIC_NF
-            assert a1["friendly_name"] == "givenName"
-            assert a1["name"] == 'urn:mace:dir:attribute-def:givenName'
-            assert a1["name_format"] == BASIC_NF
-        elif a0["friendly_name"] == 'givenName':
-            assert a0["name"] == 'urn:mace:dir:attribute-def:givenName'
-            assert a0["name_format"] == BASIC_NF
-            assert a1["friendly_name"] == "sn"
-            assert a1["name"] == 'urn:mace:dir:attribute-def:sn'
-            assert a1["name_format"] == BASIC_NF
+        assert len(statement) == 2
+        a0 = statement[0]
+        a1 = statement[1]
+        if a0.friendly_name == 'sn':
+            assert a0.name == 'urn:mace:dir:attribute-def:sn'
+            assert a0.name_format == BASIC_NF
+            assert a1.friendly_name == "givenName"
+            assert a1.name == 'urn:mace:dir:attribute-def:givenName'
+            assert a1.name_format == BASIC_NF
+        elif a0.friendly_name == 'givenName':
+            assert a0.name == 'urn:mace:dir:attribute-def:givenName'
+            assert a0.name_format == BASIC_NF
+            assert a1.friendly_name == "sn"
+            assert a1.name == 'urn:mace:dir:attribute-def:sn'
+            assert a1.name_format == BASIC_NF
         else:
             assert False
         
@@ -80,21 +80,21 @@ class TestAC():
         
         statement = attribute_converter.from_local(self.acs, ava, URI_NF)
                 
-        assert len(statement["attribute"]) == 2
-        a0 = statement["attribute"][0]
-        a1 = statement["attribute"][1]
-        if a0["friendly_name"] == 'surname':
-            assert a0["name"] == 'urn:oid:2.5.4.4'
-            assert a0["name_format"] == URI_NF
-            assert a1["friendly_name"] == "givenName"
-            assert a1["name"] == 'urn:oid:2.5.4.42'
-            assert a1["name_format"] == URI_NF
-        elif a0["friendly_name"] == 'givenName':
-            assert a0["name"] == 'urn:oid:2.5.4.42'
-            assert a0["name_format"] == URI_NF
-            assert a1["friendly_name"] == "surname"
-            assert a1["name"] == 'urn:oid:2.5.4.4'
-            assert a1["name_format"] == URI_NF
+        assert len(statement) == 2
+        a0 = statement[0]
+        a1 = statement[1]
+        if a0.friendly_name == 'surname':
+            assert a0.name == 'urn:oid:2.5.4.4'
+            assert a0.name_format == URI_NF
+            assert a1.friendly_name == "givenName"
+            assert a1.name == 'urn:oid:2.5.4.42'
+            assert a1.name_format == URI_NF
+        elif a0.friendly_name == 'givenName':
+            assert a0.name == 'urn:oid:2.5.4.42'
+            assert a0.name_format == URI_NF
+            assert a1.friendly_name == "surname"
+            assert a1.name == 'urn:oid:2.5.4.4'
+            assert a1.name_format == URI_NF
         else:
             assert False
                 

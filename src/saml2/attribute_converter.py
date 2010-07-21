@@ -16,7 +16,8 @@
 # limitations under the License.
 
 import os
-from saml2.utils import args2dict
+from saml2.s_utils import factory, do_ava
+from saml2 import saml
 from saml2.saml import NAME_FORMAT_URI
 
 class UnknownNameFormat(Exception):
@@ -64,7 +65,7 @@ def from_local(acs, ava, name_format):
         #print ac.format, name_format
         if aconv.name_format == name_format:
             #print "Found a name_form converter"
-            return aconv.to(ava)
+            return aconv.to_(ava)
             
     return None
     
@@ -73,7 +74,7 @@ def from_local_name(acs, attr, name_format):
     :param acs: List of AttributeConverter instances
     :param attr: attribute name as string
     :param name_format: Which name-format it should be translated to
-    :return: A dictionary suitable to feed to make_instance
+    :return: An Attribute instance
     """
     for aconv in acs:
         #print ac.format, name_format
@@ -118,7 +119,7 @@ class AttributeConverter(object):
         self._to = eval(open(filename).read())
 
     def adjust(self):
-        if self._fro == None and self.to != None:
+        if self._fro == None and self._to != None:
             self._fro = dict([(value, key) for key, value in self._to.items()])
         if self._to == None and self.fro != None:
             self._to = dict([(value, key) for key, value in self._fro.items()])
@@ -184,10 +185,12 @@ class AttributeConverter(object):
         
     def to_format(self, attr):
         try:
-            return args2dict(name=self._to[attr], name_format=self.name_format,
-                                friendly_name=attr)
+            return factory(saml.Attribute,
+                            name=self._to[attr], 
+                            name_format=self.name_format,
+                            friendly_name=attr)
         except KeyError:
-            return args2dict(name=attr)
+            return factory(saml.Attribute, name=attr)
     
     def from_format(self, attr):
         """
@@ -201,18 +204,18 @@ class AttributeConverter(object):
                 pass
         return ""
         
-    def to(self, ava):
+    def to_(self, attrvals):
         attributes = []
-        for key, value in ava.items():
+        for key, value in attrvals.items():
             try:
-                attributes.append(args2dict(name=self._to[key],
+                attributes.append(factory(saml.Attribute,
+                                            name=self._to[key],
                                             name_format=self.name_format,
                                             friendly_name=key,
-                                            attribute_value=value))
+                                            attribute_value=do_ava(value)))
             except KeyError:
-                # TODO
-                # Should this be made different ???
-                attributes.append(args2dict(name=key,
-                                            attribute_value=value))
+                attributes.append(factory(saml.Attribute,
+                                            name=key,
+                                            attribute_value=do_ava(value)))
         
-        return {"attribute": attributes}
+        return attributes

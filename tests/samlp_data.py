@@ -96,7 +96,7 @@ TEST_AUTHN_REQUEST = """<?xml version="1.0" encoding="utf-8"?>
   AssertionConsumerServiceIndex="1"
   AssertionConsumerServiceURL="http://www.example.com/acs"
   ProtocolBinding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
-  AssertionConsumingServiceIndex="2"
+  AttributeConsumingServiceIndex="2"
   ProviderName="provider name"
   xmlns="urn:oasis:names:tc:SAML:2.0:protocol">
   <Issuer xmlns="urn:oasis:names:tc:SAML:2.0:assertion">

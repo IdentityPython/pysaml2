@@ -54,7 +54,7 @@ TEST_PGP_DATA = """<?xml version="1.0" encoding="utf-8"?>
 TEST_X509_ISSUER_SERIAL = """<?xml version="1.0" encoding="utf-8"?>
 <X509IssuerSerial xmlns="http://www.w3.org/2000/09/xmldsig#">
   <X509IssuerName>issuer name</X509IssuerName>
-  <X509IssuerNumber>1</X509IssuerNumber>
+  <X509SerialNumber>1</X509SerialNumber>
 </X509IssuerSerial>
 """
 

@@ -9,7 +9,9 @@ sp1 = {
     "entityid" : "urn:mace:umu.se:saml:roland:sp",
     "service": {
         "sp": {
-            "url" : "http://lingon.catalogix.se:8087/",
+            "endpoints" : {
+                "assertion_consumer_service" : ["http://lingon.catalogix.se:8087/"],
+            },
             "name": "test",
             "idp" : {
                 "urn:mace:example.com:saml:roland:idp":None,
@@ -36,7 +38,9 @@ sp2 = {
     "service": {
         "sp":{
             "name" : "Rolands SP",
-            "url" : "http://localhost:8087/",
+            "endpoints" : {
+                "assertion_consumer_service" : ["http://lingon.catalogix.se:8087/"],
+            },
             "required_attributes": ["surName", "givenName", "mail"],
             "optional_attributes": ["title"],
             "idp": {
@@ -52,7 +56,9 @@ IDP1 = {
     "service": {
         "idp":{
             "name" : "Rolands IdP",
-            "url" : "http://localhost:8088/",
+            "endpoints": {
+                "single_sign_on_service" : ["http://localhost:8088/"],
+            },
             "assertions":{
                 "default": {
                     "attribute_restrictions": {
@@ -79,7 +85,7 @@ def test_1():
     service = c["service"]
     assert service.keys() == ["sp"]
     sp = service["sp"] 
-    assert _eq(sp.keys(),["url","name","idp"])
+    assert _eq(sp.keys(),["endpoints","name","idp"])
     md = c["metadata"]
     assert isinstance(md, MetaData)
 
@@ -94,7 +100,7 @@ def test_2():
     service = c["service"]
     assert service.keys() == ["sp"]
     sp = service["sp"] 
-    assert _eq(sp.keys(),['url', 'idp', 'optional_attributes', 'name', 
+    assert _eq(sp.keys(),['endpoints', 'idp', 'optional_attributes', 'name', 
                             'required_attributes'])
 
     assert len(sp["idp"]) == 1
@@ -111,7 +117,9 @@ def test_missing_must():
     no_entity_id = {
         "service": {
             "sp": {
-                "url" : "http://lingon.catalogix.se:8087/",
+                "endpoints" : {
+                    "assertion_consumer_service" : ["http://lingon.catalogix.se:8087/"],
+                },
                 "name" : "test"
             }
         },
@@ -122,7 +130,9 @@ def test_missing_must():
         "entityid" : "urn:mace:umu.se:saml:roland:sp",
         "service": {
             "sp": {
-                "url" : "http://lingon.catalogix.se:8087/",
+                "endpoints" : {
+                    "assertion_consumer_service" : ["http://lingon.catalogix.se:8087/"],
+                },
                 "name" : "test"
             }
         },
@@ -138,7 +148,9 @@ def test_minimum():
         "entityid" : "urn:mace:example.com:saml:roland:sp",
         "service": {
             "sp": {
-                "url" : "http://sp.example.org/",
+                "endpoints" : {
+                    "assertion_consumer_service" : ["http://sp.example.org/"],
+                },
                 "name" : "test",
                 "idp": {
                     "" : "https://example.com/idp/SSOService.php",
@@ -157,8 +169,15 @@ def test_idp():
     
     print c
     assert c.services() == ["idp"]
-    assert c.idp_url() == "http://localhost:8088/"
+    assert c.endpoint("idp", "single_sign_on_service") == ['http://localhost:8088/']
 
     attribute_restrictions = c.idp_policy().get_attribute_restriction("")
     assert attribute_restrictions["eduPersonAffiliation"][0].match("staff")
+    
+def test_wayf():
+    c = Config().load_file("server.config")
+    
+    idps = c.get_available_idps()
+    assert idps == [('urn:mace:example.com:saml:roland:idp', 'Example Co')]
+    
     

@@ -31,6 +31,11 @@ from saml2.time_util import daylight_corrected_now
 
 # ---------------------------------------------------------------------------
 
+class IncorrectlySigned(Exception):
+    pass
+    
+# ---------------------------------------------------------------------------
+
 def _use_on_or_after(condition, slack):
     now = daylight_corrected_now()
     #print "NOW: %d" % now
@@ -57,22 +62,16 @@ def _use_before(condition, slack):
     return True
 
 def for_me(condition, myself ):
+    # Am I among the intended audiences
     for restriction in condition.audience_restriction:
-        audience = restriction.audience
-        if audience.text.strip() == myself:
-            return True
-        else:
-            #print "Not for me: %s != %s" % (audience.text.strip(), myself)
-            pass
+        for audience in restriction.audience:
+            if audience.text.strip() == myself:
+                return True
+            else:
+                #print "Not for me: %s != %s" % (audience.text.strip(), myself)
+                pass
     
     return False
-
-# ---------------------------------------------------------------------------
-
-class IncorrectlySigned(Exception):
-    pass
-
-# ---------------------------------------------------------------------------
 
 def authn_response(conf, requestor, outstanding_queries=None, log=None,
                     timeslack=0, debug=0):
@@ -128,7 +127,6 @@ class AuthnResponse(object):
             self.response = self.sec.correctly_signed_response(decoded_xml)
         except Exception, excp:
             self.log and self.log.info("EXCEPTION: %s", excp)
-            raise
         
         if not self.response:
             if self.log:
@@ -180,7 +178,7 @@ class AuthnResponse(object):
             self.not_on_or_after = _use_on_or_after(condition, self.timeslack)
             _use_before(condition, self.timeslack)
         except Exception, excp:
-            self.log.error("Exception on condition: %s" % (excp,))
+            self.log and self.log.error("Exception on condition: %s" % (excp,))
             if not lax:
                 raise
             else:
@@ -230,6 +228,7 @@ class AuthnResponse(object):
         # The subject must contain a name_id
         assert subject.name_id
         self.name_id = subject.name_id.text.strip()
+        return self.name_id
     
     def _assertion(self, assertion):
         self.assertion = assertion
@@ -294,7 +293,7 @@ class AuthnResponse(object):
         return True
     
     def verify(self):
-        """ Verify that the assertion is syntaktically correct and
+        """ Verify that the assertion is syntactically correct and
         the signature is correct if present."""
         
         self.status_ok()

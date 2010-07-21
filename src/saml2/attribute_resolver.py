@@ -20,7 +20,6 @@ Contains classes and functions that a SAML2.0 Service Provider (SP) may use
 to do attribute aggregation.
 """
 import saml2
-from saml2.client import Saml2Client
 
 DEFAULT_BINDING = saml2.BINDING_HTTP_REDIRECT
 
@@ -32,7 +31,7 @@ class AttributeResolver(object):
         if saml2client:
             self.saml2client = saml2client
         else:
-            self.saml2client = Saml2Client(environ, config)
+            self.saml2client = saml2.client.Saml2Client(environ, config)
         
     def extend(self, subject_id, issuer, vo_members, name_id_format=None,
                 sp_name_qualifier=None, log=None):

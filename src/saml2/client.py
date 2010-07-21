@@ -25,14 +25,16 @@ import saml2
 import base64
 
 from saml2.time_util import instant
-from saml2.utils import sid, deflate_and_base64_encode
-from saml2.utils import do_attributes, args2dict
+from saml2.s_utils import sid, deflate_and_base64_encode
+from saml2.s_utils import do_attributes, factory
 
-from saml2 import samlp, saml
-from saml2 import VERSION, make_instance
+from saml2 import samlp, saml, class_name
+from saml2 import VERSION
 from saml2.sigver import pre_signature_part
 from saml2.sigver import security_context, signed_instance_factory
 from saml2.soap import SOAPClient
+from saml2.population import Population
+from saml2.virtual_org import VirtualOrg
 
 from saml2.authnresponse import authn_response
 
@@ -46,19 +48,32 @@ FORM_SPEC = """<form method="post" action="%s">
 
 LAX = False
 
+class IdpUnspecified(Exception):
+    pass
+
+class VerifyError(Exception):
+    pass
+    
 class Saml2Client(object):
     """ The basic pySAML2 service provider class """
     
-    def __init__(self, environ, config=None, debug=0):
+    def __init__(self, environ, config=None, debug=0, vorg=None, 
+                persistent_cache=None):
         """
         :param environ:
         :param config: A saml2.config.Config instance
         """
         self.environ = environ
+        self.vorg = None
+        self.users = Population(persistent_cache)
         if config:
             self.config = config
             if "metadata" in config:
                 self.metadata = config["metadata"]
+                if vorg:
+                    self.vorg = VirtualOrg(self.metadata, vorg, 
+                                            self.users.cache, 
+                                            log=None, vorg_conf=None)
             self.sec = security_context(config)
         
         self.debug = debug
@@ -71,32 +86,23 @@ class Saml2Client(object):
         return request
     
     def idp_entry(self, name=None, location=None, provider_id=None):
-        res = {}
+        res = samlp.IDPEntry()
         if name:
-            res["name"] = name
+            res.name = name
         if location:
-            res["loc"] = location
+            res.loc = location
         if provider_id:
-            res["provider_id"] = provider_id
-        if res:
-            return res
-        else:
-            return None
+            res.provider_id = provider_id
+
+        return res
     
-    def scoping(self, idp_ents):
-        return {
-            "idp_list": {
-                "idp_entry": idp_ents
-            }
-        }
-    
-    def scoping_from_metadata(self, entityid, location):
+    def scoping_from_metadata(self, entityid, location=None):
         name = self.metadata.name(entityid)
-        return make_instance(samlp.Scoping,
-                            self.scoping([self.idp_entry(name, location)]))
+        idp_ent = self.idp_entry(name, location)
+        return samlp.Scoping(idp_list=samlp.IDPList(idp_entry=[idp_ent]))
     
     def response(self, post, requestor, outstanding, log=None):
-        """ Deal with the AuthnResponse
+        """ Deal with an AuthnResponse
         
         :param post: The reply as a dictionary
         :param requestor: The issuer of the AuthN request
@@ -104,10 +110,8 @@ class Saml2Client(object):
             the original web request from the user before redirection
             as values.
         :param log: where loggin should go.
-        :return: A 2-tuple of identity information (in the form of a
-            dictionary) and where the user should really be sent. This
-            might differ from what the IdP thinks since I don't want
-            to reveal verything to it and it might not trust me.
+        :return: An authnresponse.AuthnResponse instance which among other
+            things contains a verified saml2.AuthnResponse instance.
         """
         # If the request contains a samlResponse, try to validate it
         try:
@@ -115,15 +119,18 @@ class Saml2Client(object):
         except KeyError:
             return None
         
+        aresp = None
         if saml_response:
             aresp = authn_response(self.config, requestor, outstanding, log,
                                     debug=self.debug)
             aresp.loads(saml_response)
             if self.debug:
                 log and log.info(aresp)
-            return aresp.verify()
-        
-        return None
+            aresp = aresp.verify()
+            if aresp:
+                self.users.add_information_about_person(aresp.session_info())
+                
+        return aresp
     
     def authn_request(self, query_id, destination, service_url, spentityid,
                         my_name, vorg="", scoping=None, log=None, sign=False):
@@ -139,45 +146,78 @@ class Saml2Client(object):
         :param log: A service to which logs should be written
         :param sign: Whether the request should be signed or not.
         """
-        prel = {
-            "id": query_id,
-            "version": VERSION,
-            "issue_instant": instant(),
-            "destination": destination,
-            "assertion_consumer_service_url": service_url,
-            "protocol_binding": saml2.BINDING_HTTP_POST,
-            "provider_name": my_name,
-        }
+        request = samlp.AuthnRequest(
+            id= query_id,
+            version= VERSION,
+            issue_instant= instant(),
+            destination= destination,
+            assertion_consumer_service_url= service_url,
+            protocol_binding= saml2.BINDING_HTTP_POST,
+            provider_name= my_name
+        )
         
         if scoping:
-            prel["scoping"] = scoping
+            request.scoping = scoping
         
-        name_id_policy = {
-            "allow_create": "true"
-        }
+        # Profile stuff, should be configurable
+        name_id_policy = samlp.NameIDPolicy(allow_create="true", 
+                                        format=saml.NAMEID_FORMAT_TRANSIENT)
         
-        name_id_policy["format"] = saml.NAMEID_FORMAT_TRANSIENT
         if vorg:
             try:
-                name_id_policy["sp_name_qualifier"] = vorg
-                name_id_policy["format"] = saml.NAMEID_FORMAT_PERSISTENT
+                name_id_policy.sp_name_qualifier = vorg
+                name_id_policy.format = saml.NAMEID_FORMAT_PERSISTENT
             except KeyError:
                 pass
         
         if sign:
-            prel["signature"] = pre_signature_part(prel["id"],
-                                                    self.sec.my_cert, id=1)
+            request.signature = pre_signature_part(request.id,
+                                                    self.sec.my_cert, 1)
+            to_sign = [(class_name(request), request.id)]
+        else:
+            to_sign = []
         
-        prel["name_id_policy"] = name_id_policy
-        prel["issuer"] = { "text": spentityid }
+        request.name_id_policy = name_id_policy
+        request.issuer = factory(saml.Issuer, text=spentityid )
         
         if log:
-            log.info("DICT VERSION: %s" % prel)
+            log.info("REQUEST: %s" % request)
         
-        return "%s" % signed_instance_factory(samlp.AuthnRequest, prel,
-                                                self.sec)
+        return "%s" % signed_instance_factory(request, self.sec, to_sign)
     
-    def authenticate(self, spentityid, location="", service_url="",
+    def issuer(self):
+        """ Return an Issuer instance """
+        return saml.Issuer(text=self.config["entityid"], 
+                                format=saml.NAMEID_FORMAT_ENTITY)        
+    
+    def _spentityid(self, spentityid=None):
+        if self.config:
+            return self.config["entityid"]
+        else:
+            return spentityid
+
+    def _location(self, location=None):
+        if not location :
+            # get the idp location from the configuration alternative the metadata
+            # If there is more than one IdP in the configuration raise exception
+            urls = self.config.idps()
+            if len(urls) > 1:
+                raise IdpUnspecified("Too many IdPs to choose from: %s" % urls)
+            return urls[0]
+        else:
+            return location
+        
+    def _service_url(self, url=None):
+        if not url:
+            return self.config.endpoint("sp", "assertion_consumer_service")[0]
+
+    def _my_name(self, name=None):
+        if not name:
+            return self.config["service"]["sp"]["name"]
+        else:
+            return name
+        
+    def authenticate(self, spentityid=None, location="", service_url="",
                         my_name="", relay_state="",
                         binding=saml2.BINDING_HTTP_REDIRECT, log=None,
                         vorg="", scoping=None):
@@ -199,11 +239,17 @@ class Saml2Client(object):
         :return: AuthnRequest response
         """
         
+        spentityid = self._spentityid(spentityid)
+        location = self._location(location)
+        service_url = self._service_url(service_url)
+        my_name = self._my_name(my_name)
+                            
         if log:
             log.info("spentityid: %s" % spentityid)
             log.info("location: %s" % location)
             log.info("service_url: %s" % service_url)
             log.info("my_name: %s" % my_name)
+            
         session_id = sid()
         authen_req = self.authn_request(session_id, location,
                                 service_url, spentityid, my_name, vorg,
@@ -229,7 +275,8 @@ class Saml2Client(object):
             lista = ["SAMLRequest=%s" % urllib.quote_plus(
                                 deflate_and_base64_encode(
                                     authen_req)),
-                    "spentityid=%s" % spentityid]
+                    #"spentityid=%s" % spentityid
+                    ]
             if relay_state:
                 lista.append("RelayState=%s" % relay_state)
             login_url = "?".join([location, "&".join(lista)])
@@ -263,35 +310,35 @@ class Saml2Client(object):
         """
     
         
-        subject = args2dict(
-                    name_id = args2dict(subject_id, format=nameid_format,
+        subject = saml.Subject(
+                    name_id = saml.NameID(
+                                text=subject_id, 
+                                format=nameid_format,
                                 sp_name_qualifier=sp_name_qualifier,
                                 name_qualifier=name_qualifier),
                     )
         
-        prequery = {
-            "id": session_id,
-            "version": VERSION,
-            "issue_instant": instant(),
-            "destination": destination,
-            "issuer": issuer,
-            "subject":subject,
-        }
+        query = samlp.AttributeQuery(
+            id=session_id,
+            version=VERSION,
+            issue_instant=instant(),
+            destination=destination,
+            issuer=self.issuer(),
+            subject=subject,
+        )
         
         if sign:
-            prequery["signature"] = pre_signature_part(prequery["id"],
-                                                        self.sec.my_cert, 1)
+            query.signature = pre_signature_part(query.id, self.sec.my_cert, 1)
         
         if attribute:
-            prequery["attribute"] = do_attributes(attribute)
+            query.attribute = do_attributes(attribute)
         
-        request = make_instance(samlp.AttributeQuery, prequery)
         if sign:
-            signed_req = self.sec.sign_assertion_using_xmlsec("%s" % request)
-            return samlp.attribute_query_from_string(signed_req)
+            signed_query = self.sec.sign_assertion_using_xmlsec("%s" % query)
+            return samlp.attribute_query_from_string(signed_query)
         
         else:
-            return request
+            return query
             
     
     def attribute_query(self, subject_id, issuer, destination,
@@ -333,6 +380,9 @@ class Saml2Client(object):
             
             aresp = authn_response(self.config, issuer, {session_id:""}, log)
             session_info = aresp.loads(response).verify().session_info()
+
+            if session_info:
+                self.users.add_information_about_person(session_info)
             
             log and log.info("session: %s" % session_info)
             return session_info
@@ -340,8 +390,8 @@ class Saml2Client(object):
             log and log.info("No response")
             return None
     
-    def make_logout_request(self, session_id, destination, issuer,
-                reason=None, not_on_or_after=None):
+    def make_logout_requests(self, subject_id, reason=None, 
+                            not_on_or_after=None):
         """ Constructs a LogoutRequest
         
         :param subject_id: The identifier of the subject
@@ -349,32 +399,68 @@ class Saml2Client(object):
             form of a URI reference.
         :param not_on_or_after: The time at which the request expires,
             after which the recipient may discard the message.
-        :return: An AttributeQuery instance
+        :return: A LogoutRequest instance
         """
+
+        result = []
+
+        for entity_id in self.users.issuers_of_info(subject_id):
+            destination = self.config["service"]["sp"]["idp"][entity_id]
+
+            # create NameID from subject_id
+            name_id = NameID(
+                text=self.client.users.get_entityid(subject_id, 
+                                                    entity_id)["name_id"])
+            
+            request = samlp.LogoutRequest(
+                id=sid(),
+                version=VERSION,
+                issue_instant=instant(),
+                destination=destination,
+                issuer=self.issuer(),
+                session_index=session_id,
+                name_id = name_id
+            )
+            
         
-        prel = {
-            "id": sid(),
-            "version": VERSION,
-            "issue_instant": instant(),
-            "destination": destination,
-            "issuer": issuer,
-            "session_index": session_id,
-        }
+            if reason:
+                request.reason = reason
         
-        if reason:
-            prel["reason"] = reason
-        
-        if not_on_or_after:
-            prel["not_on_or_after"] = not_on_or_after
-        
-        return make_instance(samlp.LogoutRequest, prel)
+            if not_on_or_after:
+                request.not_on_or_after = not_on_or_after
+            
+            result.append(request)
+            
+        return result
     
-    def logout(self, session_id, destination,
-                    issuer, reason="", not_on_or_after=None):
-        return self.make_logout_request(session_id, destination,
-                    issuer, reason, not_on_or_after)
+    def global_logout(self, subject_id, reason="", not_on_or_after=None):
+        requests = self.make_logout_requests(subject_id, reason, 
+                                            not_on_or_after)
+        return [r.id for r in requests]
+
+    def local_logout(self, subject_id, reason="", not_on_or_after=None):
+        # Remove the user from the cache, equals local logout
+        self.users.remove_person(subject_id)
+        return True
     
 
+    def add_vo_information_about_user(self, subject_id):
+        """ Add information to the knowledge I have about the user """
+        try:
+            (ava, _) = self.users.get_identity(subject_id)
+        except KeyError:
+            pass
+
+        # is this a Virtual Organization situation
+        if self.vorg:
+            if self.vorg.do_vo_aggregation(subject_id):
+                # Get the extended identity
+                ava = self.users.get_identity(subject_id)[0]
+        return ava
+        
+    def is_session_valid(session_id):
+        return True
+        
 # ----------------------------------------------------------------------
 
 ROW = """<tr><td>%s</td><td>%s</td></tr>"""

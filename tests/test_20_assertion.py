@@ -2,7 +2,7 @@ from saml2 import md, assertion
 from saml2.saml import Attribute, NAME_FORMAT_URI, AttributeValue
 from saml2.assertion import Policy, Assertion, filter_on_attributes
 from saml2.assertion import filter_attribute_value_assertions
-from saml2.utils import MissingValue
+from saml2.s_utils import MissingValue
 from saml2 import attribute_converter
 
 from py.test import raises
@@ -152,21 +152,24 @@ def test_ava_filter_2():
             }
         }}
 
-    r = Policy(conf)
+    policy = Policy(conf)
     
     ava = {"givenName":"Derek", 
             "surName": "Jeter", 
             "mail":"derek@example.com"}
             
     # I'm filtering away something the SP deems necessary
-    raises(MissingValue, r.filter, ava, 'urn:mace:umu.se:saml:roland:sp',
+    
+    #policy.filter(ava, 'urn:mace:umu.se:saml:roland:sp', [mail], [gn, sn])
+    
+    raises(MissingValue, policy.filter, ava, 'urn:mace:umu.se:saml:roland:sp',
                  [mail], [gn, sn])
 
     ava = {"givenName":"Derek", 
             "surName": "Jeter"}
 
     # it wasn't there to begin with
-    raises(MissingValue, r.filter, ava, 'urn:mace:umu.se:saml:roland:sp',
+    raises(MissingValue, policy.filter, ava, 'urn:mace:umu.se:saml:roland:sp',
                 [gn,sn,mail])
 
 def test_filter_attribute_value_assertions_0(AVA):    

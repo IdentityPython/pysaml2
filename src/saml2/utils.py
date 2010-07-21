@@ -189,6 +189,17 @@ def response_factory(signature=False, encrypt=False, **kwargs):
         pass
     return args2dict(**kwargs)        
 
+def response_factory_x(signature=False, encrypt=False, **kwargs):
+    response = samlp.Response(id=sid(), version=VERSION, issue_instant=instant())
+
+    if signature:
+        kwargs["signature"] = sigver.pre_signature_part(kwargs["id"])
+
+    if encrypt:
+        pass
+        
+    return response
+
 def _attrval(val):
     if isinstance(val, list) or isinstance(val, set):
         attrval = [args2dict(v) for v in val]

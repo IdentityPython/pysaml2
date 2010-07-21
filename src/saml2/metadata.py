@@ -88,7 +88,7 @@ class MetaData(object):
         :param entity_descriptor: A EntityDescriptor instance
         """
         try:
-            ssd = entity_descriptor.sp_sso_descriptor
+            ssd = entity_descriptor.spsso_descriptor
         except AttributeError:
             return
         
@@ -141,7 +141,7 @@ class MetaData(object):
         :param entity_descriptor: A EntityDescriptor instance
         """
         try:
-            isd = entity_descriptor.idp_sso_descriptor
+            isd = entity_descriptor.idpsso_descriptor
         except AttributeError:
             return
         
@@ -280,7 +280,7 @@ class MetaData(object):
             except AttributeError:
                 pass
             try:
-                entity["contact"] = entity_descriptor.contact
+                entity["contact_person"] = entity_descriptor.contact_person
             except AttributeError:
                 pass
     
@@ -394,23 +394,26 @@ class MetaData(object):
         :param entityid: The Entity ID
         :return: A name
         """
+        name = ""
+
         try:
-            org = self.entity[entity_id]["organization"]
-            try:
-                names = org.organization_display_name
-            except KeyError:
+            for org in self.entity[entity_id]["organization"]:
                 try:
-                    names = org.organization_name
-                except KeyError:
-                    try:
-                        names = org.organization_url
-                    except KeyError:
-                        names = None
-            if names:
-                name = names[0].text
+                    name = org.organization_display_name[0]
+                except IndexError:
+                    try: 
+                        name = org.organization_name[0]
+                    except IndexError:
+                        try:
+                            name = org.organization_url[0]
+                        except IndexError:
+                            pass
+                
+                if name:
+                    name = name.text
         except KeyError:
-            name = ""
-        
+            pass
+            
         return name
     
     @keep_updated

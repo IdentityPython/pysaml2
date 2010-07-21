@@ -24,13 +24,13 @@ import sys
 
 from saml2 import saml, samlp, VERSION, class_name
 
-from saml2.utils import sid, decode_base64_and_inflate
-from saml2.utils import response_factory
-from saml2.utils import MissingValue, args2dict
-from saml2.utils import success_status_factory
-from saml2.utils import OtherError
-from saml2.utils import VersionMismatch, UnknownPrincipal, UnsupportedBinding
-from saml2.utils import status_from_exception_factory
+from saml2.s_utils import sid, decode_base64_and_inflate
+from saml2.s_utils import response_factory
+from saml2.s_utils import MissingValue, factory
+from saml2.s_utils import success_status_factory
+from saml2.s_utils import OtherError
+from saml2.s_utils import VersionMismatch, UnknownPrincipal, UnsupportedBinding
+from saml2.s_utils import status_from_exception_factory
 
 from saml2.sigver import security_context, signed_instance_factory
 from saml2.sigver import pre_signature_part
@@ -104,9 +104,12 @@ class Identifier(object):
             nameid_format = vo_conf["nameid_format"]
         except KeyError:
             nameid_format = saml.NAMEID_FORMAT_PERSISTENT
-            
-        return args2dict(subj_id, format=nameid_format,
-                            sp_name_qualifier=sp_name_qualifier)
+
+        return saml.NameID(format=nameid_format,
+                            sp_name_qualifier=sp_name_qualifier,
+                            text=subj_id)
+        # return args2dict(subj_id, format=nameid_format,
+        #                     sp_name_qualifier=sp_name_qualifier)
     
     def persistent_nameid(self, sp_name_qualifier, userid):
         """ Get or create a persistent identifier for this object to be used
@@ -117,8 +120,18 @@ class Identifier(object):
         :return: A persistent random identifier.
         """
         subj_id = self.persistent(sp_name_qualifier, userid)
-        return args2dict(subj_id, format=saml.NAMEID_FORMAT_PERSISTENT,
-                                sp_name_qualifier=sp_name_qualifier)    
+        return saml.NameID(format=saml.NAMEID_FORMAT_PERSISTENT,
+                            sp_name_qualifier=sp_name_qualifier,
+                            text=subj_id)
+                                
+        # return args2dict(subj_id, format=saml.NAMEID_FORMAT_PERSISTENT,
+        #                         sp_name_qualifier=sp_name_qualifier)    
+
+    def temporary_nameid(self):
+        """ Returns a random one-time identifier """
+        return saml.NameID(format=saml.NAMEID_FORMAT_TRANSIENT,
+                             text=sid())
+        #return args2dict(sid(), format=saml.NAMEID_FORMAT_TRANSIENT)
 
     def construct_nameid(self, local_policy, userid, sp_entity_id,
                         identity=None, name_id_policy=None):
@@ -143,9 +156,6 @@ class Identifier(object):
             elif nameid_format == saml.NAMEID_FORMAT_TRANSIENT:
                 return self.temporary_nameid()
                 
-    def temporary_nameid(self):
-        """ Returns a random one-time identifier """
-        return args2dict(sid(), format=saml.NAMEID_FORMAT_TRANSIENT)
         
         
 class Server(object):
@@ -181,9 +191,8 @@ class Server(object):
     
     def issuer(self):
         """ Return an Issuer precursor """
-        return args2dict( self.conf["entityid"], 
-                            format=saml.NAMEID_FORMAT_ENTITY)
-        
+        return saml.Issuer(text=self.conf["entityid"], 
+                            format=saml.NAMEID_FORMAT_ENTITY)        
         
     def parse_authn_request(self, enc_request):
         """Parse a Authentication Request
@@ -298,6 +307,8 @@ class Server(object):
         :return: A Response instance
         """
                 
+        to_sign = []
+
         if not status:
             status = success_status_factory()
             
@@ -323,19 +334,21 @@ class Server(object):
                                         policy, issuer=_issuer)
             
             if sign:
-                assertion["signature"] = pre_signature_part(assertion["id"],
+                assertion.signature = pre_signature_part(assertion.id,
                                                         self.sec.my_cert, 1)
+                # Just the assertion or the response and the assertion ?
+                to_sign = [(class_name(assertion), assertion.id)]
 
             # Store which assertion that has been sent to which SP about which
             # subject.
             
-            self.cache.set(assertion["subject"]["name_id"]["text"], 
+            self.cache.set(assertion.subject.name_id.text, 
                             sp_entity_id, assertion, 
-                            assertion["conditions"]["not_on_or_after"])
+                            assertion.conditions.not_on_or_after)
             
-            response.update({"assertion":assertion})
+            response.assertion = assertion
                 
-        return signed_instance_factory(samlp.Response, response, self.sec)
+        return signed_instance_factory(response, self.sec, to_sign)
 
     # ------------------------------------------------------------------------
     

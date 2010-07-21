@@ -43,11 +43,11 @@ class Config(dict):
             assert "idp" in config
             assert len(config["idp"]) > 0
         
-        assert "url" in config
+        assert "endpoints" in config
         assert "name" in config
             
     def _idp_aa_check(self, config):
-        assert "url" in config
+        assert "endpoints" in config
         if "assertions" in config:
             config["policy"] = Policy(config["assertions"])
             del config["assertions"]
@@ -95,7 +95,8 @@ class Config(dict):
             config["metadata"] = self.load_metadata(config["metadata"],
                                                     config["xmlsec_binary"],
                                                     config["attrconverters"])
-                    
+            self.metadata = config["metadata"]
+            
         if "sp" in config["service"]:
             #print config["service"]["sp"]
             if "metadata" in config:
@@ -130,15 +131,36 @@ class Config(dict):
         except KeyError:
             return Policy()
             
-    def aa_url(self):
-        return self["service"]["aa"]["url"]
+    def endpoint(self, typ, service):
+        try:
+            return self["service"][typ]["endpoints"][service]
+        except KeyError:
+            return None
 
-    def idp_url(self):
-        return self["service"]["idp"]["url"]
-        
     def vo_conf(self, name):
         return self["virtual_organization"][name]
 
     def attribute_converters(self):
         return self["attrconverters"]
+        
+    def idps(self):
+        """ Returns a list of URLs of the IdP this SP can 
+        use according to the configuration"""
+        
+        try:
+            return [u for u in self["service"]["sp"]["idp"].values()]
+        except KeyError:
+            return []
 
+    def is_wayf_needed(self):
+        if len(self["service"]["sp"]["idp"]) > 1:
+            return True
+        else: # not really true, what if it's zero (0)
+            return False
+
+    def get_available_idps(self):
+        lista = []
+        for eid, url in self["service"]["sp"]["idp"].items():
+            namn = self.metadata.name(eid)
+            lista.append((eid, namn))
+        return lista

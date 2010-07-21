@@ -3,9 +3,10 @@
 
 from saml2.server import Server, Identifier
 from saml2 import server, make_instance
-from saml2 import samlp, saml, client, utils, config
-from saml2.utils import OtherError
-from saml2.utils import do_attribute_statement
+from saml2 import samlp, saml, client, config
+from saml2 import s_utils
+from saml2.s_utils import OtherError
+from saml2.s_utils import do_attribute_statement, factory
 from py.test import raises
 import shelve
 import re
@@ -25,7 +26,7 @@ class TestServer1():
         self.client = client.Saml2Client({},conf)
 
     def test_issuer(self):
-        issuer = make_instance( saml.Issuer, self.server.issuer())
+        issuer = self.server.issuer()
         assert isinstance(issuer, saml.Issuer)
         assert _eq(issuer.keyswv(), ["text","format"])
         assert issuer.format == saml.NAMEID_FORMAT_ENTITY
@@ -33,27 +34,24 @@ class TestServer1():
         
 
     def test_assertion(self):
-        tmp = utils.assertion_factory(
-            subject= utils.args2dict("_aaa",
-                                name_id=saml.NAMEID_FORMAT_TRANSIENT),
-            attribute_statement = utils.args2dict(
-                attribute=[
-                    utils.args2dict(attribute_value="Derek", 
-                                        friendly_name="givenName"),
-                    utils.args2dict(attribute_value="Jeter", 
-                                        friendly_name="surName"),
-                ]),
+        assertion = s_utils.assertion_factory(
+            subject= factory(saml.Subject, text="_aaa",
+                                name_id=factory(saml.NameID,
+                                    format=saml.NAMEID_FORMAT_TRANSIENT)),
+            attribute_statement = do_attribute_statement({
+                                    ("","","surName"): ("Jeter",""),
+                                    ("","","givenName") :("Derek",""),
+                                }),
             issuer=self.server.issuer(),
             )
             
-        assertion = make_instance(saml.Assertion, tmp)
         assert _eq(assertion.keyswv(),['attribute_statement', 'issuer', 'id',
                                     'subject', 'issue_instant', 'version'])
         assert assertion.version == "2.0"
         assert assertion.issuer.text == "urn:mace:example.com:saml:roland:idp"
         #
-        assert len(assertion.attribute_statement) == 1
-        attribute_statement = assertion.attribute_statement[0]
+        assert assertion.attribute_statement
+        attribute_statement = assertion.attribute_statement
         assert len(attribute_statement.attribute) == 2
         attr0 = attribute_statement.attribute[0]
         attr1 = attribute_statement.attribute[1]
@@ -70,28 +68,25 @@ class TestServer1():
         subject = assertion.subject
         assert _eq(subject.keyswv(),["text", "name_id"])
         assert subject.text == "_aaa"
-        assert subject.name_id.text == saml.NAMEID_FORMAT_TRANSIENT
+        assert subject.name_id.format == saml.NAMEID_FORMAT_TRANSIENT
         
     def test_response(self):
-        tmp = utils.response_factory(
+        response = s_utils.response_factory(
                 in_response_to="_012345",
                 destination="https:#www.example.com",
-                status=utils.success_status_factory(),
-                assertion=utils.assertion_factory(
-                    subject = utils.args2dict("_aaa",
+                status=s_utils.success_status_factory(),
+                assertion=s_utils.assertion_factory(
+                    subject = factory( saml.Subject, text="_aaa",
                                         name_id=saml.NAMEID_FORMAT_TRANSIENT),
-                    attribute_statement = [
-                        utils.args2dict(attribute_value="Derek", 
-                                                friendly_name="givenName"),
-                        utils.args2dict(attribute_value="Jeter", 
-                                                friendly_name="surName"),
-                    ],
+                    attribute_statement = do_attribute_statement({
+                                            ("","","surName"): ("Jeter",""),
+                                            ("","","givenName") :("Derek",""),
+                                        }),
                     issuer=self.server.issuer(),
                 ),
                 issuer=self.server.issuer(),
             )
             
-        response = make_instance(samlp.Response, tmp)
         print response.keyswv()
         assert _eq(response.keyswv(),['destination', 'assertion','status', 
                                     'in_response_to', 'issue_instant', 
@@ -114,9 +109,9 @@ class TestServer1():
                             my_name = "My real name",
                         )
                         
-        intermed = utils.deflate_and_base64_encode(authn_request)
+        intermed = s_utils.deflate_and_base64_encode(authn_request)
         # should raise an error because faulty spentityid
-        raises(OtherError,self.server.parse_authn_request,intermed)
+        raises(OtherError, self.server.parse_authn_request, intermed)
         
     def test_parse_faulty_request_to_err_status(self):
         authn_request = self.client.authn_request(
@@ -127,14 +122,13 @@ class TestServer1():
                             my_name = "My real name",
                         )
                         
-        intermed = utils.deflate_and_base64_encode(authn_request)
+        intermed = s_utils.deflate_and_base64_encode(authn_request)
         try:
             self.server.parse_authn_request(intermed)
             status = None
         except OtherError, oe:
             print oe.args
-            status = make_instance(samlp.Status,
-                            utils.status_from_exception_factory(oe))
+            status = s_utils.status_from_exception_factory(oe)
             
         assert status
         print status
@@ -156,8 +150,9 @@ class TestServer1():
                         )
                         
         print authn_request
-        intermed = utils.deflate_and_base64_encode(authn_request)
+        intermed = s_utils.deflate_and_base64_encode(authn_request)
         response = self.server.parse_authn_request(intermed)
+        # returns a dictionary
         print response
         assert response["consumer_url"] == "http://localhost:8087/"
         assert response["id"] == "1"
@@ -185,12 +180,13 @@ class TestServer1():
         assert resp.status
         assert resp.status.status_code.value == samlp.STATUS_SUCCESS
         assert resp.assertion
-        assert len(resp.assertion) == 1
-        assertion = resp.assertion[0]
-        assert len(assertion.authn_statement) == 1
+        assert resp.assertion
+        assertion = resp.assertion
+        print assertion
+        assert assertion.authn_statement
         assert assertion.conditions
-        assert len(assertion.attribute_statement) == 1
-        attribute_statement = assertion.attribute_statement[0]
+        assert assertion.attribute_statement
+        attribute_statement = assertion.attribute_statement
         print attribute_statement
         assert len(attribute_statement.attribute) == 1
         attribute = attribute_statement.attribute[0]
@@ -200,11 +196,11 @@ class TestServer1():
         assert attribute.name_format == "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
         value = attribute.attribute_value[0]
         assert value.text.strip() == "Short stop"
-        assert value.type == "xs:string"
+        assert value.get_type() == "xs:string"
         assert assertion.subject
         assert assertion.subject.name_id
-        assert len(assertion.subject.subject_confirmation) == 1
-        confirmation = assertion.subject.subject_confirmation[0]
+        assert assertion.subject.subject_confirmation
+        confirmation = assertion.subject.subject_confirmation
         print confirmation.keyswv()
         print confirmation.subject_confirmation_data
         assert confirmation.subject_confirmation_data.in_response_to == "12"
@@ -227,7 +223,7 @@ class TestServer1():
         assert not resp.assertion 
 
     def test_sso_failure_response(self):
-        exc = utils.MissingValue("eduPersonAffiliation missing")
+        exc = s_utils.MissingValue("eduPersonAffiliation missing")
         resp = self.server.error_response( "http://localhost:8087/", "12", 
                         "urn:mace:example.com:saml:roland:sp", exc )
                 
@@ -253,10 +249,8 @@ class TestServer1():
         resp_str = self.server.authn_response(ava, 
                     "1", "http://local:8087/", 
                     "urn:mace:example.com:saml:roland:sp",
-                    make_instance(samlp.NameIDPolicy,
-                                utils.args2dict(
-                                        format=saml.NAMEID_FORMAT_TRANSIENT,
-                                        allow_create="true")),
+                    samlp.NameIDPolicy(format=saml.NAMEID_FORMAT_TRANSIENT,
+                                        allow_create="true"),
                     "foba0001@example.com")
                    
         response = samlp.response_from_string("\n".join(resp_str))
@@ -324,12 +318,12 @@ class TestServer2():
         assert response.version == "2.0"
         assert response.issuer.text == "urn:mace:example.com:saml:roland:idpr"
         assert response.status.status_code.value == samlp.STATUS_SUCCESS
-        assert len(response.assertion) == 1
-        assertion = response.assertion[0]
+        assert response.assertion
+        assertion = response.assertion
         assert assertion.version == "2.0"
         subject = assertion.subject
         assert subject.name_id.format == saml.NAMEID_FORMAT_TRANSIENT
-        assert len(subject.subject_confirmation) == 1
-        subject_confirmation = subject.subject_confirmation[0]
+        assert subject.subject_confirmation
+        subject_confirmation = subject.subject_confirmation
         assert subject_confirmation.subject_confirmation_data.in_response_to == "aaa"
         

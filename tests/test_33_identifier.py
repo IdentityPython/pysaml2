@@ -14,7 +14,9 @@ CONFIG = Config().load({
     "entityid" :  "urn:mace:example.com:idp:2",
     "service": {
         "idp": {
-            "url" : "http://idp.example.org/",
+            "endpoints" : {
+                "single_sign_on_service" : ["http://idp.example.org/"],
+                },
             "name" : "test",
             "assertions": {
                 "default": {
@@ -69,15 +71,17 @@ class TestIdentifier():
         nameid = self.id.construct_nameid(policy, "foobar", 
                                             "urn:mace:example.com:sp:1")
         
-        assert _eq(nameid.keys(), ['text', 'sp_name_qualifier', 'format'])
-        assert nameid["sp_name_qualifier"] == CONFIG["entityid"]
-        assert nameid["format"] == NAMEID_FORMAT_PERSISTENT
+        assert _eq(nameid.keys(), ['text', 'sp_provided_id', 
+                            'sp_name_qualifier', 'name_qualifier', 'format'])
+        assert _eq(nameid.keyswv(), ['format', 'text', 'sp_name_qualifier'])
+        assert nameid.sp_name_qualifier == CONFIG["entityid"]
+        assert nameid.format == NAMEID_FORMAT_PERSISTENT
         
         nameid_2 = self.id.construct_nameid(policy, "foobar", 
                                             "urn:mace:example.com:sp:1")
         
-        assert nameid == nameid_2
-        assert nameid["text"] == nameid_2["text"]
+        assert nameid != nameid_2
+        assert nameid.text == nameid_2.text
         
     def test_transient_1(self):
         policy = Policy({
@@ -92,8 +96,8 @@ class TestIdentifier():
         nameid = self.id.construct_nameid(policy, "foobar", 
                                             "urn:mace:example.com:sp:1")
         
-        assert _eq(nameid.keys(), ['text', 'format'])
-        assert nameid["format"] == NAMEID_FORMAT_TRANSIENT
+        assert _eq(nameid.keyswv(), ['text', 'format'])
+        assert nameid.format == NAMEID_FORMAT_TRANSIENT
         
     def test_vo_1(self):
         policy = Policy({
@@ -112,11 +116,11 @@ class TestIdentifier():
                                             {"uid": "foobar01"},
                                             name_id_policy)
         
-        assert _eq(nameid.keys(), ['text', 'sp_name_qualifier', 'format'])
-        assert nameid["sp_name_qualifier"] == 'http://vo.example.org/biomed'
-        assert nameid["format"] == \
+        assert _eq(nameid.keyswv(), ['text', 'sp_name_qualifier', 'format'])
+        assert nameid.sp_name_qualifier == 'http://vo.example.org/biomed'
+        assert nameid.format == \
                 CONFIG.vo_conf('http://vo.example.org/biomed')["nameid_format"]
-        assert nameid["text"] == "foobar01"
+        assert nameid.text == "foobar01"
 
     def test_vo_2(self):
         policy = Policy({
@@ -136,8 +140,8 @@ class TestIdentifier():
                                             {"uid": "foobar01"},
                                             name_id_policy)
         
-        assert _eq(nameid.keys(), ['text', 'sp_name_qualifier', 'format'])
-        assert nameid["sp_name_qualifier"] == 'http://vo.example.org/design'
-        assert nameid["format"] == NAMEID_FORMAT_PERSISTENT
-        assert nameid["text"] != "foobar01"
+        assert _eq(nameid.keyswv(), ['text', 'sp_name_qualifier', 'format'])
+        assert nameid.sp_name_qualifier == 'http://vo.example.org/design'
+        assert nameid.format == NAMEID_FORMAT_PERSISTENT
+        assert nameid.text != "foobar01"
         

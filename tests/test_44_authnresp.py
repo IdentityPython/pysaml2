@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from saml2 import samlp, BINDING_HTTP_POST
-from saml2 import saml, utils, config, class_name, make_instance
+from saml2 import saml, config, class_name, make_instance
 from saml2.server import Server
 from saml2.authnresponse import authn_response
 
@@ -55,6 +55,7 @@ class TestAuthnResponse:
         assert self.ar.came_from == 'http://localhost:8088/sso'
         assert self.ar.session_id() == "12"
         assert self.ar.ava == {'eduPersonEntitlement': ['Jeter'] }
+        assert self.ar.name_id
         assert self.ar.issuer() == 'urn:mace:example.com:saml:roland:idp'
     
     def test_verify_signed_1(self):
@@ -72,18 +73,20 @@ class TestAuthnResponse:
         assert self.ar.session_id() == "12"
         assert self.ar.ava == {'eduPersonEntitlement': ['Jeter'] }
         assert self.ar.issuer() == 'urn:mace:example.com:saml:roland:idp'
+        assert self.ar.name_id
 
     def test_parse_2(self):
         xml_response = open(XML_RESPONSE_FILE).read()
         ID = "bahigehogffohiphlfmplepdpcohkhhmheppcdie"
         self.ar.outstanding_queries = {ID: "http://localhost:8088/foo"}    
         self.ar.requestor = "xenosmilus.umdc.umu.se"
-        self.ar.timeslack = 20000000
-        print self.ar.__dict__
+        # roughly a year, should create the response on the fly
+        self.ar.timeslack = 31536000
         self.ar.loads(xml_response, decode=False)
         self.ar.verify()
         
-        print self.ar
+        print self.ar.__dict__
         assert self.ar.came_from == 'http://localhost:8088/foo'
         assert self.ar.session_id() == ID
+        assert self.ar.name_id
 

@@ -1,36 +1,14 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-#
-# Copyright (C) 2007 SIOS Technology, Inc.
-# Copyright (C) 2009 Umeå University
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#            http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#!/usr/bin/env python
 
-"""Contains classes representing Saml elements.
+#
+# Generated Thu Jul 15 21:01:26 2010 by parse_xsd.py version 0.3.
+#
 
-    Module objective: provide data classes for Saml constructs. These
-    classes hide the XML-ness of Saml and provide a set of native Python
-    classes to interact with.
-
-    Conversions to and from XML should only be necessary when the Saml classes
-    "touch the wire" and are sent over HTTP. For this reason this module 
-    provides methods and functions to convert Saml classes to and from strings.
-"""
-
-import xmldsig as ds
-import xmlenc
 import saml2
 from saml2 import SamlBase
+
+import xmldsig as ds
+import xmlenc as xenc
 
 NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:assertion'
 
@@ -55,7 +33,10 @@ NAMEID_FORMAT_ENTITY = (
 PROFILE_ATTRIBUTE_BASIC = (
     "urn:oasis:names:tc:SAML:2.0:profiles:attribute:basic")
 
-URN_PASSWORD = "urn:oasis:names:tc:SAML:2.0:ac:classes:Password"
+AUTHN_PASSWORD = "urn:oasis:names:tc:SAML:2.0:ac:classes:Password"
+AUTHN_PASSWORD_PROTECTED = \
+        "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport"
+        
 NAME_FORMAT_UNSPECIFIED = (
     "urn:oasis:names:tc:SAML:2.0:attrname-format:unspecified")
 NAME_FORMAT_URI = "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
@@ -68,781 +49,428 @@ DECISION_TYPE_INDETERMINATE = "Indeterminate"
 
 CONSENT_UNSPECIFIED = "urn:oasis:names:tc:SAML:2.0:consent:unspecified"
 
-# ---------------------------------------------------------------------------
-# BaseID
-# ---------------------------------------------------------------------------
 
-class BaseID(SamlBase):
-    """ The saml:BaseID element """
+class BaseIDAbstractType(SamlBase):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:BaseIDAbstractType element """
 
-    c_tag = 'BaseID'
+    c_tag = 'BaseIDAbstractType'
     c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
-    c_attributes['NameQualifier'] = 'name_qualifier'
-    c_attributes['SPNameQualifier'] = 'sp_name_qualifier'
+    c_child_order = SamlBase.c_child_order[:]
+    c_attributes['NameQualifier'] = ('name_qualifier', 'string', False)
+    c_attributes['SPNameQualifier'] = ('sp_name_qualifier', 'string', False)
 
-    def __init__(self, name_qualifier=None, sp_name_qualifier=None, text=None,
-                    extension_elements=None, extension_attributes=None):
-        """Constructor for BaseID, an extension point that allows applications
-        to add new kinds of identifiers.
+    def __init__(self,
+            name_qualifier=None,
+            sp_name_qualifier=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        SamlBase.__init__(self, 
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.name_qualifier=name_qualifier
+        self.sp_name_qualifier=sp_name_qualifier
 
-        :param name_qualifier: NameQualifier attribute; The security or 
-            administrative domain that qualifies the identifier. 
-        :param sp_name_qualifier: SPNameQualifier attribute; Further qualifies
-            an identifier with the name of a service provider or affiliation 
-            of providers.
-        :param text: The text data in the this element
-        :param extension_elements: A list of ExtensionElement instances
-        :param extension_attributes: A dictionary of attribute value string 
-            pairs.
-        """
-        SamlBase.__init__(self, text, extension_elements, extension_attributes)
-        self.name_qualifier = name_qualifier
-        self.sp_name_qualifier = sp_name_qualifier
-    
-def base_id_from_string(xml_string):
-    """ Create BaseID instance from an XML string """
-    return saml2.create_class_from_xml_string(BaseID, xml_string)
+def base_id_abstract_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(BaseIDAbstractType, xml_string)
 
-# ---------------------------------------------------------------------------
-# NameID
-# ---------------------------------------------------------------------------
+class NameIDType(SamlBase):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:NameIDType element """
 
-class NameID(BaseID):
-    """The saml:NameID element"""
-
-    c_tag = 'NameID'
+    c_tag = 'NameIDType'
     c_namespace = NAMESPACE
-    c_children = BaseID.c_children.copy()
-    c_attributes = BaseID.c_attributes.copy()
-    c_attributes['Format'] = 'format'
-    c_attributes['SPProvidedID'] = 'sp_provided_id'
+    c_children = SamlBase.c_children.copy()
+    c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
+    c_attributes['NameQualifier'] = ('name_qualifier', 'string', False)
+    c_attributes['SPNameQualifier'] = ('sp_name_qualifier', 'string', False)
+    c_attributes['Format'] = ('format', 'anyURI', False)
+    c_attributes['SPProvidedID'] = ('sp_provided_id', 'string', False)
 
-    def __init__(self, name_qualifier=None, sp_name_qualifier=None, 
-                    format=None, sp_provided_id=None, 
-                    text=None, extension_elements=None,
-                    extension_attributes=None):
-        """Constructor for NameID
+    def __init__(self,
+            name_qualifier=None,
+            sp_name_qualifier=None,
+            format=None,
+            sp_provided_id=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        SamlBase.__init__(self, 
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.name_qualifier=name_qualifier
+        self.sp_name_qualifier=sp_name_qualifier
+        self.format=format
+        self.sp_provided_id=sp_provided_id
 
-        :param format: Format attribute; A URI reference representing the 
-            classification of string-based identifier information.
-        :param sp_provided_id: SPProvidedID attribute; A name identifier 
-            established by a service provider or affiliation of providers 
-            for the entity, if different from the primary name identifier 
-            given in the content of the element.
-        :param text: The text data in the this element
-        :param extension_elements: A list of ExtensionElement instances
-        :param extension_attributes: A dictionary of attribute value string 
-            pairs
-        """
+def name_id_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(NameIDType, xml_string)
 
-        BaseID.__init__(self, name_qualifier, sp_name_qualifier, text,
-                                 extension_elements, extension_attributes)
-        
-        self.format = format
-        self.sp_provided_id = sp_provided_id
+class EncryptedElementType(SamlBase):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:EncryptedElementType element """
 
-def name_id_from_string(xml_string):
-    """ Create NameID instance from an XML string """
-    return saml2.create_class_from_xml_string(NameID, xml_string)
+    c_tag = 'EncryptedElementType'
+    c_namespace = NAMESPACE
+    c_children = SamlBase.c_children.copy()
+    c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
+    c_children['{http://www.w3.org/2001/04/xmlenc#}EncryptedData'] = ('encrypted_data', xenc.EncryptedData)
+    c_children['{http://www.w3.org/2001/04/xmlenc#}EncryptedKey'] = ('encrypted_key', [xenc.EncryptedKey])
+    c_child_order.extend(['encrypted_data', 'encrypted_key'])
 
-# ---------------------------------------------------------------------------
-# EncryptedID
-# ---------------------------------------------------------------------------
+    def __init__(self,
+            encrypted_data=None,
+            encrypted_key=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        SamlBase.__init__(self, 
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.encrypted_data=encrypted_data
+        self.encrypted_key=encrypted_key or []
 
-class EncryptedID(SamlBase):
-    """The saml:EncryptedID element"""
+def encrypted_element_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(EncryptedElementType, xml_string)
+
+class EncryptedID(EncryptedElementType):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:EncryptedID element """
+
     c_tag = 'EncryptedID'
     c_namespace = NAMESPACE
-    c_children = SamlBase.c_children.copy()
-    c_attributes = SamlBase.c_attributes.copy()
-
-    # TODO: This is just a skelton yet.
+    c_children = EncryptedElementType.c_children.copy()
+    c_attributes = EncryptedElementType.c_attributes.copy()
+    c_child_order = EncryptedElementType.c_child_order[:]
 
 def encrypted_id_from_string(xml_string):
-    """ Create EncryptedID instance from an XML string """
     return saml2.create_class_from_xml_string(EncryptedID, xml_string)
 
-# ---------------------------------------------------------------------------
-# Issuer
-# ---------------------------------------------------------------------------
-
-class Issuer(NameID):
-    """The saml:Issuer element"""
+class Issuer(NameIDType):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:Issuer element """
 
     c_tag = 'Issuer'
-    c_children = NameID.c_children.copy()
-    c_attributes = NameID.c_attributes.copy()
+    c_namespace = NAMESPACE
+    c_children = NameIDType.c_children.copy()
+    c_attributes = NameIDType.c_attributes.copy()
+    c_child_order = NameIDType.c_child_order[:]
 
 def issuer_from_string(xml_string):
-    """ Create Issuer instance from an XML string """
     return saml2.create_class_from_xml_string(Issuer, xml_string)
 
-
-# ---------------------------------------------------------------------------
-# AssertionIDRef
-# ---------------------------------------------------------------------------
-
 class AssertionIDRef(SamlBase):
-    """The saml:AssertionIDRef element makes a reference to a SAML assertion 
-    by its unique identifier."""
+    """The urn:oasis:names:tc:SAML:2.0:assertion:AssertionIDRef element """
+
     c_tag = 'AssertionIDRef'
     c_namespace = NAMESPACE
+    c_value_type = 'NCName'
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
 
 def assertion_id_ref_from_string(xml_string):
-    """ Create AssertionIDRef instance from an XML string """
     return saml2.create_class_from_xml_string(AssertionIDRef, xml_string)
 
-# ---------------------------------------------------------------------------
-# AssertionURIRef
-# ---------------------------------------------------------------------------
-
 class AssertionURIRef(SamlBase):
-    """The saml:AssertionURIRef element makes a reference to a SAML assertion 
-    by URI reference."""
+    """The urn:oasis:names:tc:SAML:2.0:assertion:AssertionURIRef element """
+
     c_tag = 'AssertionURIRef'
     c_namespace = NAMESPACE
+    c_value_type = 'anyURI'
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
 
 def assertion_uri_ref_from_string(xml_string):
-    """ Create AssertionURIRef instance from an XML string """
     return saml2.create_class_from_xml_string(AssertionURIRef, xml_string)
 
-# ---------------------------------------------------------------------------
-# EncryptedElement
-# ---------------------------------------------------------------------------
+class SubjectConfirmationDataType(SamlBase):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:SubjectConfirmationDataType element """
 
-class EncryptedElement(SamlBase):
-
-    c_tag = 'EncryptedElement'
+    c_tag = 'SubjectConfirmationDataType'
     c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
+    c_attributes['NotBefore'] = ('not_before', 'dateTime', False)
+    c_attributes['NotOnOrAfter'] = ('not_on_or_after', 'dateTime', False)
+    c_attributes['Recipient'] = ('recipient', 'anyURI', False)
+    c_attributes['InResponseTo'] = ('in_response_to', 'NCName', False)
+    c_attributes['Address'] = ('address', 'string', False)
 
-    c_children['{%s}EncryptedData' % xmlenc.NAMESPACE] = (
-                        'encrypted_data', xmlenc.EncryptedData)
-    c_children['{%s}EncryptedKey' % xmlenc.NAMESPACE] = (
-                        'encrypted_key', xmlenc.EncryptedKey)
-    c_child_order = ["encrypted_data", "encrypted_key", "encrypted_id"]
-    
-    def __init__(self, encrypted_data=None, encrypted_key=None, 
-                encrypted_id=None,
-                text=None,
-                extension_elements=None, 
-                extension_attributes=None):
+    def __init__(self,
+            not_before=None,
+            not_on_or_after=None,
+            recipient=None,
+            in_response_to=None,
+            address=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        SamlBase.__init__(self, 
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.not_before=not_before
+        self.not_on_or_after=not_on_or_after
+        self.recipient=recipient
+        self.in_response_to=in_response_to
+        self.address=address
 
-        SamlBase.__init__(self, text, extension_elements, extension_attributes)
-        self.encrypted_data = encrypted_data
-        self.encrypted_key = encrypted_key
-        self.encrypted_id = encrypted_id
+def subject_confirmation_data_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(SubjectConfirmationDataType, xml_string)
 
-def encrypted_element_from_string(xml_string):
-    """ Create EncryptedElement instance from an XML string """
-    return saml2.create_class_from_xml_string(EncryptedElement, xml_string)
+class KeyInfoConfirmationDataType(SamlBase):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:KeyInfoConfirmationDataType element """
 
-# ---------------------------------------------------------------------------
-# EncryptedID
-# ---------------------------------------------------------------------------
-
-class EncryptedID(EncryptedElement):
-    c_tag = 'EncryptedID'
-    c_namespace = NAMESPACE
-    c_children = EncryptedElement.c_children.copy()
-    c_attributes = EncryptedElement.c_attributes.copy()
-
-def encrypted_id_from_string(xml_string):
-    """ Create EncryptedID instance from an XML string """
-    return saml2.create_class_from_xml_string(EncryptedID, xml_string)
-
-
-EncryptedElement.c_children['{%s}EncryptedID' % NAMESPACE] = (
-                        'encrypted_id', EncryptedID)
-                        
-# ---------------------------------------------------------------------------
-# EncryptedAssertion
-# ---------------------------------------------------------------------------
-
-class EncryptedAssertion(EncryptedElement):
-    """The saml:EncryptedAssertion element represents an assertion in 
-    encrypted fashion, as defined by the XML Encryption Syntax and 
-    Processing specification"""
-    
-    c_tag = 'EncryptedAssertion'
-    c_namespace = NAMESPACE
-    c_children = EncryptedElement.c_children.copy()
-    c_attributes = EncryptedElement.c_attributes.copy()
-
-    # TODO: This is just a skelton yet.
-
-def encrypted_assertion_from_string(xml_string):
-    """ Create EncryptedAssertion instance from an XML string """
-    return saml2.create_class_from_xml_string(EncryptedAssertion, xml_string)
-
-# ===========================================================================
-# SubjectConfirmationData
-# ---------------------------------------------------------------------------
-
-class SubjectConfirmationData(SamlBase):
-    """The saml:SubjectConfirmationData element has the 
-    SubjectConfirmationDataType complex type. It specifies additional data 
-    that allows the subject to be confirmed or constrains the circumstances 
-    under which the act of subject confirmation can take place"""
-
-    c_tag = 'SubjectConfirmationData'
+    c_tag = 'KeyInfoConfirmationDataType'
     c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
-    c_attributes['NotBefore'] = 'not_before'
-    c_attributes['NotOnOrAfter'] = 'not_on_or_after'
-    c_attributes['Recipient'] = 'recipient'
-    c_attributes['InResponseTo'] = 'in_response_to'
-    c_attributes['Address'] = 'address'
-    
-    def __init__(self, not_before=None, not_on_or_after=None, recipient=None,
-                    in_response_to=None, address=None, text=None,
-                    extension_elements=None, extension_attributes=None):
-        """Constructor for SubjectConfirmationData
+    c_child_order = SamlBase.c_child_order[:]
+    c_children['{http://www.w3.org/2000/09/xmldsig#}KeyInfo'] = ('key_info', [ds.KeyInfo])
+    c_child_order.extend(['key_info'])
 
-        :param not_before: NotBefore attribute; A time instant before which 
-            the subject cannot be confirmed.
-        :param not_on_or_after: NotOnOrAfter attribute; A time instant at 
-            which the subject can no longer be confirmed.
-        :param recipient: Recipient attribute; A URI specifying the entity or 
-            location to which an attesting entity can present the assertion. 
-            For example, this attribute might indicate that the assertion must 
-            be delivered to a particular network endpoint in order to prevent 
-            an intermediary from redirecting it someplace else.
-        :param in_response_to: InResponseTo attribute; The ID of a SAML 
-            protocol message in response to which an attesting entity can 
-            present the assertion.
-        :param address: Address attribute; The network address/location from 
-            which an attesting entity can present the assertion. 
-        :param text: The text data in this element
-        :param extension_elements: A list of ExtensionElement instances
-        :param extension_attributes: A dictionary of attribute value string 
-            pairs
-        """
+    def __init__(self,
+            key_info=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        SamlBase.__init__(self, 
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.key_info=key_info or []
 
-        SamlBase.__init__(self, text, extension_elements, extension_attributes)
-        self.not_before = not_before
-        self.not_on_or_after = not_on_or_after
-        self.recipient = recipient
-        self.in_response_to = in_response_to
-        self.address = address
+def key_info_confirmation_data_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(KeyInfoConfirmationDataType, xml_string)
 
-def subject_confirmation_data_from_string(xml_string):
-    """ Create SubjectConfirmationData instance from an XML string """
-    return saml2.create_class_from_xml_string(SubjectConfirmationData, 
-                                                xml_string)
+class ConditionAbstractType(SamlBase):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:ConditionAbstractType element """
 
-# ---------------------------------------------------------------------------
-# KeyInfoConfirmationDataType
-# ---------------------------------------------------------------------------
-
-# ---------------------------------------------------------------------------
-# SubjectConfirmation
-# ---------------------------------------------------------------------------
-
-class SubjectConfirmation(SamlBase):
-    """The saml:SubjectConfirmation element provides the means for a relying 
-    party to verify the correspondence of the subject of the assertion with 
-    the party with whom the relying party is communicating."""
-
-    c_tag = 'SubjectConfirmation'
+    c_tag = 'ConditionAbstractType'
     c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
-    c_attributes['Method'] = 'method'
-    c_children['{%s}BaseID' % NAMESPACE] = ('base_id', BaseID)
-    c_children['{%s}NameID' % NAMESPACE] = ('name_id', NameID)
-    c_children['{%s}EncryptedID' % NAMESPACE] = ('encrypted_id', 
-        EncryptedID)
-    c_children['{%s}SubjectConfirmationData' % NAMESPACE] = (
-        'subject_confirmation_data', SubjectConfirmationData)
-    c_child_order = ['base_id', 'name_id', 'encrypted_id', 
-                    'subject_confirmation_data']
+    c_child_order = SamlBase.c_child_order[:]
 
-    def __init__(self, method=None, base_id=None, name_id=None, 
-                    encrypted_id=None,
-                    subject_confirmation_data=None, text=None, 
-                    extension_elements=None, extension_attributes=None):
-        """Constructor for SubjectConfirmation
-
-        :param method: Subject confirmation method
-        :param base_id: Method attribute
-        :param name_id: NameID element
-        :param subject_confirmation_data: SubjectConfirmationData element
-        :param text: The text data in this element
-        :param extension_elements: A list of ExtensionElement instances
-        :param extension_attributes: A dictionary of attribute value string 
-            pairs
-        """
-
-        SamlBase.__init__(self, text, extension_elements, extension_attributes)
-        self.method = method
-        self.base_id = base_id
-        self.name_id = name_id
-        self.encrypted_id = encrypted_id
-        self.subject_confirmation_data = subject_confirmation_data
-
-def subject_confirmation_from_string(xml_string):
-    """ Create SubjectConfirmation instance from an XML string """
-    return saml2.create_class_from_xml_string(SubjectConfirmation, xml_string)
-
-# ---------------------------------------------------------------------------
-# Subject
-# ---------------------------------------------------------------------------
-
-class Subject(SamlBase):
-    """The saml:Subject element"""
-
-    c_tag = 'Subject'
-    c_namespace = NAMESPACE
-    c_children = SamlBase.c_children.copy()
-    c_attributes = SamlBase.c_attributes.copy()
-    c_children['{%s}NameID' % NAMESPACE] = ('name_id', NameID)
-    c_children['{%s}SubjectConfirmation' % NAMESPACE] = (
-        'subject_confirmation', [SubjectConfirmation])
-    c_child_order = ['name_id', 'subject_confirmation']
-
-    def __init__(self, name_id=None, subject_confirmation=None, text=None,
-                    extension_elements=None, extension_attributes=None):
-        """Constructor for SubjectConfirmation
-
-        :param name_id: NameID element
-        :param subject_confirmation: SubjectConfirmation element
-        :param text: The text data in this element
-        :param extension_elements: A list of ExtensionElement instances
-        :param extension_attributes: A dictionary of attribute value string 
-            pairs
-        """
-
-        SamlBase.__init__(self, text, extension_elements, extension_attributes)
-        self.name_id = name_id
-        self.subject_confirmation = subject_confirmation or []
-
-def subject_from_string(xml_string):
-    """ Create Subject instance from an XML string """
-    return saml2.create_class_from_xml_string(Subject, xml_string)
-
-
-# ===========================================================================
-# Condition
-# ---------------------------------------------------------------------------
-
-class Condition(SamlBase):
-    """The saml:Condition element"""
-
-    c_tag = 'Condition'
-    c_namespace = NAMESPACE
-    c_children = SamlBase.c_children.copy()
-    c_attributes = SamlBase.c_attributes.copy()
-
-def condition_from_string(xml_string):
-    """ Create Condition instance from an XML string """
-    return saml2.create_class_from_xml_string(Condition, xml_string)
-
-
-# ---------------------------------------------------------------------------
-# Audience
-# ---------------------------------------------------------------------------
+def condition_abstract_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(ConditionAbstractType, xml_string)
 
 class Audience(SamlBase):
-    """The saml:Audience element, a URI reference that identifies an intended
-    audience."""
+    """The urn:oasis:names:tc:SAML:2.0:assertion:Audience element """
 
     c_tag = 'Audience'
     c_namespace = NAMESPACE
+    c_value_type = 'anyURI'
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
 
 def audience_from_string(xml_string):
-    """ Create Audience instance from an XML string """
     return saml2.create_class_from_xml_string(Audience, xml_string)
 
-# ---------------------------------------------------------------------------
-# AudienceRestriction
-# ---------------------------------------------------------------------------
+class OneTimeUseType(ConditionAbstractType):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:OneTimeUseType element """
 
-class AudienceRestriction(Condition):
-    """The saml:AudienceRestriction element specifies that the assertion is 
-    addressed to one or more specific audiences identified by <Audience> 
-    elements."""
-
-    c_tag = 'AudienceRestriction'
+    c_tag = 'OneTimeUseType'
     c_namespace = NAMESPACE
-    c_children = Condition.c_children.copy()
-    c_attributes = Condition.c_attributes.copy()
-    c_children['{%s}Audience' % NAMESPACE] = ('audience', Audience)
+    c_children = ConditionAbstractType.c_children.copy()
+    c_attributes = ConditionAbstractType.c_attributes.copy()
+    c_child_order = ConditionAbstractType.c_child_order[:]
 
-    def __init__(self, audience=None, text=None,
-                    extension_elements=None, extension_attributes=None):
-        """Constructor for AudienceRestriction
+def one_time_use_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(OneTimeUseType, xml_string)
 
-        :param text: The text data in this element
-        :param audience: Audience elements
-        :param extension_elements: A list of ExtensionElement instances
-        :param extension_attributes: A dictionary of attribute value string 
-            pairs
-        """
+class ProxyRestrictionType(ConditionAbstractType):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:ProxyRestrictionType element """
 
-        Condition.__init__(self, text, extension_elements, 
-            extension_attributes)
-        self.audience = audience
-
-def audience_restriction_from_string(xml_string):
-    """ Create AudienceRestriction instance from an XML string """
-    return saml2.create_class_from_xml_string(AudienceRestriction, xml_string)
-
-# ---------------------------------------------------------------------------
-# OneTimeUse
-# ---------------------------------------------------------------------------
-
-class OneTimeUse(Condition):
-    """The saml:OneTimeUse element. In general, relying parties may choose to 
-    retain assertions, or the information they contain in some other form, 
-    for reuse. The <OneTimeUse> condition element allows an authority to 
-    indicate that the information in the assertion is likely to change very 
-    soon and fresh information should be obtained for each use."""
-
-    c_tag = 'OneTimeUse'
-    c_children = Condition.c_children.copy()
-    c_attributes = Condition.c_attributes.copy()
-
-def one_time_use_from_string(xml_string):
-    """ Create OneTimeUse instance from an XML string """
-    return saml2.create_class_from_xml_string(OneTimeUse, xml_string)
-
-# ---------------------------------------------------------------------------
-# OneTimeUse
-# ---------------------------------------------------------------------------
-
-class ProxyRestriction(Condition):
-    """The saml:ProxyRestriction element. Specifies limitations that the 
-    asserting party imposes on relying parties that in turn wish to act as 
-    asserting parties and issue subsequent assertions of their own on the basis
-    of the information contained in the original assertion."""
-
-    c_tag = 'ProxyRestriction'
+    c_tag = 'ProxyRestrictionType'
     c_namespace = NAMESPACE
-    c_children = Condition.c_children.copy()
-    c_attributes = Condition.c_attributes.copy()
-    c_attributes['Count'] = 'count'
-    c_children['{%s}Audience' % NAMESPACE] = ('audience', [Audience])
+    c_children = ConditionAbstractType.c_children.copy()
+    c_attributes = ConditionAbstractType.c_attributes.copy()
+    c_child_order = ConditionAbstractType.c_child_order[:]
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Audience'] = ('audience', [Audience])
+    c_attributes['Count'] = ('count', 'nonNegativeInteger', False)
+    c_child_order.extend(['audience'])
 
-    def __init__(self, count=None, audience=None, text=None,
-                    extension_elements=None, extension_attributes=None):
-        """Constructor for ProxyRestriction
+    def __init__(self,
+            audience=None,
+            count=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        ConditionAbstractType.__init__(self, 
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.audience=audience or []
+        self.count=count
 
-        :param text: The text data in this element
-        :param count: Count attribute
-        :param audience: Audience elements
-        :param extension_elements: A list of ExtensionElement instances
-        :param extension_attributes: A dictionary of attribute value string 
-            pairs
-        """
+def proxy_restriction_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(ProxyRestrictionType, xml_string)
 
-        Condition.__init__(self, extension_elements, extension_attributes, 
-                            text)
-        self.count = count
-        self.audience = audience or []
+class EncryptedAssertion(EncryptedElementType):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:EncryptedAssertion element """
 
-def proxy_restriction_from_string(xml_string):
-    """ Create ProxyRestriction instance from an XML string """
-    return saml2.create_class_from_xml_string(ProxyRestriction, xml_string)
-
-
-# ---------------------------------------------------------------------------
-# Conditions
-# ---------------------------------------------------------------------------
-
-class Conditions(SamlBase):
-    """The saml:Conditions element"""
-
-    c_tag = 'Conditions'
+    c_tag = 'EncryptedAssertion'
     c_namespace = NAMESPACE
-    c_children = SamlBase.c_children.copy()
-    c_attributes = SamlBase.c_attributes.copy()    
-    c_attributes['NotBefore'] = 'not_before'
-    c_attributes['NotOnOrAfter'] = 'not_on_or_after'
-    c_children['{%s}Condition' % NAMESPACE] = ('condition', [Condition])
-    c_children['{%s}AudienceRestriction' % NAMESPACE] = (
-        'audience_restriction', [AudienceRestriction])
-    c_children['{%s}OneTimeUse' % NAMESPACE] = (
-        'one_time_use', [OneTimeUse])
-    c_children['{%s}ProxyRestriction' % NAMESPACE] = (
-        'proxy_restriction', [ProxyRestriction])
-    c_child_order = ['condition', 'audience_restriction', 'one_time_use',
-                                    'proxy_restriction']
+    c_children = EncryptedElementType.c_children.copy()
+    c_attributes = EncryptedElementType.c_attributes.copy()
+    c_child_order = EncryptedElementType.c_child_order[:]
 
-    def __init__(self, not_before=None, not_on_or_after=None,
-                    condition=None, audience_restriction=None, 
-                    one_time_use=None, proxy_restriction=None, text=None,
-                    extension_elements=None, extension_attributes=None):
-        """Constructor for ProxyRestriction
+def encrypted_assertion_from_string(xml_string):
+    return saml2.create_class_from_xml_string(EncryptedAssertion, xml_string)
 
-        :param not_before: NotBefore attribute; Specifies the earliest 
-            time instant at which the assertion is valid.
-        :param not_on_or_after: NotOnOrAfter attribute; Specifies the 
-            time instant at which the assertion has expired.
-        :param condition: Condition elements; A condition of a type 
-            defined in an extension schema.
-        :param audience_restriction: AudienceRestriction elements; 
-            Specifies that the assertion is addressed to a particular audience.
-        :param one_time_use: OneTimeUse elements; Specifies that the assertion
-            SHOULD be used immediately and MUST NOT be retained for future use.
-        :param proxy_restriction: ProxyRestriction elements; Specifies 
-            limitations that the asserting party imposes on relying parties 
-            that wish to subsequently act as asserting parties themselves and 
-            issue assertions of their own on the basis of the information 
-            contained in the original assertion. 
-        :param text: The text data in this element
-        :param extension_elements: A list of ExtensionElement instances
-        :param extension_attributes: A dictionary of attribute value string 
-            pairs
-        """
+class StatementAbstractType(SamlBase):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:StatementAbstractType element """
 
-        SamlBase.__init__(self, text, extension_elements, extension_attributes)
-        self.not_before = not_before
-        self.not_on_or_after = not_on_or_after
-        self.condition = condition or []
-        self.audience_restriction = audience_restriction or []
-        self.one_time_use = one_time_use or []
-        self.proxy_restriction = proxy_restriction or []
-
-def conditions_from_string(xml_string):
-    """ Create Conditions instance from an XML string """
-    return saml2.create_class_from_xml_string(Conditions, xml_string)
-
-
-# ---------------------------------------------------------------------------
-# Statement
-# ---------------------------------------------------------------------------
-
-class Statement(SamlBase):
-    """The saml:Statement element is an extension point that allows other 
-    assertion-based applications to reuse the SAML assertion framework."""
-
-    c_tag = 'Statement'
+    c_tag = 'StatementAbstractType'
     c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
-    
-def statement_from_string(xml_string):
-    """ Create Statement instance from an XML string """
-    return saml2.create_class_from_xml_string(Statement, xml_string)
+    c_child_order = SamlBase.c_child_order[:]
 
-# ---------------------------------------------------------------------------
-# SubjectLocality
-# ---------------------------------------------------------------------------
+def statement_abstract_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(StatementAbstractType, xml_string)
 
-class SubjectLocality(SamlBase):
-    """The saml:SubjectLocality element"""
+class SubjectLocalityType(SamlBase):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:SubjectLocalityType element """
 
-    c_tag = 'SubjectLocality'
+    c_tag = 'SubjectLocalityType'
     c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
-    c_attributes['Address'] = 'address'
-    c_attributes['DNSName'] = 'dns_name'
+    c_child_order = SamlBase.c_child_order[:]
+    c_attributes['Address'] = ('address', 'string', False)
+    c_attributes['DNSName'] = ('dns_name', 'string', False)
 
-    def __init__(self, address=None, dns_name=None, text=None,
-                    extension_elements=None, extension_attributes=None):
-        """Constructor for SubjectLocality
+    def __init__(self,
+            address=None,
+            dns_name=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        SamlBase.__init__(self, 
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.address=address
+        self.dns_name=dns_name
 
-        :param address: Address attribute
-        :param dns_name: DNSName attribute
-        :param text: The text data in the this element
-        :param extension_elements: A list of ExtensionElement instances
-        :param extension_attributes: A dictionary of attribute value string pairs
-        """
-        SamlBase.__init__(self, text, extension_elements, extension_attributes)
-        self.address = address
-        self.dns_name = dns_name
-
-def subject_locality_from_string(xml_string):
-    """ Create SubjectLocality instance from an XML string """
-    return saml2.create_class_from_xml_string(SubjectLocality, xml_string)
-
-# ---------------------------------------------------------------------------
-# AuthnContextClassRef
-# ---------------------------------------------------------------------------
+def subject_locality_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(SubjectLocalityType, xml_string)
 
 class AuthnContextClassRef(SamlBase):
-    """The saml:AuthnContextClassRef element"""
+    """The urn:oasis:names:tc:SAML:2.0:assertion:AuthnContextClassRef element """
 
     c_tag = 'AuthnContextClassRef'
     c_namespace = NAMESPACE
+    c_value_type = 'anyURI'
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
 
 def authn_context_class_ref_from_string(xml_string):
-    """ Create AuthnContextClassRef instance from an XML string """
     return saml2.create_class_from_xml_string(AuthnContextClassRef, xml_string)
 
-
 class AuthnContextDeclRef(SamlBase):
-    """The saml:AuthnContextDeclRef element"""
+    """The urn:oasis:names:tc:SAML:2.0:assertion:AuthnContextDeclRef element """
 
     c_tag = 'AuthnContextDeclRef'
     c_namespace = NAMESPACE
+    c_value_type = 'anyURI'
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
 
 def authn_context_decl_ref_from_string(xml_string):
-    """ Create AuthnContextDeclRef instance from an XML string """
     return saml2.create_class_from_xml_string(AuthnContextDeclRef, xml_string)
 
-
 class AuthnContextDecl(SamlBase):
-    """The saml:AuthnContextDecl element"""
+    """The urn:oasis:names:tc:SAML:2.0:assertion:AuthnContextDecl element """
 
     c_tag = 'AuthnContextDecl'
     c_namespace = NAMESPACE
+    c_value_type = 'anyType'
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
 
 def authn_context_decl_from_string(xml_string):
-    """ Create AuthnContextDecl instance from an XML string """
     return saml2.create_class_from_xml_string(AuthnContextDecl, xml_string)
 
-
 class AuthenticatingAuthority(SamlBase):
-    """The saml:AuthenticatingAuthority element"""
+    """The urn:oasis:names:tc:SAML:2.0:assertion:AuthenticatingAuthority element """
 
     c_tag = 'AuthenticatingAuthority'
     c_namespace = NAMESPACE
+    c_value_type = 'anyURI'
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
 
 def authenticating_authority_from_string(xml_string):
-    """ Create AuthenticatingAuthority instance from an XML string """
-    return saml2.create_class_from_xml_string(AuthenticatingAuthority, 
-                                                xml_string)
+    return saml2.create_class_from_xml_string(AuthenticatingAuthority, xml_string)
 
+class DecisionType(SamlBase):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:DecisionType element """
 
-class AuthnContext(SamlBase):
-    """The saml:AuthnContext element"""
+    c_tag = 'DecisionType'
+    c_namespace = NAMESPACE
+    c_value_type = {'base': 'string', 'enumeration': ['Permit', 'Deny', 'Indeterminate']}
+    c_children = SamlBase.c_children.copy()
+    c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
 
-    c_tag = 'AuthnContext'
+def decision_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(DecisionType, xml_string)
+
+class ActionType(SamlBase):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:ActionType element """
+
+    c_tag = 'ActionType'
     c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
-    c_children['{%s}AuthnContextClassRef' % NAMESPACE] = (
-        'authn_context_class_ref', AuthnContextClassRef)
-    c_children['{%s}AuthnContextDeclRef' % NAMESPACE] = (
-        'authn_context_decl_ref', AuthnContextDeclRef)
-    c_children['{%s}AuthnContextDecl' % NAMESPACE] = (
-        'authn_context_decl', AuthnContextDecl)
-    c_children['{%s}AuthenticatingAuthority' % NAMESPACE] = (
-        'authenticating_authority', [AuthenticatingAuthority])
-    c_child_order = ['authn_context_class_ref', 
-                    'authn_context_decl', 'authn_context_decl_ref',
-                    'authenticating_authority']
+    c_child_order = SamlBase.c_child_order[:]
+    c_attributes['Namespace'] = ('namespace', 'anyURI', True)
 
-    def __init__(self, authn_context_class_ref=None, 
-                    authn_context_decl=None, authn_context_decl_ref=None,
-                    authenticating_authority=None,
-                    text=None, extension_elements=None, 
-                    extension_attributes=None):
-        """Constructor for AuthnContext
+    def __init__(self,
+            namespace=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        SamlBase.__init__(self, 
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.namespace=namespace
 
-        Args:
-        :param authn_context_class_ref: AuthnContextClassRef element;
-            A URI reference identifying an authentication context class 
-            that describes the authentication context declaration that follows.
-        :param authn_context_decl: AuthnContextDecl element
-        :param authn_context_decl_ref: AuthnContextDeclRef element;
-            Either an authentication context declaration provided by value, 
-            or a URI reference that identifies such a declaration.
-        :param authenticating_authority: AuthenticatingAuthority element;
-            Zero or more unique identifiers of authentication authorities 
-            that were involved in the authentication of the principal 
-            (not including the assertion issuer, who is presumed to have 
-            been involved without being explicitly named here).
-        :param text: The text data in the this element
-        :param extension_elements: A list of ExtensionElement instances
-        :param extension_attributes: A dictionary of attribute value string pairs
-        """
-        SamlBase.__init__(self, text, extension_elements, extension_attributes)
+def action_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(ActionType, xml_string)
 
-        self.authn_context_class_ref = authn_context_class_ref
-        self.authn_context_decl_ref = authn_context_decl_ref
-        self.authn_context_decl = authn_context_decl
-        self.authenticating_authority = authenticating_authority or []
-
-def authn_context_from_string(xml_string):
-    """ Create AuthnContext instance from an XML string """
-    return saml2.create_class_from_xml_string(AuthnContext, xml_string)
-
-
-# ---------------------------------------------------------------------------
-# AuthnStatement
-# ---------------------------------------------------------------------------
-
-class AuthnStatement(Statement):
-    """The saml:AuthnStatement element"""
-
-    c_tag = 'AuthnStatement'
-    c_namespace = NAMESPACE
-    c_children = Statement.c_children.copy()
-    c_attributes = Statement.c_attributes.copy()
-    c_attributes['AuthnInstant'] = 'authn_instant'
-    c_attributes['SessionIndex'] = 'session_index'
-    c_attributes['SessionNotOnOrAfter'] = 'session_not_on_or_after'
-    c_children['{%s}SubjectLocality' % NAMESPACE] = (
-        'subject_locality', SubjectLocality)
-    c_children['{%s}AuthnContext' % NAMESPACE] = (
-        'authn_context', AuthnContext)
-    c_child_order = Statement.c_child_order[:]
-    c_child_order.extend(['subject_locality', 'authn_context'])
-    
-    def __init__(self, authn_instant=None, session_index=None,
-                    session_not_on_or_after=None, subject_locality=None,
-                    authn_context=None, text=None, extension_elements=None,
-                    extension_attributes=None):
-        """Constructor for AuthnStatement
-
-        :param authn_instant: AuthnInstant attribute; Specifies the time at 
-            which the authentication took place. 
-        :param session_index: SessionIndex attribute; Specifies the index of
-            a particular session between the principal identified by the 
-            subject and the authenticating authority.
-        :param session_not_on_or_after: SessionNotOnOrAfter attribute;
-            Specifies a time instant at which the session between the 
-            principal identified by the subject and the SAML authority 
-            issuing this statement MUST be considered ended.
-        :param subject_locality: SubjectLocality element; Specifies the DNS 
-            domain name and IP address for the system from which the 
-            assertion subject was apparently authenticated.
-        :param authn_context: AuthnContext element; The context used by the 
-            authenticating authority up to and including the authentication 
-            event that yielded this statement.
-        :param text: The text data in the this element
-        :param extension_elements: A list of ExtensionElement instances
-        :param extension_attributes: A dictionary of attribute value string pairs
-        """
-        Statement.__init__(self, text, extension_elements, 
-                            extension_attributes )
-
-        self.authn_instant = authn_instant
-        self.session_index = session_index
-        self.session_not_on_or_after = session_not_on_or_after
-        self.subject_locality = subject_locality
-        self.authn_context = authn_context
-
-def authn_statement_from_string(xml_string):
-    """ Create AuthnStatement instance from an XML string """
-    return saml2.create_class_from_xml_string(AuthnStatement, xml_string)
-
-# ---------------------------------------------------------------------------
-# AttributeValue
-# ---------------------------------------------------------------------------
-
+# -------------------- AttributeValue --------------------
 XSD = "xs:"
 NS_SOAP_ENC = "http://schemas.xmlsoap.org/soap/encoding/"
 
@@ -880,61 +508,53 @@ def _verify_value_type(typ, val):
     if typ == XSD + "base64Binary":
         import base64
         return base64.decodestring(val)
-    
+
+TYPE_EXTENSION = '{%s}type' % XSI_NAMESPACE
+
 class AttributeValue(SamlBase):
-    """The saml:AttributeValue element supplies the value of a specified SAML 
-    attribute."""
+    """The urn:oasis:names:tc:SAML:2.0:assertion:AttributeValue element """
 
     c_tag = 'AttributeValue'
     c_namespace = NAMESPACE
+    c_value_type = 'anyType'
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
-    c_attributes[XSI_TYPE] = 'type'
+    c_child_order = SamlBase.c_child_order[:]
 
-    def __init__(self, type=None, text=None, extension_elements=None, 
-                    extension_attributes=None):
-        SamlBase.__init__(self, text, extension_elements, extension_attributes)
-        self.type = type
+    def set_type(self, typ):
+        self.extension_attributes[TYPE_EXTENSION] = typ
 
-    def harvest_element_tree(self, tree):
-        typ = tree.attrib.get(XSI_TYPE)
-        if (typ):
-            self.text = _decode_attribute_value(typ, tree.text)
-        else:
-            self.text = tree.text
-                  
-    def set_text(self, val, base64encode=False):
+    def get_type(self):
         try:
-            typ = getattr(self, "type")
-        except:
-            typ = None
-
-        #print "AV.set_text('%s', %s) [%s]" % (val,base64encode,typ)
-
+            return self.extension_attributes[TYPE_EXTENSION]
+        except KeyError:
+            return ""
+        
+    def set_text(self, val, base64encode=False):
+        typ = self.get_type()
         if base64encode:
             import base64
             val = base64.encodestring(val)
-            if not typ:
-                setattr(self, "type", "xs:base64Binary")
+            self.set_type("xs:base64Binary")
         else:
             if isinstance(val, basestring):
                 if not typ:
-                    setattr(self, "type", "xs:string")
+                    self.set_type("xs:string")
             elif isinstance(val, bool):
                 if val:
                     val = "true"
                 else:
                     val = "false"
                 if not typ:
-                    setattr(self, "type", "xs:boolean")
+                    self.set_type("xs:boolean")
             elif isinstance(val, int):
                 val = str(val)
                 if not typ:
-                    setattr(self, "type", "xs:integer")
+                    self.set_type("xs:integer")
             elif isinstance(val, float):
                 val = str(val)
                 if not typ:
-                    setattr(self, "type", "xs:float")
+                    self.set_type("xs:float")
             elif val == None:
                 val = ""
             else:
@@ -952,433 +572,862 @@ class AttributeValue(SamlBase):
         if tree.text:
             #print "set_text:", tree.text
             self.set_text(tree.text)
-            _x = _verify_value_type(getattr(self,"type"), getattr(self,"text"))
+            try:
+                typ = self.extension_attributes[TYPE_EXTENSION]
+                _x = _verify_value_type(typ, getattr(self,"text"))
+            except KeyError:
+                pass
             #print _x
-
+            
 def attribute_value_from_string(xml_string):
-    """ Create AttributeValue instance from an XML string """
     return saml2.create_class_from_xml_string(AttributeValue, xml_string)
 
-
-# ---------------------------------------------------------------------------
-# EncryptedAttribute
-# ---------------------------------------------------------------------------
-
-class EncryptedAttribute(SamlBase):
-    """The saml:EncryptedAttribute element represents a SAML attribute in 
-    encrypted fashion, as defined by the XML Encryption Syntax and Processing 
-    specification."""
+class EncryptedAttribute(EncryptedElementType):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:EncryptedAttribute element """
 
     c_tag = 'EncryptedAttribute'
     c_namespace = NAMESPACE
-    c_children = SamlBase.c_children.copy()
-    c_attributes = SamlBase.c_attributes.copy()
+    c_children = EncryptedElementType.c_children.copy()
+    c_attributes = EncryptedElementType.c_attributes.copy()
+    c_child_order = EncryptedElementType.c_child_order[:]
 
 def encrypted_attribute_from_string(xml_string):
-    """ Create EncryptedAttribute instance from an XML string """
     return saml2.create_class_from_xml_string(EncryptedAttribute, xml_string)
 
-# ---------------------------------------------------------------------------
-#  Attribute
-# ---------------------------------------------------------------------------
+class BaseID(BaseIDAbstractType):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:BaseID element """
 
-class Attribute(SamlBase):
-    """The saml:Attribute element"""
+    c_tag = 'BaseID'
+    c_namespace = NAMESPACE
+    c_children = BaseIDAbstractType.c_children.copy()
+    c_attributes = BaseIDAbstractType.c_attributes.copy()
+    c_child_order = BaseIDAbstractType.c_child_order[:]
 
-    c_tag = 'Attribute'
+def base_id_from_string(xml_string):
+    return saml2.create_class_from_xml_string(BaseID, xml_string)
+
+class NameID(NameIDType):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:NameID element """
+
+    c_tag = 'NameID'
+    c_namespace = NAMESPACE
+    c_children = NameIDType.c_children.copy()
+    c_attributes = NameIDType.c_attributes.copy()
+    c_child_order = NameIDType.c_child_order[:]
+
+def name_id_from_string(xml_string):
+    return saml2.create_class_from_xml_string(NameID, xml_string)
+
+class SubjectConfirmationData(SubjectConfirmationDataType):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:SubjectConfirmationData element """
+
+    c_tag = 'SubjectConfirmationData'
+    c_namespace = NAMESPACE
+    c_children = SubjectConfirmationDataType.c_children.copy()
+    c_attributes = SubjectConfirmationDataType.c_attributes.copy()
+    c_child_order = SubjectConfirmationDataType.c_child_order[:]
+
+def subject_confirmation_data_from_string(xml_string):
+    return saml2.create_class_from_xml_string(SubjectConfirmationData, xml_string)
+
+class Condition(ConditionAbstractType):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:Condition element """
+
+    c_tag = 'Condition'
+    c_namespace = NAMESPACE
+    c_children = ConditionAbstractType.c_children.copy()
+    c_attributes = ConditionAbstractType.c_attributes.copy()
+    c_child_order = ConditionAbstractType.c_child_order[:]
+
+def condition_from_string(xml_string):
+    return saml2.create_class_from_xml_string(Condition, xml_string)
+
+class AudienceRestrictionType(ConditionAbstractType):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:AudienceRestrictionType element """
+
+    c_tag = 'AudienceRestrictionType'
+    c_namespace = NAMESPACE
+    c_children = ConditionAbstractType.c_children.copy()
+    c_attributes = ConditionAbstractType.c_attributes.copy()
+    c_child_order = ConditionAbstractType.c_child_order[:]
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Audience'] = ('audience', [Audience])
+    c_child_order.extend(['audience'])
+
+    def __init__(self,
+            audience=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        ConditionAbstractType.__init__(self, 
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.audience=audience or []
+
+def audience_restriction_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(AudienceRestrictionType, xml_string)
+
+class OneTimeUse(OneTimeUseType):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:OneTimeUse element """
+
+    c_tag = 'OneTimeUse'
+    c_namespace = NAMESPACE
+    c_children = OneTimeUseType.c_children.copy()
+    c_attributes = OneTimeUseType.c_attributes.copy()
+    c_child_order = OneTimeUseType.c_child_order[:]
+
+def one_time_use_from_string(xml_string):
+    return saml2.create_class_from_xml_string(OneTimeUse, xml_string)
+
+class ProxyRestriction(ProxyRestrictionType):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:ProxyRestriction element """
+
+    c_tag = 'ProxyRestriction'
+    c_namespace = NAMESPACE
+    c_children = ProxyRestrictionType.c_children.copy()
+    c_attributes = ProxyRestrictionType.c_attributes.copy()
+    c_child_order = ProxyRestrictionType.c_child_order[:]
+
+def proxy_restriction_from_string(xml_string):
+    return saml2.create_class_from_xml_string(ProxyRestriction, xml_string)
+
+class Statement(StatementAbstractType):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:Statement element """
+
+    c_tag = 'Statement'
+    c_namespace = NAMESPACE
+    c_children = StatementAbstractType.c_children.copy()
+    c_attributes = StatementAbstractType.c_attributes.copy()
+    c_child_order = StatementAbstractType.c_child_order[:]
+
+def statement_from_string(xml_string):
+    return saml2.create_class_from_xml_string(Statement, xml_string)
+
+class SubjectLocality(SubjectLocalityType):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:SubjectLocality element """
+
+    c_tag = 'SubjectLocality'
+    c_namespace = NAMESPACE
+    c_children = SubjectLocalityType.c_children.copy()
+    c_attributes = SubjectLocalityType.c_attributes.copy()
+    c_child_order = SubjectLocalityType.c_child_order[:]
+
+def subject_locality_from_string(xml_string):
+    return saml2.create_class_from_xml_string(SubjectLocality, xml_string)
+
+class AuthnContextType(SamlBase):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:AuthnContextType element """
+
+    c_tag = 'AuthnContextType'
     c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
-    c_attributes['Name'] = 'name'
-    c_attributes['NameFormat'] = 'name_format'
-    c_attributes['FriendlyName'] = 'friendly_name'
-    c_children['{%s}AttributeValue' % NAMESPACE] = ('attribute_value', 
-                                                        [AttributeValue])
-    
-    def __init__(self, name=None, name_format=None, friendly_name=None,
-                    attribute_value=None, text=None, extension_elements=None,
-                    extension_attributes=None):
-        """Constructor for Attribute
+    c_child_order = SamlBase.c_child_order[:]
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AuthnContextClassRef'] = ('authn_context_class_ref', AuthnContextClassRef)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AuthnContextDecl'] = ('authn_context_decl', AuthnContextDecl)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AuthnContextDeclRef'] = ('authn_context_decl_ref', AuthnContextDeclRef)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AuthenticatingAuthority'] = ('authenticating_authority', [AuthenticatingAuthority])
+    c_child_order.extend(['authn_context_class_ref', 'authn_context_decl', 'authn_context_decl_ref', 'authenticating_authority'])
 
-        :param name: The name of the attribute.
-        :param name_format: NameFormat attribute, A URI reference representing 
-            the classification of the attribute name for purposes of 
-            interpreting the name.
-        :param friendly_name: FriendlyName attribute; A string that provides a 
-            more human-readable form of the attribute's name, which may be 
-            useful in cases in which the actual Name is complex or opaque, 
-            such as an OID or a UUID.
-        :param attribute_value: AttributeValue elements, Contains a value of 
-            the attribute
-        :param text: The text data in the this element
-        :param extension_elements: A list of ExtensionElement instances
-        :param extension_attributes: A dictionary of attribute value string 
-            pairs
-        """
+    def __init__(self,
+            authn_context_class_ref=None,
+            authn_context_decl=None,
+            authn_context_decl_ref=None,
+            authenticating_authority=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        SamlBase.__init__(self, 
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.authn_context_class_ref=authn_context_class_ref
+        self.authn_context_decl=authn_context_decl
+        self.authn_context_decl_ref=authn_context_decl_ref
+        self.authenticating_authority=authenticating_authority or []
 
-        SamlBase.__init__(self, text, extension_elements, extension_attributes)
-        self.name = name
-        self.name_format = name_format
-        self.friendly_name = friendly_name
-        self.attribute_value = attribute_value or []
+def authn_context_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(AuthnContextType, xml_string)
 
-def attribute_from_string(xml_string):
-    """ Create Attribute instance from an XML string """
-    return saml2.create_class_from_xml_string(Attribute, xml_string)
-
-# ---------------------------------------------------------------------------
-#  AttributeStatement
-# ---------------------------------------------------------------------------
-
-class AttributeStatement(Statement):
-    """The saml:AttributeStatement element describes a statement by the SAML 
-    authority asserting that the assertion subject is associated with the 
-    specified attributes."""
-
-    c_tag = 'AttributeStatement'
-    c_namespace = NAMESPACE
-    c_children = Statement.c_children.copy()
-    c_attributes = Statement.c_attributes.copy()
-    c_children['{%s}Attribute' % NAMESPACE] = ('attribute', [Attribute])
-    c_children['{%s}EncryptedAttribute' % NAMESPACE] = (
-            'encrypted_attribute', [EncryptedAttribute])
-    c_child_order = Statement.c_child_order[:]
-    c_child_order.extend(['attribute', 'encrypted_attribute'])
-    
-    def __init__(self, attribute=None, encrypted_attribute=None, 
-                    text=None, extension_elements=None,
-                    extension_attributes=None):
-        """Constructor for AttributeStatement
-
-        :param attribute: Attribute elements
-        :param encrypted_attribute: EncryptedAttribute elements
-        :param text: The text data in the this element
-        :param extension_elements: A list of ExtensionElement instances
-        :param extension_attributes: A dictionary of attribute value string pairs
-        """
-
-        Statement.__init__(self, text, extension_elements, 
-                            extension_attributes)
-        self.attribute = attribute or []
-        self.encrypted_attribute = encrypted_attribute or []
-
-def attribute_statement_from_string(xml_string):
-    """ Create AttributeStatement instance from an XML string """
-    return saml2.create_class_from_xml_string(AttributeStatement, xml_string)
-
-# ---------------------------------------------------------------------------
-#  Action
-# ---------------------------------------------------------------------------
-
-class Action(SamlBase):
-    """The saml:Action element specifies an action on the specified resource 
-    for which permission is sought."""
+class Action(ActionType):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:Action element """
 
     c_tag = 'Action'
     c_namespace = NAMESPACE
-    c_children = SamlBase.c_children.copy()
-    c_attributes = SamlBase.c_attributes.copy()
-    c_attributes['Namespace'] = 'namespace'
-    
-    def __init__(self, namespace=None, text=None,
-                    extension_elements=None, extension_attributes=None):
-        """Constructor for Action
-
-        :param namespace: Namespace attribute; A URI reference representing the
-            namespace in which the name of the specified action is to be 
-            interpreted.
-        :param text: The text data in this element
-        :param extension_elements: A list of ExtensionElement instances
-        :param extension_attributes: A dictionary of attribute value string 
-            pairs
-        """
-
-        SamlBase.__init__(self, text, extension_elements, extension_attributes)
-        self.namespace = namespace
+    c_children = ActionType.c_children.copy()
+    c_attributes = ActionType.c_attributes.copy()
+    c_child_order = ActionType.c_child_order[:]
 
 def action_from_string(xml_string):
-    """ Create Action instance from an XML string """
     return saml2.create_class_from_xml_string(Action, xml_string)
 
-# ---------------------------------------------------------------------------
-#  Evidence
-# ---------------------------------------------------------------------------
+class AttributeType(SamlBase):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:AttributeType element """
 
-class Evidence(SamlBase):
-    """The saml:Evidence element contains one or more assertions or 
-    assertion references that the SAML authority relied on in issuing 
-    the authorization decision."""
-
-    c_tag = 'Evidence'
+    c_tag = 'AttributeType'
     c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
-    c_children['{%s}AssertionIDRef' % NAMESPACE] = ('assertion_id_ref', 
-                                                        [AssertionIDRef])
-    c_children['{%s}AssertionURIRef' % NAMESPACE] = ('assertion_uri_ref', 
-                                                        [AssertionURIRef])
-    # Can't do this here since Assertion isn't defined
-    #c_children['{%s}Assertion' % NAMESPACE] = ('assertion', [Assertion])
-    c_children['{%s}EncryptedAssertion' % NAMESPACE] = (
-        'encrypted_assertion', [EncryptedAssertion])
-    c_child_order = ['assertion_id_ref', 'assertion_uri_ref', 'assertion',
-                    'encrypted_assertion']
-    
-    def __init__(self, assertion_id_ref=None, assertion_uri_ref=None,
-                    assertion=None, encrypted_assertion=None, text=None,
-                    extension_elements=None, extension_attributes=None):
-        """Constructor for Evidence
+    c_child_order = SamlBase.c_child_order[:]
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AttributeValue'] = ('attribute_value', [AttributeValue])
+    c_attributes['Name'] = ('name', 'string', True)
+    c_attributes['NameFormat'] = ('name_format', 'anyURI', False)
+    c_attributes['FriendlyName'] = ('friendly_name', 'string', False)
+    c_child_order.extend(['attribute_value'])
 
-        :param assertion_id_ref: AssertionIDRef elements
-        :param assertion_uri_ref: AssertionURIRef elements
-        :param assertion: Assertion elements
-        :param encrypted_assertion: EncryptedAssertion elements
-        :param text: The text data in this element
-        :param extension_elements: A list of ExtensionElement instances
-        :param extension_attributes: A dictionary of attribute value string 
-            pairs
-        """
+    def __init__(self,
+            attribute_value=None,
+            name=None,
+            name_format=None,
+            friendly_name=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        SamlBase.__init__(self, 
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.attribute_value=attribute_value or []
+        self.name=name
+        self.name_format=name_format
+        self.friendly_name=friendly_name
 
-        SamlBase.__init__(self, text, extension_elements, extension_attributes)
-        self.assertion_id_ref = assertion_id_ref or []
-        self.assertion_uri_ref = assertion_uri_ref or []
-        self.assertion = assertion or []
-        self.encrypted_assertion = encrypted_assertion or []
+def attribute_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(AttributeType, xml_string)
 
-def evidence_from_string(xml_string):
-    """ Create Evidence instance from an XML string """
-    return saml2.create_class_from_xml_string(Evidence, xml_string)
+class SubjectConfirmationType(SamlBase):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:SubjectConfirmationType element """
 
+    c_tag = 'SubjectConfirmationType'
+    c_namespace = NAMESPACE
+    c_children = SamlBase.c_children.copy()
+    c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}BaseID'] = ('base_id', BaseID)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}NameID'] = ('name_id', NameID)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}EncryptedID'] = ('encrypted_id', EncryptedID)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}SubjectConfirmationData'] = ('subject_confirmation_data', SubjectConfirmationData)
+    c_attributes['Method'] = ('method', 'anyURI', True)
+    c_child_order.extend(['base_id', 'name_id', 'encrypted_id', 'subject_confirmation_data'])
 
-# ---------------------------------------------------------------------------
-#  AuthzDecisionStatement
-# ---------------------------------------------------------------------------
+    def __init__(self,
+            base_id=None,
+            name_id=None,
+            encrypted_id=None,
+            subject_confirmation_data=None,
+            method=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        SamlBase.__init__(self, 
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.base_id=base_id
+        self.name_id=name_id
+        self.encrypted_id=encrypted_id
+        self.subject_confirmation_data=subject_confirmation_data
+        self.method=method
 
-class AuthzDecisionStatement(Statement):
-    """The saml:AuthzDecisionStatement element describes a statement by the 
-    SAML authority asserting that a request for access by the assertion subject
-    to the specified resource has resulted in the specified authorization 
-    decision on the basis of some optionally specified evidence."""
+def subject_confirmation_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(SubjectConfirmationType, xml_string)
+
+class AudienceRestriction(AudienceRestrictionType):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:AudienceRestriction element """
+
+    c_tag = 'AudienceRestriction'
+    c_namespace = NAMESPACE
+    c_children = AudienceRestrictionType.c_children.copy()
+    c_attributes = AudienceRestrictionType.c_attributes.copy()
+    c_child_order = AudienceRestrictionType.c_child_order[:]
+
+def audience_restriction_from_string(xml_string):
+    return saml2.create_class_from_xml_string(AudienceRestriction, xml_string)
+
+class AuthnContext(AuthnContextType):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:AuthnContext element """
+
+    c_tag = 'AuthnContext'
+    c_namespace = NAMESPACE
+    c_children = AuthnContextType.c_children.copy()
+    c_attributes = AuthnContextType.c_attributes.copy()
+    c_child_order = AuthnContextType.c_child_order[:]
+
+def authn_context_from_string(xml_string):
+    return saml2.create_class_from_xml_string(AuthnContext, xml_string)
+
+class Attribute(AttributeType):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:Attribute element """
+
+    c_tag = 'Attribute'
+    c_namespace = NAMESPACE
+    c_children = AttributeType.c_children.copy()
+    c_attributes = AttributeType.c_attributes.copy()
+    c_child_order = AttributeType.c_child_order[:]
+
+def attribute_from_string(xml_string):
+    return saml2.create_class_from_xml_string(Attribute, xml_string)
+
+class SubjectConfirmation(SubjectConfirmationType):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:SubjectConfirmation element """
+
+    c_tag = 'SubjectConfirmation'
+    c_namespace = NAMESPACE
+    c_children = SubjectConfirmationType.c_children.copy()
+    c_attributes = SubjectConfirmationType.c_attributes.copy()
+    c_child_order = SubjectConfirmationType.c_child_order[:]
+
+def subject_confirmation_from_string(xml_string):
+    return saml2.create_class_from_xml_string(SubjectConfirmation, xml_string)
+
+class ConditionsType(SamlBase):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:ConditionsType element """
+
+    c_tag = 'ConditionsType'
+    c_namespace = NAMESPACE
+    c_children = SamlBase.c_children.copy()
+    c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Condition'] = ('condition', [Condition])
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AudienceRestriction'] = ('audience_restriction', [AudienceRestriction])
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}OneTimeUse'] = ('one_time_use', [OneTimeUse])
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}ProxyRestriction'] = ('proxy_restriction', [ProxyRestriction])
+    c_attributes['NotBefore'] = ('not_before', 'dateTime', False)
+    c_attributes['NotOnOrAfter'] = ('not_on_or_after', 'dateTime', False)
+    c_child_order.extend(['condition', 'audience_restriction', 'one_time_use', 'proxy_restriction'])
+
+    def __init__(self,
+            condition=None,
+            audience_restriction=None,
+            one_time_use=None,
+            proxy_restriction=None,
+            not_before=None,
+            not_on_or_after=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        SamlBase.__init__(self, 
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.condition=condition or []
+        self.audience_restriction=audience_restriction or []
+        self.one_time_use=one_time_use or []
+        self.proxy_restriction=proxy_restriction or []
+        self.not_before=not_before
+        self.not_on_or_after=not_on_or_after
+
+def conditions_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(ConditionsType, xml_string)
+
+class AuthnStatementType(StatementAbstractType):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:AuthnStatementType element """
+
+    c_tag = 'AuthnStatementType'
+    c_namespace = NAMESPACE
+    c_children = StatementAbstractType.c_children.copy()
+    c_attributes = StatementAbstractType.c_attributes.copy()
+    c_child_order = StatementAbstractType.c_child_order[:]
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}SubjectLocality'] = ('subject_locality', SubjectLocality)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AuthnContext'] = ('authn_context', AuthnContext)
+    c_attributes['AuthnInstant'] = ('authn_instant', 'dateTime', True)
+    c_attributes['SessionIndex'] = ('session_index', 'string', False)
+    c_attributes['SessionNotOnOrAfter'] = ('session_not_on_or_after', 'dateTime', False)
+    c_child_order.extend(['subject_locality', 'authn_context'])
+
+    def __init__(self,
+            subject_locality=None,
+            authn_context=None,
+            authn_instant=None,
+            session_index=None,
+            session_not_on_or_after=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        StatementAbstractType.__init__(self, 
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.subject_locality=subject_locality
+        self.authn_context=authn_context
+        self.authn_instant=authn_instant
+        self.session_index=session_index
+        self.session_not_on_or_after=session_not_on_or_after
+
+def authn_statement_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(AuthnStatementType, xml_string)
+
+class AttributeStatementType(StatementAbstractType):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:AttributeStatementType element """
+
+    c_tag = 'AttributeStatementType'
+    c_namespace = NAMESPACE
+    c_children = StatementAbstractType.c_children.copy()
+    c_attributes = StatementAbstractType.c_attributes.copy()
+    c_child_order = StatementAbstractType.c_child_order[:]
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Attribute'] = ('attribute', [Attribute])
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}EncryptedAttribute'] = ('encrypted_attribute', [EncryptedAttribute])
+    c_child_order.extend(['attribute', 'encrypted_attribute'])
+
+    def __init__(self,
+            attribute=None,
+            encrypted_attribute=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        StatementAbstractType.__init__(self, 
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.attribute=attribute or []
+        self.encrypted_attribute=encrypted_attribute or []
+
+def attribute_statement_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(AttributeStatementType, xml_string)
+
+class SubjectType(SamlBase):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:SubjectType element """
+
+    c_tag = 'SubjectType'
+    c_namespace = NAMESPACE
+    c_children = SamlBase.c_children.copy()
+    c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}BaseID'] = ('base_id', BaseID)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}NameID'] = ('name_id', NameID)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}EncryptedID'] = ('encrypted_id', EncryptedID)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}SubjectConfirmation'] = ('subject_confirmation', [SubjectConfirmation])
+    c_child_order.extend(['base_id', 'name_id', 'encrypted_id', 'subject_confirmation'])
+
+    def __init__(self,
+            base_id=None,
+            name_id=None,
+            encrypted_id=None,
+            subject_confirmation=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        SamlBase.__init__(self, 
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.base_id=base_id
+        self.name_id=name_id
+        self.encrypted_id=encrypted_id
+        self.subject_confirmation=subject_confirmation or []
+
+def subject_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(SubjectType, xml_string)
+
+class Conditions(ConditionsType):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:Conditions element """
+
+    c_tag = 'Conditions'
+    c_namespace = NAMESPACE
+    c_children = ConditionsType.c_children.copy()
+    c_attributes = ConditionsType.c_attributes.copy()
+    c_child_order = ConditionsType.c_child_order[:]
+
+def conditions_from_string(xml_string):
+    return saml2.create_class_from_xml_string(Conditions, xml_string)
+
+class AuthnStatement(AuthnStatementType):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:AuthnStatement element """
+
+    c_tag = 'AuthnStatement'
+    c_namespace = NAMESPACE
+    c_children = AuthnStatementType.c_children.copy()
+    c_attributes = AuthnStatementType.c_attributes.copy()
+    c_child_order = AuthnStatementType.c_child_order[:]
+
+def authn_statement_from_string(xml_string):
+    return saml2.create_class_from_xml_string(AuthnStatement, xml_string)
+
+class AttributeStatement(AttributeStatementType):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:AttributeStatement element """
+
+    c_tag = 'AttributeStatement'
+    c_namespace = NAMESPACE
+    c_children = AttributeStatementType.c_children.copy()
+    c_attributes = AttributeStatementType.c_attributes.copy()
+    c_child_order = AttributeStatementType.c_child_order[:]
+
+def attribute_statement_from_string(xml_string):
+    return saml2.create_class_from_xml_string(AttributeStatement, xml_string)
+
+class Subject(SubjectType):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:Subject element """
+
+    c_tag = 'Subject'
+    c_namespace = NAMESPACE
+    c_children = SubjectType.c_children.copy()
+    c_attributes = SubjectType.c_attributes.copy()
+    c_child_order = SubjectType.c_child_order[:]
+
+def subject_from_string(xml_string):
+    return saml2.create_class_from_xml_string(Subject, xml_string)
+
+#..................
+# ['AssertionType', 'Advice', 'Assertion', 'AuthzDecisionStatementType', 'AuthzDecisionStatement', 'EvidenceType', 'Evidence', 'AdviceType']
+class AuthzDecisionStatementType(StatementAbstractType):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:AuthzDecisionStatementType element """
+
+    c_tag = 'AuthzDecisionStatementType'
+    c_namespace = NAMESPACE
+    c_children = StatementAbstractType.c_children.copy()
+    c_attributes = StatementAbstractType.c_attributes.copy()
+    c_child_order = StatementAbstractType.c_child_order[:]
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Action'] = ('action', [Action])
+    c_attributes['Resource'] = ('resource', 'anyURI', True)
+    c_attributes['Decision'] = ('decision', 'DecisionType', True)
+    c_child_order.extend(['action', 'evidence'])
+
+    def __init__(self,
+            action=None,
+            evidence=None,
+            resource=None,
+            decision=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        StatementAbstractType.__init__(self, 
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.action=action or []
+        self.evidence=evidence
+        self.resource=resource
+        self.decision=decision
+
+def authz_decision_statement_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(AuthzDecisionStatementType, xml_string)
+
+class AuthzDecisionStatement(AuthzDecisionStatementType):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:AuthzDecisionStatement element """
 
     c_tag = 'AuthzDecisionStatement'
     c_namespace = NAMESPACE
-    c_children = Statement.c_children.copy()
-    c_attributes = Statement.c_attributes.copy()
-
-    c_attributes['Resource'] = 'resource'
-    c_attributes['Decision'] = 'decision'
-    c_children['{%s}Action' % NAMESPACE] = ('action', [Action])
-    c_children['{%s}Evidence' % NAMESPACE] = ('evidence', [Evidence])
-    c_child_order = Statement.c_child_order[:]
-    c_child_order.extend(['action', 'evidence'])
-
-    def __init__(self, resource=None, decision=None, action=None,
-                    evidence=None, text=None, extension_elements=None,
-                    extension_attributes=None):
-        """Constructor for AuthzDecisionStatement
-
-        :param text: str The text data in this element
-        :param resource: Resource attribute; A URI reference identifying 
-            the resource to which access authorization is sought.
-        :param decision: Decision attribute; The decision rendered by the 
-            SAML authority with respect to the specified resource.
-        :param action: Action Elements; The set of actions authorized to 
-            be performed on the specified resource.
-        :param evidence: Evidence Elements; A set of assertions that the 
-            SAML authority relied on in making the decision.
-        :param text: The text data in this element
-        :param extension_elements:A list of ExtensionElement instances
-        :param extension_attributes: A dictionary of attribute value string 
-            pairs
-        """
-
-        Statement.__init__(self, text, extension_elements, 
-                            extension_attributes)
-        self.resource = resource
-        self.decision = decision
-        self.action = action or []
-        self.evidence = evidence or []
+    c_children = AuthzDecisionStatementType.c_children.copy()
+    c_attributes = AuthzDecisionStatementType.c_attributes.copy()
+    c_child_order = AuthzDecisionStatementType.c_child_order[:]
 
 def authz_decision_statement_from_string(xml_string):
-    """ Create AuthzDecisionStatement instance from an XML string """
-    return saml2.create_class_from_xml_string(AuthzDecisionStatement, 
-                                                xml_string)
+    return saml2.create_class_from_xml_string(AuthzDecisionStatement, xml_string)
 
-# ---------------------------------------------------------------------------
-#  Assertion
-# ---------------------------------------------------------------------------
+#..................
+# ['AssertionType', 'Advice', 'Assertion', 'EvidenceType', 'AdviceType', 'Evidence']
+class AssertionType(SamlBase):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:AssertionType element """
 
-class Assertion(SamlBase):
-    """The saml:Assertion element"""
-    c_tag = 'Assertion'
+    c_tag = 'AssertionType'
     c_namespace = NAMESPACE
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
-    c_attributes['Version'] = 'version'
-    c_attributes['ID'] = 'id'
-    c_attributes['IssueInstant'] = 'issue_instant'
-    c_children['{%s}Issuer' % NAMESPACE] = ('issuer', Issuer)
-    c_children['{%s}Signature' % ds.NAMESPACE] = ('signature', ds.Signature)
-    c_children['{%s}Subject' % NAMESPACE] = ('subject', Subject)
-    c_children['{%s}Conditions' % NAMESPACE] = ('conditions', Conditions)
-    #c_children['{%s}Advice' % NAMESPACE] = ('advice', Advice)
-    c_children['{%s}Statement' % NAMESPACE] = ('statement', [Statement])
-    c_children['{%s}AuthnStatement' % NAMESPACE] = (
-        'authn_statement', [AuthnStatement])
-    c_children['{%s}AuthzDecisionStatement' % NAMESPACE] = (
-        'authz_decision_statement', [AuthzDecisionStatement])
-    c_children['{%s}AttributeStatement' % NAMESPACE] = (
-        'attribute_statement', [AttributeStatement])
-    c_child_order = ['issuer', 'signature', 'subject', 'conditions', 'advice',
-                    'statement', 'authn_statement', 'authz_decision_statement',
-                    'attribute_statement']
+    c_child_order = SamlBase.c_child_order[:]
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Issuer'] = ('issuer', Issuer)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}Signature'] = ('signature', ds.Signature)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Subject'] = ('subject', Subject)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Conditions'] = ('conditions', Conditions)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Statement'] = ('statement', [Statement])
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AuthnStatement'] = ('authn_statement', [AuthnStatement])
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AuthzDecisionStatement'] = ('authz_decision_statement', [AuthzDecisionStatement])
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AttributeStatement'] = ('attribute_statement', [AttributeStatement])
+    c_attributes['Version'] = ('version', 'string', True)
+    c_attributes['ID'] = ('id', 'ID', True)
+    c_attributes['IssueInstant'] = ('issue_instant', 'dateTime', True)
+    c_child_order.extend(['issuer', 'signature', 'subject', 'conditions', 'advice', 'statement', 'authn_statement', 'authz_decision_statement', 'attribute_statement'])
 
-    def __init__(self, version=None, id=None, issue_instant=None, 
-                    issuer=None, signature=None, subject=None, conditions=None, 
-                    advice=None, statement=None, authn_statement=None,
-                    authz_decision_statement=None, attribute_statement=None,
-                    text=None, extension_elements=None, 
-                    extension_attributes=None):
-        """Constructor for Assertion
+    def __init__(self,
+            issuer=None,
+            signature=None,
+            subject=None,
+            conditions=None,
+            advice=None,
+            statement=None,
+            authn_statement=None,
+            authz_decision_statement=None,
+            attribute_statement=None,
+            version=None,
+            id=None,
+            issue_instant=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        SamlBase.__init__(self, 
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.issuer=issuer
+        self.signature=signature
+        self.subject=subject
+        self.conditions=conditions
+        self.advice=advice
+        self.statement=statement or []
+        self.authn_statement=authn_statement or []
+        self.authz_decision_statement=authz_decision_statement or []
+        self.attribute_statement=attribute_statement or []
+        self.version=version
+        self.id=id
+        self.issue_instant=issue_instant
 
-        :param version: Version attribute; The version of this assertion. 
-            The identifier for the version of SAML defined in this 
-            specification is "2.0".
-        :param id: ID attribute, The identifier for this assertion.
-        :param issue_instant: IssueInstant attribute; The time instant of 
-            issue in UTC.
-        :param issuer: Issuer element; The SAML authority that is making 
-            the claim(s) in the assertion.
-        :param signature: ds:Signature element; An XML Signature that 
-            protects the integrity of and authenticates the issuer of 
-            the assertion
-        :param subject: Subject element; The subject of the statement(s) 
-            in the assertion.
-        :param conditions: Conditions element; Conditions that MUST be 
-            evaluated when assessing the validity of and/or when using 
-            the assertion.
-        :param advice: Advice element; Additional information related 
-            to the assertion that assists processing in certain 
-            situations but which MAY be ignored by applications that do not 
-            understand the advice or do not wish to make use of it.
-        :param statement: Statement elements; A statement of a type 
-            defined in an extension schema. An xsi:type attribute MUST 
-            be used to indicate the actual statement type.
-        :param authn_statement: AuthnStatement elements; An authentication 
-            statement.
-        :param authz_decision_statement: AuthzDecisionStatement elements;
-            An authorization decision statement
-        :param attribute_statement: AttributeStatement elements:
-            An attribute statement.
-        :param text: The text data in this element
-        :param extension_elements: A list of ExtensionElement instances
-        :param extension_attributes: A dictionary of attribute value string 
-            pairs
-        """
+def assertion_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(AssertionType, xml_string)
 
-        SamlBase.__init__(self, text, extension_elements, extension_attributes)
-        self.version = version
-        self.id = id
-        self.issue_instant = issue_instant
-        self.issuer = issuer
-        self.signature = signature
-        self.subject = subject
-        self.conditions = conditions
-        self.advice = advice
-        self.statement = statement or []
-        self.authn_statement = authn_statement or []
-        self.authz_decision_statement = authz_decision_statement or []
-        self.attribute_statement = attribute_statement or []
+class Assertion(AssertionType):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:Assertion element """
+
+    c_tag = 'Assertion'
+    c_namespace = NAMESPACE
+    c_children = AssertionType.c_children.copy()
+    c_attributes = AssertionType.c_attributes.copy()
+    c_child_order = AssertionType.c_child_order[:]
 
 def assertion_from_string(xml_string):
-    """ Create Assertion instance from an XML string """
     return saml2.create_class_from_xml_string(Assertion, xml_string)
 
-Evidence.c_children['{%s}Assertion' % NAMESPACE] = (
-    'assertion', [Assertion])
+class AdviceType(SamlBase):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:AdviceType element """
 
-# ---------------------------------------------------------------------------
-# Advice
-# ---------------------------------------------------------------------------
+    c_tag = 'AdviceType'
+    c_namespace = NAMESPACE
+    c_children = SamlBase.c_children.copy()
+    c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AssertionIDRef'] = ('assertion_id_ref', [AssertionIDRef])
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AssertionURIRef'] = ('assertion_uri_ref', [AssertionURIRef])
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Assertion'] = ('assertion', [Assertion])
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}EncryptedAssertion'] = ('encrypted_assertion', [EncryptedAssertion])
+    c_child_order.extend(['assertion_id_ref', 'assertion_uri_ref', 'assertion', 'encrypted_assertion'])
 
-class Advice(SamlBase):
-    """The saml:Advice element contains any additional information that the 
-    SAML authority wishes to provide."""
+    def __init__(self,
+            assertion_id_ref=None,
+            assertion_uri_ref=None,
+            assertion=None,
+            encrypted_assertion=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        SamlBase.__init__(self, 
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.assertion_id_ref=assertion_id_ref or []
+        self.assertion_uri_ref=assertion_uri_ref or []
+        self.assertion=assertion or []
+        self.encrypted_assertion=encrypted_assertion or []
+
+def advice_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(AdviceType, xml_string)
+
+class EvidenceType(SamlBase):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:EvidenceType element """
+
+    c_tag = 'EvidenceType'
+    c_namespace = NAMESPACE
+    c_children = SamlBase.c_children.copy()
+    c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AssertionIDRef'] = ('assertion_id_ref', [AssertionIDRef])
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AssertionURIRef'] = ('assertion_uri_ref', [AssertionURIRef])
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Assertion'] = ('assertion', [Assertion])
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}EncryptedAssertion'] = ('encrypted_assertion', [EncryptedAssertion])
+    c_child_order.extend(['assertion_id_ref', 'assertion_uri_ref', 'assertion', 'encrypted_assertion'])
+
+    def __init__(self,
+            assertion_id_ref=None,
+            assertion_uri_ref=None,
+            assertion=None,
+            encrypted_assertion=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        SamlBase.__init__(self, 
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.assertion_id_ref=assertion_id_ref or []
+        self.assertion_uri_ref=assertion_uri_ref or []
+        self.assertion=assertion or []
+        self.encrypted_assertion=encrypted_assertion or []
+
+def evidence_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(EvidenceType, xml_string)
+
+class Advice(AdviceType):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:Advice element """
 
     c_tag = 'Advice'
     c_namespace = NAMESPACE
-    c_children = SamlBase.c_children.copy()
-    c_attributes = SamlBase.c_attributes.copy()
-    c_children['{%s}AssertionIDRef' % NAMESPACE] = ('assertion_id_ref', 
-                                                        [AssertionIDRef])
-    c_children['{%s}AssertionURIRef' % NAMESPACE] = ('assertion_uri_ref', 
-                                                        [AssertionURIRef])
-    c_children['{%s}Assertion' % NAMESPACE] = ('assertion', [Assertion])
-    c_children['{%s}EncryptedAssertion' % NAMESPACE] = (
-            'encrypted_assertion', [EncryptedAssertion])
-    c_child_order = ['assertion_id_ref', 'assertion_uri_ref',
-                    'assertion', 'encrypted_assertion']
-
-    def __init__(self, assertion_id_ref=None, assertion_uri_ref=None,
-                    assertion=None, encrypted_assertion=None, text=None,
-                    extension_elements=None, extension_attributes=None):
-        """Constructor for Advice
-
-        :param assertion_id_ref: AssertionIDRef elements
-        :param assertion_uri_ref: AssertionURIRef elements
-        :param assertion: Assertion elements
-        :param encrypted_assertion: EncryptedAssertion elements
-        :param text: The text data in this element
-        :param extension_elements: A list of ExtensionElement instances
-        :param extension_attributes: A dictionary of attribute value string
-            pairs
-        """
-
-        SamlBase.__init__(self, text, extension_elements, extension_attributes)
-        self.assertion_id_ref = assertion_id_ref or []
-        self.assertion_uri_ref = assertion_uri_ref or []
-        self.assertion = assertion or []
-        self.encrypted_assertion = encrypted_assertion or []
+    c_children = AdviceType.c_children.copy()
+    c_attributes = AdviceType.c_attributes.copy()
+    c_child_order = AdviceType.c_child_order[:]
 
 def advice_from_string(xml_string):
-    """ Create Advice instance from an XML string """
     return saml2.create_class_from_xml_string(Advice, xml_string)
 
-Assertion.c_children['{%s}Advice' % NAMESPACE] = ('advice', Advice)
-Evidence.c_children['{%s}Assertion' % NAMESPACE] = ('assertion', [Assertion])
+class Evidence(EvidenceType):
+    """The urn:oasis:names:tc:SAML:2.0:assertion:Evidence element """
+
+    c_tag = 'Evidence'
+    c_namespace = NAMESPACE
+    c_children = EvidenceType.c_children.copy()
+    c_attributes = EvidenceType.c_attributes.copy()
+    c_child_order = EvidenceType.c_child_order[:]
+
+def evidence_from_string(xml_string):
+    return saml2.create_class_from_xml_string(Evidence, xml_string)
+
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+AuthzDecisionStatementType.c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Evidence'] = ('evidence', Evidence)
+AuthzDecisionStatement.c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Evidence'] = ('evidence', Evidence)
+AssertionType.c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Advice'] = ('advice', Advice)
+Assertion.c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Advice'] = ('advice', Advice)
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 ELEMENT_FROM_STRING = {
     BaseID.c_tag: base_id_from_string,
+    BaseIDAbstractType.c_tag: base_id_abstract_type_from_string,
     NameID.c_tag: name_id_from_string,
+    NameIDType.c_tag: name_id_type_from_string,
+    EncryptedElementType.c_tag: encrypted_element_type_from_string,
     EncryptedID.c_tag: encrypted_id_from_string,
     Issuer.c_tag: issuer_from_string,
     AssertionIDRef.c_tag: assertion_id_ref_from_string,
     AssertionURIRef.c_tag: assertion_uri_ref_from_string,
-    EncryptedAssertion.c_tag: encrypted_assertion_from_string,
-    SubjectConfirmationData.c_tag: subject_confirmation_data_from_string,
-    SubjectConfirmation.c_tag: subject_confirmation_from_string,
+    Assertion.c_tag: assertion_from_string,
+    AssertionType.c_tag: assertion_type_from_string,
     Subject.c_tag: subject_from_string,
-    Condition.c_tag: condition_from_string,
-    Audience.c_tag: audience_from_string,
-    AudienceRestriction.c_tag: audience_restriction_from_string,
-    OneTimeUse.c_tag: one_time_use_from_string,
-    ProxyRestriction.c_tag: proxy_restriction_from_string,
+    SubjectType.c_tag: subject_type_from_string,
+    SubjectConfirmation.c_tag: subject_confirmation_from_string,
+    SubjectConfirmationType.c_tag: subject_confirmation_type_from_string,
+    SubjectConfirmationData.c_tag: subject_confirmation_data_from_string,
+    SubjectConfirmationDataType.c_tag: subject_confirmation_data_type_from_string,
+    KeyInfoConfirmationDataType.c_tag: key_info_confirmation_data_type_from_string,
     Conditions.c_tag: conditions_from_string,
+    ConditionsType.c_tag: conditions_type_from_string,
+    Condition.c_tag: condition_from_string,
+    ConditionAbstractType.c_tag: condition_abstract_type_from_string,
+    AudienceRestriction.c_tag: audience_restriction_from_string,
+    AudienceRestrictionType.c_tag: audience_restriction_type_from_string,
+    Audience.c_tag: audience_from_string,
+    OneTimeUse.c_tag: one_time_use_from_string,
+    OneTimeUseType.c_tag: one_time_use_type_from_string,
+    ProxyRestriction.c_tag: proxy_restriction_from_string,
+    ProxyRestrictionType.c_tag: proxy_restriction_type_from_string,
+    Advice.c_tag: advice_from_string,
+    AdviceType.c_tag: advice_type_from_string,
+    EncryptedAssertion.c_tag: encrypted_assertion_from_string,
     Statement.c_tag: statement_from_string,
+    StatementAbstractType.c_tag: statement_abstract_type_from_string,
+    AuthnStatement.c_tag: authn_statement_from_string,
+    AuthnStatementType.c_tag: authn_statement_type_from_string,
     SubjectLocality.c_tag: subject_locality_from_string,
+    SubjectLocalityType.c_tag: subject_locality_type_from_string,
+    AuthnContext.c_tag: authn_context_from_string,
+    AuthnContextType.c_tag: authn_context_type_from_string,
     AuthnContextClassRef.c_tag: authn_context_class_ref_from_string,
     AuthnContextDeclRef.c_tag: authn_context_decl_ref_from_string,
     AuthnContextDecl.c_tag: authn_context_decl_from_string,
     AuthenticatingAuthority.c_tag: authenticating_authority_from_string,
-    AuthnContext.c_tag: authn_context_from_string,
-    AuthnStatement(Statement): authn_statement_from_string,
+    AuthzDecisionStatement.c_tag: authz_decision_statement_from_string,
+    AuthzDecisionStatementType.c_tag: authz_decision_statement_type_from_string,
+    DecisionType.c_tag: decision_type_from_string,
+    Action.c_tag: action_from_string,
+    ActionType.c_tag: action_type_from_string,
+    Evidence.c_tag: evidence_from_string,
+    EvidenceType.c_tag: evidence_type_from_string,
+    AttributeStatement.c_tag: attribute_statement_from_string,
+    AttributeStatementType.c_tag: attribute_statement_type_from_string,
+    Attribute.c_tag: attribute_from_string,
+    AttributeType.c_tag: attribute_type_from_string,
     AttributeValue.c_tag: attribute_value_from_string,
     EncryptedAttribute.c_tag: encrypted_attribute_from_string,
-    Attribute.c_tag: attribute_from_string,
-    AttributeStatement(Statement): attribute_statement_from_string,
-    Action.c_tag: action_from_string,
-    Evidence.c_tag: evidence_from_string,
-    AuthzDecisionStatement(Statement): authz_decision_statement_from_string,
-    Assertion.c_tag: assertion_from_string,
-    Advice.c_tag: advice_from_string,
 }
+
+ELEMENT_BY_TAG = {
+    'BaseID': BaseID,
+    'BaseIDAbstractType': BaseIDAbstractType,
+    'NameID': NameID,
+    'NameIDType': NameIDType,
+    'EncryptedElementType': EncryptedElementType,
+    'EncryptedID': EncryptedID,
+    'Issuer': Issuer,
+    'AssertionIDRef': AssertionIDRef,
+    'AssertionURIRef': AssertionURIRef,
+    'Assertion': Assertion,
+    'AssertionType': AssertionType,
+    'Subject': Subject,
+    'SubjectType': SubjectType,
+    'SubjectConfirmation': SubjectConfirmation,
+    'SubjectConfirmationType': SubjectConfirmationType,
+    'SubjectConfirmationData': SubjectConfirmationData,
+    'SubjectConfirmationDataType': SubjectConfirmationDataType,
+    'KeyInfoConfirmationDataType': KeyInfoConfirmationDataType,
+    'Conditions': Conditions,
+    'ConditionsType': ConditionsType,
+    'Condition': Condition,
+    'ConditionAbstractType': ConditionAbstractType,
+    'AudienceRestriction': AudienceRestriction,
+    'AudienceRestrictionType': AudienceRestrictionType,
+    'Audience': Audience,
+    'OneTimeUse': OneTimeUse,
+    'OneTimeUseType': OneTimeUseType,
+    'ProxyRestriction': ProxyRestriction,
+    'ProxyRestrictionType': ProxyRestrictionType,
+    'Advice': Advice,
+    'AdviceType': AdviceType,
+    'EncryptedAssertion': EncryptedAssertion,
+    'Statement': Statement,
+    'StatementAbstractType': StatementAbstractType,
+    'AuthnStatement': AuthnStatement,
+    'AuthnStatementType': AuthnStatementType,
+    'SubjectLocality': SubjectLocality,
+    'SubjectLocalityType': SubjectLocalityType,
+    'AuthnContext': AuthnContext,
+    'AuthnContextType': AuthnContextType,
+    'AuthnContextClassRef': AuthnContextClassRef,
+    'AuthnContextDeclRef': AuthnContextDeclRef,
+    'AuthnContextDecl': AuthnContextDecl,
+    'AuthenticatingAuthority': AuthenticatingAuthority,
+    'AuthzDecisionStatement': AuthzDecisionStatement,
+    'AuthzDecisionStatementType': AuthzDecisionStatementType,
+    'DecisionType': DecisionType,
+    'Action': Action,
+    'ActionType': ActionType,
+    'Evidence': Evidence,
+    'EvidenceType': EvidenceType,
+    'AttributeStatement': AttributeStatement,
+    'AttributeStatementType': AttributeStatementType,
+    'Attribute': Attribute,
+    'AttributeType': AttributeType,
+    'AttributeValue': AttributeValue,
+    'EncryptedAttribute': EncryptedAttribute,
+}
+
+def factory(tag, **kwargs):
+    return ELEMENT_BY_TAG[tag](**kwargs)
+

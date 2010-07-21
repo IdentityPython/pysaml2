@@ -23,12 +23,14 @@ from saml2 import saml
 from saml2.time_util import instant, in_a_while
 from saml2.attribute_converter import from_local
 
-from saml2.utils import sid, MissingValue
-from saml2.utils import args2dict
-from saml2.utils import assertion_factory
+from saml2.s_utils import sid, MissingValue
+from saml2.s_utils import factory
+from saml2.s_utils import assertion_factory
+from saml2.s_utils import do_attribute_statement
 
 def _filter_values(vals, required=None, optional=None):
-    """ Removes values from *val* that does not appear in *attributes*.
+    """ Removes values from *vals* that does not appear in *required*
+        or *optional*.
     
     :param val: The values that are to be filtered
     :param required: The required values
@@ -314,12 +316,13 @@ class Policy(object):
         return self.filter(ava, sp_entity_id, required, optional)
     
     def conditions(self, sp_entity_id):
-        return args2dict(
+        return factory( saml.Conditions,
                         not_before=instant(),
                         # How long might depend on who's getting it
                         not_on_or_after=self._not_on_or_after(sp_entity_id),
-                        audience_restriction=args2dict(
-                                audience=args2dict(sp_entity_id)))
+                        audience_restriction=[factory( saml.AudienceRestriction,
+                                audience=factory(saml.Audience, 
+                                                text=sp_entity_id))])
 
 class Assertion(dict):
     """ Handles assertions about subjects """
@@ -327,14 +330,28 @@ class Assertion(dict):
     def __init__(self, dic=None):
         dict.__init__(self, dic)
     
-    def _authn_statement(self):
-        return args2dict(authn_instant=instant(), session_index=sid())
+    def _authn_context(self, authn_class):
+        return factory(saml.AuthnContext, 
+                        authn_context_class_ref=factory(
+                                saml.AuthnContextClassRef, text=authn_class))
+        
+    def _authn_statement(self, authn_class):
+        if authn_class:
+            return factory(saml.AuthnStatement, 
+                        authn_instant=instant(), 
+                        session_index=sid(),
+                        authn_context=self._authn_context(authn_class))
+        else:
+            return factory(saml.AuthnStatement,
+                        authn_instant=instant(), 
+                        session_index=sid())
     
     def construct(self, sp_entity_id, in_response_to, name_id, attrconvs,
-                    policy, issuer):
+                    policy, issuer, authn_class=None):
         
-        attr_statement = from_local(attrconvs, self,
-                                    policy.get_name_form(sp_entity_id))
+        attr_statement = saml.AttributeStatement(attribute=from_local(
+                                attrconvs, self, 
+                                policy.get_name_form(sp_entity_id)))
         
         # start using now and for a hour
         conds = policy.conditions(sp_entity_id)
@@ -342,14 +359,15 @@ class Assertion(dict):
         return assertion_factory(
             issuer=issuer,
             attribute_statement = attr_statement,
-            authn_statement = self._authn_statement(),
+            authn_statement = self._authn_statement(authn_class),
             conditions = conds,
-            subject=args2dict(
+            subject=factory( saml.Subject,
                 name_id=name_id,
                 method=saml.SUBJECT_CONFIRMATION_METHOD_BEARER,
-                subject_confirmation=args2dict(
-                    subject_confirmation_data = \
-                        args2dict(in_response_to=in_response_to))),
+                subject_confirmation=factory( saml.SubjectConfirmation,
+                                    subject_confirmation_data=factory(
+                                            saml.SubjectConfirmationData,
+                                            in_response_to=in_response_to))),
             )
     
     def apply_policy(self, sp_entity_id, policy, metadata=None):

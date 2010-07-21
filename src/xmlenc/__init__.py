@@ -1,568 +1,675 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python
+
 #
-# Copyright (C) 2009 Umea Universitet.
+# Generated Thu Jul 15 20:59:30 2010 by parse_xsd.py version 0.3.
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#            http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
-"""Contains classes representing xmlenc elements.
-
-    Module objective: provide data classes for xmlenc constructs. These
-    classes hide the XML-ness of Saml and provide a set of native Python
-    classes to interact with.
-
-    Classes in this module inherits saml.SamlBase now.
-
-"""
-
-try:
-    from xml.etree import cElementTree as ElementTree
-except ImportError:
-    try:
-        import cElementTree as ElementTree
-    except ImportError:
-        from elementtree import ElementTree
-        
 import saml2
-from saml2 import create_class_from_xml_string
+from saml2 import SamlBase
 
 import xmldsig as ds
 
 NAMESPACE = 'http://www.w3.org/2001/04/xmlenc#'
-#TEMPLATE = '{http://www.w3.org/2001/04/xmlenc#}%s'
 
-class EncBase(saml2.SamlBase):
-    """The enc:EncBase element"""
+class KeySizeType(SamlBase):
+    """The http://www.w3.org/2001/04/xmlenc#:KeySizeType element """
 
-    c_children = {}
-    c_attributes = {}
-
-# ---------------------------------------------------------------------------
-# KeySize
-# ---------------------------------------------------------------------------
-
-class KeySize(EncBase):
-
-    c_tag = 'KeySize'
+    c_tag = 'KeySizeType'
     c_namespace = NAMESPACE
-    c_children = EncBase.c_children.copy()
-    c_attributes = EncBase.c_attributes.copy()
+    c_value_type = {'base': 'integer'}
+    c_children = SamlBase.c_children.copy()
+    c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
 
-def key_size_from_string(xml_string):
-    """ Create KeySize instance from an XML string """
-    return create_class_from_xml_string(KeySize, xml_string)
+def key_size_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(KeySizeType, xml_string)
 
-# ---------------------------------------------------------------------------
-# OAEPparams
-# ---------------------------------------------------------------------------
+class TransformsType(SamlBase):
+    """The http://www.w3.org/2001/04/xmlenc#:TransformsType element """
 
-class OAEPparams(EncBase):
-
-    c_tag = 'OAEPparams'
+    c_tag = 'TransformsType'
     c_namespace = NAMESPACE
-    c_children = EncBase.c_children.copy()
-    c_attributes = EncBase.c_attributes.copy()
+    c_children = SamlBase.c_children.copy()
+    c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
+    c_children['{http://www.w3.org/2000/09/xmldsig#}Transform'] = ('transform', [ds.Transform])
+    c_child_order.extend(['transform'])
 
-def oaep_params_from_string(xml_string):
-    """ Create OAEPparams instance from an XML string """
-    return create_class_from_xml_string(OAEPparams, xml_string)
+    def __init__(self,
+            transform=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        SamlBase.__init__(self, 
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.transform=transform or []
 
-# ---------------------------------------------------------------------------
-# EncryptionMethod
-# ---------------------------------------------------------------------------
+def transforms_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(TransformsType, xml_string)
 
-class EncryptionMethod(EncBase):
-    """The enc:EncryptionMethod element"""
+class KA_Nonce(SamlBase):
+    """The http://www.w3.org/2001/04/xmlenc#:KA_Nonce element """
 
-    c_tag = 'EncryptionMethod'
+    c_tag = 'KA_Nonce'
     c_namespace = NAMESPACE
-    c_children = EncBase.c_children.copy()
-    c_attributes = EncBase.c_attributes.copy()
-    c_attributes['Algorithm'] = 'algorithm'
-    c_children['{%s}KeySize' % NAMESPACE] = (
-        'key_size', [KeySize])
-    c_children['{%s}OAEPparams' % NAMESPACE] = (
-        'oaep_params', [OAEPparams])
+    c_value_type = 'base64Binary'
+    c_children = SamlBase.c_children.copy()
+    c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
 
-    def __init__(self, algorithm=None, key_size=None, oaep_params=None,
-                text=None, extension_elements=None, extension_attributes=None):
-        """Constructor for EncryptedType
+def k_a__nonce_from_string(xml_string):
+    return saml2.create_class_from_xml_string(KA_Nonce, xml_string)
 
-        :param algorithm: Algorithm attribute
-        :param key_size: KeySize attribute
-        :param oaep_params: OAEPparams attribute
-        :param text: The text data in the this element
-        :param extension_elements: A list of ExtensionElement instances
-        :param extension_attributes: A dictionary of attribute value string 
-                pairs
-        """
+class OriginatorKeyInfo(ds.KeyInfoType):
+    """The http://www.w3.org/2001/04/xmlenc#:OriginatorKeyInfo element """
 
-        EncBase.__init__(self, text, extension_elements, extension_attributes)
-        self.algorithm = algorithm
-        self.key_size = key_size
-        self.oaep_params = oaep_params
-
-def encryption_method_from_string(xml_string):
-    """ Create EncryptionMethod instance from an XML string """
-    return create_class_from_xml_string(EncryptionMethod, xml_string)
-
-# ---------------------------------------------------------------------------
-# CipherValue
-# ---------------------------------------------------------------------------
-
-class CipherValue(EncBase):
-
-    c_tag = 'CipherValue'
+    c_tag = 'OriginatorKeyInfo'
     c_namespace = NAMESPACE
-    c_children = EncBase.c_children.copy()
-    c_attributes = EncBase.c_attributes.copy()
+    c_children = ds.KeyInfoType.c_children.copy()
+    c_attributes = ds.KeyInfoType.c_attributes.copy()
+    c_child_order = ds.KeyInfoType.c_child_order[:]
 
-def cipher_value_from_string(xml_string):
-    """ Create CipherValue instance from an XML string """
-    return create_class_from_xml_string(CipherValue, xml_string)
+def originator_key_info_from_string(xml_string):
+    return saml2.create_class_from_xml_string(OriginatorKeyInfo, xml_string)
 
-# ---------------------------------------------------------------------------
-# Transforms
-# NOTICE: There is an element in ds that is also named Transforms, with a very
-# similar definition. Confusing!!!
-# ---------------------------------------------------------------------------
+class RecipientKeyInfo(ds.KeyInfoType):
+    """The http://www.w3.org/2001/04/xmlenc#:RecipientKeyInfo element """
 
-class Transforms(EncBase):
-
-    c_tag = 'Transforms'
+    c_tag = 'RecipientKeyInfo'
     c_namespace = NAMESPACE
-    c_children = EncBase.c_children.copy()
-    c_attributes = EncBase.c_attributes.copy()
-    c_children['{%s}Transform' % ds.NAMESPACE] = (
-        'transform', [ds.Transform])
+    c_children = ds.KeyInfoType.c_children.copy()
+    c_attributes = ds.KeyInfoType.c_attributes.copy()
+    c_child_order = ds.KeyInfoType.c_child_order[:]
 
-    def __init__(self, transform=None,
-                text=None, extension_elements=None, extension_attributes=None):
-        """Constructor for Transforms
+def recipient_key_info_from_string(xml_string):
+    return saml2.create_class_from_xml_string(RecipientKeyInfo, xml_string)
 
-        :param transform: Transform element
-        :param text: The text data in the this element
-        :param extension_elements: A list of ExtensionElement instances
-        :param extension_attributes: A dictionary of attribute value string 
-                pairs
-        """
+class AgreementMethodType(SamlBase):
+    """The http://www.w3.org/2001/04/xmlenc#:AgreementMethodType element """
 
-        EncBase.__init__(self, text, extension_elements, extension_attributes)
-        self.transform = transform or []
-
-def transforms_from_string(xml_string):
-    """ Create Transforms instance from an XML string """
-    return create_class_from_xml_string(Transforms, xml_string)
-
-# ---------------------------------------------------------------------------
-# CipherReference
-# ---------------------------------------------------------------------------
-
-class CipherReference(EncBase):
-
-    c_tag = 'CipherReference'
+    c_tag = 'AgreementMethodType'
     c_namespace = NAMESPACE
-    c_children = EncBase.c_children.copy()
-    c_attributes = EncBase.c_attributes.copy()
-    c_attributes['URI'] = 'uri'    
-    c_children['{%s}Transforms' % NAMESPACE] = (
-        'transforms', [Transforms])
-    
-    def __init__(self, uri=None, transforms=None, 
-                text=None, extension_elements=None, extension_attributes=None):
-        """Constructor for CipherReference
+    c_children = SamlBase.c_children.copy()
+    c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
+    c_children['{http://www.w3.org/2001/04/xmlenc#}KA_Nonce'] = ('k_a__nonce', KA_Nonce)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}OriginatorKeyInfo'] = ('originator_key_info', ds.KeyInfoType)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}RecipientKeyInfo'] = ('recipient_key_info', ds.KeyInfoType)
+    c_attributes['Algorithm'] = ('algorithm', 'anyURI', True)
+    c_child_order.extend(['k_a__nonce', 'originator_key_info', 'recipient_key_info'])
 
-        :param uri: URI attribute
-        :param transforms: Transforms attribute
-        :param text: The text data in the this element
-        :param extension_elements: A list of ExtensionElement instances
-        :param extension_attributes: A dictionary of attribute value string 
-                pairs
-        """
+    def __init__(self,
+            k_a__nonce=None,
+            originator_key_info=None,
+            recipient_key_info=None,
+            algorithm=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        SamlBase.__init__(self, 
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.k_a__nonce=k_a__nonce
+        self.originator_key_info=originator_key_info
+        self.recipient_key_info=recipient_key_info
+        self.algorithm=algorithm
 
-        EncBase.__init__(self, text, extension_elements, extension_attributes)
-        self.uri = uri
-        self.transforms = transforms or []
+def agreement_method_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(AgreementMethodType, xml_string)
 
-def cipher_reference_from_string(xml_string):
-    """ Create CipherReference instance from an XML string """
-    return create_class_from_xml_string(CipherReference, xml_string)
-
-# ---------------------------------------------------------------------------
-# CipherData
-# ---------------------------------------------------------------------------
-
-class CipherData(EncBase):
-    """The enc:CipherData element"""
-
-    c_tag = 'CipherData'
-    c_namespace = NAMESPACE
-    c_children = EncBase.c_children.copy()
-    c_attributes = EncBase.c_attributes.copy()
-    c_children['{%s}CipherValue' % NAMESPACE] = (
-        'cipher_value', [CipherValue])
-    c_children['{%s}CipherReference' % NAMESPACE] = (
-        'cipher_reference', [CipherReference])
-    c_child_order = ['cipher_value', 'cipher_reference']
-
-    def __init__(self, algorithm=None, cipher_value=None, 
-                cipher_reference=None, 
-                text=None, extension_elements=None, extension_attributes=None):
-        """Constructor for CipherData
-
-        :param cipher_value: CipherValue attribute
-        :param cipher_reference: CipherReference attribute
-        :param text: The text data in the this element
-        :param extension_elements: A list of ExtensionElement instances
-        :param extension_attributes: A dictionary of attribute value string 
-                pairs
-        """
-
-        EncBase.__init__(self, text, extension_elements, extension_attributes)
-        self.cipher_value = cipher_value
-        self.cipher_reference = cipher_reference
-
-def cipher_data_from_string(xml_string):
-    """ Create CipherData instance from an XML string """
-    return create_class_from_xml_string(CipherData, xml_string)
-
-# ---------------------------------------------------------------------------
-# EncryptionProperty
-# ---------------------------------------------------------------------------
-
-class EncryptionProperty(EncBase):
-
-    c_tag = 'EncryptionProperty'
-    c_namespace = NAMESPACE
-    c_children = EncBase.c_children.copy()
-    c_attributes = EncBase.c_attributes.copy()
-    c_attributes['Target'] = 'target'
-    c_attributes['Id'] = 'identifier'
-
-    def __init__(self, target=None, identifier=None, 
-                text=None, extension_elements=None, extension_attributes=None):
-        """Constructor for EncryptedKey
-
-        :param target: Target attribute
-        :param identifier: Id attribute
-        :param text: The text data in the this element
-        :param extension_elements: A list of ExtensionElement instances
-        :param extension_attributes: A dictionary of attribute value string 
-                pairs
-        """
-
-        EncBase.__init__(self, text, extension_elements, extension_attributes)
-        self.target = target
-        self.identifier = identifier or []
-
-def encryption_property_from_string(xml_string):
-    """ Create EncryptionProperty instance from an XML string """
-    return create_class_from_xml_string(EncryptionProperty, xml_string)
-
-# ---------------------------------------------------------------------------
-# EncryptionProperties
-# ---------------------------------------------------------------------------
-
-class EncryptionProperties(EncBase):
-
-    c_tag = 'EncryptionProperties'
-    c_namespace = NAMESPACE
-    c_children = EncBase.c_children.copy()
-    c_attributes = EncBase.c_attributes.copy()
-    c_attributes['Id'] = 'identifier'
-    c_children['{%s}EncryptionProperty' % NAMESPACE] = (
-        'encryption_property', [EncryptionProperty])
-
-    def __init__(self, identifier=None, encryption_property=None, 
-                text=None, extension_elements=None, extension_attributes=None):
-        """Constructor for EncryptedKey
-
-        :param identifier: Id attribute
-        :param encryption_property: EncryptionProperty attribute
-        :param text: The text data in the this element
-        :param extension_elements: A list of ExtensionElement instances
-        :param extension_attributes: A dictionary of attribute value string 
-                pairs
-        """
-
-        EncBase.__init__(self, text, extension_elements, extension_attributes)
-        self.identifier = identifier
-        self.encryption_property = encryption_property or []
-
-def encryption_properties_from_string(xml_string):
-    """ Create EncryptionProperties instance from an XML string """
-    return create_class_from_xml_string(EncryptionProperties, xml_string)
-
-# ---------------------------------------------------------------------------
-# EncryptedType
-# ---------------------------------------------------------------------------
-
-class EncryptedType(EncBase):
-    """The enc:EncryptedType element"""
-
-    c_tag = 'EncryptedType'
-    c_namespace = NAMESPACE
-    c_children = EncBase.c_children.copy()
-    c_attributes = EncBase.c_attributes.copy()
-    c_attributes['Id'] = 'identifier'
-    c_attributes['Type'] = 'typ'
-    c_attributes['MimeType'] = 'mime_type'
-    c_attributes['Encoding'] = 'encoding'
-    c_children['{%s}EncryptionMethod' % NAMESPACE] = (
-        'encryption_method', [EncryptionMethod])
-    c_children['{%s}KeyInfo' % ds.NAMESPACE] = (
-        'key_info', [ds.KeyInfo])
-    c_children['{%s}CipherData' % NAMESPACE] = (
-        'cipher_data', [CipherData])
-    c_children['{%s}EncryptionProperties' % NAMESPACE] = (
-        'encryption_properties', [EncryptionProperties])
-    c_child_order = ['encryption_method', 'key_info',
-                    'cipher_data','encryption_properties']
-
-    def __init__(self, identifier=None, typ=None, mime_type=None, 
-                encoding=None, encryption_method=None, key_info=None,
-                cipher_data=None, encryption_properties=None,
-                text=None, extension_elements=None, extension_attributes=None):
-        """Constructor for EncryptedType
-
-        :param identifier: Id attribute
-        :param typ: Type attribute
-        :param mime_type: MimeType attribute
-        :param encoding: Encoding attribute
-        :param encryption_method: EncryptionMethod attribute
-        :param key_info: KeyInfo attribute
-        :param cipher_data: CipherData attribute
-        :param encryption_properties: EncryptionProperties attribute
-        :param text: The text data in the this element
-        :param extension_elements: A list of ExtensionElement instances
-        :param extension_attributes: A dictionary of attribute value string 
-                pairs
-        """
-
-        EncBase.__init__(self, text, extension_elements, extension_attributes)
-        self.identifier = identifier
-        self.typ = typ
-        self.mime_type = mime_type
-        self.encoding = encoding
-        self.encryption_method = encryption_method
-        self.key_info = key_info
-        self.cipher_data = cipher_data
-        self.encryption_properties = encryption_properties
-
-def encrypted_type_from_string(xml_string):
-    """ Create EncryptedType instance from an XML string """
-    return create_class_from_xml_string(EncryptedType, xml_string)
-
-# ---------------------------------------------------------------------------
-# EncryptedData
-# ---------------------------------------------------------------------------
-
-class EncryptedData(EncryptedType):
-    """The enc:EncryptedData element"""
-
-    c_tag = 'EncryptedData'
-    c_namespace = NAMESPACE
-    c_children = EncryptedType.c_children.copy()
-    c_attributes = EncryptedType.c_attributes.copy()
-
-def encrypted_data_from_string(xml_string):
-    """ Create EncryptedData instance from an XML string """
-    return create_class_from_xml_string(EncryptedData, xml_string)
-
-# ---------------------------------------------------------------------------
-# ReferenceType
-# ---------------------------------------------------------------------------
-
-class ReferenceType(EncBase):
+class ReferenceType(SamlBase):
+    """The http://www.w3.org/2001/04/xmlenc#:ReferenceType element """
 
     c_tag = 'ReferenceType'
     c_namespace = NAMESPACE
-    c_children = EncBase.c_children.copy()
-    c_attributes = EncBase.c_attributes.copy()
-    c_attributes['URI'] = 'uri'
+    c_children = SamlBase.c_children.copy()
+    c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
+    c_attributes['URI'] = ('uri', 'anyURI', True)
 
-    def __init__(self, uri=None,
-                text=None, extension_elements=None, extension_attributes=None):
-        """Constructor for ReferenceType
+    def __init__(self,
+            uri=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        SamlBase.__init__(self, 
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.uri=uri
 
-        :param uri: URI attribute
-        :param text: The text data in the this element
-        :param extension_elements: A list of ExtensionElement instances
-        :param extension_attributes: A dictionary of attribute value string 
-                pairs
-        """
-
-        EncBase.__init__(self, text, extension_elements, extension_attributes)
-        self.uri = uri
-        
 def reference_type_from_string(xml_string):
-    """ Create ReferenceType instance from an XML string """
-    return create_class_from_xml_string(ReferenceType, xml_string)
+    return saml2.create_class_from_xml_string(ReferenceType, xml_string)
 
-# ---------------------------------------------------------------------------
-# DataReference
-# ---------------------------------------------------------------------------
+class EncryptionPropertyType(SamlBase):
+    """The http://www.w3.org/2001/04/xmlenc#:EncryptionPropertyType element """
+
+    c_tag = 'EncryptionPropertyType'
+    c_namespace = NAMESPACE
+    c_children = SamlBase.c_children.copy()
+    c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
+    c_attributes['Target'] = ('target', 'anyURI', False)
+    c_attributes['Id'] = ('id', 'ID', False)
+
+    def __init__(self,
+            target=None,
+            id=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        SamlBase.__init__(self, 
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.target=target
+        self.id=id
+
+def encryption_property_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(EncryptionPropertyType, xml_string)
+
+class KeySize(KeySizeType):
+    """The http://www.w3.org/2001/04/xmlenc#:KeySize element """
+
+    c_tag = 'KeySize'
+    c_namespace = NAMESPACE
+    c_children = KeySizeType.c_children.copy()
+    c_attributes = KeySizeType.c_attributes.copy()
+    c_child_order = KeySizeType.c_child_order[:]
+
+def key_size_from_string(xml_string):
+    return saml2.create_class_from_xml_string(KeySize, xml_string)
+
+class OAEPparams(SamlBase):
+    """The http://www.w3.org/2001/04/xmlenc#:OAEPparams element """
+
+    c_tag = 'OAEPparams'
+    c_namespace = NAMESPACE
+    c_value_type = 'base64Binary'
+    c_children = SamlBase.c_children.copy()
+    c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
+
+def oae_pparams_from_string(xml_string):
+    return saml2.create_class_from_xml_string(OAEPparams, xml_string)
+
+class EncryptionMethodType(SamlBase):
+    """The http://www.w3.org/2001/04/xmlenc#:EncryptionMethodType element """
+
+    c_tag = 'EncryptionMethodType'
+    c_namespace = NAMESPACE
+    c_children = SamlBase.c_children.copy()
+    c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
+    c_children['{http://www.w3.org/2001/04/xmlenc#}KeySize'] = ('key_size', KeySize)
+    c_children['{http://www.w3.org/2001/04/xmlenc#}OAEPparams'] = ('oae_pparams', OAEPparams)
+    c_attributes['Algorithm'] = ('algorithm', 'anyURI', True)
+    c_child_order.extend(['key_size', 'oae_pparams'])
+
+    def __init__(self,
+            key_size=None,
+            oae_pparams=None,
+            algorithm=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        SamlBase.__init__(self, 
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.key_size=key_size
+        self.oae_pparams=oae_pparams
+        self.algorithm=algorithm
+
+def encryption_method_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(EncryptionMethodType, xml_string)
+
+class Transforms(TransformsType):
+    """The http://www.w3.org/2001/04/xmlenc#:Transforms element """
+
+    c_tag = 'Transforms'
+    c_namespace = NAMESPACE
+    c_children = TransformsType.c_children.copy()
+    c_attributes = TransformsType.c_attributes.copy()
+    c_child_order = TransformsType.c_child_order[:]
+
+def transforms_from_string(xml_string):
+    return saml2.create_class_from_xml_string(Transforms, xml_string)
+
+class CipherReferenceType(SamlBase):
+    """The http://www.w3.org/2001/04/xmlenc#:CipherReferenceType element """
+
+    c_tag = 'CipherReferenceType'
+    c_namespace = NAMESPACE
+    c_children = SamlBase.c_children.copy()
+    c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
+    c_children['{http://www.w3.org/2001/04/xmlenc#}Transforms'] = ('transforms', Transforms)
+    c_attributes['URI'] = ('uri', 'anyURI', True)
+    c_child_order.extend(['transforms'])
+
+    def __init__(self,
+            transforms=None,
+            uri=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        SamlBase.__init__(self, 
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.transforms=transforms
+        self.uri=uri
+
+def cipher_reference_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(CipherReferenceType, xml_string)
+
+class AgreementMethod(AgreementMethodType):
+    """The http://www.w3.org/2001/04/xmlenc#:AgreementMethod element """
+
+    c_tag = 'AgreementMethod'
+    c_namespace = NAMESPACE
+    c_children = AgreementMethodType.c_children.copy()
+    c_attributes = AgreementMethodType.c_attributes.copy()
+    c_child_order = AgreementMethodType.c_child_order[:]
+
+def agreement_method_from_string(xml_string):
+    return saml2.create_class_from_xml_string(AgreementMethod, xml_string)
 
 class DataReference(ReferenceType):
+    """The http://www.w3.org/2001/04/xmlenc#:DataReference element """
 
     c_tag = 'DataReference'
     c_namespace = NAMESPACE
     c_children = ReferenceType.c_children.copy()
     c_attributes = ReferenceType.c_attributes.copy()
+    c_child_order = ReferenceType.c_child_order[:]
 
 def data_reference_from_string(xml_string):
-    """ Create DataReference instance from an XML string """
-    return create_class_from_xml_string(DataReference, xml_string)
-
-# ---------------------------------------------------------------------------
-# KeyReference
-# ---------------------------------------------------------------------------
+    return saml2.create_class_from_xml_string(DataReference, xml_string)
 
 class KeyReference(ReferenceType):
+    """The http://www.w3.org/2001/04/xmlenc#:KeyReference element """
 
     c_tag = 'KeyReference'
     c_namespace = NAMESPACE
     c_children = ReferenceType.c_children.copy()
     c_attributes = ReferenceType.c_attributes.copy()
+    c_child_order = ReferenceType.c_child_order[:]
 
 def key_reference_from_string(xml_string):
-    """ Create KeyReference instance from an XML string """
-    return create_class_from_xml_string(KeyReference, xml_string)
+    return saml2.create_class_from_xml_string(KeyReference, xml_string)
 
-# ---------------------------------------------------------------------------
-# ReferenceList
-# ---------------------------------------------------------------------------
-
-class ReferenceList(EncBase):
+class ReferenceList(SamlBase):
+    """The http://www.w3.org/2001/04/xmlenc#:ReferenceList element """
 
     c_tag = 'ReferenceList'
     c_namespace = NAMESPACE
-    c_children = EncBase.c_children.copy()
-    c_attributes = EncBase.c_attributes.copy()
-    c_children['{%s}DataReference' % NAMESPACE] = (
-        'data_reference', [DataReference])
-    c_children['{%s}KeyReference' % NAMESPACE] = (
-        'key_reference', [KeyReference])
+    c_children = SamlBase.c_children.copy()
+    c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
+    c_children['{http://www.w3.org/2001/04/xmlenc#}DataReference'] = ('data_reference', [DataReference])
+    c_children['{http://www.w3.org/2001/04/xmlenc#}KeyReference'] = ('key_reference', [KeyReference])
+    c_child_order.extend(['data_reference', 'key_reference'])
 
-    def __init__(self, data_reference=None, key_reference=None, 
-                text=None, extension_elements=None, extension_attributes=None):
-        """Constructor for EncryptedKey
+    def __init__(self,
+            data_reference=None,
+            key_reference=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        SamlBase.__init__(self, 
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.data_reference=data_reference or []
+        self.key_reference=key_reference or []
 
-        :param data_reference: DataReference attribute
-        :param key_reference: KeyReference attribute
-        :param text: The text data in the this element
-        :param extension_elements: A list of ExtensionElement instances
-        :param extension_attributes: A dictionary of attribute value string 
-                pairs
-        """
-
-        EncBase.__init__(self, text, extension_elements, extension_attributes)
-        self.data_reference = data_reference or []
-        self.key_reference = key_reference or []
-            
 def reference_list_from_string(xml_string):
-    """ Create ReferenceList instance from an XML string """
-    return create_class_from_xml_string(ReferenceList, xml_string)
+    return saml2.create_class_from_xml_string(ReferenceList, xml_string)
 
-# ---------------------------------------------------------------------------
-# CarriedKeyName
-# ---------------------------------------------------------------------------
+class EncryptionProperty(EncryptionPropertyType):
+    """The http://www.w3.org/2001/04/xmlenc#:EncryptionProperty element """
 
-class CarriedKeyName(EncBase):
-
-    c_tag = 'CarriedKeyName'
+    c_tag = 'EncryptionProperty'
     c_namespace = NAMESPACE
-    c_children = EncBase.c_children.copy()
-    c_attributes = EncBase.c_attributes.copy()
+    c_children = EncryptionPropertyType.c_children.copy()
+    c_attributes = EncryptionPropertyType.c_attributes.copy()
+    c_child_order = EncryptionPropertyType.c_child_order[:]
 
-def carried_key_name_from_string(xml_string):
-    """ Create CarriedKeyName instance from an XML string """
-    return create_class_from_xml_string(CarriedKeyName, xml_string)
+def encryption_property_from_string(xml_string):
+    return saml2.create_class_from_xml_string(EncryptionProperty, xml_string)
 
-# ---------------------------------------------------------------------------
-# EncryptedKey
-# ---------------------------------------------------------------------------
+class CipherReference(CipherReferenceType):
+    """The http://www.w3.org/2001/04/xmlenc#:CipherReference element """
 
-class EncryptedKey(EncryptedType):
-    """The enc:EncryptedKey element"""
+    c_tag = 'CipherReference'
+    c_namespace = NAMESPACE
+    c_children = CipherReferenceType.c_children.copy()
+    c_attributes = CipherReferenceType.c_attributes.copy()
+    c_child_order = CipherReferenceType.c_child_order[:]
 
-    c_tag = 'EncryptedKey'
+def cipher_reference_from_string(xml_string):
+    return saml2.create_class_from_xml_string(CipherReference, xml_string)
+
+class EncryptionPropertiesType(SamlBase):
+    """The http://www.w3.org/2001/04/xmlenc#:EncryptionPropertiesType element """
+
+    c_tag = 'EncryptionPropertiesType'
+    c_namespace = NAMESPACE
+    c_children = SamlBase.c_children.copy()
+    c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
+    c_children['{http://www.w3.org/2001/04/xmlenc#}EncryptionProperty'] = ('encryption_property', [EncryptionProperty])
+    c_attributes['Id'] = ('id', 'ID', False)
+    c_child_order.extend(['encryption_property'])
+
+    def __init__(self,
+            encryption_property=None,
+            id=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        SamlBase.__init__(self, 
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.encryption_property=encryption_property or []
+        self.id=id
+
+def encryption_properties_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(EncryptionPropertiesType, xml_string)
+
+class CipherValue(SamlBase):
+    """The http://www.w3.org/2001/04/xmlenc#:CipherValue element """
+
+    c_tag = 'CipherValue'
+    c_namespace = NAMESPACE
+    c_value_type = 'CipherValue'
+    c_children = SamlBase.c_children.copy()
+    c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
+
+def cipher_value_from_string(xml_string):
+    return saml2.create_class_from_xml_string(CipherValue, xml_string)
+
+class CipherDataType(SamlBase):
+    """The http://www.w3.org/2001/04/xmlenc#:CipherDataType element """
+
+    c_tag = 'CipherDataType'
+    c_namespace = NAMESPACE
+    c_children = SamlBase.c_children.copy()
+    c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
+    c_children['{http://www.w3.org/2001/04/xmlenc#}CipherValue'] = ('cipher_value', CipherValue)
+    c_children['{http://www.w3.org/2001/04/xmlenc#}CipherReference'] = ('cipher_reference', CipherReference)
+    c_child_order.extend(['cipher_value', 'cipher_reference'])
+
+    def __init__(self,
+            cipher_value=None,
+            cipher_reference=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        SamlBase.__init__(self, 
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.cipher_value=cipher_value
+        self.cipher_reference=cipher_reference
+
+def cipher_data_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(CipherDataType, xml_string)
+
+class EncryptionProperties(EncryptionPropertiesType):
+    """The http://www.w3.org/2001/04/xmlenc#:EncryptionProperties element """
+
+    c_tag = 'EncryptionProperties'
+    c_namespace = NAMESPACE
+    c_children = EncryptionPropertiesType.c_children.copy()
+    c_attributes = EncryptionPropertiesType.c_attributes.copy()
+    c_child_order = EncryptionPropertiesType.c_child_order[:]
+
+def encryption_properties_from_string(xml_string):
+    return saml2.create_class_from_xml_string(EncryptionProperties, xml_string)
+
+class CipherData(CipherDataType):
+    """The http://www.w3.org/2001/04/xmlenc#:CipherData element """
+
+    c_tag = 'CipherData'
+    c_namespace = NAMESPACE
+    c_children = CipherDataType.c_children.copy()
+    c_attributes = CipherDataType.c_attributes.copy()
+    c_child_order = CipherDataType.c_child_order[:]
+
+def cipher_data_from_string(xml_string):
+    return saml2.create_class_from_xml_string(CipherData, xml_string)
+
+class EncryptionMethod(EncryptionMethodType):
+    """The http://www.w3.org/2001/04/xmlenc#:EncryptionMethod element """
+
+    c_tag = 'EncryptionMethod'
+    c_namespace = NAMESPACE
+    c_children = EncryptionMethodType.c_children.copy()
+    c_attributes = EncryptionMethodType.c_attributes.copy()
+    c_child_order = EncryptionMethodType.c_child_order[:]
+
+def encryption_method_from_string(xml_string):
+    return saml2.create_class_from_xml_string(EncryptionMethod, xml_string)
+
+class EncryptedType(SamlBase):
+    """The http://www.w3.org/2001/04/xmlenc#:EncryptedType element """
+
+    c_tag = 'EncryptedType'
+    c_namespace = NAMESPACE
+    c_children = SamlBase.c_children.copy()
+    c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
+    c_children['{http://www.w3.org/2001/04/xmlenc#}EncryptionMethod'] = ('encryption_method', EncryptionMethod)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}KeyInfo'] = ('key_info', ds.KeyInfo)
+    c_children['{http://www.w3.org/2001/04/xmlenc#}CipherData'] = ('cipher_data', CipherData)
+    c_children['{http://www.w3.org/2001/04/xmlenc#}EncryptionProperties'] = ('encryption_properties', EncryptionProperties)
+    c_attributes['Id'] = ('id', 'ID', False)
+    c_attributes['Type'] = ('type', 'anyURI', False)
+    c_attributes['MimeType'] = ('mime_type', 'string', False)
+    c_attributes['Encoding'] = ('encoding', 'anyURI', False)
+    c_child_order.extend(['encryption_method', 'key_info', 'cipher_data', 'encryption_properties'])
+
+    def __init__(self,
+            encryption_method=None,
+            key_info=None,
+            cipher_data=None,
+            encryption_properties=None,
+            id=None,
+            type=None,
+            mime_type=None,
+            encoding=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        SamlBase.__init__(self, 
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.encryption_method=encryption_method
+        self.key_info=key_info
+        self.cipher_data=cipher_data
+        self.encryption_properties=encryption_properties
+        self.id=id
+        self.type=type
+        self.mime_type=mime_type
+        self.encoding=encoding
+
+def encrypted_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(EncryptedType, xml_string)
+
+class EncryptedDataType(EncryptedType):
+    """The http://www.w3.org/2001/04/xmlenc#:EncryptedDataType element """
+
+    c_tag = 'EncryptedDataType'
     c_namespace = NAMESPACE
     c_children = EncryptedType.c_children.copy()
     c_attributes = EncryptedType.c_attributes.copy()
-    c_attributes['Recipient'] = 'recipient'
-    c_children['{%s}ReferenceList' % NAMESPACE] = (
-        'reference_list', [ReferenceList])
-    c_children['{%s}CarriedKeyName' % NAMESPACE] = (
-        'carried_key_name', [CarriedKeyName])
+    c_child_order = EncryptedType.c_child_order[:]
 
-    def __init__(self, recipient=None, reference_list=None, 
-                carried_key_name=None,identifier=None, typ=None, 
-                mime_type=None, encoding=None, encryption_method=None, 
-                key_info=None, cipher_data=None, encryption_properties=None,
-                text=None, extension_elements=None, extension_attributes=None):
-        """Constructor for EncryptedType
+def encrypted_data_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(EncryptedDataType, xml_string)
 
-        :param recipient: Id attribute
-        :param reference_list: Type attribute
-        :param carried_key_name: MimeType attribute
-        :param identifier: Id attribute
-        :param typ: Type attribute
-        :param mime_type: MimeType attribute
-        :param encoding: Encoding attribute
-        :param encryption_method: EncryptionMethod attribute
-        :param key_info: KeyInfo attribute
-        :param cipher_data: CipherData attribute
-        :param encryption_properties: EncryptionProperties attribute
-        :param text: The text data in the this element
-        :param extension_elements: A list of ExtensionElement instances
-        :param extension_attributes: A dictionary of attribute value string 
-                pairs
-        """
+class CarriedKeyName(SamlBase):
+    """The http://www.w3.org/2001/04/xmlenc#:CarriedKeyName element """
 
-        EncryptedType.__init__(self, identifier, typ, mime_type, 
-                    encoding, encryption_method, key_info,
-                    cipher_data, encryption_properties,
-                    text, extension_elements, extension_attributes)
-        self.recipient = recipient
-        self.reference_list = reference_list or []
-        self.carried_key_name = carried_key_name or []
+    c_tag = 'CarriedKeyName'
+    c_namespace = NAMESPACE
+    c_value_type = 'string'
+    c_children = SamlBase.c_children.copy()
+    c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
+
+def carried_key_name_from_string(xml_string):
+    return saml2.create_class_from_xml_string(CarriedKeyName, xml_string)
+
+class EncryptedKeyType(EncryptedType):
+    """The http://www.w3.org/2001/04/xmlenc#:EncryptedKeyType element """
+
+    c_tag = 'EncryptedKeyType'
+    c_namespace = NAMESPACE
+    c_children = EncryptedType.c_children.copy()
+    c_attributes = EncryptedType.c_attributes.copy()
+    c_child_order = EncryptedType.c_child_order[:]
+    c_children['{http://www.w3.org/2001/04/xmlenc#}ReferenceList'] = ('reference_list', ReferenceList)
+    c_children['{http://www.w3.org/2001/04/xmlenc#}CarriedKeyName'] = ('carried_key_name', CarriedKeyName)
+    c_attributes['Recipient'] = ('recipient', 'string', False)
+    c_child_order.extend(['reference_list', 'carried_key_name'])
+
+    def __init__(self,
+            reference_list=None,
+            carried_key_name=None,
+            recipient=None,
+            encryption_method=None,
+            key_info=None,
+            cipher_data=None,
+            encryption_properties=None,
+            id=None,
+            type=None,
+            mime_type=None,
+            encoding=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        EncryptedType.__init__(self, 
+                encryption_method=encryption_method,
+                key_info=key_info,
+                cipher_data=cipher_data,
+                encryption_properties=encryption_properties,
+                id=id,
+                type=type,
+                mime_type=mime_type,
+                encoding=encoding,
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.reference_list=reference_list
+        self.carried_key_name=carried_key_name
+        self.recipient=recipient
+
+def encrypted_key_type_from_string(xml_string):
+    return saml2.create_class_from_xml_string(EncryptedKeyType, xml_string)
+
+class EncryptedData(EncryptedDataType):
+    """The http://www.w3.org/2001/04/xmlenc#:EncryptedData element """
+
+    c_tag = 'EncryptedData'
+    c_namespace = NAMESPACE
+    c_children = EncryptedDataType.c_children.copy()
+    c_attributes = EncryptedDataType.c_attributes.copy()
+    c_child_order = EncryptedDataType.c_child_order[:]
+
+def encrypted_data_from_string(xml_string):
+    return saml2.create_class_from_xml_string(EncryptedData, xml_string)
+
+class EncryptedKey(EncryptedKeyType):
+    """The http://www.w3.org/2001/04/xmlenc#:EncryptedKey element """
+
+    c_tag = 'EncryptedKey'
+    c_namespace = NAMESPACE
+    c_children = EncryptedKeyType.c_children.copy()
+    c_attributes = EncryptedKeyType.c_attributes.copy()
+    c_child_order = EncryptedKeyType.c_child_order[:]
 
 def encrypted_key_from_string(xml_string):
-    """ Create EncryptedKey instance from an XML string """
-    return create_class_from_xml_string(EncryptedKey, xml_string)
+    return saml2.create_class_from_xml_string(EncryptedKey, xml_string)
 
-ds.KeyInfo.c_children['{%s}EncryptedKey' % NAMESPACE] = (
-                        'encrypted_key', [EncryptedKey])
-
-# =========================================
-
-ELEMENT_TO_STRING = {
-    KeySize: key_size_from_string,
-    OAEPparams: oaep_params_from_string,
-    EncryptionMethod: encryption_method_from_string,
-    CipherValue: cipher_value_from_string,
-    Transforms: transforms_from_string,
-    CipherReference: cipher_reference_from_string,
-    CipherData: cipher_data_from_string,
-    EncryptionProperty: encryption_property_from_string,
-    EncryptionProperties: encryption_properties_from_string,
-    EncryptedType: encrypted_type_from_string,
-    EncryptedData: encrypted_data_from_string,
-    ReferenceType: reference_type_from_string,
-    DataReference: data_reference_from_string,
-    KeyReference: key_reference_from_string,
-    ReferenceList: reference_list_from_string,
-    CarriedKeyName: carried_key_name_from_string,
-    EncryptedKey: encrypted_key_from_string,
+ELEMENT_FROM_STRING = {
+    EncryptedType.c_tag: encrypted_type_from_string,
+    EncryptionMethodType.c_tag: encryption_method_type_from_string,
+    KeySizeType.c_tag: key_size_type_from_string,
+    CipherData.c_tag: cipher_data_from_string,
+    CipherDataType.c_tag: cipher_data_type_from_string,
+    CipherReference.c_tag: cipher_reference_from_string,
+    CipherReferenceType.c_tag: cipher_reference_type_from_string,
+    TransformsType.c_tag: transforms_type_from_string,
+    EncryptedData.c_tag: encrypted_data_from_string,
+    EncryptedDataType.c_tag: encrypted_data_type_from_string,
+    EncryptedKey.c_tag: encrypted_key_from_string,
+    EncryptedKeyType.c_tag: encrypted_key_type_from_string,
+    AgreementMethod.c_tag: agreement_method_from_string,
+    AgreementMethodType.c_tag: agreement_method_type_from_string,
+    ReferenceList.c_tag: reference_list_from_string,
+    ReferenceType.c_tag: reference_type_from_string,
+    EncryptionProperties.c_tag: encryption_properties_from_string,
+    EncryptionPropertiesType.c_tag: encryption_properties_type_from_string,
+    EncryptionProperty.c_tag: encryption_property_from_string,
+    EncryptionPropertyType.c_tag: encryption_property_type_from_string,
 }
+
+ELEMENT_BY_TAG = {
+    'EncryptedType': EncryptedType,
+    'EncryptionMethodType': EncryptionMethodType,
+    'KeySizeType': KeySizeType,
+    'CipherData': CipherData,
+    'CipherDataType': CipherDataType,
+    'CipherReference': CipherReference,
+    'CipherReferenceType': CipherReferenceType,
+    'TransformsType': TransformsType,
+    'EncryptedData': EncryptedData,
+    'EncryptedDataType': EncryptedDataType,
+    'EncryptedKey': EncryptedKey,
+    'EncryptedKeyType': EncryptedKeyType,
+    'AgreementMethod': AgreementMethod,
+    'AgreementMethodType': AgreementMethodType,
+    'ReferenceList': ReferenceList,
+    'ReferenceType': ReferenceType,
+    'EncryptionProperties': EncryptionProperties,
+    'EncryptionPropertiesType': EncryptionPropertiesType,
+    'EncryptionProperty': EncryptionProperty,
+    'EncryptionPropertyType': EncryptionPropertyType,
+}
+
+def factory(tag, **kwargs):
+    return ELEMENT_BY_TAG[tag](**kwargs)
+

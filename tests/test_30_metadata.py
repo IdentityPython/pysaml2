@@ -10,7 +10,7 @@ from saml2.attribute_converter import ac_factory
 
 from py.test import raises
 
-SWAMI_METADATA = "swamid-kalmar-1.0.xml"
+SWAMI_METADATA = "swamid-1.0.xml"
 INCOMMON_METADATA = "InCommon-metadata.xml"
 EXAMPLE_METADATA = "metadata_example.xml"
 SWITCH_METADATA = "metadata.aaitest.xml"
@@ -53,16 +53,19 @@ def test_swami_1():
     ssocerts =  md.certs('https://idp.umu.se/saml2/idp/SSOService.php')
     print ssocerts
     assert len(ssocerts) == 1
-    print md.wants
-    assert _eq(md._wants.keys(),['https://connect.sunet.se/shibboleth',
-                            'https://sp.swamid.se/shibboleth'])
-    assert _eq(md.wants('https://sp.swamid.se/shibboleth')[1].keys(),
-                ["eduPersonPrincipalName"])
-    assert md.wants('https://sp.swamid.se/shibboleth')[0] == {}
+    print md._wants.keys()
+    assert _eq(md._wants.keys(),['https://connect.sunet.se/shibboleth', 
+                                'https://www.diva-portal.org/shibboleth'])
+                                
+    print md.wants('https://www.diva-portal.org/shibboleth')
+    assert _eq(md.wants('https://www.diva-portal.org/shibboleth')[1].keys(),
+                ['mail', 'givenName', 'eduPersonPrincipalName', 'sn', 
+                'eduPersonScopedAffiliation'])
+                
+    assert md.wants('https://connect.sunet.se/shibboleth')[0] == {}
     assert _eq(md.wants('https://connect.sunet.se/shibboleth')[1].keys(),
                 ['mail', 'givenName', 'eduPersonPrincipalName', 'sn',
                 'eduPersonScopedAffiliation'])
-    assert md.wants('https://connect.sunet.se/shibboleth')[0] == {}
                 
 def test_incommon_1():
     md = metadata.MetaData(attrconv=ATTRCONV)
@@ -130,8 +133,9 @@ def test_sp_metadata():
     print md.entity
     assert len(md.entity) == 1
     assert md.entity.keys() == ['urn:mace:umu.se:saml:roland:sp']
-    assert md.entity['urn:mace:umu.se:saml:roland:sp'].keys() == [
-                                    'valid_until',"organization","sp_sso"]
+    assert _eq(md.entity['urn:mace:umu.se:saml:roland:sp'].keys(), [
+                                    'valid_until',"organization","sp_sso",
+                                    'contact_person'])
     print md.entity['urn:mace:umu.se:saml:roland:sp']["sp_sso"][0].keyswv()
     (req,opt) = md.attribute_consumer('urn:mace:umu.se:saml:roland:sp')
     print req
@@ -174,7 +178,7 @@ def test_construct_organisation_name():
                         md.OrganizationName, o, "organization_name")
     print o
     assert str(o) == """<?xml version='1.0' encoding='UTF-8'?>
-<ns0:Organization xmlns:ns0="urn:oasis:names:tc:SAML:2.0:metadata"><ns0:OrganizationName ns1:lang="se" xmlns:ns1="http:#www.w3.org/XML/1998/namespace">Exempel AB</ns0:OrganizationName></ns0:Organization>"""
+<ns0:Organization xmlns:ns0="urn:oasis:names:tc:SAML:2.0:metadata"><ns0:OrganizationName xml:lang="se">Exempel AB</ns0:OrganizationName></ns0:Organization>"""
 
 def test_make_int_value():
     val = make_vals( 1, saml.AttributeValue, part=True) 
@@ -260,10 +264,11 @@ def test_construct_entity_descr_1():
 
     assert ed.entity_id == "urn:mace:catalogix.se:sp1"
     org = ed.organization
-    assert _eq(org.keyswv(), ["organization_name","organization_url"])
-    assert len(org.organization_name) == 1
-    assert org.organization_name[0].text == "Catalogix"
-    assert org.organization_url[0].text == "http://www.catalogix.se/"
+    assert len(org) == 1
+    assert _eq(org[0].keyswv(), ["organization_name","organization_url"])
+    assert len(org[0].organization_name) == 1
+    assert org[0].organization_name[0].text == "Catalogix"
+    assert org[0].organization_url[0].text == "http://www.catalogix.se/"
 
 def test_construct_entity_descr_2():
     ed = make_instance(md.EntityDescriptor,
@@ -281,10 +286,11 @@ def test_construct_entity_descr_2():
     assert _eq(ed.keyswv(), ["entity_id", "contact_person", "organization"])
     assert ed.entity_id == "urn:mace:catalogix.se:sp1"
     org = ed.organization
-    assert _eq(org.keyswv(), ["organization_name", "organization_url"])
-    assert len(org.organization_name) == 1
-    assert org.organization_name[0].text == "Catalogix"
-    assert org.organization_url[0].text == "http://www.catalogix.se/"
+    assert len(org) == 1
+    assert _eq(org[0].keyswv(), ["organization_name", "organization_url"])
+    assert len(org[0].organization_name) == 1
+    assert org[0].organization_name[0].text == "Catalogix"
+    assert org[0].organization_url[0].text == "http://www.catalogix.se/"
     assert len(ed.contact_person) == 1
     c = ed.contact_person[0]
     assert c.given_name.text == "Roland"

@@ -36,7 +36,7 @@ from repoze.who.plugins.form import FormPluginBase
 from saml2.client import Saml2Client
 from saml2.attribute_resolver import AttributeResolver
 from saml2.config import Config
-from saml2.cache import Cache
+from saml2.population import Population
 
 def construct_came_from(environ):
     """ The URL that the user used when the process where interupted 
@@ -55,7 +55,12 @@ def cgi_fieldStorage_to_dict( fieldStorage ):
     
     params = {}
     for key in fieldStorage.keys():
-        params[ key ] = fieldStorage[ key ].value
+        try:
+            params[ key ] = fieldStorage[ key ].value
+        except AttributeError:
+            if isinstance(fieldStorage[ key ], basestring):
+                params[key] = fieldStorage[key]
+                
     return params
            
 class SAML2Plugin(FormPluginBase):
@@ -92,19 +97,8 @@ class SAML2Plugin(FormPluginBase):
         self.outstanding_queries = {}
         self.iam = os.uname()[1]
         
-        if cache:
-            self.cache = Cache(cache)
-        else:
-            self.cache = Cache()
-         
-    def _cache_session(self, session_info):
-        name_id = session_info["name_id"]
-        issuer = session_info["issuer"]
-        del session_info["issuer"]
-        self.cache.set(name_id, issuer, session_info, 
-                        session_info["not_on_or_after"])
-        return name_id
-        
+        self.users = Population(cache)
+                 
     def _pick_idp(self, environ):
         """ 
         If more than one idp and if none is selected, I have to do wayf or 
@@ -234,7 +228,7 @@ class SAML2Plugin(FormPluginBase):
                 
             session_info = ar.session_info()
             # Cache it
-            name_id = self._cache_session(session_info)
+            name_id = self.users.add_information_about_person(session_info)
             if self.debug:
                 self.log and self.log.info("stored %s with key %s" % (
                                             session_info, name_id))
@@ -299,56 +293,6 @@ class SAML2Plugin(FormPluginBase):
         else:
             return None
 
-    def _vo_members_to_ask(self, subject_id):
-        # Find the member of the Virtual Organization that I haven't 
-        # alrady spoken too 
-        vo_members = [
-            member for member in self.metadata.vo_members(self.vorg)\
-                if member not in self.srv["idp"].keys()]
-            
-        self.log and self.log.info("VO members: %s" % vo_members)
-
-        # Remove the ones I have cached data from about this subject
-        vo_members = [m for m in vo_members \
-                        if not self.cache.active(subject_id, m)]                        
-        self.log and self.log.info(
-                        "VO members (not cached): %s" % vo_members)
-        return vo_members
-        
-    def _do_vo_aggregation(self, subject_id):
-        
-        if self.log:
-            self.log.info("** Do VO aggregation **")
-            self.log.info("SubjectID: %s, VO:%s" % (subject_id, self.vorg))
-        
-        vo_members = self._vo_members_to_ask(subject_id)
-        
-        if vo_members:
-            # Find the NameIDFormat and the SPNameQualifier
-            if self.vorg_conf and "name_id_format" in self.vorg_conf:
-                name_id_format = self.vorg_conf["name_id_format"]
-                sp_name_qualifier = ""
-            else:
-                sp_name_qualifier = self.vorg
-                name_id_format = ""
-            
-            resolver = AttributeResolver(environ, self.metadata, self.conf)
-            # extends returns a list of session_infos      
-            for session_info in resolver.extend(subject_id, 
-                                    self.conf["entityid"], vo_members, 
-                                    name_id_format=name_id_format,
-                                    sp_name_qualifier=sp_name_qualifier, 
-                                    log=self.log):
-                _ignore = self._cache_session(session_info)
-
-            self.log.info(
-                ">Issuers: %s" % self.cache.entities(subject_id))
-            self.log.info(
-                "AVA: %s" % (self.cache.get_identity(subject_id),))
-            
-            return True
-        else:
-            return False
                     
     # IMetadataProvider
     def add_metadata(self, environ, identity):
@@ -381,7 +325,7 @@ class SAML2Plugin(FormPluginBase):
         if "pysaml2_vo_expanded" not in identity:
             # is this a Virtual Organization situation
             if self.vorg:
-                if self._do_vo_aggregation(subject_id):
+                if self.vorg.do_vo_aggregation(subject_id):
                     # Get the extended identity
                     identity["user"] = self.cache.get_identity(subject_id)[0]
                     # Only do this once, mark that the identity has been 

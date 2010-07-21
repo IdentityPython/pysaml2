@@ -19,7 +19,7 @@
 Based on the use of xmlsec1 binaries and not the python xmlsec module.
 """
 
-from saml2 import samlp, class_name, saml, make_instance
+from saml2 import samlp, class_name, saml, ExtensionElement
 from saml2 import create_class_from_xml_string
 import xmldsig as ds
 from tempfile import NamedTemporaryFile
@@ -27,12 +27,11 @@ from subprocess import Popen, PIPE
 import base64
 import random
 import os
-import copy
 
 def get_xmlsec_binary():
     for path in os.environ["PATH"].split(":"):
         fil = os.path.join(path, "xmlsec1")
-        if os.access(fil,os.X_OK):
+        if os.access(fil, os.X_OK):
             return fil
 
     raise Exception("Can't find xmlsec1")
@@ -86,12 +85,12 @@ def _make_vals(val, klass, seccont, klass_inst=None, prop=None, part=False,
     #print "make_vals(%s, %s)" % (val, klass)
     
     if isinstance(val, dict):
-        cinst = _instance(klass, val, seccont,base64encode=base64encode,
+        cinst = _instance(klass, val, seccont, base64encode=base64encode,
                             elements_to_sign=elements_to_sign)
     else:
         try:
             cinst = klass().set_text(val)
-        except ValueError, excp:
+        except ValueError:
             if not part:
                 cis = [_make_vals(sval, klass, seccont, klass_inst, prop, 
                         True, base64encode, elements_to_sign) for sval in val]
@@ -150,16 +149,12 @@ def _instance(klass, ava, seccont, base64encode=False, elements_to_sign=None):
     
     return instance
 
-def signed_instance_factory(klass, ava, seccont, base64encode=False):
-    elements_to_sign = []
-    instance = _instance(klass, ava, seccont, base64encode=False, 
-                        elements_to_sign=elements_to_sign)
-    
+def signed_instance_factory(instance, seccont, elements_to_sign=None):    
     if elements_to_sign:
         signed_xml = "%s" % instance
         for (node_name, nodeid) in elements_to_sign:
             signed_xml = seccont.sign_statement_using_xmlsec(signed_xml,
-                                    class_name=node_name, nodeid=nodeid) 
+                                    klass_namn=node_name, nodeid=nodeid) 
 
         #print "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         #print "%s" % signed_xml
@@ -274,7 +269,7 @@ def verify_signature(enctext, xmlsec_binary, cert_file=None, cert_type="pem",
         com_list.append("--store-signatures")
         
     if node_id:
-        com_list.extend(["--node-id",node_id])
+        com_list.extend(["--node-id", node_id])
         
     com_list.append(fil)
 
@@ -351,6 +346,7 @@ class SecurityContext(object):
         
         # Your private key
         self.key_file = key_file
+        self.key_type = key_type
         
         # Your certificate
         self.cert_file = cert_file
@@ -379,7 +375,7 @@ class SecurityContext(object):
         ntf = NamedTemporaryFile()
 
         com_list = [self.xmlsec, "--decrypt", 
-                     "--privkey-pem", key_file, 
+                     "--privkey-pem", self.key_file, 
                      "--output", ntf.name,
                      "--id-attr:%s" % ID_ATTR, 
                      ENC_NODE_NAME, fil]
@@ -503,11 +499,11 @@ class SecurityContext(object):
 
         return response
 
-    #----------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     # SIGNATURE PART
-    #----------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
             
-    def sign_statement_using_xmlsec(self, statement, class_name, key=None, 
+    def sign_statement_using_xmlsec(self, statement, klass_namn, key=None, 
                                     key_file=None, nodeid=None):
         """Sign a SAML statement using xmlsec.
         
@@ -530,11 +526,11 @@ class SecurityContext(object):
         com_list = [self.xmlsec, "--sign", 
                     "--output", ntf.name,
                     "--privkey-pem", key_file, 
-                    "--id-attr:%s" % ID_ATTR, class_name,
+                    "--id-attr:%s" % ID_ATTR, klass_namn,
                     #"--store-signatures"
                     ]
         if nodeid:
-            com_list.extend(["--node-id",nodeid])
+            com_list.extend(["--node-id", nodeid])
 
         com_list.append(fil)
 
@@ -543,9 +539,9 @@ class SecurityContext(object):
         # this doesn't work if --store-signatures are used
         if out == "":
             #print " ".join(com_list)
-            #print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+            #print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
             #print out
-            #print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+            #print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
             ntf.seek(0)
             return ntf.read()
         else:
@@ -568,39 +564,65 @@ class SecurityContext(object):
 
 # ===========================================================================
 
-PRE_SIGNATURE = {
-    "signed_info": {
-        "signature_method": {
-            "algorithm": ds.SIG_RSA_SHA1
-        },
-        "canonicalization_method": { 
-            "algorithm": ds.ALG_EXC_C14N
-        },
-        "reference": {
-            # must be replace by a uriref based on the assertion ID
-            "uri": None, 
-            "transforms": {
-                "transform": [{
-                    "algorithm": ds.TRANSFORM_ENVELOPED,
-                },
-                {  
-                    "algorithm": ds.ALG_EXC_C14N,
-                    "inclusive_namespaces": {
-                        "prefix_list": "ds saml2 saml2p xenc",
-                    }   
-                }
-                ]
-            },
-            "digest_method":{
-                "algorithm": ds.DIGEST_SHA1,
-            },
-            "digest_value": "",
-        }
-    },
-    "signature_value": None,
-}
+# PRE_SIGNATURE = {
+#     "signed_info": {
+#         "signature_method": {
+#             "algorithm": ds.SIG_RSA_SHA1
+#         },
+#         "canonicalization_method": { 
+#             "algorithm": ds.ALG_EXC_C14N
+#         },
+#         "reference": {
+#             # must be replace by a uriref based on the assertion ID
+#             "uri": None, 
+#             "transforms": {
+#                 "transform": [{
+#                     "algorithm": ds.TRANSFORM_ENVELOPED,
+#                 },
+#                 {  
+#                     "algorithm": ds.ALG_EXC_C14N,
+#                     "inclusive_namespaces": {
+#                         "prefix_list": "ds saml2 saml2p xenc",
+#                     }   
+#                 }
+#                 ]
+#             },
+#             "digest_method":{
+#                 "algorithm": ds.DIGEST_SHA1,
+#             },
+#             "digest_value": "",
+#         }
+#     },
+#     "signature_value": None,
+# }
+#
+# def pre_signature_part(ident, public_key=None, id=None):
+#     """
+#     If an assertion is to be signed the signature part has to be preset
+#     with which algorithms to be used, this function returns such a
+#     preset part.
+#     
+#     :param ident: The identifier of the assertion, so you know which assertion
+#         was signed
+#     :param public_key: The base64 part of a PEM file
+#     :return: A preset signature part
+#     """
+#     
+#     presig = copy.deepcopy(PRE_SIGNATURE)
+#     presig["signed_info"]["reference"]["uri"] = "#%s" % ident
+#     if id:
+#         presig["id"] = "Signature%d" % id
+#     if public_key:
+#         presig["key_info"] = {
+#             "x509_data": {
+#                 "x509_certificate": public_key,
+#             }
+#         }    
+#         
+#     return presig
 
-def pre_signature_part(ident, public_key=None, id=None):
+
+def pre_signature_part(ident, public_key=None, identifier=None):
     """
     If an assertion is to be signed the signature part has to be preset
     with which algorithms to be used, this function returns such a
@@ -611,16 +633,34 @@ def pre_signature_part(ident, public_key=None, id=None):
     :param public_key: The base64 part of a PEM file
     :return: A preset signature part
     """
+
+    signature_method = ds.SignatureMethod(algorithm = ds.SIG_RSA_SHA1)
+    canonicalization_method = ds.CanonicalizationMethod(
+                                            algorithm = ds.ALG_EXC_C14N)
+    trans0 = ds.Transform(algorithm = ds.TRANSFORM_ENVELOPED)
+    trans1 = ds.Transform(algorithm = ds.ALG_EXC_C14N)
+    transforms = ds.Transforms(transform = [trans0, trans1])
+    digest_method = ds.DigestMethod(algorithm = ds.DIGEST_SHA1)
     
-    presig = copy.deepcopy(PRE_SIGNATURE)
-    presig["signed_info"]["reference"]["uri"] = "#%s" % ident
-    if id:
-        presig["id"] = "Signature%d" % id
+    reference = ds.Reference(uri = "#%s" % ident,
+                                digest_value = ds.DigestValue(),
+                                transforms = transforms,
+                                digest_method = digest_method)
+                                
+    signed_info = ds.SignedInfo(signature_method = signature_method,
+                                canonicalization_method = canonicalization_method,
+                                reference = reference)
+                                
+    signature = ds.Signature(signed_info=signed_info, 
+                                signature_value=ds.SignatureValue())
+                                
+    if identifier:
+        signature.id = "Signature%d" % identifier
+                                
     if public_key:
-        presig["key_info"] = {
-            "x509_data": {
-                "x509_certificate": public_key,
-            }
-        }    
-        
-    return presig
+        x509_data = ds.X509Data(x509_certificate=[ds.X509Certificate(text=public_key)])
+        key_info = ds.KeyInfo(x509_data=x509_data)
+        signature.key_info = key_info
+    
+    return signature
+    

@@ -62,7 +62,7 @@ def parse_soap_enveloped_saml_thingy(text, expected_tag):
     else:
         return ""
 
-def make_soap_enveloped_saml_thingy(thingy):
+def make_soap_enveloped_saml_thingy(thingy, headers=None):
     """ Returns a soap envelope containing a SAML request
     as a text string.
     
@@ -72,6 +72,13 @@ def make_soap_enveloped_saml_thingy(thingy):
     envelope = ElementTree.Element('')
     envelope.tag = '{%s}Envelope' % NAMESPACE
 
+    if headers:
+        header = ElementTree.Element('')
+        header.tag = '{%s}Header' % NAMESPACE
+        envelope.append(header)
+        for head in headers:
+            head.become_child_element(header)
+        
     body = ElementTree.Element('')
     body.tag = '{%s}Body' % NAMESPACE
     envelope.append(body)

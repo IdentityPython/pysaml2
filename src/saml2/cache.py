@@ -2,6 +2,7 @@
 
 import shelve
 import time
+from saml2 import time_util
 
 # The assumption is that any subject may consist of data 
 # gathered from several different sources, all with their own
@@ -18,6 +19,9 @@ class Cache(object):
         else:
             self._db = {}
             self._sync = False
+        
+    def delete(self, subject_id):
+        del self._db[subject_id]
         
     def get_identity(self, subject_id, entities=None):
         """ Get all the identity information that has been received and 
@@ -53,24 +57,27 @@ class Cache(object):
         return (res, oldees)
         
     def get(self, subject_id, entity_id):
-        """ Get seesion information about a the session when an 
-        assertion was received from an IdP or an AA or sent to a SP.
+        """ Get session information about a subject gotten from a
+        specified IdP.
         
         :param subject_id: The identifier of the subject
         :param entity_id: The identifier of the entity_id
         :return: The session information
         """
         (not_on_or_after, info) = self._db[subject_id][entity_id]
-        now = time.gmtime()
+        if isinstance(not_on_or_after, time.struct_time):
+            not_on_or_after = time.mktime(not_on_or_after)
+        now = time_util.daylight_corrected_now()
 
         if not_on_or_after < now:
-            self.reset(subject_id, entity_id)
-            raise ToOld()
+            #self.reset(subject_id, entity_id)
+            raise ToOld("%s < %s" % (not_on_or_after, now))
         else:
             return info
     
     def set( self, subject_id, entity_id, info, not_on_or_after=0):
-        """ Stores session information in the cache
+        """ Stores session information in the cache. Assumes that the subject_id
+        is unique within the context of the Service Provider.
         
         :param subject_id: The subjects identifier
         :param entity_id: The identifier of the entity_id/receiver of an 

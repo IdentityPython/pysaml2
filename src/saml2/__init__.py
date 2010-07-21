@@ -31,6 +31,22 @@
     provides methods and functions to convert SAML classes to and from strings.
 """
 
+# try:
+#     # lxml: best performance for XML processing
+#     import lxml.etree as ET
+# except ImportError:
+#     try:
+#         # Python 2.5+: batteries included
+#         import xml.etree.cElementTree as ET
+#     except ImportError:
+#         try:
+#             # Python <2.5: standalone ElementTree install
+#             import elementtree.cElementTree as ET
+#         except ImportError:
+#             raise ImportError, "lxml or ElementTree are not installed, "\
+#                 +"see http://codespeak.net/lxml "\
+#                 +"or http://effbot.org/zone/element-index.htm"
+                
 try:
     from xml.etree import cElementTree as ElementTree
 except ImportError:
@@ -45,7 +61,7 @@ NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:assertion'
 
 NAMEID_FORMAT_EMAILADDRESS = (
     "urn:oasis:names:tc:SAML:2.0:nameid-format:emailAddress")
-URN_PASSWORD = "urn:oasis:names:tc:SAML:2.0:ac:classes:Password"
+
 NAME_FORMAT_UNSPECIFIED = (
     "urn:oasis:names:tc:SAML:2.0:attrnam-format:unspecified")
 NAME_FORMAT_URI = "urn:oasis:names:tc:SAML:2.0:attrnam-format:uri"
@@ -83,10 +99,10 @@ def create_class_from_xml_string(target_class, xml_string):
         not match those of the target class.
     """
     tree = ElementTree.fromstring(xml_string)
-    return _create_class_from_element_tree(target_class, tree)
+    return create_class_from_element_tree(target_class, tree)
 
 
-def _create_class_from_element_tree(target_class, tree, namespace=None, 
+def create_class_from_element_tree(target_class, tree, namespace=None, 
                                     tag=None):
     """Instantiates the class and populates members according to the tree.
 
@@ -411,6 +427,9 @@ class SamlBase(ExtensionContainer):
     
     c_children = {}
     c_attributes = {}
+    c_attribute_type = {}
+    #c_attribute_use = {}
+    c_attribute_required = {}
     c_child_order = []
     
     def _get_all_c_children_with_order(self):
@@ -433,11 +452,11 @@ class SamlBase(ExtensionContainer):
                 if getattr(self, member_name) is None:
                     setattr(self, member_name, [])
                 getattr(self, member_name).append(
-                        _create_class_from_element_tree(
+                        create_class_from_element_tree(
                             member_class[0], child_tree))
             else:
                 setattr(self, member_name, 
-                            _create_class_from_element_tree(member_class, 
+                            create_class_from_element_tree(member_class, 
                                                             child_tree))
         else:
             ExtensionContainer._convert_element_tree_to_member(self, 
@@ -449,7 +468,7 @@ class SamlBase(ExtensionContainer):
             # Find the member of this class which corresponds to the XML 
             # attribute(lookup in current_class.c_attributes) and set this 
             # member to the desired value (using self.__dict__).
-            setattr(self, self.__class__.c_attributes[attribute], value)
+            setattr(self, self.__class__.c_attributes[attribute][0], value)
         else:
             # If it doesn't appear in the attribute list it's an extension
             ExtensionContainer._convert_element_attribute_to_member(self, 
@@ -470,8 +489,9 @@ class SamlBase(ExtensionContainer):
             else:
                 member.become_child_element_of(tree)
         # Convert the members of this class which are XML attributes.
-        for xml_attribute, member_name in \
+        for xml_attribute, attribute_info in \
                     self.__class__.c_attributes.iteritems():
+            (member_name, member_type, required) = attribute_info
             member = getattr(self, member_name)
             if member is not None:
                 tree.attrib[xml_attribute] = member
@@ -514,7 +534,8 @@ class SamlBase(ExtensionContainer):
     def _init_attribute(self, extension_attribute_id,
                 extension_attribute_name, value=None):
                 
-        self.c_attributes[extension_attribute_id] = extension_attribute_name
+        self.c_attributes[extension_attribute_id] = (extension_attribute_name,
+                                                    None, False)
         if value:
             self.__dict__[extension_attribute_name] = value
                     
@@ -532,7 +553,7 @@ class SamlBase(ExtensionContainer):
         :return: list of keys
         """
         keys = ['text']
-        keys.extend(self.c_attributes.values())
+        keys.extend([n for (n, t, r) in self.c_attributes.values()])
         keys.extend([v[1] for v in self.c_children.values()])
         return keys
         
@@ -592,7 +613,7 @@ class SamlBase(ExtensionContainer):
         :return: The instance
         """
         
-        for prop in self.c_attributes.values():
+        for prop, _typ, _req in self.c_attributes.values():
             #print "# %s" % (prop)
             if prop in ava:
                 if isinstance(ava[prop], bool):
@@ -641,7 +662,7 @@ def element_to_extension_element(element):
     exel = ExtensionElement(element.c_tag, element.c_namespace, 
                             text=element.text)
     
-    for xml_attribute, member_name in element.c_attributes.iteritems():
+    for xml_attribute, (member_name, typ, req) in element.c_attributes.iteritems():
         member_value = getattr(element, member_name)
         if member_value is not None:
             exel.attributes[xml_attribute] = member_value
