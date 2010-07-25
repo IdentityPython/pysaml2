@@ -34,9 +34,9 @@ from repoze.who.interfaces import IMetadataProvider
 from repoze.who.plugins.form import FormPluginBase
 
 from saml2.client import Saml2Client
-from saml2.attribute_resolver import AttributeResolver
+#from saml2.attribute_resolver import AttributeResolver
 from saml2.config import Config
-from saml2.population import Population
+#from saml2.population import Population
 
 def construct_came_from(environ):
     """ The URL that the user used when the process where interupted 
@@ -49,17 +49,17 @@ def construct_came_from(environ):
     return came_from
     
 # FormPluginBase defines the methods remember and forget
-def cgi_fieldStorage_to_dict( fieldStorage ):
+def cgi_fieldStorage_to_dict( field_storage ):
     """Get a plain dictionary, rather than the '.value' system used by the
     cgi module."""
     
     params = {}
-    for key in fieldStorage.keys():
+    for key in field_storage.keys():
         try:
-            params[ key ] = fieldStorage[ key ].value
+            params[ key ] = field_storage[ key ].value
         except AttributeError:
-            if isinstance(fieldStorage[ key ], basestring):
-                params[key] = fieldStorage[key]
+            if isinstance(field_storage[ key ], basestring):
+                params[key] = field_storage[key]
                 
     return params
            
@@ -67,15 +67,16 @@ class SAML2Plugin(FormPluginBase):
 
     implements(IChallenger, IIdentifier, IAuthenticator, IMetadataProvider)
     
-    def __init__(self, rememberer_name, saml_conf_file, virtual_organization,
-                wayf, cache, debug):
+    def __init__(self, rememberer_name, config, saml_client, 
+                virtual_organization, wayf, cache, debug):
         FormPluginBase.__init__(self)
+        
         self.rememberer_name = rememberer_name
         self.debug = debug        
         self.wayf = wayf
+        self.saml_client = saml_client
         
-        self.conf = Config()
-        self.conf.load_file(saml_conf_file)
+        self.conf = config
         self.srv = self.conf["service"]["sp"]
         self.log = None
         
@@ -96,36 +97,36 @@ class SAML2Plugin(FormPluginBase):
             self.metadata = None
         self.outstanding_queries = {}
         self.iam = os.uname()[1]
-        
-        self.users = Population(cache)
-                 
+                         
     def _pick_idp(self, environ):
         """ 
         If more than one idp and if none is selected, I have to do wayf or 
         disco
         """
         
-        self.log and self.log.info("IdP URL: %s" % self.srv["idp"].values())
-        if len( self.srv["idp"] ) == 1:
-            # Keys are entity_ids and values are urls
-            idp_url = self.srv["idp"].values()[0]
-        elif len( self.srv["idp"] ) == 0:
-            return (1,HTTPInternalServerError(detail='Misconfiguration'))
+        idps = self.conf.idps()
+        
+        self.log and self.log.info("IdP URL: %s" % idps)
+
+        if len( idps ) == 1:
+            idp_url = idps[0]
+        elif len( idps ) == 0:
+            return (1, HTTPInternalServerError(detail='Misconfiguration'))
         else:
             if self.wayf:
                 wayf_selected = environ.get('s2repose.wayf_selected','')
                 if not wayf_selected:
                     self.log.info("Redirect to WAYF function: %s" % self.wayf)
                     self.log.info("env, keys: %s" % (environ.keys()))
-                    return (1,HTTPTemporaryRedirect(headers = [('Location', 
+                    return (1, HTTPTemporaryRedirect(headers = [('Location', 
                                                             self.wayf)]))
                 else:
                     self.log.info("Choosen IdP: '%s'" % wayf_selected)
                     idp_url = self.srv["idp"][wayf_selected]
             else:
-                return (1,HTTPNotImplemented(detail='No WAYF present!'))
+                return (1, HTTPNotImplemented(detail='No WAYF present!'))
 
-        return (0,idp_url)
+        return (0, idp_url)
         
     #### IChallenger ####
     def challenge(self, environ, _status, _app_headers, _forget_headers):
@@ -156,14 +157,10 @@ class SAML2Plugin(FormPluginBase):
         else:
             idp_url = response
             # Do the AuthnRequest
-            scl = Saml2Client(environ, self.conf)        
-            (sid, result) = scl.authenticate(self.conf["entityid"], 
-                                            idp_url, 
-                                            self.srv["url"], 
-                                            self.srv["name"], 
-                                            relay_state=came_from, 
-                                            log=self.log,
-                                            vorg=vorg)
+            (sid, result) = self.saml_client.authenticate(location=idp_url,
+                                                    relay_state=came_from, 
+                                                    log=self.log,
+                                                    vorg=vorg)
             
             # remember the request
             self.outstanding_queries[sid] = came_from
@@ -182,8 +179,8 @@ class SAML2Plugin(FormPluginBase):
         
         try:
             if environ["CONTENT_LENGTH"]:
-                len = int(environ["CONTENT_LENGTH"])
-                body = environ["wsgi.input"].read(len)
+                length = int(environ["CONTENT_LENGTH"])
+                body = environ["wsgi.input"].read(length)
                 from StringIO import StringIO
                 environ['wsgi.input'] = StringIO(body)
                 environ['s2repoze.body'] = body
@@ -215,23 +212,20 @@ class SAML2Plugin(FormPluginBase):
     def _eval_authn_response(self, environ, post):
         """ """
         self.log and self.log.info("Got AuthN response, checking..")
-        scl = Saml2Client(environ, self.conf, self.debug)
+
         print "Outstanding: %s" % (self.outstanding_queries,)
         try:
             # Evaluate the response, returns a AuthnResponse instance
             try:
-                ar = scl.response(post, self.conf["entityid"], 
-                                    self.outstanding_queries, self.log)
+                authresp = self.saml_client.response(post, 
+                                                    self.conf["entityid"],
+                                                    self.outstanding_queries,
+                                                    self.log)
             except Exception, excp:
                 self.log and self.log.error("Exception: %s" % (excp,))
                 raise
                 
-            session_info = ar.session_info()
-            # Cache it
-            name_id = self.users.add_information_about_person(session_info)
-            if self.debug:
-                self.log and self.log.info("stored %s with key %s" % (
-                                            session_info, name_id))
+            session_info = authresp.session_info()
         except TypeError, excp:
             self.log and self.log.error("Exception: %s" % (excp,))
             return None
@@ -289,7 +283,7 @@ class SAML2Plugin(FormPluginBase):
             environ["s2repoze.sessioninfo"] = session_info
 
             # contruct and return the identity
-            return self._construct_identity(session_info)
+            return self.saml_client.users.get_identity(session_info["name_id"])
         else:
             return None
 
@@ -304,17 +298,17 @@ class SAML2Plugin(FormPluginBase):
             self.log.info(
                 "add_metadata for %s" % subject_id)
             self.log.info(
-                "Known subjects: %s" % self.cache.subjects())
+                "Known subjects: %s" % self.saml_client.users.subjects())
             try:
                 self.log.info(
-                    "Issuers: %s" % self.cache.entities(subject_id))
+                    "Issuers: %s" % self.saml_client.users.sources(subject_id))
             except KeyError:
                 pass
             
         if "user" not in identity:
             identity["user"] = {}
         try:
-            (ava, _) = self.cache.get_identity(subject_id)
+            (ava, _) = self.saml_client.users.get_identity(subject_id)
             #now = time.gmtime()        
             if self.debug:
                 self.log and self.log.info("Adding %s" % ava)
@@ -327,14 +321,15 @@ class SAML2Plugin(FormPluginBase):
             if self.vorg:
                 if self.vorg.do_vo_aggregation(subject_id):
                     # Get the extended identity
-                    identity["user"] = self.cache.get_identity(subject_id)[0]
+                    identity["user"] = self.saml_client.users.get_identity(
+                                                                subject_id)[0]
                     # Only do this once, mark that the identity has been 
                     # expanded
                     identity["pysaml2_vo_expanded"] = 1
 
 # @return
 # used 2 times : one to get the ticket, the other to validate it
-    def _serviceURL(self, environ, qstr=None):
+    def _service_url(self, environ, qstr=None):
         if qstr != None:
             url = construct_url(environ, querystring = qstr)
         else:
@@ -365,8 +360,13 @@ def make_plugin(rememberer_name=None, # plugin for remember
     if rememberer_name is None:
         raise ValueError(
              'must include rememberer_name in configuration')
+    
+    config = Config()
+    config.load_file(saml_conf)
 
-    plugin = SAML2Plugin(rememberer_name, saml_conf, 
+    scl = Saml2Client(config)
+
+    plugin = SAML2Plugin(rememberer_name, config, scl,
                 virtual_organization, wayf, cache, debug)
     return plugin
 
