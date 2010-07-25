@@ -57,13 +57,11 @@ class VerifyError(Exception):
 class Saml2Client(object):
     """ The basic pySAML2 service provider class """
     
-    def __init__(self, environ, config=None, debug=0, vorg=None, 
+    def __init__(self, config=None, debug=0, vorg=None, 
                 persistent_cache=None):
         """
-        :param environ:
         :param config: A saml2.config.Config instance
         """
-        self.environ = environ
         self.vorg = None
         self.users = Population(persistent_cache)
         if config:
@@ -224,8 +222,6 @@ class Saml2Client(object):
         """ Sends an authentication request.
         
         :param spentityid: The SP EntityID
-        :param binding: How the authentication request should be sent to the
-            IdP
         :param location: Where the IdP is.
         :param service_url: The SP's service URL
         :param my_name: The providers name
