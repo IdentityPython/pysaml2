@@ -57,7 +57,7 @@ class TestClient:
             conf.load_file("tests/server.config")
         except IOError:
             conf.load_file("server.config")
-        self.client = Saml2Client({},conf)
+        self.client = Saml2Client(conf)
     
     def test_create_attribute_query1(self):
         req = self.client.create_attribute_query("1", 

@@ -23,7 +23,7 @@ class TestServer1():
             conf.load_file("tests/server.config")
         except IOError:
             conf.load_file("server.config")
-        self.client = client.Saml2Client({},conf)
+        self.client = client.Saml2Client(conf)
 
     def test_issuer(self):
         issuer = self.server.issuer()
