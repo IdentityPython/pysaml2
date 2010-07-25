@@ -429,8 +429,9 @@ class SamlBase(ExtensionContainer):
     c_attributes = {}
     c_attribute_type = {}
     #c_attribute_use = {}
-    c_attribute_required = {}
+    #c_attribute_required = {}
     c_child_order = []
+    c_cardinality = {}
     
     def _get_all_c_children_with_order(self):
         if len(self.c_child_order) > 0:
