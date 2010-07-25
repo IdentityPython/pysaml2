@@ -288,7 +288,8 @@ def entity_descriptor(confd, valid_for):
     #else:
     #    backward = {}
         
-    ed = md.EntityDescriptor(entity_id=confd["entityid"])
+    ed = md.EntityDescriptor()
+    ed.entity_id=confd["entityid"]
     
     if valid_for:
         ed.valid_until = in_a_while(hours=valid_for)
@@ -298,10 +299,10 @@ def entity_descriptor(confd, valid_for):
         
     if "sp" in confd["service"]:
         # The SP
-        ed.sp_sso_descriptor = do_sp_sso_descriptor(confd["service"]["sp"],
+        ed.spsso_descriptor = do_sp_sso_descriptor(confd["service"]["sp"],
                                     attrconverters, mycert)
     if "idp" in confd["service"]:
-        ed.idp_sso_descriptor = do_idp_sso_descriptor(
+        ed.idpsso_descriptor = do_idp_sso_descriptor(
                                             confd["service"]["idp"], mycert)
     if "aa" in confd["service"]:
         ed.attribute_authority_descriptor = do_aa_descriptor(
