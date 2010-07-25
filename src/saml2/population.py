@@ -48,3 +48,6 @@ class Population(object):
             return self.cache.get(subject_id, source_id)["name_id"]
         except (KeyError, ValueError):
             return ""
+            
+    def sources(self, subject_id):
+        return self.cache.entities(subject_id)
