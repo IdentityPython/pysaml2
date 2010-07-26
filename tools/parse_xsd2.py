@@ -31,7 +31,13 @@ BASE_ELEMENT = ["text", "extension_elements", "extension_attributes"]
     
 class MissingPrerequisite(Exception):
     pass
-            
+
+def sd_copy(arg):
+    try:
+        return arg.copy()
+    except AttributeError:
+        return {}
+        
 # ------------------------------------------------------------------------
 
 def def_init(imports, attributes):
@@ -615,7 +621,8 @@ class Simple(object):
             self.__setattr__(attribute, value)
 
     def collect(self, top, sup, argv=None):
-        rval = self.repr(top, sup, argv)
+        argv_copy = sd_copy(argv)
+        rval = self.repr(top, sup, argv_copy)
         if rval:
             return ([rval], [])
         else:
@@ -810,8 +817,10 @@ class Complex(object):
             print self.__dict__
             print "#-- %d parts" % len(self.parts)
             
+        argv_copy = sd_copy(argv)
+        
         for part in self.parts:
-            (own, inh) = part.collect(top, sup, argv)
+            (own, inh) = part.collect(top, sup, argv_copy)
             self._own.extend(own)
             self._inherited.extend(inh)
 
@@ -874,7 +883,8 @@ class Element(Complex):
         that object """
         
         try:
-            return ([self.repr(top, sup, argv)], [])
+            argv_copy = sd_copy(argv)
+            return ([self.repr(top, sup, argv_copy)], [])
         except AttributeError, exc:
             print "!!!!", exc
             return ([], [])
@@ -906,20 +916,18 @@ class Element(Complex):
 
         objekt = PyElement(myname, root=top)
         
-        if self.maxOccurs == 1:
-            try:
-                objekt.max = argv["maxOccurs"]
-            except (KeyError, TypeError):
+        try:
+            objekt.max = argv["maxOccurs"]
+            if self.maxOccurs != 1:
                 objekt.max = self.maxOccurs
-        else:
+        except (KeyError, TypeError):
             objekt.max = self.maxOccurs
 
-        if self.minOccurs == 1:
-            try:
-                objekt.min = argv["minOccurs"]
-            except (KeyError, TypeError):
+        try:
+            objekt.min = argv["minOccurs"]
+            if self.minOccurs != 1:
                 objekt.min = self.minOccurs
-        else:
+        except (KeyError, TypeError):
             objekt.min = self.minOccurs
                 
         try:
@@ -986,16 +994,15 @@ class SimpleType(Complex):
         return obj
         
 class Sequence(Complex):
-    def collect(self, top, sup, argv={}):
-        if not argv:
-            argv = {}
+    def collect(self, top, sup, argv=None):
+        argv_copy = sd_copy(argv)
         for key, val in self.__dict__.items():
             if key not in ['xmlns_map'] and not key.startswith("_"):
-                argv[key] = val
+                argv_copy[key] = val
     
         if DEBUG:
             print "#Sequence: %s" % argv
-        return Complex.collect(self, top, sup, argv)
+        return Complex.collect(self, top, sup, argv_copy)
 
 class SimpleContent(Complex):
     pass
@@ -1004,7 +1011,7 @@ class ComplexContent(Complex):
     pass
     
 class Extension(Complex):
-    def collect(self, top, sup, argv={}):
+    def collect(self, top, sup, argv=None):
         if self._own or self._inherited:
             return (self._own, self._inherited)
         
@@ -1027,9 +1034,10 @@ class Extension(Complex):
         except (AttributeError, ValueError):
             pass
             
+        argv_copy = sd_copy(argv)
         for part in self.parts:
             #print "### ", part
-            (own, inh) = part.collect(top, sup, argv)
+            (own, inh) = part.collect(top, sup, argv_copy)
             if own:
                 if len(own) == 1 and isinstance(own[0], PyAttribute):
                     own[0].base = base
@@ -1040,16 +1048,18 @@ class Extension(Complex):
         return (self._own, self._inherited)
 
 class Choice(Complex):
-    def collect(self, top, sup, argv={}):
-        if not argv:
-            argv = {}
+    def collect(self, top, sup, argv=None):
+        argv_copy = sd_copy(argv)
         for key, val in self.__dict__.items():
             if key not in ['xmlns_map'] and not key.startswith("_"):
-                argv[key] = val
-        
+                argv_copy[key] = val
+
+        # A choice means each element may not be part of the choice
+        argv_copy["minOccurs"] = 0
+            
         if DEBUG:
             print "#Choice: %s" % argv
-        return Complex.collect(self, top, sup, argv)
+        return Complex.collect(self, top, sup, argv_copy)
 
 class Restriction(Complex):
     pass
@@ -1133,12 +1143,13 @@ class AttributeGroup(Complex):
         except AttributeError:
             if self._own or self._inherited:
                 return (self._own, self._inherited)
-                
+            
+            argv_copy = sd_copy(argv)
+            
             for prop in self.parts:
                 if isinstance(prop, Attribute):
-                    #print "== %s ==" % p.name
-                    self._own.append(prop.repr(top, sup, argv))
-            #print "$$", res
+                    self._own.append(prop.repr(top, sup, argv_copy))
+
             return (self._own, self._inherited)
 
     def repr(self, top=None, sup=None, _argv=None, _child=True):
@@ -1348,7 +1359,7 @@ class Schema(Complex):
             if isinstance(part, Import):
                 continue
 
-            elem = part.repr(self, "", [], False)
+            elem = part.repr(self, "", {}, False)
             if elem:
                 if isinstance(elem, PyAttributeGroup):
                     self.attrgrp.append(elem)
