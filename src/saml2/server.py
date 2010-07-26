@@ -230,6 +230,8 @@ class Server(object):
             consumer_url = self.metadata.consumer_url(sp_entity_id)
         except KeyError:
             self.log and self.log.info(
+                    "Failed to find consumer URL for %s" % sp_entity_id)
+            self.log and self.log.info(
                     "entities: %s" % self.metadata.entity.keys())
             raise UnknownPrincipal(sp_entity_id)
             
