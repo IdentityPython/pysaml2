@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 
 #
-# Generated Sun Jul 25 13:26:37 2010 by parse_xsd.py version 0.3.
+# Generated Mon Jul 26 14:40:05 2010 by parse_xsd.py version 0.3.
 #
 
 import saml2
 from saml2 import SamlBase
 
-from saml2 import saml
-import xmldsig as ds
-import xmlenc as xenc
+import sa as saml
+import xd as ds
+import xe as xenc
 
 NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:metadata'
 
@@ -1449,21 +1449,21 @@ class EntityDescriptorType(SamlBase):
     c_children['{urn:oasis:names:tc:SAML:2.0:metadata}Extensions'] = ('extensions', Extensions)
     c_cardinality['extensions'] = {"min":0, "max":1}
     c_children['{urn:oasis:names:tc:SAML:2.0:metadata}RoleDescriptor'] = ('role_descriptor', [RoleDescriptor])
-    c_cardinality['role_descriptor'] = {"min":1}
+    c_cardinality['role_descriptor'] = {"min":0}
     c_children['{urn:oasis:names:tc:SAML:2.0:metadata}IDPSSODescriptor'] = ('idpsso_descriptor', [IDPSSODescriptor])
-    c_cardinality['idpsso_descriptor'] = {"min":1}
+    c_cardinality['idpsso_descriptor'] = {"min":0}
     c_children['{urn:oasis:names:tc:SAML:2.0:metadata}SPSSODescriptor'] = ('spsso_descriptor', [SPSSODescriptor])
-    c_cardinality['spsso_descriptor'] = {"min":1}
+    c_cardinality['spsso_descriptor'] = {"min":0}
     c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AuthnAuthorityDescriptor'] = ('authn_authority_descriptor', [AuthnAuthorityDescriptor])
-    c_cardinality['authn_authority_descriptor'] = {"min":1}
+    c_cardinality['authn_authority_descriptor'] = {"min":0}
     c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AttributeAuthorityDescriptor'] = ('attribute_authority_descriptor', [AttributeAuthorityDescriptor])
-    c_cardinality['attribute_authority_descriptor'] = {"min":1}
+    c_cardinality['attribute_authority_descriptor'] = {"min":0}
     c_children['{urn:oasis:names:tc:SAML:2.0:metadata}PDPDescriptor'] = ('pdp_descriptor', [PDPDescriptor])
-    c_cardinality['pdp_descriptor'] = {"min":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AffiliationDescriptor'] = ('affiliation_descriptor', [AffiliationDescriptor])
-    c_cardinality['affiliation_descriptor'] = {"min":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}Organization'] = ('organization', [Organization])
-    c_cardinality['organization'] = {"min":0}
+    c_cardinality['pdp_descriptor'] = {"min":0}
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AffiliationDescriptor'] = ('affiliation_descriptor', AffiliationDescriptor)
+    c_cardinality['affiliation_descriptor'] = {"min":0, "max":1}
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}Organization'] = ('organization', Organization)
+    c_cardinality['organization'] = {"min":0, "max":1}
     c_children['{urn:oasis:names:tc:SAML:2.0:metadata}ContactPerson'] = ('contact_person', [ContactPerson])
     c_cardinality['contact_person'] = {"min":0}
     c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AdditionalMetadataLocation'] = ('additional_metadata_location', [AdditionalMetadataLocation])
@@ -1508,8 +1508,8 @@ class EntityDescriptorType(SamlBase):
         self.authn_authority_descriptor=authn_authority_descriptor or []
         self.attribute_authority_descriptor=attribute_authority_descriptor or []
         self.pdp_descriptor=pdp_descriptor or []
-        self.affiliation_descriptor=affiliation_descriptor or []
-        self.organization=organization or []
+        self.affiliation_descriptor=affiliation_descriptor
+        self.organization=organization
         self.contact_person=contact_person or []
         self.additional_metadata_location=additional_metadata_location or []
         self.entity_id=None
@@ -1549,8 +1549,8 @@ class EntitiesDescriptorType(SamlBase):
     c_children['{urn:oasis:names:tc:SAML:2.0:metadata}Extensions'] = ('extensions', Extensions)
     c_cardinality['extensions'] = {"min":0, "max":1}
     c_children['{urn:oasis:names:tc:SAML:2.0:metadata}EntityDescriptor'] = ('entity_descriptor', [EntityDescriptor])
-    c_cardinality['entity_descriptor'] = {"min":1}
-    c_cardinality['entities_descriptor'] = {"min":1}
+    c_cardinality['entity_descriptor'] = {"min":0}
+    c_cardinality['entities_descriptor'] = {"min":0}
     c_attributes['validUntil'] = ('valid_until', 'dateTime', False)
     c_attributes['cacheDuration'] = ('cache_duration', 'duration', False)
     c_attributes['ID'] = ('id', 'ID', False)
