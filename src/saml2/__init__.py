@@ -650,6 +650,45 @@ class SamlBase(ExtensionContainer):
                 self.extension_attributes[key] = val
             
         return self
+    
+    def complete(self):
+        for prop, _typ, req in self.c_attributes.values():
+            if req and not getattr(self, prop):
+                return False
+                
+        for prop, klassdef in self.c_children.values():
+            try:
+                restriction = self.c_cardinality[prop]
+                val = getattr(self, prop)
+                if val == None:
+                    num = 0
+                elif isinstance(val, list):
+                    num = len(val)
+                else:
+                    num = 1
+
+                try:
+                    minimum = restriction["min"]
+                except KeyError:
+                    minimum = 1
+                if num < minimum:
+                    return False
+                try:
+                    maximum = restriction["max"]
+                except KeyError:
+                    maximum = 1
+                # what if max == 0 ??
+                if maximum == "unbounded":
+                    continue
+                elif num > maximum:
+                    return False
+            except KeyError:
+                # default cardinality: min=max=1
+                if not getattr(self, prop):
+                    return False
+                    
+        return True
+        
         
         
 def element_to_extension_element(element):
