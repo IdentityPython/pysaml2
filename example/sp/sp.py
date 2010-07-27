@@ -111,7 +111,7 @@ def application(environ, start_response):
 from repoze.who.config import make_middleware_with_config
 
 app_with_auth = make_middleware_with_config(application, {"here":"."}, 
-                        './who.ini', log_file="who.log")
+                        './who.ini', log_file="who_sp.log")
 
 # ----------------------------------------------------------------------------
 PORT = 8087
