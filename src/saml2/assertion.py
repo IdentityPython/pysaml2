@@ -28,83 +28,121 @@ from saml2.s_utils import factory
 from saml2.s_utils import assertion_factory
 from saml2.s_utils import do_attribute_statement
 
-def _filter_values(vals, required=None, optional=None):
-    """ Removes values from *vals* that does not appear in *required*
-        or *optional*.
+def _filter_values(vals, value=None, must=False):
+    """ Removes values from *vals* that does not appear in vlist
     
     :param val: The values that are to be filtered
-    :param required: The required values
-    :param optional: The optional values
+    :param value: required or optional value
+    :param must: Whether the allowed values must appear
     :return: The set of values after filtering
     """
     
-    if not required and not optional:
+    if not value: # No value specified equals any value
         return vals
     
-    valr = []
-    valo = []
-    if required:
-        rvals = [v.text for v in required]
-    else:
-        rvals = []
-    if optional:
-        ovals = [v.text for v in optional]
-    else:
-        ovals = []
-    for val in vals:
-        if val in rvals:
-            valr.append(val)
-        elif val in ovals:
-            valo.append(val)
+    res = None
     
-    valo.extend(valr)
-    if rvals:
-        if len(rvals) == len(valr):
-            return valo
+    for val in vals:
+        if val == value:
+            res = val
+            break
+    
+    if must:
+        if res:
+            return res
         else:
-            _ = set(rvals)
             raise MissingValue("Required attribute value missing")
     else:
-        return valo
+        return res
+        
+# def _filter_values(vals, required=None, optional=None):
+#     """ Removes values from *vals* that does not appear in *required*
+#         or *optional*.
+#     
+#     :param val: The values that are to be filtered
+#     :param required: The required values
+#     :param optional: The optional values
+#     :return: The set of values after filtering
+#     """
+#     
+#     if not required and not optional:
+#         return vals
+#     
+#     valr = []
+#     valo = []
+#     if required:
+#         rvals = [v.text for v in required]
+#     else:
+#         rvals = []
+#     if optional:
+#         ovals = [v.text for v in optional]
+#     else:
+#         ovals = []
+#     for val in vals:
+#         if val in rvals:
+#             valr.append(val)
+#         elif val in ovals:
+#             valo.append(val)
+#     
+#     valo.extend(valr)
+#     if rvals:
+#         if len(rvals) == len(valr):
+#             return valo
+#         else:
+#             _ = set(rvals)
+#             raise MissingValue("Required attribute value missing")
+#     else:
+#         return valo
 
-def _combine(required=None, optional=None):
-    res = {}
-    if not required:
-        required = []
-    if not optional:
-        optional = []
-    for attr in required:
-        part = None
-        for oat in optional:
-            if attr.name == oat.name:
-                part = (attr.attribute_value, oat.attribute_value)
-                break
-        if part:
-            res[(attr.name, attr.friendly_name)] = part
-        else:
-            res[(attr.name, attr.friendly_name)] = (attr.attribute_value, [])
-    
-    for oat in optional:
-        tag = (oat.name, oat.friendly_name)
-        if tag not in res:
-            res[tag] = ([], oat.attribute_value)
-    
-    return res
+# def _combine(required=None, optional=None):
+#     res = {}
+#     if not required:
+#         required = []
+#     if not optional:
+#         optional = []
+#     for attr in required:
+#         part = None
+#         for oat in optional:
+#             if attr.name == oat.name:
+#                 part = (attr.attribute_value, oat.attribute_value)
+#                 break
+#         if part:
+#             res[(attr.name, attr.friendly_name)] = part
+#         else:
+#             res[(attr.name, attr.friendly_name)] = (attr.attribute_value, [])
+#     
+#     for oat in optional:
+#         tag = (oat.name, oat.friendly_name)
+#         if tag not in res:
+#             res[tag] = ([], oat.attribute_value)
+#     
+#     return res
 
 def filter_on_attributes(ava, required=None, optional=None):
     """ Filter
     :param required: list of RequestedAttribute instances
     """
     res = {}
-    comb = _combine(required, optional)
-    for attr, vals in comb.items():
-        if attr[0] in ava:
-            res[attr[0]] = _filter_values(ava[attr[0]], vals[0], vals[1])
-        elif attr[1] in ava:
-            res[attr[1]] = _filter_values(ava[attr[1]], vals[0], vals[1])
+    for attr in required:
+        if attr.friendly_name in ava:
+            res[attr.friendly_name] = [_filter_values(ava[attr.friendly_name], attr.text, True)]
+        elif req.name in ava:
+            res[attr.name] = [_filter_values(ava[attr.name], attr.text, True)]
         else:
             print >> sys.stderr, ava.keys()
-            raise MissingValue("Required attribute missing: '%s'" % (attr[0],))
+            raise MissingValue("Required attribute missing: '%s'" % (attr.friendly_name,))
+
+    for attr in optional:
+        if attr.friendly_name in ava:
+            try:
+                res[attr.friendly_name].append(_filter_values(ava[attr.friendly_name], attr.text))
+            except KeyError:
+                res[attr.friendly_name] = [_filter_values(ava[attr.friendly_name], attr.text)]
+        elif attr.name in ava:
+            try:
+                res[attr.name].append(_filter_values(ava[attr.name], attr.text))
+            except KeyError:
+                res[attr.name] = [_filter_values(ava[attr.name], attr.text)]
     
     return res
 
@@ -286,7 +324,7 @@ class Policy(object):
         :param ava: The information about the subject as a dictionary
         :param sp_entity_id: The entity ID of the SP
         :param required: Attributes that the SP requires in the assertion
-        :param optional: Attributes that the SP thinks is optional
+        :param optional: Attributes that the SP regards as optional
         :return: A possibly modified AVA
         """
                                 
