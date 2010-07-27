@@ -137,7 +137,8 @@ class SAML2Plugin(FormPluginBase):
             pass
 
         self.log = environ.get('repoze.who.logger','')
-
+        self.saml_client.log = self.log
+        
         # Which page was accessed to get here
         came_from = construct_came_from(environ)
         if self.debug:
@@ -159,7 +160,6 @@ class SAML2Plugin(FormPluginBase):
             # Do the AuthnRequest
             (sid, result) = self.saml_client.authenticate(location=idp_url,
                                                     relay_state=came_from, 
-                                                    log=self.log,
                                                     vorg=vorg)
             
             # remember the request
@@ -240,12 +240,14 @@ class SAML2Plugin(FormPluginBase):
                 environ["QUERY_STRING"] = query
             except ValueError:
                 environ["PATH_INFO"] = session_info["came_from"]
-                
+
+        self.log and self.log.info("Session_info: %s" % session_info)                
         return session_info
         
     #### IIdentifier ####
     def identify(self, environ):
         self.log = environ.get('repoze.who.logger','')
+        self.saml_client.log = self.log
         
         if self.log:
             self.log.info("ENVIRON: %s" % environ)
@@ -281,9 +283,16 @@ class SAML2Plugin(FormPluginBase):
                                             cgi_fieldStorage_to_dict(post))
         if session_info:        
             environ["s2repoze.sessioninfo"] = session_info
-
+            name_id = session_info["name_id"]
             # contruct and return the identity
-            return self.saml_client.users.get_identity(session_info["name_id"])
+            identity = {}
+            identity["login"] = name_id
+            identity["password"] = ""
+            identity['repoze.who.userid'] = name_id
+            identity["user"] = self.saml_client.users.get_identity(name_id)[0]
+            
+            self.log.info("IDENTITY: %s" % (identity,))
+            return identity
         else:
             return None
 
@@ -294,6 +303,8 @@ class SAML2Plugin(FormPluginBase):
         subject_id = identity['repoze.who.userid']
 
         self.log = environ.get('repoze.who.logger','')
+        self.saml_client.log = self.log
+
         if self.debug and self.log:
             self.log.info(
                 "add_metadata for %s" % subject_id)
@@ -353,7 +364,7 @@ def make_plugin(rememberer_name=None, # plugin for remember
                  debug=0,
                  ):
     
-    if saml_conf is None:
+    if saml_conf is "":
         raise ValueError(
             'must include saml_conf in configuration')
 
