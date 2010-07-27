@@ -528,3 +528,30 @@ def test_filter_ava_4():
                                 
     assert _eq(ava.keys(), ['mail', 'givenName', 'surName'])
     assert _eq(ava["mail"], ["derek@nyy.mlb.com", "dj@example.com"])
+
+def test_req_opt():
+    req = []
+    req.append(md.RequestedAttribute(friendly_name="surname", name="urn:oid:2.5.4.4",
+                    name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+                    is_required="true"))
+    req.append(md.RequestedAttribute(friendly_name="givenname", name="urn:oid:2.5.4.42",
+                    name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+                    is_required="true"))
+    req.append(md.RequestedAttribute(friendly_name="edupersonaffiliation", 
+                    name="urn:oid:1.3.6.1.4.1.5923.1.1.1.1",
+                    name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+                    is_required="true"))
+                    
+    opt = [md.RequestedAttribute(friendly_name="title", 
+                    name="urn:oid:2.5.4.12",
+                    name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+                    is_required="false")]
+                
+    policy = Policy()
+    ava = {'givenname': 'Roland', 'surname': 'Hedberg', 
+            'uid': 'rohe0002', 'edupersonaffiliation': 'staff'}
+            
+    sp_entity_id = "urn:mace:example.com:saml:curt:sp"
+    fava = policy.filter(ava, sp_entity_id, req, opt)
+    assert fava
+    
