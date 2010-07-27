@@ -186,10 +186,10 @@ class PyObj(object):
             if isinstance(prop, PyAttribute):
                 line.append("%sc_attributes['%s'] = %s" % (INDENT, 
                                                     prop.name, prop.spec()))
-                if hasattr(prop,'fixed'):
+                if prop.fixed:
                     args.append((prop.pyname, prop.fixed, None))
                 else:
-                    if hasattr(prop,'default'):
+                    if prop.default:
                         args.append((prop.pyname, prop.pyname, prop.default))
                     else:
                         args.append((prop.pyname, prop.pyname, None))
