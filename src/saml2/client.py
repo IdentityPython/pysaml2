@@ -73,8 +73,11 @@ class Saml2Client(object):
                                             self.users.cache, 
                                             log=None, vorg_conf=None)
             self.sec = security_context(config)
-        
-        self.debug = debug
+    
+        if not debug:
+            self.debug = self.config.debug()
+        else:
+            self.debug = debug
     
     def _init_request(self, request, destination):
         #request.id = sid()
