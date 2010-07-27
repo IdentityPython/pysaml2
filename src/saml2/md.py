@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 
 #
-# Generated Mon Jul 26 14:40:05 2010 by parse_xsd.py version 0.3.
+# Generated Tue Jul 27 10:53:12 2010 by parse_xsd.py version 0.3.
 #
 
 import saml2
 from saml2 import SamlBase
 
-import sa as saml
-import xd as ds
-import xe as xenc
+import xmlenc as xenc
+import saml as saml
+import xmldsig as ds
 
 NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:metadata'
 
@@ -49,7 +49,7 @@ class localizedNameType(SamlBase):
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
                 )
-        self.lang=None
+        self.lang=lang
 
 def localized_name_type_from_string(xml_string):
     return saml2.create_class_from_xml_string(localizedNameType, xml_string)
@@ -76,7 +76,7 @@ class localizedURIType(SamlBase):
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
                 )
-        self.lang=None
+        self.lang=lang
 
 def localized_uri_type_from_string(xml_string):
     return saml2.create_class_from_xml_string(localizedURIType, xml_string)
@@ -120,9 +120,9 @@ class EndpointType(SamlBase):
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
                 )
-        self.binding=None
-        self.location=None
-        self.response_location=None
+        self.binding=binding
+        self.location=location
+        self.response_location=response_location
 
 def endpoint_type_from_string(xml_string):
     return saml2.create_class_from_xml_string(EndpointType, xml_string)
@@ -157,8 +157,8 @@ class IndexedEndpointType(EndpointType):
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
                 )
-        self.index=None
-        self.is_default=None
+        self.index=index
+        self.is_default=is_default
 
 def indexed_endpoint_type_from_string(xml_string):
     return saml2.create_class_from_xml_string(IndexedEndpointType, xml_string)
@@ -308,7 +308,7 @@ class AdditionalMetadataLocationType(SamlBase):
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
                 )
-        self.namespace=None
+        self.namespace=namespace
 
 def additional_metadata_location_type_from_string(xml_string):
     return saml2.create_class_from_xml_string(AdditionalMetadataLocationType, xml_string)
@@ -529,7 +529,7 @@ class RequestedAttributeType(saml.AttributeType):
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
                 )
-        self.is_required=None
+        self.is_required=is_required
 
 def requested_attribute_type_from_string(xml_string):
     return saml2.create_class_from_xml_string(RequestedAttributeType, xml_string)
@@ -687,7 +687,7 @@ class ContactType(SamlBase):
         self.sur_name=sur_name
         self.email_address=email_address or []
         self.telephone_number=telephone_number or []
-        self.contact_type=None
+        self.contact_type=contact_type
 
 def contact_type_from_string(xml_string):
     return saml2.create_class_from_xml_string(ContactType, xml_string)
@@ -735,7 +735,7 @@ class KeyDescriptorType(SamlBase):
                 )
         self.key_info=key_info
         self.encryption_method=encryption_method or []
-        self.use=None
+        self.use=use
 
 def key_descriptor_type_from_string(xml_string):
     return saml2.create_class_from_xml_string(KeyDescriptorType, xml_string)
@@ -843,11 +843,11 @@ class RoleDescriptorType(SamlBase):
         self.key_descriptor=key_descriptor or []
         self.organization=organization
         self.contact_person=contact_person or []
-        self.id=None
-        self.valid_until=None
-        self.cache_duration=None
-        self.protocol_support_enumeration=None
-        self.error_url=None
+        self.id=id
+        self.valid_until=valid_until
+        self.cache_duration=cache_duration
+        self.protocol_support_enumeration=protocol_support_enumeration
+        self.error_url=error_url
 
 def role_descriptor_type_from_string(xml_string):
     return saml2.create_class_from_xml_string(RoleDescriptorType, xml_string)
@@ -984,7 +984,7 @@ class IDPSSODescriptorType(SSODescriptorType):
         self.assertion_id_request_service=assertion_id_request_service or []
         self.attribute_profile=attribute_profile or []
         self.attribute=attribute or []
-        self.want_authn_requests_signed=None
+        self.want_authn_requests_signed=want_authn_requests_signed
 
 def idpsso_descriptor_type_from_string(xml_string):
     return saml2.create_class_from_xml_string(IDPSSODescriptorType, xml_string)
@@ -1026,8 +1026,8 @@ class AttributeConsumingServiceType(SamlBase):
         self.service_name=service_name or []
         self.service_description=service_description or []
         self.requested_attribute=requested_attribute or []
-        self.index=None
-        self.is_default=None
+        self.index=index
+        self.is_default=is_default
 
 def attribute_consuming_service_type_from_string(xml_string):
     return saml2.create_class_from_xml_string(AttributeConsumingServiceType, xml_string)
@@ -1256,10 +1256,10 @@ class AffiliationDescriptorType(SamlBase):
         self.extensions=extensions
         self.affiliate_member=affiliate_member or []
         self.key_descriptor=key_descriptor or []
-        self.affiliation_owner_id=None
-        self.valid_until=None
-        self.cache_duration=None
-        self.id=None
+        self.affiliation_owner_id=affiliation_owner_id
+        self.valid_until=valid_until
+        self.cache_duration=cache_duration
+        self.id=id
 
 def affiliation_descriptor_type_from_string(xml_string):
     return saml2.create_class_from_xml_string(AffiliationDescriptorType, xml_string)
@@ -1416,8 +1416,8 @@ class SPSSODescriptorType(SSODescriptorType):
                 )
         self.assertion_consumer_service=assertion_consumer_service or []
         self.attribute_consuming_service=attribute_consuming_service or []
-        self.authn_requests_signed=None
-        self.want_assertions_signed=None
+        self.authn_requests_signed=authn_requests_signed
+        self.want_assertions_signed=want_assertions_signed
 
 def spsso_descriptor_type_from_string(xml_string):
     return saml2.create_class_from_xml_string(SPSSODescriptorType, xml_string)
@@ -1512,10 +1512,10 @@ class EntityDescriptorType(SamlBase):
         self.organization=organization
         self.contact_person=contact_person or []
         self.additional_metadata_location=additional_metadata_location or []
-        self.entity_id=None
-        self.valid_until=None
-        self.cache_duration=None
-        self.id=None
+        self.entity_id=entity_id
+        self.valid_until=valid_until
+        self.cache_duration=cache_duration
+        self.id=id
 
 def entity_descriptor_type_from_string(xml_string):
     return saml2.create_class_from_xml_string(EntityDescriptorType, xml_string)
@@ -1579,10 +1579,10 @@ class EntitiesDescriptorType(SamlBase):
         self.extensions=extensions
         self.entity_descriptor=entity_descriptor or []
         self.entities_descriptor=entities_descriptor or []
-        self.valid_until=None
-        self.cache_duration=None
-        self.id=None
-        self.name=None
+        self.valid_until=valid_until
+        self.cache_duration=cache_duration
+        self.id=id
+        self.name=name
 
 def entities_descriptor_type_from_string(xml_string):
     return saml2.create_class_from_xml_string(EntitiesDescriptorType, xml_string)
