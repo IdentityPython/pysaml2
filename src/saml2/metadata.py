@@ -66,18 +66,14 @@ class MetaData(object):
         
         :param entity_descriptor: A EntityDescriptor instance
         """
-        try:
-            afd = entity_descriptor.affiliation_descriptor
-        except AttributeError:
-            return
+
+        afd = entity_descriptor.affiliation_descriptor
+    
+        if afd:
+            members = [member.text.strip() for member in afd.affiliate_member]
         
-        members = []
-        for tafd in afd: # should really never be more than one
-            members.extend(
-                [member.text.strip() for member in tafd.affiliate_member])
-        
-        if members != []:
-            entity[tag] = members
+            if members != []:
+                entity[tag] = members
     
     def _sp_metadata(self, entity_descriptor, entity, tag):
         """
