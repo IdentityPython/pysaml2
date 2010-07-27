@@ -164,3 +164,10 @@ class Config(dict):
             namn = self.metadata.name(eid)
             lista.append((eid, namn))
         return lista
+    
+    def debug(self):
+        try:
+            return self["debug"]
+        except KeyError:
+            return 0
+
