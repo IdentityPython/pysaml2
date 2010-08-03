@@ -161,49 +161,50 @@ class TestX509Data:
     """Test for X509Data accessors"""
     st = ds.x509_issuer_serial_from_string(ds_data.TEST_X509_ISSUER_SERIAL)
     print st
-    self.x509_data.x509_issuer_serial.append(st)
-    self.x509_data.x509_ski.append(ds.X509SKI(text="x509 ski"))
-    self.x509_data.x509_subject_name.append(ds.X509SubjectName(
-      text="x509 subject name"))
-    self.x509_data.x509_certificate.append(ds.X509Certificate(
-      text="x509 certificate"))
-    self.x509_data.x509_crl.append(ds.X509CRL(text="x509 crl"))
+    self.x509_data.x509_issuer_serial= st
+    self.x509_data.x509_ski = ds.X509SKI(text="x509 ski")
+    self.x509_data.x509_subject_name = ds.X509SubjectName(
+                                                text="x509 subject name")
+    self.x509_data.x509_certificate = ds.X509Certificate(
+                                                text="x509 certificate")
+    self.x509_data.x509_crl = ds.X509CRL(text="x509 crl")
+    
     new_x509_data = ds.x509_data_from_string(self.x509_data.to_string())
     print new_x509_data.keyswv()
     print new_x509_data.__dict__.keys()
-    print len(new_x509_data.x509_issuer_serial)
-    assert isinstance(new_x509_data.x509_issuer_serial[0],
+    assert new_x509_data.x509_issuer_serial
+    assert isinstance(new_x509_data.x509_issuer_serial,
                             ds.X509IssuerSerialType)
-    assert new_x509_data.x509_ski[0].text.strip() == "x509 ski"
-    assert isinstance(new_x509_data.x509_ski[0], ds.X509SKI)
-    assert new_x509_data.x509_subject_name[0].text.strip() == \
+    assert new_x509_data.x509_ski.text.strip() == "x509 ski"
+    assert isinstance(new_x509_data.x509_ski, ds.X509SKI)
+    assert new_x509_data.x509_subject_name.text.strip() == \
                  "x509 subject name"
-    assert isinstance(new_x509_data.x509_subject_name[0],
+    assert isinstance(new_x509_data.x509_subject_name,
                             ds.X509SubjectName)
-    assert new_x509_data.x509_certificate[0].text.strip() == \
+    assert new_x509_data.x509_certificate.text.strip() == \
                  "x509 certificate"
-    assert isinstance(new_x509_data.x509_certificate[0],
+    assert isinstance(new_x509_data.x509_certificate,
                             ds.X509Certificate)
-    assert new_x509_data.x509_crl[0].text.strip() == "x509 crl"
-    assert isinstance(new_x509_data.x509_crl[0],ds.X509CRL)
+    assert new_x509_data.x509_crl.text.strip() == "x509 crl"
+    assert isinstance(new_x509_data.x509_crl,ds.X509CRL)
 
   def testUsingTestData(self):
     """Test for x509_data_from_string() using test data"""
     new_x509_data = ds.x509_data_from_string(ds_data.TEST_X509_DATA)
-    assert isinstance(new_x509_data.x509_issuer_serial[0],
+    assert isinstance(new_x509_data.x509_issuer_serial,
                             ds.X509IssuerSerial)
-    assert new_x509_data.x509_ski[0].text.strip() == "x509 ski"
-    assert isinstance(new_x509_data.x509_ski[0], ds.X509SKI)
-    assert new_x509_data.x509_subject_name[0].text.strip() == \
+    assert new_x509_data.x509_ski.text.strip() == "x509 ski"
+    assert isinstance(new_x509_data.x509_ski, ds.X509SKI)
+    assert new_x509_data.x509_subject_name.text.strip() == \
                  "x509 subject name"
-    assert isinstance(new_x509_data.x509_subject_name[0],
+    assert isinstance(new_x509_data.x509_subject_name,
                             ds.X509SubjectName)
-    assert new_x509_data.x509_certificate[0].text.strip() == \
+    assert new_x509_data.x509_certificate.text.strip() == \
                  "x509 certificate"
-    assert isinstance(new_x509_data.x509_certificate[0],
+    assert isinstance(new_x509_data.x509_certificate,
                             ds.X509Certificate)
-    assert new_x509_data.x509_crl[0].text.strip() == "x509 crl"
-    assert isinstance(new_x509_data.x509_crl[0],ds.X509CRL)
+    assert new_x509_data.x509_crl.text.strip() == "x509 crl"
+    assert isinstance(new_x509_data.x509_crl,ds.X509CRL)
 
 
 class TestTransform:

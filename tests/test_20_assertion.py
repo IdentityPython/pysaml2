@@ -27,19 +27,6 @@ mail = md.RequestedAttribute(
 
 # ---------------------------------------------------------------------------
 
-def test_combine_0():
-    r = Attribute(name="urn:oid:2.5.4.5", name_format=NAME_FORMAT_URI,
-                    friendly_name="serialNumber")    
-    o = Attribute(name="urn:oid:2.5.4.4", name_format=NAME_FORMAT_URI,
-                    friendly_name="surName")
-
-    comb = assertion._combine([r],[o])
-    print comb
-    assert _eq(comb.keys(), [('urn:oid:2.5.4.5', 'serialNumber'), 
-                                ('urn:oid:2.5.4.4', 'surName')])
-    assert comb[('urn:oid:2.5.4.5', 'serialNumber')] == ([], [])
-    assert comb[('urn:oid:2.5.4.4', 'surName')] == ([], [])
-
 def test_filter_on_attributes_0():
     a = Attribute(name="urn:oid:2.5.4.5", name_format=NAME_FORMAT_URI,
                     friendly_name="serialNumber")    

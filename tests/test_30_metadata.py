@@ -264,11 +264,11 @@ def test_construct_entity_descr_1():
 
     assert ed.entity_id == "urn:mace:catalogix.se:sp1"
     org = ed.organization
-    assert len(org) == 1
-    assert _eq(org[0].keyswv(), ["organization_name","organization_url"])
-    assert len(org[0].organization_name) == 1
-    assert org[0].organization_name[0].text == "Catalogix"
-    assert org[0].organization_url[0].text == "http://www.catalogix.se/"
+    assert org
+    assert _eq(org.keyswv(), ["organization_name","organization_url"])
+    assert len(org.organization_name) == 1
+    assert org.organization_name[0].text == "Catalogix"
+    assert org.organization_url[0].text == "http://www.catalogix.se/"
 
 def test_construct_entity_descr_2():
     ed = make_instance(md.EntityDescriptor,
@@ -286,11 +286,11 @@ def test_construct_entity_descr_2():
     assert _eq(ed.keyswv(), ["entity_id", "contact_person", "organization"])
     assert ed.entity_id == "urn:mace:catalogix.se:sp1"
     org = ed.organization
-    assert len(org) == 1
-    assert _eq(org[0].keyswv(), ["organization_name", "organization_url"])
-    assert len(org[0].organization_name) == 1
-    assert org[0].organization_name[0].text == "Catalogix"
-    assert org[0].organization_url[0].text == "http://www.catalogix.se/"
+    assert org
+    assert _eq(org.keyswv(), ["organization_name", "organization_url"])
+    assert len(org.organization_name) == 1
+    assert org.organization_name[0].text == "Catalogix"
+    assert org.organization_url[0].text == "http://www.catalogix.se/"
     assert len(ed.contact_person) == 1
     c = ed.contact_person[0]
     assert c.given_name.text == "Roland"
@@ -316,8 +316,8 @@ def test_construct_key_descriptor():
     assert len(ki.x509_data) == 1
     data = ki.x509_data[0]
     assert _eq(data.keyswv(), ["x509_certificate"])
-    assert len(data.x509_certificate) == 1
-    assert len(data.x509_certificate[0].text.strip()) == len(cert)
+    assert data.x509_certificate
+    assert len(data.x509_certificate.text.strip()) == len(cert)
 
 def test_construct_key_descriptor_with_key_name():
     cert = "".join(_read_lines("test.pem")[1:-1]).strip()
@@ -340,8 +340,8 @@ def test_construct_key_descriptor_with_key_name():
     assert len(ki.x509_data) == 1
     data = ki.x509_data[0]
     assert _eq(data.keyswv(), ["x509_certificate"])
-    assert len(data.x509_certificate) == 1
-    assert len(data.x509_certificate[0].text.strip()) == len(cert)
+    assert data.x509_certificate
+    assert len(data.x509_certificate.text.strip()) == len(cert)
     
 def test_construct_AttributeAuthorityDescriptor():
     aad = make_instance(

@@ -1063,7 +1063,7 @@ class TestEntityDescriptor:
                             md.IDPSSODescriptor)
     assert isinstance(new_entity_descriptor.spsso_descriptor[0],
                             md.SPSSODescriptor)
-    assert isinstance(new_entity_descriptor.organization[0],
+    assert isinstance(new_entity_descriptor.organization,
                             md.Organization)
     assert isinstance(new_entity_descriptor.contact_person[0],
                             md.ContactPerson)
@@ -1087,7 +1087,7 @@ class TestEntityDescriptor:
                             md.IDPSSODescriptor)
     assert isinstance(new_entity_descriptor.spsso_descriptor[0],
                             md.SPSSODescriptor)
-    assert isinstance(new_entity_descriptor.organization[0],
+    assert isinstance(new_entity_descriptor.organization,
                             md.Organization)
     assert isinstance(new_entity_descriptor.contact_person[0],
                             md.ContactPerson)
