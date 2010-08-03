@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #
-# Generated Thu Jul 15 20:56:45 2010 by parse_xsd.py version 0.2.
+# Generated Tue Aug  3 20:39:24 2010 by parse_xsd.py version 0.3.
 #
 
 import saml2
@@ -35,6 +35,7 @@ class CryptoBinary(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
 
 def crypto_binary_from_string(xml_string):
     return saml2.create_class_from_xml_string(CryptoBinary, xml_string)
@@ -47,6 +48,7 @@ class SignatureValueType(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
     c_attributes['Id'] = ('id', 'ID', False)
 
     def __init__(self,
@@ -73,6 +75,7 @@ class CanonicalizationMethodType(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
     c_attributes['Algorithm'] = ('algorithm', 'anyURI', True)
 
     def __init__(self,
@@ -100,6 +103,7 @@ class XPath(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
 
 def x_path_from_string(xml_string):
     return saml2.create_class_from_xml_string(XPath, xml_string)
@@ -112,7 +116,9 @@ class TransformType(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{http://www.w3.org/2000/09/xmldsig#}XPath'] = ('x_path', [XPath])
+    c_cardinality['x_path'] = {"min":0}
     c_attributes['Algorithm'] = ('algorithm', 'anyURI', True)
     c_child_order.extend(['x_path'])
 
@@ -142,6 +148,7 @@ class DigestMethodType(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
     c_attributes['Algorithm'] = ('algorithm', 'anyURI', True)
 
     def __init__(self,
@@ -169,6 +176,7 @@ class DigestValueType(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
 
 def digest_value_type_from_string(xml_string):
     return saml2.create_class_from_xml_string(DigestValueType, xml_string)
@@ -182,6 +190,7 @@ class KeyName(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
 
 def key_name_from_string(xml_string):
     return saml2.create_class_from_xml_string(KeyName, xml_string)
@@ -195,6 +204,7 @@ class MgmtData(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
 
 def mgmt_data_from_string(xml_string):
     return saml2.create_class_from_xml_string(MgmtData, xml_string)
@@ -208,6 +218,7 @@ class X509IssuerName(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
 
 def x509_issuer_name_from_string(xml_string):
     return saml2.create_class_from_xml_string(X509IssuerName, xml_string)
@@ -221,6 +232,7 @@ class X509SerialNumber(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
 
 def x509_serial_number_from_string(xml_string):
     return saml2.create_class_from_xml_string(X509SerialNumber, xml_string)
@@ -233,6 +245,7 @@ class X509IssuerSerialType(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{http://www.w3.org/2000/09/xmldsig#}X509IssuerName'] = ('x509_issuer_name', X509IssuerName)
     c_children['{http://www.w3.org/2000/09/xmldsig#}X509SerialNumber'] = ('x509_serial_number', X509SerialNumber)
     c_child_order.extend(['x509_issuer_name', 'x509_serial_number'])
@@ -264,6 +277,7 @@ class PGPKeyID(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
 
 def pgp_key_id_from_string(xml_string):
     return saml2.create_class_from_xml_string(PGPKeyID, xml_string)
@@ -277,6 +291,7 @@ class PGPKeyPacket(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
 
 def pgp_key_packet_from_string(xml_string):
     return saml2.create_class_from_xml_string(PGPKeyPacket, xml_string)
@@ -289,8 +304,10 @@ class PGPDataType(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{http://www.w3.org/2000/09/xmldsig#}PGPKeyID'] = ('pgp_key_id', PGPKeyID)
     c_children['{http://www.w3.org/2000/09/xmldsig#}PGPKeyPacket'] = ('pgp_key_packet', PGPKeyPacket)
+    c_cardinality['pgp_key_packet'] = {"min":0, "max":1}
     c_child_order.extend(['pgp_key_id', 'pgp_key_packet'])
 
     def __init__(self,
@@ -320,6 +337,7 @@ class SPKISexp(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
 
 def spki_sexp_from_string(xml_string):
     return saml2.create_class_from_xml_string(SPKISexp, xml_string)
@@ -332,7 +350,9 @@ class SPKIDataType(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{http://www.w3.org/2000/09/xmldsig#}SPKISexp'] = ('spki_sexp', [SPKISexp])
+    c_cardinality['spki_sexp'] = {"min":1}
     c_child_order.extend(['spki_sexp'])
 
     def __init__(self,
@@ -359,6 +379,7 @@ class ObjectType(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
     c_attributes['Id'] = ('id', 'ID', False)
     c_attributes['MimeType'] = ('mime_type', 'string', False)
     c_attributes['Encoding'] = ('encoding', 'anyURI', False)
@@ -391,6 +412,7 @@ class SignaturePropertyType(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
     c_attributes['Target'] = ('target', 'anyURI', True)
     c_attributes['Id'] = ('id', 'ID', False)
 
@@ -421,6 +443,7 @@ class HMACOutputLengthType(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
 
 def hmac_output_length_type_from_string(xml_string):
     return saml2.create_class_from_xml_string(HMACOutputLengthType, xml_string)
@@ -433,6 +456,7 @@ class P(CryptoBinary):
     c_children = CryptoBinary.c_children.copy()
     c_attributes = CryptoBinary.c_attributes.copy()
     c_child_order = CryptoBinary.c_child_order[:]
+    c_cardinality = CryptoBinary.c_cardinality.copy()
 
 def p_from_string(xml_string):
     return saml2.create_class_from_xml_string(P, xml_string)
@@ -445,6 +469,7 @@ class Q(CryptoBinary):
     c_children = CryptoBinary.c_children.copy()
     c_attributes = CryptoBinary.c_attributes.copy()
     c_child_order = CryptoBinary.c_child_order[:]
+    c_cardinality = CryptoBinary.c_cardinality.copy()
 
 def q_from_string(xml_string):
     return saml2.create_class_from_xml_string(Q, xml_string)
@@ -457,6 +482,7 @@ class G(CryptoBinary):
     c_children = CryptoBinary.c_children.copy()
     c_attributes = CryptoBinary.c_attributes.copy()
     c_child_order = CryptoBinary.c_child_order[:]
+    c_cardinality = CryptoBinary.c_cardinality.copy()
 
 def g_from_string(xml_string):
     return saml2.create_class_from_xml_string(G, xml_string)
@@ -469,6 +495,7 @@ class Y(CryptoBinary):
     c_children = CryptoBinary.c_children.copy()
     c_attributes = CryptoBinary.c_attributes.copy()
     c_child_order = CryptoBinary.c_child_order[:]
+    c_cardinality = CryptoBinary.c_cardinality.copy()
 
 def y_from_string(xml_string):
     return saml2.create_class_from_xml_string(Y, xml_string)
@@ -481,6 +508,7 @@ class J(CryptoBinary):
     c_children = CryptoBinary.c_children.copy()
     c_attributes = CryptoBinary.c_attributes.copy()
     c_child_order = CryptoBinary.c_child_order[:]
+    c_cardinality = CryptoBinary.c_cardinality.copy()
 
 def j_from_string(xml_string):
     return saml2.create_class_from_xml_string(J, xml_string)
@@ -493,6 +521,7 @@ class Seed(CryptoBinary):
     c_children = CryptoBinary.c_children.copy()
     c_attributes = CryptoBinary.c_attributes.copy()
     c_child_order = CryptoBinary.c_child_order[:]
+    c_cardinality = CryptoBinary.c_cardinality.copy()
 
 def seed_from_string(xml_string):
     return saml2.create_class_from_xml_string(Seed, xml_string)
@@ -505,6 +534,7 @@ class PgenCounter(CryptoBinary):
     c_children = CryptoBinary.c_children.copy()
     c_attributes = CryptoBinary.c_attributes.copy()
     c_child_order = CryptoBinary.c_child_order[:]
+    c_cardinality = CryptoBinary.c_cardinality.copy()
 
 def pgen_counter_from_string(xml_string):
     return saml2.create_class_from_xml_string(PgenCounter, xml_string)
@@ -517,13 +547,20 @@ class DSAKeyValueType(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{http://www.w3.org/2000/09/xmldsig#}P'] = ('p', P)
+    c_cardinality['p'] = {"min":0, "max":1}
     c_children['{http://www.w3.org/2000/09/xmldsig#}Q'] = ('q', Q)
+    c_cardinality['q'] = {"min":0, "max":1}
     c_children['{http://www.w3.org/2000/09/xmldsig#}G'] = ('g', G)
+    c_cardinality['g'] = {"min":0, "max":1}
     c_children['{http://www.w3.org/2000/09/xmldsig#}Y'] = ('y', Y)
     c_children['{http://www.w3.org/2000/09/xmldsig#}J'] = ('j', J)
+    c_cardinality['j'] = {"min":0, "max":1}
     c_children['{http://www.w3.org/2000/09/xmldsig#}Seed'] = ('seed', Seed)
+    c_cardinality['seed'] = {"min":0, "max":1}
     c_children['{http://www.w3.org/2000/09/xmldsig#}PgenCounter'] = ('pgen_counter', PgenCounter)
+    c_cardinality['pgen_counter'] = {"min":0, "max":1}
     c_child_order.extend(['p', 'q', 'g', 'y', 'j', 'seed', 'pgen_counter'])
 
     def __init__(self,
@@ -562,6 +599,7 @@ class Modulus(CryptoBinary):
     c_children = CryptoBinary.c_children.copy()
     c_attributes = CryptoBinary.c_attributes.copy()
     c_child_order = CryptoBinary.c_child_order[:]
+    c_cardinality = CryptoBinary.c_cardinality.copy()
 
 def modulus_from_string(xml_string):
     return saml2.create_class_from_xml_string(Modulus, xml_string)
@@ -574,6 +612,7 @@ class Exponent(CryptoBinary):
     c_children = CryptoBinary.c_children.copy()
     c_attributes = CryptoBinary.c_attributes.copy()
     c_child_order = CryptoBinary.c_child_order[:]
+    c_cardinality = CryptoBinary.c_cardinality.copy()
 
 def exponent_from_string(xml_string):
     return saml2.create_class_from_xml_string(Exponent, xml_string)
@@ -586,6 +625,7 @@ class RSAKeyValueType(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{http://www.w3.org/2000/09/xmldsig#}Modulus'] = ('modulus', Modulus)
     c_children['{http://www.w3.org/2000/09/xmldsig#}Exponent'] = ('exponent', Exponent)
     c_child_order.extend(['modulus', 'exponent'])
@@ -616,6 +656,7 @@ class SignatureValue(SignatureValueType):
     c_children = SignatureValueType.c_children.copy()
     c_attributes = SignatureValueType.c_attributes.copy()
     c_child_order = SignatureValueType.c_child_order[:]
+    c_cardinality = SignatureValueType.c_cardinality.copy()
 
 def signature_value_from_string(xml_string):
     return saml2.create_class_from_xml_string(SignatureValue, xml_string)
@@ -628,6 +669,7 @@ class CanonicalizationMethod(CanonicalizationMethodType):
     c_children = CanonicalizationMethodType.c_children.copy()
     c_attributes = CanonicalizationMethodType.c_attributes.copy()
     c_child_order = CanonicalizationMethodType.c_child_order[:]
+    c_cardinality = CanonicalizationMethodType.c_cardinality.copy()
 
 def canonicalization_method_from_string(xml_string):
     return saml2.create_class_from_xml_string(CanonicalizationMethod, xml_string)
@@ -640,6 +682,7 @@ class HMACOutputLength(HMACOutputLengthType):
     c_children = HMACOutputLengthType.c_children.copy()
     c_attributes = HMACOutputLengthType.c_attributes.copy()
     c_child_order = HMACOutputLengthType.c_child_order[:]
+    c_cardinality = HMACOutputLengthType.c_cardinality.copy()
 
 def hmac_output_length_from_string(xml_string):
     return saml2.create_class_from_xml_string(HMACOutputLength, xml_string)
@@ -652,7 +695,9 @@ class SignatureMethodType(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{http://www.w3.org/2000/09/xmldsig#}HMACOutputLength'] = ('hmac_output_length', HMACOutputLength)
+    c_cardinality['hmac_output_length'] = {"min":0, "max":1}
     c_attributes['Algorithm'] = ('algorithm', 'anyURI', True)
     c_child_order.extend(['hmac_output_length'])
 
@@ -682,6 +727,7 @@ class Transform(TransformType):
     c_children = TransformType.c_children.copy()
     c_attributes = TransformType.c_attributes.copy()
     c_child_order = TransformType.c_child_order[:]
+    c_cardinality = TransformType.c_cardinality.copy()
 
 def transform_from_string(xml_string):
     return saml2.create_class_from_xml_string(Transform, xml_string)
@@ -694,6 +740,7 @@ class DigestMethod(DigestMethodType):
     c_children = DigestMethodType.c_children.copy()
     c_attributes = DigestMethodType.c_attributes.copy()
     c_child_order = DigestMethodType.c_child_order[:]
+    c_cardinality = DigestMethodType.c_cardinality.copy()
 
 def digest_method_from_string(xml_string):
     return saml2.create_class_from_xml_string(DigestMethod, xml_string)
@@ -706,6 +753,7 @@ class DigestValue(DigestValueType):
     c_children = DigestValueType.c_children.copy()
     c_attributes = DigestValueType.c_attributes.copy()
     c_child_order = DigestValueType.c_child_order[:]
+    c_cardinality = DigestValueType.c_cardinality.copy()
 
 def digest_value_from_string(xml_string):
     return saml2.create_class_from_xml_string(DigestValue, xml_string)
@@ -718,6 +766,7 @@ class X509IssuerSerial(X509IssuerSerialType):
     c_children = X509IssuerSerialType.c_children.copy()
     c_attributes = X509IssuerSerialType.c_attributes.copy()
     c_child_order = X509IssuerSerialType.c_child_order[:]
+    c_cardinality = X509IssuerSerialType.c_cardinality.copy()
 
 def x509_issuer_serial_from_string(xml_string):
     return saml2.create_class_from_xml_string(X509IssuerSerial, xml_string)
@@ -731,6 +780,7 @@ class X509SKI(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
 
 def x509_ski_from_string(xml_string):
     return saml2.create_class_from_xml_string(X509SKI, xml_string)
@@ -744,6 +794,7 @@ class X509SubjectName(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
 
 def x509_subject_name_from_string(xml_string):
     return saml2.create_class_from_xml_string(X509SubjectName, xml_string)
@@ -757,6 +808,7 @@ class X509Certificate(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
 
 def x509_certificate_from_string(xml_string):
     return saml2.create_class_from_xml_string(X509Certificate, xml_string)
@@ -770,6 +822,7 @@ class X509CRL(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
 
 def x509_crl_from_string(xml_string):
     return saml2.create_class_from_xml_string(X509CRL, xml_string)
@@ -782,11 +835,17 @@ class X509DataType(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
-    c_children['{http://www.w3.org/2000/09/xmldsig#}X509IssuerSerial'] = ('x509_issuer_serial', [X509IssuerSerial])
-    c_children['{http://www.w3.org/2000/09/xmldsig#}X509SKI'] = ('x509_ski', [X509SKI])
-    c_children['{http://www.w3.org/2000/09/xmldsig#}X509SubjectName'] = ('x509_subject_name', [X509SubjectName])
-    c_children['{http://www.w3.org/2000/09/xmldsig#}X509Certificate'] = ('x509_certificate', [X509Certificate])
-    c_children['{http://www.w3.org/2000/09/xmldsig#}X509CRL'] = ('x509_crl', [X509CRL])
+    c_cardinality = SamlBase.c_cardinality.copy()
+    c_children['{http://www.w3.org/2000/09/xmldsig#}X509IssuerSerial'] = ('x509_issuer_serial', X509IssuerSerial)
+    c_cardinality['x509_issuer_serial'] = {"min":0, "max":1}
+    c_children['{http://www.w3.org/2000/09/xmldsig#}X509SKI'] = ('x509_ski', X509SKI)
+    c_cardinality['x509_ski'] = {"min":0, "max":1}
+    c_children['{http://www.w3.org/2000/09/xmldsig#}X509SubjectName'] = ('x509_subject_name', X509SubjectName)
+    c_cardinality['x509_subject_name'] = {"min":0, "max":1}
+    c_children['{http://www.w3.org/2000/09/xmldsig#}X509Certificate'] = ('x509_certificate', X509Certificate)
+    c_cardinality['x509_certificate'] = {"min":0, "max":1}
+    c_children['{http://www.w3.org/2000/09/xmldsig#}X509CRL'] = ('x509_crl', X509CRL)
+    c_cardinality['x509_crl'] = {"min":0, "max":1}
     c_child_order.extend(['x509_issuer_serial', 'x509_ski', 'x509_subject_name', 'x509_certificate', 'x509_crl'])
 
     def __init__(self,
@@ -804,11 +863,11 @@ class X509DataType(SamlBase):
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
                 )
-        self.x509_issuer_serial=x509_issuer_serial or []
-        self.x509_ski=x509_ski or []
-        self.x509_subject_name=x509_subject_name or []
-        self.x509_certificate=x509_certificate or []
-        self.x509_crl=x509_crl or []
+        self.x509_issuer_serial=x509_issuer_serial
+        self.x509_ski=x509_ski
+        self.x509_subject_name=x509_subject_name
+        self.x509_certificate=x509_certificate
+        self.x509_crl=x509_crl
 
 def x509_data_type_from_string(xml_string):
     return saml2.create_class_from_xml_string(X509DataType, xml_string)
@@ -821,6 +880,7 @@ class PGPData(PGPDataType):
     c_children = PGPDataType.c_children.copy()
     c_attributes = PGPDataType.c_attributes.copy()
     c_child_order = PGPDataType.c_child_order[:]
+    c_cardinality = PGPDataType.c_cardinality.copy()
 
 def pgp_data_from_string(xml_string):
     return saml2.create_class_from_xml_string(PGPData, xml_string)
@@ -833,6 +893,7 @@ class SPKIData(SPKIDataType):
     c_children = SPKIDataType.c_children.copy()
     c_attributes = SPKIDataType.c_attributes.copy()
     c_child_order = SPKIDataType.c_child_order[:]
+    c_cardinality = SPKIDataType.c_cardinality.copy()
 
 def spki_data_from_string(xml_string):
     return saml2.create_class_from_xml_string(SPKIData, xml_string)
@@ -845,6 +906,7 @@ class Object(ObjectType):
     c_children = ObjectType.c_children.copy()
     c_attributes = ObjectType.c_attributes.copy()
     c_child_order = ObjectType.c_child_order[:]
+    c_cardinality = ObjectType.c_cardinality.copy()
 
 def object_from_string(xml_string):
     return saml2.create_class_from_xml_string(Object, xml_string)
@@ -857,6 +919,7 @@ class SignatureProperty(SignaturePropertyType):
     c_children = SignaturePropertyType.c_children.copy()
     c_attributes = SignaturePropertyType.c_attributes.copy()
     c_child_order = SignaturePropertyType.c_child_order[:]
+    c_cardinality = SignaturePropertyType.c_cardinality.copy()
 
 def signature_property_from_string(xml_string):
     return saml2.create_class_from_xml_string(SignatureProperty, xml_string)
@@ -869,6 +932,7 @@ class DSAKeyValue(DSAKeyValueType):
     c_children = DSAKeyValueType.c_children.copy()
     c_attributes = DSAKeyValueType.c_attributes.copy()
     c_child_order = DSAKeyValueType.c_child_order[:]
+    c_cardinality = DSAKeyValueType.c_cardinality.copy()
 
 def dsa_key_value_from_string(xml_string):
     return saml2.create_class_from_xml_string(DSAKeyValue, xml_string)
@@ -881,6 +945,7 @@ class RSAKeyValue(RSAKeyValueType):
     c_children = RSAKeyValueType.c_children.copy()
     c_attributes = RSAKeyValueType.c_attributes.copy()
     c_child_order = RSAKeyValueType.c_child_order[:]
+    c_cardinality = RSAKeyValueType.c_cardinality.copy()
 
 def rsa_key_value_from_string(xml_string):
     return saml2.create_class_from_xml_string(RSAKeyValue, xml_string)
@@ -893,6 +958,7 @@ class SignatureMethod(SignatureMethodType):
     c_children = SignatureMethodType.c_children.copy()
     c_attributes = SignatureMethodType.c_attributes.copy()
     c_child_order = SignatureMethodType.c_child_order[:]
+    c_cardinality = SignatureMethodType.c_cardinality.copy()
 
 def signature_method_from_string(xml_string):
     return saml2.create_class_from_xml_string(SignatureMethod, xml_string)
@@ -905,7 +971,9 @@ class TransformsType(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{http://www.w3.org/2000/09/xmldsig#}Transform'] = ('transform', [Transform])
+    c_cardinality['transform'] = {"min":1}
     c_child_order.extend(['transform'])
 
     def __init__(self,
@@ -932,8 +1000,11 @@ class KeyValueType(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{http://www.w3.org/2000/09/xmldsig#}DSAKeyValue'] = ('dsa_key_value', DSAKeyValue)
+    c_cardinality['dsa_key_value'] = {"min":0, "max":1}
     c_children['{http://www.w3.org/2000/09/xmldsig#}RSAKeyValue'] = ('rsa_key_value', RSAKeyValue)
+    c_cardinality['rsa_key_value'] = {"min":0, "max":1}
     c_child_order.extend(['dsa_key_value', 'rsa_key_value'])
 
     def __init__(self,
@@ -962,6 +1033,7 @@ class X509Data(X509DataType):
     c_children = X509DataType.c_children.copy()
     c_attributes = X509DataType.c_attributes.copy()
     c_child_order = X509DataType.c_child_order[:]
+    c_cardinality = X509DataType.c_cardinality.copy()
 
 def x509_data_from_string(xml_string):
     return saml2.create_class_from_xml_string(X509Data, xml_string)
@@ -974,7 +1046,9 @@ class SignaturePropertiesType(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{http://www.w3.org/2000/09/xmldsig#}SignatureProperty'] = ('signature_property', [SignatureProperty])
+    c_cardinality['signature_property'] = {"min":1}
     c_attributes['Id'] = ('id', 'ID', False)
     c_child_order.extend(['signature_property'])
 
@@ -1004,6 +1078,7 @@ class Transforms(TransformsType):
     c_children = TransformsType.c_children.copy()
     c_attributes = TransformsType.c_attributes.copy()
     c_child_order = TransformsType.c_child_order[:]
+    c_cardinality = TransformsType.c_cardinality.copy()
 
 def transforms_from_string(xml_string):
     return saml2.create_class_from_xml_string(Transforms, xml_string)
@@ -1016,6 +1091,7 @@ class KeyValue(KeyValueType):
     c_children = KeyValueType.c_children.copy()
     c_attributes = KeyValueType.c_attributes.copy()
     c_child_order = KeyValueType.c_child_order[:]
+    c_cardinality = KeyValueType.c_cardinality.copy()
 
 def key_value_from_string(xml_string):
     return saml2.create_class_from_xml_string(KeyValue, xml_string)
@@ -1028,7 +1104,9 @@ class RetrievalMethodType(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{http://www.w3.org/2000/09/xmldsig#}Transforms'] = ('transforms', Transforms)
+    c_cardinality['transforms'] = {"min":0, "max":1}
     c_attributes['URI'] = ('uri', 'anyURI', False)
     c_attributes['Type'] = ('type', 'anyURI', False)
     c_child_order.extend(['transforms'])
@@ -1061,6 +1139,7 @@ class SignatureProperties(SignaturePropertiesType):
     c_children = SignaturePropertiesType.c_children.copy()
     c_attributes = SignaturePropertiesType.c_attributes.copy()
     c_child_order = SignaturePropertiesType.c_child_order[:]
+    c_cardinality = SignaturePropertiesType.c_cardinality.copy()
 
 def signature_properties_from_string(xml_string):
     return saml2.create_class_from_xml_string(SignatureProperties, xml_string)
@@ -1073,7 +1152,9 @@ class ReferenceType(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{http://www.w3.org/2000/09/xmldsig#}Transforms'] = ('transforms', Transforms)
+    c_cardinality['transforms'] = {"min":0, "max":1}
     c_children['{http://www.w3.org/2000/09/xmldsig#}DigestMethod'] = ('digest_method', DigestMethod)
     c_children['{http://www.w3.org/2000/09/xmldsig#}DigestValue'] = ('digest_value', DigestValue)
     c_attributes['Id'] = ('id', 'ID', False)
@@ -1115,6 +1196,7 @@ class RetrievalMethod(RetrievalMethodType):
     c_children = RetrievalMethodType.c_children.copy()
     c_attributes = RetrievalMethodType.c_attributes.copy()
     c_child_order = RetrievalMethodType.c_child_order[:]
+    c_cardinality = RetrievalMethodType.c_cardinality.copy()
 
 def retrieval_method_from_string(xml_string):
     return saml2.create_class_from_xml_string(RetrievalMethod, xml_string)
@@ -1127,6 +1209,7 @@ class Reference(ReferenceType):
     c_children = ReferenceType.c_children.copy()
     c_attributes = ReferenceType.c_attributes.copy()
     c_child_order = ReferenceType.c_child_order[:]
+    c_cardinality = ReferenceType.c_cardinality.copy()
 
 def reference_from_string(xml_string):
     return saml2.create_class_from_xml_string(Reference, xml_string)
@@ -1139,13 +1222,21 @@ class KeyInfoType(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{http://www.w3.org/2000/09/xmldsig#}KeyName'] = ('key_name', [KeyName])
+    c_cardinality['key_name'] = {"min":0}
     c_children['{http://www.w3.org/2000/09/xmldsig#}KeyValue'] = ('key_value', [KeyValue])
+    c_cardinality['key_value'] = {"min":0}
     c_children['{http://www.w3.org/2000/09/xmldsig#}RetrievalMethod'] = ('retrieval_method', [RetrievalMethod])
+    c_cardinality['retrieval_method'] = {"min":0}
     c_children['{http://www.w3.org/2000/09/xmldsig#}X509Data'] = ('x509_data', [X509Data])
+    c_cardinality['x509_data'] = {"min":0}
     c_children['{http://www.w3.org/2000/09/xmldsig#}PGPData'] = ('pgp_data', [PGPData])
+    c_cardinality['pgp_data'] = {"min":0}
     c_children['{http://www.w3.org/2000/09/xmldsig#}SPKIData'] = ('spki_data', [SPKIData])
+    c_cardinality['spki_data'] = {"min":0}
     c_children['{http://www.w3.org/2000/09/xmldsig#}MgmtData'] = ('mgmt_data', [MgmtData])
+    c_cardinality['mgmt_data'] = {"min":0}
     c_attributes['Id'] = ('id', 'ID', False)
     c_child_order.extend(['key_name', 'key_value', 'retrieval_method', 'x509_data', 'pgp_data', 'spki_data', 'mgmt_data'])
 
@@ -1187,7 +1278,9 @@ class ManifestType(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{http://www.w3.org/2000/09/xmldsig#}Reference'] = ('reference', [Reference])
+    c_cardinality['reference'] = {"min":1}
     c_attributes['Id'] = ('id', 'ID', False)
     c_child_order.extend(['reference'])
 
@@ -1217,9 +1310,11 @@ class SignedInfoType(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{http://www.w3.org/2000/09/xmldsig#}CanonicalizationMethod'] = ('canonicalization_method', CanonicalizationMethod)
     c_children['{http://www.w3.org/2000/09/xmldsig#}SignatureMethod'] = ('signature_method', SignatureMethod)
     c_children['{http://www.w3.org/2000/09/xmldsig#}Reference'] = ('reference', [Reference])
+    c_cardinality['reference'] = {"min":1}
     c_attributes['Id'] = ('id', 'ID', False)
     c_child_order.extend(['canonicalization_method', 'signature_method', 'reference'])
 
@@ -1253,6 +1348,7 @@ class KeyInfo(KeyInfoType):
     c_children = KeyInfoType.c_children.copy()
     c_attributes = KeyInfoType.c_attributes.copy()
     c_child_order = KeyInfoType.c_child_order[:]
+    c_cardinality = KeyInfoType.c_cardinality.copy()
 
 def key_info_from_string(xml_string):
     return saml2.create_class_from_xml_string(KeyInfo, xml_string)
@@ -1265,6 +1361,7 @@ class Manifest(ManifestType):
     c_children = ManifestType.c_children.copy()
     c_attributes = ManifestType.c_attributes.copy()
     c_child_order = ManifestType.c_child_order[:]
+    c_cardinality = ManifestType.c_cardinality.copy()
 
 def manifest_from_string(xml_string):
     return saml2.create_class_from_xml_string(Manifest, xml_string)
@@ -1277,6 +1374,7 @@ class SignedInfo(SignedInfoType):
     c_children = SignedInfoType.c_children.copy()
     c_attributes = SignedInfoType.c_attributes.copy()
     c_child_order = SignedInfoType.c_child_order[:]
+    c_cardinality = SignedInfoType.c_cardinality.copy()
 
 def signed_info_from_string(xml_string):
     return saml2.create_class_from_xml_string(SignedInfo, xml_string)
@@ -1289,10 +1387,13 @@ class SignatureType(SamlBase):
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{http://www.w3.org/2000/09/xmldsig#}SignedInfo'] = ('signed_info', SignedInfo)
     c_children['{http://www.w3.org/2000/09/xmldsig#}SignatureValue'] = ('signature_value', SignatureValue)
     c_children['{http://www.w3.org/2000/09/xmldsig#}KeyInfo'] = ('key_info', KeyInfo)
+    c_cardinality['key_info'] = {"min":0, "max":1}
     c_children['{http://www.w3.org/2000/09/xmldsig#}Object'] = ('object', [Object])
+    c_cardinality['object'] = {"min":0}
     c_attributes['Id'] = ('id', 'ID', False)
     c_child_order.extend(['signed_info', 'signature_value', 'key_info', 'object'])
 
@@ -1328,6 +1429,7 @@ class Signature(SignatureType):
     c_children = SignatureType.c_children.copy()
     c_attributes = SignatureType.c_attributes.copy()
     c_child_order = SignatureType.c_child_order[:]
+    c_cardinality = SignatureType.c_cardinality.copy()
 
 def signature_from_string(xml_string):
     return saml2.create_class_from_xml_string(Signature, xml_string)
@@ -1382,6 +1484,27 @@ ELEMENT_FROM_STRING = {
     DSAKeyValueType.c_tag: dsa_key_value_type_from_string,
     RSAKeyValue.c_tag: rsa_key_value_from_string,
     RSAKeyValueType.c_tag: rsa_key_value_type_from_string,
+    XPath.c_tag: x_path_from_string,
+    X509IssuerName.c_tag: x509_issuer_name_from_string,
+    X509SerialNumber.c_tag: x509_serial_number_from_string,
+    PGPKeyID.c_tag: pgp_key_id_from_string,
+    PGPKeyPacket.c_tag: pgp_key_packet_from_string,
+    SPKISexp.c_tag: spki_sexp_from_string,
+    P.c_tag: p_from_string,
+    Q.c_tag: q_from_string,
+    G.c_tag: g_from_string,
+    Y.c_tag: y_from_string,
+    J.c_tag: j_from_string,
+    Seed.c_tag: seed_from_string,
+    PgenCounter.c_tag: pgen_counter_from_string,
+    Modulus.c_tag: modulus_from_string,
+    Exponent.c_tag: exponent_from_string,
+    HMACOutputLength.c_tag: hmac_output_length_from_string,
+    X509IssuerSerial.c_tag: x509_issuer_serial_from_string,
+    X509SKI.c_tag: x509_ski_from_string,
+    X509SubjectName.c_tag: x509_subject_name_from_string,
+    X509Certificate.c_tag: x509_certificate_from_string,
+    X509CRL.c_tag: x509_crl_from_string,
 }
 
 ELEMENT_BY_TAG = {
@@ -1434,6 +1557,27 @@ ELEMENT_BY_TAG = {
     'DSAKeyValueType': DSAKeyValueType,
     'RSAKeyValue': RSAKeyValue,
     'RSAKeyValueType': RSAKeyValueType,
+    'XPath': XPath,
+    'X509IssuerName': X509IssuerName,
+    'X509SerialNumber': X509SerialNumber,
+    'PGPKeyID': PGPKeyID,
+    'PGPKeyPacket': PGPKeyPacket,
+    'SPKISexp': SPKISexp,
+    'P': P,
+    'Q': Q,
+    'G': G,
+    'Y': Y,
+    'J': J,
+    'Seed': Seed,
+    'PgenCounter': PgenCounter,
+    'Modulus': Modulus,
+    'Exponent': Exponent,
+    'HMACOutputLength': HMACOutputLength,
+    'X509IssuerSerial': X509IssuerSerial,
+    'X509SKI': X509SKI,
+    'X509SubjectName': X509SubjectName,
+    'X509Certificate': X509Certificate,
+    'X509CRL': X509CRL,
 }
 
 def factory(tag, **kwargs):

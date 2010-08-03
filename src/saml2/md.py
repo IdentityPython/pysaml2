@@ -8,7 +8,7 @@ import saml2
 from saml2 import SamlBase
 
 import xmlenc as xenc
-import saml as saml
+from saml2 import saml
 import xmldsig as ds
 
 NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:metadata'
