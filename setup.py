@@ -36,5 +36,6 @@ setup(
                     's2repoze': 'src/s2repoze'},
     classifiers = ["Development Status :: 4 - Beta",
         "License :: OSI Approved :: Apache Software License",
-        "Topic :: Software Development :: Libraries :: Python Modules"]
+        "Topic :: Software Development :: Libraries :: Python Modules"],
+    scripts = ["tools/parse_xsd2.py", "tools/make_metadata.py"]
 )
