@@ -211,11 +211,11 @@ def cert_from_key_info(key_info):
     res = []
     for x509_data in key_info.x509_data:
         #print "X509Data",x509_data
-        for x509_certificate in x509_data.x509_certificate:
-            cert = x509_certificate.text.strip()
-            cert = "\n".join(split_len("".join([
-                                        s.strip() for s in cert.split()]),64))
-            res.append(cert)
+        x509_certificate = x509_data.x509_certificate
+        cert = x509_certificate.text.strip()
+        cert = "\n".join(split_len("".join([
+                                    s.strip() for s in cert.split()]),64))
+        res.append(cert)
     return res
 
 def cert_from_instance(instance):

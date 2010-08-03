@@ -45,7 +45,7 @@ def keep_updated(func, self, entity_id, *args, **kwargs):
 class MetaData(object):
     """ A class to manage metadata information """
     
-    def __init__(self, xmlsec_binary=None, attrconv=None, log=None):
+    def __init__(self, xmlsec_binary=None, attrconv=None, log=None, extras=None):
         self.log = log
         self.xmlsec_binary = xmlsec_binary
         self.attrconv = attrconv or []
@@ -393,20 +393,20 @@ class MetaData(object):
         name = ""
 
         try:
-            for org in self.entity[entity_id]["organization"]:
-                try:
-                    name = org.organization_display_name[0]
+            org = self.entity[entity_id]["organization"]
+            try:
+                name = org.organization_display_name[0]
+            except IndexError:
+                try: 
+                    name = org.organization_name[0]
                 except IndexError:
-                    try: 
-                        name = org.organization_name[0]
+                    try:
+                        name = org.organization_url[0]
                     except IndexError:
-                        try:
-                            name = org.organization_url[0]
-                        except IndexError:
-                            pass
-                
-                if name:
-                    name = name.text
+                        pass
+            
+            if name:
+                name = name.text
         except KeyError:
             pass
             
