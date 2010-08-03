@@ -22,6 +22,7 @@ DEBUG = False
 
 XMLSCHEMA = "http://www.w3.org/2001/XMLSchema"
 XML_NAMESPACE = 'http://www.w3.org/XML/1998/namespace'
+
 CLASS_PROP = [("c_children", ".copy()"), 
                 ("c_attributes", ".copy()"),
                 ("c_child_order", "[:]"),
@@ -47,7 +48,10 @@ def def_init(imports, attributes):
 
     line.append("%sdef __init__(self," % INDENT)
     for elem in attributes:
-        line.append("%s%s=%s," % (indent3, elem[0], elem[2]))
+        if elem[2]:
+            line.append("%s%s='%s'," % (indent3, elem[0], elem[2]))
+        else:
+            line.append("%s%s=%s," % (indent3, elem[0], elem[2]))
     for _, elems in imports.items():
         for elem in elems:
             line.append("%s%s=None," % (indent3, elem))
@@ -102,7 +106,7 @@ class PyObj(object):
     def __init__(self, name=None, pyname=None, root=None):
         self.name = name
         self.done = False
-        self.local = False
+        self.local = True
         self.root = root
         self.superior = []
         self.value_type = ""
@@ -137,6 +141,10 @@ class PyObj(object):
         args = []
         child = []
         imps = {}
+
+        if self.root:
+            if self.name not in [c.name for c in self.root.elems]:
+                self.root.elems.append(self)
 
         try:
             superior = self.superior
@@ -200,7 +208,9 @@ class PyObj(object):
                     
                 if prop.max == "unbounded":
                     lista = True
+                    pmax = 0 # just has to be different from 1
                 else:
+                    pmax = int(prop.max)
                     lista = False
                     
                 if prop.name in ignore:
@@ -210,9 +220,9 @@ class PyObj(object):
                                                         target_namespace, prop,
                                                         mod, typ, lista)))
 
-                pmin = getattr(prop, 'min', 1)
+                pmin = int(getattr(prop, 'min', 1))
 
-                if prop.max == 1 and pmin == 1:
+                if pmax == 1 and pmin == 1:
                     pass
                 elif prop.max == "unbounded":
                     line.append( "%sc_cardinality['%s'] = {\"min\":%s}" % (
@@ -220,7 +230,7 @@ class PyObj(object):
                 else:
                     line.append(
                         "%sc_cardinality['%s'] = {\"min\":%s, \"max\":%d}" % (
-                                    INDENT, prop.pyname, pmin, prop.max))
+                                    INDENT, prop.pyname, pmin, pmax))
 
                 child.append(prop.pyname)
                 if lista:
@@ -257,9 +267,12 @@ def prepend(add, orig):
         res.extend(orig)
     return res
     
-def pyobj_factory(name, value_type):
+def pyobj_factory(name, value_type, elms=None):
     pyobj = PyObj(name, pyify(name))
     pyobj.value_type = value_type
+    if elms:
+        if name not in [c.name for c in elms]:
+            elms.append(pyobj)
     return pyobj
     
 def rm_duplicates(properties):
@@ -340,7 +353,7 @@ class PyElement(PyObj):
                 if imp_name not in cdict:
                     # create import object so I can get the properties from it 
                     # later
-                    impo = pyobj_factory(imp_name, None)
+                    impo = pyobj_factory(imp_name, None, None)
                     impo.properties = [_import_attrs(self.root.modul[mod], typ, 
                                                     self.root),[]]
                     cdict[imp_name] = impo
@@ -353,7 +366,7 @@ class PyElement(PyObj):
                 
         except ValueError: # Simple type element
             if self.type:
-                pyobj = pyobj_factory(self.name, self.type)
+                pyobj = pyobj_factory(self.name, self.type, self.root.elems)
                 self.type = self.name
                 cdict[self.name] = pyobj
                 text = pyobj.class_definition(target_namespace, cdict)
@@ -434,7 +447,8 @@ class PyType(PyObj):
         self.internal = internal
         self.namespace = namespace
 
-    def text(self, target_namespace, cdict, _child=True, ignore=[]):
+    def text(self, target_namespace, cdict, _child=True, ignore=[], 
+                session=None):
         if not self.properties and not self.type \
                 and not self.superior:
             self.done = True
@@ -447,7 +461,7 @@ class PyType(PyObj):
                 supc = cdict[sup]
             except KeyError:
                 (mod, typ) = sup.split('.')
-                supc = pyobj_factory(sup, None)
+                supc = pyobj_factory(sup, None, None)
                 supc.properties = [_import_attrs(self.root.modul[mod], typ, 
                                                 self.root),[]]
                 cdict[sup] = supc
@@ -476,20 +490,21 @@ class PyType(PyObj):
                     continue
                 res = _do(prop, target_namespace, cdict, req)
                 if res == ([], None):
-                    # Cleaning up
-                    for prp in own:
-                        if prp == prop:
-                            break
-                        try:
-                            if cdict[prp.name].local:
-                                del cdict[prp.name]
-                                if hasattr(prp, "orig"):
-                                    for key, val in prp.orig.items():
-                                        setattr(prp, key, val)
-                                prp.done = False
-                                prp.local = False
-                        except KeyError:
-                            pass
+                    # # Cleaning up
+                    # for prp in own:
+                    #     if prp == prop:
+                    #         break
+                    #     try:
+                    #         if cdict[prp.name].local:
+                    #             del cdict[prp.name]
+                    #             if hasattr(prp, "orig") and prp.orig:
+                    #                 for key, val in prp.orig.items():
+                    #                     setattr(prp, key, val)
+                    #             prp.done = False
+                    #             prp.local = False
+                    #     except KeyError:
+                    #         pass
+                    res = (req, None)
                 if isinstance(res, tuple):
                     return res
         
@@ -950,12 +965,14 @@ class Element(Complex):
                     (namespace, klass) = typ.split(":")
                     if self.xmlns_map[namespace] == top.target_namespace:
                         objekt.type = (None, klass)
+                    elif self.xmlns_map[namespace] == XMLSCHEMA:
+                        objekt.type = klass
                     else:
                         objekt.type = (namespace, klass)
                 except ValueError:
                     objekt.type = typ
-            except AttributeError:
-                if hasattr(self, "_part") and len(self.parts) == 1:
+            except AttributeError, exc:
+                if hasattr(self, "parts") and len(self.parts) == 1:
                     if isinstance(self.parts[0], ComplexType):
                         objekt.type = self.parts[0].repr(top, sup)
                 else:
@@ -1027,6 +1044,8 @@ class Extension(Complex):
                     cti.repr(top, sup)
                 #print "#EXT..",ct._collection
                 self._inherited = cti._collection
+            elif self.xmlns_map[namespace] == XMLSCHEMA: 
+                base = tag
             else:
                 iattr = _import_attrs(top.modul[namespace], tag, top)
                 #print "#EXT..-", ia
@@ -1259,7 +1278,12 @@ def output(elem, target_namespace, eldict, ignore=[]):
     for prep in preps:
         if prep:
             done = 1
-            print prep
+            if isinstance(prep, basestring):
+                print prep
+            else:
+                for item in prep:
+                    print item
+                    print
             print 
 
     if text:
@@ -1302,12 +1326,15 @@ class Schema(Complex):
     def adjust(self, eldict):
         udict = {}
         for elem in self.elems:
+            if isinstance(elem, PyAttribute):
+                elem.done = True
+                continue
             if not elem.done:
                 udict[elem] = elem.undefined(eldict)
 
         keys = [k.name for k in udict.keys()]
         print "#", keys
-        res = None
+        res = (None, None, None)
         for key, (sup, elems) in udict.items():
             if sup:
                 continue
@@ -1329,7 +1356,7 @@ class Schema(Complex):
                     lines = ["%s.%s" % (key.name, spec)]
                     res = (key, prop, lines)
                     break
-        if res:
+        if res[0]:
             ref = res[0].name
             for key, (sups, elems) in udict.items():
                 if sups:
@@ -1375,8 +1402,9 @@ class Schema(Complex):
         intro()
         for modul in self.add:
             print "from %s import *" % modul
-        for mod, namn in self.impo.items():
-            print "import %s as %s" % (mod, namn)
+        for namespace, (mod,namn) in self.impo.items():
+            if namn:
+                print "import %s as %s" % (mod, namn)
         print        
         print "NAMESPACE = '%s'" % self.target_namespace
         print
@@ -1389,6 +1417,8 @@ class Schema(Complex):
         while self._do(eldict):
             print "#.................."
             (objekt, prop, lines) = self.adjust(eldict)
+            if not objekt:
+                break
             output(objekt, self.target_namespace, eldict, [prop.name])
             exceptions.extend(lines)
 
@@ -1401,6 +1431,8 @@ class Schema(Complex):
                 
         print "ELEMENT_FROM_STRING = {"
         for elem in self.elems:
+            if isinstance(elem, PyAttribute):
+                continue
             print "%s%s.c_tag: %s_from_string," % (INDENT, elem.name, 
                                                     elem.pyname)
 
@@ -1408,6 +1440,8 @@ class Schema(Complex):
         print
         print "ELEMENT_BY_TAG = {"
         for elem in self.elems:
+            if isinstance(elem, PyAttribute):
+                continue
             print "%s'%s': %s," % (INDENT, elem.name, elem.name)
         print "}"
         print
@@ -1540,7 +1574,7 @@ def get_mod(name, path=None):
         
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, "a:d:hi:", 
+        opts, args = getopt.getopt(argv, "a:d:hi:I:", 
                                     ["add=", "help", "import=", "defs="])
     except getopt.GetoptError, err:
         # print help information and exit:
@@ -1552,6 +1586,7 @@ def main(argv):
     defs = []
     impo = {}
     modul = {}
+    ignore = []
 
     for opt, arg in opts:
         if opt in ("-a", "--add"):
@@ -1562,11 +1597,11 @@ def main(argv):
             usage()
             sys.exit()
         elif opt in ("-i", "--import"):
-            (mod, name) = arg.split(":")
-            impo[mod] = name
-            modul[name] = get_mod(mod, ['.'])
-            # print modul[name]
-            # print modul[mod].FOO
+            mod = get_mod(arg, ['.'])
+            modul[mod.NAMESPACE] = mod
+            impo[mod.NAMESPACE] = [arg, None]
+        elif opt in ("-I", "--ignore"):
+            ignore.append(arg)
         else:
             assert False, "unhandled option"
 
@@ -1577,6 +1612,21 @@ def main(argv):
         
     tree = parse_nsmap(args[0])
 
+    for key, namespace in tree._root.attrib["xmlns_map"].items():
+        if namespace in [XMLSCHEMA, XML_NAMESPACE]:
+            continue
+        else:
+            try:
+                modul[key] = modul[namespace]
+                impo[namespace][1] = key
+            except KeyError:
+                if namespace == tree._root.attrib["targetNamespace"]:
+                    continue
+                elif namespace in ignore:
+                    continue
+                else:
+                    raise Exception("Undefined namespace: %s" % namespace)
+    
     schema = Schema(tree._root, impo, add, modul, defs)
 
     #print schema.__dict__
