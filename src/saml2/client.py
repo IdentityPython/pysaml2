@@ -404,20 +404,18 @@ class Saml2Client(object):
         result = []
 
         for entity_id in self.users.issuers_of_info(subject_id):
-            destination = self.config["service"]["sp"]["idp"][entity_id]
+            destination = self.config["service"]["sp"]["idp"][entity_id]['logout_service']            
 
             # create NameID from subject_id
-            name_id = NameID(
-                text=self.client.users.get_entityid(subject_id, 
-                                                    entity_id)["name_id"])
-            
+            name_id = saml.NameID(
+                text=self.users.get_entityid(subject_id, entity_id))
             request = samlp.LogoutRequest(
                 id=sid(),
                 version=VERSION,
                 issue_instant=instant(),
                 destination=destination,
                 issuer=self.issuer(),
-                session_index=session_id,
+                session_index=sid(),
                 name_id = name_id
             )
             
@@ -432,12 +430,31 @@ class Saml2Client(object):
             
         return result
     
-    def global_logout(self, subject_id, reason="", not_on_or_after=None):
-        requests = self.make_logout_requests(subject_id, reason, 
-                                            not_on_or_after)
-        return [r.id for r in requests]
+    def global_logout(self, subject_id, reason="", not_on_or_after=None,
+                          sign=False, log=None):
+        result = []
+        for request in self.make_logout_requests(subject_id, reason,
+                                                    not_on_or_after):
+            if sign:
+                request.signature = pre_signature_part(request.id,
+                                                        self.sec.my_cert, 1)
+                to_sign = [(class_name(request), request.id)]
+            else:
+                to_sign = []
+        
+            if log:
+                log.info("REQUEST: %s" % request)
+        
+            data = "%s" % signed_instance_factory(request, self.sec, to_sign)
+            args = ["SAMLRequest=%s" % urllib.quote_plus(
+                                            deflate_and_base64_encode(data))]
 
-    def local_logout(self, subject_id, reason="", not_on_or_after=None):
+            logout_url = "?".join([request.destination, "&".join(args)])
+            result.append(logout_url)
+        
+        return result
+    
+    def local_logout(self, subject_id):
         # Remove the user from the cache, equals local logout
         self.users.remove_person(subject_id)
         return True
