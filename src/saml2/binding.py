@@ -23,7 +23,10 @@ Bindings normally consists of three parts:
 - how to package the information
 - which protocol to use
 """
-import httplib2
+import saml2
+import base64
+import urllib
+from saml2.s_utils import deflate_and_base64_encode
 
 try:
     from xml.etree import cElementTree as ElementTree
@@ -33,20 +36,29 @@ except ImportError:
     except ImportError:
         from elementtree import ElementTree
 
-from saml2.samlp import NAMESPACE as SAMLP_NAMESPACE
-
-import saml2
-
 NAMESPACE = "http://schemas.xmlsoap.org/soap/envelope/"
+FORM_SPEC = """<form method="post" action="%s">
+   <input type="hidden" name="SAMLRequest" value="%s" />
+   <input type="hidden" name="RelayState" value="%s" />
+   <input type="submit" value="Submit" />
+</form>"""
 
-def http_post(authn_request, sp_entity_id=None, relay_state=None):
+def http_post(message, location, relay_state=""):
+    """The HTTP POST binding defines a mechanism by which SAML protocol 
+    messages may be transmitted within the base64-encoded content of a
+    HTML form control.
+    
+    :param authn_request: The message
+    :param location: Where the form should be posted to
+    :param relay_state: for preserving and conveying state information
+    :return: A tuple containing header information and a HTML message.
+    """
     response = []
     response.append("<head>")
     response.append("""<title>SAML 2.0 POST</title>""")
     response.append("</head><body>")
-    #login_url = location + '?spentityid=' + "lingon.catalogix.se"
-    response.append(FORM_SPEC % (location, base64.b64encode(authen_req),
-                        os.environ['REQUEST_URI']))
+    response.append(FORM_SPEC % (location, base64.b64encode(message),
+                                relay_state))
     response.append("""<script type="text/javascript">""")
     response.append("     window.onload = function ()")
     response.append(" { document.forms[0].submit(); ")
@@ -55,18 +67,35 @@ def http_post(authn_request, sp_entity_id=None, relay_state=None):
     
     return ([], response)
     
-def http_redirect(authn_request, sp_entity_id, relay_state):
-    lista = ["SAMLRequest=%s" % urllib.quote_plus(
-                        deflate_and_base64_encode(
-                            authen_req)),
-            "spentityid=%s" % sp_entity_id]
-    if relay_state:
-        lista.append("RelayState=%s" % relay_state)
-    login_url = "?".join([location, "&".join(lista)])
-    headers = [('Location', login_url)]
-    response = []
+def http_redirect(message, location, sp_entity_id, relay_state=""):
+    """The HTTP Redirect binding defines a mechanism by which SAML protocol 
+    messages can be transmitted within URL parameters.
+    Messages are encoded for use with this binding using a URL encoding 
+    technique, and transmitted using the HTTP GET method. 
     
-    return (headers, response)
+    The DEFLATE Encoding is used in this function.
+    
+    :param authn_request: The message
+    :param location: Where the message should be posted to
+    :param sp_entity_id: The identifier of the sender of the message
+    :param relay_state: for preserving and conveying state information
+    :return: A tuple containing header information and a HTML message.
+    """
+
+    # make sure there is no signature present.
+    if message.signature:
+        message.signature = None
+        
+    args = {"SAMLRequest": deflate_and_base64_encode(message),
+            "spentityid": sp_entity_id}
+    if relay_state:
+        args["RelayState"] = relay_state
+        
+    login_url = "?".join([location, urllib.urlencode(args)])
+    headers = [('Location', login_url)]
+    body = []
+    
+    return (headers, body)
 
 def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
     """ Returns a soap envelope containing a SAML request
@@ -93,13 +122,13 @@ def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
 
     return ElementTree.tostring(envelope, encoding="UTF-8")
 
-def http_soap(authn_request, sp_entity_id, relay_state):
+def http_soap(message):
     return ({"content-type": "application/soap+xml"},
-            make_soap_enveloped_saml_thingy(authn_request))
+            make_soap_enveloped_saml_thingy(message))
     
-def http_paos(authn_request, sp_entity_id, relay_state, extra=None):
+def http_paos(message, extra=None):
     return ({"content-type": "application/soap+xml"},
-            make_soap_enveloped_saml_thingy(authn_request, extra))
+            make_soap_enveloped_saml_thingy(message, extra))
     
 def parse_soap_enveloped_saml(text, body_class, header_class=None):
     """Parses a SOAP enveloped SAML thing and returns header parts and body
@@ -114,7 +143,7 @@ def parse_soap_enveloped_saml(text, body_class, header_class=None):
     body = None
     header = {}
     for part in envelope:
-        print ">",part.tag
+        #print ">",part.tag
         if part.tag == '{%s}Body' % NAMESPACE:
             for sub in part:
                 try:
@@ -127,12 +156,12 @@ def parse_soap_enveloped_saml(text, body_class, header_class=None):
         elif part.tag == '{%s}Header' % NAMESPACE:
             if not header_class:
                 raise Exception("Header where I didn't expect one")
-            print "--- HEADER ---"
+            #print "--- HEADER ---"
             for sub in part:
-                print ">>",sub.tag
+                #print ">>",sub.tag
                 for klass in header_class:
-                    print "?{%s}%s" % (klass.c_namespace,klass.c_tag)
-                    if sub.tag == "{%s}%s" % (klass.c_namespace,klass.c_tag):
+                    #print "?{%s}%s" % (klass.c_namespace,klass.c_tag)
+                    if sub.tag == "{%s}%s" % (klass.c_namespace, klass.c_tag):
                         header[sub.tag] = \
                             saml2.create_class_from_element_tree(klass, sub)
                         break
@@ -150,4 +179,4 @@ def packager( identifier ):
     try:
         return PACKING[identifier]
     except KeyError:
-        raise Exception("Unkown binding type: %s" % binding)
+        raise Exception("Unkown binding type: %s" % identifier)
