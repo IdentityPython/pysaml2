@@ -415,7 +415,6 @@ class Saml2Client(object):
                 issue_instant=instant(),
                 destination=destination,
                 issuer=self.issuer(),
-                session_index=sid(),
                 name_id = name_id
             )
             
@@ -460,6 +459,36 @@ class Saml2Client(object):
         return True
     
 
+    def logout_response(self, get, subject_id, log=None):
+        """ Deal with a LogoutResponse
+
+        :param get: The reply as a dictionary
+        :param subject_id: the id of the user that initiated the logout
+        :return: None if the reply doesn't contain a SAMLResponse,
+            otherwise True if the logout was successful and False if it 
+            was not.
+        """
+        
+        success = False
+
+        # If the request contains a samlResponse, try to validate it
+        try:
+            saml_response = get['SAMLResponse']
+        except KeyError:
+            return None
+
+        if saml_response:
+            xml = decode_base64_and_inflate(saml_response)
+            response = samlp.logout_response_from_string(xml)
+            if self.debug and log:
+                log.info(response)
+
+            if response.status.status_code.value == samlp.STATUS_SUCCESS:
+                self.local_logout(subject_id)
+                success = True
+
+        return success
+        
     def add_vo_information_about_user(self, subject_id):
         """ Add information to the knowledge I have about the user """
         try:
