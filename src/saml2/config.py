@@ -160,7 +160,7 @@ class Config(dict):
 
     def get_available_idps(self):
         lista = []
-        for eid, url in self["service"]["sp"]["idp"].items():
+        for eid, _ in self["service"]["sp"]["idp"].items():
             namn = self.metadata.name(eid)
             lista.append((eid, namn))
         return lista
@@ -171,3 +171,12 @@ class Config(dict):
         except KeyError:
             return 0
 
+    def sp_name(self):
+        return self["service"]["sp"]["name"]
+        
+    def logout_service(self, entity_id):
+        try:
+            return self["service"]["sp"]["idp"][entity_id]['logout_service']
+        except KeyError:
+            return None
+        
