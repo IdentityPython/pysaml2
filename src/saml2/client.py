@@ -26,7 +26,7 @@ import base64
 
 from saml2.time_util import instant
 from saml2.s_utils import sid, deflate_and_base64_encode
-from saml2.s_utils import do_attributes, factory
+from saml2.s_utils import do_attributes, factory, decode_base64_and_inflate
 
 from saml2 import samlp, saml, class_name
 from saml2 import VERSION
@@ -199,8 +199,9 @@ class Saml2Client(object):
 
     def _location(self, location=None):
         if not location :
-            # get the idp location from the configuration alternative the metadata
-            # If there is more than one IdP in the configuration raise exception
+            # get the idp location from the configuration alternative the 
+            # metadata. If there is more than one IdP in the configuration 
+            # raise exception
             urls = self.config.idps()
             if len(urls) > 1:
                 raise IdpUnspecified("Too many IdPs to choose from: %s" % urls)
@@ -214,7 +215,7 @@ class Saml2Client(object):
 
     def _my_name(self, name=None):
         if not name:
-            return self.config["service"]["sp"]["name"]
+            return self.config.sp_name()
         else:
             return name
         
@@ -285,8 +286,8 @@ class Saml2Client(object):
         return (session_id, response)
 
     
-    def create_attribute_query(self, session_id, subject_id, issuer,
-            destination, attribute=None, sp_name_qualifier=None,
+    def create_attribute_query(self, session_id, subject_id, destination,
+            issuer=None, attribute=None, sp_name_qualifier=None,
             name_qualifier=None, nameid_format=None, sign=False):
         """ Constructs an AttributeQuery
         
@@ -316,13 +317,13 @@ class Saml2Client(object):
                                 sp_name_qualifier=sp_name_qualifier,
                                 name_qualifier=name_qualifier),
                     )
-        
+                    
         query = samlp.AttributeQuery(
             id=session_id,
             version=VERSION,
             issue_instant=instant(),
             destination=destination,
-            issuer=self.issuer(),
+            issuer=issuer,
             subject=subject,
         )
         
@@ -340,13 +341,14 @@ class Saml2Client(object):
             return query
             
     
-    def attribute_query(self, subject_id, issuer, destination,
+    def attribute_query(self, subject_id, destination, issuer=None,
                 attribute=None, sp_name_qualifier=None, name_qualifier=None,
                 nameid_format=None, log=None):
         """ Does a attribute request from an attribute authority
         
         :param subject_id: The identifier of the subject
         :param destination: To whom the query should be sent
+        :param issuer: Who is sending this query
         :param attribute: A dictionary of attributes and values that is asked for
         :param sp_name_qualifier: The unique identifier of the
             service provider or affiliation of providers for whom the
@@ -358,8 +360,11 @@ class Saml2Client(object):
         """
         
         session_id = sid()
+        if not issuer:
+            issuer = self.issuer()
+
         request = self.create_attribute_query(session_id, subject_id,
-                    issuer, destination, attribute, sp_name_qualifier,
+                    destination, issuer, attribute, sp_name_qualifier,
                     name_qualifier, nameid_format=nameid_format)
         
         log and log.info("Request, created: %s" % request)
@@ -404,8 +409,10 @@ class Saml2Client(object):
         result = []
 
         for entity_id in self.users.issuers_of_info(subject_id):
-            destination = self.config["service"]["sp"]["idp"][entity_id]['logout_service']            
-
+            destination = self.config.logout_service(entity_id)
+            if not destination:
+                continue
+                
             # create NameID from subject_id
             name_id = saml.NameID(
                 text=self.users.get_entityid(subject_id, entity_id))
@@ -498,7 +505,7 @@ class Saml2Client(object):
 
         # is this a Virtual Organization situation
         if self.vorg:
-            if self.vorg.do_vo_aggregation(subject_id):
+            if self.vorg.do_aggregation(subject_id):
                 # Get the extended identity
                 ava = self.users.get_identity(subject_id)[0]
         return ava
