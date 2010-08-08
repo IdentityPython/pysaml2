@@ -47,7 +47,6 @@ def _leq(l1, l2):
 REQ1 = """<?xml version='1.0' encoding='UTF-8'?>
 <ns0:AttributeQuery Destination="https://idp.example.com/idp/" ID="1" IssueInstant="%s" Version="2.0" xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns1:Issuer Format="urn:oasis:names:tc:SAML:2.0:nameid-format:entity" xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion">urn:mace:example.com:saml:roland:sp</ns1:Issuer><ns1:Subject xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion"><ns1:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent">E8042FB4-4D5B-48C3-8E14-8EDD852790DD</ns1:NameID></ns1:Subject></ns0:AttributeQuery>"""
     
-    
 class TestClient:
     def setup_class(self):
         self.server = Server("idp.config")
@@ -62,13 +61,13 @@ class TestClient:
     def test_create_attribute_query1(self):
         req = self.client.create_attribute_query("1", 
             "E8042FB4-4D5B-48C3-8E14-8EDD852790DD",
-            "http://vo.example.com/sp1",
             "https://idp.example.com/idp/",
+            self.client.issuer(),
             nameid_format=saml.NAMEID_FORMAT_PERSISTENT)
-        str = "%s" % req.to_string()
-        print str
+        reqstr = "%s" % req.to_string()
+        print reqstr
         print REQ1 % req.issue_instant
-        assert str == REQ1 % req.issue_instant
+        assert reqstr == REQ1 % req.issue_instant
         assert req.destination == "https://idp.example.com/idp/"
         assert req.id == "1"
         assert req.version == "2.0"
@@ -82,8 +81,8 @@ class TestClient:
     def test_create_attribute_query2(self):
         req = self.client.create_attribute_query("1", 
             "E8042FB4-4D5B-48C3-8E14-8EDD852790DD", 
-            "http://vo.example.com/sp1",
             "https://idp.example.com/idp/",
+            self.client.issuer(),
             attribute={
                 ("urn:oid:2.5.4.42",
                 "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
@@ -126,8 +125,8 @@ class TestClient:
     def test_create_attribute_query_3(self):
         req = self.client.create_attribute_query("1",
                 "_e7b68a04488f715cda642fbdd90099f5", 
-                "urn:mace:umu.se:saml/rolandsp",
                 "https://aai-demo-idp.switch.ch/idp/shibboleth",
+                self.client.issuer(),
                 nameid_format=saml.NAMEID_FORMAT_TRANSIENT )
                 
         assert isinstance(req, samlp.AttributeQuery)
@@ -143,8 +142,8 @@ class TestClient:
     def test_attribute_query(self):
         req = self.client.attribute_query( 
                 "_e7b68a04488f715cda642fbdd90099f5", 
-                "urn:mace:umu.se:saml/rolandsp",
                 "https://aai-demo-idp.switch.ch/idp/shibboleth", 
+                self.client.issuer(),
                 nameid_format=saml.NAMEID_FORMAT_TRANSIENT)
 
         # since no one is answering on the other end
