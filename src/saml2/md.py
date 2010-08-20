@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 
 #
-# Generated Tue Jul 27 10:53:12 2010 by parse_xsd.py version 0.3.
+# Generated Fri Aug 20 08:25:37 2010 by parse_xsd.py version 0.3.
 #
 
 import saml2
 from saml2 import SamlBase
 
+import xmldsig as ds
 import xmlenc as xenc
 from saml2 import saml
-import xmldsig as ds
 
 NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:metadata'
 
-class entityIDType(SamlBase):
+class EntityIDType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:metadata:entityIDType element """
 
     c_tag = 'entityIDType'
@@ -24,10 +24,11 @@ class entityIDType(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
-def entity_id_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(entityIDType, xml_string)
+def entity_id_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(EntityIDType_, xml_string)
 
-class localizedNameType(SamlBase):
+
+class LocalizedNameType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:metadata:localizedNameType element """
 
     c_tag = 'localizedNameType'
@@ -51,10 +52,11 @@ class localizedNameType(SamlBase):
                 )
         self.lang=lang
 
-def localized_name_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(localizedNameType, xml_string)
+def localized_name_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(LocalizedNameType_, xml_string)
 
-class localizedURIType(SamlBase):
+
+class LocalizedURIType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:metadata:localizedURIType element """
 
     c_tag = 'localizedURIType'
@@ -78,10 +80,11 @@ class localizedURIType(SamlBase):
                 )
         self.lang=lang
 
-def localized_uri_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(localizedURIType, xml_string)
+def localized_uri_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(LocalizedURIType_, xml_string)
 
-class ExtensionsType(SamlBase):
+
+class ExtensionsType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:metadata:ExtensionsType element """
 
     c_tag = 'ExtensionsType'
@@ -91,10 +94,11 @@ class ExtensionsType(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
-def extensions_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(ExtensionsType, xml_string)
+def extensions_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(ExtensionsType_, xml_string)
 
-class EndpointType(SamlBase):
+
+class EndpointType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:metadata:EndpointType element """
 
     c_tag = 'EndpointType'
@@ -124,18 +128,19 @@ class EndpointType(SamlBase):
         self.location=location
         self.response_location=response_location
 
-def endpoint_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(EndpointType, xml_string)
+def endpoint_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(EndpointType_, xml_string)
 
-class IndexedEndpointType(EndpointType):
+
+class IndexedEndpointType_(EndpointType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:IndexedEndpointType element """
 
     c_tag = 'IndexedEndpointType'
     c_namespace = NAMESPACE
-    c_children = EndpointType.c_children.copy()
-    c_attributes = EndpointType.c_attributes.copy()
-    c_child_order = EndpointType.c_child_order[:]
-    c_cardinality = EndpointType.c_cardinality.copy()
+    c_children = EndpointType_.c_children.copy()
+    c_attributes = EndpointType_.c_attributes.copy()
+    c_child_order = EndpointType_.c_child_order[:]
+    c_cardinality = EndpointType_.c_cardinality.copy()
     c_attributes['index'] = ('index', 'unsignedShort', True)
     c_attributes['isDefault'] = ('is_default', 'boolean', False)
 
@@ -149,7 +154,7 @@ class IndexedEndpointType(EndpointType):
             extension_elements=None,
             extension_attributes=None,
         ):
-        EndpointType.__init__(self, 
+        EndpointType_.__init__(self, 
                 binding=binding,
                 location=location,
                 response_location=response_location,
@@ -160,54 +165,58 @@ class IndexedEndpointType(EndpointType):
         self.index=index
         self.is_default=is_default
 
-def indexed_endpoint_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(IndexedEndpointType, xml_string)
+def indexed_endpoint_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(IndexedEndpointType_, xml_string)
 
-class OrganizationName(localizedNameType):
+
+class OrganizationName(LocalizedNameType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:OrganizationName element """
 
     c_tag = 'OrganizationName'
     c_namespace = NAMESPACE
-    c_children = localizedNameType.c_children.copy()
-    c_attributes = localizedNameType.c_attributes.copy()
-    c_child_order = localizedNameType.c_child_order[:]
-    c_cardinality = localizedNameType.c_cardinality.copy()
+    c_children = LocalizedNameType_.c_children.copy()
+    c_attributes = LocalizedNameType_.c_attributes.copy()
+    c_child_order = LocalizedNameType_.c_child_order[:]
+    c_cardinality = LocalizedNameType_.c_cardinality.copy()
 
 def organization_name_from_string(xml_string):
     return saml2.create_class_from_xml_string(OrganizationName, xml_string)
 
-class OrganizationDisplayName(localizedNameType):
+
+class OrganizationDisplayName(LocalizedNameType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:OrganizationDisplayName element """
 
     c_tag = 'OrganizationDisplayName'
     c_namespace = NAMESPACE
-    c_children = localizedNameType.c_children.copy()
-    c_attributes = localizedNameType.c_attributes.copy()
-    c_child_order = localizedNameType.c_child_order[:]
-    c_cardinality = localizedNameType.c_cardinality.copy()
+    c_children = LocalizedNameType_.c_children.copy()
+    c_attributes = LocalizedNameType_.c_attributes.copy()
+    c_child_order = LocalizedNameType_.c_child_order[:]
+    c_cardinality = LocalizedNameType_.c_cardinality.copy()
 
 def organization_display_name_from_string(xml_string):
     return saml2.create_class_from_xml_string(OrganizationDisplayName, xml_string)
 
-class OrganizationURL(localizedURIType):
+
+class OrganizationURL(LocalizedURIType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:OrganizationURL element """
 
     c_tag = 'OrganizationURL'
     c_namespace = NAMESPACE
-    c_children = localizedURIType.c_children.copy()
-    c_attributes = localizedURIType.c_attributes.copy()
-    c_child_order = localizedURIType.c_child_order[:]
-    c_cardinality = localizedURIType.c_cardinality.copy()
+    c_children = LocalizedURIType_.c_children.copy()
+    c_attributes = LocalizedURIType_.c_attributes.copy()
+    c_child_order = LocalizedURIType_.c_child_order[:]
+    c_cardinality = LocalizedURIType_.c_cardinality.copy()
 
 def organization_url_from_string(xml_string):
     return saml2.create_class_from_xml_string(OrganizationURL, xml_string)
+
 
 class Company(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:metadata:Company element """
 
     c_tag = 'Company'
     c_namespace = NAMESPACE
-    c_value_type = 'string'
+    c_value_type = {'base': 'string'}
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
@@ -216,12 +225,13 @@ class Company(SamlBase):
 def company_from_string(xml_string):
     return saml2.create_class_from_xml_string(Company, xml_string)
 
+
 class GivenName(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:metadata:GivenName element """
 
     c_tag = 'GivenName'
     c_namespace = NAMESPACE
-    c_value_type = 'string'
+    c_value_type = {'base': 'string'}
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
@@ -230,12 +240,13 @@ class GivenName(SamlBase):
 def given_name_from_string(xml_string):
     return saml2.create_class_from_xml_string(GivenName, xml_string)
 
+
 class SurName(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:metadata:SurName element """
 
     c_tag = 'SurName'
     c_namespace = NAMESPACE
-    c_value_type = 'string'
+    c_value_type = {'base': 'string'}
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
@@ -244,12 +255,13 @@ class SurName(SamlBase):
 def sur_name_from_string(xml_string):
     return saml2.create_class_from_xml_string(SurName, xml_string)
 
+
 class EmailAddress(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:metadata:EmailAddress element """
 
     c_tag = 'EmailAddress'
     c_namespace = NAMESPACE
-    c_value_type = 'anyURI'
+    c_value_type = {'base': 'anyURI'}
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
@@ -258,12 +270,13 @@ class EmailAddress(SamlBase):
 def email_address_from_string(xml_string):
     return saml2.create_class_from_xml_string(EmailAddress, xml_string)
 
+
 class TelephoneNumber(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:metadata:TelephoneNumber element """
 
     c_tag = 'TelephoneNumber'
     c_namespace = NAMESPACE
-    c_value_type = 'string'
+    c_value_type = {'base': 'string'}
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
@@ -272,7 +285,8 @@ class TelephoneNumber(SamlBase):
 def telephone_number_from_string(xml_string):
     return saml2.create_class_from_xml_string(TelephoneNumber, xml_string)
 
-class ContactTypeType(SamlBase):
+
+class ContactTypeType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:metadata:ContactTypeType element """
 
     c_tag = 'ContactTypeType'
@@ -283,10 +297,11 @@ class ContactTypeType(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
-def contact_type_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(ContactTypeType, xml_string)
+def contact_type_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(ContactTypeType_, xml_string)
 
-class AdditionalMetadataLocationType(SamlBase):
+
+class AdditionalMetadataLocationType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:metadata:AdditionalMetadataLocationType element """
 
     c_tag = 'AdditionalMetadataLocationType'
@@ -310,10 +325,11 @@ class AdditionalMetadataLocationType(SamlBase):
                 )
         self.namespace=namespace
 
-def additional_metadata_location_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(AdditionalMetadataLocationType, xml_string)
+def additional_metadata_location_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(AdditionalMetadataLocationType_, xml_string)
 
-class anyURIListType(SamlBase):
+
+class AnyURIListType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:metadata:anyURIListType element """
 
     c_tag = 'anyURIListType'
@@ -324,10 +340,11 @@ class anyURIListType(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
-def any_uri_list_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(anyURIListType, xml_string)
+def any_uri_list_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(AnyURIListType_, xml_string)
 
-class KeyTypes(SamlBase):
+
+class KeyTypes_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:metadata:KeyTypes element """
 
     c_tag = 'KeyTypes'
@@ -338,67 +355,72 @@ class KeyTypes(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
-def key_types_from_string(xml_string):
-    return saml2.create_class_from_xml_string(KeyTypes, xml_string)
+def key_types__from_string(xml_string):
+    return saml2.create_class_from_xml_string(KeyTypes_, xml_string)
 
-class EncryptionMethod(xenc.EncryptionMethodType):
+
+class EncryptionMethod(xenc.EncryptionMethodType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:EncryptionMethod element """
 
     c_tag = 'EncryptionMethod'
     c_namespace = NAMESPACE
-    c_children = xenc.EncryptionMethodType.c_children.copy()
-    c_attributes = xenc.EncryptionMethodType.c_attributes.copy()
-    c_child_order = xenc.EncryptionMethodType.c_child_order[:]
-    c_cardinality = xenc.EncryptionMethodType.c_cardinality.copy()
+    c_children = xenc.EncryptionMethodType_.c_children.copy()
+    c_attributes = xenc.EncryptionMethodType_.c_attributes.copy()
+    c_child_order = xenc.EncryptionMethodType_.c_child_order[:]
+    c_cardinality = xenc.EncryptionMethodType_.c_cardinality.copy()
 
 def encryption_method_from_string(xml_string):
     return saml2.create_class_from_xml_string(EncryptionMethod, xml_string)
 
-class ArtifactResolutionService(IndexedEndpointType):
+
+class ArtifactResolutionService(IndexedEndpointType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:ArtifactResolutionService element """
 
     c_tag = 'ArtifactResolutionService'
     c_namespace = NAMESPACE
-    c_children = IndexedEndpointType.c_children.copy()
-    c_attributes = IndexedEndpointType.c_attributes.copy()
-    c_child_order = IndexedEndpointType.c_child_order[:]
-    c_cardinality = IndexedEndpointType.c_cardinality.copy()
+    c_children = IndexedEndpointType_.c_children.copy()
+    c_attributes = IndexedEndpointType_.c_attributes.copy()
+    c_child_order = IndexedEndpointType_.c_child_order[:]
+    c_cardinality = IndexedEndpointType_.c_cardinality.copy()
 
 def artifact_resolution_service_from_string(xml_string):
     return saml2.create_class_from_xml_string(ArtifactResolutionService, xml_string)
 
-class SingleLogoutService(EndpointType):
+
+class SingleLogoutService(EndpointType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:SingleLogoutService element """
 
     c_tag = 'SingleLogoutService'
     c_namespace = NAMESPACE
-    c_children = EndpointType.c_children.copy()
-    c_attributes = EndpointType.c_attributes.copy()
-    c_child_order = EndpointType.c_child_order[:]
-    c_cardinality = EndpointType.c_cardinality.copy()
+    c_children = EndpointType_.c_children.copy()
+    c_attributes = EndpointType_.c_attributes.copy()
+    c_child_order = EndpointType_.c_child_order[:]
+    c_cardinality = EndpointType_.c_cardinality.copy()
 
 def single_logout_service_from_string(xml_string):
     return saml2.create_class_from_xml_string(SingleLogoutService, xml_string)
 
-class ManageNameIDService(EndpointType):
+
+class ManageNameIDService(EndpointType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:ManageNameIDService element """
 
     c_tag = 'ManageNameIDService'
     c_namespace = NAMESPACE
-    c_children = EndpointType.c_children.copy()
-    c_attributes = EndpointType.c_attributes.copy()
-    c_child_order = EndpointType.c_child_order[:]
-    c_cardinality = EndpointType.c_cardinality.copy()
+    c_children = EndpointType_.c_children.copy()
+    c_attributes = EndpointType_.c_attributes.copy()
+    c_child_order = EndpointType_.c_child_order[:]
+    c_cardinality = EndpointType_.c_cardinality.copy()
 
 def manage_name_id_service_from_string(xml_string):
     return saml2.create_class_from_xml_string(ManageNameIDService, xml_string)
+
 
 class NameIDFormat(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:metadata:NameIDFormat element """
 
     c_tag = 'NameIDFormat'
     c_namespace = NAMESPACE
-    c_value_type = 'anyURI'
+    c_value_type = {'base': 'anyURI'}
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
@@ -407,51 +429,55 @@ class NameIDFormat(SamlBase):
 def name_id_format_from_string(xml_string):
     return saml2.create_class_from_xml_string(NameIDFormat, xml_string)
 
-class SingleSignOnService(EndpointType):
+
+class SingleSignOnService(EndpointType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:SingleSignOnService element """
 
     c_tag = 'SingleSignOnService'
     c_namespace = NAMESPACE
-    c_children = EndpointType.c_children.copy()
-    c_attributes = EndpointType.c_attributes.copy()
-    c_child_order = EndpointType.c_child_order[:]
-    c_cardinality = EndpointType.c_cardinality.copy()
+    c_children = EndpointType_.c_children.copy()
+    c_attributes = EndpointType_.c_attributes.copy()
+    c_child_order = EndpointType_.c_child_order[:]
+    c_cardinality = EndpointType_.c_cardinality.copy()
 
 def single_sign_on_service_from_string(xml_string):
     return saml2.create_class_from_xml_string(SingleSignOnService, xml_string)
 
-class NameIDMappingService(EndpointType):
+
+class NameIDMappingService(EndpointType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:NameIDMappingService element """
 
     c_tag = 'NameIDMappingService'
     c_namespace = NAMESPACE
-    c_children = EndpointType.c_children.copy()
-    c_attributes = EndpointType.c_attributes.copy()
-    c_child_order = EndpointType.c_child_order[:]
-    c_cardinality = EndpointType.c_cardinality.copy()
+    c_children = EndpointType_.c_children.copy()
+    c_attributes = EndpointType_.c_attributes.copy()
+    c_child_order = EndpointType_.c_child_order[:]
+    c_cardinality = EndpointType_.c_cardinality.copy()
 
 def name_id_mapping_service_from_string(xml_string):
     return saml2.create_class_from_xml_string(NameIDMappingService, xml_string)
 
-class AssertionIDRequestService(EndpointType):
+
+class AssertionIDRequestService(EndpointType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:AssertionIDRequestService element """
 
     c_tag = 'AssertionIDRequestService'
     c_namespace = NAMESPACE
-    c_children = EndpointType.c_children.copy()
-    c_attributes = EndpointType.c_attributes.copy()
-    c_child_order = EndpointType.c_child_order[:]
-    c_cardinality = EndpointType.c_cardinality.copy()
+    c_children = EndpointType_.c_children.copy()
+    c_attributes = EndpointType_.c_attributes.copy()
+    c_child_order = EndpointType_.c_child_order[:]
+    c_cardinality = EndpointType_.c_cardinality.copy()
 
 def assertion_id_request_service_from_string(xml_string):
     return saml2.create_class_from_xml_string(AssertionIDRequestService, xml_string)
+
 
 class AttributeProfile(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:metadata:AttributeProfile element """
 
     c_tag = 'AttributeProfile'
     c_namespace = NAMESPACE
-    c_value_type = 'anyURI'
+    c_value_type = {'base': 'anyURI'}
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
@@ -460,54 +486,58 @@ class AttributeProfile(SamlBase):
 def attribute_profile_from_string(xml_string):
     return saml2.create_class_from_xml_string(AttributeProfile, xml_string)
 
-class AssertionConsumerService(IndexedEndpointType):
+
+class AssertionConsumerService(IndexedEndpointType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:AssertionConsumerService element """
 
     c_tag = 'AssertionConsumerService'
     c_namespace = NAMESPACE
-    c_children = IndexedEndpointType.c_children.copy()
-    c_attributes = IndexedEndpointType.c_attributes.copy()
-    c_child_order = IndexedEndpointType.c_child_order[:]
-    c_cardinality = IndexedEndpointType.c_cardinality.copy()
+    c_children = IndexedEndpointType_.c_children.copy()
+    c_attributes = IndexedEndpointType_.c_attributes.copy()
+    c_child_order = IndexedEndpointType_.c_child_order[:]
+    c_cardinality = IndexedEndpointType_.c_cardinality.copy()
 
 def assertion_consumer_service_from_string(xml_string):
     return saml2.create_class_from_xml_string(AssertionConsumerService, xml_string)
 
-class ServiceName(localizedNameType):
+
+class ServiceName(LocalizedNameType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:ServiceName element """
 
     c_tag = 'ServiceName'
     c_namespace = NAMESPACE
-    c_children = localizedNameType.c_children.copy()
-    c_attributes = localizedNameType.c_attributes.copy()
-    c_child_order = localizedNameType.c_child_order[:]
-    c_cardinality = localizedNameType.c_cardinality.copy()
+    c_children = LocalizedNameType_.c_children.copy()
+    c_attributes = LocalizedNameType_.c_attributes.copy()
+    c_child_order = LocalizedNameType_.c_child_order[:]
+    c_cardinality = LocalizedNameType_.c_cardinality.copy()
 
 def service_name_from_string(xml_string):
     return saml2.create_class_from_xml_string(ServiceName, xml_string)
 
-class ServiceDescription(localizedNameType):
+
+class ServiceDescription(LocalizedNameType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:ServiceDescription element """
 
     c_tag = 'ServiceDescription'
     c_namespace = NAMESPACE
-    c_children = localizedNameType.c_children.copy()
-    c_attributes = localizedNameType.c_attributes.copy()
-    c_child_order = localizedNameType.c_child_order[:]
-    c_cardinality = localizedNameType.c_cardinality.copy()
+    c_children = LocalizedNameType_.c_children.copy()
+    c_attributes = LocalizedNameType_.c_attributes.copy()
+    c_child_order = LocalizedNameType_.c_child_order[:]
+    c_cardinality = LocalizedNameType_.c_cardinality.copy()
 
 def service_description_from_string(xml_string):
     return saml2.create_class_from_xml_string(ServiceDescription, xml_string)
 
-class RequestedAttributeType(saml.AttributeType):
+
+class RequestedAttributeType_(saml.AttributeType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:RequestedAttributeType element """
 
     c_tag = 'RequestedAttributeType'
     c_namespace = NAMESPACE
-    c_children = saml.AttributeType.c_children.copy()
-    c_attributes = saml.AttributeType.c_attributes.copy()
-    c_child_order = saml.AttributeType.c_child_order[:]
-    c_cardinality = saml.AttributeType.c_cardinality.copy()
+    c_children = saml.AttributeType_.c_children.copy()
+    c_attributes = saml.AttributeType_.c_attributes.copy()
+    c_child_order = saml.AttributeType_.c_child_order[:]
+    c_cardinality = saml.AttributeType_.c_cardinality.copy()
     c_attributes['isRequired'] = ('is_required', 'boolean', False)
 
     def __init__(self,
@@ -520,7 +550,7 @@ class RequestedAttributeType(saml.AttributeType):
             extension_elements=None,
             extension_attributes=None,
         ):
-        saml.AttributeType.__init__(self, 
+        saml.AttributeType_.__init__(self, 
                 friendly_name=friendly_name,
                 name=name,
                 name_format=name_format,
@@ -531,75 +561,81 @@ class RequestedAttributeType(saml.AttributeType):
                 )
         self.is_required=is_required
 
-def requested_attribute_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(RequestedAttributeType, xml_string)
+def requested_attribute_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(RequestedAttributeType_, xml_string)
 
-class AuthnQueryService(EndpointType):
+
+class AuthnQueryService(EndpointType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:AuthnQueryService element """
 
     c_tag = 'AuthnQueryService'
     c_namespace = NAMESPACE
-    c_children = EndpointType.c_children.copy()
-    c_attributes = EndpointType.c_attributes.copy()
-    c_child_order = EndpointType.c_child_order[:]
-    c_cardinality = EndpointType.c_cardinality.copy()
+    c_children = EndpointType_.c_children.copy()
+    c_attributes = EndpointType_.c_attributes.copy()
+    c_child_order = EndpointType_.c_child_order[:]
+    c_cardinality = EndpointType_.c_cardinality.copy()
 
 def authn_query_service_from_string(xml_string):
     return saml2.create_class_from_xml_string(AuthnQueryService, xml_string)
 
-class AuthzService(EndpointType):
+
+class AuthzService(EndpointType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:AuthzService element """
 
     c_tag = 'AuthzService'
     c_namespace = NAMESPACE
-    c_children = EndpointType.c_children.copy()
-    c_attributes = EndpointType.c_attributes.copy()
-    c_child_order = EndpointType.c_child_order[:]
-    c_cardinality = EndpointType.c_cardinality.copy()
+    c_children = EndpointType_.c_children.copy()
+    c_attributes = EndpointType_.c_attributes.copy()
+    c_child_order = EndpointType_.c_child_order[:]
+    c_cardinality = EndpointType_.c_cardinality.copy()
 
 def authz_service_from_string(xml_string):
     return saml2.create_class_from_xml_string(AuthzService, xml_string)
 
-class AttributeService(EndpointType):
+
+class AttributeService(EndpointType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:AttributeService element """
 
     c_tag = 'AttributeService'
     c_namespace = NAMESPACE
-    c_children = EndpointType.c_children.copy()
-    c_attributes = EndpointType.c_attributes.copy()
-    c_child_order = EndpointType.c_child_order[:]
-    c_cardinality = EndpointType.c_cardinality.copy()
+    c_children = EndpointType_.c_children.copy()
+    c_attributes = EndpointType_.c_attributes.copy()
+    c_child_order = EndpointType_.c_child_order[:]
+    c_cardinality = EndpointType_.c_cardinality.copy()
 
 def attribute_service_from_string(xml_string):
     return saml2.create_class_from_xml_string(AttributeService, xml_string)
 
-class AffiliateMember(entityIDType):
+
+class AffiliateMember(EntityIDType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:AffiliateMember element """
 
     c_tag = 'AffiliateMember'
     c_namespace = NAMESPACE
-    c_children = entityIDType.c_children.copy()
-    c_attributes = entityIDType.c_attributes.copy()
-    c_child_order = entityIDType.c_child_order[:]
-    c_cardinality = entityIDType.c_cardinality.copy()
+    c_children = EntityIDType_.c_children.copy()
+    c_attributes = EntityIDType_.c_attributes.copy()
+    c_child_order = EntityIDType_.c_child_order[:]
+    c_cardinality = EntityIDType_.c_cardinality.copy()
 
 def affiliate_member_from_string(xml_string):
     return saml2.create_class_from_xml_string(AffiliateMember, xml_string)
 
-class Extensions(ExtensionsType):
+
+class Extensions(ExtensionsType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:Extensions element """
 
     c_tag = 'Extensions'
     c_namespace = NAMESPACE
-    c_children = ExtensionsType.c_children.copy()
-    c_attributes = ExtensionsType.c_attributes.copy()
-    c_child_order = ExtensionsType.c_child_order[:]
-    c_cardinality = ExtensionsType.c_cardinality.copy()
+    c_children = ExtensionsType_.c_children.copy()
+    c_attributes = ExtensionsType_.c_attributes.copy()
+    c_child_order = ExtensionsType_.c_child_order[:]
+    c_cardinality = ExtensionsType_.c_cardinality.copy()
 
 def extensions_from_string(xml_string):
     return saml2.create_class_from_xml_string(Extensions, xml_string)
 
-class OrganizationType(SamlBase):
+
+class OrganizationType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:metadata:OrganizationType element """
 
     c_tag = 'OrganizationType'
@@ -637,10 +673,11 @@ class OrganizationType(SamlBase):
         self.organization_display_name=organization_display_name or []
         self.organization_url=organization_url or []
 
-def organization_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(OrganizationType, xml_string)
+def organization_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(OrganizationType_, xml_string)
 
-class ContactType(SamlBase):
+
+class ContactType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:metadata:ContactType element """
 
     c_tag = 'ContactType'
@@ -689,23 +726,25 @@ class ContactType(SamlBase):
         self.telephone_number=telephone_number or []
         self.contact_type=contact_type
 
-def contact_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(ContactType, xml_string)
+def contact_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(ContactType_, xml_string)
 
-class AdditionalMetadataLocation(AdditionalMetadataLocationType):
+
+class AdditionalMetadataLocation(AdditionalMetadataLocationType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:AdditionalMetadataLocation element """
 
     c_tag = 'AdditionalMetadataLocation'
     c_namespace = NAMESPACE
-    c_children = AdditionalMetadataLocationType.c_children.copy()
-    c_attributes = AdditionalMetadataLocationType.c_attributes.copy()
-    c_child_order = AdditionalMetadataLocationType.c_child_order[:]
-    c_cardinality = AdditionalMetadataLocationType.c_cardinality.copy()
+    c_children = AdditionalMetadataLocationType_.c_children.copy()
+    c_attributes = AdditionalMetadataLocationType_.c_attributes.copy()
+    c_child_order = AdditionalMetadataLocationType_.c_child_order[:]
+    c_cardinality = AdditionalMetadataLocationType_.c_cardinality.copy()
 
 def additional_metadata_location_from_string(xml_string):
     return saml2.create_class_from_xml_string(AdditionalMetadataLocation, xml_string)
 
-class KeyDescriptorType(SamlBase):
+
+class KeyDescriptorType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:metadata:KeyDescriptorType element """
 
     c_tag = 'KeyDescriptorType'
@@ -737,62 +776,67 @@ class KeyDescriptorType(SamlBase):
         self.encryption_method=encryption_method or []
         self.use=use
 
-def key_descriptor_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(KeyDescriptorType, xml_string)
+def key_descriptor_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(KeyDescriptorType_, xml_string)
 
-class RequestedAttribute(RequestedAttributeType):
+
+class RequestedAttribute(RequestedAttributeType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:RequestedAttribute element """
 
     c_tag = 'RequestedAttribute'
     c_namespace = NAMESPACE
-    c_children = RequestedAttributeType.c_children.copy()
-    c_attributes = RequestedAttributeType.c_attributes.copy()
-    c_child_order = RequestedAttributeType.c_child_order[:]
-    c_cardinality = RequestedAttributeType.c_cardinality.copy()
+    c_children = RequestedAttributeType_.c_children.copy()
+    c_attributes = RequestedAttributeType_.c_attributes.copy()
+    c_child_order = RequestedAttributeType_.c_child_order[:]
+    c_cardinality = RequestedAttributeType_.c_cardinality.copy()
 
 def requested_attribute_from_string(xml_string):
     return saml2.create_class_from_xml_string(RequestedAttribute, xml_string)
 
-class Organization(OrganizationType):
+
+class Organization(OrganizationType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:Organization element """
 
     c_tag = 'Organization'
     c_namespace = NAMESPACE
-    c_children = OrganizationType.c_children.copy()
-    c_attributes = OrganizationType.c_attributes.copy()
-    c_child_order = OrganizationType.c_child_order[:]
-    c_cardinality = OrganizationType.c_cardinality.copy()
+    c_children = OrganizationType_.c_children.copy()
+    c_attributes = OrganizationType_.c_attributes.copy()
+    c_child_order = OrganizationType_.c_child_order[:]
+    c_cardinality = OrganizationType_.c_cardinality.copy()
 
 def organization_from_string(xml_string):
     return saml2.create_class_from_xml_string(Organization, xml_string)
 
-class ContactPerson(ContactType):
+
+class ContactPerson(ContactType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:ContactPerson element """
 
     c_tag = 'ContactPerson'
     c_namespace = NAMESPACE
-    c_children = ContactType.c_children.copy()
-    c_attributes = ContactType.c_attributes.copy()
-    c_child_order = ContactType.c_child_order[:]
-    c_cardinality = ContactType.c_cardinality.copy()
+    c_children = ContactType_.c_children.copy()
+    c_attributes = ContactType_.c_attributes.copy()
+    c_child_order = ContactType_.c_child_order[:]
+    c_cardinality = ContactType_.c_cardinality.copy()
 
 def contact_person_from_string(xml_string):
     return saml2.create_class_from_xml_string(ContactPerson, xml_string)
 
-class KeyDescriptor(KeyDescriptorType):
+
+class KeyDescriptor(KeyDescriptorType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:KeyDescriptor element """
 
     c_tag = 'KeyDescriptor'
     c_namespace = NAMESPACE
-    c_children = KeyDescriptorType.c_children.copy()
-    c_attributes = KeyDescriptorType.c_attributes.copy()
-    c_child_order = KeyDescriptorType.c_child_order[:]
-    c_cardinality = KeyDescriptorType.c_cardinality.copy()
+    c_children = KeyDescriptorType_.c_children.copy()
+    c_attributes = KeyDescriptorType_.c_attributes.copy()
+    c_child_order = KeyDescriptorType_.c_child_order[:]
+    c_cardinality = KeyDescriptorType_.c_cardinality.copy()
 
 def key_descriptor_from_string(xml_string):
     return saml2.create_class_from_xml_string(KeyDescriptor, xml_string)
 
-class RoleDescriptorType(SamlBase):
+
+class RoleDescriptorType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:metadata:RoleDescriptorType element """
 
     c_tag = 'RoleDescriptorType'
@@ -849,18 +893,16 @@ class RoleDescriptorType(SamlBase):
         self.protocol_support_enumeration=protocol_support_enumeration
         self.error_url=error_url
 
-def role_descriptor_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(RoleDescriptorType, xml_string)
 
-class SSODescriptorType(RoleDescriptorType):
+class SSODescriptorType_(RoleDescriptorType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:SSODescriptorType element """
 
     c_tag = 'SSODescriptorType'
     c_namespace = NAMESPACE
-    c_children = RoleDescriptorType.c_children.copy()
-    c_attributes = RoleDescriptorType.c_attributes.copy()
-    c_child_order = RoleDescriptorType.c_child_order[:]
-    c_cardinality = RoleDescriptorType.c_cardinality.copy()
+    c_children = RoleDescriptorType_.c_children.copy()
+    c_attributes = RoleDescriptorType_.c_attributes.copy()
+    c_child_order = RoleDescriptorType_.c_child_order[:]
+    c_cardinality = RoleDescriptorType_.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:metadata}ArtifactResolutionService'] = ('artifact_resolution_service', [ArtifactResolutionService])
     c_cardinality['artifact_resolution_service'] = {"min":0}
     c_children['{urn:oasis:names:tc:SAML:2.0:metadata}SingleLogoutService'] = ('single_logout_service', [SingleLogoutService])
@@ -890,7 +932,7 @@ class SSODescriptorType(RoleDescriptorType):
             extension_elements=None,
             extension_attributes=None,
         ):
-        RoleDescriptorType.__init__(self, 
+        RoleDescriptorType_.__init__(self, 
                 signature=signature,
                 extensions=extensions,
                 key_descriptor=key_descriptor,
@@ -910,18 +952,16 @@ class SSODescriptorType(RoleDescriptorType):
         self.manage_name_id_service=manage_name_id_service or []
         self.name_id_format=name_id_format or []
 
-def sso_descriptor_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(SSODescriptorType, xml_string)
 
-class IDPSSODescriptorType(SSODescriptorType):
+class IDPSSODescriptorType_(SSODescriptorType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:IDPSSODescriptorType element """
 
     c_tag = 'IDPSSODescriptorType'
     c_namespace = NAMESPACE
-    c_children = SSODescriptorType.c_children.copy()
-    c_attributes = SSODescriptorType.c_attributes.copy()
-    c_child_order = SSODescriptorType.c_child_order[:]
-    c_cardinality = SSODescriptorType.c_cardinality.copy()
+    c_children = SSODescriptorType_.c_children.copy()
+    c_attributes = SSODescriptorType_.c_attributes.copy()
+    c_child_order = SSODescriptorType_.c_child_order[:]
+    c_cardinality = SSODescriptorType_.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:metadata}SingleSignOnService'] = ('single_sign_on_service', [SingleSignOnService])
     c_cardinality['single_sign_on_service'] = {"min":1}
     c_children['{urn:oasis:names:tc:SAML:2.0:metadata}NameIDMappingService'] = ('name_id_mapping_service', [NameIDMappingService])
@@ -960,7 +1000,7 @@ class IDPSSODescriptorType(SSODescriptorType):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SSODescriptorType.__init__(self, 
+        SSODescriptorType_.__init__(self, 
                 artifact_resolution_service=artifact_resolution_service,
                 single_logout_service=single_logout_service,
                 manage_name_id_service=manage_name_id_service,
@@ -986,10 +1026,11 @@ class IDPSSODescriptorType(SSODescriptorType):
         self.attribute=attribute or []
         self.want_authn_requests_signed=want_authn_requests_signed
 
-def idpsso_descriptor_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(IDPSSODescriptorType, xml_string)
+def idpsso_descriptor_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(IDPSSODescriptorType_, xml_string)
 
-class AttributeConsumingServiceType(SamlBase):
+
+class AttributeConsumingServiceType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:metadata:AttributeConsumingServiceType element """
 
     c_tag = 'AttributeConsumingServiceType'
@@ -1029,18 +1070,19 @@ class AttributeConsumingServiceType(SamlBase):
         self.index=index
         self.is_default=is_default
 
-def attribute_consuming_service_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(AttributeConsumingServiceType, xml_string)
+def attribute_consuming_service_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(AttributeConsumingServiceType_, xml_string)
 
-class AuthnAuthorityDescriptorType(RoleDescriptorType):
+
+class AuthnAuthorityDescriptorType_(RoleDescriptorType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:AuthnAuthorityDescriptorType element """
 
     c_tag = 'AuthnAuthorityDescriptorType'
     c_namespace = NAMESPACE
-    c_children = RoleDescriptorType.c_children.copy()
-    c_attributes = RoleDescriptorType.c_attributes.copy()
-    c_child_order = RoleDescriptorType.c_child_order[:]
-    c_cardinality = RoleDescriptorType.c_cardinality.copy()
+    c_children = RoleDescriptorType_.c_children.copy()
+    c_attributes = RoleDescriptorType_.c_attributes.copy()
+    c_child_order = RoleDescriptorType_.c_child_order[:]
+    c_cardinality = RoleDescriptorType_.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AuthnQueryService'] = ('authn_query_service', [AuthnQueryService])
     c_cardinality['authn_query_service'] = {"min":1}
     c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AssertionIDRequestService'] = ('assertion_id_request_service', [AssertionIDRequestService])
@@ -1067,7 +1109,7 @@ class AuthnAuthorityDescriptorType(RoleDescriptorType):
             extension_elements=None,
             extension_attributes=None,
         ):
-        RoleDescriptorType.__init__(self, 
+        RoleDescriptorType_.__init__(self, 
                 signature=signature,
                 extensions=extensions,
                 key_descriptor=key_descriptor,
@@ -1086,18 +1128,19 @@ class AuthnAuthorityDescriptorType(RoleDescriptorType):
         self.assertion_id_request_service=assertion_id_request_service or []
         self.name_id_format=name_id_format or []
 
-def authn_authority_descriptor_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(AuthnAuthorityDescriptorType, xml_string)
+def authn_authority_descriptor_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(AuthnAuthorityDescriptorType_, xml_string)
 
-class PDPDescriptorType(RoleDescriptorType):
+
+class PDPDescriptorType_(RoleDescriptorType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:PDPDescriptorType element """
 
     c_tag = 'PDPDescriptorType'
     c_namespace = NAMESPACE
-    c_children = RoleDescriptorType.c_children.copy()
-    c_attributes = RoleDescriptorType.c_attributes.copy()
-    c_child_order = RoleDescriptorType.c_child_order[:]
-    c_cardinality = RoleDescriptorType.c_cardinality.copy()
+    c_children = RoleDescriptorType_.c_children.copy()
+    c_attributes = RoleDescriptorType_.c_attributes.copy()
+    c_child_order = RoleDescriptorType_.c_child_order[:]
+    c_cardinality = RoleDescriptorType_.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AuthzService'] = ('authz_service', [AuthzService])
     c_cardinality['authz_service'] = {"min":1}
     c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AssertionIDRequestService'] = ('assertion_id_request_service', [AssertionIDRequestService])
@@ -1124,7 +1167,7 @@ class PDPDescriptorType(RoleDescriptorType):
             extension_elements=None,
             extension_attributes=None,
         ):
-        RoleDescriptorType.__init__(self, 
+        RoleDescriptorType_.__init__(self, 
                 signature=signature,
                 extensions=extensions,
                 key_descriptor=key_descriptor,
@@ -1143,18 +1186,19 @@ class PDPDescriptorType(RoleDescriptorType):
         self.assertion_id_request_service=assertion_id_request_service or []
         self.name_id_format=name_id_format or []
 
-def pdp_descriptor_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(PDPDescriptorType, xml_string)
+def pdp_descriptor_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(PDPDescriptorType_, xml_string)
 
-class AttributeAuthorityDescriptorType(RoleDescriptorType):
+
+class AttributeAuthorityDescriptorType_(RoleDescriptorType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:AttributeAuthorityDescriptorType element """
 
     c_tag = 'AttributeAuthorityDescriptorType'
     c_namespace = NAMESPACE
-    c_children = RoleDescriptorType.c_children.copy()
-    c_attributes = RoleDescriptorType.c_attributes.copy()
-    c_child_order = RoleDescriptorType.c_child_order[:]
-    c_cardinality = RoleDescriptorType.c_cardinality.copy()
+    c_children = RoleDescriptorType_.c_children.copy()
+    c_attributes = RoleDescriptorType_.c_attributes.copy()
+    c_child_order = RoleDescriptorType_.c_child_order[:]
+    c_cardinality = RoleDescriptorType_.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AttributeService'] = ('attribute_service', [AttributeService])
     c_cardinality['attribute_service'] = {"min":1}
     c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AssertionIDRequestService'] = ('assertion_id_request_service', [AssertionIDRequestService])
@@ -1187,7 +1231,7 @@ class AttributeAuthorityDescriptorType(RoleDescriptorType):
             extension_elements=None,
             extension_attributes=None,
         ):
-        RoleDescriptorType.__init__(self, 
+        RoleDescriptorType_.__init__(self, 
                 signature=signature,
                 extensions=extensions,
                 key_descriptor=key_descriptor,
@@ -1208,10 +1252,11 @@ class AttributeAuthorityDescriptorType(RoleDescriptorType):
         self.attribute_profile=attribute_profile or []
         self.attribute=attribute or []
 
-def attribute_authority_descriptor_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(AttributeAuthorityDescriptorType, xml_string)
+def attribute_authority_descriptor_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(AttributeAuthorityDescriptorType_, xml_string)
 
-class AffiliationDescriptorType(SamlBase):
+
+class AffiliationDescriptorType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:metadata:AffiliationDescriptorType element """
 
     c_tag = 'AffiliationDescriptorType'
@@ -1261,109 +1306,117 @@ class AffiliationDescriptorType(SamlBase):
         self.cache_duration=cache_duration
         self.id=id
 
-def affiliation_descriptor_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(AffiliationDescriptorType, xml_string)
+def affiliation_descriptor_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(AffiliationDescriptorType_, xml_string)
 
-class RoleDescriptor(RoleDescriptorType):
+
+class RoleDescriptor(RoleDescriptorType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:RoleDescriptor element """
 
     c_tag = 'RoleDescriptor'
     c_namespace = NAMESPACE
-    c_children = RoleDescriptorType.c_children.copy()
-    c_attributes = RoleDescriptorType.c_attributes.copy()
-    c_child_order = RoleDescriptorType.c_child_order[:]
-    c_cardinality = RoleDescriptorType.c_cardinality.copy()
+    c_children = RoleDescriptorType_.c_children.copy()
+    c_attributes = RoleDescriptorType_.c_attributes.copy()
+    c_child_order = RoleDescriptorType_.c_child_order[:]
+    c_cardinality = RoleDescriptorType_.c_cardinality.copy()
 
 def role_descriptor_from_string(xml_string):
     return saml2.create_class_from_xml_string(RoleDescriptor, xml_string)
 
-class IDPSSODescriptor(IDPSSODescriptorType):
+
+class IDPSSODescriptor(IDPSSODescriptorType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:IDPSSODescriptor element """
 
     c_tag = 'IDPSSODescriptor'
     c_namespace = NAMESPACE
-    c_children = IDPSSODescriptorType.c_children.copy()
-    c_attributes = IDPSSODescriptorType.c_attributes.copy()
-    c_child_order = IDPSSODescriptorType.c_child_order[:]
-    c_cardinality = IDPSSODescriptorType.c_cardinality.copy()
+    c_children = IDPSSODescriptorType_.c_children.copy()
+    c_attributes = IDPSSODescriptorType_.c_attributes.copy()
+    c_child_order = IDPSSODescriptorType_.c_child_order[:]
+    c_cardinality = IDPSSODescriptorType_.c_cardinality.copy()
 
 def idpsso_descriptor_from_string(xml_string):
     return saml2.create_class_from_xml_string(IDPSSODescriptor, xml_string)
 
-class AttributeConsumingService(AttributeConsumingServiceType):
+
+class AttributeConsumingService(AttributeConsumingServiceType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:AttributeConsumingService element """
 
     c_tag = 'AttributeConsumingService'
     c_namespace = NAMESPACE
-    c_children = AttributeConsumingServiceType.c_children.copy()
-    c_attributes = AttributeConsumingServiceType.c_attributes.copy()
-    c_child_order = AttributeConsumingServiceType.c_child_order[:]
-    c_cardinality = AttributeConsumingServiceType.c_cardinality.copy()
+    c_children = AttributeConsumingServiceType_.c_children.copy()
+    c_attributes = AttributeConsumingServiceType_.c_attributes.copy()
+    c_child_order = AttributeConsumingServiceType_.c_child_order[:]
+    c_cardinality = AttributeConsumingServiceType_.c_cardinality.copy()
 
 def attribute_consuming_service_from_string(xml_string):
     return saml2.create_class_from_xml_string(AttributeConsumingService, xml_string)
 
-class AuthnAuthorityDescriptor(AuthnAuthorityDescriptorType):
+
+class AuthnAuthorityDescriptor(AuthnAuthorityDescriptorType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:AuthnAuthorityDescriptor element """
 
     c_tag = 'AuthnAuthorityDescriptor'
     c_namespace = NAMESPACE
-    c_children = AuthnAuthorityDescriptorType.c_children.copy()
-    c_attributes = AuthnAuthorityDescriptorType.c_attributes.copy()
-    c_child_order = AuthnAuthorityDescriptorType.c_child_order[:]
-    c_cardinality = AuthnAuthorityDescriptorType.c_cardinality.copy()
+    c_children = AuthnAuthorityDescriptorType_.c_children.copy()
+    c_attributes = AuthnAuthorityDescriptorType_.c_attributes.copy()
+    c_child_order = AuthnAuthorityDescriptorType_.c_child_order[:]
+    c_cardinality = AuthnAuthorityDescriptorType_.c_cardinality.copy()
 
 def authn_authority_descriptor_from_string(xml_string):
     return saml2.create_class_from_xml_string(AuthnAuthorityDescriptor, xml_string)
 
-class PDPDescriptor(PDPDescriptorType):
+
+class PDPDescriptor(PDPDescriptorType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:PDPDescriptor element """
 
     c_tag = 'PDPDescriptor'
     c_namespace = NAMESPACE
-    c_children = PDPDescriptorType.c_children.copy()
-    c_attributes = PDPDescriptorType.c_attributes.copy()
-    c_child_order = PDPDescriptorType.c_child_order[:]
-    c_cardinality = PDPDescriptorType.c_cardinality.copy()
+    c_children = PDPDescriptorType_.c_children.copy()
+    c_attributes = PDPDescriptorType_.c_attributes.copy()
+    c_child_order = PDPDescriptorType_.c_child_order[:]
+    c_cardinality = PDPDescriptorType_.c_cardinality.copy()
 
 def pdp_descriptor_from_string(xml_string):
     return saml2.create_class_from_xml_string(PDPDescriptor, xml_string)
 
-class AttributeAuthorityDescriptor(AttributeAuthorityDescriptorType):
+
+class AttributeAuthorityDescriptor(AttributeAuthorityDescriptorType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:AttributeAuthorityDescriptor element """
 
     c_tag = 'AttributeAuthorityDescriptor'
     c_namespace = NAMESPACE
-    c_children = AttributeAuthorityDescriptorType.c_children.copy()
-    c_attributes = AttributeAuthorityDescriptorType.c_attributes.copy()
-    c_child_order = AttributeAuthorityDescriptorType.c_child_order[:]
-    c_cardinality = AttributeAuthorityDescriptorType.c_cardinality.copy()
+    c_children = AttributeAuthorityDescriptorType_.c_children.copy()
+    c_attributes = AttributeAuthorityDescriptorType_.c_attributes.copy()
+    c_child_order = AttributeAuthorityDescriptorType_.c_child_order[:]
+    c_cardinality = AttributeAuthorityDescriptorType_.c_cardinality.copy()
 
 def attribute_authority_descriptor_from_string(xml_string):
     return saml2.create_class_from_xml_string(AttributeAuthorityDescriptor, xml_string)
 
-class AffiliationDescriptor(AffiliationDescriptorType):
+
+class AffiliationDescriptor(AffiliationDescriptorType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:AffiliationDescriptor element """
 
     c_tag = 'AffiliationDescriptor'
     c_namespace = NAMESPACE
-    c_children = AffiliationDescriptorType.c_children.copy()
-    c_attributes = AffiliationDescriptorType.c_attributes.copy()
-    c_child_order = AffiliationDescriptorType.c_child_order[:]
-    c_cardinality = AffiliationDescriptorType.c_cardinality.copy()
+    c_children = AffiliationDescriptorType_.c_children.copy()
+    c_attributes = AffiliationDescriptorType_.c_attributes.copy()
+    c_child_order = AffiliationDescriptorType_.c_child_order[:]
+    c_cardinality = AffiliationDescriptorType_.c_cardinality.copy()
 
 def affiliation_descriptor_from_string(xml_string):
     return saml2.create_class_from_xml_string(AffiliationDescriptor, xml_string)
 
-class SPSSODescriptorType(SSODescriptorType):
+
+class SPSSODescriptorType_(SSODescriptorType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:SPSSODescriptorType element """
 
     c_tag = 'SPSSODescriptorType'
     c_namespace = NAMESPACE
-    c_children = SSODescriptorType.c_children.copy()
-    c_attributes = SSODescriptorType.c_attributes.copy()
-    c_child_order = SSODescriptorType.c_child_order[:]
-    c_cardinality = SSODescriptorType.c_cardinality.copy()
+    c_children = SSODescriptorType_.c_children.copy()
+    c_attributes = SSODescriptorType_.c_attributes.copy()
+    c_child_order = SSODescriptorType_.c_child_order[:]
+    c_cardinality = SSODescriptorType_.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AssertionConsumerService'] = ('assertion_consumer_service', [AssertionConsumerService])
     c_cardinality['assertion_consumer_service'] = {"min":1}
     c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AttributeConsumingService'] = ('attribute_consuming_service', [AttributeConsumingService])
@@ -1395,7 +1448,7 @@ class SPSSODescriptorType(SSODescriptorType):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SSODescriptorType.__init__(self, 
+        SSODescriptorType_.__init__(self, 
                 artifact_resolution_service=artifact_resolution_service,
                 single_logout_service=single_logout_service,
                 manage_name_id_service=manage_name_id_service,
@@ -1419,23 +1472,25 @@ class SPSSODescriptorType(SSODescriptorType):
         self.authn_requests_signed=authn_requests_signed
         self.want_assertions_signed=want_assertions_signed
 
-def spsso_descriptor_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(SPSSODescriptorType, xml_string)
+def spsso_descriptor_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(SPSSODescriptorType_, xml_string)
 
-class SPSSODescriptor(SPSSODescriptorType):
+
+class SPSSODescriptor(SPSSODescriptorType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:SPSSODescriptor element """
 
     c_tag = 'SPSSODescriptor'
     c_namespace = NAMESPACE
-    c_children = SPSSODescriptorType.c_children.copy()
-    c_attributes = SPSSODescriptorType.c_attributes.copy()
-    c_child_order = SPSSODescriptorType.c_child_order[:]
-    c_cardinality = SPSSODescriptorType.c_cardinality.copy()
+    c_children = SPSSODescriptorType_.c_children.copy()
+    c_attributes = SPSSODescriptorType_.c_attributes.copy()
+    c_child_order = SPSSODescriptorType_.c_child_order[:]
+    c_cardinality = SPSSODescriptorType_.c_cardinality.copy()
 
 def spsso_descriptor_from_string(xml_string):
     return saml2.create_class_from_xml_string(SPSSODescriptor, xml_string)
 
-class EntityDescriptorType(SamlBase):
+
+class EntityDescriptorType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:metadata:EntityDescriptorType element """
 
     c_tag = 'EntityDescriptorType'
@@ -1517,25 +1572,27 @@ class EntityDescriptorType(SamlBase):
         self.cache_duration=cache_duration
         self.id=id
 
-def entity_descriptor_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(EntityDescriptorType, xml_string)
+def entity_descriptor_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(EntityDescriptorType_, xml_string)
 
-class EntityDescriptor(EntityDescriptorType):
+
+class EntityDescriptor(EntityDescriptorType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:EntityDescriptor element """
 
     c_tag = 'EntityDescriptor'
     c_namespace = NAMESPACE
-    c_children = EntityDescriptorType.c_children.copy()
-    c_attributes = EntityDescriptorType.c_attributes.copy()
-    c_child_order = EntityDescriptorType.c_child_order[:]
-    c_cardinality = EntityDescriptorType.c_cardinality.copy()
+    c_children = EntityDescriptorType_.c_children.copy()
+    c_attributes = EntityDescriptorType_.c_attributes.copy()
+    c_child_order = EntityDescriptorType_.c_child_order[:]
+    c_cardinality = EntityDescriptorType_.c_cardinality.copy()
 
 def entity_descriptor_from_string(xml_string):
     return saml2.create_class_from_xml_string(EntityDescriptor, xml_string)
 
+
 #..................
 # ['EntitiesDescriptor', 'EntitiesDescriptorType']
-class EntitiesDescriptorType(SamlBase):
+class EntitiesDescriptorType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:metadata:EntitiesDescriptorType element """
 
     c_tag = 'EntitiesDescriptorType'
@@ -1584,160 +1641,158 @@ class EntitiesDescriptorType(SamlBase):
         self.id=id
         self.name=name
 
-def entities_descriptor_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(EntitiesDescriptorType, xml_string)
+def entities_descriptor_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(EntitiesDescriptorType_, xml_string)
 
-class EntitiesDescriptor(EntitiesDescriptorType):
+
+class EntitiesDescriptor(EntitiesDescriptorType_):
     """The urn:oasis:names:tc:SAML:2.0:metadata:EntitiesDescriptor element """
 
     c_tag = 'EntitiesDescriptor'
     c_namespace = NAMESPACE
-    c_children = EntitiesDescriptorType.c_children.copy()
-    c_attributes = EntitiesDescriptorType.c_attributes.copy()
-    c_child_order = EntitiesDescriptorType.c_child_order[:]
-    c_cardinality = EntitiesDescriptorType.c_cardinality.copy()
+    c_children = EntitiesDescriptorType_.c_children.copy()
+    c_attributes = EntitiesDescriptorType_.c_attributes.copy()
+    c_child_order = EntitiesDescriptorType_.c_child_order[:]
+    c_cardinality = EntitiesDescriptorType_.c_cardinality.copy()
 
 def entities_descriptor_from_string(xml_string):
     return saml2.create_class_from_xml_string(EntitiesDescriptor, xml_string)
 
+
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-EntitiesDescriptorType.c_children['{urn:oasis:names:tc:SAML:2.0:metadata}EntitiesDescriptor'] = ('entities_descriptor', [EntitiesDescriptor])
+EntitiesDescriptorType_.c_children['{urn:oasis:names:tc:SAML:2.0:metadata}EntitiesDescriptor'] = ('entities_descriptor', [EntitiesDescriptor])
 EntitiesDescriptor.c_children['{urn:oasis:names:tc:SAML:2.0:metadata}EntitiesDescriptor'] = ('entities_descriptor', [EntitiesDescriptor])
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 ELEMENT_FROM_STRING = {
-    entityIDType.c_tag: entity_id_type_from_string,
-    localizedNameType.c_tag: localized_name_type_from_string,
-    localizedURIType.c_tag: localized_uri_type_from_string,
+    EntityIDType_.c_tag: entity_id_type__from_string,
+    LocalizedNameType_.c_tag: localized_name_type__from_string,
+    LocalizedURIType_.c_tag: localized_uri_type__from_string,
     Extensions.c_tag: extensions_from_string,
-    ExtensionsType.c_tag: extensions_type_from_string,
-    EndpointType.c_tag: endpoint_type_from_string,
-    IndexedEndpointType.c_tag: indexed_endpoint_type_from_string,
+    ExtensionsType_.c_tag: extensions_type__from_string,
+    EndpointType_.c_tag: endpoint_type__from_string,
+    IndexedEndpointType_.c_tag: indexed_endpoint_type__from_string,
     EntitiesDescriptor.c_tag: entities_descriptor_from_string,
-    EntitiesDescriptorType.c_tag: entities_descriptor_type_from_string,
+    EntitiesDescriptorType_.c_tag: entities_descriptor_type__from_string,
     EntityDescriptor.c_tag: entity_descriptor_from_string,
-    EntityDescriptorType.c_tag: entity_descriptor_type_from_string,
+    EntityDescriptorType_.c_tag: entity_descriptor_type__from_string,
     Organization.c_tag: organization_from_string,
-    OrganizationType.c_tag: organization_type_from_string,
+    OrganizationType_.c_tag: organization_type__from_string,
     OrganizationName.c_tag: organization_name_from_string,
     OrganizationDisplayName.c_tag: organization_display_name_from_string,
     OrganizationURL.c_tag: organization_url_from_string,
     ContactPerson.c_tag: contact_person_from_string,
-    ContactType.c_tag: contact_type_from_string,
+    ContactType_.c_tag: contact_type__from_string,
     Company.c_tag: company_from_string,
     GivenName.c_tag: given_name_from_string,
     SurName.c_tag: sur_name_from_string,
     EmailAddress.c_tag: email_address_from_string,
     TelephoneNumber.c_tag: telephone_number_from_string,
-    ContactTypeType.c_tag: contact_type_type_from_string,
+    ContactTypeType_.c_tag: contact_type_type__from_string,
     AdditionalMetadataLocation.c_tag: additional_metadata_location_from_string,
-    AdditionalMetadataLocationType.c_tag: additional_metadata_location_type_from_string,
+    AdditionalMetadataLocationType_.c_tag: additional_metadata_location_type__from_string,
     RoleDescriptor.c_tag: role_descriptor_from_string,
-    RoleDescriptorType.c_tag: role_descriptor_type_from_string,
-    anyURIListType.c_tag: any_uri_list_type_from_string,
+    AnyURIListType_.c_tag: any_uri_list_type__from_string,
     KeyDescriptor.c_tag: key_descriptor_from_string,
-    KeyDescriptorType.c_tag: key_descriptor_type_from_string,
-    KeyTypes.c_tag: key_types_from_string,
+    KeyDescriptorType_.c_tag: key_descriptor_type__from_string,
+    KeyTypes_.c_tag: key_types__from_string,
     EncryptionMethod.c_tag: encryption_method_from_string,
-    SSODescriptorType.c_tag: sso_descriptor_type_from_string,
     ArtifactResolutionService.c_tag: artifact_resolution_service_from_string,
     SingleLogoutService.c_tag: single_logout_service_from_string,
     ManageNameIDService.c_tag: manage_name_id_service_from_string,
     NameIDFormat.c_tag: name_id_format_from_string,
     IDPSSODescriptor.c_tag: idpsso_descriptor_from_string,
-    IDPSSODescriptorType.c_tag: idpsso_descriptor_type_from_string,
+    IDPSSODescriptorType_.c_tag: idpsso_descriptor_type__from_string,
     SingleSignOnService.c_tag: single_sign_on_service_from_string,
     NameIDMappingService.c_tag: name_id_mapping_service_from_string,
     AssertionIDRequestService.c_tag: assertion_id_request_service_from_string,
     AttributeProfile.c_tag: attribute_profile_from_string,
     SPSSODescriptor.c_tag: spsso_descriptor_from_string,
-    SPSSODescriptorType.c_tag: spsso_descriptor_type_from_string,
+    SPSSODescriptorType_.c_tag: spsso_descriptor_type__from_string,
     AssertionConsumerService.c_tag: assertion_consumer_service_from_string,
     AttributeConsumingService.c_tag: attribute_consuming_service_from_string,
-    AttributeConsumingServiceType.c_tag: attribute_consuming_service_type_from_string,
+    AttributeConsumingServiceType_.c_tag: attribute_consuming_service_type__from_string,
     ServiceName.c_tag: service_name_from_string,
     ServiceDescription.c_tag: service_description_from_string,
     RequestedAttribute.c_tag: requested_attribute_from_string,
-    RequestedAttributeType.c_tag: requested_attribute_type_from_string,
+    RequestedAttributeType_.c_tag: requested_attribute_type__from_string,
     AuthnAuthorityDescriptor.c_tag: authn_authority_descriptor_from_string,
-    AuthnAuthorityDescriptorType.c_tag: authn_authority_descriptor_type_from_string,
+    AuthnAuthorityDescriptorType_.c_tag: authn_authority_descriptor_type__from_string,
     AuthnQueryService.c_tag: authn_query_service_from_string,
     PDPDescriptor.c_tag: pdp_descriptor_from_string,
-    PDPDescriptorType.c_tag: pdp_descriptor_type_from_string,
+    PDPDescriptorType_.c_tag: pdp_descriptor_type__from_string,
     AuthzService.c_tag: authz_service_from_string,
     AttributeAuthorityDescriptor.c_tag: attribute_authority_descriptor_from_string,
-    AttributeAuthorityDescriptorType.c_tag: attribute_authority_descriptor_type_from_string,
+    AttributeAuthorityDescriptorType_.c_tag: attribute_authority_descriptor_type__from_string,
     AttributeService.c_tag: attribute_service_from_string,
     AffiliationDescriptor.c_tag: affiliation_descriptor_from_string,
-    AffiliationDescriptorType.c_tag: affiliation_descriptor_type_from_string,
+    AffiliationDescriptorType_.c_tag: affiliation_descriptor_type__from_string,
     AffiliateMember.c_tag: affiliate_member_from_string,
 }
 
 ELEMENT_BY_TAG = {
-    'entityIDType': entityIDType,
-    'localizedNameType': localizedNameType,
-    'localizedURIType': localizedURIType,
+    'entityIDType': EntityIDType_,
+    'localizedNameType': LocalizedNameType_,
+    'localizedURIType': LocalizedURIType_,
     'Extensions': Extensions,
-    'ExtensionsType': ExtensionsType,
-    'EndpointType': EndpointType,
-    'IndexedEndpointType': IndexedEndpointType,
+    'ExtensionsType': ExtensionsType_,
+    'EndpointType': EndpointType_,
+    'IndexedEndpointType': IndexedEndpointType_,
     'EntitiesDescriptor': EntitiesDescriptor,
-    'EntitiesDescriptorType': EntitiesDescriptorType,
+    'EntitiesDescriptorType': EntitiesDescriptorType_,
     'EntityDescriptor': EntityDescriptor,
-    'EntityDescriptorType': EntityDescriptorType,
+    'EntityDescriptorType': EntityDescriptorType_,
     'Organization': Organization,
-    'OrganizationType': OrganizationType,
+    'OrganizationType': OrganizationType_,
     'OrganizationName': OrganizationName,
     'OrganizationDisplayName': OrganizationDisplayName,
     'OrganizationURL': OrganizationURL,
     'ContactPerson': ContactPerson,
-    'ContactType': ContactType,
+    'ContactType': ContactType_,
     'Company': Company,
     'GivenName': GivenName,
     'SurName': SurName,
     'EmailAddress': EmailAddress,
     'TelephoneNumber': TelephoneNumber,
-    'ContactTypeType': ContactTypeType,
+    'ContactTypeType': ContactTypeType_,
     'AdditionalMetadataLocation': AdditionalMetadataLocation,
-    'AdditionalMetadataLocationType': AdditionalMetadataLocationType,
+    'AdditionalMetadataLocationType': AdditionalMetadataLocationType_,
     'RoleDescriptor': RoleDescriptor,
-    'RoleDescriptorType': RoleDescriptorType,
-    'anyURIListType': anyURIListType,
+    'anyURIListType': AnyURIListType_,
     'KeyDescriptor': KeyDescriptor,
-    'KeyDescriptorType': KeyDescriptorType,
-    'KeyTypes': KeyTypes,
+    'KeyDescriptorType': KeyDescriptorType_,
+    'KeyTypes': KeyTypes_,
     'EncryptionMethod': EncryptionMethod,
-    'SSODescriptorType': SSODescriptorType,
     'ArtifactResolutionService': ArtifactResolutionService,
     'SingleLogoutService': SingleLogoutService,
     'ManageNameIDService': ManageNameIDService,
     'NameIDFormat': NameIDFormat,
     'IDPSSODescriptor': IDPSSODescriptor,
-    'IDPSSODescriptorType': IDPSSODescriptorType,
+    'IDPSSODescriptorType': IDPSSODescriptorType_,
     'SingleSignOnService': SingleSignOnService,
     'NameIDMappingService': NameIDMappingService,
     'AssertionIDRequestService': AssertionIDRequestService,
     'AttributeProfile': AttributeProfile,
     'SPSSODescriptor': SPSSODescriptor,
-    'SPSSODescriptorType': SPSSODescriptorType,
+    'SPSSODescriptorType': SPSSODescriptorType_,
     'AssertionConsumerService': AssertionConsumerService,
     'AttributeConsumingService': AttributeConsumingService,
-    'AttributeConsumingServiceType': AttributeConsumingServiceType,
+    'AttributeConsumingServiceType': AttributeConsumingServiceType_,
     'ServiceName': ServiceName,
     'ServiceDescription': ServiceDescription,
     'RequestedAttribute': RequestedAttribute,
-    'RequestedAttributeType': RequestedAttributeType,
+    'RequestedAttributeType': RequestedAttributeType_,
     'AuthnAuthorityDescriptor': AuthnAuthorityDescriptor,
-    'AuthnAuthorityDescriptorType': AuthnAuthorityDescriptorType,
+    'AuthnAuthorityDescriptorType': AuthnAuthorityDescriptorType_,
     'AuthnQueryService': AuthnQueryService,
     'PDPDescriptor': PDPDescriptor,
-    'PDPDescriptorType': PDPDescriptorType,
+    'PDPDescriptorType': PDPDescriptorType_,
     'AuthzService': AuthzService,
     'AttributeAuthorityDescriptor': AttributeAuthorityDescriptor,
-    'AttributeAuthorityDescriptorType': AttributeAuthorityDescriptorType,
+    'AttributeAuthorityDescriptorType': AttributeAuthorityDescriptorType_,
     'AttributeService': AttributeService,
     'AffiliationDescriptor': AffiliationDescriptor,
-    'AffiliationDescriptorType': AffiliationDescriptorType,
+    'AffiliationDescriptorType': AffiliationDescriptorType_,
     'AffiliateMember': AffiliateMember,
 }
 

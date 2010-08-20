@@ -658,7 +658,8 @@ def pre_signature_part(ident, public_key=None, identifier=None):
         signature.id = "Signature%d" % identifier
                                 
     if public_key:
-        x509_data = ds.X509Data(x509_certificate=[ds.X509Certificate(text=public_key)])
+        x509_data = ds.X509Data(x509_certificate=[ds.X509DataType_X509Certificate(
+                                                            text=public_key)])
         key_info = ds.KeyInfo(x509_data=x509_data)
         signature.key_info = key_info
     

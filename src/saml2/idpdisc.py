@@ -10,7 +10,7 @@ from saml2 import md
 
 NAMESPACE = "urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol"
 
-class DiscoveryResponse(md.IndexedEndpointType):
+class DiscoveryResponse(md.IndexedEndpointType_):
     """The idpdisc:DiscoveryResponse element"""
     c_tag = 'DiscoveryResponse'
     c_namespace = NAMESPACE

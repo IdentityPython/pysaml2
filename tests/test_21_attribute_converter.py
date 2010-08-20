@@ -9,14 +9,16 @@ def _eq(l1,l2):
 
 BASIC_NF = 'urn:oasis:names:tc:SAML:2.0:attrname-format:basic'
 URI_NF = 'urn:oasis:names:tc:SAML:2.0:attrname-format:uri'
+SAML1 = 'urn:mace:shibboleth:1.0:attributeNamespace:uri'
 
 class TestAC():
     def setup_class(self):
         self.acs = attribute_converter.ac_factory("attributemaps")
         
     def test_setup(self):
-        assert len(self.acs) == 2
-        assert _eq([a.name_format for a in self.acs],[BASIC_NF, URI_NF] )
+        print self.acs
+        assert len(self.acs) == 3
+        assert _eq([a.name_format for a in self.acs],[BASIC_NF, URI_NF, SAML1] )
 
         
     def test_ava_fro_1(self):

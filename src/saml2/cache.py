@@ -58,7 +58,7 @@ class Cache(object):
         
     def get(self, subject_id, entity_id):
         """ Get session information about a subject gotten from a
-        specified IdP.
+        specified IdP/AA.
         
         :param subject_id: The identifier of the subject
         :param entity_id: The identifier of the entity_id
@@ -75,11 +75,11 @@ class Cache(object):
         else:
             return info
     
-    def set( self, subject_id, entity_id, info, not_on_or_after=0):
+    def set(self, subject_id, entity_id, info, not_on_or_after=0):
         """ Stores session information in the cache. Assumes that the subject_id
         is unique within the context of the Service Provider.
         
-        :param subject_id: The subjects identifier
+        :param subject_id: The subject identifier
         :param entity_id: The identifier of the entity_id/receiver of an 
             assertion
         :param info: The session info, the assertion is part of this
@@ -93,7 +93,7 @@ class Cache(object):
             self._db.sync()
             
     def reset(self, subject_id, entity_id=None):
-        """ Scrap the assertions received from a IdP or an AA.about a special
+        """ Scrap the assertions received from a IdP or an AA about a special
         subject.
         
         :param subject_id: The subjects identifier
@@ -117,7 +117,8 @@ class Cache(object):
         return self._db[subject_id].keys()
         
     def receivers(self, subject_id):
-        """ Another name just to make it more logic in the IdP scenario """
+        """ Another name for entities() just to make it more logic in the IdP 
+            scenario """
         return self.entities(subject_id)
         
     def active(self, subject_id, entity_id):

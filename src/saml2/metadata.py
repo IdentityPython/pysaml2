@@ -217,18 +217,30 @@ class MetaData(object):
             entity[tag] = aads
     
     def clear_from_source(self, source):
+        """ Remove all the metadata references I have gotten from this source
+        
+        :param source: The matadata source
+        """
+        
         for eid in self._import[source]:
             del self.entity[eid]
     
     def reload_entity(self, entity_id):
+        """ Reload metadata about an entity_id, means reload the whole
+        metadata file that this entity_id belonged to.
+        
+        :param entity_id: The Entity ID
+        """
         for source, eids in self._import.items():
             if entity_id in eids:
                 if source == "-":
                     return
+                
                 self.clear_from_source(source)
+                
                 if isinstance(source, basestring):
                     fil = open(source)
-                    self.import_metadata( fil.read(), source)
+                    self.import_metadata(fil.read(), source)
                     fil.close()
                 else:
                     self.import_external_metadata(source[0], source[1])
@@ -238,6 +250,8 @@ class MetaData(object):
         certificates from a metadata file.
         
         :param xml_str: The metadata as a XML string.
+        :param source: A name by which this source should be known, has to be
+            unique within this session.
         """
         
         # now = time.gmtime()
@@ -269,6 +283,13 @@ class MetaData(object):
             except KeyError:
                 self._import[source] = [entity_descr.entity_id]
             
+            # have I seen this entity_id before ? If so log and ignore it
+            if entity_descr.entity_id in self.entity:
+                print >> sys.stderr, \
+                    "Duplicated Entity descriptor (entity id:%s)" % \
+                    entity_descr.entity_id
+                continue
+                
             entity = self.entity[entity_descr.entity_id] = {}
             entity["valid_until"] = entities_descr.valid_until
             self._idp_metadata(entity_descr, entity, "idp_sso")
@@ -567,7 +588,7 @@ def do_key_descriptor(cert):
     return md.KeyDescriptor(
         key_info = ds.KeyInfo(
             x509_data=ds.X509Data(
-                x509_certificate=ds.X509Certificate(text=cert)
+                x509_certificate=ds.X509DataType_X509Certificate(text=cert)
                 )
             )
         )

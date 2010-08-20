@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #
-# Generated Tue Aug  3 20:39:25 2010 by parse_xsd.py version 0.3.
+# Generated Fri Aug 20 08:25:36 2010 by parse_xsd.py version 0.3.
 #
 
 import saml2
@@ -50,7 +50,7 @@ STATUS_UNSUPPORTED_BINDING = (
     'urn:oasis:names:tc:SAML:2.0:status:UnsupportedBinding')
 
 
-class ExtensionsType(SamlBase):
+class ExtensionsType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:protocol:ExtensionsType element """
 
     c_tag = 'ExtensionsType'
@@ -60,15 +60,16 @@ class ExtensionsType(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
-def extensions_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(ExtensionsType, xml_string)
+def extensions_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(ExtensionsType_, xml_string)
+
 
 class StatusMessage(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:protocol:StatusMessage element """
 
     c_tag = 'StatusMessage'
     c_namespace = NAMESPACE
-    c_value_type = 'string'
+    c_value_type = {'base': 'string'}
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
@@ -77,7 +78,8 @@ class StatusMessage(SamlBase):
 def status_message_from_string(xml_string):
     return saml2.create_class_from_xml_string(StatusMessage, xml_string)
 
-class StatusDetailType(SamlBase):
+
+class StatusDetailType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:protocol:StatusDetailType element """
 
     c_tag = 'StatusDetailType'
@@ -87,10 +89,11 @@ class StatusDetailType(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
-def status_detail_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(StatusDetailType, xml_string)
+def status_detail_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(StatusDetailType_, xml_string)
 
-class RequestedAuthnContextType(SamlBase):
+
+class RequestedAuthnContextType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:protocol:RequestedAuthnContextType element """
 
     c_tag = 'RequestedAuthnContextType'
@@ -123,10 +126,11 @@ class RequestedAuthnContextType(SamlBase):
         self.authn_context_decl_ref=authn_context_decl_ref or []
         self.comparison=comparison
 
-def requested_authn_context_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(RequestedAuthnContextType, xml_string)
+def requested_authn_context_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(RequestedAuthnContextType_, xml_string)
 
-class AuthnContextComparisonType(SamlBase):
+
+class AuthnContextComparisonType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:protocol:AuthnContextComparisonType element """
 
     c_tag = 'AuthnContextComparisonType'
@@ -137,10 +141,11 @@ class AuthnContextComparisonType(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
-def authn_context_comparison_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(AuthnContextComparisonType, xml_string)
+def authn_context_comparison_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(AuthnContextComparisonType_, xml_string)
 
-class NameIDPolicyType(SamlBase):
+
+class NameIDPolicyType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:protocol:NameIDPolicyType element """
 
     c_tag = 'NameIDPolicyType'
@@ -170,15 +175,16 @@ class NameIDPolicyType(SamlBase):
         self.sp_name_qualifier=sp_name_qualifier
         self.allow_create=allow_create
 
-def name_id_policy_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(NameIDPolicyType, xml_string)
+def name_id_policy_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(NameIDPolicyType_, xml_string)
+
 
 class RequesterID(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:protocol:RequesterID element """
 
     c_tag = 'RequesterID'
     c_namespace = NAMESPACE
-    c_value_type = 'anyURI'
+    c_value_type = {'base': 'anyURI'}
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
@@ -187,7 +193,8 @@ class RequesterID(SamlBase):
 def requester_id_from_string(xml_string):
     return saml2.create_class_from_xml_string(RequesterID, xml_string)
 
-class IDPEntryType(SamlBase):
+
+class IDPEntryType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:protocol:IDPEntryType element """
 
     c_tag = 'IDPEntryType'
@@ -217,15 +224,16 @@ class IDPEntryType(SamlBase):
         self.name=name
         self.loc=loc
 
-def idp_entry_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(IDPEntryType, xml_string)
+def idp_entry_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(IDPEntryType_, xml_string)
+
 
 class GetComplete(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:protocol:GetComplete element """
 
     c_tag = 'GetComplete'
     c_namespace = NAMESPACE
-    c_value_type = 'anyURI'
+    c_value_type = {'base': 'anyURI'}
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
@@ -234,12 +242,13 @@ class GetComplete(SamlBase):
 def get_complete_from_string(xml_string):
     return saml2.create_class_from_xml_string(GetComplete, xml_string)
 
+
 class Artifact(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:protocol:Artifact element """
 
     c_tag = 'Artifact'
     c_namespace = NAMESPACE
-    c_value_type = 'string'
+    c_value_type = {'base': 'string'}
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
@@ -248,12 +257,13 @@ class Artifact(SamlBase):
 def artifact_from_string(xml_string):
     return saml2.create_class_from_xml_string(Artifact, xml_string)
 
+
 class NewID(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:protocol:NewID element """
 
     c_tag = 'NewID'
     c_namespace = NAMESPACE
-    c_value_type = 'string'
+    c_value_type = {'base': 'string'}
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
@@ -262,20 +272,22 @@ class NewID(SamlBase):
 def new_id_from_string(xml_string):
     return saml2.create_class_from_xml_string(NewID, xml_string)
 
-class NewEncryptedID(saml.EncryptedElementType):
+
+class NewEncryptedID(saml.EncryptedElementType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:NewEncryptedID element """
 
     c_tag = 'NewEncryptedID'
     c_namespace = NAMESPACE
-    c_children = saml.EncryptedElementType.c_children.copy()
-    c_attributes = saml.EncryptedElementType.c_attributes.copy()
-    c_child_order = saml.EncryptedElementType.c_child_order[:]
-    c_cardinality = saml.EncryptedElementType.c_cardinality.copy()
+    c_children = saml.EncryptedElementType_.c_children.copy()
+    c_attributes = saml.EncryptedElementType_.c_attributes.copy()
+    c_child_order = saml.EncryptedElementType_.c_child_order[:]
+    c_cardinality = saml.EncryptedElementType_.c_cardinality.copy()
 
 def new_encrypted_id_from_string(xml_string):
     return saml2.create_class_from_xml_string(NewEncryptedID, xml_string)
 
-class TerminateType(SamlBase):
+
+class TerminateType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:protocol:TerminateType element """
 
     c_tag = 'TerminateType'
@@ -285,15 +297,16 @@ class TerminateType(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
-def terminate_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(TerminateType, xml_string)
+def terminate_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(TerminateType_, xml_string)
+
 
 class SessionIndex(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:protocol:SessionIndex element """
 
     c_tag = 'SessionIndex'
     c_namespace = NAMESPACE
-    c_value_type = 'string'
+    c_value_type = {'base': 'string'}
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
@@ -302,33 +315,36 @@ class SessionIndex(SamlBase):
 def session_index_from_string(xml_string):
     return saml2.create_class_from_xml_string(SessionIndex, xml_string)
 
-class Extensions(ExtensionsType):
+
+class Extensions(ExtensionsType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:Extensions element """
 
     c_tag = 'Extensions'
     c_namespace = NAMESPACE
-    c_children = ExtensionsType.c_children.copy()
-    c_attributes = ExtensionsType.c_attributes.copy()
-    c_child_order = ExtensionsType.c_child_order[:]
-    c_cardinality = ExtensionsType.c_cardinality.copy()
+    c_children = ExtensionsType_.c_children.copy()
+    c_attributes = ExtensionsType_.c_attributes.copy()
+    c_child_order = ExtensionsType_.c_child_order[:]
+    c_cardinality = ExtensionsType_.c_cardinality.copy()
 
 def extensions_from_string(xml_string):
     return saml2.create_class_from_xml_string(Extensions, xml_string)
 
-class StatusDetail(StatusDetailType):
+
+class StatusDetail(StatusDetailType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:StatusDetail element """
 
     c_tag = 'StatusDetail'
     c_namespace = NAMESPACE
-    c_children = StatusDetailType.c_children.copy()
-    c_attributes = StatusDetailType.c_attributes.copy()
-    c_child_order = StatusDetailType.c_child_order[:]
-    c_cardinality = StatusDetailType.c_cardinality.copy()
+    c_children = StatusDetailType_.c_children.copy()
+    c_attributes = StatusDetailType_.c_attributes.copy()
+    c_child_order = StatusDetailType_.c_child_order[:]
+    c_cardinality = StatusDetailType_.c_cardinality.copy()
 
 def status_detail_from_string(xml_string):
     return saml2.create_class_from_xml_string(StatusDetail, xml_string)
 
-class RequestAbstractType(SamlBase):
+
+class RequestAbstractType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:protocol:RequestAbstractType element """
 
     c_tag = 'RequestAbstractType'
@@ -377,18 +393,16 @@ class RequestAbstractType(SamlBase):
         self.destination=destination
         self.consent=consent
 
-def request_abstract_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(RequestAbstractType, xml_string)
 
-class AssertionIDRequestType(RequestAbstractType):
+class AssertionIDRequestType_(RequestAbstractType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:AssertionIDRequestType element """
 
     c_tag = 'AssertionIDRequestType'
     c_namespace = NAMESPACE
-    c_children = RequestAbstractType.c_children.copy()
-    c_attributes = RequestAbstractType.c_attributes.copy()
-    c_child_order = RequestAbstractType.c_child_order[:]
-    c_cardinality = RequestAbstractType.c_cardinality.copy()
+    c_children = RequestAbstractType_.c_children.copy()
+    c_attributes = RequestAbstractType_.c_attributes.copy()
+    c_child_order = RequestAbstractType_.c_child_order[:]
+    c_cardinality = RequestAbstractType_.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AssertionIDRef'] = ('assertion_id_ref', [saml.AssertionIDRef])
     c_cardinality['assertion_id_ref'] = {"min":1}
     c_child_order.extend(['assertion_id_ref'])
@@ -407,7 +421,7 @@ class AssertionIDRequestType(RequestAbstractType):
             extension_elements=None,
             extension_attributes=None,
         ):
-        RequestAbstractType.__init__(self, 
+        RequestAbstractType_.__init__(self, 
                 issuer=issuer,
                 signature=signature,
                 extensions=extensions,
@@ -422,18 +436,19 @@ class AssertionIDRequestType(RequestAbstractType):
                 )
         self.assertion_id_ref=assertion_id_ref or []
 
-def assertion_id_request_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(AssertionIDRequestType, xml_string)
+def assertion_id_request_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(AssertionIDRequestType_, xml_string)
 
-class SubjectQueryAbstractType(RequestAbstractType):
+
+class SubjectQueryAbstractType_(RequestAbstractType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:SubjectQueryAbstractType element """
 
     c_tag = 'SubjectQueryAbstractType'
     c_namespace = NAMESPACE
-    c_children = RequestAbstractType.c_children.copy()
-    c_attributes = RequestAbstractType.c_attributes.copy()
-    c_child_order = RequestAbstractType.c_child_order[:]
-    c_cardinality = RequestAbstractType.c_cardinality.copy()
+    c_children = RequestAbstractType_.c_children.copy()
+    c_attributes = RequestAbstractType_.c_attributes.copy()
+    c_child_order = RequestAbstractType_.c_child_order[:]
+    c_cardinality = RequestAbstractType_.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Subject'] = ('subject', saml.Subject)
     c_child_order.extend(['subject'])
 
@@ -451,7 +466,7 @@ class SubjectQueryAbstractType(RequestAbstractType):
             extension_elements=None,
             extension_attributes=None,
         ):
-        RequestAbstractType.__init__(self, 
+        RequestAbstractType_.__init__(self, 
                 issuer=issuer,
                 signature=signature,
                 extensions=extensions,
@@ -466,31 +481,30 @@ class SubjectQueryAbstractType(RequestAbstractType):
                 )
         self.subject=subject
 
-def subject_query_abstract_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(SubjectQueryAbstractType, xml_string)
 
-class RequestedAuthnContext(RequestedAuthnContextType):
+class RequestedAuthnContext(RequestedAuthnContextType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:RequestedAuthnContext element """
 
     c_tag = 'RequestedAuthnContext'
     c_namespace = NAMESPACE
-    c_children = RequestedAuthnContextType.c_children.copy()
-    c_attributes = RequestedAuthnContextType.c_attributes.copy()
-    c_child_order = RequestedAuthnContextType.c_child_order[:]
-    c_cardinality = RequestedAuthnContextType.c_cardinality.copy()
+    c_children = RequestedAuthnContextType_.c_children.copy()
+    c_attributes = RequestedAuthnContextType_.c_attributes.copy()
+    c_child_order = RequestedAuthnContextType_.c_child_order[:]
+    c_cardinality = RequestedAuthnContextType_.c_cardinality.copy()
 
 def requested_authn_context_from_string(xml_string):
     return saml2.create_class_from_xml_string(RequestedAuthnContext, xml_string)
 
-class AttributeQueryType(SubjectQueryAbstractType):
+
+class AttributeQueryType_(SubjectQueryAbstractType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:AttributeQueryType element """
 
     c_tag = 'AttributeQueryType'
     c_namespace = NAMESPACE
-    c_children = SubjectQueryAbstractType.c_children.copy()
-    c_attributes = SubjectQueryAbstractType.c_attributes.copy()
-    c_child_order = SubjectQueryAbstractType.c_child_order[:]
-    c_cardinality = SubjectQueryAbstractType.c_cardinality.copy()
+    c_children = SubjectQueryAbstractType_.c_children.copy()
+    c_attributes = SubjectQueryAbstractType_.c_attributes.copy()
+    c_child_order = SubjectQueryAbstractType_.c_child_order[:]
+    c_cardinality = SubjectQueryAbstractType_.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Attribute'] = ('attribute', [saml.Attribute])
     c_cardinality['attribute'] = {"min":0}
     c_child_order.extend(['attribute'])
@@ -510,7 +524,7 @@ class AttributeQueryType(SubjectQueryAbstractType):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SubjectQueryAbstractType.__init__(self, 
+        SubjectQueryAbstractType_.__init__(self, 
                 subject=subject,
                 issuer=issuer,
                 signature=signature,
@@ -526,18 +540,19 @@ class AttributeQueryType(SubjectQueryAbstractType):
                 )
         self.attribute=attribute or []
 
-def attribute_query_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(AttributeQueryType, xml_string)
+def attribute_query_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(AttributeQueryType_, xml_string)
 
-class AuthzDecisionQueryType(SubjectQueryAbstractType):
+
+class AuthzDecisionQueryType_(SubjectQueryAbstractType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:AuthzDecisionQueryType element """
 
     c_tag = 'AuthzDecisionQueryType'
     c_namespace = NAMESPACE
-    c_children = SubjectQueryAbstractType.c_children.copy()
-    c_attributes = SubjectQueryAbstractType.c_attributes.copy()
-    c_child_order = SubjectQueryAbstractType.c_child_order[:]
-    c_cardinality = SubjectQueryAbstractType.c_cardinality.copy()
+    c_children = SubjectQueryAbstractType_.c_children.copy()
+    c_attributes = SubjectQueryAbstractType_.c_attributes.copy()
+    c_child_order = SubjectQueryAbstractType_.c_child_order[:]
+    c_cardinality = SubjectQueryAbstractType_.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Action'] = ('action', [saml.Action])
     c_cardinality['action'] = {"min":1}
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Evidence'] = ('evidence', saml.Evidence)
@@ -562,7 +577,7 @@ class AuthzDecisionQueryType(SubjectQueryAbstractType):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SubjectQueryAbstractType.__init__(self, 
+        SubjectQueryAbstractType_.__init__(self, 
                 subject=subject,
                 issuer=issuer,
                 signature=signature,
@@ -580,44 +595,47 @@ class AuthzDecisionQueryType(SubjectQueryAbstractType):
         self.evidence=evidence
         self.resource=resource
 
-def authz_decision_query_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(AuthzDecisionQueryType, xml_string)
+def authz_decision_query_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(AuthzDecisionQueryType_, xml_string)
 
-class NameIDPolicy(NameIDPolicyType):
+
+class NameIDPolicy(NameIDPolicyType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:NameIDPolicy element """
 
     c_tag = 'NameIDPolicy'
     c_namespace = NAMESPACE
-    c_children = NameIDPolicyType.c_children.copy()
-    c_attributes = NameIDPolicyType.c_attributes.copy()
-    c_child_order = NameIDPolicyType.c_child_order[:]
-    c_cardinality = NameIDPolicyType.c_cardinality.copy()
+    c_children = NameIDPolicyType_.c_children.copy()
+    c_attributes = NameIDPolicyType_.c_attributes.copy()
+    c_child_order = NameIDPolicyType_.c_child_order[:]
+    c_cardinality = NameIDPolicyType_.c_cardinality.copy()
 
 def name_id_policy_from_string(xml_string):
     return saml2.create_class_from_xml_string(NameIDPolicy, xml_string)
 
-class IDPEntry(IDPEntryType):
+
+class IDPEntry(IDPEntryType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:IDPEntry element """
 
     c_tag = 'IDPEntry'
     c_namespace = NAMESPACE
-    c_children = IDPEntryType.c_children.copy()
-    c_attributes = IDPEntryType.c_attributes.copy()
-    c_child_order = IDPEntryType.c_child_order[:]
-    c_cardinality = IDPEntryType.c_cardinality.copy()
+    c_children = IDPEntryType_.c_children.copy()
+    c_attributes = IDPEntryType_.c_attributes.copy()
+    c_child_order = IDPEntryType_.c_child_order[:]
+    c_cardinality = IDPEntryType_.c_cardinality.copy()
 
 def idp_entry_from_string(xml_string):
     return saml2.create_class_from_xml_string(IDPEntry, xml_string)
 
-class ArtifactResolveType(RequestAbstractType):
+
+class ArtifactResolveType_(RequestAbstractType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:ArtifactResolveType element """
 
     c_tag = 'ArtifactResolveType'
     c_namespace = NAMESPACE
-    c_children = RequestAbstractType.c_children.copy()
-    c_attributes = RequestAbstractType.c_attributes.copy()
-    c_child_order = RequestAbstractType.c_child_order[:]
-    c_cardinality = RequestAbstractType.c_cardinality.copy()
+    c_children = RequestAbstractType_.c_children.copy()
+    c_attributes = RequestAbstractType_.c_attributes.copy()
+    c_child_order = RequestAbstractType_.c_child_order[:]
+    c_cardinality = RequestAbstractType_.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:protocol}Artifact'] = ('artifact', Artifact)
     c_child_order.extend(['artifact'])
 
@@ -635,7 +653,7 @@ class ArtifactResolveType(RequestAbstractType):
             extension_elements=None,
             extension_attributes=None,
         ):
-        RequestAbstractType.__init__(self, 
+        RequestAbstractType_.__init__(self, 
                 issuer=issuer,
                 signature=signature,
                 extensions=extensions,
@@ -650,31 +668,33 @@ class ArtifactResolveType(RequestAbstractType):
                 )
         self.artifact=artifact
 
-def artifact_resolve_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(ArtifactResolveType, xml_string)
+def artifact_resolve_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(ArtifactResolveType_, xml_string)
 
-class Terminate(TerminateType):
+
+class Terminate(TerminateType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:Terminate element """
 
     c_tag = 'Terminate'
     c_namespace = NAMESPACE
-    c_children = TerminateType.c_children.copy()
-    c_attributes = TerminateType.c_attributes.copy()
-    c_child_order = TerminateType.c_child_order[:]
-    c_cardinality = TerminateType.c_cardinality.copy()
+    c_children = TerminateType_.c_children.copy()
+    c_attributes = TerminateType_.c_attributes.copy()
+    c_child_order = TerminateType_.c_child_order[:]
+    c_cardinality = TerminateType_.c_cardinality.copy()
 
 def terminate_from_string(xml_string):
     return saml2.create_class_from_xml_string(Terminate, xml_string)
 
-class LogoutRequestType(RequestAbstractType):
+
+class LogoutRequestType_(RequestAbstractType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:LogoutRequestType element """
 
     c_tag = 'LogoutRequestType'
     c_namespace = NAMESPACE
-    c_children = RequestAbstractType.c_children.copy()
-    c_attributes = RequestAbstractType.c_attributes.copy()
-    c_child_order = RequestAbstractType.c_child_order[:]
-    c_cardinality = RequestAbstractType.c_cardinality.copy()
+    c_children = RequestAbstractType_.c_children.copy()
+    c_attributes = RequestAbstractType_.c_attributes.copy()
+    c_child_order = RequestAbstractType_.c_child_order[:]
+    c_cardinality = RequestAbstractType_.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}BaseID'] = ('base_id', saml.BaseID)
     c_cardinality['base_id'] = {"min":0, "max":1}
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}NameID'] = ('name_id', saml.NameID)
@@ -706,7 +726,7 @@ class LogoutRequestType(RequestAbstractType):
             extension_elements=None,
             extension_attributes=None,
         ):
-        RequestAbstractType.__init__(self, 
+        RequestAbstractType_.__init__(self, 
                 issuer=issuer,
                 signature=signature,
                 extensions=extensions,
@@ -726,18 +746,19 @@ class LogoutRequestType(RequestAbstractType):
         self.reason=reason
         self.not_on_or_after=not_on_or_after
 
-def logout_request_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(LogoutRequestType, xml_string)
+def logout_request_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(LogoutRequestType_, xml_string)
 
-class NameIDMappingRequestType(RequestAbstractType):
+
+class NameIDMappingRequestType_(RequestAbstractType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:NameIDMappingRequestType element """
 
     c_tag = 'NameIDMappingRequestType'
     c_namespace = NAMESPACE
-    c_children = RequestAbstractType.c_children.copy()
-    c_attributes = RequestAbstractType.c_attributes.copy()
-    c_child_order = RequestAbstractType.c_child_order[:]
-    c_cardinality = RequestAbstractType.c_cardinality.copy()
+    c_children = RequestAbstractType_.c_children.copy()
+    c_attributes = RequestAbstractType_.c_attributes.copy()
+    c_child_order = RequestAbstractType_.c_child_order[:]
+    c_cardinality = RequestAbstractType_.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}BaseID'] = ('base_id', saml.BaseID)
     c_cardinality['base_id'] = {"min":0, "max":1}
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}NameID'] = ('name_id', saml.NameID)
@@ -764,7 +785,7 @@ class NameIDMappingRequestType(RequestAbstractType):
             extension_elements=None,
             extension_attributes=None,
         ):
-        RequestAbstractType.__init__(self, 
+        RequestAbstractType_.__init__(self, 
                 issuer=issuer,
                 signature=signature,
                 extensions=extensions,
@@ -782,44 +803,47 @@ class NameIDMappingRequestType(RequestAbstractType):
         self.encrypted_id=encrypted_id
         self.name_id_policy=name_id_policy
 
-def name_id_mapping_request_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(NameIDMappingRequestType, xml_string)
+def name_id_mapping_request_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(NameIDMappingRequestType_, xml_string)
 
-class AssertionIDRequest(AssertionIDRequestType):
+
+class AssertionIDRequest(AssertionIDRequestType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:AssertionIDRequest element """
 
     c_tag = 'AssertionIDRequest'
     c_namespace = NAMESPACE
-    c_children = AssertionIDRequestType.c_children.copy()
-    c_attributes = AssertionIDRequestType.c_attributes.copy()
-    c_child_order = AssertionIDRequestType.c_child_order[:]
-    c_cardinality = AssertionIDRequestType.c_cardinality.copy()
+    c_children = AssertionIDRequestType_.c_children.copy()
+    c_attributes = AssertionIDRequestType_.c_attributes.copy()
+    c_child_order = AssertionIDRequestType_.c_child_order[:]
+    c_cardinality = AssertionIDRequestType_.c_cardinality.copy()
 
 def assertion_id_request_from_string(xml_string):
     return saml2.create_class_from_xml_string(AssertionIDRequest, xml_string)
 
-class SubjectQuery(SubjectQueryAbstractType):
+
+class SubjectQuery(SubjectQueryAbstractType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:SubjectQuery element """
 
     c_tag = 'SubjectQuery'
     c_namespace = NAMESPACE
-    c_children = SubjectQueryAbstractType.c_children.copy()
-    c_attributes = SubjectQueryAbstractType.c_attributes.copy()
-    c_child_order = SubjectQueryAbstractType.c_child_order[:]
-    c_cardinality = SubjectQueryAbstractType.c_cardinality.copy()
+    c_children = SubjectQueryAbstractType_.c_children.copy()
+    c_attributes = SubjectQueryAbstractType_.c_attributes.copy()
+    c_child_order = SubjectQueryAbstractType_.c_child_order[:]
+    c_cardinality = SubjectQueryAbstractType_.c_cardinality.copy()
 
 def subject_query_from_string(xml_string):
     return saml2.create_class_from_xml_string(SubjectQuery, xml_string)
 
-class AuthnQueryType(SubjectQueryAbstractType):
+
+class AuthnQueryType_(SubjectQueryAbstractType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:AuthnQueryType element """
 
     c_tag = 'AuthnQueryType'
     c_namespace = NAMESPACE
-    c_children = SubjectQueryAbstractType.c_children.copy()
-    c_attributes = SubjectQueryAbstractType.c_attributes.copy()
-    c_child_order = SubjectQueryAbstractType.c_child_order[:]
-    c_cardinality = SubjectQueryAbstractType.c_cardinality.copy()
+    c_children = SubjectQueryAbstractType_.c_children.copy()
+    c_attributes = SubjectQueryAbstractType_.c_attributes.copy()
+    c_child_order = SubjectQueryAbstractType_.c_child_order[:]
+    c_cardinality = SubjectQueryAbstractType_.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:protocol}RequestedAuthnContext'] = ('requested_authn_context', RequestedAuthnContext)
     c_cardinality['requested_authn_context'] = {"min":0, "max":1}
     c_attributes['SessionIndex'] = ('session_index', 'string', False)
@@ -841,7 +865,7 @@ class AuthnQueryType(SubjectQueryAbstractType):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SubjectQueryAbstractType.__init__(self, 
+        SubjectQueryAbstractType_.__init__(self, 
                 subject=subject,
                 issuer=issuer,
                 signature=signature,
@@ -858,36 +882,39 @@ class AuthnQueryType(SubjectQueryAbstractType):
         self.requested_authn_context=requested_authn_context
         self.session_index=session_index
 
-def authn_query_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(AuthnQueryType, xml_string)
+def authn_query_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(AuthnQueryType_, xml_string)
 
-class AttributeQuery(AttributeQueryType):
+
+class AttributeQuery(AttributeQueryType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:AttributeQuery element """
 
     c_tag = 'AttributeQuery'
     c_namespace = NAMESPACE
-    c_children = AttributeQueryType.c_children.copy()
-    c_attributes = AttributeQueryType.c_attributes.copy()
-    c_child_order = AttributeQueryType.c_child_order[:]
-    c_cardinality = AttributeQueryType.c_cardinality.copy()
+    c_children = AttributeQueryType_.c_children.copy()
+    c_attributes = AttributeQueryType_.c_attributes.copy()
+    c_child_order = AttributeQueryType_.c_child_order[:]
+    c_cardinality = AttributeQueryType_.c_cardinality.copy()
 
 def attribute_query_from_string(xml_string):
     return saml2.create_class_from_xml_string(AttributeQuery, xml_string)
 
-class AuthzDecisionQuery(AuthzDecisionQueryType):
+
+class AuthzDecisionQuery(AuthzDecisionQueryType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:AuthzDecisionQuery element """
 
     c_tag = 'AuthzDecisionQuery'
     c_namespace = NAMESPACE
-    c_children = AuthzDecisionQueryType.c_children.copy()
-    c_attributes = AuthzDecisionQueryType.c_attributes.copy()
-    c_child_order = AuthzDecisionQueryType.c_child_order[:]
-    c_cardinality = AuthzDecisionQueryType.c_cardinality.copy()
+    c_children = AuthzDecisionQueryType_.c_children.copy()
+    c_attributes = AuthzDecisionQueryType_.c_attributes.copy()
+    c_child_order = AuthzDecisionQueryType_.c_child_order[:]
+    c_cardinality = AuthzDecisionQueryType_.c_cardinality.copy()
 
 def authz_decision_query_from_string(xml_string):
     return saml2.create_class_from_xml_string(AuthzDecisionQuery, xml_string)
 
-class IDPListType(SamlBase):
+
+class IDPListType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:protocol:IDPListType element """
 
     c_tag = 'IDPListType'
@@ -917,31 +944,33 @@ class IDPListType(SamlBase):
         self.idp_entry=idp_entry or []
         self.get_complete=get_complete
 
-def idp_list_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(IDPListType, xml_string)
+def idp_list_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(IDPListType_, xml_string)
 
-class ArtifactResolve(ArtifactResolveType):
+
+class ArtifactResolve(ArtifactResolveType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:ArtifactResolve element """
 
     c_tag = 'ArtifactResolve'
     c_namespace = NAMESPACE
-    c_children = ArtifactResolveType.c_children.copy()
-    c_attributes = ArtifactResolveType.c_attributes.copy()
-    c_child_order = ArtifactResolveType.c_child_order[:]
-    c_cardinality = ArtifactResolveType.c_cardinality.copy()
+    c_children = ArtifactResolveType_.c_children.copy()
+    c_attributes = ArtifactResolveType_.c_attributes.copy()
+    c_child_order = ArtifactResolveType_.c_child_order[:]
+    c_cardinality = ArtifactResolveType_.c_cardinality.copy()
 
 def artifact_resolve_from_string(xml_string):
     return saml2.create_class_from_xml_string(ArtifactResolve, xml_string)
 
-class ManageNameIDRequestType(RequestAbstractType):
+
+class ManageNameIDRequestType_(RequestAbstractType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:ManageNameIDRequestType element """
 
     c_tag = 'ManageNameIDRequestType'
     c_namespace = NAMESPACE
-    c_children = RequestAbstractType.c_children.copy()
-    c_attributes = RequestAbstractType.c_attributes.copy()
-    c_child_order = RequestAbstractType.c_child_order[:]
-    c_cardinality = RequestAbstractType.c_cardinality.copy()
+    c_children = RequestAbstractType_.c_children.copy()
+    c_attributes = RequestAbstractType_.c_attributes.copy()
+    c_child_order = RequestAbstractType_.c_child_order[:]
+    c_cardinality = RequestAbstractType_.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}NameID'] = ('name_id', saml.NameID)
     c_cardinality['name_id'] = {"min":0, "max":1}
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}EncryptedID'] = ('encrypted_id', saml.EncryptedID)
@@ -972,7 +1001,7 @@ class ManageNameIDRequestType(RequestAbstractType):
             extension_elements=None,
             extension_attributes=None,
         ):
-        RequestAbstractType.__init__(self, 
+        RequestAbstractType_.__init__(self, 
                 issuer=issuer,
                 signature=signature,
                 extensions=extensions,
@@ -991,75 +1020,81 @@ class ManageNameIDRequestType(RequestAbstractType):
         self.new_encrypted_id=new_encrypted_id
         self.terminate=terminate
 
-def manage_name_id_request_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(ManageNameIDRequestType, xml_string)
+def manage_name_id_request_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(ManageNameIDRequestType_, xml_string)
 
-class LogoutRequest(LogoutRequestType):
+
+class LogoutRequest(LogoutRequestType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:LogoutRequest element """
 
     c_tag = 'LogoutRequest'
     c_namespace = NAMESPACE
-    c_children = LogoutRequestType.c_children.copy()
-    c_attributes = LogoutRequestType.c_attributes.copy()
-    c_child_order = LogoutRequestType.c_child_order[:]
-    c_cardinality = LogoutRequestType.c_cardinality.copy()
+    c_children = LogoutRequestType_.c_children.copy()
+    c_attributes = LogoutRequestType_.c_attributes.copy()
+    c_child_order = LogoutRequestType_.c_child_order[:]
+    c_cardinality = LogoutRequestType_.c_cardinality.copy()
 
 def logout_request_from_string(xml_string):
     return saml2.create_class_from_xml_string(LogoutRequest, xml_string)
 
-class NameIDMappingRequest(NameIDMappingRequestType):
+
+class NameIDMappingRequest(NameIDMappingRequestType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:NameIDMappingRequest element """
 
     c_tag = 'NameIDMappingRequest'
     c_namespace = NAMESPACE
-    c_children = NameIDMappingRequestType.c_children.copy()
-    c_attributes = NameIDMappingRequestType.c_attributes.copy()
-    c_child_order = NameIDMappingRequestType.c_child_order[:]
-    c_cardinality = NameIDMappingRequestType.c_cardinality.copy()
+    c_children = NameIDMappingRequestType_.c_children.copy()
+    c_attributes = NameIDMappingRequestType_.c_attributes.copy()
+    c_child_order = NameIDMappingRequestType_.c_child_order[:]
+    c_cardinality = NameIDMappingRequestType_.c_cardinality.copy()
 
 def name_id_mapping_request_from_string(xml_string):
     return saml2.create_class_from_xml_string(NameIDMappingRequest, xml_string)
 
-class AuthnQuery(AuthnQueryType):
+
+class AuthnQuery(AuthnQueryType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:AuthnQuery element """
 
     c_tag = 'AuthnQuery'
     c_namespace = NAMESPACE
-    c_children = AuthnQueryType.c_children.copy()
-    c_attributes = AuthnQueryType.c_attributes.copy()
-    c_child_order = AuthnQueryType.c_child_order[:]
-    c_cardinality = AuthnQueryType.c_cardinality.copy()
+    c_children = AuthnQueryType_.c_children.copy()
+    c_attributes = AuthnQueryType_.c_attributes.copy()
+    c_child_order = AuthnQueryType_.c_child_order[:]
+    c_cardinality = AuthnQueryType_.c_cardinality.copy()
 
 def authn_query_from_string(xml_string):
     return saml2.create_class_from_xml_string(AuthnQuery, xml_string)
 
-class IDPList(IDPListType):
+
+class IDPList(IDPListType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:IDPList element """
 
     c_tag = 'IDPList'
     c_namespace = NAMESPACE
-    c_children = IDPListType.c_children.copy()
-    c_attributes = IDPListType.c_attributes.copy()
-    c_child_order = IDPListType.c_child_order[:]
-    c_cardinality = IDPListType.c_cardinality.copy()
+    c_children = IDPListType_.c_children.copy()
+    c_attributes = IDPListType_.c_attributes.copy()
+    c_child_order = IDPListType_.c_child_order[:]
+    c_cardinality = IDPListType_.c_cardinality.copy()
 
 def idp_list_from_string(xml_string):
     return saml2.create_class_from_xml_string(IDPList, xml_string)
 
-class ManageNameIDRequest(ManageNameIDRequestType):
+
+class ManageNameIDRequest(ManageNameIDRequestType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:ManageNameIDRequest element """
 
     c_tag = 'ManageNameIDRequest'
     c_namespace = NAMESPACE
-    c_children = ManageNameIDRequestType.c_children.copy()
-    c_attributes = ManageNameIDRequestType.c_attributes.copy()
-    c_child_order = ManageNameIDRequestType.c_child_order[:]
-    c_cardinality = ManageNameIDRequestType.c_cardinality.copy()
+    c_children = ManageNameIDRequestType_.c_children.copy()
+    c_attributes = ManageNameIDRequestType_.c_attributes.copy()
+    c_child_order = ManageNameIDRequestType_.c_child_order[:]
+    c_cardinality = ManageNameIDRequestType_.c_cardinality.copy()
 
 def manage_name_id_request_from_string(xml_string):
     return saml2.create_class_from_xml_string(ManageNameIDRequest, xml_string)
 
-class ScopingType(SamlBase):
+
+class ScopingType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:protocol:ScopingType element """
 
     c_tag = 'ScopingType'
@@ -1092,31 +1127,33 @@ class ScopingType(SamlBase):
         self.requester_id=requester_id or []
         self.proxy_count=proxy_count
 
-def scoping_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(ScopingType, xml_string)
+def scoping_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(ScopingType_, xml_string)
 
-class Scoping(ScopingType):
+
+class Scoping(ScopingType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:Scoping element """
 
     c_tag = 'Scoping'
     c_namespace = NAMESPACE
-    c_children = ScopingType.c_children.copy()
-    c_attributes = ScopingType.c_attributes.copy()
-    c_child_order = ScopingType.c_child_order[:]
-    c_cardinality = ScopingType.c_cardinality.copy()
+    c_children = ScopingType_.c_children.copy()
+    c_attributes = ScopingType_.c_attributes.copy()
+    c_child_order = ScopingType_.c_child_order[:]
+    c_cardinality = ScopingType_.c_cardinality.copy()
 
 def scoping_from_string(xml_string):
     return saml2.create_class_from_xml_string(Scoping, xml_string)
 
-class AuthnRequestType(RequestAbstractType):
+
+class AuthnRequestType_(RequestAbstractType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:AuthnRequestType element """
 
     c_tag = 'AuthnRequestType'
     c_namespace = NAMESPACE
-    c_children = RequestAbstractType.c_children.copy()
-    c_attributes = RequestAbstractType.c_attributes.copy()
-    c_child_order = RequestAbstractType.c_child_order[:]
-    c_cardinality = RequestAbstractType.c_cardinality.copy()
+    c_children = RequestAbstractType_.c_children.copy()
+    c_attributes = RequestAbstractType_.c_attributes.copy()
+    c_child_order = RequestAbstractType_.c_child_order[:]
+    c_cardinality = RequestAbstractType_.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Subject'] = ('subject', saml.Subject)
     c_cardinality['subject'] = {"min":0, "max":1}
     c_children['{urn:oasis:names:tc:SAML:2.0:protocol}NameIDPolicy'] = ('name_id_policy', NameIDPolicy)
@@ -1161,7 +1198,7 @@ class AuthnRequestType(RequestAbstractType):
             extension_elements=None,
             extension_attributes=None,
         ):
-        RequestAbstractType.__init__(self, 
+        RequestAbstractType_.__init__(self, 
                 issuer=issuer,
                 signature=signature,
                 extensions=extensions,
@@ -1187,25 +1224,27 @@ class AuthnRequestType(RequestAbstractType):
         self.attribute_consuming_service_index=attribute_consuming_service_index
         self.provider_name=provider_name
 
-def authn_request_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(AuthnRequestType, xml_string)
+def authn_request_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(AuthnRequestType_, xml_string)
 
-class AuthnRequest(AuthnRequestType):
+
+class AuthnRequest(AuthnRequestType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:AuthnRequest element """
 
     c_tag = 'AuthnRequest'
     c_namespace = NAMESPACE
-    c_children = AuthnRequestType.c_children.copy()
-    c_attributes = AuthnRequestType.c_attributes.copy()
-    c_child_order = AuthnRequestType.c_child_order[:]
-    c_cardinality = AuthnRequestType.c_cardinality.copy()
+    c_children = AuthnRequestType_.c_children.copy()
+    c_attributes = AuthnRequestType_.c_attributes.copy()
+    c_child_order = AuthnRequestType_.c_child_order[:]
+    c_cardinality = AuthnRequestType_.c_cardinality.copy()
 
 def authn_request_from_string(xml_string):
     return saml2.create_class_from_xml_string(AuthnRequest, xml_string)
 
+
 #..................
-# ['Status', 'StatusType', 'StatusCode', 'NameIDMappingResponseType', 'StatusCodeType', 'Response', 'ResponseType', 'LogoutResponse', 'StatusResponseType', 'ManageNameIDResponse', 'NameIDMappingResponse', 'ArtifactResponse', 'ArtifactResponseType']
-class StatusType(SamlBase):
+# ['Status', 'ArtifactResponseType', 'StatusType', 'StatusCode', 'StatusCodeType', 'StatusResponseType', 'Response', 'NameIDMappingResponseType', 'ResponseType', 'ArtifactResponse', 'ManageNameIDResponse', 'LogoutResponse', 'NameIDMappingResponse']
+class StatusType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:protocol:StatusType element """
 
     c_tag = 'StatusType'
@@ -1237,23 +1276,25 @@ class StatusType(SamlBase):
         self.status_message=status_message
         self.status_detail=status_detail
 
-def status_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(StatusType, xml_string)
+def status_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(StatusType_, xml_string)
 
-class Status(StatusType):
+
+class Status(StatusType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:Status element """
 
     c_tag = 'Status'
     c_namespace = NAMESPACE
-    c_children = StatusType.c_children.copy()
-    c_attributes = StatusType.c_attributes.copy()
-    c_child_order = StatusType.c_child_order[:]
-    c_cardinality = StatusType.c_cardinality.copy()
+    c_children = StatusType_.c_children.copy()
+    c_attributes = StatusType_.c_attributes.copy()
+    c_child_order = StatusType_.c_child_order[:]
+    c_cardinality = StatusType_.c_cardinality.copy()
 
 def status_from_string(xml_string):
     return saml2.create_class_from_xml_string(Status, xml_string)
 
-class StatusResponseType(SamlBase):
+
+class StatusResponseType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:protocol:StatusResponseType element """
 
     c_tag = 'StatusResponseType'
@@ -1308,18 +1349,19 @@ class StatusResponseType(SamlBase):
         self.destination=destination
         self.consent=consent
 
-def status_response_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(StatusResponseType, xml_string)
+def status_response_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(StatusResponseType_, xml_string)
 
-class ResponseType(StatusResponseType):
+
+class ResponseType_(StatusResponseType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:ResponseType element """
 
     c_tag = 'ResponseType'
     c_namespace = NAMESPACE
-    c_children = StatusResponseType.c_children.copy()
-    c_attributes = StatusResponseType.c_attributes.copy()
-    c_child_order = StatusResponseType.c_child_order[:]
-    c_cardinality = StatusResponseType.c_cardinality.copy()
+    c_children = StatusResponseType_.c_children.copy()
+    c_attributes = StatusResponseType_.c_attributes.copy()
+    c_child_order = StatusResponseType_.c_child_order[:]
+    c_cardinality = StatusResponseType_.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Assertion'] = ('assertion', [saml.Assertion])
     c_cardinality['assertion'] = {"min":0}
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}EncryptedAssertion'] = ('encrypted_assertion', [saml.EncryptedAssertion])
@@ -1343,7 +1385,7 @@ class ResponseType(StatusResponseType):
             extension_elements=None,
             extension_attributes=None,
         ):
-        StatusResponseType.__init__(self, 
+        StatusResponseType_.__init__(self, 
                 issuer=issuer,
                 signature=signature,
                 extensions=extensions,
@@ -1361,57 +1403,61 @@ class ResponseType(StatusResponseType):
         self.assertion=assertion or []
         self.encrypted_assertion=encrypted_assertion or []
 
-def response_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(ResponseType, xml_string)
+def response_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(ResponseType_, xml_string)
 
-class ArtifactResponseType(StatusResponseType):
+
+class ArtifactResponseType_(StatusResponseType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:ArtifactResponseType element """
 
     c_tag = 'ArtifactResponseType'
     c_namespace = NAMESPACE
-    c_children = StatusResponseType.c_children.copy()
-    c_attributes = StatusResponseType.c_attributes.copy()
-    c_child_order = StatusResponseType.c_child_order[:]
-    c_cardinality = StatusResponseType.c_cardinality.copy()
+    c_children = StatusResponseType_.c_children.copy()
+    c_attributes = StatusResponseType_.c_attributes.copy()
+    c_child_order = StatusResponseType_.c_child_order[:]
+    c_cardinality = StatusResponseType_.c_cardinality.copy()
 
-def artifact_response_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(ArtifactResponseType, xml_string)
+def artifact_response_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(ArtifactResponseType_, xml_string)
 
-class ManageNameIDResponse(StatusResponseType):
+
+class ManageNameIDResponse(StatusResponseType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:ManageNameIDResponse element """
 
     c_tag = 'ManageNameIDResponse'
     c_namespace = NAMESPACE
-    c_children = StatusResponseType.c_children.copy()
-    c_attributes = StatusResponseType.c_attributes.copy()
-    c_child_order = StatusResponseType.c_child_order[:]
-    c_cardinality = StatusResponseType.c_cardinality.copy()
+    c_children = StatusResponseType_.c_children.copy()
+    c_attributes = StatusResponseType_.c_attributes.copy()
+    c_child_order = StatusResponseType_.c_child_order[:]
+    c_cardinality = StatusResponseType_.c_cardinality.copy()
 
 def manage_name_id_response_from_string(xml_string):
     return saml2.create_class_from_xml_string(ManageNameIDResponse, xml_string)
 
-class LogoutResponse(StatusResponseType):
+
+class LogoutResponse(StatusResponseType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:LogoutResponse element """
 
     c_tag = 'LogoutResponse'
     c_namespace = NAMESPACE
-    c_children = StatusResponseType.c_children.copy()
-    c_attributes = StatusResponseType.c_attributes.copy()
-    c_child_order = StatusResponseType.c_child_order[:]
-    c_cardinality = StatusResponseType.c_cardinality.copy()
+    c_children = StatusResponseType_.c_children.copy()
+    c_attributes = StatusResponseType_.c_attributes.copy()
+    c_child_order = StatusResponseType_.c_child_order[:]
+    c_cardinality = StatusResponseType_.c_cardinality.copy()
 
 def logout_response_from_string(xml_string):
     return saml2.create_class_from_xml_string(LogoutResponse, xml_string)
 
-class NameIDMappingResponseType(StatusResponseType):
+
+class NameIDMappingResponseType_(StatusResponseType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:NameIDMappingResponseType element """
 
     c_tag = 'NameIDMappingResponseType'
     c_namespace = NAMESPACE
-    c_children = StatusResponseType.c_children.copy()
-    c_attributes = StatusResponseType.c_attributes.copy()
-    c_child_order = StatusResponseType.c_child_order[:]
-    c_cardinality = StatusResponseType.c_cardinality.copy()
+    c_children = StatusResponseType_.c_children.copy()
+    c_attributes = StatusResponseType_.c_attributes.copy()
+    c_child_order = StatusResponseType_.c_child_order[:]
+    c_cardinality = StatusResponseType_.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}NameID'] = ('name_id', saml.NameID)
     c_cardinality['name_id'] = {"min":0, "max":1}
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}EncryptedID'] = ('encrypted_id', saml.EncryptedID)
@@ -1435,7 +1481,7 @@ class NameIDMappingResponseType(StatusResponseType):
             extension_elements=None,
             extension_attributes=None,
         ):
-        StatusResponseType.__init__(self, 
+        StatusResponseType_.__init__(self, 
                 issuer=issuer,
                 signature=signature,
                 extensions=extensions,
@@ -1453,51 +1499,55 @@ class NameIDMappingResponseType(StatusResponseType):
         self.name_id=name_id
         self.encrypted_id=encrypted_id
 
-def name_id_mapping_response_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(NameIDMappingResponseType, xml_string)
+def name_id_mapping_response_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(NameIDMappingResponseType_, xml_string)
 
-class Response(ResponseType):
+
+class Response(ResponseType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:Response element """
 
     c_tag = 'Response'
     c_namespace = NAMESPACE
-    c_children = ResponseType.c_children.copy()
-    c_attributes = ResponseType.c_attributes.copy()
-    c_child_order = ResponseType.c_child_order[:]
-    c_cardinality = ResponseType.c_cardinality.copy()
+    c_children = ResponseType_.c_children.copy()
+    c_attributes = ResponseType_.c_attributes.copy()
+    c_child_order = ResponseType_.c_child_order[:]
+    c_cardinality = ResponseType_.c_cardinality.copy()
 
 def response_from_string(xml_string):
     return saml2.create_class_from_xml_string(Response, xml_string)
 
-class ArtifactResponse(ArtifactResponseType):
+
+class ArtifactResponse(ArtifactResponseType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:ArtifactResponse element """
 
     c_tag = 'ArtifactResponse'
     c_namespace = NAMESPACE
-    c_children = ArtifactResponseType.c_children.copy()
-    c_attributes = ArtifactResponseType.c_attributes.copy()
-    c_child_order = ArtifactResponseType.c_child_order[:]
-    c_cardinality = ArtifactResponseType.c_cardinality.copy()
+    c_children = ArtifactResponseType_.c_children.copy()
+    c_attributes = ArtifactResponseType_.c_attributes.copy()
+    c_child_order = ArtifactResponseType_.c_child_order[:]
+    c_cardinality = ArtifactResponseType_.c_cardinality.copy()
 
 def artifact_response_from_string(xml_string):
     return saml2.create_class_from_xml_string(ArtifactResponse, xml_string)
 
-class NameIDMappingResponse(NameIDMappingResponseType):
+
+class NameIDMappingResponse(NameIDMappingResponseType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:NameIDMappingResponse element """
 
     c_tag = 'NameIDMappingResponse'
     c_namespace = NAMESPACE
-    c_children = NameIDMappingResponseType.c_children.copy()
-    c_attributes = NameIDMappingResponseType.c_attributes.copy()
-    c_child_order = NameIDMappingResponseType.c_child_order[:]
-    c_cardinality = NameIDMappingResponseType.c_cardinality.copy()
+    c_children = NameIDMappingResponseType_.c_children.copy()
+    c_attributes = NameIDMappingResponseType_.c_attributes.copy()
+    c_child_order = NameIDMappingResponseType_.c_child_order[:]
+    c_cardinality = NameIDMappingResponseType_.c_cardinality.copy()
 
 def name_id_mapping_response_from_string(xml_string):
     return saml2.create_class_from_xml_string(NameIDMappingResponse, xml_string)
 
+
 #..................
 # ['StatusCode', 'StatusCodeType']
-class StatusCodeType(SamlBase):
+class StatusCodeType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:protocol:StatusCodeType element """
 
     c_tag = 'StatusCodeType'
@@ -1525,149 +1575,147 @@ class StatusCodeType(SamlBase):
         self.status_code=status_code
         self.value=value
 
-def status_code_type_from_string(xml_string):
-    return saml2.create_class_from_xml_string(StatusCodeType, xml_string)
+def status_code_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(StatusCodeType_, xml_string)
 
-class StatusCode(StatusCodeType):
+
+class StatusCode(StatusCodeType_):
     """The urn:oasis:names:tc:SAML:2.0:protocol:StatusCode element """
 
     c_tag = 'StatusCode'
     c_namespace = NAMESPACE
-    c_children = StatusCodeType.c_children.copy()
-    c_attributes = StatusCodeType.c_attributes.copy()
-    c_child_order = StatusCodeType.c_child_order[:]
-    c_cardinality = StatusCodeType.c_cardinality.copy()
+    c_children = StatusCodeType_.c_children.copy()
+    c_attributes = StatusCodeType_.c_attributes.copy()
+    c_child_order = StatusCodeType_.c_child_order[:]
+    c_cardinality = StatusCodeType_.c_cardinality.copy()
 
 def status_code_from_string(xml_string):
     return saml2.create_class_from_xml_string(StatusCode, xml_string)
 
+
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-StatusType.c_children['{urn:oasis:names:tc:SAML:2.0:protocol}StatusCode'] = ('status_code', StatusCode)
+StatusType_.c_children['{urn:oasis:names:tc:SAML:2.0:protocol}StatusCode'] = ('status_code', StatusCode)
 Status.c_children['{urn:oasis:names:tc:SAML:2.0:protocol}StatusCode'] = ('status_code', StatusCode)
-StatusCodeType.c_children['{urn:oasis:names:tc:SAML:2.0:protocol}StatusCode'] = ('status_code', StatusCode)
+StatusCodeType_.c_children['{urn:oasis:names:tc:SAML:2.0:protocol}StatusCode'] = ('status_code', StatusCode)
 StatusCode.c_children['{urn:oasis:names:tc:SAML:2.0:protocol}StatusCode'] = ('status_code', StatusCode)
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 ELEMENT_FROM_STRING = {
-    RequestAbstractType.c_tag: request_abstract_type_from_string,
     Extensions.c_tag: extensions_from_string,
-    ExtensionsType.c_tag: extensions_type_from_string,
-    StatusResponseType.c_tag: status_response_type_from_string,
+    ExtensionsType_.c_tag: extensions_type__from_string,
+    StatusResponseType_.c_tag: status_response_type__from_string,
     Status.c_tag: status_from_string,
-    StatusType.c_tag: status_type_from_string,
+    StatusType_.c_tag: status_type__from_string,
     StatusCode.c_tag: status_code_from_string,
-    StatusCodeType.c_tag: status_code_type_from_string,
+    StatusCodeType_.c_tag: status_code_type__from_string,
     StatusMessage.c_tag: status_message_from_string,
     StatusDetail.c_tag: status_detail_from_string,
-    StatusDetailType.c_tag: status_detail_type_from_string,
+    StatusDetailType_.c_tag: status_detail_type__from_string,
     AssertionIDRequest.c_tag: assertion_id_request_from_string,
-    AssertionIDRequestType.c_tag: assertion_id_request_type_from_string,
+    AssertionIDRequestType_.c_tag: assertion_id_request_type__from_string,
     SubjectQuery.c_tag: subject_query_from_string,
-    SubjectQueryAbstractType.c_tag: subject_query_abstract_type_from_string,
     AuthnQuery.c_tag: authn_query_from_string,
-    AuthnQueryType.c_tag: authn_query_type_from_string,
+    AuthnQueryType_.c_tag: authn_query_type__from_string,
     RequestedAuthnContext.c_tag: requested_authn_context_from_string,
-    RequestedAuthnContextType.c_tag: requested_authn_context_type_from_string,
-    AuthnContextComparisonType.c_tag: authn_context_comparison_type_from_string,
+    RequestedAuthnContextType_.c_tag: requested_authn_context_type__from_string,
+    AuthnContextComparisonType_.c_tag: authn_context_comparison_type__from_string,
     AttributeQuery.c_tag: attribute_query_from_string,
-    AttributeQueryType.c_tag: attribute_query_type_from_string,
+    AttributeQueryType_.c_tag: attribute_query_type__from_string,
     AuthzDecisionQuery.c_tag: authz_decision_query_from_string,
-    AuthzDecisionQueryType.c_tag: authz_decision_query_type_from_string,
+    AuthzDecisionQueryType_.c_tag: authz_decision_query_type__from_string,
     AuthnRequest.c_tag: authn_request_from_string,
-    AuthnRequestType.c_tag: authn_request_type_from_string,
+    AuthnRequestType_.c_tag: authn_request_type__from_string,
     NameIDPolicy.c_tag: name_id_policy_from_string,
-    NameIDPolicyType.c_tag: name_id_policy_type_from_string,
+    NameIDPolicyType_.c_tag: name_id_policy_type__from_string,
     Scoping.c_tag: scoping_from_string,
-    ScopingType.c_tag: scoping_type_from_string,
+    ScopingType_.c_tag: scoping_type__from_string,
     RequesterID.c_tag: requester_id_from_string,
     IDPList.c_tag: idp_list_from_string,
-    IDPListType.c_tag: idp_list_type_from_string,
+    IDPListType_.c_tag: idp_list_type__from_string,
     IDPEntry.c_tag: idp_entry_from_string,
-    IDPEntryType.c_tag: idp_entry_type_from_string,
+    IDPEntryType_.c_tag: idp_entry_type__from_string,
     GetComplete.c_tag: get_complete_from_string,
     Response.c_tag: response_from_string,
-    ResponseType.c_tag: response_type_from_string,
+    ResponseType_.c_tag: response_type__from_string,
     ArtifactResolve.c_tag: artifact_resolve_from_string,
-    ArtifactResolveType.c_tag: artifact_resolve_type_from_string,
+    ArtifactResolveType_.c_tag: artifact_resolve_type__from_string,
     Artifact.c_tag: artifact_from_string,
     ArtifactResponse.c_tag: artifact_response_from_string,
-    ArtifactResponseType.c_tag: artifact_response_type_from_string,
+    ArtifactResponseType_.c_tag: artifact_response_type__from_string,
     ManageNameIDRequest.c_tag: manage_name_id_request_from_string,
-    ManageNameIDRequestType.c_tag: manage_name_id_request_type_from_string,
+    ManageNameIDRequestType_.c_tag: manage_name_id_request_type__from_string,
     NewID.c_tag: new_id_from_string,
     NewEncryptedID.c_tag: new_encrypted_id_from_string,
     Terminate.c_tag: terminate_from_string,
-    TerminateType.c_tag: terminate_type_from_string,
+    TerminateType_.c_tag: terminate_type__from_string,
     ManageNameIDResponse.c_tag: manage_name_id_response_from_string,
     LogoutRequest.c_tag: logout_request_from_string,
-    LogoutRequestType.c_tag: logout_request_type_from_string,
+    LogoutRequestType_.c_tag: logout_request_type__from_string,
     SessionIndex.c_tag: session_index_from_string,
     LogoutResponse.c_tag: logout_response_from_string,
     NameIDMappingRequest.c_tag: name_id_mapping_request_from_string,
-    NameIDMappingRequestType.c_tag: name_id_mapping_request_type_from_string,
+    NameIDMappingRequestType_.c_tag: name_id_mapping_request_type__from_string,
     NameIDMappingResponse.c_tag: name_id_mapping_response_from_string,
-    NameIDMappingResponseType.c_tag: name_id_mapping_response_type_from_string,
+    NameIDMappingResponseType_.c_tag: name_id_mapping_response_type__from_string,
 }
 
 ELEMENT_BY_TAG = {
-    'RequestAbstractType': RequestAbstractType,
     'Extensions': Extensions,
-    'ExtensionsType': ExtensionsType,
-    'StatusResponseType': StatusResponseType,
+    'ExtensionsType': ExtensionsType_,
+    'StatusResponseType': StatusResponseType_,
     'Status': Status,
-    'StatusType': StatusType,
+    'StatusType': StatusType_,
     'StatusCode': StatusCode,
-    'StatusCodeType': StatusCodeType,
+    'StatusCodeType': StatusCodeType_,
     'StatusMessage': StatusMessage,
     'StatusDetail': StatusDetail,
-    'StatusDetailType': StatusDetailType,
+    'StatusDetailType': StatusDetailType_,
     'AssertionIDRequest': AssertionIDRequest,
-    'AssertionIDRequestType': AssertionIDRequestType,
+    'AssertionIDRequestType': AssertionIDRequestType_,
     'SubjectQuery': SubjectQuery,
-    'SubjectQueryAbstractType': SubjectQueryAbstractType,
     'AuthnQuery': AuthnQuery,
-    'AuthnQueryType': AuthnQueryType,
+    'AuthnQueryType': AuthnQueryType_,
     'RequestedAuthnContext': RequestedAuthnContext,
-    'RequestedAuthnContextType': RequestedAuthnContextType,
-    'AuthnContextComparisonType': AuthnContextComparisonType,
+    'RequestedAuthnContextType': RequestedAuthnContextType_,
+    'AuthnContextComparisonType': AuthnContextComparisonType_,
     'AttributeQuery': AttributeQuery,
-    'AttributeQueryType': AttributeQueryType,
+    'AttributeQueryType': AttributeQueryType_,
     'AuthzDecisionQuery': AuthzDecisionQuery,
-    'AuthzDecisionQueryType': AuthzDecisionQueryType,
+    'AuthzDecisionQueryType': AuthzDecisionQueryType_,
     'AuthnRequest': AuthnRequest,
-    'AuthnRequestType': AuthnRequestType,
+    'AuthnRequestType': AuthnRequestType_,
     'NameIDPolicy': NameIDPolicy,
-    'NameIDPolicyType': NameIDPolicyType,
+    'NameIDPolicyType': NameIDPolicyType_,
     'Scoping': Scoping,
-    'ScopingType': ScopingType,
+    'ScopingType': ScopingType_,
     'RequesterID': RequesterID,
     'IDPList': IDPList,
-    'IDPListType': IDPListType,
+    'IDPListType': IDPListType_,
     'IDPEntry': IDPEntry,
-    'IDPEntryType': IDPEntryType,
+    'IDPEntryType': IDPEntryType_,
     'GetComplete': GetComplete,
     'Response': Response,
-    'ResponseType': ResponseType,
+    'ResponseType': ResponseType_,
     'ArtifactResolve': ArtifactResolve,
-    'ArtifactResolveType': ArtifactResolveType,
+    'ArtifactResolveType': ArtifactResolveType_,
     'Artifact': Artifact,
     'ArtifactResponse': ArtifactResponse,
-    'ArtifactResponseType': ArtifactResponseType,
+    'ArtifactResponseType': ArtifactResponseType_,
     'ManageNameIDRequest': ManageNameIDRequest,
-    'ManageNameIDRequestType': ManageNameIDRequestType,
+    'ManageNameIDRequestType': ManageNameIDRequestType_,
     'NewID': NewID,
     'NewEncryptedID': NewEncryptedID,
     'Terminate': Terminate,
-    'TerminateType': TerminateType,
+    'TerminateType': TerminateType_,
     'ManageNameIDResponse': ManageNameIDResponse,
     'LogoutRequest': LogoutRequest,
-    'LogoutRequestType': LogoutRequestType,
+    'LogoutRequestType': LogoutRequestType_,
     'SessionIndex': SessionIndex,
     'LogoutResponse': LogoutResponse,
     'NameIDMappingRequest': NameIDMappingRequest,
-    'NameIDMappingRequestType': NameIDMappingRequestType,
+    'NameIDMappingRequestType': NameIDMappingRequestType_,
     'NameIDMappingResponse': NameIDMappingResponse,
-    'NameIDMappingResponseType': NameIDMappingResponseType,
+    'NameIDMappingResponseType': NameIDMappingResponseType_,
 }
 
 def factory(tag, **kwargs):

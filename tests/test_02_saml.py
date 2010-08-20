@@ -729,13 +729,13 @@ class TestOneTimeUse:
     def testAccessors(self):
         """Test for OneTimeUse accessors"""
         assert isinstance(self.one_time_use, saml.OneTimeUse)
-        assert isinstance(self.one_time_use, saml.ConditionAbstractType)
+        assert isinstance(self.one_time_use, saml.ConditionAbstractType_)
 
     def testUsingTestData(self):
         """Test one_time_use_from_string() using test data"""
         one_time_use = saml.one_time_use_from_string(saml2_data.TEST_ONE_TIME_USE)
         assert isinstance(one_time_use, saml.OneTimeUse)
-        assert isinstance(one_time_use, saml.ConditionAbstractType)
+        assert isinstance(one_time_use, saml.ConditionAbstractType_)
 
 
 class TestProxyRestriction:
@@ -746,7 +746,7 @@ class TestProxyRestriction:
     def testAccessors(self):
         """Test for ProxyRestriction accessors"""
 
-        assert isinstance(self.proxy_restriction, saml.ConditionAbstractType)
+        assert isinstance(self.proxy_restriction, saml.ConditionAbstractType_)
         self.proxy_restriction.count = "2"
         self.proxy_restriction.audience.append(saml.audience_from_string(
             saml2_data.TEST_AUDIENCE))
