@@ -2,14 +2,17 @@
 # -*- coding: utf-8 -*-
 # 
 
+import sys
+
 from saml2 import metadata
 from saml2.assertion import Policy
 from saml2.attribute_converter import ac_factory, AttributeConverter
+from saml2 import BINDING_HTTP_REDIRECT
 
 class MissingValue(Exception):
     pass
     
-def entity_id2url(meta, entity_id):
+def entity_id2url(meta, entity_id, binding=BINDING_HTTP_REDIRECT):
     """ Grab the first endpoint if there are more than one, 
         raises IndexError if the function returns an empty list.
      
@@ -18,7 +21,7 @@ def entity_id2url(meta, entity_id):
         endpoint is sought
     :return: An endpoint (URL)
     """
-    return meta.single_sign_on_services(entity_id)[0]
+    return meta.single_sign_on_services(entity_id, binding)[0]
     
 class Config(dict):
     def _sp_check(self, config, metadat=None):
@@ -33,8 +36,11 @@ class Config(dict):
                     try:
                         config["idp"][eid] = entity_id2url(metadat, eid)
                     except (IndexError, KeyError):
-                        if not config["idp"][eid]:
-                            raise MissingValue
+                        try:
+                            if not config["idp"][eid]:
+                                raise MissingValue
+                        except KeyError:
+                            print >> sys.stderr, "Can't talk with %s" % eid 
             else:
                 for eid, url in config["idp"].items():
                     if not url:
