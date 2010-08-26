@@ -1816,8 +1816,10 @@ def main(argv):
         
     tree = parse_nsmap(args[0])
 
+    known = NAMESPACE_BASE[:]
+    known.append(XML_NAMESPACE)
     for key, namespace in tree._root.attrib["xmlns_map"].items():
-        if namespace in [XMLSCHEMA, XML_NAMESPACE]:
+        if namespace in known:
             continue
         else:
             try:
