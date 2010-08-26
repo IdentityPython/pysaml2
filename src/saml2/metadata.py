@@ -255,6 +255,7 @@ class MetaData(object):
         """
         
         # now = time.gmtime()
+        print >> sys.stderr, "Loading %s" % (source,)
         
         entities_descr = md.entities_descriptor_from_string(xml_str)
         
@@ -340,6 +341,8 @@ class MetaData(object):
         """
         
         # May raise KeyError
+        #print >> sys.stderr, "%s" % self.entity[entity_id]
+        
         idps = self.entity[entity_id]["idp_sso"]
         
         loc = []
@@ -634,7 +637,7 @@ ENDPOINTS = {
 
 DEFAULT_BINDING = {
     "assertion_consumer_service": BINDING_HTTP_POST,
-    "single_sign_on_service": BINDING_HTTP_POST,
+    "single_sign_on_service": BINDING_HTTP_REDIRECT,
     "single_logout_service": BINDING_HTTP_POST,
     "attribute_service": BINDING_SOAP,
     "artifact_resolution_service": BINDING_SOAP
