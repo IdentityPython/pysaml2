@@ -249,9 +249,9 @@ class SAML2Plugin(FormPluginBase):
         self.log = environ.get('repoze.who.logger','')
         self.saml_client.log = self.log
         
-        if self.log:
-            self.log.info("ENVIRON: %s" % environ)
-            self.log.info("self: %s" % (self.__dict__,))
+        # if self.log:
+        #     self.log.info("ENVIRON: %s" % environ)
+        #     self.log.info("self: %s" % (self.__dict__,))
         
         uri = environ.get('REQUEST_URI', construct_url(environ))
         if self.debug:
