@@ -294,7 +294,7 @@ class Server(object):
 
     def _response(self, consumer_url, in_response_to, sp_entity_id, 
                     identity=None, name_id=None, status=None, sign=False,
-                    policy=Policy()):
+                    policy=Policy(), authn=None):
         """ Create a Response that adhers to the ??? profile.
         
         :param consumer_url: The URL which should receive the response
@@ -306,6 +306,7 @@ class Server(object):
         :param status: The status of the response
         :param sign: Whether the assertion should be signed or not 
         :param policy: The attribute release policy for this instance
+        :param auth: A 2-tuple denoting the authn class and the authn authority
         :return: A Response instance
         """
                 
@@ -331,9 +332,18 @@ class Server(object):
                 return self.error_response(consumer_url, in_response_to, 
                                                sp_entity_id, exc, name_id)
 
-            assertion = ast.construct(sp_entity_id, in_response_to, name_id,
-                                        self.conf.attribute_converters(), 
-                                        policy, issuer=_issuer)
+            if auth: # expected to be a 2-tuple class+authority
+                (authn_class, authn_authn) = auth
+                assertion = ast.construct(sp_entity_id, in_response_to, 
+                                            name_id,
+                                            self.conf.attribute_converters(), 
+                                            policy, issuer=_issuer, 
+                                            authn_class, authn_authn)
+            else:
+                assertion = ast.construct(sp_entity_id, in_response_to, 
+                                            name_id,
+                                            self.conf.attribute_converters(), 
+                                            policy, issuer=_issuer)
             
             if sign:
                 assertion.signature = pre_signature_part(assertion.id,
@@ -356,11 +366,11 @@ class Server(object):
     
     def do_response(self, consumer_url, in_response_to,
                         sp_entity_id, identity=None, name_id=None, 
-                        status=None, sign=False ):
+                        status=None, sign=False, authn=None ):
 
         return self._response(consumer_url, in_response_to,
                         sp_entity_id, identity, name_id, 
-                        status, sign, self.conf.idp_policy())
+                        status, sign, self.conf.idp_policy(), authn)
                         
     # ------------------------------------------------------------------------
     
