@@ -20,6 +20,7 @@ WSGI application.
 """
 import cgi
 import os
+import shelve
 
 from paste.httpexceptions import HTTPTemporaryRedirect
 from paste.httpexceptions import HTTPNotImplemented
@@ -36,6 +37,7 @@ from repoze.who.plugins.form import FormPluginBase
 from saml2.client import Saml2Client
 #from saml2.attribute_resolver import AttributeResolver
 from saml2.config import Config
+from saml2.s_utils import sid
 #from saml2.population import Population
 
 def construct_came_from(environ):
@@ -49,7 +51,7 @@ def construct_came_from(environ):
     return came_from
     
 # FormPluginBase defines the methods remember and forget
-def cgi_fieldStorage_to_dict( field_storage ):
+def cgi_field_storage_to_dict( field_storage ):
     """Get a plain dictionary, rather than the '.value' system used by the
     cgi module."""
     
@@ -68,7 +70,7 @@ class SAML2Plugin(FormPluginBase):
     implements(IChallenger, IIdentifier, IAuthenticator, IMetadataProvider)
     
     def __init__(self, rememberer_name, config, saml_client, 
-                virtual_organization, wayf, cache, debug):
+                virtual_organization, wayf, _cache, debug, sid_store=None):
         FormPluginBase.__init__(self)
         
         self.rememberer_name = rememberer_name
@@ -95,10 +97,13 @@ class SAML2Plugin(FormPluginBase):
             self.metadata = self.conf["metadata"]
         except KeyError:
             self.metadata = None
-        self.outstanding_queries = {}
+        if sid_store:
+            self.outstanding_queries = shelve.open(sid_store, writeback=True)
+        else:
+            self.outstanding_queries = {}
         self.iam = os.uname()[1]
                          
-    def _pick_idp(self, environ):
+    def _pick_idp(self, environ, came_from):
         """ 
         If more than one idp and if none is selected, I have to do wayf or 
         disco
@@ -106,7 +111,7 @@ class SAML2Plugin(FormPluginBase):
         
         idps = self.conf.idps()
         
-        self.log and self.log.info("IdP URL: %s" % idps)
+        #self.log and self.log.info("IdP URL: %s" % idps)
 
         if len( idps ) == 1:
             idp_url = idps[0]
@@ -116,10 +121,12 @@ class SAML2Plugin(FormPluginBase):
             if self.wayf:
                 wayf_selected = environ.get('s2repose.wayf_selected','')
                 if not wayf_selected:
+                    sid_ = sid()
+                    self.outstanding_queries[sid_] = came_from
                     self.log.info("Redirect to WAYF function: %s" % self.wayf)
-                    self.log.info("env, keys: %s" % (environ.keys()))
+                    #self.log.info("env: %s" % (environ,))
                     return (1, HTTPTemporaryRedirect(headers = [('Location', 
-                                                            self.wayf)]))
+                                                "%s?%s" % (self.wayf, sid_))]))
                 else:
                     self.log.info("Choosen IdP: '%s'" % wayf_selected)
                     idp_url = self.srv["idp"][wayf_selected]
@@ -133,7 +140,7 @@ class SAML2Plugin(FormPluginBase):
 
         # this challenge consist in loggin out
         if environ.has_key('rwpc.logout'): 
-            # TODO
+            # ignore right now?
             pass
 
         self.log = environ.get('repoze.who.logger','')
@@ -141,29 +148,30 @@ class SAML2Plugin(FormPluginBase):
         
         # Which page was accessed to get here
         came_from = construct_came_from(environ)
+        environ["myapp.came_from"] = came_from
         if self.debug:
-            self.log and self.log.info("RelayState >> %s" % came_from)
+            self.log and self.log.info("[sp.challenge] RelayState >> %s" % came_from)
         
         # Am I part of a virtual organization ?
         try:
             vorg = environ["myapp.vo"]
         except KeyError:
             vorg = self.vorg
-        self.log and self.log.info("VO: %s" % vorg)
+        self.log and self.log.info("[sp.challenge] VO: %s" % vorg)
 
         # If more than one idp and if none is selected, I have to do wayf
-        (done, response) = self._pick_idp(environ)
+        (done, response) = self._pick_idp(environ, came_from)
         if done:
             return response
         else:
             idp_url = response
             # Do the AuthnRequest
-            (sid, result) = self.saml_client.authenticate(location=idp_url,
+            (sid_, result) = self.saml_client.authenticate(location=idp_url,
                                                     relay_state=came_from, 
                                                     vorg=vorg)
             
             # remember the request
-            self.outstanding_queries[sid] = came_from
+            self.outstanding_queries[sid_] = came_from
                 
             if self.debug:
                 self.log and self.log.info('sc returned: %s' % (result,))
@@ -173,25 +181,39 @@ class SAML2Plugin(FormPluginBase):
                 return HTTPInternalServerError(detail='Incorrect returned data')
 
     def _get_post(self, environ):
-        """ Get the posted information """
+        """ 
+        Get the posted information 
+        
+        :param environ: A dictionary 
+        """
+        
+        post = {}
+
         post_env = environ.copy()
         post_env['QUERY_STRING'] = ''
-        
-        try:
-            if environ["CONTENT_LENGTH"]:
-                length = int(environ["CONTENT_LENGTH"])
-                body = environ["wsgi.input"].read(length)
-                from StringIO import StringIO
-                environ['wsgi.input'] = StringIO(body)
-                environ['s2repoze.body'] = body
-        except KeyError:
-            pass
 
-        post = cgi.FieldStorage(
-            fp=environ['wsgi.input'],
-            environ=post_env,
-            keep_blank_values=True
-        )
+        length = int(environ["CONTENT_LENGTH"])
+        try:
+            body = environ["wsgi.input"].read(length)
+        except Exception, excp:
+            if self.debug and self.log:
+                self.log.info("Exception while reading post: %s" % (excp,))
+                raise
+            
+        from StringIO import StringIO
+        environ['wsgi.input'] = StringIO(body)
+        environ['s2repoze.body'] = body
+
+        try:
+            post = cgi.FieldStorage(
+                fp=environ['wsgi.input'],
+                environ=post_env,
+                keep_blank_values=True
+            )
+        except Exception, excp:
+            if self.debug and self.log:
+                self.log.info("Exception (II): %s" % (excp,))
+                raise
 
         if self.debug:
             self.log and self.log.info('identify post: %s' % (post,))
@@ -210,7 +232,6 @@ class SAML2Plugin(FormPluginBase):
         return identity
         
     def _eval_authn_response(self, environ, post):
-        """ """
         self.log and self.log.info("Got AuthN response, checking..")
 
         print "Outstanding: %s" % (self.outstanding_queries,)
@@ -241,7 +262,7 @@ class SAML2Plugin(FormPluginBase):
             except ValueError:
                 environ["PATH_INFO"] = session_info["came_from"]
 
-        self.log and self.log.info("Session_info: %s" % session_info)                
+        self.log and self.log.info("Session_info: %s" % session_info)
         return session_info
         
     #### IIdentifier ####
@@ -249,38 +270,48 @@ class SAML2Plugin(FormPluginBase):
         self.log = environ.get('repoze.who.logger','')
         self.saml_client.log = self.log
         
+        if "CONTENT_LENGTH" not in environ:
+            if self.debug:
+                self.log and self.log.info('[identify] get or empty post')
+            return {}
+        
         # if self.log:
         #     self.log.info("ENVIRON: %s" % environ)
         #     self.log.info("self: %s" % (self.__dict__,))
         
         uri = environ.get('REQUEST_URI', construct_url(environ))
+        
         if self.debug:
             #self.log and self.log.info("environ.keys(): %s" % environ.keys())
             #self.log and self.log.info("Environment: %s" % environ)
-            self.log and self.log.info('identify uri: %s' % (uri,))
+            self.log and self.log.info('[sp.identify] uri: %s' % (uri,))
 
         query = parse_dict_querystring(environ)
         if self.debug:
-            self.log and self.log.info('identify query: %s' % (query,))
+            self.log and self.log.info('[sp.identify] query: %s' % (query,))
         
         post = self._get_post(environ)
-        
+
+        if self.debug:
+            self.log and self.log.info('[sp.identify] post keys: %s' % (post.keys(),))
+            
         # Not for me, put the post back where next in line can find it
         try:
             if not post.has_key("SAMLResponse"):
+                self.log.info("[sp.identify] --- NOT SAMLResponse ---")
                 environ["post.fieldstorage"] = post
                 return {}
             else:
-                self.log.info("--- SAMLResponse ---")
+                self.log.info("[sp.identify] --- SAMLResponse ---")
         except TypeError, exc:
-            self.log.error("Exception: %s" % (exc,))
+            self.log.error("[sp.identify] Exception: %s" % (exc,))
             environ["post.fieldstorage"] = post
             return {}
             
         # check for SAML2 authN response
         #if self.debug:
         session_info = self._eval_authn_response(environ,  
-                                            cgi_fieldStorage_to_dict(post))
+                                            cgi_field_storage_to_dict(post))
         if session_info:        
             environ["s2repoze.sessioninfo"] = session_info
             name_id = session_info["name_id"]
@@ -291,7 +322,7 @@ class SAML2Plugin(FormPluginBase):
             identity['repoze.who.userid'] = name_id
             identity["user"] = self.saml_client.users.get_identity(name_id)[0]
             
-            self.log.info("IDENTITY: %s" % (identity,))
+            self.log.info("[sp.identify] IDENTITY: %s" % (identity,))
             return identity
         else:
             return None
@@ -307,9 +338,7 @@ class SAML2Plugin(FormPluginBase):
 
         if self.debug and self.log:
             self.log.info(
-                "add_metadata for %s" % subject_id)
-            self.log.info(
-                "Known subjects: %s" % self.saml_client.users.subjects())
+                "[add_metadata] for %s" % subject_id)
             try:
                 self.log.info(
                     "Issuers: %s" % self.saml_client.users.sources(subject_id))
@@ -338,6 +367,10 @@ class SAML2Plugin(FormPluginBase):
                     # expanded
                     identity["pysaml2_vo_expanded"] = 1
 
+        if self.debug:
+            self.log and self.log.info("[Adding] identity %s" % (identity,))
+        
+        
 # @return
 # used 2 times : one to get the ticket, the other to validate it
     def _service_url(self, environ, qstr=None):
@@ -348,7 +381,7 @@ class SAML2Plugin(FormPluginBase):
         return url
 
     #### IAuthenticatorPlugin #### 
-    def authenticate(self, environ, identity=None):
+    def authenticate(self, _environ, identity=None):
         if identity:
             return identity.get('login', None)
         else:
@@ -362,6 +395,8 @@ def make_plugin(rememberer_name=None, # plugin for remember
                  saml_conf="",
                  wayf="",
                  debug=0,
+                 sid_store="",
+                 identity_cache=""
                  ):
     
     if saml_conf is "":
@@ -375,10 +410,10 @@ def make_plugin(rememberer_name=None, # plugin for remember
     config = Config()
     config.load_file(saml_conf)
 
-    scl = Saml2Client(config)
+    scl = Saml2Client(config, persistent_cache=identity_cache)
 
     plugin = SAML2Plugin(rememberer_name, config, scl,
-                virtual_organization, wayf, cache, debug)
+                virtual_organization, wayf, cache, debug, sid_store)
     return plugin
 
 # came_from = re.sub(r'ticket=[^&]*&?', '', came_from)
