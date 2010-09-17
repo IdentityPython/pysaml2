@@ -319,25 +319,42 @@ class Assertion(dict):
     def __init__(self, dic=None):
         dict.__init__(self, dic)
     
-    def _authn_context(self, authn_class):
+    def _authn_context(self, authn_class, authn_auth):
+        # authn_class: saml.AUTHN_PASSWORD
         return factory(saml.AuthnContext, 
                         authn_context_class_ref=factory(
-                                saml.AuthnContextClassRef, text=authn_class))
+                                saml.AuthnContextClassRef, text=authn_class),
+                        authenticating_authority=factory(
+                                                saml.AuthenticatingAuthority,
+                                                text=authn_auth))
         
-    def _authn_statement(self, authn_class):
-        if authn_class:
+    def _authn_statement(self, authn_class=None, authn_auth=None):
+        if authn_class and authn_auth:
             return factory(saml.AuthnStatement, 
                         authn_instant=instant(), 
                         session_index=sid(),
-                        authn_context=self._authn_context(authn_class))
+                        authn_context=self._authn_context(authn_class, 
+                                                            authn_auth))
         else:
             return factory(saml.AuthnStatement,
                         authn_instant=instant(), 
                         session_index=sid())
     
     def construct(self, sp_entity_id, in_response_to, name_id, attrconvs,
-                    policy, issuer, authn_class=None):
+                    policy, issuer, authn_class=None, authn_auth=None):
+        """ Construct the Assertion 
         
+        :param sp_entity_id: The entityid of the SP
+        :param in_response_to: An identifier of the message, this message is 
+            a response to
+        :param name_id: An NameID instance
+        :param attrconvs: AttributeConverters
+        :param policy: The policy that should be adhered to when replying
+        :param issuer: Who is issuing the statement
+        :param authn_class: The authentication class
+        :param authn_auth: The authentication instance
+        :return: An Assertion instance
+        """
         attr_statement = saml.AttributeStatement(attribute=from_local(
                                 attrconvs, self, 
                                 policy.get_name_form(sp_entity_id)))
@@ -348,7 +365,7 @@ class Assertion(dict):
         return assertion_factory(
             issuer=issuer,
             attribute_statement = attr_statement,
-            authn_statement = self._authn_statement(authn_class),
+            authn_statement = self._authn_statement(authn_class, authn_auth),
             conditions = conds,
             subject=factory( saml.Subject,
                 name_id=name_id,
