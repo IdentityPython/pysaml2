@@ -338,7 +338,8 @@ class Server(object):
                                             name_id,
                                             self.conf.attribute_converters(), 
                                             policy, issuer=_issuer, 
-                                            authn_class, authn_authn)
+                                            authn_class=authn_class, 
+                                            authn_auth=authn_authn)
             else:
                 assertion = ast.construct(sp_entity_id, in_response_to, 
                                             name_id,
