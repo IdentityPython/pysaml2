@@ -850,7 +850,8 @@ class Attribute(Simple):
                     objekt.type = self.type
             except ValueError:
                 objekt.type = self.type
-        
+            except AttributeError:
+                objekt.type = None
         try:
             if self.use == "required":
                 objekt.required = True
@@ -1128,11 +1129,25 @@ class Element(Complex):
 
             except AttributeError, exc:
                 # neither type nor reference, definitely local
-                if hasattr(self, "parts") and len(self.parts) == 1:
-                    if isinstance(self.parts[0], ComplexType):
-                        objekt.type = self.parts[0].repr(top, sup, 
-                                                        parent=self.name)
-                        objekt.scoped = True
+                if hasattr(self, "parts"):
+                    if len(self.parts) == 1:
+                        if isinstance(self.parts[0], ComplexType) or \
+                            isinstance(self.parts[0], SimpleType):
+                            self.parts[0].name = self.name
+                            objekt.type = self.parts[0].repr(top, sup, 
+                                                            parent=self.name)
+                            objekt.scoped = True
+                    elif len(self.parts) == 2:# One child might be Annotation
+                        if isinstance(self.parts[0], Annotation):
+                            self.parts[1].name = self.name
+                            objekt.type = self.parts[1].repr(top, sup, 
+                                                            parent=self.name)
+                            objekt.scoped = True
+                        elif isinstance(self.parts[1], Annotation):
+                            self.parts[0].name = self.name
+                            objekt.type = self.parts[0].repr(top, sup, 
+                                                            parent=self.name)
+                            objekt.scoped = True
                 else:
                     if (DEBUG):
                         print "$", self
@@ -1309,6 +1324,9 @@ class ComplexType(Complex):
         return self._class 
         
 class Annotation(Complex):
+    pass
+
+class All(Complex):
     pass
 
 class Group(Complex):
@@ -1683,6 +1701,7 @@ _MAP = {
     "complexType": ComplexType,
     "sequence": Sequence,
     "any": Any,
+    "all": All,
     "anyAttribute": AnyAttribute,
     "simpleContent": SimpleContent,
     "extension": Extension,
