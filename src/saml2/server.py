@@ -332,8 +332,8 @@ class Server(object):
                 return self.error_response(consumer_url, in_response_to, 
                                                sp_entity_id, exc, name_id)
 
-            if auth: # expected to be a 2-tuple class+authority
-                (authn_class, authn_authn) = auth
+            if authn: # expected to be a 2-tuple class+authority
+                (authn_class, authn_authn) = authn
                 assertion = ast.construct(sp_entity_id, in_response_to, 
                                             name_id,
                                             self.conf.attribute_converters(), 
