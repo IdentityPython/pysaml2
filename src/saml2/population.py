@@ -4,7 +4,10 @@ from saml2.cache import Cache
 class Population(object):
     def __init__(self, cache=None):
         if cache:
-            self.cache = cache
+            if isinstance(cache, basestring):
+                self.cache = Cache(cache)
+            else:
+                self.cache = cache
         else:
             self.cache = Cache()
 
