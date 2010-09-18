@@ -406,7 +406,8 @@ class Server(object):
     # ------------------------------------------------------------------------
 
     def authn_response(self, identity, in_response_to, destination, 
-                        sp_entity_id, name_id_policy, userid, sign=False):
+                        sp_entity_id, name_id_policy, userid, sign=False, 
+                        authn=None):
         """ Constructs an AuthenticationResponse
         
         :param identity: Information about an user
@@ -416,6 +417,8 @@ class Server(object):
         :param sp_entity_id: The entity identifier of the Service Provider
         :param name_id_policy: ...
         :param userid: The subject identifier
+        :param sign: Whether the assertion should be signed or not
+        :param authn: Information about the authentication
         :return: A XML string representing an authentication response
         """
         
@@ -435,7 +438,9 @@ class Server(object):
                             sp_entity_id,   # sp_entity_id
                             identity,       # identity as dictionary
                             name_id,
-                            sign=sign
+                            sign=sign,      # If the assertion should be signed
+                            authn=authn     # Information about the 
+                                            #   authentication
                         )
         except MissingValue, exc:
             response = self.error_response(destination, in_response_to, 
