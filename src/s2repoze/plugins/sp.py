@@ -267,10 +267,10 @@ class SAML2Plugin(FormPluginBase):
         
     #### IIdentifier ####
     def identify(self, environ):
-        self.log = environ.get('repoze.who.logger','')
+        self.log = environ.get('repoze.who.logger', '')
         self.saml_client.log = self.log
         
-        if "CONTENT_LENGTH" not in environ:
+        if "CONTENT_LENGTH" not in environ or not environ["CONTENT_LENGTH"]:
             if self.debug:
                 self.log and self.log.info('[identify] get or empty post')
             return {}
