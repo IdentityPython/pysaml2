@@ -314,6 +314,15 @@ class AuthnResponse(object):
         """ Return the ID of the response """
         return self.response.id
     
+    def authn_info(self):
+        res = []
+        for astat in self.assertion.authn_statement:
+            ac = astat.authn_context
+            aclass = ac.authn_context_class_ref.text
+            authn_auth = [aa.text for aa in ac.authenticating_authority]
+            res.append((aclass, authn_auth))
+        return res
+        
     def session_info(self):
         """ Returns a predefined set of information gleened from the 
         response.
@@ -321,7 +330,8 @@ class AuthnResponse(object):
         """
         return { "ava": self.ava, "name_id": self.name_id,
                 "came_from": self.came_from, "issuer": self.issuer(),
-                "not_on_or_after": self.not_on_or_after }
+                "not_on_or_after": self.not_on_or_after,
+                "authn_info": self.authn_info() }
     
     def __str__(self):
         return "%s" % self.xmlstr
