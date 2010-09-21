@@ -92,7 +92,7 @@ class Cache(object):
         if self._sync:
             self._db.sync()
             
-    def reset(self, subject_id, entity_id=None):
+    def reset(self, subject_id, entity_id):
         """ Scrap the assertions received from a IdP or an AA about a special
         subject.
         
@@ -100,12 +100,7 @@ class Cache(object):
         :param entity_id: The identifier of the entity_id of the assertion
         :return:
         """
-        if entity_id:
-            self.set(subject_id, entity_id, {}, 0)
-        else:
-            self._db[subject_id] = {}
-            if self._sync:
-                self._db.sync()
+        self.set(subject_id, entity_id, {}, 0)
             
     def entities(self, subject_id):
         """ Returns all the entities of assertions for a subject, disregarding
