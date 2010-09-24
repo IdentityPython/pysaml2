@@ -7,7 +7,7 @@ import imp
 import sys
 import types
 
-__version__ = 0.3
+__version__ = 0.4
 
 try:
     from xml.etree import cElementTree as ElementTree
@@ -660,7 +660,10 @@ class PyAttribute(PyObj):
         return ([], []) # Means this elements definition is empty
         
     def spec(self):
-        return "('%s', '%s', %s)" % (self.pyname, self.type, self.required)
+        if isinstance(self.type, SimpleType):
+            return "('%s', %s_, %s)" % (self.pyname, self.type.name, self.required)
+        else:
+            return "('%s', '%s', %s)" % (self.pyname, self.type, self.required)
        
 class PyAny(PyObj):
     def __init__(self, name=None, pyname=None, _external=False, _namespace=""):
@@ -843,7 +846,7 @@ class Attribute(Simple):
                     ctyp = get_type_def(klass, top.parts)
                     if not ctyp.repr_done:
                         ctyp.repr(top, sup)
-                    objekt.type = klass
+                    objekt.type = ctyp
                 elif self.xmlns_map[namespace] == XMLSCHEMA:
                     objekt.type = klass
                 else:
