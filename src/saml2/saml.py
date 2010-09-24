@@ -1267,7 +1267,7 @@ class AuthzDecisionStatementType_(StatementAbstractType_):
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Evidence'] = ('evidence', Evidence)
     c_cardinality['evidence'] = {"min":0, "max":1}
     c_attributes['Resource'] = ('resource', 'anyURI', True)
-    c_attributes['Decision'] = ('decision', 'DecisionType', True)
+    c_attributes['Decision'] = ('decision', DecisionType_, True)
     c_child_order.extend(['action', 'evidence'])
 
     def __init__(self,
