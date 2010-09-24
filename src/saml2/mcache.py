@@ -14,6 +14,17 @@ class ToOld(Exception):
 def _key(prefix, name):
     return "%s_%s" % (prefix, name)
     
+def _valid(not_on_or_after):
+    if isinstance(not_on_or_after, time.struct_time):
+        not_on_or_after = time.mktime(not_on_or_after)
+    now = time_util.daylight_corrected_now()
+
+    if not_on_or_after and not_on_or_after < now:
+        #self.reset(subject_id, entity_id)
+        raise ToOld("%s < %s" % (not_on_or_after, now))
+    else:
+        return True
+        
 class Cache(object):
     def __init__(self, servers, debug=0):
         self._cache = memcache.Client(servers, debug)
@@ -68,21 +79,14 @@ class Cache(object):
         specified IdP/AA.
 
         :param item: Information stored
-        :return: The session information
+        :return: The session information as a dictionary
         """
         try:
             (not_on_or_after, info) = item
         except ValueError:
             raise ToOld()
             
-        if isinstance(not_on_or_after, time.struct_time):
-            not_on_or_after = time.mktime(not_on_or_after)
-        now = time_util.daylight_corrected_now()
-
-        if not_on_or_after < now:
-            #self.reset(subject_id, entity_id)
-            raise ToOld("%s < %s" % (not_on_or_after, now))
-        else:
+        if _valid(not_on_or_after):
             return info
 
     def get(self, subject_id, entity_id):
@@ -160,11 +164,10 @@ class Cache(object):
         except ValueError:
             return False
             
-        now = time.gmtime()
-        if not_on_or_after < now:
+        try:
+            return _valid(not_on_or_after)
+        except ToOld:
             return False
-        else:
-            return True
         
     def subjects(self):
         """ Return identifiers for all the subjects that are in the cache.
@@ -172,3 +175,21 @@ class Cache(object):
         :return: list of subject identifiers
         """
         return self._cache.get("subjects")
+
+    def update(self, subject_id, entity_id, ava):
+        res = self._cache.get(_key(subject_id, entity_id))
+        if res == None:
+            raise KeyError("No such subject")
+        else:
+            info = self.get_info(res)
+            if info:
+                info.update(ava)
+                self.set(subject_id, entity_id, info, res[0])
+                
+    def valid_to(self, subject_id, entity_id, newtime):
+        try:
+            (not_on_or_after, info) = self._cache.get(_key(subject_id, entity_id))
+        except ValueError:
+            return False
+            
+        self._cache.set(_key(subject_id, entity_id), (newtime, info))
