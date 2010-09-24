@@ -256,7 +256,7 @@ class Policy(object):
         
         return restrictions
     
-    def _not_on_or_after(self, sp_entity_id):
+    def not_on_or_after(self, sp_entity_id):
         """ When the assertion stops being valid, should not be
         used after this time.
         
@@ -308,7 +308,7 @@ class Policy(object):
         return factory( saml.Conditions,
                         not_before=instant(),
                         # How long might depend on who's getting it
-                        not_on_or_after=self._not_on_or_after(sp_entity_id),
+                        not_on_or_after=self.not_on_or_after(sp_entity_id),
                         audience_restriction=[factory( saml.AudienceRestriction,
                                 audience=factory(saml.Audience, 
                                                 text=sp_entity_id))])
@@ -359,7 +359,7 @@ class Assertion(dict):
                                 attrconvs, self, 
                                 policy.get_name_form(sp_entity_id)))
         
-        # start using now and for a hour
+        # start using now and for some time
         conds = policy.conditions(sp_entity_id)
         
         return assertion_factory(
