@@ -91,15 +91,27 @@ D_FORMAT = [
 ]
 
 def parse_duration(duration):
-    # PnYnMnDTnHnMnS
-    assert duration[0] == "P"
-    index = 1
-    dic = {}
+    # (-)PnYnMnDTnHnMnS
+    index = 0
+    if duration[0] == '-':
+        sign = '-'
+        index += 1
+    else:
+        sign = '+'
+    assert duration[index] == "P"
+    index += 1
+    
+    dic = dict([(typ, 0) for (code, typ) in D_FORMAT])
+    
     for code, typ in D_FORMAT:
-        #print duration[index:], code        
+        #print duration[index:], code
+        if duration[index] == '-':
+            raise Exception("Negation not allowed on individual items")
         if code == "T":
             if duration[index] == "T":
                 index += 1
+                if index == len(duration):
+                    raise Exception("Not allowed to end with 'T'")
             else:
                 raise Exception("Missing T")
         else:
@@ -108,57 +120,70 @@ def parse_duration(duration):
                 try:
                     dic[typ] = int(duration[index:index+mod])
                 except ValueError:
-                    dic[typ] = float(duration[index:index+mod])
+                    if code == "S":
+                        try:
+                            dic[typ] = float(duration[index:index+mod])
+                        except ValueError:
+                            raise Exception("Not a float")
+                    else:
+                        raise Exception(
+                                "Fractions not allow on anything byt seconds")
                 index = mod+index+1
             except ValueError:
                 dic[typ] = 0
-    
-    return dic
+
+        if index == len(duration):
+            break
+        
+    return (sign, dic)
     
 def add_duration(tid, duration):
     
-    dur = parse_duration(duration)
-        
-    #Months
-    temp = tid.tm_mon + dur["tm_mon"]
-    month = modulo(temp, 1, 13)
-    carry = f_quotient(temp, 1, 13)
-    #Years
-    year = tid.tm_year + dur["tm_year"] + carry
-    # seconds
-    temp = tid.tm_sec + dur["tm_sec"]
-    secs = modulo(temp, 60)
-    carry = f_quotient(temp, 60)
-    # minutes
-    temp = tid.tm_min + dur["tm_min"] + carry
-    minutes = modulo(temp, 60)
-    carry = f_quotient(temp, 60)
-    # hours
-    temp = tid.tm_hour + dur["tm_hour"] + carry
-    hour = modulo(temp, 60)
-    carry = f_quotient(temp, 60)
-    # days
-    if dur["tm_mday"] > maximum_day_in_month_for(year, month):
-        temp_days = maximum_day_in_month_for(year, month)
-    elif dur["tm_mday"] < 1:
-        temp_days = 1
-    else:
-        temp_days = dur["tm_mday"]
-    days = temp_days + tid.tm_mday + carry
-    while True:
-        if days < 1:
-            pass
-        elif days > maximum_day_in_month_for(year, month):
-            days = days - maximum_day_in_month_for(year, month)
-            carry = 1
-        else:
-            break
-        temp = month + carry
-        month = modulo(temp, 1, 13)
-        year = year + f_quotient(temp, 1, 13)
+    (sign, dur) = parse_duration(duration)
     
-    return time.localtime(time.mktime((year, month, days, hour, minutes, 
-                            secs, 0, 0, -1)))
+    if sign == '+':
+        #Months
+        temp = tid.tm_mon + dur["tm_mon"]
+        month = modulo(temp, 1, 13)
+        carry = f_quotient(temp, 1, 13)
+        #Years
+        year = tid.tm_year + dur["tm_year"] + carry
+        # seconds
+        temp = tid.tm_sec + dur["tm_sec"]
+        secs = modulo(temp, 60)
+        carry = f_quotient(temp, 60)
+        # minutes
+        temp = tid.tm_min + dur["tm_min"] + carry
+        minutes = modulo(temp, 60)
+        carry = f_quotient(temp, 60)
+        # hours
+        temp = tid.tm_hour + dur["tm_hour"] + carry
+        hour = modulo(temp, 60)
+        carry = f_quotient(temp, 60)
+        # days
+        if dur["tm_mday"] > maximum_day_in_month_for(year, month):
+            temp_days = maximum_day_in_month_for(year, month)
+        elif dur["tm_mday"] < 1:
+            temp_days = 1
+        else:
+            temp_days = dur["tm_mday"]
+        days = temp_days + tid.tm_mday + carry
+        while True:
+            if days < 1:
+                pass
+            elif days > maximum_day_in_month_for(year, month):
+                days = days - maximum_day_in_month_for(year, month)
+                carry = 1
+            else:
+                break
+            temp = month + carry
+            month = modulo(temp, 1, 13)
+            year = year + f_quotient(temp, 1, 13)
+    
+        return time.localtime(time.mktime((year, month, days, hour, minutes, 
+                                secs, 0, 0, -1)))
+    else:
+        pass
 
 # ---------------------------------------------------------------------------
 
@@ -175,6 +200,19 @@ def time_in_a_while(days=0, seconds=0, microseconds=0, milliseconds=0,
     soon = now + delta
     return soon
 
+def time_a_while_ago(days=0, seconds=0, microseconds=0, milliseconds=0,
+                minutes=0, hours=0, weeks=0):
+    """
+    format of timedelta:
+        timedelta([days[, seconds[, microseconds[, milliseconds[,
+                    minutes[, hours[, weeks]]]]]]])
+    """
+    now = datetime.utcnow()
+    delta = timedelta(*[days, seconds, microseconds, milliseconds, minutes,
+                    hours, weeks])
+    prev = now - delta
+    return prev
+
 def in_a_while(days=0, seconds=0, microseconds=0, milliseconds=0,
                 minutes=0, hours=0, weeks=0):
     """
@@ -185,6 +223,11 @@ def in_a_while(days=0, seconds=0, microseconds=0, milliseconds=0,
     return time_in_a_while(days, seconds, microseconds, milliseconds,
                 minutes, hours, weeks).strftime(TIME_FORMAT)
 
+def a_while_ago(days=0, seconds=0, microseconds=0, milliseconds=0,
+                minutes=0, hours=0, weeks=0):
+    return time_a_while_ago(days, seconds, microseconds, milliseconds,
+                minutes, hours, weeks).strftime(TIME_FORMAT)
+                
 # ---------------------------------------------------------------------------
 
 def str_to_time(timestr):
@@ -214,6 +257,18 @@ def daylight_corrected_now():
     
 # ---------------------------------------------------------------------------
 
+def not_before(point):
+    if not point:
+        return True
+        
+    then = str_to_time(point)
+    now = time.gmtime()
+
+    if now > then:
+        return True
+    else:
+        return False
+
 def valid( valid_until ):
     """ Checks whether a valid_until specification is still valid
     :param valid_until: The string representation of a time
@@ -233,7 +288,7 @@ def valid( valid_until ):
 
 def later_than(then, that):
     then = str_to_time( then )
-    then = str_to_time( that )
+    that = str_to_time( that )
     
     return then >= that
     

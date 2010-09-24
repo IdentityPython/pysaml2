@@ -37,7 +37,8 @@ def test_modulo_2():
     #assert modulo(13+x, 1, 13) == 1+x
 
 def test_parse_duration():
-    d = parse_duration("P1Y3M5DT7H10M3.3S")
+    (sign, d) = parse_duration("P1Y3M5DT7H10M3.3S")
+    assert sign == "+"
     assert d['tm_sec'] == 3.3
     assert d['tm_mon'] == 3
     assert d['tm_hour'] == 7
