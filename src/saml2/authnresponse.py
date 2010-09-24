@@ -18,16 +18,21 @@
 import base64
 import time
 
-from saml2.time_util import str_to_time
 
 from saml2 import samlp
 from saml2 import saml
 from saml2 import extension_element_to_element
+from saml2 import time_util
 
 from saml2.sigver import security_context
 
 from saml2.attribute_converter import to_local
 from saml2.time_util import daylight_corrected_now
+from saml2.time_util import str_to_time
+from saml2.time_util import not_before
+
+from saml2.validate import validate_on_or_after
+from saml2.validate import validate_before
 
 # ---------------------------------------------------------------------------
 
@@ -35,31 +40,6 @@ class IncorrectlySigned(Exception):
     pass
     
 # ---------------------------------------------------------------------------
-
-def _use_on_or_after(condition, slack):
-    now = daylight_corrected_now()
-    #print "NOW: %d" % now
-    not_on_or_after = time.mktime(str_to_time(condition.not_on_or_after))
-    #print "not_on_or_after: %d" % not_on_or_after
-    # slack is +-
-    high = not_on_or_after+slack
-    if now > high:
-        # To old ignore
-        #print "(%d > %d)" % (now,high)
-        raise Exception("To old can't use it! %d" % (now-high,))
-    return not_on_or_after
-
-def _use_before(condition, slack):
-    now = daylight_corrected_now()
-    #print "NOW: %s" % now
-    not_before = time.mktime(str_to_time(condition.not_before))
-    #print "not_before: %d" % not_before
-    
-    if not_before > now + slack:
-        # Can't use it yet
-        raise Exception("Can't use it yet %s <= %s" % (not_before, now))
-    
-    return True
 
 def for_me(condition, myself ):
     # Am I among the intended audiences
@@ -163,7 +143,14 @@ class AuthnResponse(object):
     def authn_statement_ok(self):
         # the assertion MUST contain one AuthNStatement
         assert len(self.assertion.authn_statement) == 1
-        # authn_statement = assertion.authn_statement[0]
+        authn_statement = assertion.authn_statement[0]
+        if authn_statement.session_not_on_or_after:
+            try:
+                validate_on_or_after(authn_statement.session_not_on_or_after, 
+                                    self.timeslack)
+            except Exception:
+                return False
+        return True
         # check authn_statement.session_index
     
     def condition_ok(self, lax=False):
@@ -175,8 +162,9 @@ class AuthnResponse(object):
             self.log.info("condition: %s" % condition)
         
         try:
-            self.not_on_or_after = _use_on_or_after(condition, self.timeslack)
-            _use_before(condition, self.timeslack)
+            self.not_on_or_after = validate_on_or_after(condition.not_on_or_after, 
+                                                    self.timeslack)
+            validate_before(condition.not_before, self.timeslack)
         except Exception, excp:
             self.log and self.log.error("Exception on condition: %s" % (excp,))
             if not lax:
@@ -214,6 +202,11 @@ class AuthnResponse(object):
         subject = self.assertion.subject
         for subject_confirmation in subject.subject_confirmation:
             data = subject_confirmation.subject_confirmation_data
+
+            # These two will raise exception if untrue
+            validate_on_or_after(data.not_on_or_after, self.timeslack)
+            validate_before(data.not_before, self.timeslack)
+            
             if data.in_response_to in self.outstanding_queries:
                 self.came_from = self.outstanding_queries[data.in_response_to]
                 del self.outstanding_queries[data.in_response_to]
@@ -253,9 +246,11 @@ class AuthnResponse(object):
         if self.debug:
             self.log.info("--- AVA: %s" % (self.ava,))
         
-        self.get_subject()
-        
-        return True
+        try:
+            self.get_subject()
+            return True
+        except Exception:
+            return False
     
     def _encrypted_assertion(self, xmlstr):
         decrypt_xml = self.sec.decrypt(xmlstr)
@@ -297,11 +292,19 @@ class AuthnResponse(object):
         the signature is correct if present."""
         
         self.status_ok()
+        self.issue_instant_ok()
         if self.parse_assertion():
             return self
         else:
             return None
     
+    def issue_instant_ok(self):
+        """ Check that the response was issued at a reasonable time """
+        upper = time_util.in_a_while(days=1)
+        lower = time_util.a_while_ago(days=1)
+        issued_at = str_to_time(self.response.issue_instant)
+        return issued_at > lower and issued_at < upper
+        
     def issuer(self):
         """ Return the issuer of the reponse """
         return self.response.issuer.text
@@ -318,9 +321,13 @@ class AuthnResponse(object):
         res = []
         for astat in self.assertion.authn_statement:
             ac = astat.authn_context
-            aclass = ac.authn_context_class_ref.text
-            authn_auth = [aa.text for aa in ac.authenticating_authority]
-            res.append((aclass, authn_auth))
+            if ac:
+                aclass = ac.authn_context_class_ref.text
+                try:
+                    authn_auth = [a.text for a in ac.authenticating_authority]
+                except AttributeError:
+                    authn_auth = []
+                res.append((aclass, authn_auth))
         return res
         
     def session_info(self):
