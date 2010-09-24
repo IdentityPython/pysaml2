@@ -290,16 +290,25 @@ def valid_instance(instance):
         
         if value:
             if name in instclass.c_cardinality:
+                try:
+                    vlen = len(value)
+                except TypeError:
+                    vlen = 1
+                    
                 if "min" in instclass.c_cardinality[name] and \
-                    instclass.c_cardinality[name]["min"] > len(value):
+                    instclass.c_cardinality[name]["min"] > vlen:
                     return False
                 if "max" in instclass.c_cardinality[name] and \
-                    instclass.c_cardinality[name]["max"] < len(value):
+                    instclass.c_cardinality[name]["max"] < vlen:
                     return False
-                    
-            for val in value:
-                # That it is the right class is handled elsewhere
-                if not valid_instance(val):
+            
+            if isinstance(value, list):
+                for val in value:
+                    # That it is the right class is handled elsewhere
+                    if not valid_instance(val):
+                        return False
+            else:
+                if not valid_instance(value):
                     return False
         elif name in instclass.c_cardinality and \
                 "min" in instclass.c_cardinality[name] and \
