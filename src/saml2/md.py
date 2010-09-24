@@ -698,7 +698,7 @@ class ContactType_(SamlBase):
     c_cardinality['email_address'] = {"min":0}
     c_children['{urn:oasis:names:tc:SAML:2.0:metadata}TelephoneNumber'] = ('telephone_number', [TelephoneNumber])
     c_cardinality['telephone_number'] = {"min":0}
-    c_attributes['contactType'] = ('contact_type', 'ContactTypeType', True)
+    c_attributes['contactType'] = ('contact_type', ContactTypeType_, True)
     c_child_order.extend(['extensions', 'company', 'given_name', 'sur_name', 'email_address', 'telephone_number'])
 
     def __init__(self,
@@ -756,7 +756,7 @@ class KeyDescriptorType_(SamlBase):
     c_children['{http://www.w3.org/2000/09/xmldsig#}KeyInfo'] = ('key_info', ds.KeyInfo)
     c_children['{urn:oasis:names:tc:SAML:2.0:metadata}EncryptionMethod'] = ('encryption_method', [EncryptionMethod])
     c_cardinality['encryption_method'] = {"min":0}
-    c_attributes['use'] = ('use', 'KeyTypes', False)
+    c_attributes['use'] = ('use', KeyTypes_, False)
     c_child_order.extend(['key_info', 'encryption_method'])
 
     def __init__(self,
@@ -858,7 +858,7 @@ class RoleDescriptorType_(SamlBase):
     c_attributes['ID'] = ('id', 'ID', False)
     c_attributes['validUntil'] = ('valid_until', 'dateTime', False)
     c_attributes['cacheDuration'] = ('cache_duration', 'duration', False)
-    c_attributes['protocolSupportEnumeration'] = ('protocol_support_enumeration', 'anyURIListType', True)
+    c_attributes['protocolSupportEnumeration'] = ('protocol_support_enumeration', AnyURIListType_, True)
     c_attributes['errorURL'] = ('error_url', 'anyURI', False)
     c_child_order.extend(['signature', 'extensions', 'key_descriptor', 'organization', 'contact_person'])
 
@@ -1273,7 +1273,7 @@ class AffiliationDescriptorType_(SamlBase):
     c_cardinality['affiliate_member'] = {"min":1}
     c_children['{urn:oasis:names:tc:SAML:2.0:metadata}KeyDescriptor'] = ('key_descriptor', [KeyDescriptor])
     c_cardinality['key_descriptor'] = {"min":0}
-    c_attributes['affiliationOwnerID'] = ('affiliation_owner_id', 'entityIDType', True)
+    c_attributes['affiliationOwnerID'] = ('affiliation_owner_id', EntityIDType_, True)
     c_attributes['validUntil'] = ('valid_until', 'dateTime', False)
     c_attributes['cacheDuration'] = ('cache_duration', 'duration', False)
     c_attributes['ID'] = ('id', 'ID', False)
@@ -1523,7 +1523,7 @@ class EntityDescriptorType_(SamlBase):
     c_cardinality['contact_person'] = {"min":0}
     c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AdditionalMetadataLocation'] = ('additional_metadata_location', [AdditionalMetadataLocation])
     c_cardinality['additional_metadata_location'] = {"min":0}
-    c_attributes['entityID'] = ('entity_id', 'entityIDType', True)
+    c_attributes['entityID'] = ('entity_id', EntityIDType_, True)
     c_attributes['validUntil'] = ('valid_until', 'dateTime', False)
     c_attributes['cacheDuration'] = ('cache_duration', 'duration', False)
     c_attributes['ID'] = ('id', 'ID', False)
