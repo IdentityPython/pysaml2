@@ -90,13 +90,14 @@ def sid(seed=""):
     """The hash of the server time + seed makes an unique SID for each session.
     
     :param seed: A seed string
-    :return: The hex version of the digest
+    :return: The hex version of the digest, prefixed by 'id-' to make it 
+        compliant with the NCName specification
     """
     ident = md5()
     ident.update(repr(time.time()))
     if seed:
         ident.update(seed)
-    return ident.hexdigest()
+    return "id-"+ident.hexdigest()
 
 def parse_attribute_map(filenames):
     """
