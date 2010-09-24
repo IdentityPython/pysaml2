@@ -483,6 +483,9 @@ class SecurityContext(object):
         
         response = samlp.response_from_string(decoded_xml)
 
+        if response.signature:
+            self._check_signature(decoded_xml, response)
+            
         # Try to find the signing cert in the assertion
         for assertion in response.assertion:
             if not assertion.signature:
