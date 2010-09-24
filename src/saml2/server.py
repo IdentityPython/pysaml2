@@ -173,10 +173,13 @@ class Server(object):
         
         self.metadata = self.conf["metadata"]
         self.sec = security_context(self.conf, log)
-        if cache:
-            self.cache = Cache(cache)
-        else:
-            self.cache = Cache()
+        # if cache:
+        #     if isinstance(cache, basestring):
+        #         self.cache = Cache(cache)
+        #     else:
+        #         self.cache = cache
+        # else:
+        #     self.cache = Cache()
         
     def load_config(self, config_file):
         
@@ -355,9 +358,9 @@ class Server(object):
             # Store which assertion that has been sent to which SP about which
             # subject.
             
-            self.cache.set(assertion.subject.name_id.text, 
-                            sp_entity_id, assertion, 
-                            assertion.conditions.not_on_or_after)
+            # self.cache.set(assertion.subject.name_id.text, 
+            #                 sp_entity_id, {"ava": identity, "authn": authn}, 
+            #                 assertion.conditions.not_on_or_after)
             
             response.assertion = assertion
                 
