@@ -222,7 +222,7 @@ class Saml2Client(object):
     def authenticate(self, spentityid=None, location="", service_url="",
                         my_name="", relay_state="",
                         binding=saml2.BINDING_HTTP_REDIRECT, log=None,
-                        vorg="", scoping=None):
+                        vorg="", scoping=None, sign=False):
         """ Sends an authentication request.
         
         :param spentityid: The SP EntityID
@@ -235,7 +235,7 @@ class Saml2Client(object):
         :param log: Where to write log messages
         :param vorg: The entity_id of the virtual organization I'm a member of
         :param scoping: For which IdPs this query are aimed.
-        
+        :param sign: Whether the request should be signed or not.
         :return: AuthnRequest response
         """
         
@@ -253,7 +253,7 @@ class Saml2Client(object):
         session_id = sid()
         authen_req = self.authn_request(session_id, location,
                                 service_url, spentityid, my_name, vorg,
-                                scoping, log)
+                                scoping, log, sign)
         log and log.info("AuthNReq: %s" % authen_req)
         
         if binding == saml2.BINDING_HTTP_POST:
