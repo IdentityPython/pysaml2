@@ -86,7 +86,7 @@ class Cache(object):
         :param not_on_or_after: A time after which the assertion is not valid.
         """
         if subject_id not in self._db:
-            self.reset(subject_id)
+            self._db[subject_id] = {}
 
         self._db[subject_id][entity_id] = (not_on_or_after, info)
         if self._sync:
