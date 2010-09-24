@@ -17,7 +17,7 @@
 
 import base64
 import time
-
+import sys
 
 from saml2 import samlp
 from saml2 import saml
@@ -33,6 +33,7 @@ from saml2.time_util import not_before
 
 from saml2.validate import validate_on_or_after
 from saml2.validate import validate_before
+from saml2.validate import valid_instance
 
 # ---------------------------------------------------------------------------
 
@@ -116,7 +117,13 @@ class AuthnResponse(object):
         
         if self.debug:
             self.log.info("response: %s" % (self.response,))
-        
+
+        if not valid_instance(self.response):
+            if self.log:
+                self.log.error("Not valid response")
+            else:
+                print >> sys.stderr, "Not valid response"
+            
         return self
     
     def clear(self):
