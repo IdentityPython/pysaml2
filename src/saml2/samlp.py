@@ -93,6 +93,21 @@ def status_detail_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(StatusDetailType_, xml_string)
 
 
+class AuthnContextComparisonType_(SamlBase):
+    """The urn:oasis:names:tc:SAML:2.0:protocol:AuthnContextComparisonType element """
+
+    c_tag = 'AuthnContextComparisonType'
+    c_namespace = NAMESPACE
+    c_value_type = {'base': 'string', 'enumeration': ['exact', 'minimum', 'maximum', 'better']}
+    c_children = SamlBase.c_children.copy()
+    c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
+
+def authn_context_comparison_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(AuthnContextComparisonType_, xml_string)
+
+
 class RequestedAuthnContextType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:protocol:RequestedAuthnContextType element """
 
@@ -106,7 +121,7 @@ class RequestedAuthnContextType_(SamlBase):
     c_cardinality['authn_context_class_ref'] = {"min":0}
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AuthnContextDeclRef'] = ('authn_context_decl_ref', [saml.AuthnContextDeclRef])
     c_cardinality['authn_context_decl_ref'] = {"min":0}
-    c_attributes['Comparison'] = ('comparison', 'AuthnContextComparisonType', False)
+    c_attributes['Comparison'] = ('comparison', AuthnContextComparisonType_, False)
     c_child_order.extend(['authn_context_class_ref', 'authn_context_decl_ref'])
 
     def __init__(self,
@@ -128,21 +143,6 @@ class RequestedAuthnContextType_(SamlBase):
 
 def requested_authn_context_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(RequestedAuthnContextType_, xml_string)
-
-
-class AuthnContextComparisonType_(SamlBase):
-    """The urn:oasis:names:tc:SAML:2.0:protocol:AuthnContextComparisonType element """
-
-    c_tag = 'AuthnContextComparisonType'
-    c_namespace = NAMESPACE
-    c_value_type = {'base': 'string', 'enumeration': ['exact', 'minimum', 'maximum', 'better']}
-    c_children = SamlBase.c_children.copy()
-    c_attributes = SamlBase.c_attributes.copy()
-    c_child_order = SamlBase.c_child_order[:]
-    c_cardinality = SamlBase.c_cardinality.copy()
-
-def authn_context_comparison_type__from_string(xml_string):
-    return saml2.create_class_from_xml_string(AuthnContextComparisonType_, xml_string)
 
 
 class NameIDPolicyType_(SamlBase):
