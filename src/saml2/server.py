@@ -219,7 +219,12 @@ class Server(object):
                 self.log.error("Request was not correctly signed")
                 self.log.info(request_xml)
             raise
-                        
+
+        if not valid_instance(request):
+            if self.log:
+                self.log.info(request_xml)
+            raise Exception("Request doesn't validate")
+            
         return_destination = request.assertion_consumer_service_url
         # request.destination should be me 
         response["id"] = request.id # put in in_reply_to
