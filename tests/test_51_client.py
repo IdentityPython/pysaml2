@@ -295,15 +295,14 @@ class TestClient:
         
         authn_response = self.client.response({"SAMLResponse":resp_str},
                             "urn:mace:example.com:saml:roland:sp",
-                            {"id":"http://foo.example.com/service"})
+                            {"id2":"http://foo.example.com/service"})
         
         # Two persons in the cache
-        assert len(self.client.users.subjects()) == 1
+        assert len(self.client.users.subjects()) == 2
         issuers = [self.client.users.issuers_of_info(s) for s in self.client.users.subjects()]
         # The information I have about the subjects comes from the same source
         print issuers
-        # assert issuers == [[IDP], [IDP]]
-        assert issuers == [[IDP]]
+        assert issuers == [[IDP], [IDP]]
         
     def test_init_values(self):
         print self.client.config["service"]["sp"]
