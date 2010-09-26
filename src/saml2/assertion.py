@@ -369,8 +369,8 @@ class Assertion(dict):
             conditions = conds,
             subject=factory( saml.Subject,
                 name_id=name_id,
-                method=saml.SUBJECT_CONFIRMATION_METHOD_BEARER,
                 subject_confirmation=factory( saml.SubjectConfirmation,
+                                    method=saml.SUBJECT_CONFIRMATION_METHOD_BEARER,
                                     subject_confirmation_data=factory(
                                             saml.SubjectConfirmationData,
                                             in_response_to=in_response_to))),

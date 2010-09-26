@@ -31,6 +31,7 @@ from saml2.validate import validate_on_or_after
 from saml2.validate import validate_before
 from saml2.validate import valid_instance
 from saml2.validate import valid_address
+from saml2.validate import NotValid
 
 # ---------------------------------------------------------------------------
 
@@ -118,12 +119,17 @@ class AuthnResponse(object):
         if self.debug:
             self.log.info("response: %s" % (self.response,))
 
-        if not valid_instance(self.response):
+        try:
+            valid_instance(self.response)
+        except NotValid, exc:
             if self.log:
-                self.log.error("Not valid response")
+                self.log.error("Not valid response: %s" % exc.args[0])
             else:
-                print >> sys.stderr, "Not valid response"
-        
+                print >> sys.stderr, "Not valid response: %s" % exc.args[0]
+            
+            self.clear()
+            return self
+            
         self.in_response_to = self.response.in_response_to
         if self.in_response_to in self.outstanding_queries:
             self.came_from = self.outstanding_queries[self.in_response_to]

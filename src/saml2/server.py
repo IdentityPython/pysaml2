@@ -37,6 +37,7 @@ from saml2.sigver import pre_signature_part
 from saml2.config import Config
 from saml2.cache import Cache 
 from saml2.assertion import Assertion, Policy   
+from saml2.validate import valid_instance, NotValid
 
 class UnknownVO(Exception):
     pass
@@ -220,10 +221,12 @@ class Server(object):
                 self.log.info(request_xml)
             raise
 
-        if not valid_instance(request):
+        try:
+            valid_instance(request)
+        except NotValid, exc:
             if self.log:
                 self.log.info(request_xml)
-            raise Exception("Request doesn't validate")
+            raise 
             
         return_destination = request.assertion_consumer_service_url
         # request.destination should be me 

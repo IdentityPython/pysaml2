@@ -1,3 +1,4 @@
+import sys
 import urlparse
 import re
 import time_util
@@ -5,49 +6,51 @@ import struct
 import base64
 import time
 
+class NotValid(Exception):
+    pass
+
+class OutsideCardinality(Exception):
+    pass
+    
 def valid_ncname(name):
-    """
-    """
     exp = re.compile("(?P<NCName>[a-zA-Z_](\w|[_.-])*)")
     match = exp.match(name)
     if not match:
-        return False
-        
+        raise NotValid("NCName")
     return True
-
+    
 def valid_id(oid):
-    return valid_ncname(oid)
+    valid_ncname(oid)
     
 def valid_any_uri(item):
     """very simplistic, ..."""
     try:
         part = urlparse.urlparse(item)
     except Exception:
-        return False
+        raise NotValid("AnyURI")
 
     if part[0] == "urn" and part[1] == "": # A urn
         return True
-    elif part[1] == "localhost" or part[1] == "127.0.0.1":
-        return False
-        
+    # elif part[1] == "localhost" or part[1] == "127.0.0.1":
+    #     raise NotValid("AnyURI")
+
     return True
     
 def valid_date_time(item):
     try:
         time_util.str_to_time(item)
-        return True
     except Exception:
-        return False
+        raise NotValid("dateTime")
+    return True
     
 def valid_url(url):
     try:
         part = urlparse.urlparse(url)
     except Exception:
-        return False
+        raise NotValid("URL")
         
-    if part[1] == "localhost" or part[1] == "127.0.0.1":
-        return False
-        
+    # if part[1] == "localhost" or part[1] == "127.0.0.1":
+    #     raise NotValid("URL")
     return True
     
 def validate_on_or_after(not_on_or_after, slack):
@@ -67,12 +70,13 @@ def validate_before(not_before, slack):
         nbefore = time.mktime(time_util.str_to_time(not_before))
         if nbefore > now + slack:
             raise Exception("Can't use it yet %s <= %s" % (nbefore, now))    
-        return True
-    else:
-        return True
+
+    return True
 
 def valid_address(address):
-    return valid_ipv4(address) or valid_ipv6(address)
+    if not (valid_ipv4(address) or valid_ipv6(address)):
+        raise NotValid("address")
+    return True
     
 def valid_ipv4(address):
     parts = address.split(".")
@@ -81,7 +85,7 @@ def valid_ipv4(address):
     for item in parts:
         try:
             if not 0 <= int(item) <= 255:
-                return False
+                raise NotValid("ipv4")
         except ValueError:
             return False
     return True
@@ -120,17 +124,17 @@ def valid_ipv6(address):
 
 def valid_boolean(val):
     vall = val.lower()
-    if vall == "true" or vall == "false":
+    if vall in ["true", "false", "0", "1"]:
         return True
     else:
-        return False
-
+        raise NotValid("boolean")
+        
 def valid_duration(val):
     try:
         time_util.parse_duration(val)
-        return True
     except Exception:
-        return False
+        raise NotValid("duration")
+    return True
 
 def valid_string(val):
     """ Expects unicode 
@@ -141,7 +145,7 @@ def valid_string(val):
         try:
             char = ord(char)
         except TypeError:
-            return False
+            raise NotValid("string")
         if char == 0x09 or char == 0x0A or char == 0x0D:
             continue
         elif char >= 0x20 and char <= 0xD7FF:
@@ -151,39 +155,39 @@ def valid_string(val):
         elif char >= 0x10000 and char <= 0x10FFFF:
             continue
         else:
-            return False
+            raise NotValid("string")
     return True
     
 def valid_unsigned_short(val):
     try:
         struct.pack("H", int(val))
-        return True
     except struct.error:
-        return False
+        raise NotValid("unsigned short")
+    return True
     
 def valid_non_negative_integer(val):
     try:
         integer = int(val)
-        if integer > 0 and isinstance(integer, int):
-            return True
-        else:
-            return False
-    except Exception:
-        return False
+    except ValueError:
+        raise NotValid("non negative integer")
+        
+    if integer < 0:
+        raise NotValid("non negative integer")
+    return True
 
 def valid_integer(val):
     try:
-        integer = int(val)
-        return True
-    except Exception:
-        return False
-        
+        int(val)
+    except ValueError:
+        raise NotValid("integer")
+    return True
+    
 def valid_base64(val):
     try:
         base64.b64decode(val)
-        return True
     except Exception:
-        return False
+        raise NotValid("base64")
+    return True
 
 def valid_qname(val):
     """ either 
@@ -206,7 +210,7 @@ def valid_anytype(val):
     if isinstance(val, type):
         return True
         
-    return False
+    raise NotValid("AnyType")
     
 # -----------------------------------------------------------------------------
 
@@ -242,13 +246,12 @@ def validate_value_type(value, spec):
     if spec["base"] == "string":
         if "enumeration" in spec:
             if value not in spec["enumeration"]:
-                return False
+                raise NotValid("value not in enumeration")
         else:
             return valid_string(value)
     elif spec["base"] == "list": #comma separated list of values
         for val in [v.strip() for v in value.split(",")]:
-            if not valid(spec["member"], val):
-                return False
+            valid(spec["member"], val)
     else:
         return valid(spec["base"], value)
         
@@ -264,32 +267,56 @@ def valid(typ, value):
             if typ == "":
                 typ = "string"
         return VALIDATOR[typ](value)
-    
+
+def _valid_instance(instance, val):
+    try:
+        valid_instance(val)
+    except NotValid, exc:
+        raise NotValid("Class '%s' instance: %s" % \
+                            (instance.__class__.__name__,
+                            exc.args[0]))
+    except OutsideCardinality, exc:
+        raise NotValid(
+                "Class '%s' instance cardinality error: %s" % \
+                (instance.__class__.__name__, exc.args[0]))
+
+ERROR_TEXT = "Wrong type of value '%s' on attribute '%s' expected it to be %s"
+
 def valid_instance(instance):
     instclass = instance.__class__
+    class_name = instclass.__name__
     try:
         if instclass.c_value_type and instance.text:
-            assert validate_value_type(instance.text.strip(), 
+            try:
+                validate_value_type(instance.text.strip(), 
                                         instclass.c_value_type)
+            except NotValid, exc:
+                raise NotValid("Class '%s' instance: %s" % (class_name, 
+                                                            exc.args[0]))
     except AttributeError: # No c_value_type
         pass
         
     for (name, typ, required) in instclass.c_attributes.values():
         value = getattr(instance, name, '')
         if required and not value:
-            return False
+            txt = "Required value on property '%s' missing" % name
+            raise NotValid("Class '%s' instance: %s" % (class_name, txt))
         
         if value:
-            if isinstance(typ, type):
-                if typ.c_value_type:
-                    spec = typ.c_value_type
-                else:
-                    spec = {"base": "string"} # doI need a default
+            try:
+                if isinstance(typ, type):
+                    if typ.c_value_type:
+                        spec = typ.c_value_type
+                    else:
+                        spec = {"base": "string"} # doI need a default
               
-                if not validate_value_type(value, spec):
-                    return False
-            elif not valid(typ, value):
-                return False
+                    validate_value_type(value, spec)
+                else:
+                    valid(typ, value)
+            except NotValid, exc:
+                txt = ERROR_TEXT % (value, name, exc.args[0])
+                raise NotValid(
+                            "Class '%s' instance: %s" % (class_name, txt))
         
     for (name, _spec) in instclass.c_children.values():
         value = getattr(instance, name, '')
@@ -303,22 +330,33 @@ def valid_instance(instance):
                     
                 if "min" in instclass.c_cardinality[name] and \
                     instclass.c_cardinality[name]["min"] > vlen:
-                    return False
+                    raise NotValid(
+                            "Class '%s' instance cardinality error: %s" % \
+                            (class_name, "less then min (%s<%s)" % \
+                                (vlen, instclass.c_cardinality[name]["min"])))
                 if "max" in instclass.c_cardinality[name] and \
                     instclass.c_cardinality[name]["max"] < vlen:
-                    return False
+                    raise NotValid(
+                            "Class '%s' instance cardinality error: %s" % \
+                            (class_name, "more then max (%s>%s)" % \
+                                (vlen, instclass.c_cardinality[name]["max"])))
             
             if isinstance(value, list):
                 for val in value:
                     # That it is the right class is handled elsewhere
-                    if not valid_instance(val):
-                        return False
+                    _valid_instance(instance, val)
             else:
-                if not valid_instance(value):
-                    return False
-        elif name in instclass.c_cardinality and \
-                "min" in instclass.c_cardinality[name] and \
-                instclass.c_cardinality[name]["min"] > 0:
-            return False
+                _valid_instance(instance, value)
+        else:
+            try:
+                min = instclass.c_cardinality[name]["min"]
+                if min:
+                    print >> sys.stderr, \
+                                "Min cardinality for '%s': %s" % (name, min) 
+                    raise NotValid(
+                        "Class '%s' instance cardinality error: %s" % \
+                        (class_name, "too few values on %s" % name))
+            except KeyError:
+                pass
     
     return True

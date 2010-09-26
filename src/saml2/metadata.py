@@ -35,7 +35,7 @@ from saml2.attribute_converter import ava_fro, AttributeConverter
 from saml2.sigver import pre_signature_part
 from saml2.sigver import make_temp, cert_from_key_info, verify_signature
 from saml2.sigver import pem_format
-from saml2.validate import valid_instance
+from saml2.validate import valid_instance, NotValid
 
 @decorator
 def keep_updated(func, self, entity_id, *args, **kwargs):
@@ -260,7 +260,11 @@ class MetaData(object):
         
         entities_descr = md.entities_descriptor_from_string(xml_str)
         
-        valid_instance(entities_descr)
+        try:
+            valid_instance(entities_descr)
+        except NotValid, exc:
+            print >> sys.stderr, exc.args[0]
+            return
         
         try:
             valid(entities_descr.valid_until)
@@ -522,11 +526,12 @@ ORG_ATTR_TRANSL = {
 }
 
 def _localized_name(val, klass):
+    """If no language is defined 'en' is the default"""
     try:
         (text, lang) = val
         return klass(text=text, lang=lang)
     except ValueError:
-        return klass(text=val)
+        return klass(text=val, lang="en")
 
 def do_organization_info(conf):
     """ decription of an organization in the configuration is
@@ -585,6 +590,12 @@ def do_contact_person_info(conf):
                     setattr(cper, prop, corg[prop])
                 except KeyError:
                     pass
+
+            # ContactType must have a value
+            typ = getattr(cper, "contact_type")
+            if not typ:
+                setattr(cper, "contact_type", "technical")
+                
             cps.append(cper)
     except KeyError:
         pass
