@@ -45,7 +45,7 @@ def _leq(l1, l2):
 #     assert False
 
 REQ1 = """<?xml version='1.0' encoding='UTF-8'?>
-<ns0:AttributeQuery Destination="https://idp.example.com/idp/" ID="1" IssueInstant="%s" Version="2.0" xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns1:Issuer Format="urn:oasis:names:tc:SAML:2.0:nameid-format:entity" xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion">urn:mace:example.com:saml:roland:sp</ns1:Issuer><ns1:Subject xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion"><ns1:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent">E8042FB4-4D5B-48C3-8E14-8EDD852790DD</ns1:NameID></ns1:Subject></ns0:AttributeQuery>"""
+<ns0:AttributeQuery Destination="https://idp.example.com/idp/" ID="id1" IssueInstant="%s" Version="2.0" xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns1:Issuer Format="urn:oasis:names:tc:SAML:2.0:nameid-format:entity" xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion">urn:mace:example.com:saml:roland:sp</ns1:Issuer><ns1:Subject xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion"><ns1:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent">E8042FB4-4D5B-48C3-8E14-8EDD852790DD</ns1:NameID></ns1:Subject></ns0:AttributeQuery>"""
     
 class TestClient:
     def setup_class(self):
@@ -59,7 +59,7 @@ class TestClient:
         self.client = Saml2Client(conf)
     
     def test_create_attribute_query1(self):
-        req = self.client.create_attribute_query("1", 
+        req = self.client.create_attribute_query("id1", 
             "E8042FB4-4D5B-48C3-8E14-8EDD852790DD",
             "https://idp.example.com/idp/",
             self.client.issuer(),
@@ -69,7 +69,7 @@ class TestClient:
         print REQ1 % req.issue_instant
         assert reqstr == REQ1 % req.issue_instant
         assert req.destination == "https://idp.example.com/idp/"
-        assert req.id == "1"
+        assert req.id == "id1"
         assert req.version == "2.0"
         subject = req.subject
         name_id = subject.name_id
@@ -79,7 +79,7 @@ class TestClient:
         assert issuer.text == "urn:mace:example.com:saml:roland:sp"
         
     def test_create_attribute_query2(self):
-        req = self.client.create_attribute_query("1", 
+        req = self.client.create_attribute_query("id1", 
             "E8042FB4-4D5B-48C3-8E14-8EDD852790DD", 
             "https://idp.example.com/idp/",
             self.client.issuer(),
@@ -97,7 +97,7 @@ class TestClient:
                 
         print req.to_string()
         assert req.destination == "https://idp.example.com/idp/"
-        assert req.id == "1"
+        assert req.id == "id1"
         assert req.version == "2.0"
         subject = req.subject
         name_id = subject.name_id
@@ -123,7 +123,7 @@ class TestClient:
         assert set(seen) == set(["givenName","surname","email"])
         
     def test_create_attribute_query_3(self):
-        req = self.client.create_attribute_query("1",
+        req = self.client.create_attribute_query("id1",
                 "_e7b68a04488f715cda642fbdd90099f5", 
                 "https://aai-demo-idp.switch.ch/idp/shibboleth",
                 self.client.issuer(),
@@ -131,7 +131,7 @@ class TestClient:
                 
         assert isinstance(req, samlp.AttributeQuery)
         assert req.destination == "https://aai-demo-idp.switch.ch/idp/shibboleth"
-        assert req.id == "1"
+        assert req.id == "id1"
         assert req.version == "2.0"
         assert req.issue_instant
         assert req.issuer.text == "urn:mace:example.com:saml:roland:sp"
@@ -168,7 +168,7 @@ class TestClient:
         assert idp_entry.loc == ['http://localhost:8088/sso/']
     
     def test_create_auth_request_0(self):
-        ar_str = self.client.authn_request("1",
+        ar_str = self.client.authn_request("id1",
                                     "http://www.example.com/sso",
                                     "http://www.example.org/service",
                                     "urn:mace:example.org:saml:sp",
@@ -213,7 +213,7 @@ class TestClient:
     def test_sign_auth_request_0(self):
         #print self.client.config
         
-        ar_str = self.client.authn_request("1",
+        ar_str = self.client.authn_request("id1",
                                     "http://www.example.com/sso",
                                     "http://www.example.org/service",
                                     "urn:mace:example.org:saml:sp",
@@ -227,7 +227,7 @@ class TestClient:
         signed_info = ar.signature.signed_info
         #print signed_info
         assert len(signed_info.reference) == 1
-        assert signed_info.reference[0].uri == "#1"
+        assert signed_info.reference[0].uri == "#id1"
         assert signed_info.reference[0].digest_value
         print "------------------------------------------------"
         try:
@@ -245,7 +245,7 @@ class TestClient:
 
         resp_str = "\n".join(self.server.authn_response(
                     identity=ava, 
-                    in_response_to="1", 
+                    in_response_to="id1", 
                     destination="http://local:8087/", 
                     sp_entity_id="urn:mace:example.com:saml:roland:sp",
                     name_id_policy=samlp.NameIDPolicy(
@@ -256,7 +256,7 @@ class TestClient:
         
         authn_response = self.client.response({"SAMLResponse":resp_str},
                             "urn:mace:example.com:saml:roland:sp",
-                            {"1":"http://foo.example.com/service"})
+                            {"id1":"http://foo.example.com/service"})
                             
         assert authn_response != None
         assert authn_response.issuer() == IDP
@@ -284,7 +284,7 @@ class TestClient:
 
         resp_str = "\n".join(self.server.authn_response(
                     identity=ava, 
-                    in_response_to="2", 
+                    in_response_to="id2", 
                     destination="http://local:8087/", 
                     sp_entity_id="urn:mace:example.com:saml:roland:sp",
                     name_id_policy=samlp.NameIDPolicy(
@@ -295,14 +295,15 @@ class TestClient:
         
         authn_response = self.client.response({"SAMLResponse":resp_str},
                             "urn:mace:example.com:saml:roland:sp",
-                            {"2":"http://foo.example.com/service"})
+                            {"id":"http://foo.example.com/service"})
         
         # Two persons in the cache
-        assert len(self.client.users.subjects()) == 2
+        assert len(self.client.users.subjects()) == 1
         issuers = [self.client.users.issuers_of_info(s) for s in self.client.users.subjects()]
         # The information I have about the subjects comes from the same source
         print issuers
-        assert issuers == [[IDP], [IDP]]
+        # assert issuers == [[IDP], [IDP]]
+        assert issuers == [[IDP]]
         
     def test_init_values(self):
         print self.client.config["service"]["sp"]

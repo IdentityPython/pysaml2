@@ -102,7 +102,7 @@ class TestServer1():
 
     def test_parse_faulty_request(self):
         authn_request = self.client.authn_request(
-                            query_id = "1",
+                            query_id = "id1",
                             destination = "http://www.example.com",
                             service_url = "http://www.example.org",
                             spentityid = "urn:mace:example.com:saml:roland:sp",
@@ -115,7 +115,7 @@ class TestServer1():
         
     def test_parse_faulty_request_to_err_status(self):
         authn_request = self.client.authn_request(
-                            query_id = "1",
+                            query_id = "id1",
                             destination = "http://www.example.com",
                             service_url = "http://www.example.org",
                             spentityid = "urn:mace:example.com:saml:roland:sp",
@@ -142,7 +142,7 @@ class TestServer1():
 
     def test_parse_ok_request(self):
         authn_request = self.client.authn_request(
-                            query_id = "1",
+                            query_id = "id1",
                             destination = "http://www.example.com",
                             service_url = "http://localhost:8087/",
                             spentityid = "urn:mace:example.com:saml:roland:sp",
@@ -155,7 +155,7 @@ class TestServer1():
         # returns a dictionary
         print response
         assert response["consumer_url"] == "http://localhost:8087/"
-        assert response["id"] == "1"
+        assert response["id"] == "id1"
         name_id_policy = response["request"].name_id_policy
         assert _eq(name_id_policy.keyswv(), ["format", "allow_create"])
         assert name_id_policy.format == saml.NAMEID_FORMAT_TRANSIENT
@@ -165,7 +165,7 @@ class TestServer1():
         name_id = self.server.ident.temporary_nameid()
         resp = self.server.do_response(
                     "http://localhost:8087/",   # consumer_url
-                    "12",                       # in_response_to
+                    "id12",                       # in_response_to
                     "urn:mace:example.com:saml:roland:sp", # sp_entity_id
                     { "eduPersonEntitlement": "Short stop"}, # identity
                     name_id
@@ -176,7 +176,7 @@ class TestServer1():
                                     'in_response_to', 'issue_instant', 
                                     'version', 'id', 'issuer'])
         assert resp.destination == "http://localhost:8087/"
-        assert resp.in_response_to == "12"
+        assert resp.in_response_to == "id12"
         assert resp.status
         assert resp.status.status_code.value == samlp.STATUS_SUCCESS
         assert resp.assertion
@@ -203,12 +203,12 @@ class TestServer1():
         confirmation = assertion.subject.subject_confirmation
         print confirmation.keyswv()
         print confirmation.subject_confirmation_data
-        assert confirmation.subject_confirmation_data.in_response_to == "12"
+        assert confirmation.subject_confirmation_data.in_response_to == "id12"
 
     def test_sso_response_without_identity(self):
         resp = self.server.do_response(
                     "http://localhost:8087/",   # consumer_url
-                    "12",                       # in_response_to
+                    "id12",                       # in_response_to
                     "urn:mace:example.com:saml:roland:sp", # sp_entity_id
                 )
                 
@@ -216,7 +216,7 @@ class TestServer1():
         assert _eq(resp.keyswv(),['status', 'destination', 'in_response_to', 
                                   'issue_instant', 'version', 'id', 'issuer'])
         assert resp.destination == "http://localhost:8087/"
-        assert resp.in_response_to == "12"
+        assert resp.in_response_to == "id12"
         assert resp.status
         assert resp.status.status_code.value == samlp.STATUS_SUCCESS
         assert resp.issuer.text == "urn:mace:example.com:saml:roland:idp"
@@ -224,14 +224,14 @@ class TestServer1():
 
     def test_sso_failure_response(self):
         exc = s_utils.MissingValue("eduPersonAffiliation missing")
-        resp = self.server.error_response( "http://localhost:8087/", "12", 
+        resp = self.server.error_response( "http://localhost:8087/", "id12", 
                         "urn:mace:example.com:saml:roland:sp", exc )
                 
         print resp.keyswv()
         assert _eq(resp.keyswv(),['status', 'destination', 'in_response_to', 
                                   'issue_instant', 'version', 'id', 'issuer'])
         assert resp.destination == "http://localhost:8087/"
-        assert resp.in_response_to == "12"
+        assert resp.in_response_to == "id12"
         assert resp.status
         print resp.status
         assert resp.status.status_code.value == samlp.STATUS_RESPONDER
@@ -247,7 +247,7 @@ class TestServer1():
                 "mail": ["derek@nyy.mlb.com"]}
 
         resp_str = self.server.authn_response(ava, 
-                    "1", "http://local:8087/", 
+                    "id1", "http://local:8087/", 
                     "urn:mace:example.com:saml:roland:sp",
                     samlp.NameIDPolicy(format=saml.NAMEID_FORMAT_TRANSIENT,
                                         allow_create="true"),
@@ -274,7 +274,7 @@ class TestServer1():
                 
         signed_resp = self.server.do_response(
                     "http://lingon.catalogix.se:8087/",   # consumer_url
-                    "12",                       # in_response_to
+                    "id12",                       # in_response_to
                     "urn:mace:example.com:saml:roland:sp", # sp_entity_id
                     {"eduPersonEntitlement":"Jeter"},
                     name_id = name_id,

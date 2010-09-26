@@ -46,7 +46,7 @@ class TestSP():
                 "mail": ["derek@nyy.mlb.com"]}
 
         resp_str = "\n".join(self.server.authn_response(ava, 
-                    "1", "http://local:8087/", 
+                    "id1", "http://local:8087/", 
                     "urn:mace:example.com:saml:roland:sp",
                     make_instance(samlp.NameIDPolicy,
                                 utils.args2dict(
@@ -55,7 +55,7 @@ class TestSP():
                     "foba0001@example.com"))
 
         resp_str = base64.encodestring(resp_str)
-        self.sp.outstanding_queries = {"1":"http://www.example.com/service"}
+        self.sp.outstanding_queries = {"id1":"http://www.example.com/service"}
         session_info = self.sp._eval_authn_response({},{"SAMLResponse":resp_str})
         
         assert len(session_info) > 1
