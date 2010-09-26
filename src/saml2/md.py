@@ -37,7 +37,7 @@ class LocalizedNameType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_attributes['{http://www.w3.org/XML/1998/namespace}lang'] = ('lang', '', True)
+    c_attributes['{http://www.w3.org/XML/1998/namespace}lang'] = ('lang', 'string', True)
 
     def __init__(self,
             lang=None,
@@ -65,7 +65,7 @@ class LocalizedURIType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_attributes['{http://www.w3.org/XML/1998/namespace}lang'] = ('lang', '', True)
+    c_attributes['{http://www.w3.org/XML/1998/namespace}lang'] = ('lang', 'string', True)
 
     def __init__(self,
             lang=None,
