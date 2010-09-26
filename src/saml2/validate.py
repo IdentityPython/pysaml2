@@ -174,10 +174,7 @@ def valid_non_negative_integer(val):
 def valid_integer(val):
     try:
         integer = int(val)
-        if isinstance(integer, int):
-            return True
-        else:
-            return False
+        return True
     except Exception:
         return False
         
@@ -261,7 +258,11 @@ def valid(typ, value):
     try:
         return VALIDATOR[typ](value)
     except KeyError:
-        (_namespace, typ) = typ.split(":")
+        try:
+            (_namespace, typ) = typ.split(":")
+        except ValueError:
+            if typ == "":
+                typ = "string"
         return VALIDATOR[typ](value)
     
 def valid_instance(instance):
@@ -280,9 +281,14 @@ def valid_instance(instance):
         
         if value:
             if isinstance(typ, type):
-                if not valid_instance(typ):
+                if typ.c_value_type:
+                    spec = typ.c_value_type
+                else:
+                    spec = {"base": "string"} # doI need a default
+              
+                if not validate_value_type(value, spec):
                     return False
-            if not valid(typ, value):
+            elif not valid(typ, value):
                 return False
         
     for (name, _spec) in instclass.c_children.values():
