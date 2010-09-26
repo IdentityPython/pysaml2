@@ -35,6 +35,7 @@ from saml2.attribute_converter import ava_fro, AttributeConverter
 from saml2.sigver import pre_signature_part
 from saml2.sigver import make_temp, cert_from_key_info, verify_signature
 from saml2.sigver import pem_format
+from saml2.validate import valid_instance
 
 @decorator
 def keep_updated(func, self, entity_id, *args, **kwargs):
@@ -259,6 +260,8 @@ class MetaData(object):
         
         entities_descr = md.entities_descriptor_from_string(xml_str)
         
+        valid_instance(entities_descr)
+        
         try:
             valid(entities_descr.valid_until)
         except AttributeError:
@@ -287,7 +290,7 @@ class MetaData(object):
             # have I seen this entity_id before ? If so log and ignore it
             if entity_descr.entity_id in self.entity:
                 print >> sys.stderr, \
-                    "Duplicated Entity descriptor (entity id:%s)" % \
+                    "Duplicated Entity descriptor (entity id: '%s')" % \
                     entity_descr.entity_id
                 continue
                 
