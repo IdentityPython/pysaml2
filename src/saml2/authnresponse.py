@@ -16,7 +16,6 @@
 # limitations under the License.
 
 import base64
-import time
 import sys
 
 from saml2 import samlp
@@ -25,15 +24,13 @@ from saml2 import extension_element_to_element
 from saml2 import time_util
 
 from saml2.sigver import security_context
-
 from saml2.attribute_converter import to_local
-from saml2.time_util import daylight_corrected_now
 from saml2.time_util import str_to_time
-from saml2.time_util import not_before
 
 from saml2.validate import validate_on_or_after
 from saml2.validate import validate_before
 from saml2.validate import valid_instance
+from saml2.validate import valid_address
 
 # ---------------------------------------------------------------------------
 
@@ -67,6 +64,8 @@ def authn_response(conf, requestor, outstanding_queries=None, log=None,
                             outstanding_queries, log, timeslack, debug)
 
 class AuthnResponse(object):
+    """ This is where all the profile complience is checked.
+    This one does saml2int complience. """
     
     def __init__(self, sec_context, attribute_converters, requestor,
                     outstanding_queries=None, log=None, timeslack=0, debug=0):
@@ -91,6 +90,7 @@ class AuthnResponse(object):
         self.response = None
         self.not_on_or_after = 0
         self.assertion = None
+        self.in_response_to = None
     
     def loads(self, xmldata, decode=True):
         if self.debug:
@@ -123,7 +123,12 @@ class AuthnResponse(object):
                 self.log.error("Not valid response")
             else:
                 print >> sys.stderr, "Not valid response"
-            
+        
+        self.in_response_to = self.response.in_response_to
+        if self.in_response_to in self.outstanding_queries:
+            self.came_from = self.outstanding_queries[self.in_response_to]
+            del self.outstanding_queries[self.in_response_to]
+
         return self
     
     def clear(self):
@@ -150,7 +155,7 @@ class AuthnResponse(object):
     def authn_statement_ok(self):
         # the assertion MUST contain one AuthNStatement
         assert len(self.assertion.authn_statement) == 1
-        authn_statement = assertion.authn_statement[0]
+        authn_statement = self.assertion.authn_statement[0]
         if authn_statement.session_not_on_or_after:
             try:
                 validate_on_or_after(authn_statement.session_not_on_or_after, 
@@ -169,7 +174,8 @@ class AuthnResponse(object):
             self.log.info("condition: %s" % condition)
         
         try:
-            self.not_on_or_after = validate_on_or_after(condition.not_on_or_after, 
+            self.not_on_or_after = validate_on_or_after(
+                                                    condition.not_on_or_after,
                                                     self.timeslack)
             validate_before(condition.not_before, self.timeslack)
         except Exception, excp:
@@ -197,7 +203,8 @@ class AuthnResponse(object):
                 self.log.info("Attribute Statement: %s" % (
                                     self.assertion.attribute_statement[0],))
                 for aconv in self.attribute_converters():
-                    self.log.info("Converts name format: %s" % (aconv.name_format,))
+                    self.log.info(
+                            "Converts name format: %s" % (aconv.name_format,))
             
             ava = to_local(self.attribute_converters(),
                             self.assertion.attribute_statement[0])
@@ -207,23 +214,49 @@ class AuthnResponse(object):
         # The assertion must contain a Subject
         assert self.assertion.subject
         subject = self.assertion.subject
+        subjconf = []
         for subject_confirmation in subject.subject_confirmation:
             data = subject_confirmation.subject_confirmation_data
-
+            if not data:
+                # I don't know where this belongs so I ignore it
+                continue
+                
+            if data.address:
+                if not valid_address(data.address):
+                    # ignore this subject_confirmation
+                    continue
+                    
             # These two will raise exception if untrue
             validate_on_or_after(data.not_on_or_after, self.timeslack)
             validate_before(data.not_before, self.timeslack)
             
-            if data.in_response_to in self.outstanding_queries:
-                self.came_from = self.outstanding_queries[data.in_response_to]
-                del self.outstanding_queries[data.in_response_to]
-            else:
-                if self.debug:
-                    self.log.info("in response to: %s" % data.in_response_to)
-                    self.log.info("outstanding queries: %s" % \
-                                        self.outstanding_queries.keys())
-                raise Exception(
+            # not_before must be < not_on_or_after
+            if not time_util.later_than(data.not_on_or_after, data.not_before):
+                continue
+            
+            if not self.came_from:
+                if data.in_response_to in self.outstanding_queries:
+                    self.came_from = self.outstanding_queries[
+                                                        data.in_response_to]
+                    del self.outstanding_queries[data.in_response_to]
+                else:
+                    # This is where I don't allow unsolicited reponses
+                    # Either in_response_to == None or has a value I don't
+                    # recognize
+                    if self.debug:
+                        self.log.info(
+                                "in response to: '%s'" % data.in_response_to)
+                        self.log.info("outstanding queries: %s" % \
+                                            self.outstanding_queries.keys())
+                    raise Exception(
                     "Combination of session id and requestURI I don't recall")
+                        
+            subjconf.append(subject_confirmation)
+            
+        if subjconf == []:
+            raise Exception("No valid subject confirmation")
+            
+        subject.subject_confirmation = subjconf
         
         # The subject must contain a name_id
         assert subject.name_id
@@ -255,7 +288,10 @@ class AuthnResponse(object):
         
         try:
             self.get_subject()
-            return True
+            if not self.came_from:
+                return False
+            else:
+                return True
         except Exception:
             return False
     
@@ -327,11 +363,12 @@ class AuthnResponse(object):
     def authn_info(self):
         res = []
         for astat in self.assertion.authn_statement:
-            ac = astat.authn_context
-            if ac:
-                aclass = ac.authn_context_class_ref.text
+            context = astat.authn_context
+            if context:
+                aclass = context.authn_context_class_ref.text
                 try:
-                    authn_auth = [a.text for a in ac.authenticating_authority]
+                    authn_auth = [
+                            a.text for a in context.authenticating_authority]
                 except AttributeError:
                     authn_auth = []
                 res.append((aclass, authn_auth))
