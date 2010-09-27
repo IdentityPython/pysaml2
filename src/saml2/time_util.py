@@ -214,19 +214,23 @@ def time_a_while_ago(days=0, seconds=0, microseconds=0, milliseconds=0,
     return prev
 
 def in_a_while(days=0, seconds=0, microseconds=0, milliseconds=0,
-                minutes=0, hours=0, weeks=0):
+                minutes=0, hours=0, weeks=0, format=None):
     """
     format of timedelta:
         timedelta([days[, seconds[, microseconds[, milliseconds[,
                     minutes[, hours[, weeks]]]]]]])
     """
+    if not format:
+        format = TIME_FORMAT
     return time_in_a_while(days, seconds, microseconds, milliseconds,
-                minutes, hours, weeks).strftime(TIME_FORMAT)
+                minutes, hours, weeks).strftime(format)
 
 def a_while_ago(days=0, seconds=0, microseconds=0, milliseconds=0,
-                minutes=0, hours=0, weeks=0):
+                minutes=0, hours=0, weeks=0, format=None):
+    if not format:
+        format = TIME_FORMAT
     return time_a_while_ago(days, seconds, microseconds, milliseconds,
-                minutes, hours, weeks).strftime(TIME_FORMAT)
+                minutes, hours, weeks).strftime(format)
                 
 # ---------------------------------------------------------------------------
 
@@ -245,8 +249,10 @@ def str_to_time(timestr):
         
     return then
 
-def instant():
-    return datetime.utcnow().strftime(TIME_FORMAT)
+def instant(format=None):
+    if not format:
+        format = TIME_FORMAT
+    return datetime.utcnow().strftime(format)
     
 # ---------------------------------------------------------------------------
 
