@@ -67,7 +67,7 @@ def test_error_status():
 
 def test_status_from_exception():
     e = utils.UnknownPrincipal("Error resolving principal")
-    stat = utils.status_from_exception_factory(e)
+    stat = utils.error_status_factory(e)
     status_text = "%s" % stat
     print status_text
     assert status_text == ERROR_STATUS
