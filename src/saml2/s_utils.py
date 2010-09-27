@@ -133,16 +133,27 @@ def identity_attribute(form, attribute, forward_map=None):
 
 #----------------------------------------------------------------------------
     
-def status_from_exception_factory(exception):
-    msg = exception.args[0]
-    status = samlp.Status(
-        status_message=samlp.StatusMessage(text=msg),
-        status_code=samlp.StatusCode(
-            value=samlp.STATUS_RESPONDER,
+def error_status_factory(info):
+    if isinstance(info, Exception):
+        msg = info.args[0]
+        status = samlp.Status(
+            status_message=samlp.StatusMessage(text=msg),
             status_code=samlp.StatusCode(
-                value=EXCEPTION2STATUS[exception.__class__])
-            ),
-    )
+                value=samlp.STATUS_RESPONDER,
+                status_code=samlp.StatusCode(
+                    value=EXCEPTION2STATUS[info.__class__])
+                ),
+        )
+    else:
+        (errcode, text) = info
+        status = samlp.Status(
+            status_message=samlp.StatusMessage(text=text),
+            status_code=samlp.StatusCode(
+                value=samlp.STATUS_RESPONDER,
+                status_code=samlp.StatusCode(value=errcode)
+                ),
+        )
+        
     return status
         
 def success_status_factory():
