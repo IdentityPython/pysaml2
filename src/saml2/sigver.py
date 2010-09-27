@@ -450,6 +450,26 @@ class SecurityContext(object):
             raise SignatureError("Failed to verify signature")
 
         return item
+
+    def correctly_signed_logout_request(self, decoded_xml, must=False):
+        """ Check if a request is correctly signed, if we have metadata for
+        the SP that sent the info use that, if not use the key that are in 
+        the message if any.
+
+        :param decode_xml: The SAML message as a XML string
+        :param must: Whether there must be a signature
+        :return: None if the signature can not be verified otherwise 
+            request as a samlp.Request instance
+        """
+        request = samlp.logout_response_from_string(decoded_xml)
+
+        if not request.signature:
+            if must:
+                raise SignatureError("Missing must signature")
+            else:
+                return request
+
+        return self._check_signature( decoded_xml, request )
     
     def correctly_signed_authn_request(self, decoded_xml, must=False):
         """ Check if a request is correctly signed, if we have metadata for
