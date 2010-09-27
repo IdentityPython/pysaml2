@@ -413,11 +413,12 @@ class Saml2Client(object):
             if not destination:
                 continue
                 
+            session_id = sid(),
             # create NameID from subject_id
             name_id = saml.NameID(
                 text=self.users.get_entityid(subject_id, entity_id))
             request = samlp.LogoutRequest(
-                id=sid(),
+                id=session_id,
                 version=VERSION,
                 issue_instant=instant(),
                 destination=destination,
@@ -432,15 +433,16 @@ class Saml2Client(object):
             if not_on_or_after:
                 request.not_on_or_after = not_on_or_after
             
-            result.append(request)
+            result.append((session_id, request))
             
         return result
     
     def global_logout(self, subject_id, reason="", not_on_or_after=None,
                           sign=False, log=None):
         result = []
-        for request in self.make_logout_requests(subject_id, reason,
-                                                    not_on_or_after):
+        for (session_id, request) in self.make_logout_requests(subject_id, 
+                                                            reason,
+                                                            not_on_or_after):
             if sign:
                 request.signature = pre_signature_part(request.id,
                                                         self.sec.my_cert, 1)
