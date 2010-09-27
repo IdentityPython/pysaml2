@@ -128,7 +128,7 @@ class TestServer1():
             status = None
         except OtherError, oe:
             print oe.args
-            status = s_utils.status_from_exception_factory(oe)
+            status = s_utils.error_status_factory(oe)
             
         assert status
         print status
