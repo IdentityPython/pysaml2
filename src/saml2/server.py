@@ -30,7 +30,7 @@ from saml2.s_utils import MissingValue, factory
 from saml2.s_utils import success_status_factory
 from saml2.s_utils import OtherError
 from saml2.s_utils import VersionMismatch, UnknownPrincipal, UnsupportedBinding
-from saml2.s_utils import status_from_exception_factory
+from saml2.s_utils import error_status_factory
 
 from saml2.sigver import security_context, signed_instance_factory
 from saml2.sigver import pre_signature_part
@@ -386,16 +386,27 @@ class Server(object):
                         
     # ------------------------------------------------------------------------
     
-    def error_response(self, destination, in_response_to, spid, exc, 
+    def error_response(self, destination, in_response_to, spid, info, 
                         name_id=None):
-                        
+        """
+        :param destination: The intended recipient of this message
+        :param in_response_to: The identifier of the message this is a response
+            to.
+        :param spid: The entitiy ID of the SP that will get this.
+        :param info: Either an Exception instance or a 2-tuple consisting of
+            error code and descriptive text
+            
+        :return: A Response instance
+        """
+        status = error_status_factory(info)
+            
         return self._response(
                         destination,    # consumer_url
                         in_response_to, # in_response_to
                         spid,           # sp_entity_id
                         None,           # identity
                         name_id,
-                        status = status_from_exception_factory(exc)
+                        status = status,
                         )
 
     # ------------------------------------------------------------------------
@@ -468,3 +479,35 @@ class Server(object):
                 return ("%s" % response).split("\n")
         else:
             return ("%s" % response).split("\n")
+
+    def parse_logout_request(self, enc_request):
+        """Parse a Logout Request
+        
+        :param enc_request: The request in its transport format
+        :return: A dictionary with keys:
+            consumer_url - as gotten from the SPs entity_id and the metadata
+            id - the id of the request
+            sp_entity_id - the entity id of the SP
+            request - The verified request
+        """
+        
+        response = {}
+        request_xml = decode_base64_and_inflate(enc_request)
+        try:
+            request = self.sec.correctly_signed_logout_request(request_xml)
+            if self.log and self.debug:
+                self.log.info("Request was correctly signed")
+        except Exception:
+            if self.log:
+                self.log.error("Request was not correctly signed")
+                self.log.info(request_xml)
+            raise
+
+        try:
+            valid_instance(request)
+        except NotValid, exc:
+            if self.log:
+                self.log.info(request_xml)
+            raise 
+    
+        
