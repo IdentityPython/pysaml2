@@ -39,7 +39,7 @@ from saml2.virtual_org import VirtualOrg
 from saml2.response import authn_response
 from saml2.validate import valid_instance
 
-DEFAULT_BINDING = saml2.BINDING_HTTP_REDIRECT
+SSO_BINDING = saml2.BINDING_HTTP_REDIRECT
 
 FORM_SPEC = """<form method="post" action="%s">
    <input type="hidden" name="SAMLRequest" value="%s" />
@@ -200,7 +200,7 @@ class Saml2Client(object):
         else:
             return spentityid
 
-    def _location(self, location=None):
+    def _sso_location(self, location=None):
         if not location :
             # get the idp location from the configuration alternative the 
             # metadata. If there is more than one IdP in the configuration 
@@ -208,7 +208,7 @@ class Saml2Client(object):
             urls = self.config.idps()
             if len(urls) > 1:
                 raise IdpUnspecified("Too many IdPs to choose from: %s" % urls)
-            return urls[0]
+            return urls[0]["single_sign_on_service"][SSO_BINDING]
         else:
             return location
         
@@ -243,7 +243,7 @@ class Saml2Client(object):
         """
         
         spentityid = self._spentityid(spentityid)
-        location = self._location(location)
+        location = self._sso_location(location)
         service_url = self._service_url(service_url)
         my_name = self._my_name(my_name)
                             
