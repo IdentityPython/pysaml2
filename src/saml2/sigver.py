@@ -461,7 +461,7 @@ class SecurityContext(object):
         :return: None if the signature can not be verified otherwise 
             request as a samlp.Request instance
         """
-        request = samlp.logout_response_from_string(decoded_xml)
+        request = samlp.logout_request_from_string(decoded_xml)
 
         if not request.signature:
             if must:
