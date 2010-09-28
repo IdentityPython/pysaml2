@@ -234,6 +234,20 @@ def a_while_ago(days=0, seconds=0, microseconds=0, milliseconds=0,
                 
 # ---------------------------------------------------------------------------
 
+def shift_time(dtime, shift):
+    """ Adds/deletes an integer amount of seconds from a datetime specification
+    
+    :param dtime: The datatime specification
+    :param shift: The wanted time shift (+/-)
+    :return: A shifted datatime specification
+    """
+    tstruct = dtime.timetuple()
+    tfl = time.mktime(tstruct)
+    tfl += shift
+    return datetime.utcfromtimestamp(tfl)
+    
+# ---------------------------------------------------------------------------
+
 def str_to_time(timestr):
     if not timestr:
         return 0
