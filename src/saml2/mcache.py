@@ -88,6 +88,8 @@ class Cache(object):
             
         if _valid(not_on_or_after):
             return info
+        else:
+            raise ToOld()
 
     def get(self, subject_id, entity_id):
         res = self._cache.get(_key(subject_id, entity_id))
