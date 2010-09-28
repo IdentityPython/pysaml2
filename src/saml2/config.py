@@ -7,12 +7,13 @@ import sys
 from saml2 import metadata
 from saml2.assertion import Policy
 from saml2.attribute_converter import ac_factory, AttributeConverter
-from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
+from saml2.metadata import ENDPOINTS
 
 class MissingValue(Exception):
     pass
     
-def entity_id2url(meta, entity_id, binding=BINDING_HTTP_REDIRECT):
+def entity_id2url(meta, entity_id):
     """ Grab the first endpoint if there are more than one, 
         raises IndexError if the function returns an empty list.
      
@@ -21,7 +22,12 @@ def entity_id2url(meta, entity_id, binding=BINDING_HTTP_REDIRECT):
         endpoint is sought
     :return: An endpoint (URL)
     """
-    return meta.single_sign_on_services(entity_id, binding)[0]
+    res = {}
+    for typ in ENDPOINTS["idp"].keys():
+        val = meta.idp_services(entity_id, typ)
+        if val:
+            res[typ] = val
+    return res
     
 class Config(dict):
     def _sp_check(self, config, metadat=None):
@@ -180,9 +186,10 @@ class Config(dict):
     def sp_name(self):
         return self["service"]["sp"]["name"]
         
-    def logout_service(self, entity_id):
+    def logout_service(self, entity_id, binding=BINDING_HTTP_POST):
         try:
-            return self["service"]["sp"]["idp"][entity_id]
+            return self["service"]["sp"]["idp"][entity_id][
+                            "single_logout_service"][binding]
         except KeyError:
             return None
         
