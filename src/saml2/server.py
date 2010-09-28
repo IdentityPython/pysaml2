@@ -481,8 +481,8 @@ class Server(object):
         
         lreq = soap.parse_soap_enveloped_saml_logout_request(text)
         slo = self.conf.endpoint("idp", "single_logout_service")[0]
-        req = request.Request(self.sec, slo)
-        req = req.loads(lreq)
+        req = request.LogoutRequest(self.sec, slo)
+        req = req.loads(lreq, False) # Got it over SOAP so no base64+zip
         req = req.verify()
         
         if not req: # Not a valid request
