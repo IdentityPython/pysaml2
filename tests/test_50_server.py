@@ -133,8 +133,7 @@ class TestServer1():
         assert status
         print status
         assert _eq(status.keyswv(), ["status_code", "status_message"])
-        assert status.status_message.text == (
-                        'ConsumerURL and return destination mismatch')
+        assert status.status_message.text == 'Not destined for me!'
         status_code = status.status_code
         assert _eq(status_code.keyswv(), ["status_code","value"])
         assert status_code.value == samlp.STATUS_RESPONDER
@@ -143,7 +142,7 @@ class TestServer1():
     def test_parse_ok_request(self):
         authn_request = self.client.authn_request(
                             query_id = "id1",
-                            destination = "http://www.example.com",
+                            destination = "http://localhost:8088/sso",
                             service_url = "http://localhost:8087/",
                             spentityid = "urn:mace:example.com:saml:roland:sp",
                             my_name = "My real name",
