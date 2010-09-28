@@ -334,6 +334,19 @@ class MetaData(object):
             self.log and self.log.info("Response status: %s" % response.status)
         return False
 
+    def idp_services(self, entity_id, typ, binding=None):
+        idps = self.entity[entity_id]["idp_sso"]
+        
+        loc = {}
+        #print idps
+        for idp in idps: # None or one
+            #print "==",idp.keyswv()
+            for sso in getattr(idp, typ, []):
+                #print "SSO",sso
+                if not binding or binding == sso.binding:
+                    loc[sso.binding] = sso.location
+        return loc
+        
     
     @keep_updated
     def single_sign_on_services(self, entity_id,
