@@ -41,6 +41,10 @@ def parse_soap_enveloped_saml_attribute_query(text):
     expected_tag = '{%s}AttributeQuery' % SAMLP_NAMESPACE
     return parse_soap_enveloped_saml_thingy(text, expected_tag)
 
+def parse_soap_enveloped_saml_logout_request(text):
+    expected_tag = '{%s}LogoutRequest' % SAMLP_NAMESPACE
+    return parse_soap_enveloped_saml_thingy(text, expected_tag)
+
 def parse_soap_enveloped_saml_thingy(text, expected_tag):
     """Parses a SOAP enveloped SAML thing and returns the thing as
     a string.
