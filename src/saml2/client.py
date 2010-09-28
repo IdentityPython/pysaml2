@@ -418,10 +418,11 @@ class Saml2Client(object):
             if not destination:
                 continue
                 
-            session_id = sid(),
+            session_id = sid()
             # create NameID from subject_id
             name_id = saml.NameID(
                 text=self.users.get_entityid(subject_id, entity_id))
+
             request = samlp.LogoutRequest(
                 id=session_id,
                 version=VERSION,
@@ -438,7 +439,7 @@ class Saml2Client(object):
             if not_on_or_after:
                 request.not_on_or_after = not_on_or_after
             
-            result.append(destination, request)
+            result.append((destination, request))
             
         return result
     

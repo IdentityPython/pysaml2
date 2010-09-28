@@ -182,7 +182,7 @@ class Config(dict):
         
     def logout_service(self, entity_id):
         try:
-            return self["service"]["sp"]["idp"][entity_id]['logout_service']
+            return self["service"]["sp"]["idp"][entity_id]
         except KeyError:
             return None
         
