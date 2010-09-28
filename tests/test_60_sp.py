@@ -46,7 +46,7 @@ class TestSP():
                 "mail": ["derek@nyy.mlb.com"]}
 
         resp_str = "\n".join(self.server.authn_response(ava, 
-                    "id1", "http://local:8087/", 
+                    "id1", "http://lingon.catalogix.se:8087/", 
                     "urn:mace:example.com:saml:roland:sp",
                     make_instance(samlp.NameIDPolicy,
                                 utils.args2dict(

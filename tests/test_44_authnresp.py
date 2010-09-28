@@ -4,7 +4,7 @@
 from saml2 import samlp, BINDING_HTTP_POST
 from saml2 import saml, config, class_name, make_instance
 from saml2.server import Server
-from saml2.authnresponse import authn_response
+from saml2.response import authn_response
 
 XML_RESPONSE_FILE = "saml_signed.xml"
 XML_RESPONSE_FILE2 = "saml2_response.xml"
@@ -50,12 +50,12 @@ class TestAuthnResponse:
             conf.load_file("tests/server.config")
         except IOError:
             conf.load_file("server.config")
-        self.ar = authn_response(conf,"")
+        self.ar = authn_response(conf, "urn:mace:example.com:saml:roland:sp", 
+                                    "http://lingon.catalogix.se:8087/")
     
     def test_verify_1(self):
         xml_response = ("%s" % (self._resp_,)).split("\n")[1]
         self.ar.outstanding_queries = {"id12": "http://localhost:8088/sso"}
-        self.ar.requestor = "urn:mace:example.com:saml:roland:sp"
         self.ar.timeslack = 10000
         self.ar.loads(xml_response, decode=False)
         self.ar.verify()
@@ -72,7 +72,6 @@ class TestAuthnResponse:
         print xml_response
         
         self.ar.outstanding_queries = {"id12": "http://localhost:8088/sso"}
-        self.ar.requestor = "urn:mace:example.com:saml:roland:sp"
         self.ar.timeslack = 10000
         self.ar.loads(xml_response, decode=False)
         self.ar.verify()
@@ -88,7 +87,8 @@ class TestAuthnResponse:
         xml_response = open(XML_RESPONSE_FILE).read()
         ID = "bahigehogffohiphlfmplepdpcohkhhmheppcdie"
         self.ar.outstanding_queries = {ID: "http://localhost:8088/foo"}    
-        self.ar.requestor = "xenosmilus.umdc.umu.se"
+        self.ar.return_addr = "http://xenosmilus.umdc.umu.se:8087/login"
+        self.ar.entity_id = "xenosmilus.umdc.umu.se"
         # roughly a year, should create the response on the fly
         self.ar.timeslack = 315360000 # indecent long time
         self.ar.loads(xml_response, decode=False)
@@ -102,7 +102,8 @@ class TestAuthnResponse:
     def test_verify_w_authn(self):
         xml_response = ("%s" % (self._resp_authn,)).split("\n",1)[1]
         self.ar.outstanding_queries = {"id12": "http://localhost:8088/sso"}
-        self.ar.requestor = "urn:mace:example.com:saml:roland:sp"
+        self.ar.return_addr = "http://lingon.catalogix.se:8087/"
+        self.ar.entity_id = "urn:mace:example.com:saml:roland:sp"
         self.ar.timeslack = 10000
         self.ar.loads(xml_response, decode=False)
         self.ar.verify()

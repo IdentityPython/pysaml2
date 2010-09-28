@@ -246,7 +246,7 @@ class TestClient:
         resp_str = "\n".join(self.server.authn_response(
                     identity=ava, 
                     in_response_to="id1", 
-                    destination="http://local:8087/", 
+                    destination="http://lingon.catalogix.se:8087/", 
                     sp_entity_id="urn:mace:example.com:saml:roland:sp",
                     name_id_policy=samlp.NameIDPolicy(
                         format=saml.NAMEID_FORMAT_PERSISTENT),
@@ -268,7 +268,7 @@ class TestClient:
         assert session_info["issuer"] == IDP
         assert session_info["came_from"] == "http://foo.example.com/service"
         response = samlp.response_from_string(authn_response.xmlstr)        
-        assert response.destination == "http://local:8087/"
+        assert response.destination == "http://lingon.catalogix.se:8087/"
 
         # One person in the cache
         assert len(self.client.users.subjects()) == 1
@@ -285,7 +285,7 @@ class TestClient:
         resp_str = "\n".join(self.server.authn_response(
                     identity=ava, 
                     in_response_to="id2", 
-                    destination="http://local:8087/", 
+                    destination="http://lingon.catalogix.se:8087/", 
                     sp_entity_id="urn:mace:example.com:saml:roland:sp",
                     name_id_policy=samlp.NameIDPolicy(
                         format=saml.NAMEID_FORMAT_PERSISTENT),
