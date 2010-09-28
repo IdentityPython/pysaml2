@@ -91,7 +91,7 @@ def test_1():
 
     assert len(sp["idp"]) == 1
     assert sp["idp"].keys() == ["urn:mace:example.com:saml:roland:idp"]
-    assert sp["idp"].values() == ["http://localhost:8088/sso/"]
+    assert sp["idp"].values() == [{'single_sign_on_service': {'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect':'http://localhost:8088/sso/'}}]
 
 def test_2():
     c = Config().load(sp2)
@@ -178,6 +178,6 @@ def test_wayf():
     c = Config().load_file("server.config")
     
     idps = c.get_available_idps()
-    assert idps == [('urn:mace:example.com:saml:roland:idp', 'Example Co')]
+    assert idps == [('urn:mace:example.com:saml:roland:idp', 'Exempel AB')]
     
     

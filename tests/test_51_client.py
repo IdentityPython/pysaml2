@@ -164,8 +164,8 @@ class TestClient:
         assert scope.idp_list
         assert len(scope.idp_list.idp_entry) == 1
         idp_entry = scope.idp_list.idp_entry[0]
-        assert idp_entry.name == 'Example Co'
-        assert idp_entry.loc == ['http://localhost:8088/sso/']
+        assert idp_entry.name == 'Exempel AB'
+        assert idp_entry.loc == ['http://localhost:8088/sso']
     
     def test_create_auth_request_0(self):
         ar_str = self.client.authn_request("id1",
@@ -309,9 +309,9 @@ class TestClient:
         spentityid = self.client._spentityid()
         print spentityid
         assert spentityid == "urn:mace:example.com:saml:roland:sp"
-        location = self.client._location()
+        location = self.client._sso_location()
         print location
-        assert location == 'http://localhost:8088/sso/'
+        assert location == 'http://localhost:8088/sso'
         service_url = self.client._service_url()
         print service_url
         assert service_url == "http://lingon.catalogix.se:8087/"
@@ -349,7 +349,7 @@ class TestClient:
         authnreq = samlp.authn_request_from_string(saml_request)
         print authnreq.keyswv()
         assert authnreq.id == sid
-        assert authnreq.destination == "http://localhost:8088/sso/"
+        assert authnreq.destination == "http://localhost:8088/sso"
         assert authnreq.assertion_consumer_service_url == "http://lingon.catalogix.se:8087/"
         assert authnreq.provider_name == "urn:mace:example.com:saml:roland:sp"
         assert authnreq.protocol_binding == "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"

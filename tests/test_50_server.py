@@ -5,8 +5,11 @@ from saml2.server import Server, Identifier
 from saml2 import server, make_instance
 from saml2 import samlp, saml, client, config
 from saml2 import s_utils
+from saml2 import time_util
 from saml2.s_utils import OtherError
 from saml2.s_utils import do_attribute_statement, factory
+from saml2.soap import make_soap_enveloped_saml_thingy
+
 from py.test import raises
 import shelve
 import re
@@ -291,6 +294,28 @@ class TestServer1():
         # value. Just that there should be one
         assert assertion.signature.signature_value.text != ""
 
+    def test_slo(self):
+        soon = time_util.in_a_while(days=1)
+        sinfo = {
+            "name_id": "foba0001",
+            "issuer": "urn:mace:example.com:saml:roland:idp",
+            "not_on_or_after" : soon,
+            "user": {
+                "givenName": "Leo",
+                "surName": "Laport",
+            }
+        }
+        self.client.users.add_information_about_person(sinfo)
+        
+        (dest, logout_request) = self.client.make_logout_requests(
+                            subject_id = "foba0001",
+                            reason = "I'm tired of this",
+                        )[0]
+                        
+        saml_soap = make_soap_enveloped_saml_thingy(logout_request)
+        request = self.server.parse_logout_request(saml_soap)
+        assert request
+        
 #------------------------------------------------------------------------
 
 IDENTITY = {"eduPersonAffiliation": ["staff", "member"],
