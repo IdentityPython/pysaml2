@@ -22,22 +22,25 @@ or attribute authority (AA) may use to conclude its tasks.
 import shelve
 import sys
 
-from saml2 import saml, samlp, VERSION, class_name
+from saml2 import saml
+from saml2 import class_name
+from saml2 import soap
+from saml2 import request
 
-from saml2.s_utils import sid, decode_base64_and_inflate
+from saml2.s_utils import sid
 from saml2.s_utils import response_factory
-from saml2.s_utils import MissingValue, factory
+from saml2.s_utils import MissingValue
 from saml2.s_utils import success_status_factory
 from saml2.s_utils import OtherError
-from saml2.s_utils import VersionMismatch, UnknownPrincipal, UnsupportedBinding
+from saml2.s_utils import UnknownPrincipal
+from saml2.s_utils import UnsupportedBinding
 from saml2.s_utils import error_status_factory
 
-from saml2.sigver import security_context, signed_instance_factory
+from saml2.sigver import security_context
+from saml2.sigver import signed_instance_factory
 from saml2.sigver import pre_signature_part
 from saml2.config import Config
-from saml2.cache import Cache 
 from saml2.assertion import Assertion, Policy   
-from saml2.validate import valid_instance, NotValid
 
 class UnknownVO(Exception):
     pass
@@ -161,7 +164,7 @@ class Identifier(object):
         
 class Server(object):
     """ A class that does things that IdPs or AAs do """
-    def __init__(self, config_file="", config=None, cache="",
+    def __init__(self, config_file="", config=None, _cache="",
                     log=None, debug=0):
 
         self.log = log
@@ -210,33 +213,22 @@ class Server(object):
         """
         
         response = {}
-        request_xml = decode_base64_and_inflate(enc_request)
-        try:
-            request = self.sec.correctly_signed_authn_request(request_xml)
-            if self.log and self.debug:
-                self.log.info("Request was correctly signed")
-        except Exception:
-            if self.log:
-                self.log.error("Request was not correctly signed")
-                self.log.info(request_xml)
-            raise
-
-        try:
-            valid_instance(request)
-        except NotValid, exc:
-            if self.log:
-                self.log.info(request_xml)
-            raise 
+        
+        receiver_addresses = self.conf.endpoint("idp", "single_sign_on_service")
+        authn_request = request.AuthnRequest(self.sec, 
+                                            self.conf.attribute_converters(),
+                                            receiver_addresses)
+        authn_request = authn_request.loads(enc_request)
+        if authn_request:
+            authn_request = authn_request.verify()
+        
+        if not authn_request:
+            return None
             
-        return_destination = request.assertion_consumer_service_url
-        # request.destination should be me 
-        response["id"] = request.id # put in in_reply_to
-        if request.version != VERSION:
-            raise VersionMismatch(
-                        "can't work with version %s" % request.version)
-                        
-        sp_entity_id = request.issuer.text
-        # used to find return address in metadata
+        response["id"] = authn_request.message.id # put in in_reply_to
+
+        sp_entity_id = authn_request.message.issuer.text
+        # try to find return address in metadata
         try:
             consumer_url = self.metadata.consumer_url(sp_entity_id)
         except KeyError:
@@ -251,17 +243,22 @@ class Server(object):
 
         response["sp_entity_id"] = sp_entity_id
 
-        if consumer_url != return_destination:
-            # serious error on someones behalf
-            if self.log:
-                self.log.info("%s != %s" % (consumer_url, return_destination))
-            else:
-                print >> sys.stderr, \
-                            "%s != %s" % (consumer_url, return_destination)
-            raise OtherError("ConsumerURL and return destination mismatch")
+        if authn_request.message.assertion_consumer_service_url:
+            return_destination = \
+                        authn_request.message.assertion_consumer_service_url
+        
+            if consumer_url != return_destination:
+                # serious error on someones behalf
+                if self.log:
+                    self.log.info("%s != %s" % (consumer_url, 
+                                                    return_destination))
+                else:
+                    print >> sys.stderr, \
+                                "%s != %s" % (consumer_url, return_destination)
+                raise OtherError("ConsumerURL and return destination mismatch")
         
         response["consumer_url"] = consumer_url
-        response["request"] = request
+        response["request"] = authn_request.message
 
         return response
                         
@@ -283,23 +280,17 @@ class Server(object):
             attribute - which attributes that the requestor wants back
             query - the whole query
         """
-        query = samlp.attribute_query_from_string(xml_string)
-        # Check that it's 
-        assert query.version == VERSION
+        receiver_addresses = self.conf.endpoint("aa", "attribute_service")
+        attribute_query = request.AttributeQuery( self.sec, receiver_addresses)
+
+        attribute_query = attribute_query.loads(xml_string)
+        attribute_query = attribute_query.verify()
         
-        self.log and self.log.info(
-            "%s ?= %s" % (query.destination, self.conf.aa_url))
-        # Is it for me ?
-        assert query.destination == self.conf.aa_url
-        
-        # verify signature
-        
-        subject = query.subject.name_id.text
-        if query.attribute:
-            attribute = query.attribute
-        else:
-            attribute = None
-        return (subject, attribute, query)
+        # Subject name is a BaseID,NameID or EncryptedID instance
+        subject = attribute_query.subject_id()        
+        attribute = attribute_query.attribute()
+
+        return (subject, attribute, attribute_query.message)
             
     # ------------------------------------------------------------------------
 
@@ -413,7 +404,7 @@ class Server(object):
     
     def do_aa_response(self, consumer_url, in_response_to, sp_entity_id, 
                         identity=None, userid="", name_id=None, status=None, 
-                        sign=False, name_id_policy=None):
+                        sign=False, _name_id_policy=None):
 
         name_id = self.ident.construct_nameid(self.conf.aa_policy(), userid, 
                                             sp_entity_id, identity)
@@ -480,34 +471,24 @@ class Server(object):
         else:
             return ("%s" % response).split("\n")
 
-    def parse_logout_request(self, enc_request):
+    def parse_logout_request(self, text):
         """Parse a Logout Request
         
-        :param enc_request: The request in its transport format
-        :return: A dictionary with keys:
-            consumer_url - as gotten from the SPs entity_id and the metadata
-            id - the id of the request
-            sp_entity_id - the entity id of the SP
-            request - The verified request
+        :param test: The request in its transport format
+        :return: A validated LogoutRequest instance or None if validation 
+            failed.
         """
         
-        response = {}
-        request_xml = decode_base64_and_inflate(enc_request)
-        try:
-            request = self.sec.correctly_signed_logout_request(request_xml)
-            if self.log and self.debug:
-                self.log.info("Request was correctly signed")
-        except Exception:
-            if self.log:
-                self.log.error("Request was not correctly signed")
-                self.log.info(request_xml)
-            raise
-
-        try:
-            valid_instance(request)
-        except NotValid, exc:
-            if self.log:
-                self.log.info(request_xml)
-            raise 
-    
+        lreq = soap.parse_soap_enveloped_saml_logout_request(text)
+        slo = self.conf.endpoint("idp", "single_logout_service")[0]
+        req = request.Request(self.sec, slo)
+        req = req.loads(lreq)
+        req = req.verify()
         
+        if not req: # Not a valid request
+            # return a error message with status code element set to
+            # urn:oasis:names:tc:SAML:2.0:status:Requester
+            return None
+        else:
+            return req.message
+
