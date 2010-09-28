@@ -52,8 +52,8 @@ def for_me(condition, myself ):
     
     return False
 
-def authn_response(conf, requestor, outstanding_queries=None, log=None,
-                    timeslack=0, debug=0):
+def authn_response(conf, entity_id, return_addr, outstanding_queries=None, 
+                    log=None, timeslack=0, debug=0):
     sec = security_context(conf)
     if not timeslack:
         try:
@@ -61,46 +61,40 @@ def authn_response(conf, requestor, outstanding_queries=None, log=None,
         except KeyError:
             pass
     
-    return AuthnResponse(sec, conf.attribute_converters, requestor,
-                            outstanding_queries, log, timeslack, debug)
+    return AuthnResponse(sec, conf.attribute_converters, entity_id, 
+                        return_addr, outstanding_queries, log, timeslack, 
+                        debug)
 
-class AuthnResponse(object):
-    """ This is where all the profile complience is checked.
-    This one does saml2int complience. """
-    
-    def __init__(self, sec_context, attribute_converters, requestor,
-                    outstanding_queries=None, log=None, timeslack=0, debug=0):
+class StatusResponse(object):
+    def __init__(self, sec_context, return_addr, log=None, timeslack=0, 
+                    debug=0, request_id=0):
         self.sec = sec_context
-        self.attribute_converters = attribute_converters
-        self.requestor = requestor
-        if outstanding_queries:
-            self.outstanding_queries = outstanding_queries
-        else:
-            self.outstanding_queries = {}
-        self.context = "AuthnReq"
+        self.return_addr = return_addr
         self.timeslack = timeslack
+        self.request_id = request_id
         self.log = log
         self.debug = debug
         if self.debug and not self.log:
             self.debug = 0
         
         self.xmlstr = ""
-        self.came_from = ""
         self.name_id = ""
-        self.ava = None
         self.response = None
         self.not_on_or_after = 0
-        self.assertion = None
         self.in_response_to = None
     
-    def loads(self, xmldata, decode=True):
-        if self.debug:
-            self.log.info("--- Loads AuthnResponse ---")
+    def _clear(self):
+        self.xmlstr = ""
+        self.name_id = ""
+        self.response = None
+        self.not_on_or_after = 0
+
+    def _loads(self, xmldata, decode=True):
         if decode:
             decoded_xml = base64.b64decode(xmldata)
         else:
             decoded_xml = xmldata
-        
+    
         # own copy
         self.xmlstr = decoded_xml[:]
         if self.debug:
@@ -109,13 +103,13 @@ class AuthnResponse(object):
             self.response = self.sec.correctly_signed_response(decoded_xml)
         except Exception, excp:
             self.log and self.log.info("EXCEPTION: %s", excp)
-        
+    
         if not self.response:
             if self.log:
                 self.log.error("Response was not correctly signed")
                 self.log.info(decoded_xml)
             raise IncorrectlySigned()
-        
+    
         if self.debug:
             self.log.info("response: %s" % (self.response,))
 
@@ -126,25 +120,12 @@ class AuthnResponse(object):
                 self.log.error("Not valid response: %s" % exc.args[0])
             else:
                 print >> sys.stderr, "Not valid response: %s" % exc.args[0]
-            
+        
             self.clear()
             return self
-            
+        
         self.in_response_to = self.response.in_response_to
-        if self.in_response_to in self.outstanding_queries:
-            self.came_from = self.outstanding_queries[self.in_response_to]
-            del self.outstanding_queries[self.in_response_to]
-
         return self
-    
-    def clear(self):
-        self.xmlstr = ""
-        self.came_from = ""
-        self.name_id = ""
-        self.ava = None
-        self.response = None
-        self.not_on_or_after = 0
-        self.assertion = None
     
     def status_ok(self):
         if self.response.status:
@@ -157,7 +138,91 @@ class AuthnResponse(object):
                 raise Exception(
                     "Not successfull according to: %s" % \
                     status.status_code.value)
+        return True
+
+    def issue_instant_ok(self):
+        """ Check that the response was issued at a reasonable time """
+        upper = time_util.shift_time(time_util.time_in_a_while(days=1),
+                                    self.timeslack).timetuple()
+        lower = time_util.shift_time(time_util.time_a_while_ago(days=1),
+                                    -self.timeslack).timetuple()
+        # print "issue_instant: %s" % self.response.issue_instant
+        # print "%s < x < %s" % (lower, upper)
+        issued_at = str_to_time(self.response.issue_instant)
+        return issued_at > lower and issued_at < upper
+
+    def _verify(self):
+        if self.request_id and self.in_response_to and \
+            self.in_response_to != self.request_id:
+            if self.log:
+                self.log.error("Not the id I expected: %s != %s" % (
+                                                        self.in_response_to,
+                                                        self.request_id))
+            return None
+            
+        assert self.response.version == "2.0"
+        if self.response.destination and \
+            self.response.destination != self.return_addr:
+            if self.log:
+                self.log.error("%s != %s" % (self.response.destination, 
+                                                self.return_addr))
+            return None
+            
+        assert self.issue_instant_ok()
+
+        assert self.status_ok()
+        return self
+
+    def loads(self, xmldata, decode=True):
+        return self._loads(xmldata, decode)
+
+    def verify(self):
+        try:
+            return self._verify()
+        except AssertionError:
+            return None
+
+class LogoutResponse(StatusResponse):
+    def __init__(self, sec_context, return_addr, log=None, timeslack=0, debug=0):
+        StatusResponse.__init__(self, sec_context, return_addr, log, timeslack, 
+                                debug)
+
+        
+class AuthnResponse(StatusResponse):
+    """ This is where all the profile complience is checked.
+    This one does saml2int complience. """
     
+    def __init__(self, sec_context, attribute_converters, entity_id, 
+                    return_addr=None, outstanding_queries=None, log=None, 
+                    timeslack=0, debug=0):
+        StatusResponse.__init__(self, sec_context, return_addr, log, 
+                                    timeslack, debug)
+        self.entity_id = entity_id
+        self.attribute_converters = attribute_converters
+        if outstanding_queries:
+            self.outstanding_queries = outstanding_queries
+        else:
+            self.outstanding_queries = {}
+        self.context = "AuthnReq"        
+        self.came_from = ""
+        self.ava = None
+        self.assertion = None
+    
+    def loads(self, xmldata, decode=True):
+        self._loads(xmldata, decode)
+        
+        if self.in_response_to in self.outstanding_queries:
+            self.came_from = self.outstanding_queries[self.in_response_to]
+            del self.outstanding_queries[self.in_response_to]
+
+        return self
+    
+    def clear(self):
+        self._clear()
+        self.came_from = ""
+        self.ava = None
+        self.assertion = None
+        
     def authn_statement_ok(self):
         # the assertion MUST contain one AuthNStatement
         assert len(self.assertion.authn_statement) == 1
@@ -191,8 +256,10 @@ class AuthnResponse(object):
             else:
                 self.not_on_or_after = 0
         
-        if not for_me(condition, self.requestor):
+        if not for_me(condition, self.entity_id):
             if not lax:
+                print condition
+                print self.entity_id
                 raise Exception("Not for me!!!")
         
         return True
@@ -340,20 +407,16 @@ class AuthnResponse(object):
         """ Verify that the assertion is syntactically correct and
         the signature is correct if present."""
         
-        self.status_ok()
-        self.issue_instant_ok()
+        try:
+            self._verify()
+        except AssertionError:
+            return None
+        
         if self.parse_assertion():
             return self
         else:
             return None
     
-    def issue_instant_ok(self):
-        """ Check that the response was issued at a reasonable time """
-        upper = time_util.in_a_while(days=1)
-        lower = time_util.a_while_ago(days=1)
-        issued_at = str_to_time(self.response.issue_instant)
-        return issued_at > lower and issued_at < upper
-        
     def issuer(self):
         """ Return the issuer of the reponse """
         return self.response.issuer.text
@@ -393,7 +456,3 @@ class AuthnResponse(object):
     def __str__(self):
         return "%s" % self.xmlstr
 
-# ======================================================================
-   
-   # session_info["ava"]["__userid"] = session_info["name_id"]
-   # return session_info
