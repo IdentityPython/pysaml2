@@ -36,7 +36,8 @@ from saml2.soap import SOAPClient
 from saml2.population import Population
 from saml2.virtual_org import VirtualOrg
 
-from saml2.authnresponse import authn_response
+from saml2.response import authn_response
+from saml2.validate import valid_instance
 
 DEFAULT_BINDING = saml2.BINDING_HTTP_REDIRECT
 
@@ -53,7 +54,7 @@ class IdpUnspecified(Exception):
 
 class VerifyError(Exception):
     pass
-    
+        
 class Saml2Client(object):
     """ The basic pySAML2 service provider class """
     
@@ -102,16 +103,16 @@ class Saml2Client(object):
         idp_ent = self.idp_entry(name, location)
         return samlp.Scoping(idp_list=samlp.IDPList(idp_entry=[idp_ent]))
     
-    def response(self, post, requestor, outstanding, log=None):
+    def response(self, post, entity_id, outstanding, log=None):
         """ Deal with an AuthnResponse
         
         :param post: The reply as a dictionary
-        :param requestor: The issuer of the AuthN request
+        :param entity_id: The Entity ID for this SP
         :param outstanding: A dictionary with session IDs as keys and
             the original web request from the user before redirection
             as values.
         :param log: where loggin should go.
-        :return: An authnresponse.AuthnResponse instance which among other
+        :return: An response.AuthnResponse instance which among other
             things contains a verified saml2.AuthnResponse instance.
         """
         # If the request contains a samlResponse, try to validate it
@@ -120,10 +121,12 @@ class Saml2Client(object):
         except KeyError:
             return None
         
+        reply_addr = self._service_url()
+        
         aresp = None
         if saml_response:
-            aresp = authn_response(self.config, requestor, outstanding, log,
-                                    debug=self.debug)
+            aresp = authn_response(self.config, entity_id, reply_addr,
+                                    outstanding, log, debug=self.debug)
             aresp.loads(saml_response)
             if self.debug:
                 log and log.info(aresp)
@@ -362,7 +365,7 @@ class Saml2Client(object):
         session_id = sid()
         if not issuer:
             issuer = self.issuer()
-
+        
         request = self.create_attribute_query(session_id, subject_id,
                     destination, issuer, attribute, sp_name_qualifier,
                     name_qualifier, nameid_format=nameid_format)
@@ -382,7 +385,9 @@ class Saml2Client(object):
         if response:
             log and log.info("Verifying response")
             
-            aresp = authn_response(self.config, issuer, {session_id:""}, log)
+            aresp = authn_response(self.config, issuer, 
+                                    outstanding_queries={session_id:""}, 
+                                    log=log)
             session_info = aresp.loads(response).verify().session_info()
 
             if session_info:
@@ -433,14 +438,18 @@ class Saml2Client(object):
             if not_on_or_after:
                 request.not_on_or_after = not_on_or_after
             
-            result.append((session_id, request))
+            result.append(destination, request)
             
         return result
     
     def global_logout(self, subject_id, reason="", not_on_or_after=None,
                           sign=False, log=None):
+        """ SAML SOAP (using HTTP as a transport) binding [SAML2Bind] for 
+            issuance of <saml2p:LogoutRequest> message
+        
+        """
         result = []
-        for (session_id, request) in self.make_logout_requests(subject_id, 
+        for (destination, request) in self.make_logout_requests(subject_id, 
                                                             reason,
                                                             not_on_or_after):
             if sign:
@@ -452,13 +461,31 @@ class Saml2Client(object):
         
             if log:
                 log.info("REQUEST: %s" % request)
-        
-            data = "%s" % signed_instance_factory(request, self.sec, to_sign)
-            args = ["SAMLRequest=%s" % urllib.quote_plus(
-                                            deflate_and_base64_encode(data))]
 
-            logout_url = "?".join([request.destination, "&".join(args)])
-            result.append(logout_url)
+            request = "%s" % signed_instance_factory(request, self.sec, to_sign)
+        
+            soapclient = SOAPClient(destination, self.config["key_file"],
+                                    self.config["cert_file"])
+            log and log.info("SOAP client initiated")
+            try:
+                response = soapclient.send(request)
+            except Exception, exc:
+                log and log.info("SoapClient exception: %s" % (exc,))
+                return None
+
+            log and log.info("SOAP request sent and got response: %s" % response)
+            if response:
+                log and log.info("Verifying response")
+                lresp = logout_response(response, self.config, log)
+            else:
+                log and log.info("No response")
+        
+            # data = "%s" % signed_instance_factory(request, self.sec, to_sign)
+            # args = ["SAMLRequest=%s" % urllib.quote_plus(
+            #                                 deflate_and_base64_encode(data))]
+            # 
+            # logout_url = "?".join([request.destination, "&".join(args)])
+            # result.append(logout_url)
         
         return result
     
