@@ -28,7 +28,7 @@ from saml2 import soap
 from saml2 import request
 
 from saml2.s_utils import sid
-from saml2.s_utils import response_factory
+from saml2.s_utils import response_factory, logoutresponse_factory
 from saml2.s_utils import MissingValue
 from saml2.s_utils import success_status_factory
 from saml2.s_utils import OtherError
@@ -499,8 +499,10 @@ class Server(object):
         
         if not status: 
             status = success_status_factory()
+
+        return logoutresponse_factory(
+                    issuer = self.issuer(),
+                    in_response_to = in_response_to,
+                    status = status,
+                )
         
-        return self._response(
-                        in_response_to, # in_response_to
-                        status = status,
-                        )
