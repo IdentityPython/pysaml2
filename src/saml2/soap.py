@@ -34,24 +34,29 @@ from saml2.samlp import NAMESPACE as SAMLP_NAMESPACE
 NAMESPACE = "http://schemas.xmlsoap.org/soap/envelope/"
 
 def parse_soap_enveloped_saml_response(text):
-    expected_tag = '{%s}Response' % SAMLP_NAMESPACE
-    return parse_soap_enveloped_saml_thingy(text, expected_tag)
+    tags = ['{%s}Response' % SAMLP_NAMESPACE, 
+            '{%s}LogoutResponse' % SAMLP_NAMESPACE]
+    return parse_soap_enveloped_saml_thingy(text, tags)
 
 def parse_soap_enveloped_saml_attribute_query(text):
     expected_tag = '{%s}AttributeQuery' % SAMLP_NAMESPACE
-    return parse_soap_enveloped_saml_thingy(text, expected_tag)
+    return parse_soap_enveloped_saml_thingy(text, [expected_tag])
 
 def parse_soap_enveloped_saml_logout_request(text):
     expected_tag = '{%s}LogoutRequest' % SAMLP_NAMESPACE
-    return parse_soap_enveloped_saml_thingy(text, expected_tag)
+    return parse_soap_enveloped_saml_thingy(text, [expected_tag])
 
-def parse_soap_enveloped_saml_thingy(text, expected_tag):
+def parse_soap_enveloped_saml_logout_response(text):
+    expected_tag = '{%s}LogoutResponse' % SAMLP_NAMESPACE
+    return parse_soap_enveloped_saml_thingy(text, [expected_tag])
+
+def parse_soap_enveloped_saml_thingy(text, expected_tags):
     """Parses a SOAP enveloped SAML thing and returns the thing as
     a string.
     
     :param text: The SOAP object as XML 
     :param expected_tag: What the tag of the SAML thingy is expected to be.
-    :return: SAML thingy as string
+    :return: SAML thingy as a string
     """
     envelope = ElementTree.fromstring(text)
     assert envelope.tag == '{%s}Envelope' % NAMESPACE
@@ -61,7 +66,7 @@ def parse_soap_enveloped_saml_thingy(text, expected_tag):
     assert body.tag == '{%s}Body' % NAMESPACE
     assert len(body) == 1
     saml_part = body[0]
-    if saml_part.tag == expected_tag:
+    if saml_part.tag in expected_tags:
         return ElementTree.tostring(saml_part, encoding="UTF-8")
     else:
         return ""
@@ -110,13 +115,15 @@ class _Http(object):
 
 class SOAPClient(object):
     
-    def __init__(self, server_url, keyfile=None, certfile=None):
+    def __init__(self, server_url, keyfile=None, certfile=None, log=None):
         self.server = _Http(server_url, keyfile, certfile)
+        self.log = log
         
     def send(self, request):
         soap_message = make_soap_enveloped_saml_thingy(request)
         response = self.server.write(soap_message)
         if response:
+            self.log and self.log.info("SOAP response: %s" % response)
             return parse_soap_enveloped_saml_response(response)
 
 
