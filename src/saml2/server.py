@@ -294,7 +294,7 @@ class Server(object):
             
     # ------------------------------------------------------------------------
 
-    def _response(self, consumer_url, in_response_to, sp_entity_id, 
+    def _response(self, in_response_to, consumer_url=None, sp_entity_id=None, 
                     identity=None, name_id=None, status=None, sign=False,
                     policy=Policy(), authn=None):
         """ Create a Response that adhers to the ??? profile.
@@ -314,7 +314,7 @@ class Server(object):
                 
         to_sign = []
 
-        if not status:
+        if not status: 
             status = success_status_factory()
             
         _issuer = self.issuer()
@@ -322,16 +322,18 @@ class Server(object):
         response = response_factory(
             issuer=_issuer,
             in_response_to = in_response_to,
-            destination = consumer_url,
             status = status,
             )
+
+        if consumer_url:
+            response.destination = consumer_url
 
         if identity:            
             ast = Assertion(identity)
             try:
                 ast.apply_policy(sp_entity_id, policy, self.metadata)
             except MissingValue, exc:
-                return self.error_response(consumer_url, in_response_to, 
+                return self.error_response(in_response_to, consumer_url, 
                                                sp_entity_id, exc, name_id)
 
             if authn: # expected to be a 2-tuple class+authority
@@ -367,17 +369,17 @@ class Server(object):
 
     # ------------------------------------------------------------------------
     
-    def do_response(self, consumer_url, in_response_to,
+    def do_response(self, in_response_to, consumer_url,
                         sp_entity_id, identity=None, name_id=None, 
                         status=None, sign=False, authn=None ):
 
-        return self._response(consumer_url, in_response_to,
+        return self._response(in_response_to, consumer_url,
                         sp_entity_id, identity, name_id, 
                         status, sign, self.conf.idp_policy(), authn)
                         
     # ------------------------------------------------------------------------
     
-    def error_response(self, destination, in_response_to, spid, info, 
+    def error_response(self, in_response_to, destination, spid, info, 
                         name_id=None):
         """
         :param destination: The intended recipient of this message
@@ -392,8 +394,8 @@ class Server(object):
         status = error_status_factory(info)
             
         return self._response(
-                        destination,    # consumer_url
                         in_response_to, # in_response_to
+                        destination,    # consumer_url
                         spid,           # sp_entity_id
                         None,           # identity
                         name_id,
@@ -402,14 +404,14 @@ class Server(object):
 
     # ------------------------------------------------------------------------
     
-    def do_aa_response(self, consumer_url, in_response_to, sp_entity_id, 
+    def do_aa_response(self, in_response_to, consumer_url, sp_entity_id, 
                         identity=None, userid="", name_id=None, status=None, 
                         sign=False, _name_id_policy=None):
 
         name_id = self.ident.construct_nameid(self.conf.aa_policy(), userid, 
                                             sp_entity_id, identity)
         
-        return self._response(consumer_url, in_response_to,
+        return self._response(in_response_to, consumer_url,
                         sp_entity_id, identity, name_id, 
                         status, sign, policy=self.conf.aa_policy())
 
@@ -440,14 +442,14 @@ class Server(object):
                                   userid, sp_entity_id, identity,
                                   name_id_policy)
         except IOError, exc:
-            response = self.error_response(destination, in_response_to, 
+            response = self.error_response(in_response_to, destination, 
                                             sp_entity_id, exc, name_id)
             return ("%s" % response).split("\n")
         
         try:
             response = self.do_response(
-                            destination,    # consumer_url
                             in_response_to, # in_response_to
+                            destination,    # consumer_url
                             sp_entity_id,   # sp_entity_id
                             identity,       # identity as dictionary
                             name_id,
@@ -456,7 +458,7 @@ class Server(object):
                                             #   authentication
                         )
         except MissingValue, exc:
-            response = self.error_response(destination, in_response_to, 
+            response = self.error_response(in_response_to, destination, 
                                         sp_entity_id, exc, name_id)
         
 
@@ -465,7 +467,7 @@ class Server(object):
                 return self.sec.sign_statement_using_xmlsec(response,
                                                         class_name(response))
             except Exception, exc:
-                response = self.error_response(destination, in_response_to, 
+                response = self.error_response(in_response_to, destination, 
                                                 sp_entity_id, exc, name_id)
                 return ("%s" % response).split("\n")
         else:
@@ -490,5 +492,15 @@ class Server(object):
             # urn:oasis:names:tc:SAML:2.0:status:Requester
             return None
         else:
-            return req.message
+            return req
 
+
+    def logout_response(self, in_response_to, status=None):
+        
+        if not status: 
+            status = success_status_factory()
+        
+        return self._response(
+                        in_response_to, # in_response_to
+                        status = status,
+                        )
