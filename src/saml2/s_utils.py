@@ -173,6 +173,20 @@ def assertion_factory(**kwargs):
     for key, val in kwargs.items():
         setattr(assertion, key, val)
     return assertion
+
+def logoutresponse_factory(signature=False, encrypt=False, **kwargs):
+    response = samlp.LogoutResponse(id=sid(), version=VERSION,
+                                issue_instant=instant())
+
+    if signature:
+        response["signature"] = sigver.pre_signature_part(kwargs["id"])
+    if encrypt:
+        pass
+
+    for key, val in kwargs.items():
+        setattr(response, key, val)
+
+    return response
     
 def response_factory(signature=False, encrypt=False, **kwargs):
     response = samlp.Response(id=sid(), version=VERSION,
