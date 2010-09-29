@@ -434,7 +434,7 @@ class SecurityContext(object):
         if not certs:
             raise SignatureError("Missing signing certificate")
 
-        print certs
+        #print certs
         
         verified = False
         for _, pem_file in certs:
@@ -451,6 +451,9 @@ class SecurityContext(object):
 
         return item
 
+    def check_signature(self, item, node_name=NODE_NAME):
+        return self._check_signature( "%s" % (item,), item)
+        
     def correctly_signed_logout_request(self, decoded_xml, must=False):
         """ Check if a request is correctly signed, if we have metadata for
         the SP that sent the info use that, if not use the key that are in 
@@ -470,6 +473,26 @@ class SecurityContext(object):
                 return request
 
         return self._check_signature( decoded_xml, request )
+
+    def correctly_signed_logout_response(self, decoded_xml, must=False):
+        """ Check if a request is correctly signed, if we have metadata for
+        the SP that sent the info use that, if not use the key that are in 
+        the message if any.
+
+        :param decode_xml: The SAML message as a XML string
+        :param must: Whether there must be a signature
+        :return: None if the signature can not be verified otherwise 
+             the response as a samlp.LogoutResponse instance
+        """
+        response = samlp.logout_response_from_string(decoded_xml)
+
+        if not response.signature:
+            if must:
+                raise SignatureError("Missing must signature")
+            else:
+                return response
+
+        return self._check_signature( decoded_xml, response )
     
     def correctly_signed_authn_request(self, decoded_xml, must=False):
         """ Check if a request is correctly signed, if we have metadata for
