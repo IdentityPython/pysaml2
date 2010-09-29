@@ -33,10 +33,13 @@ from saml2 import VERSION
 from saml2.sigver import pre_signature_part
 from saml2.sigver import security_context, signed_instance_factory
 from saml2.soap import SOAPClient
+from saml2.soap import parse_soap_enveloped_saml_logout_response
 from saml2.population import Population
 from saml2.virtual_org import VirtualOrg
 
 from saml2.response import authn_response
+from saml2.response import LogoutResponse
+
 from saml2.validate import valid_instance
 
 SSO_BINDING = saml2.BINDING_HTTP_REDIRECT
@@ -65,6 +68,7 @@ class Saml2Client(object):
         """
         self.vorg = None
         self.users = Population(persistent_cache)
+        self.sec = None
         if config:
             self.config = config
             if "metadata" in config:
@@ -470,7 +474,7 @@ class Saml2Client(object):
             request = signed_instance_factory(request, self.sec, to_sign)
         
             soapclient = SOAPClient(destination, self.config["key_file"],
-                                    self.config["cert_file"])
+                                    self.config["cert_file"], log=log)
             log and log.info("SOAP client initiated")
             try:
                 response = soapclient.send(request)
@@ -481,17 +485,13 @@ class Saml2Client(object):
             log and log.info("SOAP request sent and got response: %s" % response)
             if response:
                 log and log.info("Verifying response")
-                lresp = logout_response(response, self.config, log)
+                lresp = self.logout_response(response, log)
+                result.append((destination, lresp))
             else:
                 log and log.info("No response")
+                result.append((destination, ""))
         
-            # data = "%s" % signed_instance_factory(request, self.sec, to_sign)
-            # args = ["SAMLRequest=%s" % urllib.quote_plus(
-            #                                 deflate_and_base64_encode(data))]
-            # 
-            # logout_url = "?".join([request.destination, "&".join(args)])
-            # result.append(logout_url)
-        
+        self.local_logout(subject_id)
         return result
     
     def local_logout(self, subject_id):
@@ -500,32 +500,32 @@ class Saml2Client(object):
         return True
     
 
-    def logout_response(self, get, subject_id, log=None):
+    def logout_response(self, xmlstr, log=None):
         """ Deal with a LogoutResponse
 
-        :param get: The reply as a dictionary
+        :param xmlstr: The response as a xml string
         :param subject_id: the id of the user that initiated the logout
-        :return: None if the reply doesn't contain a SAMLResponse,
+        :return: None if the reply doesn't contain a valid SAML LogoutResponse,
             otherwise True if the logout was successful and False if it 
             was not.
         """
         
         success = False
 
-        # If the request contains a samlResponse, try to validate it
-        try:
-            saml_response = get['SAMLResponse']
-        except KeyError:
-            return None
-
-        if saml_response:
-            xml = decode_base64_and_inflate(saml_response)
-            response = samlp.logout_response_from_string(xml)
+        if xmlstr:
+            response = LogoutResponse(self.sec, debug=True, log=log)
+            # arrived by SOAP+HTTP so no base64+zip done
+            response = response.loads(xmlstr, False)
+            if response:
+                response = response.verify()
+                
+            if not response:
+                return None
+            
             if self.debug and log:
                 log.info(response)
 
-            if response.status.status_code.value == samlp.STATUS_SUCCESS:
-                self.local_logout(subject_id)
+            if response.response.status.status_code.value == samlp.STATUS_SUCCESS:
                 success = True
 
         return success
