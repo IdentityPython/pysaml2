@@ -40,6 +40,9 @@ class IncorrectlySigned(Exception):
     
 # ---------------------------------------------------------------------------
 
+def _dummy(_arg):
+    return None
+
 def for_me(condition, myself ):
     # Am I among the intended audiences
     for restriction in condition.audience_restriction:
@@ -66,7 +69,7 @@ def authn_response(conf, entity_id, return_addr, outstanding_queries=None,
                         debug)
 
 class StatusResponse(object):
-    def __init__(self, sec_context, return_addr, log=None, timeslack=0, 
+    def __init__(self, sec_context, return_addr=None, log=None, timeslack=0, 
                     debug=0, request_id=0):
         self.sec = sec_context
         self.return_addr = return_addr
@@ -82,6 +85,7 @@ class StatusResponse(object):
         self.response = None
         self.not_on_or_after = 0
         self.in_response_to = None
+        self.signature_check = self.sec.correctly_signed_response
     
     def _clear(self):
         self.xmlstr = ""
@@ -89,25 +93,12 @@ class StatusResponse(object):
         self.response = None
         self.not_on_or_after = 0
 
-    def _loads(self, xmldata, decode=True):
-        if decode:
-            decoded_xml = base64.b64decode(xmldata)
-        else:
-            decoded_xml = xmldata
-    
-        # own copy
-        self.xmlstr = decoded_xml[:]
-        if self.debug:
-            self.log.info("xmlstr: %s" % (self.xmlstr,))
-        try:
-            self.response = self.sec.correctly_signed_response(decoded_xml)
-        except Exception, excp:
-            self.log and self.log.info("EXCEPTION: %s", excp)
-    
+    def _postamble(self):
         if not self.response:
             if self.log:
                 self.log.error("Response was not correctly signed")
-                self.log.info(decoded_xml)
+                if self.xmlstr:
+                    self.log.info(self.xmlstr)
             raise IncorrectlySigned()
     
         if self.debug:
@@ -126,6 +117,27 @@ class StatusResponse(object):
         
         self.in_response_to = self.response.in_response_to
         return self
+        
+    def load_instance(self, instance):
+        self.response = self.sec.check_signature(instance)
+        return self._postamble()
+        
+    def _loads(self, xmldata, decode=True):
+        if decode:
+            decoded_xml = base64.b64decode(xmldata)
+        else:
+            decoded_xml = xmldata
+    
+        # own copy
+        self.xmlstr = decoded_xml[:]
+        if self.debug:
+            self.log.info("xmlstr: %s" % (self.xmlstr,))
+        try:
+            self.response = self.signature_check(decoded_xml)
+        except Exception, excp:
+            self.log and self.log.info("EXCEPTION: %s", excp)
+    
+        return self._postamble()
     
     def status_ok(self):
         if self.response.status:
@@ -183,9 +195,11 @@ class StatusResponse(object):
             return None
 
 class LogoutResponse(StatusResponse):
-    def __init__(self, sec_context, return_addr, log=None, timeslack=0, debug=0):
+    def __init__(self, sec_context, return_addr=None, log=None, timeslack=0, 
+                    debug=0):
         StatusResponse.__init__(self, sec_context, return_addr, log, timeslack, 
                                 debug)
+        self.signature_check = self.sec.correctly_signed_logout_response
 
         
 class AuthnResponse(StatusResponse):
