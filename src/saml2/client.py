@@ -400,7 +400,7 @@ class Saml2Client(object):
             return None
     
     def make_logout_requests(self, subject_id, reason=None, 
-                            not_on_or_after=None):
+                                not_on_or_after=None, log=None):
         """ Constructs a LogoutRequest
         
         :param subject_id: The identifier of the subject
@@ -410,11 +410,13 @@ class Saml2Client(object):
             after which the recipient may discard the message.
         :return: A LogoutRequest instance
         """
-
+            
         result = []
-
+        log and log.info("logout request for: %s" % subject_id)
         for entity_id in self.users.issuers_of_info(subject_id):
+            log and log.info("provider id: %s" % entity_id)
             destination = self.config.logout_service(entity_id)
+            log and log.info("destination to provider: %s" % destination)
             if not destination:
                 continue
                 
@@ -449,10 +451,12 @@ class Saml2Client(object):
             issuance of <saml2p:LogoutRequest> message
         
         """
+            
         result = []
         for (destination, request) in self.make_logout_requests(subject_id, 
                                                             reason,
-                                                            not_on_or_after):
+                                                            not_on_or_after, 
+                                                            log):
             if sign:
                 request.signature = pre_signature_part(request.id,
                                                         self.sec.my_cert, 1)
@@ -463,7 +467,7 @@ class Saml2Client(object):
             if log:
                 log.info("REQUEST: %s" % request)
 
-            request = "%s" % signed_instance_factory(request, self.sec, to_sign)
+            request = signed_instance_factory(request, self.sec, to_sign)
         
             soapclient = SOAPClient(destination, self.config["key_file"],
                                     self.config["cert_file"])
