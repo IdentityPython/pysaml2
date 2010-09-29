@@ -34,6 +34,7 @@ from repoze.who.interfaces import IChallenger, IIdentifier, IAuthenticator
 from repoze.who.interfaces import IMetadataProvider
 from repoze.who.plugins.form import FormPluginBase
 
+from saml2 import BINDING_HTTP_REDIRECT
 from saml2.client import Saml2Client
 #from saml2.attribute_resolver import AttributeResolver
 from saml2.config import Config
@@ -114,7 +115,7 @@ class SAML2Plugin(FormPluginBase):
         #self.log and self.log.info("IdP URL: %s" % idps)
 
         if len( idps ) == 1:
-            idp_url = idps[0]
+            idp_url = idps[0]["single_sign_on_service"][BINDING_HTTP_REDIRECT]
         elif len( idps ) == 0:
             return (1, HTTPInternalServerError(detail='Misconfiguration'))
         else:
