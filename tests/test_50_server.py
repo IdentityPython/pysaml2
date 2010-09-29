@@ -166,8 +166,8 @@ class TestServer1():
     def test_sso_response_with_identity(self):
         name_id = self.server.ident.temporary_nameid()
         resp = self.server.do_response(
-                    "http://localhost:8087/",   # consumer_url
-                    "id12",                       # in_response_to
+                    "id12",                         # in_response_to
+                    "http://localhost:8087/",       # consumer_url
                     "urn:mace:example.com:saml:roland:sp", # sp_entity_id
                     { "eduPersonEntitlement": "Short stop"}, # identity
                     name_id
@@ -209,8 +209,8 @@ class TestServer1():
 
     def test_sso_response_without_identity(self):
         resp = self.server.do_response(
-                    "http://localhost:8087/",   # consumer_url
-                    "id12",                       # in_response_to
+                    "id12",                             # in_response_to
+                    "http://localhost:8087/",           # consumer_url
                     "urn:mace:example.com:saml:roland:sp", # sp_entity_id
                 )
                 
@@ -226,7 +226,7 @@ class TestServer1():
 
     def test_sso_failure_response(self):
         exc = s_utils.MissingValue("eduPersonAffiliation missing")
-        resp = self.server.error_response( "http://localhost:8087/", "id12", 
+        resp = self.server.error_response("id12", "http://localhost:8087/", 
                         "urn:mace:example.com:saml:roland:sp", exc )
                 
         print resp.keyswv()
@@ -275,9 +275,9 @@ class TestServer1():
         name_id = self.server.ident.temporary_nameid()
                 
         signed_resp = self.server.do_response(
-                    "http://lingon.catalogix.se:8087/",   # consumer_url
-                    "id12",                       # in_response_to
-                    "urn:mace:example.com:saml:roland:sp", # sp_entity_id
+                    "id12",                                 # in_response_to
+                    "http://lingon.catalogix.se:8087/",     # consumer_url
+                    "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
                     {"eduPersonEntitlement":"Jeter"},
                     name_id = name_id,
                     sign=True
@@ -333,7 +333,7 @@ class TestServer2():
         aa_policy = self.server.conf.aa_policy()
         print aa_policy.__dict__
         print self.server.conf["service"]
-        response = self.server.do_aa_response( "http://example.com/sp/", "aaa",
+        response = self.server.do_aa_response("aaa", "http://example.com/sp/", 
                         "urn:mace:example.com:sp:1", IDENTITY.copy())
 
         assert response != None

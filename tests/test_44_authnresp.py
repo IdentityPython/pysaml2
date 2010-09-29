@@ -20,16 +20,16 @@ class TestAuthnResponse:
         name_id = server.ident.temporary_nameid()
 
         self._resp_ = server.do_response(
-                    "http://lingon.catalogix.se:8087/",   # consumer_url
                     "id12",                       # in_response_to
+                    "http://lingon.catalogix.se:8087/",   # consumer_url
                     "urn:mace:example.com:saml:roland:sp", # sp_entity_id
                     {"eduPersonEntitlement":"Jeter"},
                     name_id = name_id
                 )
                 
         self._sign_resp_ = server.do_response(
-                    "http://lingon.catalogix.se:8087/",   # consumer_url
                     "id12",                       # in_response_to
+                    "http://lingon.catalogix.se:8087/",   # consumer_url
                     "urn:mace:example.com:saml:roland:sp", # sp_entity_id
                     {"eduPersonEntitlement":"Jeter"},
                     name_id = name_id,
@@ -37,8 +37,8 @@ class TestAuthnResponse:
                 )
 
         self._resp_authn = server.do_response(
-                    "http://lingon.catalogix.se:8087/",   # consumer_url
                     "id12",                       # in_response_to
+                    "http://lingon.catalogix.se:8087/",   # consumer_url
                     "urn:mace:example.com:saml:roland:sp", # sp_entity_id
                     {"eduPersonEntitlement":"Jeter"},
                     name_id = name_id,
