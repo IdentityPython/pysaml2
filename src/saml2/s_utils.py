@@ -33,6 +33,8 @@ EXCEPTION2STATUS = {
     UnsupportedBinding: samlp.STATUS_UNSUPPORTED_BINDING,
     OtherError: samlp.STATUS_UNKNOWN_PRINCIPAL,
     MissingValue: samlp.STATUS_REQUEST_UNSUPPORTED,
+    # Undefined
+    Exception: samlp.STATUS_AUTHN_FAILED,
 }
 
 GENERIC_DOMAINS = "aero", "asia", "biz", "cat", "com", "coop", \
