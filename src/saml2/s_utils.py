@@ -137,13 +137,17 @@ def identity_attribute(form, attribute, forward_map=None):
     
 def error_status_factory(info):
     if isinstance(info, Exception):
+        try:
+            exc_val = EXCEPTION2STATUS[info.__class__]
+        except KeyError:
+            exc_val = samlp.STATUS_AUTHN_FAILED
         msg = info.args[0]
         status = samlp.Status(
             status_message=samlp.StatusMessage(text=msg),
             status_code=samlp.StatusCode(
                 value=samlp.STATUS_RESPONDER,
                 status_code=samlp.StatusCode(
-                    value=EXCEPTION2STATUS[info.__class__])
+                    value=exc_val)
                 ),
         )
     else:
