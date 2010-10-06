@@ -1,6 +1,6 @@
 import os
 
-from saml2 import metadata, utils, make_vals, make_instance
+from saml2 import metadata, make_vals, make_instance
 from saml2 import NAMESPACE as SAML2_NAMESPACE
 from saml2 import BINDING_SOAP
 from saml2 import md, saml, samlp
