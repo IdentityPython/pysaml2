@@ -130,7 +130,15 @@ class SAML2Plugin(FormPluginBase):
                                                 "%s?%s" % (self.wayf, sid_))]))
                 else:
                     self.log.info("Choosen IdP: '%s'" % wayf_selected)
-                    idp_url = self.srv["idp"][wayf_selected]
+                    try:
+                        idp_url = self.srv["idp"][wayf_selected][
+                                                    "single_sign_on_service"][
+                                                        BINDING_HTTP_REDIRECT]
+                    except KeyError:
+                        return (1, 
+                            HTTPNotImplemented(
+                                detail="Do not know how to talk to '%s'!" & (
+                                                            wayf_selected,)))
             else:
                 return (1, HTTPNotImplemented(detail='No WAYF present!'))
 
