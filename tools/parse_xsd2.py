@@ -187,8 +187,11 @@ class PyObj(object):
             cname = cdict[sup].class_name
         except AttributeError:
             (namespace,tag) = cdict[sup].name.split('.')
-            ctag = self.root.modul[namespace].factory(tag).__class__.__name__
-            cname = '%s.%s' % (namespace,ctag)
+            if namespace:
+                ctag = self.root.modul[namespace].factory(tag).__class__.__name__
+                cname = '%s.%s' % (namespace,ctag)
+            else:
+                cname = tag + "_"
         return cname
         
     def class_definition(self, target_namespace, cdict=None, ignore=None):
@@ -209,9 +212,13 @@ class PyObj(object):
                     cname = cdict[sup].class_name
                 except AttributeError:
                     cname = cdict[sup].name
-                    (namespace,tag) = cname.split('.')
-                    ctag = self.root.modul[namespace].factory(tag).__class__.__name__
-                    cname = '%s.%s' % (namespace,ctag)
+                    (namespace, tag) = cname.split('.')
+                    if namespace:
+                        ctag = self.root.modul[namespace].factory(
+                                                        tag).__class__.__name__
+                        cname = '%s.%s' % (namespace, ctag)
+                    else:
+                        cname = tag + "_"
                 klass = self.knamn(sup, cdict)
                 sups.append(klass)
                 
@@ -581,8 +588,9 @@ class PyType(PyObj):
             except KeyError:
                 (mod, typ) = sup.split('.')
                 supc = pyobj_factory(sup, None, None)
-                supc.properties = [_import_attrs(self.root.modul[mod], typ, 
-                                                self.root),[]]
+                if mod:
+                    supc.properties = [_import_attrs(self.root.modul[mod], 
+                                                        typ, self.root),[]]
                 cdict[sup] = supc
                 supc.done = True
                 
@@ -1281,7 +1289,13 @@ class ComplexType(Complex):
                 if len(cci.parts) == 1:
                     if isinstance(cci.parts[0], Extension):
                         ext = cci.parts[0]
-                        (namespace, name) = ext.base.split(":")
+
+                        try:
+                            (namespace, name) = ext.base.split(":")
+                        except ValueError:
+                            name = ext.base
+                            namespace = ""
+                            
                         if namespace and \
                             ext.xmlns_map[namespace] == top.target_namespace:
                             new_sup = name
@@ -1426,6 +1440,8 @@ def pyify_0(name):
             res += "_"+match.group(num+1).lower()+match.group(num)[1:]
         except AttributeError:
             break
+    
+    res = res.replace("-","_")
     return res
 
 def pyify(name):
@@ -1437,6 +1453,8 @@ def pyify(name):
     for char in name:
         if char >= "A" and char <= "Z":
             upc.append(char)
+        elif char == "-":
+            upc.append("_")
         else:
             if upc:
                 if len(upc) == 1:
