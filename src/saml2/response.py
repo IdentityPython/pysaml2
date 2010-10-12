@@ -92,7 +92,7 @@ class StatusResponse(object):
         self.name_id = ""
         self.response = None
         self.not_on_or_after = 0
-
+        
     def _postamble(self):
         if not self.response:
             if self.log:
@@ -112,7 +112,7 @@ class StatusResponse(object):
             else:
                 print >> sys.stderr, "Not valid response: %s" % exc.args[0]
         
-            self.clear()
+            self._clear()
             return self
         
         self.in_response_to = self.response.in_response_to
@@ -132,11 +132,16 @@ class StatusResponse(object):
         self.xmlstr = decoded_xml[:]
         if self.debug:
             self.log.info("xmlstr: %s" % (self.xmlstr,))
+
         try:
             self.response = self.signature_check(decoded_xml)
+        except TypeError:
+            raise
         except Exception, excp:
             self.log and self.log.info("EXCEPTION: %s", excp)
     
+        print "<", self.response
+        
         return self._postamble()
     
     def status_ok(self):
@@ -194,6 +199,11 @@ class StatusResponse(object):
         except AssertionError:
             return None
 
+    def update(self, mold):
+        self.xmlstr = mold.xmlstr
+        self.in_response_to = mold.in_response_to
+        self.response = mold.response
+        
 class LogoutResponse(StatusResponse):
     def __init__(self, sec_context, return_addr=None, log=None, timeslack=0, 
                     debug=0):
@@ -470,3 +480,34 @@ class AuthnResponse(StatusResponse):
     def __str__(self):
         return "%s" % self.xmlstr
 
+def response_factory(xmlstr, conf, entity_id=None, return_addr=None, 
+                        outstanding_queries=None, log=None, 
+                        timeslack=0, debug=0, decode=True, request_id=0):
+    sec_context = security_context(conf)
+    if not timeslack:
+        try:
+            timeslack = int(conf["timeslack"])
+        except KeyError:
+            pass
+    
+    attribute_converters = conf.attribute_converters
+                        
+    response = StatusResponse(sec_context, return_addr, log, timeslack, 
+                                        debug, request_id)
+    try:
+        response.loads(xmlstr, decode)
+        if response.response.assertion:
+            authnresp = AuthnResponse(sec_context, attribute_converters, 
+                            entity_id, return_addr, outstanding_queries, log,
+                            timeslack, debug)
+            authnresp.update(response)
+            return authnresp
+    except TypeError:
+        response.signature_check = sec_context.correctly_signed_logout_response
+        response.loads(xmlstr, decode)
+        logoutresp = LogoutResponse(sec_context, return_addr, log, timeslack, 
+                                    debug)
+        logoutresp.update(response)
+        return logoutresp
+        
+    return response
