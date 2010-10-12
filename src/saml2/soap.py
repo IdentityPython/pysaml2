@@ -96,15 +96,17 @@ def make_soap_enveloped_saml_thingy(thingy, headers=None):
 
     return ElementTree.tostring(envelope, encoding="UTF-8")
 
-class _Http(object):
-    """ For writing to a HTTP server using POST """
-    def __init__(self, path, keyfile=None, certfile=None):
+class HTTPClient(object):
+    """ For sending a message to a HTTP server using POST or GET """
+    def __init__(self, path, keyfile=None, certfile=None, log=None):
         self.path = path
         self.server = httplib2.Http()
+        self.log = log
+        
         if keyfile:
             self.server.add_certificate(keyfile, certfile, "")
 
-    def write(self, data):
+    def post(self, data):
         (response, content) = self.server.request(self.path, 
                             "POST", data,
                             headers={"content-type": "application/soap+xml"})
@@ -113,17 +115,25 @@ class _Http(object):
         else:
             return False
 
+    def get(self, data):
+        (response, content) = self.server.request(self.path, "GET", data)
+        if response.status == 200:
+            return content
+        else:
+            return False
+
 class SOAPClient(object):
     
     def __init__(self, server_url, keyfile=None, certfile=None, log=None):
-        self.server = _Http(server_url, keyfile, certfile)
+        self.server = HTTPClient(server_url, keyfile, certfile, log)
         self.log = log
         
     def send(self, request):
         soap_message = make_soap_enveloped_saml_thingy(request)
-        response = self.server.write(soap_message)
+        response = self.server.post(soap_message)
         if response:
             self.log and self.log.info("SOAP response: %s" % response)
             return parse_soap_enveloped_saml_response(response)
-
+        else:
+            return False
 
