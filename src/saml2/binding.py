@@ -27,6 +27,7 @@ import saml2
 import base64
 import urllib
 from saml2.s_utils import deflate_and_base64_encode
+from saml2.soap import SOAPClient, HTTPClient
 
 try:
     from xml.etree import cElementTree as ElementTree
@@ -86,8 +87,7 @@ def http_redirect(message, location, sp_entity_id, relay_state=""):
     if message.signature:
         message.signature = None
         
-    args = {"SAMLRequest": deflate_and_base64_encode(message),
-            "spentityid": sp_entity_id}
+    args = {"SAMLRequest": deflate_and_base64_encode(message),}
     if relay_state:
         args["RelayState"] = relay_state
         
@@ -167,6 +167,38 @@ def parse_soap_enveloped_saml(text, body_class, header_class=None):
                         break
                         
     return body, header
+
+# -----------------------------------------------------------------------------
+def send_using_http(request, destination, key_file=None, cert_file=None, 
+                    log=None):
+
+    http = HTTPClient(destination, key_file, cert_file, log)
+    log and log.info("HTTP client initiated")
+
+    try:
+        response = http.get(request)
+    except Exception, exc:
+        log and log.info("HTTPClient exception: %s" % (exc,))
+        return None
+
+    log and log.info("HTTP request sent and got response: %s" % response)
+
+    return response
+
+def send_using_soap(request, destination, key_file=None, cert_file=None, 
+                    log=None):
+
+    soapclient = SOAPClient(destination, key_file, cert_file, log)
+    log and log.info("SOAP client initiated")
+    try:
+        response = soapclient.send(request)
+    except Exception, exc:
+        log and log.info("SoapClient exception: %s" % (exc,))
+        return None
+
+    log and log.info("SOAP request sent and got response: %s" % response)
+
+    return response
 
 # -----------------------------------------------------------------------------
 
