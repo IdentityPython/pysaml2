@@ -465,6 +465,8 @@ class SecurityContext(object):
             request as a samlp.Request instance
         """
         request = samlp.logout_request_from_string(decoded_xml)
+        if not request:
+            raise TypeError("Not a LogoutRequest")
 
         if not request.signature:
             if must:
@@ -485,6 +487,8 @@ class SecurityContext(object):
              the response as a samlp.LogoutResponse instance
         """
         response = samlp.logout_response_from_string(decoded_xml)
+        if not response:
+            raise TypeError("Not a LogoutResponse")
 
         if not response.signature:
             if must:
@@ -505,7 +509,9 @@ class SecurityContext(object):
             request as a samlp.Request instance
         """
         request = samlp.authn_request_from_string(decoded_xml)
-
+        if not request:
+            raise TypeError("Not an AuthnRequest")
+            
         if not request.signature:
             if must:
                 raise SignatureError("Missing must signature")
@@ -525,6 +531,8 @@ class SecurityContext(object):
         """
         
         response = samlp.response_from_string(decoded_xml)
+        if not response:
+            raise TypeError("Not a Response")
 
         if response.signature:
             self._check_signature(decoded_xml, response)
