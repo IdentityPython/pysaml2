@@ -681,7 +681,9 @@ def do_endpoints(conf, endpoints):
                 if isinstance(args, basestring): # Assume it's the location
                     args = {"location":args, 
                             "binding": DEFAULT_BINDING[endpoint]}
-                if indexed:
+                elif isinstance(args, tuple): # (location, binding)
+                    args = {"location":args[0], "binding": args[1]}
+                if indexed and "index" not in args:
                     args["index"] = "%d" % i
                 servs.append(factory(eclass, **args))
                 i += 1
