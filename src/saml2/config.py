@@ -7,8 +7,8 @@ import sys
 from saml2 import metadata
 from saml2.assertion import Policy
 from saml2.attribute_converter import ac_factory, AttributeConverter
-from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
-from saml2.metadata import ENDPOINTS
+from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST, BINDING_SOAP
+from saml2.metadata import ENDPOINTS, DEFAULT_BINDING
 
 class MissingValue(Exception):
     pass
@@ -123,6 +123,9 @@ class Config(dict):
         for key, val in config.items():
             self[key] = val
         
+        if "secret" not in config:
+            self["secret"] = "abc" # not a very good secret :-)
+            
         return self
     
     def xmlsec(self):
@@ -143,11 +146,28 @@ class Config(dict):
         except KeyError:
             return Policy()
             
-    def endpoint(self, typ, service):
+    def endpoint(self, typ, service, binding=None):
+        """ Will return addresses to endpoints for specific services and 
+        bindings.
+        
+        :param typ: The type of server "idp"/"sp"/"aa"
+        :param service: The type of service "single_sign_on_service"/....
+        :param binding: The binding used for the service, if no binding is
+            specified the default binding for that service is searched for.
+        :return: Possible empty list of endpoints
+        """
         try:
-            return self["service"][typ]["endpoints"][service]
+            res = []
+            for spec in self["service"][typ]["endpoints"][service]:
+                if isinstance(spec, basestring):
+                    if binding == None:
+                        res.append(spec)
+                elif isinstance(spec, tuple):
+                    if binding == spec[1]:
+                        res.append(spec[0])
+            return res
         except KeyError:
-            return None
+            return []
 
     def vo_conf(self, name):
         return self["virtual_organization"][name]
@@ -186,10 +206,16 @@ class Config(dict):
     def sp_name(self):
         return self["service"]["sp"]["name"]
         
-    def logout_service(self, entity_id, binding=BINDING_HTTP_POST):
+    def logout_service(self, entity_id, binding=BINDING_SOAP):
         try:
             return self["service"]["sp"]["idp"][entity_id][
                             "single_logout_service"][binding]
         except KeyError:
             return None
-        
+
+    def single_sign_on_service(self, entity_id, binding=BINDING_HTTP_REDIRECT):
+        try:
+            return self["service"]["sp"]["idp"][entity_id][
+                                        "single_sign_on_service"][binding]
+        except KeyError:
+            return None
