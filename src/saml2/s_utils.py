@@ -2,6 +2,9 @@
 
 import time
 import base64
+import hashlib
+import hmac
+
 from saml2 import saml, samlp, VERSION, sigver
 from saml2.time_util import instant
 
@@ -180,11 +183,11 @@ def assertion_factory(**kwargs):
         setattr(assertion, key, val)
     return assertion
 
-def logoutresponse_factory(signature=False, encrypt=False, **kwargs):
+def logoutresponse_factory(sign=False, encrypt=False, **kwargs):
     response = samlp.LogoutResponse(id=sid(), version=VERSION,
                                 issue_instant=instant())
 
-    if signature:
+    if sign:
         response["signature"] = sigver.pre_signature_part(kwargs["id"])
     if encrypt:
         pass
@@ -194,11 +197,11 @@ def logoutresponse_factory(signature=False, encrypt=False, **kwargs):
 
     return response
     
-def response_factory(signature=False, encrypt=False, **kwargs):
+def response_factory(sign=False, encrypt=False, **kwargs):
     response = samlp.Response(id=sid(), version=VERSION,
                                 issue_instant=instant())
     
-    if signature:
+    if sign:
         response["signature"] = sigver.pre_signature_part(kwargs["id"])
     if encrypt:
         pass
@@ -301,3 +304,18 @@ def factory(klass, **kwargs):
     for key, val in kwargs.items():
         setattr(instance, key, val)
     return instance
+
+def signature(secret, parts):
+    """Generates a signature.
+    """
+    csum = hmac.new(secret, digestmod=hashlib.sha1)
+    for part in parts: 
+        csum.update(part)
+    return csum.hexdigest()
+
+def verify_signature(secret, parts):
+    """ Checks that the signature is correct """
+    if signature(secret, parts[:-1]) == parts[-1]:
+        return True
+    else:
+        return False
