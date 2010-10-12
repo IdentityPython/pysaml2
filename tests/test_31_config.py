@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from saml2 import BINDING_HTTP_REDIRECT
 from saml2.config import Config
 from saml2.metadata import MetaData
 from py.test import raises
@@ -58,6 +59,31 @@ IDP1 = {
             "name" : "Rolands IdP",
             "endpoints": {
                 "single_sign_on_service" : ["http://localhost:8088/"],
+            },
+            "assertions":{
+                "default": {
+                    "attribute_restrictions": {
+                        "givenName": None,
+                        "surName": None,
+                        "eduPersonAffiliation": ["(member|staff)"],
+                        "mail": [".*@example.com"],
+                    }
+                },
+                "urn:mace:umu.se:saml:roland:sp": None
+            }
+        }
+    },
+    "xmlsec_binary" : "/usr/local/bin/xmlsec1",
+}
+
+IDP2 = {
+    "entityid" : "urn:mace:umu.se:saml:roland:idp",
+    "service": {
+        "idp":{
+            "name" : "Rolands IdP",
+            "endpoints": {
+                "single_sign_on_service" : ["http://localhost:8088/"],
+                "single_logout_service" : [("http://localhost:8088/", BINDING_HTTP_REDIRECT)],
             },
             "assertions":{
                 "default": {
@@ -164,12 +190,23 @@ def test_minimum():
     
     assert c != None
     
-def test_idp():
+def test_idp_1():
     c = Config().load(IDP1)
     
     print c
     assert c.services() == ["idp"]
     assert c.endpoint("idp", "single_sign_on_service") == ['http://localhost:8088/']
+
+    attribute_restrictions = c.idp_policy().get_attribute_restriction("")
+    assert attribute_restrictions["eduPersonAffiliation"][0].match("staff")
+
+def test_idp_2():
+    c = Config().load(IDP2)
+
+    print c
+    assert c.services() == ["idp"]
+    assert c.endpoint("idp", "single_logout_service") == [] # default is SOAP
+    assert c.endpoint("idp", "single_logout_service", BINDING_HTTP_REDIRECT) == ['http://localhost:8088/']
 
     attribute_restrictions = c.idp_policy().get_attribute_restriction("")
     assert attribute_restrictions["eduPersonAffiliation"][0].match("staff")
