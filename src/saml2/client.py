@@ -19,28 +19,29 @@
 to conclude its tasks.
 """
 
-import os
-import urllib
 import saml2
-import base64
+import time
 
-from saml2.time_util import instant
-from saml2.s_utils import sid, deflate_and_base64_encode
-from saml2.s_utils import do_attributes, factory, decode_base64_and_inflate
+from saml2.time_util import instant, not_on_or_after
+from saml2.s_utils import sid, signature
+from saml2.s_utils import do_attributes, factory
 
 from saml2 import samlp, saml, class_name
 from saml2 import VERSION
 from saml2.sigver import pre_signature_part
 from saml2.sigver import security_context, signed_instance_factory
 from saml2.soap import SOAPClient
-from saml2.soap import parse_soap_enveloped_saml_logout_response
+from saml2.binding import send_using_soap, http_redirect_message
+from saml2.binding import http_post_message
 from saml2.population import Population
 from saml2.virtual_org import VirtualOrg
 
 from saml2.response import authn_response
+from saml2.response import response_factory
 from saml2.response import LogoutResponse
+from saml2.response import AuthnResponse
 
-from saml2.validate import valid_instance
+from saml2 import BINDING_HTTP_REDIRECT, BINDING_SOAP, BINDING_HTTP_POST
 
 SSO_BINDING = saml2.BINDING_HTTP_REDIRECT
 
@@ -57,17 +58,27 @@ class IdpUnspecified(Exception):
 
 class VerifyError(Exception):
     pass
+
+class LogoutError(Exception):
+    pass
         
 class Saml2Client(object):
     """ The basic pySAML2 service provider class """
     
     def __init__(self, config=None, debug=0, vorg=None, 
-                persistent_cache=None):
+                identity_cache=None, state_cache=None):
         """
         :param config: A saml2.config.Config instance
         """
         self.vorg = None
-        self.users = Population(persistent_cache)
+        self.users = Population(identity_cache)
+
+        # for server state storage
+        if not state_cache:
+            self.state = {} # in memory storage
+        else:
+            self.state = state_cache
+        
         self.sec = None
         if config:
             self.config = config
@@ -84,6 +95,11 @@ class Saml2Client(object):
         else:
             self.debug = debug
     
+    def relay_state(self, session_id):
+        vals = [session_id, str(int(time.time()))]
+        vals.append(signature(self.config["secret"], vals))
+        return "|".join(vals)
+
     def _init_request(self, request, destination):
         #request.id = sid()
         request.version = VERSION
@@ -108,7 +124,7 @@ class Saml2Client(object):
         return samlp.Scoping(idp_list=samlp.IDPList(idp_entry=[idp_ent]))
     
     def response(self, post, entity_id, outstanding, log=None):
-        """ Deal with an AuthnResponse
+        """ Deal with an AuthnResponse or LogoutResponse
         
         :param post: The reply as a dictionary
         :param entity_id: The Entity ID for this SP
@@ -116,8 +132,7 @@ class Saml2Client(object):
             the original web request from the user before redirection
             as values.
         :param log: where loggin should go.
-        :return: An response.AuthnResponse instance which among other
-            things contains a verified saml2.AuthnResponse instance.
+        :return: An response.AuthnResponse or response.LogoutResponse instance
         """
         # If the request contains a samlResponse, try to validate it
         try:
@@ -127,21 +142,38 @@ class Saml2Client(object):
         
         reply_addr = self._service_url()
         
-        aresp = None
+        resp = None
         if saml_response:
-            aresp = authn_response(self.config, entity_id, reply_addr,
-                                    outstanding, log, debug=self.debug)
-            aresp.loads(saml_response)
+            resp = response_factory(saml_response, self.config, entity_id, 
+                                    reply_addr, outstanding, log, 
+                                    debug=self.debug)
+
+            
             if self.debug:
-                log and log.info(aresp)
-            aresp = aresp.verify()
-            if aresp:
-                self.users.add_information_about_person(aresp.session_info())
-                
-        return aresp
+                log and log.info(resp)
+            resp = resp.verify()
+            if isinstance(resp, AuthnResponse):
+                self.users.add_information_about_person(resp.session_info())
+            elif isinstance(resp, LogoutResponse):
+                status = self.state[resp.in_response_to]
+                del self.state[resp.in_response_to]
+                if status["entity_ids"] == [resp.response.issuer]: # done
+                    self.local_logout(status["subject_id"])
+                    return (0, ["200 Ok"])
+                else:
+                    status["entity_ids"].remove(resp.response.issuer)
+                    return self._logout(status["subject_id"], 
+                                        status["entity_ids"], 
+                                        status["reason"], 
+                                        status["not_on_or_after"], 
+                                        status["sign"], 
+                                        log, )
+                    
+        return resp
     
     def authn_request(self, query_id, destination, service_url, spentityid,
-                        my_name, vorg="", scoping=None, log=None, sign=False):
+                        my_name, vorg="", scoping=None, log=None, sign=False,
+                        binding=saml2.BINDING_HTTP_POST):
         """ Creates an authentication request.
         
         :param query_id: The identifier for this request
@@ -160,7 +192,7 @@ class Saml2Client(object):
             issue_instant= instant(),
             destination= destination,
             assertion_consumer_service_url= service_url,
-            protocol_binding= saml2.BINDING_HTTP_POST,
+            protocol_binding= binding,
             provider_name= my_name
         )
         
@@ -212,7 +244,7 @@ class Saml2Client(object):
             urls = self.config.idps()
             if len(urls) > 1:
                 raise IdpUnspecified("Too many IdPs to choose from: %s" % urls)
-            return urls[0]["single_sign_on_service"][SSO_BINDING]
+            return urls[0]["single_sign_on_service"][BINDING_HTTP_REDIRECT]
         else:
             return location
         
@@ -266,28 +298,12 @@ class Saml2Client(object):
         if binding == saml2.BINDING_HTTP_POST:
             # No valid ticket; Send a form to the client
             # THIS IS NOT TO BE USED RIGHT NOW
-            response = []
-            response.append("<head>")
-            response.append("""<title>SAML 2.0 POST</title>""")
-            response.append("</head><body>")
-            #login_url = location + '?spentityid=' + "lingon.catalogix.se"
-            response.append(FORM_SPEC % (location, base64.b64encode(authen_req),
-                                os.environ['REQUEST_URI']))
-            response.append("""<script type="text/javascript">""")
-            response.append("     window.onload = function ()")
-            response.append(" { document.forms[0].submit(); ")
-            response.append("""</script>""")
-            response.append("</body>")
+            (head, response) = http_post_message(authen_req, location, 
+                                                    relay_state)
         elif binding == saml2.BINDING_HTTP_REDIRECT:
-            lista = ["SAMLRequest=%s" % urllib.quote_plus(
-                                deflate_and_base64_encode(
-                                    authen_req)),
-                    #"spentityid=%s" % spentityid
-                    ]
-            if relay_state:
-                lista.append("RelayState=%s" % relay_state)
-            login_url = "?".join([location, "&".join(lista)])
-            response = ('Location', login_url)
+            (head, _body) = http_redirect_message(authen_req, location, 
+                                                relay_state)
+            response = head[0]
         else:
             raise Exception("Unkown binding type: %s" % binding)
         return (session_id, response)
@@ -343,7 +359,6 @@ class Saml2Client(object):
         if sign:
             signed_query = self.sec.sign_assertion_using_xmlsec("%s" % query)
             return samlp.attribute_query_from_string(signed_query)
-        
         else:
             return query
             
@@ -389,7 +404,7 @@ class Saml2Client(object):
         if response:
             log and log.info("Verifying response")
             
-            aresp = authn_response(self.config, issuer, 
+            aresp = authn_response(self.config, "", issuer, 
                                     outstanding_queries={session_id:""}, 
                                     log=log)
             session_info = aresp.loads(response).verify().session_info()
@@ -403,102 +418,155 @@ class Saml2Client(object):
             log and log.info("No response")
             return None
     
-    def make_logout_requests(self, subject_id, reason=None, 
-                                not_on_or_after=None, log=None):
+    def logout_requests(self, subject_id, destination, entity_id, 
+                            reason=None, expire=None, _log=None):
         """ Constructs a LogoutRequest
         
         :param subject_id: The identifier of the subject
+        :param destination: 
         :param reason: An indication of the reason for the logout, in the
             form of a URI reference.
-        :param not_on_or_after: The time at which the request expires,
+        :param expire: The time at which the request expires,
             after which the recipient may discard the message.
         :return: A LogoutRequest instance
         """
             
-        result = []
-        log and log.info("logout request for: %s" % subject_id)
-        for entity_id in self.users.issuers_of_info(subject_id):
-            log and log.info("provider id: %s" % entity_id)
-            destination = self.config.logout_service(entity_id)
-            log and log.info("destination to provider: %s" % destination)
-            if not destination:
-                continue
-                
-            session_id = sid()
-            # create NameID from subject_id
-            name_id = saml.NameID(
-                text=self.users.get_entityid(subject_id, entity_id))
+        session_id = sid()
+        # create NameID from subject_id
+        name_id = saml.NameID(
+            text = self.users.get_entityid(subject_id, entity_id))
 
-            request = samlp.LogoutRequest(
-                id=session_id,
-                version=VERSION,
-                issue_instant=instant(),
-                destination=destination,
-                issuer=self.issuer(),
-                name_id = name_id
-            )
-            
+        request = samlp.LogoutRequest(
+            id=session_id,
+            version=VERSION,
+            issue_instant=instant(),
+            destination=destination,
+            issuer=self.issuer(),
+            name_id = name_id
+        )
         
-            if reason:
-                request.reason = reason
-        
-            if not_on_or_after:
-                request.not_on_or_after = not_on_or_after
-            
-            result.append((destination, request))
-            
-        return result
     
-    def global_logout(self, subject_id, reason="", not_on_or_after=None,
+        if reason:
+            request.reason = reason
+    
+        if expire:
+            request.not_on_or_after = expire
+                        
+        return request
+    
+    def global_logout(self, subject_id, reason="", expire=None,
                           sign=False, log=None):
-        """ SAML SOAP (using HTTP as a transport) binding [SAML2Bind] for 
-            issuance of <saml2p:LogoutRequest> message
+        """ More or less a layer of indirection :-/
+        Bootstrapping the whole thing by finding all the IdPs that should
+        be notified.
         
+        :param subject_id: The identifier of the subject that wants to be
+            logged out.
+        :param reason: Why the subject wants to log out
+        :param expire: The latest the log out should happen.
+        :param sign: Whether the request should be signed or not.
+            This also depends on what binding is used.
+        :param log: A logging function
+        :return: Depends on which binding is used:
+            If the HTTP redirect binding then a HTTP redirect,
+            if SOAP binding has been used the just the result of that
+            conversation. 
         """
             
-        result = []
-        for (destination, request) in self.make_logout_requests(subject_id, 
-                                                            reason,
-                                                            not_on_or_after, 
-                                                            log):
-            if sign:
-                request.signature = pre_signature_part(request.id,
-                                                        self.sec.my_cert, 1)
-                to_sign = [(class_name(request), request.id)]
-            else:
+        log and log.info("logout request for: %s" % subject_id)
+
+        # find out which IdPs/AAs I should notify
+        entity_ids = self.users.issuers_of_info(subject_id)
+
+        return self._logout(subject_id, entity_ids, reason, expire, 
+                            sign, log)
+        
+    def _logout(self, subject_id, entity_ids, reason, expire, 
+                sign, log=None):
+        
+        # check time
+        if not_on_or_after(expire) == False: # I've run out of time
+            # Do the local logout anyway
+            self.local_logout(subject_id)
+            return (0, ["504 Gateway Timeout"])
+            
+        # for all where I can use the SOAP binding, do those first
+        not_done = entity_ids[:]
+        session_id = 0
+
+        for entity_id in entity_ids:
+            response = False
+            rstate = None
+            for binding in [BINDING_SOAP, BINDING_HTTP_POST, 
+                            BINDING_HTTP_REDIRECT]:
+                destination = self.config.logout_service(entity_id, binding)
+                if not destination:
+                    continue
+
+                log and log.info("destination to provider: %s" % destination)
+                request = self.logout_requests(subject_id, destination, 
+                                                entity_id, reason, expire, log)
+                
                 to_sign = []
+                if sign and binding != BINDING_HTTP_REDIRECT:
+                    request.signature = pre_signature_part(request.id,
+                                                    self.sec.my_cert, 1)
+                    to_sign = [(class_name(request), request.id)]
         
-            if log:
-                log.info("REQUEST: %s" % request)
+                if log:
+                    log.info("REQUEST: %s" % request)
 
-            request = signed_instance_factory(request, self.sec, to_sign)
+                request = signed_instance_factory(request, self.sec, to_sign)
         
-            soapclient = SOAPClient(destination, self.config["key_file"],
-                                    self.config["cert_file"], log=log)
-            log and log.info("SOAP client initiated")
-            try:
-                response = soapclient.send(request)
-            except Exception, exc:
-                log and log.info("SoapClient exception: %s" % (exc,))
-                return None
+                if binding == BINDING_SOAP:
+                    response = send_using_soap(request, destination, 
+                                                self.config["key_file"],
+                                                self.config["cert_file"], 
+                                                log=log)
+                    if response:
+                        log and log.info("Verifying response")
+                        response = self.logout_response(response, log)
 
-            log and log.info("SOAP request sent and got response: %s" % response)
-            if response:
-                log and log.info("Verifying response")
-                lresp = self.logout_response(response, log)
-                result.append((destination, lresp))
-            else:
-                log and log.info("No response")
-                result.append((destination, ""))
+                    if response:
+                        not_done.remove(entity_id)
+                        log and log.info("OK response from %s" % destination)
+                    else:
+                        log and log.info("NOT OK response from %s" % destination)
+
+                else:
+                    session_id = request.id
+                    rstate = self.relay_state(session_id)
+
+                    self.state[session_id] = {"entity_id": entity_id,
+                                                "operation": "SLO",
+                                                "entity_ids": entity_ids,
+                                                "subject_id": subject_id,
+                                                "reason": reason,
+                                                "not_on_of_after": expire,
+                                                "sign": sign}
+                    
+
+                    if binding == BINDING_HTTP_POST:
+                        (head, body) = http_post_message(request, 
+                                                            destination, 
+                                                            rstate)
+                    else:
+                        (head, body) = http_redirect_message(request, 
+                                                            destination, 
+                                                            rstate)
+            
+                    return (session_id, head, body)
         
-        self.local_logout(subject_id)
-        return result
-    
+        if not_done != []:
+            # upstream should try later
+            raise LogoutError("%s" % (entity_ids,))
+        
+        return (0, [], response)
+
     def local_logout(self, subject_id):
         # Remove the user from the cache, equals local logout
         self.users.remove_person(subject_id)
         return True
-    
 
     def logout_response(self, xmlstr, log=None):
         """ Deal with a LogoutResponse
@@ -520,7 +588,7 @@ class Saml2Client(object):
                 response = response.verify()
                 
             if not response:
-                return None
+                return False
             
             if self.debug and log:
                 log.info(response)
