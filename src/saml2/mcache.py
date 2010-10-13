@@ -13,18 +13,7 @@ class ToOld(Exception):
 
 def _key(prefix, name):
     return "%s_%s" % (prefix, name)
-    
-def _valid(not_on_or_after):
-    if isinstance(not_on_or_after, time.struct_time):
-        not_on_or_after = time.mktime(not_on_or_after)
-    now = time_util.daylight_corrected_now()
-
-    if not_on_or_after and not_on_or_after < now:
-        #self.reset(subject_id, entity_id)
-        raise ToOld("%s < %s" % (not_on_or_after, now))
-    else:
-        return True
-        
+            
 class Cache(object):
     def __init__(self, servers, debug=0):
         self._cache = memcache.Client(servers, debug)
@@ -82,11 +71,11 @@ class Cache(object):
         :return: The session information as a dictionary
         """
         try:
-            (not_on_or_after, info) = item
+            (timestamp, info) = item
         except ValueError:
             raise ToOld()
             
-        if _valid(not_on_or_after):
+        if info and not_on_or_after(timestamp):
             return info
         else:
             raise ToOld()
@@ -98,7 +87,7 @@ class Cache(object):
         else:
             return self.get_info(res)
         
-    def set(self, subject_id, entity_id, info, not_on_or_after=0):
+    def set(self, subject_id, entity_id, info, timestamp=0):
         """ Stores session information in the cache. Assumes that the subject_id
         is unique within the context of the Service Provider.
         
@@ -106,7 +95,7 @@ class Cache(object):
         :param entity_id: The identifier of the entity_id/receiver of an 
             assertion
         :param info: The session info, the assertion is part of this
-        :param not_on_or_after: A time after which the assertion is not valid.
+        :param timestamp: A time after which the assertion is not valid.
         """
         entities = self._cache.get(subject_id)
         if not entities:
@@ -123,7 +112,7 @@ class Cache(object):
             self._cache.set(subject_id, entities)
           
         # Should use memcache's expire
-        self._cache.set(_key(subject_id, entity_id), (not_on_or_after, info))
+        self._cache.set(_key(subject_id, entity_id), (timestamp, info))
             
     def reset(self, subject_id, entity_id):
         """ Scrap the assertions received from a IdP or an AA about a special
@@ -162,12 +151,15 @@ class Cache(object):
             valid or not.
         """
         try:
-            (not_on_or_after, _) = self._cache.get(_key(subject_id, entity_id))
+            (timestamp, info) = self._cache.get(_key(subject_id, entity_id))
         except ValueError:
             return False
             
+        if not info:
+            return False
+            
         try:
-            return _valid(not_on_or_after)
+            return not_on_or_after(timestamp)
         except ToOld:
             return False
         
@@ -190,7 +182,7 @@ class Cache(object):
                 
     def valid_to(self, subject_id, entity_id, newtime):
         try:
-            (not_on_or_after, info) = self._cache.get(_key(subject_id, entity_id))
+            (timestamp, info) = self._cache.get(_key(subject_id, entity_id))
         except ValueError:
             return False
             
