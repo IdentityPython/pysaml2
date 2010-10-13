@@ -26,6 +26,7 @@ from saml2 import saml
 from saml2 import class_name
 from saml2 import soap
 from saml2 import request
+from saml2 import BINDING_HTTP_REDIRECT, BINDING_SOAP
 
 from saml2.s_utils import sid
 from saml2.s_utils import response_factory, logoutresponse_factory
@@ -201,7 +202,7 @@ class Server(object):
         return saml.Issuer(text=self.conf["entityid"], 
                             format=saml.NAMEID_FORMAT_ENTITY)        
         
-    def parse_authn_request(self, enc_request):
+    def parse_authn_request(self, enc_request, binding=BINDING_HTTP_REDIRECT):
         """Parse a Authentication Request
         
         :param enc_request: The request in its transport format
@@ -214,7 +215,9 @@ class Server(object):
         
         response = {}
         
-        receiver_addresses = self.conf.endpoint("idp", "single_sign_on_service")
+        receiver_addresses = self.conf.endpoint("idp", 
+                                                "single_sign_on_service",
+                                                binding)
         authn_request = request.AuthnRequest(self.sec, 
                                             self.conf.attribute_converters(),
                                             receiver_addresses)
@@ -473,18 +476,30 @@ class Server(object):
         else:
             return ("%s" % response).split("\n")
 
-    def parse_logout_request(self, text):
+    def parse_logout_request(self, text, binding=BINDING_SOAP):
         """Parse a Logout Request
         
-        :param test: The request in its transport format
+        :param text: The request in its transport format, if the binding is 
+            HTTP-Redirect or HTTP-Post the text *must* be the value of the 
+            SAMLRequest attribute.
         :return: A validated LogoutRequest instance or None if validation 
             failed.
         """
         
-        lreq = soap.parse_soap_enveloped_saml_logout_request(text)
-        slo = self.conf.endpoint("idp", "single_logout_service")[0]
-        req = request.LogoutRequest(self.sec, slo)
-        req = req.loads(lreq, False) # Got it over SOAP so no base64+zip
+        slos = self.conf.endpoint("idp", "single_logout_service", binding)[0]
+        req = request.LogoutRequest(self.sec, slos)
+        if binding == BINDING_SOAP:
+            lreq = soap.parse_soap_enveloped_saml_logout_request(text)
+            try:
+                req = req.loads(lreq, False) # Got it over SOAP so no base64+zip
+            except Exception:
+                return None
+        else:
+            try:
+                req = req.loads(text)
+            except Exception:
+                return None
+
         req = req.verify()
         
         if not req: # Not a valid request
