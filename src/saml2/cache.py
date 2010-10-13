@@ -10,7 +10,7 @@ from saml2 import time_util
 
 class ToOld(Exception):
     pass
-    
+
 class Cache(object):
     def __init__(self, filename=None):
         if filename:
@@ -64,16 +64,11 @@ class Cache(object):
         :param entity_id: The identifier of the entity_id
         :return: The session information
         """
-        (not_on_or_after, info) = self._db[subject_id][entity_id]
-        if isinstance(not_on_or_after, time.struct_time):
-            not_on_or_after = time.mktime(not_on_or_after)
-        now = time_util.daylight_corrected_now()
-
-        if not_on_or_after < now:
-            #self.reset(subject_id, entity_id)
-            raise ToOld("%s < %s" % (not_on_or_after, now))
-        else:
+        (timestamp, info) = self._db[subject_id][entity_id]
+        if time_util.not_on_or_after(timestamp) and info:
             return info
+        else:
+            raise ToOld("past %s" % (timestamp,))
     
     def set(self, subject_id, entity_id, info, not_on_or_after=0):
         """ Stores session information in the cache. Assumes that the subject_id
@@ -125,14 +120,14 @@ class Cache(object):
             valid or not.
         """
         try:
-            (not_on_or_after, _) = self._db[subject_id][entity_id]
+            (timestamp, info) = self._db[subject_id][entity_id]
         except KeyError:
             return False
-        now = time.gmtime()
-        if not_on_or_after < now:
+
+        if not info:
             return False
         else:
-            return True
+            return time_util.not_on_or_after(timestamp)
         
     def subjects(self):
         """ Return identifiers for all the subjects that are in the cache.
