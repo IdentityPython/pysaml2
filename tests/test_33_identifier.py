@@ -54,8 +54,7 @@ NAME_ID_POLICY_2 = """<?xml version="1.0" encoding="utf-8"?>
 
 class TestIdentifier():
     def setup_class(self):
-        self.id = Identifier("subject.db", CONFIG["entityid"], 
-                            CONFIG.vo_conf)
+        self.id = Identifier("subject.db", CONFIG.vo_conf)
         
     def test_persistent_1(self):
         policy = Policy({
@@ -74,7 +73,7 @@ class TestIdentifier():
         assert _eq(nameid.keys(), ['text', 'sp_provided_id', 
                             'sp_name_qualifier', 'name_qualifier', 'format'])
         assert _eq(nameid.keyswv(), ['format', 'text', 'sp_name_qualifier'])
-        assert nameid.sp_name_qualifier == CONFIG["entityid"]
+        assert nameid.sp_name_qualifier == "urn:mace:example.com:sp:1"
         assert nameid.format == NAMEID_FORMAT_PERSISTENT
         
         nameid_2 = self.id.construct_nameid(policy, "foobar", 

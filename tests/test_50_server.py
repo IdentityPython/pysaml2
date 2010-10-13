@@ -14,10 +14,48 @@ from saml2 import BINDING_HTTP_POST
 from py.test import raises
 import shelve
 import re
+import os
 
 def _eq(l1,l2):
     return set(l1) == set(l2)
 
+class TestIdentifier():
+    def setup_class(self):
+        self.ident = Identifier("foobar.db")
+    
+    def test_persistent_nameid(self):
+        sp_id = "urn:mace:umu.se:sp"
+        nameid = self.ident.persistent_nameid(sp_id, "abcd0001")
+        remote_id = nameid.text.strip()
+        print remote_id
+        print self.ident.map
+        local = self.ident.local_name(sp_id, remote_id)
+        assert local == "abcd0001"
+        assert self.ident.local_name(sp_id, "pseudo random string") == None
+        assert self.ident.local_name(sp_id+":x", remote_id) == None
+
+        # Always get the same
+        nameid2 = self.ident.persistent_nameid(sp_id, "abcd0001")
+        assert nameid.text.strip() == nameid2.text.strip()
+
+    def test_transient_nameid(self):
+        sp_id = "urn:mace:umu.se:sp"
+        nameid = self.ident.transient_nameid(sp_id, "abcd0001")
+        remote_id = nameid.text.strip()
+        print remote_id
+        print self.ident.map
+        local = self.ident.local_name(sp_id, remote_id)
+        assert local == "abcd0001"
+        assert self.ident.local_name(sp_id, "pseudo random string") == None
+        assert self.ident.local_name(sp_id+":x", remote_id) == None
+
+        # Getting a new, means really getting a new !
+        nameid2 = self.ident.transient_nameid(sp_id, "abcd0001")
+        assert nameid.text.strip() != nameid2.text.strip()
+        
+    def teardown_class(self):
+        os.unlink("foobar.db")
+        
 class TestServer1():
     def setup_class(self):
         self.server = Server("idp.config")
@@ -165,7 +203,9 @@ class TestServer1():
         assert response["sp_entity_id"] == "urn:mace:example.com:saml:roland:sp"
 
     def test_sso_response_with_identity(self):
-        name_id = self.server.ident.temporary_nameid()
+        name_id = self.server.ident.transient_nameid(
+                                        "urn:mace:example.com:saml:roland:sp",
+                                        "id12")
         resp = self.server.do_response(
                     "id12",                         # in_response_to
                     "http://localhost:8087/",       # consumer_url
@@ -273,7 +313,9 @@ class TestServer1():
         assert len(astate.attribute) == 3
         
     def test_signed_response(self):
-        name_id = self.server.ident.temporary_nameid()
+        name_id = self.server.ident.transient_nameid(
+                                        "urn:mace:example.com:saml:roland:sp",
+                                        "id12")
                 
         signed_resp = self.server.do_response(
                     "id12",                                 # in_response_to

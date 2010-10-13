@@ -17,7 +17,8 @@ def _eq(l1,l2):
 class TestAuthnResponse:
     def setup_class(self):
         server = Server("idp.config")
-        name_id = server.ident.temporary_nameid()
+        name_id = server.ident.transient_nameid(
+                            "urn:mace:example.com:saml:roland:sp","id12")
 
         self._resp_ = server.do_response(
                     "id12",                       # in_response_to
