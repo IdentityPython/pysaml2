@@ -455,7 +455,7 @@ class Saml2Client(object):
         return request
     
     def global_logout(self, subject_id, reason="", expire=None,
-                          sign=False, log=None):
+                          sign=False, log=None, return_to="/"):
         """ More or less a layer of indirection :-/
         Bootstrapping the whole thing by finding all the IdPs that should
         be notified.
@@ -467,6 +467,8 @@ class Saml2Client(object):
         :param sign: Whether the request should be signed or not.
             This also depends on what binding is used.
         :param log: A logging function
+        :param return_to: Where to send the user after she has been
+            logged out.
         :return: Depends on which binding is used:
             If the HTTP redirect binding then a HTTP redirect,
             if SOAP binding has been used the just the result of that
@@ -479,10 +481,10 @@ class Saml2Client(object):
         entity_ids = self.users.issuers_of_info(subject_id)
 
         return self._logout(subject_id, entity_ids, reason, expire, 
-                            sign, log)
+                            sign, log, return_to)
         
     def _logout(self, subject_id, entity_ids, reason, expire, 
-                sign, log=None):
+                sign, log=None, return_to="/"):
         
         # check time
         if not_on_or_after(expire) == False: # I've run out of time
@@ -543,7 +545,8 @@ class Saml2Client(object):
                                                 "subject_id": subject_id,
                                                 "reason": reason,
                                                 "not_on_of_after": expire,
-                                                "sign": sign}
+                                                "sign": sign,
+                                                "return_to": return_to}
                     
 
                     if binding == BINDING_HTTP_POST:
