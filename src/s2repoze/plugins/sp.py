@@ -419,7 +419,7 @@ def make_plugin(rememberer_name=None, # plugin for remember
     config = Config()
     config.load_file(saml_conf)
 
-    scl = Saml2Client(config, persistent_cache=identity_cache)
+    scl = Saml2Client(config, identity_cache=identity_cache)
 
     plugin = SAML2Plugin(rememberer_name, config, scl,
                 virtual_organization, wayf, cache, debug, sid_store)
