@@ -4,7 +4,7 @@
 from saml2 import samlp, BINDING_HTTP_POST
 from saml2 import saml, config, class_name, make_instance
 from saml2.server import Server
-from saml2.response import authn_response
+from saml2.response import authn_response, StatusResponse
 
 XML_RESPONSE_FILE = "saml_signed.xml"
 XML_RESPONSE_FILE2 = "saml2_response.xml"
@@ -45,11 +45,14 @@ class TestAuthnResponse:
                     authn=(saml.AUTHN_PASSWORD, "http://www.example.com/login")
                 )
 
+        self._logout_resp = server.logout_response("id12")
+        
         conf = config.Config()
         try:
             conf.load_file("tests/server.config")
         except IOError:
             conf.load_file("server.config")
+        self.conf = conf
         self.ar = authn_response(conf, "urn:mace:example.com:saml:roland:sp", 
                                     "http://lingon.catalogix.se:8087/")
     
@@ -116,3 +119,4 @@ class TestAuthnResponse:
         assert authn_info[0][1] == ["http://www.example.com/login"]
         session_info = self.ar.session_info()
         assert session_info["authn_info"] == authn_info
+

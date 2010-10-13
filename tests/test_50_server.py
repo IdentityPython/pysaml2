@@ -9,6 +9,7 @@ from saml2 import time_util
 from saml2.s_utils import OtherError
 from saml2.s_utils import do_attribute_statement, factory
 from saml2.soap import make_soap_enveloped_saml_thingy
+from saml2 import BINDING_HTTP_POST
 
 from py.test import raises
 import shelve
@@ -294,7 +295,7 @@ class TestServer1():
         # value. Just that there should be one
         assert assertion.signature.signature_value.text != ""
 
-    def test_slo(self):
+    def test_slo_http_post(self):
         soon = time_util.in_a_while(days=1)
         sinfo = {
             "name_id": "foba0001",
@@ -307,13 +308,44 @@ class TestServer1():
         }
         self.client.users.add_information_about_person(sinfo)
         
-        (dest, logout_request) = self.client.make_logout_requests(
-                            subject_id = "foba0001",
-                            reason = "I'm tired of this",
-                        )[0]
+        logout_request = self.client.logout_requests(subject_id = "foba0001",
+                            destination = "http://localhost:8088/slo",
+                            entity_id = "urn:mace:example.com:saml:roland:idp",
+                            reason = "I'm tired of this")
+
+        intermed = s_utils.deflate_and_base64_encode("%s" % (logout_request,))
+                        
+        #saml_soap = make_soap_enveloped_saml_thingy(logout_request)
+        request = self.server.parse_logout_request(intermed, BINDING_HTTP_POST)
+        assert request
+        
+    def test_slo_soap(self):
+        soon = time_util.in_a_while(days=1)
+        sinfo = {
+            "name_id": "foba0001",
+            "issuer": "urn:mace:example.com:saml:roland:idp",
+            "not_on_or_after" : soon,
+            "user": {
+                "givenName": "Leo",
+                "surName": "Laport",
+            }
+        }
+        conf = config.Config()
+        conf.load_file("server2.config")
+        sp = client.Saml2Client(conf)
+
+        sp.users.add_information_about_person(sinfo)
+        
+        logout_request = sp.logout_requests(subject_id = "foba0001",
+                            destination = "http://localhost:8088/slo",
+                            entity_id = "urn:mace:example.com:saml:roland:idp",
+                            reason = "I'm tired of this")
+
+        intermed = s_utils.deflate_and_base64_encode("%s" % (logout_request,))
                         
         saml_soap = make_soap_enveloped_saml_thingy(logout_request)
-        request = self.server.parse_logout_request(saml_soap)
+        idp = Server("idp_soap.conf")
+        request = idp.parse_logout_request(saml_soap)
         assert request
         
 #------------------------------------------------------------------------

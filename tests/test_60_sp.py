@@ -48,10 +48,8 @@ class TestSP():
         resp_str = "\n".join(self.server.authn_response(ava, 
                     "id1", "http://lingon.catalogix.se:8087/", 
                     "urn:mace:example.com:saml:roland:sp",
-                    make_instance(samlp.NameIDPolicy,
-                                utils.args2dict(
-                                        format=saml.NAMEID_FORMAT_TRANSIENT,
-                                        allow_create="true")),
+                    samlp.NameIDPolicy(format=saml.NAMEID_FORMAT_TRANSIENT,
+                                        allow_create="true"),
                     "foba0001@example.com"))
 
         resp_str = base64.encodestring(resp_str)

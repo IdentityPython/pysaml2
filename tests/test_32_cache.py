@@ -59,8 +59,8 @@ class TestClass:
         
     def test_remove_info(self):
         self.cache.reset("1234", "bcde")
-        assert self.cache.active("1234","bcde") == False
-        assert self.cache.active("1234","abcd")
+        assert self.cache.active("1234", "bcde") == False
+        assert self.cache.active("1234", "abcd")
         
         (ava, inactive) = self.cache.get_identity("1234")
         assert inactive == ['bcde']

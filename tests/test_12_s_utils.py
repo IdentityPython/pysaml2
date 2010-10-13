@@ -442,3 +442,12 @@ def test_authn_statement():
     assert _eq(ast.keyswv(),["authn_instant","session_index",
                             "session_not_on_or_after",
                             "authn_context"])
+                            
+def test_signature():
+    arr = ["foobar", "1234567890"]
+    csum = utils.signature("abcdef", arr)
+    arr.append(csum)
+    
+    assert utils.verify_signature("abcdef", arr)
+
+    

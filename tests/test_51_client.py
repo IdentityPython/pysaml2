@@ -4,12 +4,16 @@
 import base64
 from urlparse import urlparse, parse_qs
 
-from saml2.client import Saml2Client
-from saml2 import samlp, client, BINDING_HTTP_POST
+from saml2.client import Saml2Client, LogoutError
+from saml2 import samlp, client, BINDING_HTTP_POST, BINDING_HTTP_REDIRECT
+from saml2 import BINDING_SOAP
 from saml2 import saml, s_utils, config, class_name
 #from saml2.sigver import correctly_signed_authn_request, verify_signature
 from saml2.server import Server
 from saml2.s_utils import decode_base64_and_inflate
+from saml2.time_util import in_a_while
+
+from py.test import raises
 
 import os
         
@@ -352,7 +356,7 @@ class TestClient:
         assert authnreq.destination == "http://localhost:8088/sso"
         assert authnreq.assertion_consumer_service_url == "http://lingon.catalogix.se:8087/"
         assert authnreq.provider_name == "urn:mace:example.com:saml:roland:sp"
-        assert authnreq.protocol_binding == "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
+        assert authnreq.protocol_binding == BINDING_HTTP_POST
         name_id_policy = authnreq.name_id_policy
         assert name_id_policy.allow_create == "true" 
         assert name_id_policy.format == "urn:oasis:names:tc:SAML:2.0:nameid-format:transient" 
@@ -360,5 +364,112 @@ class TestClient:
         assert issuer.text == "urn:mace:example.com:saml:roland:sp"
         
         
-    # def test_logout_request(self):
+    def test_logout_1(self):
+        """ one IdP/AA with BINDING_HTTP_REDIRECT on single_logout_service"""
+
+        # information about the user from an IdP
+        session_info = {
+            "name_id": "123456",
+            "issuer": "urn:mace:example.com:saml:roland:idp",
+            "not_on_or_after": in_a_while(minutes=15),
+            "ava": {
+                "givenName": "Anders",
+                "surName": "Andersson",
+                "mail": "anders.andersson@example.com"
+            }
+        }
+        self.client.users.add_information_about_person(session_info)
+        entity_ids = self.client.users.issuers_of_info("123456")
+        assert entity_ids == ["urn:mace:example.com:saml:roland:idp"]
+        resp = self.client.global_logout("123456", "Tired", in_a_while(minutes=5))
+        print resp
+        assert resp
+        assert resp[0] # a session_id
+        assert resp[1] == [('Content-type', 'text/html')]
+        assert resp[2][0] == '<head>'
+        assert resp[2][1] == '<title>SAML 2.0 POST</title>'
+        session_info = self.client.state[resp[0]]
+        print session_info
+        assert session_info["entity_id"] == entity_ids[0]
+        assert session_info["subject_id"] == "123456"
+        assert session_info["reason"] == "Tired"
+        assert session_info["operation"] == "SLO"
+        assert session_info["entity_ids"] == entity_ids
+        assert session_info["sign"] == False
+
+    def test_logout_2(self):
+        """ one IdP/AA with BINDING_SOAP, can't actually send something"""
+
+        conf = config.Config()
+        conf.load_file("server2.config")
+        client = Saml2Client(conf)
+
+        # information about the user from an IdP
+        session_info = {
+            "name_id": "123456",
+            "issuer": "urn:mace:example.com:saml:roland:idp",
+            "not_on_or_after": in_a_while(minutes=15),
+            "ava": {
+                "givenName": "Anders",
+                "surName": "Andersson",
+                "mail": "anders.andersson@example.com"
+            }
+        }
+        client.users.add_information_about_person(session_info)
+        entity_ids = self.client.users.issuers_of_info("123456")
+        assert entity_ids == ["urn:mace:example.com:saml:roland:idp"]
+        destination = client.config.logout_service(entity_ids[0], BINDING_SOAP)
+        print destination
+        assert destination == 'http://localhost:8088/slo'
+
+        # Will raise an error since there is noone at the other end.
+        raises(LogoutError, 'client.global_logout("123456", "Tired", in_a_while(minutes=5))')
+
+    def test_logout_3(self):
+        """ two or more IdP/AA with BINDING_HTTP_REDIRECT"""
+
+        conf = config.Config()
+        conf.load_file("server3.config")
+        client = Saml2Client(conf)
+
+        # information about the user from an IdP
+        session_info_authn = {
+            "name_id": "123456",
+            "issuer": "urn:mace:example.com:saml:roland:idp",
+            "not_on_or_after": in_a_while(minutes=15),
+            "ava": {
+                "givenName": "Anders",
+                "surName": "Andersson",
+                "mail": "anders.andersson@example.com"
+            }
+        }
+        client.users.add_information_about_person(session_info_authn)
+        session_info_aa = {
+            "name_id": "123456",
+            "issuer": "urn:mace:example.com:saml:roland:aa",
+            "not_on_or_after": in_a_while(minutes=15),
+            "ava": {
+                "eduPersonEntitlement": "Foobar",
+            }
+        }
+        client.users.add_information_about_person(session_info_aa)
+        entity_ids = client.users.issuers_of_info("123456")
+        assert _leq(entity_ids, ["urn:mace:example.com:saml:roland:idp",
+                                "urn:mace:example.com:saml:roland:aa"])
+        resp = client.global_logout("123456", "Tired", in_a_while(minutes=5))
+        print resp
+        assert resp
+        assert resp[0] # a session_id
+        # HTTP POST
+        assert resp[1] == [('Content-type', 'text/html')]
+        assert resp[2][0] == '<head>'
+        assert resp[2][1] == '<title>SAML 2.0 POST</title>'
         
+        state_info = client.state[resp[0]]
+        print state_info
+        assert state_info["entity_id"] == entity_ids[0]
+        assert state_info["subject_id"] == "123456"
+        assert state_info["reason"] == "Tired"
+        assert state_info["operation"] == "SLO"
+        assert state_info["entity_ids"] == entity_ids
+        assert state_info["sign"] == False
