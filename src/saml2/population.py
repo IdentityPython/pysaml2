@@ -15,12 +15,12 @@ class Population(object):
         """If there already are information from this source in the cache 
         this function will overwrite that information"""
         
-        name_id = session_info["name_id"]
+        subject_id = session_info["name_id"]
         issuer = session_info["issuer"]
         del session_info["issuer"]
-        self.cache.set(name_id, issuer, session_info, 
+        self.cache.set(subject_id, issuer, session_info, 
                         session_info["not_on_or_after"])
-        return name_id
+        return subject_id
     
     def stale_sources_for_person(self, subject_id, sources=None):
         if not sources: # assume that all the members has be asked
