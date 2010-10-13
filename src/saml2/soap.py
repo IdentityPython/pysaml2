@@ -106,21 +106,21 @@ class HTTPClient(object):
         if keyfile:
             self.server.add_certificate(keyfile, certfile, "")
 
-    def post(self, data):
-        (response, content) = self.server.request(self.path, 
-                            "POST", data,
-                            headers={"content-type": "application/soap+xml"})
+    def post(self, data, headers):
+        (response, content) = self.server.request(self.path, "POST", data, 
+                                                    headers=headers)
         if response.status == 200:
             return content
         else:
             return False
 
-    def get(self, data):
-        (response, content) = self.server.request(self.path, "GET", data)
-        if response.status == 200:
-            return content
-        else:
-            return False
+    # def get(self, data, headers={"content-type": "text/html"}):
+    #     (response, content) = self.server.request(self.path, "GET", data, 
+    #                                                 headers=headerss)
+    #     if response.status == 200:
+    #         return content
+    #     else:
+    #         return False
 
 class SOAPClient(object):
     
@@ -130,7 +130,8 @@ class SOAPClient(object):
         
     def send(self, request):
         soap_message = make_soap_enveloped_saml_thingy(request)
-        response = self.server.post(soap_message)
+        response = self.server.post(soap_message, 
+                                    {"content-type": "application/soap+xml"})
         if response:
             self.log and self.log.info("SOAP response: %s" % response)
             return parse_soap_enveloped_saml_response(response)

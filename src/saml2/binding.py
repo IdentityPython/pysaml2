@@ -39,12 +39,12 @@ except ImportError:
 
 NAMESPACE = "http://schemas.xmlsoap.org/soap/envelope/"
 FORM_SPEC = """<form method="post" action="%s">
-   <input type="hidden" name="SAMLRequest" value="%s" />
+   <input type="hidden" name="%s" value="%s" />
    <input type="hidden" name="RelayState" value="%s" />
    <input type="submit" value="Submit" />
 </form>"""
 
-def http_post(message, location, relay_state=""):
+def http_post_message(message, location, relay_state="", typ="SAMLRequest"):
     """The HTTP POST binding defines a mechanism by which SAML protocol 
     messages may be transmitted within the base64-encoded content of a
     HTML form control.
@@ -58,17 +58,21 @@ def http_post(message, location, relay_state=""):
     response.append("<head>")
     response.append("""<title>SAML 2.0 POST</title>""")
     response.append("</head><body>")
-    response.append(FORM_SPEC % (location, base64.b64encode(message),
+    
+    if not isinstance(message, basestring):
+        message = "%s" % (message,)
+    response.append(FORM_SPEC % (location, typ, base64.b64encode(message),
                                 relay_state))
+                                
     response.append("""<script type="text/javascript">""")
     response.append("     window.onload = function ()")
     response.append(" { document.forms[0].submit(); ")
     response.append("""</script>""")
     response.append("</body>")
     
-    return ([], response)
+    return ([("Content-type", "text/html")], response)
     
-def http_redirect(message, location, sp_entity_id, relay_state=""):
+def http_redirect_message(message, location, relay_state=""):
     """The HTTP Redirect binding defines a mechanism by which SAML protocol 
     messages can be transmitted within URL parameters.
     Messages are encoded for use with this binding using a URL encoding 
@@ -78,16 +82,12 @@ def http_redirect(message, location, sp_entity_id, relay_state=""):
     
     :param authn_request: The message
     :param location: Where the message should be posted to
-    :param sp_entity_id: The identifier of the sender of the message
     :param relay_state: for preserving and conveying state information
     :return: A tuple containing header information and a HTML message.
     """
-
-    # make sure there is no signature present.
-    if message.signature:
-        message.signature = None
         
-    args = {"SAMLRequest": deflate_and_base64_encode(message),}
+    args = {"SAMLRequest": deflate_and_base64_encode(message)}
+    
     if relay_state:
         args["RelayState"] = relay_state
         
@@ -122,7 +122,7 @@ def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
 
     return ElementTree.tostring(envelope, encoding="UTF-8")
 
-def http_soap(message):
+def http_soap_message(message):
     return ({"content-type": "application/soap+xml"},
             make_soap_enveloped_saml_thingy(message))
     
@@ -169,14 +169,35 @@ def parse_soap_enveloped_saml(text, body_class, header_class=None):
     return body, header
 
 # -----------------------------------------------------------------------------
-def send_using_http(request, destination, key_file=None, cert_file=None, 
-                    log=None):
+# def send_using_http_get(request, destination, key_file=None, cert_file=None, 
+#                     log=None):
+# 
+#     
+#     http = HTTPClient(destination, key_file, cert_file, log)
+#     log and log.info("HTTP client initiated")
+# 
+#     try:
+#         response = http.get()
+#     except Exception, exc:
+#         log and log.info("HTTPClient exception: %s" % (exc,))
+#         return None
+# 
+#     log and log.info("HTTP request sent and got response: %s" % response)
+# 
+#     return response
+
+def send_using_http_post(request, destination, relay_state, key_file=None, 
+                        cert_file=None, log=None):
 
     http = HTTPClient(destination, key_file, cert_file, log)
     log and log.info("HTTP client initiated")
 
+    if not isinstance(request, basestring):
+        request = "%s" % (request,)
+        
+    (headers, message) = http_post_message(request, destination, relay_state)
     try:
-        response = http.get(request)
+        response = http.post(message, headers)
     except Exception, exc:
         log and log.info("HTTPClient exception: %s" % (exc,))
         return None
@@ -185,13 +206,23 @@ def send_using_http(request, destination, key_file=None, cert_file=None,
 
     return response
 
-def send_using_soap(request, destination, key_file=None, cert_file=None, 
+def send_using_soap(message, destination, key_file=None, cert_file=None, 
                     log=None):
-
+    """ 
+    Actual construction of the SOAP message is done by the SOAPClient
+    
+    :param message: The SAML message to send
+    :param destination: Where to send the message
+    :param key_file: If HTTPS this is the client certificate
+    :param cert_file: If HTTPS this a certificates file 
+    :param log: A log function to use for logging
+    :return: The response gotten from the other side interpreted by the 
+        SOAPClient
+    """
     soapclient = SOAPClient(destination, key_file, cert_file, log)
     log and log.info("SOAP client initiated")
     try:
-        response = soapclient.send(request)
+        response = soapclient.send(message)
     except Exception, exc:
         log and log.info("SoapClient exception: %s" % (exc,))
         return None
@@ -203,8 +234,8 @@ def send_using_soap(request, destination, key_file=None, cert_file=None,
 # -----------------------------------------------------------------------------
 
 PACKING = {
-    saml2.BINDING_HTTP_REDIRECT: http_redirect,
-    saml2.BINDING_HTTP_POST: http_post,
+    saml2.BINDING_HTTP_REDIRECT: http_redirect_message,
+    saml2.BINDING_HTTP_POST: http_post_message,
     }
     
 def packager( identifier ):
