@@ -75,7 +75,7 @@ class Cache(object):
         except ValueError:
             raise ToOld()
             
-        if info and not_on_or_after(timestamp):
+        if info and time_util.not_on_or_after(timestamp):
             return info
         else:
             raise ToOld()
@@ -159,7 +159,7 @@ class Cache(object):
             return False
             
         try:
-            return not_on_or_after(timestamp)
+            return time_util.not_on_or_after(timestamp)
         except ToOld:
             return False
         
