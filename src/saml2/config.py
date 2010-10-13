@@ -156,11 +156,12 @@ class Config(dict):
             specified the default binding for that service is searched for.
         :return: Possible empty list of endpoints
         """
+        
         try:
             res = []
             for spec in self["service"][typ]["endpoints"][service]:
                 if isinstance(spec, basestring):
-                    if binding == None:
+                    if binding == None or binding == DEFAULT_BINDING[service]:
                         res.append(spec)
                 elif isinstance(spec, tuple):
                     if binding == spec[1]:
