@@ -49,6 +49,8 @@ class Request(object):
             self.log.info("xmlstr: %s" % (self.xmlstr,))
         try:
             self.message = self.signature_check(decoded_xml)
+        except TypeError:
+            raise
         except Exception, excp:
             self.log and self.log.info("EXCEPTION: %s", excp)
     
