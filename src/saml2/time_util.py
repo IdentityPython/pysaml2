@@ -289,6 +289,33 @@ def not_before(point):
     else:
         return False
 
+# def not_on_or_after(point):
+#     if not point:
+#         return True
+# 
+#     then = str_to_time(point)
+#     now = time.gmtime()
+# 
+#     if now >= then:
+#         return False
+#     else:
+#         return True
+
+def not_on_or_after(not_on_or_after):
+    if isinstance(not_on_or_after, time.struct_time):
+        not_on_or_after = time.mktime(not_on_or_after)
+    elif isinstance(not_on_or_after, basestring):
+        not_on_or_after = str_to_time(not_on_or_after)
+        
+    now = daylight_corrected_now()
+
+    if not_on_or_after and not_on_or_after < now:
+        #self.reset(subject_id, entity_id)
+        #raise ToOld("%s < %s" % (not_on_or_after, now))
+        return False
+    else:
+        return True
+                
 def valid( valid_until ):
     """ Checks whether a valid_until specification is still valid
     :param valid_until: The string representation of a time
