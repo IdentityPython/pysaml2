@@ -1,0 +1,26 @@
+This is a very simple setup just to check that all your gear are in order.
+
+The setup consists of one IdP and one SP.
+The IdP authenticates users by using a htpasswd plugin and gets the identity information
+from the ini-plugin.
+
+All this is in the idp/who.ini configuration file, the file used for authentication
+is idp/passwd and the ini file is idp/idp_user.ini.
+
+The passwords in passwd in clear text:
+
+roland:one
+ozzie:two
+derek:three
+ryan:four
+ischiro:five
+
+The SP doesn't do anything but show you the information that the IdP sent.
+
+To make it easy, for me :-), both the IdP and the SP uses the same keys.
+
+To run the setup do
+
+./run.sh
+
+and then use your favourit webbrowser to look at "http://localhost:8087/whoami"
