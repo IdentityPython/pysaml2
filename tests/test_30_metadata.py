@@ -5,7 +5,7 @@ from saml2 import NAMESPACE as SAML2_NAMESPACE
 from saml2 import BINDING_SOAP
 from saml2 import md, saml, samlp
 from saml2 import time_util
-from saml2.saml import NAMEID_FORMAT_TRANSIENT
+from saml2.saml import NAMEID_FORMAT_TRANSIENT, NAME_FORMAT_URI
 from saml2.attribute_converter import ac_factory
 
 from py.test import raises
@@ -400,4 +400,18 @@ def test_status():
         }
     status_text = "%s" % make_instance( samlp.Status, input)
     assert status_text == STATUS_RESULT
+    
+def test_attributes():
+    required = ["surname", "givenname", "edupersonaffiliation"]
+    ra = metadata.do_requested_attribute(required, ATTRCONV, "True")
+    print ra
+    assert ra
+    assert len(ra) == 3
+    for i in range(3):
+        assert isinstance(ra[i], md.RequestedAttribute)
+        assert ra[i].name_format == NAME_FORMAT_URI
+        assert ra[i].attribute_value == []
+        assert ra[i].is_required == "True"
+    assert ra[0].friendly_name == "surname"
+    assert ra[0].name == 'urn:oid:2.5.4.4'
     
