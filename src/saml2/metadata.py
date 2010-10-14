@@ -726,7 +726,8 @@ def do_sp_sso_descriptor(servprov, acs, cert=None):
     if requested_attributes:
         spsso.attribute_consuming_service = [md.AttributeConsumingService(
             requested_attribute=requested_attributes,
-            service_name= [md.ServiceName(lang="en",text=servprov["name"])]
+            service_name= [md.ServiceName(lang="en",text=servprov["name"])],
+            index="1",
         )]
         try:
             spsso.attribute_consuming_service[0].service_description = [
