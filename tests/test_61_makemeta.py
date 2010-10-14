@@ -163,7 +163,7 @@ def test_do_sp_sso_descriptor():
     acs = spsso.attribute_consuming_service[0]
     print acs.keyswv()
     assert _eq(acs.keyswv(), ['requested_attribute', 'service_name',
-                                 'service_description'])
+                                 'service_description', 'index'])
     assert acs.service_name[0].text == SP["name"]
     assert acs.service_description[0].text == SP["description"]
     assert len(acs.requested_attribute) == 4
