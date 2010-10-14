@@ -177,7 +177,7 @@ def application(environ, start_response):
 from repoze.who.config import make_middleware_with_config
 
 APP_WITH_AUTH = make_middleware_with_config(application, {"here":"."}, 
-                        './who.ini', log_file="who_idp.log")
+                        './who.ini', log_file="app.log")
 
 # ----------------------------------------------------------------------------
 
