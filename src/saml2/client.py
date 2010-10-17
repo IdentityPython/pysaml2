@@ -21,10 +21,13 @@ to conclude its tasks.
 
 import saml2
 import time
+import base64
 
 from saml2.time_util import instant, not_on_or_after
-from saml2.s_utils import sid, signature
+from saml2.s_utils import signature
+from saml2.s_utils import sid
 from saml2.s_utils import do_attributes, factory
+from saml2.s_utils import decode_base64_and_inflate
 
 from saml2 import samlp, saml, class_name
 from saml2 import VERSION
@@ -155,19 +158,7 @@ class Saml2Client(object):
             if isinstance(resp, AuthnResponse):
                 self.users.add_information_about_person(resp.session_info())
             elif isinstance(resp, LogoutResponse):
-                status = self.state[resp.in_response_to]
-                del self.state[resp.in_response_to]
-                if status["entity_ids"] == [resp.response.issuer]: # done
-                    self.local_logout(status["subject_id"])
-                    return (0, ["200 Ok"])
-                else:
-                    status["entity_ids"].remove(resp.response.issuer)
-                    return self._logout(status["subject_id"], 
-                                        status["entity_ids"], 
-                                        status["reason"], 
-                                        status["not_on_or_after"], 
-                                        status["sign"], 
-                                        log, )
+                self.handle_logout_response(resp)
                     
         return resp
     
@@ -254,7 +245,7 @@ class Saml2Client(object):
 
     def _my_name(self, name=None):
         if not name:
-            return self.config.sp_name()
+            return self.config.name()
         else:
             return name
         
@@ -490,7 +481,7 @@ class Saml2Client(object):
         if not_on_or_after(expire) == False: # I've run out of time
             # Do the local logout anyway
             self.local_logout(subject_id)
-            return (0, ["504 Gateway Timeout"])
+            return (0, "504 Gateway Timeout", [], [])
             
         # for all where I can use the SOAP binding, do those first
         not_done = entity_ids[:]
@@ -533,7 +524,8 @@ class Saml2Client(object):
                         not_done.remove(entity_id)
                         log and log.info("OK response from %s" % destination)
                     else:
-                        log and log.info("NOT OK response from %s" % destination)
+                        log and log.info(
+                                    "NOT OK response from %s" % destination)
 
                 else:
                     session_id = request.id
@@ -553,53 +545,94 @@ class Saml2Client(object):
                         (head, body) = http_post_message(request, 
                                                             destination, 
                                                             rstate)
+                        code = "200 OK"
                     else:
                         (head, body) = http_redirect_message(request, 
                                                             destination, 
                                                             rstate)
+                        code = "302 Found"
             
-                    return (session_id, head, body)
+                    return (session_id, code, head, body)
         
         if not_done != []:
             # upstream should try later
             raise LogoutError("%s" % (entity_ids,))
         
-        return (0, [], response)
+        return (0, "", [], response)
 
     def local_logout(self, subject_id):
         # Remove the user from the cache, equals local logout
         self.users.remove_person(subject_id)
         return True
 
-    def logout_response(self, xmlstr, log=None):
+    def handle_logout_response(self, response):
+        """ handles a Logout response """
+        self.log and self.log.info("state: %s" % (self.state,))
+        status = self.state[response.in_response_to]
+        self.log and self.log.info("status: %s" % (status,))
+        issuer = response.issuer()
+        self.log and self.log.info("issuer: %s" % issuer)
+        del self.state[response.in_response_to]
+        if status["entity_ids"] == [issuer]: # done
+            self.local_logout(status["subject_id"])
+            return (0, "200 Ok", [("Content-type","text/html")], [])
+        else:
+            status["entity_ids"].remove(issuer)
+            return self._logout(status["subject_id"], 
+                                status["entity_ids"], 
+                                status["reason"], 
+                                status["not_on_or_after"], 
+                                status["sign"], 
+                                log, )
+        
+    def logout_response(self, xmlstr, log=None, binding=BINDING_SOAP):
         """ Deal with a LogoutResponse
 
         :param xmlstr: The response as a xml string
         :param subject_id: the id of the user that initiated the logout
+        :param log: logging function
+        :param binding: What type of binding this message came through.
         :return: None if the reply doesn't contain a valid SAML LogoutResponse,
-            otherwise True if the logout was successful and False if it 
+            otherwise the reponse if the logout was successful and None if it 
             was not.
         """
         
-        success = False
+        response = None
 
         if xmlstr:
-            response = LogoutResponse(self.sec, debug=True, log=log)
-            # arrived by SOAP+HTTP so no base64+zip done
+            try:
+                return_addr = self.config.endpoint("sp", 
+                                                    "single_logout_service",
+                                                    binding=binding)[0]
+            except Exception:
+                log and log.info("Not supposed to handle this!")
+                return None
+            
+            response = LogoutResponse(self.sec, return_addr, debug=True, 
+                                        log=log)
+
+            if binding == BINDING_HTTP_REDIRECT:
+                xmlstr = decode_base64_and_inflate(xmlstr)
+            elif binding == BINDING_HTTP_POST:
+                xmlstr = base64.b64decode(xmlstr)
+
+            if self.debug and log:
+                log.info("XMLSTR: %s" % xmlstr)
+
             response = response.loads(xmlstr, False)
+
             if response:
                 response = response.verify()
                 
             if not response:
-                return False
+                return None
             
             if self.debug and log:
                 log.info(response)
+                
+            return self.handle_logout_response(response)
 
-            if response.response.status.status_code.value == samlp.STATUS_SUCCESS:
-                success = True
-
-        return success
+        return response
         
     def add_vo_information_about_user(self, subject_id):
         """ Add information to the knowledge I have about the user """
