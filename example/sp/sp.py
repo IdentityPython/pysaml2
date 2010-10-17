@@ -2,7 +2,9 @@
 
 import re
 from cgi import escape
+from cgi import parse_qs
 import urllib
+from saml2 import BINDING_HTTP_REDIRECT
 
 # -----------------------------------------------------------------------------
 def dict_to_table(ava, width=1):
@@ -48,10 +50,13 @@ def dict_to_table(ava, width=1):
     
     
 def whoami(environ, start_response, user, logger):
-    start_response('200 OK', [('Content-Type', 'text/html')])
     identity = environ["repoze.who.identity"]["user"]
+    if not identity:
+        return not_authn(environ, start_response)
     response = ["<h2>Your identity are supposed to be</h2>"]
     response.extend(dict_to_table(identity))
+    response.extend("<a href='logout'>Logout</a>")
+    start_response('200 OK', [('Content-Type', 'text/html')])
     return response[:]
     
 def not_found(environ, start_response):
@@ -62,12 +67,71 @@ def not_found(environ, start_response):
 def not_authn(environ, start_response):
     start_response('401 Unauthorized', [('Content-Type', 'text/plain')])
     return ['Unknown user']
+
+def slo(environ, start_response, user, logger):
+    # so here I might get either a LogoutResponse or a LogoutRequest
+    client = environ['repoze.who.plugins']["saml2auth"]
+    if "QUERY_STRING" in environ:
+        query = parse_qs(environ["QUERY_STRING"])
+        logger and logger.info("query: %s" % query)
+        try:
+            (sids, code, head, message) = client.saml_client.logout_response(
+                                                query["SAMLResponse"][0],
+                                                log=logger,
+                                                binding=BINDING_HTTP_REDIRECT)
+            logger.info("LOGOUT reponse parsed OK")
+        except KeyError:
+            # return error reply
+            pass
     
+    if sids == 0:
+        start_response("302 Found", [("Location", "/done")])
+        return ["Successfull Logout"]
+    
+def logout(environ, start_response, user, logger):
+    client = environ['repoze.who.plugins']["saml2auth"]
+    subject_id = environ["repoze.who.identity"]['repoze.who.userid']
+    logger.info("[logout] subject_id: '%s'" % (subject_id,))
+    target = "/done"
+    # What if more than one
+    tmp = client.saml_client.global_logout(subject_id, log=logger, 
+                                            return_to=target)
+    logger.info("[logout] global_logout > %s" % (tmp,))
+    (session_id, code, header, result) = tmp
+
+    if session_id:
+        #redir = [v for (a,v) in header if a == "Location"]
+        # remove cookie
+        start_response(code, header)
+        return result
+    else: # All was done using SOAP
+        if result: 
+            start_response("302 Found", [("Location", target)])
+            return ["Successfull Logout"]
+        else:
+            start_response("500 Internal Server Error")
+            return ["Failed to logout from identity services"]
+
+def done(environ, start_response, user, logger):
+    # remove cookie and stored info
+    logger.info("[done] environ: %s" % environ)
+    subject_id = environ["repoze.who.identity"]['repoze.who.userid']
+    client = environ['repoze.who.plugins']["saml2auth"]
+    logger.info("[logout done] remaining subjects: %s" % (
+                                        client.saml_client.users.subjects(),))
+
+    start_response('200 OK', [('Content-Type', 'text/html')])
+    return ["<h3>You are now logged out from this service</h3>"]
+        
 # ----------------------------------------------------------------------------
 
 # map urls to functions
 urls = [
     (r'whoami$', whoami),
+    (r'logout$', logout),
+    (r'done$', done),
+    (r'slo$', slo),
+    (r'^$', whoami),
 ]
 
 # ----------------------------------------------------------------------------

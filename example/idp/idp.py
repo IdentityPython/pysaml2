@@ -4,7 +4,17 @@ import re
 import base64
 from cgi import parse_qs
 from saml2 import server
-    
+from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
+from saml2 import time_util
+from Cookie import SimpleCookie
+
+def _expiration(timeout, format=None):
+    if timeout == "now":
+        return time_util.instant(format)
+    else:
+        # validity time should match lifetime of assertions
+        return time_util.in_a_while(minutes=timeout, format=format)
+
 # -----------------------------------------------------------------------------
 def dict_to_table(ava, lev=0, width=1):
     txt = []
@@ -124,6 +134,57 @@ def not_authn(environ, start_response, logger):
     start_response('401 Unauthorized', [('Content-Type', 'text/plain')])
     return ['Unknown user']
 
+def slo(environ, start_response, user, logger):
+    """ Expects a HTTP-redirect logout request """
+
+    if "QUERY_STRING" in environ:
+        logger and logger.info("Query string: %s" % environ["QUERY_STRING"])
+        query = parse_qs(environ["QUERY_STRING"])
+
+    try:
+        req_info = IDP.parse_logout_request(query["SAMLRequest"][0],
+                                            BINDING_HTTP_REDIRECT)
+        logger.info("LOGOUT request parsed OK")
+        logger.info("REQ_INFO: %s" % req_info.message)
+    except KeyError, exc:
+        logger and logger.info("logout request error: %s" % (exc,))
+        # return error reply
+
+    # look for the subject
+    subject = req_info.subject_id()
+    subject = subject.text.strip()
+    sp_entity_id = req_info.message.issuer.text.strip()
+    logger.info("Logout subject: %s" % (subject,))
+    logger.info("local identifier: %s" % IDP.ident.local_name(sp_entity_id, 
+                                                                subject))
+    # remove the authentication
+    
+    status = None
+
+    # Either HTTP-Post or HTTP-redirect is possible
+    bindings = [BINDING_HTTP_POST, BINDING_HTTP_REDIRECT]
+    (resp, headers, message) = IDP.logout_response(req_info.message, bindings)
+    #headers.append(session.cookie(expire="now"))
+    logger.info("Response code: %s" % (resp,))
+    logger.info("Header: %s" % (headers,))
+    delco = delete_cookie(environ, "pysaml2idp")
+    if delco:
+        headers.append(delco)
+    start_response(resp, headers)
+    return message
+
+def delete_cookie(environ, name):
+    kaka = environ.get("HTTP_COOKIE", '')
+    if kaka:
+        cookie_obj = SimpleCookie(kaka)
+        morsel = cookie_obj.get(name, None)
+        cookie = SimpleCookie()
+        cookie[name] = morsel
+        cookie[name]["expires"] = \
+            _expiration("now", "%a, %d-%b-%Y %H:%M:%S CET")
+        return tuple(cookie.output().split(": ", 1))
+    return None
+    
 # ----------------------------------------------------------------------------
 
 # map urls to functions
@@ -132,6 +193,8 @@ URLS = [
     (r'whoami/(.*)$', whoami),
     (r'sso$', sso),
     (r'sso/(.*)$', sso),
+    (r'logout$', slo),
+    (r'logout/(.*)$', slo),
 ]
 
 # ----------------------------------------------------------------------------
@@ -151,12 +214,14 @@ def application(environ, start_response):
     :return: The response as a list of lines
     """
     user = environ.get("REMOTE_USER", "")
+    kaka = environ.get("HTTP_COOKIE", '')
     if not user:
         user = environ.get("repoze.who.identity", "")
-            
+
     path = environ.get('PATH_INFO', '').lstrip('/')
     logger = environ.get('repoze.who.logger')
-    logger and logger.info( "<application> PATH: %s" % path)
+    logger and logger.info("<application> PATH: %s" % path)
+    logger and logger.info("Cookie: %s" % (kaka,))
     for regex, callback in URLS:
         if user:
             match = re.search(regex, path)
