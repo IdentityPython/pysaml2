@@ -285,7 +285,8 @@ def verify_signature(enctext, xmlsec_binary, cert_file=None, cert_type="pem",
         print "%s: %s" % (cert_file, os.access(cert_file, os.F_OK))
         print "%s: %s" % (fil, os.access(fil, os.F_OK))
 
-    output = Popen(com_list, stderr=PIPE).communicate()[1]
+    pof = Popen(com_list, stderr=PIPE)
+    output = pof.stderr.read()
     verified = _parse_xmlsec_output(output)
 
     if __DEBUG:
