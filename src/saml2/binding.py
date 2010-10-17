@@ -61,6 +61,7 @@ def http_post_message(message, location, relay_state="", typ="SAMLRequest"):
     
     if not isinstance(message, basestring):
         message = "%s" % (message,)
+        
     response.append(FORM_SPEC % (location, typ, base64.b64encode(message),
                                 relay_state))
                                 
@@ -72,7 +73,8 @@ def http_post_message(message, location, relay_state="", typ="SAMLRequest"):
     
     return ([("Content-type", "text/html")], response)
     
-def http_redirect_message(message, location, relay_state=""):
+def http_redirect_message(message, location, relay_state="", 
+                            typ="SAMLRequest"):
     """The HTTP Redirect binding defines a mechanism by which SAML protocol 
     messages can be transmitted within URL parameters.
     Messages are encoded for use with this binding using a URL encoding 
@@ -85,8 +87,11 @@ def http_redirect_message(message, location, relay_state=""):
     :param relay_state: for preserving and conveying state information
     :return: A tuple containing header information and a HTML message.
     """
+    
+    if not isinstance(message, basestring):
+        message = "%s" % (message,)
         
-    args = {"SAMLRequest": deflate_and_base64_encode(message)}
+    args = {typ: deflate_and_base64_encode(message)}
     
     if relay_state:
         args["RelayState"] = relay_state
@@ -123,11 +128,11 @@ def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
     return ElementTree.tostring(envelope, encoding="UTF-8")
 
 def http_soap_message(message):
-    return ({"content-type": "application/soap+xml"},
+    return ([("Content-type", "application/soap+xml")],
             make_soap_enveloped_saml_thingy(message))
     
 def http_paos(message, extra=None):
-    return ({"content-type": "application/soap+xml"},
+    return ([("Content-type", "application/soap+xml")],
             make_soap_enveloped_saml_thingy(message, extra))
     
 def parse_soap_enveloped_saml(text, body_class, header_class=None):
