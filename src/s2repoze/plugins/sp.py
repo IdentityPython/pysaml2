@@ -37,7 +37,7 @@ from repoze.who.plugins.form import FormPluginBase
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2.client import Saml2Client
 #from saml2.attribute_resolver import AttributeResolver
-from saml2.config import Config
+from saml2.config import SPConfig
 from saml2.s_utils import sid
 #from saml2.population import Population
 
@@ -416,7 +416,7 @@ def make_plugin(rememberer_name=None, # plugin for remember
         raise ValueError(
              'must include rememberer_name in configuration')
     
-    config = Config()
+    config = SPConfig()
     config.load_file(saml_conf)
 
     scl = Saml2Client(config, identity_cache=identity_cache)
