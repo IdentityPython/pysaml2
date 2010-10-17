@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from saml2 import BINDING_HTTP_REDIRECT
-from saml2.config import Config
+from saml2.config import SPConfig, IDPConfig
 from saml2.metadata import MetaData
 from py.test import raises
 
@@ -105,7 +105,7 @@ def _eq(l1,l2):
     return set(l1) == set(l2)
 
 def test_1():
-    c = Config().load(sp1)
+    c = SPConfig().load(sp1)
     
     print c
     service = c["service"]
@@ -120,7 +120,7 @@ def test_1():
     assert sp["idp"].values() == [{'single_sign_on_service': {'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect':'http://localhost:8088/sso/'}}]
 
 def test_2():
-    c = Config().load(sp2)
+    c = SPConfig().load(sp2)
     
     print c
     service = c["service"]
@@ -164,7 +164,7 @@ def test_missing_must():
         },
     }
     
-    c = Config()
+    c = SPConfig()
     raises(AssertionError, "c.load(no_service)")
     raises(AssertionError, "c.load(no_entity_id)")
     raises(AssertionError, "c.load(no_xmlsec)")
@@ -186,12 +186,12 @@ def test_minimum():
         "xmlsec_binary" : "/usr/local/bin/xmlsec1",
     }
 
-    c = Config().load(minimum)
+    c = SPConfig().load(minimum)
     
     assert c != None
     
 def test_idp_1():
-    c = Config().load(IDP1)
+    c = IDPConfig().load(IDP1)
     
     print c
     assert c.services() == ["idp"]
@@ -201,7 +201,7 @@ def test_idp_1():
     assert attribute_restrictions["eduPersonAffiliation"][0].match("staff")
 
 def test_idp_2():
-    c = Config().load(IDP2)
+    c = IDPConfig().load(IDP2)
 
     print c
     assert c.services() == ["idp"]
@@ -212,7 +212,7 @@ def test_idp_2():
     assert attribute_restrictions["eduPersonAffiliation"][0].match("staff")
     
 def test_wayf():
-    c = Config().load_file("server.config")
+    c = SPConfig().load_file("server.config")
     
     idps = c.get_available_idps()
     assert idps == [('urn:mace:example.com:saml:roland:idp', 'Exempel AB')]

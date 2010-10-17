@@ -2,7 +2,7 @@
 
 from saml2 import samlp
 from saml2.saml import NAMEID_FORMAT_PERSISTENT, NAMEID_FORMAT_TRANSIENT
-from saml2.config import Config
+from saml2.config import IDPConfig
 from saml2.server import Identifier
 from saml2.assertion import Policy
 
@@ -10,7 +10,7 @@ from saml2.assertion import Policy
 def _eq(l1,l2):
     return set(l1) == set(l2)
 
-CONFIG = Config().load({
+CONFIG = IDPConfig().load({
     "entityid" :  "urn:mace:example.com:idp:2",
     "service": {
         "idp": {

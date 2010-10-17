@@ -9,7 +9,7 @@ from saml2 import time_util
 from saml2.s_utils import OtherError
 from saml2.s_utils import do_attribute_statement, factory
 from saml2.soap import make_soap_enveloped_saml_thingy
-from saml2 import BINDING_HTTP_POST
+from saml2 import BINDING_HTTP_POST, BINDING_HTTP_REDIRECT, BINDING_SOAP
 
 from py.test import raises
 import shelve
@@ -60,7 +60,7 @@ class TestServer1():
     def setup_class(self):
         self.server = Server("idp.config")
         
-        conf = config.Config()
+        conf = config.SPConfig()
         try:
             conf.load_file("tests/server.config")
         except IOError:
@@ -372,7 +372,7 @@ class TestServer1():
                 "surName": "Laport",
             }
         }
-        conf = config.Config()
+        conf = config.SPConfig()
         conf.load_file("server2.config")
         sp = client.Saml2Client(conf)
 
@@ -424,4 +424,40 @@ class TestServer2():
         assert subject.subject_confirmation
         subject_confirmation = subject.subject_confirmation
         assert subject_confirmation.subject_confirmation_data.in_response_to == "aaa"
+
+def _logout_request(conf_file):
+    conf = config.SPConfig()
+    conf.load_file(conf_file)
+    sp = client.Saml2Client(conf)
+
+    soon = time_util.in_a_while(days=1)
+    sinfo = {
+        "name_id": "foba0001",
+        "issuer": "urn:mace:example.com:saml:roland:idp",
+        "not_on_or_after" : soon,
+        "user": {
+            "givenName": "Leo",
+            "surName": "Laport",
+        }
+    }
+    sp.users.add_information_about_person(sinfo)
+    
+    return sp.logout_requests(
+                            subject_id = "foba0001",
+                            destination = "http://localhost:8088/slo",
+                            entity_id = "urn:mace:example.com:saml:roland:idp",
+                            reason = "I'm tired of this")
+    
+class TestServerLogout():
+    
+    def test_1(self):
+        server = Server("idp_slo_redirect.conf")        
+        request = _logout_request("sp_slo_redirect.conf")
+        print request
+        bindings = [BINDING_HTTP_REDIRECT]
+        (resp, headers, message) = server.logout_response(request, bindings)
+        assert resp == '302 Found'
+        assert len(headers) == 1
+        assert headers[0][0] == "Location"
+        assert message == ['']
         

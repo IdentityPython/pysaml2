@@ -46,9 +46,7 @@ class TestAuthnResponse:
                     authn=(saml.AUTHN_PASSWORD, "http://www.example.com/login")
                 )
 
-        self._logout_resp = server.logout_response("id12")
-        
-        conf = config.Config()
+        conf = config.SPConfig()
         try:
             conf.load_file("tests/server.config")
         except IOError:

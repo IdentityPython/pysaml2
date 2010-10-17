@@ -55,7 +55,7 @@ class TestClient:
     def setup_class(self):
         self.server = Server("idp.config")
 
-        conf = config.Config()
+        conf = config.SPConfig()
         try:
             conf.load_file("tests/server.config")
         except IOError:
@@ -385,9 +385,10 @@ class TestClient:
         print resp
         assert resp
         assert resp[0] # a session_id
-        assert resp[1] == [('Content-type', 'text/html')]
-        assert resp[2][0] == '<head>'
-        assert resp[2][1] == '<title>SAML 2.0 POST</title>'
+        assert resp[1] == '200 OK'
+        assert resp[2] == [('Content-type', 'text/html')]
+        assert resp[3][0] == '<head>'
+        assert resp[3][1] == '<title>SAML 2.0 POST</title>'
         session_info = self.client.state[resp[0]]
         print session_info
         assert session_info["entity_id"] == entity_ids[0]
@@ -400,7 +401,7 @@ class TestClient:
     def test_logout_2(self):
         """ one IdP/AA with BINDING_SOAP, can't actually send something"""
 
-        conf = config.Config()
+        conf = config.SPConfig()
         conf.load_file("server2.config")
         client = Saml2Client(conf)
 
@@ -428,7 +429,7 @@ class TestClient:
     def test_logout_3(self):
         """ two or more IdP/AA with BINDING_HTTP_REDIRECT"""
 
-        conf = config.Config()
+        conf = config.SPConfig()
         conf.load_file("server3.config")
         client = Saml2Client(conf)
 
@@ -460,10 +461,11 @@ class TestClient:
         print resp
         assert resp
         assert resp[0] # a session_id
+        assert resp[1] == '200 OK'
         # HTTP POST
-        assert resp[1] == [('Content-type', 'text/html')]
-        assert resp[2][0] == '<head>'
-        assert resp[2][1] == '<title>SAML 2.0 POST</title>'
+        assert resp[2] == [('Content-type', 'text/html')]
+        assert resp[3][0] == '<head>'
+        assert resp[3][1] == '<title>SAML 2.0 POST</title>'
         
         state_info = client.state[resp[0]]
         print state_info

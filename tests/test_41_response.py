@@ -51,10 +51,8 @@ class TestResponse:
                     name_id = name_id,
                     authn=(saml.AUTHN_PASSWORD, "http://www.example.com/login")
                 )
-
-        self._logout_resp = server.logout_response("id12")
         
-        conf = config.Config()
+        conf = config.SPConfig()
         try:
             conf.load_file("tests/server.config")
         except IOError:
@@ -84,15 +82,15 @@ class TestResponse:
         assert isinstance(resp, StatusResponse)
         assert isinstance(resp, AuthnResponse)
 
-    def test_3(self):
-        xml_response = ("%s" % (self._logout_resp,)).split("\n")[1]
-        sec = security_context(self.conf)
-        resp = response_factory(xml_response, self.conf, 
-                                entity_id="urn:mace:example.com:saml:roland:sp", 
-                                return_addr="http://lingon.catalogix.se:8087/", 
-                                outstanding_queries={"id12": "http://localhost:8088/sso"},
-                                timeslack=10000, decode=False)
-
-        assert isinstance(resp, StatusResponse)
-        assert isinstance(resp, LogoutResponse)
+    # def test_3(self):
+    #     xml_response = ("%s" % (self._logout_resp,)).split("\n")[1]
+    #     sec = security_context(self.conf)
+    #     resp = response_factory(xml_response, self.conf, 
+    #                             entity_id="urn:mace:example.com:saml:roland:sp", 
+    #                             return_addr="http://lingon.catalogix.se:8087/", 
+    #                             outstanding_queries={"id12": "http://localhost:8088/sso"},
+    #                             timeslack=10000, decode=False)
+    # 
+    #     assert isinstance(resp, StatusResponse)
+    #     assert isinstance(resp, LogoutResponse)
         
