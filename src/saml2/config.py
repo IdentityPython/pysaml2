@@ -30,42 +30,6 @@ def entity_id2url(meta, entity_id):
     return res
     
 class Config(dict):
-    def _sp_check(self, config, metadat=None):
-        """ Verify that the SP configuration part is correct.
-        
-        """
-        if metadat:
-            if "idp" not in config or len(config["idp"]) == 0:
-                eids = [e for e, d in metadat.entity.items() if "idp_sso" in d]
-                config["idp"] = {}
-                for eid in eids:
-                    try:
-                        config["idp"][eid] = entity_id2url(metadat, eid)
-                    except (IndexError, KeyError):
-                        try:
-                            if not config["idp"][eid]:
-                                raise MissingValue
-                        except KeyError:
-                            print >> sys.stderr, "Can't talk with %s" % eid 
-            else:
-                for eid, url in config["idp"].items():
-                    if not url:
-                        config["idp"][eid] = entity_id2url(metadat, eid)
-        else:
-            assert "idp" in config
-            assert len(config["idp"]) > 0
-        
-        assert "endpoints" in config
-        assert "name" in config
-            
-    def _idp_aa_check(self, config):
-        assert "endpoints" in config
-        if "assertions" in config:
-            config["policy"] = Policy(config["assertions"])
-            del config["assertions"]
-        elif "policy" in config:
-            config["policy"] = Policy(config["policy"])
-                
     def load_metadata(self, metadata_conf, xmlsec_binary, acs):
         """ Loads metadata into an internal structure """
         metad = metadata.MetaData(xmlsec_binary, acs)
@@ -109,17 +73,8 @@ class Config(dict):
                                                     config["attrconverters"])
             self.metadata = config["metadata"]
             
-        if "sp" in config["service"]:
-            #print config["service"]["sp"]
-            if "metadata" in config:
-                self._sp_check(config["service"]["sp"], config["metadata"])
-            else:
-                self._sp_check(config["service"]["sp"])
-        if "idp" in config["service"]:
-            self._idp_aa_check(config["service"]["idp"])
-        if "aa" in config["service"]:
-            self._idp_aa_check(config["service"]["aa"])
-                            
+        self._load(config)
+
         for key, val in config.items():
             self[key] = val
         
@@ -133,19 +88,7 @@ class Config(dict):
         
     def services(self):
         return self["service"].keys()
-        
-    def idp_policy(self):
-        try:
-            return self["service"]["idp"]["policy"]
-        except KeyError:
-            return Policy()
-        
-    def aa_policy(self):
-        try:
-            return self["service"]["aa"]["policy"]
-        except KeyError:
-            return Policy()
-            
+                
     def endpoint(self, typ, service, binding=None):
         """ Will return addresses to endpoints for specific services and 
         bindings.
@@ -176,6 +119,51 @@ class Config(dict):
     def attribute_converters(self):
         return self["attrconverters"]
         
+    def debug(self):
+        try:
+            return self["debug"]
+        except KeyError:
+            return 0
+
+class IDPConfig(Config):
+    def _load(self, config):
+        if "idp" in config["service"]:
+            self._check(config["service"]["idp"])
+        if "aa" in config["service"]:
+            self._check(config["service"]["aa"])
+
+    def _check(self, config):
+        assert "endpoints" in config
+        if "assertions" in config:
+            config["policy"] = Policy(config["assertions"])
+            del config["assertions"]
+        elif "policy" in config:
+            config["policy"] = Policy(config["policy"])
+
+    def idp_policy(self):
+        try:
+            return self["service"]["idp"]["policy"]
+        except KeyError:
+            return Policy()
+
+    def aa_policy(self):
+        try:
+            return self["service"]["aa"]["policy"]
+        except KeyError:
+            return Policy()
+            
+    def logout_service(self, entity_id, typ, binding):
+        return self.metadata.single_logout_services(entity_id, typ, binding)
+        
+class SPConfig(Config):
+    def _load(self, config):
+        assert "sp" in config["service"]
+
+        if "metadata" in config:
+            self._check(config["service"]["sp"], config["metadata"])
+        else:
+            self._check(config["service"]["sp"])
+        
     def idps(self):
         """ Returns a list of URLs of the IdP this SP can 
         use according to the configuration"""
@@ -184,6 +172,34 @@ class Config(dict):
             return [u for u in self["service"]["sp"]["idp"].values()]
         except KeyError:
             return []
+
+    def _check(self, config, metadat=None):
+        """ Verify that the SP configuration part is correct.
+        
+        """
+        if metadat:
+            if "idp" not in config or len(config["idp"]) == 0:
+                eids = [e for e, d in metadat.entity.items() if "idp_sso" in d]
+                config["idp"] = {}
+                for eid in eids:
+                    try:
+                        config["idp"][eid] = entity_id2url(metadat, eid)
+                    except (IndexError, KeyError):
+                        try:
+                            if not config["idp"][eid]:
+                                raise MissingValue
+                        except KeyError:
+                            print >> sys.stderr, "Can't talk with %s" % eid 
+            else:
+                for eid, url in config["idp"].items():
+                    if not url:
+                        config["idp"][eid] = entity_id2url(metadat, eid)
+        else:
+            assert "idp" in config
+            assert len(config["idp"]) > 0
+        
+        assert "endpoints" in config
+        assert "name" in config
 
     def is_wayf_needed(self):
         if len(self["service"]["sp"]["idp"]) > 1:
@@ -198,13 +214,7 @@ class Config(dict):
             lista.append((eid, namn))
         return lista
     
-    def debug(self):
-        try:
-            return self["debug"]
-        except KeyError:
-            return 0
-
-    def sp_name(self):
+    def name(self):
         return self["service"]["sp"]["name"]
         
     def logout_service(self, entity_id, binding=BINDING_SOAP):
