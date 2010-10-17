@@ -256,7 +256,7 @@ class MetaData(object):
         """
         
         # now = time.gmtime()
-        print >> sys.stderr, "Loading %s" % (source,)
+        #print >> sys.stderr, "Loading %s" % (source,)
         
         entities_descr = md.entities_descriptor_from_string(xml_str)
         
@@ -373,6 +373,35 @@ class MetaData(object):
                 #print "SSO",sso
                 if binding == sso.binding:
                     loc.append(sso.location)
+        return loc
+
+    @keep_updated
+    def single_logout_services(self, entity_id, typ,
+                                binding = BINDING_HTTP_REDIRECT):
+        """ Get me all single-logout services that supports the specified
+        binding version.
+
+        :param entity_id: The EntityId
+        :param typ: "sp", "idp" or "aa"
+        :param binding: A binding identifier
+        :return: list of single-logout service location run by the entity
+            with the specified EntityId.
+        """
+
+        # May raise KeyError
+        #print >> sys.stderr, "%s" % self.entity[entity_id]
+
+        loc = []
+        
+        try:
+            sss = self.entity[entity_id]["%s_sso" % typ]
+        except KeyError:
+            return loc
+
+        for entity in sss:
+            for slo in entity.single_logout_service:
+                if binding == slo.binding:
+                    loc.append(slo.location)
         return loc
     
     @keep_updated
@@ -730,9 +759,14 @@ def do_sp_sso_descriptor(servprov, acs, cert=None):
             index="1",
         )]
         try:
+            try:
+                (text, lang) = servprov["description"]
+            except ValueError:
+                text = servprov["description"]
+                lang = "en"
             spsso.attribute_consuming_service[0].service_description = [
                                 md.ServiceDescription(
-                                            text=servprov["description"])]
+                                            text=text, lang=lang)]
         except KeyError:
             pass
 
