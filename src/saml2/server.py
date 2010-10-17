@@ -37,10 +37,16 @@ from saml2.s_utils import UnknownPrincipal
 from saml2.s_utils import UnsupportedBinding
 from saml2.s_utils import error_status_factory
 
+from saml2.time_util import instant
+
+from saml2.binding import http_soap_message
+from saml2.binding import http_redirect_message
+from saml2.binding import http_post_message
+
 from saml2.sigver import security_context
 from saml2.sigver import signed_instance_factory
 from saml2.sigver import pre_signature_part
-from saml2.config import Config
+from saml2.config import IDPConfig
 from saml2.assertion import Assertion, Policy   
 
 class UnknownVO(Exception):
@@ -203,7 +209,7 @@ class Server(object):
         
     def load_config(self, config_file):
         
-        self.conf = Config()
+        self.conf = IDPConfig()
         self.conf.load_file(config_file)
         if "subject_data" in self.conf:
             self.ident = Identifier(self.conf["subject_data"], 
@@ -391,9 +397,14 @@ class Server(object):
                         sp_entity_id, identity=None, name_id=None, 
                         status=None, sign=False, authn=None ):
 
+        try:
+            policy = self.conf.idp_policy()
+        except KeyError:
+            policy = self.conf.aa_policy()
+            
         return self._response(in_response_to, consumer_url,
                         sp_entity_id, identity, name_id, 
-                        status, sign, self.conf.idp_policy(), authn)
+                        status, sign, policy, authn)
                         
     # ------------------------------------------------------------------------
     
@@ -435,9 +446,6 @@ class Server(object):
 
     # ------------------------------------------------------------------------
 
-
-    # ------------------------------------------------------------------------
-
     def authn_response(self, identity, in_response_to, destination, 
                         sp_entity_id, name_id_policy, userid, sign=False, 
                         authn=None):
@@ -456,9 +464,13 @@ class Server(object):
         """
         
         try:
-            name_id = self.ident.construct_nameid(self.conf.idp_policy(),
-                                  userid, sp_entity_id, identity,
-                                  name_id_policy)
+            try:
+                policy = self.conf.idp_policy()
+            except KeyError:
+                policy = self.conf.aa_policy()
+                
+            name_id = self.ident.construct_nameid(policy, userid, sp_entity_id,
+                                                    identity, name_id_policy)
         except IOError, exc:
             response = self.error_response(in_response_to, destination, 
                                             sp_entity_id, exc, name_id)
@@ -501,8 +513,9 @@ class Server(object):
             failed.
         """
         
-        slos = self.conf.endpoint("idp", "single_logout_service", binding)[0]
-        req = request.LogoutRequest(self.sec, slos)
+        slo = self.conf.endpoint("idp", "single_logout_service", binding)[0]
+        self.log and self.log.info("Endpoint: %s" % (slo))
+        req = request.LogoutRequest(self.sec, slo)
         if binding == BINDING_SOAP:
             lreq = soap.parse_soap_enveloped_saml_logout_request(text)
             try:
@@ -512,10 +525,15 @@ class Server(object):
         else:
             try:
                 req = req.loads(text)
-            except Exception:
+            except Exception, exc:
+                self.log.error("%s" % (exc,))
                 return None
 
+        self.log and self.log.info("Before verify %s" % (req,))
+        
         req = req.verify()
+
+        self.log and self.log.info("After verify %s" % (req,))
         
         if not req: # Not a valid request
             # return a error message with status code element set to
@@ -525,14 +543,62 @@ class Server(object):
             return req
 
 
-    def logout_response(self, in_response_to, status=None):
+    def logout_response(self, request, bindings, status=None,
+                            sign=False):
         
+        sp_entity_id = request.issuer.text.strip()
+        
+        for binding in bindings:
+            destination = self.conf.logout_service(sp_entity_id, "sp", 
+                                                    binding)
+            if destination:
+                break
+                
+
+        if not destination:
+            self.log and self.log.error("Not way to return a response !!!")
+            return ("412 Precondition Failed",
+                    [("Content-type", "text/html")],
+                    ["No return way defined"])
+        
+        # Pick the first
+        destination = destination[0]
+        
+        self.log and self.log.info("Destination: %s, binding: %s" % (destination,
+                                                                    binding))
         if not status: 
             status = success_status_factory()
 
-        return logoutresponse_factory(
-                    issuer = self.issuer(),
-                    in_response_to = in_response_to,
-                    status = status,
-                )
+        mid = sid()
+        rcode = "200 OK"
         
+        # response and packaging differs depending on binding
+        
+        if binding == BINDING_SOAP:
+            response = logoutresponse_factory(
+                                id = mid,
+                                in_response_to = request.id,
+                                status = status,
+                                )
+            (headers, message) = http_soap_message(response)
+        else:
+            response = logoutresponse_factory(
+                                id = mid,
+                                in_response_to = request.id,
+                                status = status,
+                                issuer = self.issuer(),
+                                destination = destination,
+                                sp_entity_id = sp_entity_id,
+                                instant=instant(),
+                                )
+            self.log and self.log.info("Response: %s" % (response,))
+            if binding == BINDING_HTTP_REDIRECT:
+                (headers, message) = http_redirect_message(response, 
+                                                            destination, 
+                                                            typ="SAMLResponse")
+                rcode = "302 Found"
+            else:
+                (headers, message) = http_post_message(response, destination,
+                                                        typ="SAMLResponse")
+                
+        return (rcode, headers, message)
