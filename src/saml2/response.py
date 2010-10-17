@@ -204,6 +204,9 @@ class StatusResponse(object):
         self.in_response_to = mold.in_response_to
         self.response = mold.response
         
+    def issuer(self):
+        return self.response.issuer.text.strip()
+        
 class LogoutResponse(StatusResponse):
     def __init__(self, sec_context, return_addr=None, log=None, timeslack=0, 
                     debug=0):
@@ -440,11 +443,7 @@ class AuthnResponse(StatusResponse):
             return self
         else:
             return None
-    
-    def issuer(self):
-        """ Return the issuer of the reponse """
-        return self.response.issuer.text
-    
+        
     def session_id(self):
         """ Returns the SessionID of the response """ 
         return self.response.in_response_to
