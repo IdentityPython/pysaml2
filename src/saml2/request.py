@@ -122,6 +122,9 @@ class Request(object):
         else: # EncryptedID
             pass
             
+    def sender(self):
+        return self.message.issuer.text()
+        
 class LogoutRequest(Request):
     def __init__(self, sec_context, receiver_addrs, log=None, timeslack=0, 
                     debug=0):
