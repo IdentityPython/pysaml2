@@ -41,6 +41,9 @@ def sd_copy(arg):
         
 # ------------------------------------------------------------------------
 
+def class_pyify(ref):
+    return ref.replace("-","_")
+    
 def def_init(imports, attributes):
     indent = INDENT+INDENT
     indent3 = INDENT+INDENT+INDENT
@@ -112,7 +115,10 @@ def _mod_cname(prop, cdict):
     else:
         (mod, typ) = _mod_typ(prop)
         if not mod:
-            cname = cdict[typ].class_name
+            try:
+                cname = cdict[typ].class_name
+            except KeyError:
+                cname = cdict[class_pyify(typ)].class_name
         else:
             cname = typ
         
@@ -133,13 +139,24 @@ def leading_lowercase(string):
         return string
     except TypeError:
         return ""
-        
-def rm_duplicates(lista):
-    res = []
-    for item in lista:
-        if item not in res:
-            res.append(item)
-    return res
+
+def rm_duplicates(properties):
+    keys = []
+    clist = []
+    for prop in properties:
+        if prop.name in keys:
+            continue
+        else:
+            clist.append(prop)
+            keys.append(prop.name)
+    return clist
+
+# def rm_duplicates(lista):
+#     res = []
+#     for item in lista:
+#         if item not in res:
+#             res.append(item)
+#     return res
 
 def klass_namn(obj):
     if obj.class_name:
@@ -157,6 +174,7 @@ class PyObj(object):
         self.value_type = ""
         self.properties = ([], [])
         self.abstract = False
+        self.class_name = ""
         
         if pyname:
             self.pyname = pyname
@@ -169,103 +187,34 @@ class PyObj(object):
             
     def child_spec(self, target_namespace, prop, mod, typ, lista):
         if mod:
-            namespace = external_namespace(self.root.modul[mod])
-            key = '{%s}%s' % (namespace, prop.name)
+            namesp = external_namespace(self.root.modul[mod])
+            pkey = '{%s}%s' % (namesp, prop.name)
             typ = "%s.%s" % (mod, typ)
         else:
-            key = '{%s}%s' % (target_namespace, prop.name)
+            pkey = '{%s}%s' % (target_namespace, prop.name)
 
         if lista:
             return "c_children['%s'] = ('%s', [%s])" % (
-                        key, prop.pyname, typ)
+                        pkey, prop.pyname, typ)
         else:
             return "c_children['%s'] = ('%s', %s)" % (
-                        key, prop.pyname, typ)
+                        pkey, prop.pyname, typ)
     
     def knamn(self, sup, cdict):
-        try:
-            cname = cdict[sup].class_name
-        except AttributeError:
-            (namespace,tag) = cdict[sup].name.split('.')
-            if namespace:
-                ctag = self.root.modul[namespace].factory(tag).__class__.__name__
-                cname = '%s.%s' % (namespace,ctag)
+        cname = cdict[sup].class_name
+        if not cname:
+            (namesp, tag) = cdict[sup].name.split('.')
+            if namesp:
+                ctag = self.root.modul[namesp].factory(tag).__class__.__name__
+                cname = '%s.%s' % (namesp, ctag)
             else:
                 cname = tag + "_"
         return cname
-        
-    def class_definition(self, target_namespace, cdict=None, ignore=None):
-        line = []
+    
+    def _do_properties(self, line, cdict, ignore, target_namespace):
         args = []
         child = []
-        imps = {}
 
-        if self.root:
-            if self.name not in [c.name for c in self.root.elems]:
-                self.root.elems.append(self)
-
-        try:
-            superior = self.superior
-            sups = []
-            for sup in superior:
-                try:
-                    cname = cdict[sup].class_name
-                except AttributeError:
-                    cname = cdict[sup].name
-                    (namespace, tag) = cname.split('.')
-                    if namespace:
-                        ctag = self.root.modul[namespace].factory(
-                                                        tag).__class__.__name__
-                        cname = '%s.%s' % (namespace, ctag)
-                    else:
-                        cname = tag + "_"
-                klass = self.knamn(sup, cdict)
-                sups.append(klass)
-                
-                imps[klass] = []
-                for c in cdict[sup].properties[0]:
-                    if c.pyname and c.pyname not in imps[klass]: 
-                        imps[klass].append(c.pyname)
-        except AttributeError:
-            superior = []
-            sups = []
-
-        c_name = klass_namn(self)
-            
-        if not superior:
-            line.append("class %s(SamlBase):" % (c_name,))
-        else:
-            line.append("class %s(%s):" % (c_name, ",".join(sups)))
-
-        if hasattr(self, 'scoped'):
-            pass
-        else:
-            line.append("%s\"\"\"The %s:%s element \"\"\"" % (INDENT, 
-                                                        target_namespace,
-                                                        self.name))
-        line.append("")
-        line.append("%sc_tag = '%s'" % (INDENT, self.name))
-        line.append("%sc_namespace = NAMESPACE" % (INDENT,))
-        try:
-            if self.value_type:
-                if isinstance(self.value_type, basestring):
-                    line.append("%sc_value_type = '%s'" % (INDENT, 
-                                                            self.value_type))
-                else:
-                    line.append("%sc_value_type = %s" % (INDENT, 
-                                                        self.value_type))
-        except AttributeError:
-            pass
-
-        if not superior:
-            for var, cps in CLASS_PROP:
-                line.append("%s%s = SamlBase.%s%s" % (INDENT, var, var, cps))
-        else:
-            for sup in sups:
-                for var, cps in CLASS_PROP:
-                    line.append("%s%s = %s.%s%s" % (INDENT, var, sup, var, 
-                                                    cps))
-        
         try:
             (own, inh) = self.properties
         except AttributeError:
@@ -321,6 +270,76 @@ class PyObj(object):
                 else:
                     args.append((prop.pyname, prop.pyname, None))
         
+        return (args, child, inh)
+        
+    def _superiors(self, cdict):
+        imps = {}
+
+        try:
+            superior = self.superior
+            sups = []
+            for sup in superior:
+                klass = self.knamn(sup, cdict)
+                sups.append(klass)
+                
+                imps[klass] = []
+                for cla in cdict[sup].properties[0]:
+                    if cla.pyname and cla.pyname not in imps[klass]: 
+                        imps[klass].append(cla.pyname)
+        except AttributeError:
+            superior = []
+            sups = []
+        
+        return (superior, sups, imps)
+        
+    def class_definition(self, target_namespace, cdict=None, ignore=None):
+        line = []
+
+        if self.root:
+            if self.name not in [c.name for c in self.root.elems]:
+                self.root.elems.append(self)
+
+        (superior, sups, imps) = self._superiors(cdict)
+
+        c_name = klass_namn(self)
+            
+        if not superior:
+            line.append("class %s(SamlBase):" % (c_name,))
+        else:
+            line.append("class %s(%s):" % (c_name, ",".join(sups)))
+
+        if hasattr(self, 'scoped'):
+            pass
+        else:
+            line.append("%s\"\"\"The %s:%s element \"\"\"" % (INDENT, 
+                                                        target_namespace,
+                                                        self.name))
+        line.append("")
+        line.append("%sc_tag = '%s'" % (INDENT, self.name))
+        line.append("%sc_namespace = NAMESPACE" % (INDENT,))
+        try:
+            if self.value_type:
+                if isinstance(self.value_type, basestring):
+                    line.append("%sc_value_type = '%s'" % (INDENT, 
+                                                            self.value_type))
+                else:
+                    line.append("%sc_value_type = %s" % (INDENT, 
+                                                        self.value_type))
+        except AttributeError:
+            pass
+
+        if not superior:
+            for var, cps in CLASS_PROP:
+                line.append("%s%s = SamlBase.%s%s" % (INDENT, var, var, cps))
+        else:
+            for sup in sups:
+                for var, cps in CLASS_PROP:
+                    line.append("%s%s = %s.%s%s" % (INDENT, var, sup, var, 
+                                                    cps))
+
+        (args, child, inh) = self._do_properties(line, cdict, ignore, 
+                                                target_namespace)
+        
         if child:
             line.append("%sc_child_order.extend([%s])" % (INDENT,
                             "'"+"', '".join(child)+"'"))
@@ -340,7 +359,7 @@ class PyObj(object):
                                                             self.class_name))
             line.append(
                 "%sreturn saml2.create_class_from_xml_string(%s, xml_string)" % (
-                            INDENT,self.class_name))
+                            INDENT, self.class_name))
             line.append("")
         
         self.done = True
@@ -369,17 +388,6 @@ def pyelement_factory(name, value_type, elms=None):
             elms.append(obj)
     return obj
     
-def rm_duplicates(properties):
-    keys = []
-    clist = []
-    for prop in properties:
-        if prop.name in keys:
-            continue
-        else:
-            clist.append(prop)
-            keys.append(prop.name)
-    return clist
-
 def expand_groups(properties, cdict):
     res = []
     for prop in properties:
@@ -396,7 +404,7 @@ class PyElement(PyObj):
     def __init__(self, name=None, pyname=None, root=None, parent=""):
         PyObj.__init__(self, name, pyname, root)
         if parent:
-            self.class_name = "%s_%s" % (leading_uppercase(parent),self.name)
+            self.class_name = "%s_%s" % (leading_uppercase(parent), self.name)
         else:
             self.class_name = leading_uppercase(self.name)
         self.ref = None
@@ -432,7 +440,55 @@ class PyElement(PyObj):
                 if not cdict[cname].done:
                     return ([cdict[cname]], [])
         return ([], [])
+    
+    def _local_class(self, typ, cdict, child, target_namespace, ignore):
+        if typ in cdict and not cdict[typ].done:
+            raise MissingPrerequisite(typ)
+        else:
+            self.orig = {"type": self.type}
+            try:
+                self.orig["superior"] = self.superior
+            except AttributeError:
+                self.orig["superior"] = []
+            self.superior = [typ]
+            req = self.class_definition(target_namespace, cdict, 
+                                        ignore)
+            if not child:
+                req = [req]
             
+            if not hasattr(self, 'scoped'):
+                cdict[self.name] = self
+                cdict[self.name].done = True
+                if child:
+                    cdict[self.name].local = True
+            self.type = (None, self.name)
+        
+        return req
+        
+    def _external_class(self, mod, typ, cdict, child, target_namespace, 
+                        ignore):
+        # Will raise exception if class can't be found
+        cname = self.root.modul[mod].factory(typ).__class__.__name__
+        imp_name = "%s.%s" % (mod, cname)
+            
+        if imp_name not in cdict:
+            # create import object so I can get the properties from it 
+            # later
+            impo = pyelement_factory(imp_name, None, None)
+            impo.properties = [_import_attrs(self.root.modul[mod], typ, 
+                                            self.root),[]]
+            impo.class_name = imp_name
+            cdict[imp_name] = impo
+            impo.done = True
+            if child:
+                impo.local = True
+        # and now for this object
+        self.superior = [imp_name]
+        text = self.class_definition(target_namespace, cdict, 
+                                        ignore=ignore)
+        
+        return text
+        
     def text(self, target_namespace, cdict, child=True, ignore=[]):
         if child:
             text = []
@@ -442,55 +498,13 @@ class PyElement(PyObj):
         try:
             (mod, typ) = self.type
             if not mod:
-                if typ in cdict and not cdict[typ].done:
-                    raise MissingPrerequisite(typ)
-                else:
-                    self.orig = {"type": self.type}
-                    try:
-                        self.orig["superior"] = self.superior
-                    except AttributeError:
-                        self.orig["superior"] = []
-                    self.superior = [typ]
-                    req = self.class_definition(target_namespace, cdict, 
-                                                ignore)
-                    if not child:
-                        req = [req]
-                    
-                    if not hasattr(self, 'scoped'):
-                        cdict[self.name] = self
-                        cdict[self.name].done = True
-                        if child:
-                            cdict[self.name].local = True
-                    self.type = (None, self.name)
+                req = self._local_class(typ, cdict, child, 
+                                        target_namespace, ignore)
             else:
-                # Will raise exception if class can't be found
-                cname = self.root.modul[mod].factory(typ).__class__.__name__
-                imp_name = "%s.%s" % (mod, cname)
-                    
-                if imp_name not in cdict:
-                    # create import object so I can get the properties from it 
-                    # later
-                    impo = pyelement_factory(imp_name, None, None)
-                    impo.properties = [_import_attrs(self.root.modul[mod], typ, 
-                                                    self.root),[]]
-                    impo.class_name = imp_name
-                    cdict[imp_name] = impo
-                    impo.done = True
-                    if child:
-                        impo.local = True
-                # and now for this object
-                self.superior = [imp_name]
-                text = self.class_definition(target_namespace, cdict, 
-                                                ignore=ignore)
-                
+                text = self._external_class(mod, typ, cdict, child, 
+                                            target_namespace, ignore)
         except ValueError: # Simple type element
             if self.type:
-                # pyobj = pyelement_factory(self.name, self.type, self.root.elems)
-                # if hasattr(self, 'scoped'):
-                #     pyobj.class_name = self.class_name
-                # else:
-                #     self.type = self.name
-                #     cdict[self.name] = pyobj
                 text = self.class_definition(target_namespace, cdict, 
                                                 ignore=ignore)
                 if child:
@@ -513,14 +527,14 @@ class PyElement(PyObj):
                         return (req, text)
                     else:
                         raise Exception(
-                            "Import attempted on %s from %s module failed - wasn't there" % (
+            "Import attempted on %s from %s module failed - wasn't there" % (
                                 typ,mod))
                 elif not child:
                     self.superior = [typ]
                     text = self.class_definition(target_namespace, cdict,
                                                     ignore=ignore)
             else:
-                if not cdict[self.ref].done:
+                if not cdict[class_pyify(self.ref)].done:
                     raise MissingPrerequisite(self.ref)
                 
         self.done = True
@@ -574,7 +588,7 @@ class PyType(PyObj):
         self.namespace = namespace
 
     def text(self, target_namespace, cdict, _child=True, ignore=[], 
-                session=None):
+                _session=None):
         if not self.properties and not self.type \
                 and not self.superior:
             self.done = True
@@ -649,6 +663,8 @@ class PyType(PyObj):
         for prop in own:
             if not prop.name: # Ignore
                 continue 
+            if isinstance(prop, PyAttribute):
+                continue
             if not prop.done:
                 undef[1].append(prop)
         return undef
@@ -664,14 +680,24 @@ class PyAttribute(PyObj):
         self.base = None
         self.type = typ
 
-    def text(self, _target_namespace, _cdict, _child=True):
+    def text(self, _target_namespace, cdict, _child=True):
+        if isinstance(self.type, PyObj):
+            if not cdict[self.type.name].done:
+                raise MissingPrerequisite(self.type.name)
+                
         return ([], []) # Means this elements definition is empty
         
     def spec(self):
-        if isinstance(self.type, SimpleType):
-            return "('%s', %s_, %s)" % (self.pyname, self.type.name, self.required)
+        if isinstance(self.type, PyObj):
+            return "('%s', %s, %s)" % (self.pyname, self.type.class_name, 
+                                        self.required)
         else:
-            return "('%s', '%s', %s)" % (self.pyname, self.type, self.required)
+            if self.type:
+                return "('%s', '%s', %s)" % (self.pyname, self.type, 
+                                                self.required)
+            else:
+                return "('%s', '%s', %s)" % (self.pyname, self.base, 
+                                                self.required)
        
 class PyAny(PyObj):
     def __init__(self, name=None, pyname=None, _external=False, _namespace=""):
@@ -691,10 +717,10 @@ class PyGroup(object):
         self.properties = []
         self.done = False
     
-    def text(self,target_namespace, _dict, _child, ignore):
+    def text(self, _target_namespace, _dict, _child, _ignore):
         return ([], [])
         
-    def undefined(self, cdict):
+    def undefined(self, _cdict):
         undef = ([], [])
 
         (own, _) = self.properties
@@ -769,12 +795,19 @@ def _do_from_string(name):
     print "%sreturn saml2.create_class_from_xml_string(%s, xml_string)" % (
                 INDENT, name)
 
+def _namespace_and_tag(obj, param, top):
+    try:
+        (namespace, tag) = param.split(":")
+    except ValueError:
+        namespace = ""
+        tag = param
 
+    return (namespace, tag)
+    
 # -----------------------------------------------------------------------------
 
 class Simple(object):
     def __init__(self, elem):
-        self.repr_done = []
         self.default = None
         self.fixed = None
         self.xmlns_map = []
@@ -782,19 +815,20 @@ class Simple(object):
         self.type = None
         self.use = None
         self.ref = None
+        self.scoped = False
         
         for attribute, value in elem.attrib.iteritems():            
             self.__setattr__(attribute, value)
 
     def collect(self, top, sup, argv=None, parent=""):
         argv_copy = sd_copy(argv)
-        rval = self.repr(top, sup, argv_copy, parent=parent)
+        rval = self.repr(top, sup, argv_copy, True, parent)
         if rval:
             return ([rval], [])
         else:
             return ([], [])
 
-    def repr(self, _top=None, _sup=None, _argv=None, _child=True, parent=""):
+    def repr(self, _top=None, _sup=None, _argv=None, _child=True, _parent=""):
         return None
         
     def elements(self, _top):
@@ -803,16 +837,16 @@ class Simple(object):
         
 class Any(Simple):
     
-    def repr(self, _top=None, _sup=None, _argv=None, _child=True, parent=""):
+    def repr(self, _top=None, _sup=None, _argv=None, _child=True, _parent=""):
         return PyAny()
         
 class AnyAttribute(Simple):
 
-    def repr(self, _top=None, _sup=None, _argv=None, _child=True, parent=""):
+    def repr(self, _top=None, _sup=None, _argv=None, _child=True, _parent=""):
         return PyAny()
 
 class Attribute(Simple):
-    def repr(self, top=None, sup=None, _argv=None, _child=True, parent=""):
+    def repr(self, top=None, sup=None, _argv=None, _child=True, _parent=""):
         # default, fixed, use, type
                     
         if (DEBUG):
@@ -820,7 +854,7 @@ class Attribute(Simple):
 
         external = False
         try:
-            (namespace, tag) = self.ref.split(":")
+            (namespace, tag) = _namespace_and_tag(self, self.ref, top)
             ref = True
             pyname = tag
             if namespace in self.xmlns_map:
@@ -849,18 +883,24 @@ class Attribute(Simple):
         # Initial declaration
         if not ref:
             try:
-                (namespace, klass) = self.type.split(":")
+                (namespace, klass) = _namespace_and_tag(self, self.type, top)
                 if self.xmlns_map[namespace] == top.target_namespace:
                     ctyp = get_type_def(klass, top.parts)
-                    if not ctyp.repr_done:
+                    if not ctyp.py_class:
                         ctyp.repr(top, sup)
-                    objekt.type = ctyp
+                    objekt.type = ctyp.py_class
                 elif self.xmlns_map[namespace] == XMLSCHEMA:
                     objekt.type = klass
                 else:
                     objekt.type = self.type
             except ValueError:
-                objekt.type = self.type
+                if self.xmlns_map[""] == top.target_namespace:
+                    ctyp = get_type_def(self.type.replace("-","_"), top.parts)
+                    if not ctyp.py_class:
+                        ctyp.repr(top, sup)
+                    objekt.type = ctyp.py_class                    
+                else:
+                    objekt.type = self.type
             except AttributeError:
                 objekt.type = None
         try:
@@ -920,28 +960,13 @@ class List(Simple):
     pass
     
 # -----------------------------------------------------------------------------
-# 
-# def _do_typ(klass, top, sup, obj):
-#     ctyp = get_type_def(klass, top.parts)
-# 
-#     if (DEBUG):
-#         print "# _do_typ '%s' (repr:%s)" % (ctyp.name, ctyp.repr_done)
-#         
-#     if not ctyp.repr_done:
-#         ctyp.repr(top, sup)
-# 
-#     if obj.name not in top.py_elements:
-#         sup = top.py_elements[ctyp.name]        
-#         top.py_element = PyClass(obj.name, root=top)
-# 
-# -----------------------------------------------------------------------------
 
 def sequence(elem):
     return [evaluate(child.tag, child) for child in elem]
 
 def name_or_ref(elem, top):
     try:
-        (namespace, name) = elem.ref.split(":")
+        (namespace, name) = _namespace_and_tag(elem, elem.ref, top)
         if namespace and elem.xmlns_map[namespace] == top.target_namespace:
             return name
         else:
@@ -955,9 +980,8 @@ class Complex(object):
         self.parts = []
         self._own = []
         self._inherited = []
-        self.repr_done = False
         self._generated = False
-        self._class = None
+        self.py_class = None
         self.properties = []
         # From Elementtree
         self.ref = None
@@ -966,6 +990,8 @@ class Complex(object):
         self.maxOccurs = 1
         self.minOccurs = 1
         self.base = None
+        self.scoped = False
+        self.abstract = False
         
         for attribute, value in elem.attrib.iteritems():
             self.__setattr__(attribute, value)
@@ -983,6 +1009,16 @@ class Complex(object):
         except AttributeError:
             pass
 
+    def _extend(self, top, sup, argv=None, parent="", base=""):
+        argv_copy = sd_copy(argv)
+        for part in self.parts:
+            (own, inh) = part.collect(top, sup, argv_copy, parent)
+            if own and base:
+                if len(own) == 1 and isinstance(own[0], PyAttribute):
+                    own[0].base = base
+            self._own.extend(own)
+            self._inherited.extend(inh)
+        
     def collect(self, top, sup, argv=None, parent=""):
         if self._own or self._inherited:
             return (self._own, self._inherited)
@@ -990,14 +1026,9 @@ class Complex(object):
         if (DEBUG):
             print self.__dict__
             print "#-- %d parts" % len(self.parts)
-            
-        argv_copy = sd_copy(argv)
         
-        for part in self.parts:
-            (own, inh) = part.collect(top, sup, argv_copy, parent=parent)
-            self._own.extend(own)
-            self._inherited.extend(inh)
-
+        self._extend(top, sup, argv, parent)
+        
         return (self._own, self._inherited)
         
     def do_child(self, elem):
@@ -1024,6 +1055,16 @@ class Complex(object):
     def repr(self, _top=None, _sup=None, _argv=None, _child=True, parent=""):
         return None
 
+    def significant_parts(self):
+        res = []
+        for p in self.parts:
+            if isinstance(p, Annotation):
+                continue
+            else:
+                res.append(p)
+                
+        return res
+        
 def min_max(cls, objekt, argv):
     try:
         objekt.max = argv["maxOccurs"]
@@ -1049,7 +1090,7 @@ class Element(Complex):
         ctyp = None
         ref = False
         try:
-            (namespace, name) = self.ref.split(":")
+            (namespace, name) = _namespace_and_tag(self, self.ref, top)
             ref = True
         except AttributeError:
             try:
@@ -1060,11 +1101,10 @@ class Element(Complex):
             except AttributeError:
                 namespace = name = None
 
-        if namespace:
-            if self.xmlns_map[namespace] == top.target_namespace:
-                ctyp = get_type_def(name, top.parts)
-            else:
-                xns = namespace
+        if self.xmlns_map[namespace] == top.target_namespace:
+            ctyp = get_type_def(name, top.parts)
+        else:
+            xns = namespace
 
         return (namespace, name, ctyp, xns, ref)
 
@@ -1095,21 +1135,24 @@ class Element(Complex):
         #<element name="RecipientKeyInfo" type="ds:KeyInfoType" ...
         #<element name='ReferenceList'>
 
+        if self.py_class:
+            return self.py_class
+            
         try:
             myname = self.name
         except AttributeError:
             myname = ""
 
         if DEBUG:
-            print "#Element.repr '%s' (child=%s) [%s/%s]" % (myname, child, 
-                                                    self.repr_done, self._generated)
+            print "#Element.repr '%s' (child=%s) [%s]" % (myname, 
+                                                            child, 
+                                                            self._generated)
 
-        objekt = PyElement(myname, root=top)
-        
+        self.py_class = objekt = PyElement(myname, root=top)
         min_max(self, objekt, argv)
                 
         try:
-            (namespace, superkl) = self.ref.split(":")
+            (namespace, superkl) = _namespace_and_tag(self, self.ref, top)
             # internal or external reference
             if not myname:
                 objekt.name = superkl
@@ -1125,7 +1168,7 @@ class Element(Complex):
             typ = self.type
 
             try:
-                (namespace, klass) = typ.split(":")
+                (namespace, klass) = _namespace_and_tag(self, typ, top)
                 if self.xmlns_map[namespace] == top.target_namespace:
                     objekt.type = (None, klass)
                 elif self.xmlns_map[namespace] == XMLSCHEMA:
@@ -1174,6 +1217,9 @@ class Element(Complex):
 
 class SimpleType(Complex):
     def repr(self, top=None, _sup=None, _argv=None, _child=True, parent=""):
+        if self.py_class:
+            return self.py_class
+            
         obj = PyType(self.name, root=top)
         try:
             if len(self.parts) == 1:
@@ -1197,7 +1243,8 @@ class SimpleType(Complex):
                         obj.value_type = {"base":"list", "member":part.itemType}
         except ValueError:
             pass
-            
+        
+        self.py_class = obj
         return obj
         
 class Sequence(Complex):
@@ -1227,13 +1274,15 @@ class Extension(Complex):
 
         try:
             base = self.base
-            (namespace, tag) = base.split(":")
+            (namespace, tag) = _namespace_and_tag(self, base, top)
+                    
             if self.xmlns_map[namespace] == top.target_namespace:
                 cti = get_type_def(tag, top.parts)
-                if not cti.repr_done:
+                if not cti.py_class:
                     cti.repr(top, sup)
                 #print "#EXT..",ct._collection
-                self._inherited = cti._collection
+                self._inherited = cti.py_class.properties[0][:]
+                self._inherited.extend(cti.py_class.properties[1])
             elif self.xmlns_map[namespace] == XMLSCHEMA: 
                 base = tag
             else:
@@ -1243,17 +1292,8 @@ class Extension(Complex):
         except (AttributeError, ValueError):
             pass
             
-        argv_copy = sd_copy(argv)
-        for part in self.parts:
-            #print "### ", part
-            (own, inh) = part.collect(top, sup, argv_copy, parent)
-            if own:
-                if len(own) == 1 and isinstance(own[0], PyAttribute):
-                    own[0].base = base
-                self._own.extend(own)
-            self._inherited.extend(inh)
+        self._extend(top, sup, argv, parent, base)
 
-        #print "#EXT C", self._own
         return (self._own, self._inherited)
 
 class Choice(Complex):
@@ -1277,35 +1317,32 @@ class Restriction(Complex):
 
 class ComplexType(Complex):
     def repr(self, top=None, sup=None, _argv=None, _child=True, parent=""):
-        if self.repr_done:
-            return
-            
-        self.repr_done = True
-        
+        if self.py_class:
+            return self.py_class
+                    
         # looking for a pattern here
-        if len(self.parts) == 1:
-            if isinstance(self.parts[0], ComplexContent):
-                cci = self.parts[0]
+        significant_parts = self.significant_parts()
+        value_type = ""
+        if len(significant_parts) == 1:
+            if isinstance(significant_parts[0], ComplexContent) or \
+                isinstance(significant_parts[0], SimpleContent):
+                cci = significant_parts[0]
                 if len(cci.parts) == 1:
                     if isinstance(cci.parts[0], Extension):
                         ext = cci.parts[0]
 
-                        try:
-                            (namespace, name) = ext.base.split(":")
-                        except ValueError:
-                            name = ext.base
-                            namespace = ""
-                            
-                        if namespace and \
-                            ext.xmlns_map[namespace] == top.target_namespace:
+                        (namespace, name) = _namespace_and_tag(ext, ext.base, 
+                                                                top)
+
+                        if ext.xmlns_map[namespace] == top.target_namespace:
                             new_sup = name
                             cti = get_type_def(new_sup, top.parts)
-                            if cti and not cti.repr_done:
+                            if cti and not cti.py_class:
                                 cti.repr(top, sup)
-                        elif namespace and ext.xmlns_map[namespace] == XMLSCHEMA:
+                        elif ext.xmlns_map[namespace] == XMLSCHEMA:
                             new_sup = None
+                            value_type = name
                         else:
-                            #cname = top.modul[namespace].factory(name).__class__.__name__
                             new_sup = "%s.%s" % (namespace, name)
                             
                         #print "#Superior: %s" % new_sup
@@ -1316,16 +1353,19 @@ class ComplexType(Complex):
                 pass
                 
         try:
-            self._class = PyType(self.name, superior=sup, 
+            self.py_class = PyType(self.name, superior=sup, 
                                     namespace=top.target_namespace, root=top)
         except AttributeError: # No name 
-            self._class = PyType("", superior=sup, 
+            self.py_class = PyType("", superior=sup, 
                                     namespace=top.target_namespace, root=top)
 
         try:
-            self._class.abstract = self.abstract
+            self.py_class.abstract = self.abstract
         except AttributeError:
             pass
+        
+        if value_type:
+            self.py_class.value_type = {"base": value_type}
             
         try:
             if not parent:
@@ -1334,11 +1374,11 @@ class ComplexType(Complex):
                 except AttributeError:
                     parent = ""
             
-            self._class.properties = self.collect(top, sup, parent=parent)
+            self.py_class.properties = self.collect(top, sup, parent=parent)
         except ValueError:
             pass
             
-        return self._class 
+        return self.py_class 
         
 class Annotation(Complex):
     pass
@@ -1352,41 +1392,36 @@ class Group(Complex):
         that object """
         
         try:
-            objekt = PyGroup("", root=top)
-            (namespace, tag) = self.ref.split(":")
-            if namespace in self.xmlns_map:
+            #objekt = PyGroup("", root=top)
+            (namespace, tag) = _namespace_and_tag(self, self.ref, top)
+    
+            try:
                 if self.xmlns_map[namespace] == top.target_namespace:
-                    objekt.ref = (None, tag.replace("-","_"))
+                    cti = get_type_def(tag, top.parts)
+                    try:
+                        return cti.py_class.properties
+                    except ValueError:
+                        return cti.collect(top, sup) 
                 else:
                     raise Exception(
                         "Reference to group in other XSD file, not supported")
-            else:
-                raise Exception("Missing namespace definition")
-            
-            return ([objekt], [])
+            except KeyError:
+                raise Exception("Missing namespace definition")            
         except AttributeError, exc:
             print "!!!!", exc
             return ([], [])
 
     def repr(self, top=None, sup=None, argv=None, _child=True, parent=""):
-        self._class = objekt = PyGroup(self.name, root=top)
+        if self.py_class:
+            return self.py_class
+
+        self.py_class = objekt = PyGroup(self.name, root=top)
 
         min_max(self, objekt, argv)
         
         try:
-            argv_copy = sd_copy(argv)
-            c_own = []
-            c_inherited = []
-            for part in self.parts:
-                #print "### ", part
-                (own, inh) = part.collect(top, sup, argv_copy)
-                if own:
-                    # if len(own) == 1 and isinstance(own[0], PyAttribute):
-                    #     own[0].base = base
-                    c_own.extend(own)
-                c_inherited.extend(inh)
-
-            objekt.properties = (c_own, c_inherited)
+            self._extend(top, sup, argv)
+            objekt.properties = (self._own, self._inherited)
         except ValueError:
             pass
             
@@ -1404,7 +1439,8 @@ class Field(Complex):
 class AttributeGroup(Complex):
     def collect(self, top, sup, argv=None, parent=""):
         try:
-            (_namespace, typ) = self.ref.split(":")
+            (_namespace, typ) = _namespace_and_tag(self, self.ref, top)
+            # TODO: use definitions in other XSD
             cti = get_type_def(typ, top.parts)
             return cti.collect(top, sup)
         except AttributeError:
@@ -1420,14 +1456,17 @@ class AttributeGroup(Complex):
             return (self._own, self._inherited)
 
     def repr(self, top=None, sup=None, _argv=None, _child=True, parent=""):
-        self._class = PyAttributeGroup(self.name, root=top)
+        if self.py_class:
+            return self.py_class
+            
+        self.py_class = PyAttributeGroup(self.name, root=top)
 
         try:
-            self._class.properties = self.collect(top, sup)
+            self.py_class.properties = self.collect(top, sup)
         except ValueError:
             pass
             
-        return self._class 
+        return self.py_class 
 
 def pyify_0(name):
     res = ""
@@ -1442,6 +1481,8 @@ def pyify_0(name):
             break
     
     res = res.replace("-","_")
+    if res in ["class"]:
+        res = res+"_"
     return res
 
 def pyify(name):
@@ -1560,6 +1601,38 @@ from saml2 import SamlBase
 
 #NAMESPACE = 'http://www.w3.org/2000/09/xmldsig#'
     
+def block_items(objekt, block, eldict):
+    if objekt not in block:
+        if isinstance(objekt.type, PyType):
+            if objekt.type not in block:
+                block.append(objekt.type)
+        block.append(objekt)
+        if isinstance(objekt, PyType):
+            others = [p for p in eldict.values() if isinstance(p, 
+                                    PyElement) and p.type[1] == objekt.name]
+            for item in others:
+                if item not in block:
+                    block.append(item)
+    return block
+
+    
+def find_parent(elm, eldict):
+    if isinstance(elm, PyElement):
+        if elm.type:
+            sup = eldict[elm.type[1]]
+            return find_parent(sup, eldict)
+        elif elm.ref:
+            sup = eldict[elm.ref]
+            return find_parent(sup, eldict)
+    else:
+        if elm.superior:
+            sup = eldict[elm.superior[0]]
+            if sup.done:
+                return elm
+            return find_parent(sup, eldict)
+    
+    return elm
+    
 class Schema(Complex):
 
     def __init__(self, elem, impo, add, modul, defs):
@@ -1579,50 +1652,95 @@ class Schema(Complex):
         for def_file in defs:
             self.defs.append(open(def_file).read())
 
-    def adjust(self, eldict):
+    def _mk_list(self, objekt, alla, eldict):
+        tup = []
+        for prop in alla:
+            (mod, cname) = _mod_cname(prop, eldict)
+
+            if prop.max == "unbounded":
+                lista = True
+            else:
+                lista = False
+
+            spec = objekt.child_spec(self.target_namespace, 
+                                        prop, mod, cname, 
+                                        lista)
+            lines = ["%s.%s" % (objekt.class_name, spec)]
+            tup.append((prop, lines, spec))
+        
+        return tup
+        
+    def adjust(self, eldict, block):
         udict = {}
         for elem in self.elems:
-            if isinstance(elem, PyAttribute):
+            if isinstance(elem, PyAttribute) or isinstance(elem, PyGroup):
                 elem.done = True
+                continue
+            if elem in block:
                 continue
             if not elem.done:
                 udict[elem] = elem.undefined(eldict)
 
         keys = [k.name for k in udict.keys()]
         print "#", keys
-        res = (None, None, None)
-        for key, (sup, elems) in udict.items():
-            if sup:
-                continue
-            else:
-                signif = []
-                for elem in elems:
-                    if elem.name in keys:
-                        signif.append(elem)
-                if len(signif) == 1:
-                    prop = signif[0]
-                    (mod, cname) = _mod_cname(prop, eldict)
-
-                    if prop.max == "unbounded":
-                        lista = True
-                    else:
-                        lista = False
-                    spec = key.child_spec(self.target_namespace, prop, mod, 
-                                            cname, lista)
-                    lines = ["%s.%s" % (key.class_name, spec)]
-                    res = (key, prop, lines)
-                    break
-        if res[0]:
-            ref = res[0].name
-            for key, (sups, elems) in udict.items():
-                if sups:
-                    for sup in sups:
-                        if sup.name == ref:
-                            lines.append("%s.%s" % (key.class_name, spec))
-                            break
+        res = (None, [])
+        if not udict:
+            return res
+        level = 1
+        rblocked = [p.name for p in block]
+        while True:
+            non_child = 0
+            for objekt, (sup, elems) in udict.items():
+                if sup:
+                    continue
                 else:
-                    pass
-
+                    non_child += 1
+                    signif = []
+                    other = []
+                    for elem in elems:
+                        if elem.name in keys:
+                            signif.append(elem)
+                        elif elem.ref in rblocked:
+                            other.append(elem)
+                    if len(signif) <= level:
+                        alla = signif
+                        alla.extend(other)
+                        tup = self._mk_list(objekt, alla, eldict)
+                        res = (objekt, tup)
+                        break
+            if res[0]:
+                ref = res[0].name
+                tups = res[1]
+                for objekt, (sups, elems) in udict.items():
+                    if sups:
+                        for sup in sups:
+                            if sup.name == ref:
+                                for tup in tups:
+                                    tup[1].append("%s.%s" % (objekt.class_name,
+                                                            tup[2]))
+                                break
+                    else:
+                        pass
+            elif not non_child or level > 10:
+                elm = udict.keys()[0]
+                parent = find_parent(elm, eldict)
+                signif = []
+                other = []
+                tot = parent.properties[0]
+                tot.extend(parent.properties[1])
+                alla = []
+                for elem in tot:
+                    if isinstance(elem, PyAttribute):
+                        continue
+                    else:
+                        alla.append(elem)
+                tup = self._mk_list(parent, alla, eldict)
+                res = (parent, tup)
+                
+            if res[0]:
+                break
+            else:
+                level += 1
         return res
 
     def _do(self, eldict):
@@ -1636,6 +1754,39 @@ class Schema(Complex):
                 undone += 1
                 not_done += output(elem, self.target_namespace, eldict)
         return undone
+        
+    def _element_from_string(self):
+        print "ELEMENT_FROM_STRING = {"
+        for elem in self.elems:
+            if isinstance(elem, PyAttribute) or isinstance(elem, PyGroup):
+                continue
+            if elem.abstract:
+                continue
+            print "%s%s.c_tag: %s_from_string," % (INDENT, elem.class_name, 
+                                                    pyify(elem.class_name))
+        print "}"
+        print
+        
+    def _element_by_tag(self):
+        print "ELEMENT_BY_TAG = {"
+        listed = []
+        for elem in self.elems:
+            if isinstance(elem, PyAttribute) or isinstance(elem, PyGroup):
+                continue
+            if elem.abstract:
+                continue
+            lcen = elem.name
+            print "%s'%s': %s," % (INDENT, lcen, elem.class_name)
+            listed.append(lcen)
+        for elem in self.elems:
+            if isinstance(elem, PyAttribute) or isinstance(elem, PyGroup):
+                continue
+            lcen = elem.name
+            if elem.abstract and lcen not in listed:
+                print "%s'%s': %s," % (INDENT, lcen, elem.class_name)
+                listed.append(lcen)
+        print "}"
+        print
         
     def out(self):
         for part in self.parts:
@@ -1658,7 +1809,7 @@ class Schema(Complex):
         intro()
         for modul in self.add:
             print "from %s import *" % modul
-        for namespace, (mod,namn) in self.impo.items():
+        for _namespace, (mod, namn) in self.impo.items():
             if namn:
                 print "import %s as %s" % (mod, namn)
         print        
@@ -1670,13 +1821,20 @@ class Schema(Complex):
             print
         
         exceptions = []
+        block = []
         while self._do(eldict):
             print "#.................."
-            (objekt, prop, lines) = self.adjust(eldict)
+            (objekt, tups) = self.adjust(eldict, block)
             if not objekt:
                 break
-            output(objekt, self.target_namespace, eldict, [prop.name])
-            exceptions.extend(lines)
+            ignore = [p.name for (p, _l, _s) in tups]
+            done = output(objekt, self.target_namespace, eldict, ignore)
+            if done:
+                for (prop, lines, _) in tups:
+                    exceptions.extend(lines)
+                block = []
+            else:
+                block = block_items(objekt, block, eldict)
 
         if exceptions:
             print "#", 70*'+'
@@ -1684,27 +1842,21 @@ class Schema(Complex):
                 print line
             print "#", 70*'+'
             print
-                
-        print "ELEMENT_FROM_STRING = {"
-        for elem in self.elems:
-            if isinstance(elem, PyAttribute) or isinstance(elem, PyGroup):
-                continue
-            if elem.abstract:
-                continue
-            print "%s%s.c_tag: %s_from_string," % (INDENT, elem.class_name, 
-                                                    pyify(elem.class_name))
-
-        print "}"
-        print
-        print "ELEMENT_BY_TAG = {"
-        for elem in self.elems:
-            if isinstance(elem, PyAttribute) or isinstance(elem, PyGroup):
-                continue
-            if elem.abstract:
-                continue
-            lcen = elem.name
-            print "%s'%s': %s," % (INDENT, lcen, elem.class_name)
-        print "}"
+        
+        for attrgrp in self.attrgrp:
+            print "AG_%s = [" % attrgrp.name
+            for prop in attrgrp.properties[0]:
+                if isinstance(prop.type, PyObj):
+                    print "%s('%s', %s_, %s)," % (INDENT, prop.name, 
+                                                prop.type.name, prop.required)
+                else:
+                    print "%s('%s', '%s', %s)," % (INDENT, prop.name, 
+                                                    prop.type, prop.required)
+            print "]"
+            print
+           
+        self._element_from_string() 
+        self._element_by_tag()
         print
         print "def factory(tag, **kwargs):"
         print "    return ELEMENT_BY_TAG[tag](**kwargs)"
@@ -1747,9 +1899,9 @@ _MAP = {
     
 ELEMENTFUNCTION = {}
 
-for namespace in NAMESPACE_BASE:
-    for key, func in _MAP.items():
-        ELEMENTFUNCTION["{%s}%s" % (namespace,key)] = func
+for nsp in NAMESPACE_BASE:
+    for nskey, func in _MAP.items():
+        ELEMENTFUNCTION["{%s}%s" % (nsp, nskey)] = func
 
     
 def evaluate(typ, elem):
