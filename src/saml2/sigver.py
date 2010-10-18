@@ -453,7 +453,7 @@ class SecurityContext(object):
         return item
 
     def check_signature(self, item, node_name=NODE_NAME):
-        return self._check_signature( "%s" % (item,), item)
+        return self._check_signature( "%s" % (item,), item, node_name)
         
     def correctly_signed_logout_request(self, decoded_xml, must=False):
         """ Check if a request is correctly signed, if we have metadata for
@@ -475,7 +475,7 @@ class SecurityContext(object):
             else:
                 return request
 
-        return self._check_signature( decoded_xml, request )
+        return self._check_signature(decoded_xml, request, class_name(request))
 
     def correctly_signed_logout_response(self, decoded_xml, must=False):
         """ Check if a request is correctly signed, if we have metadata for
@@ -497,7 +497,7 @@ class SecurityContext(object):
             else:
                 return response
 
-        return self._check_signature( decoded_xml, response )
+        return self._check_signature(decoded_xml, response, class_name(response))
     
     def correctly_signed_authn_request(self, decoded_xml, must=False):
         """ Check if a request is correctly signed, if we have metadata for
@@ -536,7 +536,7 @@ class SecurityContext(object):
             raise TypeError("Not a Response")
 
         if response.signature:
-            self._check_signature(decoded_xml, response)
+            self._check_signature(decoded_xml, response,class_name(response))
             
         # Try to find the signing cert in the assertion
         for assertion in response.assertion:
