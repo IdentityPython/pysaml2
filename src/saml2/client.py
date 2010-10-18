@@ -98,7 +98,7 @@ class Saml2Client(object):
         else:
             self.debug = debug
     
-    def relay_state(self, session_id):
+    def _relay_state(self, session_id):
         vals = [session_id, str(int(time.time()))]
         vals.append(signature(self.config["secret"], vals))
         return "|".join(vals)
@@ -110,21 +110,34 @@ class Saml2Client(object):
         request.destination = destination
         return request
     
-    def idp_entry(self, name=None, location=None, provider_id=None):
-        res = samlp.IDPEntry()
-        if name:
-            res.name = name
-        if location:
-            res.loc = location
-        if provider_id:
-            res.provider_id = provider_id
-
-        return res
-    
-    def scoping_from_metadata(self, entityid, location=None):
-        name = self.metadata.name(entityid)
-        idp_ent = self.idp_entry(name, location)
-        return samlp.Scoping(idp_list=samlp.IDPList(idp_entry=[idp_ent]))
+    # def idp_entry(self, name=None, location=None, provider_id=None):
+    #     """ Create an IDP entry
+    #     
+    #     :param name: The name of the IdP
+    #     :param location: The location of the IdP
+    #     :param provider_id: The identifier of the provider
+    #     :return: A IdPEntry instance
+    #     """
+    #     res = samlp.IDPEntry()
+    #     if name:
+    #         res.name = name
+    #     if location:
+    #         res.loc = location
+    #     if provider_id:
+    #         res.provider_id = provider_id
+    # 
+    #     return res
+    # 
+    # def scoping_from_metadata(self, entityid, location=None):
+    #     """ Set the scope of the assertion
+    #     
+    #     :param entityid: The EntityID of the server
+    #     :param location: The location of the server
+    #     :return: A samlp.Scoping instance
+    #     """
+    #     name = self.metadata.name(entityid)
+    #     idp_ent = self.idp_entry(name, location)
+    #     return samlp.Scoping(idp_list=samlp.IDPList(idp_entry=[idp_ent]))
     
     def response(self, post, entity_id, outstanding, log=None):
         """ Deal with an AuthnResponse or LogoutResponse
@@ -158,7 +171,7 @@ class Saml2Client(object):
             if isinstance(resp, AuthnResponse):
                 self.users.add_information_about_person(resp.session_info())
             elif isinstance(resp, LogoutResponse):
-                self.handle_logout_response(resp)
+                self.handle_logout_response(resp, log)
                     
         return resp
     
@@ -529,7 +542,7 @@ class Saml2Client(object):
 
                 else:
                     session_id = request.id
-                    rstate = self.relay_state(session_id)
+                    rstate = self._relay_state(session_id)
 
                     self.state[session_id] = {"entity_id": entity_id,
                                                 "operation": "SLO",
@@ -561,17 +574,26 @@ class Saml2Client(object):
         return (0, "", [], response)
 
     def local_logout(self, subject_id):
-        # Remove the user from the cache, equals local logout
+        """ Remove the user from the cache, equals local logout 
+        
+        :param subject_id: The identifier of the subject
+        """
         self.users.remove_person(subject_id)
         return True
 
-    def handle_logout_response(self, response):
-        """ handles a Logout response """
-        self.log and self.log.info("state: %s" % (self.state,))
+    def handle_logout_response(self, response, log):
+        """ handles a Logout response 
+        
+        :param response: A response.Response instance
+        :param log: A logging function
+        :return: 4-tuple of (session_id of the last sent logout request,
+            response message, response headers and message)
+        """
+        log and log.info("state: %s" % (self.state,))
         status = self.state[response.in_response_to]
-        self.log and self.log.info("status: %s" % (status,))
+        log and log.info("status: %s" % (status,))
         issuer = response.issuer()
-        self.log and self.log.info("issuer: %s" % issuer)
+        log and log.info("issuer: %s" % issuer)
         del self.state[response.in_response_to]
         if status["entity_ids"] == [issuer]: # done
             self.local_logout(status["subject_id"])
@@ -630,12 +652,17 @@ class Saml2Client(object):
             if self.debug and log:
                 log.info(response)
                 
-            return self.handle_logout_response(response)
+            return self.handle_logout_response(response, log)
 
         return response
         
     def add_vo_information_about_user(self, subject_id):
-        """ Add information to the knowledge I have about the user """
+        """ Add information to the knowledge I have about the user. This is
+        for Virtual organizations.
+        
+        :param subject_id: The subject identifier 
+        :return: A possibly extended knowledge.
+        """
         try:
             (ava, _) = self.users.get_identity(subject_id)
         except KeyError:
@@ -648,43 +675,7 @@ class Saml2Client(object):
                 ava = self.users.get_identity(subject_id)[0]
         return ava
         
-    def is_session_valid(session_id):
+    def is_session_valid(self, session_id):
+        """ Place holder. Supposed to check if the session is still valid.
+        """
         return True
-        
-# ----------------------------------------------------------------------
-
-ROW = """<tr><td>%s</td><td>%s</td></tr>"""
-
-def _print_statement(statem):
-    """ Print a statement as a HTML table """
-    txt = ["""<table border="1">"""]
-    for key, val in statem.__dict__.items():
-        if key.startswith("_"):
-            continue
-        else:
-            if isinstance(val, basestring):
-                txt.append(ROW % (key, val))
-            elif isinstance(val, list):
-                for value in val:
-                    if isinstance(val, basestring):
-                        txt.append(ROW % (key, val))
-                    elif isinstance(value, saml2.SamlBase):
-                        txt.append(ROW % (key, _print_statement(value)))
-            elif isinstance(val, saml2.SamlBase):
-                txt.append(ROW % (key, _print_statement(val)))
-            else:
-                txt.append(ROW % (key, val))
-    
-    txt.append("</table>")
-    return "\n".join(txt)
-
-def _print_statements(states):
-    """ Print a list statement as HTML tables """
-    txt = []
-    for stat in states:
-        txt.append(_print_statement(stat))
-    return "\n".join(txt)
-
-def print_response(resp):
-    print _print_statement(resp)
-    print resp.to_string()

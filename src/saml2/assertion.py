@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2009 Umeå University
+# Copyright (C) 2010 Umeå University
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -60,7 +60,13 @@ def _filter_values(vals, vlist=None, must=False):
 
 def filter_on_attributes(ava, required=None, optional=None):
     """ Filter
-    :param required: list of RequestedAttribute instances
+    
+    :param ava: An attribute value assertion as a dictionary
+    :param required: list of RequestedAttribute instances defined to be 
+        required
+    :param optional: list of     RequestedAttribute instances defined to be 
+        optional
+    :return: The modified attribute value assertion
     """
     res = {}
     
@@ -98,7 +104,14 @@ def filter_on_attributes(ava, required=None, optional=None):
     return res
 
 def filter_on_demands(ava, required={}, optional={}):
-    """ Never return more than is needed """
+    """ Never return more than is needed. Filters out everything
+    the server is prepared to return but the receiver doesn't ask for
+    
+    :param ava: Attribute value assertion as a dictionary
+    :param required: Required attributes
+    :param optional: Optional attributes
+    :return: The possibly reduced assertion
+    """
     
     # Is all what's required there:
     
@@ -198,6 +211,10 @@ class Policy(object):
         return self._restrictions
     
     def get_nameid_format(self, sp_entity_id):
+        """ Get the NameIDFormat to used for the entity id 
+        :param: The SP entity ID
+        :retur: The format
+        """
         try:
             form = self._restrictions[sp_entity_id]["nameid_format"]
         except KeyError:
@@ -209,6 +226,10 @@ class Policy(object):
         return form
     
     def get_name_form(self, sp_entity_id):
+        """ Get the NameFormat to used for the entity id 
+        :param: The SP entity ID
+        :retur: The format
+        """
         form = ""
         
         try:
@@ -222,6 +243,10 @@ class Policy(object):
         return form
     
     def get_lifetime(self, sp_entity_id):
+        """ The lifetime of the assertion 
+        :param sp_entity_id: The SP entity ID
+        :param: lifetime as a dictionary 
+        """
         # default is a hour
         spec = {"hours":1}
         if not self._restrictions:
@@ -238,6 +263,12 @@ class Policy(object):
         return spec
     
     def get_attribute_restriction(self, sp_entity_id):
+        """ Return the attribute restriction for SP that want the information
+        
+        :param sp_entity_id: The SP entity ID
+        :return: The restrictions
+        """
+        
         if not self._restrictions:
             return None
         
@@ -260,6 +291,7 @@ class Policy(object):
         """ When the assertion stops being valid, should not be
         used after this time.
         
+        :param sp_entity_id: The SP entity ID
         :return: String representation of the time
         """
         
@@ -305,6 +337,11 @@ class Policy(object):
         return self.filter(ava, sp_entity_id, required, optional)
     
     def conditions(self, sp_entity_id):
+        """ Return a saml.Condition instance
+        
+        :param sp_entity_id: The SP entity ID
+        :return: A saml.Condition instance
+        """
         return factory( saml.Conditions,
                         not_before=instant(),
                         # How long might depend on who's getting it
@@ -377,4 +414,11 @@ class Assertion(dict):
             )
     
     def apply_policy(self, sp_entity_id, policy, metadata=None):
+        """ Apply policy to the assertion I'm representing 
+        
+        :param sp_entity_id: The SP entity ID
+        :param policy: The policy
+        :param metadata: Metadata to use
+        :return: The resulting AVA after the policy is applied
+        """
         return policy.restrict(self, sp_entity_id, metadata)

@@ -25,8 +25,11 @@ import sys
 from saml2 import saml
 from saml2 import class_name
 from saml2 import soap
-from saml2 import request
 from saml2 import BINDING_HTTP_REDIRECT, BINDING_SOAP
+
+from saml2.request import AuthnRequest
+from saml2.request import AttributeQuery
+from saml2.request import LogoutRequest
 
 from saml2.s_utils import sid
 from saml2.s_utils import response_factory, logoutresponse_factory
@@ -89,7 +92,7 @@ class Identifier(object):
             while True:
                 temp_id = sid()
                 try:
-                    l = self._get_local("persistent", entity_id, temp_id)
+                    self._get_local("persistent", entity_id, temp_id)
                 except KeyError:
                     break
             self._store("persistent", entity_id, subject_id, temp_id)
@@ -133,11 +136,17 @@ class Identifier(object):
                             text=subj_id)
 
     def transient_nameid(self, sp_name_qualifier, userid):
-        """ Returns a random one-time identifier """
+        """ Returns a random one-time identifier. One-time means it is
+        kept around as long as the session is active.
+        
+        :param sp_name_qualifier: A qualifier to bind the created identifier to
+        :param userid: The local persistent identifier for the subject.
+        :return: The created identifier,
+        """
         while True:
             temp_id = sid()
             try:
-                l = self._get_local("transient", sp_name_qualifier, temp_id)
+                _ = self._get_local("transient", sp_name_qualifier, temp_id)
             except KeyError:
                 break
         self._store("transient", sp_name_qualifier, userid, temp_id)
@@ -170,7 +179,7 @@ class Identifier(object):
                 return self.transient_nameid(sp_entity_id, userid)
                 
     def local_name(self, entity_id, remote_id):
-        """ Only works for persistent names
+        """ Get the local persistent name that has the specified remote ID.
         
         :param entity_id: The identifier of the entity that got the remote id
         :param remote_id: The identifier that was exported
@@ -208,7 +217,10 @@ class Server(object):
         #     self.cache = Cache()
         
     def load_config(self, config_file):
+        """ Load the server configuration 
         
+        :param config_file: The name of the configuration file
+        """
         self.conf = IDPConfig()
         self.conf.load_file(config_file)
         if "subject_data" in self.conf:
@@ -227,6 +239,8 @@ class Server(object):
         """Parse a Authentication Request
         
         :param enc_request: The request in its transport format
+        :param binding: Which binding that was used to transport the message
+            to this entity.
         :return: A dictionary with keys:
             consumer_url - as gotten from the SPs entity_id and the metadata
             id - the id of the request
@@ -239,7 +253,7 @@ class Server(object):
         receiver_addresses = self.conf.endpoint("idp", 
                                                 "single_sign_on_service",
                                                 binding)
-        authn_request = request.AuthnRequest(self.sec, 
+        authn_request = AuthnRequest(self.sec, 
                                             self.conf.attribute_converters(),
                                             receiver_addresses)
         authn_request = authn_request.loads(enc_request)
@@ -287,7 +301,7 @@ class Server(object):
         return response
                         
     def wants(self, sp_entity_id):
-        """ Returns what attributes this SP requiers and which are optional
+        """ Returns what attributes the SP requiers and which are optional
         if any such demands are registered in the Metadata.
         
         :param sp_entity_id: The entity id of the SP
@@ -305,7 +319,7 @@ class Server(object):
             query - the whole query
         """
         receiver_addresses = self.conf.endpoint("aa", "attribute_service")
-        attribute_query = request.AttributeQuery( self.sec, receiver_addresses)
+        attribute_query = AttributeQuery( self.sec, receiver_addresses)
 
         attribute_query = attribute_query.loads(xml_string)
         attribute_query = attribute_query.verify()
@@ -323,8 +337,8 @@ class Server(object):
                     policy=Policy(), authn=None):
         """ Create a Response that adhers to the ??? profile.
         
-        :param consumer_url: The URL which should receive the response
         :param in_response_to: The session identifier of the request
+        :param consumer_url: The URL which should receive the response
         :param sp_entity_id: The entity identifier of the SP
         :param identity: A dictionary with attributes and values that are
             expected to be the bases for the assertion in the response.
@@ -396,7 +410,19 @@ class Server(object):
     def do_response(self, in_response_to, consumer_url,
                         sp_entity_id, identity=None, name_id=None, 
                         status=None, sign=False, authn=None ):
-
+        """ Create a response. A layer of indirection.
+        
+        :param in_response_to: The session identifier of the request
+        :param consumer_url: The URL which should receive the response
+        :param sp_entity_id: The entity identifier of the SP
+        :param identity: A dictionary with attributes and values that are
+            expected to be the bases for the assertion in the response.
+        :param name_id: The identifier of the subject
+        :param status: The status of the response
+        :param sign: Whether the assertion should be signed or not 
+        :param auth: A 2-tuple denoting the authn class and the authn authority.
+        :return: A Response instance.
+        """
         try:
             policy = self.conf.idp_policy()
         except KeyError:
@@ -410,14 +436,14 @@ class Server(object):
     
     def error_response(self, in_response_to, destination, spid, info, 
                         name_id=None):
-        """
-        :param destination: The intended recipient of this message
+        """ Create a error response.
+        
         :param in_response_to: The identifier of the message this is a response
             to.
+            :param destination: The intended recipient of this message
         :param spid: The entitiy ID of the SP that will get this.
         :param info: Either an Exception instance or a 2-tuple consisting of
-            error code and descriptive text
-            
+            error code and descriptive text            
         :return: A Response instance
         """
         status = error_status_factory(info)
@@ -436,7 +462,20 @@ class Server(object):
     def do_aa_response(self, in_response_to, consumer_url, sp_entity_id, 
                         identity=None, userid="", name_id=None, status=None, 
                         sign=False, _name_id_policy=None):
-
+        """ Create an attribute assertion response.
+        
+        :param in_response_to: The session identifier of the request
+        :param consumer_url: The URL which should receive the response
+        :param sp_entity_id: The entity identifier of the SP
+        :param identity: A dictionary with attributes and values that are
+            expected to be the bases for the assertion in the response.
+        :param userid: A identifier of the user
+        :param name_id: The identifier of the subject
+        :param status: The status of the response
+        :param sign: Whether the assertion should be signed or not 
+        :param name_id_policy: Policy for NameID creation.
+        :return: A Response instance.
+        """
         name_id = self.ident.construct_nameid(self.conf.aa_policy(), userid, 
                                             sp_entity_id, identity)
         
@@ -515,7 +554,7 @@ class Server(object):
         
         slo = self.conf.endpoint("idp", "single_logout_service", binding)[0]
         self.log and self.log.info("Endpoint: %s" % (slo))
-        req = request.LogoutRequest(self.sec, slo)
+        req = LogoutRequest(self.sec, slo)
         if binding == BINDING_SOAP:
             lreq = soap.parse_soap_enveloped_saml_logout_request(text)
             try:
@@ -529,11 +568,7 @@ class Server(object):
                 self.log.error("%s" % (exc,))
                 return None
 
-        self.log and self.log.info("Before verify %s" % (req,))
-        
         req = req.verify()
-
-        self.log and self.log.info("After verify %s" % (req,))
         
         if not req: # Not a valid request
             # return a error message with status code element set to
@@ -545,9 +580,19 @@ class Server(object):
 
     def logout_response(self, request, bindings, status=None,
                             sign=False):
+        """ Create a LogoutResponse. What is returned depends on which binding
+        is used.
         
+        :param request: The request the is a response to
+        :param bindings: Which bindings that can be used to send the response
+        :param status: The return status of the response operation
+        :return: A 3-tuple consisting of HTTP return code, HTTP headers and 
+            possibly a message.
+        """
         sp_entity_id = request.issuer.text.strip()
         
+        binding = None
+        destination = ""
         for binding in bindings:
             destination = self.conf.logout_service(sp_entity_id, "sp", 
                                                     binding)
@@ -564,8 +609,9 @@ class Server(object):
         # Pick the first
         destination = destination[0]
         
-        self.log and self.log.info("Destination: %s, binding: %s" % (destination,
-                                                                    binding))
+        if self.log:
+            self.log.info("Destination: %s, binding: %s" % (destination,
+                                                            binding))
         if not status: 
             status = success_status_factory()
 
@@ -576,6 +622,7 @@ class Server(object):
         
         if binding == BINDING_SOAP:
             response = logoutresponse_factory(
+                                sign=sign,
                                 id = mid,
                                 in_response_to = request.id,
                                 status = status,
@@ -583,6 +630,7 @@ class Server(object):
             (headers, message) = http_soap_message(response)
         else:
             response = logoutresponse_factory(
+                                sign=sign,
                                 id = mid,
                                 in_response_to = request.id,
                                 status = status,
