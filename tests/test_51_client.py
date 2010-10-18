@@ -153,23 +153,23 @@ class TestClient:
         # since no one is answering on the other end
         assert req == None
                 
-    def test_idp_entry(self):
-        idp_entry = self.client.idp_entry(name="Umeå Universitet",
-                            location="https://idp.umu.se/")
-        
-        assert idp_entry.name == "Umeå Universitet"
-        assert idp_entry.loc == "https://idp.umu.se/"
-        
-    def test_scope(self):
-        entity_id = "urn:mace:example.com:saml:roland:idp"
-        locs = self.client.metadata.single_sign_on_services(entity_id)
-        scope = self.client.scoping_from_metadata(entity_id, locs)
-        
-        assert scope.idp_list
-        assert len(scope.idp_list.idp_entry) == 1
-        idp_entry = scope.idp_list.idp_entry[0]
-        assert idp_entry.name == 'Exempel AB'
-        assert idp_entry.loc == ['http://localhost:8088/sso']
+    # def test_idp_entry(self):
+    #     idp_entry = self.client.idp_entry(name="Umeå Universitet",
+    #                         location="https://idp.umu.se/")
+    #     
+    #     assert idp_entry.name == "Umeå Universitet"
+    #     assert idp_entry.loc == "https://idp.umu.se/"
+    #     
+    # def test_scope(self):
+    #     entity_id = "urn:mace:example.com:saml:roland:idp"
+    #     locs = self.client.metadata.single_sign_on_services(entity_id)
+    #     scope = self.client.scoping_from_metadata(entity_id, locs)
+    #     
+    #     assert scope.idp_list
+    #     assert len(scope.idp_list.idp_entry) == 1
+    #     idp_entry = scope.idp_list.idp_entry[0]
+    #     assert idp_entry.name == 'Exempel AB'
+    #     assert idp_entry.loc == ['http://localhost:8088/sso']
     
     def test_create_auth_request_0(self):
         ar_str = self.client.authn_request("id1",
