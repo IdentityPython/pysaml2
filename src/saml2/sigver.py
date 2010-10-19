@@ -46,6 +46,9 @@ _TEST_ = True
 class SignatureError(Exception):
     pass
 
+class XmlsecError(Exception):
+    pass
+
 # --------------------------------------------------------------------------
 
 #def make_signed_instance(klass, spec, seccont, base64encode=False):
@@ -237,17 +240,17 @@ def _parse_xmlsec_output(output):
     """ Parse the output from xmlsec to try to find out if the 
     command was successfull or not.
     
-    :param output: The output from POpen
+    :param output: The output from Popen
     :return: A boolean; True if the command was a success otherwise False
     """ 
     for line in output.split("\n"):
         if line == "OK":
             return True
         elif line == "FALSE":
-            return False
-    return False
+            raise XmlsecError(output)
+    raise XmlsecError(output)
 
-__DEBUG = 1
+__DEBUG = 0
 
 def verify_signature(enctext, xmlsec_binary, cert_file=None, cert_type="pem",
                         node_name=NODE_NAME, debug=False, node_id=None):
@@ -285,16 +288,13 @@ def verify_signature(enctext, xmlsec_binary, cert_file=None, cert_type="pem",
         print "%s: %s" % (cert_file, os.access(cert_file, os.F_OK))
         print "%s: %s" % (fil, os.access(fil, os.F_OK))
 
-    pof = Popen(com_list, stderr=PIPE)
-    output = pof.stderr.read()
-    verified = _parse_xmlsec_output(output)
-
-    if __DEBUG:
-        print output
-        print os.stat(cert_file)
-        print "Verify result: '%s'" % (verified,)
-        #fil_p.seek(0)
-        #print fil_p.read()
+    pof = Popen(com_list, stderr=PIPE, stdout=PIPE)
+    p_out = pof.stdout.read()
+    #p_err = pof.stderr.read()
+    try:
+        verified = _parse_xmlsec_output(pof.stderr.read())
+    except XmlsecError, exc:
+        raise SignatureError("%s" % (exc,))
 
     return verified
 
@@ -384,10 +384,12 @@ class SecurityContext(object):
         if self.debug:
             self.log.debug("Decrypt command: %s" % " ".join(com_list))
             
-        result = Popen(com_list, stderr=PIPE).communicate()
+        pof = Popen(com_list, stderr=PIPE, stdout=PIPE)
+        p_out = pof.stdout.read()
+        p_err = pof.stderr.read()
         
         if self.debug:
-            self.log.debug("Decrypt result: %s" % (result,))
+            self.log.debug("Decrypt result: %s" % (p_out, p_err))
 
         ntf.seek(0)
         return ntf.read()
@@ -421,7 +423,7 @@ class SecurityContext(object):
             issuer = None
 
         if self.metadata:
-            certs = self.metadata.certs(issuer)
+            certs = self.metadata.certs(issuer, "signing")
         else:
             certs = []
             
@@ -536,7 +538,7 @@ class SecurityContext(object):
             raise TypeError("Not a Response")
 
         if response.signature:
-            self._check_signature(decoded_xml, response,class_name(response))
+            self._check_signature(decoded_xml, response, class_name(response))
             
         # Try to find the signing cert in the assertion
         for assertion in response.assertion:
@@ -550,7 +552,8 @@ class SecurityContext(object):
                 if self.debug:
                     self.log.debug("signed")
 
-            self._check_signature( decoded_xml, assertion )
+            self._check_signature(decoded_xml, assertion, 
+                                    class_name(assertion))
 
         return response
 
@@ -589,18 +592,17 @@ class SecurityContext(object):
 
         com_list.append(fil)
 
-        
-        out = Popen(com_list, stdout=PIPE).communicate()[0]
+        pof = Popen(com_list, stderr=PIPE, stdout=PIPE)
+        p_out = pof.stdout.read()
+        p_err = pof.stderr.read()
+
         # this doesn't work if --store-signatures are used
-        if out == "":
-            #print " ".join(com_list)
-            #print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-            #print out
-            #print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+        if p_out == "":
             ntf.seek(0)
             return ntf.read()
         else:
-            print out
+            print p_out
+            print "E", p_out
             raise Exception("Signing failed")
 
     def sign_assertion_using_xmlsec(self, statement, key=None, key_file=None,
