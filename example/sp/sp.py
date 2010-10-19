@@ -100,8 +100,6 @@ def logout(environ, start_response, user, logger):
     (session_id, code, header, result) = tmp
 
     if session_id:
-        #redir = [v for (a,v) in header if a == "Location"]
-        # remove cookie
         start_response(code, header)
         return result
     else: # All was done using SOAP
