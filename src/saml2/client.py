@@ -160,10 +160,13 @@ class Saml2Client(object):
         
         resp = None
         if saml_response:
-            resp = response_factory(saml_response, self.config, entity_id, 
-                                    reply_addr, outstanding, log, 
-                                    debug=self.debug)
-
+            try:
+                resp = response_factory(saml_response, self.config, entity_id, 
+                                        reply_addr, outstanding, log, 
+                                        debug=self.debug)
+            except Exception, exc:
+                log and log.error("%s" % exc)
+                return None
             
             if self.debug:
                 log and log.info(resp)
@@ -408,9 +411,14 @@ class Saml2Client(object):
         if response:
             log and log.info("Verifying response")
             
-            aresp = authn_response(self.config, "", issuer, 
-                                    outstanding_queries={session_id:""}, 
-                                    log=log)
+            try:
+                aresp = authn_response(self.config, "", issuer, 
+                                        outstanding_queries={session_id:""}, 
+                                        log=log)
+            except Exception, exc:
+                log and log.error("%s", (exc,))
+                return None
+                
             session_info = aresp.loads(response).verify().session_info()
 
             if session_info:
@@ -630,9 +638,13 @@ class Saml2Client(object):
                 log and log.info("Not supposed to handle this!")
                 return None
             
-            response = LogoutResponse(self.sec, return_addr, debug=True, 
-                                        log=log)
-
+            try:
+                response = LogoutResponse(self.sec, return_addr, debug=True, 
+                                            log=log)
+            except Exception, exc:
+                log and log.info("%s" % exc)
+                return None
+                
             if binding == BINDING_HTTP_REDIRECT:
                 xmlstr = decode_base64_and_inflate(xmlstr)
             elif binding == BINDING_HTTP_POST:

@@ -319,8 +319,12 @@ class SAML2Plugin(FormPluginBase):
             
         # check for SAML2 authN response
         #if self.debug:
-        session_info = self._eval_authn_response(environ,  
+        try:
+            session_info = self._eval_authn_response(environ,  
                                             cgi_field_storage_to_dict(post))
+        except Exception, exc:
+            return None
+            
         if session_info:        
             environ["s2repoze.sessioninfo"] = session_info
             name_id = session_info["name_id"]

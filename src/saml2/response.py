@@ -23,7 +23,7 @@ from saml2 import saml
 from saml2 import extension_element_to_element
 from saml2 import time_util
 
-from saml2.sigver import security_context
+from saml2.sigver import security_context, SignatureError
 from saml2.attribute_converter import to_local
 from saml2.time_util import str_to_time
 
@@ -136,6 +136,8 @@ class StatusResponse(object):
         try:
             self.response = self.signature_check(decoded_xml)
         except TypeError:
+            raise
+        except SignatureError:
             raise
         except Exception, excp:
             self.log and self.log.info("EXCEPTION: %s", excp)
@@ -504,8 +506,8 @@ def response_factory(xmlstr, conf, entity_id=None, return_addr=None,
     except TypeError:
         response.signature_check = sec_context.correctly_signed_logout_response
         response.loads(xmlstr, decode)
-        logoutresp = LogoutResponse(sec_context, return_addr, log, timeslack, 
-                                    debug)
+        logoutresp = LogoutResponse(sec_context, return_addr, log, 
+                                        timeslack, debug)
         logoutresp.update(response)
         return logoutresp
         
