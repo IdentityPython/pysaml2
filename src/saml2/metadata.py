@@ -27,6 +27,7 @@ import xmldsig as ds
 from saml2 import md, samlp, BINDING_HTTP_POST, BINDING_HTTP_REDIRECT
 from saml2 import BINDING_SOAP, class_name
 from saml2.s_utils import factory
+from saml2.s_utils import signature
 from saml2.saml import NAME_FORMAT_URI
 from saml2.time_util import in_a_while
 from saml2.time_util import valid
@@ -48,6 +49,7 @@ def keep_updated(func, self, entity_id, *args, **kwargs):
     
     return func(self, entity_id, *args, **kwargs)
 
+
 class MetaData(object):
     """ A class to manage metadata information """
     
@@ -63,7 +65,42 @@ class MetaData(object):
         self.http = httplib2.Http()
         self._import = {}
         self._wants = {}
+        self._keys = {}
     
+    def _certs(self, key_descriptors, typ):
+        certs = {}
+        for key_desc in key_descriptors:
+            use = key_desc.use
+            for cert in cert_from_key_info(key_desc.key_info):
+                chash = signature("", [cert])
+                try:
+                    cert = self._keys[chash] 
+                except KeyError:
+                    if typ == "pem":
+                        cert = make_temp(pem_format(cert), ".pem", False)
+                    elif typ == "der": 
+                        cert = make_temp(cert, suffix=".der") 
+                    self._keys[chash] = cert
+
+                try:
+                    certs[use].append(chash)
+                except KeyError:
+                    certs[use] = [chash]
+        return certs
+
+    def _add_certs(self, ident, certspec):
+        for use, certs in certspec.items():
+            try:            
+                stored = self._loc_key[ident][use]
+                for cert in certs:
+                    if cert not in stored:
+                        self._loc_key[ident][use].append(cert)
+            except KeyError:
+                try:
+                    self._loc_key[ident][use] = certs
+                except KeyError:
+                    self._loc_key[ident] = {use: certs}
+
     def _vo_metadata(self, entity_descr, entity, tag):
         """
         Pick out the Affiliation descriptors from an entity
@@ -106,11 +143,8 @@ class MetaData(object):
                 continue
             
             ssds.append(tssd)
-            certs = []
-            for key_desc in tssd.key_descriptor:
-                certs.extend(cert_from_key_info(key_desc.key_info))
-            
-            certs = [make_temp(pem_format(c), ".pem", False) for c in certs]
+            certs = self._certs(tssd.key_descriptor, "pem")
+            self._add_certs(entity_descr.entity_id, certs)
             
             for acs in tssd.attribute_consuming_service:
                 for attr in acs.requested_attribute:
@@ -121,7 +155,8 @@ class MetaData(object):
                         optional.append(attr)
             
             for acs in tssd.assertion_consumer_service:
-                self._loc_key[acs.location] = certs
+                self._add_certs(acs.location, certs)
+
         
         if required or optional:
             #print "REQ",required
@@ -155,13 +190,12 @@ class MetaData(object):
                 continue
             
             idps.append(tidp)
-            certs = []
-            for key_desc in tidp.key_descriptor:
-                certs.extend(cert_from_key_info(key_desc.key_info))
-            
-            certs = [make_temp(c, suffix=".der") for c in certs]
+
+            certs = self._certs(tidp.key_descriptor, "pem")
+
+            self._add_certs(entity_descr.entity_id, certs)
             for sso in tidp.single_sign_on_service:
-                self._loc_key[sso.location] = certs
+                self._add_certs(sso.location, certs)
         
         if idps:
             entity[tag] = idps
@@ -201,16 +235,11 @@ class MetaData(object):
             taad.attribute_service = aserv
             
             # gather all the certs and place them in temporary files
-            certs = []
-            for key_desc in taad.key_descriptor:
-                certs.extend(cert_from_key_info(key_desc.key_info))
-            
-            certs = [make_temp(c, suffix=".der") for c in certs]
+            certs = self._certs(taad.key_descriptor, "pem")
+            self._add_certs(entity_descr.entity_id, certs)
+
             for sso in taad.attribute_service:
-                try:
-                    self._loc_key[sso.location].append(certs)
-                except KeyError:
-                    self._loc_key[sso.location] = certs
+                self._add_certs(sso.location, certs)
             
             aads.append(taad)
         
@@ -418,20 +447,26 @@ class MetaData(object):
         """
         return self._loc_key.keys()
     
-    def certs(self, loc):
-        """ Get all certificates that are used by a IdP at the specified
-        location. There can be more than one because of overlapping lifetimes
-        of the certs.
+    def certs(self, identifier, usage):
+        """ Get all certificates that are used by a entity. 
+        There can be more than one because of overlapping lifetimes of the 
+        certs.
         
-        :param loc: The location of the IdP
+        :param identifier: The location or entityID of the entity
+        :param use: The usage of the cert ("signing"/"encryption")
         :return: a list of 2-tuples (file pointer,file name) that represents
             certificates used by the IdP at the location loc.
         """
         try:
-            return self._loc_key[loc]
+            hashes = self._loc_key[identifier][usage]
         except KeyError:
-            return []
-    
+            try:
+                hashes = self._loc_key[identifier][None]
+            except KeyError:
+                return []
+        
+        return [self._keys[h] for h in hashes]
+        
     @keep_updated
     def vo_members(self, entity_id):
         try:
