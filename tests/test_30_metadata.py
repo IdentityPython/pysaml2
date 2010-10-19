@@ -50,7 +50,8 @@ def test_swami_1():
         u'Ume\xe5 university (New SAML2)')
     assert len(idp_sso) == 1
     assert idp_sso == ['https://idp.umu.se/saml2/idp/SSOService.php']
-    ssocerts =  md.certs('https://idp.umu.se/saml2/idp/SSOService.php')
+    print md._loc_key['https://idp.umu.se/saml2/idp/SSOService.php']
+    ssocerts =  md.certs('https://idp.umu.se/saml2/idp/SSOService.php', "signing")
     print ssocerts
     assert len(ssocerts) == 1
     print md._wants.keys()
@@ -92,8 +93,10 @@ def test_example():
                 if "idp_sso" in ent])
     assert idps.keys() == [
             'http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php']
+    print md._loc_key['http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php']
     certs = md.certs(
-            'http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php')
+            'http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php',
+            "signing")
     assert len(certs) == 1
     assert isinstance(certs[0], tuple)
     assert len(certs[0]) == 2
