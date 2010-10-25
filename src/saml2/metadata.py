@@ -275,6 +275,53 @@ class MetaData(object):
                 else:
                     self.import_external_metadata(source[0], source[1])
     
+    def do_entity_descriptor(self, entity_descr, source, valid_until=0):
+        try:
+            if not valid(entity_descr.valid_until):
+                if self.log:
+                    self.log.info(
+                        "Entity descriptor (entity id:%s) to old" % \
+                        entity_descr.entity_id)
+                else:
+                    print >> sys.stderr, \
+                        "Entity descriptor (entity id:%s) to old" % \
+                        entity_descr.entity_id
+                return 
+        except AttributeError:
+            pass
+        
+        try:
+            self._import[source].append(entity_descr.entity_id)
+        except KeyError:
+            self._import[source] = [entity_descr.entity_id]
+        
+        # have I seen this entity_id before ? If so log and ignore it
+        if entity_descr.entity_id in self.entity:
+            print >> sys.stderr, \
+                "Duplicated Entity descriptor (entity id: '%s')" % \
+                entity_descr.entity_id
+            return 
+            
+        entity = self.entity[entity_descr.entity_id] = {}
+        if valid_until:
+            entity["valid_until"] = valid_until
+        elif entity_descr.valid_until:
+            entity["valid_until"] = entity_descr.valid_until
+         
+        self._idp_metadata(entity_descr, entity, "idp_sso")
+        self._sp_metadata(entity_descr, entity, "sp_sso")
+        self._aad_metadata(entity_descr, entity,
+                            "attribute_authority")
+        self._vo_metadata(entity_descr, entity, "affiliation")
+        try:
+            entity["organization"] = entity_descr.organization
+        except AttributeError:
+            pass
+        try:
+            entity["contact_person"] = entity_descr.contact_person
+        except AttributeError:
+            pass
+        
     def import_metadata(self, xml_str, source):
         """ Import information; organization distinguish name, location and
         certificates from a metadata file.
@@ -288,60 +335,25 @@ class MetaData(object):
         #print >> sys.stderr, "Loading %s" % (source,)
         
         entities_descr = md.entities_descriptor_from_string(xml_str)
-        
-        try:
-            valid_instance(entities_descr)
-        except NotValid, exc:
-            print >> sys.stderr, exc.args[0]
-            return
-        
-        try:
-            valid(entities_descr.valid_until)
-        except AttributeError:
-            pass
-        
-        for entity_descr in entities_descr.entity_descriptor:
+        if not entities_descr:
+            entity_descr = md.entity_descriptor_from_string(xml_str)
+            if entity_descr:
+                self.do_entity_descriptor(entity_descr, source)
+        else:
             try:
-                if not valid(entity_descr.valid_until):
-                    if self.log:
-                        self.log.info(
-                            "Entity descriptor (entity id:%s) to old" % \
-                            entity_descr.entity_id)
-                    else:
-                        print >> sys.stderr, \
-                            "Entity descriptor (entity id:%s) to old" % \
-                            entity_descr.entity_id
-                    continue
+                valid_instance(entities_descr)
+            except NotValid, exc:
+                print >> sys.stderr, exc.args[0]
+                return
+        
+            try:
+                valid(entities_descr.valid_until)
             except AttributeError:
                 pass
-            
-            try:
-                self._import[source].append(entity_descr.entity_id)
-            except KeyError:
-                self._import[source] = [entity_descr.entity_id]
-            
-            # have I seen this entity_id before ? If so log and ignore it
-            if entity_descr.entity_id in self.entity:
-                print >> sys.stderr, \
-                    "Duplicated Entity descriptor (entity id: '%s')" % \
-                    entity_descr.entity_id
-                continue
-                
-            entity = self.entity[entity_descr.entity_id] = {}
-            entity["valid_until"] = entities_descr.valid_until
-            self._idp_metadata(entity_descr, entity, "idp_sso")
-            self._sp_metadata(entity_descr, entity, "sp_sso")
-            self._aad_metadata(entity_descr, entity,
-                                "attribute_authority")
-            self._vo_metadata(entity_descr, entity, "affiliation")
-            try:
-                entity["organization"] = entity_descr.organization
-            except AttributeError:
-                pass
-            try:
-                entity["contact_person"] = entity_descr.contact_person
-            except AttributeError:
-                pass
+        
+            for entity_descr in entities_descr.entity_descriptor:
+                self.do_entity_descriptor(entity_descr, source, 
+                                            entities_descr.valid_until)
     
     def import_external_metadata(self, url, cert=None):
         """ Imports metadata by the use of HTTP GET.
