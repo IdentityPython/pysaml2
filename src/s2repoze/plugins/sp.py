@@ -364,7 +364,7 @@ class SAML2Plugin(FormPluginBase):
             (ava, _) = self.saml_client.users.get_identity(subject_id)
             #now = time.gmtime()        
             if self.debug:
-                self.log and self.log.info("Adding %s" % ava)
+                self.log and self.log.info("[add_metadata] adds: %s" % ava)
             identity["user"].update(ava)
         except KeyError:
             pass
@@ -381,7 +381,7 @@ class SAML2Plugin(FormPluginBase):
                     identity["pysaml2_vo_expanded"] = 1
 
         if self.debug:
-            self.log and self.log.info("[Adding] identity %s" % (identity,))
+            self.log and self.log.info("[add_metadata] returns: %s" % (dict(identity),))
         
         
 # @return
