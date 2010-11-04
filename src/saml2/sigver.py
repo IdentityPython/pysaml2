@@ -246,7 +246,7 @@ def _parse_xmlsec_output(output):
     for line in output.split("\n"):
         if line == "OK":
             return True
-        elif line == "FALSE":
+        elif line == "FAIL":
             raise XmlsecError(output)
     raise XmlsecError(output)
 
@@ -422,10 +422,10 @@ class SecurityContext(object):
         except AttributeError:
             issuer = None
 
-        if self.metadata:
-            certs = self.metadata.certs(issuer, "signing")
-        else:
-            certs = []
+        certs = []
+        # if self.metadata:
+        #     certs = self.metadata.certs(issuer, "signing")
+        # else:
             
         if not certs:
             #print "==== Certs from instance ===="
@@ -576,7 +576,7 @@ class SecurityContext(object):
             
         _, fil = make_temp("%s" % statement, decode=False)
 
-        if key:
+        if not key_file and key:
             _, key_file = make_temp("%s" % key, ".pem")
             
         ntf = NamedTemporaryFile()
