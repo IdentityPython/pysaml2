@@ -57,7 +57,7 @@ As you see the format is again a python dictionary where the key is the
 name to convert from and the value is the name to convert to.
     
 Since *to* in most cases are the inverse of the *fro* file, the 
-software allowes you to only specify one of *to*/*fro* and it will 
+software allowes you to only specify one of them and it will 
 automatically create the other.
 
 cert_file
@@ -65,7 +65,7 @@ cert_file
 
 Format::
 
-    cert_file: ["cert.pem"]
+    cert_file: "cert.pem"
 
 This is the public part of the service private/public key pair.
 *cert_file* must be a PEM formatted certificate chain file.
@@ -83,7 +83,7 @@ the standard technical, support, administrative, billing, and other.::
         "givenname": "Derek",
         "surname": "Jeter",
         "company": "Example Co.",
-        "mail": "jeter@example.com",
+        "mail": ["jeter@example.com"],
         "type": "technical",
     },{
         "givenname": "Joe",
@@ -116,7 +116,7 @@ key_file
 
 Format::
 
-    key_file: ["key.pem"]
+    key_file: "key.pem"
 
 *key_file* is the name of a PEM formatted file that contains the private key
 of the service. This is presently used both to encrypt/sign assertions and as
@@ -159,30 +159,34 @@ Where you describe the organization responsible for the service.::
 
 .. note:: You can specify the language of the name, or the language used on
     the webpage, by entering a tuple, instead of a simple string, 
-    where the second part is the language code.
+    where the second part is the language code. If you don't specify a
+    language the default is "en" (English).
 
 service
 ^^^^^^^
 
 Which services the server will provide, those are combinations of "idp","sp" 
 and "aa".
-So if one server is supposed to be both Service Provider (SP) and 
-Attribute Authority (AA), which is rather unlikely, then the configuration 
+So if one server is a Service Provider (SP) then the configuration 
 could look something like this::
 
     "service": {
-        "aa":{
-            "name" : "VO AA",
-            "url": "http://localhost:8090/soap",
-        },
         "sp":{
-            "name" : "VO SP",
-            "url" : "http://localhost:8090/sp",
+            "name" : "Rolands SP",
+            "endpoints":{
+                "assertion_consumer_service": ["http://localhost:8087/"],
+                "single_logout_service" : [("http://localhost:8087/slo",
+                               'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect')],
+            },
+            "required_attributes": ["surname", "givenname", "edupersonaffiliation"],
+            "optional_attributes": ["title"],
+            "idp": {
+                "urn:mace:umu.se:saml:roland:idp": None,
+            },
         }
     },
     
-There are two options common to all services: 'name' and 'url'. With the 
-obvious meanings. 
+There are two options common to all services: 'name' and 'endpoints'.
 The remaining options are specific to one or the other of the service types.
 Which one is specified along side the name of the option
 
@@ -243,7 +247,7 @@ regular expressions.::
                 "urn:mace:umu.se:saml:roland:sp": {
                     "lifetime": {"minutes": 5},
                     "attribute_restrictions":{
-                         "mail": [".*.umu.se$"],
+                         "mail": [".*\.umu\.se$"],
                     }
                 }
             }
@@ -284,7 +288,12 @@ metadata might be overkill so this construct can be used instead::
     "service": {
         "sp": {
             "idp": {
-                "" : "https://example.com/saml2/idp/SSOService.php",
+                "" :{"single_signon_service":
+                        ["https://example.com/idp/SSOService.php"],
+                    "single_logout_service": 
+                        [("https://example.com/idp/SLS",
+                            'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect')],
+                },
             },
         }
     }
@@ -342,8 +351,8 @@ the user friendly names.
 subject_data
 ^^^^^^^^^^^^
 
-The name of a shelve database where the map between a local identifier and 
-a distributed identifier is kept.
+The name of a database where the map between a local identifier and 
+a distributed identifier is kept. Presently this is a shelve database.
 
 Example::
 
@@ -352,9 +361,9 @@ Example::
 timeslack
 ^^^^^^^^^
 
-If your computer and another computer that are communicating are not in synch
-regarding the computer clock. Then you here can state how big a difference you 
-are prepared to accept.
+If your computer and another computer that you are communicating with are not 
+in synch regarding the computer clock. Then you here can state how big a 
+difference you are prepared to accept.
 
 .. note:: This will indiscriminately effect all time comparisons.
     Hence your server my accept a statement that in fact is to old.
@@ -408,7 +417,8 @@ We start with a simple but fairly complete Service provider configuration::
                 "name" : "Rolands SP",
                 "url" : "http://www.example.com:8087/",
                 "idp": {
-                    "urn:mace:example.com:saml:roland:idp": "http://idp.example.com",
+                    "urn:mace:example.com:saml:roland:idp": {
+                        "single_signon_service": "http://idp.example.com/sso"},
                 },
             }
         },
@@ -417,13 +427,14 @@ We start with a simple but fairly complete Service provider configuration::
         "xmlsec_binary" : "/usr/local/bin/xmlsec1",
         "attribute_map_dir": "./attributemaps",
         "organization": {
-            "display_name":["Rolands identiteter"]
+            "display_name":["Rolands identities"]
         }
         "contact_person": [{
             "givenname": "Roland",
             "surname": "Hedberg",
             "phone": "+46 90510",
             "mail": "roland@example.com",
+            "type": "technical",
             }]
     }
 
@@ -452,13 +463,14 @@ A slightly more complex configuration::
         },
         "attribute_maps" : "attributemaps",
         "organization": {
-            "display_name":["Rolands identiteter"]
+            "display_name":["Rolands identities"]
         }
         "contact_person": [{
             "givenname": "Roland",
             "surname": "Hedberg",
             "phone": "+46 90510",
             "mail": "roland@example.com",
+            "type": "technical",
             }]
     }
     
