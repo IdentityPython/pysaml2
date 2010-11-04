@@ -3,10 +3,10 @@
 Quick install guide
 ===================
 
-Before you can use Pysaml2, you'll need to get it installed. This guide 
+Before you can use PySAML2, you'll need to get it installed. This guide 
 will guide you to a simple, minimal installation.
 
-Install Pysaml2
+Install PySAML2
 ---------------
 
 For all this to work you need to have Python installed. 
@@ -25,6 +25,14 @@ You also need xmlsec which you can download from http://www.aleksey.com/xmlsec/
 
 If you're on OS X you can get xmlsec installed from MacPorts or Fink.
 
+Depending on how you are going to use PySAML2 you might also need
+
+* Mako
+* pyASN1
+* repoze.who (make sure you get 1.0.16 and not 2.0)
+* decorator
+* python-memcache
+* memcached
 
 Quick build instructions
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -41,6 +49,6 @@ The tests are based on the pypy test environment, so::
     cd tests
     py.test 
 
-is what you should use. If you don't have py.test, get it ! 
+is what you should use. If you don't have py.test, get it it's part of pypy! 
 It's really good !
 
