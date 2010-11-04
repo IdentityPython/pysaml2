@@ -169,13 +169,15 @@ class Saml2Client(object):
                 return None
             
             if self.debug:
-                log and log.info(resp)
+                log and log.info(">>",resp)
             resp = resp.verify()
             if isinstance(resp, AuthnResponse):
                 self.users.add_information_about_person(resp.session_info())
+                log and log.error("--- ADDED person info ----")
             elif isinstance(resp, LogoutResponse):
                 self.handle_logout_response(resp, log)
-                    
+            elif log:
+                log.error("Other response type: %s" % saml2.class_name(resp))
         return resp
     
     def authn_request(self, query_id, destination, service_url, spentityid,
