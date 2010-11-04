@@ -21,6 +21,7 @@ or attribute authority (AA) may use to conclude its tasks.
 
 import shelve
 import sys
+import memcache
 
 from saml2 import saml
 from saml2 import class_name
@@ -57,8 +58,11 @@ class UnknownVO(Exception):
     
 class Identifier(object):
     """ A class that handles identifiers of objects """
-    def __init__(self, dbname, voconf=None, debug=0, log=None):
-        self.map = shelve.open(dbname, writeback=True)
+    def __init__(self, db, voconf=None, debug=0, log=None):
+        if isinstance(db, basestring):
+            self.map = shelve.open(db, writeback=True)
+        else:
+            self.map = db
         self.voconf = voconf
         self.debug = debug
         self.log = log
@@ -224,9 +228,22 @@ class Server(object):
         self.conf = IDPConfig()
         self.conf.load_file(config_file)
         if "subject_data" in self.conf:
-            self.ident = Identifier(self.conf["subject_data"], 
-                                    self.conf.vo_conf,
-                                    self.debug, self.log)
+            # subject information is store in database
+            # default database is a shelve database which is OK in some setups
+            dbspec = self.conf["subject_data"]
+            if isinstance(dbspec, basestring):
+                idb = shelve.open(dbspec, writeback=True)
+            else: # database spec is a a 2-tuple (type, address)
+                (typ, addr) = dbspec
+                if typ == "shelve":
+                    idb = shelve.open(dbspec, writeback=True)
+                elif typ == "memcached":
+                    idb = memcache.Client(addr)
+            if idb:
+                self.ident = Identifier(idb, self.conf.vo_conf, self.debug, 
+                                        self.log)
+            else:
+                raise Exception("Couldn't open identity database: %s" % (dbspec))
         else:
             self.ident = None
     
