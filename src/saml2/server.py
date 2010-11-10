@@ -236,10 +236,10 @@ class Server(object):
             else: # database spec is a a 2-tuple (type, address)
                 (typ, addr) = dbspec
                 if typ == "shelve":
-                    idb = shelve.open(dbspec, writeback=True)
+                    idb = shelve.open(addr, writeback=True)
                 elif typ == "memcached":
                     idb = memcache.Client(addr)
-            if idb:
+            if idb != None:
                 self.ident = Identifier(idb, self.conf.vo_conf, self.debug, 
                                         self.log)
             else:
