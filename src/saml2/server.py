@@ -504,7 +504,7 @@ class Server(object):
 
     def authn_response(self, identity, in_response_to, destination, 
                         sp_entity_id, name_id_policy, userid, sign=False, 
-                        authn=None):
+                        authn=None, sign_response=False):
         """ Constructs an AuthenticationResponse
         
         :param identity: Information about an user
@@ -514,8 +514,11 @@ class Server(object):
         :param sp_entity_id: The entity identifier of the Service Provider
         :param name_id_policy: ...
         :param userid: The subject identifier
-        :param sign: Whether the assertion should be signed or not
+        :param sign: Whether the assertion should be signed or not. This is
+            different from signing the response as such.
         :param authn: Information about the authentication
+        :param sign_response: The response can be signed separately from the 
+            assertions.
         :return: A XML string representing an authentication response
         """
         
@@ -548,10 +551,14 @@ class Server(object):
                                         sp_entity_id, exc, name_id)
         
 
-        if sign:
+        if sign_response:
             try:
+                response.signature = pre_signature_part(response.id,
+                                                        self.sec.my_cert, 2)
+        
                 return self.sec.sign_statement_using_xmlsec(response,
-                                                        class_name(response))
+                                                        class_name(response),
+                                                        nodeid=response.id)
             except Exception, exc:
                 response = self.error_response(in_response_to, destination, 
                                                 sp_entity_id, exc, name_id)
