@@ -22,12 +22,14 @@ to conclude its tasks.
 import saml2
 import time
 import base64
+#import urllib
 
 from saml2.time_util import instant, not_on_or_after
 from saml2.s_utils import signature
 from saml2.s_utils import sid
 from saml2.s_utils import do_attributes, factory
 from saml2.s_utils import decode_base64_and_inflate
+#from saml2.s_utils import deflate_and_base64_encode
 
 from saml2 import samlp, saml, class_name
 from saml2 import VERSION
@@ -169,7 +171,7 @@ class Saml2Client(object):
                 return None
             
             if self.debug:
-                log and log.info(">>",resp)
+                log and log.info(">>", resp)
             resp = resp.verify()
             if isinstance(resp, AuthnResponse):
                 self.users.add_information_about_person(resp.session_info())
@@ -669,7 +671,84 @@ class Saml2Client(object):
             return self.handle_logout_response(response, log)
 
         return response
+
+    def http_redirect_logout_request(self, get, subject_id, log=None):
+        """ Deal with a LogoutRequest received through HTTP redirect
+
+        :param get: The request as a dictionary 
+        :param subject_id: the id of the current logged user
+        :return: a tuple with an URL to redirect to and a status which
+           will be True in case of success or False otherwise
+        """
+        headers = []
+        success = False
+
+        try:
+            saml_request = get['SAMLRequest']
+        except KeyError:
+            return None
+
+        if saml_request:
+            xml = decode_base64_and_inflate(saml_request)
+
+            request = samlp.logout_request_from_string(xml)
+            if self.debug and log:
+                log.info(request)
+
+            if request.name_id.text == subject_id:
+                status = samlp.STATUS_SUCCESS
+                success = self.local_logout(subject_id)
+            else:
+                status = samlp.STATUS_REQUEST_DENIED
+
+            response, destination = self .make_logout_response(
+                                                        request.issuer.text,
+                                                        request.id,
+                                                        status)
+
+            if log:
+                log.info("RESPONSE: %s" % response)
+
+            if 'RelayState' in get:
+                rstate = get['RelayState']
+            else:
+                rstate = ""
+                
+            (headers, _body) = http_redirect_message(str(response), 
+                                                    destination, 
+                                                    rstate)
+
+        return headers, success
         
+    def make_logout_response(self, idp_entity_id, request_id,
+                             status_code, binding=BINDING_HTTP_REDIRECT):
+        """ Constructs a LogoutResponse
+
+        :param idp_entity_id: The entityid of the IdP that want to do the
+            logout
+        :param request_id: The Id of the request we are replying to
+        :param status_code: The status code of the response
+        :param binding: The type of binding that will be used for the response
+        :return: A LogoutResponse instance
+        """
+
+        destination = self.config.logout_service(idp_entity_id, binding)
+
+        status = samlp.Status(
+            status_code=samlp.StatusCode(value=status_code))
+
+        response = samlp.LogoutResponse(
+            id=sid(),
+            version=VERSION,
+            issue_instant=instant(),
+            destination=destination,
+            issuer=self.issuer(),
+            in_response_to=request_id,
+            status=status,
+            )
+
+        return response, destination
+
     def add_vo_information_about_user(self, subject_id):
         """ Add information to the knowledge I have about the user. This is
         for Virtual organizations.
@@ -689,7 +768,7 @@ class Saml2Client(object):
                 ava = self.users.get_identity(subject_id)[0]
         return ava
         
-    def is_session_valid(self, session_id):
+    def is_session_valid(self, _session_id):
         """ Place holder. Supposed to check if the session is still valid.
         """
         return True
