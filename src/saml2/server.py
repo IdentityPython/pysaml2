@@ -239,6 +239,7 @@ class Server(object):
                     idb = shelve.open(addr, writeback=True)
                 elif typ == "memcached":
                     idb = memcache.Client(addr)
+
             if idb != None:
                 self.ident = Identifier(idb, self.conf.vo_conf, self.debug, 
                                         self.log)
