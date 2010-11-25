@@ -407,10 +407,13 @@ class Assertion(dict):
             subject=factory( saml.Subject,
                 name_id=name_id,
                 subject_confirmation=factory( saml.SubjectConfirmation,
-                                    method=saml.SUBJECT_CONFIRMATION_METHOD_BEARER,
-                                    subject_confirmation_data=factory(
-                                            saml.SubjectConfirmationData,
-                                            in_response_to=in_response_to))),
+                                method=saml.SUBJECT_CONFIRMATION_METHOD_BEARER,
+                                subject_confirmation_data=factory(
+                                    saml.SubjectConfirmationData,
+                                    in_response_to=in_response_to,
+                                    recipient=sp_entity_id,
+                                    not_on_or_after=policy.not_on_or_after(
+                                                            sp_entity_id)))),
             )
     
     def apply_policy(self, sp_entity_id, policy, metadata=None):
