@@ -352,7 +352,7 @@ class Server(object):
 
     def _response(self, in_response_to, consumer_url=None, sp_entity_id=None, 
                     identity=None, name_id=None, status=None, sign=False,
-                    policy=Policy(), authn=None):
+                    policy=Policy(), authn=None, authn_decl=None):
         """ Create a Response that adhers to the ??? profile.
         
         :param in_response_to: The session identifier of the request
@@ -400,6 +400,12 @@ class Server(object):
                                             policy, issuer=_issuer, 
                                             authn_class=authn_class, 
                                             authn_auth=authn_authn)
+            elif authn_decl:
+                assertion = ast.construct(sp_entity_id, in_response_to, 
+                                            consumer_url, name_id,
+                                            self.conf.attribute_converters(), 
+                                            policy, issuer=_issuer, 
+                                            authn_decl=authn_decl)
             else:
                 assertion = ast.construct(sp_entity_id, in_response_to, 
                                             consumer_url, name_id,
@@ -427,7 +433,7 @@ class Server(object):
     
     def do_response(self, in_response_to, consumer_url,
                         sp_entity_id, identity=None, name_id=None, 
-                        status=None, sign=False, authn=None ):
+                        status=None, sign=False, authn=None, authn_decl=None ):
         """ Create a response. A layer of indirection.
         
         :param in_response_to: The session identifier of the request
@@ -439,6 +445,7 @@ class Server(object):
         :param status: The status of the response
         :param sign: Whether the assertion should be signed or not 
         :param auth: A 2-tuple denoting the authn class and the authn authority.
+        :param authn_decl:
         :return: A Response instance.
         """
         try:
@@ -448,7 +455,7 @@ class Server(object):
             
         return self._response(in_response_to, consumer_url,
                         sp_entity_id, identity, name_id, 
-                        status, sign, policy, authn)
+                        status, sign, policy, authn, authn_decl)
                         
     # ------------------------------------------------------------------------
     
@@ -505,7 +512,7 @@ class Server(object):
 
     def authn_response(self, identity, in_response_to, destination, 
                         sp_entity_id, name_id_policy, userid, sign=False, 
-                        authn=None, sign_response=False):
+                        authn=None, sign_response=False, authn_decl=None):
         """ Constructs an AuthenticationResponse
         
         :param identity: Information about an user
@@ -520,6 +527,7 @@ class Server(object):
         :param authn: Information about the authentication
         :param sign_response: The response can be signed separately from the 
             assertions.
+        :param authn_decl:
         :return: A XML string representing an authentication response
         """
         
@@ -544,8 +552,9 @@ class Server(object):
                             identity,       # identity as dictionary
                             name_id,
                             sign=sign,      # If the assertion should be signed
-                            authn=authn     # Information about the 
+                            authn=authn,    # Information about the 
                                             #   authentication
+                            authn_decl=authn_decl
                         )
         except MissingValue, exc:
             response = self.error_response(in_response_to, destination, 
