@@ -395,14 +395,14 @@ class Server(object):
             if authn: # expected to be a 2-tuple class+authority
                 (authn_class, authn_authn) = authn
                 assertion = ast.construct(sp_entity_id, in_response_to, 
-                                            name_id,
+                                            consumer_url, name_id,
                                             self.conf.attribute_converters(), 
                                             policy, issuer=_issuer, 
                                             authn_class=authn_class, 
                                             authn_auth=authn_authn)
             else:
                 assertion = ast.construct(sp_entity_id, in_response_to, 
-                                            name_id,
+                                            consumer_url, name_id,
                                             self.conf.attribute_converters(), 
                                             policy, issuer=_issuer)
             

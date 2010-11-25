@@ -377,13 +377,15 @@ class Assertion(dict):
                         authn_instant=instant(), 
                         session_index=sid())
     
-    def construct(self, sp_entity_id, in_response_to, name_id, attrconvs,
-                    policy, issuer, authn_class=None, authn_auth=None):
+    def construct(self, sp_entity_id, in_response_to, consumer_url,
+                    name_id, attrconvs, policy, issuer, authn_class=None, 
+                    authn_auth=None):
         """ Construct the Assertion 
         
         :param sp_entity_id: The entityid of the SP
         :param in_response_to: An identifier of the message, this message is 
             a response to
+        :param consumer_url: The intended consumer of the assertion
         :param name_id: An NameID instance
         :param attrconvs: AttributeConverters
         :param policy: The policy that should be adhered to when replying
@@ -411,7 +413,7 @@ class Assertion(dict):
                                 subject_confirmation_data=factory(
                                     saml.SubjectConfirmationData,
                                     in_response_to=in_response_to,
-                                    recipient=sp_entity_id,
+                                    recipient=consumer_url,
                                     not_on_or_after=policy.not_on_or_after(
                                                             sp_entity_id)))),
             )
