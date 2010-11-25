@@ -599,7 +599,11 @@ class SecurityContext(object):
         # this doesn't work if --store-signatures are used
         if p_out == "":
             ntf.seek(0)
-            return ntf.read()
+            signed_statement = ntf.read()
+            if not signed_statement:
+                raise Exception("Signing failed")
+            else:
+                return signed_statement
         else:
             print p_out
             print "E", p_out
