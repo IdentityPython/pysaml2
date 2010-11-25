@@ -20,7 +20,7 @@ return you have to sit behind a Web server. Well that is not really true since
 the AttributeQuery would be over SOAP and you would get the result over the
 conenction you have to the AttributeAuthority.
 
-But anyway, you get may get my point. This is middleware stuff here !
+But anyway, you may get my point. This is middleware stuff !
 
 PySAML2 is built to fit into a 
 `WSGI  <http://www.python.org/dev/peps/pep-0333/>`_ application

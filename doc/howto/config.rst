@@ -6,12 +6,12 @@ Configuration of pySAML2 entities
 Whether you plan to run a pySAML2 Service Provider, Identity provider or an
 attribute authority you have to configure it. The format of the configuration
 file is the same disregarding which type of service you plan to run.
-What differs is the directives.
+What differs is some of the directives.
 Below you will find a list of all the used directives in alphabetic order.
 The configuration is written as a python dictionary which means that the
 directives are the top level keys.
 
-.. note:: You can build metadata files directly from the configuration.
+.. note:: You can build the entities metadata file directly from the configuration.
     The make_metadata.py script in the pySAML2 tools directory will do that 
     for you.
     
@@ -77,7 +77,8 @@ This is only used by *make_metadata.py* when it constructs the metadata for
 the service described by the configuration file.
 This is where you described who can be contacted if questions arises
 about the service or if support is needed. The possible types are according to
-the standard technical, support, administrative, billing, and other.::
+the standard **technical**, **support**, **administrative**, **billing** 
+and **other**.::
 
     contact_person: [{
         "givenname": "Derek",
@@ -110,6 +111,9 @@ Format::
     entityid: "http://saml.example.com/sp"
 
 The globally unique identifier of the entity.
+
+.. note:: There is a recommendation that the entityid should point to a real
+    webpage where the metadata for the entity can be found.
 
 key_file
 ^^^^^^^^
@@ -167,7 +171,7 @@ service
 
 Which services the server will provide, those are combinations of "idp","sp" 
 and "aa".
-So if one server is a Service Provider (SP) then the configuration 
+So if a server is a Service Provider (SP) then the configuration 
 could look something like this::
 
     "service": {
@@ -298,8 +302,16 @@ metadata might be overkill so this construct can be used instead::
         }
     }
 
+Apart from *single_signon_service* and *single_logout_service*, the following
+service type specifications can be used
+ 
+* artifact_resolution_service
+* manage_name_id_service
+* name_id_mapping_service
+* assertion_id_request_service
+    
 Since the user is immediately sent to the IdP the entity identifier of the IdP
-is immaterial. In this case the key is expected to be the user friendly
+is immaterial. If not the key is expected to be the user friendly
 name of the IdP. Which again if no WAYF is used is immaterial, since the
 user will never see the name.
 
@@ -326,7 +338,7 @@ Example::
         }
     }
     
-Since the attribute values used here are user friendly an attribute map
+Since the attribute names used here are the user friendly ones an attribute map
 must exist, so that the server can use the full name when communicating
 with other servers.
 
@@ -352,11 +364,22 @@ subject_data
 ^^^^^^^^^^^^
 
 The name of a database where the map between a local identifier and 
-a distributed identifier is kept. Presently this is a shelve database.
+a distributed identifier is kept. By default this is a shelve database.
+So if you just specify name, then a shelve database with that name
+is created. On the other hand if you specify a tuple then the first
+element in the tuple specifise which type of database you want to use
+and the second element is the address of the database.
 
 Example::
 
     "subject_data": "./idp.subject.db",
+
+or if you want to use for instance memcache::
+
+    "subject_data": ("memcached", "localhost:12121"),
+
+*shelve* and *memcached* are the only database types that are presently
+supported.
 
 timeslack
 ^^^^^^^^^
@@ -415,7 +438,11 @@ We start with a simple but fairly complete Service provider configuration::
         "service": {
             "sp":{
                 "name" : "Rolands SP",
-                "url" : "http://www.example.com:8087/",
+                "endpoints":{
+                    "assertion_consumer_service": ["http://localhost:8087/"],
+                    "single_logout_service" : [("http://localhost:8087/slo",
+                                   'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect')],
+                },
                 "idp": {
                     "urn:mace:example.com:saml:roland:idp": {
                         "single_signon_service": "http://idp.example.com/sso"},
@@ -449,7 +476,11 @@ A slightly more complex configuration::
         "service": {
             "sp":{
                 "name" : "Rolands SP",
-                "url" : "http://lingon.ladok.umu.se:8087/",
+                "endpoints":{
+                    "assertion_consumer_service": ["http://localhost:8087/"],
+                    "single_logout_service" : [("http://localhost:8087/slo",
+                                   'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect')],
+                },
             }
         },
         "key_file" : "./mykey.pem",
