@@ -356,22 +356,38 @@ class Assertion(dict):
     def __init__(self, dic=None):
         dict.__init__(self, dic)
     
-    def _authn_context(self, authn_class, authn_auth):
+    def _authn_context_decl_ref(self, authn_class):
         # authn_class: saml.AUTHN_PASSWORD
         return factory(saml.AuthnContext, 
-                        authn_context_class_ref=factory(
-                                saml.AuthnContextClassRef, text=authn_class),
-                        authenticating_authority=factory(
+                        authn_context_decl_ref=factory(
+                                saml.AuthnContextDeclRef, text=authn_class))
+
+    def _authn_context_class_ref(self, authn_class, authn_auth=None):
+        # authn_class: saml.AUTHN_PASSWORD
+        cntx_class = factory(saml.AuthnContextClassRef, text=authn_class)
+        if authn_auth:
+            return factory(saml.AuthnContext, 
+                            authn_context_class_ref=cntx_class,
+                            authenticating_authority=factory(
                                                 saml.AuthenticatingAuthority,
                                                 text=authn_auth))
+        else:
+            return factory(saml.AuthnContext, 
+                            authn_context_class_ref=cntx_class)
         
-    def _authn_statement(self, authn_class=None, authn_auth=None):
-        if authn_class and authn_auth:
+    def _authn_statement(self, authn_class=None, authn_auth=None, 
+                            authn_decl=None):
+        if authn_class:
             return factory(saml.AuthnStatement, 
                         authn_instant=instant(), 
                         session_index=sid(),
-                        authn_context=self._authn_context(authn_class, 
-                                                            authn_auth))
+                        authn_context=self._authn_context_class_ref(
+                                                    authn_class, authn_auth))
+        elif authn_decl:
+            return factory(saml.AuthnStatement, 
+                        authn_instant=instant(), 
+                        session_index=sid(),
+                        authn_context=self._authn_context_decl_ref(authn_decl))
         else:
             return factory(saml.AuthnStatement,
                         authn_instant=instant(), 
@@ -379,7 +395,7 @@ class Assertion(dict):
     
     def construct(self, sp_entity_id, in_response_to, consumer_url,
                     name_id, attrconvs, policy, issuer, authn_class=None, 
-                    authn_auth=None):
+                    authn_auth=None, authn_decl=None):
         """ Construct the Assertion 
         
         :param sp_entity_id: The entityid of the SP
@@ -404,7 +420,8 @@ class Assertion(dict):
         return assertion_factory(
             issuer=issuer,
             attribute_statement = attr_statement,
-            authn_statement = self._authn_statement(authn_class, authn_auth),
+            authn_statement = self._authn_statement(authn_class, authn_auth, 
+                                                    authn_decl),
             conditions = conds,
             subject=factory( saml.Subject,
                 name_id=name_id,
