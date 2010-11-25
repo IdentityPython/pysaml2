@@ -677,8 +677,9 @@ class Saml2Client(object):
 
         :param get: The request as a dictionary 
         :param subject_id: the id of the current logged user
-        :return: a tuple with an URL to redirect to and a status which
-           will be True in case of success or False otherwise
+        :return: a tuple with a list of header tuples (presently only location)
+            and a status which will be True in case of success or False 
+            otherwise.
         """
         headers = []
         success = False
@@ -719,6 +720,19 @@ class Saml2Client(object):
                                                     rstate)
 
         return headers, success
+
+    def logout_request(self, request, subject_id, log=None, 
+                            binding=BINDING_HTTP_REDIRECT):
+        """ Deal with a LogoutRequest 
+
+        :param request: The request. The format depends on which binding is
+            used.
+        :param subject_id: the id of the current logged user
+        :return: What is returned also depends on which binding is used.
+        """
+        
+        if binding == BINDING_HTTP_REDIRECT:
+            return http_redirect_logout_request(request, subject_id, log)
         
     def make_logout_response(self, idp_entity_id, request_id,
                              status_code, binding=BINDING_HTTP_REDIRECT):
