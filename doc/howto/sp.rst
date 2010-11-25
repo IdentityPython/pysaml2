@@ -13,7 +13,7 @@ setup. Namely the Challenger, Identifier and MetadataProvider parts so that
 is also how it is implemented.
 
 Normal for Repoze.who Identifier and MetadataProvider plugins are that
-they place information they gather in environment variables. The convention is 
+they place the information, they gather, in environment variables. The convention is 
 to place identity information in the environment under the key 
 *repoze.who.identity*.
 The information is structured as a dictionary with keys like *login*, and 
@@ -47,7 +47,7 @@ unauthenticated user + selected IdP
     is expected to be in the environment variable *s2repose.wayf_selected*.
     If so the user is redirected to that IdP.
     
-The set up
+The set-up
 ----------
 
 There are two configuration files you have to deal with, first the 
@@ -85,11 +85,11 @@ An example::
 
     [plugin:saml2sp]
     use = s2repoze.plugins.sp:make_plugin
-    rememberer_name = auth_tkt
     saml_conf = sp.conf
-    virtual_organization=urn:mace:umu.se:vo:it-enheten:cms
+    rememberer_name = auth_tkt
     debug = 1
-    cache = /tmp/sp.cache
+    sid_store = outstanding
+    identity_cache = identities
     wayf = wayf.html
 
 Once you have configured the plugin you have to tell the server to use the
@@ -116,12 +116,11 @@ Other information
 -----------------
 
 The SP keeps tabs on all outstanding authentication requests it has. 
-This is kept in the local variable *outstanding_queries*.
+This is kept in the datastore pointed to by *sid_store*.
 Presently if an authentication reponse is received that does not match an
 outstanding request the reponse is ignored. This is going to change in the
 future.
 
-The format of *outstanding_queries* is a dictionary with the session IDs as
-keys and which URL that was accessed that triggered the SP to send the
-request.
+The format of *sid_store* is a dictionary with the outstanding session IDs as
+keys.
 
