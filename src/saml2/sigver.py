@@ -29,6 +29,14 @@ import random
 import os
 
 def get_xmlsec_binary(paths=None):
+    """
+    Tries to find the xmlsec1 binary.
+    
+    :param paths: Non-system path paths which should be searched when
+        looking for xmlsec1
+    :return: full name of the xmlsec1 binary found. If no binaries are
+        found then an exception is raised.
+    """
     if paths:
         for path in paths:
             fil = os.path.join(path, "xmlsec1")
