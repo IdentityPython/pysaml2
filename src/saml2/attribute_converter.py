@@ -187,8 +187,8 @@ class AttributeConverter(object):
         try:
             return factory(saml.Attribute,
                             name=self._to[attr], 
-                            name_format=self.name_format,
-                            friendly_name=attr)
+                            name_format=self.name_format)
+                            # friendly_name=attr)
         except KeyError:
             return factory(saml.Attribute, name=attr)
     
