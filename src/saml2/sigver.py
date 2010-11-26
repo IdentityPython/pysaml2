@@ -28,7 +28,13 @@ import base64
 import random
 import os
 
-def get_xmlsec_binary():
+def get_xmlsec_binary(paths=None):
+    if paths:
+        for path in paths:
+            fil = os.path.join(path, "xmlsec1")
+            if os.access(fil, os.X_OK):
+                return fil
+
     for path in os.environ["PATH"].split(":"):
         fil = os.path.join(path, "xmlsec1")
         if os.access(fil, os.X_OK):
@@ -36,7 +42,11 @@ def get_xmlsec_binary():
 
     raise Exception("Can't find xmlsec1")
     
-XMLSEC_BINARY = get_xmlsec_binary()
+try:
+    XMLSEC_BINARY = get_xmlsec_binary()
+except Exception:
+    XMLSEC_BINARY = ""
+    
 ID_ATTR = "ID"
 NODE_NAME = "urn:oasis:names:tc:SAML:2.0:assertion:Assertion"
 ENC_NODE_NAME = "urn:oasis:names:tc:SAML:2.0:assertion:EncryptedAssertion"
