@@ -139,7 +139,7 @@ class Identifier(object):
                             sp_name_qualifier=sp_name_qualifier,
                             text=subj_id)
 
-    def transient_nameid(self, sp_name_qualifier, userid):
+    def transient_nameid(self, sp_entity_id, userid):
         """ Returns a random one-time identifier. One-time means it is
         kept around as long as the session is active.
         
@@ -150,14 +150,15 @@ class Identifier(object):
         while True:
             temp_id = sid()
             try:
-                _ = self._get_local("transient", sp_name_qualifier, temp_id)
+                _ = self._get_local("transient", sp_entity_id, temp_id)
             except KeyError:
                 break
-        self._store("transient", sp_name_qualifier, userid, temp_id)
+        self._store("transient", sp_entity_id, userid, temp_id)
         self.map.sync()
 
         return saml.NameID(format=saml.NAMEID_FORMAT_TRANSIENT,
-                             text=temp_id)
+                            sp_name_qualifier=sp_entity_id,
+                            text=temp_id)
 
     def construct_nameid(self, local_policy, userid, sp_entity_id,
                         identity=None, name_id_policy=None):
