@@ -588,6 +588,16 @@ class Server(object):
         """
         
         slo = self.conf.endpoint("idp", "single_logout_service", binding)[0]
+        try:
+            slo = self.conf.endpoint("idp", "single_logout_service", 
+                                        binding)[0]
+        except IndexError:
+            if self.log:
+                self.log.info("enpoints: %s" % (self.conf["service"]["idp"][
+                                                                "endpoints"]))
+                self.log.info("binding wanted: %s" % (binding,))
+            raise
+                
         self.log and self.log.info("Endpoint: %s" % (slo))
         req = LogoutRequest(self.sec, slo)
         if binding == BINDING_SOAP:
