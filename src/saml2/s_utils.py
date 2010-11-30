@@ -188,7 +188,7 @@ def logoutresponse_factory(sign=False, encrypt=False, **kwargs):
                                 issue_instant=instant())
 
     if sign:
-        response["signature"] = sigver.pre_signature_part(kwargs["id"])
+        response.signature = sigver.pre_signature_part(kwargs["id"])
     if encrypt:
         pass
 
@@ -202,7 +202,7 @@ def response_factory(sign=False, encrypt=False, **kwargs):
                                 issue_instant=instant())
     
     if sign:
-        response["signature"] = sigver.pre_signature_part(kwargs["id"])
+        response.signature = sigver.pre_signature_part(kwargs["id"])
     if encrypt:
         pass
 
