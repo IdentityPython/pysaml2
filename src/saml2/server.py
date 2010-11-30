@@ -618,7 +618,7 @@ class Server(object):
         """ Create a LogoutResponse. What is returned depends on which binding
         is used.
         
-        :param request: The request the is a response to
+        :param request: The request this is a response to
         :param bindings: Which bindings that can be used to send the response
         :param status: The return status of the response operation
         :return: A 3-tuple consisting of HTTP return code, HTTP headers and 
@@ -645,8 +645,8 @@ class Server(object):
         destination = destination[0]
         
         if self.log:
-            self.log.info("Destination: %s, binding: %s" % (destination,
-                                                            binding))
+            self.log.info("Logout Destination: %s, binding: %s" % (destination,
+                                                                    binding))
         if not status: 
             status = success_status_factory()
 
@@ -662,6 +662,10 @@ class Server(object):
                                 in_response_to = request.id,
                                 status = status,
                                 )
+            if sign:
+                to_sign = [(class_name(response), mid)]
+                response = signed_instance_factory(response, self.sec, to_sign)
+                
             (headers, message) = http_soap_message(response)
         else:
             response = logoutresponse_factory(
@@ -674,6 +678,10 @@ class Server(object):
                                 sp_entity_id = sp_entity_id,
                                 instant=instant(),
                                 )
+            if sign:
+                to_sign = [(class_name(response), mid)]
+                response = signed_instance_factory(response, self.sec, to_sign)
+                
             self.log and self.log.info("Response: %s" % (response,))
             if binding == BINDING_HTTP_REDIRECT:
                 (headers, message) = http_redirect_message(response, 
