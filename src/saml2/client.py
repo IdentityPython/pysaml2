@@ -79,7 +79,7 @@ class Saml2Client(object):
         self.users = Population(identity_cache)
 
         # for server state storage
-        if not state_cache:
+        if state_cache is None:
             self.state = {} # in memory storage
         else:
             self.state = state_cache
@@ -717,7 +717,7 @@ class Saml2Client(object):
                 
             (headers, _body) = http_redirect_message(str(response), 
                                                     destination, 
-                                                    rstate)
+                                                    rstate, 'SAMLResponse')
 
         return headers, success
 
@@ -732,7 +732,7 @@ class Saml2Client(object):
         """
         
         if binding == BINDING_HTTP_REDIRECT:
-            return http_redirect_logout_request(request, subject_id, log)
+            return self.http_redirect_logout_request(request, subject_id, log)
         
     def make_logout_response(self, idp_entity_id, request_id,
                              status_code, binding=BINDING_HTTP_REDIRECT):
