@@ -95,7 +95,7 @@ class TestIdentifier():
         nameid = self.id.construct_nameid(policy, "foobar", 
                                             "urn:mace:example.com:sp:1")
         
-        assert _eq(nameid.keyswv(), ['text', 'format'])
+        assert _eq(nameid.keyswv(), ['text', 'format', 'sp_name_qualifier'])
         assert nameid.format == NAMEID_FORMAT_TRANSIENT
         
     def test_vo_1(self):
