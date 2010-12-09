@@ -36,7 +36,7 @@ SIGNATURE_DIGEST = {
         "l36wHa6Lyed9ZeAZ3jFL77wPVQ4="
         )
     ],
-    "":[
+    "1.2.16":[
         (
         "imvo3quPyMND8yCv8D3LNCbeiG98hKl+F5VekEY5N7EEBoq7S3A7mArz4yZUVJVw\n1migufgOZEiZX80vzR0lwfjAEjwRp+NjKRvOcWHfIgjz+dG8q9n4LcI5YmsjveLa\n+iNTujev1PYA+UWf57S5mqGFoi0KaS8Xnp0FG1olAZ0=",
         "0+0Td5mWbs+CF7xZeYSlcQ/pjKw="),
