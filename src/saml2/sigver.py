@@ -86,6 +86,14 @@ class XmlsecError(Exception):
 #    else:
 #        return make_instance(klass, spec, base64encode)
 
+def xmlsec_version(execname):
+    com_list = [execname,"--version"]
+    pof = Popen(com_list, stderr=PIPE, stdout=PIPE)
+    try:
+        return pof.stdout.read().split(" ")[1]
+    except Exception:
+        return ""
+    
 def _make_vals(val, klass, seccont, klass_inst=None, prop=None, part=False,
                 base64encode=False, elements_to_sign=None):
     """
