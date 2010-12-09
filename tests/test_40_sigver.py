@@ -22,11 +22,11 @@ PRIV_KEY = "test.key"
 def _eq(l1,l2):
     return set(l1) == set(l2)
 
-SIGNED_VALUE= """kMuyOK17nyp4CbA1v7KE32rX4+NQQ8EvdglTK61uIMEo3ax0PgFU7bgZGey+Aj8H
-hTPVyAzWmBDxHpSCFe050PTtNoKHx7nXprLfhuQXsPq8s0KBoZR+2qYfVCkWYVX7
-T3zG/Tn+fesBA1zLo4lYdAovol7C35KAsAWoknmZdOE="""
+SIGNED_VALUE= """imvo3quPyMND8yCv8D3LNCbeiG98hKl+F5VekEY5N7EEBoq7S3A7mArz4yZUVJVw
+1migufgOZEiZX80vzR0lwfjAEjwRp+NjKRvOcWHfIgjz+dG8q9n4LcI5YmsjveLa
++iNTujev1PYA+UWf57S5mqGFoi0KaS8Xnp0FG1olAZ0="""
 
-DIGEST_VALUE = "SXw3kqTf+PtTiUnI8nQ6xmrM3qw="
+DIGEST_VALUE = "0+0Td5mWbs+CF7xZeYSlcQ/pjKw="
 
 def get_xmlsec():
     for path in os.environ["PATH"].split(":"):
@@ -162,12 +162,12 @@ class TestSecurity():
         assert sass.id == "11111"
         assert time_util.str_to_time(sass.issue_instant)
         sig = sass.signature
-        assert sig.signature_value.text == """upeKPE1pkzXLy9BvKFOSTnjn4du59lQQ74TN5CqDGae9D21uY/zLuOWql7LiSTSi\nC945F0WrOvG7s0eZnpuNPZobdfdeCOffCMMrq5RQ2+abPFBamkjmceuEKGdO5PWQ\nt7B1GkzXAMMgeMuU+YmvIJkHbbv5Yn6M0/ICE/COaKQ="""
+        assert sig.signature_value.text == """NEoJEpCLRi35e+cK8fwInrThausuD3xNlKZFhZda6qS8GU93s8J3sKLpd5BwB9my\nesHX38c9WhQkXeuQu6O75hMwLWb7496vG+QcodaWvLJ8u/Cgp2XdQopkNWLOqLJC\n7XyLa0fEDhPY/kvX88kx9xBnA/VhIYVjQtNrTD9M5Q8="""
         
         assert len(sig.signed_info.reference) == 1
         assert sig.signed_info.reference[0].digest_value
         digest = sig.signed_info.reference[0].digest_value.text
-        assert digest == """uX92C/YDroqITDfDY1IeekGtZac="""
+        assert digest == "gqe292uV8r7LfSomiMh9VS9wYZw="
 
     def test_sign_response_2(self):
         assertion2 = factory( saml.Assertion,
@@ -202,12 +202,12 @@ class TestSecurity():
         assert sass.id == "11122"
         assert time_util.str_to_time(sass.issue_instant)
         sig = sass.signature
-        assert sig.signature_value.text == """xHECLk1jj4NBvk1jhGrb2mwnrLFKXk6JN3NogjMVMtnnarg9vtk7jYzy1M9RPWdj\nRSa2Jph7yVZJENm4bGuBkT91w+FYm2X4jREULPUsnupPHTQyhJEVZ07EhnluOWa3\n95KkqnZ5gbnTxn1ZvpsANzThLmYY3eSGzNXz+S7758M="""
+        assert sig.signature_value.text == "DS5V623NrKCXmBjzCgVDUkPXSg8kMezZIeEqg8RC6Q/0/vjoBgZDt1hMvOmOX4Vf\nA1ckqeEEHnsqegjBRUUiV41SALJmKSVvUG5V29ZonGK4EXtdC5dxRPa/2tqN1i8N\nwtTlD7DE/YLAPIM5nhL8qHKKovQvwypZmC2YVmKIuQ0="
         
         assert len(sig.signed_info.reference) == 1
         assert sig.signed_info.reference[0].digest_value
         digest = sig.signed_info.reference[0].digest_value.text
-        assert digest == """l36wHa6Lyed9ZeAZ3jFL77wPVQ4="""
+        assert digest == "h6o97FThq9XqEzw+njeKjH45QgM="
 
     def test_sign_verify(self):        
         response = factory(samlp.Response,
