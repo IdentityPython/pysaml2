@@ -8,6 +8,8 @@ from saml2 import class_name
 from saml2 import time_util
 from saml2 import saml, samlp
 from saml2.s_utils import factory, do_attribute_statement
+from saml2.sigver import xmlsec_version, get_xmlsec_binary
+
 import xmldsig as ds
 from py.test import raises
 
@@ -22,19 +24,30 @@ PRIV_KEY = "test.key"
 def _eq(l1,l2):
     return set(l1) == set(l2)
 
-SIGNED_VALUE= """imvo3quPyMND8yCv8D3LNCbeiG98hKl+F5VekEY5N7EEBoq7S3A7mArz4yZUVJVw
-1migufgOZEiZX80vzR0lwfjAEjwRp+NjKRvOcWHfIgjz+dG8q9n4LcI5YmsjveLa
-+iNTujev1PYA+UWf57S5mqGFoi0KaS8Xnp0FG1olAZ0="""
-
-DIGEST_VALUE = "0+0Td5mWbs+CF7xZeYSlcQ/pjKw="
-
-def get_xmlsec():
-    for path in os.environ["PATH"].split(":"):
-        fil = os.path.join(path, "xmlsec1")
-        if os.access(fil,os.X_OK):
-            return fil
-
-    raise Exception("Can't find xmlsec1")
+SIGNATURE_DIGEST = {
+    "1.2.14": [(
+        "kMuyOK17nyp4CbA1v7KE32rX4+NQQ8EvdglTK61uIMEo3ax0PgFU7bgZGey+Aj8H\nhTPVyAzWmBDxHpSCFe050PTtNoKHx7nXprLfhuQXsPq8s0KBoZR+2qYfVCkWYVX7\nT3zG/Tn+fesBA1zLo4lYdAovol7C35KAsAWoknmZdOE=",
+        "SXw3kqTf+PtTiUnI8nQ6xmrM3qw="),
+        (
+        "upeKPE1pkzXLy9BvKFOSTnjn4du59lQQ74TN5CqDGae9D21uY/zLuOWql7LiSTSi\nC945F0WrOvG7s0eZnpuNPZobdfdeCOffCMMrq5RQ2+abPFBamkjmceuEKGdO5PWQ\nt7B1GkzXAMMgeMuU+YmvIJkHbbv5Yn6M0/ICE/COaKQ=",
+        "uX92C/YDroqITDfDY1IeekGtZac="),
+        (
+        "xHECLk1jj4NBvk1jhGrb2mwnrLFKXk6JN3NogjMVMtnnarg9vtk7jYzy1M9RPWdj\nRSa2Jph7yVZJENm4bGuBkT91w+FYm2X4jREULPUsnupPHTQyhJEVZ07EhnluOWa3\n95KkqnZ5gbnTxn1ZvpsANzThLmYY3eSGzNXz+S7758M=",
+        "l36wHa6Lyed9ZeAZ3jFL77wPVQ4="
+        )
+    ],
+    "":[
+        (
+        "imvo3quPyMND8yCv8D3LNCbeiG98hKl+F5VekEY5N7EEBoq7S3A7mArz4yZUVJVw\n1migufgOZEiZX80vzR0lwfjAEjwRp+NjKRvOcWHfIgjz+dG8q9n4LcI5YmsjveLa\n+iNTujev1PYA+UWf57S5mqGFoi0KaS8Xnp0FG1olAZ0=",
+        "0+0Td5mWbs+CF7xZeYSlcQ/pjKw="),
+        (
+        "NEoJEpCLRi35e+cK8fwInrThausuD3xNlKZFhZda6qS8GU93s8J3sKLpd5BwB9my\nesHX38c9WhQkXeuQu6O75hMwLWb7496vG+QcodaWvLJ8u/Cgp2XdQopkNWLOqLJC\n7XyLa0fEDhPY/kvX88kx9xBnA/VhIYVjQtNrTD9M5Q8=",
+        "gqe292uV8r7LfSomiMh9VS9wYZw="),
+        (
+        "DS5V623NrKCXmBjzCgVDUkPXSg8kMezZIeEqg8RC6Q/0/vjoBgZDt1hMvOmOX4Vf\nA1ckqeEEHnsqegjBRUUiV41SALJmKSVvUG5V29ZonGK4EXtdC5dxRPa/2tqN1i8N\nwtTlD7DE/YLAPIM5nhL8qHKKovQvwypZmC2YVmKIuQ0=",
+        "h6o97FThq9XqEzw+njeKjH45QgM="),
+    ]
+}
 
 CERT1 = """MIICsDCCAhmgAwIBAgIJAJrzqSSwmDY9MA0GCSqGSIb3DQEBBQUAMEUxCzAJBgNV
 BAYTAkFVMRMwEQYDVQQIEwpTb21lLVN0YXRlMSEwHwYDVQQKExhJbnRlcm5ldCBX
@@ -92,8 +105,11 @@ def test_cert_from_instance_ssp():
     
 class TestSecurity():
     def setup_class(self):
-        self.sec = sigver.SecurityContext(get_xmlsec(), PRIV_KEY, "pem",
+        xmlexec = get_xmlsec_binary()
+        self.sec = sigver.SecurityContext(xmlexec, PRIV_KEY, "pem",
                                             PUB_KEY, "pem", debug=1)
+        
+        self.sign_digest = SIGNATURE_DIGEST[xmlsec_version(xmlexec)]
         
         self._assertion = factory( saml.Assertion,
             version="2.0",
@@ -135,10 +151,10 @@ class TestSecurity():
         assert sass.id == "11111"
         assert time_util.str_to_time(sass.issue_instant)
         sig = sass.signature
-        assert sig.signature_value.text == SIGNED_VALUE
+        assert sig.signature_value.text == self.sign_digest[0][0]
         assert len(sig.signed_info.reference) == 1
         assert sig.signed_info.reference[0].digest_value
-        assert sig.signed_info.reference[0].digest_value.text == DIGEST_VALUE
+        assert sig.signed_info.reference[0].digest_value.text == self.sign_digest[0][1]
         
     def test_sign_response(self):
         response = factory(samlp.Response,
@@ -162,12 +178,12 @@ class TestSecurity():
         assert sass.id == "11111"
         assert time_util.str_to_time(sass.issue_instant)
         sig = sass.signature
-        assert sig.signature_value.text == """NEoJEpCLRi35e+cK8fwInrThausuD3xNlKZFhZda6qS8GU93s8J3sKLpd5BwB9my\nesHX38c9WhQkXeuQu6O75hMwLWb7496vG+QcodaWvLJ8u/Cgp2XdQopkNWLOqLJC\n7XyLa0fEDhPY/kvX88kx9xBnA/VhIYVjQtNrTD9M5Q8="""
+        assert sig.signature_value.text == self.sign_digest[1][0]
         
         assert len(sig.signed_info.reference) == 1
         assert sig.signed_info.reference[0].digest_value
         digest = sig.signed_info.reference[0].digest_value.text
-        assert digest == "gqe292uV8r7LfSomiMh9VS9wYZw="
+        assert digest == self.sign_digest[1][1]
 
     def test_sign_response_2(self):
         assertion2 = factory( saml.Assertion,
@@ -202,12 +218,12 @@ class TestSecurity():
         assert sass.id == "11122"
         assert time_util.str_to_time(sass.issue_instant)
         sig = sass.signature
-        assert sig.signature_value.text == "DS5V623NrKCXmBjzCgVDUkPXSg8kMezZIeEqg8RC6Q/0/vjoBgZDt1hMvOmOX4Vf\nA1ckqeEEHnsqegjBRUUiV41SALJmKSVvUG5V29ZonGK4EXtdC5dxRPa/2tqN1i8N\nwtTlD7DE/YLAPIM5nhL8qHKKovQvwypZmC2YVmKIuQ0="
+        assert sig.signature_value.text == self.sign_digest[2][0]
         
         assert len(sig.signed_info.reference) == 1
         assert sig.signed_info.reference[0].digest_value
         digest = sig.signed_info.reference[0].digest_value.text
-        assert digest == "h6o97FThq9XqEzw+njeKjH45QgM="
+        assert digest == self.sign_digest[2][1]
 
     def test_sign_verify(self):        
         response = factory(samlp.Response,

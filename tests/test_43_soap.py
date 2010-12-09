@@ -56,6 +56,5 @@ def test_make_soap_envelope():
     request.become_child_element_of(body)
     
     string = ElementTree.tostring(envelope, encoding="UTF-8")
-    result = """<?xml version='1.0' encoding='UTF-8'?>
-<ns0:Envelope xmlns:ns0="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="urn:oasis:names:tc:SAML:2.0:protocol"><ns0:Body><ns1:AuthnRequest /></ns0:Body></ns0:Envelope>"""
+    result = """<?xml version=\'1.0\' encoding=\'UTF-8\'?>\n<ns0:Envelope xmlns:ns0="http://schemas.xmlsoap.org/soap/envelope/"><ns0:Body><ns1:AuthnRequest xmlns:ns1="urn:oasis:names:tc:SAML:2.0:protocol" /></ns0:Body></ns0:Envelope>"""
     assert string == result

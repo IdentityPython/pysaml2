@@ -12,6 +12,7 @@ from saml2 import saml, s_utils, config, class_name
 from saml2.server import Server
 from saml2.s_utils import decode_base64_and_inflate
 from saml2.time_util import in_a_while
+from saml2.sigver import xmlsec_version
 
 from py.test import raises
 
@@ -48,9 +49,11 @@ def _leq(l1, l2):
 #     print name_id
 #     assert False
 
-REQ1 = """<?xml version='1.0' encoding='UTF-8'?>
-<ns0:AttributeQuery xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol" xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion" Destination="https://idp.example.com/idp/" ID="id1" IssueInstant="%s" Version="2.0"><ns1:Issuer Format="urn:oasis:names:tc:SAML:2.0:nameid-format:entity">urn:mace:example.com:saml:roland:sp</ns1:Issuer><ns1:Subject><ns1:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent">E8042FB4-4D5B-48C3-8E14-8EDD852790DD</ns1:NameID></ns1:Subject></ns0:AttributeQuery>"""
-    
+REQ1 = { "1.2.14": """<?xml version='1.0' encoding='UTF-8'?>
+<ns0:AttributeQuery Destination="https://idp.example.com/idp/" ID="id1" IssueInstant="%s" Version="2.0" xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns1:Issuer Format="urn:oasis:names:tc:SAML:2.0:nameid-format:entity" xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion">urn:mace:example.com:saml:roland:sp</ns1:Issuer><ns1:Subject xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion"><ns1:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent">E8042FB4-4D5B-48C3-8E14-8EDD852790DD</ns1:NameID></ns1:Subject></ns0:AttributeQuery>""",
+    "":"""<?xml version='1.0' encoding='UTF-8'?>
+<ns0:AttributeQuery xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol" xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion" Destination="https://idp.example.com/idp/" ID="id1" IssueInstant="%s" Version="2.0"><ns1:Issuer Format="urn:oasis:names:tc:SAML:2.0:nameid-format:entity">urn:mace:example.com:saml:roland:sp</ns1:Issuer><ns1:Subject><ns1:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent">E8042FB4-4D5B-48C3-8E14-8EDD852790DD</ns1:NameID></ns1:Subject></ns0:AttributeQuery>"""}
+
 class TestClient:
     def setup_class(self):
         self.server = Server("idp.config")
@@ -69,9 +72,11 @@ class TestClient:
             self.client.issuer(),
             nameid_format=saml.NAMEID_FORMAT_PERSISTENT)
         reqstr = "%s" % req.to_string()
+        xmlsec_vers = xmlsec_version(self.client.config["xmlsec_binary"])
+        print "XMLSEC version: %s" % xmlsec_vers
         print reqstr
-        print REQ1 % req.issue_instant
-        assert reqstr == REQ1 % req.issue_instant
+        print REQ1[xmlsec_vers] % req.issue_instant
+        assert reqstr == REQ1[xmlsec_vers] % req.issue_instant
         assert req.destination == "https://idp.example.com/idp/"
         assert req.id == "id1"
         assert req.version == "2.0"
