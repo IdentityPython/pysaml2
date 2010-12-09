@@ -107,7 +107,7 @@ class Config(dict):
                     if binding == None or binding == DEFAULT_BINDING[service]:
                         res.append(spec)
                 elif isinstance(spec, tuple):
-                    if binding == spec[1]:
+                    if binding == None or binding == spec[1]:
                         res.append(spec[0])
             return res
         except KeyError:
