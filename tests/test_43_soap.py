@@ -46,15 +46,17 @@ def test_parse_soap_envelope():
 def test_make_soap_envelope():
     envelope = ElementTree.Element('')
     envelope.tag = '{%s}Envelope' % NAMESPACE
-    
     body = ElementTree.Element('')
     body.tag = '{%s}Body' % NAMESPACE
-    
-    envelope.append(body)
-    
+    envelope.append(body)    
     request = samlp.AuthnRequest()
     request.become_child_element_of(body)
+
+    assert envelope.tag == '{%s}Envelope' % NAMESPACE
+    assert len(envelope) == 1
+    body = envelope[0]
+    assert body.tag == '{%s}Body' % NAMESPACE
+    assert len(body) == 1
+    saml_part = body[0]
+    assert saml_part.tag == '{%s}AuthnRequest' % SAMLP_NAMESPACE
     
-    string = ElementTree.tostring(envelope, encoding="UTF-8")
-    result = """<?xml version=\'1.0\' encoding=\'UTF-8\'?>\n<ns0:Envelope xmlns:ns0="http://schemas.xmlsoap.org/soap/envelope/"><ns0:Body><ns1:AuthnRequest xmlns:ns1="urn:oasis:names:tc:SAML:2.0:protocol" /></ns0:Body></ns0:Envelope>"""
-    assert string == result
