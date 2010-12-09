@@ -1,3 +1,5 @@
+import datetime
+import re
 import os
 
 from saml2 import metadata, make_vals, make_instance
@@ -32,6 +34,12 @@ def _read_lines(name):
     except IOError:
         name = "tests/"+name
         return open(name).readlines()
+
+def _fix_valid_until(xmlstring):
+    new_date = datetime.datetime.now() + datetime.timedelta(days=1)
+    new_date = new_date.strftime("%Y-%m-%dT%H:%M:%SZ")
+    return re.sub(r' validUntil=".*?"', ' validUntil="%s"' % new_date,
+                  xmlstring)
         
 ATTRCONV = ac_factory("attributemaps")
 
@@ -131,7 +139,7 @@ def test_switch_1():
 
 def test_sp_metadata():
     md = metadata.MetaData(attrconv=ATTRCONV)
-    md.import_metadata(_read_file(SP_METADATA), "-")
+    md.import_metadata(_fix_valid_until(_read_file(SP_METADATA)), "-")
     
     print md.entity
     assert len(md.entity) == 1
