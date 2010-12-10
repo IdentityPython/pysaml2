@@ -11,7 +11,9 @@ class NotValid(Exception):
 
 class OutsideCardinality(Exception):
     pass
-    
+
+# --------------------- validators -------------------------------------
+# 
 def valid_ncname(name):
     exp = re.compile("(?P<NCName>[a-zA-Z_](\w|[_.-])*)")
     match = exp.match(name)
@@ -163,6 +165,9 @@ def valid_unsigned_short(val):
         struct.pack("H", int(val))
     except struct.error:
         raise NotValid("unsigned short")
+    except ValueError:
+        raise NotValid("unsigned short")
+        
     return True
     
 def valid_non_negative_integer(val):
@@ -190,7 +195,7 @@ def valid_base64(val):
     return True
 
 def valid_qname(val):
-    """ either 
+    """ A qname is either 
         NCName or 
         NCName ':' NCName
     """
@@ -202,10 +207,17 @@ def valid_qname(val):
         return valid_ncname(val)
 
 def valid_anytype(val):
-    # Should I go through and check all known types ???
+    """ Goes through all known type validators 
+    
+    :param val: The value to validate
+    :return: True is value is valid otherwise an exception is raised
+    """
     for validator in VALIDATOR.values():
-        if validator(val):
-            return True
+        try:
+            if validator(val):
+                return True
+        except NotValid:
+            pass
     
     if isinstance(val, type):
         return True
@@ -219,7 +231,6 @@ VALIDATOR = {
     "NCName": valid_ncname,
     "dateTime": valid_date_time,
     "anyURI": valid_any_uri,
-    "string": valid_string,
     "nonNegativeInteger": valid_non_negative_integer,
     "boolean": valid_boolean,
     "unsignedShort": valid_unsigned_short,
@@ -228,6 +239,7 @@ VALIDATOR = {
     "integer": valid_integer,
     "QName": valid_qname,
     "anyType": valid_anytype,
+    "string": valid_string,
 }
 
 # -----------------------------------------------------------------------------

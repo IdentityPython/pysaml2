@@ -14,6 +14,7 @@ from saml2.validate import valid_string
 from saml2.validate import valid_instance
 from saml2.validate import valid_any_uri
 from saml2.validate import NotValid
+from saml2.validate import valid_anytype
 
 from py.test import raises
 
@@ -94,4 +95,13 @@ def test_valid_instance():
     response.assertion.append(saml.Assertion())
 
     raises( NotValid, 'valid_instance(response)')
+    
+def test_valid_anytype():
+    assert valid_anytype("130.239.16.3")
+    assert valid_anytype("textstring")
+    assert valid_anytype("12345678")
+    assert valid_anytype("-1234")
+    assert valid_anytype("P1Y2M3DT10H30M")
+    assert valid_anytype("urn:oasis:names:tc:SAML:2.0:attrname-format:uri")
+    
     
