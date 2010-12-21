@@ -306,6 +306,9 @@ def not_on_or_after(not_on_or_after):
         not_on_or_after = time.mktime(not_on_or_after)
     elif isinstance(not_on_or_after, basestring):
         not_on_or_after = str_to_time(not_on_or_after)
+
+    if not_on_or_after == 0:
+        return True
         
     now = daylight_corrected_now()
 
