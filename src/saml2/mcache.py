@@ -154,6 +154,8 @@ class Cache(object):
             (timestamp, info) = self._cache.get(_key(subject_id, entity_id))
         except ValueError:
             return False
+        except TypeError:
+            return False
             
         if not info:
             return False
