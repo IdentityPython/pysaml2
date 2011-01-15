@@ -157,8 +157,8 @@ class Cache(object):
         except TypeError:
             return False
             
-        if not info:
-            return False
+        # if not info:
+        #     return False
             
         try:
             return time_util.not_on_or_after(timestamp)
@@ -187,5 +187,7 @@ class Cache(object):
             (timestamp, info) = self._cache.get(_key(subject_id, entity_id))
         except ValueError:
             return False
+        except TypeError:
+            info = {}
             
         self._cache.set(_key(subject_id, entity_id), (newtime, info))
