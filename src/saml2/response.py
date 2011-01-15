@@ -236,6 +236,7 @@ class AuthnResponse(StatusResponse):
         self.came_from = ""
         self.ava = None
         self.assertion = None
+        self.session_not_on_or_after = 0
     
     def loads(self, xmldata, decode=True):
         self._loads(xmldata, decode)
@@ -258,7 +259,8 @@ class AuthnResponse(StatusResponse):
         authn_statement = self.assertion.authn_statement[0]
         if authn_statement.session_not_on_or_after:
             try:
-                validate_on_or_after(authn_statement.session_not_on_or_after, 
+                self.session_not_on_or_after = validate_on_or_after(
+                                    authn_statement.session_not_on_or_after,
                                     self.timeslack)
             except Exception:
                 return False
@@ -473,9 +475,14 @@ class AuthnResponse(StatusResponse):
         response.
         :returns: Dictionary with information
         """
+        if self.session_not_on_or_after > 0:
+            nooa = self.session_not_on_or_after
+        else:
+            nooa = self.not_on_or_after
+            
         return { "ava": self.ava, "name_id": self.name_id,
                 "came_from": self.came_from, "issuer": self.issuer(),
-                "not_on_or_after": self.not_on_or_after,
+                "not_on_or_after": nooa,
                 "authn_info": self.authn_info() }
     
     def __str__(self):
