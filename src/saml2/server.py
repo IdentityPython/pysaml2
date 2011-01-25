@@ -461,7 +461,7 @@ class Server(object):
     # ------------------------------------------------------------------------
     
     def error_response(self, in_response_to, destination, spid, info, 
-                        name_id=None):
+                        name_id=None, sign=False):
         """ Create a error response.
         
         :param in_response_to: The identifier of the message this is a response
@@ -481,6 +481,7 @@ class Server(object):
                         None,           # identity
                         name_id,
                         status = status,
+                        sign=sign
                         )
 
     # ------------------------------------------------------------------------
