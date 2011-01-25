@@ -94,8 +94,10 @@ class Saml2Client(object):
                                             self.users.cache, 
                                             log=None, vorg_conf=None)
             self.sec = security_context(config)
-    
-        if not debug:
+        else:
+            self.config = {}
+        
+        if not debug and self.config:
             self.debug = self.config.debug()
         else:
             self.debug = debug
