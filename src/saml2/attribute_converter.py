@@ -26,11 +26,15 @@ class UnknownNameFormat(Exception):
 def ac_factory(path):
     acs = []
 
-    for tup in os.walk(path):
-        if tup[2]:
-            atco = AttributeConverter(os.path.basename(tup[0]))
-            for name in tup[2]:
-                fname = os.path.join(tup[0], name)
+    for dir_name, directories, files in os.walk(path):
+        for d in list(directories):
+            if d.startswith('.'):
+                directories.remove(d)
+
+        if files:
+            atco = AttributeConverter(os.path.basename(dir_name))
+            for name in files:
+                fname = os.path.join(dir_name, name)
                 if name.endswith(".py"):
                     name = name[:-3]
                 atco.set(name, fname)
