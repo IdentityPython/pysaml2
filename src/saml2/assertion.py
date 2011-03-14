@@ -26,7 +26,7 @@ from saml2.attribute_converter import from_local
 from saml2.s_utils import sid, MissingValue
 from saml2.s_utils import factory
 from saml2.s_utils import assertion_factory
-from saml2.s_utils import do_attribute_statement
+
 
 def _filter_values(vals, vlist=None, must=False):
     """ Removes values from *vals* that does not appear in vlist
