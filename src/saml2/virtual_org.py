@@ -70,13 +70,13 @@ class VirtualOrg(object):
                 
             resolver = AttributeResolver(saml2client=self.sp)
             # extends returns a list of session_infos      
-            for session_info in resolver.extend(com_identifier, 
+            for session_info in resolver.extend(com_identifier,
                                         self.sp.config["entityid"], 
                                         to_ask, 
                                         name_id_format=name_id_format,
                                         sp_name_qualifier=sp_name_qualifier,
                                         log=self.log):
-                _ignore = self._cache_session(session_info)
+                _ = self._cache_session(session_info)
 
             if log:
                 log.info(

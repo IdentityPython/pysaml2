@@ -27,7 +27,7 @@ import base64
 from saml2.time_util import instant, not_on_or_after
 from saml2.s_utils import signature
 from saml2.s_utils import sid
-from saml2.s_utils import do_attributes, factory
+from saml2.s_utils import do_attributes
 from saml2.s_utils import decode_base64_and_inflate
 #from saml2.s_utils import deflate_and_base64_encode
 
@@ -41,7 +41,7 @@ from saml2.binding import http_post_message
 from saml2.population import Population
 from saml2.virtual_org import VirtualOrg
 
-from saml2.response import authn_response
+#from saml2.response import authn_response
 from saml2.response import response_factory
 from saml2.response import LogoutResponse
 from saml2.response import AuthnResponse
@@ -341,8 +341,10 @@ class Saml2Client(object):
             name_qualifier=None, nameid_format=None, sign=False):
         """ Constructs an AttributeQuery
         
+        :param session_id: The identifier of the session
         :param subject_id: The identifier of the subject
         :param destination: To whom the query should be sent
+        :param issuer_id: Identifier of the issuer
         :param attribute: A dictionary of attributes and values that is
             asked for. The key are one of 4 variants:
             3-tuple of name_format,name and friendly_name,
@@ -393,11 +395,13 @@ class Saml2Client(object):
     def attribute_query(self, subject_id, destination, issuer_id=None,
                 attribute=None, sp_name_qualifier=None, name_qualifier=None,
                 nameid_format=None, log=None):
-        """ Does a attribute request to an attribute authority
+        """ Does a attribute request to an attribute authority, this is
+        by default done over SOAP. Other bindings could be used but not
+        supported right now.
         
         :param subject_id: The identifier of the subject
         :param destination: To whom the query should be sent
-        :param issuer: Who is sending this query
+        :param issuer_id: Who is sending this query
         :param attribute: A dictionary of attributes and values that is asked for
         :param sp_name_qualifier: The unique identifier of the
             service provider or affiliation of providers for whom the
@@ -405,6 +409,7 @@ class Saml2Client(object):
         :param name_qualifier: The unique identifier of the identity
             provider that generated the identifier.
         :param nameid_format: The format of the name ID
+        :param log: Function to use for logging
         :return: The attributes returned
         """
         
@@ -455,7 +460,7 @@ class Saml2Client(object):
                 log.info("No response")
             return None
     
-    def logout_requests(self, subject_id, destination, entity_id, 
+    def logout_request(self, subject_id, destination, entity_id,
                             reason=None, expire=None, _log=None):
         """ Constructs a LogoutRequest
         
@@ -481,7 +486,6 @@ class Saml2Client(object):
             issuer=self.issuer(),
             name_id = name_id
         )
-        
     
         if reason:
             request.reason = reason
@@ -532,7 +536,6 @@ class Saml2Client(object):
             
         # for all where I can use the SOAP binding, do those first
         not_done = entity_ids[:]
-        session_id = 0
         response = False
         
         for entity_id in entity_ids:
@@ -546,7 +549,7 @@ class Saml2Client(object):
 
                 if log:
                     log.info("destination to provider: %s" % destination)
-                request = self.logout_requests(subject_id, destination, 
+                request = self.logout_request(subject_id, destination,
                                                 entity_id, reason, expire, log)
                 
                 to_sign = []
