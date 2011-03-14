@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import memcache
-import time
 from saml2 import time_util
 
 # The assumption is that any subject may consist of data 
@@ -63,7 +62,7 @@ class Cache(object):
                     res[key] = vals
         return res, oldees
 
-    def get_info(self, item):
+    def get_info(self, item, check_not_on_or_after=True):
         """ Get session information about a subject gotten from a
         specified IdP/AA.
 
@@ -75,12 +74,12 @@ class Cache(object):
         except ValueError:
             raise ToOld()
             
-        if info and time_util.not_on_or_after(timestamp):
-            return info
-        else:
+        if check_not_on_or_after and not time_util.not_on_or_after(timestamp):
             raise ToOld()
 
-    def get(self, subject_id, entity_id):
+        return info or None
+
+    def get(self, subject_id, entity_id, check_not_on_or_after=True):
         res = self._cache.get(_key(subject_id, entity_id))
         if not res:
             return {}
