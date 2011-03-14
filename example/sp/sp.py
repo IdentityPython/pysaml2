@@ -22,7 +22,7 @@ def dict_to_table(ava, width=1):
             i = 0
             n = len(valarr)       
             for val in valarr:
-                if i == 0:
+                if not i:
                     txt.append("<th rowspan=%d>%s</td>\n" % (len(valarr),prop))
                 else:
                     txt.append("<tr>\n")
@@ -84,7 +84,7 @@ def slo(environ, start_response, user, logger):
             # return error reply
             pass
     
-    if sids == 0:
+    if not sids:
         start_response("302 Found", [("Location", "/done")])
         return ["Successfull Logout"]
     

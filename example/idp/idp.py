@@ -31,7 +31,7 @@ def dict_to_table(ava, lev=0, width=1):
             index = 0
             num = len(valarr)       
             for val in valarr:
-                if index == 0:
+                if not index:
                     txt.append("<th rowspan=%d>%s</td>\n" % (len(valarr), prop))
                 else:
                     txt.append("<tr>\n")
