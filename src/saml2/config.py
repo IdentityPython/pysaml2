@@ -7,7 +7,7 @@ import sys
 from saml2 import metadata
 from saml2.assertion import Policy
 from saml2.attribute_converter import ac_factory, AttributeConverter
-from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST, BINDING_SOAP
+from saml2 import BINDING_HTTP_REDIRECT, BINDING_SOAP
 from saml2.metadata import ENDPOINTS, DEFAULT_BINDING
 
 class MissingValue(Exception):
@@ -28,7 +28,8 @@ def entity_id2url(meta, entity_id):
         if val:
             res[typ] = val
     return res
-    
+
+
 class Config(dict):
     def load_metadata(self, metadata_conf, xmlsec_binary, acs):
         """ Loads metadata into an internal structure """
@@ -62,8 +63,7 @@ class Config(dict):
             config["key_file"] = None
             
         if "attribute_map_dir" in config:
-            config["attrconverters"] = ac_factory(
-                                                config["attribute_map_dir"])
+            config["attrconverters"] = ac_factory(config["attribute_map_dir"])
         else:
             config["attrconverters"] = [AttributeConverter()]
 
