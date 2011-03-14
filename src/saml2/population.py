@@ -46,9 +46,10 @@ class Population(object):
     def remove_person(self, subject_id):
         self.cache.delete(subject_id)
         
-    def get_entityid(self, subject_id, source_id):
+    def get_entityid(self, subject_id, source_id, check_not_on_or_after=True):
         try:
-            return self.cache.get(subject_id, source_id)["name_id"]
+            return self.cache.get(subject_id, source_id,
+                                  check_not_on_or_after)["name_id"]
         except (KeyError, ValueError):
             return ""
             
