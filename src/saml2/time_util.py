@@ -39,7 +39,7 @@ TIME_FORMAT_WITH_FRAGMENT = re.compile(
 def f_quotient(arg0, arg1, arg2=0):
     if arg2:
         return int((arg0-arg1)/(arg2-arg1))
-    elif arg0 == 0:
+    elif not arg0:
         return 0
     else:
         return int(arg0/arg1)
@@ -65,7 +65,7 @@ DAYS_IN_MONTH = {
     }
     
 def days_in_february(year):
-    if modulo(year, 400) == 0:
+    if not modulo(year, 400):
         return 29
     elif (modulo(year, 100) != 0) and (modulo(year, 4) == 0):
         return 29
@@ -135,7 +135,7 @@ def parse_duration(duration):
         if index == len(duration):
             break
         
-    return (sign, dic)
+    return sign, dic
     
 def add_duration(tid, duration):
     
@@ -270,11 +270,9 @@ def instant(format=None):
     
 # ---------------------------------------------------------------------------
 
-def daylight_corrected_now():
-    lgmt = list(time.gmtime())
-    #lgmt[8] = time.daylight
-    return time.mktime(lgmt)    
-    
+def utc_now():
+    return time.mktime(datetime.utcnow().timetuple())
+
 # ---------------------------------------------------------------------------
 
 def not_before(point):
@@ -307,10 +305,10 @@ def not_on_or_after(not_on_or_after):
     elif isinstance(not_on_or_after, basestring):
         not_on_or_after = str_to_time(not_on_or_after)
 
-    if not_on_or_after == 0:
+    if not not_on_or_after:
         return True
         
-    now = daylight_corrected_now()
+    now = utc_now()
 
     if not_on_or_after and not_on_or_after < now:
         #self.reset(subject_id, entity_id)
@@ -329,7 +327,7 @@ def valid( valid_until ):
         return True
         
     then = str_to_time( valid_until )
-    now = time.gmtime()
+    now = datetime.utcnow().timetuple()
     
     if now <= then:
         return True

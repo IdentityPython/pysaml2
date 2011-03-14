@@ -57,7 +57,7 @@ def valid_url(url):
     
 def validate_on_or_after(not_on_or_after, slack):
     if not_on_or_after:
-        now = time_util.daylight_corrected_now()
+        now = time_util.utc_now()
         nooa = time.mktime(time_util.str_to_time(not_on_or_after))
         high = nooa+slack
         if now > high:
@@ -68,7 +68,7 @@ def validate_on_or_after(not_on_or_after, slack):
 
 def validate_before(not_before, slack):
     if not_before:
-        now = time_util.daylight_corrected_now()
+        now = time_util.utc_now()
         nbefore = time.mktime(time_util.str_to_time(not_before))
         if nbefore > now + slack:
             raise Exception("Can't use it yet %s <= %s" % (nbefore, now))    

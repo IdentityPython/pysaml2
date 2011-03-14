@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import datetime
 import time
 from saml2.time_util import f_quotient, modulo, parse_duration, add_duration
 from saml2.time_util import str_to_time, instant, valid, in_a_while
@@ -80,8 +81,10 @@ def test_instant():
     
 def test_valid():
     assert valid("2000-01-12T00:00:00Z") == False
-    assert valid("2011-01-12T00:00:00Z") == True
+    current_year = datetime.datetime.today().year
+    assert valid("%d-01-12T00:00:00Z" % (current_year + 1)) == True
     this_instance = instant()
+    time.sleep(1)
     print this_instance
     assert valid(this_instance) == False # unless on a very fast machine :-)
     soon = in_a_while(seconds=10)
@@ -91,3 +94,11 @@ def test_timeout():
     soon = in_a_while(seconds=1)
     time.sleep(2)
     assert valid(soon) == False
+
+
+# def test_validate_before(not_before, slack):
+#     not_before = in_a_while(minutes=5)
+#     now = time_util.daylight_corrected_now()
+#     nbefore = time.mktime(time_util.str_to_time(not_before))
+#     print nbefore, now
+#     assert nbefore > now
