@@ -25,18 +25,17 @@ But anyway, you may get my point. This is middleware stuff !
 PySAML2 is built to fit into a 
 `WSGI  <http://www.python.org/dev/peps/pep-0333/>`_ application
 
-There are more than one WSGI framework out there, so when I started this work
-I just picked one I liked, namely `Repoze <http://repoze.org/>`_ .
-Or to be more specific I choose to work within the context of
-`Repoze.who <http://static.repoze.org/whodocs/>`_.
+But it can be used in a non-WSGI environment too. 
 
-So the descriptions in the following chapters are based on the usage of
-pySAML2 together with repoze.who .
+So you will find descriptions of both cases here.
+
+The configuration is the same disregarding whether you are using PySAML2 in a 
+WSGI or non-WSGI environment.
 
 .. toctree::
    :maxdepth: 1
 
    config
-   sp
-   idp
+   wsgi/index
+   nonwsgi/index
    
