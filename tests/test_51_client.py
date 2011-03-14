@@ -69,7 +69,6 @@ class TestClient:
         req = self.client.create_attribute_query("id1", 
             "E8042FB4-4D5B-48C3-8E14-8EDD852790DD",
             "https://idp.example.com/idp/",
-            self.client.issuer(),
             nameid_format=saml.NAMEID_FORMAT_PERSISTENT)
         reqstr = "%s" % req.to_string()
         xmlsec_vers = xmlsec_version(self.client.config["xmlsec_binary"])
@@ -91,7 +90,6 @@ class TestClient:
         req = self.client.create_attribute_query("id1", 
             "E8042FB4-4D5B-48C3-8E14-8EDD852790DD", 
             "https://idp.example.com/idp/",
-            self.client.issuer(),
             attribute={
                 ("urn:oid:2.5.4.42",
                 "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
@@ -135,7 +133,6 @@ class TestClient:
         req = self.client.create_attribute_query("id1",
                 "_e7b68a04488f715cda642fbdd90099f5", 
                 "https://aai-demo-idp.switch.ch/idp/shibboleth",
-                self.client.issuer(),
                 nameid_format=saml.NAMEID_FORMAT_TRANSIENT )
                 
         assert isinstance(req, samlp.AttributeQuery)
@@ -152,7 +149,6 @@ class TestClient:
         req = self.client.attribute_query( 
                 "_e7b68a04488f715cda642fbdd90099f5", 
                 "https://aai-demo-idp.switch.ch/idp/shibboleth", 
-                self.client.issuer(),
                 nameid_format=saml.NAMEID_FORMAT_TRANSIENT)
 
         # since no one is answering on the other end

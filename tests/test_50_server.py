@@ -461,3 +461,17 @@ class TestServerLogout():
         assert headers[0][0] == "Location"
         assert message == ['']
         
+# class TestSign():
+#     def test_1(self):
+#         IDP = server.Server("restrictive_idp.config", debug=1)
+#         ava = { "givenName": ["Derek"], "surName": ["Jeter"], 
+#                 "mail": ["derek@nyy.mlb.com"]}
+# 
+#         authn_resp = IDP.authn_response(ava, 
+#                     "id1", "http://local:8087/", 
+#                     "urn:mace:example.com:saml:roland:sp",
+#                     samlp.NameIDPolicy(format=saml.NAMEID_FORMAT_TRANSIENT,
+#                                         allow_create="true"),
+#                     "foba0001@example.com", sign=True)
+#         print authn_resp
+#         assert False

@@ -70,7 +70,7 @@ def filter_on_attributes(ava, required=None, optional=None):
     """
     res = {}
     
-    if required == None:
+    if required is None:
         required = []
         
     for attr in required:
@@ -84,7 +84,7 @@ def filter_on_attributes(ava, required=None, optional=None):
             print >> sys.stderr, ava.keys()
             raise MissingValue("Required attribute missing: '%s'" % (attr.friendly_name,))
 
-    if optional == None:
+    if optional is None:
         optional = []
         
     for attr in optional:
@@ -189,7 +189,7 @@ class Policy(object):
         self._restrictions = restrictions.copy()
         
         for _, spec in self._restrictions.items():
-            if spec == None:
+            if spec is None:
                 continue
             
             try:
@@ -197,7 +197,7 @@ class Policy(object):
             except KeyError:
                 continue
             
-            if restr == None:
+            if restr is None:
                 continue
             
             for key, values in restr.items():

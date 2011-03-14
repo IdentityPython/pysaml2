@@ -71,7 +71,7 @@ def base_init(imports):
         line.append("%sSamlBase.__init__(self, " % (INDENT+INDENT))
         for attr in BASE_ELEMENT:
             line.append("%s%s=%s," % (indent4, attr, attr))
-        line.append("%s)" % (indent4))
+        line.append("%s)" % indent4)
     else:
         # TODO have to keep apart which properties comes from which superior
         for sup, elems in imports.items():
@@ -80,7 +80,7 @@ def base_init(imports):
             lattr.extend(BASE_ELEMENT)
             for attr in lattr:
                 line.append("%s%s=%s," % (indent4, attr, attr))
-            line.append("%s)" % (indent4))
+            line.append("%s)" % indent4)
     return line
     
 def initialize(attributes):
@@ -106,7 +106,7 @@ def _mod_typ(prop):
                 typ = prop.ref
             mod = None
     
-    return (mod, typ)
+    return mod, typ
 
 def _mod_cname(prop, cdict):
     if hasattr(prop, "scoped"):
@@ -122,7 +122,7 @@ def _mod_cname(prop, cdict):
         else:
             cname = typ
         
-    return (mod, cname)
+    return mod, cname
 
 def leading_uppercase(string):
     try:
@@ -270,7 +270,7 @@ class PyObj(object):
                 else:
                     args.append((prop.pyname, prop.pyname, None))
         
-        return (args, child, inh)
+        return args, child, inh
         
     def _superiors(self, cdict):
         imps = {}
@@ -290,7 +290,7 @@ class PyObj(object):
             superior = []
             sups = []
         
-        return (superior, sups, imps)
+        return superior, sups, imps
         
     def class_definition(self, target_namespace, cdict=None, ignore=None):
         line = []
@@ -427,7 +427,7 @@ class PyElement(PyObj):
             if not mod:
                 cname = leading_uppercase(typ)
                 if not cdict[cname].done:
-                    return ([cdict[cname]], [])
+                    return [cdict[cname]], []
         except ValueError:
             pass
         except TypeError: # could be a ref then or a PyObj instance
@@ -438,8 +438,8 @@ class PyElement(PyObj):
             else:
                 cname = leading_uppercase(self.ref)
                 if not cdict[cname].done:
-                    return ([cdict[cname]], [])
-        return ([], [])
+                    return [cdict[cname]], []
+        return [], []
     
     def _local_class(self, typ, cdict, child, target_namespace, ignore):
         if typ in cdict and not cdict[typ].done:
@@ -524,7 +524,7 @@ class PyElement(PyObj):
                 if mod:
                     #self.superior = ["%s.%s" % (mod, typ)]
                     if verify_import(self.root.modul[mod], typ):
-                        return (req, text)
+                        return req, text
                     else:
                         raise Exception(
             "Import attempted on %s from %s module failed - wasn't there" % (
@@ -538,19 +538,19 @@ class PyElement(PyObj):
                     raise MissingPrerequisite(self.ref)
                 
         self.done = True
-        return (req, text)
+        return req, text
         
 def _do(obj, target_namespace, cdict, prep):
     try:
         (req, text) = obj.text(target_namespace, cdict)
     except MissingPrerequisite:
-        return ([], None)
+        return [], None
         
-    if text == None:
+    if text is None:
         if req:
             #prep = prepend(req, prep)
             prep.append(req)
-        return (prep, None)
+        return prep, None
     else:
         obj.done = True
         if req:
@@ -592,7 +592,7 @@ class PyType(PyObj):
         if not self.properties and not self.type \
                 and not self.superior:
             self.done = True
-            return ([], self.class_definition(target_namespace, cdict))
+            return [], self.class_definition(target_namespace, cdict)
         
         req = []
         inherited_properties = []
@@ -613,7 +613,7 @@ class PyType(PyObj):
                 if isinstance(res, tuple):
                     return res
             
-            if self.properties[1] == []:
+            if not self.properties[1]:
                 inherited_properties = reqursive_superior(supc, cdict)
         
         if inherited_properties:
@@ -649,7 +649,7 @@ class PyType(PyObj):
                 if isinstance(res, tuple):
                     return res
         
-        return (req, self.class_definition(target_namespace, cdict, ignore))
+        return req, self.class_definition(target_namespace, cdict, ignore)
     
     def undefined(self, cdict):
         undef = ([], [])
@@ -685,7 +685,7 @@ class PyAttribute(PyObj):
             if not cdict[self.type.name].done:
                 raise MissingPrerequisite(self.type.name)
                 
-        return ([], []) # Means this elements definition is empty
+        return [], [] # Means this elements definition is empty
         
     def spec(self):
         if isinstance(self.type, PyObj):
@@ -718,7 +718,7 @@ class PyGroup(object):
         self.done = False
     
     def text(self, _target_namespace, _dict, _child, _ignore):
-        return ([], [])
+        return [], []
         
     def undefined(self, _cdict):
         undef = ([], [])
@@ -802,7 +802,7 @@ def _namespace_and_tag(obj, param, top):
         namespace = ""
         tag = param
 
-    return (namespace, tag)
+    return namespace, tag
     
 # -----------------------------------------------------------------------------
 
@@ -824,9 +824,9 @@ class Simple(object):
         argv_copy = sd_copy(argv)
         rval = self.repr(top, sup, argv_copy, True, parent)
         if rval:
-            return ([rval], [])
+            return [rval], []
         else:
-            return ([], [])
+            return [], []
 
     def repr(self, _top=None, _sup=None, _argv=None, _child=True, _parent=""):
         return None
@@ -849,7 +849,7 @@ class Attribute(Simple):
     def repr(self, top=None, sup=None, _argv=None, _child=True, _parent=""):
         # default, fixed, use, type
                     
-        if (DEBUG):
+        if DEBUG:
             print "#ATTR", self.__dict__
 
         external = False
@@ -921,7 +921,7 @@ class Attribute(Simple):
         except AttributeError:
             pass
         
-        if (DEBUG):
+        if DEBUG:
             print "#--ATTR py_attr:%s" % (objekt,)
             
         return objekt
@@ -1021,15 +1021,15 @@ class Complex(object):
         
     def collect(self, top, sup, argv=None, parent=""):
         if self._own or self._inherited:
-            return (self._own, self._inherited)
+            return self._own, self._inherited
             
-        if (DEBUG):
+        if DEBUG:
             print self.__dict__
             print "#-- %d parts" % len(self.parts)
         
         self._extend(top, sup, argv, parent)
         
-        return (self._own, self._inherited)
+        return self._own, self._inherited
         
     def do_child(self, elem):
         for child in elem:
@@ -1106,7 +1106,7 @@ class Element(Complex):
         else:
             xns = namespace
 
-        return (namespace, name, ctyp, xns, ref)
+        return namespace, name, ctyp, xns, ref
 
     def collect(self, top, sup, argv=None, parent=""):
         """ means this element is part of a larger object, hence a property of 
@@ -1114,10 +1114,10 @@ class Element(Complex):
         
         try:
             argv_copy = sd_copy(argv)
-            return ([self.repr(top, sup, argv_copy, parent=parent)], [])
+            return [self.repr(top, sup, argv_copy, parent=parent)], []
         except AttributeError, exc:
             print "!!!!", exc
-            return ([], [])
+            return [], []
 
     def elements(self, top):            
         (_namespace, name, ctyp, xns, _) = self.klass(top)
@@ -1162,7 +1162,7 @@ class Element(Complex):
             else:
                 objekt.ref = (namespace, superkl)                
         except AttributeError, exc:
-            if (DEBUG):
+            if DEBUG:
                 print "#===>", exc
 
             typ = self.type
@@ -1203,7 +1203,7 @@ class Element(Complex):
                                                             parent=self.name)
                             objekt.scoped = True
                 else:
-                    if (DEBUG):
+                    if DEBUG:
                         print "$", self
                     raise 
 
@@ -1267,9 +1267,9 @@ class ComplexContent(Complex):
 class Extension(Complex):
     def collect(self, top, sup, argv=None, parent=""):
         if self._own or self._inherited:
-            return (self._own, self._inherited)
+            return self._own, self._inherited
         
-        if (DEBUG):
+        if DEBUG:
             print "#!!!", self.__dict__
 
         try:
@@ -1294,7 +1294,7 @@ class Extension(Complex):
             
         self._extend(top, sup, argv, parent, base)
 
-        return (self._own, self._inherited)
+        return self._own, self._inherited
 
 class Choice(Complex):
     def collect(self, top, sup, argv=None, parent=""):
@@ -1409,7 +1409,7 @@ class Group(Complex):
                 raise Exception("Missing namespace definition")            
         except AttributeError, exc:
             print "!!!!", exc
-            return ([], [])
+            return [], []
 
     def repr(self, top=None, sup=None, argv=None, _child=True, parent=""):
         if self.py_class:
@@ -1445,7 +1445,7 @@ class AttributeGroup(Complex):
             return cti.collect(top, sup)
         except AttributeError:
             if self._own or self._inherited:
-                return (self._own, self._inherited)
+                return self._own, self._inherited
             
             argv_copy = sd_copy(argv)
             
@@ -1453,7 +1453,7 @@ class AttributeGroup(Complex):
                 if isinstance(prop, Attribute):
                     self._own.append(prop.repr(top, sup, argv_copy, parent))
 
-            return (self._own, self._inherited)
+            return self._own, self._inherited
 
     def repr(self, top=None, sup=None, _argv=None, _child=True, parent=""):
         if self.py_class:
@@ -1482,7 +1482,7 @@ def pyify_0(name):
     
     res = res.replace("-","_")
     if res in ["class"]:
-        res = res+"_"
+        res += "_"
     return res
 
 def pyify(name):
@@ -1557,7 +1557,7 @@ def sort_elements(els):
         partres.sort()
         res.extend(partres)
         
-    return (res, els)
+    return res, els
 
 def output(elem, target_namespace, eldict, ignore=[]):
     done = 0

@@ -41,7 +41,7 @@ class Population(object):
         
     def subjects(self):
         """Returns the name id's for all the persons in the cache"""
-        return self.cache.subjects();
+        return self.cache.subjects()
 
     def remove_person(self, subject_id):
         self.cache.delete(subject_id)

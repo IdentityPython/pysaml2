@@ -122,7 +122,7 @@ def parse_attribute_map(filenames):
             forward[(name, name_format)] = friendly_name
             backward[friendly_name] = (name, name_format)
         
-    return (forward, backward)
+    return forward, backward
     
 def identity_attribute(form, attribute, forward_map=None):
     if form == "friendly":
@@ -214,7 +214,7 @@ def response_factory(sign=False, encrypt=False, **kwargs):
 def _attrval(val, typ=""):
     if isinstance(val, list) or isinstance(val, set):
         attrval = [saml.AttributeValue(text=v) for v in val]
-    elif val == None:
+    elif val is None:
         attrval = None
     else:
         attrval = [saml.AttributeValue(text=val)]
@@ -241,7 +241,7 @@ def do_ava(val, typ=""):
         ava = saml.AttributeValue()
         ava.set_text(val)        
         attrval = [ava]
-    elif val == None:
+    elif val is None:
         attrval = None
     else:
         raise OtherError("strange value type on: %s" % val)

@@ -104,7 +104,7 @@ class Config(dict):
             res = []
             for spec in self["service"][typ]["endpoints"][service]:
                 if isinstance(spec, basestring):
-                    if binding == None or binding == DEFAULT_BINDING[service]:
+                    if binding is None or binding == DEFAULT_BINDING[service]:
                         res.append(spec)
                 elif isinstance(spec, tuple):
                     if binding:

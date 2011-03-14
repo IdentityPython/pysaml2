@@ -21,17 +21,18 @@ to do attribute aggregation.
 """
 import saml2
 
-DEFAULT_BINDING = saml2.BINDING_HTTP_REDIRECT
+DEFAULT_BINDING = saml2.BINDING_SOAP
 
 class AttributeResolver(object):
 
-    def __init__(self, environ, metadata=None, config=None, saml2client=None):
+    def __init__(self, metadata=None, config=None, saml2client=None):
         self.metadata = metadata
 
         if saml2client:
             self.saml2client = saml2client
+            self.metadata = saml2client.config.metadata
         else:
-            self.saml2client = saml2.client.Saml2Client(environ, config)
+            self.saml2client = saml2.client.Saml2Client(config)
         
     def extend(self, subject_id, issuer, vo_members, name_id_format=None,
                 sp_name_qualifier=None, log=None):
@@ -51,14 +52,19 @@ class AttributeResolver(object):
         for member in vo_members:            
             for ass in self.metadata.attribute_services(member):
                 for attr_serv in ass.attribute_service:
-                    log and log.info("Send attribute request to %s" % \
-                                        attr_serv.location)
+                    if log:
+                        log.info(
+                            "Send attribute request to %s" % attr_serv.location)
+                    if attr_serv.binding != saml2.BINDING_SOAP:
+                        continue
+                    # attribute query assumes SOAP binding
                     session_info = self.saml2client.attribute_query(
-                                subject_id, 
-                                issuer, 
-                                attr_serv.location, 
-                                sp_name_qualifier=sp_name_qualifier,
-                                format=name_id_format, log=log)
+                                        subject_id, 
+                                        attr_serv.location, 
+                                        issuer_id=issuer, 
+                                        sp_name_qualifier=sp_name_qualifier,
+                                        nameid_format=name_id_format, 
+                                        log=log)
                     if session_info:
                         result.append(session_info)
         return result

@@ -115,7 +115,7 @@ class MetaData(object):
         if afd:
             members = [member.text.strip() for member in afd.affiliate_member]
         
-            if members != []:
+            if members:
                 entity[tag] = members
     
     def _sp_metadata(self, entity_descr, entity, tag):
@@ -229,7 +229,7 @@ class MetaData(object):
                 if attr_serv.binding == BINDING_SOAP:
                     aserv.append(attr_serv)
             
-            if aserv == []:
+            if not aserv:
                 continue
             
             taad.attribute_service = aserv
@@ -243,7 +243,7 @@ class MetaData(object):
             
             aads.append(taad)
         
-        if aads != []:
+        if aads:
             entity[tag] = aads
     
     def clear_from_source(self, source):
@@ -295,7 +295,7 @@ class MetaData(object):
         except KeyError:
             self._import[source] = [entity_descr.entity_id]
         
-        # have I seen this entity_id before ? If so log and ignore it
+        # have I seen this entity_id before ? If so if log: ignore it
         if entity_descr.entity_id in self.entity:
             print >> sys.stderr, \
                 "Duplicated Entity descriptor (entity id: '%s')" % \
@@ -372,7 +372,7 @@ class MetaData(object):
                 self.import_metadata(content, (url, cert))
                 return True
         else:
-            self.log and self.log.info("Response status: %s" % response.status)
+            self.if log: self.log.info("Response status: %s" % response.status)
         return False
 
     def idp_services(self, entity_id, typ, binding=None):
@@ -541,14 +541,14 @@ class MetaData(object):
         try:
             return self._wants[entity_id]
         except KeyError:
-            return ([], [])
+            return [], []
     
     @keep_updated
     def attribute_consumer(self, entity_id):
         try:
             ssos = self.entity[entity_id]["sp_sso"]
         except KeyError:
-            return ([], [])
+            return [], []
         
         required = []
         optional = []
@@ -560,7 +560,7 @@ class MetaData(object):
                 else:
                     optional.append(attr)
         
-        return (required, optional)
+        return required, optional
     
     def _orgname(self, org, lang="en"):
         if not org:
@@ -594,8 +594,10 @@ class MetaData(object):
         for entity_id, edict in self.entity.items():
             if "idp_sso" in edict:
 #idp_aa_check                self._valid(entity_id)
+                name = None
                 if "organization" in edict:
                     name = self._orgname(edict["organization"],"en")
+
                 if not name:
                     name = self._location(edict["idp_sso"])[0]
                 idps[entity_id] = (name, edict["idp_sso"])

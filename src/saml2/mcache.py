@@ -44,7 +44,7 @@ class Cache(object):
         if not entities:
             entities = self.entities(subject_id)
             if not entities:
-                return ({}, [])
+                return {}, []
             
         res = {}
         oldees = []
@@ -61,7 +61,7 @@ class Cache(object):
                     res[key] = list(tmp)
                 except KeyError:
                     res[key] = vals
-        return (res, oldees)
+        return res, oldees
 
     def get_info(self, item):
         """ Get session information about a subject gotten from a
@@ -174,7 +174,7 @@ class Cache(object):
 
     def update(self, subject_id, entity_id, ava):
         res = self._cache.get(_key(subject_id, entity_id))
-        if res == None:
+        if res is None:
             raise KeyError("No such subject")
         else:
             info = self.get_info(res)

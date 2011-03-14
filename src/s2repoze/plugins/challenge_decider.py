@@ -75,7 +75,7 @@ class MyChallengeDecider:
 
             # require a challenge for login
             for regex in self.path_login:
-                if regex.match(uri) != None:
+                if regex.match(uri) is not None:
                     return True
 
         return False

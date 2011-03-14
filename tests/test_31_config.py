@@ -27,9 +27,12 @@ sp1 = {
                     "urn-mace-swami.se-swamid-test-1.0-metadata.xml"],
     },
     "virtual_organization" : {
-        "http://vo.example.org/biomed":{
-            "nameid_format" : "urn:oid:2.16.756.1.2.5.1.1.1-NameID",
-            "common_identifier": "swissEduPersonUniqueID",
+        "coip":{
+            "nameid_format" : "urn:oasis:names:tc:SAML:2.0:nameid-format:transient",
+            "common_identifier": "eduPersonPrincipalName",
+            "attribute_auth": [
+                "https://coip-test.sunet.se/idp/shibboleth",
+            ]
         }
     }
 }

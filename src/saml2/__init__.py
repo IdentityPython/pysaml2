@@ -593,7 +593,7 @@ class SamlBase(ExtensionContainer):
             setattr(self, "text", "%d" % val)
         elif isinstance(val, basestring):
             setattr(self, "text", val)
-        elif val == None:
+        elif val is None:
             pass
         else:
             raise ValueError( "Type shouldn't be '%s'" % (val,))
@@ -660,7 +660,7 @@ class SamlBase(ExtensionContainer):
             try:
                 restriction = self.c_cardinality[prop]
                 val = getattr(self, prop)
-                if val == None:
+                if val is None:
                     num = 0
                 elif isinstance(val, list):
                     num = len(val)

@@ -52,7 +52,7 @@ class Request(object):
         except TypeError:
             raise
         except Exception, excp:
-            self.log and self.log.info("EXCEPTION: %s", excp)
+            self.if log: self.log.info("EXCEPTION: %s", excp)
     
         if not self.message:
             if self.log:

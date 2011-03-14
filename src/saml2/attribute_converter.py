@@ -44,7 +44,7 @@ def ac_factory(path):
     
 def ava_fro(acs, statement):
     """ translates attributes according to their name_formats """
-    if statement == []:
+    if not statement:
         return {}
         
     acsdic = dict([(ac.name_format, ac) for ac in acs])
@@ -123,9 +123,9 @@ class AttributeConverter(object):
         self._to = eval(open(filename).read())
 
     def adjust(self):
-        if self._fro == None and self._to != None:
+        if self._fro is None and self._to is not None:
             self._fro = dict([(value, key) for key, value in self._to.items()])
-        if self._to == None and self.fro != None:
+        if self._to is None and self.fro is not None:
             self._to = dict([(value, key) for key, value in self._fro.items()])
     
     def fail_safe_fro(self, statement):
@@ -161,7 +161,7 @@ class AttributeConverter(object):
             else:
                 val.append(value.text.strip())
 
-        return (attr, val)
+        return attr, val
         
     def fro(self, statement):
         """ Get the attributes and the attribute values 

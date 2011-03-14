@@ -36,10 +36,12 @@ from repoze.who.plugins.form import FormPluginBase
 
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2.client import Saml2Client
-#from saml2.attribute_resolver import AttributeResolver
 from saml2.config import SPConfig
 from saml2.s_utils import sid
+from saml2.virtual_org import VirtualOrg
+
 #from saml2.population import Population
+#from saml2.attribute_resolver import AttributeResolver
 
 def construct_came_from(environ):
     """ The URL that the user used when the process where interupted 
@@ -71,7 +73,7 @@ class SAML2Plugin(FormPluginBase):
     implements(IChallenger, IIdentifier, IAuthenticator, IMetadataProvider)
     
     def __init__(self, rememberer_name, config, saml_client, 
-                virtual_organization, wayf, _cache, debug, sid_store=None):
+                    wayf, _cache, debug, sid_store=None):
         FormPluginBase.__init__(self)
         
         self.rememberer_name = rememberer_name
@@ -82,18 +84,7 @@ class SAML2Plugin(FormPluginBase):
         self.conf = config
         self.srv = self.conf["service"]["sp"]
         self.log = None
-        
-        if virtual_organization:
-            self.vorg = virtual_organization
-            self.vorg_conf = None
-#            try:
-#                self.vorg_conf = self.conf[
-#                                "virtual_organization"][virtual_organization]
-#            except KeyError:
-#                self.vorg = None
-        else:
-            self.vorg = None
-            
+                    
         try:
             self.metadata = self.conf["metadata"]
         except KeyError:
@@ -116,8 +107,8 @@ class SAML2Plugin(FormPluginBase):
 
         if len( idps ) == 1:
             idp_url = idps[0]["single_sign_on_service"][BINDING_HTTP_REDIRECT]
-        elif len( idps ) == 0:
-            return (1, HTTPInternalServerError(detail='Misconfiguration'))
+        elif not len(idps):
+            return 1, HTTPInternalServerError(detail='Misconfiguration')
         else:
             if self.wayf:
                 wayf_selected = environ.get('s2repose.wayf_selected','')
@@ -140,9 +131,9 @@ class SAML2Plugin(FormPluginBase):
                                 detail="Do not know how to talk to '%s'!" & (
                                                             wayf_selected,)))
             else:
-                return (1, HTTPNotImplemented(detail='No WAYF present!'))
+                return 1, HTTPNotImplemented(detail='No WAYF present!')
 
-        return (0, idp_url)
+        return 0, idp_url
         
     #### IChallenger ####
     def challenge(self, environ, _status, _app_headers, _forget_headers):
@@ -165,7 +156,8 @@ class SAML2Plugin(FormPluginBase):
         try:
             vorg = environ["myapp.vo"]
         except KeyError:
-            vorg = self.vorg
+            vorg = self.saml_client.vorg
+            
         self.log and self.log.info("[sp.challenge] VO: %s" % vorg)
 
         # If more than one idp and if none is selected, I have to do wayf
@@ -176,8 +168,9 @@ class SAML2Plugin(FormPluginBase):
             idp_url = response
             # Do the AuthnRequest
             (sid_, result) = self.saml_client.authenticate(location=idp_url,
-                                                    relay_state=came_from, 
-                                                    vorg=vorg)
+                                                            relay_state=came_from,
+                                                            log=self.log, 
+                                                            vorg=vorg)
             
             # remember the request
             self.outstanding_queries[sid_] = came_from
@@ -230,11 +223,12 @@ class SAML2Plugin(FormPluginBase):
         return post
     
     def _construct_identity(self, session_info):
-        identity = {}
-        identity["login"] = session_info["name_id"]
-        identity["password"] = ""
-        identity['repoze.who.userid'] = session_info["name_id"]
-        identity["user"] = session_info["ava"]
+        identity = {
+            "login": session_info["name_id"],
+            "password": "",
+            'repoze.who.userid': session_info["name_id"],
+            "user": session_info["ava"],
+        }
         if self.debug and self.log:
             self.log.info("Identity: %s" % identity)
 
@@ -329,12 +323,12 @@ class SAML2Plugin(FormPluginBase):
             environ["s2repoze.sessioninfo"] = session_info
             name_id = session_info["name_id"]
             # contruct and return the identity
-            identity = {}
-            identity["login"] = name_id
-            identity["password"] = ""
-            identity['repoze.who.userid'] = name_id
-            identity["user"] = self.saml_client.users.get_identity(name_id)[0]
-            
+            identity = {
+                "login": name_id,
+                "password": "",
+                'repoze.who.userid': name_id,
+                "user": self.saml_client.users.get_identity(name_id)[0],
+            }
             self.log.info("[sp.identify] IDENTITY: %s" % (identity,))
             return identity
         else:
@@ -371,23 +365,29 @@ class SAML2Plugin(FormPluginBase):
 
         if "pysaml2_vo_expanded" not in identity:
             # is this a Virtual Organization situation
-            if self.vorg:
-                if self.vorg.do_vo_aggregation(subject_id):
-                    # Get the extended identity
-                    identity["user"] = self.saml_client.users.get_identity(
+            if self.saml_client.vorg:
+                try:
+                    if self.saml_client.vorg.do_aggregation(subject_id, 
+                                                            log=self.log):
+                        # Get the extended identity
+                        identity["user"] = self.saml_client.users.get_identity(
                                                                 subject_id)[0]
-                    # Only do this once, mark that the identity has been 
-                    # expanded
-                    identity["pysaml2_vo_expanded"] = 1
-
+                        # Only do this once, mark that the identity has been 
+                        # expanded
+                        identity["pysaml2_vo_expanded"] = 1
+                except KeyError:
+                    self.log and self.log.error(
+                                        "Failed to do attribute aggregation, "
+                                        "missing common attribute")
         if self.debug:
-            self.log and self.log.info("[add_metadata] returns: %s" % (dict(identity),))
+            self.log and self.log.info("[add_metadata] returns: %s" % (
+                                                            dict(identity),))
         
         
 # @return
 # used 2 times : one to get the ticket, the other to validate it
     def _service_url(self, environ, qstr=None):
-        if qstr != None:
+        if qstr is not None:
             url = construct_url(environ, querystring = qstr)
         else:
             url = construct_url(environ)
@@ -422,11 +422,12 @@ def make_plugin(rememberer_name=None, # plugin for remember
     
     config = SPConfig()
     config.load_file(saml_conf)
+            
+    scl = Saml2Client(config, identity_cache=identity_cache,
+                        virtual_organization=virtual_organization)
 
-    scl = Saml2Client(config, identity_cache=identity_cache)
-
-    plugin = SAML2Plugin(rememberer_name, config, scl,
-                virtual_organization, wayf, cache, debug, sid_store)
+    plugin = SAML2Plugin(rememberer_name, config, scl, wayf, cache, debug, 
+                        sid_store)
     return plugin
 
 # came_from = re.sub(r'ticket=[^&]*&?', '', came_from)

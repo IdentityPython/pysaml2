@@ -38,7 +38,7 @@ class Cache(object):
             try:
                 entities = self._db[subject_id].keys()
             except KeyError:
-                return ({}, [])
+                return {}, []
             
         res = {}
         oldees = []
@@ -54,7 +54,7 @@ class Cache(object):
                     res[key] = list(tmp)
                 except KeyError:
                     res[key] = vals
-        return (res, oldees)
+        return res, oldees
         
     def get(self, subject_id, entity_id):
         """ Get session information about a subject gotten from a

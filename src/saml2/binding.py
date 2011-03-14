@@ -71,7 +71,7 @@ def http_post_message(message, location, relay_state="", typ="SAMLRequest"):
     response.append("""</script>""")
     response.append("</body>")
     
-    return ([("Content-type", "text/html")], response)
+    return [("Content-type", "text/html")], response
     
 def http_redirect_message(message, location, relay_state="", 
                             typ="SAMLRequest"):
@@ -100,7 +100,7 @@ def http_redirect_message(message, location, relay_state="",
     headers = [('Location', login_url)]
     body = [""]
     
-    return (headers, body)
+    return headers, body
 
 def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
     """ Returns a soap envelope containing a SAML request
@@ -179,15 +179,15 @@ def parse_soap_enveloped_saml(text, body_class, header_class=None):
 # 
 #     
 #     http = HTTPClient(destination, key_file, cert_file, log)
-#     log and log.info("HTTP client initiated")
+#     if log: log.info("HTTP client initiated")
 # 
 #     try:
 #         response = http.get()
 #     except Exception, exc:
-#         log and log.info("HTTPClient exception: %s" % (exc,))
+#         if log: log.info("HTTPClient exception: %s" % (exc,))
 #         return None
 # 
-#     log and log.info("HTTP request sent and got response: %s" % response)
+#     if log: log.info("HTTP request sent and got response: %s" % response)
 # 
 #     return response
 
@@ -195,7 +195,8 @@ def send_using_http_post(request, destination, relay_state, key_file=None,
                         cert_file=None, log=None):
 
     http = HTTPClient(destination, key_file, cert_file, log)
-    log and log.info("HTTP client initiated")
+    if log:
+        log.info("HTTP client initiated")
 
     if not isinstance(request, basestring):
         request = "%s" % (request,)
@@ -204,10 +205,12 @@ def send_using_http_post(request, destination, relay_state, key_file=None,
     try:
         response = http.post(message, headers)
     except Exception, exc:
-        log and log.info("HTTPClient exception: %s" % (exc,))
+        if log:
+            log.info("HTTPClient exception: %s" % (exc,))
         return None
 
-    log and log.info("HTTP request sent and got response: %s" % response)
+    if log:
+        log.info("HTTP request sent and got response: %s" % response)
 
     return response
 
@@ -225,14 +228,17 @@ def send_using_soap(message, destination, key_file=None, cert_file=None,
         SOAPClient
     """
     soapclient = SOAPClient(destination, key_file, cert_file, log)
-    log and log.info("SOAP client initiated")
+    if log:
+        log.info("SOAP client initiated")
     try:
         response = soapclient.send(message)
     except Exception, exc:
-        log and log.info("SoapClient exception: %s" % (exc,))
+        if log:
+            log.info("SoapClient exception: %s" % (exc,))
         return None
 
-    log and log.info("SOAP request sent and got response: %s" % response)
+    if log:
+        log.info("SOAP request sent and got response: %s" % response)
 
     return response
 

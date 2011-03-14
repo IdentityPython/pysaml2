@@ -47,7 +47,7 @@ class EntitlementMetadataProvider(object):
         elif "entitlement" not in self._store[user]:
             self._store[user]["entitlement"] = {}
 
-        if entitlement == None:
+        if entitlement is None:
             entitlement = []
         self._store[user]["entitlement"][virtualorg] = entitlement
         self._store.sync()

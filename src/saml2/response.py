@@ -68,6 +68,19 @@ def authn_response(conf, entity_id, return_addr, outstanding_queries=None,
                         return_addr, outstanding_queries, log, timeslack, 
                         debug)
 
+# comes in over SOAP so synchronous
+def attribute_response(conf, entity_id, return_addr, log=None, timeslack=0, 
+                        debug=0):
+    sec = security_context(conf)
+    if not timeslack:
+        try:
+            timeslack = int(conf["timeslack"])
+        except KeyError:
+            pass
+
+    return AttributeResponse(sec, conf.attribute_converters, entity_id, 
+                                return_addr, log, timeslack, debug)
+
 class StatusResponse(object):
     def __init__(self, sec_context, return_addr=None, log=None, timeslack=0, 
                     debug=0, request_id=0):
@@ -140,7 +153,7 @@ class StatusResponse(object):
         except SignatureError:
             raise
         except Exception, excp:
-            self.log and self.log.info("EXCEPTION: %s", excp)
+            self.if log: self.log.info("EXCEPTION: %s", excp)
     
         print "<", self.response
         
@@ -216,6 +229,33 @@ class LogoutResponse(StatusResponse):
                                 debug)
         self.signature_check = self.sec.correctly_signed_logout_response
 
+class AttributeResponse(StatusResponse):
+    def __init__(self, sec_context, attribute_converters, entity_id,
+                    return_addr=None, log=None, timeslack=0, debug=0):
+        StatusResponse.__init__(self, sec_context, return_addr, log, timeslack, 
+                                debug)
+        self.entity_id = entity_id
+        self.attribute_converters = attribute_converters
+
+
+    def get_identity(self):
+        # The assertion can contain zero or one attributeStatements
+        if not self.assertion.attribute_statement:
+            self.log.error("Missing Attribute Statement")
+            ava = {}
+        else:
+            assert len(self.assertion.attribute_statement) == 1
+
+            if self.debug:
+                self.log.info("Attribute Statement: %s" % (
+                                    self.assertion.attribute_statement[0],))
+                for aconv in self.attribute_converters():
+                    self.log.info(
+                            "Converts name format: %s" % (aconv.name_format,))
+
+            ava = to_local(self.attribute_converters(),
+                            self.assertion.attribute_statement[0])
+        return ava
         
 class AuthnResponse(StatusResponse):
     """ This is where all the profile complience is checked.
@@ -281,7 +321,7 @@ class AuthnResponse(StatusResponse):
                                                     self.timeslack)
             validate_before(condition.not_before, self.timeslack)
         except Exception, excp:
-            self.log and self.log.error("Exception on condition: %s" % (excp,))
+            self.if log: self.log.error("Exception on condition: %s" % (excp,))
             if not lax:
                 raise
             else:
@@ -357,7 +397,7 @@ class AuthnResponse(StatusResponse):
                         
             subjconf.append(subject_confirmation)
             
-        if subjconf == []:
+        if not subjconf:
             raise Exception("No valid subject confirmation")
             
         subject.subject_confirmation = subjconf
@@ -374,7 +414,7 @@ class AuthnResponse(StatusResponse):
             self.log.info("assertion context: %s" % (self.context,))
             self.log.info("assertion keys: %s" % (assertion.keyswv()))
             self.log.info("outstanding_queries: %s" % (
-                                                    self.outstanding_queries))
+                                                    self.outstanding_queries,))
         
         if self.context == "AuthNReq":
             self.authn_statement_ok()

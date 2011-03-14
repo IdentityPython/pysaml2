@@ -93,6 +93,7 @@ class Identifier(object):
         try:
             return self._get_remote("persistent", entity_id, subject_id)
         except KeyError:
+            temp_id = "xyz"
             while True:
                 temp_id = sid()
                 try:
@@ -147,10 +148,11 @@ class Identifier(object):
         :param userid: The local persistent identifier for the subject.
         :return: The created identifier,
         """
+        temp_id = sid()
         while True:
-            temp_id = sid()
             try:
                 _ = self._get_local("transient", sp_entity_id, temp_id)
+                temp_id = sid()
             except KeyError:
                 break
         self._store("transient", sp_entity_id, userid, temp_id)
@@ -232,6 +234,7 @@ class Server(object):
             # subject information is store in database
             # default database is a shelve database which is OK in some setups
             dbspec = self.conf["subject_data"]
+            idb = None
             if isinstance(dbspec, basestring):
                 idb = shelve.open(dbspec, writeback=True)
             else: # database spec is a a 2-tuple (type, address)
@@ -241,11 +244,12 @@ class Server(object):
                 elif typ == "memcached":
                     idb = memcache.Client(addr)
 
-            if idb != None:
+            if idb is not None:
                 self.ident = Identifier(idb, self.conf.vo_conf, self.debug, 
                                         self.log)
             else:
-                raise Exception("Couldn't open identity database: %s" % (dbspec))
+                raise Exception("Couldn't open identity database: %s" %
+                                (dbspec,))
         else:
             self.ident = None
     
@@ -289,9 +293,9 @@ class Server(object):
         try:
             consumer_url = self.metadata.consumer_url(sp_entity_id)
         except KeyError:
-            self.log and self.log.info(
+            self.if log: self.log.info(
                     "Failed to find consumer URL for %s" % sp_entity_id)
-            self.log and self.log.info(
+            self.if log: self.log.info(
                     "entities: %s" % self.metadata.entity.keys())
             raise UnknownPrincipal(sp_entity_id)
             
@@ -347,7 +351,7 @@ class Server(object):
         subject = attribute_query.subject_id()        
         attribute = attribute_query.attribute()
 
-        return (subject, attribute, attribute_query.message)
+        return subject, attribute, attribute_query.message
             
     # ------------------------------------------------------------------------
 
@@ -599,7 +603,7 @@ class Server(object):
                 self.log.info("binding wanted: %s" % (binding,))
             raise
                 
-        self.log and self.log.info("Endpoint: %s" % (slo))
+        self.if log: self.log.info("Endpoint: %s" % slo)
         req = LogoutRequest(self.sec, slo)
         if binding == BINDING_SOAP:
             lreq = soap.parse_soap_enveloped_saml_logout_request(text)
@@ -647,7 +651,7 @@ class Server(object):
                 
 
         if not destination:
-            self.log and self.log.error("Not way to return a response !!!")
+            self.if log: self.log.error("Not way to return a response !!!")
             return ("412 Precondition Failed",
                     [("Content-type", "text/html")],
                     ["No return way defined"])
@@ -693,7 +697,7 @@ class Server(object):
                 to_sign = [(class_name(response), mid)]
                 response = signed_instance_factory(response, self.sec, to_sign)
                 
-            self.log and self.log.info("Response: %s" % (response,))
+            self.if log: self.log.info("Response: %s" % (response,))
             if binding == BINDING_HTTP_REDIRECT:
                 (headers, message) = http_redirect_message(response, 
                                                             destination, 
@@ -703,4 +707,4 @@ class Server(object):
                 (headers, message) = http_post_message(response, destination,
                                                         typ="SAMLResponse")
                 
-        return (rcode, headers, message)
+        return rcode, headers, message

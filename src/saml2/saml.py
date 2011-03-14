@@ -80,7 +80,7 @@ def _verify_value_type(typ, val):
     if typ == XSD + "float" or typ == XSD + "double":
         return float(val)
     if typ == XSD + "boolean":
-        if (val.lower() == "true" or val.lower() == "false"):
+        if val.lower() == "true" or val.lower() == "false":
             pass
         else:
             raise ValueError("Faulty boolean value")
@@ -126,7 +126,7 @@ class AttributeValueBase(SamlBase):
                 val = str(val)
                 if not typ:
                     self.set_type("xs:float")
-            elif val == None:
+            elif val is None:
                 val = ""
             else:
                 raise ValueError

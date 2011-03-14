@@ -165,7 +165,6 @@ def test_sp_metadata():
     assert _eq(md.wants('urn:mace:umu.se:saml:roland:sp')[1].keys(),
                 ["title"])
 
-
 KALMAR2_URL = "https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2"
 KALMAR2_CERT = "kalmar2.pem"
 

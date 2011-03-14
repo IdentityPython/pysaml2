@@ -388,7 +388,7 @@ class SecurityContext(object):
             self.debug = 0
             
     def correctly_signed(self, xml, must=False):
-        self.log and self.log.info("verify correct signature")
+        self.if log: self.log.info("verify correct signature")
         return self.correctly_signed_response(xml, must)
 
     def decrypt(self, enctext):
@@ -397,7 +397,7 @@ class SecurityContext(object):
         :param enctext: The encrypted text as a string
         :return: The decrypted text
         """
-        self.log and self.log.info("input len: %d" % len(enctext))
+        self.if log: self.log.info("input len: %d" % len(enctext))
         _, fil = make_temp("%s" % enctext, decode=False)
         ntf = NamedTemporaryFile()
 
@@ -415,7 +415,8 @@ class SecurityContext(object):
         p_err = pof.stderr.read()
         
         if self.debug:
-            self.log.debug("Decrypt result: %s" % (p_out, p_err))
+            self.log.debug("Decrypt result (out): %s" % (p_out))
+            self.log.debug("Decrypt result (err): %s" % (p_err))
 
         ntf.seek(0)
         return ntf.read()

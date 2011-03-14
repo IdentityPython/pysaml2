@@ -45,6 +45,7 @@ from saml2.response import authn_response
 from saml2.response import response_factory
 from saml2.response import LogoutResponse
 from saml2.response import AuthnResponse
+from saml2.response import attribute_response
 
 from saml2 import BINDING_HTTP_REDIRECT, BINDING_SOAP, BINDING_HTTP_POST
 
@@ -70,12 +71,13 @@ class LogoutError(Exception):
 class Saml2Client(object):
     """ The basic pySAML2 service provider class """
     
-    def __init__(self, config=None, debug=0, vorg=None, 
-                identity_cache=None, state_cache=None):
+    def __init__(self, config=None, debug=0, 
+                identity_cache=None, state_cache=None, 
+                virtual_organization=None):
         """
         :param config: A saml2.config.Config instance
         """
-        self.vorg = None
+
         self.users = Population(identity_cache)
 
         # for server state storage
@@ -83,20 +85,21 @@ class Saml2Client(object):
             self.state = {} # in memory storage
         else:
             self.state = state_cache
-        
+
         self.sec = None
         if config:
             self.config = config
             if "metadata" in config:
                 self.metadata = config["metadata"]
-                if vorg:
-                    self.vorg = VirtualOrg(self.metadata, vorg, 
-                                            self.users.cache, 
-                                            log=None, vorg_conf=None)
             self.sec = security_context(config)
         else:
             self.config = {}
         
+        if virtual_organization:
+            self.vorg = VirtualOrg(self, virtual_organization)
+        else:
+            self.vorg = None
+
         if not debug and self.config:
             self.debug = self.config.debug()
         else:
@@ -169,15 +172,18 @@ class Saml2Client(object):
                                         reply_addr, outstanding, log, 
                                         debug=self.debug)
             except Exception, exc:
-                log and log.error("%s" % exc)
+                if log:
+                    log.error("%s" % exc)
                 return None
             
             if self.debug:
-                log and log.info(">>", resp)
+                if log:
+                    log.info(">>", resp)
             resp = resp.verify()
             if isinstance(resp, AuthnResponse):
                 self.users.add_information_about_person(resp.session_info())
-                log and log.error("--- ADDED person info ----")
+                if log:
+                    log.error("--- ADDED person info ----")
             elif isinstance(resp, LogoutResponse):
                 self.handle_logout_response(resp, log)
             elif log:
@@ -231,16 +237,23 @@ class Saml2Client(object):
             to_sign = []
         
         request.name_id_policy = name_id_policy
-        request.issuer = factory(saml.Issuer, text=spentityid )
+        request.issuer = self.issuer(spentityid)
         
         if log:
             log.info("REQUEST: %s" % request)
         
         return "%s" % signed_instance_factory(request, self.sec, to_sign)
     
-    def issuer(self):
+    def issuer(self, entityid=None):
         """ Return an Issuer instance """
-        return saml.Issuer(text=self.config["entityid"], 
+        if entityid:
+            if isinstance(entityid, saml.Issuer):
+                return entityid
+            else:
+                return saml.Issuer(text=entityid, 
+                                    format=saml.NAMEID_FORMAT_ENTITY)
+        else:
+            return saml.Issuer(text=self.config["entityid"], 
                                 format=saml.NAMEID_FORMAT_ENTITY)        
     
     def _spentityid(self, spentityid=None):
@@ -306,7 +319,8 @@ class Saml2Client(object):
         authen_req = self.authn_request(session_id, location,
                                 service_url, spentityid, my_name, vorg,
                                 scoping, log, sign)
-        log and log.info("AuthNReq: %s" % authen_req)
+        if log:
+            log.info("AuthNReq: %s" % authen_req)
         
         if binding == saml2.BINDING_HTTP_POST:
             # No valid ticket; Send a form to the client
@@ -319,11 +333,11 @@ class Saml2Client(object):
             response = head[0]
         else:
             raise Exception("Unkown binding type: %s" % binding)
-        return (session_id, response)
+        return session_id, response
 
     
     def create_attribute_query(self, session_id, subject_id, destination,
-            issuer=None, attribute=None, sp_name_qualifier=None,
+            issuer_id=None, attribute=None, sp_name_qualifier=None,
             name_qualifier=None, nameid_format=None, sign=False):
         """ Constructs an AttributeQuery
         
@@ -359,7 +373,7 @@ class Saml2Client(object):
             version=VERSION,
             issue_instant=instant(),
             destination=destination,
-            issuer=issuer,
+            issuer=self.issuer(issuer_id),
             subject=subject,
         )
         
@@ -376,10 +390,10 @@ class Saml2Client(object):
             return query
             
     
-    def attribute_query(self, subject_id, destination, issuer=None,
+    def attribute_query(self, subject_id, destination, issuer_id=None,
                 attribute=None, sp_name_qualifier=None, name_qualifier=None,
                 nameid_format=None, log=None):
-        """ Does a attribute request from an attribute authority
+        """ Does a attribute request to an attribute authority
         
         :param subject_id: The identifier of the subject
         :param destination: To whom the query should be sent
@@ -395,45 +409,50 @@ class Saml2Client(object):
         """
         
         session_id = sid()
-        if not issuer:
-            issuer = self.issuer()
+        issuer = self.issuer(issuer_id)
         
         request = self.create_attribute_query(session_id, subject_id,
                     destination, issuer, attribute, sp_name_qualifier,
                     name_qualifier, nameid_format=nameid_format)
         
-        log and log.info("Request, created: %s" % request)
+        if log:
+            log.info("Request, created: %s" % request)
         
         soapclient = SOAPClient(destination, self.config["key_file"],
                                 self.config["cert_file"])
-        log and log.info("SOAP client initiated")
+        if log:
+            log.info("SOAP client initiated")
         try:
             response = soapclient.send(request)
         except Exception, exc:
-            log and log.info("SoapClient exception: %s" % (exc,))
+            if log:
+                log.info("SoapClient exception: %s" % (exc,))
             return None
         
-        log and log.info("SOAP request sent and got response: %s" % response)
+        if log:
+            log.info("SOAP request sent and got response: %s" % response)
         if response:
-            log and log.info("Verifying response")
+            if log:
+                log.info("Verifying response")
             
             try:
-                aresp = authn_response(self.config, "", issuer, 
-                                        outstanding_queries={session_id:""}, 
-                                        log=log)
+                aresp = attribute_response(self.config, "", issuer, log=log)
             except Exception, exc:
-                log and log.error("%s", (exc,))
+                if log:
+                    log.error("%s", (exc,))
                 return None
                 
-            session_info = aresp.loads(response).verify().session_info()
+            session_info = aresp.loads(response, False).verify().session_info()
 
             if session_info:
                 self.users.add_information_about_person(session_info)
             
-            log and log.info("session: %s" % session_info)
+            if log:
+                log.info("session: %s" % session_info)
             return session_info
         else:
-            log and log.info("No response")
+            if log:
+                log.info("No response")
             return None
     
     def logout_requests(self, subject_id, destination, entity_id, 
@@ -493,7 +512,8 @@ class Saml2Client(object):
             conversation. 
         """
             
-        log and log.info("logout request for: %s" % subject_id)
+        if log:
+            log.info("logout request for: %s" % subject_id)
 
         # find out which IdPs/AAs I should notify
         entity_ids = self.users.issuers_of_info(subject_id)
@@ -505,15 +525,16 @@ class Saml2Client(object):
                 sign, log=None, return_to="/"):
         
         # check time
-        if not_on_or_after(expire) == False: # I've run out of time
+        if not not_on_or_after(expire): # I've run out of time
             # Do the local logout anyway
             self.local_logout(subject_id)
-            return (0, "504 Gateway Timeout", [], [])
+            return 0, "504 Gateway Timeout", [], []
             
         # for all where I can use the SOAP binding, do those first
         not_done = entity_ids[:]
         session_id = 0
-
+        response = False
+        
         for entity_id in entity_ids:
             response = False
             rstate = None
@@ -523,7 +544,8 @@ class Saml2Client(object):
                 if not destination:
                     continue
 
-                log and log.info("destination to provider: %s" % destination)
+                if log:
+                    log.info("destination to provider: %s" % destination)
                 request = self.logout_requests(subject_id, destination, 
                                                 entity_id, reason, expire, log)
                 
@@ -544,14 +566,17 @@ class Saml2Client(object):
                                                 self.config["cert_file"], 
                                                 log=log)
                     if response:
-                        log and log.info("Verifying response")
+                        if log:
+                            log.info("Verifying response")
                         response = self.logout_response(response, log)
 
                     if response:
                         not_done.remove(entity_id)
-                        log and log.info("OK response from %s" % destination)
+                        if log:
+                            log.info("OK response from %s" % destination)
                     else:
-                        log and log.info(
+                        if log:
+                            log.info(
                                     "NOT OK response from %s" % destination)
 
                 else:
@@ -579,13 +604,13 @@ class Saml2Client(object):
                                                             rstate)
                         code = "302 Found"
             
-                    return (session_id, code, head, body)
+                    return session_id, code, head, body
         
-        if not_done != []:
+        if not_done:
             # upstream should try later
             raise LogoutError("%s" % (entity_ids,))
         
-        return (0, "", [], response)
+        return 0, "", [], response
 
     def local_logout(self, subject_id):
         """ Remove the user from the cache, equals local logout 
@@ -603,15 +628,18 @@ class Saml2Client(object):
         :return: 4-tuple of (session_id of the last sent logout request,
             response message, response headers and message)
         """
-        log and log.info("state: %s" % (self.state,))
+        if log:
+            log.info("state: %s" % (self.state,))
         status = self.state[response.in_response_to]
-        log and log.info("status: %s" % (status,))
+        if log:
+            log.info("status: %s" % (status,))
         issuer = response.issuer()
-        log and log.info("issuer: %s" % issuer)
+        if log:
+            log.info("issuer: %s" % issuer)
         del self.state[response.in_response_to]
         if status["entity_ids"] == [issuer]: # done
             self.local_logout(status["subject_id"])
-            return (0, "200 Ok", [("Content-type","text/html")], [])
+            return 0, "200 Ok", [("Content-type","text/html")], []
         else:
             status["entity_ids"].remove(issuer)
             return self._logout(status["subject_id"], 
@@ -641,14 +669,16 @@ class Saml2Client(object):
                                                     "single_logout_service",
                                                     binding=binding)[0]
             except Exception:
-                log and log.info("Not supposed to handle this!")
+                if log:
+                    log.info("Not supposed to handle this!")
                 return None
             
             try:
                 response = LogoutResponse(self.sec, return_addr, debug=True, 
                                             log=log)
             except Exception, exc:
-                log and log.info("%s" % exc)
+                if log:
+                    log.info("%s" % exc)
                 return None
                 
             if binding == BINDING_HTTP_REDIRECT:
@@ -710,7 +740,7 @@ class Saml2Client(object):
                                                         status)
 
             if log:
-                log.info("RESPONSE: %s" % response)
+                log.info("RESPONSE: {0:>s}".format(response))
 
             if 'RelayState' in get:
                 rstate = get['RelayState']
