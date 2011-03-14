@@ -467,15 +467,16 @@ class AuthnResponse(StatusResponse):
             raise Exception("No assertion part")
         
         if self.response.assertion:
-            self.debug and self.log.info("***Unencrypted response***")
+            if self.debug:
+                self.log.info("***Unencrypted response***")
             return self._assertion(self.response.assertion[0])
         else:
-            self.debug and self.log.info("***Encrypted response***")
+            if self.debug:
+                self.log.info("***Encrypted response***")
             return self._encrypted_assertion(
                                         self.response.encrypted_assertion[0])
         
-        return True
-    
+
     def verify(self):
         """ Verify that the assertion is syntactically correct and
         the signature is correct if present."""
