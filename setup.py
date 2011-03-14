@@ -17,11 +17,11 @@
 #
 #
 
-from distutils.core import setup
+from setuptools import setup, find_packages
 
 
 setup(
-    name='python-saml2',
+    name='pysaml2',
     version='0.2.0',
     description='Python implementation of SAML Version 2 to be used with WSGI applications',
 #    long_description = read("README"),
@@ -29,13 +29,17 @@ setup(
     author_email='roland.hedberg@adm.umu.se',
     license='Apache 2.0',
     url='https://code.launchpad.net/~roland-hedberg/pysaml2/main',
-    packages=['saml2', 'xmldsig', 'xmlenc', 's2repoze', 
-                's2repoze.plugins'],
-    package_dir = {'saml2':'src/saml2', 'xmldsig':'src/xmldsig',
-                    'xmlenc': 'src/xmlenc', 
-                    's2repoze': 'src/s2repoze'},
-    classifiers = ["Development Status :: 4 - Beta",
+    packages=find_packages('src'),
+    package_dir={'': 'src'},
+    classifiers=[
+        "Development Status :: 4 - Beta",
         "License :: OSI Approved :: Apache Software License",
-        "Topic :: Software Development :: Libraries :: Python Modules"],
-    scripts = ["tools/parse_xsd2.py", "tools/make_metadata.py"]
+        "Topic :: Software Development :: Libraries :: Python Modules",
+        ],
+    scripts=["tools/parse_xsd2.py", "tools/make_metadata.py"],
+    install_requires=[
+        'decorator',
+        'httplib2',
+        ],
+    zip_safe=False,
 )
