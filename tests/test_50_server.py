@@ -350,7 +350,8 @@ class TestServer1():
         }
         self.client.users.add_information_about_person(sinfo)
         
-        logout_request = self.client.logout_requests(subject_id = "foba0001",
+        logout_request = self.client.construct_logout_request(
+                            subject_id="foba0001",
                             destination = "http://localhost:8088/slo",
                             entity_id = "urn:mace:example.com:saml:roland:idp",
                             reason = "I'm tired of this")
@@ -378,7 +379,7 @@ class TestServer1():
 
         sp.users.add_information_about_person(sinfo)
         
-        logout_request = sp.logout_requests(subject_id = "foba0001",
+        logout_request = sp.construct_logout_request(subject_id = "foba0001",
                             destination = "http://localhost:8088/slo",
                             entity_id = "urn:mace:example.com:saml:roland:idp",
                             reason = "I'm tired of this")
@@ -442,7 +443,7 @@ def _logout_request(conf_file):
     }
     sp.users.add_information_about_person(sinfo)
     
-    return sp.logout_requests(
+    return sp.construct_logout_request(
                             subject_id = "foba0001",
                             destination = "http://localhost:8088/slo",
                             entity_id = "urn:mace:example.com:saml:roland:idp",
