@@ -162,7 +162,13 @@ class Saml2Client(object):
             saml_response = post['SAMLResponse']
         except KeyError:
             return None
-        
+
+        if not entity_id:
+            try:
+                entity_id = self.config["entity_id"]
+            except KeyError:
+                raise Exception("Missing entity_id specification")
+
         reply_addr = self._service_url()
         
         resp = None
@@ -476,7 +482,7 @@ class Saml2Client(object):
         session_id = sid()
         # create NameID from subject_id
         name_id = saml.NameID(
-            text = self.users.get_entityid(subject_id, entity_id))
+            text = self.users.get_entityid(subject_id, entity_id, False))
 
         request = samlp.LogoutRequest(
             id=session_id,
