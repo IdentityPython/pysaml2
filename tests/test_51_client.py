@@ -5,9 +5,9 @@ import base64
 from urlparse import urlparse, parse_qs
 
 from saml2.client import Saml2Client, LogoutError
-from saml2 import samlp, client, BINDING_HTTP_POST, BINDING_HTTP_REDIRECT
+from saml2 import samlp, BINDING_HTTP_POST
 from saml2 import BINDING_SOAP
-from saml2 import saml, s_utils, config, class_name
+from saml2 import saml, config, class_name
 #from saml2.sigver import correctly_signed_authn_request, verify_signature
 from saml2.server import Server
 from saml2.s_utils import decode_base64_and_inflate
