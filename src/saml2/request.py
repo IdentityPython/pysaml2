@@ -1,4 +1,3 @@
-import base64
 import sys
 
 from attribute_converter import to_local
