@@ -153,7 +153,8 @@ class StatusResponse(object):
         except SignatureError:
             raise
         except Exception, excp:
-            self.if log: self.log.info("EXCEPTION: %s", excp)
+            if self.log:
+                self.log.info("EXCEPTION: %s", excp)
     
         print "<", self.response
         
@@ -321,7 +322,8 @@ class AuthnResponse(StatusResponse):
                                                     self.timeslack)
             validate_before(condition.not_before, self.timeslack)
         except Exception, excp:
-            self.if log: self.log.error("Exception on condition: %s" % (excp,))
+            if self.log:
+                self.log.error("Exception on condition: %s" % (excp,))
             if not lax:
                 raise
             else:

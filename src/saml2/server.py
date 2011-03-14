@@ -293,9 +293,10 @@ class Server(object):
         try:
             consumer_url = self.metadata.consumer_url(sp_entity_id)
         except KeyError:
-            self.if log: self.log.info(
+            if self.log:
+                self.log.info(
                     "Failed to find consumer URL for %s" % sp_entity_id)
-            self.if log: self.log.info(
+            if self.log: self.log.info(
                     "entities: %s" % self.metadata.entity.keys())
             raise UnknownPrincipal(sp_entity_id)
             
@@ -603,7 +604,8 @@ class Server(object):
                 self.log.info("binding wanted: %s" % (binding,))
             raise
                 
-        self.if log: self.log.info("Endpoint: %s" % slo)
+        if self.log:
+            self.log.info("Endpoint: %s" % slo)
         req = LogoutRequest(self.sec, slo)
         if binding == BINDING_SOAP:
             lreq = soap.parse_soap_enveloped_saml_logout_request(text)
@@ -651,7 +653,8 @@ class Server(object):
                 
 
         if not destination:
-            self.if log: self.log.error("Not way to return a response !!!")
+            if self.log:
+                self.log.error("Not way to return a response !!!")
             return ("412 Precondition Failed",
                     [("Content-type", "text/html")],
                     ["No return way defined"])
@@ -697,7 +700,8 @@ class Server(object):
                 to_sign = [(class_name(response), mid)]
                 response = signed_instance_factory(response, self.sec, to_sign)
                 
-            self.if log: self.log.info("Response: %s" % (response,))
+            if self.log:
+                self.log.info("Response: %s" % (response,))
             if binding == BINDING_HTTP_REDIRECT:
                 (headers, message) = http_redirect_message(response, 
                                                             destination, 

@@ -41,8 +41,8 @@ class VirtualOrg(object):
         # Remove the ones I have cached data from about this subject
         vo_members = [m for m in vo_members if not self.sp.users.cache.active(
                                                                 subject_id, m)]
-        self.if log: self.log.info(
-                        "VO members (not cached): %s" % vo_members)
+        if self.log:
+            self.log.info("VO members (not cached): %s" % vo_members)
         return vo_members
     
     def get_common_identifier(self, subject_id):

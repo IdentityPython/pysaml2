@@ -388,7 +388,8 @@ class SecurityContext(object):
             self.debug = 0
             
     def correctly_signed(self, xml, must=False):
-        self.if log: self.log.info("verify correct signature")
+        if self.log:
+            self.log.info("verify correct signature")
         return self.correctly_signed_response(xml, must)
 
     def decrypt(self, enctext):
@@ -397,7 +398,8 @@ class SecurityContext(object):
         :param enctext: The encrypted text as a string
         :return: The decrypted text
         """
-        self.if log: self.log.info("input len: %d" % len(enctext))
+        if self.log:
+            self.log.info("input len: %d" % len(enctext))
         _, fil = make_temp("%s" % enctext, decode=False)
         ntf = NamedTemporaryFile()
 

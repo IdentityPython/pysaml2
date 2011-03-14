@@ -372,7 +372,8 @@ class MetaData(object):
                 self.import_metadata(content, (url, cert))
                 return True
         else:
-            self.if log: self.log.info("Response status: %s" % response.status)
+            if self.log:
+                self.log.info("Response status: %s" % response.status)
         return False
 
     def idp_services(self, entity_id, typ, binding=None):

@@ -133,7 +133,8 @@ class SOAPClient(object):
         response = self.server.post(soap_message, 
                                     {"content-type": "application/soap+xml"})
         if response:
-            self.if log: self.log.info("SOAP response: %s" % response)
+            if self.log:
+                self.log.info("SOAP response: %s" % response)
             return parse_soap_enveloped_saml_response(response)
         else:
             return False
