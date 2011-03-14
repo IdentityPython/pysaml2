@@ -14,9 +14,9 @@ def test_1():
     ed = xenc.encrypted_data_from_string(data1)
     assert ed
     assert ed.mime_type == "text/xml"
-    assert ed.cipher_data != None
+    assert ed.cipher_data is not None
     cd = ed.cipher_data
-    assert cd.cipher_value != None
+    assert cd.cipher_value is not None
     assert cd.cipher_value.text == "A23B45C56"
     
 data2 = """<?xml version='1.0' encoding='UTF-8'?>
@@ -47,15 +47,15 @@ def test_2():
     assert ed
     print ed
     assert ed.type == "http://www.w3.org/2001/04/xmlenc#Element"
-    assert ed.encryption_method != None
+    assert ed.encryption_method is not None
     em = ed.encryption_method
     assert em.algorithm == 'http://www.w3.org/2001/04/xmlenc#tripledes-cbc'
-    assert ed.key_info != None
+    assert ed.key_info is not None
     ki = ed.key_info
     assert ki.key_name[0].text == "John Smith"
-    assert ed.cipher_data != None
+    assert ed.cipher_data is not None
     cd = ed.cipher_data
-    assert cd.cipher_value != None
+    assert cd.cipher_value is not None
     assert cd.cipher_value.text == "DEADBEEF"
 
 data3 = """<?xml version='1.0' encoding='UTF-8'?>
