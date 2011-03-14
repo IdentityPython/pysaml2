@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import shelve
-import time
 from saml2 import time_util
 
 # The assumption is that any subject may consist of data 
@@ -48,6 +47,11 @@ class Cache(object):
             except ToOld:
                 oldees.append(entity_id)
                 continue
+
+            if not info:
+                oldees.append(entity_id)
+                continue
+                
             for key, vals in info["ava"].items():            
                 try:
                     tmp = set(res[key]).union(set(vals))
@@ -56,19 +60,22 @@ class Cache(object):
                     res[key] = vals
         return res, oldees
         
-    def get(self, subject_id, entity_id):
+    def get(self, subject_id, entity_id, check_not_on_or_after=True):
         """ Get session information about a subject gotten from a
         specified IdP/AA.
         
         :param subject_id: The identifier of the subject
         :param entity_id: The identifier of the entity_id
+        :param check_not_on_or_after: if True it will check if this
+             subject is still valid or if it is too old. Otherwise it
+             will not check this. True by default.
         :return: The session information
         """
         (timestamp, info) = self._db[subject_id][entity_id]
-        if time_util.not_on_or_after(timestamp) and info:
-            return info
-        else:
-            raise ToOld("past %s" % (timestamp,))
+        if check_not_on_or_after and not time_util.not_on_or_after(timestamp):
+            raise ToOld("past %s" % timestamp)
+
+        return info or None
     
     def set(self, subject_id, entity_id, info, not_on_or_after=0):
         """ Stores session information in the cache. Assumes that the subject_id
