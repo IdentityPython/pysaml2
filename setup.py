@@ -38,8 +38,16 @@ setup(
         ],
     scripts=["tools/parse_xsd2.py", "tools/make_metadata.py"],
     install_requires=[
+        # core dependencies
         'decorator',
         'httplib2',
+        # for the tests:
+        'pyasn1',
+        'python-memcached',
+        # for s2repoze:
+        'paste',
+        'zope.interface',
+        'repoze.who<2.0',
         ],
     zip_safe=False,
 )
