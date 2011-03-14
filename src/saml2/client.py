@@ -460,7 +460,7 @@ class Saml2Client(object):
                 log.info("No response")
             return None
     
-    def logout_request(self, subject_id, destination, entity_id,
+    def construct_logout_request(self, subject_id, destination, entity_id,
                             reason=None, expire=None, _log=None):
         """ Constructs a LogoutRequest
         
@@ -549,7 +549,7 @@ class Saml2Client(object):
 
                 if log:
                     log.info("destination to provider: %s" % destination)
-                request = self.logout_request(subject_id, destination,
+                request = self.construct_logout_request(subject_id, destination,
                                                 entity_id, reason, expire, log)
                 
                 to_sign = []
