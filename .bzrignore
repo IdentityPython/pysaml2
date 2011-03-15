@@ -1,0 +1,10 @@
+.idea
+build
+python_saml2.egg-info
+dist
+.coverage
+htmlcov
+*.bak
+*.dat
+*.dir
+*.log

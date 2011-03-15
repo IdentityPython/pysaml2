@@ -17,11 +17,24 @@
 #
 #
 
+from distutils.core import  Command
 from setuptools import setup, find_packages
 
 
+class PyTest(Command):
+    user_options = []
+    def initialize_options(self):
+        pass
+    def finalize_options(self):
+        pass
+    def run(self):
+        import sys,subprocess
+        errno = subprocess.call([sys.executable, 'runtests.py'])
+        raise SystemExit(errno)
+
+
 setup(
-    name='pysaml2',
+    name='python-saml2',
     version='0.2.0',
     description='Python implementation of SAML Version 2 to be used with WSGI applications',
 #    long_description = read("README"),
@@ -29,14 +42,20 @@ setup(
     author_email='roland.hedberg@adm.umu.se',
     license='Apache 2.0',
     url='https://code.launchpad.net/~roland-hedberg/pysaml2/main',
-    packages=find_packages('src'),
-    package_dir={'': 'src'},
-    classifiers=[
-        "Development Status :: 4 - Beta",
+
+    packages=['saml2', 'xmldsig', 'xmlenc', 's2repoze',
+                's2repoze.plugins'],
+
+    package_dir = {'saml2':'src/saml2', 'xmldsig':'src/xmldsig',
+                    'xmlenc': 'src/xmlenc',
+                    's2repoze': 'src/s2repoze'},
+
+    classifiers = ["Development Status :: 4 - Beta",
         "License :: OSI Approved :: Apache Software License",
-        "Topic :: Software Development :: Libraries :: Python Modules",
-        ],
+        "Topic :: Software Development :: Libraries :: Python Modules"],
+
     scripts=["tools/parse_xsd2.py", "tools/make_metadata.py"],
+
     install_requires=[
         # core dependencies
         'decorator',
@@ -44,10 +63,14 @@ setup(
         # for the tests:
         'pyasn1',
         'python-memcached',
+        "pytest",
+        "pytest-coverage",
         # for s2repoze:
         'paste',
         'zope.interface',
         'repoze.who<2.0',
         ],
     zip_safe=False,
+
+    cmdclass = {'test': PyTest},
 )

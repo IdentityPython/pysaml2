@@ -54,7 +54,8 @@ class TestIdentifier():
         assert nameid.text.strip() != nameid2.text.strip()
         
     def teardown_class(self):
-        os.unlink("foobar.db")
+	if os.path.exists("foobar.db"):
+	    os.unlink("foobar.db")
         
 class TestServer1():
     def setup_class(self):

@@ -68,8 +68,14 @@ def test_add_duration_2():
     assert t.tm_sec == 0
     
 def test_str_to_time():
-    t = time.mktime(str_to_time("2000-01-12T00:00:00Z"))
-    assert t == 947631600.0
+    import calendar
+    t = calendar.timegm(str_to_time("2000-01-12T00:00:00Z"))
+    #TODO: Find all instances of time.mktime(.....)
+    #t = time.mktime(str_to_time("2000-01-12T00:00:00Z"))
+    #assert t == 947631600.0
+    #TODO: add something to show how this time was arrived at
+    # do this as an external method in the 
+    assert t == 947635200
     
 def test_instant():
     inst = str_to_time(instant())

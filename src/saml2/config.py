@@ -12,7 +12,7 @@ from saml2.metadata import ENDPOINTS, DEFAULT_BINDING
 
 class MissingValue(Exception):
     pass
-    
+
 def entity_id2url(meta, entity_id):
     """ Grab the first endpoint if there are more than one, 
         raises IndexError if the function returns an empty list.
@@ -82,6 +82,17 @@ class Config(dict):
             self["secret"] = "abc" # not a very good secret :-)
             
         return self
+
+    def log_level(self):
+        """Pass
+        """
+
+        # The assumption that I am currently working on is that the app should
+        # be capable of specifying a logger of any manner as long as it
+        # follows the logging idiom found in the python standard lib.
+
+        if "logging" in self.keys():
+            log_level = self["logging"]
     
     def xmlsec(self):
         return self["xmlsec_binary"]
@@ -121,6 +132,9 @@ class Config(dict):
 
     def attribute_converters(self):
         return self["attrconverters"]
+
+    def set_logger(self):
+        pass
         
     def debug(self):
         try:
