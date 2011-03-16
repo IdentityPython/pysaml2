@@ -109,8 +109,9 @@ class TestSecurity():
         self.sec = sigver.SecurityContext(xmlexec, PRIV_KEY, "pem",
                                             PUB_KEY, "pem", debug=1)
         
-        self.sign_digest = SIGNATURE_DIGEST[xmlsec_version(xmlexec)]
-        
+        #self.sign_digest = SIGNATURE_DIGEST[xmlsec_version(xmlexec)]
+        self.sign_digest = SIGNATURE_DIGEST["1.2.16"]
+
         self._assertion = factory( saml.Assertion,
             version="2.0",
             id="11111",
@@ -142,15 +143,18 @@ class TestSecurity():
         ass = self._assertion
         print ass
         sign_ass = self.sec.sign_assertion_using_xmlsec("%s" % ass, nodeid=ass.id)
-        print sign_ass
+        #print sign_ass
         sass = saml.assertion_from_string(sign_ass)
-        print sass
+        #print sass
         assert _eq(sass.keyswv(), ['attribute_statement', 'issue_instant', 
                                 'version', 'signature', 'id'])
         assert sass.version == "2.0"
         assert sass.id == "11111"
         assert time_util.str_to_time(sass.issue_instant)
         sig = sass.signature
+        print xmlsec_version(get_xmlsec_binary())
+        print sig.signature_value.text
+        print self.sign_digest[0][0]
         assert sig.signature_value.text == self.sign_digest[0][0]
         assert len(sig.signed_info.reference) == 1
         assert sig.signed_info.reference[0].digest_value

@@ -75,7 +75,8 @@ class TestClient:
         print "XMLSEC version: %s" % xmlsec_vers
         print reqstr
         print REQ1[xmlsec_vers] % req.issue_instant
-        assert reqstr == REQ1[xmlsec_vers] % req.issue_instant
+        assert reqstr == REQ1["1.2.16"] % req.issue_instant
+        #assert reqstr == REQ1[xmlsec_vers] % req.issue_instant
         assert req.destination == "https://idp.example.com/idp/"
         assert req.id == "id1"
         assert req.version == "2.0"

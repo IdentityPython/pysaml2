@@ -28,7 +28,7 @@ class PyTest(Command):
     def finalize_options(self):
         pass
     def run(self):
-        import sys,subprocess
+        import sys, subprocess
         errno = subprocess.call([sys.executable, 'runtests.py'])
         raise SystemExit(errno)
 
@@ -68,7 +68,7 @@ setup(
         # for s2repoze:
         'paste',
         'zope.interface',
-        'repoze.who<2.0',
+        'repoze.who == 1.0.18',
         ],
     zip_safe=False,
 
