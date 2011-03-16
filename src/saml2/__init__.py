@@ -46,7 +46,9 @@
 #             raise ImportError, "lxml or ElementTree are not installed, "\
 #                 +"see http://codespeak.net/lxml "\
 #                 +"or http://effbot.org/zone/element-index.htm"
-                
+
+import logging
+
 try:
     from xml.etree import cElementTree as ElementTree
 except ImportError:
@@ -54,6 +56,9 @@ except ImportError:
         import cElementTree as ElementTree
     except ImportError:
         from elementtree import ElementTree
+
+root_logger = logging.getLogger("pySAML2")
+root_logger.level = logging.NOTSET
 
 NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:assertion'
 #TEMPLATE = '{urn:oasis:names:tc:SAML:2.0:assertion}%s'

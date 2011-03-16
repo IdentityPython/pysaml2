@@ -1,5 +1,6 @@
 import os
-    
+
+#TODO: On my system this function seems to be returning an incorrect location
 def pytest_funcarg__xmlsec(request):
     for path in os.environ["PATH"].split(":"):
         fil = os.path.join(path, "xmlsec1")
