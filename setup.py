@@ -22,7 +22,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='pysaml2',
-    version='0.2.0',
+    version='0.3.0',
     description='Python implementation of SAML Version 2 to be used with WSGI applications',
 #    long_description = read("README"),
     author='Roland Hedberg',
