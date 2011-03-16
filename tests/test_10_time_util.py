@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
+import calendar
 import datetime
 import time
 from saml2.time_util import f_quotient, modulo, parse_duration, add_duration
 from saml2.time_util import str_to_time, instant, valid, in_a_while
+from saml2.time_util import before, after, not_before, not_on_or_after
 
 def test_f_quotient():
     assert f_quotient(-1,3) == -1
@@ -68,15 +70,12 @@ def test_add_duration_2():
     assert t.tm_sec == 0
     
 def test_str_to_time():
-    t = time.mktime(str_to_time("2000-01-12T00:00:00Z"))
-    assert t == 947631600.0
+    assert 947635200 == calendar.timegm(str_to_time("2000-01-12T00:00:00Z"))
     
 def test_instant():
     inst = str_to_time(instant())
-    print inst
     now = time.gmtime()
-    print now
-    
+
     assert now >= inst
     
 def test_valid():
@@ -85,7 +84,6 @@ def test_valid():
     assert valid("%d-01-12T00:00:00Z" % (current_year + 1)) == True
     this_instance = instant()
     time.sleep(1)
-    print this_instance
     assert valid(this_instance) == False # unless on a very fast machine :-)
     soon = in_a_while(seconds=10)
     assert valid(soon) == True
@@ -96,9 +94,25 @@ def test_timeout():
     assert valid(soon) == False
 
 
-# def test_validate_before(not_before, slack):
-#     not_before = in_a_while(minutes=5)
-#     now = time_util.daylight_corrected_now()
-#     nbefore = time.mktime(time_util.str_to_time(not_before))
-#     print nbefore, now
-#     assert nbefore > now
+def test_before():
+    current_year = datetime.datetime.today().year
+    assert before("%d-01-01T00:00:00Z" % (current_year - 1)) == True
+    assert before("%d-01-01T00:00:00Z" % (current_year + 1)) == False
+
+
+def test_after():
+    current_year = datetime.datetime.today().year
+    assert after("%d-01-01T00:00:00Z" % (current_year + 1)) == True
+    assert after("%d-01-01T00:00:00Z" % (current_year - 1)) == False
+
+
+def test_not_before():
+    current_year = datetime.datetime.today().year
+    assert not_before("%d-01-01T00:00:00Z" % (current_year + 1)) == True
+    assert not_before("%d-01-01T00:00:00Z" % (current_year - 1)) == False
+
+
+def test_not_on_or_after():
+    current_year = datetime.datetime.today().year
+    assert not_on_or_after("%d-01-01T00:00:00Z" % (current_year + 1)) == True
+    assert not_on_or_after("%d-01-01T00:00:00Z" % (current_year - 1)) == False

@@ -72,7 +72,7 @@ class TestServer1():
         assert isinstance(issuer, saml.Issuer)
         assert _eq(issuer.keyswv(), ["text","format"])
         assert issuer.format == saml.NAMEID_FORMAT_ENTITY
-        assert issuer.text == self.server.conf["entityid"]
+        assert issuer.text == self.server.conf.entityid
         
 
     def test_assertion(self):
@@ -405,9 +405,8 @@ class TestServer2():
             self.server = Server("tests/restrictive_idp.config")
                 
     def test_do_aa_reponse(self):
-        aa_policy = self.server.conf.aa_policy()
+        aa_policy = self.server.conf.policy
         print aa_policy.__dict__
-        print self.server.conf["service"]
         response = self.server.do_aa_response("aaa", "http://example.com/sp/", 
                         "urn:mace:example.com:sp:1", IDENTITY.copy())
 

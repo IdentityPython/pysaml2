@@ -1,38 +1,77 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# 
 
-import sys
+__author__ = 'rolandh'
 
+from saml2 import BINDING_SOAP, BINDING_HTTP_REDIRECT
 from saml2 import metadata
+from saml2.attribute_converter import ac_factory
 from saml2.assertion import Policy
-from saml2.attribute_converter import ac_factory, AttributeConverter
-from saml2 import BINDING_HTTP_REDIRECT, BINDING_SOAP
-from saml2.metadata import ENDPOINTS, DEFAULT_BINDING
 
-class MissingValue(Exception):
-    pass
-    
-def entity_id2url(meta, entity_id):
-    """ Grab the first endpoint if there are more than one, 
-        raises IndexError if the function returns an empty list.
-     
-    :param meta: MetaData instance
-    :param entity_id: The entity id of the entity for which an
-        endpoint is sought
-    :return: An endpoint (URL)
-    """
-    res = {}
-    for typ in ENDPOINTS["idp"].keys():
-        val = meta.idp_services(entity_id, typ)
-        if val:
-            res[typ] = val
-    return res
+SIMPLE_ARGS = ["entityid", "xmlsec_binary", "debug", "key_file", "cert_file",
+                "secret", "accepted_time_diff", "virtual_organization", "name",
+                "description", "endpoints", "required_attributes",
+                "optional_attributes", "idp", "sp", "aa", "subject_data",
+                "want_assertions_signed", "authn_requests_signed", "type",
+                "organization", "contact_person", "want_authn_requests_signed"]
 
+COMPLEX_ARGS = ["metadata", "attribute_converters", "policy"]
 
-class Config(dict):
-    def load_metadata(self, metadata_conf, xmlsec_binary, acs):
+class Config(object):
+    def __init__(self):
+        self._attr = {}
+
+    def __getattribute__(self, item):
+        if item in SIMPLE_ARGS or item in COMPLEX_ARGS:
+            try:
+                return self._attr[item]
+            except KeyError:
+                return None
+        else:
+            return object.__getattribute__(self, item)
+
+    def load(self, cnf):
+
+        for arg in SIMPLE_ARGS:
+            try:
+                self._attr[arg] = cnf[arg]
+            except KeyError:
+                pass
+
+        try:
+            self._attr["policy"] = Policy(cnf["policy"])
+        except KeyError:
+            pass
+
+        try:
+            acs = ac_factory(cnf["attribute_map_dir"])
+            try:
+                self._attr["attribute_converters"].extend(acs)
+            except KeyError:
+                self._attr["attribute_converters"] = acs
+        except KeyError:
+            pass
+
+        try:
+            self._attr["metadata"] = self.load_metadata(cnf["metadata"])
+        except KeyError:
+            pass
+
+        return self
+
+    def load_file(self, config_file):
+        return self.load(eval(open(config_file).read()))
+
+    def load_metadata(self, metadata_conf):
         """ Loads metadata into an internal structure """
+
+        xmlsec_binary = self.xmlsec_binary
+        acs = self.attribute_converters
+
+        if xmlsec_binary is None:
+            raise Exception("Missing xmlsec1 specification")
+        if acs is None:
+            raise Exception("Missing attribute converter specification")
+
         metad = metadata.MetaData(xmlsec_binary, acs)
         if "local" in metadata_conf:
             for mdfile in metadata_conf["local"]:
@@ -45,191 +84,108 @@ class Config(dict):
                     cert = None
                 metad.import_external_metadata(spec["url"], cert)
         return metad
-                
-    def load_file(self, config_file):
-        return self.load(eval(open(config_file).read()))
-        
-    def load(self, config):
-    
-        # check for those that have to be there
-        assert "xmlsec_binary" in config
-        assert "service" in config
-        assert "entityid" in config
-        
-        if "key_file" in config:
-            # If you have a key file you have to have a cert file
-            assert "cert_file" in config
-        else:
-            config["key_file"] = None
-            
-        if "attribute_map_dir" in config:
-            config["attrconverters"] = ac_factory(config["attribute_map_dir"])
-        else:
-            config["attrconverters"] = [AttributeConverter()]
 
-        if "metadata" in config:
-            config["metadata"] = self.load_metadata(config["metadata"],
-                                                    config["xmlsec_binary"],
-                                                    config["attrconverters"])
-            self.metadata = config["metadata"]
-            
-        self._load(config)
+    def endpoint(self, service, binding=None):
+        """ Goes through the list of endpoint specifications for the
+        given type of service and returnes the first endpoint that matches
+        the given binding. If no binding is given any endpoint for that
+        service will be returned.
 
-        for key, val in config.items():
-            self[key] = val
-        
-        if "secret" not in config:
-            self["secret"] = "abc" # not a very good secret :-)
-            
-        return self
-    
-    def xmlsec(self):
-        return self["xmlsec_binary"]
-        
-    def services(self):
-        return self["service"].keys()
-                
-    def endpoint(self, typ, service, binding=None):
-        """ Will return addresses to endpoints for specific services and 
-        bindings.
-        
-        :param typ: The type of server "idp"/"sp"/"aa"
-        :param service: The type of service "single_sign_on_service"/....
-        :param binding: The binding used for the service, if no binding is
-            specified the default binding for that service is searched for.
-        :return: Possible empty list of endpoints
+        :param service: The service the endpoint should support
+        :param binding: The expected binding
+        :return: At the most one endpoint that matches the given restrictions
         """
-        
+        res = []
+        for endpspec in self.endpoints[service]:
+            try:
+                endp, bind = endpspec
+                if binding is None or bind == binding:
+                    res.append(endp)
+            except ValueError:
+                res.append(endpspec)
         try:
-            res = []
-            for spec in self["service"][typ]["endpoints"][service]:
-                if isinstance(spec, basestring):
-                    if binding is None or binding == DEFAULT_BINDING[service]:
-                        res.append(spec)
-                elif isinstance(spec, tuple):
-                    if binding:
-                        if binding == spec[1]:
-                            res.append(spec[0])
-                    elif spec[1] == DEFAULT_BINDING[service]:
-                        res.append(spec[0])
-            return res
-        except KeyError:
-            return []
+            return res[0]
+        except IndexError:
+            return None
 
-    def vo_conf(self, name):
-        return self["virtual_organization"][name]
-
-    def attribute_converters(self):
-        return self["attrconverters"]
-        
-    def debug(self):
-        try:
-            return self["debug"]
-        except KeyError:
-            return 0
-
-class IDPConfig(Config):
-    def _load(self, config):
-        if "idp" in config["service"]:
-            self._check(config["service"]["idp"])
-        if "aa" in config["service"]:
-            self._check(config["service"]["aa"])
-
-    def _check(self, config):
-        assert "endpoints" in config
-        if "assertions" in config:
-            config["policy"] = Policy(config["assertions"])
-            del config["assertions"]
-        elif "policy" in config:
-            config["policy"] = Policy(config["policy"])
-
-    def idp_policy(self):
-        try:
-            return self["service"]["idp"]["policy"]
-        except KeyError:
-            return Policy()
-
-    def aa_policy(self):
-        try:
-            return self["service"]["aa"]["policy"]
-        except KeyError:
-            return Policy()
-            
-    def logout_service(self, entity_id, typ, binding):
-        return self.metadata.single_logout_services(entity_id, typ, binding)
-        
 class SPConfig(Config):
-    def _load(self, config):
-        assert "sp" in config["service"]
+    def __init__(self):
+        Config.__init__(self)
 
-        if "metadata" in config:
-            self._check(config["service"]["sp"], config["metadata"])
-        else:
-            self._check(config["service"]["sp"])
-        
-    def idps(self):
-        """ Returns a list of URLs of the IdP this SP can 
-        use according to the configuration"""
-        
-        try:
-            return [u for u in self["service"]["sp"]["idp"].values()]
-        except KeyError:
-            return []
+    def single_logout_services(self, entity_id, binding=BINDING_SOAP):
+        """ returns a list of endpoints to use for sending logout requests to
 
-    def _check(self, config, metadat=None):
-        """ Verify that the SP configuration part is correct.
-        
+        :param entity_id: The entity ID of the service
+        :param binding: The preferred binding (which for logout by default is
+            the SOAP binding)
+        :return: list of endpoints
         """
-        if metadat:
-            if "idp" not in config or len(config["idp"]) == 0:
-                eids = [e for e, d in metadat.entity.items() if "idp_sso" in d]
-                config["idp"] = {}
-                for eid in eids:
-                    try:
-                        config["idp"][eid] = entity_id2url(metadat, eid)
-                    except (IndexError, KeyError):
-                        try:
-                            if not config["idp"][eid]:
-                                raise MissingValue
-                        except KeyError:
-                            print >> sys.stderr, "Can't talk with %s" % eid 
-            else:
-                for eid, url in config["idp"].items():
-                    if not url:
-                        config["idp"][eid] = entity_id2url(metadat, eid)
+        return self.metadata.single_logout_services(entity_id, "idp",
+                                                     binding=binding)
+
+    def single_sign_on_services(self, entity_id,
+                                binding=BINDING_HTTP_REDIRECT):
+        """ returns a list of endpoints to use for sending login requests to
+
+        :param entity_id: The entity ID of the service
+        :param binding: The preferred binding 
+        :return: list of endpoints
+        """
+        return self.metadata.single_sign_on_services(entity_id,
+                                                     binding=binding)
+
+    def attribute_services(self, entity_id, binding=BINDING_SOAP):
+        """ returns a list of endpoints to use for attribute requests to
+
+        :param entity_id: The entity ID of the service
+        :param binding: The preferred binding (which for logout by default is
+            the SOAP binding)
+        :return: list of endpoints
+        """
+        typ = "attribute_service"
+        if self.aa is None or entity_id in self.aa:
+            slo = self.metadata.attribute_services(entity_id, typ,
+                                                    binding=binding)
+            if slo:
+                return [s[binding] for s in slo]
+            
+        return []
+
+    def idps(self, langpref=["en"]):
+        """ Returns a dictionary of usefull IdPs, the keys being the
+        entity ID of the service and the names of the services as values
+
+        :param langpref: The preferred languages of the name, the first match
+            is used.
+        :return: Dictionary
+        """
+        if self.idp:
+            return dict([(e, nd[0]) for (e,
+                nd) in self.metadata.idps(langpref).items() if e in self.idp])
         else:
-            assert "idp" in config
-            assert len(config["idp"]) > 0
+            return self.metadata.idps()
+
+class IdPConfig(Config):
+    def __init__(self):
+        Config.__init__(self)
         
-        assert "endpoints" in config
-        assert "name" in config
+    def single_logout_services(self, entity_id, binding=BINDING_SOAP):
+        """ returns a list of endpoints to use for sending logout requests to
 
-    def is_wayf_needed(self):
-        if len(self["service"]["sp"]["idp"]) > 1:
-            return True
-        else: # not really true, what if it's zero (0)
-            return False
-
-    def get_available_idps(self):
-        lista = []
-        for eid, _ in self["service"]["sp"]["idp"].items():
-            namn = self.metadata.name(eid)
-            lista.append((eid, namn))
-        return lista
+        :param entity_id: The entity ID of the service
+        :param binding: The preferred binding (which for logout by default is
+            the SOAP binding)
+        :return: list of endpoints
+        """
     
-    def name(self):
-        return self["service"]["sp"]["name"]
-        
-    def logout_service(self, entity_id, binding=BINDING_SOAP):
-        try:
-            return self["service"]["sp"]["idp"][entity_id][
-                            "single_logout_service"][binding]
-        except KeyError:
-            return None
+        return self.metadata.single_logout_services(entity_id, "sp",
+                                                     binding=binding)
 
-    def single_sign_on_service(self, entity_id, binding=BINDING_HTTP_REDIRECT):
-        try:
-            return self["service"]["sp"]["idp"][entity_id][
-                                        "single_sign_on_service"][binding]
-        except KeyError:
-            return None
+    def assertion_consumer_services(self, entity_id, binding):
+        typ = "assertion_consumer_service"
+        if self.sp is None or entity_id in self.sp:
+            acs = self.metadata.sp_services(entity_id, typ, binding=binding)
+            if acs:
+                return [s[binding] for s in acs]
+
+        return []

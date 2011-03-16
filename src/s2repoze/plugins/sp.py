@@ -82,11 +82,10 @@ class SAML2Plugin(FormPluginBase):
         self.saml_client = saml_client
         
         self.conf = config
-        self.srv = self.conf["service"]["sp"]
         self.log = None
                     
         try:
-            self.metadata = self.conf["metadata"]
+            self.metadata = self.conf.metadata
         except KeyError:
             self.metadata = None
         if sid_store:
@@ -103,7 +102,8 @@ class SAML2Plugin(FormPluginBase):
         
         idps = self.conf.idps()
         
-        #self.log and self.log.info("IdP URL: %s" % idps)
+        #if self.log:
+        #   self.log.info("IdP URL: %s" % idps)
 
         if len( idps ) == 1:
             idp_url = idps[0]["single_sign_on_service"][BINDING_HTTP_REDIRECT]
@@ -122,7 +122,7 @@ class SAML2Plugin(FormPluginBase):
                 else:
                     self.log.info("Choosen IdP: '%s'" % wayf_selected)
                     try:
-                        idp_url = self.srv["idp"][wayf_selected][
+                        idp_url = self.idp[wayf_selected][
                                                     "single_sign_on_service"][
                                                         BINDING_HTTP_REDIRECT]
                     except KeyError:
@@ -149,8 +149,8 @@ class SAML2Plugin(FormPluginBase):
         # Which page was accessed to get here
         came_from = construct_came_from(environ)
         environ["myapp.came_from"] = came_from
-        if self.debug:
-            self.log and self.log.info("[sp.challenge] RelayState >> %s" % came_from)
+        if self.debug and self.log:
+            self.log.info("[sp.challenge] RelayState >> %s" % came_from)
         
         # Am I part of a virtual organization ?
         try:
@@ -158,7 +158,8 @@ class SAML2Plugin(FormPluginBase):
         except KeyError:
             vorg = self.saml_client.vorg
             
-        self.log and self.log.info("[sp.challenge] VO: %s" % vorg)
+        if self.log:
+            self.log.info("[sp.challenge] VO: %s" % vorg)
 
         # If more than one idp and if none is selected, I have to do wayf
         (done, response) = self._pick_idp(environ, came_from)
@@ -175,8 +176,8 @@ class SAML2Plugin(FormPluginBase):
             # remember the request
             self.outstanding_queries[sid_] = came_from
                 
-            if self.debug:
-                self.log and self.log.info('sc returned: %s' % (result,))
+            if self.debug and self.log:
+                self.log.info('sc returned: %s' % (result,))
             if isinstance(result, tuple):
                 return HTTPTemporaryRedirect(headers=[result])
             else :
@@ -217,8 +218,8 @@ class SAML2Plugin(FormPluginBase):
                 self.log.info("Exception (II): %s" % (excp,))
                 raise
 
-        if self.debug:
-            self.log and self.log.info('identify post: %s' % (post,))
+        if self.debug and self.log:
+            self.log.info('identify post: %s' % (post,))
             
         return post
     
@@ -235,29 +236,31 @@ class SAML2Plugin(FormPluginBase):
         return identity
         
     def _eval_authn_response(self, environ, post):
-        self.log and self.log.info("Got AuthN response, checking..")
+        if self.log:
+            self.log.info("Got AuthN response, checking..")
 
         print "Outstanding: %s" % (self.outstanding_queries,)
         try:
             # Evaluate the response, returns a AuthnResponse instance
             try:
                 authresp = self.saml_client.response(post, 
-                                                    self.conf["entityid"],
+                                                    self.conf.entityid,
                                                     self.outstanding_queries,
                                                     self.log)
             except Exception, excp:
-                self.log and self.log.error("Exception: %s" % (excp,))
+                if self.log:
+                    self.log.error("Exception: %s" % (excp,))
                 raise
                 
             session_info = authresp.session_info()
         except TypeError, excp:
-            self.log and self.log.error("Exception: %s" % (excp,))
+            if self.log:
+                self.log.error("Exception: %s" % (excp,))
             return None
                                         
         if session_info["came_from"]:
-            if self.debug:
-                self.log and self.log.info(
-                            "came_from << %s" % session_info["came_from"])
+            if self.debug and self.log:
+                self.log.info("came_from << %s" % session_info["came_from"])
             try:
                 path, query = session_info["came_from"].split('?')
                 environ["PATH_INFO"] = path
@@ -265,7 +268,8 @@ class SAML2Plugin(FormPluginBase):
             except ValueError:
                 environ["PATH_INFO"] = session_info["came_from"]
 
-        self.log and self.log.info("Session_info: %s" % session_info)
+        if self.log:
+            self.log.info("Session_info: %s" % session_info)
         return session_info
         
     #### IIdentifier ####
@@ -274,8 +278,8 @@ class SAML2Plugin(FormPluginBase):
         self.saml_client.log = self.log
         
         if "CONTENT_LENGTH" not in environ or not environ["CONTENT_LENGTH"]:
-            if self.debug:
-                self.log and self.log.info('[identify] get or empty post')
+            if self.debug and self.log:
+                self.log.info('[identify] get or empty post')
             return {}
         
         # if self.log:
@@ -285,18 +289,19 @@ class SAML2Plugin(FormPluginBase):
         uri = environ.get('REQUEST_URI', construct_url(environ))
         
         if self.debug:
-            #self.log and self.log.info("environ.keys(): %s" % environ.keys())
-            #self.log and self.log.info("Environment: %s" % environ)
-            self.log and self.log.info('[sp.identify] uri: %s' % (uri,))
+            #if self.log: self.log.info("environ.keys(): %s" % environ.keys())
+            #if self.log: self.log.info("Environment: %s" % environ)
+            if self.log:
+                self.log.info('[sp.identify] uri: %s' % (uri,))
 
         query = parse_dict_querystring(environ)
-        if self.debug:
-            self.log and self.log.info('[sp.identify] query: %s' % (query,))
+        if self.debug and self.log:
+            self.log.info('[sp.identify] query: %s' % (query,))
         
         post = self._get_post(environ)
 
-        if self.debug:
-            self.log and self.log.info('[sp.identify] post keys: %s' % (post.keys(),))
+        if self.debug and self.log:
+            self.log.info('[sp.identify] post keys: %s' % (post.keys(),))
             
         # Not for me, put the post back where next in line can find it
         try:
@@ -357,8 +362,8 @@ class SAML2Plugin(FormPluginBase):
         try:
             (ava, _) = self.saml_client.users.get_identity(subject_id)
             #now = time.gmtime()        
-            if self.debug:
-                self.log and self.log.info("[add_metadata] adds: %s" % ava)
+            if self.debug and self.log:
+                self.log.info("[add_metadata] adds: %s" % ava)
             identity["user"].update(ava)
         except KeyError:
             pass
@@ -376,12 +381,11 @@ class SAML2Plugin(FormPluginBase):
                         # expanded
                         identity["pysaml2_vo_expanded"] = 1
                 except KeyError:
-                    self.log and self.log.error(
-                                        "Failed to do attribute aggregation, "
+                    if self.log:
+                        self.log.error("Failed to do attribute aggregation, "
                                         "missing common attribute")
-        if self.debug:
-            self.log and self.log.info("[add_metadata] returns: %s" % (
-                                                            dict(identity),))
+        if self.debug and self.log:
+            self.log.info("[add_metadata] returns: %s" % (dict(identity),))
         
         
 # @return

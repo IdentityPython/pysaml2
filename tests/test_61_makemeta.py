@@ -1,13 +1,15 @@
 from saml2 import metadata
-from saml2 import md, make_instance
+from saml2 import md
 from saml2 import BINDING_HTTP_POST
-from saml2.attribute_converter import from_local_name, ac_factory
+from saml2.attribute_converter import ac_factory
 from saml2.saml import NAME_FORMAT_URI
+from saml2.config import SPConfig, IdPConfig
 
 def _eq(l1,l2):
     return set(l1) == set(l2)
 
 SP = {
+    "type": "sp",
     "name" : "Rolands SP",
     "description": "One of the best SPs in business",
     "endpoints": {
@@ -17,6 +19,7 @@ SP = {
     },
     "required_attributes": ["sn", "givenName", "mail"],
     "optional_attributes": ["title"],
+    "attribute_map_dir" : "attributemaps",
     "idp": {
         "" : "https://example.com/saml2/idp/SSOService.php",
     },
@@ -41,11 +44,11 @@ IDP = {
 }
 
 def test_org_1():
-    desc = { "organization": {
+    desc = {
         "name": [("Example Company","en"), ("Exempel AB","se"), "Example",],
         "display_name": ["Example AS", ("Voorbeeld AZ", "")],
         "url": [("http://example.com","en")],
-    }}
+    }
     org = metadata.do_organization_info(desc)
     print org
     assert isinstance(org, md.Organization)
@@ -57,11 +60,11 @@ def test_org_1():
     assert len(org.organization_url) == 1
 
 def test_org_2():
-    desc = { "organization": {
+    desc = {
         "name": [("Example Company","en"), ("Exempel AB","se"), "Example",],
         "display_name": "Example AS",
         "url": ("http://example.com","en"),
-    }}
+    }
     org = metadata.do_organization_info(desc)
     print org
     assert _eq(org.keyswv(), ['organization_name',
@@ -75,19 +78,19 @@ def test_org_2():
     assert org.organization_url[0].text == 'http://example.com'
 
 def test_org_3():
-    desc = {"organization": { "display_name": ["Rolands SAML"] } }
+    desc = { "display_name": ["Rolands SAML"] }
     org = metadata.do_organization_info(desc)
     assert _eq(org.keyswv(), ['organization_display_name'])
     assert len(org.organization_display_name) == 1
                                                 
 def test_contact_0():
-    conf = {"contact_person": [{
+    conf = [{
         "given_name":"Roland",
         "sur_name": "Hedberg",
         "telephone_number": "+46 70 100 00 00",
         "email_address": ["foo@eample.com", "foo@example.org"],
         "contact_type": "technical"
-        }]}
+        }]
     contact_person = metadata.do_contact_person_info(conf)
     assert _eq(contact_person[0].keyswv(), ['given_name', 'sur_name', 
                                             'contact_type', 'telephone_number',
@@ -146,8 +149,8 @@ def test_optional_attributes():
     assert ras[0].is_required == "false"
     
 def test_do_sp_sso_descriptor():
-    attrconverters = ac_factory("../tests/attributemaps")
-    spsso = metadata.do_sp_sso_descriptor(SP, attrconverters)
+    conf = SPConfig().load(SP)
+    spsso = metadata.do_sp_sso_descriptor(conf)
     
     assert isinstance(spsso, md.SPSSODescriptor)
     assert _eq(spsso.keyswv(), ['authn_requests_signed', 
@@ -173,7 +176,9 @@ def test_do_sp_sso_descriptor():
     assert acs.requested_attribute[0].is_required == "true"
     
 def test_entity_description():
-    confd = eval(open("../tests/server.config").read())
+    #confd = eval(open("../tests/server.config").read())
+    confd = SPConfig().load_file("server.config")
+    print confd.attribute_converters
     entd = metadata.entity_descriptor(confd, 1)
     assert entd != None
     print entd.keyswv()
@@ -183,7 +188,8 @@ def test_entity_description():
     assert entd.entity_id == "urn:mace:example.com:saml:roland:sp"
 
 def test_do_idp_sso_descriptor():
-    idpsso = metadata.do_idp_sso_descriptor(IDP)
+    conf = IdPConfig().load(IDP)
+    idpsso = metadata.do_idp_sso_descriptor(conf)
 
     assert isinstance(idpsso, md.IDPSSODescriptor)
     assert _eq(idpsso.keyswv(), ['protocol_support_enumeration', 

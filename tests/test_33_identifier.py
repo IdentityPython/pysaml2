@@ -2,7 +2,7 @@
 
 from saml2 import samlp
 from saml2.saml import NAMEID_FORMAT_PERSISTENT, NAMEID_FORMAT_TRANSIENT
-from saml2.config import IDPConfig
+from saml2.config import IdPConfig
 from saml2.server import Identifier
 from saml2.assertion import Policy
 
@@ -10,23 +10,19 @@ from saml2.assertion import Policy
 def _eq(l1,l2):
     return set(l1) == set(l2)
 
-CONFIG = IDPConfig().load({
+CONFIG = IdPConfig().load({
     "entityid" :  "urn:mace:example.com:idp:2",
-    "service": {
-        "idp": {
-            "endpoints" : {
-                "single_sign_on_service" : ["http://idp.example.org/"],
-                },
-            "name" : "test",
-            "assertions": {
-                "default": {
-                    "lifetime": {"minutes":15},
-                    "attribute_restrictions": None, # means all I have
-                    "name_form": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
-                    "nameid_format": NAMEID_FORMAT_PERSISTENT
-                },
-            }
-        }
+    "endpoints" : {
+        "single_sign_on_service" : ["http://idp.example.org/"],
+        },
+    "name" : "test",
+    "policy": {
+        "default": {
+            "lifetime": {"minutes":15},
+            "attribute_restrictions": None, # means all I have
+            "name_form": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+            "nameid_format": NAMEID_FORMAT_PERSISTENT
+        },
     },
     "xmlsec_binary" : "/usr/local/bin/xmlsec1",
     "virtual_organization" : {
@@ -54,7 +50,7 @@ NAME_ID_POLICY_2 = """<?xml version="1.0" encoding="utf-8"?>
 
 class TestIdentifier():
     def setup_class(self):
-        self.id = Identifier("subject.db", CONFIG.vo_conf)
+        self.id = Identifier("subject.db", CONFIG.virtual_organization)
         
     def test_persistent_1(self):
         policy = Policy({
@@ -118,7 +114,8 @@ class TestIdentifier():
         assert _eq(nameid.keyswv(), ['text', 'sp_name_qualifier', 'format'])
         assert nameid.sp_name_qualifier == 'http://vo.example.org/biomed'
         assert nameid.format == \
-                CONFIG.vo_conf('http://vo.example.org/biomed')["nameid_format"]
+                CONFIG.virtual_organization['http://vo.example.org/biomed'][
+                                                                "nameid_format"]
         assert nameid.text == "foobar01"
 
     def test_vo_2(self):

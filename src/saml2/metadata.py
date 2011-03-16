@@ -249,7 +249,7 @@ class MetaData(object):
     def clear_from_source(self, source):
         """ Remove all the metadata references I have gotten from this source
         
-        :param source: The matadata source
+        :param source: The metadata source
         """
         
         for eid in self._import[source]:
@@ -376,38 +376,46 @@ class MetaData(object):
                 self.log.info("Response status: %s" % response.status)
         return False
 
+    @keep_updated
     def idp_services(self, entity_id, typ, binding=None):
         idps = self.entity[entity_id]["idp_sso"]
         
         loc = {}
-        #print idps
         for idp in idps: # None or one
-            #print "==",idp.keyswv()
             for sso in getattr(idp, typ, []):
-                #print "SSO",sso
                 if not binding or binding == sso.binding:
                     loc[sso.binding] = sso.location
         return loc
         
-    
+    @keep_updated
+    def sp_services(self, entity_id, typ, binding=None):
+        sps = self.entity[entity_id]["sp_sso"]
+
+        loc = {}
+        for sep in sps: # None or one
+            for sso in getattr(sep, typ, []):
+                if not binding or binding == sso.binding:
+                    loc[sso.binding] = sso.location
+        return loc
+
     @keep_updated
     def single_sign_on_services(self, entity_id,
                                 binding = BINDING_HTTP_REDIRECT):
-        """ Get me all single-sign-on services that supports the specified
-        binding version.
+        """ Get me all single-sign-on services with a specified
+        entity ID that supports the specified version of binding.
         
         :param entity_id: The EntityId
         :param binding: A binding identifier
         :return: list of single-sign-on service location run by the entity
             with the specified EntityId.
         """
-        
-        # May raise KeyError
-        #print >> sys.stderr, "%s" % self.entity[entity_id]
-        
-        idps = self.entity[entity_id]["idp_sso"]
-        
+
         loc = []
+        try:
+            idps = self.entity[entity_id]["idp_sso"]
+        except KeyError:
+            return loc
+        
         #print idps
         for idp in idps:
             #print "==",idp.keyswv()
@@ -563,10 +571,10 @@ class MetaData(object):
         
         return required, optional
     
-    def _orgname(self, org, lang="en"):
+    def _orgname(self, org, langs=["en"]):
         if not org:
             return ""
-        for spec in [lang, None]:
+        for spec in langs:
             for name in org.organization_display_name:
                 if name.lang == spec:
                     return name.text.strip()
@@ -590,14 +598,14 @@ class MetaData(object):
     # def _valid(self, entity_id):
     #     return True
     
-    def idps(self):
+    def idps(self, langs=["en"]):
         idps = {}
         for entity_id, edict in self.entity.items():
             if "idp_sso" in edict:
-#idp_aa_check                self._valid(entity_id)
+                #idp_aa_check   self._valid(entity_id)
                 name = None
                 if "organization" in edict:
-                    name = self._orgname(edict["organization"],"en")
+                    name = self._orgname(edict["organization"], langs)
 
                 if not name:
                     name = self._location(edict["idp_sso"])[0]
@@ -625,7 +633,7 @@ def _localized_name(val, klass):
     except ValueError:
         return klass(text=val, lang="en")
 
-def do_organization_info(conf):
+def do_organization_info(ava):
     """ decription of an organization in the configuration is
     a dictionary of keys and values, where the values might be tuples:
 
@@ -635,62 +643,63 @@ def do_organization_info(conf):
             "url": "http://www.example.org"
         }
     """
-    try:
-        corg = conf["organization"]
-        org = md.Organization()
-        for dkey, (ckey, klass) in ORG_ATTR_TRANSL.items():
-            if ckey not in corg:
-                continue
-            if isinstance(corg[ckey], basestring):
-                setattr(org, dkey, [_localized_name(corg[ckey], klass)])
-            elif isinstance(corg[ckey], list):
-                setattr(org, dkey, 
-                            [_localized_name(n, klass) for n in corg[ckey]])
-            else:
-                setattr(org, dkey, [_localized_name(corg[ckey], klass)])
-        return org
-    except KeyError:
-        return None
 
-def do_contact_person_info(conf):
+    if ava is None:
+        return None
+    
+    org = md.Organization()
+    for dkey, (ckey, klass) in ORG_ATTR_TRANSL.items():
+        if ckey not in ava:
+            continue
+        if isinstance(ava[ckey], basestring):
+            setattr(org, dkey, [_localized_name(ava[ckey], klass)])
+        elif isinstance(ava[ckey], list):
+            setattr(org, dkey,
+                        [_localized_name(n, klass) for n in ava[ckey]])
+        else:
+            setattr(org, dkey, [_localized_name(ava[ckey], klass)])
+    return org
+
+def do_contact_person_info(lava):
     """ Creates a ContactPerson instance from configuration information"""
     
-    contact_person = md.ContactPerson
     cps = []
-    try:
-        for corg in conf["contact_person"]:
-            cper = md.ContactPerson()
-            for (key, classpec) in contact_person.c_children.values():
-                try:
-                    value = corg[key]
-                    data = []
-                    if isinstance(classpec, list):
-                        # What if value is not a list ?
-                        if isinstance(value, basestring):
-                            data = [classpec[0](text=value)]
-                        else:
-                            for val in value:
-                                data.append(classpec[0](text=val))
+    if lava is None:
+        return cps
+    
+    contact_person = md.ContactPerson
+    for ava in lava:
+        cper = md.ContactPerson()
+        for (key, classpec) in contact_person.c_children.values():
+            try:
+                value = ava[key]
+                data = []
+                if isinstance(classpec, list):
+                    # What if value is not a list ?
+                    if isinstance(value, basestring):
+                        data = [classpec[0](text=value)]
                     else:
-                        data = classpec(text=value)
-                    setattr(cper, key, data)
-                except KeyError:
-                    pass
-            for (prop, classpec, _) in contact_person.c_attributes.values():
-                try:
-                    # should do a check for valid value
-                    setattr(cper, prop, corg[prop])
-                except KeyError:
-                    pass
+                        for val in value:
+                            data.append(classpec[0](text=val))
+                else:
+                    data = classpec(text=value)
+                setattr(cper, key, data)
+            except KeyError:
+                pass
+        for (prop, classpec, _) in contact_person.c_attributes.values():
+            try:
+                # should do a check for valid value
+                setattr(cper, prop, ava[prop])
+            except KeyError:
+                pass
 
-            # ContactType must have a value
-            typ = getattr(cper, "contact_type")
-            if not typ:
-                setattr(cper, "contact_type", "technical")
-                
-            cps.append(cper)
-    except KeyError:
-        pass
+        # ContactType must have a value
+        typ = getattr(cper, "contact_type")
+        if not typ:
+            setattr(cper, "contact_type", "technical")
+
+        cps.append(cper)
+
     return cps
 
 def do_key_descriptor(cert):
@@ -771,13 +780,19 @@ def do_endpoints(conf, endpoints):
             pass
     return service
 
-def do_sp_sso_descriptor(servprov, acs, cert=None):
+DEFAULT = {
+    "want_assertions_signed": "true",
+    "authn_requests_signed": "false",
+    "want_authn_requests_signed": "false",
+}
+
+def do_sp_sso_descriptor(conf, cert=None):
     spsso = md.SPSSODescriptor()
     spsso.protocol_support_enumeration = samlp.NAMESPACE
 
-    if servprov["endpoints"]:
-        for (endpoint, instlist) in do_endpoints(servprov["endpoints"],
-                                                ENDPOINTS["sp"]).items():
+    if conf.endpoints:
+        for (endpoint, instlist) in do_endpoints(conf.endpoints,
+                                                    ENDPOINTS["sp"]).items():
             setattr(spsso, endpoint, instlist)
 
     if cert:
@@ -785,34 +800,39 @@ def do_sp_sso_descriptor(servprov, acs, cert=None):
 
     for key in ["want_assertions_signed", "authn_requests_signed"]:
         try:
-            setattr(spsso, key, "%s" % servprov[key])
+            val = getattr(conf, key)
+            if val is None:
+                setattr(spsso, key, DEFAULT[key]) #default ?!
+            else:
+                strval = "{0:>s}".format(val)
+                setattr(spsso, key, strval.lower())
         except KeyError:
             setattr(spsso, key, DEFAULTS[key])
 
     requested_attributes = []
-    if "required_attributes" in servprov:
+    if conf.required_attributes:
         requested_attributes.extend(do_requested_attribute(
-                                            servprov["required_attributes"],
-                                            acs, 
+                                            conf.required_attributes,
+                                            conf.attribute_converters,
                                             is_required="true"))
 
-    if "optional_attributes" in servprov:
+    if conf.optional_attributes:
         requested_attributes.extend(do_requested_attribute(
-                                            servprov["optional_attributes"], 
-                                            acs, 
+                                            conf.optional_attributes,
+                                            conf.attribute_converters,
                                             is_required="false"))
 
     if requested_attributes:
         spsso.attribute_consuming_service = [md.AttributeConsumingService(
             requested_attribute=requested_attributes,
-            service_name= [md.ServiceName(lang="en",text=servprov["name"])],
+            service_name= [md.ServiceName(lang="en",text=conf.name)],
             index="1",
         )]
         try:
             try:
-                (text, lang) = servprov["description"]
+                (text, lang) = conf.description
             except ValueError:
-                text = servprov["description"]
+                text = conf.description
                 lang = "en"
             spsso.attribute_consuming_service[0].service_description = [
                                 md.ServiceDescription(
@@ -835,13 +855,13 @@ def do_sp_sso_descriptor(servprov, acs, cert=None):
 
     return spsso
 
-def do_idp_sso_descriptor(idp, cert=None):
+def do_idp_sso_descriptor(conf, cert=None):
     idpsso = md.IDPSSODescriptor()
     idpsso.protocol_support_enumeration = samlp.NAMESPACE
 
-    if idp["endpoints"]:
-        for (endpoint, instlist) in do_endpoints(idp["endpoints"],
-                                                ENDPOINTS["idp"]).items():
+    if conf.endpoints:
+        for (endpoint, instlist) in do_endpoints(conf.endpoints,
+                                                    ENDPOINTS["idp"]).items():
             setattr(idpsso, endpoint, instlist)
 
     if cert:
@@ -849,19 +869,23 @@ def do_idp_sso_descriptor(idp, cert=None):
 
     for key in ["want_authn_requests_signed"]:
         try:
-            setattr(idpsso, key, "%s" % idp[key])
+            val = getattr(conf,key)
+            if val is None:
+                setattr(idpsso, key, DEFAULT["want_authn_requests_signed"])
+            else:
+                setattr(idpsso, key, "%s" % val)
         except KeyError:
             setattr(idpsso, key, DEFAULTS[key])
 
     return idpsso
 
-def do_aa_descriptor(ata, cert):
+def do_aa_descriptor(conf, cert):
     aad = md.AttributeAuthorityDescriptor()
     aad.protocol_support_enumeration = samlp.NAMESPACE
 
-    if ata["endpoints"]:
-        for (endpoint, instlist) in do_endpoints(ata["endpoints"],
-                                                ENDPOINTS["aa"]).items():
+    if conf.endpoints:
+        for (endpoint, instlist) in do_endpoints(conf.endpoints,
+                                                    ENDPOINTS["aa"]).items():
             setattr(aad, endpoint, instlist)
 
     if cert:
@@ -870,12 +894,12 @@ def do_aa_descriptor(ata, cert):
     return aad
 
 def entity_descriptor(confd, valid_for):
-    mycert = "".join(open(confd["cert_file"]).readlines()[1:-1])
+    mycert = "".join(open(confd.cert_file).readlines()[1:-1])
 
-    if "attribute_map_dir" in confd:
-        attrconverters = ac_factory(confd["attribute_map_dir"])
-    else:
-        attrconverters = [AttributeConverter()]
+#    if "attribute_map_dir" in confd:
+#        attrconverters = ac_factory(confd.attribute_map_dir)
+#    else:
+#        attrconverters = [AttributeConverter()]
 
     #if "attribute_maps" in confd:
     #    (forward,backward) = parse_attribute_map(confd["attribute_maps"])
@@ -883,25 +907,26 @@ def entity_descriptor(confd, valid_for):
     #    backward = {}
 
     entd = md.EntityDescriptor()
-    entd.entity_id = confd["entityid"]
+    entd.entity_id = confd.entityid
 
     if valid_for:
         entd.valid_until = in_a_while(hours=valid_for)
 
-    entd.organization = do_organization_info(confd)
-    entd.contact_person = do_contact_person_info(confd)
+    if confd.organization is not None:
+        entd.organization = do_organization_info(confd.organization)
+    if confd.contact_person is not None:
+        entd.contact_person = do_contact_person_info(confd.contact_person)
 
-    if "sp" in confd["service"]:
-        # The SP
-        entd.spsso_descriptor = do_sp_sso_descriptor(confd["service"]["sp"],
-                                    attrconverters, mycert)
-    if "idp" in confd["service"]:
-        entd.idpsso_descriptor = do_idp_sso_descriptor(
-                                            confd["service"]["idp"], mycert)
-    if "aa" in confd["service"]:
-        entd.attribute_authority_descriptor = do_aa_descriptor(
-                                            confd["service"]["aa"], mycert)
-
+    if confd.type == "sp":
+        entd.spsso_descriptor = do_sp_sso_descriptor(confd, mycert)
+    elif confd.type == "idp":
+        entd.idpsso_descriptor = do_idp_sso_descriptor(confd, mycert)
+    elif confd.type == "aa":
+        entd.attribute_authority_descriptor = do_aa_descriptor(confd, mycert)
+    else:
+        raise Exception(
+            'No service type ("sp","idp","aa") provided in the configuration')
+    
     return entd
 
 def entities_descriptor(eds, valid_for, name, ident, sign, secc):

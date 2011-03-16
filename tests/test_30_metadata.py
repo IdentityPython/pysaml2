@@ -85,7 +85,7 @@ def test_incommon_1():
         (id,ent["idp_sso"]) for id,ent in md.entity.items() if "idp_sso" in ent])
     print idps.keys()
     assert len(idps) == 53 # !!!!???? < 10%
-    raises(KeyError, "md.single_sign_on_services('urn:mace:incommon:uiuc.edu')")
+    assert md.single_sign_on_services('urn:mace:incommon:uiuc.edu') == []
     idp_sso = md.single_sign_on_services('urn:mace:incommon:alaska.edu')
     assert len(idp_sso) == 1
     print idp_sso
@@ -168,17 +168,17 @@ def test_sp_metadata():
 KALMAR2_URL = "https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2"
 KALMAR2_CERT = "kalmar2.pem"
 
-def test_import_external_metadata(xmlsec):
-    md = metadata.MetaData(xmlsec,attrconv=ATTRCONV)
-    md.import_external_metadata(KALMAR2_URL, KALMAR2_CERT)
-    
-    print len(md.entity)
-    assert len(md.entity) > 20
-    idps = dict([
-        (id,ent["idp_sso"]) for id,ent in md.entity.items() if "idp_sso" in ent])
-    print idps.keys()
-    assert len(idps) > 1
-    assert "https://idp.umu.se/saml2/idp/metadata.php" in idps
+#def test_import_external_metadata(xmlsec):
+#    md = metadata.MetaData(xmlsec,attrconv=ATTRCONV)
+#    md.import_external_metadata(KALMAR2_URL, KALMAR2_CERT)
+#
+#    print len(md.entity)
+#    assert len(md.entity) > 20
+#    idps = dict([
+#        (id,ent["idp_sso"]) for id,ent in md.entity.items() if "idp_sso" in ent])
+#    print idps.keys()
+#    assert len(idps) > 1
+#    assert "https://idp.umu.se/saml2/idp/metadata.php" in idps
     
 # ------------ Constructing metaval ----------------------------------------
 

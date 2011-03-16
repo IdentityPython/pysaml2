@@ -71,7 +71,7 @@ class TestClient:
             "https://idp.example.com/idp/",
             nameid_format=saml.NAMEID_FORMAT_PERSISTENT)
         reqstr = "%s" % req.to_string()
-        xmlsec_vers = xmlsec_version(self.client.config["xmlsec_binary"])
+        xmlsec_vers = xmlsec_version(self.client.config.xmlsec_binary)
         print "XMLSEC version: %s" % xmlsec_vers
         print reqstr
         print REQ1[xmlsec_vers] % req.issue_instant
@@ -191,7 +191,7 @@ class TestClient:
         assert nid_policy.format == saml.NAMEID_FORMAT_TRANSIENT
 
     def test_create_auth_request_vo(self):
-        assert self.client.config["virtual_organization"].keys() == [
+        assert self.client.config.virtual_organization.keys() == [
                                     "urn:mace:example.com:it:tek"]
                                     
         ar_str = self.client.authn_request("666",
@@ -237,8 +237,8 @@ class TestClient:
         print "------------------------------------------------"
         try:
             assert correctly_signed_authn_request(ar_str,
-                    self.client.config["xmlsec_binary"],
-                    self.client.config["metadata"])
+                    self.client.config.xmlsec_binary,
+                    self.client.config.metadata)
         except Exception: # missing certificate
             self.client.sec.verify_signature(ar_str, node_name=class_name(ar))
 
@@ -310,10 +310,12 @@ class TestClient:
         assert issuers == [[IDP], [IDP]]
         
     def test_init_values(self):
-        print self.client.config["service"]["sp"]
-        spentityid = self.client._spentityid()
-        print spentityid
-        assert spentityid == "urn:mace:example.com:saml:roland:sp"
+        entityid = self.client._entityid()
+        print entityid
+        assert entityid == "urn:mace:example.com:saml:roland:sp"
+        print self.client.config.idp
+        print self.client.config.metadata.idps()
+        print self.client.config.idps()
         location = self.client._sso_location()
         print location
         assert location == 'http://localhost:8088/sso'
@@ -325,12 +327,10 @@ class TestClient:
         assert my_name == "urn:mace:example.com:saml:roland:sp"
 
     def test_authenticate(self):
+        print self.client.config.idps()
         (sid, response) = self.client.authenticate(
-                                    "http://www.example.com/sso",
-                                    "http://www.example.org/service",
-                                    "urn:mace:example.org:saml:sp",
-                                    "My Name",
-                                    "http://www.example.com/relay_state")
+                                        "urn:mace:example.com:saml:roland:idp",
+                                        "http://www.example.com/relay_state")
         assert sid != None
         assert response[0] == "Location"
         o = urlparse(response[1])
@@ -420,9 +420,10 @@ class TestClient:
         client.users.add_information_about_person(session_info)
         entity_ids = self.client.users.issuers_of_info("123456")
         assert entity_ids == ["urn:mace:example.com:saml:roland:idp"]
-        destination = client.config.logout_service(entity_ids[0], BINDING_SOAP)
-        print destination
-        assert destination == 'http://localhost:8088/slo'
+        destinations = client.config.single_logout_services(entity_ids[0],
+                                                            BINDING_SOAP)
+        print destinations
+        assert destinations == ['http://localhost:8088/slo']
 
         # Will raise an error since there is noone at the other end.
         raises(LogoutError, 'client.global_logout("123456", "Tired", in_a_while(minutes=5))')

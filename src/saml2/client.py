@@ -40,6 +40,7 @@ from saml2.binding import send_using_soap, http_redirect_message
 from saml2.binding import http_post_message
 from saml2.population import Population
 from saml2.virtual_org import VirtualOrg
+from saml2.config import SPConfig
 
 #from saml2.response import authn_response
 from saml2.response import response_factory
@@ -76,6 +77,12 @@ class Saml2Client(object):
                 virtual_organization=None):
         """
         :param config: A saml2.config.Config instance
+        :param debug: Whether debugging should be done even if the
+            configuration says otherwise
+        :param identity_cache: Where the class should store identity information
+        :param state_cache: Where the class should keep state information
+        :param virtual_organization: Which if any virtual organization this
+            SP belongs to
         """
 
         self.users = Population(identity_cache)
@@ -89,11 +96,10 @@ class Saml2Client(object):
         self.sec = None
         if config:
             self.config = config
-            if "metadata" in config:
-                self.metadata = config["metadata"]
+            self.metadata = config.metadata
             self.sec = security_context(config)
         else:
-            self.config = {}
+            self.config = SPConfig()
         
         if virtual_organization:
             self.vorg = VirtualOrg(self, virtual_organization)
@@ -101,13 +107,16 @@ class Saml2Client(object):
             self.vorg = None
 
         if not debug and self.config:
-            self.debug = self.config.debug()
+            self.debug = self.config.debug
         else:
             self.debug = debug
     
     def _relay_state(self, session_id):
         vals = [session_id, str(int(time.time()))]
-        vals.append(signature(self.config["secret"], vals))
+        if self.config.secret is None:
+            vals.append(signature("", vals))
+        else:
+            vals.append(signature(self.config.secret, vals))
         return "|".join(vals)
 
     def _init_request(self, request, destination):
@@ -165,7 +174,7 @@ class Saml2Client(object):
 
         if not entity_id:
             try:
-                entity_id = self.config["entity_id"]
+                entity_id = self.config.entityid
             except KeyError:
                 raise Exception("Missing entity_id specification")
 
@@ -259,47 +268,37 @@ class Saml2Client(object):
                 return saml.Issuer(text=entityid, 
                                     format=saml.NAMEID_FORMAT_ENTITY)
         else:
-            return saml.Issuer(text=self.config["entityid"], 
+            return saml.Issuer(text=self.config.entityid,
                                 format=saml.NAMEID_FORMAT_ENTITY)        
     
-    def _spentityid(self, spentityid=None):
-        if self.config:
-            return self.config["entityid"]
-        else:
-            return spentityid
+    def _entityid(self):
+        return self.config.entityid
 
-    def _sso_location(self, location=None):
-        if not location :
-            # get the idp location from the configuration alternative the 
-            # metadata. If there is more than one IdP in the configuration 
-            # raise exception
-            urls = self.config.idps()
-            if len(urls) > 1:
-                raise IdpUnspecified("Too many IdPs to choose from: %s" % urls)
-            return urls[0]["single_sign_on_service"][BINDING_HTTP_REDIRECT]
-        else:
-            return location
-        
-    def _service_url(self, url=None):
-        if not url:
-            return self.config.endpoint("sp", "assertion_consumer_service")[0]
+    def _sso_location(self, entityid=None):
+        if entityid:
+            # verify that it's in the metadata
+            return self.config.single_sign_on_services(entityid)[0]
 
-    def _my_name(self, name=None):
-        if not name:
-            return self.config.name()
-        else:
-            return name
+        # get the idp location from the configuration alternative the
+        # metadata. If there is more than one IdP in the configuration
+        # raise exception
+        eids = self.config.idps()
+        if len(eids) > 1:
+            raise IdpUnspecified("Too many IdPs to choose from: %s" % eids)
+        return self.config.single_sign_on_services(eids.keys()[0])[0]
         
-    def authenticate(self, spentityid=None, location="", service_url="",
-                        my_name="", relay_state="",
-                        binding=saml2.BINDING_HTTP_REDIRECT, log=None,
-                        vorg="", scoping=None, sign=False):
-        """ Sends an authentication request.
-        
-        :param spentityid: The SP EntityID
-        :param location: Where the IdP is.
-        :param service_url: The SP's service URL
-        :param my_name: The providers name
+    def _service_url(self, binding=BINDING_HTTP_POST):
+        return self.config.endpoint("assertion_consumer_service", binding)
+
+    def _my_name(self):
+        return self.config.name
+
+    def authenticate(self, entityid=None, relay_state="",
+                     binding=saml2.BINDING_HTTP_REDIRECT,
+                     log=None, vorg="", scoping=None, sign=False):
+        """ Makes an authentication request.
+
+        :param entityid: The entity ID of the IdP to send the request to
         :param relay_state: To where the user should be returned after
             successfull log in.
         :param binding: Which binding to use for sending the request
@@ -310,10 +309,10 @@ class Saml2Client(object):
         :return: AuthnRequest response
         """
         
-        spentityid = self._spentityid(spentityid)
-        location = self._sso_location(location)
-        service_url = self._service_url(service_url)
-        my_name = self._my_name(my_name)
+        spentityid = self._entityid()
+        location = self._sso_location(entityid)
+        service_url = self._service_url()
+        my_name = self._my_name()
                             
         if log:
             log.info("spentityid: %s" % spentityid)
@@ -429,8 +428,8 @@ class Saml2Client(object):
         if log:
             log.info("Request, created: %s" % request)
         
-        soapclient = SOAPClient(destination, self.config["key_file"],
-                                self.config["cert_file"])
+        soapclient = SOAPClient(destination, self.config.key_file,
+                                self.config.cert_file)
         if log:
             log.info("SOAP client initiated")
         try:
@@ -467,7 +466,7 @@ class Saml2Client(object):
             return None
     
     def construct_logout_request(self, subject_id, destination, entity_id,
-                            reason=None, expire=None, _log=None):
+                            reason=None, expire=None):
         """ Constructs a LogoutRequest
         
         :param subject_id: The identifier of the subject
@@ -546,17 +545,20 @@ class Saml2Client(object):
         
         for entity_id in entity_ids:
             response = False
-            rstate = None
-            for binding in [BINDING_SOAP, BINDING_HTTP_POST, 
+
+            for binding in [BINDING_SOAP, BINDING_HTTP_POST,
                             BINDING_HTTP_REDIRECT]:
-                destination = self.config.logout_service(entity_id, binding)
-                if not destination:
+                destinations = self.config.single_logout_services(entity_id,
+                                                                binding)
+                if not destinations:
                     continue
 
+                destination = destinations[0]
+                
                 if log:
                     log.info("destination to provider: %s" % destination)
                 request = self.construct_logout_request(subject_id, destination,
-                                                entity_id, reason, expire, log)
+                                                    entity_id, reason, expire)
                 
                 to_sign = []
                 if sign and binding != BINDING_HTTP_REDIRECT:
@@ -571,8 +573,8 @@ class Saml2Client(object):
         
                 if binding == BINDING_SOAP:
                     response = send_using_soap(request, destination, 
-                                                self.config["key_file"],
-                                                self.config["cert_file"], 
+                                                self.config.key_file,
+                                                self.config.cert_file,
                                                 log=log)
                     if response:
                         if log:
@@ -674,9 +676,9 @@ class Saml2Client(object):
 
         if xmlstr:
             try:
-                return_addr = self.config.endpoint("sp", 
-                                                    "single_logout_service",
-                                                    binding=binding)[0]
+                # expected return address
+                return_addr = self.config.endpoint("single_logout_service",
+                                                    binding=binding)
             except Exception:
                 if log:
                     log.info("Not supposed to handle this!")
@@ -787,7 +789,7 @@ class Saml2Client(object):
         :return: A LogoutResponse instance
         """
 
-        destination = self.config.logout_service(idp_entity_id, binding)
+        destination = self.config.single_logout_service(idp_entity_id, binding)
 
         status = samlp.Status(
             status_code=samlp.StatusCode(value=status_code))

@@ -351,18 +351,11 @@ def security_context(conf, log=None):
     if not conf:
         return None
         
-    try:
-        debug = conf["debug"]
-    except KeyError:
-        debug = 0
-        
-    try:
-        metadata = conf["metadata"]
-    except KeyError:
-        metadata = None
-        
-    return SecurityContext(conf.xmlsec(), conf["key_file"], "pem",
-                            conf["cert_file"], "pem", metadata,
+    debug = conf.debug
+    metadata = conf.metadata
+
+    return SecurityContext(conf.xmlsec_binary, conf.key_file, "pem",
+                            conf.cert_file, "pem", metadata,
                             log=log, debug=debug)
 
 class SecurityContext(object):

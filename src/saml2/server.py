@@ -50,7 +50,7 @@ from saml2.binding import http_post_message
 from saml2.sigver import security_context
 from saml2.sigver import signed_instance_factory
 from saml2.sigver import pre_signature_part
-from saml2.config import IDPConfig
+from saml2.config import IdPConfig
 from saml2.assertion import Assertion, Policy   
 
 class UnknownVO(Exception):
@@ -107,7 +107,7 @@ class Identifier(object):
 
     def _get_vo_identifier(self, sp_name_qualifier, userid, identity):
         try:
-            vo_conf = self.voconf(sp_name_qualifier)
+            vo_conf = self.voconf[sp_name_qualifier]
             if "common_identifier" in vo_conf:
                 try:
                     subj_id = identity[vo_conf["common_identifier"]]
@@ -213,7 +213,7 @@ class Server(object):
         elif config:
             self.conf = config
         
-        self.metadata = self.conf["metadata"]
+        self.metadata = self.conf.metadata
         self.sec = security_context(self.conf, log)
         # if cache:
         #     if isinstance(cache, basestring):
@@ -228,12 +228,12 @@ class Server(object):
         
         :param config_file: The name of the configuration file
         """
-        self.conf = IDPConfig()
+        self.conf = IdPConfig()
         self.conf.load_file(config_file)
-        if "subject_data" in self.conf:
+        try:
             # subject information is store in database
             # default database is a shelve database which is OK in some setups
-            dbspec = self.conf["subject_data"]
+            dbspec = self.conf.subject_data
             idb = None
             if isinstance(dbspec, basestring):
                 idb = shelve.open(dbspec, writeback=True)
@@ -245,17 +245,17 @@ class Server(object):
                     idb = memcache.Client(addr)
 
             if idb is not None:
-                self.ident = Identifier(idb, self.conf.vo_conf, self.debug, 
-                                        self.log)
+                self.ident = Identifier(idb, self.conf.virtual_organization,
+                                        self.debug, self.log)
             else:
                 raise Exception("Couldn't open identity database: %s" %
                                 (dbspec,))
-        else:
+        except AttributeError:
             self.ident = None
     
     def issuer(self):
         """ Return an Issuer precursor """
-        return saml.Issuer(text=self.conf["entityid"], 
+        return saml.Issuer(text=self.conf.entityid,
                             format=saml.NAMEID_FORMAT_ENTITY)        
         
     def parse_authn_request(self, enc_request, binding=BINDING_HTTP_REDIRECT):
@@ -273,11 +273,9 @@ class Server(object):
         
         response = {}
         
-        receiver_addresses = self.conf.endpoint("idp", 
-                                                "single_sign_on_service",
+        receiver_addresses = self.conf.endpoint("single_sign_on_service",
                                                 binding)
-        authn_request = AuthnRequest(self.sec, 
-                                            self.conf.attribute_converters(),
+        authn_request = AuthnRequest(self.sec, self.conf.attribute_converters,
                                             receiver_addresses)
         authn_request = authn_request.loads(enc_request)
         if authn_request:
@@ -342,7 +340,7 @@ class Server(object):
             attribute - which attributes that the requestor wants back
             query - the whole query
         """
-        receiver_addresses = self.conf.endpoint("aa", "attribute_service")
+        receiver_addresses = self.conf.endpoint("attribute_service")
         attribute_query = AttributeQuery( self.sec, receiver_addresses)
 
         attribute_query = attribute_query.loads(xml_string)
@@ -402,20 +400,20 @@ class Server(object):
                 (authn_class, authn_authn) = authn
                 assertion = ast.construct(sp_entity_id, in_response_to, 
                                             consumer_url, name_id,
-                                            self.conf.attribute_converters(), 
+                                            self.conf.attribute_converters,
                                             policy, issuer=_issuer, 
                                             authn_class=authn_class, 
                                             authn_auth=authn_authn)
             elif authn_decl:
                 assertion = ast.construct(sp_entity_id, in_response_to, 
                                             consumer_url, name_id,
-                                            self.conf.attribute_converters(), 
+                                            self.conf.attribute_converters,
                                             policy, issuer=_issuer, 
                                             authn_decl=authn_decl)
             else:
                 assertion = ast.construct(sp_entity_id, in_response_to, 
                                             consumer_url, name_id,
-                                            self.conf.attribute_converters(), 
+                                            self.conf.attribute_converters,
                                             policy, issuer=_issuer)
             
             if sign:
@@ -454,11 +452,9 @@ class Server(object):
         :param authn_decl:
         :return: A Response instance.
         """
-        try:
-            policy = self.conf.idp_policy()
-        except KeyError:
-            policy = self.conf.aa_policy()
-            
+
+        policy = self.conf.policy
+
         return self._response(in_response_to, consumer_url,
                         sp_entity_id, identity, name_id, 
                         status, sign, policy, authn, authn_decl)
@@ -508,12 +504,12 @@ class Server(object):
         :param name_id_policy: Policy for NameID creation.
         :return: A Response instance.
         """
-        name_id = self.ident.construct_nameid(self.conf.aa_policy(), userid, 
+        name_id = self.ident.construct_nameid(self.conf.policy, userid,
                                             sp_entity_id, identity)
         
         return self._response(in_response_to, consumer_url,
                         sp_entity_id, identity, name_id, 
-                        status, sign, policy=self.conf.aa_policy())
+                        status, sign, policy=self.conf.policy)
 
     # ------------------------------------------------------------------------
 
@@ -539,11 +535,8 @@ class Server(object):
         """
         
         try:
-            try:
-                policy = self.conf.idp_policy()
-            except KeyError:
-                policy = self.conf.aa_policy()
-                
+            policy = self.conf.policy
+
             name_id = self.ident.construct_nameid(policy, userid, sp_entity_id,
                                                     identity, name_id_policy)
         except IOError, exc:
@@ -593,14 +586,11 @@ class Server(object):
             failed.
         """
         
-        slo = self.conf.endpoint("idp", "single_logout_service", binding)[0]
         try:
-            slo = self.conf.endpoint("idp", "single_logout_service", 
-                                        binding)[0]
+            slo = self.conf.endpoint("single_logout_service", binding)
         except IndexError:
             if self.log:
-                self.log.info("enpoints: %s" % (self.conf["service"]["idp"][
-                                                                "endpoints"]))
+                self.log.info("enpoints: %s" % (self.conf.endpoints,))
                 self.log.info("binding wanted: %s" % (binding,))
             raise
                 
@@ -646,13 +636,13 @@ class Server(object):
         binding = None
         destination = ""
         for binding in bindings:
-            destination = self.conf.logout_service(sp_entity_id, "sp", 
-                                                    binding)
-            if destination:
+            destinations = self.conf.single_logout_services(sp_entity_id,
+                                                           binding)
+            if destinations:
                 break
                 
 
-        if not destination:
+        if not destinations:
             if self.log:
                 self.log.error("Not way to return a response !!!")
             return ("412 Precondition Failed",
@@ -660,7 +650,7 @@ class Server(object):
                     ["No return way defined"])
         
         # Pick the first
-        destination = destination[0]
+        destination = destinations[0]
         
         if self.log:
             self.log.info("Logout Destination: %s, binding: %s" % (destination,

@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import calendar
 import base64
 import sys
 
@@ -40,7 +41,7 @@ class IncorrectlySigned(Exception):
     
 # ---------------------------------------------------------------------------
 
-def _dummy(_arg):
+def _dummy(_):
     return None
 
 def for_me(condition, myself ):
@@ -60,9 +61,9 @@ def authn_response(conf, entity_id, return_addr, outstanding_queries=None,
     sec = security_context(conf)
     if not timeslack:
         try:
-            timeslack = int(conf["timeslack"])
-        except KeyError:
-            pass
+            timeslack = int(conf.accepted_time_diff)
+        except TypeError:
+            timeslack = 0
     
     return AuthnResponse(sec, conf.attribute_converters, entity_id, 
                         return_addr, outstanding_queries, log, timeslack, 
@@ -74,9 +75,9 @@ def attribute_response(conf, entity_id, return_addr, log=None, timeslack=0,
     sec = security_context(conf)
     if not timeslack:
         try:
-            timeslack = int(conf["timeslack"])
-        except KeyError:
-            pass
+            timeslack = int(conf.accepted_time_diff)
+        except TypeError:
+            timeslack = 0
 
     return AttributeResponse(sec, conf.attribute_converters, entity_id, 
                                 return_addr, log, timeslack, debug)
@@ -237,7 +238,7 @@ class AttributeResponse(StatusResponse):
                                 debug)
         self.entity_id = entity_id
         self.attribute_converters = attribute_converters
-
+        self.assertion = None
 
     def get_identity(self):
         # The assertion can contain zero or one attributeStatements
@@ -250,11 +251,11 @@ class AttributeResponse(StatusResponse):
             if self.debug:
                 self.log.info("Attribute Statement: %s" % (
                                     self.assertion.attribute_statement[0],))
-                for aconv in self.attribute_converters():
+                for aconv in self.attribute_converters:
                     self.log.info(
                             "Converts name format: %s" % (aconv.name_format,))
 
-            ava = to_local(self.attribute_converters(),
+            ava = to_local(self.attribute_converters,
                             self.assertion.attribute_statement[0])
         return ava
         
@@ -299,11 +300,11 @@ class AuthnResponse(StatusResponse):
         assert len(self.assertion.authn_statement) == 1
         authn_statement = self.assertion.authn_statement[0]
         if authn_statement.session_not_on_or_after:
-            try:
-                self.session_not_on_or_after = validate_on_or_after(
-                                    authn_statement.session_not_on_or_after,
-                                    self.timeslack)
-            except Exception:
+            if validate_on_or_after(authn_statement.session_not_on_or_after,
+                                    self.timeslack):
+                self.session_not_on_or_after = calendar.timegm(
+                    time_util.str_to_time(authn_statement.session_not_on_or_after))
+            else:
                 return False
         return True
         # check authn_statement.session_index
@@ -348,11 +349,11 @@ class AuthnResponse(StatusResponse):
             if self.debug:
                 self.log.info("Attribute Statement: %s" % (
                                     self.assertion.attribute_statement[0],))
-                for aconv in self.attribute_converters():
+                for aconv in self.attribute_converters:
                     self.log.info(
                             "Converts name format: %s" % (aconv.name_format,))
             
-            ava = to_local(self.attribute_converters(),
+            ava = to_local(self.attribute_converters,
                             self.assertion.attribute_statement[0])
         return ava
     
@@ -536,11 +537,10 @@ def response_factory(xmlstr, conf, entity_id=None, return_addr=None,
                         timeslack=0, debug=0, decode=True, request_id=0):
     sec_context = security_context(conf)
     if not timeslack:
-        try:
-            timeslack = int(conf["timeslack"])
-        except KeyError:
-            pass
-    
+        timeslack = int(conf.accepted_time_diff)
+        if timeslack is None:
+            timeslack = 0
+
     attribute_converters = conf.attribute_converters
                         
     response = StatusResponse(sec_context, return_addr, log, timeslack, 
