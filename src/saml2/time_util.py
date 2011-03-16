@@ -20,6 +20,7 @@ Implements some usefull functions when dealing with validity of
 different types of information.
 """
 
+import calendar
 import re
 import time
 from datetime import timedelta
@@ -50,36 +51,11 @@ def modulo(arg0, arg1, arg2=0):
     else:
         return arg0 % arg1
 
-DAYS_IN_MONTH = {
-    1: 31,
-    3: 31,
-    4: 30,
-    5: 31,
-    6: 30,
-    7: 31,
-    8: 31,
-    9: 30,
-    10: 31,
-    11: 30,
-    12: 31,
-    }
-    
-def days_in_february(year):
-    if not modulo(year, 400):
-        return 29
-    elif (modulo(year, 100) != 0) and (modulo(year, 4) == 0):
-        return 29
-    else:
-        return 28
 
-def maximum_day_in_month_for(year_value, month_value):
-    month = modulo(month_value, 1, 13)
-    year = year_value + f_quotient(month_value, 1, 13)
-    try: 
-        return DAYS_IN_MONTH[month]
-    except KeyError:
-        return days_in_february(year)
-          
+def maximum_day_in_month_for(year, month):
+    return calendar.monthrange(year, month)[1]
+
+
 D_FORMAT = [
     ("Y", "tm_year"),
     ("M", "tm_mon"),
@@ -188,64 +164,56 @@ def add_duration(tid, duration):
 # ---------------------------------------------------------------------------
 
 def time_in_a_while(days=0, seconds=0, microseconds=0, milliseconds=0,
-                minutes=0, hours=0, weeks=0):
+                    minutes=0, hours=0, weeks=0):
     """
     format of timedelta:
         timedelta([days[, seconds[, microseconds[, milliseconds[,
                     minutes[, hours[, weeks]]]]]]])
     """
-    now = datetime.utcnow()
-    delta = timedelta(*[days, seconds, microseconds, milliseconds, minutes,
-                    hours, weeks])
-    soon = now + delta
-    return soon
+    delta = timedelta(days, seconds, microseconds, milliseconds,
+                      minutes, hours, weeks)
+    return datetime.utcnow() + delta
+
 
 def time_a_while_ago(days=0, seconds=0, microseconds=0, milliseconds=0,
-                minutes=0, hours=0, weeks=0):
+                     minutes=0, hours=0, weeks=0):
     """
     format of timedelta:
         timedelta([days[, seconds[, microseconds[, milliseconds[,
                     minutes[, hours[, weeks]]]]]]])
     """
-    now = datetime.utcnow()
-    delta = timedelta(*[days, seconds, microseconds, milliseconds, minutes,
-                    hours, weeks])
-    prev = now - delta
-    return prev
+    delta = timedelta(days, seconds, microseconds, milliseconds,
+                      minutes, hours, weeks)
+    return datetime.utcnow() - delta
+
 
 def in_a_while(days=0, seconds=0, microseconds=0, milliseconds=0,
-                minutes=0, hours=0, weeks=0, format=None):
+               minutes=0, hours=0, weeks=0, format=TIME_FORMAT):
     """
     format of timedelta:
         timedelta([days[, seconds[, microseconds[, milliseconds[,
                     minutes[, hours[, weeks]]]]]]])
     """
-    if not format:
-        format = TIME_FORMAT
     return time_in_a_while(days, seconds, microseconds, milliseconds,
-                minutes, hours, weeks).strftime(format)
+                           minutes, hours, weeks).strftime(format)
+
 
 def a_while_ago(days=0, seconds=0, microseconds=0, milliseconds=0,
-                minutes=0, hours=0, weeks=0, format=None):
-    if not format:
-        format = TIME_FORMAT
+                minutes=0, hours=0, weeks=0, format=TIME_FORMAT):
     return time_a_while_ago(days, seconds, microseconds, milliseconds,
-                minutes, hours, weeks).strftime(format)
-                
+                            minutes, hours, weeks).strftime(format)
+
 # ---------------------------------------------------------------------------
 
 def shift_time(dtime, shift):
     """ Adds/deletes an integer amount of seconds from a datetime specification
-    
+
     :param dtime: The datatime specification
     :param shift: The wanted time shift (+/-)
     :return: A shifted datatime specification
     """
-    tstruct = dtime.timetuple()
-    tfl = time.mktime(tstruct)
-    tfl += shift
-    return datetime.utcfromtimestamp(tfl)
-    
+    return dtime + timedelta(seconds=shift)
+
 # ---------------------------------------------------------------------------
 
 def str_to_time(timestr):
@@ -260,83 +228,61 @@ def str_to_time(timestr):
             print "Exception: %s on %s" % (exc, timestr)
             raise
         then = time.strptime(elem.groups()[0]+"Z", TIME_FORMAT)
-        
-    return then
 
-def instant(format=None):
-    if not format:
-        format = TIME_FORMAT
-    return datetime.utcnow().strftime(format)
-    
+    return time.gmtime(calendar.timegm(then))
+
+
+def instant(format=TIME_FORMAT):
+    return time.strftime(format, time.gmtime())
+
 # ---------------------------------------------------------------------------
 
 def utc_now():
-    return time.mktime(datetime.utcnow().timetuple())
+    return calendar.timegm(time.gmtime())
 
 # ---------------------------------------------------------------------------
 
-def not_before(point):
+def before(point):
+    """ True if point datetime specification is before now """
     if not point:
         return True
-        
-    then = str_to_time(point)
-    now = time.gmtime()
 
-    if now > then:
+    if isinstance(point, basestring):
+        point = str_to_time(point)
+    elif isinstance(point, int):
+        point = time.gmtime(point)
+
+    return point < time.gmtime()
+
+
+def after(point):
+    """ True if point datetime specification is equal or after now """
+    if not point:
         return True
     else:
-        return False
+        return not before(point)
 
-# def not_on_or_after(point):
-#     if not point:
-#         return True
-# 
-#     then = str_to_time(point)
-#     now = time.gmtime()
-# 
-#     if now >= then:
-#         return False
-#     else:
-#         return True
 
-def not_on_or_after(not_on_or_after):
-    if isinstance(not_on_or_after, time.struct_time):
-        not_on_or_after = time.mktime(not_on_or_after)
-    elif isinstance(not_on_or_after, basestring):
-        not_on_or_after = str_to_time(not_on_or_after)
+not_before = after
 
-    if not not_on_or_after:
-        return True
-        
-    now = utc_now()
+# 'not_on_or_after' is just an obscure name for 'not before'
+not_on_or_after = after
 
-    if not_on_or_after and not_on_or_after < now:
-        #self.reset(subject_id, entity_id)
-        #raise ToOld("%s < %s" % (not_on_or_after, now))
-        return False
-    else:
-        return True
-                
-def valid( valid_until ):
-    """ Checks whether a valid_until specification is still valid
-    :param valid_until: The string representation of a time
-    :return: True if the time specified in valid_until is now or sometime 
-        in the future. Otherwise False.
-    """
-    if not valid_until:
-        return True
-        
-    then = str_to_time( valid_until )
-    now = datetime.utcnow().timetuple()
-    
-    if now <= then:
-        return True
-    else:
-        return False
+# a point is valid if is now or sometime in the future, in other words,
+# if it is not before now
+valid = after
+
 
 def later_than(then, that):
-    then = str_to_time( then )
-    that = str_to_time( that )
-    
+    """ True if then is later or equal to that """
+    if isinstance(then, basestring):
+        then = str_to_time(then)
+    elif isinstance(then, int):
+        then = time.gmtime(then)
+
+    if isinstance(that, basestring):
+        that = str_to_time(that)
+    elif isinstance(that, int):
+        that = time.gmtime(that)
+
     return then >= that
-    
