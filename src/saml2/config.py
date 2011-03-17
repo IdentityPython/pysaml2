@@ -12,7 +12,8 @@ SIMPLE_ARGS = ["entityid", "xmlsec_binary", "debug", "key_file", "cert_file",
                 "description", "endpoints", "required_attributes",
                 "optional_attributes", "idp", "sp", "aa", "subject_data",
                 "want_assertions_signed", "authn_requests_signed", "type",
-                "organization", "contact_person", "want_authn_requests_signed"]
+                "organization", "contact_person",
+                "want_authn_requests_signed", "name_form"]
 
 COMPLEX_ARGS = ["metadata", "attribute_converters", "policy"]
 

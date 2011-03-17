@@ -155,7 +155,7 @@ class Saml2Client(object):
     #     idp_ent = self.idp_entry(name, location)
     #     return samlp.Scoping(idp_list=samlp.IDPList(idp_entry=[idp_ent]))
     
-    def response(self, post, entity_id, outstanding, log=None):
+    def response(self, post, outstanding, log=None):
         """ Deal with an AuthnResponse or LogoutResponse
         
         :param post: The reply as a dictionary
@@ -172,18 +172,17 @@ class Saml2Client(object):
         except KeyError:
             return None
 
-        if not entity_id:
-            try:
-                entity_id = self.config.entityid
-            except KeyError:
-                raise Exception("Missing entity_id specification")
+        try:
+            entity_id = self.config.entityid
+        except KeyError:
+            raise Exception("Missing entity_id specification")
 
         reply_addr = self._service_url()
         
         resp = None
         if saml_response:
             try:
-                resp = response_factory(saml_response, self.config, entity_id, 
+                resp = response_factory(saml_response, self.config,
                                         reply_addr, outstanding, log, 
                                         debug=self.debug)
             except Exception, exc:
@@ -193,7 +192,7 @@ class Saml2Client(object):
             
             if self.debug:
                 if log:
-                    log.info(">>", resp)
+                    log.info(">> %s", resp)
             resp = resp.verify()
             if isinstance(resp, AuthnResponse):
                 self.users.add_information_about_person(resp.session_info())

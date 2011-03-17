@@ -106,7 +106,7 @@ class SAML2Plugin(FormPluginBase):
         #   self.log.info("IdP URL: %s" % idps)
 
         if len( idps ) == 1:
-            idp_url = idps[0]["single_sign_on_service"][BINDING_HTTP_REDIRECT]
+            idp_entity_id = idps[0]
         elif not len(idps):
             return 1, HTTPInternalServerError(detail='Misconfiguration')
         else:
@@ -121,19 +121,11 @@ class SAML2Plugin(FormPluginBase):
                                                 "%s?%s" % (self.wayf, sid_))]))
                 else:
                     self.log.info("Choosen IdP: '%s'" % wayf_selected)
-                    try:
-                        idp_url = self.idp[wayf_selected][
-                                                    "single_sign_on_service"][
-                                                        BINDING_HTTP_REDIRECT]
-                    except KeyError:
-                        return (1, 
-                            HTTPNotImplemented(
-                                detail="Do not know how to talk to '%s'!" & (
-                                                            wayf_selected,)))
+                    idp_entity_id = wayf_selected
             else:
                 return 1, HTTPNotImplemented(detail='No WAYF present!')
 
-        return 0, idp_url
+        return 0, idp_entity_id
         
     #### IChallenger ####
     def challenge(self, environ, _status, _app_headers, _forget_headers):
@@ -167,11 +159,13 @@ class SAML2Plugin(FormPluginBase):
             return response
         else:
             idp_url = response
+            if self.log:
+                self.log.info("[sp.challenge] idp_url: %s" % idp_url)
             # Do the AuthnRequest
-            (sid_, result) = self.saml_client.authenticate(location=idp_url,
-                                                            relay_state=came_from,
-                                                            log=self.log, 
-                                                            vorg=vorg)
+            (sid_, result) = self.saml_client.authenticate(idp_url,
+                                                        relay_state=came_from,
+                                                        log=self.log,
+                                                        vorg=vorg)
             
             # remember the request
             self.outstanding_queries[sid_] = came_from
@@ -238,13 +232,12 @@ class SAML2Plugin(FormPluginBase):
     def _eval_authn_response(self, environ, post):
         if self.log:
             self.log.info("Got AuthN response, checking..")
+            self.log.info("Outstanding: %s" % (self.outstanding_queries,))
 
-        print "Outstanding: %s" % (self.outstanding_queries,)
         try:
             # Evaluate the response, returns a AuthnResponse instance
             try:
                 authresp = self.saml_client.response(post, 
-                                                    self.conf.entityid,
                                                     self.outstanding_queries,
                                                     self.log)
             except Exception, excp:

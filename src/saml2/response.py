@@ -532,17 +532,19 @@ class AuthnResponse(StatusResponse):
     def __str__(self):
         return "%s" % self.xmlstr
 
-def response_factory(xmlstr, conf, entity_id=None, return_addr=None, 
+def response_factory(xmlstr, conf, return_addr=None,
                         outstanding_queries=None, log=None, 
                         timeslack=0, debug=0, decode=True, request_id=0):
     sec_context = security_context(conf)
     if not timeslack:
-        timeslack = int(conf.accepted_time_diff)
-        if timeslack is None:
+        try:
+            timeslack = int(conf.accepted_time_diff)
+        except TypeError:
             timeslack = 0
-
+            
     attribute_converters = conf.attribute_converters
-                        
+    entity_id = conf.entityid
+
     response = StatusResponse(sec_context, return_addr, log, timeslack, 
                                         debug, request_id)
     try:
