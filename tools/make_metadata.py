@@ -5,6 +5,7 @@ import getopt
 from saml2.metadata import entity_descriptor, entities_descriptor
 from saml2.sigver import SecurityContext
 from saml2.validate import valid_instance
+from saml2.config import Config
 
 HELP_MESSAGE = """
 Usage: make_metadata [options] 1*configurationfile
@@ -69,8 +70,8 @@ def main(args):
 
     eds = []
     for conf in args:
-        confd = eval(open(conf).read())
-        eds.append(entity_descriptor(confd, valid_for))
+        cnf = Config().load_file(conf)
+        eds.append(entity_descriptor(cnf, valid_for))
     
     secc = SecurityContext(xmlsec, keyfile) 
     desc = entities_descriptor(eds, valid_for, name, id, sign, secc)
