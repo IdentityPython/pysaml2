@@ -67,10 +67,12 @@ NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:assertion'
 NAMEID_FORMAT_EMAILADDRESS = (
     "urn:oasis:names:tc:SAML:2.0:nameid-format:emailAddress")
 
-NAME_FORMAT_UNSPECIFIED = (
-    "urn:oasis:names:tc:SAML:2.0:attrnam-format:unspecified")
-NAME_FORMAT_URI = "urn:oasis:names:tc:SAML:2.0:attrnam-format:uri"
-NAME_FORMAT_BASIC = "urn:oasis:names:tc:SAML:2.0:attrnam-format:basic"
+# These are defined in saml2.saml
+#NAME_FORMAT_UNSPECIFIED = (
+#    "urn:oasis:names:tc:SAML:2.0:attrname-format:unspecified")
+#NAME_FORMAT_URI = "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
+#NAME_FORMAT_BASIC = "urn:oasis:names:tc:SAML:2.0:attrname-format:basic"
+
 SUBJECT_CONFIRMATION_METHOD_BEARER = "urn:oasis:names:tc:SAML:2.0:cm:bearer"
 
 DECISION_TYPE_PERMIT = "Permit"
