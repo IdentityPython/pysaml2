@@ -12,17 +12,21 @@ def _eq(l1,l2):
 
 CONFIG = IdPConfig().load({
     "entityid" :  "urn:mace:example.com:idp:2",
-    "endpoints" : {
-        "single_sign_on_service" : ["http://idp.example.org/"],
-        },
     "name" : "test",
-    "policy": {
-        "default": {
-            "lifetime": {"minutes":15},
-            "attribute_restrictions": None, # means all I have
-            "name_form": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
-            "nameid_format": NAMEID_FORMAT_PERSISTENT
-        },
+    "service": {
+        "idp": {
+            "endpoints" : {
+                "single_sign_on_service" : ["http://idp.example.org/"],
+                },
+            "policy": {
+                "default": {
+                    "lifetime": {"minutes":15},
+                    "attribute_restrictions": None, # means all I have
+                    "name_form": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+                    "nameid_format": NAMEID_FORMAT_PERSISTENT
+                }
+            }
+        }
     },
     "xmlsec_binary" : "/usr/local/bin/xmlsec1",
     "virtual_organization" : {

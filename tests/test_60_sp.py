@@ -33,8 +33,8 @@ ENV1 = {'SERVER_SOFTWARE': 'CherryPy/3.1.2 WSGI Server',
     
 class TestSP():
     def setup_class(self):
-        self.sp = make_plugin("rem", saml_conf="server.config")
-        self.server = Server("idp.config")
+        self.sp = make_plugin("rem", saml_conf="server_conf")
+        self.server = Server(config_file="idp_conf")
 
     def test_setup(self):
         assert self.sp

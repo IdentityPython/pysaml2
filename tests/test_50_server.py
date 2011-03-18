@@ -59,13 +59,10 @@ class TestIdentifier():
         
 class TestServer1():
     def setup_class(self):
-        self.server = Server("idp.config")
+        self.server = Server("idp_conf")
         
         conf = config.SPConfig()
-        try:
-            conf.load_file("tests/server.config")
-        except IOError:
-            conf.load_file("server.config")
+        conf.load_file("server_conf")
         self.client = client.Saml2Client(conf)
 
     def test_issuer(self):
@@ -352,10 +349,10 @@ class TestServer1():
         self.client.users.add_information_about_person(sinfo)
         
         logout_request = self.client.construct_logout_request(
-                            subject_id="foba0001",
-                            destination = "http://localhost:8088/slo",
-                            entity_id = "urn:mace:example.com:saml:roland:idp",
-                            reason = "I'm tired of this")
+                    subject_id="foba0001",
+                    destination = "http://localhost:8088/slo",
+                    issuer_entity_id = "urn:mace:example.com:saml:roland:idp",
+                    reason = "I'm tired of this")
 
         intermed = s_utils.deflate_and_base64_encode("%s" % (logout_request,))
                         
@@ -374,21 +371,19 @@ class TestServer1():
                 "surName": "Laport",
             }
         }
-        conf = config.SPConfig()
-        conf.load_file("server2.config")
-        sp = client.Saml2Client(conf)
 
+        sp = client.Saml2Client(config_file="server_conf")
         sp.users.add_information_about_person(sinfo)
         
         logout_request = sp.construct_logout_request(subject_id = "foba0001",
-                            destination = "http://localhost:8088/slo",
-                            entity_id = "urn:mace:example.com:saml:roland:idp",
-                            reason = "I'm tired of this")
+                    destination = "http://localhost:8088/slo",
+                    issuer_entity_id = "urn:mace:example.com:saml:roland:idp",
+                    reason = "I'm tired of this")
 
         intermed = s_utils.deflate_and_base64_encode("%s" % (logout_request,))
                         
         saml_soap = make_soap_enveloped_saml_thingy(logout_request)
-        idp = Server("idp_soap.conf")
+        idp = Server("idp_soap_conf")
         request = idp.parse_logout_request(saml_soap)
         assert request
         
@@ -400,11 +395,8 @@ IDENTITY = {"eduPersonAffiliation": ["staff", "member"],
 
 class TestServer2():
     def setup_class(self):
-        try:
-            self.server = Server("restrictive_idp.config")
-        except IOError, e:
-            self.server = Server("tests/restrictive_idp.config")
-                
+        self.server = Server("restrictive_idp_conf")
+
     def test_do_aa_reponse(self):
         aa_policy = self.server.conf.policy
         print aa_policy.__dict__
@@ -444,16 +436,16 @@ def _logout_request(conf_file):
     sp.users.add_information_about_person(sinfo)
     
     return sp.construct_logout_request(
-                            subject_id = "foba0001",
-                            destination = "http://localhost:8088/slo",
-                            entity_id = "urn:mace:example.com:saml:roland:idp",
-                            reason = "I'm tired of this")
+                subject_id = "foba0001",
+                destination = "http://localhost:8088/slo",
+                issuer_entity_id = "urn:mace:example.com:saml:roland:idp",
+                reason = "I'm tired of this")
     
 class TestServerLogout():
     
     def test_1(self):
-        server = Server("idp_slo_redirect.conf")        
-        request = _logout_request("sp_slo_redirect.conf")
+        server = Server("idp_slo_redirect_conf")
+        request = _logout_request("sp_slo_redirect_conf")
         print request
         bindings = [BINDING_HTTP_REDIRECT]
         (resp, headers, message) = server.logout_response(request, bindings)

@@ -81,5 +81,5 @@
   'urn:oid:1.3.6.1.4.1.5923.1.1.1.3': 'eduPersonOrgDN',
   'urn:oid:1.3.6.1.4.1.2428.90.1.3': 'norEduPersonBirthDate',
   'urn:oid:1.3.6.1.4.1.250.1.57': 'labeledURI',
-  
+  'urn:oid:0.9.2342.19200300.100.1.1': 'uid',
 }

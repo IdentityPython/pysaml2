@@ -223,8 +223,7 @@ def test_make_string():
 def test_make_list_of_strings():
     attr = saml.Attribute()
     vals = ["foo", "bar"]
-    val = make_vals(vals, saml.AttributeValue, attr, 
-                                "attribute_value") 
+    make_vals(vals, saml.AttributeValue, attr, "attribute_value")
     assert attr.keyswv() == ["attribute_value"]
     print attr.attribute_value
     assert _eq([val.text for val in attr.attribute_value], vals)

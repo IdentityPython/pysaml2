@@ -8,14 +8,18 @@ from py.test import raises
 
 sp1 = {
     "entityid" : "urn:mace:umu.se:saml:roland:sp",
-    "endpoints" : {
-        "assertion_consumer_service" : ["http://lingon.catalogix.se:8087/"],
-    },
-    "name": "test",
-    "idp" : {
-        "urn:mace:example.com:saml:roland:idp": {'single_sign_on_service':
-        {'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect':
-         'http://localhost:8088/sso/'}},
+    "service": {
+        "sp": {
+            "endpoints" : {
+                "assertion_consumer_service" : ["http://lingon.catalogix.se:8087/"],
+            },
+            "name": "test",
+            "idp" : {
+                "urn:mace:example.com:saml:roland:idp": {'single_sign_on_service':
+                {'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect':
+                 'http://localhost:8088/sso/'}},
+            }
+        }
     },
     "key_file" : "mykey.pem",
     "cert_file" : "mycert.pem",
@@ -39,13 +43,17 @@ sp1 = {
 sp2 = {
     "entityid" : "urn:mace:umu.se:saml:roland:sp",
     "name" : "Rolands SP",
-    "endpoints" : {
-        "assertion_consumer_service" : ["http://lingon.catalogix.se:8087/"],
-    },
-    "required_attributes": ["surName", "givenName", "mail"],
-    "optional_attributes": ["title"],
-    "idp": {
-        "" : "https://example.com/saml2/idp/SSOService.php",
+    "service": {
+        "sp": {
+            "endpoints" : {
+                "assertion_consumer_service" : ["http://lingon.catalogix.se:8087/"],
+            },
+            "required_attributes": ["surName", "givenName", "mail"],
+            "optional_attributes": ["title"],
+            "idp": {
+                "" : "https://example.com/saml2/idp/SSOService.php",
+            }
+        }
     },
     "xmlsec_binary" : "/opt/local/bin/xmlsec1",
 }
@@ -53,19 +61,23 @@ sp2 = {
 IDP1 = {
     "entityid" : "urn:mace:umu.se:saml:roland:idp",
     "name" : "Rolands IdP",
-    "endpoints": {
-        "single_sign_on_service" : ["http://localhost:8088/"],
-    },
-    "policy": {
-        "default": {
-            "attribute_restrictions": {
-                "givenName": None,
-                "surName": None,
-                "eduPersonAffiliation": ["(member|staff)"],
-                "mail": [".*@example.com"],
-            }
-        },
-        "urn:mace:umu.se:saml:roland:sp": None
+    "service": {
+        "idp": {
+            "endpoints": {
+                "single_sign_on_service" : ["http://localhost:8088/"],
+            },
+            "policy": {
+                "default": {
+                    "attribute_restrictions": {
+                        "givenName": None,
+                        "surName": None,
+                        "eduPersonAffiliation": ["(member|staff)"],
+                        "mail": [".*@example.com"],
+                    }
+                },
+                "urn:mace:umu.se:saml:roland:sp": None
+            },
+        }
     },
     "xmlsec_binary" : "/usr/local/bin/xmlsec1",
 }
@@ -73,20 +85,24 @@ IDP1 = {
 IDP2 = {
     "entityid" : "urn:mace:umu.se:saml:roland:idp",
     "name" : "Rolands IdP",
-    "endpoints": {
-        "single_sign_on_service" : ["http://localhost:8088/"],
-        "single_logout_service" : [("http://localhost:8088/", BINDING_HTTP_REDIRECT)],
-    },
-    "policy":{
-        "default": {
-            "attribute_restrictions": {
-                "givenName": None,
-                "surName": None,
-                "eduPersonAffiliation": ["(member|staff)"],
-                "mail": [".*@example.com"],
-            }
-        },
-        "urn:mace:umu.se:saml:roland:sp": None
+    "service": {
+        "idp": {
+            "endpoints": {
+                "single_sign_on_service" : ["http://localhost:8088/"],
+                "single_logout_service" : [("http://localhost:8088/", BINDING_HTTP_REDIRECT)],
+            },
+            "policy":{
+                "default": {
+                    "attribute_restrictions": {
+                        "givenName": None,
+                        "surName": None,
+                        "eduPersonAffiliation": ["(member|staff)"],
+                        "mail": [".*@example.com"],
+                    }
+                },
+                "urn:mace:umu.se:saml:roland:sp": None
+            },
+        }
     },
     "xmlsec_binary" : "/usr/local/bin/xmlsec1",
 }
@@ -96,7 +112,7 @@ def _eq(l1,l2):
 
 def test_1():
     c = SPConfig().load(sp1)
-    
+    c.context = "sp"
     print c
     assert c.endpoints
     assert c.name
@@ -112,7 +128,8 @@ def test_1():
 
 def test_2():
     c = SPConfig().load(sp2)
-    
+    c.context = "sp"
+
     print c
     assert c.endpoints
     assert c.idp
@@ -128,23 +145,29 @@ def test_2():
 def test_minimum():
     minimum = {
         "entityid" : "urn:mace:example.com:saml:roland:sp",
-        "endpoints" : {
-            "assertion_consumer_service" : ["http://sp.example.org/"],
-        },
-        "name" : "test",
-        "idp": {
-            "" : "https://example.com/idp/SSOService.php",
+        "service": {
+            "sp": {
+                "endpoints" : {
+                    "assertion_consumer_service" : ["http://sp.example.org/"],
+                },
+                "name" : "test",
+                "idp": {
+                    "" : "https://example.com/idp/SSOService.php",
+                },
+            }
         },
         "xmlsec_binary" : "/usr/local/bin/xmlsec1",
     }
 
     c = SPConfig().load(minimum)
-    
-    assert c != None
+    c.context = "sp"
+
+    assert c is not None
     
 def test_idp_1():
     c = IdPConfig().load(IDP1)
-    
+    c.context = "idp"
+
     print c
     assert c.endpoint("single_sign_on_service") == 'http://localhost:8088/'
 
@@ -153,10 +176,11 @@ def test_idp_1():
 
 def test_idp_2():
     c = IdPConfig().load(IDP2)
+    c.context = "idp"
 
     print c
     assert c.endpoint("single_logout_service",
-                      BINDING_SOAP) == None
+                      BINDING_SOAP) is None
     assert c.endpoint("single_logout_service",
                         BINDING_HTTP_REDIRECT) == 'http://localhost:8088/'
 
@@ -164,16 +188,18 @@ def test_idp_2():
     assert attribute_restrictions["eduPersonAffiliation"][0].match("staff")
     
 def test_wayf():
-    c = SPConfig().load_file("server.config")
-    
+    c = SPConfig().load_file("server_conf")
+    c.context = "sp"
+
     idps = c.idps()
     assert idps == {'urn:mace:example.com:saml:roland:idp': 'Example Co.'}
     idps = c.idps(["se","en"])
     assert idps == {'urn:mace:example.com:saml:roland:idp': 'Exempel AB'}
 
+#noinspection PyUnresolvedReferences
 def test_3():
     cnf = Config()
-    cnf.load_file("sp_1.conf")
+    cnf.load_file("sp_1_conf")
     assert cnf.entityid == "urn:mace:example.com:saml:roland:sp"
     assert cnf.debug == 1
     assert cnf.key_file == "test.key"
@@ -186,7 +212,7 @@ def test_3():
 
 def test_sp():
     cnf = SPConfig()
-    cnf.load_file("sp_1.conf")
+    cnf.load_file("sp_1_conf")
     assert cnf.single_logout_services("urn:mace:example.com:saml:roland:idp",
                             BINDING_HTTP_POST) == ["http://localhost:8088/slo"]
     assert cnf.endpoint("assertion_consumer_service") == \

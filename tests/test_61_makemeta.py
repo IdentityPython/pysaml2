@@ -9,36 +9,43 @@ def _eq(l1,l2):
     return set(l1) == set(l2)
 
 SP = {
-    "type": "sp",
     "name" : "Rolands SP",
     "description": "One of the best SPs in business",
-    "endpoints": {
-        "single_logout_service" : ["http://localhost:8087/logout"],
-        "assertion_consumer_service" : [{"location":"http://localhost:8087/",
-                                        "binding":BINDING_HTTP_POST},]
+    "service": {
+        "sp": {
+            "endpoints": {
+                "single_logout_service" : ["http://localhost:8087/logout"],
+                "assertion_consumer_service" : [{"location":"http://localhost:8087/",
+                                                "binding":BINDING_HTTP_POST},]
+            },
+            "required_attributes": ["sn", "givenName", "mail"],
+            "optional_attributes": ["title"],
+            "idp": {
+                "" : "https://example.com/saml2/idp/SSOService.php",
+            },
+        }
     },
-    "required_attributes": ["sn", "givenName", "mail"],
-    "optional_attributes": ["title"],
     "attribute_map_dir" : "attributemaps",
-    "idp": {
-        "" : "https://example.com/saml2/idp/SSOService.php",
-    },
 }
 
 IDP = {
     "name" : "Rolands IdP",
-    "endpoints": {
-        "single_sign_on_service" : ["http://localhost:8088/sso"],
-    },
-    "policy": {
-        "default": {
-            "lifetime": {"minutes":15},
-            "attribute_restrictions": None, # means all I have
-            "name_form": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
-        },
-        "urn:mace:example.com:saml:roland:sp": {
-            "lifetime": {"minutes": 5},
-            "nameid_format": "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent",
+    "service": {
+        "idp": {
+            "endpoints": {
+                "single_sign_on_service" : ["http://localhost:8088/sso"],
+            },
+            "policy": {
+                "default": {
+                    "lifetime": {"minutes":15},
+                    "attribute_restrictions": None, # means all I have
+                    "name_form": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+                },
+                "urn:mace:example.com:saml:roland:sp": {
+                    "lifetime": {"minutes": 5},
+                    "nameid_format": "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent",
+                }
+            }
         }
     }
 }
@@ -109,7 +116,7 @@ def test_contact_0():
     assert person.email_address[0].text == "foo@eample.com"
     
 def test_do_endpoints():
-    eps = metadata.do_endpoints(SP["endpoints"], 
+    eps = metadata.do_endpoints(SP["service"]["sp"]["endpoints"],
                                     metadata.ENDPOINTS["sp"])
     print eps
     assert _eq(eps.keys(), ["assertion_consumer_service", 
@@ -130,9 +137,10 @@ def test_do_endpoints():
     
 def test_required_attributes():
     attrconverters = ac_factory("../tests/attributemaps")
-    ras = metadata.do_requested_attribute(SP["required_attributes"], 
-                                        attrconverters, is_required="true")
-    assert len(ras) == len(SP["required_attributes"])
+    ras = metadata.do_requested_attribute(
+                                SP["service"]["sp"]["required_attributes"],
+                                attrconverters, is_required="true")
+    assert len(ras) == len(SP["service"]["sp"]["required_attributes"])
     print ras[0]
     assert ras[0].name == 'urn:oid:2.5.4.4'
     assert ras[0].name_format == NAME_FORMAT_URI
@@ -140,9 +148,10 @@ def test_required_attributes():
 
 def test_optional_attributes():
     attrconverters = ac_factory("../tests/attributemaps")
-    ras = metadata.do_requested_attribute(SP["optional_attributes"], 
-                                        attrconverters)
-    assert len(ras) == len(SP["optional_attributes"])
+    ras = metadata.do_requested_attribute(
+                                SP["service"]["sp"]["optional_attributes"],
+                                attrconverters)
+    assert len(ras) == len(SP["service"]["sp"]["optional_attributes"])
     print ras[0]
     assert ras[0].name == 'urn:oid:2.5.4.12'
     assert ras[0].name_format == NAME_FORMAT_URI
@@ -177,7 +186,7 @@ def test_do_sp_sso_descriptor():
     
 def test_entity_description():
     #confd = eval(open("../tests/server.config").read())
-    confd = SPConfig().load_file("server.config")
+    confd = SPConfig().load_file("server_conf")
     print confd.attribute_converters
     entd = metadata.entity_descriptor(confd, 1)
     assert entd != None

@@ -21,7 +21,7 @@ def _eq(l1,l2):
     
 class TestResponse:
     def setup_class(self):
-        server = Server("idp.config")
+        server = Server("idp_conf")
         name_id = server.ident.transient_nameid(
                                 "urn:mace:example.com:saml:roland:sp",
                                 "id12")
@@ -53,17 +53,13 @@ class TestResponse:
                 )
         
         conf = config.SPConfig()
-        try:
-            conf.load_file("tests/server.config")
-        except IOError:
-            conf.load_file("server.config")
+        conf.load_file("server_conf")
         self.conf = conf
         
     def test_1(self):
         xml_response = ("%s" % (self._resp_,)).split("\n")[1]
         resp = response_factory(xml_response, self.conf, 
-                                entity_id="urn:mace:example.com:saml:roland:sp", 
-                                return_addr="http://lingon.catalogix.se:8087/", 
+                                return_addr="http://lingon.catalogix.se:8087/",
                                 outstanding_queries={"id12": "http://localhost:8088/sso"},
                                 timeslack=10000, decode=False)
         
@@ -74,8 +70,7 @@ class TestResponse:
         xml_response = ("%s" % (self._sign_resp_,)).split("\n",1)[1]
         sec = security_context(self.conf)
         resp = response_factory(xml_response, self.conf, 
-                                entity_id="urn:mace:example.com:saml:roland:sp", 
-                                return_addr="http://lingon.catalogix.se:8087/", 
+                                return_addr="http://lingon.catalogix.se:8087/",
                                 outstanding_queries={"id12": "http://localhost:8088/sso"},
                                 timeslack=10000, decode=False)
 
@@ -86,8 +81,7 @@ class TestResponse:
     #     xml_response = ("%s" % (self._logout_resp,)).split("\n")[1]
     #     sec = security_context(self.conf)
     #     resp = response_factory(xml_response, self.conf, 
-    #                             entity_id="urn:mace:example.com:saml:roland:sp", 
-    #                             return_addr="http://lingon.catalogix.se:8087/", 
+    #                             return_addr="http://lingon.catalogix.se:8087/",
     #                             outstanding_queries={"id12": "http://localhost:8088/sso"},
     #                             timeslack=10000, decode=False)
     # 

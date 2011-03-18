@@ -5,6 +5,7 @@ from saml2 import samlp, BINDING_HTTP_POST
 from saml2 import saml, config, class_name, make_instance
 from saml2.server import Server
 from saml2.response import authn_response, StatusResponse
+from saml2.config import config_factory
 
 XML_RESPONSE_FILE = "saml_signed.xml"
 XML_RESPONSE_FILE2 = "saml2_response.xml"
@@ -16,7 +17,7 @@ def _eq(l1,l2):
     
 class TestAuthnResponse:
     def setup_class(self):
-        server = Server("idp.config")
+        server = Server("idp_conf")
         name_id = server.ident.transient_nameid(
                             "urn:mace:example.com:saml:roland:sp","id12")
 
@@ -46,14 +47,8 @@ class TestAuthnResponse:
                     authn=(saml.AUTHN_PASSWORD, "http://www.example.com/login")
                 )
 
-        conf = config.SPConfig()
-        try:
-            conf.load_file("tests/server.config")
-        except IOError:
-            conf.load_file("server.config")
-        self.conf = conf
-        self.ar = authn_response(conf, "urn:mace:example.com:saml:roland:sp", 
-                                    "http://lingon.catalogix.se:8087/")
+        self.conf = config_factory("sp", "server_conf")
+        self.ar = authn_response(self.conf, "http://lingon.catalogix.se:8087/")
     
     def test_verify_1(self):
         xml_response = ("%s" % (self._resp_,)).split("\n")[1]

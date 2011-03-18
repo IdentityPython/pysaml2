@@ -8,7 +8,7 @@ from saml2.client import Saml2Client, LogoutError
 from saml2 import samlp, BINDING_HTTP_POST
 from saml2 import BINDING_SOAP
 from saml2 import saml, config, class_name
-#from saml2.sigver import correctly_signed_authn_request, verify_signature
+#from saml2.sigver import correctly_signed_authn_request
 from saml2.server import Server
 from saml2.s_utils import decode_base64_and_inflate
 from saml2.time_util import in_a_while
@@ -16,8 +16,7 @@ from saml2.sigver import xmlsec_version
 
 from py.test import raises
 
-import os
-        
+
 def for_me(condition, me ):
     for restriction in condition.audience_restriction:
         audience = restriction.audience
@@ -56,13 +55,10 @@ REQ1 = { "1.2.14": """<?xml version='1.0' encoding='UTF-8'?>
 
 class TestClient:
     def setup_class(self):
-        self.server = Server("idp.config")
+        self.server = Server("idp_conf")
 
         conf = config.SPConfig()
-        try:
-            conf.load_file("tests/server.config")
-        except IOError:
-            conf.load_file("server.config")
+        conf.load_file("server_conf")
         self.client = Saml2Client(conf)
     
     def test_create_attribute_query1(self):
@@ -153,7 +149,7 @@ class TestClient:
                 nameid_format=saml.NAMEID_FORMAT_TRANSIENT)
 
         # since no one is answering on the other end
-        assert req == None
+        assert req is None
                 
     # def test_idp_entry(self):
     #     idp_entry = self.client.idp_entry(name="Umeå Universitet",
@@ -237,7 +233,7 @@ class TestClient:
         assert signed_info.reference[0].digest_value
         print "------------------------------------------------"
         try:
-            assert correctly_signed_authn_request(ar_str,
+            assert self.client.sec.correctly_signed_authn_request(ar_str,
                     self.client.config.xmlsec_binary,
                     self.client.config.metadata)
         except Exception: # missing certificate
@@ -261,10 +257,9 @@ class TestClient:
         resp_str = base64.encodestring(resp_str)
         
         authn_response = self.client.response({"SAMLResponse":resp_str},
-                            "urn:mace:example.com:saml:roland:sp",
                             {"id1":"http://foo.example.com/service"})
                             
-        assert authn_response != None
+        assert authn_response is not None
         assert authn_response.issuer() == IDP
         assert authn_response.response.assertion[0].issuer.text == IDP
         session_info = authn_response.session_info()
@@ -299,8 +294,7 @@ class TestClient:
 
         resp_str = base64.encodestring(resp_str)
         
-        authn_response = self.client.response({"SAMLResponse":resp_str},
-                            "urn:mace:example.com:saml:roland:sp",
+        self.client.response({"SAMLResponse":resp_str},
                             {"id2":"http://foo.example.com/service"})
         
         # Two persons in the cache
@@ -332,7 +326,7 @@ class TestClient:
         (sid, response) = self.client.authenticate(
                                         "urn:mace:example.com:saml:roland:idp",
                                         "http://www.example.com/relay_state")
-        assert sid != None
+        assert sid is not None
         assert response[0] == "Location"
         o = urlparse(response[1])
         qdict = parse_qs(o.query)
@@ -344,7 +338,7 @@ class TestClient:
 
     def test_authenticate_no_args(self):
         (sid, request) = self.client.authenticate(relay_state="http://www.example.com/relay_state")
-        assert sid != None
+        assert sid is not None
         assert request[0] == "Location"
         o = urlparse(request[1])
         qdict = parse_qs(o.query)
@@ -404,7 +398,7 @@ class TestClient:
         """ one IdP/AA with BINDING_SOAP, can't actually send something"""
 
         conf = config.SPConfig()
-        conf.load_file("server2.config")
+        conf.load_file("server2_conf")
         client = Saml2Client(conf)
 
         # information about the user from an IdP
@@ -433,7 +427,7 @@ class TestClient:
         """ two or more IdP/AA with BINDING_HTTP_REDIRECT"""
 
         conf = config.SPConfig()
-        conf.load_file("server3.config")
+        conf.load_file("server3_conf")
         client = Saml2Client(conf)
 
         # information about the user from an IdP
