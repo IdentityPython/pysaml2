@@ -924,10 +924,13 @@ def entity_descriptor(confd, valid_for):
             'No service type ("sp","idp","aa") provided in the configuration')
     
     if "sp" in serves:
+        confd.context = "sp"
         entd.spsso_descriptor = do_sp_sso_descriptor(confd, mycert)
     if "idp" in serves:
+        confd.context = "idp"
         entd.idpsso_descriptor = do_idp_sso_descriptor(confd, mycert)
     if "aa" in serves:
+        confd.context = "aa"
         entd.attribute_authority_descriptor = do_aa_descriptor(confd, mycert)
 
     return entd
