@@ -56,6 +56,17 @@ class Config(object):
 
     def serves(self):
         return [t for t in ["sp", "idp", "aa"] if self._attr[t]]
+
+    def copy_into(self, typ=""):
+        if typ == "sp":
+            copy = SPConfig()
+        elif typ in ["idp", "aa"]:
+            copy = IdPConfig()
+        else:
+            copy = Config()
+        copy.context = typ
+        copy._attr = self._attr.copy()
+        return copy
     
     def __getattribute__(self, item):
         if item == "context":

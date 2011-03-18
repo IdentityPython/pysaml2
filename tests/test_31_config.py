@@ -218,3 +218,16 @@ def test_sp():
     assert cnf.endpoint("assertion_consumer_service") == \
                                             "http://lingon.catalogix.se:8087/"
     assert len(cnf.idps()) == 1
+
+def test_dual():
+    cnf = Config().load_file("idp_sp_conf")
+    cnf.serves() == ["sp", "idp"]
+
+    spcnf = cnf.copy_into("sp")
+    assert isinstance(spcnf, SPConfig)
+    assert spcnf.context == "sp"
+
+    idpcnf = cnf.copy_into("idp")
+    assert isinstance(idpcnf, IdPConfig)
+    assert idpcnf.context == "idp"
+    
