@@ -2,65 +2,135 @@
 
 __author__ = 'rolandh'
 
+import sys
+from importlib import import_module
 from saml2 import BINDING_SOAP, BINDING_HTTP_REDIRECT
 from saml2 import metadata
 from saml2.attribute_converter import ac_factory
 from saml2.assertion import Policy
 
-SIMPLE_ARGS = ["entityid", "xmlsec_binary", "debug", "key_file", "cert_file",
-                "secret", "accepted_time_diff", "virtual_organization", "name",
-                "description", "endpoints", "required_attributes",
-                "optional_attributes", "idp", "sp", "aa", "subject_data",
-                "want_assertions_signed", "authn_requests_signed", "type",
-                "organization", "contact_person",
-                "want_authn_requests_signed", "name_form"]
+COMMON_ARGS = ["entityid", "xmlsec_binary", "debug", "key_file", "cert_file",
+                "secret", "accepted_time_diff", "name",
+                "description",
+                "organization",
+                "contact_person",
+                "name_form",
+                "virtual_organization",
+                ]
 
-COMPLEX_ARGS = ["metadata", "attribute_converters", "policy"]
+SP_ARGS = [
+            "required_attributes",
+            "optional_attributes",
+            "idp",
+            "subject_data",
+            "want_assertions_signed",
+            "authn_requests_signed",
+            "name_form",
+            "endpoints",
+            ]
+
+AA_IDP_ARGS = ["want_authn_requests_signed",
+               "provided_attributes",
+               "subject_data",
+               "sp",
+               "endpoints",
+               "metadata"]
+
+COMPLEX_ARGS = ["attribute_converters", "metadata", "policy"]
+ALL = COMMON_ARGS + SP_ARGS + AA_IDP_ARGS + COMPLEX_ARGS
+
+
+SPEC = {
+    "": COMMON_ARGS + COMPLEX_ARGS,
+    "sp": COMMON_ARGS + COMPLEX_ARGS + SP_ARGS,
+    "idp": COMMON_ARGS + COMPLEX_ARGS + AA_IDP_ARGS,
+    "aa": COMMON_ARGS + COMPLEX_ARGS + AA_IDP_ARGS,
+}
 
 class Config(object):
-    def __init__(self):
-        self._attr = {}
+    def_context = ""
 
+    def __init__(self):
+        self._attr = {"": {}, "sp": {}, "idp": {}, "aa": {}}
+        self.context = ""
+
+    def serves(self):
+        return [t for t in ["sp", "idp", "aa"] if self._attr[t]]
+    
     def __getattribute__(self, item):
-        if item in SIMPLE_ARGS or item in COMPLEX_ARGS:
+        if item == "context":
+            return object.__getattribute__(self, item)
+
+        _context = self.context
+        if item in ALL:
             try:
-                return self._attr[item]
+                return self._attr[_context][item]
             except KeyError:
+                if _context:
+                    try:
+                        return self._attr[""][item]
+                    except KeyError:
+                        pass
                 return None
         else:
             return object.__getattribute__(self, item)
 
-    def load(self, cnf):
-
-        for arg in SIMPLE_ARGS:
+    def load_special(self, cnf, typ):
+        for arg in SPEC[typ]:
             try:
-                self._attr[arg] = cnf[arg]
+                self._attr[typ][arg] = cnf[arg]
             except KeyError:
                 pass
 
+        self.context = typ
+        self.load_complex(cnf, typ)
+        self.context = self.def_context
+
+    def load_complex(self, cnf, typ=""):
         try:
-            self._attr["policy"] = Policy(cnf["policy"])
+            self._attr[typ]["policy"] = Policy(cnf["policy"])
         except KeyError:
             pass
 
         try:
             acs = ac_factory(cnf["attribute_map_dir"])
             try:
-                self._attr["attribute_converters"].extend(acs)
+                self._attr[typ]["attribute_converters"].extend(acs)
             except KeyError:
-                self._attr["attribute_converters"] = acs
+                self._attr[typ]["attribute_converters"] = acs
         except KeyError:
             pass
 
         try:
-            self._attr["metadata"] = self.load_metadata(cnf["metadata"])
+            self._attr[typ]["metadata"] = self.load_metadata(cnf["metadata"])
         except KeyError:
             pass
 
+    def load(self, cnf):
+
+        for arg in COMMON_ARGS:
+            try:
+                self._attr[""][arg] = cnf[arg]
+            except KeyError:
+                pass
+
+        if "service" in cnf:
+            for typ in ["aa", "idp", "sp"]:
+                try:
+                    self.load_special(cnf["service"][typ], typ)
+                except KeyError:
+                    pass
+
+        self.load_complex(cnf)
+        self.context = self.def_context
         return self
 
     def load_file(self, config_file):
-        return self.load(eval(open(config_file).read()))
+        if sys.path[0] != ".":
+            sys.path.insert(0, ".")
+        mod = import_module(config_file)
+        #return self.load(eval(open(config_file).read()))
+        return self.load(mod.CONFIG)
 
     def load_metadata(self, metadata_conf):
         """ Loads metadata into an internal structure """
@@ -110,6 +180,8 @@ class Config(object):
             return None
 
 class SPConfig(Config):
+    def_context = "sp"
+
     def __init__(self):
         Config.__init__(self)
 
@@ -167,6 +239,8 @@ class SPConfig(Config):
             return self.metadata.idps()
 
 class IdPConfig(Config):
+    def_context = "idp"
+    
     def __init__(self):
         Config.__init__(self)
         
@@ -190,3 +264,15 @@ class IdPConfig(Config):
                 return [s[binding] for s in acs]
 
         return []
+
+def config_factory(typ, file):
+    if typ == "sp":
+        conf = SPConfig().load_file(file)
+        conf.context = typ
+    elif typ in ["aa", "idp"]:
+        conf = IdPConfig().load_file(file)
+        conf.context = typ
+    else:
+        conf = Config().load_file(file)
+        conf.context = typ
+    return conf

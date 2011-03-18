@@ -719,6 +719,7 @@ def do_requested_attribute(attributes, acs, is_required="false"):
         for key in attr.keyswv():
             args[key] = getattr(attr, key)
         args["is_required"] = is_required
+        args["name_format"] = NAME_FORMAT_URI
         lista.append(md.RequestedAttribute(**args))
     return lista
 
@@ -917,16 +918,18 @@ def entity_descriptor(confd, valid_for):
     if confd.contact_person is not None:
         entd.contact_person = do_contact_person_info(confd.contact_person)
 
-    if confd.type == "sp":
-        entd.spsso_descriptor = do_sp_sso_descriptor(confd, mycert)
-    elif confd.type == "idp":
-        entd.idpsso_descriptor = do_idp_sso_descriptor(confd, mycert)
-    elif confd.type == "aa":
-        entd.attribute_authority_descriptor = do_aa_descriptor(confd, mycert)
-    else:
+    serves = confd.serves()
+    if not serves:
         raise Exception(
             'No service type ("sp","idp","aa") provided in the configuration')
     
+    if "sp" in serves:
+        entd.spsso_descriptor = do_sp_sso_descriptor(confd, mycert)
+    if "idp" in serves:
+        entd.idpsso_descriptor = do_idp_sso_descriptor(confd, mycert)
+    if "aa" in serves:
+        entd.attribute_authority_descriptor = do_aa_descriptor(confd, mycert)
+
     return entd
 
 def entities_descriptor(eds, valid_for, name, ident, sign, secc):

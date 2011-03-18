@@ -34,11 +34,8 @@ from repoze.who.interfaces import IChallenger, IIdentifier, IAuthenticator
 from repoze.who.interfaces import IMetadataProvider
 from repoze.who.plugins.form import FormPluginBase
 
-from saml2 import BINDING_HTTP_REDIRECT
 from saml2.client import Saml2Client
-from saml2.config import SPConfig
 from saml2.s_utils import sid
-from saml2.virtual_org import VirtualOrg
 
 #from saml2.population import Population
 #from saml2.attribute_resolver import AttributeResolver
@@ -417,13 +414,10 @@ def make_plugin(rememberer_name=None, # plugin for remember
         raise ValueError(
              'must include rememberer_name in configuration')
     
-    config = SPConfig()
-    config.load_file(saml_conf)
-            
-    scl = Saml2Client(config, identity_cache=identity_cache,
+    scl = Saml2Client(config_file=saml_conf, identity_cache=identity_cache,
                         virtual_organization=virtual_organization)
 
-    plugin = SAML2Plugin(rememberer_name, config, scl, wayf, cache, debug, 
+    plugin = SAML2Plugin(rememberer_name, scl.config, scl, wayf, cache, debug,
                         sid_store)
     return plugin
 

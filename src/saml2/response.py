@@ -56,7 +56,7 @@ def for_me(condition, myself ):
     
     return False
 
-def authn_response(conf, entity_id, return_addr, outstanding_queries=None, 
+def authn_response(conf, return_addr, outstanding_queries=None,
                     log=None, timeslack=0, debug=0):
     sec = security_context(conf)
     if not timeslack:
@@ -65,12 +65,12 @@ def authn_response(conf, entity_id, return_addr, outstanding_queries=None,
         except TypeError:
             timeslack = 0
     
-    return AuthnResponse(sec, conf.attribute_converters, entity_id, 
+    return AuthnResponse(sec, conf.attribute_converters, conf.entityid,
                         return_addr, outstanding_queries, log, timeslack, 
                         debug)
 
 # comes in over SOAP so synchronous
-def attribute_response(conf, entity_id, return_addr, log=None, timeslack=0, 
+def attribute_response(conf, return_addr, log=None, timeslack=0,
                         debug=0):
     sec = security_context(conf)
     if not timeslack:
@@ -79,7 +79,7 @@ def attribute_response(conf, entity_id, return_addr, log=None, timeslack=0,
         except TypeError:
             timeslack = 0
 
-    return AttributeResponse(sec, conf.attribute_converters, entity_id, 
+    return AttributeResponse(sec, conf.attribute_converters, conf.entityid,
                                 return_addr, log, timeslack, debug)
 
 class StatusResponse(object):

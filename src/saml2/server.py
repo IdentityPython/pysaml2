@@ -50,7 +50,7 @@ from saml2.binding import http_post_message
 from saml2.sigver import security_context
 from saml2.sigver import signed_instance_factory
 from saml2.sigver import pre_signature_part
-from saml2.config import IdPConfig
+from saml2.config import config_factory
 from saml2.assertion import Assertion, Policy   
 
 class UnknownVO(Exception):
@@ -212,6 +212,8 @@ class Server(object):
             self.load_config(config_file)
         elif config:
             self.conf = config
+        else:
+            raise Exception("Missing configuration")
         
         self.metadata = self.conf.metadata
         self.sec = security_context(self.conf, log)
@@ -228,8 +230,7 @@ class Server(object):
         
         :param config_file: The name of the configuration file
         """
-        self.conf = IdPConfig()
-        self.conf.load_file(config_file)
+        self.conf = config_factory("idp", config_file)
         try:
             # subject information is store in database
             # default database is a shelve database which is OK in some setups
@@ -593,7 +594,10 @@ class Server(object):
                 self.log.info("enpoints: %s" % (self.conf.endpoints,))
                 self.log.info("binding wanted: %s" % (binding,))
             raise
-                
+
+        if not slo:
+            raise Exception("No single_logout_server for that binding")
+        
         if self.log:
             self.log.info("Endpoint: %s" % slo)
         req = LogoutRequest(self.sec, slo)

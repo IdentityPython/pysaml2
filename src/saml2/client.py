@@ -40,7 +40,7 @@ from saml2.binding import send_using_soap, http_redirect_message
 from saml2.binding import http_post_message
 from saml2.population import Population
 from saml2.virtual_org import VirtualOrg
-from saml2.config import SPConfig
+from saml2.config import config_factory
 
 #from saml2.response import authn_response
 from saml2.response import response_factory
@@ -72,9 +72,9 @@ class LogoutError(Exception):
 class Saml2Client(object):
     """ The basic pySAML2 service provider class """
     
-    def __init__(self, config=None, debug=0, 
+    def __init__(self, config=None, debug=0,
                 identity_cache=None, state_cache=None, 
-                virtual_organization=None):
+                virtual_organization=None, config_file=""):
         """
         :param config: A saml2.config.Config instance
         :param debug: Whether debugging should be done even if the
@@ -96,11 +96,14 @@ class Saml2Client(object):
         self.sec = None
         if config:
             self.config = config
-            self.metadata = config.metadata
-            self.sec = security_context(config)
+        elif config_file:
+            self.config = config_factory("sp", config_file)
         else:
-            self.config = SPConfig()
-        
+            raise Exception("Missing configuration")
+
+        self.metadata = self.config.metadata
+        self.sec = security_context(config)
+
         if virtual_organization:
             self.vorg = VirtualOrg(self, virtual_organization)
         else:
@@ -464,12 +467,15 @@ class Saml2Client(object):
                 log.info("No response")
             return None
     
-    def construct_logout_request(self, subject_id, destination, entity_id,
+    def construct_logout_request(self, subject_id, destination,
+                                 issuer_entity_id,
                             reason=None, expire=None):
         """ Constructs a LogoutRequest
         
         :param subject_id: The identifier of the subject
-        :param destination: 
+        :param destination:
+        :param issuer_entity_id: The entity ID of the IdP the request is
+            target at.
         :param reason: An indication of the reason for the logout, in the
             form of a URI reference.
         :param expire: The time at which the request expires,
@@ -480,7 +486,8 @@ class Saml2Client(object):
         session_id = sid()
         # create NameID from subject_id
         name_id = saml.NameID(
-            text = self.users.get_entityid(subject_id, entity_id, False))
+            text = self.users.get_entityid(subject_id, issuer_entity_id,
+                                           False))
 
         request = samlp.LogoutRequest(
             id=session_id,
