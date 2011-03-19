@@ -51,6 +51,7 @@
   'generationQualifier': 'urn:oid:2.5.4.44',
   'eduPersonAffiliation': 'urn:oid:1.3.6.1.4.1.5923.1.1.1.1',
   'eduPersonPrincipalName': 'urn:oid:1.3.6.1.4.1.5923.1.1.1.6',
+  'edupersonprincipalname': 'urn:oid:1.3.6.1.4.1.5923.1.1.1.6',
   'localityName': 'urn:oid:2.5.4.7',
   'owner': 'urn:oid:2.5.4.32',
   'norEduOrgUnitUniqueNumber': 'urn:oid:1.3.6.1.4.1.2428.90.1.2',
@@ -95,6 +96,6 @@
   'presentationAddress': 'urn:oid:2.5.4.29',
   'sn': 'urn:oid:2.5.4.4',
   'domainComponent': 'urn:oid:0.9.2342.19200300.100.1.25',
-  'labeledURI': 'urn:oud:1.3.6.1.4.1.250.1.57',
-  'uid': 'urn:oud:0.9.2342.19200300.100.1.1'
+  'labeledURI': 'urn:oid:1.3.6.1.4.1.250.1.57',
+  'uid': 'urn:oid:0.9.2342.19200300.100.1.1'
 }
