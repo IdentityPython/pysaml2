@@ -98,22 +98,23 @@ class Config(object):
         self.context = self.def_context
 
     def load_complex(self, cnf, typ=""):
+        _attr_typ = self._attr[typ]
         try:
-            self._attr[typ]["policy"] = Policy(cnf["policy"])
+            _attr_typ["policy"] = Policy(cnf["policy"])
         except KeyError:
             pass
 
         try:
             acs = ac_factory(cnf["attribute_map_dir"])
             try:
-                self._attr[typ]["attribute_converters"].extend(acs)
+                _attr_typ["attribute_converters"].extend(acs)
             except KeyError:
-                self._attr[typ]["attribute_converters"] = acs
+                _attr_typ["attribute_converters"] = acs
         except KeyError:
             pass
 
         try:
-            self._attr[typ]["metadata"] = self.load_metadata(cnf["metadata"])
+            _attr_typ["metadata"] = self.load_metadata(cnf["metadata"])
         except KeyError:
             pass
 
@@ -185,6 +186,7 @@ class Config(object):
                     res.append(endp)
             except ValueError:
                 res.append(endpspec)
+    
         try:
             return res[0]
         except IndexError:
