@@ -36,6 +36,7 @@ from repoze.who.plugins.form import FormPluginBase
 
 from saml2.client import Saml2Client
 from saml2.s_utils import sid
+from saml2.config import config_factory
 
 #from saml2.population import Population
 #from saml2.attribute_resolver import AttributeResolver
@@ -311,7 +312,7 @@ class SAML2Plugin(FormPluginBase):
         try:
             session_info = self._eval_authn_response(environ,  
                                             cgi_field_storage_to_dict(post))
-        except Exception, exc:
+        except Exception:
             return None
             
         if session_info:        
@@ -413,11 +414,13 @@ def make_plugin(rememberer_name=None, # plugin for remember
     if rememberer_name is None:
         raise ValueError(
              'must include rememberer_name in configuration')
-    
-    scl = Saml2Client(config_file=saml_conf, identity_cache=identity_cache,
+
+    conf = config_factory("sp", saml_conf)
+
+    scl = Saml2Client(config=conf, identity_cache=identity_cache,
                         virtual_organization=virtual_organization)
 
-    plugin = SAML2Plugin(rememberer_name, scl.config, scl, wayf, cache, debug,
+    plugin = SAML2Plugin(rememberer_name, conf, scl, wayf, cache, debug,
                         sid_store)
     return plugin
 
