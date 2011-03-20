@@ -33,6 +33,7 @@ AA_IDP_ARGS = ["want_authn_requests_signed",
                "provided_attributes",
                "subject_data",
                "sp",
+               "scope",
                "endpoints",
                "metadata"]
 

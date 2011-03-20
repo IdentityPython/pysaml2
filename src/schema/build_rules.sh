@@ -7,3 +7,5 @@
 ../../tools/parse_xsd2.py -i xd -i xe -i sa -i sm ui.xsd > ui.py
 ../../tools/parse_xsd2.py -i xd -i xe -i sa -i sm -i ui dri.xsd > dri.py
 
+../../tools/parse_xsd2.py -i xd shibboleth-metadata-1.0.xsd > shb.py
+

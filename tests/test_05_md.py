@@ -32,8 +32,9 @@ from saml2 import saml
 from saml2 import samlp
 from saml2 import md 
 from saml2 import idpdisc
+from saml2 import shibmd
 
-from saml2 import element_to_extension_element, extension_element_to_element
+from saml2 import extension_element_to_element
 import md_data, ds_data
 
 class TestEndpointType:
@@ -773,7 +774,24 @@ class TestIDPSSODescriptor:
     assert isinstance(new_idp_sso_descriptor.attribute[0],
                             saml.Attribute)
 
-
+  def testUsingScope(self):
+      descriptor = md.IDPSSODescriptor()
+      scope = shibmd.Scope()
+      scope.text = "example.org"
+      scope.regexp = "false"
+      descriptor.extensions = md.Extensions()
+      ext = saml2.element_to_extension_element(scope)
+      descriptor.extensions.extension_elements.append(ext)
+      exts = descriptor.extensions
+      assert len(exts.extension_elements) == 1
+      elem = exts.extension_elements[0]
+      inst = saml2.extension_element_to_element(elem,
+                                                shibmd.ELEMENT_FROM_STRING,
+                                                namespace=shibmd.NAMESPACE)
+      assert isinstance(inst, shibmd.Scope)
+      assert inst.text == "example.org"
+      assert inst.regexp == "false"
+      
 class TestAssertionConsumerService:
 
   def setup_class(self):
