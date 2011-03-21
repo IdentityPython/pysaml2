@@ -1,6 +1,8 @@
+import saml2
 from saml2 import metadata
 from saml2 import md
 from saml2 import BINDING_HTTP_POST
+from saml2 import shibmd
 from saml2.attribute_converter import ac_factory
 from saml2.saml import NAME_FORMAT_URI
 from saml2.config import SPConfig, IdPConfig
@@ -45,7 +47,8 @@ IDP = {
                     "lifetime": {"minutes": 5},
                     "nameid_format": "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent",
                 }
-            }
+            },
+            "scope": ["example.org"]
         }
     }
 }
@@ -203,4 +206,14 @@ def test_do_idp_sso_descriptor():
     assert isinstance(idpsso, md.IDPSSODescriptor)
     assert _eq(idpsso.keyswv(), ['protocol_support_enumeration', 
                                 'single_sign_on_service', 
-                                'want_authn_requests_signed'])
+                                'want_authn_requests_signed',
+                                "extensions"])
+    exts = idpsso.extensions
+    assert len(exts.extension_elements) == 1
+    elem = exts.extension_elements[0]
+    inst = saml2.extension_element_to_element(elem,
+                                              shibmd.ELEMENT_FROM_STRING,
+                                              namespace=shibmd.NAMESPACE)
+    assert isinstance(inst, shibmd.Scope)
+    assert inst.text == "example.org"
+    assert inst.regexp == "false"

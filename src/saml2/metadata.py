@@ -24,6 +24,7 @@ import sys
 from decorator import decorator
 import xmldsig as ds
 
+import saml2
 from saml2 import md, samlp, BINDING_HTTP_POST, BINDING_HTTP_REDIRECT
 from saml2 import BINDING_SOAP, class_name
 from saml2.s_utils import factory
@@ -37,6 +38,7 @@ from saml2.sigver import pre_signature_part
 from saml2.sigver import make_temp, cert_from_key_info, verify_signature
 from saml2.sigver import pem_format
 from saml2.validate import valid_instance, NotValid
+from saml2 import shibmd
 
 @decorator
 def keep_updated(func, self, entity_id, *args, **kwargs):
@@ -864,6 +866,19 @@ def do_idp_sso_descriptor(conf, cert=None):
         for (endpoint, instlist) in do_endpoints(conf.endpoints,
                                                     ENDPOINTS["idp"]).items():
             setattr(idpsso, endpoint, instlist)
+
+    if conf.scope:
+        extensions = md.Extensions()
+        _ext_elems = extensions.extension_elements
+        for scope in conf.scope:
+            mdscope = shibmd.Scope()
+            mdscope.text = scope
+            # unless scope contains '*'/'+'/'?' assume non regexp ?
+            mdscope.regexp = "false"
+            ext = saml2.element_to_extension_element(mdscope)
+            _ext_elems.append(ext)
+
+        idpsso.extensions = extensions
 
     if cert:
         idpsso.key_descriptor = do_key_descriptor(cert)
