@@ -314,7 +314,7 @@ class AuthnResponse(StatusResponse):
         #print "Conditions",assertion.conditions
         assert self.assertion.conditions
         condition = self.assertion.conditions
-        if self.debug:
+        if self.debug and self.log:
             self.log.info("condition: %s" % condition)
         
         try:
@@ -341,12 +341,13 @@ class AuthnResponse(StatusResponse):
     def get_identity(self):
         # The assertion can contain zero or one attributeStatements
         if not self.assertion.attribute_statement:
-            self.log.error("Missing Attribute Statement")
+            if self.log:
+                self.log.error("Missing Attribute Statement")
             ava = {}
         else:
             assert len(self.assertion.attribute_statement) == 1
             
-            if self.debug:
+            if self.debug and self.log:
                 self.log.info("Attribute Statement: %s" % (
                                     self.assertion.attribute_statement[0],))
                 for aconv in self.attribute_converters:
@@ -390,7 +391,7 @@ class AuthnResponse(StatusResponse):
                     # This is where I don't allow unsolicited reponses
                     # Either in_response_to == None or has a value I don't
                     # recognize
-                    if self.debug:
+                    if self.debug and self.log:
                         self.log.info(
                                 "in response to: '%s'" % data.in_response_to)
                         self.log.info("outstanding queries: %s" % \
@@ -413,7 +414,7 @@ class AuthnResponse(StatusResponse):
     def _assertion(self, assertion):
         self.assertion = assertion
         
-        if self.debug:
+        if self.debug and self.log:
             self.log.info("assertion context: %s" % (self.context,))
             self.log.info("assertion keys: %s" % (assertion.keyswv()))
             self.log.info("outstanding_queries: %s" % (
@@ -425,12 +426,12 @@ class AuthnResponse(StatusResponse):
         if not self.condition_ok():
             return None
         
-        if self.debug:
+        if self.debug and self.log:
             self.log.info("--- Getting Identity ---")
         
         self.ava = self.get_identity()
         
-        if self.debug:
+        if self.debug and self.log:
             self.log.info("--- AVA: %s" % (self.ava,))
         
         try:
@@ -445,18 +446,18 @@ class AuthnResponse(StatusResponse):
     def _encrypted_assertion(self, xmlstr):
         decrypt_xml = self.sec.decrypt(xmlstr)
         
-        if self.debug:
+        if self.debug and self.log:
             self.log.info("Decryption successfull")
         
         self.response = samlp.response_from_string(decrypt_xml)
-        if self.debug:
+        if self.debug and self.log:
             self.log.info("Parsed decrypted assertion successfull")
         
         enc = self.response.encrypted_assertion[0].extension_elements[0]
         assertion = extension_element_to_element(enc,
                                                 saml.ELEMENT_FROM_STRING,
                                                 namespace=saml.NAMESPACE)
-        if self.debug:
+        if self.debug and self.log:
             self.log.info("Decrypted Assertion: %s" % assertion)
         return self._assertion(assertion)
     
@@ -468,11 +469,11 @@ class AuthnResponse(StatusResponse):
             raise Exception("No assertion part")
         
         if self.response.assertion:
-            if self.debug:
+            if self.debug and self.log:
                 self.log.info("***Unencrypted response***")
             return self._assertion(self.response.assertion[0])
         else:
-            if self.debug:
+            if self.debug and self.log:
                 self.log.info("***Encrypted response***")
             return self._encrypted_assertion(
                                         self.response.encrypted_assertion[0])
