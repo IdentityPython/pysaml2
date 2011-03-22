@@ -22,7 +22,7 @@ class Cache(object):
     def delete(self, subject_id):
         del self._db[subject_id]
         
-    def get_identity(self, subject_id, entities=None):
+    def get_identity(self, subject_id, entities=None, check_not_on_or_after=True):
         """ Get all the identity information that has been received and 
         are still valid about the subject.
         
@@ -43,7 +43,7 @@ class Cache(object):
         oldees = []
         for entity_id in entities:
             try:
-                info = self.get(subject_id, entity_id)
+                info = self.get(subject_id, entity_id, check_not_on_or_after)
             except ToOld:
                 oldees.append(entity_id)
                 continue
