@@ -9,7 +9,7 @@ CONFIG={
             },
             "required_attributes": ["surName", "givenName", "mail"],
             "optional_attributes": ["title"],
-            "idp": {"urn:mace:example.com:saml:roland:idp":None},
+            "idp": ["urn:mace:example.com:saml:roland:idp"],
         }
     },
     "debug" : 1,

@@ -8,23 +8,59 @@ attribute authority you have to configure it. The format of the configuration
 file is the same disregarding which type of service you plan to run.
 What differs is some of the directives.
 Below you will find a list of all the used directives in alphabetic order.
-The configuration is written as a python dictionary which means that the
-directives are the top level keys.
+The configuration is written as a python module which contains a named
+dictionary ("CONFIG") that contains the configuration directives.
 
-.. note:: You can build the entities metadata file directly from the configuration.
-    The make_metadata.py script in the pySAML2 tools directory will do that 
-    for you.
-    
-    
+The basic structure of the configuration file is therefor like this::
+
+    from saml2 import BINDING_HTTP_REDIRECT
+
+    CONFIG = {
+        "entityid" : "http://saml.example.com:saml/idp.xml",
+        "name" : "Rolands IdP",
+        "service": {
+            "idp": {
+                "endpoints" : {
+                    "single_sign_on_service" : [
+                            ("http://saml.example.com:saml:8088/sso",
+                                BINDING_HTTP_REDIRECT)],
+                    "single_logout_service": [
+                            ("http://saml.example.com:saml:8088/slo",
+                                BINDING_HTTP_REDIRECT)]
+                },
+                ...
+            }
+        },
+        "key_file" : "my.key",
+        "cert_file" : "ca.pem",
+        "xmlsec_binary" : "/usr/local/bin/xmlsec1",
+        "metadata": {
+            "local": ["edugain.xml"],
+        },
+        "attribute_map_dir" : "attributemaps",
+        ...
+    }
+
+.. note:: You can build the metadata file for your services directly from the
+    configuration.The make_metadata.py script in the pySAML2 tools directory
+    will do that for you.
+
 Configuration directives
-------------------------
-    
+::::::::::::::::::::::::
+
+.. contents::
+    :local:
+    :backlinks: entry
+
+General directives
+------------------
+
 attribute_map_dir
 ^^^^^^^^^^^^^^^^^
 
 Format::
 
-    attribute_map_dir: "attribute-maps"
+    "attribute_map_dir": "attribute-maps"
     
 Points to a directory which has subdirectories, one per name-format you
 expect to support. So a typical tree would be.::
@@ -194,10 +230,48 @@ There are two options common to all services: 'name' and 'endpoints'.
 The remaining options are specific to one or the other of the service types.
 Which one is specified along side the name of the option
 
--------
+timeslack
+^^^^^^^^^
 
-*policy* (idp/aa)
-"""""""""""""""""
+If your computer and another computer that you are communicating with are not
+in synch regarding the computer clock. Then you here can state how big a
+difference you are prepared to accept.
+
+.. note:: This will indiscriminately effect all time comparisons.
+    Hence your server my accept a statement that in fact is to old.
+
+xmlsec_binary
+^^^^^^^^^^^^^
+
+Presently xmlsec1 binaries are used for all the signing and encryption stuff.
+This option defines where the binary is situated.
+
+Example::
+
+    "xmlsec_binary": "/usr/local/bin/xmlsec1",
+
+valid_for
+^^^^^^^^^
+
+How many *hours* this configuration is expected to be accurate.::
+
+    "valid_for": 24
+
+This of course is only used by *make_metadata.py*.
+The server will not stop working when this amount of time has elapsed :-).
+
+Specific directives
+-------------------
+
+Directives that are specific to a certain type of service.
+
+idp/aa
+^^^^^^
+
+Directives that are specific to an IdP or AA service instance
+
+policy
+""""""
 
 If the server is an IdP and/or an AA then there might be reasons to do things
 differently depending on who is asking; this is where that is specified.
@@ -260,73 +334,32 @@ regular expressions.::
 
 Here only mail addresses that ends with ".umu.se" will be returned.
 
-*idp* (sp)
-""""""""""
+sp
+^^
 
-Defines the set of IdPs that this SP is allowed to use. If there is metadata 
-loaded, and not all the IdPs in the metadata is allowed, then the value is 
-expected to be a dictionary with entity identifiers as
-keys. The IdP url which normally is the value can be omitted. 
-If the url is not defined then an
-attempt is made to pick it out of the metadata.
-A typical configuration, when metadata is present and the allowed set of 
-IdPs are limited, would look something like this::
+Directives specific to SP instances
 
-    "service": {
-        "sp": {
-            "idp": {
-                "urn:mace:umu.se:saml:roland:idp": None,
-            },
-        }
-    }
+idp
+"""
 
-In this case the SP has only one IdP it can use, a typical situation when
-you are using SAML for services within one organization. At configuration
-time the url of the IdP might not be know so the evaluation of it is left 
-until a metadata file is present. If more than one IdP can be used then
-the WAYF function would use the metadata file to 
-find out the names, to be presented to the user, for the different IdPs.
-On the other hand if the SP only uses one specific IdP then the usage of
-metadata might be overkill so this construct can be used instead::
+Defines the set of IdPs that this SP is allowed to use. If not all the IdPs in
+the metadata is allowed, then the value is expected to be a list with entity
+identifiers for the allowed IdPs.
+A typical configuration, when the allowed set of IdPs are limited, would look
+something like this::
 
     "service": {
         "sp": {
-            "idp": {
-                "" :{"single_signon_service":
-                        ["https://example.com/idp/SSOService.php"],
-                    "single_logout_service": 
-                        [("https://example.com/idp/SLS",
-                            'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect')],
-                },
-            },
+            "idp": ["urn:mace:umu.se:saml:roland:idp"],
         }
     }
 
-Apart from *single_signon_service* and *single_logout_service*, the following
-service type specifications can be used
- 
-* artifact_resolution_service
-* manage_name_id_service
-* name_id_mapping_service
-* assertion_id_request_service
-    
-Since the user is immediately sent to the IdP the entity identifier of the IdP
-is immaterial. If not the key is expected to be the user friendly
-name of the IdP. Which again if no WAYF is used is immaterial, since the
-user will never see the name.
+In this case the SP has only one IdP it can use.
 
-There is a third choice and that is to leave the configuration blank, in 
-which case all the IdP present in the metadata
-will be regarded as eligible services to use. ::
+If all IdPs present in the metadata loaded this directive must be left out.
 
-    "service": {
-        "sp": {
-            "idp": {},
-        }
-    }
-
-*optional_attributes* (sp)
-""""""""""""""""""""""""""
+optional_attributes
+"""""""""""""""""""
 
 Attributes that this SP would like to receive from IdPs.
 
@@ -342,8 +375,8 @@ Since the attribute names used here are the user friendly ones an attribute map
 must exist, so that the server can use the full name when communicating
 with other servers.
 
-*required_attributes* (sp)
-""""""""""""""""""""""""""
+required_attributes
+"""""""""""""""""""
 
 Attributes that this SP demands to receive from IdPs.
 
@@ -358,10 +391,46 @@ Example::
 Again as for *optional_attributes* the names given are expected to be 
 the user friendly names.
 
---------
+idp/aa/sp
+^^^^^^^^^ 
+
+If the configuration is covering both two or three different service types
+(like if one server is actually acting as both an IdP and a SP) then in some
+cases you might want to have these below different for the different services.
+
+endpoints
+"""""""""
+
+Where the endpoints for the services provided are.
+This directive has as value a dictionary with one of the following keys:
+
+* artifact_resolution_service (aa, idp and sp)
+* assertion_consumer_service (sp)
+* assertion_id_request_service (aa, idp)
+* attribute_service (aa)
+* manage_name_id_service (aa, idp)
+* name_id_mapping_service (idp)
+* single_logout_service (aa, idp, sp)
+* single_sign_on_service (idp)
+
+The values per service is a list of tuples containing endpoint and binding
+type.
+
+Example::
+
+    "service":
+        "idp": {
+            "endpoints" : {
+                "single_sign_on_service" : [
+                        ("http://localhost:8088/sso", BINDING_HTTP_REDIRECT)],
+                "single_logout_service": [
+                        ("http://localhost:8088/slo", BINDING_HTTP_REDIRECT)]
+            },
+        },
+    },
 
 subject_data
-^^^^^^^^^^^^
+""""""""""""
 
 The name of a database where the map between a local identifier and 
 a distributed identifier is kept. By default this is a shelve database.
@@ -381,38 +450,9 @@ or if you want to use for instance memcache::
 *shelve* and *memcached* are the only database types that are presently
 supported.
 
-timeslack
-^^^^^^^^^
-
-If your computer and another computer that you are communicating with are not 
-in synch regarding the computer clock. Then you here can state how big a 
-difference you are prepared to accept.
-
-.. note:: This will indiscriminately effect all time comparisons.
-    Hence your server my accept a statement that in fact is to old.
-
-xmlsec_binary
-^^^^^^^^^^^^^
-
-Presently xmlsec1 binaries are used for all the signing and encryption stuff.
-This option defines where the binary is situated.
-
-Example::
-
-    "xmlsec_binary": "/usr/local/bin/xmlsec1",
-
-valid_for
-^^^^^^^^^
-
-How many *hours* this configuration is expected to be accurate.::
-
-    "valid_for": 24
-    
-This of course is only used by *make_metadata.py*.
-The server will not stop working when this amount of time has elapsed :-).
 
 virtual_organization
-^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""
 
 Gives information about common identifiers for virtual_organizations::
 
@@ -433,19 +473,17 @@ Complete example
 
 We start with a simple but fairly complete Service provider configuration::
 
-    {
-        "entityid" : "urn:mace:example.com:saml:roland:sp",
+    from saml2 import BINDING_HTTP_REDIRECT
+
+    CONFIG = {
+        "entityid" : "http://example.com/sp/metadata.xml",
         "service": {
             "sp":{
-                "name" : "Rolands SP",
+                "name" : "Example SP",
                 "endpoints":{
-                    "assertion_consumer_service": ["http://localhost:8087/"],
-                    "single_logout_service" : [("http://localhost:8087/slo",
-                                   'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect')],
-                },
-                "idp": {
-                    "urn:mace:example.com:saml:roland:idp": {
-                        "single_signon_service": "http://idp.example.com/sso"},
+                    "assertion_consumer_service": ["http://example.com/sp"],
+                    "single_logout_service" : [("http://example.com/sp/slo",
+                                                BINDING_HTTP_REDIRECT)],
                 },
             }
         },
@@ -453,8 +491,11 @@ We start with a simple but fairly complete Service provider configuration::
         "cert_file" : "./mycert.pem",
         "xmlsec_binary" : "/usr/local/bin/xmlsec1",
         "attribute_map_dir": "./attributemaps",
+        "metadata": {
+            "local": ["idp.xml"]
+        }
         "organization": {
-            "display_name":["Rolands identities"]
+            "display_name":["Example identities"]
         }
         "contact_person": [{
             "givenname": "Roland",
@@ -465,21 +506,32 @@ We start with a simple but fairly complete Service provider configuration::
             }]
     }
 
-This is the typical setup for a SP used within an organization.
-If static configuration is OK, no metadata file is needed, instead all the 
-necessary information on how to find the IdP is given in the configuration.
+This is the typical setup for a SP.
+A metadata file to load is *always* needed, but it can of course be
+containing anything from 1 up to many entity descriptions.
+
+------
 
 A slightly more complex configuration::
 
-    {
-        "entityid" : "urn:mace:umu.se:saml:roland:sp",
+    from saml2 import BINDING_HTTP_REDIRECT
+
+    CONFIG = {
+        "entityid" : "http://sp.example.com/metadata.xml",
         "service": {
             "sp":{
-                "name" : "Rolands SP",
+                "name" : "Example SP",
                 "endpoints":{
-                    "assertion_consumer_service": ["http://localhost:8087/"],
-                    "single_logout_service" : [("http://localhost:8087/slo",
-                                   'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect')],
+                    "assertion_consumer_service": ["http://sp.example.com/"],
+                    "single_logout_service" : [("http://sp.example.com/slo",
+                                   BINDING_HTTP_REDIRECT)],
+                },
+                "subject_data": ("memcached", "localhost:12121"),
+                "virtual_organization" : {
+                    "urn:mace:example.com:it:tek":{
+                        "nameid_format" : "urn:oid:1.3.6.1.4.1.1466.115.121.1.15-NameID",
+                        "common_identifier": "eduPersonPName",
+                    }
                 },
             }
         },
@@ -487,14 +539,14 @@ A slightly more complex configuration::
         "cert_file" : "./mycert.pem",
         "xmlsec_binary" : "/usr/local/bin/xmlsec1",
         "metadata" : { 
-            "local": ["idp/idp.xml"],
+            "local": ["example.xml"],
             "remote": [{ 
                 "url":"https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2",
                 "cert":"kalmar2.pem"}]
         },
         "attribute_maps" : "attributemaps",
         "organization": {
-            "display_name":["Rolands identities"]
+            "display_name":["Example identities"]
         }
         "contact_person": [{
             "givenname": "Roland",
