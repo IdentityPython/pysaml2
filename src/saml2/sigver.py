@@ -410,8 +410,8 @@ class SecurityContext(object):
         p_err = pof.stderr.read()
         
         if self.debug:
-            self.log.debug("Decrypt result (out): %s" % (p_out))
-            self.log.debug("Decrypt result (err): %s" % (p_err))
+            self.log.debug("Decrypt result (out): %s" % (p_out,))
+            self.log.debug("Decrypt result (err): %s" % (p_err,))
 
         ntf.seek(0)
         return ntf.read()
