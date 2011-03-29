@@ -530,7 +530,7 @@ A slightly more complex configuration::
                 "virtual_organization" : {
                     "urn:mace:example.com:it:tek":{
                         "nameid_format" : "urn:oid:1.3.6.1.4.1.1466.115.121.1.15-NameID",
-                        "common_identifier": "eduPersonPName",
+                        "common_identifier": "eduPersonPrincipalName",
                     }
                 },
             }
