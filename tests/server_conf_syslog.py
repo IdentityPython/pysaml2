@@ -1,3 +1,5 @@
+__author__ = 'rolandh'
+
 CONFIG={
     "entityid" : "urn:mace:example.com:saml:roland:sp",
     "name" : "urn:mace:example.com:saml:roland:sp",
@@ -42,11 +44,11 @@ CONFIG={
         },
     ],
     "logger": {
-        "rotating": {
-            "filename": "sp.log",
-            "maxBytes": 100000,
-            "backupCount": 5,
+        "syslog": {
+            "address": ("localhost", 514),
+            "facility": "local3",
+            "socktype": "dgram",
         },
-        "loglevel": "warning",
+        "loglevel": "info",
     }
 }

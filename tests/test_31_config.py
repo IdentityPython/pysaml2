@@ -6,6 +6,9 @@ from saml2.config import SPConfig, IdPConfig, Config
 from saml2.metadata import MetaData
 from py.test import raises
 
+from saml2 import root_logger
+import logging
+
 sp1 = {
     "entityid" : "urn:mace:umu.se:saml:roland:sp",
     "service": {
@@ -195,6 +198,40 @@ def test_wayf():
     assert idps == {'urn:mace:example.com:saml:roland:idp': 'Example Co.'}
     idps = c.idps(["se","en"])
     assert idps == {'urn:mace:example.com:saml:roland:idp': 'Exempel AB'}
+
+    c.setup_logger()
+
+    assert root_logger.level != logging.NOTSET
+    assert root_logger.level == logging.WARNING
+    assert len(root_logger.handlers) == 1
+    assert isinstance(root_logger.handlers[0],
+                        logging.handlers.RotatingFileHandler)
+    handler = root_logger.handlers[0]
+    assert handler.backupCount == 5
+    assert handler.maxBytes == 100000
+    assert handler.mode == "a"
+    assert root_logger.name == "pySAML2"
+    assert root_logger.level == 30
+
+def test_conf_syslog():
+    c = SPConfig().load_file("server_conf_syslog")
+    c.context = "sp"
+
+    # otherwise the logger setting is not changed
+    root_logger.level == logging.NOTSET
+    c.setup_logger()
+
+    assert root_logger.level != logging.NOTSET
+    assert root_logger.level == logging.INFO
+    assert len(root_logger.handlers) == 1
+    assert isinstance(root_logger.handlers[0],
+                        logging.handlers.SyslogHandler)
+    handler = root_logger.handlers[0]
+    assert handler.backupCount == 5
+    assert handler.maxBytes == 100000
+    assert handler.mode == "a"
+    assert root_logger.name == "pySAML2"
+    assert root_logger.level == 20
 
 #noinspection PyUnresolvedReferences
 def test_3():

@@ -3,9 +3,15 @@
 __author__ = 'rolandh'
 
 import sys
+import logging
+import logging.handlers
+
 from importlib import import_module
+
 from saml2 import BINDING_SOAP, BINDING_HTTP_REDIRECT
 from saml2 import metadata
+from saml2 import root_logger
+
 from saml2.attribute_converter import ac_factory
 from saml2.assertion import Policy
 
@@ -16,6 +22,7 @@ COMMON_ARGS = ["entityid", "xmlsec_binary", "debug", "key_file", "cert_file",
                 "contact_person",
                 "name_form",
                 "virtual_organization",
+                "logger"
                 ]
 
 SP_ARGS = [
@@ -47,6 +54,24 @@ SPEC = {
     "idp": COMMON_ARGS + COMPLEX_ARGS + AA_IDP_ARGS,
     "aa": COMMON_ARGS + COMPLEX_ARGS + AA_IDP_ARGS,
 }
+
+# --------------- Logging stuff ---------------
+
+LOG_LEVEL = {'debug': logging.DEBUG,
+    'info': logging.INFO,
+    'warning': logging.WARNING,
+    'error': logging.ERROR,
+    'critical': logging.CRITICAL}
+
+LOG_HANDLER = {
+    "rotating": logging.handlers.RotatingFileHandler,
+    "syslog": logging.handlers.SysLogHandler,
+    "timerotate": logging.handlers.TimedRotatingFileHandler,
+}
+
+LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+# -----------------------------------------------------------------
 
 class Config(object):
     def_context = ""
@@ -193,6 +218,52 @@ class Config(object):
         except IndexError:
             return None
 
+    def setup_logger(self):
+        try:
+            _logconf = self.logger
+        except KeyError:
+            return None
+
+        if root_logger.level != logging.NOTSET: # Someone got there before me
+            return root_logger
+
+        if "loglevel" in _logconf:
+            root_logger.setLevel(LOG_LEVEL[_logconf["loglevel"]])
+        else: # reasonable default
+            root_logger.setLevel(logging.WARNING)
+
+        handler = None
+        for htyp in LOG_HANDLER:
+            if htyp in _logconf:
+                if htyp == "syslog":
+                    args = _logconf[htyp]
+                    if "socktype" in args:
+                        import socket
+                        if args["socktype"] == "dgram":
+                            args["socktype"] = socket.SOCK_DGRAM
+                        elif args["socktype"] == "stream":
+                            args["socktype"] = socket.SOCK_STREAM
+                        else:
+                            raise Exception("Unknown socktype!")
+                    handler = LOG_HANDLER[htyp](**args)
+                else:
+                    handler = LOG_HANDLER[htyp](**_logconf[htyp])
+                break
+
+        if handler is None:
+            raise Exception("You have to define a log handler")
+
+        if "format" in _logconf:
+            formatter = logging.Formatter(_logconf["format"])
+        else:
+            formatter = logging.Formatter(LOG_FORMAT)
+        
+        handler.setFormatter(formatter)
+        root_logger.addHandler(handler)
+
+        return root_logger
+    
+    
 class SPConfig(Config):
     def_context = "sp"
 
@@ -238,7 +309,7 @@ class SPConfig(Config):
             
         return []
 
-    def idps(self, langpref=["en"]):
+    def idps(self, langpref=None):
         """ Returns a dictionary of usefull IdPs, the keys being the
         entity ID of the service and the names of the services as values
 
@@ -246,6 +317,9 @@ class SPConfig(Config):
             is used.
         :return: Dictionary
         """
+        if langpref is None:
+            langpref = ["en"]
+            
         if self.idp:
             return dict([(e, nd[0]) for (e,
                 nd) in self.metadata.idps(langpref).items() if e in self.idp])

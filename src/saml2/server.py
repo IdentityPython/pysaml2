@@ -214,9 +214,13 @@ class Server(object):
             self.conf = config
         else:
             raise Exception("Missing configuration")
-        
+
+        if self.log is None:
+            self.log = self.conf.setup_logger()
+            
         self.metadata = self.conf.metadata
         self.sec = security_context(self.conf, log)
+
         # if cache:
         #     if isinstance(cache, basestring):
         #         self.cache = Cache(cache)
@@ -638,7 +642,7 @@ class Server(object):
         sp_entity_id = request.issuer.text.strip()
         
         binding = None
-        destination = ""
+        destinations = []
         for binding in bindings:
             destinations = self.conf.single_logout_services(sp_entity_id,
                                                            binding)

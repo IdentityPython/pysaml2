@@ -104,6 +104,8 @@ class Saml2Client(object):
         self.metadata = self.config.metadata
         self.sec = security_context(config)
 
+        self.logger = self.config.setup_logger()
+
         if virtual_organization:
             self.vorg = VirtualOrg(self, virtual_organization)
         else:
@@ -180,6 +182,9 @@ class Saml2Client(object):
         except KeyError:
             raise Exception("Missing entity_id specification")
 
+        if log is None:
+            log = self.logger
+            
         reply_addr = self._service_url()
         
         resp = None
@@ -255,7 +260,10 @@ class Saml2Client(object):
         
         request.name_id_policy = name_id_policy
         request.issuer = self.issuer(spentityid)
-        
+
+        if log is None:
+            log = self.logger
+
         if log:
             log.info("REQUEST: %s" % request)
         
@@ -315,7 +323,10 @@ class Saml2Client(object):
         location = self._sso_location(entityid)
         service_url = self._service_url()
         my_name = self._my_name()
-                            
+
+        if log is None:
+            log = self.logger
+
         if log:
             log.info("spentityid: %s" % spentityid)
             log.info("location: %s" % location)
@@ -419,7 +430,10 @@ class Saml2Client(object):
         :param log: Function to use for logging
         :return: The attributes returned
         """
-        
+
+        if log is None:
+            log = self.logger
+
         session_id = sid()
         issuer = self.issuer(issuer_id)
         
@@ -448,7 +462,7 @@ class Saml2Client(object):
                 log.info("Verifying response")
             
             try:
-                aresp = attribute_response(self.config, "", issuer, log=log)
+                aresp = attribute_response(self.config, issuer, log)
             except Exception, exc:
                 if log:
                     log.error("%s", (exc,))
@@ -468,8 +482,7 @@ class Saml2Client(object):
             return None
     
     def construct_logout_request(self, subject_id, destination,
-                                 issuer_entity_id,
-                            reason=None, expire=None):
+                                    issuer_entity_id, reason=None, expire=None):
         """ Constructs a LogoutRequest
         
         :param subject_id: The identifier of the subject
@@ -526,7 +539,10 @@ class Saml2Client(object):
             if SOAP binding has been used the just the result of that
             conversation. 
         """
-            
+
+        if log is None:
+            log = self.logger
+
         if log:
             log.info("logout request for: %s" % subject_id)
 
@@ -548,7 +564,9 @@ class Saml2Client(object):
         # for all where I can use the SOAP binding, do those first
         not_done = entity_ids[:]
         response = False
-        
+        if log is None:
+            log = self.logger
+
         for entity_id in entity_ids:
             response = False
 
@@ -645,6 +663,9 @@ class Saml2Client(object):
         :return: 4-tuple of (session_id of the last sent logout request,
             response message, response headers and message)
         """
+        if log is None:
+            log = self.logger
+
         if log:
             log.info("state: %s" % (self.state,))
         status = self.state[response.in_response_to]
@@ -679,6 +700,8 @@ class Saml2Client(object):
         """
         
         response = None
+        if log is None:
+            log = self.logger
 
         if xmlstr:
             try:
@@ -732,6 +755,8 @@ class Saml2Client(object):
         """
         headers = []
         success = False
+        if log is None:
+            log = self.logger
 
         try:
             saml_request = get['SAMLRequest']
@@ -779,7 +804,9 @@ class Saml2Client(object):
         :param subject_id: the id of the current logged user
         :return: What is returned also depends on which binding is used.
         """
-        
+        if log is None:
+            log = self.logger
+
         if binding == BINDING_HTTP_REDIRECT:
             return self.http_redirect_logout_request(request, subject_id, log)
         
