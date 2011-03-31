@@ -49,14 +49,14 @@ I'll go through these step by step.
 The application
 ---------------
 
-Build to use the wsgiref's simple_server, which is find for testing but
+Build to use the wsgiref's simple_server, which is fine for testing but
 not for production.
 
 
 SP configuration
 ----------------
 
-The configuration is written as a Python dictionary. It means among other
+The configuration is written as described in config_. It means among other
 things that it's easily testable as to the correct syntax.
 
 You can see the whole file in example/sp/sp_conf.py, here I will go through
