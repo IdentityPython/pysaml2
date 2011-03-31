@@ -227,6 +227,9 @@ class Config(object):
         if root_logger.level != logging.NOTSET: # Someone got there before me
             return root_logger
 
+        if _logconf is None:
+            return None
+
         if "loglevel" in _logconf:
             root_logger.setLevel(LOG_LEVEL[_logconf["loglevel"]])
         else: # reasonable default
