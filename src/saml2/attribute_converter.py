@@ -49,7 +49,7 @@ def ava_fro(acs, statement):
         
     acsdic = dict([(ac.name_format, ac) for ac in acs])
     acsdic[None] = acsdic[NAME_FORMAT_URI]    
-    return dict([acsdic[a.name_format].ava_fro(a) for a in statement])
+    return dict([acsdic[a.name_format].ava_from(a) for a in statement])
 
 def to_local(acs, statement):
     if not acs:
@@ -145,7 +145,7 @@ class AttributeConverter(object):
                     result[name].append(value.text.strip())    
         return result
         
-    def ava_fro(self, attribute):
+    def ava_from(self, attribute):
         try:
             attr = self._fro[attribute.name.strip()]
         except (AttributeError, KeyError):
@@ -179,7 +179,7 @@ class AttributeConverter(object):
                 attribute.name_format != self.name_format:
                 raise UnknownNameFormat
                 
-            (key, val) = self.ava_fro(attribute)
+            (key, val) = self.ava_from(attribute)
             result[key] = val
             
         if not result:
