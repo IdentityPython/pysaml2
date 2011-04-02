@@ -194,6 +194,9 @@ def in_a_while(days=0, seconds=0, microseconds=0, milliseconds=0,
         timedelta([days[, seconds[, microseconds[, milliseconds[,
                     minutes[, hours[, weeks]]]]]]])
     """
+    if format is None:
+        format = TIME_FORMAT
+        
     return time_in_a_while(days, seconds, microseconds, milliseconds,
                            minutes, hours, weeks).strftime(format)
 
