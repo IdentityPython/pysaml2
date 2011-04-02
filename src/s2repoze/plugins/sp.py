@@ -100,11 +100,12 @@ class SAML2Plugin(FormPluginBase):
         
         idps = self.conf.idps()
         
-        #if self.log:
-        #   self.log.info("IdP URL: %s" % idps)
+        if self.log:
+           self.log.info("IdP URL: %s" % idps)
 
         if len( idps ) == 1:
-            idp_entity_id = idps[0]
+            # idps is a dictionary
+            idp_entity_id = idps.keys()[0]
         elif not len(idps):
             return 1, HTTPInternalServerError(detail='Misconfiguration')
         else:
