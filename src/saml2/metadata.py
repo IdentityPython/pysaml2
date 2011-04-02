@@ -32,8 +32,8 @@ from saml2.s_utils import signature
 from saml2.saml import NAME_FORMAT_URI
 from saml2.time_util import in_a_while
 from saml2.time_util import valid
-from saml2.attribute_converter import from_local_name, ac_factory
-from saml2.attribute_converter import ava_fro, AttributeConverter
+from saml2.attribute_converter import from_local_name
+from saml2.attribute_converter import ava_fro
 from saml2.sigver import pre_signature_part
 from saml2.sigver import make_temp, cert_from_key_info, verify_signature
 from saml2.sigver import pem_format
@@ -41,15 +41,16 @@ from saml2.validate import valid_instance, NotValid
 from saml2 import shibmd
 
 @decorator
-def keep_updated(func, self, entity_id, *args, **kwargs):
+def keep_updated(func):
     #print "In keep_updated"
-    try:
-        if not valid(self.entity[entity_id]["valid_until"]):
-            self.reload_entity(entity_id)
-    except KeyError:
-        pass
-    
-    return func(self, entity_id, *args, **kwargs)
+    def callf(self, entity_id, *args, **kwargs):
+        try:
+            if not valid(self.entity[entity_id]["valid_until"]):
+                self.reload_entity(entity_id)
+        except KeyError:
+            pass
+        return func(self, entity_id, *args, **kwargs)
+    return callf
 
 
 class MetaData(object):
@@ -167,7 +168,7 @@ class MetaData(object):
                                                                 required),
                                                         ava_fro(self.attrconv,
                                                                 optional))
-        
+
         if ssds:
             entity[tag] = ssds
     
@@ -573,9 +574,13 @@ class MetaData(object):
         
         return required, optional
     
-    def _orgname(self, org, langs=["en"]):
+    def _orgname(self, org, langs=None):
         if not org:
             return ""
+
+        if langs is None:
+            langs = ["en"]
+
         for spec in langs:
             for name in org.organization_display_name:
                 if name.lang == spec:
@@ -600,8 +605,12 @@ class MetaData(object):
     # def _valid(self, entity_id):
     #     return True
     
-    def idps(self, langs=["en"]):
+    def idps(self, langs=None):
         idps = {}
+
+        if langs is None:
+            langs = ["en"]
+
         for entity_id, edict in self.entity.items():
             if "idp_sso" in edict:
                 #idp_aa_check   self._valid(entity_id)
