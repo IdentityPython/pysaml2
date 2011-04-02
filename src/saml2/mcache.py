@@ -10,6 +10,9 @@ from saml2 import time_util
 class ToOld(Exception):
     pass
 
+class CacheError(Exception):
+    pass
+
 def _key(prefix, name):
     return "%s_%s" % (prefix, name)
             
@@ -21,13 +24,17 @@ class Cache(object):
         entities = self.entities(subject_id)
         if entities:
             for entity_id in entities:
-                self._cache.delete(_key(subject_id, entity_id))
+                if self._cache.delete(_key(subject_id, entity_id)) == 0:
+                    raise CacheError("Delete failed")
     
-        self._cache.delete(subject_id)
+        if self._cache.delete(subject_id) == 0:
+            raise CacheError("Delete failed")
+
         subjects = self._cache.get("subjects")
         if subjects and subject_id in subjects:
             subjects.remove(subject_id)
-            self._cache.set("subjects", subjects)
+            if self._cache.set("subjects", subjects) == 0:
+                raise CacheError("Set operation failed")
         
     def get_identity(self, subject_id, entities=None):
         """ Get all the identity information that has been received and 
@@ -104,14 +111,17 @@ class Cache(object):
                 subjects = []
             if subject_id not in subjects:
                 subjects.append(subject_id)
-                self._cache.set("subjects", subjects)
+                if not self._cache.set("subjects", subjects):
+                    raise CacheError("set failed")
         
         if entity_id not in entities:
             entities.append(entity_id)
-            self._cache.set(subject_id, entities)
+            if not self._cache.set(subject_id, entities):
+                raise CacheError("set failed")
           
         # Should use memcache's expire
-        self._cache.set(_key(subject_id, entity_id), (timestamp, info))
+        if not self._cache.set(_key(subject_id, entity_id), (timestamp, info)):
+            raise CacheError("set failed")
             
     def reset(self, subject_id, entity_id):
         """ Scrap the assertions received from a IdP or an AA about a special
@@ -121,7 +131,8 @@ class Cache(object):
         :param entity_id: The identifier of the entity_id of the assertion
         :return:
         """
-        self._cache.set(_key(subject_id, entity_id), {}, 0)
+        if not self._cache.set(_key(subject_id, entity_id), {}, 0):
+            raise CacheError("reset failed")
             
     def entities(self, subject_id):
         """ Returns all the entities of assertions for a subject, disregarding
@@ -189,4 +200,5 @@ class Cache(object):
         except TypeError:
             info = {}
             
-        self._cache.set(_key(subject_id, entity_id), (newtime, info))
+        if not self._cache.set(_key(subject_id, entity_id), (newtime, info)):
+            raise CacheError("valid_to failed")
