@@ -218,18 +218,22 @@ def test_conf_syslog():
     c.context = "sp"
 
     # otherwise the logger setting is not changed
-    root_logger.level == logging.NOTSET
+    root_logger.level = logging.NOTSET
+    root_logger.handlers = []
+    
+    print c.logger
     c.setup_logger()
 
     assert root_logger.level != logging.NOTSET
     assert root_logger.level == logging.INFO
     assert len(root_logger.handlers) == 1
     assert isinstance(root_logger.handlers[0],
-                        logging.handlers.SyslogHandler)
+                        logging.handlers.SysLogHandler)
     handler = root_logger.handlers[0]
-    assert handler.backupCount == 5
-    assert handler.maxBytes == 100000
-    assert handler.mode == "a"
+    print handler.__dict__
+    assert handler.facility == "local3"
+    assert handler.address == ('localhost', 514)
+    assert handler.socktype == 2
     assert root_logger.name == "pySAML2"
     assert root_logger.level == 20
 
@@ -258,7 +262,7 @@ def test_sp():
 
 def test_dual():
     cnf = Config().load_file("idp_sp_conf")
-    cnf.serves() == ["sp", "idp"]
+    assert cnf.serves() == ["sp", "idp"]
 
     spcnf = cnf.copy_into("sp")
     assert isinstance(spcnf, SPConfig)
