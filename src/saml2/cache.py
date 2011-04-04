@@ -10,6 +10,9 @@ from saml2 import time_util
 class ToOld(Exception):
     pass
 
+class CacheError(Exception):
+    pass
+
 class Cache(object):
     def __init__(self, filename=None):
         if filename:
