@@ -230,9 +230,9 @@ class Config(object):
         if _logconf is None:
             return None
 
-        if "loglevel" in _logconf:
+        try:
             root_logger.setLevel(LOG_LEVEL[_logconf["loglevel"]])
-        else: # reasonable default
+        except KeyError: # reasonable default
             root_logger.setLevel(logging.WARNING)
 
         handler = None
