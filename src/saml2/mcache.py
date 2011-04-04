@@ -2,16 +2,12 @@
 
 import memcache
 from saml2 import time_util
+from saml2.cache import ToOld, CacheError
 
 # The assumption is that any subject may consist of data 
 # gathered from several different sources, all with their own
 # timeout time.
 
-class ToOld(Exception):
-    pass
-
-class CacheError(Exception):
-    pass
 
 def _key(prefix, name):
     return "%s_%s" % (prefix, name)
@@ -24,16 +20,16 @@ class Cache(object):
         entities = self.entities(subject_id)
         if entities:
             for entity_id in entities:
-                if self._cache.delete(_key(subject_id, entity_id)) == 0:
+                if not self._cache.delete(_key(subject_id, entity_id)):
                     raise CacheError("Delete failed")
     
-        if self._cache.delete(subject_id) == 0:
+        if not self._cache.delete(subject_id):
             raise CacheError("Delete failed")
 
         subjects = self._cache.get("subjects")
         if subjects and subject_id in subjects:
             subjects.remove(subject_id)
-            if self._cache.set("subjects", subjects) == 0:
+            if not self._cache.set("subjects", subjects):
                 raise CacheError("Set operation failed")
         
     def get_identity(self, subject_id, entities=None):
