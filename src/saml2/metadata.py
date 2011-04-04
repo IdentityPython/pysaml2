@@ -41,16 +41,14 @@ from saml2.validate import valid_instance, NotValid
 from saml2 import shibmd
 
 @decorator
-def keep_updated(func):
+def keep_updated(func, self, entity_id, *args, **kwargs):
     #print "In keep_updated"
-    def callf(self, entity_id, *args, **kwargs):
-        try:
-            if not valid(self.entity[entity_id]["valid_until"]):
-                self.reload_entity(entity_id)
-        except KeyError:
-            pass
-        return func(self, entity_id, *args, **kwargs)
-    return callf
+    try:
+        if not valid(self.entity[entity_id]["valid_until"]):
+            self.reload_entity(entity_id)
+    except KeyError:
+        pass
+    return func(self, entity_id, *args, **kwargs)
 
 
 class MetaData(object):
