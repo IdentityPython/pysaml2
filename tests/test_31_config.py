@@ -233,7 +233,10 @@ def test_conf_syslog():
     print handler.__dict__
     assert handler.facility == "local3"
     assert handler.address == ('localhost', 514)
-    assert handler.socktype == 2
+    if sys.version >= (2, 7):
+        assert handler.socktype == 2
+    else:
+        pass
     assert root_logger.name == "pySAML2"
     assert root_logger.level == 20
 
