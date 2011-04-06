@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import sys
+import logging
+
 from saml2 import BINDING_HTTP_REDIRECT, BINDING_SOAP, BINDING_HTTP_POST
 from saml2.config import SPConfig, IdPConfig, Config
 from saml2.metadata import MetaData
 from py.test import raises
 
 from saml2 import root_logger
-import logging
 
 sp1 = {
     "entityid" : "urn:mace:umu.se:saml:roland:sp",
