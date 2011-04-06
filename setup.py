@@ -18,7 +18,7 @@
 #
 
 from distutils.core import  Command
-from setuptools import setup, find_packages
+from setuptools import setup
 
 
 class PyTest(Command):
@@ -60,6 +60,7 @@ setup(
         # core dependencies
         'decorator',
         'httplib2',
+        'importlib',
         # for the tests:
         'pyasn1',
         'python-memcached',
@@ -69,6 +70,8 @@ setup(
         'paste',
         'zope.interface',
         'repoze.who == 1.0.18',
+        # extras
+        'pymongo'
         ],
     zip_safe=False,
 
