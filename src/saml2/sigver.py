@@ -628,7 +628,7 @@ class SecurityContext(object):
                 return signed_statement
         else:
             print p_out
-            print "E", p_out
+            print "E", p_err
             raise Exception("Signing failed")
 
     def sign_assertion_using_xmlsec(self, statement, key=None, key_file=None,
