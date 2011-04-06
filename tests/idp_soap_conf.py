@@ -34,7 +34,7 @@ CONFIG={
     "debug" : 1,
     "key_file" : "test.key",
     "cert_file" : "test.pem",
-    "xmlsec_binary" : "/usr/local/bin/xmlsec1",
+    #"xmlsec_binary" : "/usr/local/bin/xmlsec1",
     "metadata": {
         "local": ["metadata.xml", "vo_metadata.xml"],
     },

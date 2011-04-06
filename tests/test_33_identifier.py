@@ -28,7 +28,6 @@ CONFIG = IdPConfig().load({
             }
         }
     },
-    "xmlsec_binary" : "/usr/local/bin/xmlsec1",
     "virtual_organization" : {
         "http://vo.example.org/biomed":{
             "nameid_format" : "urn:oid:2.16.756.1.2.5.1.1.1-NameID",

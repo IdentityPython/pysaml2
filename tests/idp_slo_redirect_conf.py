@@ -30,7 +30,7 @@ CONFIG = {
     "debug" : 1,
     "key_file" : "test.key",
     "cert_file" : "test.pem",
-    "xmlsec_binary" : "/usr/local/bin/xmlsec1",
+    #"xmlsec_binary" : "/usr/local/bin/xmlsec1",
     "metadata": {
         "local": ["sp_slo_redirect.xml"],
     },

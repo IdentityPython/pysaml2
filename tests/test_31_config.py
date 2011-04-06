@@ -28,7 +28,7 @@ sp1 = {
     },
     "key_file" : "mykey.pem",
     "cert_file" : "mycert.pem",
-    "xmlsec_binary" : "/opt/local/bin/xmlsec1",
+    #"xmlsec_binary" : "/opt/local/bin/xmlsec1",
     "metadata": { 
         "local": ["metadata.xml", 
                     "urn-mace-swami.se-swamid-test-1.0-metadata.xml"],
@@ -60,7 +60,7 @@ sp2 = {
             }
         }
     },
-    "xmlsec_binary" : "/opt/local/bin/xmlsec1",
+    #"xmlsec_binary" : "/opt/local/bin/xmlsec1",
 }
 
 IDP1 = {
@@ -84,7 +84,7 @@ IDP1 = {
             },
         }
     },
-    "xmlsec_binary" : "/usr/local/bin/xmlsec1",
+    #"xmlsec_binary" : "/usr/local/bin/xmlsec1",
 }
 
 IDP2 = {
@@ -109,7 +109,7 @@ IDP2 = {
             },
         }
     },
-    "xmlsec_binary" : "/usr/local/bin/xmlsec1",
+    #"xmlsec_binary" : "/usr/local/bin/xmlsec1",
 }
 
 def _eq(l1,l2):
@@ -161,7 +161,7 @@ def test_minimum():
                 },
             }
         },
-        "xmlsec_binary" : "/usr/local/bin/xmlsec1",
+        #"xmlsec_binary" : "/usr/local/bin/xmlsec1",
     }
 
     c = SPConfig().load(minimum)
@@ -250,7 +250,7 @@ def test_3():
     assert cnf.debug == 1
     assert cnf.key_file == "test.key"
     assert cnf.cert_file == "test.pem"
-    assert cnf.xmlsec_binary ==  "/usr/local/bin/xmlsec1"
+    #assert cnf.xmlsec_binary ==  "/usr/local/bin/xmlsec1"
     assert cnf.accepted_time_diff == 60
     assert cnf.secret == "0123456789"
     assert cnf.metadata is not None
