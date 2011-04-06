@@ -1,14 +1,20 @@
-{
+from saml2 import BINDING_HTTP_REDIRECT
+from saml2.saml import NAME_FORMAT_URI
+
+BASE= "http://localhost:8087/"
+
+CONFIG = {
     "entityid" : "urn:mace:umu.se:saml:roland:sp",
     "service": {
         "sp":{
             "name" : "Rolands SP",
             "endpoints":{
-                "assertion_consumer_service": ["http://localhost:8087/"],
-                "single_logout_service" : [("http://localhost:8087/slo",
-                               'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect')],
+                "assertion_consumer_service": [BASE],
+                "single_logout_service" : [(BASE+"slo",
+                                            BINDING_HTTP_REDIRECT)],
             },
-            "required_attributes": ["surname", "givenname", "edupersonaffiliation"],
+            "required_attributes": ["surname", "givenname",
+                                    "edupersonaffiliation"],
             "optional_attributes": ["title"],
             "idp": {
                 "urn:mace:umu.se:saml:roland:idp": None,
@@ -18,10 +24,9 @@
     "debug" : 1,
     "key_file" : "pki/mykey.pem",
     "cert_file" : "pki/mycert.pem",
-    "xmlsec_binary" : "/user/local/bin/xmlsec1",
     "attribute_map_dir" : "./attributemaps",
     "metadata" : {
-       "local": ["../metadata.xml"],
+       "local": ["../idp/idp.xml"],
     },
     # -- below used by make_metadata --
     "organization": {
@@ -36,5 +41,5 @@
         "contact_type": "technical",
         },
     ],
-    "name_form": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
+    "name_form": NAME_FORMAT_URI
 }
