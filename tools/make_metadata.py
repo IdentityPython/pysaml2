@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os 
 import getopt
+import sys
 
 from saml2.metadata import entity_descriptor, entities_descriptor
 from saml2.sigver import SecurityContext
@@ -34,8 +35,7 @@ def main(args):
     except getopt.GetoptError, err:
         # print help information and exit:
         raise Usage(err) # will print something like "option -a not recognized"
-        sys.exit(2)
-        
+
     output = None
     verbose = False
     valid_for = 0
@@ -69,8 +69,13 @@ def main(args):
         return 2
 
     eds = []
-    for conf in args:
-        cnf = Config().load_file(conf)
+    for filespec in args:
+        bas, fil = os.path.split(filespec)
+        if bas != "":
+            sys.path.insert(0, bas)
+        if fil.endswith(".py"):
+            fil = fil[:-3]
+        cnf = Config().load_file(fil)
         eds.append(entity_descriptor(cnf, valid_for))
     
     secc = SecurityContext(xmlsec, keyfile) 
