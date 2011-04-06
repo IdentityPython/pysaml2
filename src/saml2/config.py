@@ -248,7 +248,11 @@ class Config(object):
                             args["socktype"] = socket.SOCK_STREAM
                         else:
                             raise Exception("Unknown socktype!")
-                    handler = LOG_HANDLER[htyp](**args)
+                    try:
+                        handler = LOG_HANDLER[htyp](**args)
+                    except TypeError: # difference between 2.6 and 2.7
+                        del args["socktype"]
+                        handler = LOG_HANDLER[htyp](**args)
                 else:
                     handler = LOG_HANDLER[htyp](**_logconf[htyp])
                 break
