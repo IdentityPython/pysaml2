@@ -14,6 +14,7 @@ from saml2 import root_logger
 
 from saml2.attribute_converter import ac_factory
 from saml2.assertion import Policy
+from saml2.sigver import get_xmlsec_binary
 
 COMMON_ARGS = ["entityid", "xmlsec_binary", "debug", "key_file", "cert_file",
                 "secret", "accepted_time_diff", "name",
@@ -159,8 +160,12 @@ class Config(object):
                 except KeyError:
                     pass
 
+        if "xmlsec_binary" not in self._attr:
+            self._attr[""]["xmlsec_binary"] = get_xmlsec_binary()
+
         self.load_complex(cnf)
         self.context = self.def_context
+
         return self
 
     def load_file(self, config_file):
