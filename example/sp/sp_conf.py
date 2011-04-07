@@ -5,6 +5,7 @@ BASE= "http://localhost:8087/"
 
 CONFIG = {
     "entityid" : "urn:mace:umu.se:saml:roland:sp",
+    "description": "My SP",
     "service": {
         "sp":{
             "name" : "Rolands SP",
@@ -26,7 +27,7 @@ CONFIG = {
     "cert_file" : "pki/mycert.pem",
     "attribute_map_dir" : "./attributemaps",
     "metadata" : {
-       "local": ["../idp/idp.xml"],
+       #"local": ["../idp/idp.xml"],
     },
     # -- below used by make_metadata --
     "organization": {
@@ -41,5 +42,6 @@ CONFIG = {
         "contact_type": "technical",
         },
     ],
+    #"xmlsec_binary":"/usr/local/bin/xmlsec1",
     "name_form": NAME_FORMAT_URI
 }

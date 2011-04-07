@@ -5,6 +5,7 @@ BASE = "http://localhost:8088/"
 
 CONFIG={
     "entityid" : "urn:mace:umu.se:saml:roland:idp",
+    "description": "My IDP",
     "service": {
         "idp": {
             "name" : "Rolands IdP",
@@ -22,14 +23,15 @@ CONFIG={
                 "urn:mace:umu.se:saml:roland:sp": {
                     "lifetime": {"minutes": 5},
                 }
-            }
+            },
+            "subject_data": "./idp.subject.db",
         }
     },
     "debug" : 1,
     "key_file" : "pki/mykey.pem",
     "cert_file" : "pki/mycert.pem",
     "metadata" : {
-        "local": ["../sp/sp.xml"],
+        #"local": ["../sp/sp.xml"],
     },
     "organization": {
         "display_name": "Rolands Identiteter",
@@ -38,6 +40,6 @@ CONFIG={
     },
     # This database holds the map between a subjects local identifier and
     # the identifier returned to a SP
-    "subject_data": "./idp.subject.db",
+    #"xmlsec_binary": "/usr/local/bin/xmlsec1",
     "attribute_map_dir" : "./attributemaps",
 }
