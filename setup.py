@@ -60,7 +60,8 @@ setup(
         # core dependencies
         'decorator',
         'httplib2',
-        'importlib',
+        # only for Python 2.6
+        #'importlib',
         # for the tests:
         'pyasn1',
         'python-memcached',
