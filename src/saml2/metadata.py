@@ -839,14 +839,15 @@ def do_sp_sso_descriptor(conf, cert=None):
             index="1",
         )]
         try:
-            try:
-                (text, lang) = conf.description
-            except ValueError:
-                text = conf.description
-                lang = "en"
-            spsso.attribute_consuming_service[0].service_description = [
-                                md.ServiceDescription(
-                                            text=text, lang=lang)]
+            if conf.description:
+                try:
+                    (text, lang) = conf.description
+                except ValueError:
+                    text = conf.description
+                    lang = "en"
+                spsso.attribute_consuming_service[0].service_description = [
+                                    md.ServiceDescription(text=text,
+                                                           lang=lang)]
         except KeyError:
             pass
 
