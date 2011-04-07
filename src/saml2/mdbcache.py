@@ -3,12 +3,12 @@
 __author__ = 'rolandh'
 
 from pymongo import Connection
-import cjson
+#import cjson
 import time
 from datetime import datetime
 
 from saml2 import time_util
-from saml2.cache import ToOld, CacheError
+from saml2.cache import ToOld
 from saml2.time_util import TIME_FORMAT
 
 class Cache(object):
