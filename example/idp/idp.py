@@ -17,8 +17,7 @@ def _expiration(timeout, format=None):
 
 # -----------------------------------------------------------------------------
 def dict_to_table(ava, lev=0, width=1):
-    txt = []
-    txt.append('<table border=%s bordercolor="black">\n' % width)
+    txt = ['<table border=%s bordercolor="black">\n' % width]
     for prop, valarr in ava.items():
         txt.append("<tr>\n")
         if isinstance(valarr, basestring):
@@ -66,14 +65,20 @@ FORM_SPEC = """<form name="myform" method="post" action="%s">
 def sso(environ, start_response, user, logger):
     """ Supposted to return a POST """
     #edict = dict_to_table(environ)
-    #logger and logger.info("Environ keys: %s" % environ.keys())
+    #if logger: logger.info("Environ keys: %s" % environ.keys())
     logger.info("--- In SSO ---")
+    query = None
     if "QUERY_STRING" in environ:
-        logger and logger.info("Query string: %s" % environ["QUERY_STRING"])
+        if logger:
+            logger.info("Query string: %s" % environ["QUERY_STRING"])
         query = parse_qs(environ["QUERY_STRING"])
     elif "s2repoze.qinfo" in environ:
         query = environ["s2repoze.qinfo"]
 
+    if not query:
+        start_response('401 Unauthorized', [('Content-Type', 'text/plain')])
+        return ['Unknown user']
+        
     # base 64 encoded request
     req_info = IDP.parse_authn_request(query["SAMLRequest"][0])
     logger.info("parsed OK")
@@ -92,21 +97,20 @@ def sso(environ, start_response, user, logger):
                                         req_info["request"].name_id_policy, 
                                         userid)
     except Exception, excp:
-        logger and logger.error("Exception: %s" % (excp,))
+        if logger: logger.error("Exception: %s" % (excp,))
         raise
         
-    logger and logger.info("AuthNResponse: %s" % authn_resp)
+    if logger: logger.info("AuthNResponse: %s" % authn_resp)
 
-    response = []
-    response.append("<head>")
-    response.append("<title>SAML 2.0 POST</title>")
-    response.append("</head><body>")
-    response.append(FORM_SPEC % (req_info["consumer_url"], 
-                                    base64.b64encode("".join(authn_resp)),"/"))
-    response.append("""<script type="text/javascript" language="JavaScript">""")
-    response.append("     document.myform.submit();")
-    response.append("""</script>""")
-    response.append("</body>")
+    response = ["<head>",
+                "<title>SAML 2.0 POST</title>",
+                "</head><body>",
+                FORM_SPEC % (req_info["consumer_url"],
+                             base64.b64encode("".join(authn_resp)), "/"),
+                """<script type="text/javascript" language="JavaScript">""",
+                "     document.myform.submit();",
+                """</script>""",
+                "</body>"]
 
     start_response('200 OK', [('Content-Type', 'text/html')])
     return response
@@ -130,16 +134,21 @@ def not_found(environ, start_response, logger):
 def not_authn(environ, start_response, logger):
     if "QUERY_STRING" in environ:
         query = parse_qs(environ["QUERY_STRING"])
-        logger and logger.info("query: %s" % query)
+        if logger: logger.info("query: %s" % query)
     start_response('401 Unauthorized', [('Content-Type', 'text/plain')])
     return ['Unknown user']
 
 def slo(environ, start_response, user, logger):
     """ Expects a HTTP-redirect logout request """
 
+    query = None
     if "QUERY_STRING" in environ:
-        logger and logger.info("Query string: %s" % environ["QUERY_STRING"])
+        if logger: logger.info("Query string: %s" % environ["QUERY_STRING"])
         query = parse_qs(environ["QUERY_STRING"])
+
+    if not query:
+        start_response('401 Unauthorized', [('Content-Type', 'text/plain')])
+        return ['Unknown user']
 
     try:
         req_info = IDP.parse_logout_request(query["SAMLRequest"][0],
@@ -147,7 +156,7 @@ def slo(environ, start_response, user, logger):
         logger.info("LOGOUT request parsed OK")
         logger.info("REQ_INFO: %s" % req_info.message)
     except KeyError, exc:
-        logger and logger.info("logout request error: %s" % (exc,))
+        if logger: logger.info("logout request error: %s" % (exc,))
         # return error reply
 
     # look for the subject
@@ -220,8 +229,8 @@ def application(environ, start_response):
 
     path = environ.get('PATH_INFO', '').lstrip('/')
     logger = environ.get('repoze.who.logger')
-    logger and logger.info("<application> PATH: %s" % path)
-    logger and logger.info("Cookie: %s" % (kaka,))
+    if logger: logger.info("<application> PATH: %s" % path)
+    if logger: logger.info("Cookie: %s" % (kaka,))
     for regex, callback in URLS:
         if user:
             match = re.search(regex, path)
@@ -230,10 +239,10 @@ def application(environ, start_response):
                     environ['myapp.url_args'] = match.groups()[0]
                 except IndexError:
                     environ['myapp.url_args'] = path
-                logger and logger.info("callback: %s" % (callback,))
+                if logger: logger.info("callback: %s" % (callback,))
                 return callback(environ, start_response, user, logger)
         else:
-            logger and logger.info("-- No USER --")
+            if logger: logger.info("-- No USER --")
             return not_authn(environ, start_response, logger)
     return not_found(environ, start_response, logger)
 
