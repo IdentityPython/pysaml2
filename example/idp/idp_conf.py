@@ -31,7 +31,7 @@ CONFIG={
     "key_file" : "pki/mykey.pem",
     "cert_file" : "pki/mycert.pem",
     "metadata" : {
-        #"local": ["../sp/sp.xml"],
+        "local": ["../sp/sp.xml"],
     },
     "organization": {
         "display_name": "Rolands Identiteter",

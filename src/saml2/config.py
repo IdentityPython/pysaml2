@@ -113,7 +113,7 @@ class Config(object):
         else:
             return object.__getattribute__(self, item)
 
-    def load_special(self, cnf, typ):
+    def load_special(self, cnf, typ, metadata_construction=False):
         for arg in SPEC[typ]:
             try:
                 self._attr[typ][arg] = cnf[arg]
@@ -121,10 +121,10 @@ class Config(object):
                 pass
 
         self.context = typ
-        self.load_complex(cnf, typ)
+        self.load_complex(cnf, typ, metadata_construction=metadata_construction)
         self.context = self.def_context
 
-    def load_complex(self, cnf, typ=""):
+    def load_complex(self, cnf, typ="", metadata_construction=False):
         _attr_typ = self._attr[typ]
         try:
             _attr_typ["policy"] = Policy(cnf["policy"])
@@ -140,12 +140,13 @@ class Config(object):
         except KeyError:
             pass
 
-        try:
-            _attr_typ["metadata"] = self.load_metadata(cnf["metadata"])
-        except KeyError:
-            pass
+        if not metadata_construction:
+            try:
+                _attr_typ["metadata"] = self.load_metadata(cnf["metadata"])
+            except KeyError:
+                pass
 
-    def load(self, cnf):
+    def load(self, cnf, metadata_construction=False):
 
         for arg in COMMON_ARGS:
             try:
@@ -156,24 +157,27 @@ class Config(object):
         if "service" in cnf:
             for typ in ["aa", "idp", "sp"]:
                 try:
-                    self.load_special(cnf["service"][typ], typ)
+                    self.load_special(cnf["service"][typ], typ,
+                                    metadata_construction=metadata_construction)
+
                 except KeyError:
                     pass
 
-        if "xmlsec_binary" not in self._attr[""]:
-            self._attr[""]["xmlsec_binary"] = get_xmlsec_binary()
+        if not metadata_construction:
+            if "xmlsec_binary" not in self._attr[""]:
+                self._attr[""]["xmlsec_binary"] = get_xmlsec_binary()
 
-        self.load_complex(cnf)
+        self.load_complex(cnf, metadata_construction=metadata_construction)
         self.context = self.def_context
 
         return self
 
-    def load_file(self, config_file):
+    def load_file(self, config_file, metadata_construction=False):
         if sys.path[0] != ".":
             sys.path.insert(0, ".")
         mod = import_module(config_file)
         #return self.load(eval(open(config_file).read()))
-        return self.load(mod.CONFIG)
+        return self.load(mod.CONFIG, metadata_construction)
 
     def load_metadata(self, metadata_conf):
         """ Loads metadata into an internal structure """

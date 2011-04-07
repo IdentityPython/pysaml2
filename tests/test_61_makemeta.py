@@ -27,6 +27,9 @@ SP = {
             },
         }
     },
+    "metadata": {
+        "local": ["foo.xml"],
+    },
     "attribute_map_dir" : "attributemaps",
 }
 
@@ -50,7 +53,10 @@ IDP = {
             },
             "scope": ["example.org"]
         }
-    }
+    },
+    "metadata": {
+        "local": ["bar.xml"],
+    },
 }
 
 def test_org_1():
@@ -161,7 +167,7 @@ def test_optional_attributes():
     assert ras[0].is_required == "false"
     
 def test_do_sp_sso_descriptor():
-    conf = SPConfig().load(SP)
+    conf = SPConfig().load(SP, metadata_construction=True)
     spsso = metadata.do_sp_sso_descriptor(conf)
     
     assert isinstance(spsso, md.SPSSODescriptor)
@@ -174,7 +180,7 @@ def test_do_sp_sso_descriptor():
                                 
     assert spsso.authn_requests_signed == "false"
     assert spsso.want_assertions_signed == "true"
-    len (spsso.attribute_consuming_service) == 1
+    assert len (spsso.attribute_consuming_service) == 1
     acs = spsso.attribute_consuming_service[0]
     print acs.keyswv()
     assert _eq(acs.keyswv(), ['requested_attribute', 'service_name',
@@ -192,7 +198,7 @@ def test_entity_description():
     confd = SPConfig().load_file("server_conf")
     print confd.attribute_converters
     entd = metadata.entity_descriptor(confd, 1)
-    assert entd != None
+    assert entd is not None
     print entd.keyswv()
     assert _eq(entd.keyswv(), ['valid_until', 'entity_id', 'contact_person',
                                 'spsso_descriptor', 'organization'])
@@ -200,7 +206,7 @@ def test_entity_description():
     assert entd.entity_id == "urn:mace:example.com:saml:roland:sp"
 
 def test_do_idp_sso_descriptor():
-    conf = IdPConfig().load(IDP)
+    conf = IdPConfig().load(IDP, metadata_construction=True)
     idpsso = metadata.do_idp_sso_descriptor(conf)
 
     assert isinstance(idpsso, md.IDPSSODescriptor)

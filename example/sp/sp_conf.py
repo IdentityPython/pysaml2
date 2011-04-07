@@ -27,7 +27,7 @@ CONFIG = {
     "cert_file" : "pki/mycert.pem",
     "attribute_map_dir" : "./attributemaps",
     "metadata" : {
-       #"local": ["../idp/idp.xml"],
+       "local": ["../idp/idp.xml"],
     },
     # -- below used by make_metadata --
     "organization": {

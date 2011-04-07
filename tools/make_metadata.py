@@ -75,7 +75,7 @@ def main(args):
             sys.path.insert(0, bas)
         if fil.endswith(".py"):
             fil = fil[:-3]
-        cnf = Config().load_file(fil)
+        cnf = Config().load_file(fil, metadata_construction=True)
         eds.append(entity_descriptor(cnf, valid_for))
     
     secc = SecurityContext(xmlsec, keyfile) 
