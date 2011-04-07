@@ -160,7 +160,7 @@ class Config(object):
                 except KeyError:
                     pass
 
-        if "xmlsec_binary" not in self._attr:
+        if "xmlsec_binary" not in self._attr[""]:
             self._attr[""]["xmlsec_binary"] = get_xmlsec_binary()
 
         self.load_complex(cnf)
