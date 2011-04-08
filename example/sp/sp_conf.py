@@ -17,9 +17,7 @@ CONFIG = {
             "required_attributes": ["surname", "givenname",
                                     "edupersonaffiliation"],
             "optional_attributes": ["title"],
-            "idp": {
-                "urn:mace:umu.se:saml:roland:idp": None,
-            },
+            "idp": [ "urn:mace:umu.se:saml:roland:idp"],
         }
     },
     "debug" : 1,
