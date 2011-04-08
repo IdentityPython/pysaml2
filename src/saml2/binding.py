@@ -144,7 +144,7 @@ def parse_soap_enveloped_saml(text, body_class, header_class=None):
     envelope = ElementTree.fromstring(text)
     assert envelope.tag == '{%s}Envelope' % NAMESPACE
 
-    print len(envelope)
+    #print len(envelope)
     body = None
     header = {}
     for part in envelope:
@@ -154,8 +154,8 @@ def parse_soap_enveloped_saml(text, body_class, header_class=None):
                 try:
                     body = saml2.create_class_from_element_tree(body_class, sub)
                 except Exception, exc:
-                    print exc
-                    print body_class.c_tag
+                    #print exc
+                    #print body_class.c_tag
                     raise Exception(
                             "Wrong body type (%s) in SOAP envelope" % sub.tag)
         elif part.tag == '{%s}Header' % NAMESPACE:

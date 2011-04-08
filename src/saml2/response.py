@@ -157,7 +157,7 @@ class StatusResponse(object):
             if self.log:
                 self.log.info("EXCEPTION: %s", excp)
     
-        print "<", self.response
+        #print "<", self.response
         
         return self._postamble()
     
@@ -332,8 +332,8 @@ class AuthnResponse(StatusResponse):
         
         if not for_me(condition, self.entity_id):
             if not lax:
-                print condition
-                print self.entity_id
+                #print condition
+                #print self.entity_id
                 raise Exception("Not for me!!!")
         
         return True
