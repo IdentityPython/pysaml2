@@ -90,7 +90,7 @@ class SAML2Plugin(FormPluginBase):
             self.outstanding_queries = shelve.open(sid_store, writeback=True)
         else:
             self.outstanding_queries = {}
-        self.iam = platform.uname()
+        self.iam = platform.node()
                          
     def _pick_idp(self, environ, came_from):
         """ 
