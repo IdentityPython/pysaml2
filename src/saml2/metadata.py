@@ -29,6 +29,7 @@ from saml2 import md, samlp, BINDING_HTTP_POST, BINDING_HTTP_REDIRECT
 from saml2 import BINDING_SOAP, class_name
 from saml2.s_utils import factory
 from saml2.s_utils import signature
+from saml2.s_utils import sid
 from saml2.saml import NAME_FORMAT_URI
 from saml2.time_util import in_a_while
 from saml2.time_util import valid
@@ -968,9 +969,20 @@ def entities_descriptor(eds, valid_for, name, ident, sign, secc):
         entities.id = ident
 
     if sign:
-        entities.signature = pre_signature_part(ident)
+        if not ident:
+            ident = sid()
 
-    if sign:
-        entities = secc.sign_statement_using_xmlsec("%s" % entities, 
-                                                    class_name(entities))
+        if not secc.my_key:
+            raise Exception("If you want to do signing you should define " +
+                            "a key to sign with")
+
+        if not secc.my_cert:
+            raise Exception("If you want to do signing you should define " +
+                            "where your public key are")
+        
+        entities.signature = pre_signature_part(ident, secc.my_cert, 1)
+        entities.id = ident
+        xmldoc = secc.sign_statement_using_xmlsec("%s" % entities,
+                                                        class_name(entities))
+        entities = md.entities_descriptor_from_string(xmldoc)
     return entities
