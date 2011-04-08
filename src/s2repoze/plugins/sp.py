@@ -19,7 +19,7 @@ WSGI application.
 
 """
 import cgi
-import os
+import platform
 import shelve
 
 from paste.httpexceptions import HTTPTemporaryRedirect
@@ -90,7 +90,7 @@ class SAML2Plugin(FormPluginBase):
             self.outstanding_queries = shelve.open(sid_store, writeback=True)
         else:
             self.outstanding_queries = {}
-        self.iam = os.uname()[1]
+        self.iam = platform.uname()
                          
     def _pick_idp(self, environ, came_from):
         """ 
