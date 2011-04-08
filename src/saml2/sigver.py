@@ -378,7 +378,7 @@ class SecurityContext(object):
         self.key_file = key_file
         self.key_type = key_type
         
-        # Your certificate
+        # Your public key
         self.cert_file = cert_file
         self.cert_type = cert_type
         self.my_cert = read_cert_from_file(cert_file, cert_type)
@@ -616,7 +616,7 @@ class SecurityContext(object):
         com_list = [self.xmlsec, "--sign", 
                     "--output", ntf.name,
                     "--privkey-pem", key_file, 
-                    "--id-attr:%s" % ID_ATTR, klass_namn,
+                    "--id-attr:%s" % ID_ATTR, klass_namn
                     #"--store-signatures"
                     ]
         if nodeid:
