@@ -29,7 +29,7 @@ class Usage(Exception):
     
 def main(args):
     try:
-        opts, args = getopt.getopt(args, "hi:k:sv:x:", 
+        opts, args = getopt.getopt(args, "c:hi:k:sv:x:",
                         ["help", "name", "id", "keyfile", "sign", 
                         "valid", "xmlsec"])
     except getopt.GetoptError, err:
@@ -44,6 +44,7 @@ def main(args):
     sign = False
     xmlsec = ""
     keyfile = ""
+    pubkeyfile = ""
     
     try:
         for o, a in opts:
@@ -61,6 +62,8 @@ def main(args):
                 xmlsec = a
             elif o in ("-k", "--keyfile"):
                 keyfile = a
+            elif o in ("-c", "--certfile"):
+                pubkeyfile = a
             else:
                 assert False, "unhandled option %s" % o
     except Usage, err:
@@ -77,8 +80,8 @@ def main(args):
             fil = fil[:-3]
         cnf = Config().load_file(fil, metadata_construction=True)
         eds.append(entity_descriptor(cnf, valid_for))
-    
-    secc = SecurityContext(xmlsec, keyfile) 
+
+    secc = SecurityContext(xmlsec, keyfile, cert_file=pubkeyfile)
     desc = entities_descriptor(eds, valid_for, name, id, sign, secc)
     valid_instance(desc)
     print desc
