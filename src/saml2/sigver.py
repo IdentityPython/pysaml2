@@ -19,14 +19,17 @@
 Based on the use of xmlsec1 binaries and not the python xmlsec module.
 """
 
-from saml2 import samlp, class_name, saml, ExtensionElement
-from saml2 import create_class_from_xml_string
-import xmldsig as ds
-from tempfile import NamedTemporaryFile
-from subprocess import Popen, PIPE
 import base64
 import random
 import os
+import sys
+
+import xmldsig as ds
+
+from saml2 import samlp, class_name, saml, ExtensionElement
+from saml2 import create_class_from_xml_string
+from tempfile import NamedTemporaryFile
+from subprocess import Popen, PIPE
 
 def get_xmlsec_binary(paths=None):
     """
@@ -37,18 +40,25 @@ def get_xmlsec_binary(paths=None):
     :return: full name of the xmlsec1 binary found. If no binaries are
         found then an exception is raised.
     """
+    if os.name == "posix":
+        bin_name = "xmlsec1"
+    elif os.name == "nt":
+        bin_name = "xmlsec"
+    else: # Default !?
+        bin_name = "xmlsec1"
+
     if paths:
         for path in paths:
-            fil = os.path.join(path, "xmlsec1")
+            fil = os.path.join(path, bin_name)
             if os.access(fil, os.X_OK):
                 return fil
 
     for path in os.environ["PATH"].split(":"):
-        fil = os.path.join(path, "xmlsec1")
+        fil = os.path.join(path, bin_name)
         if os.access(fil, os.X_OK):
             return fil
 
-    raise Exception("Can't find xmlsec1")
+    raise Exception("Can't find %s" % bin_name)
     
 try:
     XMLSEC_BINARY = get_xmlsec_binary()
@@ -627,7 +637,7 @@ class SecurityContext(object):
             else:
                 return signed_statement
         else:
-            print p_out
+            print >> sys.stderr, p_out
             print "E", p_err
             raise Exception("Signing failed")
 
