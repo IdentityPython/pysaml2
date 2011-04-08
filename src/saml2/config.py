@@ -279,6 +279,13 @@ class Config(object):
 
         return root_logger
     
+    def keys(self):
+        keys = []
+
+        for dir in ["", "sp", "idp", "aa"]:
+            keys.extend(self._attr[dir].keys())
+
+        return list(set(keys))
     
 class SPConfig(Config):
     def_context = "sp"
