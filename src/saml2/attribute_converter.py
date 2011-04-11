@@ -16,12 +16,50 @@
 # limitations under the License.
 
 import os
+import sys
+from importlib import import_module
+
 from saml2.s_utils import factory, do_ava
 from saml2 import saml
 from saml2.saml import NAME_FORMAT_URI
 
 class UnknownNameFormat(Exception):
     pass
+
+def load_maps(dirspec):
+    map = {}
+    if dirspec not in sys.path:
+        sys.path.insert(0, dirspec)
+
+    for fil in os.listdir(dirspec):
+        if fil.endswith(".py"):
+            mod = import_module(fil[:-3])
+            for key, item in mod.__dict__.items():
+                if key.startswith("__"):
+                    continue
+                if isinstance(item, dict) and "to" in item and "fro" in item:
+                    map[item["identifier"]] = item
+
+    return map
+
+def ac_factory_II(path):
+    acs = []
+
+    if path not in sys.path:
+        sys.path.insert(0, path)
+
+    for fil in os.listdir(path):
+        if fil.endswith(".py"):
+            mod = import_module(fil[:-3])
+            for key, item in mod.__dict__.items():
+                if key.startswith("__"):
+                    continue
+                if isinstance(item, dict) and "to" in item and "fro" in item:
+                    atco = AttributeConverter(item["identifier"])
+                    atco.from_dict(item)
+                    acs.append(atco)
+
+    return acs
 
 def ac_factory(path):
     acs = []
@@ -127,7 +165,25 @@ class AttributeConverter(object):
             self._fro = dict([(value, key) for key, value in self._to.items()])
         if self._to is None and self.fro is not None:
             self._to = dict([(value, key) for key, value in self._fro.items()])
-    
+
+    def from_dict(self, mapdict):
+        self.name_format = mapdict["identifier"]
+        try:
+            self._fro = mapdict["fro"]
+        except KeyError:
+            pass
+        try:
+            self._to = mapdict["to"]
+        except KeyError:
+            pass
+
+        if self._fro is None and self._to is None:
+            raise Exception("Missing specifications")
+
+        if self._fro is None or self._to is None:
+            self.adjust()
+
+        
     def fail_safe_fro(self, statement):
         """ In case there is not formats defined """
         result = {}

@@ -13,6 +13,7 @@ from saml2 import metadata
 from saml2 import root_logger
 
 from saml2.attribute_converter import ac_factory
+from saml2.attribute_converter import ac_factory_II
 from saml2.assertion import Policy
 from saml2.sigver import get_xmlsec_binary
 
@@ -132,7 +133,7 @@ class Config(object):
             pass
 
         try:
-            acs = ac_factory(cnf["attribute_map_dir"])
+            acs = ac_factory_II(cnf["attribute_map_dir"])
             try:
                 _attr_typ["attribute_converters"].extend(acs)
             except KeyError:
