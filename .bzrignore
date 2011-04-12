@@ -8,3 +8,5 @@ htmlcov
 *.dat
 *.dir
 *.log
+*.egg-info
+doc/_build
