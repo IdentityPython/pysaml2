@@ -62,32 +62,32 @@ Format::
 
     "attribute_map_dir": "attribute-maps"
     
-Points to a directory which has subdirectories, one per name-format you
-expect to support. So a typical tree would be.::
+Points to a directory which has the attribute maps in Python modules.
+A typical map file will looks like this::
 
-    attribute-maps 
-        |
-        +-- urn:oases:names:tc:SAML:2.0:name-format:basic
-        |                       |
-        |                       +-- fro
-        |                       +-- to
-        |
-        +-- urn:oases:names:tc:SAML:2.0:name-format:uri
-                                |
-                                +-- fro
-                                +-- to
-        
-The *to* and *fro* files then contain the mapping between the names.
-The start of the urn:oases:names:tc:SAML:2.0:name-format:uri/fro file
-for instance looks like this::
+    MAP = {
+        "identifier": "urn:oasis:names:tc:SAML:2.0:attrname-format:basic",
+        "fro": {
+            'urn:mace:dir:attribute-def:aRecord': 'aRecord',
+            'urn:mace:dir:attribute-def:aliasedEntryName': 'aliasedEntryName',
+            'urn:mace:dir:attribute-def:aliasedObjectName': 'aliasedObjectName',
+            'urn:mace:dir:attribute-def:associatedDomain': 'associatedDomain',
+            'urn:mace:dir:attribute-def:associatedName': 'associatedName',
+            ...
+            },
+        "to": {
+            'aRecord': 'urn:mace:dir:attribute-def:aRecord',
+            'aliasedEntryName': 'urn:mace:dir:attribute-def:aliasedEntryName',
+            'aliasedObjectName': 'urn:mace:dir:attribute-def:aliasedObjectName',
+            'associatedDomain': 'urn:mace:dir:attribute-def:associatedDomain',
+            'associatedName': 'urn:mace:dir:attribute-def:associatedName',
+            ...
+        }
+    }
 
-    {
-      'urn:oid:1.3.6.1.4.1.5923.1.1.1.2': 'eduPersonNickname',
-      'urn:oid:1.3.6.1.4.1.5923.1.1.1.9': 'eduPersonScopedAffiliation',
-      'urn:oid:1.3.6.1.4.1.5923.1.1.1.11': 'eduPersonAssurance',
-      'urn:oid:1.3.6.1.4.1.5923.1.1.1.10': 'eduPersonTargetedID',
-      'urn:oid:1.3.6.1.4.1.5923.1.1.1.4': 'eduPersonOrgUnitDN',
-      'urn:oid:1.3.6.1.4.1.5923.1.1.1.1': 'eduPersonAffiliation',
+The attribute map module contains a MAP dictionary with three items.  The
+`identifier` item is the name-format you expect to support.
+The *to* and *fro* sub-dictionaries then contain the mapping between the names.
 
 As you see the format is again a python dictionary where the key is the
 name to convert from and the value is the name to convert to.
