@@ -56,7 +56,7 @@ not for production.
 SP configuration
 ----------------
 
-The configuration is written as described in config_. It means among other
+The configuration is written as described in :ref:`howto_config`. It means among other
 things that it's easily testable as to the correct syntax.
 
 You can see the whole file in example/sp/sp_conf.py, here I will go through
