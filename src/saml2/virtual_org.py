@@ -14,7 +14,7 @@ class VirtualOrg(object):
     def _affiliation_members(self):
         """
         Get the member of the Virtual Organization from the metadata, 
-        more specifically a AffiliationDescriptor.
+        more specifically from AffiliationDescriptor.
         """
         return self.config.metadata.vo_members(self.vorg_name)
     
@@ -25,7 +25,7 @@ class VirtualOrg(object):
         
         try:
             return self.vorg_conf["member"]
-        except KeyError:
+        except (KeyError, TypeError):
             return []
         
     def members_to_ask(self, subject_id):
@@ -49,7 +49,10 @@ class VirtualOrg(object):
         (ava, _) = self.sp.users.get_identity(subject_id)
         ident = self.vorg_conf["common_identifier"]
 
-        return ava[ident][0]        
+        try:
+            return ava[ident][0]
+        except KeyError:
+            return None
         
     def do_aggregation(self, subject_id, log=None):
         if log:

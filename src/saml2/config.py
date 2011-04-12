@@ -350,6 +350,12 @@ class SPConfig(Config):
         else:
             return self.metadata.idps()
 
+    def vo_conf(self, vo_name):
+        try:
+            return self.virtual_organization[vo_name]
+        except KeyError:
+            return None
+        
 class IdPConfig(Config):
     def_context = "idp"
     
