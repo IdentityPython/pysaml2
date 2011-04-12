@@ -46,9 +46,7 @@ setup(
     packages=['saml2', 'xmldsig', 'xmlenc', 's2repoze',
                 's2repoze.plugins'],
 
-    package_dir = {'saml2':'src/saml2', 'xmldsig':'src/xmldsig',
-                    'xmlenc': 'src/xmlenc',
-                    's2repoze': 'src/s2repoze'},
+    package_dir = {'':'src'},
 
     classifiers = ["Development Status :: 4 - Beta",
         "License :: OSI Approved :: Apache Software License",
