@@ -42,7 +42,7 @@ def load_maps(dirspec):
 
     return map
 
-def ac_factory_II(path):
+def ac_factory(path):
     acs = []
 
     if path not in sys.path:
@@ -61,7 +61,10 @@ def ac_factory_II(path):
 
     return acs
 
-def ac_factory(path):
+def ac_factory_II(path):
+    return ac_factory(path)
+
+def ac_factory_old(path):
     acs = []
 
     for dir_name, directories, files in os.walk(path):
