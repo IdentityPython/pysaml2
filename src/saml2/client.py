@@ -74,7 +74,7 @@ class Saml2Client(object):
     
     def __init__(self, config=None, debug=0,
                 identity_cache=None, state_cache=None, 
-                virtual_organization=None, config_file=""):
+                virtual_organization=None, config_file="", logger=None):
         """
         :param config: A saml2.config.Config instance
         :param debug: Whether debugging should be done even if the
@@ -102,20 +102,25 @@ class Saml2Client(object):
             raise Exception("Missing configuration")
 
         self.metadata = self.config.metadata
-        self.sec = security_context(config)
 
-        self.logger = self.config.setup_logger()
+        if logger is None:
+            self.logger = self.config.setup_logger()
+        else:
+            self.logger = logger
+
+        if not debug and self.config:
+            self.debug = self.config.debug
+        else:
+            self.debug = debug
+
+        self.sec = security_context(config, log=self.logger, debug=self.debug)
 
         if virtual_organization:
             self.vorg = VirtualOrg(self, virtual_organization)
         else:
             self.vorg = None
 
-        if not debug and self.config:
-            self.debug = self.config.debug
-        else:
-            self.debug = debug
-    
+
     def _relay_state(self, session_id):
         vals = [session_id, str(int(time.time()))]
         if self.config.secret is None:
