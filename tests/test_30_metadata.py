@@ -1,6 +1,6 @@
 import datetime
 import re
-import os
+#import os
 
 from saml2 import metadata, make_vals, make_instance
 from saml2 import NAMESPACE as SAML2_NAMESPACE
@@ -10,7 +10,7 @@ from saml2 import time_util
 from saml2.saml import NAMEID_FORMAT_TRANSIENT, NAME_FORMAT_URI
 from saml2.attribute_converter import ac_factory
 
-from py.test import raises
+#from py.test import raises
 
 SWAMI_METADATA = "swamid-1.0.xml"
 INCOMMON_METADATA = "InCommon-metadata.xml"
@@ -424,3 +424,8 @@ def test_attributes():
     assert ra[0].friendly_name == "surname"
     assert ra[0].name == 'urn:oid:2.5.4.4'
     
+
+# TODO
+#def test_extend():
+#    md = metadata.MetaData(attrconv=ATTRCONV)
+#    md.import_metadata(_fix_valid_until(_read_file("extended.xml")), "-")
