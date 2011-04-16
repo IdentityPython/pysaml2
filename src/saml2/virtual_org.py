@@ -5,7 +5,10 @@ class VirtualOrg(object):
         self.sp = sp # The parent SP client instance 
         self.config = sp.config
         self.vorg_name = vorg
-        self.log = log
+        if log is None:
+            self.log = self.sp.logger
+        else:
+            self.log = log
         self.vorg_conf = self.config.vo_conf(self.vorg_name)
         
     def _cache_session(self, session_info):
@@ -47,6 +50,9 @@ class VirtualOrg(object):
     
     def get_common_identifier(self, subject_id):
         (ava, _) = self.sp.users.get_identity(subject_id)
+        if ava == {}:
+            return None
+            
         ident = self.vorg_conf["common_identifier"]
 
         try:
@@ -55,6 +61,9 @@ class VirtualOrg(object):
             return None
         
     def do_aggregation(self, subject_id, log=None):
+        if log is None:
+            log = self.log
+            
         if log:
             log.info("** Do VO aggregation **")
             log.info("SubjectID: %s, VO:%s" % (subject_id, self.vorg_name))
@@ -74,7 +83,7 @@ class VirtualOrg(object):
             resolver = AttributeResolver(saml2client=self.sp)
             # extends returns a list of session_infos      
             for session_info in resolver.extend(com_identifier,
-                                        self.sp.config["entityid"], 
+                                        self.sp.config.entityid, 
                                         to_ask, 
                                         name_id_format=name_id_format,
                                         sp_name_qualifier=sp_name_qualifier,
