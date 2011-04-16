@@ -12,7 +12,7 @@ def add_derek_info(sp):
     not_on_or_after = str_to_time(in_a_while(days=1))
     session_info = SESSION_INFO_PATTERN.copy()
     session_info["ava"] = {"givenName":["Derek"], "umuselin":["deje0001"]}
-    session_info["issuer"] = "urn:mace:example.com:saml:roland:idp"
+    session_info["issuer"] = "https://toylan3.umdc.umu.se/shibboleth"
     session_info["name_id"] = "abcdefgh"
     session_info["not_on_or_after"] = not_on_or_after
     # subject_id, entity_id, info, timestamp
