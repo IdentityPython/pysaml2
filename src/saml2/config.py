@@ -3,6 +3,7 @@
 __author__ = 'rolandh'
 
 import sys
+import os
 import logging
 import logging.handlers
 
@@ -13,7 +14,6 @@ from saml2 import metadata
 from saml2 import root_logger
 
 from saml2.attribute_converter import ac_factory
-from saml2.attribute_converter import ac_factory_II
 from saml2.assertion import Policy
 from saml2.sigver import get_xmlsec_binary
 
@@ -133,7 +133,7 @@ class Config(object):
             pass
 
         try:
-            acs = ac_factory_II(cnf["attribute_map_dir"])
+            acs = ac_factory(cnf["attribute_map_dir"])
             try:
                 _attr_typ["attribute_converters"].extend(acs)
             except KeyError:
@@ -148,7 +148,13 @@ class Config(object):
                 pass
 
     def load(self, cnf, metadata_construction=False):
+        """ The base load method, loads the configuration
 
+        :param cnf: The configuration as a dictionary
+        :param metadata_construction: Is this only to be able to construct
+            metadata. If so some things can be left out.
+        :return: The Configuration instance
+        """
         for arg in COMMON_ARGS:
             try:
                 self._attr[""][arg] = cnf[arg]
@@ -167,6 +173,10 @@ class Config(object):
         if not metadata_construction:
             if "xmlsec_binary" not in self._attr[""]:
                 self._attr[""]["xmlsec_binary"] = get_xmlsec_binary()
+            # verify that xmlsec is where it's supposed to be
+            if not os.access(self._attr[""]["xmlsec_binary"], os.F_OK):
+                raise Exception("xmlsec binary not in '%s' !" % (
+                                            self._attr[""]["xmlsec_binary"]))
 
         self.load_complex(cnf, metadata_construction=metadata_construction)
         self.context = self.def_context
