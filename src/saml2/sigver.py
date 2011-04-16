@@ -289,13 +289,19 @@ def _parse_xmlsec_output(output):
 __DEBUG = 0
 
 def verify_signature(enctext, xmlsec_binary, cert_file=None, cert_type="pem",
-                        node_name=NODE_NAME, debug=False, node_id=None):
+                        node_name=NODE_NAME, debug=False, node_id=None,
+                        log=None):
     """ Verifies the signature of a XML document.
-    
+
+    :param enctext: The signed XML document
     :param xmlsec_binary: The xmlsec1 binaries to be used
-    :param input: The XML document as a string
-    :param der_file: The public key that was used to sign the document
-    :return: Boolean True if the signature was correct otherwise False.
+    :param cert_file: The public key used to decrypt the signature
+    :param cert_type: The cert format
+    :param node_name: The SAML class of the root node in the signed document
+    :param debug: To debug or not
+    :param node_id: The identifier of the root node if any
+    :return: The signed document if all was OK otherwise will raise an
+        exception.
     """
         
     _, fil = make_temp(enctext, decode=False)
@@ -330,6 +336,12 @@ def verify_signature(enctext, xmlsec_binary, cert_file=None, cert_type="pem",
     try:
         verified = _parse_xmlsec_output(pof.stderr.read())
     except XmlsecError, exc:
+        if log:
+            log.error(60*"=")
+            log.error(p_out)
+            log.error(60*"-")
+            log.error("%s" % exc)
+            log.error(60*"=")            
         raise SignatureError("%s" % (exc,))
 
     return verified
@@ -337,6 +349,13 @@ def verify_signature(enctext, xmlsec_binary, cert_file=None, cert_type="pem",
 # ---------------------------------------------------------------------------
 
 def read_cert_from_file(cert_file, cert_type):
+    """ Reads a certificate from a file. The assumption is that there is
+    only one certificate in the file
+
+    :param cert_file: The name of the file
+    :param cert_type: The certificate type
+    :return: A base64 encoded certificate as a string or the empty string
+    """
     if not cert_file:
         return ""
     
@@ -353,15 +372,25 @@ def read_cert_from_file(cert_file, cert_type):
         else:
             raise Exception("Strange end of PEM file")
         return "".join(line)
+
     if cert_type in ["der", "cer", "crt"]:
         data = open(cert_file).read()
         return base64.b64encode(data)
 
-def security_context(conf, log=None):
+def security_context(conf, log=None, debug=None):
+    """ Creates a security context based on the configuration
+
+    :param conf: The configuration
+    :param log: A logger if different from the one specified in the
+        configuration
+    :return: A SecurityContext instance
+    """
     if not conf:
         return None
         
-    debug = conf.debug
+    if debug is None:
+        debug = conf.debug
+
     metadata = conf.metadata
 
     return SecurityContext(conf.xmlsec_binary, conf.key_file, "pem",
@@ -372,6 +401,7 @@ class SecurityContext(object):
     def __init__(self, xmlsec_binary, key_file="", key_type= "pem", 
                     cert_file="", cert_type="pem", metadata=None, log=None, 
                     debug=False):
+        
         self.xmlsec = xmlsec_binary
         
         # Your private key
@@ -473,14 +503,20 @@ class SecurityContext(object):
         
         verified = False
         for _, pem_file in certs:
-            #print "========================================================="
-            #print open(pem_file).read()
-            #print "========================================================="
-            if self.verify_signature(decoded_xml, pem_file, "pem", node_name,
+            try:
+                if self.verify_signature(decoded_xml, pem_file, "pem", node_name,
                                     item.id):
-                verified = True
-                break
-                    
+                    verified = True
+                    break
+            except XmlsecError, exc:
+                if self.log:
+                    self.log.error("check_sig: %s" % exc)
+                pass
+            except Exception, exc:
+                if self.log:
+                    self.log.error("check_sig: %s" % exc)
+                raise
+
         if not verified:
             raise SignatureError("Failed to verify signature")
 
@@ -584,10 +620,16 @@ class SecurityContext(object):
                 if self.debug:
                     self.log.debug("signed")
 
-            self._check_signature(decoded_xml, assertion, 
-                                    class_name(assertion))
-
+            try:
+                self._check_signature(decoded_xml, assertion,
+                                        class_name(assertion))
+            except Exception, exc:
+                if self.log:
+                    self.log.error("correctly_signed_response: %s" % exc)
+                raise
+            
         return response
+
 
     #--------------------------------------------------------------------------
     # SIGNATURE PART
@@ -757,4 +799,3 @@ def pre_signature_part(ident, public_key=None, identifier=None):
         signature.key_info = key_info
     
     return signature
-    
