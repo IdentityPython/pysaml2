@@ -425,7 +425,13 @@ def test_attributes():
     assert ra[0].name == 'urn:oid:2.5.4.4'
     
 
-# TODO
-#def test_extend():
-#    md = metadata.MetaData(attrconv=ATTRCONV)
-#    md.import_metadata(_fix_valid_until(_read_file("extended.xml")), "-")
+def test_extend():
+    md = metadata.MetaData(attrconv=ATTRCONV)
+    md.import_metadata(_fix_valid_until(_read_file("extended.xml")), "-")
+
+    signcerts = md.certs("https://coip-test.sunet.se/shibboleth", "signing")
+    assert len(signcerts) == 1
+    enccerts = md.certs("https://coip-test.sunet.se/shibboleth", "encryption")
+    assert len(enccerts) == 1
+    assert signcerts[0] == enccerts[0]
+    

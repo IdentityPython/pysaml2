@@ -986,3 +986,15 @@ def entities_descriptor(eds, valid_for, name, ident, sign, secc):
                                                         class_name(entities))
         entities = md.entities_descriptor_from_string(xmldoc)
     return entities
+
+def sign_entity_descriptor(edesc, valid_for, ident, secc):
+    if valid_for:
+        edesc.valid_until = in_a_while(hours=valid_for)
+
+    if not ident:
+        ident = sid()
+
+    edesc.signature = pre_signature_part(ident, secc.my_cert, 1)
+    edesc.id = ident
+    xmldoc = secc.sign_statement_using_xmlsec("%s" % edesc, class_name(edesc))
+    return md.entity_descriptor_from_string(xmldoc)

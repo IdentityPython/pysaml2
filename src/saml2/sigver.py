@@ -484,11 +484,12 @@ class SecurityContext(object):
         except AttributeError:
             issuer = None
 
-        certs = []
-        # if self.metadata:
-        #     certs = self.metadata.certs(issuer, "signing")
-        # else:
-            
+        # More trust in certs from metadata then certs in the XML document
+        if self.metadata:
+             certs = self.metadata.certs(issuer, "signing")
+        else:
+            certs = []
+
         if not certs:
             #print "==== Certs from instance ===="
             certs = [make_temp(pem_format(cert), ".pem", False) \

@@ -4,7 +4,9 @@ import getopt
 import sys
 
 from saml2.metadata import entity_descriptor, entities_descriptor
+from saml2.metadata import sign_entity_descriptor
 from saml2.sigver import SecurityContext
+from saml2.sigver import get_xmlsec_binary
 from saml2.validate import valid_instance
 from saml2.config import Config
 
@@ -29,9 +31,9 @@ class Usage(Exception):
     
 def main(args):
     try:
-        opts, args = getopt.getopt(args, "c:hi:k:sv:x:",
+        opts, args = getopt.getopt(args, "c:ehi:k:p:sv:x:",
                         ["help", "name", "id", "keyfile", "sign", 
-                        "valid", "xmlsec"])
+                        "valid", "xmlsec", "entityid", "path"])
     except getopt.GetoptError, err:
         # print help information and exit:
         raise Usage(err) # will print something like "option -a not recognized"
@@ -45,6 +47,8 @@ def main(args):
     xmlsec = ""
     keyfile = ""
     pubkeyfile = ""
+    entitiesid = True
+    path = []
     
     try:
         for o, a in opts:
@@ -64,6 +68,10 @@ def main(args):
                 keyfile = a
             elif o in ("-c", "--certfile"):
                 pubkeyfile = a
+            elif o in ("-e", "--entityid"):
+                entitiesid = False
+            elif o in ("-p", "--path"):
+                path = [x.strip() for x in a.split(":")]
             else:
                 assert False, "unhandled option %s" % o
     except Usage, err:
@@ -71,6 +79,9 @@ def main(args):
         print >> sys.stderr, "\t for help use --help"
         return 2
 
+    if not xmlsec:
+        xmlsec = get_xmlsec_binary(path)
+        
     eds = []
     for filespec in args:
         bas, fil = os.path.split(filespec)
@@ -82,10 +93,19 @@ def main(args):
         eds.append(entity_descriptor(cnf, valid_for))
 
     secc = SecurityContext(xmlsec, keyfile, cert_file=pubkeyfile)
-    desc = entities_descriptor(eds, valid_for, name, id, sign, secc)
-    valid_instance(desc)
-    print desc
-    
+    if entitiesid:
+        desc = entities_descriptor(eds, valid_for, name, id, sign, secc)
+        valid_instance(desc)
+        print desc
+    else:
+        for eid in eds:
+            if sign:
+                desc = sign_entity_descriptor(eid, valid_for, id, secc)
+            else:
+                desc = eid
+            valid_instance(desc)
+            print desc
+
 if __name__ == "__main__":
     import sys
     
