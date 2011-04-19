@@ -62,7 +62,7 @@ class TestClient:
         self.client = Saml2Client(conf)
     
     def test_create_attribute_query1(self):
-        req = self.client.create_attribute_query("id1", 
+        req = self.client.create_attribute_query("id1",
             "E8042FB4-4D5B-48C3-8E14-8EDD852790DD",
             "https://idp.example.com/idp/",
             nameid_format=saml.NAMEID_FORMAT_PERSISTENT)
@@ -70,8 +70,13 @@ class TestClient:
         xmlsec_vers = xmlsec_version(self.client.config.xmlsec_binary)
         print "XMLSEC version: %s" % xmlsec_vers
         print reqstr
-        print REQ1[xmlsec_vers] % req.issue_instant
-        assert reqstr == REQ1["1.2.16"] % req.issue_instant
+        try:
+            expected_req = REQ1[xmlsec_vers] % req.issue_instant
+        except KeyError:
+            expected_req = REQ1["1.2.14"] % req.issue_instant
+
+        print expected_req
+        assert reqstr == expected_req
         #assert reqstr == REQ1[xmlsec_vers] % req.issue_instant
         assert req.destination == "https://idp.example.com/idp/"
         assert req.id == "id1"
