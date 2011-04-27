@@ -71,7 +71,9 @@ LOG_HANDLER = {
     "timerotate": logging.handlers.TimedRotatingFileHandler,
 }
 
-LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+LOG_FORMAT = "%(asctime)s %(name)s: %(levelname)s %(message)s"
+#LOG_FORMAT = "%(asctime)s %(name)s: %(levelname)s [%(sid)s][%(func)s] %
+# (message)s"
 
 # -----------------------------------------------------------------
 
@@ -251,7 +253,7 @@ class Config(object):
             return None
 
         try:
-            root_logger.setLevel(LOG_LEVEL[_logconf["loglevel"]])
+            root_logger.setLevel(LOG_LEVEL[_logconf["loglevel"].lower()])
         except KeyError: # reasonable default
             root_logger.setLevel(logging.WARNING)
 
@@ -278,7 +280,8 @@ class Config(object):
                 break
 
         if handler is None:
-            raise Exception("You have to define a log handler")
+            # default if rotating logger
+            handler = LOG_HANDLER["rotating"]()
 
         if "format" in _logconf:
             formatter = logging.Formatter(_logconf["format"])
