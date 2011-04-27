@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2009 Umeå University
@@ -477,7 +477,8 @@ class SecurityContext(object):
         return verify_signature(enctext, self.xmlsec, cert_file, cert_type,
                                 node_name, self.debug, node_id)
         
-    def _check_signature(self, decoded_xml, item, node_name=NODE_NAME):
+    def _check_signature(self, decoded_xml, item, node_name=NODE_NAME,
+                         origdoc=None):
         #print item
         try:
             issuer = item.issuer.text.strip()
@@ -505,10 +506,16 @@ class SecurityContext(object):
         verified = False
         for _, pem_file in certs:
             try:
-                if self.verify_signature(decoded_xml, pem_file, "pem", node_name,
-                                    item.id):
-                    verified = True
-                    break
+                if origdoc is not None:
+                    if self.verify_signature(origdoc, pem_file, "pem",
+                                             node_name, item.id):
+                        verified = True
+                        break
+                else:
+                    if self.verify_signature(decoded_xml, pem_file, "pem",
+                                             node_name, item.id):
+                        verified = True
+                        break
             except XmlsecError, exc:
                 if self.log:
                     self.log.error("check_sig: %s" % exc)
@@ -592,7 +599,7 @@ class SecurityContext(object):
 
         return self._check_signature( decoded_xml, request )
 
-    def correctly_signed_response(self, decoded_xml, must=False):
+    def correctly_signed_response(self, decoded_xml, must=False, origdoc=None):
         """ Check if a instance is correctly signed, if we have metadata for
         the IdP that sent the info use that, if not use the key that are in 
         the message if any.
@@ -623,7 +630,7 @@ class SecurityContext(object):
 
             try:
                 self._check_signature(decoded_xml, assertion,
-                                        class_name(assertion))
+                                        class_name(assertion), origdoc)
             except Exception, exc:
                 if self.log:
                     self.log.error("correctly_signed_response: %s" % exc)
