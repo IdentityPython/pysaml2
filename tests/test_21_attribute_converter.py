@@ -132,3 +132,11 @@ class TestAC():
         
         print result
         assert result == {'givenName': [], 'sn': [], 'title': []}
+
+    def test_to_local_name_from_basic(self):
+        attr = [saml.Attribute(
+                name="urn:mace:dir:attribute-def:eduPersonPrimaryOrgUnitDN")]
+
+        lan = [attribute_converter.to_local_name(self.acs, a) for a in attr]
+
+        assert _eq(lan, ['eduPersonPrimaryOrgUnitDN'])

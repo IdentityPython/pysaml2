@@ -260,11 +260,18 @@ class AttributeConverter(object):
         :param attr: An saml.Attribute instance
         :return: The local attribute name or "" if no mapping could be made
         """
-        if self.name_format == attr.name_format:
+        if attr.name_format:
+            if self.name_format == attr.name_format:
+                try:
+                    return self._fro[attr.name]
+                except KeyError:
+                    pass
+        else: #don't know the name format so try all I have
             try:
                 return self._fro[attr.name]
             except KeyError:
                 pass
+
         return ""
         
     def to_(self, attrvals):
