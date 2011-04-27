@@ -231,6 +231,7 @@ class Saml2Client(object):
         :param scoping: The scope of the request
         :param log: A service to which logs should be written
         :param sign: Whether the request should be signed or not.
+        :param binding: The protocol to use for the Response !!
         """
         request = samlp.AuthnRequest(
             id= query_id,
@@ -348,10 +349,14 @@ class Saml2Client(object):
         if binding == saml2.BINDING_HTTP_POST:
             # No valid ticket; Send a form to the client
             # THIS IS NOT TO BE USED RIGHT NOW
+            if log:
+                log.info("HTTP POST")
             (head, response) = http_post_message(authen_req, location, 
                                                     relay_state)
         elif binding == saml2.BINDING_HTTP_REDIRECT:
-            (head, _body) = http_redirect_message(authen_req, location, 
+            if log:
+                log.info("HTTP REDIRECT")
+            (head, _body) = http_redirect_message(authen_req, location,
                                                 relay_state)
             response = head[0]
         else:
@@ -417,7 +422,7 @@ class Saml2Client(object):
     
     def attribute_query(self, subject_id, destination, issuer_id=None,
                 attribute=None, sp_name_qualifier=None, name_qualifier=None,
-                nameid_format=None, log=None):
+                nameid_format=None, log=None, real_id=None):
         """ Does a attribute request to an attribute authority, this is
         by default done over SOAP. Other bindings could be used but not
         supported right now.
@@ -433,6 +438,8 @@ class Saml2Client(object):
             provider that generated the identifier.
         :param nameid_format: The format of the name ID
         :param log: Function to use for logging
+        :param real_id: The identifier which is the key to this entity in the
+            identity database
         :return: The attributes returned
         """
 
@@ -462,6 +469,10 @@ class Saml2Client(object):
         
         if log:
             log.info("SOAP request sent and got response: %s" % response)
+#            fil = open("response.xml", "w")
+#            fil.write(response)
+#            fil.close()
+            
         if response:
             if log:
                 log.info("Verifying response")
@@ -473,9 +484,12 @@ class Saml2Client(object):
                     log.error("%s", (exc,))
                 return None
                 
-            session_info = aresp.loads(response, False).verify().session_info()
+            session_info = aresp.loads(response, False, soapclient.response
+                                       ).verify().session_info()
 
             if session_info:
+                if real_id is not None:
+                    session_info["name_id"] = real_id
                 self.users.add_information_about_person(session_info)
             
             if log:
