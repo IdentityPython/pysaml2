@@ -59,6 +59,11 @@ def parse_soap_enveloped_saml_thingy(text, expected_tags):
     :return: SAML thingy as a string
     """
     envelope = ElementTree.fromstring(text)
+#    if True:
+#        fil = open("soap.xml", "w")
+#        fil.write(text)
+#        fil.close()
+        
     assert envelope.tag == '{%s}Envelope' % NAMESPACE
     
     assert len(envelope) == 1
@@ -127,15 +132,17 @@ class SOAPClient(object):
     def __init__(self, server_url, keyfile=None, certfile=None, log=None):
         self.server = HTTPClient(server_url, keyfile, certfile, log)
         self.log = log
+        self.response = None
         
     def send(self, request):
         soap_message = make_soap_enveloped_saml_thingy(request)
-        response = self.server.post(soap_message, 
+        _response = self.server.post(soap_message,
                                     {"content-type": "application/soap+xml"})
-        if response:
+        if _response:
             if self.log:
-                self.log.info("SOAP response: %s" % response)
-            return parse_soap_enveloped_saml_response(response)
+                self.log.info("SOAP response: %s" % _response)
+            self.response = _response
+            return parse_soap_enveloped_saml_response(_response)
         else:
             return False
 
