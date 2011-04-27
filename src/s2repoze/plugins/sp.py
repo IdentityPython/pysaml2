@@ -22,7 +22,7 @@ import cgi
 import platform
 import shelve
 
-from paste.httpexceptions import HTTPTemporaryRedirect
+from paste.httpexceptions import HTTPSeeOther
 from paste.httpexceptions import HTTPNotImplemented
 from paste.httpexceptions import HTTPInternalServerError
 from paste.request import parse_dict_querystring
@@ -116,7 +116,7 @@ class SAML2Plugin(FormPluginBase):
                     self.outstanding_queries[sid_] = came_from
                     self.log.info("Redirect to WAYF function: %s" % self.wayf)
                     #self.log.info("env: %s" % (environ,))
-                    return (1, HTTPTemporaryRedirect(headers = [('Location', 
+                    return (1, HTTPSeeOther(headers = [('Location', 
                                                 "%s?%s" % (self.wayf, sid_))]))
                 else:
                     self.log.info("Choosen IdP: '%s'" % wayf_selected)
@@ -168,11 +168,11 @@ class SAML2Plugin(FormPluginBase):
             
             # remember the request
             self.outstanding_queries[sid_] = came_from
-                
-            if self.debug and self.log:
-                self.log.info('sc returned: %s' % (result,))
+
             if isinstance(result, tuple):
-                return HTTPTemporaryRedirect(headers=[result])
+                if self.debug and self.log:
+                    self.log.info('redirect to: %s' % result[1])
+                return HTTPSeeOther(headers=[result])
             else :
                 return HTTPInternalServerError(detail='Incorrect returned data')
 
