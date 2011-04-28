@@ -284,7 +284,7 @@ class AuthnResponse(StatusResponse):
     
     def __init__(self, sec_context, attribute_converters, entity_id, 
                     return_addr=None, outstanding_queries=None, log=None, 
-                    timeslack=0, debug=0, asynchop=False):
+                    timeslack=0, debug=0, asynchop=True):
         StatusResponse.__init__(self, sec_context, return_addr, log, 
                                     timeslack, debug)
         self.entity_id = entity_id
