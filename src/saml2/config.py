@@ -136,6 +136,9 @@ class Config(object):
 
         try:
             acs = ac_factory(cnf["attribute_map_dir"])
+            if not acs:
+                raise Exception(("No attribute converters, ",
+                                    "something is wrong!!"))
             try:
                 _attr_typ["attribute_converters"].extend(acs)
             except KeyError:
@@ -240,22 +243,11 @@ class Config(object):
         except IndexError:
             return None
 
-    def setup_logger(self):
+    def log_handler(self):
         try:
             _logconf = self.logger
         except KeyError:
             return None
-
-        if root_logger.level != logging.NOTSET: # Someone got there before me
-            return root_logger
-
-        if _logconf is None:
-            return None
-
-        try:
-            root_logger.setLevel(LOG_LEVEL[_logconf["loglevel"].lower()])
-        except KeyError: # reasonable default
-            root_logger.setLevel(logging.WARNING)
 
         handler = None
         for htyp in LOG_HANDLER:
@@ -287,10 +279,29 @@ class Config(object):
             formatter = logging.Formatter(_logconf["format"])
         else:
             formatter = logging.Formatter(LOG_FORMAT)
-        
-        handler.setFormatter(formatter)
-        root_logger.addHandler(handler)
 
+        handler.setFormatter(formatter)
+        return handler
+    
+    def setup_logger(self):
+        try:
+            _logconf = self.logger
+        except KeyError:
+            return None
+
+        if root_logger.level != logging.NOTSET: # Someone got there before me
+            return root_logger
+
+        if _logconf is None:
+            return None
+
+        try:
+            root_logger.setLevel(LOG_LEVEL[_logconf["loglevel"].lower()])
+        except KeyError: # reasonable default
+            root_logger.setLevel(logging.WARNING)
+
+        root_logger.addHandler(self.log_handler())
+        root_logger.info("Logging started")
         return root_logger
     
     def keys(self):
