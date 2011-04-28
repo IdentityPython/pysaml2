@@ -67,13 +67,16 @@ class TestClient:
             "https://idp.example.com/idp/",
             nameid_format=saml.NAMEID_FORMAT_PERSISTENT)
         reqstr = "%s" % req.to_string()
-        xmlsec_vers = xmlsec_version(self.client.config.xmlsec_binary)
-        print "XMLSEC version: %s" % xmlsec_vers
-        print reqstr
-        try:
-            expected_req = REQ1[xmlsec_vers] % req.issue_instant
-        except KeyError:
-            expected_req = REQ1["1.2.14"] % req.issue_instant
+
+        expected_req = REQ1["1.2.16"] % req.issue_instant
+
+#        xmlsec_vers = xmlsec_version(self.client.config.xmlsec_binary)
+#        print "XMLSEC version: %s" % xmlsec_vers
+#        print reqstr
+#        try:
+#            expected_req = REQ1[xmlsec_vers] % req.issue_instant
+#        except KeyError:
+#            expected_req = REQ1["1.2.14"] % req.issue_instant
 
         print expected_req
         assert reqstr == expected_req

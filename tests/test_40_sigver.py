@@ -109,10 +109,11 @@ class TestSecurity():
         self.sec = sigver.SecurityContext(xmlexec, PRIV_KEY, "pem",
                                             PUB_KEY, "pem", debug=1)
 
-        try:
-            self.sign_digest = SIGNATURE_DIGEST[xmlsec_version(xmlexec)]
-        except KeyError:
-            self.sign_digest = SIGNATURE_DIGEST["1.2.14"]
+        self.sign_digest = SIGNATURE_DIGEST["1.2.16"]
+#        try:
+#            self.sign_digest = SIGNATURE_DIGEST[xmlsec_version(xmlexec)]
+#        except KeyError:
+#            self.sign_digest = SIGNATURE_DIGEST["1.2.14"]
 
         self._assertion = factory( saml.Assertion,
             version="2.0",
