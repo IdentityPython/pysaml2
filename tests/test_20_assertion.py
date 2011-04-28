@@ -1,9 +1,10 @@
 from saml2 import md, assertion
 from saml2.saml import Attribute, NAME_FORMAT_URI, AttributeValue
 from saml2.assertion import Policy, Assertion, filter_on_attributes
-from saml2.assertion import filter_attribute_value_assertions
+from saml2.assertion import filter_attribute_value_assertions, from_local
 from saml2.s_utils import MissingValue
 from saml2 import attribute_converter
+from saml2.attribute_converter import ac_factory
 
 from py.test import raises
 
@@ -68,7 +69,7 @@ def test_lifetime_1():
             }}
     
     r = Policy(conf)
-    assert r != None
+    assert r is not None
     
     assert r.get_lifetime("urn:mace:umu.se:saml:roland:sp") == {"minutes": 5}               
     assert r.get_lifetime("urn:mace:example.se:saml:sp") == {"minutes": 15}
@@ -88,7 +89,7 @@ def test_lifetime_2():
             }}
     
     r = Policy(conf)
-    assert r != None
+    assert r is not None
     
     assert r.get_lifetime("urn:mace:umu.se:saml:roland:sp") == {"minutes": 5}               
     assert r.get_lifetime("urn:mace:example.se:saml:sp") == {"hours": 1}        
@@ -260,7 +261,34 @@ def test_assertion_1(AVA):
     ava = ava.apply_policy( "", policy )
     assert _eq(ava.keys(), ["givenName"])
     assert ava["givenName"] == ["Roland"]
-    
+
+def test_assertion_2():
+    AVA = {'mail': u'roland.hedberg@adm.umu.se',
+           'eduPersonTargetedID': 'http://lingon.ladok.umu.se:8090/idp!http://lingon.ladok.umu.se:8088/sp!95e9ae91dbe62d35198fbbd5e1fb0976',
+           'displayName': u'Roland Hedberg',
+           'uid': 'http://roland.hedberg.myopenid.com/'}
+
+    ava = Assertion(AVA)
+
+    policy = Policy( {
+        "default": {
+            "lifetime": {"minutes": 240},
+            "attribute_restrictions": None, # means all I have
+            "name_form": NAME_FORMAT_URI
+        },
+    })
+
+    ava = ava.apply_policy( "", policy )
+    acs = ac_factory("attributemaps")
+    attribute=from_local(acs, ava, policy.get_name_form(""))
+
+    assert len(attribute) == 4
+    names = [attr.name for attr in attribute]
+    assert _eq(names, ['urn:oid:0.9.2342.19200300.100.1.3',
+                       'urn:oid:1.3.6.1.4.1.5923.1.1.1.10',
+                       'urn:oid:2.16.840.1.113730.3.1.241',
+                       'urn:oid:0.9.2342.19200300.100.1.1'])
+
 # ----------------------------------------------------------------------------
     
 def test_filter_values_req_2():
@@ -517,18 +545,18 @@ def test_filter_ava_4():
     assert _eq(ava["mail"], ["derek@nyy.mlb.com", "dj@example.com"])
 
 def test_req_opt():
-    req = []
-    req.append(md.RequestedAttribute(friendly_name="surname", name="urn:oid:2.5.4.4",
-                    name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
-                    is_required="true"))
-    req.append(md.RequestedAttribute(friendly_name="givenname", name="urn:oid:2.5.4.42",
-                    name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
-                    is_required="true"))
-    req.append(md.RequestedAttribute(friendly_name="edupersonaffiliation", 
-                    name="urn:oid:1.3.6.1.4.1.5923.1.1.1.1",
-                    name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
-                    is_required="true"))
-                    
+    req = [md.RequestedAttribute(friendly_name="surname", name="urn:oid:2.5.4.4",
+                                 name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+                                 is_required="true"),
+           md.RequestedAttribute(friendly_name="givenname",
+                                 name="urn:oid:2.5.4.42",
+                                 name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+                                 is_required="true"),
+           md.RequestedAttribute(friendly_name="edupersonaffiliation",
+                                 name="urn:oid:1.3.6.1.4.1.5923.1.1.1.1",
+                                 name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+                                 is_required="true")]
+
     opt = [md.RequestedAttribute(friendly_name="title", 
                     name="urn:oid:2.5.4.12",
                     name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
