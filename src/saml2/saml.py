@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #
-# Generated Fri Aug 20 08:25:36 2010 by parse_xsd.py version 0.3.
+# Generated Mon May  2 14:23:33 2011 by parse_xsd.py version 0.4.
 #
 
 import saml2
@@ -183,6 +183,7 @@ class NameIDType_(SamlBase):
 
     c_tag = 'NameIDType'
     c_namespace = NAMESPACE
+    c_value_type = {'base': 'string'}
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
@@ -585,6 +586,7 @@ class ActionType_(SamlBase):
 
     c_tag = 'ActionType'
     c_namespace = NAMESPACE
+    c_value_type = {'base': 'string'}
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
@@ -1197,7 +1199,7 @@ def subject_from_string(xml_string):
 
 
 #..................
-# ['AssertionType', 'Evidence', 'EvidenceType', 'Advice', 'AdviceType', 'Assertion', 'AuthzDecisionStatement', 'AuthzDecisionStatementType']
+# ['AuthzDecisionStatement', 'EvidenceType', 'AdviceType', 'Evidence', 'Assertion', 'AssertionType', 'AuthzDecisionStatementType', 'Advice']
 class EvidenceType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:assertion:EvidenceType element """
 
@@ -1308,7 +1310,7 @@ def authz_decision_statement_from_string(xml_string):
 
 
 #..................
-# ['Assertion', 'AssertionType', 'Advice', 'AdviceType']
+# ['Assertion', 'AssertionType', 'AdviceType', 'Advice']
 class AssertionType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:assertion:AssertionType element """
 
@@ -1455,6 +1457,11 @@ AssertionType_.c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Advice'] = ('a
 Assertion.c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Advice'] = ('advice', Advice)
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+AG_IDNameQualifiers = [
+    ('NameQualifier', 'string', False),
+    ('SPNameQualifier', 'string', False),
+]
+
 ELEMENT_FROM_STRING = {
     BaseID.c_tag: base_id_from_string,
     NameID.c_tag: name_id_from_string,
@@ -1567,7 +1574,11 @@ ELEMENT_BY_TAG = {
     'AttributeType': AttributeType_,
     'AttributeValue': AttributeValue,
     'EncryptedAttribute': EncryptedAttribute,
+    'BaseIDAbstractType': BaseIDAbstractType_,
+    'ConditionAbstractType': ConditionAbstractType_,
+    'StatementAbstractType': StatementAbstractType_,
 }
+
 
 def factory(tag, **kwargs):
     return ELEMENT_BY_TAG[tag](**kwargs)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #
-# Generated Fri Aug 20 08:25:36 2010 by parse_xsd.py version 0.3.
+# Generated Mon May  2 14:23:33 2011 by parse_xsd.py version 0.4.
 #
 
 import saml2
@@ -46,6 +46,7 @@ class SignatureValueType_(SamlBase):
 
     c_tag = 'SignatureValueType'
     c_namespace = NAMESPACE
+    c_value_type = {'base': 'base64Binary'}
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
@@ -1628,6 +1629,7 @@ ELEMENT_BY_TAG = {
     'X509Certificate': X509DataType_X509Certificate,
     'X509CRL': X509DataType_X509CRL,
 }
+
 
 def factory(tag, **kwargs):
     return ELEMENT_BY_TAG[tag](**kwargs)

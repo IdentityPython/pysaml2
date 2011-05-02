@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #
-# Generated Fri Aug 20 08:25:36 2010 by parse_xsd.py version 0.3.
+# Generated Mon May  2 14:23:33 2011 by parse_xsd.py version 0.4.
 #
 
 import saml2
@@ -754,7 +754,9 @@ ELEMENT_BY_TAG = {
     'DataReference': ReferenceList_DataReference,
     'KeyReference': ReferenceList_KeyReference,
     'CarriedKeyName': EncryptedKeyType_CarriedKeyName,
+    'EncryptedType': EncryptedType_,
 }
+
 
 def factory(tag, **kwargs):
     return ELEMENT_BY_TAG[tag](**kwargs)

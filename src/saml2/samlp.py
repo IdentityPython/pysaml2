@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #
-# Generated Fri Aug 20 08:25:36 2010 by parse_xsd.py version 0.3.
+# Generated Mon May  2 14:23:33 2011 by parse_xsd.py version 0.4.
 #
 
 import saml2
@@ -106,43 +106,6 @@ class AuthnContextComparisonType_(SamlBase):
 
 def authn_context_comparison_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(AuthnContextComparisonType_, xml_string)
-
-
-class RequestedAuthnContextType_(SamlBase):
-    """The urn:oasis:names:tc:SAML:2.0:protocol:RequestedAuthnContextType element """
-
-    c_tag = 'RequestedAuthnContextType'
-    c_namespace = NAMESPACE
-    c_children = SamlBase.c_children.copy()
-    c_attributes = SamlBase.c_attributes.copy()
-    c_child_order = SamlBase.c_child_order[:]
-    c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AuthnContextClassRef'] = ('authn_context_class_ref', [saml.AuthnContextClassRef])
-    c_cardinality['authn_context_class_ref'] = {"min":0}
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AuthnContextDeclRef'] = ('authn_context_decl_ref', [saml.AuthnContextDeclRef])
-    c_cardinality['authn_context_decl_ref'] = {"min":0}
-    c_attributes['Comparison'] = ('comparison', AuthnContextComparisonType_, False)
-    c_child_order.extend(['authn_context_class_ref', 'authn_context_decl_ref'])
-
-    def __init__(self,
-            authn_context_class_ref=None,
-            authn_context_decl_ref=None,
-            comparison=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.authn_context_class_ref=authn_context_class_ref or []
-        self.authn_context_decl_ref=authn_context_decl_ref or []
-        self.comparison=comparison
-
-def requested_authn_context_type__from_string(xml_string):
-    return saml2.create_class_from_xml_string(RequestedAuthnContextType_, xml_string)
 
 
 class NameIDPolicyType_(SamlBase):
@@ -482,18 +445,41 @@ class SubjectQueryAbstractType_(RequestAbstractType_):
         self.subject=subject
 
 
-class RequestedAuthnContext(RequestedAuthnContextType_):
-    """The urn:oasis:names:tc:SAML:2.0:protocol:RequestedAuthnContext element """
+class RequestedAuthnContextType_(SamlBase):
+    """The urn:oasis:names:tc:SAML:2.0:protocol:RequestedAuthnContextType element """
 
-    c_tag = 'RequestedAuthnContext'
+    c_tag = 'RequestedAuthnContextType'
     c_namespace = NAMESPACE
-    c_children = RequestedAuthnContextType_.c_children.copy()
-    c_attributes = RequestedAuthnContextType_.c_attributes.copy()
-    c_child_order = RequestedAuthnContextType_.c_child_order[:]
-    c_cardinality = RequestedAuthnContextType_.c_cardinality.copy()
+    c_children = SamlBase.c_children.copy()
+    c_attributes = SamlBase.c_attributes.copy()
+    c_child_order = SamlBase.c_child_order[:]
+    c_cardinality = SamlBase.c_cardinality.copy()
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AuthnContextClassRef'] = ('authn_context_class_ref', [saml.AuthnContextClassRef])
+    c_cardinality['authn_context_class_ref'] = {"min":0}
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AuthnContextDeclRef'] = ('authn_context_decl_ref', [saml.AuthnContextDeclRef])
+    c_cardinality['authn_context_decl_ref'] = {"min":0}
+    c_attributes['Comparison'] = ('comparison', AuthnContextComparisonType_, False)
+    c_child_order.extend(['authn_context_class_ref', 'authn_context_decl_ref'])
 
-def requested_authn_context_from_string(xml_string):
-    return saml2.create_class_from_xml_string(RequestedAuthnContext, xml_string)
+    def __init__(self,
+            authn_context_class_ref=None,
+            authn_context_decl_ref=None,
+            comparison=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        SamlBase.__init__(self, 
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.authn_context_class_ref=authn_context_class_ref or []
+        self.authn_context_decl_ref=authn_context_decl_ref or []
+        self.comparison=comparison
+
+def requested_authn_context_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(RequestedAuthnContextType_, xml_string)
 
 
 class AttributeQueryType_(SubjectQueryAbstractType_):
@@ -835,55 +821,18 @@ def subject_query_from_string(xml_string):
     return saml2.create_class_from_xml_string(SubjectQuery, xml_string)
 
 
-class AuthnQueryType_(SubjectQueryAbstractType_):
-    """The urn:oasis:names:tc:SAML:2.0:protocol:AuthnQueryType element """
+class RequestedAuthnContext(RequestedAuthnContextType_):
+    """The urn:oasis:names:tc:SAML:2.0:protocol:RequestedAuthnContext element """
 
-    c_tag = 'AuthnQueryType'
+    c_tag = 'RequestedAuthnContext'
     c_namespace = NAMESPACE
-    c_children = SubjectQueryAbstractType_.c_children.copy()
-    c_attributes = SubjectQueryAbstractType_.c_attributes.copy()
-    c_child_order = SubjectQueryAbstractType_.c_child_order[:]
-    c_cardinality = SubjectQueryAbstractType_.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}RequestedAuthnContext'] = ('requested_authn_context', RequestedAuthnContext)
-    c_cardinality['requested_authn_context'] = {"min":0, "max":1}
-    c_attributes['SessionIndex'] = ('session_index', 'string', False)
-    c_child_order.extend(['requested_authn_context'])
+    c_children = RequestedAuthnContextType_.c_children.copy()
+    c_attributes = RequestedAuthnContextType_.c_attributes.copy()
+    c_child_order = RequestedAuthnContextType_.c_child_order[:]
+    c_cardinality = RequestedAuthnContextType_.c_cardinality.copy()
 
-    def __init__(self,
-            requested_authn_context=None,
-            session_index=None,
-            subject=None,
-            issuer=None,
-            signature=None,
-            extensions=None,
-            id=None,
-            version=None,
-            issue_instant=None,
-            destination=None,
-            consent=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SubjectQueryAbstractType_.__init__(self, 
-                subject=subject,
-                issuer=issuer,
-                signature=signature,
-                extensions=extensions,
-                id=id,
-                version=version,
-                issue_instant=issue_instant,
-                destination=destination,
-                consent=consent,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.requested_authn_context=requested_authn_context
-        self.session_index=session_index
-
-def authn_query_type__from_string(xml_string):
-    return saml2.create_class_from_xml_string(AuthnQueryType_, xml_string)
+def requested_authn_context_from_string(xml_string):
+    return saml2.create_class_from_xml_string(RequestedAuthnContext, xml_string)
 
 
 class AttributeQuery(AttributeQueryType_):
@@ -1052,18 +1001,55 @@ def name_id_mapping_request_from_string(xml_string):
     return saml2.create_class_from_xml_string(NameIDMappingRequest, xml_string)
 
 
-class AuthnQuery(AuthnQueryType_):
-    """The urn:oasis:names:tc:SAML:2.0:protocol:AuthnQuery element """
+class AuthnQueryType_(SubjectQueryAbstractType_):
+    """The urn:oasis:names:tc:SAML:2.0:protocol:AuthnQueryType element """
 
-    c_tag = 'AuthnQuery'
+    c_tag = 'AuthnQueryType'
     c_namespace = NAMESPACE
-    c_children = AuthnQueryType_.c_children.copy()
-    c_attributes = AuthnQueryType_.c_attributes.copy()
-    c_child_order = AuthnQueryType_.c_child_order[:]
-    c_cardinality = AuthnQueryType_.c_cardinality.copy()
+    c_children = SubjectQueryAbstractType_.c_children.copy()
+    c_attributes = SubjectQueryAbstractType_.c_attributes.copy()
+    c_child_order = SubjectQueryAbstractType_.c_child_order[:]
+    c_cardinality = SubjectQueryAbstractType_.c_cardinality.copy()
+    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}RequestedAuthnContext'] = ('requested_authn_context', RequestedAuthnContext)
+    c_cardinality['requested_authn_context'] = {"min":0, "max":1}
+    c_attributes['SessionIndex'] = ('session_index', 'string', False)
+    c_child_order.extend(['requested_authn_context'])
 
-def authn_query_from_string(xml_string):
-    return saml2.create_class_from_xml_string(AuthnQuery, xml_string)
+    def __init__(self,
+            requested_authn_context=None,
+            session_index=None,
+            subject=None,
+            issuer=None,
+            signature=None,
+            extensions=None,
+            id=None,
+            version=None,
+            issue_instant=None,
+            destination=None,
+            consent=None,
+            text=None,
+            extension_elements=None,
+            extension_attributes=None,
+        ):
+        SubjectQueryAbstractType_.__init__(self, 
+                subject=subject,
+                issuer=issuer,
+                signature=signature,
+                extensions=extensions,
+                id=id,
+                version=version,
+                issue_instant=issue_instant,
+                destination=destination,
+                consent=consent,
+                text=text,
+                extension_elements=extension_elements,
+                extension_attributes=extension_attributes,
+                )
+        self.requested_authn_context=requested_authn_context
+        self.session_index=session_index
+
+def authn_query_type__from_string(xml_string):
+    return saml2.create_class_from_xml_string(AuthnQueryType_, xml_string)
 
 
 class IDPList(IDPListType_):
@@ -1092,6 +1078,20 @@ class ManageNameIDRequest(ManageNameIDRequestType_):
 
 def manage_name_id_request_from_string(xml_string):
     return saml2.create_class_from_xml_string(ManageNameIDRequest, xml_string)
+
+
+class AuthnQuery(AuthnQueryType_):
+    """The urn:oasis:names:tc:SAML:2.0:protocol:AuthnQuery element """
+
+    c_tag = 'AuthnQuery'
+    c_namespace = NAMESPACE
+    c_children = AuthnQueryType_.c_children.copy()
+    c_attributes = AuthnQueryType_.c_attributes.copy()
+    c_child_order = AuthnQueryType_.c_child_order[:]
+    c_cardinality = AuthnQueryType_.c_cardinality.copy()
+
+def authn_query_from_string(xml_string):
+    return saml2.create_class_from_xml_string(AuthnQuery, xml_string)
 
 
 class ScopingType_(SamlBase):
@@ -1243,7 +1243,7 @@ def authn_request_from_string(xml_string):
 
 
 #..................
-# ['Status', 'ArtifactResponseType', 'StatusType', 'StatusCode', 'StatusCodeType', 'StatusResponseType', 'Response', 'NameIDMappingResponseType', 'ResponseType', 'ArtifactResponse', 'ManageNameIDResponse', 'LogoutResponse', 'NameIDMappingResponse']
+# ['ManageNameIDResponse', 'Status', 'NameIDMappingResponse', 'ArtifactResponseType', 'NameIDMappingResponseType', 'StatusType', 'ArtifactResponse', 'StatusCode', 'StatusCodeType', 'LogoutResponse', 'StatusResponseType', 'Response', 'ResponseType']
 class StatusType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:protocol:StatusType element """
 
@@ -1546,7 +1546,7 @@ def name_id_mapping_response_from_string(xml_string):
 
 
 #..................
-# ['StatusCode', 'StatusCodeType']
+# ['StatusCodeType', 'StatusCode']
 class StatusCodeType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:protocol:StatusCodeType element """
 
@@ -1716,7 +1716,10 @@ ELEMENT_BY_TAG = {
     'NameIDMappingRequestType': NameIDMappingRequestType_,
     'NameIDMappingResponse': NameIDMappingResponse,
     'NameIDMappingResponseType': NameIDMappingResponseType_,
+    'RequestAbstractType': RequestAbstractType_,
+    'SubjectQueryAbstractType': SubjectQueryAbstractType_,
 }
+
 
 def factory(tag, **kwargs):
     return ELEMENT_BY_TAG[tag](**kwargs)

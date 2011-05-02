@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #
-# Generated Fri Aug 20 08:25:37 2010 by parse_xsd.py version 0.3.
+# Generated Mon May  2 14:23:33 2011 by parse_xsd.py version 0.4.
 #
 
 import saml2
@@ -33,6 +33,7 @@ class LocalizedNameType_(SamlBase):
 
     c_tag = 'localizedNameType'
     c_namespace = NAMESPACE
+    c_value_type = {'base': 'string'}
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
@@ -61,11 +62,12 @@ class LocalizedURIType_(SamlBase):
 
     c_tag = 'localizedURIType'
     c_namespace = NAMESPACE
+    c_value_type = {'base': 'anyURI'}
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_attributes['{http://www.w3.org/XML/1998/namespace}lang'] = ('lang', 'string', True)
+    c_attributes['{http://www.w3.org/XML/1998/namespace}lang'] = ('lang', 'anyURI', True)
 
     def __init__(self,
             lang=None,
@@ -306,6 +308,7 @@ class AdditionalMetadataLocationType_(SamlBase):
 
     c_tag = 'AdditionalMetadataLocationType'
     c_namespace = NAMESPACE
+    c_value_type = {'base': 'anyURI'}
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
@@ -1794,7 +1797,10 @@ ELEMENT_BY_TAG = {
     'AffiliationDescriptor': AffiliationDescriptor,
     'AffiliationDescriptorType': AffiliationDescriptorType_,
     'AffiliateMember': AffiliateMember,
+    'RoleDescriptorType': RoleDescriptorType_,
+    'SSODescriptorType': SSODescriptorType_,
 }
+
 
 def factory(tag, **kwargs):
     return ELEMENT_BY_TAG[tag](**kwargs)
