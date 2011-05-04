@@ -434,4 +434,3 @@ def test_extend():
     enccerts = md.certs("https://coip-test.sunet.se/shibboleth", "encryption")
     assert len(enccerts) == 1
     assert signcerts[0] == enccerts[0]
-    

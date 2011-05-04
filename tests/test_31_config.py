@@ -276,4 +276,4 @@ def test_dual():
     idpcnf = cnf.copy_into("idp")
     assert isinstance(idpcnf, IdPConfig)
     assert idpcnf.context == "idp"
-    
+
