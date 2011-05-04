@@ -36,6 +36,7 @@ SP_ARGS = [
             "authn_requests_signed",
             "name_form",
             "endpoints",
+            "ui_info"
             ]
 
 AA_IDP_ARGS = ["want_authn_requests_signed",
@@ -44,7 +45,8 @@ AA_IDP_ARGS = ["want_authn_requests_signed",
                "sp",
                "scope",
                "endpoints",
-               "metadata"]
+               "metadata",
+               "ui_info"]
 
 COMPLEX_ARGS = ["attribute_converters", "metadata", "policy"]
 ALL = COMMON_ARGS + SP_ARGS + AA_IDP_ARGS + COMPLEX_ARGS
@@ -74,6 +76,9 @@ LOG_HANDLER = {
 LOG_FORMAT = "%(asctime)s %(name)s: %(levelname)s %(message)s"
 #LOG_FORMAT = "%(asctime)s %(name)s: %(levelname)s [%(sid)s][%(func)s] %
 # (message)s"
+
+class ConfigurationError(Exception):
+    pass
 
 # -----------------------------------------------------------------
 
