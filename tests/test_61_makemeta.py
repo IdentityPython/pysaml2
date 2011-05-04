@@ -3,6 +3,7 @@ from saml2 import metadata
 from saml2 import md
 from saml2 import BINDING_HTTP_POST
 from saml2 import shibmd
+from saml2 import mdui
 from saml2.attribute_converter import ac_factory
 from saml2.saml import NAME_FORMAT_URI
 from saml2.config import SPConfig, IdPConfig
@@ -51,7 +52,20 @@ IDP = {
                     "nameid_format": "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent",
                 }
             },
-            "scope": ["example.org"]
+            "scope": ["example.org"],
+            "ui_info": {
+                "privacy_statement_url":
+                            "http://example.com/saml2/privacyStatement.html",
+                "information_url": "http://example.com/saml2/info.html",
+                "logo": {
+                    "height": "40",
+                    "width" : "30",
+                    "text": "http://example.com/logo.jpg"
+                },
+                "display_name": "Example Co.",
+                "description" : {"text":"Exempel bolag","lang":"se"},
+                "keywords": {"lang":"en", "text":["foo", "bar"]}
+            },
         }
     },
     "metadata": {
@@ -215,11 +229,28 @@ def test_do_idp_sso_descriptor():
                                 'want_authn_requests_signed',
                                 "extensions"])
     exts = idpsso.extensions
-    assert len(exts.extension_elements) == 1
-    elem = exts.extension_elements[0]
-    inst = saml2.extension_element_to_element(elem,
+    assert len(exts.extension_elements) == 2
+    print exts.extension_elements
+    elem0 = exts.extension_elements[0]
+    elem1 = exts.extension_elements[1]
+    inst = saml2.extension_element_to_element(elem0,
                                               shibmd.ELEMENT_FROM_STRING,
                                               namespace=shibmd.NAMESPACE)
     assert isinstance(inst, shibmd.Scope)
     assert inst.text == "example.org"
     assert inst.regexp == "false"
+
+    uiinfo = saml2.extension_element_to_element(elem1,
+                                              mdui.ELEMENT_FROM_STRING,
+                                              namespace=mdui.NAMESPACE)
+
+    assert uiinfo
+    assert _eq(uiinfo.keyswv(), ['display_name', 'description',
+                                 'information_url', 'privacy_statement_url',
+                                 'keywords', 'logo'])
+
+    assert len(uiinfo.privacy_statement_url) == 1
+    assert uiinfo.privacy_statement_url[0].text == "http://example.com/saml2/privacyStatement.html"
+    assert len(uiinfo.description) == 1
+    assert uiinfo.description[0].text == "Exempel bolag"
+    assert uiinfo.description[0].lang == "se"
