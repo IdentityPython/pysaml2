@@ -4,6 +4,7 @@ from saml2 import md
 from saml2 import BINDING_HTTP_POST
 from saml2 import shibmd
 from saml2 import mdui
+from saml2 import extension_elements_to_elements
 from saml2.attribute_converter import ac_factory
 from saml2.saml import NAME_FORMAT_URI
 from saml2.config import SPConfig, IdPConfig
@@ -254,3 +255,13 @@ def test_do_idp_sso_descriptor():
     assert len(uiinfo.description) == 1
     assert uiinfo.description[0].text == "Exempel bolag"
     assert uiinfo.description[0].lang == "se"
+
+    res = extension_elements_to_elements(exts.extension_elements,[shibmd,
+                                                                  mdui])
+
+    assert len(res) == 2
+    # one is a shibmd.Scope instance and the other a mdui.UIInfo instance
+    if isinstance(res[0], shibmd.Scope):
+        assert isinstance(res[1], mdui.UIInfo)
+    elif isinstance(res[1], shibmd.Scope):
+        assert isinstance(res[0], mdui.UIInfo)
