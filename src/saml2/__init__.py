@@ -20,7 +20,8 @@
 
     These codes were originally written by Jeffrey Scudder for
     representing Saml elements. Takashi Matsuo had added some codes, and
-    changed some. Roland Hedberg changed and added some more.
+    changed some. Roland Hedberg rewrote the whole thing from bottom up so
+    barely anything but the original structures remained.
 
     Module objective: provide data classes for SAML constructs. These
     classes hide the XML-ness of SAML and provide a set of native Python
@@ -696,8 +697,45 @@ class SamlBase(ExtensionContainer):
                     
         return True
         
-        
-        
+    def child_class(self, child):
+        """ Return the class a child element should be an instance of
+
+        :param child: The name of the child element
+        :return: The class
+        """
+        for prop, klassdef in self.c_children.values():
+            if child == prop:
+                if isinstance(klassdef, list):
+                    return klassdef[0]
+                else:
+                    return klassdef
+        return None
+
+    def child_cardinality(self, child):
+        """ Return the cardinality of a child element
+
+        :param child: The name of the child element
+        :return: The cardinality as a 2-tuple (min, max).
+            The max value is either a number or the string "unbounded".
+            The min value is always a number.
+        """
+        for prop, klassdef in self.c_children.values():
+            if child == prop:
+                if isinstance(klassdef, list):
+                    try:
+                        min = self.c_cardinality["min"]
+                    except KeyError:
+                        min = 1
+                    try:
+                        max = self.c_cardinality["max"]
+                    except KeyError:
+                        max = "unbounded"
+
+                    return min, max
+                else:
+                    return 1,1
+        return None
+
 def element_to_extension_element(element):
     """
     Convert an element into a extension element
