@@ -40,6 +40,7 @@ from saml2.sigver import make_temp, cert_from_key_info, verify_signature
 from saml2.sigver import pem_format
 from saml2.validate import valid_instance, NotValid
 from saml2 import shibmd
+from saml2 import mdui
 
 @decorator
 def keep_updated(func, self, entity_id, *args, **kwargs):
@@ -733,6 +734,98 @@ def do_requested_attribute(attributes, acs, is_required="false"):
         lista.append(md.RequestedAttribute(**args))
     return lista
 
+def do_uiinfo(conf):
+    try:
+        _uiinfo = conf.ui_info
+    except AttributeError:
+        return None
+
+    uii = mdui.UIInfo()
+    for attr in ["information_url", "display_name", "description",
+                 'privacy_statement_url']:
+        try:
+            val = _uiinfo[attr]
+        except KeyError:
+            continue
+
+        aclass = uii.child_class(attr)
+        inst = getattr(uii, attr)
+        if isinstance(val, basestring):
+            ainst = aclass(text=val)
+            inst.append(ainst)
+        elif isinstance(val, dict):
+            ainst = aclass()
+            ainst.text = val["text"]
+            ainst.lang = val["lang"]
+            inst.append(ainst)
+        else :
+            for value in val:
+                if isinstance(val, basestring):
+                    ainst = aclass(text=val)
+                    inst.append(ainst)
+                elif isinstance(val, dict):
+                    ainst = aclass()
+                    ainst.text = val["text"]
+                    ainst.lang = val["lang"]
+                    inst.append(ainst)
+
+    try:
+        _attr = "logo"
+        val = _uiinfo[_attr]
+        inst = getattr(uii, _attr)
+        # dictionary or list of dictionaries
+        if isinstance(val, dict):
+            logo = mdui.Logo()
+            for attr, value in val.items():
+                if attr in logo.keys():
+                    setattr(logo, attr, value)
+            inst.append(logo)
+        elif isinstance(val, list):
+            for logga in val:
+                if not isinstance(logga, dict):
+                    raise Exception("Configuration error !!")
+                logo = mdui.Logo()
+                for attr, value in logga.items():
+                    if attr in logo.keys():
+                        setattr(logo, attr, value)
+                inst.append(logo)
+    except KeyError:
+        pass
+
+    try:
+        _attr = "keywords"
+        val = _uiinfo[_attr]
+        inst = getattr(uii, _attr)
+        # list of basestrings, dictionary or list of dictionaries
+        if isinstance(val, list):
+            for value in val:
+                keyw = mdui.Keywords()
+                if isinstance(value, basestring):
+                    keyw.text = " ".join(value)
+                elif isinstance(value, dict):
+                    keyw.text = " ".join(value["text"])
+                    try:
+                        keyw.lang = value["lang"]
+                    except KeyError:
+                        pass
+                else:
+                    raise Exception("Configuration error: ui_info logo")
+                inst.append(keyw)
+        elif isinstance(val, dict):
+            keyw = mdui.Keywords()
+            keyw.text = " ".join(val["text"])
+            try:
+                keyw.lang = val["lang"]
+            except KeyError:
+                pass
+            inst.append(keyw)
+        else:
+            raise Exception("Configuration Error: ui_info logo")
+    except KeyError:
+        pass
+    
+    return uii
+
 ENDPOINTS = {
     "sp": {
         "artifact_resolution_service": (md.ArtifactResolutionService, True),
@@ -888,6 +981,17 @@ def do_idp_sso_descriptor(conf, cert=None):
             _ext_elems.append(ext)
 
         idpsso.extensions = extensions
+
+    if conf.ui_info:
+        if not idpsso.extensions:
+            extensions = md.Extensions()
+            _ext_elems = extensions.extension_elements
+        else:
+            _ext_elems = idpsso.extensions.extension_elements
+
+        uii = do_uiinfo(conf)
+        ext = saml2.element_to_extension_element(uii)
+        _ext_elems.append(ext)
 
     if cert:
         idpsso.key_descriptor = do_key_descriptor(cert)
