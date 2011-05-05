@@ -434,3 +434,15 @@ def test_extend():
     enccerts = md.certs("https://coip-test.sunet.se/shibboleth", "encryption")
     assert len(enccerts) == 1
     assert signcerts[0] == enccerts[0]
+
+def test_ui_info():
+    md = metadata.MetaData(attrconv=ATTRCONV)
+    md.import_metadata(_fix_valid_until(_read_file("idp_uiinfo.xml")), "-")
+    loc = md.single_sign_on_services_with_uiinfo(
+                                            "http://example.com/saml2/idp.xml")
+    assert len(loc) == 1
+    assert loc[0][0] == "http://example.com/saml2/"
+    assert len(loc[0][1]) == 1
+    ui_info = loc[0][1][0]
+    print ui_info
+    assert ui_info.description[0].text == "Exempel bolag"
