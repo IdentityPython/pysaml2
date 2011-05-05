@@ -265,3 +265,11 @@ def test_do_idp_sso_descriptor():
         assert isinstance(res[1], mdui.UIInfo)
     elif isinstance(res[1], shibmd.Scope):
         assert isinstance(res[0], mdui.UIInfo)
+
+    found = exts.find_extensions(mdui.UIInfo.c_tag, mdui.NAMESPACE)
+    assert len(found) == 1
+
+    elem = exts.extensions_as_elements(mdui.UIInfo.c_tag, mdui)
+    assert len(elem) == 1
+    assert isinstance(elem[0], mdui.UIInfo)
+
