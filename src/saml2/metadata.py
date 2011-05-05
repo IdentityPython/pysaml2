@@ -429,6 +429,37 @@ class MetaData(object):
         return loc
 
     @keep_updated
+    def single_sign_on_services_with_uiinfo(self, entity_id,
+                                             binding = BINDING_HTTP_REDIRECT):
+        """ Get me all single-sign-on services with a specified
+        entity ID that supports the specified version of binding.
+
+        :param entity_id: The EntityId
+        :param binding: A binding identifier
+        :return: list of 2-tuple containing single-sign-on service locations,
+            and their ui info, run by the entity with the specified EntityId.
+        """
+
+        loc = []
+        try:
+            idps = self.entity[entity_id]["idp_sso"]
+        except KeyError:
+            return loc
+
+        #print idps
+        for idp in idps:
+            #print "==",idp.keyswv()
+            for sso in idp.single_sign_on_service:
+                #print "SSO",sso
+                if binding == sso.binding:
+                    uiinfo = []
+                    if idp.extensions:
+                        uiinfo = idp.extensions.extensions_as_elements(
+                                                    mdui.UIInfo.c_tag, mdui)
+                    loc.append((sso.location, uiinfo))
+        return loc
+
+    @keep_updated
     def single_logout_services(self, entity_id, typ,
                                 binding = BINDING_HTTP_REDIRECT):
         """ Get me all single-logout services that supports the specified
@@ -622,7 +653,10 @@ class MetaData(object):
                     name = self._location(edict["idp_sso"])[0]
                 idps[entity_id] = (name, edict["idp_sso"])
         return idps
-        
+
+    @keep_updated
+    def ui_info(self, entity_id, service="idp_sso"):
+        inst = self.entity[entity_id][service]
 
 DEFAULTS = {
     "want_assertions_signed": "true",
