@@ -460,6 +460,7 @@ class Saml2Client(object):
                                 self.config.cert_file)
         if log:
             log.info("SOAP client initiated")
+
         try:
             response = soapclient.send(request)
         except Exception, exc:
@@ -478,14 +479,21 @@ class Saml2Client(object):
                 log.info("Verifying response")
             
             try:
-                aresp = attribute_response(self.config, issuer, log)
+                # synchronous operation
+                aresp = attribute_response(self.config, issuer, log=log,
+                                           asynchop=False)
             except Exception, exc:
                 if log:
                     log.error("%s", (exc,))
                 return None
                 
-            session_info = aresp.loads(response, False, soapclient.response
-                                       ).verify().session_info()
+            _resp = aresp.loads(response, False, soapclient.response).verify()
+            if _resp is None:
+                if log:
+                    log.error("Didn't like the response")
+                return None
+            
+            session_info = _resp.session_info()
 
             if session_info:
                 if real_id is not None:
