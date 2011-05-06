@@ -70,8 +70,8 @@ def authn_response(conf, return_addr, outstanding_queries=None,
                         debug)
 
 # comes in over SOAP so synchronous
-def attribute_response(conf, return_addr, log=None, timeslack=0,
-                        debug=0):
+def attribute_response(conf, return_addr, log=None, timeslack=0, debug=0,
+                       asynchop=False):
     sec = security_context(conf)
     if not timeslack:
         try:
@@ -81,7 +81,7 @@ def attribute_response(conf, return_addr, log=None, timeslack=0,
 
     return AttributeResponse(sec, conf.attribute_converters, conf.entityid,
                                 return_addr, log, timeslack, debug,
-                                asynchop=False)
+                                asynchop=asynchop)
 
 class StatusResponse(object):
     def __init__(self, sec_context, return_addr=None, log=None, timeslack=0, 
@@ -147,9 +147,9 @@ class StatusResponse(object):
         self.xmlstr = decoded_xml[:]
         if self.debug:
             self.log.info("xmlstr: %s" % (self.xmlstr,))
-            fil = open("response.xml", "w")
-            fil.write(self.xmlstr)
-            fil.close()
+#            fil = open("response.xml", "w")
+#            fil.write(self.xmlstr)
+#            fil.close()
 
         try:
             self.response = self.signature_check(decoded_xml, origdoc=origxml)
@@ -285,7 +285,7 @@ class AuthnResponse(StatusResponse):
     def __init__(self, sec_context, attribute_converters, entity_id, 
                     return_addr=None, outstanding_queries=None, log=None, 
                     timeslack=0, debug=0, asynchop=True):
-        StatusResponse.__init__(self, sec_context, return_addr, log, 
+        StatusResponse.__init__(self, sec_context, return_addr, log,
                                     timeslack, debug)
         self.entity_id = entity_id
         self.attribute_converters = attribute_converters
@@ -303,10 +303,15 @@ class AuthnResponse(StatusResponse):
     def loads(self, xmldata, decode=True, origxml=None):
         self._loads(xmldata, decode, origxml)
         
-        if self.asynchop and self.in_response_to in self.outstanding_queries:
-            self.came_from = self.outstanding_queries[self.in_response_to]
-            del self.outstanding_queries[self.in_response_to]
-
+        if self.asynchop:
+            if self.in_response_to in self.outstanding_queries:
+                self.came_from = self.outstanding_queries[self.in_response_to]
+                del self.outstanding_queries[self.in_response_to]
+            else:
+                if self.log:
+                    self.log("Unsolicited response")
+                raise Exception("Unsolicited response")
+            
         return self
     
     def clear(self):
@@ -560,8 +565,9 @@ class AuthnResponse(StatusResponse):
 class AttributeResponse(AuthnResponse):
     def __init__(self, sec_context, attribute_converters, entity_id,
                     return_addr=None, log=None, timeslack=0, debug=0,
-                    asynchop=True):
-        AuthnResponse.__init__(self, sec_context, return_addr, log, timeslack,
+                    asynchop=False):
+        AuthnResponse.__init__(self, sec_context, attribute_converters,
+                                entity_id, return_addr, None, log, timeslack,
                                 debug, asynchop)
         self.entity_id = entity_id
         self.attribute_converters = attribute_converters
