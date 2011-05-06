@@ -87,7 +87,7 @@ class VirtualOrg(object):
                                         to_ask, 
                                         name_id_format=name_id_format,
                                         sp_name_qualifier=sp_name_qualifier,
-                                        log=self.log, real_id=subject_id):
+                                        log=log, real_id=subject_id):
                 _ = self._cache_session(session_info)
 
             if log:
