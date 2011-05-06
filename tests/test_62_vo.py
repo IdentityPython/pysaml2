@@ -48,3 +48,32 @@ class TestVirtualOrg():
     def test_id_unknown(self):
         id = self.vo.get_common_identifier("01234567")
         assert id is None
+
+class TestVirtualOrg_2():
+    def setup_class(self):
+        conf = config.SPConfig()
+        conf.load_file("server_conf")
+        vo_name = conf.virtual_organization.keys()[0]
+        self.sp = Saml2Client(conf, virtual_organization=vo_name)
+        add_derek_info(self.sp)
+
+    def test_mta(self):
+        aas = self.sp.vorg.members_to_ask("abcdefgh")
+        print aas
+        assert len(aas) == 2
+        assert 'urn:mace:example.com:saml:aa' in aas
+        assert 'urn:mace:example.com:saml:idp' in aas
+
+    def test_unknown_subject(self):
+        aas = self.sp.vorg.members_to_ask("01234567")
+        print aas
+        assert len(aas) == 0
+
+    def test_id(self):
+        id = self.sp.vorg.get_common_identifier("abcdefgh")
+        print id
+        assert id == "deje0001"
+
+    def test_id_unknown(self):
+        id = self.sp.vorg.get_common_identifier("01234567")
+        assert id is None
