@@ -164,7 +164,7 @@ class SAML2Plugin(FormPluginBase):
             (sid_, result) = self.saml_client.authenticate(idp_url,
                                                         relay_state=came_from,
                                                         log=self.log,
-                                                        vorg=vorg)
+                                                        vorg=vorg.vorg_name)
             
             # remember the request
             self.outstanding_queries[sid_] = came_from
