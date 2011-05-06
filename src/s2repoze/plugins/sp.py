@@ -145,12 +145,15 @@ class SAML2Plugin(FormPluginBase):
         
         # Am I part of a virtual organization ?
         try:
-            vorg = environ["myapp.vo"]
+            vorg_name = environ["myapp.vo"]
         except KeyError:
-            vorg = self.saml_client.vorg
+            try:
+                vorg_name = self.saml_client.vorg.vorg_name
+            except AttributeError:
+                vorg_name = ""
             
         if self.log:
-            self.log.info("[sp.challenge] VO: %s" % vorg)
+            self.log.info("[sp.challenge] VO: %s" % vorg_name)
 
         # If more than one idp and if none is selected, I have to do wayf
         (done, response) = self._pick_idp(environ, came_from)
@@ -161,11 +164,12 @@ class SAML2Plugin(FormPluginBase):
             if self.log:
                 self.log.info("[sp.challenge] idp_url: %s" % idp_url)
             # Do the AuthnRequest
+
             (sid_, result) = self.saml_client.authenticate(idp_url,
-                                                        relay_state=came_from,
-                                                        log=self.log,
-                                                        vorg=vorg.vorg_name)
-            
+                                                    relay_state=came_from,
+                                                    log=self.log,
+                                                    vorg=vorg_name)
+
             # remember the request
             self.outstanding_queries[sid_] = came_from
 
