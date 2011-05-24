@@ -1110,7 +1110,7 @@ def entities_descriptor(eds, valid_for, name, ident, sign, secc):
         if not ident:
             ident = sid()
 
-        if not secc.my_key:
+        if not secc.key_file:
             raise Exception("If you want to do signing you should define " +
                             "a key to sign with")
 
