@@ -66,10 +66,17 @@ def parse_soap_enveloped_saml_thingy(text, expected_tags):
         
     assert envelope.tag == '{%s}Envelope' % NAMESPACE
     
-    assert len(envelope) == 1
-    body = envelope[0]
-    assert body.tag == '{%s}Body' % NAMESPACE
-    assert len(body) == 1
+    assert len(envelope) >= 1
+    body = None
+    for part in envelope:
+        if part.tag == '{%s}Body' % NAMESPACE:
+            assert len(part) == 1
+            body = part
+            break
+
+    if body is None:
+        return ""
+    
     saml_part = body[0]
     if saml_part.tag in expected_tags:
         return ElementTree.tostring(saml_part, encoding="UTF-8")
