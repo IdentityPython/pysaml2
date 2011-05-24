@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2010 Umeå University
+# Copyright (C) 2011 Umeå University
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,6 +27,13 @@ class UnknownNameFormat(Exception):
     pass
 
 def load_maps(dirspec):
+    """ load the attribute maps
+
+    :param dirspec: a directory specification
+    :return: a dictionary with the name of the map as key and the
+        map as value. The map itself is a dictionary with two keys:
+        "to" and "fro". The values for those keys are the actual mapping.
+    """
     map = {}
     if dirspec not in sys.path:
         sys.path.insert(0, dirspec)
@@ -43,6 +50,12 @@ def load_maps(dirspec):
     return map
 
 def ac_factory(path):
+    """Attribute Converter factory
+
+    :param path: The path to a directory where the attribute maps are expected
+        to reside.
+    :return: A AttributeConverter instance
+    """
     acs = []
 
     if path not in sys.path:
@@ -64,27 +77,33 @@ def ac_factory(path):
 def ac_factory_II(path):
     return ac_factory(path)
 
-def ac_factory_old(path):
-    acs = []
-
-    for dir_name, directories, files in os.walk(path):
-        for d in list(directories):
-            if d.startswith('.'):
-                directories.remove(d)
-
-        if files:
-            atco = AttributeConverter(os.path.basename(dir_name))
-            for name in files:
-                fname = os.path.join(dir_name, name)
-                if name.endswith(".py"):
-                    name = name[:-3]
-                atco.set(name, fname)
-            atco.adjust()
-            acs.append(atco)
-    return acs
+#def ac_factory_old(path):
+#    acs = []
+#
+#    for dir_name, directories, files in os.walk(path):
+#        for d in list(directories):
+#            if d.startswith('.'):
+#                directories.remove(d)
+#
+#        if files:
+#            atco = AttributeConverter(os.path.basename(dir_name))
+#            for name in files:
+#                fname = os.path.join(dir_name, name)
+#                if name.endswith(".py"):
+#                    name = name[:-3]
+#                atco.set(name, fname)
+#            atco.adjust()
+#            acs.append(atco)
+#    return acs
     
 def ava_fro(acs, statement):
-    """ translates attributes according to their name_formats """
+    """  Translates attributes according to their name_formats into the local
+     names.
+
+    :param acs: AttributeConverter instances
+    :param statement: A SAML statement
+    :return: A dictionary with attribute names replaced with local names.
+    """
     if not statement:
         return {}
         
@@ -93,6 +112,10 @@ def ava_fro(acs, statement):
     return dict([acsdic[a.name_format].ava_from(a) for a in statement])
 
 def to_local(acs, statement):
+    """ Replaces the attribute names in a attribute value assertion with the
+    equivalent name from a local name format.
+
+    """
     if not acs:
         acs = [AttributeConverter()]
         
@@ -150,26 +173,35 @@ class AttributeConverter(object):
         self._to = None
         self._fro = None
         
-    def set(self, name, filename):
-        if name == "to":
-            self.set_to(filename)
-        elif name == "fro":
-            self.set_fro(filename)
-        # else ignore
-        
-    def set_fro(self, filename):
-        self._fro = eval(open(filename).read())
-
-    def set_to(self, filename):
-        self._to = eval(open(filename).read())
-
+#    def set(self, name, filename):
+#        if name == "to":
+#            self.set_to(filename)
+#        elif name == "fro":
+#            self.set_fro(filename)
+#        # else ignore
+#
+#    def set_fro(self, filename):
+#        self._fro = eval(open(filename).read())
+#
+#    def set_to(self, filename):
+#        self._to = eval(open(filename).read())
+#
     def adjust(self):
+        """ In one of the transformations is not defined it is expected to
+        be the mirror image of the other.
+        """
+        
         if self._fro is None and self._to is not None:
             self._fro = dict([(value, key) for key, value in self._to.items()])
         if self._to is None and self.fro is not None:
             self._to = dict([(value, key) for key, value in self._fro.items()])
 
     def from_dict(self, mapdict):
+        """ Import the attribute map from  a dictionary
+
+        :param mapdict: The dictionary
+        """
+
         self.name_format = mapdict["identifier"]
         try:
             self._fro = mapdict["fro"]
@@ -247,6 +279,12 @@ class AttributeConverter(object):
             return result
         
     def to_format(self, attr):
+        """ Creates an Attribute instance with name, name_format and
+        friendly_name
+
+        :param attr: The local name of the attribute
+        :return: An Attribute instance
+        """
         try:
             return factory(saml.Attribute,
                             name=self._to[attr], 
@@ -256,7 +294,8 @@ class AttributeConverter(object):
             return factory(saml.Attribute, name=attr)
     
     def from_format(self, attr):
-        """
+        """ Find out the local name of an attribute
+         
         :param attr: An saml.Attribute instance
         :return: The local attribute name or "" if no mapping could be made
         """
@@ -275,6 +314,11 @@ class AttributeConverter(object):
         return ""
         
     def to_(self, attrvals):
+        """ Create a list of Attribute instances.
+
+        :param attrvals: A dictionary of attributes and values
+        :return: A list of Attribute instances
+        """
         attributes = []
         for key, value in attrvals.items():
             try:
