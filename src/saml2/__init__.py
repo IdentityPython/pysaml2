@@ -802,7 +802,7 @@ def extension_element_to_element(extension_element, translation_functions,
         
 def extension_elements_to_elements(extension_elements, schemas):
     """ Create a list of elements each one matching one of the
-    given extenstion elements. This is of course dependent on the access
+    given extension elements. This is of course dependent on the access
     to schemas that describe the extension elements.
 
     :param extenstion_elements: The list of extension elements
