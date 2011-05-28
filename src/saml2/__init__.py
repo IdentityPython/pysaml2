@@ -824,3 +824,7 @@ def extension_elements_to_elements(extension_elements, schemas):
                 break
 
     return res
+
+def extension_elements_as_dict(extension_elements, onts):
+    ees_ = extension_elements_to_elements(extension_elements, onts)
+    return dict([(elem.c_tag, elem) for elem in ees_])
