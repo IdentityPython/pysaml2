@@ -202,7 +202,7 @@ class MetaData(object):
         
         if idps:
             entity[tag] = idps
-    
+
     def _aad_metadata(self, entity_descr, entity, tag):
         """
         Pick out the attribute authority descriptors from an entity
@@ -249,6 +249,66 @@ class MetaData(object):
         if aads:
             entity[tag] = aads
     
+    def _pdp_metadata(self, entity_descr, entity, tag):
+        """
+        Pick out the PDP descriptors from an entity
+        descriptor and store the information in a way which is easily
+        accessible.
+
+        *authz_service=None,
+        assertion_id_request_service=None,
+        name_id_format=None,
+        signature=None,
+        extensions=None,
+        key_descriptor=None,
+        organization=None,
+        contact_person=None,
+        id=None,
+        valid_until=None,
+        cache_duration=None,
+        *protocol_support_enumeration=None,
+        error_url=None,
+
+        :param entity_descr: A EntityDescriptor instance
+        """
+        try:
+            pdp_descr = entity_descr.pdp_descriptor
+        except AttributeError:
+            #print "No Attribute AD: %s" % entity_descr.entity_id
+            return
+
+        pdps = []
+        for pdp in pdp_descr:
+            # Remove everyone that doesn't talk SAML 2.0
+            #print "supported protocols", taad.protocol_support_enumeration
+            if samlp.NAMESPACE not in \
+                    pdp.protocol_support_enumeration.split(" "):
+                continue
+
+            # remove the bindings I can't handle
+            aserv = []
+            for authz_serv in pdp.authz_service:
+                #print "binding", attr_serv.binding
+                if authz_serv.binding == BINDING_SOAP:
+                    aserv.append(authz_serv)
+
+            if not aserv:
+                continue
+
+            pdp.authz_service = aserv
+
+            # gather all the certs and place them in temporary files
+            certs = self._certs(pdp.key_descriptor, "pem")
+            self._add_certs(entity_descr.entity_id, certs)
+
+            for aus in pdp.authz_service:
+                self._add_certs(aus.location, certs)
+
+            pdps.append(pdp)
+
+        if pdps:
+            entity[tag] = pdps
+
     def clear_from_source(self, source):
         """ Remove all the metadata references I have gotten from this source
         
@@ -316,6 +376,7 @@ class MetaData(object):
         self._aad_metadata(entity_descr, entity,
                             "attribute_authority")
         self._vo_metadata(entity_descr, entity, "affiliation")
+        self._pdp_metadata(entity_descr, entity, "pdp")
         try:
             entity["organization"] = entity_descr.organization
         except AttributeError:
@@ -381,6 +442,7 @@ class MetaData(object):
 
     @keep_updated
     def idp_services(self, entity_id, typ, binding=None):
+        """ depreceated """
         idps = self.entity[entity_id]["idp_sso"]
         
         loc = {}
@@ -392,6 +454,7 @@ class MetaData(object):
         
     @keep_updated
     def sp_services(self, entity_id, typ, binding=None):
+        """ depreceated """
         sps = self.entity[entity_id]["sp_sso"]
 
         loc = {}
@@ -494,7 +557,25 @@ class MetaData(object):
             return self.entity[entity_id]["attribute_authority"]
         except KeyError:
             return []
-    
+
+    @keep_updated
+    def pdp_services(self, entity_id):
+        try:
+            return self.entity[entity_id]["pdp"]
+        except KeyError:
+            return []
+
+    def authz_service_endpoints(self, entity_id, binding=BINDING_SOAP):
+        try:
+            result = []
+            for pdp in self.entity[entity_id]["pdp"]:
+                for aserv in pdp.authz_service:
+                    if aserv.binding == binding:
+                        result.append(aserv.location)
+            return result
+        except KeyError:
+            return []
+
     def locations(self):
         """ Returns all the locations that are know using this metadata file.
         
@@ -871,10 +952,8 @@ ENDPOINTS = {
         "artifact_resolution_service": (md.ArtifactResolutionService, True),
         "single_logout_service": (md.SingleLogoutService, False),
         "manage_name_id_service": (md.ManageNameIDService, False),
-
         "single_sign_on_service": (md.SingleSignOnService, False),
         "name_id_mapping_service": (md.NameIDMappingService, False),
-
         "assertion_id_request_service": (md.AssertionIDRequestService, False),
     },
     "aa":{
@@ -886,6 +965,9 @@ ENDPOINTS = {
 
         "attribute_service": (md.AttributeService, False)
     },
+    "pdp": {
+        "authz_service": (md.AuthzService, True)
+    }
 }
 
 DEFAULT_BINDING = {
@@ -1056,6 +1138,29 @@ def do_aa_descriptor(conf, cert):
 
     return aad
 
+def do_pdp_descriptor(conf, cert):
+    """ Create a Policy Decision Point descriptor """
+    pdp = md.PDPDescriptor()
+
+    pdp.protocol_support_enumeration = samlp.NAMESPACE
+
+    if conf.endpoints:
+        for (endpoint, instlist) in do_endpoints(conf.endpoints,
+                                                    ENDPOINTS["pdp"]).items():
+            setattr(pdp, endpoint, instlist)
+
+    if conf.name_form:
+        if isinstance(conf.name_form, basestring):
+            ids = [md.NameIDFormat(conf.name_form)]
+        else:
+            ids = [md.NameIDFormat(text=form) for form in conf.name_form]
+        setattr(pdp, "name_id_format", ids)
+
+    if cert:
+        pdp.key_descriptor = do_key_descriptor(cert)
+
+    return pdp
+
 def entity_descriptor(confd, valid_for):
     mycert = "".join(open(confd.cert_file).readlines()[1:-1])
 
@@ -1094,6 +1199,9 @@ def entity_descriptor(confd, valid_for):
     if "aa" in serves:
         confd.context = "aa"
         entd.attribute_authority_descriptor = do_aa_descriptor(confd, mycert)
+    if "pdp" in serves:
+        confd.context = "pdp"
+        entd.pdp_descriptor = do_pdp_descriptor(confd, mycert)
 
     return entd
 
