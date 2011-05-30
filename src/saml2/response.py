@@ -457,11 +457,12 @@ class AuthnResponse(StatusResponse):
         
         if self.debug and self.log:
             self.log.info("--- Getting Identity ---")
+
+        if self.context == "AuthnReq":
+            self.ava = self.get_identity()
         
-        self.ava = self.get_identity()
-        
-        if self.debug and self.log:
-            self.log.info("--- AVA: %s" % (self.ava,))
+            if self.debug and self.log:
+                self.log.info("--- AVA: %s" % (self.ava,))
         
         try:
             self.get_subject()
@@ -543,7 +544,14 @@ class AuthnResponse(StatusResponse):
                     authn_auth = []
                 res.append((aclass, authn_auth))
         return res
-        
+
+    def authz_decision_info(self):
+        res = {"permit":[], "deny": [], "indeterminate":[] }
+        for adstat in self.assertion.authz_decision_statement:
+            # one of 'Permit', 'Deny', 'Indeterminate'
+            res[adstat.decision.text.lower()] = adstat
+        return res
+
     def session_info(self):
         """ Returns a predefined set of information gleened from the 
         response.
@@ -553,11 +561,17 @@ class AuthnResponse(StatusResponse):
             nooa = self.session_not_on_or_after
         else:
             nooa = self.not_on_or_after
-            
-        return { "ava": self.ava, "name_id": self.name_id,
-                "came_from": self.came_from, "issuer": self.issuer(),
-                "not_on_or_after": nooa,
-                "authn_info": self.authn_info() }
+
+        if self.context == "AuthzQuery":
+            return {"name_id": self.name_id,
+                    "came_from": self.came_from, "issuer": self.issuer(),
+                    "not_on_or_after": nooa,
+                    "authz_decision_info": self.authz_decision_info() }
+        else:
+            return { "ava": self.ava, "name_id": self.name_id,
+                    "came_from": self.came_from, "issuer": self.issuer(),
+                    "not_on_or_after": nooa,
+                    "authn_info": self.authn_info() }
     
     def __str__(self):
         return "%s" % self.xmlstr
@@ -573,6 +587,20 @@ class AttributeResponse(AuthnResponse):
         self.attribute_converters = attribute_converters
         self.assertion = None
         self.context = "AttrQuery"
+
+class AuthzResponse(AuthnResponse):
+    """ A successful response will be in the form of assertions containing
+    authorization decision statements."""
+    def __init__(self, sec_context, attribute_converters, entity_id,
+                    return_addr=None, log=None, timeslack=0, debug=0,
+                    asynchop=False):
+        AuthnResponse.__init__(self, sec_context, attribute_converters,
+                                entity_id, return_addr, None, log, timeslack,
+                                debug, asynchop)
+        self.entity_id = entity_id
+        self.attribute_converters = attribute_converters
+        self.assertion = None
+        self.context = "AuthzQuery"
 
 def response_factory(xmlstr, conf, return_addr=None,
                         outstanding_queries=None, log=None, 
