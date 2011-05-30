@@ -38,7 +38,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'pysaml2'
-copyright = u'2011, Roland Hedberg'
+copyright = u'2010-2011, Roland Hedberg'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
