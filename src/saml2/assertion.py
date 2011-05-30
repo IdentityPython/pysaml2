@@ -234,6 +234,8 @@ class Policy(object):
         
         try:
             form = self._restrictions[sp_entity_id]["name_form"]
+        except TypeError:
+            pass
         except KeyError:
             try:
                 form = self._restrictions["default"]["name_form"]
