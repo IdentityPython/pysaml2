@@ -43,21 +43,34 @@ def sd_copy(arg):
 
 def class_pyify(ref):
     return ref.replace("-","_")
-    
+
+PROTECTED_KEYWORDS = ["import", "def", "if", "else", "return", "for",
+                      "while", "not", "try", "except", "in"]
+
 def def_init(imports, attributes):
     indent = INDENT+INDENT
     indent3 = INDENT+INDENT+INDENT
-    line = []
+    line = ["%sdef __init__(self," % INDENT]
 
-    line.append("%sdef __init__(self," % INDENT)
     for elem in attributes:
-        if elem[2]:
-            line.append("%s%s='%s'," % (indent3, elem[0], elem[2]))
+        if elem[0] in PROTECTED_KEYWORDS:
+            _name = elem[0] +"_"
         else:
-            line.append("%s%s=%s," % (indent3, elem[0], elem[2]))
+            _name = elem[0]
+
+        if elem[2]:
+            line.append("%s%s='%s'," % (indent3, _name, elem[2]))
+        else:
+            line.append("%s%s=%s," % (indent3, _name, elem[2]))
+
     for _, elems in imports.items():
         for elem in elems:
-            line.append("%s%s=None," % (indent3, elem))
+            if elem in PROTECTED_KEYWORDS:
+                _name = elem +"_"
+            else:
+                _name = elem
+            line.append("%s%s=None," % (indent3, _name))
+
     line.append("%stext=None," % indent3)
     line.append("%sextension_elements=None," % indent3)
     line.append("%sextension_attributes=None," % indent3)
@@ -70,7 +83,11 @@ def base_init(imports):
     if not imports:
         line.append("%sSamlBase.__init__(self, " % (INDENT+INDENT))
         for attr in BASE_ELEMENT:
-            line.append("%s%s=%s," % (indent4, attr, attr))
+            if attr in PROTECTED_KEYWORDS:
+                _name = attr + "_"
+            else:
+                _name = attr
+            line.append("%s%s=%s," % (indent4, _name, _name))
         line.append("%s)" % indent4)
     else:
         # TODO have to keep apart which properties comes from which superior
@@ -79,7 +96,11 @@ def base_init(imports):
             lattr = elems[:]
             lattr.extend(BASE_ELEMENT)
             for attr in lattr:
-                line.append("%s%s=%s," % (indent4, attr, attr))
+                if attr in PROTECTED_KEYWORDS:
+                    _name = attr + "_"
+                else:
+                    _name = attr
+                line.append("%s%s=%s," % (indent4, _name, _name))
             line.append("%s)" % indent4)
     return line
     
@@ -87,7 +108,17 @@ def initialize(attributes):
     indent = INDENT+INDENT
     line = []
     for prop, val, _default in attributes:
-        line.append("%sself.%s=%s" % (indent, prop, val))
+        if prop in PROTECTED_KEYWORDS:
+            _name = prop +"_"
+        else:
+            _name = prop
+
+        if val in PROTECTED_KEYWORDS:
+            _vname = val +"_"
+        else:
+            _vname = val
+            
+        line.append("%sself.%s=%s" % (indent, _name, _vname))
     return line
 
 def _mod_typ(prop):
@@ -489,7 +520,10 @@ class PyElement(PyObj):
         
         return text
         
-    def text(self, target_namespace, cdict, child=True, ignore=[]):
+    def text(self, target_namespace, cdict, child=True, ignore=None):
+        if ignore is None:
+            ignore = []
+
         if child:
             text = []
         else:
@@ -587,13 +621,15 @@ class PyType(PyObj):
         self.internal = internal
         self.namespace = namespace
 
-    def text(self, target_namespace, cdict, _child=True, ignore=[], 
+    def text(self, target_namespace, cdict, _child=True, ignore=None,
                 _session=None):
         if not self.properties and not self.type \
                 and not self.superior:
             self.done = True
             return [], self.class_definition(target_namespace, cdict)
-        
+
+        if ignore is None:
+            ignore = []
         req = []
         inherited_properties = []
         for sup in self.superior:
@@ -853,6 +889,7 @@ class Attribute(Simple):
             print "#ATTR", self.__dict__
 
         external = False
+        name = ""
         try:
             (namespace, tag) = _namespace_and_tag(self, self.ref, top)
             ref = True
@@ -1116,7 +1153,7 @@ class Element(Complex):
             argv_copy = sd_copy(argv)
             return [self.repr(top, sup, argv_copy, parent=parent)], []
         except AttributeError, exc:
-            print "!!!!", exc
+            print "#!!!!", exc
             return [], []
 
     def elements(self, top):            
@@ -1263,7 +1300,10 @@ class SimpleContent(Complex):
 
 class ComplexContent(Complex):
     pass
-    
+
+class Key(Complex):
+    pass
+
 class Extension(Complex):
     def collect(self, top, sup, argv=None, parent=""):
         if self._own or self._inherited:
@@ -1408,7 +1448,7 @@ class Group(Complex):
             except KeyError:
                 raise Exception("Missing namespace definition")            
         except AttributeError, exc:
-            print "!!!!", exc
+            print "#!!!!", exc
             return [], []
 
     def repr(self, top=None, sup=None, argv=None, _child=True, parent=""):
@@ -1559,8 +1599,11 @@ def sort_elements(els):
         
     return res, els
 
-def output(elem, target_namespace, eldict, ignore=[]):
+def output(elem, target_namespace, eldict, ignore=None):
     done = 0
+
+    if ignore is None:
+        ignore = []
         
     try:
         (preps, text) = elem.text(target_namespace, eldict, False, ignore)
@@ -1745,6 +1788,7 @@ class Schema(Complex):
 
     def _do(self, eldict):
         not_done = 1
+        undone = 0
         while not_done:
             not_done = 0
             undone = 0
@@ -1792,7 +1836,9 @@ class Schema(Complex):
         for part in self.parts:
             if isinstance(part, Import):
                 continue
-
+            if part is None:
+                continue
+                
             elem = part.repr(self, "", {}, False)
             if elem:
                 if isinstance(elem, PyAttributeGroup):
@@ -1895,6 +1941,7 @@ _MAP = {
     "group": Group,
     "selector": Selector,
     "field": Field,
+    "key": Key,
     }
     
 ELEMENTFUNCTION = {}
@@ -1938,6 +1985,7 @@ def usage():
 def recursive_find_module(name, path=None):
     parts = name.split(".")
 
+    mod_a = None
     for part in parts:
         #print "$$", part, path
         try:
