@@ -113,6 +113,7 @@ class Request(object):
         """ The name of the subject can be in either of 
         BaseID, NameID or EncryptedID
 
+        :return: The identifier if there is one
         """
 
         if self.message.base_id:
@@ -158,3 +159,22 @@ class AuthnRequest(Request):
     def attributes(self):
         return to_local(self.attribute_converters, self.message)
             
+
+class AuthzRequest(Request):
+    def __init__(self, sec_context, receiver_addrs, log=None, timeslack=0,
+                    debug=0):
+        Request.__init__(self, sec_context, receiver_addrs, log, timeslack,
+                            debug)
+        self.signature_check = self.sec.correctly_signed_logout_request
+
+    def action(self):
+        """ Which action authorization is requested for """
+        pass
+
+    def evidence(self):
+        """ The evidence on which the decision is based """
+        pass
+
+    def resource(self):
+        """ On which resource the action is expected to occur """
+        pass
