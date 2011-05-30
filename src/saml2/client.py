@@ -309,6 +309,24 @@ class Saml2Client(object):
     def _my_name(self):
         return self.config.name
 
+    def authn(self, location, session_id,vorg="", scoping=None, log=None,
+                sign=False):
+        spentityid = self._entityid()
+        service_url = self._service_url()
+        my_name = self._my_name()
+
+        if log is None:
+            log = self.logger
+
+        if log:
+            log.info("spentityid: %s" % spentityid)
+            log.info("service_url: %s" % service_url)
+            log.info("my_name: %s" % my_name)
+
+        return self.authn_request(session_id, location, service_url,
+                                  spentityid, my_name, vorg, scoping, log,
+                                  sign)
+
     def authenticate(self, entityid=None, relay_state="",
                      binding=saml2.BINDING_HTTP_REDIRECT,
                      log=None, vorg="", scoping=None, sign=False):
@@ -324,25 +342,12 @@ class Saml2Client(object):
         :param sign: Whether the request should be signed or not.
         :return: AuthnRequest response
         """
-        
-        spentityid = self._entityid()
+
         location = self._sso_location(entityid)
-        service_url = self._service_url()
-        my_name = self._my_name()
-
-        if log is None:
-            log = self.logger
-
-        if log:
-            log.info("spentityid: %s" % spentityid)
-            log.info("location: %s" % location)
-            log.info("service_url: %s" % service_url)
-            log.info("my_name: %s" % my_name)
-            
         session_id = sid()
-        authen_req = self.authn_request(session_id, location,
-                                service_url, spentityid, my_name, vorg,
-                                scoping, log, sign)
+
+        authen_req = self.authn(location, session_id, vorg, scoping, log, sign)
+        
         if log:
             log.info("AuthNReq: %s" % authen_req)
         
@@ -889,3 +894,121 @@ class Saml2Client(object):
         """ Place holder. Supposed to check if the session is still valid.
         """
         return True
+
+    def authz_decision_query_using_assertion(self, entityid, assertion,
+                                            action=None,
+                                            resource=None, subject=None,
+                                            binding=saml2.BINDING_HTTP_REDIRECT,
+                                            log=None, sign=False):
+        """ Makes an authz decision query.
+
+        :param entityid: The entity ID of the IdP to send the request to
+        :param assertion:
+        :param action:
+        :param resource:
+        :param subject:
+        :param binding: Which binding to use for sending the request
+        :param log: Where to write log messages
+        :param sign: Whether the request should be signed or not.
+        :return: AuthzDecisionQuery instance
+        """
+
+        if action:
+            if isinstance(action, basestring):
+                _action = [saml.Action(text=action)]
+            else:
+                _action = [saml.Action(text=a) for a in action]
+        else:
+            _action = None
+            
+        return self.authz_decision_query(entityid,
+                                         _action,
+                                         saml.Evidence(assertion=assertion),
+                                         resource, subject,
+                                         binding, log, sign)
+
+    def authz_decision_query(self, entityid, action,
+                                evidence=None, resource=None, subject=None,
+                                binding=saml2.BINDING_HTTP_REDIRECT,
+                                log=None, sign=False):
+        """ Creates an authz decision query.
+
+        :param entityid: The entity ID of the IdP to send the request to
+        :param action: The action you want to perform (has to be at least one)
+        :param evidence: Why you should be able to perform the action
+        :param resource: The resource you want to perform the action on
+        :param subject: Who wants to do the thing
+        :param binding: Which binding to use for sending the request
+        :param log: Where to write log messages
+        :param sign: Whether the request should be signed or not.
+        :return: AuthzDecisionQuery instance
+        """
+
+        spentityid = self.issuer()
+        service_url = self._service_url()
+        my_name = self._my_name()
+
+        if log is None:
+            log = self.logger
+
+        if log:
+            log.info("spentityid: %s" % spentityid)
+            log.info("service_url: %s" % service_url)
+            log.info("my_name: %s" % my_name)
+
+
+#        authen_req = self.authn_request(session_id, location,
+#                                service_url, spentityid, my_name, vorg,
+#                                scoping, log, sign)
+        
+        request = samlp.AuthzDecisionQuery(action, evidence, resource,
+                                           subject=subject,
+                                           issuer=spentityid,
+                                           id=sid(),
+                                           issue_instant=instant(),
+                                           version=VERSION,
+                                           destination=entityid)
+
+        return request
+
+
+    def authz_decision_query_response(self, response, log=None):
+        """ Verify that the response is OK """
+        pass
+    
+    def do_authz_decision_query(self, entityid, authz_decision_query,
+                                log=None, sign=False):
+
+        authz_decision_query = samlp.AuthzDecisionQuery()
+
+        for destination in self.config.authz_services(entityid):
+            to_sign = []
+            if sign :
+                authz_decision_query.signature = pre_signature_part(
+                                                        authz_decision_query.id,
+                                                        self.sec.my_cert, 1)
+                to_sign.append((class_name(authz_decision_query),
+                                authz_decision_query.id))
+
+                authz_decision_query = signed_instance_factory(authz_decision_query,
+                                                               self.sec, to_sign)
+
+            response = send_using_soap(authz_decision_query, destination,
+                                        self.config.key_file,
+                                        self.config.cert_file,
+                                        log=log)
+            if response:
+                if log:
+                    log.info("Verifying response")
+                response = self.authz_decision_query_response(response, log)
+
+            if response:
+                #not_done.remove(entity_id)
+                if log:
+                    log.info("OK response from %s" % destination)
+                return response
+            else:
+                if log:
+                    log.info("NOT OK response from %s" % destination)
+
+        return None
