@@ -48,8 +48,10 @@ AA_IDP_ARGS = ["want_authn_requests_signed",
                "metadata",
                "ui_info"]
 
+PDP_ARGS = ["endpoints", "name_form"]
+
 COMPLEX_ARGS = ["attribute_converters", "metadata", "policy"]
-ALL = COMMON_ARGS + SP_ARGS + AA_IDP_ARGS + COMPLEX_ARGS
+ALL = COMMON_ARGS + SP_ARGS + AA_IDP_ARGS + PDP_ARGS + COMPLEX_ARGS
 
 
 SPEC = {
@@ -57,6 +59,7 @@ SPEC = {
     "sp": COMMON_ARGS + COMPLEX_ARGS + SP_ARGS,
     "idp": COMMON_ARGS + COMPLEX_ARGS + AA_IDP_ARGS,
     "aa": COMMON_ARGS + COMPLEX_ARGS + AA_IDP_ARGS,
+    "pdp": COMMON_ARGS + COMPLEX_ARGS + PDP_ARGS,
 }
 
 # --------------- Logging stuff ---------------
@@ -86,11 +89,11 @@ class Config(object):
     def_context = ""
 
     def __init__(self):
-        self._attr = {"": {}, "sp": {}, "idp": {}, "aa": {}}
+        self._attr = {"": {}, "sp": {}, "idp": {}, "aa": {}, "pdp": {}}
         self.context = ""
 
     def serves(self):
-        return [t for t in ["sp", "idp", "aa"] if self._attr[t]]
+        return [t for t in ["sp", "idp", "aa", "pdp"] if self._attr[t]]
 
     def copy_into(self, typ=""):
         if typ == "sp":
@@ -172,7 +175,7 @@ class Config(object):
                 pass
 
         if "service" in cnf:
-            for typ in ["aa", "idp", "sp"]:
+            for typ in ["aa", "idp", "sp", "pdp"]:
                 try:
                     self.load_special(cnf["service"][typ], typ,
                                     metadata_construction=metadata_construction)
@@ -412,11 +415,15 @@ class IdPConfig(Config):
 
         return []
 
+    def authz_services(self, entity_id, binding=BINDING_SOAP):
+        return self.metadata.authz_services(entity_id, "pdp",
+                                                     binding=binding)
+
 def config_factory(typ, file):
     if typ == "sp":
         conf = SPConfig().load_file(file)
         conf.context = typ
-    elif typ in ["aa", "idp"]:
+    elif typ in ["aa", "idp", "pdp"]:
         conf = IdPConfig().load_file(file)
         conf.context = typ
     else:
