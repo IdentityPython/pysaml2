@@ -3,7 +3,7 @@
 How to use PySAML2
 ===================
 
-:Release: |version|
+:Release: |release|
 :Date: |today|
 
 Before you can use Pysaml2, you'll need to get it installed. 
@@ -36,5 +36,7 @@ WSGI or non-WSGI environment.
    :maxdepth: 1
 
    config
+   wsgi/index
+   nonwsgi/index
 
    

@@ -8,7 +8,7 @@
 Welcome to the documentation of pysaml2!
 ========================================
 
-:Release: |version|
+:Release: |release|
 :Date: |today|
 
 Contents:
