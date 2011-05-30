@@ -20,7 +20,6 @@ class TestAC():
         assert len(self.acs) == 3
         assert _eq([a.name_format for a in self.acs],[BASIC_NF, URI_NF, SAML1] )
 
-        
     def test_ava_fro_1(self):
         ats = saml.attribute_statement_from_string(STATEMENT1)
         #print ats
@@ -58,7 +57,7 @@ class TestAC():
         
         statement = attribute_converter.from_local(self.acs, ava, BASIC_NF)
         
-        assert statement != None
+        assert statement is not None
         assert len(statement) == 2
         a0 = statement[0]
         a1 = statement[1]
@@ -140,3 +139,15 @@ class TestAC():
         lan = [attribute_converter.to_local_name(self.acs, a) for a in attr]
 
         assert _eq(lan, ['eduPersonPrimaryOrgUnitDN'])
+
+    def test_to_and_for(self):
+        ava = { "givenName": "Roland", "surname": "Hedberg" }
+
+        basic_ac = [a for a in self.acs if a.name_format == BASIC_NF][0]
+
+        attr_state = saml.AttributeStatement(basic_ac.to_(ava))
+
+        oava = basic_ac.fro(attr_state)
+
+        assert _eq(ava.keys(), oava.keys())
+        

@@ -59,4 +59,3 @@ def test_make_soap_envelope():
     assert len(body) == 1
     saml_part = body[0]
     assert saml_part.tag == '{%s}AuthnRequest' % SAMLP_NAMESPACE
-    

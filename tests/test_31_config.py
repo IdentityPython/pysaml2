@@ -112,6 +112,33 @@ IDP2 = {
     #"xmlsec_binary" : "/usr/local/bin/xmlsec1",
 }
 
+PDP = {
+    "entityid" : "http://example.org/pysaml2/pdp",
+    "name" : "Rolands PdP",
+    "service": {
+        "pdp": {
+            "endpoints": {
+                "authz_service" : [("http://example.org/pysaml2/pdp/authz",
+                                   BINDING_SOAP)],
+            },
+        }
+    },
+    "key_file" : "test.key",
+    "cert_file" : "test.pem",
+    "organization": {
+        "name": "Exempel AB",
+        "display_name": [("Exempel AB","se"),("Example Co.","en")],
+        "url":"http://www.example.com/roland",
+    },
+    "contact_person": [{
+        "given_name":"John",
+        "sur_name": "Smith",
+        "email_address": ["john.smith@example.com"],
+        "contact_type": "technical",
+        },
+    ],
+}
+
 def _eq(l1,l2):
     return set(l1) == set(l2)
 

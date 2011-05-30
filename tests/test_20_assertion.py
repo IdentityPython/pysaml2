@@ -93,8 +93,7 @@ def test_lifetime_2():
     
     assert r.get_lifetime("urn:mace:umu.se:saml:roland:sp") == {"minutes": 5}               
     assert r.get_lifetime("urn:mace:example.se:saml:sp") == {"hours": 1}        
-    
-    
+
     
 def test_ava_filter_1():
     conf = {

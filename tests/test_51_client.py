@@ -8,14 +8,13 @@ from saml2.client import Saml2Client, LogoutError
 from saml2 import samlp, BINDING_HTTP_POST
 from saml2 import BINDING_SOAP
 from saml2 import saml, config, class_name
-#from saml2.sigver import correctly_signed_authn_request
 from saml2.server import Server
 from saml2.s_utils import decode_base64_and_inflate
 from saml2.time_util import in_a_while
-from saml2.sigver import xmlsec_version
+from saml2.assertion import Assertion
+from saml2.assertion import Policy
 
 from py.test import raises
-
 
 def for_me(condition, me ):
     for restriction in condition.audience_restriction:
@@ -480,3 +479,36 @@ class TestClient:
         assert state_info["operation"] == "SLO"
         assert state_info["entity_ids"] == entity_ids
         assert state_info["sign"] == False
+
+    def test_authz_decision_query(self):
+        conf = config.SPConfig()
+        conf.load_file("server3_conf")
+        client = Saml2Client(conf)
+
+        AVA = {'mail': u'roland.hedberg@adm.umu.se',
+               'eduPersonTargetedID': '95e9ae91dbe62d35198fbbd5e1fb0976',
+               'displayName': u'Roland Hedberg',
+               'uid': 'http://roland.hedberg.myopenid.com/'}
+
+        sp_entity_id = "sp_entity_id"
+        in_response_to = "1234"
+        consumer_url = "http://example.com/consumer"
+        name_id = saml.NameID(saml.NAMEID_FORMAT_TRANSIENT, text="name_id")
+        policy = Policy(None)
+        ava = Assertion(AVA)
+        assertion = ava.construct(sp_entity_id, in_response_to,
+                                    consumer_url, name_id,
+                                    conf.attribute_converters,
+                                    policy, issuer=client.issuer())
+
+        adq = client.authz_decision_query_using_assertion("entity_id",
+                                                         assertion,
+                                                        "read",
+                                                        "http://example.com/text")
+
+        assert adq
+        print adq
+        assert adq.keyswv() != []
+        assert adq.destination == "entity_id"
+        assert adq.resource == "http://example.com/text"
+        assert adq.action[0].text == "read"

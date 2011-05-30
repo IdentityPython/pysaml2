@@ -446,3 +446,20 @@ def test_ui_info():
     ui_info = loc[0][1][0]
     print ui_info
     assert ui_info.description[0].text == "Exempel bolag"
+
+def test_pdp():
+    md = metadata.MetaData(attrconv=ATTRCONV)
+    md.import_metadata(_fix_valid_until(_read_file("pdp_meta.xml")), "-")
+
+    assert md
+
+    pdps = md.pdp_services("http://www.example.org/pysaml2/")
+
+    assert len(pdps) == 1
+    pdp = pdps[0]
+    assert len(pdp.authz_service) == 1
+    assert pdp.authz_service[0].location == "http://www.example.org/pysaml2/authz"
+    assert pdp.authz_service[0].binding == BINDING_SOAP
+    endpoints = md.authz_service_endpoints("http://www.example.org/pysaml2/")
+    assert len(endpoints) == 1
+    assert endpoints[0] == "http://www.example.org/pysaml2/authz"

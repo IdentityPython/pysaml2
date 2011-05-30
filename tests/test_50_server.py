@@ -2,18 +2,15 @@
 # -*- coding: utf-8 -*-
 
 from saml2.server import Server, Identifier
-from saml2 import server, make_instance
 from saml2 import samlp, saml, client, config
 from saml2 import s_utils
 from saml2 import time_util
 from saml2.s_utils import OtherError
 from saml2.s_utils import do_attribute_statement, factory
 from saml2.soap import make_soap_enveloped_saml_thingy
-from saml2 import BINDING_HTTP_POST, BINDING_HTTP_REDIRECT, BINDING_SOAP
+from saml2 import BINDING_HTTP_POST, BINDING_HTTP_REDIRECT
 
 from py.test import raises
-import shelve
-import re
 import os
 
 def _eq(l1,l2):
@@ -22,7 +19,7 @@ def _eq(l1,l2):
 class TestIdentifier():
     def setup_class(self):
         self.ident = Identifier("foobar.db")
-    
+
     def test_persistent_nameid(self):
         sp_id = "urn:mace:umu.se:sp"
         nameid = self.ident.persistent_nameid(sp_id, "abcd0001")
@@ -31,8 +28,8 @@ class TestIdentifier():
         print self.ident.map
         local = self.ident.local_name(sp_id, remote_id)
         assert local == "abcd0001"
-        assert self.ident.local_name(sp_id, "pseudo random string") == None
-        assert self.ident.local_name(sp_id+":x", remote_id) == None
+        assert self.ident.local_name(sp_id, "pseudo random string") is None
+        assert self.ident.local_name(sp_id+":x", remote_id) is None
 
         # Always get the same
         nameid2 = self.ident.persistent_nameid(sp_id, "abcd0001")
@@ -46,21 +43,21 @@ class TestIdentifier():
         print self.ident.map
         local = self.ident.local_name(sp_id, remote_id)
         assert local == "abcd0001"
-        assert self.ident.local_name(sp_id, "pseudo random string") == None
-        assert self.ident.local_name(sp_id+":x", remote_id) == None
+        assert self.ident.local_name(sp_id, "pseudo random string") is None
+        assert self.ident.local_name(sp_id+":x", remote_id) is None
 
         # Getting a new, means really getting a new !
         nameid2 = self.ident.transient_nameid(sp_id, "abcd0001")
         assert nameid.text.strip() != nameid2.text.strip()
-        
+
     def teardown_class(self):
-	if os.path.exists("foobar.db"):
-	    os.unlink("foobar.db")
-        
+        if os.path.exists("foobar.db"):
+            os.unlink("foobar.db")
+
 class TestServer1():
     def setup_class(self):
         self.server = Server("idp_conf")
-        
+
         conf = config.SPConfig()
         conf.load_file("server_conf")
         self.client = client.Saml2Client(conf)
@@ -71,7 +68,7 @@ class TestServer1():
         assert _eq(issuer.keyswv(), ["text","format"])
         assert issuer.format == saml.NAMEID_FORMAT_ENTITY
         assert issuer.text == self.server.conf.entityid
-        
+
 
     def test_assertion(self):
         assertion = s_utils.assertion_factory(
@@ -84,7 +81,7 @@ class TestServer1():
                                 }),
             issuer=self.server.issuer(),
             )
-            
+
         assert _eq(assertion.keyswv(),['attribute_statement', 'issuer', 'id',
                                     'subject', 'issue_instant', 'version'])
         assert assertion.version == "2.0"
@@ -109,7 +106,7 @@ class TestServer1():
         assert _eq(subject.keyswv(),["text", "name_id"])
         assert subject.text == "_aaa"
         assert subject.name_id.format == saml.NAMEID_FORMAT_TRANSIENT
-        
+
     def test_response(self):
         response = s_utils.response_factory(
                 in_response_to="_012345",
@@ -126,7 +123,7 @@ class TestServer1():
                 ),
                 issuer=self.server.issuer(),
             )
-            
+
         print response.keyswv()
         assert _eq(response.keyswv(),['destination', 'assertion','status', 
                                     'in_response_to', 'issue_instant', 
@@ -148,11 +145,11 @@ class TestServer1():
                             spentityid = "urn:mace:example.com:saml:roland:sp",
                             my_name = "My real name",
                         )
-                        
+
         intermed = s_utils.deflate_and_base64_encode(authn_request)
         # should raise an error because faulty spentityid
         raises(OtherError, self.server.parse_authn_request, intermed)
-        
+
     def test_parse_faulty_request_to_err_status(self):
         authn_request = self.client.authn_request(
                             query_id = "id1",
@@ -161,7 +158,7 @@ class TestServer1():
                             spentityid = "urn:mace:example.com:saml:roland:sp",
                             my_name = "My real name",
                         )
-                        
+
         intermed = s_utils.deflate_and_base64_encode(authn_request)
         try:
             self.server.parse_authn_request(intermed)
@@ -169,7 +166,7 @@ class TestServer1():
         except OtherError, oe:
             print oe.args
             status = s_utils.error_status_factory(oe)
-            
+
         assert status
         print status
         assert _eq(status.keyswv(), ["status_code", "status_message"])
@@ -187,7 +184,7 @@ class TestServer1():
                             spentityid = "urn:mace:example.com:saml:roland:sp",
                             my_name = "My real name",
                         )
-                        
+
         print authn_request
         intermed = s_utils.deflate_and_base64_encode(authn_request)
         response = self.server.parse_authn_request(intermed)
@@ -211,7 +208,7 @@ class TestServer1():
                     { "eduPersonEntitlement": "Short stop"}, # identity
                     name_id
                 )
-                
+
         print resp.keyswv()
         assert _eq(resp.keyswv(),['status', 'destination', 'assertion', 
                                     'in_response_to', 'issue_instant', 
@@ -252,7 +249,7 @@ class TestServer1():
                     "http://localhost:8087/",           # consumer_url
                     "urn:mace:example.com:saml:roland:sp", # sp_entity_id
                 )
-                
+
         print resp.keyswv()
         assert _eq(resp.keyswv(),['status', 'destination', 'in_response_to', 
                                   'issue_instant', 'version', 'id', 'issuer'])
@@ -267,7 +264,7 @@ class TestServer1():
         exc = s_utils.MissingValue("eduPersonAffiliation missing")
         resp = self.server.error_response("id12", "http://localhost:8087/", 
                         "urn:mace:example.com:saml:roland:sp", exc )
-                
+
         print resp.keyswv()
         assert _eq(resp.keyswv(),['status', 'destination', 'in_response_to', 
                                   'issue_instant', 'version', 'id', 'issuer'])
@@ -293,7 +290,7 @@ class TestServer1():
                     samlp.NameIDPolicy(format=saml.NAMEID_FORMAT_TRANSIENT,
                                         allow_create="true"),
                     "foba0001@example.com")
-                   
+
         response = samlp.response_from_string("\n".join(resp_str))
         print response.keyswv()
         assert _eq(response.keyswv(),['status', 'destination', 'assertion', 
@@ -309,12 +306,12 @@ class TestServer1():
         astate = assertion.attribute_statement[0]
         print astate
         assert len(astate.attribute) == 3
-        
+
     def test_signed_response(self):
         name_id = self.server.ident.transient_nameid(
                                         "urn:mace:example.com:saml:roland:sp",
                                         "id12")
-                
+
         signed_resp = self.server.do_response(
                     "id12",                                 # in_response_to
                     "http://lingon.catalogix.se:8087/",     # consumer_url
@@ -326,7 +323,7 @@ class TestServer1():
 
         print "%s" % signed_resp
         assert signed_resp
-        
+
         # It's the assertions that are signed not the response per se
         assert len(signed_resp.assertion) == 1
         assertion = signed_resp.assertion[0]
@@ -347,7 +344,7 @@ class TestServer1():
             }
         }
         self.client.users.add_information_about_person(sinfo)
-        
+
         logout_request = self.client.construct_logout_request(
                     subject_id="foba0001",
                     destination = "http://localhost:8088/slo",
@@ -355,11 +352,11 @@ class TestServer1():
                     reason = "I'm tired of this")
 
         intermed = s_utils.deflate_and_base64_encode("%s" % (logout_request,))
-                        
+
         #saml_soap = make_soap_enveloped_saml_thingy(logout_request)
         request = self.server.parse_logout_request(intermed, BINDING_HTTP_POST)
         assert request
-        
+
     def test_slo_soap(self):
         soon = time_util.in_a_while(days=1)
         sinfo = {
@@ -374,19 +371,19 @@ class TestServer1():
 
         sp = client.Saml2Client(config_file="server_conf")
         sp.users.add_information_about_person(sinfo)
-        
+
         logout_request = sp.construct_logout_request(subject_id = "foba0001",
                     destination = "http://localhost:8088/slo",
                     issuer_entity_id = "urn:mace:example.com:saml:roland:idp",
                     reason = "I'm tired of this")
 
         intermed = s_utils.deflate_and_base64_encode("%s" % (logout_request,))
-                        
+
         saml_soap = make_soap_enveloped_saml_thingy(logout_request)
         idp = Server("idp_soap_conf")
         request = idp.parse_logout_request(saml_soap)
         assert request
-        
+
 #------------------------------------------------------------------------
 
 IDENTITY = {"eduPersonAffiliation": ["staff", "member"],
@@ -403,7 +400,7 @@ class TestServer2():
         response = self.server.do_aa_response("aaa", "http://example.com/sp/", 
                         "urn:mace:example.com:sp:1", IDENTITY.copy())
 
-        assert response != None
+        assert response is not None
         assert response.destination == "http://example.com/sp/"
         assert response.in_response_to == "aaa"
         assert response.version == "2.0"
@@ -434,15 +431,15 @@ def _logout_request(conf_file):
         }
     }
     sp.users.add_information_about_person(sinfo)
-    
+
     return sp.construct_logout_request(
                 subject_id = "foba0001",
                 destination = "http://localhost:8088/slo",
                 issuer_entity_id = "urn:mace:example.com:saml:roland:idp",
                 reason = "I'm tired of this")
-    
+
 class TestServerLogout():
-    
+
     def test_1(self):
         server = Server("idp_slo_redirect_conf")
         request = _logout_request("sp_slo_redirect_conf")
@@ -453,7 +450,7 @@ class TestServerLogout():
         assert len(headers) == 1
         assert headers[0][0] == "Location"
         assert message == ['']
-        
+
 # class TestSign():
 #     def test_1(self):
 #         IDP = server.Server("restrictive_idp.config", debug=1)
