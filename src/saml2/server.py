@@ -710,3 +710,24 @@ class Server(object):
                                                         typ="SAMLResponse")
                 
         return rcode, headers, message
+
+    def parse_authz_decision_query(self, xml_string):
+        """ Parse an attribute query
+
+        :param xml_string: The Authz decision Query as an XML string
+        :return: 3-Tuple containing:
+            subject - identifier of the subject
+            attribute - which attributes that the requestor wants back
+            query - the whole query
+        """
+        receiver_addresses = self.conf.endpoint("attribute_service")
+        attribute_query = AttributeQuery( self.sec, receiver_addresses)
+
+        attribute_query = attribute_query.loads(xml_string)
+        attribute_query = attribute_query.verify()
+
+        # Subject name is a BaseID,NameID or EncryptedID instance
+        subject = attribute_query.subject_id()
+        attribute = attribute_query.attribute()
+
+        return subject, attribute, attribute_query.message
