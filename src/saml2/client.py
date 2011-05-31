@@ -232,6 +232,7 @@ class Saml2Client(object):
         :param log: A service to which logs should be written
         :param sign: Whether the request should be signed or not.
         :param binding: The protocol to use for the Response !!
+        :return: <samlp:AuthnRequest> instance
         """
         request = samlp.AuthnRequest(
             id= query_id,
@@ -273,7 +274,7 @@ class Saml2Client(object):
         if log:
             log.info("REQUEST: %s" % request)
         
-        return "%s" % signed_instance_factory(request, self.sec, to_sign)
+        return signed_instance_factory(request, self.sec, to_sign)
     
     def issuer(self, entityid=None):
         """ Return an Issuer instance """
@@ -309,7 +310,7 @@ class Saml2Client(object):
     def _my_name(self):
         return self.config.name
 
-    def authn(self, location, session_id,vorg="", scoping=None, log=None,
+    def authn(self, location, session_id, vorg="", scoping=None, log=None,
                 sign=False):
         spentityid = self._entityid()
         service_url = self._service_url()
@@ -346,23 +347,24 @@ class Saml2Client(object):
         location = self._sso_location(entityid)
         session_id = sid()
 
-        authen_req = self.authn(location, session_id, vorg, scoping, log, sign)
-        
+        _req_str = "%s" %self.authn(location, session_id, vorg, scoping, log,
+                                       sign)
+
         if log:
-            log.info("AuthNReq: %s" % authen_req)
-        
+            log.info("AuthNReq: %s" % _req_str)
+
         if binding == saml2.BINDING_HTTP_POST:
             # No valid ticket; Send a form to the client
             # THIS IS NOT TO BE USED RIGHT NOW
             if log:
                 log.info("HTTP POST")
-            (head, response) = http_post_message(authen_req, location, 
+            (head, response) = http_post_message(_req_str, location,
                                                     relay_state)
         elif binding == saml2.BINDING_HTTP_REDIRECT:
             if log:
                 log.info("HTTP REDIRECT")
-            (head, _body) = http_redirect_message(authen_req, location,
-                                                relay_state)
+            (head, _body) = http_redirect_message(_req_str, location,
+                                                    relay_state)
             response = head[0]
         else:
             raise Exception("Unkown binding type: %s" % binding)
