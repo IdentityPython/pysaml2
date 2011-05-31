@@ -55,7 +55,7 @@ def test_swami_1():
     idp_sso = md.single_sign_on_services(
                     'https://idp.umu.se/saml2/idp/metadata.php')
     assert md.name('https://idp.umu.se/saml2/idp/metadata.php') == (
-        u'Ume\xe5 university (New SAML2)')
+        u'Ume\xe5 University (SAML2)')
     assert len(idp_sso) == 1
     assert idp_sso == ['https://idp.umu.se/saml2/idp/SSOService.php']
     print md._loc_key['https://idp.umu.se/saml2/idp/SSOService.php']
@@ -63,8 +63,13 @@ def test_swami_1():
     print ssocerts
     assert len(ssocerts) == 1
     print md._wants.keys()
-    assert _eq(md._wants.keys(),['https://connect.sunet.se/shibboleth', 
-                                'https://www.diva-portal.org/shibboleth'])
+    assert _eq(md._wants.keys(),['https://sp.swamid.se/shibboleth',
+                                 'https://connect8.sunet.se/shibboleth',
+                                 'https://beta.lobber.se/shibboleth',
+                                 'https://connect.uninett.no/shibboleth',
+                                 'https://www.diva-portal.org/shibboleth',
+                                 'https://connect.sunet.se/shibboleth',
+                                 'https://crowd.nordu.net/shibboleth'])
                                 
     print md.wants('https://www.diva-portal.org/shibboleth')
     assert _eq(md.wants('https://www.diva-portal.org/shibboleth')[1].keys(),

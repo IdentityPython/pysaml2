@@ -177,11 +177,11 @@ class TestClient:
     #     assert idp_entry.loc == ['http://localhost:8088/sso']
     
     def test_create_auth_request_0(self):
-        ar_str = self.client.authn_request("id1",
-                                    "http://www.example.com/sso",
-                                    "http://www.example.org/service",
-                                    "urn:mace:example.org:saml:sp",
-                                    "My Name")
+        ar_str = "%s" % self.client.authn_request("id1",
+                                        "http://www.example.com/sso",
+                                        "http://www.example.org/service",
+                                        "urn:mace:example.org:saml:sp",
+                                        "My Name")
         ar = samlp.authn_request_from_string(ar_str)
         print ar
         assert ar.assertion_consumer_service_url == "http://www.example.org/service"
@@ -198,12 +198,12 @@ class TestClient:
         assert self.client.config.virtual_organization.keys() == [
                                     "urn:mace:example.com:it:tek"]
                                     
-        ar_str = self.client.authn_request("666",
-                                    "http://www.example.com/sso",
-                                    "http://www.example.org/service",
-                                    "urn:mace:example.org:saml:sp",
-                                    "My Name",
-                                    vorg="urn:mace:example.com:it:tek")
+        ar_str = "%s" % self.client.authn_request("666",
+                                        "http://www.example.com/sso",
+                                        "http://www.example.org/service",
+                                        "urn:mace:example.org:saml:sp",
+                                        "My Name",
+                                        vorg="urn:mace:example.com:it:tek")
               
         ar = samlp.authn_request_from_string(ar_str)
         print ar
@@ -222,11 +222,11 @@ class TestClient:
     def test_sign_auth_request_0(self):
         #print self.client.config
         
-        ar_str = self.client.authn_request("id1",
-                                    "http://www.example.com/sso",
-                                    "http://www.example.org/service",
-                                    "urn:mace:example.org:saml:sp",
-                                    "My Name", sign=True)
+        ar_str = "%s" % self.client.authn_request("id1",
+                                        "http://www.example.com/sso",
+                                        "http://www.example.org/service",
+                                        "urn:mace:example.org:saml:sp",
+                                        "My Name", sign=True)
                                     
         ar = samlp.authn_request_from_string(ar_str)
 

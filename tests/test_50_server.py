@@ -146,7 +146,7 @@ class TestServer1():
                             my_name = "My real name",
                         )
 
-        intermed = s_utils.deflate_and_base64_encode(authn_request)
+        intermed = s_utils.deflate_and_base64_encode("%s" % authn_request)
         # should raise an error because faulty spentityid
         raises(OtherError, self.server.parse_authn_request, intermed)
 
@@ -159,7 +159,7 @@ class TestServer1():
                             my_name = "My real name",
                         )
 
-        intermed = s_utils.deflate_and_base64_encode(authn_request)
+        intermed = s_utils.deflate_and_base64_encode("%s" % authn_request)
         try:
             self.server.parse_authn_request(intermed)
             status = None
@@ -186,7 +186,7 @@ class TestServer1():
                         )
 
         print authn_request
-        intermed = s_utils.deflate_and_base64_encode(authn_request)
+        intermed = s_utils.deflate_and_base64_encode("%s" % authn_request)
         response = self.server.parse_authn_request(intermed)
         # returns a dictionary
         print response
