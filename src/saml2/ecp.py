@@ -256,29 +256,12 @@ class ECPClient(Saml2Client):
         # <samlp:AuthnRequest>
         # ----------------------------------------
 
-        spentityid = self._entityid()
         location = self._sso_location(entityid)
-        service_url = self._service_url()
-        my_name = self._my_name()
-
-        if log is None:
-            log = self.logger
-
-        if log:
-            log.info("spentityid: %s" % spentityid)
-            log.info("location: %s" % location)
-            log.info("service_url: %s" % service_url)
-            log.info("my_name: %s" % my_name)
-
         session_id = sid()
-        authen_req = self.authn_request(session_id, location,
-                                service_url, spentityid, my_name,
-                                scoping, log, sign)
-
-        authn_request = samlp.AuthnRequest()
+        authn_req = self.authn(location, session_id, log=log)
 
         body = soapenv.Body()
-        body.extension_elements = [element_to_extension_element(authn_request)]
+        body.extension_elements = [element_to_extension_element(authn_req)]
 
         # ----------------------------------------
         # The SOAP envelope
