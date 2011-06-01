@@ -21,6 +21,7 @@ Contains classes used in the SAML ECP profile
 
 import cookielib
 import getpass
+import sys
 
 from saml2 import soap
 from saml2 import element_to_extension_element
@@ -64,12 +65,16 @@ class ECP(object):
         self._debug = debug
         self.cookie_jar = None
         self.cookie_handler = None
+        self.http = None
         
     def init(self):
         """ Handles the initial connection to the SP """
         self.cookie_jar = cookielib.LWPCookieJar()
         self.http = soap.HTTPClient(self._sp, cookiejar=self.cookie_jar)
 
+        # ********************************************
+        # Phase 1 - First conversation with the SP
+        # ********************************************
         # headers needed to indicate to the SP an ECP request
         headers = {
                     'Accept' : 'text/html; application/vnd.paos+xml',
@@ -78,6 +83,8 @@ class ECP(object):
 
         # request target from SP
         response = self.http.get(headers=headers)
+        if self._debug:
+            print >> sys.stderr, "SP reponse: %s" % response
 
         if response is None:
             raise Exception(
@@ -91,24 +98,36 @@ class ECP(object):
         # <cb:ChannelBindings> header blocks may also be present
         # if 'holder-of-key' option then one or more <ecp:SubjectConfirmation>
         # header blocks may also be present
-        response = soap.class_instances_from_soap_enveloped_saml_thingies(
+        respdict = soap.class_instances_from_soap_enveloped_saml_thingies(
                                                                     response,
-                                                                    [paos])
-        if response is None:
+                                                                    [paos, ecp,
+                                                                     samlp])
+        if respdict is None:
             raise Exception("Unexpected reply from the SP")
 
-        # AuthnRequest in the body
-        authn_request = response["body"]
+        if self._debug:
+            print >> sys.stderr, "SP reponse dict: %s" % respdict
+
+        # AuthnRequest in the body or not
+        authn_request = respdict["body"]
         assert authn_request.c_tag == "AuthnRequest"
-        _rc_url = authn_request.response_consumer_url
 
         # ecp.RelayState among headers
         _relay_state = None
-        for item in response["header"]:
+        _paos_request = None
+        for item in respdict["header"]:
             if item.c_tag == "RelayState" and \
                item.c_namespace == ecp.NAMESPACE:
                 _relay_state = item
+            if item.c_tag == "Request" and \
+               item.c_namespace == paos.NAMESPACE:
+                _paos_request = item
 
+        _rc_url = _paos_request.response_consumer_url
+
+        # **********************
+        # Phase 2 - talk to the IdP
+        # **********************
         idp_request = soap.make_soap_enveloped_saml_thingy(authn_request)
         idp_endpoint = self._idp
         
@@ -126,45 +145,75 @@ class ECP(object):
             raise Exception(
                 "Request to IdP failed: %s" % self.http.response.reason)
 
-        # SAMLP response in a SOAP envelope body, ecp response in header
-        response = soap.class_instances_from_soap_enveloped_saml_thingies(
-                                                                response,
-                                                                [paos])
+        if self._debug:
+            print >> sys.stderr, "IdP response: %s" % response
 
-        if response is None:
+        # SAMLP response in a SOAP envelope body, ecp response in headers
+        respdict = soap.class_instances_from_soap_enveloped_saml_thingies(
+                                                                response,
+                                                                [paos, ecp,
+                                                                 samlp])
+
+        if respdict is None:
             raise Exception("Unexpected reply from the IdP")
 
-        idp_response = response["body"]
+        if self._debug:
+            print >> sys.stderr, "IdP reponse dict: %s" % respdict
+
+        idp_response = respdict["body"]
         assert idp_response.c_tag == "Response"
-        
-        _acs_url = idp_response.assertion_consumer_service_url
+
+        if self._debug:
+            print >> sys.stderr, "IdP AUTHN response: %s" % idp_response
+
+        print idp_response
+        print 
+        _ecp_response = None
+        for item in respdict["header"]:
+            if item.c_tag == "Response" and \
+               item.c_namespace == ecp.NAMESPACE:
+                _ecp_response = item
+
+        _acs_url = _ecp_response.assertion_consumer_service_url
         if _rc_url != _acs_url:
             error = ("response_consumer_url '%s' does not match" % _rc_url,
                      "assertion_consumer_service_url '%s" % _acs_url)
             # Send an error message to the SP
             fault_text = soap.soap_fault(error)
-            response = self.http.post(fault_text, path=_rc_url)
+            _ = self.http.post(fault_text, path=_rc_url)
             # Raise an exception so the user knows something went wrong
             raise Exception(error)
 
+        # **********************************
+        # Phase 3 - back to the SP
+        # **********************************
         sp_response = soap.make_soap_enveloped_saml_thingy(idp_response,
-                                                           _relay_state)
+                                                           [_relay_state])
 
+        print sp_response
+        
         headers = {'Content-Type' : 'application/vnd.paos+xml',}
 
         # POST the package to the SP
         response = self.http.post(sp_response, headers, _acs_url)
 
-        if response is None:
+        if not response:
+            print self.http.error_description
             raise Exception(
                 "Error POSTing package to SP: %s" % self.http.response.reason)
 
+        if self._debug:
+            print >> sys.stderr, "Final SP reponse: %s" % response
+
         return None
 
-    def get(self, path):
+    def get(self, path=None):
+        if path is None:
+            path = self._sp
+            
         if self.http is None:
             try:
-                self.init()
+                return self.init()
             except Exception,e:
                 return "%s" % e
 
@@ -294,12 +343,9 @@ class ECPServer(Server):
         # ----------------------------------------
         target_url = ""
         
-        ecp_response = ecp.Response(
-            assertion_consumer_service_url=target_url
-        )
+        ecp_response = ecp.Response(assertion_consumer_service_url=target_url)
         header = soapenv.Body()
-        header.extension_elements = [
-                                    element_to_extension_element(ecp_response)]
+        header.extension_elements = [element_to_extension_element(ecp_response)]
 
         # ----------------------------------------
         # <samlp:Response
