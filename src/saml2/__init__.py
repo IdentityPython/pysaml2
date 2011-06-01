@@ -760,14 +760,17 @@ def element_to_extension_element(element):
     
     exel = ExtensionElement(element.c_tag, element.c_namespace, 
                             text=element.text)
+
+    exel.attributes.update(element.extension_attributes)
+    exel.children.extend(element.extension_elements)
     
     for xml_attribute, (member_name, typ, req) in element.c_attributes.iteritems():
         member_value = getattr(element, member_name)
         if member_value is not None:
             exel.attributes[xml_attribute] = member_value
                 
-    exel.children = [element_to_extension_element(c) \
-                        for c in element.children_with_values()]
+    exel.children.extend([element_to_extension_element(c) \
+                                for c in element.children_with_values()])
     
     return exel
     
