@@ -202,11 +202,14 @@ class HTTPClient(object):
         if path is None:
             path = self.path
             
-        (response, content) = self.server.request(path, "POST", body=data,
+        (response, content) = self.server.request(path, method="POST",
+                                                    body=data,
                                                     headers=headers)
         if response.status == 200:
             return content
         else:
+            self.response = response
+            self.error_description = content
             return False
 
     def get(self, headers=None, path=None):
@@ -216,12 +219,13 @@ class HTTPClient(object):
         if headers is None:
             headers = {"content-type": "text/html"}
 
-        (response, content) = self.server.request(path, "GET",
+        (response, content) = self.server.request(path, method="GET",
                                                      headers=headers)
         if response.status == 200:
             return content
         else:
             self.response = response
+            self.error_description = content
             return None
 
     def add_credentials(self, name, passwd):
