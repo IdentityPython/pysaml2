@@ -830,4 +830,10 @@ def extension_elements_to_elements(extension_elements, schemas):
 
 def extension_elements_as_dict(extension_elements, onts):
     ees_ = extension_elements_to_elements(extension_elements, onts)
-    return dict([(elem.c_tag, elem) for elem in ees_])
+    res = {}
+    for elem in ees_:
+        try:
+            res[elem.c_tag].append(elem)
+        except KeyError:
+            res[elem.c_tag] = [elem]
+    return res
