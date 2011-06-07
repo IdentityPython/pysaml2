@@ -190,7 +190,7 @@ class Saml2Client(object):
         if log is None:
             log = self.logger
             
-        reply_addr = self._service_url()
+        reply_addr = self.service_url()
         
         resp = None
         if saml_response:
@@ -304,7 +304,7 @@ class Saml2Client(object):
             raise IdpUnspecified("Too many IdPs to choose from: %s" % eids)
         return self.config.single_sign_on_services(eids.keys()[0])[0]
         
-    def _service_url(self, binding=BINDING_HTTP_POST):
+    def service_url(self, binding=BINDING_HTTP_POST):
         return self.config.endpoint("assertion_consumer_service", binding)
 
     def _my_name(self):
@@ -313,7 +313,7 @@ class Saml2Client(object):
     def authn(self, location, session_id, vorg="", scoping=None, log=None,
                 sign=False):
         spentityid = self._entityid()
-        service_url = self._service_url()
+        service_url = self.service_url()
         my_name = self._my_name()
 
         if log is None:
@@ -947,7 +947,7 @@ class Saml2Client(object):
         """
 
         spentityid = self.issuer()
-        service_url = self._service_url()
+        service_url = self.service_url()
         my_name = self._my_name()
 
         if log is None:
