@@ -19,6 +19,8 @@
 Suppport for the client part of the SAML2.0 SOAP binding.
 """
 
+from httplib2 import Http
+
 from saml2 import httplib2cookie
 from saml2 import create_class_from_element_tree
 from saml2.samlp import NAMESPACE as SAMLP_NAMESPACE
@@ -189,7 +191,10 @@ class HTTPClient(object):
     def __init__(self, path, keyfile=None, certfile=None, log=None,
                  cookiejar=None):
         self.path = path
-        self.server = httplib2cookie.CookiefulHttp(cookiejar)
+        if cookiejar:
+            self.server = httplib2cookie.CookiefulHttp(cookiejar)
+        else:
+            self.server = Http()
         self.log = log
         self.response = None
         
@@ -201,12 +206,17 @@ class HTTPClient(object):
             headers = {}
         if path is None:
             path = self.path
-            
+
+#        (response, content) = self.server.request(self.path, "POST", data,
+#                                                    headers=headers)
+
         (response, content) = self.server.request(path, method="POST",
                                                     body=data,
                                                     headers=headers)
         if response.status == 200:
             return content
+        elif response.status == 302: # redirect
+            return self.post(data, headers, response["location"])
         else:
             self.response = response
             self.error_description = content
@@ -223,6 +233,8 @@ class HTTPClient(object):
                                                      headers=headers)
         if response.status == 200:
             return content
+        elif response.status == 302: # redirect
+            return self.post(data, headers, response["location"])
         else:
             self.response = response
             self.error_description = content
@@ -242,7 +254,8 @@ class SOAPClient(object):
     def send(self, request, path=None):
         soap_message = make_soap_enveloped_saml_thingy(request)
         _response = self.server.post(soap_message,
-                                    {"content-type": "application/soap+xml"})
+                                     {"content-type": "application/soap+xml"},
+                                     path=path)
 
         self.response = _response
         if _response:
@@ -251,4 +264,7 @@ class SOAPClient(object):
             return parse_soap_enveloped_saml_response(_response)
         else:
             return False
+
+    def add_credentials(self, name, passwd):
+        self.server.add_credentials(name, passwd)
 
