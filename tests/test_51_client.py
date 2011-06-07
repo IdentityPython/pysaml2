@@ -131,7 +131,7 @@ class TestClient:
                 if getattr(attribute,"friendly_name"):
                     assert False
                 seen.append("email")
-        assert set(seen) == set(["givenName","surname","email"])
+        assert set(seen) == {"givenName", "surname", "email"}
         
     def test_create_attribute_query_3(self):
         req = self.client.create_attribute_query("id1",
@@ -321,7 +321,7 @@ class TestClient:
         location = self.client._sso_location()
         print location
         assert location == 'http://localhost:8088/sso'
-        service_url = self.client._service_url()
+        service_url = self.client.service_url()
         print service_url
         assert service_url == "http://lingon.catalogix.se:8087/"
         my_name = self.client._my_name()
@@ -494,7 +494,7 @@ class TestClient:
         in_response_to = "1234"
         consumer_url = "http://example.com/consumer"
         name_id = saml.NameID(saml.NAMEID_FORMAT_TRANSIENT, text="name_id")
-        policy = Policy(None)
+        policy = Policy()
         ava = Assertion(AVA)
         assertion = ava.construct(sp_entity_id, in_response_to,
                                     consumer_url, name_id,
