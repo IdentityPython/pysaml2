@@ -37,7 +37,7 @@ SERVICE = "urn:oasis:names:tc:SAML:2.0:profiles:SSO:ecp"
 
 class Client(object):
     def __init__(self, user, passwd, sp, idp=None, metadata_file=None,
-                 xmlsec_binary=None, debug=0):
+                 xmlsec_binary=None, verbose=0):
         self._idp = idp
         self._sp = sp
         self._user = user
@@ -48,7 +48,7 @@ class Client(object):
                                             xmlsec_binary)
         else:
             self._metadata = None
-        self._debug = debug
+        self._verbose = verbose
         self.cookie_jar = None
         self.cookie_handler = None
         self.http = None
@@ -69,7 +69,7 @@ class Client(object):
 
         # request target from SP
         response = self.http.get(headers=headers)
-        if self._debug:
+        if self._verbose:
             print >> sys.stderr, "SP reponse: %s" % response
 
         if response is None:
@@ -91,7 +91,7 @@ class Client(object):
         if respdict is None:
             raise Exception("Unexpected reply from the SP")
 
-        if self._debug:
+        if self._verbose:
             print >> sys.stderr, "SP reponse dict: %s" % respdict
 
         # AuthnRequest in the body or not
@@ -131,7 +131,7 @@ class Client(object):
             raise Exception(
                 "Request to IdP failed: %s" % self.http.response.reason)
 
-        if self._debug:
+        if self._verbose:
             print >> sys.stderr, "IdP response: %s" % response
 
         # SAMLP response in a SOAP envelope body, ecp response in headers
@@ -143,13 +143,13 @@ class Client(object):
         if respdict is None:
             raise Exception("Unexpected reply from the IdP")
 
-        if self._debug:
+        if self._verbose:
             print >> sys.stderr, "IdP reponse dict: %s" % respdict
 
         idp_response = respdict["body"]
         assert idp_response.c_tag == "Response"
 
-        if self._debug:
+        if self._verbose:
             print >> sys.stderr, "IdP AUTHN response: %s" % idp_response
             print
             
@@ -175,7 +175,7 @@ class Client(object):
         sp_response = soap.make_soap_enveloped_saml_thingy(idp_response,
                                                            [_relay_state])
 
-        if self._debug:
+        if self._verbose:
             print >> sys.stderr, sp_response
             print
 
@@ -189,7 +189,7 @@ class Client(object):
             raise Exception(
                 "Error POSTing package to SP: %s" % self.http.response.reason)
 
-        if self._debug:
+        if self._verbose:
             print >> sys.stderr, "Final SP reponse: %s" % response
 
         return None
