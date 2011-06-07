@@ -115,9 +115,9 @@ class Identifier(object):
                     raise MissingValue("Common identifier")
             else:
                 return self.persistent_nameid(sp_name_qualifier, userid)
-        except KeyError:
+        except (KeyError, TypeError):
             raise UnknownVO("%s" % sp_name_qualifier)
-        
+
         try:
             nameid_format = vo_conf["nameid_format"]
         except KeyError:
@@ -144,7 +144,7 @@ class Identifier(object):
         """ Returns a random one-time identifier. One-time means it is
         kept around as long as the session is active.
         
-        :param sp_name_qualifier: A qualifier to bind the created identifier to
+        :param sp_entity_id: A qualifier to bind the created identifier to
         :param userid: The local persistent identifier for the subject.
         :return: The created identifier,
         """
@@ -168,7 +168,7 @@ class Identifier(object):
         constructed depends on the context.
         
         :param local_policy: The policy the server is configured to follow
-        :param user: The local permanent identifier of the object
+        :param userid: The local permanent identifier of the object
         :param sp_entity_id: The 'user' of the name_id
         :param identity: Attribute/value pairs describing the object
         :param name_id_policy: The policy the server on the other side wants
@@ -176,14 +176,17 @@ class Identifier(object):
         :return: NameID instance precursor
         """
         if name_id_policy and name_id_policy.sp_name_qualifier:
-            return self._get_vo_identifier(name_id_policy.sp_name_qualifier,
-                                            userid, identity)
-        else:
-            nameid_format = local_policy.get_nameid_format(sp_entity_id)
-            if nameid_format == saml.NAMEID_FORMAT_PERSISTENT:
-                return self.persistent_nameid(sp_entity_id, userid)
-            elif nameid_format == saml.NAMEID_FORMAT_TRANSIENT:
-                return self.transient_nameid(sp_entity_id, userid)
+            try:
+                return self._get_vo_identifier(name_id_policy.sp_name_qualifier,
+                                                userid, identity)
+            except Exception:
+                pass
+            
+        nameid_format = local_policy.get_nameid_format(sp_entity_id)
+        if nameid_format == saml.NAMEID_FORMAT_PERSISTENT:
+            return self.persistent_nameid(sp_entity_id, userid)
+        elif nameid_format == saml.NAMEID_FORMAT_TRANSIENT:
+            return self.transient_nameid(sp_entity_id, userid)
                 
     def local_name(self, entity_id, remote_id):
         """ Get the local persistent name that has the specified remote ID.
@@ -373,7 +376,9 @@ class Server(object):
         :param status: The status of the response
         :param sign: Whether the assertion should be signed or not 
         :param policy: The attribute release policy for this instance
-        :param auth: A 2-tuple denoting the authn class and the authn authority
+        :param authn: A 2-tuple denoting the authn class and the authn
+            authority
+        :param authn_decl: 
         :return: A Response instance
         """
                 
@@ -453,7 +458,8 @@ class Server(object):
         :param name_id: The identifier of the subject
         :param status: The status of the response
         :param sign: Whether the assertion should be signed or not 
-        :param auth: A 2-tuple denoting the authn class and the authn authority.
+        :param authn: A 2-tuple denoting the authn class and the authn
+            authority.
         :param authn_decl:
         :return: A Response instance.
         """
@@ -484,9 +490,8 @@ class Server(object):
                         in_response_to, # in_response_to
                         destination,    # consumer_url
                         spid,           # sp_entity_id
-                        None,           # identity
-                        name_id,
-                        status = status,
+                        name_id=name_id,
+                        status=status,
                         sign=sign
                         )
 
@@ -506,7 +511,7 @@ class Server(object):
         :param name_id: The identifier of the subject
         :param status: The status of the response
         :param sign: Whether the assertion should be signed or not 
-        :param name_id_policy: Policy for NameID creation.
+        :param _name_id_policy: Policy for NameID creation.
         :return: A Response instance.
         """
         name_id = self.ident.construct_nameid(self.conf.policy, userid,
@@ -538,10 +543,10 @@ class Server(object):
         :param authn_decl:
         :return: A XML string representing an authentication response
         """
-        
+
+        name_id = None
         try:
             policy = self.conf.policy
-
             name_id = self.ident.construct_nameid(policy, userid, sp_entity_id,
                                                     identity, name_id_policy)
         except IOError, exc:
