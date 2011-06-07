@@ -186,7 +186,8 @@ class SAML2Plugin(FormPluginBase):
         
         :param environ: A dictionary 
         """
-        
+
+        body = ""
         post = {}
 
         post_env = environ.copy()
