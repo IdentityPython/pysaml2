@@ -72,7 +72,7 @@ class Client(object):
         if self._verbose:
             print >> sys.stderr, "SP reponse: %s" % response
 
-        if response is None:
+        if response is None or response is False:
             raise Exception(
                 "Request to SP failed: %s" % self.http.response.status)
 
@@ -127,9 +127,10 @@ class Client(object):
         # POST the request to the IdP
         response = self.http.post(idp_request, path=idp_endpoint)
 
-        if response is None:
+        if response is None or response is False:
             raise Exception(
-                "Request to IdP failed: %s" % self.http.response.reason)
+                "Request to IdP failed (%s): %s" % (self.http.response.status,
+                                                self.http.error_description))
 
         if self._verbose:
             print >> sys.stderr, "IdP response: %s" % response
