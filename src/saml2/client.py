@@ -169,7 +169,6 @@ class Saml2Client(object):
         """ Deal with an AuthnResponse or LogoutResponse
         
         :param post: The reply as a dictionary
-        :param entity_id: The Entity ID for this SP
         :param outstanding: A dictionary with session IDs as keys and
             the original web request from the user before redirection
             as values.
@@ -347,7 +346,7 @@ class Saml2Client(object):
         location = self._sso_location(entityid)
         session_id = sid()
 
-        _req_str = "%s" %self.authn(location, session_id, vorg, scoping, log,
+        _req_str = "%s" % self.authn(location, session_id, vorg, scoping, log,
                                        sign)
 
         if log:
@@ -487,8 +486,7 @@ class Saml2Client(object):
             
             try:
                 # synchronous operation
-                aresp = attribute_response(self.config, issuer, log=log,
-                                           asynchop=False)
+                aresp = attribute_response(self.config, issuer, log=log)
             except Exception, exc:
                 if log:
                     log.error("%s", (exc,))
@@ -725,7 +723,6 @@ class Saml2Client(object):
         """ Deal with a LogoutResponse
 
         :param xmlstr: The response as a xml string
-        :param subject_id: the id of the user that initiated the logout
         :param log: logging function
         :param binding: What type of binding this message came through.
         :return: None if the reply doesn't contain a valid SAML LogoutResponse,
@@ -880,6 +877,8 @@ class Saml2Client(object):
         :param subject_id: The subject identifier 
         :return: A possibly extended knowledge.
         """
+
+        ava = {}
         try:
             (ava, _) = self.users.get_identity(subject_id)
         except KeyError:
