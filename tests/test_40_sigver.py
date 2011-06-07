@@ -328,7 +328,6 @@ class TestSecurity():
         to_sign = [(class_name(response), response.id)]
                     
         s_response = sigver.signed_instance_factory(response, self.sec, to_sign)
-            
 
         # Change something that should make everything fail
         s_response.id = "23456"
