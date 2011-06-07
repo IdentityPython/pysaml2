@@ -586,8 +586,8 @@ class SamlBase(ExtensionContainer):
         :return: Possibly empty list of children.
         """
         childs = []
-        for _, values in self.__class__.c_children.iteritems():
-            member = getattr(self, values[0])
+        for attribute in self._get_all_c_children_with_order():
+            member = getattr(self, attribute)
             if member is None or member == []:
                 pass
             elif isinstance(member, list):
