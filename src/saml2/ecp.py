@@ -21,7 +21,7 @@ Contains classes used in the SAML ECP profile
 
 from saml2 import element_to_extension_element
 from saml2 import samlp
-from saml2 import saml
+from saml2 import soap
 
 from saml2.profile import paos
 from saml2.profile import ecp
@@ -31,6 +31,8 @@ from saml2.server import Server
 
 from saml2.schema import soapenv
 from saml2.s_utils import sid
+
+from saml2.response import authn_response
 
 SERVICE = "urn:oasis:names:tc:SAML:2.0:profiles:SSO:ecp"
 
@@ -133,11 +135,27 @@ class ECPClient(Saml2Client):
 
         return session_id, "%s" % soap_envelope
 
-#    def handle_ecp_response(self):
-#        pass
-#
-#    def ecp_relaystate(self, state=""):
-#        relay_state = ecp.RelayState(text=state)
+    def handle_ecp_authn_response(self, soap_message, outstanding=None):
+        rdict = soap.class_instances_from_soap_enveloped_saml_thingies(
+                                                                soap_message,
+                                                                [paos, ecp,
+                                                                 samlp])
+
+        _relay_state = None
+        for item in rdict["header"]:
+            if item.c_tag == "RelayState" and \
+               item.c_namespace == ecp.NAMESPACE:
+                _relay_state = item
+
+        response = authn_response(self.config, self.service_url(),
+                                  outstanding, log=self.logger,
+                                  debug=self.debug)
+
+        response.loads("%s" % rdict["body"], False, soap_message)
+        response.verify()
+        
+        return response, _relay_state
+        
 
 class ECPServer(Server):
     """ This deals with what the IdP has to do
@@ -149,7 +167,8 @@ class ECPServer(Server):
         Server.__init__(self, config_file, config, _cache, log, debug)
 
     def parse_ecp_authn_query(self):
-        
+        pass
+    
     def ecp_response(self):
 
         # ----------------------------------------
