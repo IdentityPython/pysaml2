@@ -65,7 +65,25 @@ def cgi_field_storage_to_dict( field_storage ):
                 params[key] = field_storage[key]
                 
     return params
-           
+
+def get_body(environ, log=None, debug=0):
+    body = ""
+
+    length = int(environ["CONTENT_LENGTH"])
+    try:
+        body = environ["wsgi.input"].read(length)
+    except Exception, excp:
+        if log:
+            log.info("Exception while reading post: %s" % (excp,))
+        raise
+
+    # restore what I might have upset
+    from StringIO import StringIO
+    environ['wsgi.input'] = StringIO(body)
+    environ['s2repoze.body'] = body
+
+    return body
+
 class SAML2Plugin(FormPluginBase):
 
     implements(IChallenger, IIdentifier, IAuthenticator, IMetadataProvider)
@@ -91,7 +109,37 @@ class SAML2Plugin(FormPluginBase):
         else:
             self.outstanding_queries = {}
         self.iam = platform.node()
-                         
+
+    def _get_post(self, environ):
+        """
+        Get the posted information
+    
+        :param environ: A dictionary
+        """
+    
+        post = {}
+    
+        post_env = environ.copy()
+        post_env['QUERY_STRING'] = ''
+    
+        body = get_body(environ, self.log, self.debug)
+        
+        try:
+            post = cgi.FieldStorage(
+                fp=environ['wsgi.input'],
+                environ=post_env,
+                keep_blank_values=True
+            )
+        except Exception, excp:
+            if self.debug and self.log:
+                self.log.info("Exception (II): %s" % (excp,))
+                raise
+    
+        if self.debug and self.log:
+            self.log.info('identify post: %s' % (post,))
+    
+        return post
+        
     def _pick_idp(self, environ, came_from):
         """ 
         If more than one idp and if none is selected, I have to do wayf or 
@@ -180,47 +228,6 @@ class SAML2Plugin(FormPluginBase):
             else :
                 return HTTPInternalServerError(detail='Incorrect returned data')
 
-    def _get_post(self, environ):
-        """ 
-        Get the posted information 
-        
-        :param environ: A dictionary 
-        """
-
-        body = ""
-        post = {}
-
-        post_env = environ.copy()
-        post_env['QUERY_STRING'] = ''
-
-        length = int(environ["CONTENT_LENGTH"])
-        try:
-            body = environ["wsgi.input"].read(length)
-        except Exception, excp:
-            if self.debug and self.log:
-                self.log.info("Exception while reading post: %s" % (excp,))
-                raise
-            
-        from StringIO import StringIO
-        environ['wsgi.input'] = StringIO(body)
-        environ['s2repoze.body'] = body
-
-        try:
-            post = cgi.FieldStorage(
-                fp=environ['wsgi.input'],
-                environ=post_env,
-                keep_blank_values=True
-            )
-        except Exception, excp:
-            if self.debug and self.log:
-                self.log.info("Exception (II): %s" % (excp,))
-                raise
-
-        if self.debug and self.log:
-            self.log.info('identify post: %s' % (post,))
-            
-        return post
-    
     def _construct_identity(self, session_info):
         identity = {
             "login": session_info["name_id"],
@@ -271,6 +278,9 @@ class SAML2Plugin(FormPluginBase):
         
     #### IIdentifier ####
     def identify(self, environ):
+        """
+        Tries do the identification 
+        """
         self.log = environ.get('repoze.who.logger', '')
         self.saml_client.log = self.log
         
