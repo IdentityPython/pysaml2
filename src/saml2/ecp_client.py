@@ -186,9 +186,15 @@ class Client(object):
         response = self.http.post(sp_response, headers, _acs_url)
 
         if not response:
-            print self.http.error_description
-            raise Exception(
-                "Error POSTing package to SP: %s" % self.http.response.reason)
+            if self.http.response.status == 302:
+                # ignore where the SP is redirecting us to and go for the
+                # url I started off with.
+                response = self.http.get(headers)
+                return response
+            else:
+                print self.http.error_description
+                raise Exception(
+                    "Error POSTing package to SP: %s" % self.http.response.reason)
 
         if self._verbose:
             print >> sys.stderr, "Final SP reponse: %s" % response
@@ -217,7 +223,7 @@ class Client(object):
             try:
                 return self.init()
             except Exception,e:
-                return "%s" % e
+                return "Error: %s" % e
 
         # use existing established session to request the original target
         # from the SP
