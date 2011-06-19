@@ -552,7 +552,7 @@ class MetaData(object):
         return loc
     
     @keep_updated
-    def attribute_services(self, entity_id):
+    def attribute_authority(self, entity_id):
         try:
             return self.entity[entity_id]["attribute_authority"]
         except KeyError:
