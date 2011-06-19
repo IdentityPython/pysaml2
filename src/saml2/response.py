@@ -57,7 +57,7 @@ def for_me(condition, myself ):
     return False
 
 def authn_response(conf, return_addr, outstanding_queries=None,
-                    log=None, timeslack=0, debug=0):
+                    log=None, timeslack=0, debug=0, asynchop=True):
     sec = security_context(conf)
     if not timeslack:
         try:
@@ -67,7 +67,7 @@ def authn_response(conf, return_addr, outstanding_queries=None,
     
     return AuthnResponse(sec, conf.attribute_converters, conf.entityid,
                         return_addr, outstanding_queries, log, timeslack, 
-                        debug)
+                        debug, asynchop=asynchop)
 
 # comes in over SOAP so synchronous
 def attribute_response(conf, return_addr, log=None, timeslack=0, debug=0,
@@ -385,9 +385,6 @@ class AuthnResponse(StatusResponse):
     
     def get_subject(self):
         """ The assertion must contain a Subject
-
-        :param asynch: If the connection is asynchronous there is
-            outstanding queries to connect to
         """
         assert self.assertion.subject
         subject = self.assertion.subject
@@ -581,8 +578,9 @@ class AttributeResponse(AuthnResponse):
                     return_addr=None, log=None, timeslack=0, debug=0,
                     asynchop=False):
         AuthnResponse.__init__(self, sec_context, attribute_converters,
-                                entity_id, return_addr, None, log, timeslack,
-                                debug, asynchop)
+                                entity_id, return_addr, log=log,
+                                timeslack=timeslack, debug=debug,
+                                asynchop=asynchop)
         self.entity_id = entity_id
         self.attribute_converters = attribute_converters
         self.assertion = None
@@ -595,8 +593,9 @@ class AuthzResponse(AuthnResponse):
                     return_addr=None, log=None, timeslack=0, debug=0,
                     asynchop=False):
         AuthnResponse.__init__(self, sec_context, attribute_converters,
-                                entity_id, return_addr, None, log, timeslack,
-                                debug, asynchop)
+                                entity_id, return_addr, log=log,
+                                timeslack=timeslack, debug=debug,
+                                asynchop=asynchop)
         self.entity_id = entity_id
         self.attribute_converters = attribute_converters
         self.assertion = None
@@ -605,7 +604,7 @@ class AuthzResponse(AuthnResponse):
 def response_factory(xmlstr, conf, return_addr=None,
                         outstanding_queries=None, log=None, 
                         timeslack=0, debug=0, decode=True, request_id=0,
-                        origxml=None):
+                        origxml=None, asynchop=True):
     sec_context = security_context(conf)
     if not timeslack:
         try:
@@ -623,7 +622,7 @@ def response_factory(xmlstr, conf, return_addr=None,
         if response.response.assertion:
             authnresp = AuthnResponse(sec_context, attribute_converters, 
                             entity_id, return_addr, outstanding_queries, log,
-                            timeslack, debug)
+                            timeslack, debug, asynchop)
             authnresp.update(response)
             return authnresp
     except TypeError:
