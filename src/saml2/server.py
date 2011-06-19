@@ -206,13 +206,13 @@ class Identifier(object):
 class Server(object):
     """ A class that does things that IdPs or AAs do """
     def __init__(self, config_file="", config=None, _cache="",
-                    log=None, debug=0):
+                    log=None, debug=0, stype="idp"):
 
         self.log = log
         self.debug = debug
         self.ident = None
         if config_file:
-            self.load_config(config_file)
+            self.load_config(config_file, stype)
         elif config:
             self.conf = config
         else:
@@ -232,12 +232,16 @@ class Server(object):
         # else:
         #     self.cache = Cache()
         
-    def load_config(self, config_file):
+    def load_config(self, config_file, stype="idp"):
         """ Load the server configuration 
         
         :param config_file: The name of the configuration file
+        :param stype: The type of Server ("idp"/"aa")
         """
-        self.conf = config_factory("idp", config_file)
+        self.conf = config_factory(stype, config_file)
+        if stype == "aa":
+            return
+        
         try:
             # subject information is store in database
             # default database is a shelve database which is OK in some setups
@@ -514,8 +518,8 @@ class Server(object):
         :param _name_id_policy: Policy for NameID creation.
         :return: A Response instance.
         """
-        name_id = self.ident.construct_nameid(self.conf.policy, userid,
-                                            sp_entity_id, identity)
+#        name_id = self.ident.construct_nameid(self.conf.policy, userid,
+#                                            sp_entity_id, identity)
         
         return self._response(in_response_to, consumer_url,
                         sp_entity_id, identity, name_id, 
