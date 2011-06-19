@@ -390,6 +390,15 @@ class ExtensionContainer(object):
             result.append(ets(ext.to_string()))
         return result
 
+    def add_extension_elements(self, items):
+        for item in items:
+            self.extension_elements.append(element_to_extension_element(item))
+
+    def add_extension_element(self, item):
+        self.extension_elements.append(element_to_extension_element(item))
+
+
+
 def make_vals(val, klass, klass_inst=None, prop=None, part=False,
                 base64encode=False):
     """
@@ -749,6 +758,8 @@ class SamlBase(ExtensionContainer):
                 else:
                     return 1,1
         return None
+
+
 
 def element_to_extension_element(element):
     """
