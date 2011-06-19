@@ -165,7 +165,8 @@ class Saml2Client(object):
     #     idp_ent = self.idp_entry(name, location)
     #     return samlp.Scoping(idp_list=samlp.IDPList(idp_entry=[idp_ent]))
     
-    def response(self, post, outstanding, log=None):
+    def response(self, post, outstanding, log=None, decode=True,
+                 asynchop=True):
         """ Deal with an AuthnResponse or LogoutResponse
         
         :param post: The reply as a dictionary
@@ -173,6 +174,9 @@ class Saml2Client(object):
             the original web request from the user before redirection
             as values.
         :param log: where loggin should go.
+        :param decode: Whether the response is Base64 encoded or not
+        :param asynchop: Whether the response was return over a asynchronous
+            connection. SOAP for instance is synchronous
         :return: An response.AuthnResponse or response.LogoutResponse instance
         """
         # If the request contains a samlResponse, try to validate it
@@ -196,7 +200,8 @@ class Saml2Client(object):
             try:
                 resp = response_factory(saml_response, self.config,
                                         reply_addr, outstanding, log, 
-                                        debug=self.debug)
+                                        debug=self.debug, decode=decode,
+                                        asynchop=asynchop)
             except Exception, exc:
                 if log:
                     log.error("%s" % exc)
