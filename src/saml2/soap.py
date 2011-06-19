@@ -191,7 +191,7 @@ class HTTPClient(object):
     def __init__(self, path, keyfile=None, certfile=None, log=None,
                  cookiejar=None):
         self.path = path
-        if cookiejar:
+        if cookiejar is not None:
             self.server = httplib2cookie.CookiefulHttp(cookiejar)
         else:
             self.server = Http()
@@ -207,16 +207,13 @@ class HTTPClient(object):
         if path is None:
             path = self.path
 
-#        (response, content) = self.server.request(self.path, "POST", data,
-#                                                    headers=headers)
-
         (response, content) = self.server.request(path, method="POST",
                                                     body=data,
                                                     headers=headers)
         if response.status == 200:
             return content
-        elif response.status == 302: # redirect
-            return self.post(data, headers, response["location"])
+#        elif response.status == 302: # redirect
+#            return self.post(data, headers, response["location"])
         else:
             self.response = response
             self.error_description = content
@@ -233,8 +230,8 @@ class HTTPClient(object):
                                                      headers=headers)
         if response.status == 200:
             return content
-        elif response.status == 302: # redirect
-            return self.post(data, headers, response["location"])
+#        elif response.status == 302: # redirect
+#            return self.get(headers, response["location"])
         else:
             self.response = response
             self.error_description = content
