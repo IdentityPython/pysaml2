@@ -31,6 +31,7 @@ SP_ARGS = [
             "required_attributes",
             "optional_attributes",
             "idp",
+            "aa",
             "subject_data",
             "want_assertions_signed",
             "authn_requests_signed",
@@ -356,14 +357,15 @@ class SPConfig(Config):
             the SOAP binding)
         :return: list of endpoints
         """
-        typ = "attribute_service"
+
+        res = []
         if self.aa is None or entity_id in self.aa:
-            slo = self.metadata.attribute_services(entity_id, typ,
-                                                    binding=binding)
-            if slo:
-                return [s[binding] for s in slo]
-            
-        return []
+            for aad in self.metadata.attribute_authority(entity_id):
+                for attrserv in aad.attribute_service:
+                    if attrserv.binding == binding:
+                        res.append(attrserv)
+
+        return res
 
     def idps(self, langpref=None):
         """ Returns a dictionary of usefull IdPs, the keys being the
