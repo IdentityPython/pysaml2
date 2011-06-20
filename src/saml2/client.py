@@ -315,7 +315,7 @@ class Saml2Client(object):
         return self.config.name
 
     def authn(self, location, session_id, vorg="", scoping=None, log=None,
-                sign=False):
+                sign=False, binding=saml2.BINDING_HTTP_POST):
         spentityid = self._entityid()
         service_url = self.service_url()
         my_name = self._my_name()
