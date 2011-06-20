@@ -144,16 +144,12 @@ def make_soap_enveloped_saml_thingy(thingy, headers=None):
     soap_envelope = soapenv.Envelope()
 
     if headers:
-        eelist = []
-
-        for item in headers:
-            eelist.append(element_to_extension_element(item))
-
-        soap_envelope.header = soapenv.Header()
-        soap_envelope.header.extension_elements = eelist
+        _header = soapenv.Header()
+        _header.add_extension_elements(headers)
+        soap_envelope.header = _header
 
     soap_envelope.body = soapenv.Body()
-    soap_envelope.body.extension_elements = [element_to_extension_element(thingy)]
+    soap_envelope.body.add_extension_element(thingy)
 
     return "%s" % soap_envelope
 
