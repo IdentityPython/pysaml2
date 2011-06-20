@@ -78,8 +78,8 @@ class Client(object):
 
         # So the response should be a AuthnRequest instance in a SOAP envelope
         # body.
-        # Two SOAP header blocks too; paos:Request and ecp:Request
-        # may contain a ecp:RelayState SOAP header block
+        # Two SOAP header blocks; paos:Request and ecp:Request
+        # may also contain a ecp:RelayState SOAP header block
         # If channel-binding was part of the PAOS header any number of
         # <cb:ChannelBindings> header blocks may also be present
         # if 'holder-of-key' option then one or more <ecp:SubjectConfirmation>
