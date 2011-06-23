@@ -22,7 +22,8 @@ to conclude its tasks.
 import saml2
 import time
 import base64
-#import urllib
+import urllib
+from urlparse import urlparse, parse_qs
 
 from saml2.time_util import instant, not_on_or_after
 from saml2.s_utils import signature
@@ -59,6 +60,7 @@ FORM_SPEC = """<form method="post" action="%s">
 </form>"""
 
 LAX = False
+IDPDISC_POLICY = "urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol:single"
 
 class IdpUnspecified(Exception):
     pass
@@ -1022,3 +1024,59 @@ class Saml2Client(object):
                     log.info("NOT OK response from %s" % destination)
 
         return None
+
+    def request_to_discovery_service(self, disc_url, return_url="",
+                                     policy="", returnIDParam="",
+                                     is_passive=False ):
+        """
+        Created the HTTP redirect URL needed to send the user to the
+        discovery service.
+
+        :param disc_url: The URL of the discovery service
+        :param return_url: The discovery service MUST redirect the user agent
+            to this location in response to this request
+        :param policy: A parameter name used to indicate the desired behavior
+            controlling the processing of the discovery service
+        :param returnIDParam: A parameter name used to return the unique
+            identifier of the selected identity provider to the original
+            requester.
+        :param is_passive: A boolean value of "true" or "false" that controls
+            whether the discovery service is allowed to visibly interact with
+            the user agent.
+        :return: A URL
+        """
+        pdir = {"entityID": self._entityid()}
+        if return_url:
+            pdir["return"] = return_url
+        if policy and policy != IDPDISC_POLICY:
+            pdir["policy"] = policy
+        if returnIDParam:
+            pdir["returnIDParam"] = returnIDParam
+        if is_passive:
+            pdir["is_passive"] = "true"
+
+        params = urllib.urlencode(pdir)
+        return "%s?%s" % (disc_url, params)
+
+    def get_idp_from_discovery_service(self, url, returnIDParam=""):
+        """
+        Deal with the reponse url from a Discovery Service
+
+        :param url: the url the user was redirected back to
+        :param returnIDParam: This is where the identifier of the IdP is
+            place if it was specified in the query otherwise in 'entityID'
+        :return: The IdP identifier or "" if none was given
+        """
+
+        part = urlparse(url)
+        qsd = parse_qs(part[4])
+        if returnIDParam:
+            try:
+                return qsd[returnIDParam]
+            except KeyError:
+                return ""
+        else:
+            try:
+                return qsd["entityID"]
+            except KeyError:
+                return ""

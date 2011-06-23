@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import base64
+import urllib
 from urlparse import urlparse, parse_qs
 
 from saml2.client import Saml2Client, LogoutError
@@ -512,3 +513,33 @@ class TestClient:
         assert adq.destination == "entity_id"
         assert adq.resource == "http://example.com/text"
         assert adq.action[0].text == "read"
+
+    def test_request_to_discovery_service(self):
+        disc_url = "http://example.com/saml2/idp/disc"
+        url = self.client.request_to_discovery_service(disc_url)
+        print url
+        assert url == "http://example.com/saml2/idp/disc?entityID=urn%3Amace%3Aexample.com%3Asaml%3Aroland%3Asp"
+
+        url = self.client.request_to_discovery_service(disc_url,
+                            return_url= "http://example.org/saml2/sp/ds")
+
+        print url
+        assert url == "http://example.com/saml2/idp/disc?entityID=urn%3Amace%3Aexample.com%3Asaml%3Aroland%3Asp&return=http%3A%2F%2Fexample.org%2Fsaml2%2Fsp%2Fds"
+
+    def test_get_idp_from_discovery_service(self):
+        pdir = {"entityID": "http://example.org/saml2/idp/sso"}
+        params = urllib.urlencode(pdir)
+        redirect_url = "http://example.com/saml2/sp/disc?%s" % params
+
+        entity_id = self.client.get_idp_from_discovery_service(redirect_url)
+        assert len(entity_id) == 1
+        assert entity_id[0] == pdir["entityID"]
+
+        pdir = {"idpID": "http://example.org/saml2/idp/sso"}
+        params = urllib.urlencode(pdir)
+        redirect_url = "http://example.com/saml2/sp/disc?%s" % params
+
+        entity_id = self.client.get_idp_from_discovery_service(redirect_url,
+                                                               "idpID")
+        assert len(entity_id) == 1
+        assert entity_id[0] == pdir["idpID"]
