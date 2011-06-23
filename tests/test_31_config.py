@@ -201,7 +201,7 @@ def test_idp_1():
     c.context = "idp"
 
     print c
-    assert c.endpoint("single_sign_on_service") == 'http://localhost:8088/'
+    assert c.endpoint("single_sign_on_service")[0] == 'http://localhost:8088/'
 
     attribute_restrictions = c.policy.get_attribute_restriction("")
     assert attribute_restrictions["eduPersonAffiliation"][0].match("staff")
@@ -212,9 +212,9 @@ def test_idp_2():
 
     print c
     assert c.endpoint("single_logout_service",
-                      BINDING_SOAP) is None
+                      BINDING_SOAP) == []
     assert c.endpoint("single_logout_service",
-                        BINDING_HTTP_REDIRECT) == 'http://localhost:8088/'
+                        BINDING_HTTP_REDIRECT) == ["http://localhost:8088/"]
 
     attribute_restrictions = c.policy.get_attribute_restriction("")
     assert attribute_restrictions["eduPersonAffiliation"][0].match("staff")
@@ -289,7 +289,7 @@ def test_sp():
     assert cnf.single_logout_services("urn:mace:example.com:saml:roland:idp",
                             BINDING_HTTP_POST) == ["http://localhost:8088/slo"]
     assert cnf.endpoint("assertion_consumer_service") == \
-                                            "http://lingon.catalogix.se:8087/"
+                                            ["http://lingon.catalogix.se:8087/"]
     assert len(cnf.idps()) == 1
 
 def test_dual():

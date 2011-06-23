@@ -228,20 +228,18 @@ def test_do_idp_sso_descriptor():
     assert _eq(idpsso.keyswv(), ['protocol_support_enumeration', 
                                 'single_sign_on_service', 
                                 'want_authn_requests_signed',
-                                "extensions"])
-    exts = idpsso.extensions
-    assert len(exts.extension_elements) == 2
-    print exts.extension_elements
-    elem0 = exts.extension_elements[0]
-    elem1 = exts.extension_elements[1]
-    inst = saml2.extension_element_to_element(elem0,
+                                "extension_elements"])
+    exts = idpsso.extension_elements
+    assert len(exts) == 2
+    print exts
+    inst = saml2.extension_element_to_element(exts[0],
                                               shibmd.ELEMENT_FROM_STRING,
                                               namespace=shibmd.NAMESPACE)
     assert isinstance(inst, shibmd.Scope)
     assert inst.text == "example.org"
     assert inst.regexp == "false"
 
-    uiinfo = saml2.extension_element_to_element(elem1,
+    uiinfo = saml2.extension_element_to_element(exts[1],
                                               mdui.ELEMENT_FROM_STRING,
                                               namespace=mdui.NAMESPACE)
 
@@ -256,8 +254,7 @@ def test_do_idp_sso_descriptor():
     assert uiinfo.description[0].text == "Exempel bolag"
     assert uiinfo.description[0].lang == "se"
 
-    res = extension_elements_to_elements(exts.extension_elements,[shibmd,
-                                                                  mdui])
+    res = extension_elements_to_elements(exts,[shibmd, mdui])
 
     assert len(res) == 2
     # one is a shibmd.Scope instance and the other a mdui.UIInfo instance
@@ -266,10 +263,10 @@ def test_do_idp_sso_descriptor():
     elif isinstance(res[1], shibmd.Scope):
         assert isinstance(res[0], mdui.UIInfo)
 
-    found = exts.find_extensions(mdui.UIInfo.c_tag, mdui.NAMESPACE)
+    found = idpsso.find_extensions(mdui.UIInfo.c_tag, mdui.NAMESPACE)
     assert len(found) == 1
 
-    elem = exts.extensions_as_elements(mdui.UIInfo.c_tag, mdui)
+    elem = idpsso.extensions_as_elements(mdui.UIInfo.c_tag, mdui)
     assert len(elem) == 1
     assert isinstance(elem[0], mdui.UIInfo)
 

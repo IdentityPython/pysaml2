@@ -347,7 +347,7 @@ class TestServer1():
 
         logout_request = self.client.construct_logout_request(
                     subject_id="foba0001",
-                    destination = "http://localhost:8088/slo",
+                    destination = "http://localhost:8088/slop",
                     issuer_entity_id = "urn:mace:example.com:saml:roland:idp",
                     reason = "I'm tired of this")
 
