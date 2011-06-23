@@ -24,7 +24,6 @@ import sys
 from decorator import decorator
 import xmldsig as ds
 
-import saml2
 from saml2 import md, samlp, BINDING_HTTP_POST, BINDING_HTTP_REDIRECT
 from saml2 import BINDING_SOAP, class_name
 
@@ -46,7 +45,7 @@ from saml2.sigver import pem_format
 from saml2.validate import valid_instance, NotValid
 
 @decorator
-def keep_updated(func, self, entity_id, *args, **kwargs):
+def keep_updated(func, self=None, entity_id=None, *args, **kwargs):
     #print "In keep_updated"
     try:
         if "valid_until" in self.entity[entity_id]:
@@ -432,14 +431,14 @@ class MetaData(object):
         compliance before it is imported.
         
         :param url: The URL pointing to the metadata
-        :param hexdigest: A 40 character long hexdigest
+        :param cert: A cert to use for checking the signature
         :return: True if the import worked out, otherwise False
         """
         (response, content) = self.http.request(url)
         if response.status == 200:
-            if verify_signature(content, self.xmlsec_binary, cert, "pem",
-                    "%s:%s" % (md.EntitiesDescriptor.c_namespace,
-                            md.EntitiesDescriptor.c_tag)):
+            if verify_signature(content, self.xmlsec_binary, cert,
+                    node_name="%s:%s" % (md.EntitiesDescriptor.c_namespace,
+                                        md.EntitiesDescriptor.c_tag)):
                 self.import_metadata(content, (url, cert))
                 return True
         else:
@@ -596,7 +595,7 @@ class MetaData(object):
         certs.
         
         :param identifier: The location or entityID of the entity
-        :param use: The usage of the cert ("signing"/"encryption")
+        :param usage: The usage of the cert ("signing"/"encryption")
         :return: a list of 2-tuples (file pointer,file name) that represents
             certificates used by the IdP at the location loc.
         """
@@ -643,7 +642,7 @@ class MetaData(object):
         The name is either the display name, the name or the url
         ,in that order, for the organization.
         
-        :param entityid: The Entity ID
+        :param entity_id: The Entity ID
         :return: A name
         """
 
@@ -658,7 +657,7 @@ class MetaData(object):
                     try:
                         name = org.organization_url[0]
                     except IndexError:
-                        pass
+                        name = ""
             
             if name:
                 name = name.text
@@ -1050,8 +1049,7 @@ def do_sp_sso_descriptor(conf, cert=None):
     if conf.optional_attributes:
         requested_attributes.extend(do_requested_attribute(
                                             conf.optional_attributes,
-                                            conf.attribute_converters,
-                                            is_required="false"))
+                                            conf.attribute_converters))
 
     if requested_attributes:
         spsso.attribute_consuming_service = [md.AttributeConsumingService(
