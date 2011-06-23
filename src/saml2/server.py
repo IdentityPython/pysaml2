@@ -284,15 +284,26 @@ class Server(object):
         """
         
         response = {}
-        
+
+        # The addresses I should receive messages like this on
         receiver_addresses = self.conf.endpoint("single_sign_on_service",
-                                                binding)
+                                                 binding)
+        if self.debug and self.log:
+            self.log.info("receiver addresses: %s" % receiver_addresses)
+            
         authn_request = AuthnRequest(self.sec, self.conf.attribute_converters,
                                             receiver_addresses)
         authn_request = authn_request.loads(enc_request)
+
+        if self.debug and self.log:
+            self.log.info("Loaded authn_request")
+
         if authn_request:
             authn_request = authn_request.verify()
-        
+
+        if self.debug and self.log:
+            self.log.info("Verified authn_request")
+
         if not authn_request:
             return None
             
