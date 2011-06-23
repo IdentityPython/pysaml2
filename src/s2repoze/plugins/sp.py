@@ -21,13 +21,13 @@ WSGI application.
 import cgi
 import platform
 import shelve
+from urlparse import parse_qs
 
 from paste.httpexceptions import HTTPSeeOther
 from paste.httpexceptions import HTTPNotImplemented
 from paste.httpexceptions import HTTPInternalServerError
 from paste.request import parse_dict_querystring
 from paste.request import construct_url
-
 from zope.interface import implements
 
 from repoze.who.interfaces import IChallenger, IIdentifier, IAuthenticator
@@ -149,7 +149,7 @@ class SAML2Plugin(FormPluginBase):
         idps = self.conf.idps()
         
         if self.log:
-           self.log.info("IdP URL: %s" % idps)
+            self.log.info("IdP URL: %s" % idps)
 
         if len( idps ) == 1:
             # idps is a dictionary
@@ -158,17 +158,20 @@ class SAML2Plugin(FormPluginBase):
             return 1, HTTPInternalServerError(detail='Misconfiguration')
         else:
             if self.wayf:
-                wayf_selected = environ.get('s2repose.wayf_selected','')
-                if not wayf_selected:
+                query = environ.get('s2repoze.body','')
+                if self.log:
+                    self.log.info("<_pick_idp> query: %s" % query)
+
+                if query:
+                    wayf_selected = dict(parse_qs(query))["wayf_selected"][0]
+                    self.log.info("Choosen IdP: '%s'" % wayf_selected)
+                    idp_entity_id = wayf_selected
+                else:
                     sid_ = sid()
                     self.outstanding_queries[sid_] = came_from
                     self.log.info("Redirect to WAYF function: %s" % self.wayf)
-                    #self.log.info("env: %s" % (environ,))
-                    return (1, HTTPSeeOther(headers = [('Location', 
+                    return (1, HTTPSeeOther(headers = [('Location',
                                                 "%s?%s" % (self.wayf, sid_))]))
-                else:
-                    self.log.info("Choosen IdP: '%s'" % wayf_selected)
-                    idp_entity_id = wayf_selected
             else:
                 return 1, HTTPNotImplemented(detail='No WAYF present!')
 
