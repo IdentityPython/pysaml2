@@ -27,6 +27,11 @@ import xmldsig as ds
 import saml2
 from saml2 import md, samlp, BINDING_HTTP_POST, BINDING_HTTP_REDIRECT
 from saml2 import BINDING_SOAP, class_name
+
+from saml2 import shibmd
+from saml2 import mdui
+from saml2 import idpdisc
+
 from saml2.s_utils import factory
 from saml2.s_utils import signature
 from saml2.s_utils import sid
@@ -39,8 +44,6 @@ from saml2.sigver import pre_signature_part
 from saml2.sigver import make_temp, cert_from_key_info, verify_signature
 from saml2.sigver import pem_format
 from saml2.validate import valid_instance, NotValid
-from saml2 import shibmd
-from saml2 import mdui
 
 @decorator
 def keep_updated(func, self, entity_id, *args, **kwargs):
@@ -945,6 +948,10 @@ def do_uiinfo(conf):
     
     return uii
 
+def do_idpdisc(discovery_response):
+    return idpdisc.DiscoveryResponse(index="0", location=discovery_response,
+                                     binding=idpdisc.NAMESPACE)
+
 ENDPOINTS = {
     "sp": {
         "artifact_resolution_service": (md.ArtifactResolutionService, True),
@@ -1065,18 +1072,8 @@ def do_sp_sso_descriptor(conf, cert=None):
         except KeyError:
             pass
 
-    # if "discovery_service" in sp:        
-    #     spsso.extensions= {"extension_elements":[
-    #         {
-    #         "tag":"DiscoveryResponse",
-    #         "namespace":md.IDPDISC,
-    #         "attributes": {
-    #             "index":"1",
-    #             "binding": md.IDPDISC,
-    #             "location":sp["url"]
-    #             }
-    #         }
-    #     ]}
+    if conf.discovery_response:
+        spsso.add_extension_element(do_idpdisc(conf.discovery_response))
 
     return spsso
 
@@ -1099,9 +1096,6 @@ def do_idp_sso_descriptor(conf, cert=None):
 
     if conf.ui_info:
         idpsso.add_extension_element(do_uiinfo(conf))
-
-    if conf.discovery_response:
-        idpsso.add_extension_element(do_idpdisc(conf.discovery_response))
 
     if cert:
         idpsso.key_descriptor = do_key_descriptor(cert)

@@ -4,6 +4,7 @@ from saml2 import md
 from saml2 import BINDING_HTTP_POST
 from saml2 import shibmd
 from saml2 import mdui
+from saml2 import idpdisc
 from saml2 import extension_elements_to_elements
 from saml2.attribute_converter import ac_factory
 from saml2.saml import NAME_FORMAT_URI
@@ -207,7 +208,34 @@ def test_do_sp_sso_descriptor():
     assert acs.requested_attribute[0].name == 'urn:oid:2.5.4.4'
     assert acs.requested_attribute[0].name_format == NAME_FORMAT_URI
     assert acs.requested_attribute[0].is_required == "true"
+
+def test_do_sp_sso_descriptor_2():
+    SP["service"]["sp"]["discovery_response"] = "http://example.com/sp/ds"
     
+    conf = SPConfig().load(SP, metadata_construction=True)
+    spsso = metadata.do_sp_sso_descriptor(conf)
+
+    assert isinstance(spsso, md.SPSSODescriptor)
+    print spsso.keyswv()
+    assert _eq(spsso.keyswv(), ['authn_requests_signed',
+                                'attribute_consuming_service',
+                                'single_logout_service',
+                                'protocol_support_enumeration',
+                                'assertion_consumer_service',
+                                'want_assertions_signed',
+                                'extension_elements'])
+
+    exts = spsso.extension_elements
+    assert len(exts) == 1
+    print exts
+    idpd = saml2.extension_element_to_element(exts[0],
+                                              idpdisc.ELEMENT_FROM_STRING,
+                                              namespace=idpdisc.NAMESPACE)
+    print idpd
+    assert idpd.location == "http://example.com/sp/ds"
+    assert idpd.index == "0"
+    assert idpd.binding == "urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol"
+
 def test_entity_description():
     #confd = eval(open("../tests/server.config").read())
     confd = SPConfig().load_file("server_conf")
