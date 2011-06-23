@@ -1,22 +1,27 @@
 #!/usr/bin/env python
 
 #
-# Generated Mon Jul 12 22:05:35 2010 by parse_xsd.py version 0.2.
+# Generated Thu Jun 23 09:01:47 2011 by parse_xsd.py version 0.4.
 #
 
 import saml2
 from saml2 import md
 
-NAMESPACE = "urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol"
+NAMESPACE = 'urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol'
 
 class DiscoveryResponse(md.IndexedEndpointType_):
-    """The idpdisc:DiscoveryResponse element"""
+    """The urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol:DiscoveryResponse element """
+
     c_tag = 'DiscoveryResponse'
     c_namespace = NAMESPACE
-    
+    c_children = md.IndexedEndpointType_.c_children.copy()
+    c_attributes = md.IndexedEndpointType_.c_attributes.copy()
+    c_child_order = md.IndexedEndpointType_.c_child_order[:]
+    c_cardinality = md.IndexedEndpointType_.c_cardinality.copy()
+
 def discovery_response_from_string(xml_string):
-    """ Create DiscoveryResponse instance from an XML string """
     return saml2.create_class_from_xml_string(DiscoveryResponse, xml_string)
+
 
 ELEMENT_FROM_STRING = {
     DiscoveryResponse.c_tag: discovery_response_from_string,
@@ -25,6 +30,7 @@ ELEMENT_FROM_STRING = {
 ELEMENT_BY_TAG = {
     'DiscoveryResponse': DiscoveryResponse,
 }
+
 
 def factory(tag, **kwargs):
     return ELEMENT_BY_TAG[tag](**kwargs)
