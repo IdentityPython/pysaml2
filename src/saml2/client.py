@@ -309,7 +309,11 @@ class Saml2Client(object):
         return self.config.single_sign_on_services(eids.keys()[0])[0]
         
     def service_url(self, binding=BINDING_HTTP_POST):
-        return self.config.endpoint("assertion_consumer_service", binding)
+        _res = self.config.endpoint("assertion_consumer_service", binding)
+        if _res:
+            return _res[0]
+        else:
+            return None
 
     def _my_name(self):
         return self.config.name
