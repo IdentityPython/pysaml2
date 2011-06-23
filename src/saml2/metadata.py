@@ -46,9 +46,13 @@ from saml2 import mdui
 def keep_updated(func, self, entity_id, *args, **kwargs):
     #print "In keep_updated"
     try:
-        if not valid(self.entity[entity_id]["valid_until"]):
-            self.reload_entity(entity_id)
-    except KeyError:
+        if "valid_until" in self.entity[entity_id]:
+            try:
+                if not valid(self.entity[entity_id]["valid_until"]):
+                    self.reload_entity(entity_id)
+            except KeyError:
+                pass
+    except KeyError: # Unknown entity, handle downstream
         pass
     return func(self, entity_id, *args, **kwargs)
 
@@ -110,7 +114,7 @@ class MetaData(object):
         descriptor and store the information in a way which is easily
         accessible.
         
-        :param entity_descriptor: A EntityDescriptor instance
+        :param entity_descr: A EntityDescriptor instance
         """
 
         afd = entity_descr.affiliation_descriptor
@@ -428,7 +432,7 @@ class MetaData(object):
         :param hexdigest: A 40 character long hexdigest
         :return: True if the import worked out, otherwise False
         """
-        (response, content) = self.http.request(url, "GET")
+        (response, content) = self.http.request(url)
         if response.status == 200:
             if verify_signature(content, self.xmlsec_binary, cert, "pem",
                     "%s:%s" % (md.EntitiesDescriptor.c_namespace,
@@ -1086,28 +1090,18 @@ def do_idp_sso_descriptor(conf, cert=None):
             setattr(idpsso, endpoint, instlist)
 
     if conf.scope:
-        extensions = md.Extensions()
-        _ext_elems = extensions.extension_elements
         for scope in conf.scope:
             mdscope = shibmd.Scope()
             mdscope.text = scope
             # unless scope contains '*'/'+'/'?' assume non regexp ?
             mdscope.regexp = "false"
-            ext = saml2.element_to_extension_element(mdscope)
-            _ext_elems.append(ext)
-
-        idpsso.extensions = extensions
+            idpsso.add_extension_element(mdscope)
 
     if conf.ui_info:
-        if not idpsso.extensions:
-            extensions = md.Extensions()
-            _ext_elems = extensions.extension_elements
-        else:
-            _ext_elems = idpsso.extensions.extension_elements
+        idpsso.add_extension_element(do_uiinfo(conf))
 
-        uii = do_uiinfo(conf)
-        ext = saml2.element_to_extension_element(uii)
-        _ext_elems.append(ext)
+    if conf.discovery_response:
+        idpsso.add_extension_element(do_idpdisc(conf.discovery_response))
 
     if cert:
         idpsso.key_descriptor = do_key_descriptor(cert)
