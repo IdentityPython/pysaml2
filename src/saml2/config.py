@@ -37,7 +37,8 @@ SP_ARGS = [
             "authn_requests_signed",
             "name_form",
             "endpoints",
-            "ui_info"
+            "ui_info",
+            "discovery_response",
             ]
 
 AA_IDP_ARGS = ["want_authn_requests_signed",
@@ -236,7 +237,7 @@ class Config(object):
 
         :param service: The service the endpoint should support
         :param binding: The expected binding
-        :return: At the most one endpoint that matches the given restrictions
+        :return: All the endpoints that matches the given restrictions
         """
         res = []
         for endpspec in self.endpoints[service]:
@@ -248,7 +249,7 @@ class Config(object):
                 res.append(endpspec)
     
         try:
-            return res[0]
+            return res
         except IndexError:
             return None
 
