@@ -31,8 +31,8 @@ import xmldsig as ds
 from saml2 import saml
 from saml2 import samlp
 from saml2 import md 
-from saml2 import idpdisc
-from saml2 import shibmd
+from saml2.extension import idpdisc
+from saml2.extension import shibmd
 
 from saml2 import extension_element_to_element
 import md_data, ds_data

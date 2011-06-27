@@ -2,10 +2,12 @@ import saml2
 from saml2 import metadata
 from saml2 import md
 from saml2 import BINDING_HTTP_POST
-from saml2 import shibmd
-from saml2 import mdui
-from saml2 import idpdisc
 from saml2 import extension_elements_to_elements
+
+from saml2.extension import shibmd
+from saml2.extension import mdui
+from saml2.extension import idpdisc
+
 from saml2.attribute_converter import ac_factory
 from saml2.saml import NAME_FORMAT_URI
 from saml2.config import SPConfig, IdPConfig
