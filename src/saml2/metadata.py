@@ -47,6 +47,7 @@ from saml2.sigver import pre_signature_part
 from saml2.sigver import make_temp, cert_from_key_info, verify_signature
 from saml2.sigver import pem_format
 from saml2.validate import valid_instance, NotValid
+from saml2.country_codes import D_COUNTRIES
 
 def metadata_extension_modules():
     _pre = "saml2.extension"
@@ -786,15 +787,56 @@ class MetaData(object):
         weight: 0
 
         """
-        if not lang: lang = ["en"]
+        if not lang:
+            lang = ["en"]
+            
         result = []
         for entity_id, entity in self.entity.items():
             try:
-                _sso = entity['idp_sso']
-                rdict = {'entityID': entity_id,
-                         'title': self._orgname(entity['organization'], lang)}
+                for _sso in entity['idp_sso']:
+                    rdict = {'entityID': entity_id,
+                             'title': self._orgname(entity['organization'], lang)}
 
-                result.append(rdict)
+                    try:
+                        eelm = _sso.e_e_
+                        try:
+                            coco = []
+                            for scope in eelm["Scope"]:
+                                if scope.regexp == "false":
+                                    dom = scope.text.strip()[-3:]
+                                    if dom[0] and dom[-2:].upper() in D_COUNTRIES:
+                                        coco.append(dom[-2:].lower())
+                            if coco:
+                                rdict["country"] = coco[0]
+                        except KeyError:
+                            pass
+
+                        try:
+                            for uiinfo in eelm["UIInfo"]:
+                                for disp_name in uiinfo.display_name:
+                                    if disp_name.lang in lang:
+                                        rdict["displayName"] = disp_name.text
+                                        break
+                                for description in uiinfo.display_name:
+                                    if description.lang in lang:
+                                        rdict["descr"] = description.text
+                                        break
+                        except KeyError:
+                            pass
+
+                        try:
+                            for dhint in eelm["DiscoHints"]:
+                                for lochint in dhint.geo_location_hint:
+                                    # RFC XXX format lat,long,alt
+                                    part = lochint.split(',')
+                                    rdict["geo"] = {"lat":part[0], "lon":part[1]}
+                                    break
+                        except KeyError:
+                            pass
+                    except AttributeError:
+                        pass
+
+                    result.append(rdict)
             except KeyError:
                 pass
 
