@@ -27,9 +27,13 @@ import xmldsig as ds
 from saml2 import md, samlp, BINDING_HTTP_POST, BINDING_HTTP_REDIRECT
 from saml2 import BINDING_SOAP, class_name
 
-from saml2 import shibmd
-from saml2 import mdui
-from saml2 import idpdisc
+# All included below this is only to save some space
+from saml2.extension import shibmd
+from saml2.extension import mdui
+from saml2.extension import idpdisc
+
+from saml2 import extension_elements_as_dict
+from saml2.extension import *
 
 from saml2.s_utils import factory
 from saml2.s_utils import signature
@@ -43,6 +47,14 @@ from saml2.sigver import pre_signature_part
 from saml2.sigver import make_temp, cert_from_key_info, verify_signature
 from saml2.sigver import pem_format
 from saml2.validate import valid_instance, NotValid
+
+def metadata_extension_modules():
+    _pre = "saml2.extension"
+    res = []
+    for key, mod in sys.modules.items():
+        if key.startswith(_pre) and key != _pre and mod:
+            res.append(mod)
+    return res
 
 @decorator
 def keep_updated(func, self=None, entity_id=None, *args, **kwargs):
@@ -75,7 +87,17 @@ class MetaData(object):
         self._import = {}
         self._wants = {}
         self._keys = {}
-    
+        self._extension_modules = metadata_extension_modules()
+
+    def _extensions(self, entity):
+        if entity.extensions:
+            if entity.extensions.extension_elements:
+                entity.e_e_ = extension_elements_as_dict(
+                                            entity.extensions.extension_elements,
+                                            self._extension_modules)
+            if entity.extensions.extension_attributes:
+                entity.e_a_ = None
+
     def _certs(self, key_descriptors, typ):
         certs = {}
         for key_desc in key_descriptors:
@@ -120,8 +142,9 @@ class MetaData(object):
         """
 
         afd = entity_descr.affiliation_descriptor
-    
+
         if afd:
+            self._extensions(afd)
             members = [member.text.strip() for member in afd.affiliate_member]
         
             if members:
@@ -154,7 +177,9 @@ class MetaData(object):
             ssds.append(tssd)
             certs = self._certs(tssd.key_descriptor, "pem")
             self._add_certs(entity_descr.entity_id, certs)
-            
+
+            self._extensions(tssd)
+
             for acs in tssd.attribute_consuming_service:
                 for attr in acs.requested_attribute:
                     #print "==", attr
@@ -205,7 +230,9 @@ class MetaData(object):
             self._add_certs(entity_descr.entity_id, certs)
             for sso in tidp.single_sign_on_service:
                 self._add_certs(sso.location, certs)
-        
+
+            self._extensions(tidp)
+
         if idps:
             entity[tag] = idps
 
@@ -242,7 +269,8 @@ class MetaData(object):
                 continue
             
             taad.attribute_service = aserv
-            
+            self._extensions(taad)
+
             # gather all the certs and place them in temporary files
             certs = self._certs(taad.key_descriptor, "pem")
             self._add_certs(entity_descr.entity_id, certs)
@@ -302,7 +330,8 @@ class MetaData(object):
                 continue
 
             pdp.authz_service = aserv
-
+            self._extensions(pdp)
+            
             # gather all the certs and place them in temporary files
             certs = self._certs(pdp.key_descriptor, "pem")
             self._add_certs(entity_descr.entity_id, certs)
@@ -745,6 +774,32 @@ class MetaData(object):
     def ui_info(self, entity_id, service="idp_sso"):
         inst = self.entity[entity_id][service]
 
+    def export_discojuice_json(self, lang=None):
+        """
+        The JSON entry contains these attributes:
+        entityID: entity_id
+        title: mdui.UIInfo.display_name
+        displayName: mdui.UIInfo.display_name
+        descr: mdui.UIInfo.description
+        country: ?
+        geo: mdui.DiscoHints.geo_location_hint,
+        weight: 0
+
+        """
+        if not lang: lang = ["en"]
+        result = []
+        for entity_id, entity in self.entity.items():
+            try:
+                _sso = entity['idp_sso']
+                rdict = {'entityID': entity_id,
+                         'title': self._orgname(entity['organization'], lang)}
+
+                result.append(rdict)
+            except KeyError:
+                pass
+
+        return result
+    
 DEFAULTS = {
     "want_assertions_signed": "true",
     "authn_requests_signed": "false",
@@ -862,7 +917,7 @@ def do_uiinfo(conf):
         return None
 
     uii = mdui.UIInfo()
-    for attr in ["information_url", "display_name", "description",
+    for attr in ['display_name', 'description', "information_url",
                  'privacy_statement_url']:
         try:
             val = _uiinfo[attr]

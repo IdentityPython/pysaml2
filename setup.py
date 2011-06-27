@@ -44,7 +44,8 @@ setup(
     url='https://code.launchpad.net/~roland-hedberg/pysaml2/main',
 
     packages=['saml2', 'xmldsig', 'xmlenc', 's2repoze',
-                's2repoze.plugins', "saml2/profile", "saml2/schema"],
+                's2repoze.plugins', "saml2/profile", "saml2/schema",
+                "saml2/extension"],
 
     package_dir = {'':'src'},
 
