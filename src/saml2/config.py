@@ -126,6 +126,9 @@ class Config(object):
         else:
             return object.__getattribute__(self, item)
 
+    def setattr(self, context, attr, val):
+        self._attr[context][attr] = val
+
     def load_special(self, cnf, typ, metadata_construction=False):
         for arg in SPEC[typ]:
             try:
