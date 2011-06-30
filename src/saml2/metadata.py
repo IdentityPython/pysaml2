@@ -21,11 +21,14 @@ Contains classes and functions to alleviate the handling of SAML metadata
 
 import httplib2
 import sys
-from decorator import decorator
 import xmldsig as ds
+import cjson
+
+from decorator import decorator
 
 from saml2 import md, samlp, BINDING_HTTP_POST, BINDING_HTTP_REDIRECT
 from saml2 import BINDING_SOAP, class_name
+#from saml2 import saml
 
 # All included below this is only to save some space
 from saml2.extension import shibmd
@@ -56,6 +59,9 @@ def metadata_extension_modules():
         if key.startswith(_pre) and key != _pre and mod:
             res.append(mod)
     return res
+
+def clean(txt):
+    return " ".join([x.strip() for x in txt.split("\n")]).strip()
 
 @decorator
 def keep_updated(func, self=None, entity_id=None, *args, **kwargs):
@@ -788,7 +794,7 @@ class MetaData(object):
 
         """
         if not lang:
-            lang = ["en"]
+            lang = ["en", ""]
             
         result = []
         for entity_id, entity in self.entity.items():
@@ -814,13 +820,23 @@ class MetaData(object):
                         try:
                             for uiinfo in eelm["UIInfo"]:
                                 for disp_name in uiinfo.display_name:
-                                    if disp_name.lang in lang:
-                                        rdict["displayName"] = disp_name.text
+                                    if disp_name.lang in lang or \
+                                       disp_name.lang is None:
+                                        rdict["displayName"] = clean(disp_name.text)
+                                        if rdict['title'] == "":
+                                            rdict["title"] = rdict["displayName"]
                                         break
-                                for description in uiinfo.display_name:
-                                    if description.lang in lang:
-                                        rdict["descr"] = description.text
+                                for description in uiinfo.description:
+                                    if description.lang in lang or \
+                                        description.lang is None:
+                                        rdict["descr"] = clean(description.text)
                                         break
+                                for logo in uiinfo.logo:
+                                    if logo.lang in lang or \
+                                        logo.lang is None:
+                                        rdict["logo"] = clean(logo.text)
+                                        break
+
                         except KeyError:
                             pass
 
@@ -840,7 +856,7 @@ class MetaData(object):
             except KeyError:
                 pass
 
-        return result
+        return cjson.encode(result)
     
 DEFAULTS = {
     "want_assertions_signed": "true",
@@ -1168,7 +1184,9 @@ def do_sp_sso_descriptor(conf, cert=None):
             pass
 
     if conf.discovery_response:
-        spsso.add_extension_element(do_idpdisc(conf.discovery_response))
+        if spsso.extensions is None:
+            spsso.extensions = md.Extensions()
+        spsso.extensions.add_extension_element(do_idpdisc(conf.discovery_response))
 
     return spsso
 
@@ -1182,15 +1200,19 @@ def do_idp_sso_descriptor(conf, cert=None):
             setattr(idpsso, endpoint, instlist)
 
     if conf.scope:
+        if idpsso.extensions is None:
+            idpsso.extensions = md.Extensions()
         for scope in conf.scope:
             mdscope = shibmd.Scope()
             mdscope.text = scope
             # unless scope contains '*'/'+'/'?' assume non regexp ?
             mdscope.regexp = "false"
-            idpsso.add_extension_element(mdscope)
+            idpsso.extensions.add_extension_element(mdscope)
 
     if conf.ui_info:
-        idpsso.add_extension_element(do_uiinfo(conf))
+        if idpsso.extensions is None:
+            idpsso.extensions = md.Extensions()
+        idpsso.extensions.add_extension_element(do_uiinfo(conf))
 
     if cert:
         idpsso.key_descriptor = do_key_descriptor(cert)
