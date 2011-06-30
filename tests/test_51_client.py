@@ -531,15 +531,14 @@ class TestClient:
         params = urllib.urlencode(pdir)
         redirect_url = "http://example.com/saml2/sp/disc?%s" % params
 
-        entity_id = self.client.get_idp_from_discovery_service(redirect_url)
-        assert len(entity_id) == 1
-        assert entity_id[0] == pdir["entityID"]
+        entity_id = self.client.get_idp_from_discovery_service(url=redirect_url)
+        assert entity_id == "http://example.org/saml2/idp/sso"
 
         pdir = {"idpID": "http://example.org/saml2/idp/sso"}
         params = urllib.urlencode(pdir)
         redirect_url = "http://example.com/saml2/sp/disc?%s" % params
 
-        entity_id = self.client.get_idp_from_discovery_service(redirect_url,
-                                                               "idpID")
-        assert len(entity_id) == 1
-        assert entity_id[0] == pdir["idpID"]
+        entity_id = self.client.get_idp_from_discovery_service(url=redirect_url,
+                                                        returnIDParam="idpID")
+
+        assert entity_id == "http://example.org/saml2/idp/sso"

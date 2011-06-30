@@ -225,9 +225,9 @@ def test_do_sp_sso_descriptor_2():
                                 'protocol_support_enumeration',
                                 'assertion_consumer_service',
                                 'want_assertions_signed',
-                                'extension_elements'])
+                                'extensions'])
 
-    exts = spsso.extension_elements
+    exts = spsso.extensions.extension_elements
     assert len(exts) == 1
     print exts
     idpd = saml2.extension_element_to_element(exts[0],
@@ -258,8 +258,8 @@ def test_do_idp_sso_descriptor():
     assert _eq(idpsso.keyswv(), ['protocol_support_enumeration', 
                                 'single_sign_on_service', 
                                 'want_authn_requests_signed',
-                                "extension_elements"])
-    exts = idpsso.extension_elements
+                                "extensions"])
+    exts = idpsso.extensions.extension_elements
     assert len(exts) == 2
     print exts
     inst = saml2.extension_element_to_element(exts[0],
@@ -293,10 +293,11 @@ def test_do_idp_sso_descriptor():
     elif isinstance(res[1], shibmd.Scope):
         assert isinstance(res[0], mdui.UIInfo)
 
-    found = idpsso.find_extensions(mdui.UIInfo.c_tag, mdui.NAMESPACE)
+    found = idpsso.extensions.find_extensions(mdui.UIInfo.c_tag,
+                                              mdui.NAMESPACE)
     assert len(found) == 1
 
-    elem = idpsso.extensions_as_elements(mdui.UIInfo.c_tag, mdui)
+    elem = idpsso.extensions.extensions_as_elements(mdui.UIInfo.c_tag, mdui)
     assert len(elem) == 1
     assert isinstance(elem[0], mdui.UIInfo)
 
