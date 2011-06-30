@@ -89,14 +89,14 @@ class SAML2Plugin(FormPluginBase):
     implements(IChallenger, IIdentifier, IAuthenticator, IMetadataProvider)
     
     def __init__(self, rememberer_name, config, saml_client, 
-                    wayf, _cache, debug, sid_store=None):
+                    wayf, _cache, debug, sid_store=None, discovery=""):
         FormPluginBase.__init__(self)
         
         self.rememberer_name = rememberer_name
         self.debug = debug        
         self.wayf = wayf
         self.saml_client = saml_client
-        
+        self.discovery = discovery
         self.conf = config
         self.log = None
                     
@@ -151,30 +151,47 @@ class SAML2Plugin(FormPluginBase):
         if self.log:
             self.log.info("IdP URL: %s" % idps)
 
+        idp_entity_id = ""
         if len( idps ) == 1:
             # idps is a dictionary
             idp_entity_id = idps.keys()[0]
         elif not len(idps):
             return 1, HTTPInternalServerError(detail='Misconfiguration')
         else:
-            if self.wayf:
-                query = environ.get('s2repoze.body','')
-                if self.log:
-                    self.log.info("<_pick_idp> query: %s" % query)
+            if self.log:
+                self.log.info("ENVIRON: %s" % environ)
+            query = environ.get('s2repoze.body','')
+            if not query:
+                query = environ.get("QUERY_STRING","")
+                
+            if self.log:
+                self.log.info("<_pick_idp> query: %s" % query)
 
+            if self.wayf:
                 if query:
                     wayf_selected = dict(parse_qs(query))["wayf_selected"][0]
-                    self.log.info("Choosen IdP: '%s'" % wayf_selected)
                     idp_entity_id = wayf_selected
                 else:
                     sid_ = sid()
                     self.outstanding_queries[sid_] = came_from
                     self.log.info("Redirect to WAYF function: %s" % self.wayf)
-                    return (1, HTTPSeeOther(headers = [('Location',
-                                                "%s?%s" % (self.wayf, sid_))]))
+                    return 1, HTTPSeeOther(headers = [('Location',
+                                                "%s?%s" % (self.wayf, sid_))])
+            elif self.discovery:
+                if query:
+                    idp_entity_id = self.saml_client.get_idp_from_discovery_service(
+                                            query=environ.get("QUERY_STRING"))
+                else:
+                    sid_ = sid()
+                    self.outstanding_queries[sid_] = came_from
+                    self.log.info("Redirect to Discovery Service function")
+                    loc = self.saml_client.request_to_discovery_service(
+                                                                self.discovery)
+                    return 1, HTTPSeeOther(headers = [('Location',loc)])
             else:
-                return 1, HTTPNotImplemented(detail='No WAYF present!')
+                return 1, HTTPNotImplemented(detail='No WAYF or DJ present!')
 
+        self.log.info("Choosen IdP: '%s'" % idp_entity_id)
         return 0, idp_entity_id
         
     #### IChallenger ####
@@ -311,7 +328,10 @@ class SAML2Plugin(FormPluginBase):
         post = self._get_post(environ)
 
         if self.debug and self.log:
-            self.log.info('[sp.identify] post keys: %s' % (post.keys(),))
+            try:
+                self.log.info('[sp.identify] post keys: %s' % (post.keys(),))
+            except TypeError:
+                pass
             
         # Not for me, put the post back where next in line can find it
         try:
@@ -423,7 +443,8 @@ def make_plugin(rememberer_name=None, # plugin for remember
                  wayf="",
                  debug=0,
                  sid_store="",
-                 identity_cache=""
+                 identity_cache="",
+                 discovery=""
                  ):
     
     if saml_conf is "":
@@ -440,7 +461,7 @@ def make_plugin(rememberer_name=None, # plugin for remember
                         virtual_organization=virtual_organization)
 
     plugin = SAML2Plugin(rememberer_name, conf, scl, wayf, cache, debug,
-                        sid_store)
+                        sid_store, discovery)
     return plugin
 
 # came_from = re.sub(r'ticket=[^&]*&?', '', came_from)
