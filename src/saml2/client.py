@@ -336,7 +336,7 @@ class Saml2Client(object):
 
         return self.authn_request(session_id, location, service_url,
                                   spentityid, my_name, vorg, scoping, log,
-                                  sign)
+                                  sign, binding=binding)
 
     def authenticate(self, entityid=None, relay_state="",
                      binding=saml2.BINDING_HTTP_REDIRECT,
@@ -1058,7 +1058,7 @@ class Saml2Client(object):
         params = urllib.urlencode(pdir)
         return "%s?%s" % (disc_url, params)
 
-    def get_idp_from_discovery_service(self, url, returnIDParam=""):
+    def get_idp_from_discovery_service(self, query="", url="", returnIDParam=""):
         """
         Deal with the reponse url from a Discovery Service
 
@@ -1068,15 +1068,21 @@ class Saml2Client(object):
         :return: The IdP identifier or "" if none was given
         """
 
-        part = urlparse(url)
-        qsd = parse_qs(part[4])
+        if url:
+            part = urlparse(url)
+            qsd = parse_qs(part[4])
+        elif query:
+            qsd = parse_qs(query)
+        else:
+            qsd = {}
+            
         if returnIDParam:
             try:
-                return qsd[returnIDParam]
+                return qsd[returnIDParam][0]
             except KeyError:
                 return ""
         else:
             try:
-                return qsd["entityID"]
+                return qsd["entityID"][0]
             except KeyError:
                 return ""
