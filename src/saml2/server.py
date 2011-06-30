@@ -379,7 +379,7 @@ class Server(object):
 
     def _response(self, in_response_to, consumer_url=None, sp_entity_id=None, 
                     identity=None, name_id=None, status=None, sign=False,
-                    policy=Policy(), authn=None, authn_decl=None):
+                    policy=Policy(), authn=None, authn_decl=None, issuer=None):
         """ Create a Response that adhers to the ??? profile.
         
         :param in_response_to: The session identifier of the request
@@ -393,7 +393,8 @@ class Server(object):
         :param policy: The attribute release policy for this instance
         :param authn: A 2-tuple denoting the authn class and the authn
             authority
-        :param authn_decl: 
+        :param authn_decl:
+        :param issuer: The issuer of the response
         :return: A Response instance
         """
                 
@@ -401,8 +402,11 @@ class Server(object):
 
         if not status: 
             status = success_status_factory()
-            
-        _issuer = self.issuer()
+
+        if issuer is None:
+            _issuer = self.issuer()
+        else:
+            _issuer = issuer
         
         response = response_factory(
             issuer=_issuer,
@@ -462,7 +466,8 @@ class Server(object):
     
     def do_response(self, in_response_to, consumer_url,
                         sp_entity_id, identity=None, name_id=None, 
-                        status=None, sign=False, authn=None, authn_decl=None ):
+                        status=None, sign=False, authn=None, authn_decl=None,
+                        issuer=None):
         """ Create a response. A layer of indirection.
         
         :param in_response_to: The session identifier of the request
@@ -476,6 +481,7 @@ class Server(object):
         :param authn: A 2-tuple denoting the authn class and the authn
             authority.
         :param authn_decl:
+        :param issuer: The issuer of the response
         :return: A Response instance.
         """
 
@@ -483,12 +489,12 @@ class Server(object):
 
         return self._response(in_response_to, consumer_url,
                         sp_entity_id, identity, name_id, 
-                        status, sign, policy, authn, authn_decl)
+                        status, sign, policy, authn, authn_decl, issuer)
                         
     # ------------------------------------------------------------------------
     
     def error_response(self, in_response_to, destination, spid, info, 
-                        name_id=None, sign=False):
+                        name_id=None, sign=False, issuer=None):
         """ Create a error response.
         
         :param in_response_to: The identifier of the message this is a response
@@ -496,7 +502,10 @@ class Server(object):
             :param destination: The intended recipient of this message
         :param spid: The entitiy ID of the SP that will get this.
         :param info: Either an Exception instance or a 2-tuple consisting of
-            error code and descriptive text            
+            error code and descriptive text
+        :param name_id:
+        :param sign: Whether the message should be signed or not
+        :param issuer: The issuer of the response
         :return: A Response instance
         """
         status = error_status_factory(info)
@@ -507,14 +516,15 @@ class Server(object):
                         spid,           # sp_entity_id
                         name_id=name_id,
                         status=status,
-                        sign=sign
+                        sign=sign,
+                        issuer=issuer
                         )
 
     # ------------------------------------------------------------------------
     
     def do_aa_response(self, in_response_to, consumer_url, sp_entity_id, 
                         identity=None, userid="", name_id=None, status=None, 
-                        sign=False, _name_id_policy=None):
+                        sign=False, _name_id_policy=None, issuer=None):
         """ Create an attribute assertion response.
         
         :param in_response_to: The session identifier of the request
@@ -527,6 +537,7 @@ class Server(object):
         :param status: The status of the response
         :param sign: Whether the assertion should be signed or not 
         :param _name_id_policy: Policy for NameID creation.
+        :param issuer: The issuer of the response
         :return: A Response instance.
         """
 #        name_id = self.ident.construct_nameid(self.conf.policy, userid,
@@ -534,15 +545,16 @@ class Server(object):
         
         return self._response(in_response_to, consumer_url,
                         sp_entity_id, identity, name_id, 
-                        status, sign, policy=self.conf.policy)
+                        status, sign, policy=self.conf.policy, issuer=issuer)
 
     # ------------------------------------------------------------------------
 
-    def authn_response(self, identity, in_response_to, destination, 
+    def authn_response(self, identity, in_response_to, destination,
                         sp_entity_id, name_id_policy, userid, sign=False, 
-                        authn=None, sign_response=False, authn_decl=None):
+                        authn=None, sign_response=False, authn_decl=None,
+                        issuer=None):
         """ Constructs an AuthenticationResponse
-        
+
         :param identity: Information about an user
         :param in_response_to: The identifier of the authentication request
             this response is an answer to.
@@ -556,6 +568,7 @@ class Server(object):
         :param sign_response: The response can be signed separately from the 
             assertions.
         :param authn_decl:
+        :param issuer: Issuer of the response
         :return: A XML string representing an authentication response
         """
 
@@ -579,7 +592,8 @@ class Server(object):
                             sign=sign,      # If the assertion should be signed
                             authn=authn,    # Information about the 
                                             #   authentication
-                            authn_decl=authn_decl
+                            authn_decl=authn_decl,
+                            issuer=issuer
                         )
         except MissingValue, exc:
             response = self.error_response(in_response_to, destination, 
@@ -649,13 +663,14 @@ class Server(object):
 
 
     def logout_response(self, request, bindings, status=None,
-                            sign=False):
+                            sign=False, issuer=None):
         """ Create a LogoutResponse. What is returned depends on which binding
         is used.
         
         :param request: The request this is a response to
         :param bindings: Which bindings that can be used to send the response
         :param status: The return status of the response operation
+        :param issuer: The issuer of the message
         :return: A 3-tuple consisting of HTTP return code, HTTP headers and 
             possibly a message.
         """
@@ -704,12 +719,14 @@ class Server(object):
                 
             (headers, message) = http_soap_message(response)
         else:
+            if issuer is None:
+                issuer = self.issuer()
             response = logoutresponse_factory(
                                 sign=sign,
                                 id = mid,
                                 in_response_to = request.id,
                                 status = status,
-                                issuer = self.issuer(),
+                                issuer = issuer,
                                 destination = destination,
                                 sp_entity_id = sp_entity_id,
                                 instant=instant(),
