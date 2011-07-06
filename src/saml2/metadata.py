@@ -651,7 +651,8 @@ class MetaData(object):
             return self.entity[entity_id]["affiliation"]
         except KeyError:
             return []
-    
+
+    #noinspection PyUnusedLocal
     @keep_updated
     def consumer_url(self, entity_id, binding=BINDING_HTTP_POST, _log=None):
         try:
@@ -777,6 +778,7 @@ class MetaData(object):
                 idps[entity_id] = (name, edict["idp_sso"])
         return idps
 
+    #noinspection PyUnusedLocal
     @keep_updated
     def ui_info(self, entity_id, service="idp_sso"):
         inst = self.entity[entity_id][service]
@@ -823,7 +825,7 @@ class MetaData(object):
                                     if disp_name.lang in lang or \
                                        disp_name.lang is None:
                                         rdict["displayName"] = clean(disp_name.text)
-                                        if rdict['title'] == "":
+                                        if not rdict['title']:
                                             rdict["title"] = rdict["displayName"]
                                         break
                                 for description in uiinfo.description:
@@ -857,7 +859,7 @@ class MetaData(object):
                 pass
 
         return cjson.encode(result)
-    
+
 DEFAULTS = {
     "want_assertions_signed": "true",
     "authn_requests_signed": "false",
@@ -994,13 +996,13 @@ def do_uiinfo(conf):
             inst.append(ainst)
         else :
             for value in val:
-                if isinstance(val, basestring):
-                    ainst = aclass(text=val)
+                if isinstance(value, basestring):
+                    ainst = aclass(text=value)
                     inst.append(ainst)
-                elif isinstance(val, dict):
+                elif isinstance(value, dict):
                     ainst = aclass()
-                    ainst.text = val["text"]
-                    ainst.lang = val["lang"]
+                    ainst.text = value["text"]
+                    ainst.lang = value["lang"]
                     inst.append(ainst)
 
     try:
