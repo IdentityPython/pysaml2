@@ -31,6 +31,7 @@ from saml2 import create_class_from_xml_string
 from tempfile import NamedTemporaryFile
 from subprocess import Popen, PIPE
 
+
 def get_xmlsec_binary(paths=None):
     """
     Tries to find the xmlsec1 binary.
@@ -68,6 +69,7 @@ except Exception:
 ID_ATTR = "ID"
 NODE_NAME = "urn:oasis:names:tc:SAML:2.0:assertion:Assertion"
 ENC_NODE_NAME = "urn:oasis:names:tc:SAML:2.0:assertion:EncryptedAssertion"
+ENC_KEY_CLASS = "EncryptedKey"
 
 _TEST_ = True
 
@@ -260,7 +262,7 @@ def cert_from_key_info(key_info):
 def cert_from_instance(instance):
     """ Find certificates that are part of an instance
 
-    :param assertion: An instance
+    :param instance: An instance
     :return: possible empty list of certificates
     """
     if instance.signature:
@@ -393,14 +395,14 @@ def security_context(conf, log=None, debug=None):
 
     metadata = conf.metadata
 
-    return SecurityContext(conf.xmlsec_binary, conf.key_file, "pem",
-                            conf.cert_file, "pem", metadata,
+    return SecurityContext(conf.xmlsec_binary, conf.key_file,
+                            cert_file=conf.cert_file, metadata=metadata,
                             log=log, debug=debug)
 
 class SecurityContext(object):
     def __init__(self, xmlsec_binary, key_file="", key_type= "pem", 
                     cert_file="", cert_type="pem", metadata=None, log=None, 
-                    debug=False):
+                    debug=False, template="", encrypt_key_type="des-192"):
         
         self.xmlsec = xmlsec_binary
         
@@ -416,6 +418,14 @@ class SecurityContext(object):
         self.metadata = metadata
         self.log = log
         self.debug = debug
+        
+        if not template:
+            this_dir, this_filename = os.path.split(__file__)
+            self.template = os.path.join(this_dir, "xml", "template.xml")
+        else:
+            self.template = template
+            
+        self.key_type = encrypt_key_type
 
         if self.debug and not self.log:
             self.debug = 0
@@ -425,12 +435,56 @@ class SecurityContext(object):
             self.log.info("verify correct signature")
         return self.correctly_signed_response(xml, must)
 
+    def encrypt(self, text, recv_key="", template="", key_type=""):
+        """
+        xmlsec encrypt --pubkey-pem pub-userkey.pem
+            --session-key aes128-cbc --xml-data doc-plain.xml
+            --output doc-encrypted.xml session-key-template.xml
+
+        :param text: Text to encrypt
+        :param recv_key: A file containing the receivers public key
+        :param template: A file containing the XML document template
+        :param key_type: The type of session key to use
+        :result: An encrypted XML text
+        """
+        if not key_type:
+            key_type = self.key_type
+        if not template:
+            template = self.template
+
+        if self.log:
+            self.log.info("input len: %d" % len(text))
+        _, fil = make_temp("%s" % text, decode=False)
+        ntf = NamedTemporaryFile()
+
+        com_list = [self.xmlsec, "--encrypt",
+                     "--pubkey-pem", recv_key,
+                     "--session-key", key_type,
+                     "--xml-data", fil,
+                     "--output", ntf.name,
+                     template]
+
+        if self.debug:
+            self.log.debug("Encryption command: %s" % " ".join(com_list))
+
+        pof = Popen(com_list, stderr=PIPE, stdout=PIPE)
+        p_out = pof.stdout.read()
+        p_err = pof.stderr.read()
+
+        if self.debug:
+            self.log.debug("Encryption result (out): %s" % (p_out,))
+            self.log.debug("Encryption result (err): %s" % (p_err,))
+
+        ntf.seek(0)
+        return ntf.read()
+
     def decrypt(self, enctext):
         """ Decrypting an encrypted text by the use of a private key.
         
         :param enctext: The encrypted text as a string
         :return: The decrypted text
         """
+
         if self.log:
             self.log.info("input len: %d" % len(enctext))
         _, fil = make_temp("%s" % enctext, decode=False)
@@ -439,12 +493,12 @@ class SecurityContext(object):
         com_list = [self.xmlsec, "--decrypt", 
                      "--privkey-pem", self.key_file, 
                      "--output", ntf.name,
-                     "--id-attr:%s" % ID_ATTR, 
-                     ENC_NODE_NAME, fil]
+                     "--id-attr:%s" % ID_ATTR, ENC_KEY_CLASS,
+                     fil]
 
         if self.debug:
             self.log.debug("Decrypt command: %s" % " ".join(com_list))
-            
+
         pof = Popen(com_list, stderr=PIPE, stdout=PIPE)
         p_out = pof.stdout.read()
         p_err = pof.stderr.read()
@@ -507,13 +561,15 @@ class SecurityContext(object):
         for _, pem_file in certs:
             try:
                 if origdoc is not None:
-                    if self.verify_signature(origdoc, pem_file, "pem",
-                                             node_name, item.id):
+                    if self.verify_signature(origdoc, pem_file,
+                                             node_name=node_name,
+                                             node_id=item.id):
                         verified = True
                         break
                 else:
-                    if self.verify_signature(decoded_xml, pem_file, "pem",
-                                             node_name, item.id):
+                    if self.verify_signature(decoded_xml, pem_file,
+                                             node_name=node_name,
+                                             node_id=item.id):
                         verified = True
                         break
             except XmlsecError, exc:
@@ -538,7 +594,7 @@ class SecurityContext(object):
         the SP that sent the info use that, if not use the key that are in 
         the message if any.
 
-        :param decode_xml: The SAML message as a XML string
+        :param decoded_xml: The SAML message as a XML string
         :param must: Whether there must be a signature
         :return: None if the signature can not be verified otherwise 
             request as a samlp.Request instance
@@ -560,7 +616,7 @@ class SecurityContext(object):
         the SP that sent the info use that, if not use the key that are in 
         the message if any.
 
-        :param decode_xml: The SAML message as a XML string
+        :param decoded_xml: The SAML message as a XML string
         :param must: Whether there must be a signature
         :return: None if the signature can not be verified otherwise 
              the response as a samlp.LogoutResponse instance
@@ -582,7 +638,7 @@ class SecurityContext(object):
         the SP that sent the info use that, if not use the key that are in 
         the message if any.
         
-        :param decode_xml: The SAML message as a XML string
+        :param decoded_xml: The SAML message as a XML string
         :param must: Whether there must be a signature
         :return: None if the signature can not be verified otherwise 
             request as a samlp.Request instance
@@ -604,7 +660,7 @@ class SecurityContext(object):
         the IdP that sent the info use that, if not use the key that are in 
         the message if any.
         
-        :param decode_xml: The SAML message as a XML string
+        :param decoded_xml: The SAML message as a XML string
         :param must: Whether there must be a signature
         :return: None if the signature can not be verified otherwise an instance
         """
@@ -649,7 +705,7 @@ class SecurityContext(object):
         
         :param statement: The statement to be signed
         :param key: The key to be used for the signing, either this or
-        :param key_File: The file where the key can be found
+        :param key_file: The file where the key can be found
         :return: The signed statement
         """
         
@@ -697,7 +753,7 @@ class SecurityContext(object):
         
         :param statement: The statement to be signed
         :param key: The key to be used for the signing, either this or
-        :param key_File: The file where the key can be found
+        :param key_file: The file where the key can be found
         :return: The signed statement
         """
 

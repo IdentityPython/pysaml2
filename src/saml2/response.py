@@ -24,6 +24,8 @@ from saml2 import saml
 from saml2 import extension_element_to_element
 from saml2 import time_util
 
+from saml2.saml import attribute_from_string
+from saml2.saml import encrypted_attribute_from_string
 from saml2.sigver import security_context, SignatureError
 from saml2.attribute_converter import to_local
 from saml2.time_util import str_to_time
@@ -362,25 +364,50 @@ class AuthnResponse(StatusResponse):
                 raise Exception("Not for me!!!")
         
         return True
-    
+
+    def decrypt_attributes(self, attribute_statement):
+        """
+        Decrypts possible encrypted attributes and adds the decrypts to the
+        list of attributes.
+
+        :param attribute_statement: A SAML.AttributeStatement which might
+            contain both encrypted attributes and attributes.
+        """
+#        _node_name = [
+#            "urn:oasis:names:tc:SAML:2.0:assertion:EncryptedData",
+#            "urn:oasis:names:tc:SAML:2.0:assertion:EncryptedAttribute"]
+
+        for encattr in attribute_statement.encrypted_attribute:
+            if not encattr.encrypted_key:
+                _decr = self.sec.decrypt(encattr.encrypted_data)
+                _attr = attribute_from_string(_decr)
+                attribute_statement.attribute.append(_attr)
+            else:
+                _decr = self.sec.decrypt(encattr)
+                enc_attr = encrypted_attribute_from_string(_decr)
+                attrlist = enc_attr.extensions_as_elements("Attribute", saml)
+                attribute_statement.attribute.extend(attrlist)
+
     def get_identity(self):
-        # The assertion can contain zero or one attributeStatements
+        """ The assertion can contain zero or one attributeStatements
+
+        """
         if not self.assertion.attribute_statement:
             if self.log:
                 self.log.error("Missing Attribute Statement")
             ava = {}
         else:
             assert len(self.assertion.attribute_statement) == 1
-            
+            _attr_statem = self.assertion.attribute_statement[0]
+
             if self.debug and self.log:
-                self.log.info("Attribute Statement: %s" % (
-                                    self.assertion.attribute_statement[0],))
+                self.log.info("Attribute Statement: %s" % (_attr_statem,))
                 for aconv in self.attribute_converters:
                     self.log.info(
                             "Converts name format: %s" % (aconv.name_format,))
-            
-            ava = to_local(self.attribute_converters,
-                            self.assertion.attribute_statement[0])
+
+            self.decrypt_attributes(_attr_statem)
+            ava = to_local(self.attribute_converters, _attr_statem)
         return ava
     
     def get_subject(self):
