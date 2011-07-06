@@ -394,10 +394,11 @@ class Assertion(dict):
             return factory(saml.AuthnStatement,
                         authn_instant=instant(), 
                         session_index=sid())
-    
+
     def construct(self, sp_entity_id, in_response_to, consumer_url,
                     name_id, attrconvs, policy, issuer, authn_class=None, 
-                    authn_auth=None, authn_decl=None):
+                    authn_auth=None, authn_decl=None, encrypt=None,
+                    sec_context=None):
         """ Construct the Assertion 
         
         :param sp_entity_id: The entityid of the SP
@@ -410,12 +411,24 @@ class Assertion(dict):
         :param issuer: Who is issuing the statement
         :param authn_class: The authentication class
         :param authn_auth: The authentication instance
+        :param encrypt: Whether to encrypt parts or all of the Assertion
+        :param sec_context: The security context used when encrypting
         :return: An Assertion instance
         """
         attr_statement = saml.AttributeStatement(attribute=from_local(
                                 attrconvs, self, 
                                 policy.get_name_form(sp_entity_id)))
-        
+
+        if encrypt == "attributes":
+            for attr in attr_statement.attribute:
+                enc = sec_context.encrypt(text="%s" % attr)
+
+                encd = xmlenc.encrypted_data_from_string(enc)
+                encattr = saml.EncryptedAttribute(encrypted_data=encd)
+                attr_statement.encrypted_attribute.append(encattr)
+
+            attr_statement.attribute = []
+
         # start using now and for some time
         conds = policy.conditions(sp_entity_id)
         
