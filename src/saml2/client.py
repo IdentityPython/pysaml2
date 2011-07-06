@@ -188,7 +188,7 @@ class Saml2Client(object):
             return None
 
         try:
-            entity_id = self.config.entityid
+            _ = self.config.entityid
         except KeyError:
             raise Exception("Missing entity_id specification")
 
@@ -901,7 +901,8 @@ class Saml2Client(object):
                 # Get the extended identity
                 ava = self.users.get_identity(subject_id)[0]
         return ava
-        
+
+    #noinspection PyUnusedLocal
     def is_session_valid(self, _session_id):
         """ Place holder. Supposed to check if the session is still valid.
         """
@@ -939,6 +940,7 @@ class Saml2Client(object):
                                          resource, subject,
                                          binding, log, sign)
 
+    #noinspection PyUnusedLocal
     def authz_decision_query(self, entityid, action,
                                 evidence=None, resource=None, subject=None,
                                 binding=saml2.BINDING_HTTP_REDIRECT,
@@ -984,14 +986,16 @@ class Saml2Client(object):
         return request
 
 
+    #noinspection PyUnusedLocal
     def authz_decision_query_response(self, response, log=None):
         """ Verify that the response is OK """
         pass
-    
-    def do_authz_decision_query(self, entityid, authz_decision_query,
+
+    #noinspection PyUnusedLocal
+    def do_authz_decision_query(self, entityid, assertion=None,
                                 log=None, sign=False):
 
-        authz_decision_query = samlp.AuthzDecisionQuery()
+        authz_decision_query = self.authz_decision_query(entityid, assertion)
 
         for destination in self.config.authz_services(entityid):
             to_sign = []
