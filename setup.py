@@ -48,6 +48,7 @@ setup(
                 "saml2/extension"],
 
     package_dir = {'':'src'},
+    package_data={'': ['xml/*.xml']},
 
     classifiers = ["Development Status :: 4 - Beta",
         "License :: OSI Approved :: Apache Software License",
@@ -65,13 +66,14 @@ setup(
         'pyasn1',
         'python-memcached',
         "pytest",
-        "pytest-coverage",
+        #"pytest-coverage",
         # for s2repoze:
         'paste',
         'zope.interface',
         'repoze.who == 1.0.18',
         # extras
-        'pymongo'
+        'pymongo',
+        'python-cjson'
         ],
     zip_safe=False,
 
