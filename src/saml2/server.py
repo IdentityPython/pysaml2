@@ -223,6 +223,7 @@ class Server(object):
             
         self.metadata = self.conf.metadata
         self.sec = security_context(self.conf, log)
+        self._cache = _cache
 
         # if cache:
         #     if isinstance(cache, basestring):
@@ -265,10 +266,14 @@ class Server(object):
         except AttributeError:
             self.ident = None
     
-    def issuer(self):
+    def issuer(self, entityid=None):
         """ Return an Issuer precursor """
-        return saml.Issuer(text=self.conf.entityid,
-                            format=saml.NAMEID_FORMAT_ENTITY)        
+        if entityid:
+            return saml.Issuer(text=entityid,
+                                format=saml.NAMEID_FORMAT_ENTITY)
+        else:
+            return saml.Issuer(text=self.conf.entityid,
+                                format=saml.NAMEID_FORMAT_ENTITY)
         
     def parse_authn_request(self, enc_request, binding=BINDING_HTTP_REDIRECT):
         """Parse a Authentication Request
@@ -403,11 +408,8 @@ class Server(object):
         if not status: 
             status = success_status_factory()
 
-        if issuer is None:
-            _issuer = self.issuer()
-        else:
-            _issuer = issuer
-        
+        _issuer = self.issuer(issuer)
+
         response = response_factory(
             issuer=_issuer,
             in_response_to = in_response_to,
@@ -521,7 +523,7 @@ class Server(object):
                         )
 
     # ------------------------------------------------------------------------
-    
+    #noinspection PyUnusedLocal
     def do_aa_response(self, in_response_to, consumer_url, sp_entity_id, 
                         identity=None, userid="", name_id=None, status=None, 
                         sign=False, _name_id_policy=None, issuer=None):
@@ -719,14 +721,13 @@ class Server(object):
                 
             (headers, message) = http_soap_message(response)
         else:
-            if issuer is None:
-                issuer = self.issuer()
+            _issuer = self.issuer(issuer)
             response = logoutresponse_factory(
                                 sign=sign,
                                 id = mid,
                                 in_response_to = request.id,
                                 status = status,
-                                issuer = issuer,
+                                issuer = _issuer,
                                 destination = destination,
                                 sp_entity_id = sp_entity_id,
                                 instant=instant(),
