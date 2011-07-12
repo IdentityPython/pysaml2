@@ -5,7 +5,9 @@ import base64
 import hashlib
 import hmac
 
-from saml2 import saml, samlp, VERSION, sigver
+from saml2 import saml
+from saml2 import samlp
+from saml2 import VERSION
 from saml2.time_util import instant
 
 try:
@@ -110,7 +112,7 @@ def parse_attribute_map(filenames):
     exactly one space, a user friendly name of the attribute and then
     the type specification of the name.
     
-    :param filename: List of filenames on mapfiles.
+    :param filenames: List of filenames on mapfiles.
     :return: A 2-tuple, one dictionary with the oid as keys and the friendly 
         names as values, the other one the other way around.
     """
@@ -182,34 +184,6 @@ def assertion_factory(**kwargs):
     for key, val in kwargs.items():
         setattr(assertion, key, val)
     return assertion
-
-def logoutresponse_factory(sign=False, encrypt=False, **kwargs):
-    response = samlp.LogoutResponse(id=sid(), version=VERSION,
-                                issue_instant=instant())
-
-    if sign:
-        response.signature = sigver.pre_signature_part(kwargs["id"])
-    if encrypt:
-        pass
-
-    for key, val in kwargs.items():
-        setattr(response, key, val)
-
-    return response
-    
-def response_factory(sign=False, encrypt=False, **kwargs):
-    response = samlp.Response(id=sid(), version=VERSION,
-                                issue_instant=instant())
-    
-    if sign:
-        response.signature = sigver.pre_signature_part(kwargs["id"])
-    if encrypt:
-        pass
-
-    for key, val in kwargs.items():
-        setattr(response, key, val)
-        
-    return response
 
 def _attrval(val, typ=""):
     if isinstance(val, list) or isinstance(val, set):
