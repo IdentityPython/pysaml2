@@ -398,7 +398,11 @@ class ExtensionContainer(object):
         self.extension_elements.append(element_to_extension_element(item))
 
 
+    def add_extension_attribute(self, name, value):
+        self.extension_attributes[name] = value
 
+
+        
 def make_vals(val, klass, klass_inst=None, prop=None, part=False,
                 base64encode=False):
     """
@@ -819,7 +823,7 @@ def extension_elements_to_elements(extension_elements, schemas):
     given extension elements. This is of course dependent on the access
     to schemas that describe the extension elements.
 
-    :param extenstion_elements: The list of extension elements
+    :param extension_elements: The list of extension elements
     :param schemas: Imported Python modules that represent the different
         known schemas used for the extension elements
     :return: A list of elements, representing the set of extension elements
