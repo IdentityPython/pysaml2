@@ -498,19 +498,24 @@ class AuthnResponse(StatusResponse):
             return False
     
     def _encrypted_assertion(self, xmlstr):
-        decrypt_xml = self.sec.decrypt(xmlstr)
-        
-        if self.debug and self.log:
-            self.log.info("Decryption successfull")
-        
-        self.response = samlp.response_from_string(decrypt_xml)
-        if self.debug and self.log:
-            self.log.info("Parsed decrypted assertion successfull")
-        
-        enc = self.response.encrypted_assertion[0].extension_elements[0]
-        assertion = extension_element_to_element(enc,
-                                                saml.ELEMENT_FROM_STRING,
-                                                namespace=saml.NAMESPACE)
+        if xmlstr.encrypted_data:
+            assertion_str = self.sec.decrypt(xmlstr.encrypted_data)
+            assertion = saml.assertion_from_string(assertion_str)
+        else:
+            decrypt_xml = self.sec.decrypt(xmlstr)
+
+            if self.debug and self.log:
+                self.log.info("Decryption successfull")
+
+            self.response = samlp.response_from_string(decrypt_xml)
+            if self.debug and self.log:
+                self.log.info("Parsed decrypted assertion successfull")
+
+            enc = self.response.encrypted_assertion[0].extension_elements[0]
+            assertion = extension_element_to_element(enc,
+                                                    saml.ELEMENT_FROM_STRING,
+                                                    namespace=saml.NAMESPACE)
+            
         if self.debug and self.log:
             self.log.info("Decrypted Assertion: %s" % assertion)
         return self._assertion(assertion)
@@ -646,7 +651,7 @@ def response_factory(xmlstr, conf, return_addr=None,
                                         debug, request_id)
     try:
         response.loads(xmlstr, decode, origxml)
-        if response.response.assertion:
+        if response.response.assertion or response.response.encrypted_assertion:
             authnresp = AuthnResponse(sec_context, attribute_converters, 
                             entity_id, return_addr, outstanding_queries, log,
                             timeslack, debug, asynchop)
