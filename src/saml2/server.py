@@ -33,7 +33,6 @@ from saml2.request import AttributeQuery
 from saml2.request import LogoutRequest
 
 from saml2.s_utils import sid
-from saml2.s_utils import response_factory, logoutresponse_factory
 from saml2.s_utils import MissingValue
 from saml2.s_utils import success_status_factory
 from saml2.s_utils import OtherError
@@ -50,8 +49,11 @@ from saml2.binding import http_post_message
 from saml2.sigver import security_context
 from saml2.sigver import signed_instance_factory
 from saml2.sigver import pre_signature_part
+from saml2.sigver import response_factory, logoutresponse_factory
+
 from saml2.config import config_factory
-from saml2.assertion import Assertion, Policy   
+
+from saml2.assertion import Assertion, Policy
 
 class UnknownVO(Exception):
     pass
