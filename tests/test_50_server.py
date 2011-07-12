@@ -4,6 +4,7 @@
 from saml2.server import Server, Identifier
 from saml2 import samlp, saml, client, config
 from saml2 import s_utils
+from saml2 import sigver
 from saml2 import time_util
 from saml2.s_utils import OtherError
 from saml2.s_utils import do_attribute_statement, factory
@@ -108,7 +109,7 @@ class TestServer1():
         assert subject.name_id.format == saml.NAMEID_FORMAT_TRANSIENT
 
     def test_response(self):
-        response = s_utils.response_factory(
+        response = sigver.response_factory(
                 in_response_to="_012345",
                 destination="https:#www.example.com",
                 status=s_utils.success_status_factory(),
@@ -377,7 +378,7 @@ class TestServer1():
                     issuer_entity_id = "urn:mace:example.com:saml:roland:idp",
                     reason = "I'm tired of this")
 
-        intermed = s_utils.deflate_and_base64_encode("%s" % (logout_request,))
+        _ = s_utils.deflate_and_base64_encode("%s" % (logout_request,))
 
         saml_soap = make_soap_enveloped_saml_thingy(logout_request)
         idp = Server("idp_soap_conf")
