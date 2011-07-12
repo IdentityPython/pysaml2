@@ -26,8 +26,17 @@ import sys
 
 import xmldsig as ds
 
-from saml2 import samlp, class_name, saml, ExtensionElement
+from saml2 import samlp
+from saml2 import class_name
+from saml2 import saml
+from saml2 import ExtensionElement
 from saml2 import create_class_from_xml_string
+from saml2 import VERSION
+
+from saml2.s_utils import sid
+
+from saml2.time_util import instant
+
 from tempfile import NamedTemporaryFile
 from subprocess import Popen, PIPE
 
@@ -292,7 +301,7 @@ __DEBUG = 0
 
 def verify_signature(enctext, xmlsec_binary, cert_file=None, cert_type="pem",
                         node_name=NODE_NAME, debug=False, node_id=None,
-                        log=None):
+                        log=None, id_attr=""):
     """ Verifies the signature of a XML document.
 
     :param enctext: The signed XML document
@@ -305,12 +314,15 @@ def verify_signature(enctext, xmlsec_binary, cert_file=None, cert_type="pem",
     :return: The signed document if all was OK otherwise will raise an
         exception.
     """
-        
+
+    if not id_attr:
+        id_attr = ID_ATTR
+
     _, fil = make_temp(enctext, decode=False)
     
     com_list = [xmlsec_binary, "--verify",
                 "--pubkey-cert-%s" % cert_type, cert_file, 
-                "--id-attr:%s" % ID_ATTR, node_name]
+                "--id-attr:%s" % id_attr, node_name]
                 
     if debug:
         com_list.append("--store-signatures")
@@ -365,11 +377,17 @@ def read_cert_from_file(cert_file, cert_type):
         line = open(cert_file).read().split("\n")
         if line[0] == "-----BEGIN CERTIFICATE-----":
             line = line[1:]
+        elif line[0] == "-----BEGIN PUBLIC KEY-----":
+            line = line[1:]
         else:
             raise Exception("Strange beginning of PEM file")
+
         while line[-1] == "":
             line = line[:-1]
+
         if line[-1] == "-----END CERTIFICATE-----":
+            line = line[:-1]
+        elif line[-1] == "-----END PUBLIC KEY-----":
             line = line[:-1]
         else:
             raise Exception("Strange end of PEM file")
@@ -513,13 +531,15 @@ class SecurityContext(object):
     
         
     def verify_signature(self, enctext, cert_file=None, cert_type="pem", 
-                            node_name=NODE_NAME, node_id=None):
+                            node_name=NODE_NAME, node_id=None, id_attr=""):
         """ Verifies the signature of a XML document.
         
         :param enctext: The XML document as a string
         :param cert_file: The public key that was used to sign the document
         :param cert_type: The file type of the certificate
         :param node_name: The name of the class that is signed
+        :param node_id: The identifier of the node
+        :param id_attr: Should normally be one of "id", "Id" or "ID"
         :return: Boolean True if the signature was correct otherwise False.
         """
         # This is only for testing purposes, otherwise when would you receive
@@ -529,10 +549,10 @@ class SecurityContext(object):
             cert_type = self.cert_type
             
         return verify_signature(enctext, self.xmlsec, cert_file, cert_type,
-                                node_name, self.debug, node_id)
+                                node_name, self.debug, node_id, id_attr)
         
     def _check_signature(self, decoded_xml, item, node_name=NODE_NAME,
-                         origdoc=None):
+                         origdoc=None, id_attr=""):
         #print item
         try:
             issuer = item.issuer.text.strip()
@@ -563,13 +583,13 @@ class SecurityContext(object):
                 if origdoc is not None:
                     if self.verify_signature(origdoc, pem_file,
                                              node_name=node_name,
-                                             node_id=item.id):
+                                             node_id=item.id, id_attr=id_attr):
                         verified = True
                         break
                 else:
                     if self.verify_signature(decoded_xml, pem_file,
                                              node_name=node_name,
-                                             node_id=item.id):
+                                             node_id=item.id, id_attr=id_attr):
                         verified = True
                         break
             except XmlsecError, exc:
@@ -586,8 +606,9 @@ class SecurityContext(object):
 
         return item
 
-    def check_signature(self, item, node_name=NODE_NAME):
-        return self._check_signature( "%s" % (item,), item, node_name)
+    def check_signature(self, item, node_name=NODE_NAME, id_attr=""):
+        return self._check_signature( "%s" % (item,), item, node_name,
+                                      id_attr=id_attr)
         
     def correctly_signed_logout_request(self, decoded_xml, must=False):
         """ Check if a request is correctly signed, if we have metadata for
@@ -596,7 +617,7 @@ class SecurityContext(object):
 
         :param decoded_xml: The SAML message as a XML string
         :param must: Whether there must be a signature
-        :return: None if the signature can not be verified otherwise 
+        :return: None if the signature can not be verified otherwise
             request as a samlp.Request instance
         """
         request = samlp.logout_request_from_string(decoded_xml)
@@ -653,7 +674,7 @@ class SecurityContext(object):
             else:
                 return request
 
-        return self._check_signature( decoded_xml, request )
+        return self._check_signature(decoded_xml, request )
 
     def correctly_signed_response(self, decoded_xml, must=False, origdoc=None):
         """ Check if a instance is correctly signed, if we have metadata for
@@ -700,29 +721,35 @@ class SecurityContext(object):
     #--------------------------------------------------------------------------
             
     def sign_statement_using_xmlsec(self, statement, klass_namn, key=None, 
-                                    key_file=None, nodeid=None):
+                                    key_file=None, nodeid=None, id_attr=""):
         """Sign a SAML statement using xmlsec.
         
         :param statement: The statement to be signed
         :param key: The key to be used for the signing, either this or
         :param key_file: The file where the key can be found
+        :param id_attr: The attribute name for the identifier, normally one of
+            'id','Id' or 'ID'
         :return: The signed statement
         """
-        
+
+        if not id_attr:
+            id_attr = ID_ATTR
+
+        if not key_file and key:
+            _, key_file = make_temp("%s" % key, ".pem")
+
         if not key and not key_file:
             key_file = self.key_file
             
         _, fil = make_temp("%s" % statement, decode=False)
 
-        if not key_file and key:
-            _, key_file = make_temp("%s" % key, ".pem")
-            
+
         ntf = NamedTemporaryFile()
 
         com_list = [self.xmlsec, "--sign", 
                     "--output", ntf.name,
                     "--privkey-pem", key_file, 
-                    "--id-attr:%s" % ID_ATTR, klass_namn
+                    "--id-attr:%s" % id_attr, klass_namn
                     #"--store-signatures"
                     ]
         if nodeid:
@@ -748,7 +775,7 @@ class SecurityContext(object):
             raise Exception("Signing failed")
 
     def sign_assertion_using_xmlsec(self, statement, key=None, key_file=None,
-                                    nodeid=None):
+                                    nodeid=None, id_attr=""):
         """Sign a SAML assertion using xmlsec.
         
         :param statement: The statement to be signed
@@ -757,10 +784,40 @@ class SecurityContext(object):
         :return: The signed statement
         """
 
-        return self.sign_statement_using_xmlsec( statement,
+        return self.sign_statement_using_xmlsec(statement,
                                                 class_name(saml.Assertion()),
-                                                key, key_file, nodeid)
+                                                key, key_file, nodeid,
+                                                id_attr=id_attr)
 
+    def multiple_signatures(self, statement, to_sign, key=None, key_file=None):
+        """
+        Sign multiple parts of a statement
+
+        :param statement: The statement that should be sign, this is XML text
+        :param to_sign: A list of (items, id, id attribute name) tuples that
+            specifies what to sign
+        :param key: A key that should be used for doing the signing
+        :param key_file: A file that contains the key to be used
+        :return: A possibly multiple signed statement
+        """
+        for (item, id, id_attr) in to_sign:
+            if not id:
+                if not item.id:
+                    id = item.id = sid()
+                else:
+                    id = item.id
+
+            if not item.signature:
+                item.signature = pre_signature_part(id, self.cert_file)
+                
+            statement = self.sign_statement_using_xmlsec(statement,
+                                                         class_name(item),
+                                                         key=key,
+                                                         key_file=key_file,
+                                                         nodeid=id,
+                                                         id_attr=id_attr)
+        return statement
+    
 # ===========================================================================
 
 # PRE_SIGNATURE = {
@@ -863,3 +920,31 @@ def pre_signature_part(ident, public_key=None, identifier=None):
         signature.key_info = key_info
     
     return signature
+
+def logoutresponse_factory(sign=False, encrypt=False, **kwargs):
+    response = samlp.LogoutResponse(id=sid(), version=VERSION,
+                                issue_instant=instant())
+
+    if sign:
+        response.signature = pre_signature_part(kwargs["id"])
+    if encrypt:
+        pass
+
+    for key, val in kwargs.items():
+        setattr(response, key, val)
+
+    return response
+
+def response_factory(sign=False, encrypt=False, **kwargs):
+    response = samlp.Response(id=sid(), version=VERSION,
+                                issue_instant=instant())
+
+    if sign:
+        response.signature = pre_signature_part(kwargs["id"])
+    if encrypt:
+        pass
+
+    for key, val in kwargs.items():
+        setattr(response, key, val)
+
+    return response
