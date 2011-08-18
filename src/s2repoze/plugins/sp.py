@@ -19,8 +19,10 @@ WSGI application.
 
 """
 import cgi
+import sys
 import platform
 import shelve
+import traceback
 from urlparse import parse_qs
 
 from paste.httpexceptions import HTTPSeeOther
@@ -34,12 +36,17 @@ from repoze.who.interfaces import IChallenger, IIdentifier, IAuthenticator
 from repoze.who.interfaces import IMetadataProvider
 from repoze.who.plugins.form import FormPluginBase
 
+from saml2 import ecp
+
 from saml2.client import Saml2Client
 from saml2.s_utils import sid
 from saml2.config import config_factory
+from saml2.profile import paos
 
 #from saml2.population import Population
 #from saml2.attribute_resolver import AttributeResolver
+
+PAOS_HEADER_INFO = 'ver="%s";"%s"' % (paos.NAMESPACE, ecp.SERVICE)
 
 def construct_came_from(environ):
     """ The URL that the user used when the process where interupted 
@@ -52,7 +59,7 @@ def construct_came_from(environ):
     return came_from
     
 # FormPluginBase defines the methods remember and forget
-def cgi_field_storage_to_dict( field_storage ):
+def cgi_field_storage_to_dict(field_storage):
     """Get a plain dictionary, rather than the '.value' system used by the
     cgi module."""
     
@@ -66,7 +73,7 @@ def cgi_field_storage_to_dict( field_storage ):
                 
     return params
 
-def get_body(environ, log=None, debug=0):
+def get_body(environ, log=None):
     body = ""
 
     length = int(environ["CONTENT_LENGTH"])
@@ -84,12 +91,30 @@ def get_body(environ, log=None, debug=0):
 
     return body
 
+def exception_trace(tag, exc, log):
+    message = traceback.format_exception(*sys.exc_info())
+    log.error("[%s] ExcList: %s" % (tag, "".join(message),))
+    log.error("[%s] Exception: %s" % (tag, exc))
+
+class ECP_response(object):
+    code = 200
+    title = 'OK'
+
+    def __init__(self, content):
+        self.content = content
+
+    #noinspection PyUnusedLocal
+    def __call__(self, environ, start_response):
+        start_response('%s %s' % (self.code, self.title),
+                       [('Content-Type', "text/xml")])
+        return [self.content]
+
 class SAML2Plugin(FormPluginBase):
 
     implements(IChallenger, IIdentifier, IAuthenticator, IMetadataProvider)
     
     def __init__(self, rememberer_name, config, saml_client, 
-                    wayf, _cache, debug, sid_store=None, discovery=""):
+                    wayf, cache, debug, sid_store=None, discovery=""):
         FormPluginBase.__init__(self)
         
         self.rememberer_name = rememberer_name
@@ -99,6 +124,7 @@ class SAML2Plugin(FormPluginBase):
         self.discovery = discovery
         self.conf = config
         self.log = None
+        self.cache = cache
                     
         try:
             self.metadata = self.conf.metadata
@@ -114,7 +140,7 @@ class SAML2Plugin(FormPluginBase):
         """
         Get the posted information
     
-        :param environ: A dictionary
+        :param environ: A dictionary with environment variables
         """
     
         post = {}
@@ -122,7 +148,7 @@ class SAML2Plugin(FormPluginBase):
         post_env = environ.copy()
         post_env['QUERY_STRING'] = ''
     
-        body = get_body(environ, self.log, self.debug)
+        _ = get_body(environ, self.log)
         
         try:
             post = cgi.FieldStorage(
@@ -139,25 +165,60 @@ class SAML2Plugin(FormPluginBase):
             self.log.info('identify post: %s' % (post,))
     
         return post
-        
+
+    #noinspection PyUnusedLocal
     def _pick_idp(self, environ, came_from):
         """ 
         If more than one idp and if none is selected, I have to do wayf or 
         disco
         """
-        
+
+        # check headers to see if it's an ECP request
+#        headers = {
+#                    'Accept' : 'text/html; application/vnd.paos+xml',
+#                    'PAOS'   : 'ver="%s";"%s"' % (paos.NAMESPACE, SERVICE)
+#                    }
+
+        self.log.info("[_pick_idp] %s" % environ)
+        if "HTTP_PAOS" in environ:
+            if environ["HTTP_PAOS"] == PAOS_HEADER_INFO:
+                if 'application/vnd.paos+xml' in environ["HTTP_ACCEPT"]:
+                    # Where should I redirect the user to
+                    # entityid -> the IdP to use
+                    # relay_state -> when back from authentication
+
+                    self.log.info("- ECP client detected -")
+
+                    _relay_state = construct_came_from(environ)
+                    _entityid = self.saml_client.config.ecp_endpoint(
+                                                    environ["REMOTE_ADDR"])
+                    if not _entityid:
+                        return -1, HTTPInternalServerError(
+                                        detail="No IdP to talk to"
+                        )
+                    self.log.info("IdP to talk to: %s" % _entityid)
+                    return ecp.ecp_auth_request(self.saml_client, _entityid,
+                                                _relay_state, log=self.log)
+                else:
+                    return -1, HTTPInternalServerError(
+                                    detail='Faulty Accept header')
+            else:
+                return -1, HTTPInternalServerError(
+                                                detail='unknown ECP version')
+
+
         idps = self.conf.idps()
         
         if self.log:
             self.log.info("IdP URL: %s" % idps)
 
-        idp_entity_id = ""
         if len( idps ) == 1:
             # idps is a dictionary
             idp_entity_id = idps.keys()[0]
         elif not len(idps):
-            return 1, HTTPInternalServerError(detail='Misconfiguration')
+            return -1, HTTPInternalServerError(detail='Misconfiguration')
         else:
+            idp_entity_id = ""
             if self.log:
                 self.log.info("ENVIRON: %s" % environ)
             query = environ.get('s2repoze.body','')
@@ -175,7 +236,7 @@ class SAML2Plugin(FormPluginBase):
                     sid_ = sid()
                     self.outstanding_queries[sid_] = came_from
                     self.log.info("Redirect to WAYF function: %s" % self.wayf)
-                    return 1, HTTPSeeOther(headers = [('Location',
+                    return -1, HTTPSeeOther(headers = [('Location',
                                                 "%s?%s" % (self.wayf, sid_))])
             elif self.discovery:
                 if query:
@@ -187,17 +248,18 @@ class SAML2Plugin(FormPluginBase):
                     self.log.info("Redirect to Discovery Service function")
                     loc = self.saml_client.request_to_discovery_service(
                                                                 self.discovery)
-                    return 1, HTTPSeeOther(headers = [('Location',loc)])
+                    return -1, HTTPSeeOther(headers = [('Location',loc)])
             else:
-                return 1, HTTPNotImplemented(detail='No WAYF or DJ present!')
+                return -1, HTTPNotImplemented(detail='No WAYF or DJ present!')
 
         self.log.info("Choosen IdP: '%s'" % idp_entity_id)
         return 0, idp_entity_id
         
     #### IChallenger ####
+    #noinspection PyUnusedLocal
     def challenge(self, environ, _status, _app_headers, _forget_headers):
 
-        # this challenge consist in loggin out
+        # this challenge consist in login out
         if environ.has_key('rwpc.logout'): 
             # ignore right now?
             pass
@@ -225,8 +287,16 @@ class SAML2Plugin(FormPluginBase):
 
         # If more than one idp and if none is selected, I have to do wayf
         (done, response) = self._pick_idp(environ, came_from)
-        if done:
+        # Three cases: -1 something went wrong or Discovery service used
+        #               0 I've got an IdP to send a request to
+        #               >0 ECP in progress
+        if self.log:
+            self.log.debug("_idp_pick returned: %s" % done)
+        if done == -1:
             return response
+        elif done > 0:
+            self.outstanding_queries[done] = came_from
+            return ECP_response(response)
         else:
             idp_url = response
             if self.log:
@@ -295,7 +365,18 @@ class SAML2Plugin(FormPluginBase):
         if self.log:
             self.log.info("Session_info: %s" % session_info)
         return session_info
-        
+
+    def do_ecp_response(self, body, environ):
+        response, _relay_state = ecp.handle_ecp_authn_response(self.saml_client,
+                                                               body)
+
+        environ["s2repoze.relay_state"] = _relay_state.text
+        session_info = response.session_info()
+        if self.log:
+            self.log.info("Session_info: %s" % session_info)
+
+        return session_info
+
     #### IIdentifier ####
     def identify(self, environ):
         """
@@ -330,29 +411,35 @@ class SAML2Plugin(FormPluginBase):
         if self.debug and self.log:
             try:
                 self.log.info('[sp.identify] post keys: %s' % (post.keys(),))
-            except TypeError:
+            except (TypeError, IndexError):
                 pass
             
-        # Not for me, put the post back where next in line can find it
         try:
             if not post.has_key("SAMLResponse"):
                 self.log.info("[sp.identify] --- NOT SAMLResponse ---")
+                # Not for me, put the post back where next in line can
+                # find it
                 environ["post.fieldstorage"] = post
                 return {}
             else:
                 self.log.info("[sp.identify] --- SAMLResponse ---")
+                # check for SAML2 authN response
+                #if self.debug:
+                try:
+                    session_info = self._eval_authn_response(environ,
+                                                cgi_field_storage_to_dict(post))
+                except Exception:
+                    return None
         except TypeError, exc:
-            self.log.error("[sp.identify] Exception: %s" % (exc,))
-            environ["post.fieldstorage"] = post
-            return {}
-            
-        # check for SAML2 authN response
-        #if self.debug:
-        try:
-            session_info = self._eval_authn_response(environ,  
-                                            cgi_field_storage_to_dict(post))
-        except Exception:
-            return None
+            # might be a ECP (=SOAP) response
+            body = environ.get('s2repoze.body', None)
+            if body:
+                # might be a ECP response
+                session_info = self.do_ecp_response(body, environ)
+            else:
+                exception_trace("sp.identity", exc, self.log)
+                environ["post.fieldstorage"] = post
+                return {}
             
         if session_info:        
             environ["s2repoze.sessioninfo"] = session_info
@@ -416,7 +503,10 @@ class SAML2Plugin(FormPluginBase):
                                         "missing common attribute")
         if self.debug and self.log:
             self.log.info("[add_metadata] returns: %s" % (dict(identity),))
-        
+
+        if not identity["user"]:
+            # remove cookie and demand re-authentication
+            pass
         
 # @return
 # used 2 times : one to get the ticket, the other to validate it
@@ -428,7 +518,8 @@ class SAML2Plugin(FormPluginBase):
         return url
 
     #### IAuthenticatorPlugin #### 
-    def authenticate(self, _environ, identity=None):
+    #noinspection PyUnusedLocal
+    def authenticate(self, environ, identity=None):
         if identity:
             return identity.get('login', None)
         else:
