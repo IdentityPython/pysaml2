@@ -24,7 +24,7 @@ from httplib2 import Http
 from saml2 import httplib2cookie
 from saml2 import create_class_from_element_tree
 from saml2.samlp import NAMESPACE as SAMLP_NAMESPACE
-from saml2 import element_to_extension_element
+#from saml2 import element_to_extension_element
 from saml2.schema import soapenv
 
 try:
@@ -33,7 +33,12 @@ except ImportError:
     try:
         import cElementTree as ElementTree
     except ImportError:
+        #noinspection PyUnresolvedReferences
         from elementtree import ElementTree
+
+class XmlParseError(Exception):
+    pass
+
 
 #NAMESPACE = "http://schemas.xmlsoap.org/soap/envelope/"
 
@@ -59,7 +64,7 @@ def parse_soap_enveloped_saml_thingy(text, expected_tags):
     a string.
     
     :param text: The SOAP object as XML 
-    :param expected_tag: What the tag of the SAML thingy is expected to be.
+    :param expected_tags: What the tag of the SAML thingy is expected to be.
     :return: SAML thingy as a string
     """
     envelope = ElementTree.fromstring(text)
@@ -99,7 +104,10 @@ def class_instances_from_soap_enveloped_saml_thingies(text, modules):
     :param modules: modules representing xsd schemas
     :return: SAML thingy as a class instance
     """
-    envelope = ElementTree.fromstring(text)
+    try:
+        envelope = ElementTree.fromstring(text)
+    except Exception, exc:
+        raise XmlParseError("%s" % exc)
 
     assert envelope.tag == '{%s}Envelope' % soapenv.NAMESPACE
     assert len(envelope) >= 1
@@ -203,7 +211,7 @@ class HTTPClient(object):
         if path is None:
             path = self.path
 
-        (response, content) = self.server.request(path, method="POST",
+        (response, content) = self.server.crequest(path, method="POST",
                                                     body=data,
                                                     headers=headers)
         if response.status == 200:
@@ -222,7 +230,7 @@ class HTTPClient(object):
         if headers is None:
             headers = {"content-type": "text/html"}
 
-        (response, content) = self.server.request(path, method="GET",
+        (response, content) = self.server.crequest(path, method="GET",
                                                      headers=headers)
         if response.status == 200:
             return content
@@ -232,6 +240,38 @@ class HTTPClient(object):
             self.response = response
             self.error_description = content
             return None
+
+    def put(self, data, headers=None, path=None):
+        if headers is None:
+            headers = {}
+        if path is None:
+            path = self.path
+
+        (response, content) = self.server.crequest(path, method="PUT",
+                                                    body=data,
+                                                    headers=headers)
+        if response.status == 200:
+            return content
+        else:
+            self.response = response
+            self.error_description = content
+            return False
+
+    def delete(self, headers=None, path=None):
+        if headers is None:
+            headers = {}
+        if path is None:
+            path = self.path
+
+        (response, content) = self.server.crequest(path, method="DELETE",
+                                                    headers=headers)
+        if response.status == 200:
+            return content
+        else:
+            self.response = response
+            self.error_description = content
+            return False
+
 
     def add_credentials(self, name, passwd):
         self.server.add_credentials(name, passwd)
