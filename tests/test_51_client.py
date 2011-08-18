@@ -542,3 +542,44 @@ class TestClient:
                                                         returnIDParam="idpID")
 
         assert entity_id == "http://example.org/saml2/idp/sso"
+
+    def test_unsolicited_response(self):
+        """
+
+        """
+        for subject in self.client.users.subjects():
+            self.client.users.remove_person(subject)
+            
+        IDP = "urn:mace:example.com:saml:roland:idp"
+
+        ava = { "givenName": ["Derek"], "surname": ["Jeter"],
+                "mail": ["derek@nyy.mlb.com"]}
+
+        resp_str = "\n".join(self.server.authn_response(
+                    identity=ava,
+                    in_response_to="id1",
+                    destination="http://lingon.catalogix.se:8087/",
+                    sp_entity_id="urn:mace:example.com:saml:roland:sp",
+                    name_id_policy=samlp.NameIDPolicy(
+                        format=saml.NAMEID_FORMAT_PERSISTENT),
+                    userid="foba0001@example.com"))
+
+        resp_str = base64.encodestring(resp_str)
+
+        self.client.allow_unsolicited = True
+        authn_response = self.client.response({"SAMLResponse":resp_str}, ())
+                            
+        assert authn_response is not None
+        assert authn_response.issuer() == IDP
+        assert authn_response.response.assertion[0].issuer.text == IDP
+        session_info = authn_response.session_info()
+
+        print session_info
+        assert session_info["ava"] == {'mail': ['derek@nyy.mlb.com'], 'givenName': ['Derek'], 'sn': ['Jeter']}
+        assert session_info["issuer"] == IDP
+        assert session_info["came_from"] == ""
+        response = samlp.response_from_string(authn_response.xmlstr)
+        assert response.destination == "http://lingon.catalogix.se:8087/"
+
+        # One person in the cache
+        assert len(self.client.users.subjects()) ==  1

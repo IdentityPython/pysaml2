@@ -1,11 +1,13 @@
 __author__ = 'rolandh'
 
 from saml2 import soap
-from saml2.profile import ecp as ecp_prof
-from saml2.profile import paos
 from saml2 import samlp
 from saml2 import config
 from saml2 import ecp
+
+from saml2.profile import ecp as ecp_prof
+from saml2.profile import paos
+from saml2.client import Saml2Client
 
 def _eq(l1, l2):
     if len(l1) == len(l2):
@@ -42,10 +44,10 @@ class TestECPClient(object):
     def setup_class(self):
         conf = config.SPConfig()
         conf.load_file("server_conf")
-        self.client = ecp.ECPClient(conf)
+        self.client = Saml2Client(conf)
 
     def test_ecp_authn(self):
-        ssid, soap_req = self.client.ecp_auth_request(
+        ssid, soap_req = ecp.ecp_auth_request(self.client,
                                             "urn:mace:example.com:saml:roland:idp",
                                             "id1")
         print soap_req

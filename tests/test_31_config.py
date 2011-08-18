@@ -139,6 +139,22 @@ PDP = {
     ],
 }
 
+ECP_SP = {
+    "entityid" : "urn:mace:umu.se:saml:roland:ecpsp",
+    "name" : "Rolands ECP_SP",
+    "service": {
+        "sp": {
+            "endpoints" : {
+                "assertion_consumer_service" : ["http://lingon.catalogix.se:8087/"],
+            },
+            "ecp" : {
+                "130.239.": "http://example.com/idp",
+            }
+        }
+    },
+    #"xmlsec_binary" : "/opt/local/bin/xmlsec1",
+}
+
 def _eq(l1,l2):
     return set(l1) == set(l2)
 
@@ -304,3 +320,12 @@ def test_dual():
     assert isinstance(idpcnf, IdPConfig)
     assert idpcnf.context == "idp"
 
+def test_ecp():
+    cnf = SPConfig()
+    cnf.load(ECP_SP)
+    assert cnf.endpoint("assertion_consumer_service") == \
+                                            ["http://lingon.catalogix.se:8087/"]
+    eid = cnf.ecp_endpoint("130.239.16.3")
+    assert eid == "http://example.com/idp"
+    eid = cnf.ecp_endpoint("130.238.20.20")
+    assert eid is None
