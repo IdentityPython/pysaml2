@@ -4,6 +4,7 @@ __author__ = 'rolandh'
 
 import sys
 import os
+import re
 import logging
 import logging.handlers
 
@@ -39,6 +40,8 @@ SP_ARGS = [
             "endpoints",
             "ui_info",
             "discovery_response",
+            "allow_unsolicited",
+            "ecp"
             ]
 
 AA_IDP_ARGS = ["want_authn_requests_signed",
@@ -324,7 +327,13 @@ class Config(object):
             keys.extend(self._attr[dir].keys())
 
         return list(set(keys))
-    
+
+    def __contains__(self, item):
+        for dir in ["", "sp", "idp", "aa"]:
+            if item in self._attr[dir]:
+                return True
+        return False
+        
 class SPConfig(Config):
     def_context = "sp"
 
@@ -393,7 +402,21 @@ class SPConfig(Config):
             return self.virtual_organization[vo_name]
         except KeyError:
             return None
-        
+
+    def ecp_endpoint(self, ipaddress):
+        """
+        Returns the entity ID of the IdP which the ECP client should talk to
+
+        :param ipaddress: The IP address of the user client
+        :return: IdP entity ID or None
+        """
+        if "ecp" in self._attr["sp"]:
+            for key, eid in self._attr["sp"]["ecp"].items():
+                if re.match(key, ipaddress):
+                    return eid
+
+        return None
+
 class IdPConfig(Config):
     def_context = "idp"
     
