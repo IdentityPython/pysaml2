@@ -34,6 +34,7 @@ from saml2.profile import ecp
 from saml2.metadata import MetaData
 
 SERVICE = "urn:oasis:names:tc:SAML:2.0:profiles:SSO:ecp"
+PAOS_HEADER_INFO = 'ver="%s";"%s"' % (paos.NAMESPACE, SERVICE)
 
 class Client(object):
     def __init__(self, user, passwd, sp, idp=None, metadata_file=None,
@@ -49,45 +50,37 @@ class Client(object):
         else:
             self._metadata = None
         self._verbose = verbose
-        self.cookie_jar = None
         self.cookie_handler = None
-        self.http = None
 
-    def init(self):
-        """ Handles the initial connection to the SP """
+        self.done_ecp = False
         self.cookie_jar = cookielib.LWPCookieJar()
         self.http = soap.HTTPClient(self._sp, cookiejar=self.cookie_jar)
 
-        # ********************************************
-        # Phase 1 - First conversation with the SP
-        # ********************************************
-        # headers needed to indicate to the SP an ECP request
-        headers = {
-                    'Accept' : 'text/html; application/vnd.paos+xml',
-                    'PAOS'   : 'ver="%s";"%s"' % (paos.NAMESPACE, SERVICE)
-                    }
-
-        # request target from SP
-        response = self.http.get(headers=headers)
-        if self._verbose:
-            print >> sys.stderr, "SP reponse: %s" % response
-
-        if response is None or response is False:
+    def find_idp_endpoint(self, idp_entity_id):
+        if self._idp:
+            return self._idp
+        
+        if idp_entity_id and not self._metadata:
             raise Exception(
-                "Request to SP failed: %s" % self.http.response.status)
+                    "Can't handle IdP entity ID if I don't have metadata")
 
-        # So the response should be a AuthnRequest instance in a SOAP envelope
-        # body.
-        # Two SOAP header blocks; paos:Request and ecp:Request
-        # may also contain a ecp:RelayState SOAP header block
-        # If channel-binding was part of the PAOS header any number of
-        # <cb:ChannelBindings> header blocks may also be present
-        # if 'holder-of-key' option then one or more <ecp:SubjectConfirmation>
-        # header blocks may also be present
-        respdict = soap.class_instances_from_soap_enveloped_saml_thingies(
-                                                                    response,
-                                                                    [paos, ecp,
-                                                                     samlp])
+        if idp_entity_id:
+            ssos = self._metadata.single_sign_on_services(idp_entity_id,
+                                                        binding=BINDING_PAOS)
+            try:
+                self._idp = ssos[0]
+                return self._idp
+            except TypeError:
+                raise Exception(
+                        "No suitable endpoint found for entity id '%s'"\
+                                % (idp_entity_id,))
+
+        raise Exception("No IdP endpoint found")
+
+    #noinspection PyUnusedLocal
+    def ecp_conversation(self, respdict, idp_entity_id=None):
+        """  """
+
         if respdict is None:
             raise Exception("Unexpected reply from the SP")
 
@@ -115,7 +108,8 @@ class Client(object):
         # Phase 2 - talk to the IdP
         # **********************
         idp_request = soap.make_soap_enveloped_saml_thingy(authn_request)
-        idp_endpoint = self._idp
+        #idp_endpoint = authn_request.destination
+        idp_endpoint = self.find_idp_endpoint(idp_entity_id)
 
         # prompt the user for a password
         if not self._passwd:
@@ -182,56 +176,91 @@ class Client(object):
 
         headers = {'Content-Type' : 'application/vnd.paos+xml',}
 
-        # POST the package to the SP
+        # POST the package from the IdP to the SP
         response = self.http.post(sp_response, headers, _acs_url)
 
         if not response:
             if self.http.response.status == 302:
                 # ignore where the SP is redirecting us to and go for the
                 # url I started off with.
-                response = self.http.get(headers)
-                return response
+                pass
             else:
                 print self.http.error_description
                 raise Exception(
                     "Error POSTing package to SP: %s" % self.http.response.reason)
 
         if self._verbose:
-            print >> sys.stderr, "Final SP reponse: %s" % response
+            print >> sys.stderr, "Final SP response: %s" % response
 
+        self.done_ecp = True
         return None
 
-    def get(self, path=None, idp_entity_id=None):
-        if path is None:
-            path = self._sp
 
-        if self.http is None:
-            if idp_entity_id and not self._metadata:
-                raise Exception(
-                        "Can't handle IdP entity ID if I don't have metadata")
+    def operation(self, idp_entity_id, op, **opargs):
+        if "path" not in opargs:
+            opargs["path"] = self._sp
 
-            if idp_entity_id:
-                ssos = self._metadata.single_sign_on_services(idp_entity_id,
-                                                            binding=BINDING_PAOS)
-                try:
-                    self._idp = ssos[0]
-                except TypeError:
-                    raise Exception(
-                            "No suitable endpoint found for entity id '%s'"\
-                                    % (idp_entity_id,))
+        # ********************************************
+        # Phase 1 - First conversation with the SP
+        # ********************************************
+        # headers needed to indicate to the SP that I'm ECP enabled
 
-            try:
-                return self.init()
-            except Exception,e:
-                return "Error: %s" % e
+        if "headers" in opargs and opargs["headers"]:
+            opargs["headers"]["PAOS"] = PAOS_HEADER_INFO
+            if "Accept" in opargs["headers"]:
+                opargs["headers"]["Accept"] =+ ";application/vnd.paos+xml"
+        else:
+            opargs["headers"] = {
+                        'Accept' : 'text/html; application/vnd.paos+xml',
+                        'PAOS'   : PAOS_HEADER_INFO
+                        }
 
-        # use existing established session to request the original target
-        # from the SP
-        response = self.http.get(path)
+        # request target from SP
+        response = op(**opargs)
+        if self._verbose:
+            print >> sys.stderr, "SP response: %s" % response
 
-        if response is None:
-            raise Exception( "Error requesting target %s from SP: %s" % (
-                                            path, self.http.response.reason))
+        if not response:
+            raise Exception(
+                "Request to SP failed: %s" % self.http.error_description)
+
+        # The response might be a AuthnRequest instance in a SOAP envelope
+        # body. If so it's the start of the ECP conversation
+        # Two SOAP header blocks; paos:Request and ecp:Request
+        # may also contain a ecp:RelayState SOAP header block
+        # If channel-binding was part of the PAOS header any number of
+        # <cb:ChannelBindings> header blocks may also be present
+        # if 'holder-of-key' option then one or more <ecp:SubjectConfirmation>
+        # header blocks may also be present
+        try:
+            respdict = soap.class_instances_from_soap_enveloped_saml_thingies(
+                                                                    response,
+                                                                    [paos, ecp,
+                                                                     samlp])
+            self.ecp_conversation(respdict, idp_entity_id)
+            # should by now be authenticated so this should go smoothly
+            response = op(**opargs)
+        except (soap.XmlParseError, AssertionError, KeyError):
+            pass
+
+        if not response:
+            raise Exception( "Error performing operation: %s" % (
+                                            self.http.error_description,))
 
         return response
+
+    def delete(self, path=None, idp_entity_id=None):
+        return self.operation(idp_entity_id, self.http.delete, path=path)
+
+    def get(self, path=None, idp_entity_id=None, headers=None):
+        return self.operation(idp_entity_id, self.http.get, path=path,
+                              headers=headers)
+
+    def post(self, path=None, data="", idp_entity_id=None, headers=None):
+        return self.operation(idp_entity_id, self.http.post, data=data,
+                              path=path, headers=headers)
+
+    def put(self, path=None, data="", idp_entity_id=None, headers=None):
+        return self.operation(idp_entity_id, self.http.put, data=data,
+                              path=path, headers=headers)
 
