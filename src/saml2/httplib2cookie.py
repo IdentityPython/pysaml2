@@ -133,7 +133,9 @@ class CookiefulHttp(Http):
             cookiejar = cookielib.CookieJar()
         self.cookiejar = cookiejar
 
-    def request(self, uri, **kws):
+    def crequest(self, uri, **kws):
+        """ crequest so it's not messing up the 'real' request method
+        """
         headers = kws.pop('headers', None)
         req = DummyRequest(uri, headers)
         self.cookiejar.add_cookie_header(req)
