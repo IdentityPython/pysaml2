@@ -38,6 +38,8 @@ class Request(object):
 
     def _loads(self, xmldata, decode=True):
         if decode:
+            if self.debug:
+                self.log.debug("Expected to decode and inflate xml data")
             decoded_xml = s_utils.decode_base64_and_inflate(xmldata)
         else:
             decoded_xml = xmldata
