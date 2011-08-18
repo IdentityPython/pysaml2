@@ -49,7 +49,10 @@ from saml2.response import LogoutResponse
 from saml2.response import AuthnResponse
 from saml2.response import attribute_response
 
-from saml2 import BINDING_HTTP_REDIRECT, BINDING_SOAP, BINDING_HTTP_POST
+from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_SOAP
+from saml2 import BINDING_HTTP_POST
+from saml2 import BINDING_PAOS
 
 SSO_BINDING = saml2.BINDING_HTTP_REDIRECT
 
@@ -122,6 +125,10 @@ class Saml2Client(object):
         else:
             self.vorg = None
 
+        if "allow_unsolicited" in self.config:
+            self.allow_unsolicited = self.config.allow_unsolicited
+        else:
+            self.allow_unsolicited = False
 
     def _relay_state(self, session_id):
         vals = [session_id, str(int(time.time()))]
@@ -203,7 +210,8 @@ class Saml2Client(object):
                 resp = response_factory(saml_response, self.config,
                                         reply_addr, outstanding, log, 
                                         debug=self.debug, decode=decode,
-                                        asynchop=asynchop)
+                                        asynchop=asynchop, 
+                                        allow_unsolicited=self.allow_unsolicited)
             except Exception, exc:
                 if log:
                     log.error("%s" % exc)
@@ -244,12 +252,14 @@ class Saml2Client(object):
             id= query_id,
             version= VERSION,
             issue_instant= instant(),
-            destination= destination,
             assertion_consumer_service_url= service_url,
-            protocol_binding= binding,
-            provider_name= my_name
+            protocol_binding= binding
         )
-        
+
+        if destination:
+            request.destination = destination
+        if my_name:
+            request.provider_name = my_name
         if scoping:
             request.scoping = scoping
         
@@ -297,10 +307,16 @@ class Saml2Client(object):
     def _entityid(self):
         return self.config.entityid
 
-    def _sso_location(self, entityid=None):
+    def _sso_location(self, entityid=None, binding=BINDING_HTTP_REDIRECT):
         if entityid:
             # verify that it's in the metadata
-            return self.config.single_sign_on_services(entityid)[0]
+            try:
+                return self.config.single_sign_on_services(entityid, binding)[0]
+            except IndexError:
+                if self.logger:
+                    self.logger.info("_sso_location: %s, %s" % (entityid,
+                                                                binding))
+                return IdpUnspecified("No IdP to send to given the premises")
 
         # get the idp location from the configuration alternative the
         # metadata. If there is more than one IdP in the configuration
@@ -308,7 +324,12 @@ class Saml2Client(object):
         eids = self.config.idps()
         if len(eids) > 1:
             raise IdpUnspecified("Too many IdPs to choose from: %s" % eids)
-        return self.config.single_sign_on_services(eids.keys()[0])[0]
+        try:
+            loc = self.config.single_sign_on_services(eids.keys()[0],
+                                                        binding)[0]
+            return loc
+        except IndexError:
+            return IdpUnspecified("No IdP to send to given the premises")
         
     def service_url(self, binding=BINDING_HTTP_POST):
         _res = self.config.endpoint("assertion_consumer_service", binding)
@@ -321,10 +342,32 @@ class Saml2Client(object):
         return self.config.name
 
     def authn(self, location, session_id, vorg="", scoping=None, log=None,
-                sign=False, binding=saml2.BINDING_HTTP_POST):
+                sign=False, binding=saml2.BINDING_HTTP_POST,
+                service_url_binding=None):
+        """
+        Construct a Authentication Request
+
+        :param location: The URL of the destination
+        :param session_id: The ID of the session
+        :param vorg: The virtual organization if any that is involved
+        :param scoping: How the request should be scoped, default == Not
+        :param log: A log function to use for logging
+        :param sign: If the request should be signed
+        :param binding: The binding to use, default = HTTP POST
+        :return: An AuthnRequest instance
+        """
         spentityid = self._entityid()
-        service_url = self.service_url()
-        my_name = self._my_name()
+        if service_url_binding is None:
+            service_url = self.service_url(binding)
+        else:
+            service_url = self.service_url(service_url_binding)
+
+        if binding == BINDING_PAOS:
+            my_name = None
+            location = None
+        else:
+            my_name = self._my_name()
+
 
         if log is None:
             log = self.logger
