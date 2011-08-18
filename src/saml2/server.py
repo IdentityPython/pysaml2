@@ -297,10 +297,18 @@ class Server(object):
                                                  binding)
         if self.debug and self.log:
             self.log.info("receiver addresses: %s" % receiver_addresses)
+            self.log.info("Binding: %s" % binding)
             
         authn_request = AuthnRequest(self.sec, self.conf.attribute_converters,
-                                            receiver_addresses)
-        authn_request = authn_request.loads(enc_request)
+                                            receiver_addresses, log=self.log)
+
+        if binding == BINDING_SOAP:
+            # not base64 decoding and unzipping
+            authn_request.debug=True
+            self.log.info("Don't decode")
+            authn_request = authn_request.loads(enc_request, decode=False)
+        else:
+            authn_request = authn_request.loads(enc_request)
 
         if self.debug and self.log:
             self.log.info("Loaded authn_request")
@@ -319,7 +327,10 @@ class Server(object):
         sp_entity_id = authn_request.message.issuer.text
         # try to find return address in metadata
         try:
-            consumer_url = self.metadata.consumer_url(sp_entity_id)
+            # What's the binding ? ProtocolBinding
+            _binding = authn_request.message.protocol_binding
+            consumer_url = self.metadata.consumer_url(sp_entity_id,
+                                                      binding=_binding)
         except KeyError:
             if self.log:
                 self.log.info(
@@ -556,7 +567,7 @@ class Server(object):
     def authn_response(self, identity, in_response_to, destination,
                         sp_entity_id, name_id_policy, userid, sign=False, 
                         authn=None, sign_response=False, authn_decl=None,
-                        issuer=None):
+                        issuer=None, instance=False):
         """ Constructs an AuthenticationResponse
 
         :param identity: Information about an user
@@ -573,6 +584,8 @@ class Server(object):
             assertions.
         :param authn_decl:
         :param issuer: Issuer of the response
+        :param instance: Whether to return the instance or a string
+            representation
         :return: A XML string representing an authentication response
         """
 
@@ -615,9 +628,15 @@ class Server(object):
             except Exception, exc:
                 response = self.error_response(in_response_to, destination, 
                                                 sp_entity_id, exc, name_id)
-                return ("%s" % response).split("\n")
+                if instance:
+                    return response
+                else:
+                    return ("%s" % response).split("\n")
         else:
-            return ("%s" % response).split("\n")
+            if instance:
+                return response
+            else:
+                return ("%s" % response).split("\n")
 
     def parse_logout_request(self, text, binding=BINDING_SOAP):
         """Parse a Logout Request
