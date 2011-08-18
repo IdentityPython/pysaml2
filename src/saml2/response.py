@@ -59,7 +59,8 @@ def for_me(condition, myself ):
     return False
 
 def authn_response(conf, return_addr, outstanding_queries=None,
-                    log=None, timeslack=0, debug=0, asynchop=True):
+                    log=None, timeslack=0, debug=0, asynchop=True,
+                    allow_unsolicited=False):
     sec = security_context(conf)
     if not timeslack:
         try:
@@ -69,7 +70,8 @@ def authn_response(conf, return_addr, outstanding_queries=None,
     
     return AuthnResponse(sec, conf.attribute_converters, conf.entityid,
                         return_addr, outstanding_queries, log, timeslack, 
-                        debug, asynchop=asynchop)
+                        debug, asynchop=asynchop,
+                        allow_unsolicited=allow_unsolicited)
 
 # comes in over SOAP so synchronous
 def attribute_response(conf, return_addr, log=None, timeslack=0, debug=0,
@@ -286,7 +288,8 @@ class AuthnResponse(StatusResponse):
     
     def __init__(self, sec_context, attribute_converters, entity_id, 
                     return_addr=None, outstanding_queries=None, log=None, 
-                    timeslack=0, debug=0, asynchop=True):
+                    timeslack=0, debug=0, asynchop=True,
+                    allow_unsolicited=False):
         StatusResponse.__init__(self, sec_context, return_addr, log,
                                     timeslack, debug)
         self.entity_id = entity_id
@@ -301,6 +304,7 @@ class AuthnResponse(StatusResponse):
         self.assertion = None
         self.session_not_on_or_after = 0
         self.asynchop = asynchop
+        self.allow_unsolicited = allow_unsolicited
 
     def loads(self, xmldata, decode=True, origxml=None):
         self._loads(xmldata, decode, origxml)
@@ -309,6 +313,8 @@ class AuthnResponse(StatusResponse):
             if self.in_response_to in self.outstanding_queries:
                 self.came_from = self.outstanding_queries[self.in_response_to]
                 del self.outstanding_queries[self.in_response_to]
+            elif self.allow_unsolicited:
+                pass
             else:
                 if self.log:
                     self.log("Unsolicited response")
@@ -440,6 +446,8 @@ class AuthnResponse(StatusResponse):
                     self.came_from = self.outstanding_queries[
                                                         data.in_response_to]
                     del self.outstanding_queries[data.in_response_to]
+                elif self.allow_unsolicited:
+                    pass
                 else:
                     # This is where I don't allow unsolicited reponses
                     # Either in_response_to == None or has a value I don't
@@ -490,10 +498,12 @@ class AuthnResponse(StatusResponse):
         
         try:
             self.get_subject()
-            if self.asynchop and not self.came_from:
-                return False
-            else:
-                return True
+            if self.asynchop:
+                if self.allow_unsolicited:
+                    pass
+                elif not self.came_from:
+                    return False
+            return True
         except Exception:
             return False
     
@@ -636,7 +646,7 @@ class AuthzResponse(AuthnResponse):
 def response_factory(xmlstr, conf, return_addr=None,
                         outstanding_queries=None, log=None, 
                         timeslack=0, debug=0, decode=True, request_id=0,
-                        origxml=None, asynchop=True):
+                        origxml=None, asynchop=True, allow_unsolicited=False):
     sec_context = security_context(conf)
     if not timeslack:
         try:
@@ -654,7 +664,7 @@ def response_factory(xmlstr, conf, return_addr=None,
         if response.response.assertion or response.response.encrypted_assertion:
             authnresp = AuthnResponse(sec_context, attribute_converters, 
                             entity_id, return_addr, outstanding_queries, log,
-                            timeslack, debug, asynchop)
+                            timeslack, debug, asynchop, allow_unsolicited)
             authnresp.update(response)
             return authnresp
     except TypeError:
