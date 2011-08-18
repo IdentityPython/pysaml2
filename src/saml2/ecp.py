@@ -22,11 +22,12 @@ Contains classes used in the SAML ECP profile
 from saml2 import element_to_extension_element
 from saml2 import samlp
 from saml2 import soap
+from saml2 import BINDING_SOAP, BINDING_PAOS
 
 from saml2.profile import paos
 from saml2.profile import ecp
 
-from saml2.client import Saml2Client
+#from saml2.client import Saml2Client
 from saml2.server import Server
 
 from saml2.schema import soapenv
@@ -47,47 +48,37 @@ def ecp_capable(headers):
 
 ACTOR = "http://schemas.xmlsoap.org/soap/actor/next"
 
-class ECPClient(Saml2Client):
-    """ This is the SP side of the ECP communication
+#noinspection PyUnusedLocal
+def ecp_auth_request(cls, entityid=None, relay_state="",
+                     log=None, sign=False):
+    """ Makes an authentication request.
 
-    TODO: Still tentative
+    :param entityid: The entity ID of the IdP to send the request to
+    :param relay_state: To where the user should be returned after
+        successfull log in.
+    :param log: Where to write log messages
+    :param sign: Whether the request should be signed or not.
+    :return: AuthnRequest response
     """
-    def __init__(self, config=None, debug=0,identity_cache=None,
-                 state_cache=None, virtual_organization=None,
-                 config_file="", logger=None):
-        Saml2Client.__init__(self, config, debug,identity_cache, state_cache,
-                                virtual_organization, config_file, logger)
 
-    def ecp_auth_request(self, entityid=None, relay_state="",
-                         log=None, sign=False):
-        """ Makes an authentication request.
+    eelist = []
 
-        :param entityid: The entity ID of the IdP to send the request to
-        :param relay_state: To where the user should be returned after
-            successfull log in.
-        :param log: Where to write log messages
-        :param sign: Whether the request should be signed or not.
-        :return: AuthnRequest response
-        """
+    # ----------------------------------------
+    # <paos:Request>
+    # ----------------------------------------
+    my_url = cls.service_url(BINDING_PAOS)
 
-        eelist = []
+    # must_understan and actor according to the standard
+    #
+    paos_request = paos.Request(must_understand="1", actor=ACTOR,
+                                response_consumer_url=my_url,
+                                service = SERVICE)
 
-        # ----------------------------------------
-        # <paos:Request>
-        # ----------------------------------------
-        my_url = self._my_name()
+    eelist.append(element_to_extension_element(paos_request))
 
-        # must_understan and actor according to the standard
-        #
-        paos_request = paos.Request(must_understand="1", actor=ACTOR,
-                                    response_consumer_url=my_url,
-                                    service = SERVICE)
-
-        eelist.append(element_to_extension_element(paos_request))
-
-        # ----------------------------------------
-        # <ecp:Request>
-        # ----------------------------------------
+    # ----------------------------------------
+    # <ecp:Request>
+    # ----------------------------------------
 
 #        idp = samlp.IDPEntry(
 #            provider_id = "https://idp.example.org/entity",
@@ -104,58 +95,87 @@ class ECPClient(Saml2Client):
 #
 #        eelist.append(element_to_extension_element(ecp_request))
 
-        # ----------------------------------------
-        # <ecp:RelayState>
-        # ----------------------------------------
+    # ----------------------------------------
+    # <ecp:RelayState>
+    # ----------------------------------------
 
-        relay_state = ecp.RelayState(actor=ACTOR, must_understand="1",
-                                     text=relay_state)
+    relay_state = ecp.RelayState(actor=ACTOR, must_understand="1",
+                                 text=relay_state)
 
-        eelist.append(element_to_extension_element(relay_state))
+    eelist.append(element_to_extension_element(relay_state))
 
-        header = soapenv.Header()
-        header.extension_elements = eelist
+    header = soapenv.Header()
+    header.extension_elements = eelist
 
-        # ----------------------------------------
-        # <samlp:AuthnRequest>
-        # ----------------------------------------
+    # ----------------------------------------
+    # <samlp:AuthnRequest>
+    # ----------------------------------------
 
-        location = self._sso_location(entityid)
-        session_id = sid()
-        authn_req = self.authn(location, session_id, log=log)
-
-        body = soapenv.Body()
-        body.extension_elements = [element_to_extension_element(authn_req)]
-
-        # ----------------------------------------
-        # The SOAP envelope
-        # ----------------------------------------
-
-        soap_envelope = soapenv.Envelope(header=header, body=body)
-
-        return session_id, "%s" % soap_envelope
-
-    def handle_ecp_authn_response(self, soap_message, outstanding=None):
-        rdict = soap.class_instances_from_soap_enveloped_saml_thingies(
-                                                                soap_message,
-                                                                [paos, ecp,
-                                                                 samlp])
-
-        _relay_state = None
-        for item in rdict["header"]:
-            if item.c_tag == "RelayState" and \
-               item.c_namespace == ecp.NAMESPACE:
-                _relay_state = item
-
-        response = authn_response(self.config, self.service_url(),
-                                  outstanding, log=self.logger,
-                                  debug=self.debug)
-
-        response.loads("%s" % rdict["body"], False, soap_message)
-        response.verify()
+    if log:
+        log.info("entityid: %s, binding: %s" % (entityid, BINDING_SOAP))
         
-        return response, _relay_state
+    location = cls._sso_location(entityid, binding=BINDING_SOAP)
+    session_id = sid()
+    authn_req = cls.authn(location, session_id, log=log,
+                          binding=BINDING_PAOS,
+                          service_url_binding=BINDING_PAOS)
+
+    body = soapenv.Body()
+    body.extension_elements = [element_to_extension_element(authn_req)]
+
+    # ----------------------------------------
+    # The SOAP envelope
+    # ----------------------------------------
+
+    soap_envelope = soapenv.Envelope(header=header, body=body)
+
+    return session_id, "%s" % soap_envelope
+
+
+def handle_ecp_authn_response(cls, soap_message, outstanding=None):
+    rdict = soap.class_instances_from_soap_enveloped_saml_thingies(
+                                                            soap_message,
+                                                            [paos, ecp,
+                                                             samlp])
+
+    _relay_state = None
+    for item in rdict["header"]:
+        if item.c_tag == "RelayState" and \
+           item.c_namespace == ecp.NAMESPACE:
+            _relay_state = item
+
+    response = authn_response(cls.config, cls.service_url(),
+                              outstanding, log=cls.logger,
+                              debug=cls.debug,
+                              allow_unsolicited=True)
+
+    response.loads("%s" % rdict["body"], False, soap_message)
+    response.verify()
+    cls.users.add_information_about_person(response.session_info())
+
+    return response, _relay_state
         
+
+def ecp_response(target_url, response):
+
+    # ----------------------------------------
+    # <ecp:Response
+    # ----------------------------------------
+
+    ecp_response = ecp.Response(assertion_consumer_service_url=target_url)
+    header = soapenv.Header()
+    header.extension_elements = [element_to_extension_element(ecp_response)]
+
+    # ----------------------------------------
+    # <samlp:Response
+    # ----------------------------------------
+
+    body = soapenv.Body()
+    body.extension_elements = [element_to_extension_element(response)]
+
+    soap_envelope = soapenv.Envelope(header=header, body=body)
+
+    return "%s" % soap_envelope
 
 class ECPServer(Server):
     """ This deals with what the IdP has to do
@@ -175,7 +195,7 @@ class ECPServer(Server):
         # <ecp:Response
         # ----------------------------------------
         target_url = ""
-        
+
         ecp_response = ecp.Response(assertion_consumer_service_url=target_url)
         header = soapenv.Body()
         header.extension_elements = [element_to_extension_element(ecp_response)]
