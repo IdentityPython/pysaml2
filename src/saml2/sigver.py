@@ -676,6 +676,28 @@ class SecurityContext(object):
 
         return self._check_signature(decoded_xml, request )
 
+    def correctly_signed_attribute_query(self, decoded_xml, must=False):
+        """ Check if a request is correctly signed, if we have metadata for
+        the SP that sent the info use that, if not use the key that are in
+        the message if any.
+
+        :param decoded_xml: The SAML message as a XML string
+        :param must: Whether there must be a signature
+        :return: None if the signature can not be verified otherwise
+            request as a samlp.Request instance
+        """
+        request = samlp.attribute_query_from_string(decoded_xml)
+        if not request:
+            raise TypeError("Not an AttributeQuery")
+
+        if not request.signature:
+            if must:
+                raise SignatureError("Missing must signature")
+            else:
+                return request
+
+        return self._check_signature(decoded_xml, request )
+
     def correctly_signed_response(self, decoded_xml, must=False, origdoc=None):
         """ Check if a instance is correctly signed, if we have metadata for
         the IdP that sent the info use that, if not use the key that are in 
