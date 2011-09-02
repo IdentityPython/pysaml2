@@ -47,9 +47,9 @@ def parse_soap_enveloped_saml_response(text):
             '{%s}LogoutResponse' % SAMLP_NAMESPACE]
     return parse_soap_enveloped_saml_thingy(text, tags)
 
-#def parse_soap_enveloped_saml_attribute_query(text):
-#    expected_tag = '{%s}AttributeQuery' % SAMLP_NAMESPACE
-#    return parse_soap_enveloped_saml_thingy(text, [expected_tag])
+def parse_soap_enveloped_saml_attribute_query(text):
+    expected_tag = '{%s}AttributeQuery' % SAMLP_NAMESPACE
+    return parse_soap_enveloped_saml_thingy(text, [expected_tag])
 
 def parse_soap_enveloped_saml_logout_request(text):
     expected_tag = '{%s}LogoutRequest' % SAMLP_NAMESPACE
@@ -196,8 +196,10 @@ class HTTPClient(object):
                  cookiejar=None):
         self.path = path
         if cookiejar is not None:
+            self.cj = True
             self.server = httplib2cookie.CookiefulHttp(cookiejar)
         else:
+            self.cj = False
             self.server = Http()
         self.log = log
         self.response = None
@@ -211,9 +213,15 @@ class HTTPClient(object):
         if path is None:
             path = self.path
 
-        (response, content) = self.server.crequest(path, method="POST",
-                                                    body=data,
-                                                    headers=headers)
+        if self.cj:
+            (response, content) = self.server.crequest(path, method="POST",
+                                                        body=data,
+                                                        headers=headers)
+        else:
+            (response, content) = self.server.request(path, method="POST",
+                                                        body=data,
+                                                        headers=headers)
+
         if response.status == 200:
             return content
 #        elif response.status == 302: # redirect
