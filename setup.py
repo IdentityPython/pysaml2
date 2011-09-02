@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #
 # Copyright (C) 2007 SIOS Technology, Inc.
-# Copyright (C) 2010 Umea Universitet, Sweden
+# Copyright (C) 2011 Umea Universitet, Sweden
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
