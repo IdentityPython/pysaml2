@@ -243,7 +243,7 @@ class Client(object):
         except (soap.XmlParseError, AssertionError, KeyError):
             pass
 
-        if not response:
+        if not response and self.http.response.status != "404":
             raise Exception( "Error performing operation: %s" % (
                                             self.http.error_description,))
 
