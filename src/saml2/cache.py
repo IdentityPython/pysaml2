@@ -24,6 +24,9 @@ class Cache(object):
         
     def delete(self, subject_id):
         del self._db[subject_id]
+
+        if self._sync:
+            self._db.sync()
         
     def get_identity(self, subject_id, entities=None, check_not_on_or_after=True):
         """ Get all the identity information that has been received and 
