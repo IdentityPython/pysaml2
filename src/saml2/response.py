@@ -92,6 +92,7 @@ class StatusResponse(object):
                     debug=0, request_id=0):
         self.sec = sec_context
         self.return_addr = return_addr
+
         self.timeslack = timeslack
         self.request_id = request_id
         self.log = log
@@ -176,9 +177,9 @@ class StatusResponse(object):
                 self.log.info("status: %s" % (status,))
             if status.status_code.value != samlp.STATUS_SUCCESS:
                 if self.log:
-                    self.log.info("Not successfull operation: %s" % status)
+                    self.log.info("Not successful operation: %s" % status)
                 raise Exception(
-                    "Not successfull according to: %s" % \
+                    "Not successful according to: %s" % \
                     status.status_code.value)
         return True
 
@@ -211,7 +212,6 @@ class StatusResponse(object):
             return None
             
         assert self.issue_instant_ok()
-
         assert self.status_ok()
         return self
 
@@ -221,7 +221,8 @@ class StatusResponse(object):
     def verify(self):
         try:
             return self._verify()
-        except AssertionError:
+        except AssertionError, exc:
+            self.log.error("Assertion error: %s" % exc)
             return None
 
     def update(self, mold):
@@ -290,6 +291,7 @@ class AuthnResponse(StatusResponse):
                     return_addr=None, outstanding_queries=None, log=None, 
                     timeslack=0, debug=0, asynchop=True,
                     allow_unsolicited=False):
+
         StatusResponse.__init__(self, sec_context, return_addr, log,
                                     timeslack, debug)
         self.entity_id = entity_id
@@ -481,7 +483,7 @@ class AuthnResponse(StatusResponse):
             self.log.info("outstanding_queries: %s" % (
                                                     self.outstanding_queries,))
         
-        if self.context == "AuthnReq":
+        if self.context == "AuthnReq" or self.context == "AttrQuery":
             self.authn_statement_ok()
         
         if not self.condition_ok():
@@ -490,7 +492,7 @@ class AuthnResponse(StatusResponse):
         if self.debug and self.log:
             self.log.info("--- Getting Identity ---")
 
-        if self.context == "AuthnReq":
+        if self.context == "AuthnReq" or self.context == "AttrQuery":
             self.ava = self.get_identity()
         
             if self.debug and self.log:
@@ -504,7 +506,8 @@ class AuthnResponse(StatusResponse):
                 elif not self.came_from:
                     return False
             return True
-        except Exception:
+        except Exception, exc:
+            self.log.error("Exception: %s" % exc)
             return False
     
     def _encrypted_assertion(self, xmlstr):
@@ -560,6 +563,7 @@ class AuthnResponse(StatusResponse):
         if self.parse_assertion():
             return self
         else:
+            self.log.error("Could not parse the assertion")
             return None
         
     def session_id(self):
@@ -619,6 +623,7 @@ class AttributeResponse(AuthnResponse):
     def __init__(self, sec_context, attribute_converters, entity_id,
                     return_addr=None, log=None, timeslack=0, debug=0,
                     asynchop=False):
+
         AuthnResponse.__init__(self, sec_context, attribute_converters,
                                 entity_id, return_addr, log=log,
                                 timeslack=timeslack, debug=debug,
