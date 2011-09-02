@@ -590,7 +590,7 @@ class SamlBase(ExtensionContainer):
         """
         keys = ['text']
         keys.extend([n for (n, t, r) in self.c_attributes.values()])
-        keys.extend([v[1] for v in self.c_children.values()])
+        keys.extend([v[0] for v in self.c_children.values()])
         return keys
         
     def children_with_values(self):
