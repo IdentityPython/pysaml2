@@ -118,12 +118,19 @@ class Request(object):
         :return: The identifier if there is one
         """
 
-        if self.message.base_id:
-            return self.message.base_id
-        elif self.message.name_id:
-            return self.message.name_id
-        else: # EncryptedID
-            pass
+        if "subject" in self.message.keys():
+            _subj = self.message.subject
+            if "base_id" in _subj.keys() and _subj.base_id:
+                return _subj.base_id
+            elif _subj.name_id:
+                return _subj.name_id
+        else:
+            if "base_id" in self.message.keys() and self.message.base_id:
+                return self.message.base_id
+            elif self.message.name_id:
+                return self.message.name_id
+            else: # EncryptedID
+                pass
             
     def sender(self):
         return self.message.issuer.text()
