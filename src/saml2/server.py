@@ -246,19 +246,22 @@ class Server(object):
             return
         
         try:
-            # subject information is store in database
+            # subject information is stored in a database
             # default database is a shelve database which is OK in some setups
             dbspec = self.conf.subject_data
             idb = None
             if isinstance(dbspec, basestring):
                 idb = shelve.open(dbspec, writeback=True)
             else: # database spec is a a 2-tuple (type, address)
+                print >> sys.stderr, "DBSPEC: %s" % dbspec
                 (typ, addr) = dbspec
                 if typ == "shelve":
                     idb = shelve.open(addr, writeback=True)
                 elif typ == "memcached":
                     idb = memcache.Client(addr)
-
+                elif typ == "dict": # in-memory dictionary
+                    idb = addr
+                    
             if idb is not None:
                 self.ident = Identifier(idb, self.conf.virtual_organization,
                                         self.debug, self.log)
@@ -372,10 +375,11 @@ class Server(object):
         """
         return self.metadata.requests(sp_entity_id)
         
-    def parse_attribute_query(self, xml_string):
+    def parse_attribute_query(self, xml_string, decode=True):
         """ Parse an attribute query
         
         :param xml_string: The Attribute Query as an XML string
+        :param decode: Whether the xmlstring is base64encoded and zipped
         :return: 3-Tuple containing:
             subject - identifier of the subject
             attribute - which attributes that the requestor wants back
@@ -384,11 +388,12 @@ class Server(object):
         receiver_addresses = self.conf.endpoint("attribute_service")
         attribute_query = AttributeQuery( self.sec, receiver_addresses)
 
-        attribute_query = attribute_query.loads(xml_string)
+        attribute_query = attribute_query.loads(xml_string, decode=decode)
         attribute_query = attribute_query.verify()
-        
-        # Subject name is a BaseID,NameID or EncryptedID instance
-        subject = attribute_query.subject_id()        
+
+        self.log.info("KEYS: %s" % attribute_query.message.keys())
+        # Subject is described in the a saml.Subject instance
+        subject = attribute_query.subject_id()
         attribute = attribute_query.attribute()
 
         return subject, attribute, attribute_query.message
