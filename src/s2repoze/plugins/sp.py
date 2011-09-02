@@ -435,7 +435,11 @@ class SAML2Plugin(FormPluginBase):
             body = environ.get('s2repoze.body', None)
             if body:
                 # might be a ECP response
-                session_info = self.do_ecp_response(body, environ)
+                try:
+                    session_info = self.do_ecp_response(body, environ)
+                except Exception:
+                    environ["post.fieldstorage"] = post
+                    return {}
             else:
                 exception_trace("sp.identity", exc, self.log)
                 environ["post.fieldstorage"] = post
