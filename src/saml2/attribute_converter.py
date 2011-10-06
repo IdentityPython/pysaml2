@@ -187,7 +187,7 @@ class AttributeConverter(object):
 #        self._to = eval(open(filename).read())
 #
     def adjust(self):
-        """ In one of the transformations is not defined it is expected to
+        """ If one of the transformations is not defined it is expected to
         be the mirror image of the other.
         """
         
