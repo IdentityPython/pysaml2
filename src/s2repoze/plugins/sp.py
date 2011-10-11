@@ -166,6 +166,13 @@ class SAML2Plugin(FormPluginBase):
     
         return post
 
+    def _wayf_redirect(self, came_from):
+        sid_ = sid()
+        self.outstanding_queries[sid_] = came_from
+        self.log.info("Redirect to WAYF function: %s" % self.wayf)
+        return -1, HTTPSeeOther(headers = [('Location',
+                                    "%s?%s" % (self.wayf, sid_))])
+
     #noinspection PyUnusedLocal
     def _pick_idp(self, environ, came_from):
         """ 
@@ -230,14 +237,13 @@ class SAML2Plugin(FormPluginBase):
 
             if self.wayf:
                 if query:
-                    wayf_selected = dict(parse_qs(query))["wayf_selected"][0]
+                    try:
+                        wayf_selected = dict(parse_qs(query))["wayf_selected"][0]
+                    except KeyError:
+                        return self._wayf_redirect(came_from)
                     idp_entity_id = wayf_selected
                 else:
-                    sid_ = sid()
-                    self.outstanding_queries[sid_] = came_from
-                    self.log.info("Redirect to WAYF function: %s" % self.wayf)
-                    return -1, HTTPSeeOther(headers = [('Location',
-                                                "%s?%s" % (self.wayf, sid_))])
+                    return self._wayf_redirect(came_from)
             elif self.discovery:
                 if query:
                     idp_entity_id = self.saml_client.get_idp_from_discovery_service(
