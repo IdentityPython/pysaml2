@@ -75,7 +75,7 @@ def authn_response(conf, return_addr, outstanding_queries=None,
 
 # comes in over SOAP so synchronous
 def attribute_response(conf, return_addr, log=None, timeslack=0, debug=0,
-                       asynchop=False):
+                       asynchop=False, test=False):
     sec = security_context(conf)
     if not timeslack:
         try:
@@ -85,7 +85,7 @@ def attribute_response(conf, return_addr, log=None, timeslack=0, debug=0,
 
     return AttributeResponse(sec, conf.attribute_converters, conf.entityid,
                                 return_addr, log, timeslack, debug,
-                                asynchop=asynchop)
+                                asynchop=asynchop, test=test)
 
 class StatusResponse(object):
     def __init__(self, sec_context, return_addr=None, log=None, timeslack=0, 
@@ -290,7 +290,7 @@ class AuthnResponse(StatusResponse):
     def __init__(self, sec_context, attribute_converters, entity_id, 
                     return_addr=None, outstanding_queries=None, log=None, 
                     timeslack=0, debug=0, asynchop=True,
-                    allow_unsolicited=False):
+                    allow_unsolicited=False, test=False):
 
         StatusResponse.__init__(self, sec_context, return_addr, log,
                                     timeslack, debug)
@@ -307,6 +307,7 @@ class AuthnResponse(StatusResponse):
         self.session_not_on_or_after = 0
         self.asynchop = asynchop
         self.allow_unsolicited = allow_unsolicited
+        self.test = test
 
     def loads(self, xmldata, decode=True, origxml=None):
         self._loads(xmldata, decode, origxml)
@@ -330,9 +331,16 @@ class AuthnResponse(StatusResponse):
         self.ava = None
         self.assertion = None
         
-    def authn_statement_ok(self):
-        # the assertion MUST contain one AuthNStatement
-        assert len(self.assertion.authn_statement) == 1
+    def authn_statement_ok(self, optional=False):
+        try:
+            # the assertion MUST contain one AuthNStatement
+            assert len(self.assertion.authn_statement) == 1
+        except AssertionError:
+            if optional:
+                return True
+            else:
+                raise
+            
         authn_statement = self.assertion.authn_statement[0]
         if authn_statement.session_not_on_or_after:
             if validate_on_or_after(authn_statement.session_not_on_or_after,
@@ -347,6 +355,8 @@ class AuthnResponse(StatusResponse):
     def condition_ok(self, lax=False):
         # The Identity Provider MUST include a <saml:Conditions> element
         #print "Conditions",assertion.conditions
+        if self.test:
+            lax = True
         assert self.assertion.conditions
         condition = self.assertion.conditions
         if self.debug and self.log:
@@ -483,9 +493,12 @@ class AuthnResponse(StatusResponse):
             self.log.info("outstanding_queries: %s" % (
                                                     self.outstanding_queries,))
         
-        if self.context == "AuthnReq" or self.context == "AttrQuery":
+        #if self.context == "AuthnReq" or self.context == "AttrQuery":
+        if self.context == "AuthnReq":
             self.authn_statement_ok()
-        
+#        elif self.context == "AttrQuery":
+#            self.authn_statement_ok(True)
+
         if not self.condition_ok():
             return None
         
@@ -622,12 +635,12 @@ class AuthnResponse(StatusResponse):
 class AttributeResponse(AuthnResponse):
     def __init__(self, sec_context, attribute_converters, entity_id,
                     return_addr=None, log=None, timeslack=0, debug=0,
-                    asynchop=False):
+                    asynchop=False, test=False):
 
         AuthnResponse.__init__(self, sec_context, attribute_converters,
                                 entity_id, return_addr, log=log,
                                 timeslack=timeslack, debug=debug,
-                                asynchop=asynchop)
+                                asynchop=asynchop, test=test)
         self.entity_id = entity_id
         self.attribute_converters = attribute_converters
         self.assertion = None
