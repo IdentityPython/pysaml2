@@ -22,7 +22,7 @@ Contains classes and functions to alleviate the handling of SAML metadata
 import httplib2
 import sys
 import xmldsig as ds
-import cjson
+import json
 
 from decorator import decorator
 
@@ -31,9 +31,9 @@ from saml2 import BINDING_SOAP, class_name
 #from saml2 import saml
 
 # All included below this is only to save some space
-from saml2.extension import shibmd
-from saml2.extension import mdui
-from saml2.extension import idpdisc
+#from saml2.extension import shibmd
+#from saml2.extension import mdui
+#from saml2.extension import idpdisc
 
 from saml2 import extension_elements_as_dict
 from saml2.extension import *
@@ -858,7 +858,7 @@ class MetaData(object):
             except KeyError:
                 pass
 
-        return cjson.encode(result)
+        return json.dumps(result)
 
 DEFAULTS = {
     "want_assertions_signed": "true",
