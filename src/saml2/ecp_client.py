@@ -46,7 +46,7 @@ class Client(object):
         if metadata_file:
             self._metadata = MetaData()
             self._metadata.import_metadata(open(metadata_file).read(),
-                                            xmlsec_binary)
+                                           xmlsec_binary)
         else:
             self._metadata = None
         self._verbose = verbose
@@ -59,21 +59,21 @@ class Client(object):
     def find_idp_endpoint(self, idp_entity_id):
         if self._idp:
             return self._idp
-        
+
         if idp_entity_id and not self._metadata:
             raise Exception(
-                    "Can't handle IdP entity ID if I don't have metadata")
+                "Can't handle IdP entity ID if I don't have metadata")
 
         if idp_entity_id:
             ssos = self._metadata.single_sign_on_services(idp_entity_id,
-                                                        binding=BINDING_PAOS)
+                                                          binding=BINDING_PAOS)
             try:
                 self._idp = ssos[0]
                 return self._idp
             except TypeError:
                 raise Exception(
-                        "No suitable endpoint found for entity id '%s'"\
-                                % (idp_entity_id,))
+                    "No suitable endpoint found for entity id '%s'"\
+                    % (idp_entity_id,))
 
         raise Exception("No IdP endpoint found")
 
@@ -95,10 +95,10 @@ class Client(object):
         _relay_state = None
         _paos_request = None
         for item in respdict["header"]:
-            if item.c_tag == "RelayState" and \
+            if item.c_tag == "RelayState" and\
                item.c_namespace == ecp.NAMESPACE:
                 _relay_state = item
-            if item.c_tag == "Request" and \
+            if item.c_tag == "Request" and\
                item.c_namespace == paos.NAMESPACE:
                 _paos_request = item
 
@@ -114,7 +114,7 @@ class Client(object):
         # prompt the user for a password
         if not self._passwd:
             self._passwd = getpass.getpass(
-                                "Enter password for login '%s': " % self._user)
+                "Enter password for login '%s': " % self._user)
 
         self.http.add_credentials(self._user, self._passwd)
 
@@ -124,16 +124,16 @@ class Client(object):
         if response is None or response is False:
             raise Exception(
                 "Request to IdP failed (%s): %s" % (self.http.response.status,
-                                                self.http.error_description))
+                                                    self.http.error_description))
 
         if self._verbose:
             print >> sys.stderr, "IdP response: %s" % response
 
         # SAMLP response in a SOAP envelope body, ecp response in headers
         respdict = soap.class_instances_from_soap_enveloped_saml_thingies(
-                                                                response,
-                                                                [paos, ecp,
-                                                                 samlp])
+            response,
+            [paos, ecp,
+             samlp])
 
         if respdict is None:
             raise Exception("Unexpected reply from the IdP")
@@ -147,10 +147,10 @@ class Client(object):
         if self._verbose:
             print >> sys.stderr, "IdP AUTHN response: %s" % idp_response
             print
-            
+
         _ecp_response = None
         for item in respdict["header"]:
-            if item.c_tag == "Response" and \
+            if item.c_tag == "Response" and\
                item.c_namespace == ecp.NAMESPACE:
                 _ecp_response = item
 
@@ -168,13 +168,13 @@ class Client(object):
         # Phase 3 - back to the SP
         # **********************************
         sp_response = soap.make_soap_enveloped_saml_thingy(idp_response,
-                                                           [_relay_state])
+            [_relay_state])
 
         if self._verbose:
             print >> sys.stderr, sp_response
             print
 
-        headers = {'Content-Type' : 'application/vnd.paos+xml',}
+        headers = {'Content-Type': 'application/vnd.paos+xml', }
 
         # POST the package from the IdP to the SP
         response = self.http.post(sp_response, headers, _acs_url)
@@ -208,14 +208,24 @@ class Client(object):
         if "headers" in opargs and opargs["headers"]:
             opargs["headers"]["PAOS"] = PAOS_HEADER_INFO
             if "Accept" in opargs["headers"]:
-                opargs["headers"]["Accept"] =+ ";application/vnd.paos+xml"
+                opargs["headers"]["Accept"] += ";application/vnd.paos+xml"
+            elif "accept" in opargs["headers"]:
+                opargs["headers"]["Accept"] = opargs["headers"]["accept"]
+                opargs["headers"]["Accept"] += ";application/vnd.paos+xml"
+                del opargs["headers"]["accept"]
         else:
             opargs["headers"] = {
-                        'Accept' : 'text/html; application/vnd.paos+xml',
-                        'PAOS'   : PAOS_HEADER_INFO
-                        }
+                'Accept': 'text/html; application/vnd.paos+xml',
+                'PAOS': PAOS_HEADER_INFO
+            }
 
         # request target from SP
+        # can remove the PAOS header now
+#        try:
+#            del opargs["headers"]["PAOS"]
+#        except KeyError:
+#            pass
+        
         response = op(**opargs)
         if self._verbose:
             print >> sys.stderr, "SP response: %s" % response
@@ -234,9 +244,9 @@ class Client(object):
         # header blocks may also be present
         try:
             respdict = soap.class_instances_from_soap_enveloped_saml_thingies(
-                                                                    response,
-                                                                    [paos, ecp,
-                                                                     samlp])
+                response,
+                [paos, ecp,
+                 samlp])
             self.ecp_conversation(respdict, idp_entity_id)
             # should by now be authenticated so this should go smoothly
             response = op(**opargs)
@@ -244,8 +254,8 @@ class Client(object):
             pass
 
         if not response and self.http.response.status != "404":
-            raise Exception( "Error performing operation: %s" % (
-                                            self.http.error_description,))
+            raise Exception("Error performing operation: %s" % (
+                self.http.error_description,))
 
         return response
 
