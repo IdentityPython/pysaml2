@@ -1,15 +1,12 @@
 #!/usr/bin/env python
 
 import re
-from cgi import escape
 from cgi import parse_qs
-import urllib
 from saml2 import BINDING_HTTP_REDIRECT
 
 # -----------------------------------------------------------------------------
-def dict_to_table(ava, width=1):
-    txt = []
-    txt.append('<table border=%s bordercolor="black">\n' % width)
+def dict_to_table(ava, lev=0, width=1):
+    txt = ['<table border=%s bordercolor="black">\n' % width]
     for prop, valarr in ava.items():
         txt.append("<tr>\n")
         if isinstance(valarr, basestring):
@@ -47,8 +44,9 @@ def dict_to_table(ava, width=1):
         txt.append("</tr>\n")
     txt.append('</table>\n')
     return txt
-    
-    
+
+
+#noinspection PyUnusedLocal
 def whoami(environ, start_response, user, logger):
     identity = environ["repoze.who.identity"]["user"]
     if not identity:
@@ -59,21 +57,26 @@ def whoami(environ, start_response, user, logger):
     start_response('200 OK', [('Content-Type', 'text/html')])
     return response[:]
     
+#noinspection PyUnusedLocal
 def not_found(environ, start_response):
     """Called if no URL matches."""
     start_response('404 NOT FOUND', [('Content-Type', 'text/plain')])
     return ['Not Found']
 
+#noinspection PyUnusedLocal
 def not_authn(environ, start_response):
     start_response('401 Unauthorized', [('Content-Type', 'text/plain')])
     return ['Unknown user']
 
+#noinspection PyUnusedLocal
 def slo(environ, start_response, user, logger):
     # so here I might get either a LogoutResponse or a LogoutRequest
     client = environ['repoze.who.plugins']["saml2auth"]
+    sids = None
     if "QUERY_STRING" in environ:
         query = parse_qs(environ["QUERY_STRING"])
-        logger and logger.info("query: %s" % query)
+        if logger:
+            logger.info("query: %s" % query)
         try:
             (sids, code, head, message) = client.saml_client.logout_response(
                                                 query["SAMLResponse"][0],
@@ -88,6 +91,7 @@ def slo(environ, start_response, user, logger):
         start_response("302 Found", [("Location", "/done")])
         return ["Successfull Logout"]
     
+#noinspection PyUnusedLocal
 def logout(environ, start_response, user, logger):
     client = environ['repoze.who.plugins']["saml2auth"]
     subject_id = environ["repoze.who.identity"]['repoze.who.userid']
@@ -110,6 +114,7 @@ def logout(environ, start_response, user, logger):
             start_response("500 Internal Server Error")
             return ["Failed to logout from identity services"]
 
+#noinspection PyUnusedLocal
 def done(environ, start_response, user, logger):
     # remove cookie and stored info
     logger.info("[done] environ: %s" % environ)
@@ -154,7 +159,8 @@ def application(environ, start_response):
             
     path = environ.get('PATH_INFO', '').lstrip('/')
     logger = environ.get('repoze.who.logger')
-    logger and logger.info( "<application> PATH: %s" % path)
+    if logger:
+        logger.info( "<application> PATH: %s" % path)
     for regex, callback in urls:
         if user:
             match = re.search(regex, path)
