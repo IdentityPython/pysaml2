@@ -14,24 +14,39 @@ HELP_MESSAGE = """
 Usage: make_metadata [options] 1*configurationfile
 
 Valid options:
-hi:k:sv:x:
+c:hi:k:np:sv:x:
+  -c            : certificate
+  -e            : Wrap the whole thing in an EntitiesDescriptor
   -h            : Print this help message
   -i id         : The ID of the entities descriptor
   -k keyfile    : A file with a key to sign the metadata with
-  -s            : sign the metadta
+  -n            : name
+  -p            : path to the configuration file
+  -s            : sign the metadata
   -v            : How long, in days, the metadata is valid from the 
                     time of creation
   -x            : xmlsec1 binaries to be used for the signing
+  -w            : Use wellknown namespace prefixes
 """
 
 class Usage(Exception):
     def __init__(self, msg):
         self.msg = msg
 
-    
+NSPAIR = {
+    "saml2p":"urn:oasis:names:tc:SAML:2.0:protocol",
+    "saml2":"urn:oasis:names:tc:SAML:2.0:assertion",
+    "soap11":"http://schemas.xmlsoap.org/soap/envelope/",
+    "meta": "urn:oasis:names:tc:SAML:2.0:metadata",
+    "xsi":"http://www.w3.org/2001/XMLSchema-instance",
+    "ds":"http://www.w3.org/2000/09/xmldsig#",
+    "shibmd":"urn:mace:shibboleth:metadata:1.0",
+    "md":"urn:oasis:names:tc:SAML:2.0:metadata",
+}
+
 def main(args):
     try:
-        opts, args = getopt.getopt(args, "c:ehi:k:p:sv:x:",
+        opts, args = getopt.getopt(args, "c:ehi:k:np:sv:wx",
                         ["help", "name", "id", "keyfile", "sign", 
                         "valid", "xmlsec", "entityid", "path"])
     except getopt.GetoptError, err:
@@ -49,6 +64,7 @@ def main(args):
     pubkeyfile = ""
     entitiesid = True
     path = []
+    nspair = None
     
     try:
         for o, a in opts:
@@ -72,6 +88,8 @@ def main(args):
                 entitiesid = False
             elif o in ("-p", "--path"):
                 path = [x.strip() for x in a.split(":")]
+            elif o in ("-w",):
+                nspair = NSPAIR
             else:
                 assert False, "unhandled option %s" % o
     except Usage, err:
@@ -96,7 +114,7 @@ def main(args):
     if entitiesid:
         desc = entities_descriptor(eds, valid_for, name, id, sign, secc)
         valid_instance(desc)
-        print desc
+        print desc.to_string(nspair)
     else:
         for eid in eds:
             if sign:
@@ -104,7 +122,7 @@ def main(args):
             else:
                 desc = eid
             valid_instance(desc)
-            print desc
+            print desc.to_string(nspair)
 
 if __name__ == "__main__":
     import sys
