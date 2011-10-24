@@ -245,19 +245,20 @@ class Config(object):
         :param binding: The expected binding
         :return: All the endpoints that matches the given restrictions
         """
-        res = []
+        spec = []
+        unspec = []
         for endpspec in self.endpoints[service]:
             try:
                 endp, bind = endpspec
                 if binding is None or bind == binding:
-                    res.append(endp)
+                    spec.append(endp)
             except ValueError:
-                res.append(endpspec)
-    
-        try:
-            return res
-        except IndexError:
-            return None
+                unspec.append(endpspec)
+
+        if spec:
+            return spec
+        else:
+            return unspec
 
     def log_handler(self):
         try:
