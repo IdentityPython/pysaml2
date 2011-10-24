@@ -560,8 +560,15 @@ class SamlBase(ExtensionContainer):
         self._add_members_to_element_tree(new_tree)
         return new_tree
 
-    def to_string(self):
+    def to_string(self, nspair=None):
         """Converts the Saml object to a string containing XML."""
+        if nspair:
+            for prefix, uri in nspair.items():
+                try:
+                    ElementTree.register_namespace(prefix, uri)
+                except AttributeError:
+                    pass
+        
         return ElementTree.tostring(self._to_element_tree(), encoding="UTF-8")
 
     def __str__(self):
@@ -609,7 +616,8 @@ class SamlBase(ExtensionContainer):
             else:
                 childs.append(member)
         return childs
-        
+
+    #noinspection PyUnusedLocal
     def set_text(self, val, base64encode=False):
         """ Sets the text property of this instance.
         
