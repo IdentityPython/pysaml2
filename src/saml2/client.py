@@ -118,7 +118,8 @@ class Saml2Client(object):
         else:
             self.debug = debug
 
-        self.sec = security_context(config, log=self.logger, debug=self.debug)
+        self.sec = security_context(self.config, log=self.logger,
+                                    debug=self.debug)
 
         if virtual_organization:
             self.vorg = VirtualOrg(self, virtual_organization)
@@ -232,8 +233,9 @@ class Saml2Client(object):
         return resp
     
     def authn_request(self, query_id, destination, service_url, spentityid,
-                        my_name, vorg="", scoping=None, log=None, sign=False,
-                        binding=saml2.BINDING_HTTP_POST):
+                        my_name="", vorg="", scoping=None, log=None, sign=False,
+                        binding=saml2.BINDING_HTTP_POST,
+                        nameid_format=saml.NAMEID_FORMAT_TRANSIENT):
         """ Creates an authentication request.
         
         :param query_id: The identifier for this request
@@ -264,9 +266,12 @@ class Saml2Client(object):
             request.scoping = scoping
         
         # Profile stuff, should be configurable
-        name_id_policy = samlp.NameIDPolicy(allow_create="true", 
-                                        format=saml.NAMEID_FORMAT_TRANSIENT)
-        
+        if nameid_format == saml.NAMEID_FORMAT_TRANSIENT:
+            name_id_policy = samlp.NameIDPolicy(allow_create="true",
+                                                format=nameid_format)
+        else:
+            name_id_policy = samlp.NameIDPolicy(format=nameid_format)
+
         if vorg:
             try:
                 name_id_policy.sp_name_qualifier = vorg
