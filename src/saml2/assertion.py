@@ -17,6 +17,7 @@
 
 import re
 import sys
+import xmlenc
 
 from saml2 import saml
 
@@ -31,7 +32,7 @@ from saml2.s_utils import assertion_factory
 def _filter_values(vals, vlist=None, must=False):
     """ Removes values from *vals* that does not appear in vlist
     
-    :param val: The values that are to be filtered
+    :param vals: The values that are to be filtered
     :param vlist: required or optional value
     :param must: Whether the allowed values must appear
     :return: The set of values after filtering
@@ -103,7 +104,7 @@ def filter_on_attributes(ava, required=None, optional=None):
     
     return res
 
-def filter_on_demands(ava, required={}, optional={}):
+def filter_on_demands(ava, required=None, optional=None):
     """ Never return more than is needed. Filters out everything
     the server is prepared to return but the receiver doesn't ask for
     
@@ -114,7 +115,9 @@ def filter_on_demands(ava, required={}, optional={}):
     """
     
     # Is all what's required there:
-    
+    if required is None:
+        required = {}
+        
     for attr, vals in required.items():
         if attr in ava:
             if vals:
@@ -125,7 +128,10 @@ def filter_on_demands(ava, required={}, optional={}):
                                                                         val))
         else:
             raise MissingValue("Required attribute missing: %s" % (attr,))
-    
+
+    if optional is None:
+        optional = {}
+        
     # OK, so I can imaging releasing values that are not absolutely necessary
     # but not attributes
     for attr, vals in ava.items():
