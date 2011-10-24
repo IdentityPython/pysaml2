@@ -269,8 +269,8 @@ def after(point):
 
 not_before = after
 
-# 'not_on_or_after' is just an obscure name for 'not before'
-not_on_or_after = after
+# 'not_on_or_after' is just an obscure name for 'before'
+not_on_or_after = before
 
 # a point is valid if is now or sometime in the future, in other words,
 # if it is not before now
