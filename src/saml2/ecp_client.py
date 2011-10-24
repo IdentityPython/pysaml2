@@ -37,12 +37,21 @@ SERVICE = "urn:oasis:names:tc:SAML:2.0:profiles:SSO:ecp"
 PAOS_HEADER_INFO = 'ver="%s";"%s"' % (paos.NAMESPACE, SERVICE)
 
 class Client(object):
-    def __init__(self, user, passwd, sp, idp=None, metadata_file=None,
+    def __init__(self, user, passwd, sp="", idp=None, metadata_file=None,
                  xmlsec_binary=None, verbose=0):
+        """
+        :param user: user name
+        :param passwd: user password
+        :param sp: The SP URL
+        :param idp: The IdP PAOS endpoint
+        :param metadata_file: Where the metadata file is if used
+        :param xmlsec_binary: Where the xmlsec1 binary can be found
+        :param verbose: Chatty or not
+        """
         self._idp = idp
         self._sp = sp
-        self._user = user
-        self._passwd = passwd
+        self.user = user
+        self.passwd = passwd
         if metadata_file:
             self._metadata = MetaData()
             self._metadata.import_metadata(open(metadata_file).read(),
@@ -77,6 +86,72 @@ class Client(object):
 
         raise Exception("No IdP endpoint found")
 
+    def phase2(self, authn_request, rc_url, idp_entity_id):
+        """
+        Doing the second phase of the ECP conversation
+
+        :param authn_request: The AuthenticationRequest
+        :param rc_url: The assertion consumer service url
+        :param idp_entity_id: The EntityID of the IdP
+        :return: The response from the IdP
+        """
+        idp_request = soap.make_soap_enveloped_saml_thingy(authn_request)
+        #idp_endpoint = authn_request.destination
+        idp_endpoint = self.find_idp_endpoint(idp_entity_id)
+
+        # prompt the user for a password
+        if not self.passwd:
+            self.passwd = getpass.getpass(
+                                "Enter password for login '%s': " % self.user)
+
+        self.http.add_credentials(self.user, self.passwd)
+
+        # POST the request to the IdP
+        response = self.http.post(idp_request, path=idp_endpoint)
+
+        if response is None or response is False:
+            raise Exception(
+                "Request to IdP failed (%s): %s" % (self.http.response.status,
+                                                    self.http.error_description))
+
+        if self._verbose:
+            print >> sys.stderr, "IdP response: %s" % response
+
+        # SAMLP response in a SOAP envelope body, ecp response in headers
+        respdict = soap.class_instances_from_soap_enveloped_saml_thingies(
+                                                response, [paos, ecp,samlp])
+
+        if respdict is None:
+            raise Exception("Unexpected reply from the IdP")
+
+        if self._verbose:
+            print >> sys.stderr, "IdP reponse dict: %s" % respdict
+
+        idp_response = respdict["body"]
+        assert idp_response.c_tag == "Response"
+
+        if self._verbose:
+            print >> sys.stderr, "IdP AUTHN response: %s" % idp_response
+            print
+
+        _ecp_response = None
+        for item in respdict["header"]:
+            if item.c_tag == "Response" and\
+               item.c_namespace == ecp.NAMESPACE:
+                _ecp_response = item
+
+        _acs_url = _ecp_response.assertion_consumer_service_url
+        if rc_url != _acs_url:
+            error = ("response_consumer_url '%s' does not match" % rc_url,
+                     "assertion_consumer_service_url '%s" % _acs_url)
+            # Send an error message to the SP
+            fault_text = soap.soap_fault(error)
+            _ = self.http.post(fault_text, path=rc_url)
+            # Raise an exception so the user knows something went wrong
+            raise Exception(error)
+        
+        return idp_response
+
     #noinspection PyUnusedLocal
     def ecp_conversation(self, respdict, idp_entity_id=None):
         """  """
@@ -107,66 +182,13 @@ class Client(object):
         # **********************
         # Phase 2 - talk to the IdP
         # **********************
-        idp_request = soap.make_soap_enveloped_saml_thingy(authn_request)
-        #idp_endpoint = authn_request.destination
-        idp_endpoint = self.find_idp_endpoint(idp_entity_id)
 
-        # prompt the user for a password
-        if not self._passwd:
-            self._passwd = getpass.getpass(
-                "Enter password for login '%s': " % self._user)
-
-        self.http.add_credentials(self._user, self._passwd)
-
-        # POST the request to the IdP
-        response = self.http.post(idp_request, path=idp_endpoint)
-
-        if response is None or response is False:
-            raise Exception(
-                "Request to IdP failed (%s): %s" % (self.http.response.status,
-                                                    self.http.error_description))
-
-        if self._verbose:
-            print >> sys.stderr, "IdP response: %s" % response
-
-        # SAMLP response in a SOAP envelope body, ecp response in headers
-        respdict = soap.class_instances_from_soap_enveloped_saml_thingies(
-            response,
-            [paos, ecp,
-             samlp])
-
-        if respdict is None:
-            raise Exception("Unexpected reply from the IdP")
-
-        if self._verbose:
-            print >> sys.stderr, "IdP reponse dict: %s" % respdict
-
-        idp_response = respdict["body"]
-        assert idp_response.c_tag == "Response"
-
-        if self._verbose:
-            print >> sys.stderr, "IdP AUTHN response: %s" % idp_response
-            print
-
-        _ecp_response = None
-        for item in respdict["header"]:
-            if item.c_tag == "Response" and\
-               item.c_namespace == ecp.NAMESPACE:
-                _ecp_response = item
-
-        _acs_url = _ecp_response.assertion_consumer_service_url
-        if _rc_url != _acs_url:
-            error = ("response_consumer_url '%s' does not match" % _rc_url,
-                     "assertion_consumer_service_url '%s" % _acs_url)
-            # Send an error message to the SP
-            fault_text = soap.soap_fault(error)
-            _ = self.http.post(fault_text, path=_rc_url)
-            # Raise an exception so the user knows something went wrong
-            raise Exception(error)
+        idp_response = self.phase2(authn_request, _rc_url, idp_entity_id)
 
         # **********************************
         # Phase 3 - back to the SP
         # **********************************
+
         sp_response = soap.make_soap_enveloped_saml_thingy(idp_response,
             [_relay_state])
 
@@ -177,7 +199,7 @@ class Client(object):
         headers = {'Content-Type': 'application/vnd.paos+xml', }
 
         # POST the package from the IdP to the SP
-        response = self.http.post(sp_response, headers, _acs_url)
+        response = self.http.post(sp_response, headers, _rc_url)
 
         if not response:
             if self.http.response.status == 302:
@@ -253,9 +275,12 @@ class Client(object):
         except (soap.XmlParseError, AssertionError, KeyError):
             pass
 
-        if not response and self.http.response.status != "404":
-            raise Exception("Error performing operation: %s" % (
-                self.http.error_description,))
+        #print "RESP",response, self.http.response
+
+        if not response:
+            if  self.http.response.status != 404:
+                raise Exception("Error performing operation: %s" % (
+                    self.http.error_description,))
 
         return response
 
