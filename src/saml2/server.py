@@ -26,7 +26,9 @@ import memcache
 from saml2 import saml
 from saml2 import class_name
 from saml2 import soap
-from saml2 import BINDING_HTTP_REDIRECT, BINDING_SOAP
+from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_SOAP
+from saml2 import BINDING_PAOS
 
 from saml2.request import AuthnRequest
 from saml2.request import AttributeQuery
@@ -294,33 +296,34 @@ class Server(object):
         """
         
         response = {}
+        _log_info = self.log.info
 
         # The addresses I should receive messages like this on
         receiver_addresses = self.conf.endpoint("single_sign_on_service",
                                                  binding)
         if self.debug and self.log:
-            self.log.info("receiver addresses: %s" % receiver_addresses)
-            self.log.info("Binding: %s" % binding)
+            _log_info("receiver addresses: %s" % receiver_addresses)
+            _log_info("Binding: %s" % binding)
             
         authn_request = AuthnRequest(self.sec, self.conf.attribute_converters,
                                             receiver_addresses, log=self.log)
 
-        if binding == BINDING_SOAP:
+        if binding == BINDING_SOAP or binding == BINDING_PAOS:
             # not base64 decoding and unzipping
             authn_request.debug=True
-            self.log.info("Don't decode")
+            _log_info("Don't decode")
             authn_request = authn_request.loads(enc_request, decode=False)
         else:
             authn_request = authn_request.loads(enc_request)
 
         if self.debug and self.log:
-            self.log.info("Loaded authn_request")
+            _log_info("Loaded authn_request")
 
         if authn_request:
             authn_request = authn_request.verify()
 
         if self.debug and self.log:
-            self.log.info("Verified authn_request")
+            _log_info("Verified authn_request")
 
         if not authn_request:
             return None
@@ -336,13 +339,13 @@ class Server(object):
                                                       binding=_binding)
         except KeyError:
             if self.log:
-                self.log.info(
-                    "Failed to find consumer URL for %s" % sp_entity_id)
-            if self.log: self.log.info(
-                    "entities: %s" % self.metadata.entity.keys())
+                _log_info("Failed to find consumer URL for %s" % sp_entity_id)
+                _log_info("entities: %s" % self.metadata.entity.keys())
             raise UnknownPrincipal(sp_entity_id)
             
         if not consumer_url: # what to do ?
+            if self.log:
+                _log_info("Couldn't find a consumer URL binding=%s" % _binding)
             raise UnsupportedBinding(sp_entity_id)
 
         response["sp_entity_id"] = sp_entity_id
@@ -354,8 +357,7 @@ class Server(object):
             if consumer_url != return_destination:
                 # serious error on someones behalf
                 if self.log:
-                    self.log.info("%s != %s" % (consumer_url, 
-                                                    return_destination))
+                    _log_info("%s != %s" % (consumer_url, return_destination))
                 else:
                     print >> sys.stderr, \
                                 "%s != %s" % (consumer_url, return_destination)
