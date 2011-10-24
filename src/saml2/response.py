@@ -26,7 +26,9 @@ from saml2 import time_util
 
 from saml2.saml import attribute_from_string
 from saml2.saml import encrypted_attribute_from_string
-from saml2.sigver import security_context, SignatureError
+from saml2.sigver import security_context
+from saml2.sigver import SignatureError
+from saml2.sigver import signed
 from saml2.attribute_converter import to_local
 from saml2.time_util import str_to_time
 
@@ -106,6 +108,7 @@ class StatusResponse(object):
         self.not_on_or_after = 0
         self.in_response_to = None
         self.signature_check = self.sec.correctly_signed_response
+        self.not_signed = False
     
     def _clear(self):
         self.xmlstr = ""
@@ -139,7 +142,17 @@ class StatusResponse(object):
         return self
         
     def load_instance(self, instance):
-        self.response = self.sec.check_signature(instance)
+        if signed(instance):
+            # This will check signature on Assertion which is the default
+            try:
+                self.response = self.sec.check_signature(instance)
+            except SignatureError: # The response as a whole might be signed or not
+                self.response = self.sec.check_signature(instance,
+                                                    samlp.NAMESPACE+":Response")
+        else:
+            self.not_signed = True
+            self.response = instance
+            
         return self._postamble()
         
     def _loads(self, xmldata, decode=True, origxml=None):
