@@ -55,6 +55,10 @@ def parse_soap_enveloped_saml_logout_request(text):
     expected_tag = '{%s}LogoutRequest' % SAMLP_NAMESPACE
     return parse_soap_enveloped_saml_thingy(text, [expected_tag])
 
+def parse_soap_enveloped_saml_authentication_request(text):
+    expected_tag = '{%s}AuthenticationRequest' % SAMLP_NAMESPACE
+    return parse_soap_enveloped_saml_thingy(text, [expected_tag])
+
 #def parse_soap_enveloped_saml_logout_response(text):
 #    expected_tag = '{%s}LogoutResponse' % SAMLP_NAMESPACE
 #    return parse_soap_enveloped_saml_thingy(text, [expected_tag])
@@ -222,7 +226,7 @@ class HTTPClient(object):
                                                         body=data,
                                                         headers=headers)
 
-        if response.status == 200:
+        if response.status == 200 or response.status == 201:
             return content
 #        elif response.status == 302: # redirect
 #            return self.post(data, headers, response["location"])
@@ -240,7 +244,7 @@ class HTTPClient(object):
 
         (response, content) = self.server.crequest(path, method="GET",
                                                      headers=headers)
-        if response.status == 200:
+        if response.status == 200 or response.status == 201:
             return content
 #        elif response.status == 302: # redirect
 #            return self.get(headers, response["location"])
@@ -258,7 +262,7 @@ class HTTPClient(object):
         (response, content) = self.server.crequest(path, method="PUT",
                                                     body=data,
                                                     headers=headers)
-        if response.status == 200:
+        if response.status == 200 or response.status == 201:
             return content
         else:
             self.response = response
@@ -273,7 +277,7 @@ class HTTPClient(object):
 
         (response, content) = self.server.crequest(path, method="DELETE",
                                                     headers=headers)
-        if response.status == 200:
+        if response.status == 200 or response.status == 201:
             return content
         else:
             self.response = response
