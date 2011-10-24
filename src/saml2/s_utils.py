@@ -2,8 +2,14 @@
 
 import time
 import base64
-import hashlib
+import sys
 import hmac
+
+# from python 2.5
+if sys.version_info >= (2,5):
+    import hashlib
+else: # before python 2.5
+    import sha
 
 from saml2 import saml
 from saml2 import samlp
@@ -282,9 +288,14 @@ def factory(klass, **kwargs):
 def signature(secret, parts):
     """Generates a signature.
     """
-    csum = hmac.new(secret, digestmod=hashlib.sha1)
-    for part in parts: 
+    if sys.version_info >= (2, 5):
+        csum = hmac.new(secret, digestmod=hashlib.sha1)
+    else:
+        csum = hmac.new(secret, digestmod=sha)
+
+    for part in parts:
         csum.update(part)
+
     return csum.hexdigest()
 
 def verify_signature(secret, parts):
