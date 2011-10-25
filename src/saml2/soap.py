@@ -288,6 +288,10 @@ class HTTPClient(object):
     def add_credentials(self, name, passwd):
         self.server.add_credentials(name, passwd)
 
+    def clear_credentials(self):
+        self.server.clear_credentials()
+
+
 class SOAPClient(object):
     
     def __init__(self, server_url, keyfile=None, certfile=None, log=None,
