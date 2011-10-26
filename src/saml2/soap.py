@@ -300,11 +300,14 @@ class SOAPClient(object):
         self.log = log
         self.response = None
         
-    def send(self, request, path=None):
+    def send(self, request, path=None, headers=None):
+        if headers is None:
+            headers = {"content-type": "application/soap+xml"}
+        else:
+            headers.update({"content-type": "application/soap+xml"})
+
         soap_message = make_soap_enveloped_saml_thingy(request)
-        _response = self.server.post(soap_message,
-                                     {"content-type": "application/soap+xml"},
-                                     path=path)
+        _response = self.server.post(soap_message, headers, path=path)
 
         self.response = _response
         if _response:
