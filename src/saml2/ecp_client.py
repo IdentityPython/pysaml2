@@ -86,28 +86,26 @@ class Client(object):
 
         raise Exception("No IdP endpoint found")
 
-    def phase2(self, authn_request, rc_url, idp_entity_id):
+    def phase2(self, authn_request, rc_url, idp_entity_id, headers=None):
         """
         Doing the second phase of the ECP conversation
 
         :param authn_request: The AuthenticationRequest
         :param rc_url: The assertion consumer service url
         :param idp_entity_id: The EntityID of the IdP
+        :param headers: Possible extra headers
         :return: The response from the IdP
         """
         idp_request = soap.make_soap_enveloped_saml_thingy(authn_request)
         #idp_endpoint = authn_request.destination
         idp_endpoint = self.find_idp_endpoint(idp_entity_id)
 
-        # prompt the user for a password
-        if not self.passwd:
-            self.passwd = getpass.getpass(
-                                "Enter password for login '%s': " % self.user)
-
-        self.http.add_credentials(self.user, self.passwd)
+        if self.user and self.passwd:
+            self.http.add_credentials(self.user, self.passwd)
 
         # POST the request to the IdP
-        response = self.http.post(idp_request, path=idp_endpoint)
+        response = self.http.post(idp_request, headers=headers,
+                                  path=idp_endpoint)
 
         if response is None or response is False:
             raise Exception(
