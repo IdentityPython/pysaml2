@@ -140,6 +140,44 @@ def filter_on_demands(ava, required=None, optional=None):
     
     return ava
 
+def filter_on_wire_representation(ava, acs, required=None, optional=None):
+    """
+    :param ava: A dictionary with attributes and values
+    :param required: A list of saml.Attributes
+    :param optional: A list of saml.Attributes
+    :return: Dictionary of expected/wanted attributes and values
+    """
+    acsdic = dict([(ac.name_format, ac) for ac in acs])
+
+    if required is None:
+        required = []
+    if optional is None:
+        optional = []
+
+    res = {}
+    for attr, val in ava.items():
+        done = False
+        for req in required:
+            try:
+                _name = acsdic[req.name_format]._to[attr]
+                if _name == req.name:
+                    res[attr] = val
+                    done = True
+            except KeyError:
+                pass
+        if done:
+            continue
+        for opt in optional:
+            try:
+                _name = acsdic[opt.name_format]._to[attr]
+                if _name == opt.name:
+                    res[attr] = val
+                    break
+            except KeyError:
+                pass
+
+    return res
+
 def filter_attribute_value_assertions(ava, attribute_restrictions=None):
     """ Will weed out attribute values and values according to the
     rules defined in the attribute restrictions. If filtering results in
