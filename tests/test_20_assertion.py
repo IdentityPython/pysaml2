@@ -568,4 +568,41 @@ def test_req_opt():
     sp_entity_id = "urn:mace:example.com:saml:curt:sp"
     fava = policy.filter(ava, sp_entity_id, req, opt)
     assert fava
-    
+
+def test_filter_on_wire_representation_1():
+    r = [Attribute(friendly_name="surName",
+            name="urn:oid:2.5.4.4",
+            name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"),
+        Attribute(friendly_name="givenName",
+                name="urn:oid:2.5.4.42",
+                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri")]
+    o = [Attribute(friendly_name="title",
+                name="urn:oid:2.5.4.12",
+                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri")]
+
+    acs = attribute_converter.ac_factory("attributemaps")
+
+    ava = { "sn":["Hedberg"], "givenname":["Roland"],
+            "edupersonaffiliation":["staff"],"uid":["rohe0002"]}
+
+    ava = assertion.filter_on_wire_representation(ava, acs, r, o)
+    assert _eq(ava.keys(), ["sn", "givenname"])
+
+def test_filter_on_wire_representation_2():
+    r = [Attribute(friendly_name="surName",
+            name="urn:oid:2.5.4.4",
+            name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"),
+        Attribute(friendly_name="givenName",
+                name="urn:oid:2.5.4.42",
+                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri")]
+    o = [Attribute(friendly_name="title",
+                name="urn:oid:2.5.4.12",
+                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri")]
+
+    acs = attribute_converter.ac_factory("attributemaps")
+
+    ava = { "sn":["Hedberg"], "givenname":["Roland"],
+            "title":["Master"],"uid":["rohe0002"]}
+
+    ava = assertion.filter_on_wire_representation(ava, acs, r, o)
+    assert _eq(ava.keys(), ["sn", "givenname", "title"])
