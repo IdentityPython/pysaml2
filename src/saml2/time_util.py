@@ -256,7 +256,7 @@ def before(point):
     elif isinstance(point, int):
         point = time.gmtime(point)
 
-    return point < time.gmtime()
+    return time.gmtime() < point
 
 
 def after(point):
@@ -272,9 +272,9 @@ not_before = after
 # 'not_on_or_after' is just an obscure name for 'before'
 not_on_or_after = before
 
-# a point is valid if is now or sometime in the future, in other words,
+# a point is valid if it is now or sometime in the future, in other words,
 # if it is not before now
-valid = after
+valid = before
 
 
 def later_than(then, that):
