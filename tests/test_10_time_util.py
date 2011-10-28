@@ -102,20 +102,20 @@ def test_timeout():
 
 def test_before():
     current_year = datetime.datetime.today().year
-    assert before("%d-01-01T00:00:00Z" % (current_year - 1)) == True
-    assert before("%d-01-01T00:00:00Z" % (current_year + 1)) == False
+    assert before("%d-01-01T00:00:00Z" % (current_year - 1)) == False
+    assert before("%d-01-01T00:00:00Z" % (current_year + 1)) == True
 
 
 def test_after():
     current_year = datetime.datetime.today().year
-    assert after("%d-01-01T00:00:00Z" % (current_year + 1)) == True
-    assert after("%d-01-01T00:00:00Z" % (current_year - 1)) == False
+    assert after("%d-01-01T00:00:00Z" % (current_year + 1)) == False
+    assert after("%d-01-01T00:00:00Z" % (current_year - 1)) == True
 
 
 def test_not_before():
     current_year = datetime.datetime.today().year
-    assert not_before("%d-01-01T00:00:00Z" % (current_year + 1)) == True
-    assert not_before("%d-01-01T00:00:00Z" % (current_year - 1)) == False
+    assert not_before("%d-01-01T00:00:00Z" % (current_year + 1)) == False
+    assert not_before("%d-01-01T00:00:00Z" % (current_year - 1)) == True
 
 
 def test_not_on_or_after():
