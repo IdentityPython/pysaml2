@@ -28,7 +28,8 @@ class Cache(object):
         if self._sync:
             self._db.sync()
         
-    def get_identity(self, subject_id, entities=None, check_not_on_or_after=True):
+    def get_identity(self, subject_id, entities=None,
+                     check_not_on_or_after=True):
         """ Get all the identity information that has been received and 
         are still valid about the subject.
         
@@ -78,7 +79,7 @@ class Cache(object):
         :return: The session information
         """
         (timestamp, info) = self._db[subject_id][entity_id]
-        if check_not_on_or_after and not time_util.not_on_or_after(timestamp):
+        if check_not_on_or_after and time_util.after(timestamp):
             raise ToOld("past %s" % timestamp)
 
         return info or None
