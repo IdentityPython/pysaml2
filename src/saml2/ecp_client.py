@@ -27,6 +27,7 @@ import sys
 from saml2 import soap
 from saml2 import samlp
 from saml2 import BINDING_PAOS
+from saml2 import BINDING_SOAP
 
 from saml2.profile import paos
 from saml2.profile import ecp
@@ -74,19 +75,20 @@ class Client(object):
                 "Can't handle IdP entity ID if I don't have metadata")
 
         if idp_entity_id:
-            ssos = self._metadata.single_sign_on_services(idp_entity_id,
-                                                          binding=BINDING_PAOS)
-            try:
-                self._idp = ssos[0]
-                return self._idp
-            except TypeError:
-                raise Exception(
-                    "No suitable endpoint found for entity id '%s'"\
-                    % (idp_entity_id,))
+            for binding in [BINDING_PAOS, BINDING_SOAP]:
+                ssos = self._metadata.single_sign_on_services(idp_entity_id,
+                                                              binding=binding)
+                if ssos:
+                    self._idp = ssos[0]
+                    return self._idp
 
-        raise Exception("No IdP endpoint found")
+            raise Exception("No suitable endpoint found for entity id '%s'" % (
+                            idp_entity_id,))
+        else:
+            raise Exception("No entity ID -> no endpoint")
 
-    def phase2(self, authn_request, rc_url, idp_entity_id, headers=None):
+    def phase2(self, authn_request, rc_url, idp_entity_id, headers=None,
+               idp_endpoint=None):
         """
         Doing the second phase of the ECP conversation
 
@@ -97,8 +99,9 @@ class Client(object):
         :return: The response from the IdP
         """
         idp_request = soap.make_soap_enveloped_saml_thingy(authn_request)
-        #idp_endpoint = authn_request.destination
-        idp_endpoint = self.find_idp_endpoint(idp_entity_id)
+
+        if not idp_endpoint:
+            idp_endpoint = self.find_idp_endpoint(idp_entity_id)
 
         if self.user and self.passwd:
             self.http.add_credentials(self.user, self.passwd)
