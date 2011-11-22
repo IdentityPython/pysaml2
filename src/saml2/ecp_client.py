@@ -21,7 +21,6 @@ programs.
 """
 
 import cookielib
-import getpass
 import sys
 
 from saml2 import soap
@@ -39,7 +38,8 @@ PAOS_HEADER_INFO = 'ver="%s";"%s"' % (paos.NAMESPACE, SERVICE)
 
 class Client(object):
     def __init__(self, user, passwd, sp="", idp=None, metadata_file=None,
-                 xmlsec_binary=None, verbose=0):
+                 xmlsec_binary=None, verbose=0, ca_certs="",
+                 disable_ssl_certificate_validation=True):
         """
         :param user: user name
         :param passwd: user password
@@ -48,6 +48,11 @@ class Client(object):
         :param metadata_file: Where the metadata file is if used
         :param xmlsec_binary: Where the xmlsec1 binary can be found
         :param verbose: Chatty or not
+        :param ca_certs: is the path of a file containing root CA certificates
+            for SSL server certificate validation.
+        :param disable_ssl_certificate_validation: If
+            disable_ssl_certificate_validation is true, SSL cert validation
+            will not be performed.
         """
         self._idp = idp
         self._sp = sp
@@ -64,7 +69,10 @@ class Client(object):
 
         self.done_ecp = False
         self.cookie_jar = cookielib.LWPCookieJar()
-        self.http = soap.HTTPClient(self._sp, cookiejar=self.cookie_jar)
+        self.http = soap.HTTPClient(self._sp, cookiejar=self.cookie_jar,
+            ca_certs=ca_certs,
+            disable_ssl_certificate_validation=disable_ssl_certificate_validation)
+
 
     def find_idp_endpoint(self, idp_entity_id):
         if self._idp:
