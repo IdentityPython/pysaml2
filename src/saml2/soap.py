@@ -197,17 +197,21 @@ def soap_fault(message=None, actor=None, code=None, detail=None):
 class HTTPClient(object):
     """ For sending a message to a HTTP server using POST or GET """
     def __init__(self, path, keyfile=None, certfile=None, log=None,
-                 cookiejar=None):
+                 cookiejar=None, ca_certs="",
+                 disable_ssl_certificate_validation=True):
         self.path = path
         if cookiejar is not None:
             self.cj = True
-            self.server = httplib2cookie.CookiefulHttp(cookiejar)
+            self.server = httplib2cookie.CookiefulHttp(cookiejar,
+                ca_certs=ca_certs,
+                disable_ssl_certificate_validation=disable_ssl_certificate_validation)
         else:
             self.cj = False
-            self.server = Http()
+            self.server = Http(ca_certs=ca_certs,
+                disable_ssl_certificate_validation=disable_ssl_certificate_validation)
         self.log = log
         self.response = None
-        
+
         if keyfile:
             self.server.add_certificate(keyfile, certfile, "")
 
@@ -295,8 +299,11 @@ class HTTPClient(object):
 class SOAPClient(object):
     
     def __init__(self, server_url, keyfile=None, certfile=None, log=None,
-                 cookiejar=None):
-        self.server = HTTPClient(server_url, keyfile, certfile, log, cookiejar)
+                 cookiejar=None, ca_certs="",
+                 disable_ssl_certificate_validation=True):
+        self.server = HTTPClient(server_url, keyfile, certfile, log,
+                cookiejar, ca_certs=ca_certs,
+                disable_ssl_certificate_validation=disable_ssl_certificate_validation)
         self.log = log
         self.response = None
         
