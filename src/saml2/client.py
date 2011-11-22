@@ -522,7 +522,8 @@ class Saml2Client(object):
             log.info("Request, created: %s" % request)
         
         soapclient = SOAPClient(destination, self.config.key_file,
-                                self.config.cert_file)
+                                self.config.cert_file,
+                                ca_certs=self.config.ca_certs)
         if log:
             log.info("SOAP client initiated")
 
@@ -690,7 +691,8 @@ class Saml2Client(object):
                     response = send_using_soap(request, destination, 
                                                 self.config.key_file,
                                                 self.config.cert_file,
-                                                log=log)
+                                                log=log,
+                                                ca_certs=self.config.ca_certs)
                     if response:
                         if log:
                             log.info("Verifying response")
@@ -1060,7 +1062,8 @@ class Saml2Client(object):
             response = send_using_soap(authz_decision_query, destination,
                                         self.config.key_file,
                                         self.config.cert_file,
-                                        log=log)
+                                        log=log,
+                                        ca_certs=self.config.ca_certs)
             if response:
                 if log:
                     log.info("Verifying response")
