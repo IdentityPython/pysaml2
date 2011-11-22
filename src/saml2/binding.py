@@ -49,16 +49,13 @@ def http_post_message(message, location, relay_state="", typ="SAMLRequest"):
     messages may be transmitted within the base64-encoded content of a
     HTML form control.
     
-    :param authn_request: The message
+    :param message: The message
     :param location: Where the form should be posted to
     :param relay_state: for preserving and conveying state information
     :return: A tuple containing header information and a HTML message.
     """
-    response = []
-    response.append("<head>")
-    response.append("""<title>SAML 2.0 POST</title>""")
-    response.append("</head><body>")
-    
+    response = ["<head>", """<title>SAML 2.0 POST</title>""", "</head><body>"]
+
     if not isinstance(message, basestring):
         message = "%s" % (message,)
         
@@ -82,7 +79,7 @@ def http_redirect_message(message, location, relay_state="",
     
     The DEFLATE Encoding is used in this function.
     
-    :param authn_request: The message
+    :param message: The message
     :param location: Where the message should be posted to
     :param relay_state: for preserving and conveying state information
     :return: A tuple containing header information and a HTML message.
@@ -153,9 +150,7 @@ def parse_soap_enveloped_saml(text, body_class, header_class=None):
             for sub in part:
                 try:
                     body = saml2.create_class_from_element_tree(body_class, sub)
-                except Exception, exc:
-                    #print exc
-                    #print body_class.c_tag
+                except Exception:
                     raise Exception(
                             "Wrong body type (%s) in SOAP envelope" % sub.tag)
         elif part.tag == '{%s}Header' % NAMESPACE:
@@ -192,9 +187,9 @@ def parse_soap_enveloped_saml(text, body_class, header_class=None):
 #     return response
 
 def send_using_http_post(request, destination, relay_state, key_file=None, 
-                        cert_file=None, log=None):
+                        cert_file=None, log=None, ca_certs=""):
 
-    http = HTTPClient(destination, key_file, cert_file, log)
+    http = HTTPClient(destination, key_file, cert_file, log, ca_certs)
     if log:
         log.info("HTTP client initiated")
 
@@ -215,7 +210,7 @@ def send_using_http_post(request, destination, relay_state, key_file=None,
     return response
 
 def send_using_soap(message, destination, key_file=None, cert_file=None, 
-                    log=None):
+                    log=None, ca_certs=""):
     """ 
     Actual construction of the SOAP message is done by the SOAPClient
     
@@ -224,10 +219,11 @@ def send_using_soap(message, destination, key_file=None, cert_file=None,
     :param key_file: If HTTPS this is the client certificate
     :param cert_file: If HTTPS this a certificates file 
     :param log: A log function to use for logging
+    :param ca_certs: CA certificates to use when verifying server certificates
     :return: The response gotten from the other side interpreted by the 
         SOAPClient
     """
-    soapclient = SOAPClient(destination, key_file, cert_file, log)
+    soapclient = SOAPClient(destination, key_file, cert_file, log, ca_certs)
     if log:
         log.info("SOAP client initiated")
     try:
