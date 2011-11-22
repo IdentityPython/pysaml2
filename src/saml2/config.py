@@ -19,7 +19,7 @@ from saml2.assertion import Policy
 from saml2.sigver import get_xmlsec_binary
 
 COMMON_ARGS = ["entityid", "xmlsec_binary", "debug", "key_file", "cert_file",
-                "secret", "accepted_time_diff", "name",
+                "secret", "accepted_time_diff", "name", "ca_certs",
                 "description",
                 "organization",
                 "contact_person",
