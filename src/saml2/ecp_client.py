@@ -39,7 +39,8 @@ PAOS_HEADER_INFO = 'ver="%s";"%s"' % (paos.NAMESPACE, SERVICE)
 class Client(object):
     def __init__(self, user, passwd, sp="", idp=None, metadata_file=None,
                  xmlsec_binary=None, verbose=0, ca_certs="",
-                 disable_ssl_certificate_validation=True):
+                 disable_ssl_certificate_validation=True, logger=None,
+                 debug=False):
         """
         :param user: user name
         :param passwd: user password
@@ -53,15 +54,21 @@ class Client(object):
         :param disable_ssl_certificate_validation: If
             disable_ssl_certificate_validation is true, SSL cert validation
             will not be performed.
+        :param logger: Somewhere to write logs to
+        :param debug: Whether debug output is needed
         """
         self._idp = idp
         self._sp = sp
         self.user = user
         self.passwd = passwd
+        self.log = logger
+        self.debug = debug
+
         if metadata_file:
             self._metadata = MetaData()
             self._metadata.import_metadata(open(metadata_file).read(),
                                            xmlsec_binary)
+            self._debug_info("Loaded metadata from '%s'" % metadata_file)
         else:
             self._metadata = None
         self._verbose = verbose
@@ -73,6 +80,13 @@ class Client(object):
             ca_certs=ca_certs,
             disable_ssl_certificate_validation=disable_ssl_certificate_validation)
 
+    def _debug_info(self, text):
+        if self.debug:
+            if self.log:
+                self.log.debug(text)
+
+        if self._verbose:
+            print >> sys.stderr, text
 
     def find_idp_endpoint(self, idp_entity_id):
         if self._idp:
@@ -88,6 +102,8 @@ class Client(object):
                                                               binding=binding)
                 if ssos:
                     self._idp = ssos[0]
+                    if self.debug:
+                        self.log.debug("IdP endpoint: '%s'" % self._idp)
                     return self._idp
 
             raise Exception("No suitable endpoint found for entity id '%s'" % (
@@ -114,17 +130,18 @@ class Client(object):
         if self.user and self.passwd:
             self.http.add_credentials(self.user, self.passwd)
 
+        self._debug_info("[P2] Sending request: %s" % idp_request)
+            
         # POST the request to the IdP
         response = self.http.post(idp_request, headers=headers,
                                   path=idp_endpoint)
 
+        self._debug_info("[P2] Got IdP response: %s" % response)
+
         if response is None or response is False:
             raise Exception(
                 "Request to IdP failed (%s): %s" % (self.http.response.status,
-                                                    self.http.error_description))
-
-        if self._verbose:
-            print >> sys.stderr, "IdP response: %s" % response
+                                                self.http.error_description))
 
         # SAMLP response in a SOAP envelope body, ecp response in headers
         respdict = soap.class_instances_from_soap_enveloped_saml_thingies(
@@ -133,15 +150,12 @@ class Client(object):
         if respdict is None:
             raise Exception("Unexpected reply from the IdP")
 
-        if self._verbose:
-            print >> sys.stderr, "IdP reponse dict: %s" % respdict
+        self._debug_info("[P2] IdP response dict: %s" % respdict)
 
         idp_response = respdict["body"]
         assert idp_response.c_tag == "Response"
 
-        if self._verbose:
-            print >> sys.stderr, "IdP AUTHN response: %s" % idp_response
-            print
+        self._debug_info("[P2] IdP AUTHN response: %s" % idp_response)
 
         _ecp_response = None
         for item in respdict["header"]:
@@ -168,8 +182,7 @@ class Client(object):
         if respdict is None:
             raise Exception("Unexpected reply from the SP")
 
-        if self._verbose:
-            print >> sys.stderr, "SP reponse dict: %s" % respdict
+        self._debug_info("[P1] SP response dict: %s" % respdict)
 
         # AuthnRequest in the body or not
         authn_request = respdict["body"]
@@ -201,9 +214,7 @@ class Client(object):
         sp_response = soap.make_soap_enveloped_saml_thingy(idp_response,
             [_relay_state])
 
-        if self._verbose:
-            print >> sys.stderr, sp_response
-            print
+        self._debug_info("[P3] Post to SP: %s" % sp_response)
 
         headers = {'Content-Type': 'application/vnd.paos+xml', }
 
@@ -220,10 +231,12 @@ class Client(object):
                 raise Exception(
                     "Error POSTing package to SP: %s" % self.http.response.reason)
 
-        if self._verbose:
-            print >> sys.stderr, "Final SP response: %s" % response
+        self._debug_info("[P3] IdP response: %s" % response)
 
         self.done_ecp = True
+        if self.debug:
+            self.log.debug("Done ECP")
+            
         return None
 
 
@@ -258,8 +271,7 @@ class Client(object):
 #            pass
         
         response = op(**opargs)
-        if self._verbose:
-            print >> sys.stderr, "SP response: %s" % response
+        self._debug_info("[Op] SP response: %s" % response)
 
         if not response:
             raise Exception(
