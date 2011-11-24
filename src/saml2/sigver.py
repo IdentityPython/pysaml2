@@ -577,7 +577,7 @@ class SecurityContext(object):
 
         # More trust in certs from metadata then certs in the XML document
         if self.metadata:
-             certs = self.metadata.certs(issuer, "signing")
+            certs = self.metadata.certs(issuer, "signing")
         else:
             certs = []
 
@@ -826,6 +826,22 @@ class SecurityContext(object):
                                                 class_name(saml.Assertion()),
                                                 key, key_file, nodeid,
                                                 id_attr=id_attr)
+
+    def sign_attribute_query_using_xmlsec(self, statement, key=None,
+                                          key_file=None, nodeid=None,
+                                          id_attr=""):
+        """Sign a SAML assertion using xmlsec.
+
+        :param statement: The statement to be signed
+        :param key: The key to be used for the signing, either this or
+        :param key_file: The file where the key can be found
+        :return: The signed statement
+        """
+
+        return self.sign_statement_using_xmlsec(statement,
+                                            class_name(samlp.AttributeQuery()),
+                                            key, key_file, nodeid,
+                                            id_attr=id_attr)
 
     def multiple_signatures(self, statement, to_sign, key=None, key_file=None):
         """
