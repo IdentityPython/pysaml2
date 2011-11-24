@@ -33,6 +33,175 @@ from saml2 import saml
 
 from py.test import raises
 
+
+class TestExtensionElement:
+    def test_loadd(self):
+        ava = {
+            "attributes": {"attr":"loa", "info":"source"},
+            "tag": "tag",
+            "namespace": "urn:mace:example.com",
+            "text": "free text"
+            }
+
+        ee = saml2.ExtensionElement(ava["tag"])
+        ee.loadd(ava)
+
+        del ava["tag"]
+        print ava
+        ee = saml2.ExtensionElement("")
+
+        raises(KeyError, "ee.loadd(ava)")
+
+        ava["tag"] = "foo"
+        del ava["namespace"]
+
+        ee = saml2.ExtensionElement("")
+        raises(KeyError, "ee.loadd(ava)")
+
+    def test_find_children(self):
+        ava = {
+            "attributes": {"attr":"loa", "info":"source"},
+            "tag": "tag",
+            "namespace": "urn:mace:example.com",
+            "text": "free text",
+            "children": [{
+                "attributes": {"foo":"bar","special":"app"},
+                "tag": "tag2",
+                "namespace": "urn:mace:example.com",
+                "text": "Just a line"
+                },
+                {
+                "attributes": {"static":"attribute","dynamic":"orgname"},
+                "tag": "tag3",
+                "namespace": "urn:mace:example.com",
+                "text": "Another line of text",
+                "children": [{
+                    "tag": "subtag",
+                    "namespace": "urn:mace:example.org",
+                    "text": "grandchild"
+                    }]
+                },
+                {
+                "attributes": {"entitlement":"xyz"},
+                "tag": "tag4",
+                "namespace": "urn:mace:example.org",
+                "text": "A comment"
+                }
+            ]
+        }
+
+        ee = saml2.ExtensionElement(ava["tag"])
+        ee.loadd(ava)
+
+        c = ee.find_children(tag="tag")
+        assert len(c) == 0
+        c = ee.find_children(tag="tag2")
+        assert len(c) == 1
+        c = ee.find_children(tag="tag3")
+        assert len(c) == 1
+        # Grandchild
+        gc = c[0].find_children(tag="subtag")
+        assert len(gc) == 1
+        # only do immediate children
+        gc = ee.find_children(tag="subtag")
+        assert len(gc) == 0
+
+        c = ee.find_children(tag="tag2", namespace="urn:mace:example.com")
+        assert len(c) == 1
+        c = ee.find_children(tag="tag2", namespace="urn:mace:example.org")
+        assert len(c) == 0
+        c = ee.find_children(tag="subtag", namespace="urn:mace:example.org")
+        assert len(c) == 0
+
+        c = ee.find_children(namespace="urn:mace:example.com")
+        assert len(c) == 2
+        c = ee.find_children(namespace="urn:mace:example.org")
+        assert len(c) == 1
+
+        c = ee.find_children()
+        assert len(c) == 3
+
+class TestExtensionContainer:
+    def test_find_extensions(self):
+        avas = [{
+            "attributes": {"foo":"bar","special":"app"},
+            "tag": "tag2",
+            "namespace": "urn:mace:example.com",
+            "text": "Just a line"
+            },
+            {
+            "attributes": {"static":"attribute","dynamic":"orgname"},
+            "tag": "tag3",
+            "namespace": "urn:mace:example.com",
+            "text": "Another line of text",
+            "children": [{
+                "tag": "subtag",
+                "namespace": "urn:mace:example.org",
+                "text": "grandchild"
+                }]
+            },
+            {
+            "attributes": {"entitlement":"xyz"},
+            "tag": "tag4",
+            "namespace": "urn:mace:example.org",
+            "text": "A comment"
+            }]
+
+        ees = [saml2.ExtensionElement("").loadd(a) for a in avas]
+        print ees
+        ec = saml2.ExtensionContainer(extension_elements=ees)
+        esl = ec.find_extensions(tag="tag2")
+        assert len(esl) == 1
+        esl = ec.find_extensions(tag="tag3")
+        assert len(esl) == 1
+        esl = ec.find_extensions(tag="tag4")
+        assert len(esl) == 1
+        esl = ec.find_extensions(tag="tag2", namespace="urn:mace:example.com")
+        assert len(esl) == 1
+        esl = ec.find_extensions(tag="tag2", namespace="urn:mace:example.org")
+        assert len(esl) == 0
+        esl = ec.find_extensions(namespace="urn:mace:example.com")
+        assert len(esl) == 2
+        esl = ec.find_extensions(namespace="urn:mace:example.org")
+        assert len(esl) == 1
+        esl = ec.find_extensions()
+        assert len(esl) == 3
+
+    def test_add_extension_elements(self):
+        items = [saml.NameID(sp_name_qualifier="sp0", text="foo"),
+                 saml.NameID(sp_name_qualifier="sp1", text="bar"),
+                 saml.Audience(text="http://example.org")]
+
+        ec = saml2.ExtensionContainer()
+        ec.add_extension_elements(items)
+        esl = ec.find_extensions(tag="NameID")
+        assert len(esl) == 2
+        esl = ec.find_extensions(tag="Audience")
+        assert len(esl) == 1
+        esl = ec.find_extensions(namespace=saml.NAMESPACE)
+        assert len(esl) == 3
+        esl = ec.find_extensions()
+        assert len(esl) == 3
+
+    def test_add_extension_attribute(self):
+        ec = saml2.ExtensionContainer()
+        ec.add_extension_attribute("foo", "bar")
+        assert len(ec.extension_attributes) == 1
+        assert ec.extension_attributes.keys()[0] == "foo"
+
+class TestSAMLBase:
+    def test_make_vals(self):
+        ava = {
+            "attributes": {"attr":"loa", "info":"source"},
+            "tag": "tag",
+            "namespace": "urn:mace:example.com",
+            "text": "free text"
+            }
+
+        foo = saml2.make_vals(ava, saml2.SamlBase, part=True)
+        print foo
+        assert False
+
 class TestNameID:
 
     def setup_class(self):

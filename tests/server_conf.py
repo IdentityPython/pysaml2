@@ -15,6 +15,7 @@ CONFIG={
     "debug" : 1,
     "key_file" : "test.key",
     "cert_file" : "test.pem",
+    "ca_certs": "cacerts.txt",
     "xmlsec_binary" : "/opt/local/bin/xmlsec1",
     "metadata": {
         "local": ["idp.xml", "vo_metadata.xml"],

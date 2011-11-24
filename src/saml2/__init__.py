@@ -155,7 +155,7 @@ class ExtensionElement(object):
     extension are turned into ExtensionElements as well.
     """
     
-    def __init__(self, tag, namespace=None, attributes=None, 
+    def __init__(self, tag, namespace=None, attributes=None,
             children=None, text=None):
         """Constructor for ExtensionElement
 
@@ -223,13 +223,11 @@ class ExtensionElement(object):
         If you specify only the tag, the result list may contain extension
         elements in multiple namespaces.
 
-        Args:
-            tag: str (optional) The desired tag
-            namespace: str (optional) The desired namespace
+        :param tag: str (optional) The desired tag
+        :param namespace: str (optional) The desired namespace
 
-        Returns:
-            A list of elements whose tag and/or namespace match the parameters
-            values
+        :return: A list of elements whose tag and/or namespace match the
+            parameters values
         """
 
         results = []
