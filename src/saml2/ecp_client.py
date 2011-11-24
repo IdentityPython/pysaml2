@@ -63,6 +63,7 @@ class Client(object):
         self.passwd = passwd
         self.log = logger
         self.debug = debug
+        self._verbose = verbose
 
         if metadata_file:
             self._metadata = MetaData()
@@ -71,7 +72,7 @@ class Client(object):
             self._debug_info("Loaded metadata from '%s'" % metadata_file)
         else:
             self._metadata = None
-        self._verbose = verbose
+
         self.cookie_handler = None
 
         self.done_ecp = False
