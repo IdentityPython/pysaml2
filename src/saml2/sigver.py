@@ -730,26 +730,27 @@ class SecurityContext(object):
 
         if response.signature:
             self._check_signature(decoded_xml, response, class_name(response))
-            
-        # Try to find the signing cert in the assertion
-        for assertion in response.assertion:
-            if not assertion.signature:
-                if self.debug:
-                    self.log.debug("unsigned")
-                if must:
-                    raise SignatureError("Signature missing")
-                continue
-            else:
-                if self.debug:
-                    self.log.debug("signed")
 
-            try:
-                self._check_signature(decoded_xml, assertion,
-                                        class_name(assertion), origdoc)
-            except Exception, exc:
-                if self.log:
-                    self.log.error("correctly_signed_response: %s" % exc)
-                raise
+        if response.assertion:
+            # Try to find the signing cert in the assertion
+            for assertion in response.assertion:
+                if not assertion.signature:
+                    if self.debug:
+                        self.log.debug("unsigned")
+                    if must:
+                        raise SignatureError("Signature missing")
+                    continue
+                else:
+                    if self.debug:
+                        self.log.debug("signed")
+
+                try:
+                    self._check_signature(decoded_xml, assertion,
+                                            class_name(assertion), origdoc)
+                except Exception, exc:
+                    if self.log:
+                        self.log.error("correctly_signed_response: %s" % exc)
+                    raise
             
         return response
 
