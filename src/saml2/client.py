@@ -479,7 +479,8 @@ class Saml2Client(object):
             query.attribute = do_attributes(attribute)
         
         if sign:
-            signed_query = self.sec.sign_assertion_using_xmlsec("%s" % query)
+            signed_query = self.sec.sign_attribute_query_using_xmlsec(
+                                                                "%s" % query)
             return samlp.attribute_query_from_string(signed_query)
         else:
             return query
