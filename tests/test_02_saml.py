@@ -33,6 +33,11 @@ from saml2 import saml
 
 from py.test import raises
 
+from saml2.saml import Issuer
+from saml2.saml import Attribute
+from saml2.saml import AttributeValue
+from saml2.saml import NAMEID_FORMAT_EMAILADDRESS
+
 
 class TestExtensionElement:
     def test_loadd(self):
@@ -190,17 +195,70 @@ class TestExtensionContainer:
         assert ec.extension_attributes.keys()[0] == "foo"
 
 class TestSAMLBase:
-    def test_make_vals(self):
+    def test_make_vals_dict(self):
         ava = {
-            "attributes": {"attr":"loa", "info":"source"},
-            "tag": "tag",
-            "namespace": "urn:mace:example.com",
+            "sp_name_qualifier": "loa",
+            "format": NAMEID_FORMAT_EMAILADDRESS,
             "text": "free text"
             }
 
-        foo = saml2.make_vals(ava, saml2.SamlBase, part=True)
+        foo = saml2.make_vals(ava, Issuer, part=True)
         print foo
-        assert False
+        assert foo.format == NAMEID_FORMAT_EMAILADDRESS
+        assert foo.sp_name_qualifier == "loa"
+        assert foo.text == "free text"
+
+    def test_make_vals_str(self):
+        ava = "free text"
+
+        foo = saml2.make_vals(ava, Issuer, part=True)
+        print foo
+        assert foo.keyswv() == ["text"]
+        assert foo.text == "free text"
+
+    def test_make_vals_multi_dict(self):
+        ava = ["foo", "bar", "lions", "saints"]
+
+        raises(Exception,
+              "saml2.make_vals(ava, AttributeValue, Attribute(), part=True)")
+
+        attr = Attribute()
+        saml2.make_vals(ava, AttributeValue, attr, prop="attribute_value")
+        assert attr.keyswv() == ["attribute_value"]
+        assert len(attr.attribute_value) == 4
+
+    def test_to_string_nspair(self):
+        foo = saml2.make_vals("lions", AttributeValue, part=True)
+        str = foo.to_string()
+        nsstr = foo.to_string({"saml":saml.NAMESPACE})
+        assert nsstr != str
+        print str
+        print nsstr
+        assert "saml:AttributeValue" in nsstr
+        assert "saml:AttributeValue" not in str
+
+    def test_set_text(self):
+        av = AttributeValue()
+        av.set_text(True)
+        assert av.text == "true"
+        av.set_text(False)
+        assert av.text == "false"
+        av.set_text(491)
+        assert av.text == "491"
+
+        av = AttributeValue()
+        av.set_text(None)
+        assert av.text == ""
+
+    def test_make_vals_div(self):
+        foo = saml2.make_vals(666, AttributeValue, part=True)
+        assert foo.text == "666"
+
+        foo = saml2.make_vals(True, AttributeValue, part=True)
+        assert foo.text == "true"
+
+        foo = saml2.make_vals(False, AttributeValue, part=True)
+        assert foo.text == "false"
 
 class TestNameID:
 
