@@ -296,7 +296,8 @@ class Server(object):
         """
         
         response = {}
-        _log_info = self.log.info
+        if self.log:
+            _log_info = self.log.info
 
         # The addresses I should receive messages like this on
         receiver_addresses = self.conf.endpoint("single_sign_on_service",
