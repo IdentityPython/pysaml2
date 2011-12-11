@@ -362,9 +362,11 @@ def verify_signature(enctext, xmlsec_binary, cert_file=None, cert_type="pem",
 
     pof = Popen(com_list, stderr=PIPE, stdout=PIPE)
     p_out = pof.stdout.read()
-    #p_err = pof.stderr.read()
     try:
-        verified = _parse_xmlsec_output(pof.stderr.read())
+        p_err = pof.stderr.read()
+        if __DEBUG:
+            print p_err
+        verified = _parse_xmlsec_output(p_err)
     except XmlsecError, exc:
         if log:
             log.error(60*"=")
