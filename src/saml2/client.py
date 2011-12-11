@@ -800,7 +800,7 @@ class Saml2Client(object):
             try:
                 # expected return address
                 return_addr = self.config.endpoint("single_logout_service",
-                                                    binding=binding)
+                                                   binding=binding)[0]
             except Exception:
                 if log:
                     log.info("Not supposed to handle this!")
@@ -915,7 +915,7 @@ class Saml2Client(object):
         :return: A LogoutResponse instance
         """
 
-        destination = self.config.single_logout_service(idp_entity_id, binding)
+        destination = self.config.single_logout_service(idp_entity_id, binding)[0]
 
         status = samlp.Status(
             status_code=samlp.StatusCode(value=status_code))
