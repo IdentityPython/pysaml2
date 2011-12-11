@@ -624,17 +624,20 @@ class SecurityContext(object):
 
         return item
 
-    def check_signature(self, item, node_name=NODE_NAME, id_attr=""):
-        return self._check_signature( "%s" % (item,), item, node_name,
+    def check_signature(self, item, node_name=NODE_NAME, origdoc=None,
+                        id_attr=""):
+        return self._check_signature( "%s" % (item,), item, node_name, origdoc,
                                       id_attr=id_attr)
         
-    def correctly_signed_logout_request(self, decoded_xml, must=False):
+    def correctly_signed_logout_request(self, decoded_xml, must=False,
+                                        origdoc=None):
         """ Check if a request is correctly signed, if we have metadata for
         the SP that sent the info use that, if not use the key that are in 
         the message if any.
 
         :param decoded_xml: The SAML message as a XML string
         :param must: Whether there must be a signature
+        :param origdoc: The original XML message
         :return: None if the signature can not be verified otherwise
             request as a samlp.Request instance
         """
@@ -648,9 +651,11 @@ class SecurityContext(object):
             else:
                 return request
 
-        return self._check_signature(decoded_xml, request, class_name(request))
+        return self._check_signature(decoded_xml, request,
+                                     class_name(request), origdoc)
 
-    def correctly_signed_logout_response(self, decoded_xml, must=False):
+    def correctly_signed_logout_response(self, decoded_xml, must=False,
+                                         origdoc=None):
         """ Check if a request is correctly signed, if we have metadata for
         the SP that sent the info use that, if not use the key that are in 
         the message if any.
@@ -670,9 +675,11 @@ class SecurityContext(object):
             else:
                 return response
 
-        return self._check_signature(decoded_xml, response, class_name(response))
+        return self._check_signature(decoded_xml, response,
+                                     class_name(response), origdoc)
     
-    def correctly_signed_authn_request(self, decoded_xml, must=False):
+    def correctly_signed_authn_request(self, decoded_xml, must=False,
+                                       origdoc=None):
         """ Check if a request is correctly signed, if we have metadata for
         the SP that sent the info use that, if not use the key that are in 
         the message if any.
@@ -692,9 +699,11 @@ class SecurityContext(object):
             else:
                 return request
 
-        return self._check_signature(decoded_xml, request )
+        return self._check_signature(decoded_xml, request,
+                                     class_name(request), origdoc=origdoc )
 
-    def correctly_signed_attribute_query(self, decoded_xml, must=False):
+    def correctly_signed_attribute_query(self, decoded_xml, must=False,
+                                         origdoc=None):
         """ Check if a request is correctly signed, if we have metadata for
         the SP that sent the info use that, if not use the key that are in
         the message if any.
@@ -714,7 +723,8 @@ class SecurityContext(object):
             else:
                 return request
 
-        return self._check_signature(decoded_xml, request )
+        return self._check_signature(decoded_xml, request,
+                                     class_name(request), origdoc=origdoc )
 
     def correctly_signed_response(self, decoded_xml, must=False, origdoc=None):
         """ Check if a instance is correctly signed, if we have metadata for
@@ -731,7 +741,8 @@ class SecurityContext(object):
             raise TypeError("Not a Response")
 
         if response.signature:
-            self._check_signature(decoded_xml, response, class_name(response))
+            self._check_signature(decoded_xml, response, class_name(response),
+                                  origdoc)
 
         if response.assertion:
             # Try to find the signing cert in the assertion
@@ -807,6 +818,7 @@ class SecurityContext(object):
             ntf.seek(0)
             signed_statement = ntf.read()
             if not signed_statement:
+                print >> sys.stderr, p_err
                 raise Exception("Signing failed")
             else:
                 return signed_statement
