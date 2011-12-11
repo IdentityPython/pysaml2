@@ -583,8 +583,8 @@ class SecurityContext(object):
 
         if not certs:
             #print "==== Certs from instance ===="
-            certs = [make_temp(pem_format(cert), ".pem", False) \
-                        for cert in cert_from_instance(item)]
+            certs = [make_temp(pem_format(cert), ".pem",
+                               False) for cert in cert_from_instance(item)]
         #else:
             #print "==== Certs from metadata ==== %s: %s ====" % (issuer,certs)
             
