@@ -915,7 +915,7 @@ class Saml2Client(object):
         :return: A LogoutResponse instance
         """
 
-        destination = self.config.single_logout_service(idp_entity_id, binding)[0]
+        destination = self.config.single_logout_services(idp_entity_id, binding)[0]
 
         status = samlp.Status(
             status_code=samlp.StatusCode(value=status_code))
