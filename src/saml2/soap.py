@@ -26,6 +26,7 @@ from saml2 import create_class_from_element_tree
 from saml2.samlp import NAMESPACE as SAMLP_NAMESPACE
 #from saml2 import element_to_extension_element
 from saml2.schema import soapenv
+from saml2 import class_name
 
 try:
     from xml.etree import cElementTree as ElementTree
@@ -307,13 +308,19 @@ class SOAPClient(object):
         self.log = log
         self.response = None
         
-    def send(self, request, path=None, headers=None):
+    def send(self, request, path=None, headers=None, sign=None, sec=None):
         if headers is None:
             headers = {"content-type": "application/soap+xml"}
         else:
             headers.update({"content-type": "application/soap+xml"})
 
         soap_message = make_soap_enveloped_saml_thingy(request)
+        if sign:
+            _signed = sec.sign_statement_using_xmlsec(soap_message,
+                                                      class_name(request),
+                                                      nodeid=request.id)
+            soap_message = _signed
+
         _response = self.server.post(soap_message, headers, path=path)
 
         self.response = _response
