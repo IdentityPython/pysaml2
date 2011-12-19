@@ -207,6 +207,10 @@ class Config(object):
     def load_file(self, config_file, metadata_construction=False):
         if sys.path[0] != ".":
             sys.path.insert(0, ".")
+
+        if config_file.endswith(".py"):
+            config_file = config_file[:-3]
+
         mod = import_module(config_file)
         #return self.load(eval(open(config_file).read()))
         return self.load(mod.CONFIG, metadata_construction)
