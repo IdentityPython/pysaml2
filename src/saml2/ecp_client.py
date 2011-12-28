@@ -27,6 +27,7 @@ from saml2 import soap
 from saml2 import samlp
 from saml2 import BINDING_PAOS
 from saml2 import BINDING_SOAP
+from saml2 import class_name
 
 from saml2.profile import paos
 from saml2.profile import ecp
@@ -113,7 +114,7 @@ class Client(object):
             raise Exception("No entity ID -> no endpoint")
 
     def phase2(self, authn_request, rc_url, idp_entity_id, headers=None,
-               idp_endpoint=None):
+               idp_endpoint=None, sign=False, sec=""):
         """
         Doing the second phase of the ECP conversation
 
@@ -121,9 +122,17 @@ class Client(object):
         :param rc_url: The assertion consumer service url
         :param idp_entity_id: The EntityID of the IdP
         :param headers: Possible extra headers
+        :param idp_endpoint: Where to send it all
+        :param sign: If the message should be signed
+        :param sec: security context
         :return: The response from the IdP
         """
         idp_request = soap.make_soap_enveloped_saml_thingy(authn_request)
+        if sign:
+            _signed = sec.sign_statement_using_xmlsec(idp_request,
+                                                      class_name(authn_request),
+                                                      nodeid=authn_request.id)
+            idp_request = _signed
 
         if not idp_endpoint:
             idp_endpoint = self.find_idp_endpoint(idp_entity_id)
