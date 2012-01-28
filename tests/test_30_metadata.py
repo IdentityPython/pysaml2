@@ -211,7 +211,7 @@ def test_make_false_value():
     assert val.text == "false"
 
 NO_VALUE = """<?xml version='1.0' encoding='UTF-8'?>
-<ns0:AttributeValue xmlns:ns0="urn:oasis:names:tc:SAML:2.0:assertion" />"""
+<saml:AttributeValue xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" />"""
 
 def test_make_no_value():
     val = make_vals( None, saml.AttributeValue, part=True ) 

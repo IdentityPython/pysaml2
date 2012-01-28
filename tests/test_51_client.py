@@ -68,19 +68,6 @@ class TestClient:
             nameid_format=saml.NAMEID_FORMAT_PERSISTENT)
         reqstr = "%s" % req.to_string()
 
-        expected_req = REQ1["1.2.16"] % req.issue_instant
-
-#        xmlsec_vers = xmlsec_version(self.client.config.xmlsec_binary)
-#        print "XMLSEC version: %s" % xmlsec_vers
-#        print reqstr
-#        try:
-#            expected_req = REQ1[xmlsec_vers] % req.issue_instant
-#        except KeyError:
-#            expected_req = REQ1["1.2.14"] % req.issue_instant
-
-        print expected_req
-        assert reqstr == expected_req
-        #assert reqstr == REQ1[xmlsec_vers] % req.issue_instant
         assert req.destination == "https://idp.example.com/idp/"
         assert req.id == "id1"
         assert req.version == "2.0"
@@ -90,7 +77,21 @@ class TestClient:
         assert name_id.text == "E8042FB4-4D5B-48C3-8E14-8EDD852790DD"
         issuer = req.issuer
         assert issuer.text == "urn:mace:example.com:saml:roland:sp"
-        
+
+        attrq = samlp.attribute_query_from_string(reqstr)
+
+        print attrq.keyswv()
+        assert _leq(attrq.keyswv(), ['destination', 'subject', 'issue_instant',
+                                    'version', 'id', 'issuer'])
+
+        assert attrq.destination == req.destination
+        assert attrq.id == req.id
+        assert attrq.version == req.version
+        assert attrq.issuer.text == issuer.text
+        assert attrq.issue_instant == req.issue_instant
+        assert attrq.subject.name_id.format == name_id.format
+        assert attrq.subject.name_id.text == name_id.text
+
     def test_create_attribute_query2(self):
         req = self.client.create_attribute_query("id1", 
             "E8042FB4-4D5B-48C3-8E14-8EDD852790DD", 

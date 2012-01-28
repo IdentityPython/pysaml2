@@ -42,7 +42,8 @@ sp1 = {
             ]
         }
     },
-    "attribute_map_dir": "attributemaps"
+    "attribute_map_dir": "attributemaps",
+    "only_use_keys_in_metadata": True,
 }
 
 sp2 = {
@@ -174,6 +175,8 @@ def test_1():
         {'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect':
          'http://localhost:8088/sso/'}}]
 
+    assert c.only_use_keys_in_metadata
+
 def test_2():
     c = SPConfig().load(sp2)
     c.context = "sp"
@@ -188,7 +191,7 @@ def test_2():
     assert len(c.idp) == 1
     assert c.idp.keys() == [""]
     assert c.idp.values() == ["https://example.com/saml2/idp/SSOService.php"]
-
+    assert c.only_use_keys_in_metadata is None
     
 def test_minimum():
     minimum = {

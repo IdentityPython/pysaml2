@@ -1,15 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from saml2 import saml, config
+from saml2 import saml
+from saml2 import config
 
 from saml2.server import Server
 from saml2.response import response_factory
 from saml2.response import StatusResponse
 from saml2.response import AuthnResponse
-from saml2.sigver import security_context
 from saml2.sigver import SecurityContext
+from saml2.sigver import security_context
 from saml2.sigver import get_xmlsec_binary
+from saml2.sigver import MissingKey
+
+from pytest import raises
 
 XML_RESPONSE_FILE = "saml_signed.xml"
 XML_RESPONSE_FILE2 = "saml2_response.xml"
@@ -101,3 +105,13 @@ class TestResponse:
 
         assert len(attr_stat.attribute) == 4
         assert len(attr_stat.encrypted_attribute) == 4
+
+
+    def test_only_use_keys_in_metadata(self):
+        conf = config.SPConfig()
+        conf.load_file("sp_2_conf")
+
+        sc = security_context(conf)
+        # should fail
+        raises(MissingKey,
+               'sc.correctly_signed_response("%s" % self._sign_resp_)')
