@@ -104,6 +104,9 @@ class SignatureError(Exception):
 class XmlsecError(Exception):
     pass
 
+class MissingKey(Exception):
+    pass
+
 # --------------------------------------------------------------------------
 
 #def make_signed_instance(klass, spec, seccont, base64encode=False):
@@ -239,7 +242,7 @@ def create_id():
     """
     ret = ""
     for _ in range(40):
-        ret = ret + chr(random.randint(0, 15) + ord('a'))
+        ret += chr(random.randint(0, 15) + ord('a'))
     return ret
     
 def make_temp(string, suffix="", decode=True):
@@ -413,7 +416,7 @@ def read_cert_from_file(cert_file, cert_type):
 
     if cert_type in ["der", "cer", "crt"]:
         data = open(cert_file).read()
-        return base64.b64encode(data)
+        return base64.b64encode(str(data))
 
 def security_context(conf, log=None, debug=None):
     """ Creates a security context based on the configuration
@@ -431,14 +434,20 @@ def security_context(conf, log=None, debug=None):
 
     metadata = conf.metadata
 
+    _only_md = conf.only_use_keys_in_metadata
+    if _only_md is None:
+        _only_md = False
+
     return SecurityContext(conf.xmlsec_binary, conf.key_file,
-                            cert_file=conf.cert_file, metadata=metadata,
-                            log=log, debug=debug)
+                    cert_file=conf.cert_file, metadata=metadata,
+                    log=log, debug=debug,
+                    only_use_keys_in_metadata=_only_md)
 
 class SecurityContext(object):
     def __init__(self, xmlsec_binary, key_file="", key_type= "pem", 
                     cert_file="", cert_type="pem", metadata=None, log=None, 
-                    debug=False, template="", encrypt_key_type="des-192"):
+                    debug=False, template="", encrypt_key_type="des-192",
+                    only_use_keys_in_metadata=False):
         
         self.xmlsec = xmlsec_binary
         
@@ -452,6 +461,7 @@ class SecurityContext(object):
         self.my_cert = read_cert_from_file(cert_file, cert_type)
         
         self.metadata = metadata
+        self.only_use_keys_in_metadata = only_use_keys_in_metadata
         self.log = log
         self.debug = debug
         
@@ -583,7 +593,7 @@ class SecurityContext(object):
         else:
             certs = []
 
-        if not certs:
+        if not certs and not self.only_use_keys_in_metadata:
             #print "==== Certs from instance ===="
             certs = [make_temp(pem_format(cert), ".pem",
                                False) for cert in cert_from_instance(item)]
@@ -591,7 +601,7 @@ class SecurityContext(object):
             #print "==== Certs from metadata ==== %s: %s ====" % (issuer,certs)
             
         if not certs:
-            raise SignatureError("Missing signing certificate")
+            raise MissingKey("%s" % issuer)
 
         #print certs
         
