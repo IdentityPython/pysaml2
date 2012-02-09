@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 #
+import sys
 
 from distutils.core import  Command
 from setuptools import setup
@@ -32,6 +33,19 @@ class PyTest(Command):
         errno = subprocess.call([sys.executable, 'runtests.py'])
         raise SystemExit(errno)
 
+
+install_requires=[
+    # core dependencies
+    'decorator',
+    'httplib2',
+    'paste',
+    'zope.interface',
+    'repoze.who == 1.0.18'
+    ]
+
+# only for Python 2.6
+if sys.version_info < (2,7):
+    install_requires.append('importlib')
 
 setup(
     name='pysaml2',
@@ -56,25 +70,23 @@ setup(
 
     scripts=["tools/parse_xsd2.py", "tools/make_metadata.py"],
 
-    install_requires=[
-        # core dependencies
-        'decorator',
-        'httplib2',
-        # only for Python 2.6
-        #'importlib',
-        # for the tests:
+    test_requires=[
         'pyasn1',
-        'python-memcached',
-        "pytest",
-        #"pytest-coverage",
-        # for s2repoze:
-        'paste',
-        'zope.interface',
-        'repoze.who == 1.0.18',
-        # extras
         'pymongo',
-        'python-cjson'
+        'python-memcached',
+        'pytest',
+        #'pytest-coverage',
         ],
+
+    install_requires=install_requires,
+
+    extras_require={
+        'cjson': ['python-cjson'],
+        'pyasn1': ['pyasn1'],
+        'pymongo': ['pymongo'],
+        'python-memcached': ['python-memcached']
+    },
+
     zip_safe=False,
 
     cmdclass = {'test': PyTest},
