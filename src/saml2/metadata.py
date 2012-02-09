@@ -882,13 +882,14 @@ def _localized_name(val, klass):
 
 def do_organization_info(ava):
     """ decription of an organization in the configuration is
-    a dictionary of keys and values, where the values might be tuples::
+    a dictionary of keys and values, where the values might be tuples:
 
         "organization": {
             "name": ("AB Exempel", "se"),
             "display_name": ("AB Exempel", "se"),
             "url": "http://www.example.org"
         }
+
     """
 
     if ava is None:
