@@ -678,31 +678,34 @@ class MetaData(object):
         """ Find a name from the metadata about this entity id.
         The name is either the display name, the name or the url
         ,in that order, for the organization.
-        
+
         :param entity_id: The Entity ID
         :return: A name
         """
 
         try:
             org = self.entity[entity_id]["organization"]
-            try:
-                name = org.organization_display_name[0]
-            except IndexError:
-                try: 
-                    name = org.organization_name[0]
+            if org is None:
+                name = ""
+            else:
+                try:
+                    name = org.organization_display_name[0]
                 except IndexError:
                     try:
-                        name = org.organization_url[0]
+                        name = org.organization_name[0]
                     except IndexError:
-                        name = ""
-            
-            if name:
-                name = name.text
+                        try:
+                            name = org.organization_url[0]
+                        except IndexError:
+                            name = ""
+
+                if name:
+                    name = name.text
         except KeyError:
             name = ""
-            
+
         return name
-    
+
     @keep_updated
     def wants(self, entity_id):
         try:
