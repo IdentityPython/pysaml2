@@ -496,7 +496,7 @@ class MetaData(object):
         
     @keep_updated
     def sp_services(self, entity_id, typ, binding=None):
-        """ depreceated """
+        """ deprecated """
         sps = self.entity[entity_id]["sp_sso"]
 
         loc = {}
