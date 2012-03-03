@@ -166,8 +166,13 @@ class Identifier(object):
                             sp_name_qualifier=sp_entity_id,
                             text=temp_id)
 
+    def email_nameid(self, sp_name_qualifier, userid):
+        return saml.NameID(format=saml.NAMEID_FORMAT_EMAILADDRESS,
+                       sp_name_qualifier=sp_name_qualifier,
+                       text=userid)
+
     def construct_nameid(self, local_policy, userid, sp_entity_id,
-                        identity=None, name_id_policy=None):
+                        identity=None, name_id_policy=None, sp_nid=None):
         """ Returns a name_id for the object. How the name_id is 
         constructed depends on the context.
         
@@ -177,6 +182,7 @@ class Identifier(object):
         :param identity: Attribute/value pairs describing the object
         :param name_id_policy: The policy the server on the other side wants
             us to follow.
+        :param sp_nid: Name ID Formats from the SPs metadata
         :return: NameID instance precursor
         """
         if name_id_policy and name_id_policy.sp_name_qualifier:
@@ -185,13 +191,19 @@ class Identifier(object):
                                                 userid, identity)
             except Exception:
                 pass
-            
-        nameid_format = local_policy.get_nameid_format(sp_entity_id)
+
+        if sp_nid:
+            nameid_format = sp_nid[0]
+        else:
+            nameid_format = local_policy.get_nameid_format(sp_entity_id)
+
         if nameid_format == saml.NAMEID_FORMAT_PERSISTENT:
             return self.persistent_nameid(sp_entity_id, userid)
         elif nameid_format == saml.NAMEID_FORMAT_TRANSIENT:
             return self.transient_nameid(sp_entity_id, userid)
-                
+        elif nameid_format == saml.NAMEID_FORMAT_EMAILADDRESS:
+            return self.email_nameid(sp_entity_id, userid)
+
     def local_name(self, entity_id, remote_id):
         """ Get the local persistent name that has the specified remote ID.
         
@@ -307,9 +319,16 @@ class Server(object):
         if self.debug and self.log:
             _log_info("receiver addresses: %s" % receiver_addresses)
             _log_info("Binding: %s" % binding)
-            
-        authn_request = AuthnRequest(self.sec, self.conf.attribute_converters,
-                                            receiver_addresses, log=self.log)
+
+
+        try:
+            timeslack = self.conf.accepted_time_diff
+        except AttributeError:
+            timeslack = 0
+        authn_request = AuthnRequest(self.sec,
+                                     self.conf.attribute_converters,
+                                     receiver_addresses, log=self.log,
+                                     timeslack=timeslack)
 
         if binding == BINDING_SOAP or binding == BINDING_PAOS:
             # not base64 decoding and unzipping
@@ -601,9 +620,14 @@ class Server(object):
 
         name_id = None
         try:
+            nid_formats = []
+            for _sp in self.metadata.entity[sp_entity_id]["sp_sso"]:
+                nid_formats.extend([n.text for n in _sp.name_id_format])
+
             policy = self.conf.policy
             name_id = self.ident.construct_nameid(policy, userid, sp_entity_id,
-                                                    identity, name_id_policy)
+                                                    identity, name_id_policy,
+                                                    nid_formats)
         except IOError, exc:
             response = self.error_response(in_response_to, destination, 
                                             sp_entity_id, exc, name_id)
