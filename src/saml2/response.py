@@ -297,8 +297,8 @@ class LogoutResponse(StatusResponse):
 #                "authn_info": self.authn_info() }
    
 class AuthnResponse(StatusResponse):
-    """ This is where all the profile complience is checked.
-    This one does saml2int complience. """
+    """ This is where all the profile compliance is checked.
+    This one does saml2int compliance. """
     
     def __init__(self, sec_context, attribute_converters, entity_id, 
                     return_addr=None, outstanding_queries=None, log=None, 
