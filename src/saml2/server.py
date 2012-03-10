@@ -323,8 +323,11 @@ class Server(object):
 
         try:
             timeslack = self.conf.accepted_time_diff
+            if not timeslack:
+                timeslack = 0
         except AttributeError:
             timeslack = 0
+
         authn_request = AuthnRequest(self.sec,
                                      self.conf.attribute_converters,
                                      receiver_addresses, log=self.log,
