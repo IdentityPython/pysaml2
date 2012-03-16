@@ -2,6 +2,11 @@
 from saml2 import BINDING_SOAP, BINDING_HTTP_REDIRECT, NAME_FORMAT_URI
 BASE = "http://localhost:8089/"
 
+try:
+    from xmlsec_location import xmlsec_path
+except ImportError:
+    xmlsec_path = '/opt/local/bin/xmlsec1'
+
 CONFIG={
     "service":{
         "aa":{
@@ -24,7 +29,7 @@ CONFIG={
     "debug" : 1,
     "key_file" : "test.key",
     "cert_file" : "test.pem",
-    #"xmlsec_binary" : "/usr/local/bin/xmlsec1",
+    #"xmlsec_binary" : xmlsec_path,
     "metadata": {
         "local": ["metadata.xml", "vo_metadata.xml"],
     },

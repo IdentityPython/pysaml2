@@ -1,3 +1,8 @@
+try:
+    from xmlsec_location import xmlsec_path
+except ImportError:
+    xmlsec_path = '/opt/local/bin/xmlsec1'
+
 CONFIG={
     "entityid" : "urn:mace:example.com:saml:roland:sp",
     "name" : "urn:mace:example.com:saml:roland:sp",
@@ -16,7 +21,7 @@ CONFIG={
     "key_file" : "test.key",
     "cert_file" : "test.pem",
     "ca_certs": "cacerts.txt",
-    "xmlsec_binary" : "/opt/local/bin/xmlsec1",
+    "xmlsec_binary" : xmlsec_path,
     "metadata": {
         "local": ["idp.xml", "vo_metadata.xml"],
     },

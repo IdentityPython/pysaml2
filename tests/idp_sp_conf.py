@@ -6,6 +6,12 @@ from saml2.saml import NAME_FORMAT_URI
 
 BASE = "http://localhost:8088/"
 
+try:
+    from xmlsec_location import xmlsec_path
+except ImportError:
+    xmlsec_path = '/opt/local/bin/xmlsec1'
+
+
 CONFIG = {
     "entityid" : "urn:mace:example.com:saml:roland:idp",
     "name" : "Rolands IdP",
@@ -47,7 +53,7 @@ CONFIG = {
     "debug" : 1,
     "key_file" : "test.key",
     "cert_file" : "test.pem",
-    #"xmlsec_binary" : "/usr/local/bin/xmlsec1",
+    #"xmlsec_binary" : xmlsec_path,
     "metadata": {
         "local": ["metadata.xml", "vo_metadata.xml"],
     },
