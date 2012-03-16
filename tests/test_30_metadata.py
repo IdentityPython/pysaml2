@@ -218,7 +218,7 @@ def test_make_no_value():
     assert isinstance(val, saml.AttributeValue)
     assert val.text == ""
     print val
-    assert "%s" % val == NO_VALUE
+    assert val.to_string({'saml': saml.NAMESPACE}) == NO_VALUE
 
 def test_make_string():
     val = make_vals( "example", saml.AttributeValue, part=True ) 

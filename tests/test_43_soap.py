@@ -2,6 +2,11 @@
 
 try:
     from xml.etree import cElementTree as ElementTree
+    if ElementTree.VERSION < '1.3.0':
+        # cElementTree has no support for register_namespace
+        # neither _namespace_map, thus we sacrify performance
+        # for correctness
+        from xml.etree import ElementTree
 except ImportError:
     try:
         import cElementTree as ElementTree

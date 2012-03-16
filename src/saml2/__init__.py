@@ -52,6 +52,11 @@ import logging
 
 try:
     from xml.etree import cElementTree as ElementTree
+    if ElementTree.VERSION < '1.3.0':
+        # cElementTree has no support for register_namespace
+        # neither _namespace_map, thus we sacrify performance
+        # for correctness
+        from xml.etree import ElementTree
 except ImportError:
     try:
         import cElementTree as ElementTree
@@ -565,7 +570,8 @@ class SamlBase(ExtensionContainer):
                 try:
                     ElementTree.register_namespace(prefix, uri)
                 except AttributeError:
-                    pass
+                    # Backwards compatibility with ET < 1.3
+                    ElementTree._namespace_map[uri] = prefix
         
         return ElementTree.tostring(self._to_element_tree(), encoding="UTF-8")
 
