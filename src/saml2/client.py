@@ -131,6 +131,11 @@ class Saml2Client(object):
         else:
             self.allow_unsolicited = False
 
+        if getattr(self.config, 'authn_requests_signed', 'false') == 'true':
+            self.authn_requests_signed_default = True
+        else:
+            self.authn_requests_signed_default = False
+
     def _relay_state(self, session_id):
         vals = [session_id, str(int(time.time()))]
         if self.config.secret is None:
@@ -233,7 +238,7 @@ class Saml2Client(object):
         return resp
     
     def authn_request(self, query_id, destination, service_url, spentityid,
-                        my_name="", vorg="", scoping=None, log=None, sign=False,
+                        my_name="", vorg="", scoping=None, log=None, sign=None,
                         binding=saml2.BINDING_HTTP_POST,
                         nameid_format=saml.NAMEID_FORMAT_TRANSIENT):
         """ Creates an authentication request.
@@ -278,6 +283,9 @@ class Saml2Client(object):
                 name_id_policy.format = saml.NAMEID_FORMAT_PERSISTENT
             except KeyError:
                 pass
+
+        if sign is None:
+            sign = self.authn_requests_signed_default
         
         if sign:
             request.signature = pre_signature_part(request.id,
@@ -347,7 +355,7 @@ class Saml2Client(object):
         return self.config.name
 
     def authn(self, location, session_id, vorg="", scoping=None, log=None,
-                sign=False, binding=saml2.BINDING_HTTP_POST,
+                sign=None, binding=saml2.BINDING_HTTP_POST,
                 service_url_binding=None):
         """
         Construct a Authentication Request
@@ -388,7 +396,7 @@ class Saml2Client(object):
 
     def authenticate(self, entityid=None, relay_state="",
                      binding=saml2.BINDING_HTTP_REDIRECT,
-                     log=None, vorg="", scoping=None, sign=False):
+                     log=None, vorg="", scoping=None, sign=None):
         """ Makes an authentication request.
 
         :param entityid: The entity ID of the IdP to send the request to
@@ -995,7 +1003,7 @@ class Saml2Client(object):
     def authz_decision_query(self, entityid, action,
                                 evidence=None, resource=None, subject=None,
                                 binding=saml2.BINDING_HTTP_REDIRECT,
-                                log=None, sign=False):
+                                log=None, sign=None):
         """ Creates an authz decision query.
 
         :param entityid: The entity ID of the IdP to send the request to
