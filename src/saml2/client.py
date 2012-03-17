@@ -686,7 +686,8 @@ class Saml2Client(object):
                                                     entity_id, reason, expire)
                 
                 to_sign = []
-                if sign and binding != BINDING_HTTP_REDIRECT:
+                #if sign and binding != BINDING_HTTP_REDIRECT:
+                if sign:
                     request.signature = pre_signature_part(request.id,
                                                     self.sec.my_cert, 1)
                     to_sign = [(class_name(request), request.id)]
