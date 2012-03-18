@@ -136,6 +136,12 @@ class Saml2Client(object):
         else:
             self.authn_requests_signed_default = False
 
+        if getattr(self.config, 'logout_requests_signed', 'false') == 'true':
+            self.logout_requests_signed_default = True
+        else:
+            self.logout_requests_signed_default = False
+
+
     def _relay_state(self, session_id):
         vals = [session_id, str(int(time.time()))]
         if self.config.secret is None:
@@ -621,7 +627,7 @@ class Saml2Client(object):
         return request
     
     def global_logout(self, subject_id, reason="", expire=None,
-                          sign=False, log=None, return_to="/"):
+                          sign=None, log=None, return_to="/"):
         """ More or less a layer of indirection :-/
         Bootstrapping the whole thing by finding all the IdPs that should
         be notified.
@@ -654,7 +660,7 @@ class Saml2Client(object):
                             sign, log, return_to)
         
     def _logout(self, subject_id, entity_ids, reason, expire, 
-                sign, log=None, return_to="/"):
+                sign=None, log=None, return_to="/"):
         
         # check time
         if not not_on_or_after(expire): # I've run out of time
@@ -687,6 +693,10 @@ class Saml2Client(object):
                 
                 to_sign = []
                 #if sign and binding != BINDING_HTTP_REDIRECT:
+
+                if sign is None:
+                    sign = self.logout_requests_signed_default
+
                 if sign:
                     request.signature = pre_signature_part(request.id,
                                                     self.sec.my_cert, 1)

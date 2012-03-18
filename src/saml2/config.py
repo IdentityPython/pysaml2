@@ -27,6 +27,7 @@ COMMON_ARGS = ["entityid", "xmlsec_binary", "debug", "key_file", "cert_file",
                 "virtual_organization",
                 "logger",
                 "only_use_keys_in_metadata",
+                "logout_requests_signed",
                 ]
 
 SP_ARGS = [
