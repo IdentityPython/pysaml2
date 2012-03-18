@@ -339,6 +339,26 @@ sp
 
 Directives specific to SP instances
 
+authn_requests_signed
+"""""""""""""""""""""
+
+Indicates if the Authentication Requests sent by this SP should be signed
+by default. This can be overriden by application code for a specific call.
+
+This set the AuthnRequestsSigned attribute of the SPSSODescriptor node.
+of the metadata so the IdP will know this SP preference.
+
+Valid values are "true" or "false". Default value is "false".
+
+Example::
+
+    "service": {
+        "sp": {
+            "authn_assertions_signed": "true",
+        }
+    }
+
+
 idp
 """
 
@@ -391,6 +411,24 @@ Example::
 Again as for *optional_attributes* the names given are expected to be 
 the user friendly names.
 
+want_assertions_signed
+""""""""""""""""""""""
+
+Indicates if this SP wants the IdP to send the assertions signed. This
+set the WantAssertionsSigned attribute of the SPSSODescriptor node.
+of the metadata so the IdP will know this SP preference.
+
+Valid values are "true" or "false". Default value is "true".
+
+Example::
+
+    "service": {
+        "sp": {
+            "want_assertions_signed": "true",
+        }
+    }
+
+
 idp/aa/sp
 ^^^^^^^^^ 
 
@@ -428,6 +466,23 @@ Example::
             },
         },
     },
+
+logout_requests_signed
+""""""""""""""""""""""
+
+Indicates if this entity will sign the Logout Requests originated from it.
+
+This can be overriden by application code for a specific call.
+
+Valid values are "true" or "false". Default value is "false"
+
+Example::
+
+    "service": {
+        "sp": {
+            "logout_requests_signed": "true",
+        }
+    }
 
 subject_data
 """"""""""""
