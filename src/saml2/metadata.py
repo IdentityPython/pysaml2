@@ -22,7 +22,12 @@ Contains classes and functions to alleviate the handling of SAML metadata
 import httplib2
 import sys
 import xmldsig as ds
-import json
+try:
+    import json
+except ImportError:
+    # Compatibility with Python <= 2.5. In this case the
+    # external simplejson library is required
+    import simplejson as json
 
 from decorator import decorator
 
