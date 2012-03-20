@@ -23,7 +23,12 @@ import saml2
 import time
 import base64
 import urllib
-from urlparse import urlparse, parse_qs
+from urlparse import urlparse
+try:
+    from urlparse import parse_qs
+except ImportError:
+    # Compatibility with Python <= 2.5
+    from cgi import parse_qs
 
 from saml2.time_util import instant, not_on_or_after
 from saml2.s_utils import signature
