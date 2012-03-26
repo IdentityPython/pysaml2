@@ -11,6 +11,10 @@ BASIC_NF = 'urn:oasis:names:tc:SAML:2.0:attrname-format:basic'
 URI_NF = 'urn:oasis:names:tc:SAML:2.0:attrname-format:uri'
 SAML1 = 'urn:mace:shibboleth:1.0:attributeNamespace:uri'
 
+def test_default():
+    acs = attribute_converter.ac_factory()
+    assert acs
+
 class TestAC():
     def setup_class(self):
         self.acs = attribute_converter.ac_factory("attributemaps")
@@ -23,6 +27,8 @@ class TestAC():
     def test_ava_fro_1(self):
         ats = saml.attribute_statement_from_string(STATEMENT1)
         #print ats
+        ava = None
+
         for ac in self.acs:
             try:
                 ava = ac.fro(ats)
@@ -39,6 +45,7 @@ class TestAC():
     def test_ava_fro_2(self):
         ats = saml.attribute_statement_from_string(STATEMENT2)
         #print ats
+        ava = None
         for ac in self.acs:
             try:
                 ava = ac.fro(ats)
