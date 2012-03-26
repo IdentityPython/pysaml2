@@ -153,7 +153,11 @@ class Config(object):
             pass
 
         try:
-            acs = ac_factory(cnf["attribute_map_dir"])
+            try:
+                acs = ac_factory(cnf["attribute_map_dir"])
+            except KeyError:
+                acs = ac_factory()
+
             if not acs:
                 raise Exception(("No attribute converters, ",
                                     "something is wrong!!"))

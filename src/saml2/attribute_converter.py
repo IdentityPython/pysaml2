@@ -49,7 +49,7 @@ def load_maps(dirspec):
 
     return map
 
-def ac_factory(path):
+def ac_factory(path=""):
     """Attribute Converter factory
 
     :param path: The path to a directory where the attribute maps are expected
@@ -58,12 +58,23 @@ def ac_factory(path):
     """
     acs = []
 
-    if path not in sys.path:
-        sys.path.insert(0, path)
+    if path:
+        if path not in sys.path:
+            sys.path.insert(0, path)
 
-    for fil in os.listdir(path):
-        if fil.endswith(".py"):
-            mod = import_module(fil[:-3])
+        for fil in os.listdir(path):
+            if fil.endswith(".py"):
+                mod = import_module(fil[:-3])
+                for key, item in mod.__dict__.items():
+                    if key.startswith("__"):
+                        continue
+                    if isinstance(item, dict) and "to" in item and "fro" in item:
+                        atco = AttributeConverter(item["identifier"])
+                        atco.from_dict(item)
+                        acs.append(atco)
+    else:
+        for map in ["basic", "saml_uri", "shibboleth_uri"]:
+            mod = import_module(".%s" % map, "saml2.attributemaps")
             for key, item in mod.__dict__.items():
                 if key.startswith("__"):
                     continue
