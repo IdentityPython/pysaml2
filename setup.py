@@ -57,9 +57,9 @@ setup(
     license='Apache 2.0',
     url='https://code.launchpad.net/~roland-hedberg/pysaml2/main',
 
-    packages=['saml2', 'xmldsig', 'xmlenc', 's2repoze',
-                's2repoze.plugins', "saml2/profile", "saml2/schema",
-                "saml2/extension"],
+    packages=['saml2', 'xmldsig', 'xmlenc', 's2repoze', 's2repoze.plugins',
+              "saml2/profile", "saml2/schema", "saml2/extension",
+              "saml2/attributemaps"],
 
     package_dir = {'':'src'},
     package_data={'': ['xml/*.xml']},
