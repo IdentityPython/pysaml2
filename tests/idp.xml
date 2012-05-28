@@ -32,6 +32,9 @@
             <ns0:SingleSignOnService
                     Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
                     Location="http://localhost:8088/sso"/>
+            <ns0:SingleSignOnService
+                    Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP"
+                    Location="http://localhost:8088/sso_soap"/>
         </ns0:IDPSSODescriptor>
         <ns0:Organization>
             <ns0:OrganizationName xml:lang="en">Exempel AB

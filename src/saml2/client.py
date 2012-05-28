@@ -176,7 +176,7 @@ class Saml2Client(object):
                 if self.logger:
                     self.logger.info("_sso_location: %s, %s" % (entityid,
                                                                 binding))
-                return IdpUnspecified("No IdP to send to given the premises")
+                raise IdpUnspecified("No IdP to send to given the premises")
 
         # get the idp location from the configuration alternative the
         # metadata. If there is more than one IdP in the configuration
@@ -189,7 +189,7 @@ class Saml2Client(object):
                                                         binding)[0]
             return loc
         except IndexError:
-            return IdpUnspecified("No IdP to send to given the premises")
+            raise IdpUnspecified("No IdP to send to given the premises")
 
     def _my_name(self):
         return self.config.name
