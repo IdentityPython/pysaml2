@@ -67,8 +67,4 @@ class AttributeResolver(object):
                                         log=log, real_id=real_id)
                     if session_info:
                         result.append(session_info)
-<<<<<<< HEAD
         return result
-=======
-        return result
->>>>>>> eb53c062d261de66e86d8a6e2bbdfd7c17a753d5

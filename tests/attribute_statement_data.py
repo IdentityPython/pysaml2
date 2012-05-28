@@ -172,8 +172,4 @@ STATEMENT3 = """<?xml version='1.0' encoding='UTF-8'?>
     <ns0:Attribute Name="givenname">
         <ns0:AttributeValue>Roland</ns0:AttributeValue>
     </ns0:Attribute>
-<<<<<<< HEAD
 </ns0:AttributeStatement>"""
-=======
-</ns0:AttributeStatement>"""
->>>>>>> eb53c062d261de66e86d8a6e2bbdfd7c17a753d5

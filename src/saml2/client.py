@@ -82,20 +82,11 @@ class LogoutError(Exception):
 class Saml2Client(object):
     """ The basic pySAML2 service provider class """
     
-<<<<<<< HEAD
     def __init__(self, config=None,
-=======
-    def __init__(self, config=None, debug=0,
->>>>>>> eb53c062d261de66e86d8a6e2bbdfd7c17a753d5
-                identity_cache=None, state_cache=None, 
+                identity_cache=None, state_cache=None,
                 virtual_organization=None, config_file="", logger=None):
         """
         :param config: A saml2.config.Config instance
-<<<<<<< HEAD
-=======
-        :param debug: Whether debugging should be done even if the
-            configuration says otherwise
->>>>>>> eb53c062d261de66e86d8a6e2bbdfd7c17a753d5
         :param identity_cache: Where the class should store identity information
         :param state_cache: Where the class should keep state information
         :param virtual_organization: Which if any virtual organization this
@@ -110,10 +101,6 @@ class Saml2Client(object):
         else:
             self.state = state_cache
 
-<<<<<<< HEAD
-=======
-        self.sec = None
->>>>>>> eb53c062d261de66e86d8a6e2bbdfd7c17a753d5
         if config:
             self.config = config
         elif config_file:
@@ -128,17 +115,10 @@ class Saml2Client(object):
         else:
             self.logger = logger
 
-<<<<<<< HEAD
         # we copy the config.debug variable in an internal
         # field for convenience and because we may need to
         # change it during the tests
         self.debug = self.config.debug
-=======
-        if not debug and self.config:
-            self.debug = self.config.debug
-        else:
-            self.debug = debug
->>>>>>> eb53c062d261de66e86d8a6e2bbdfd7c17a753d5
 
         self.sec = security_context(self.config, log=self.logger,
                                     debug=self.debug)
@@ -163,12 +143,9 @@ class Saml2Client(object):
         else:
             self.logout_requests_signed_default = False
 
-<<<<<<< HEAD
     #
     # Private methods
     #
-=======
->>>>>>> eb53c062d261de66e86d8a6e2bbdfd7c17a753d5
 
     def _relay_state(self, session_id):
         vals = [session_id, str(int(time.time()))]
@@ -178,7 +155,6 @@ class Saml2Client(object):
             vals.append(signature(self.config.secret, vals))
         return "|".join(vals)
 
-<<<<<<< HEAD
     def _issuer(self, entityid=None):
         """ Return an Issuer instance """
         if entityid:
@@ -229,44 +205,6 @@ class Saml2Client(object):
         else:
             return None
 
-=======
-    def _init_request(self, request, destination):
-        #request.id = sid()
-        request.version = VERSION
-        request.issue_instant = instant()
-        request.destination = destination
-        return request
-    
-    # def idp_entry(self, name=None, location=None, provider_id=None):
-    #     """ Create an IDP entry
-    #     
-    #     :param name: The name of the IdP
-    #     :param location: The location of the IdP
-    #     :param provider_id: The identifier of the provider
-    #     :return: A IdPEntry instance
-    #     """
-    #     res = samlp.IDPEntry()
-    #     if name:
-    #         res.name = name
-    #     if location:
-    #         res.loc = location
-    #     if provider_id:
-    #         res.provider_id = provider_id
-    # 
-    #     return res
-    # 
-    # def scoping_from_metadata(self, entityid, location=None):
-    #     """ Set the scope of the assertion
-    #     
-    #     :param entityid: The EntityID of the server
-    #     :param location: The location of the server
-    #     :return: A samlp.Scoping instance
-    #     """
-    #     name = self.metadata.name(entityid)
-    #     idp_ent = self.idp_entry(name, location)
-    #     return samlp.Scoping(idp_list=samlp.IDPList(idp_entry=[idp_ent]))
-    
->>>>>>> eb53c062d261de66e86d8a6e2bbdfd7c17a753d5
     def response(self, post, outstanding, log=None, decode=True,
                  asynchop=True):
         """ Deal with an AuthnResponse or LogoutResponse
@@ -309,34 +247,18 @@ class Saml2Client(object):
                 if log:
                     log.error("%s" % exc)
                 return None
-<<<<<<< HEAD
-
             if log:
                 log.debug(">> %s", resp)
 
-=======
-            
-            if self.debug:
-                if log:
-                    log.info(">> %s", resp)
->>>>>>> eb53c062d261de66e86d8a6e2bbdfd7c17a753d5
             resp = resp.verify()
             if isinstance(resp, AuthnResponse):
                 self.users.add_information_about_person(resp.session_info())
                 if log:
-<<<<<<< HEAD
                     log.info("--- ADDED person info ----")
             elif isinstance(resp, LogoutResponse):
                 self.handle_logout_response(resp, log)
             elif log:
                 log.error("Response type not supported: %s" % saml2.class_name(resp))
-=======
-                    log.error("--- ADDED person info ----")
-            elif isinstance(resp, LogoutResponse):
-                self.handle_logout_response(resp, log)
-            elif log:
-                log.error("Other response type: %s" % saml2.class_name(resp))
->>>>>>> eb53c062d261de66e86d8a6e2bbdfd7c17a753d5
         return resp
     
     def authn_request(self, query_id, destination, service_url, spentityid,
@@ -397,11 +319,7 @@ class Saml2Client(object):
             to_sign = []
         
         request.name_id_policy = name_id_policy
-<<<<<<< HEAD
         request.issuer = self._issuer(spentityid)
-=======
-        request.issuer = self.issuer(spentityid)
->>>>>>> eb53c062d261de66e86d8a6e2bbdfd7c17a753d5
 
         if log is None:
             log = self.logger
@@ -410,58 +328,6 @@ class Saml2Client(object):
             log.info("REQUEST: %s" % request)
         
         return signed_instance_factory(request, self.sec, to_sign)
-<<<<<<< HEAD
-=======
-    
-    def issuer(self, entityid=None):
-        """ Return an Issuer instance """
-        if entityid:
-            if isinstance(entityid, saml.Issuer):
-                return entityid
-            else:
-                return saml.Issuer(text=entityid, 
-                                    format=saml.NAMEID_FORMAT_ENTITY)
-        else:
-            return saml.Issuer(text=self.config.entityid,
-                                format=saml.NAMEID_FORMAT_ENTITY)        
-    
-    def _entityid(self):
-        return self.config.entityid
-
-    def _sso_location(self, entityid=None, binding=BINDING_HTTP_REDIRECT):
-        if entityid:
-            # verify that it's in the metadata
-            try:
-                return self.config.single_sign_on_services(entityid, binding)[0]
-            except IndexError:
-                if self.logger:
-                    self.logger.info("_sso_location: %s, %s" % (entityid,
-                                                                binding))
-                return IdpUnspecified("No IdP to send to given the premises")
-
-        # get the idp location from the configuration alternative the
-        # metadata. If there is more than one IdP in the configuration
-        # raise exception
-        eids = self.config.idps()
-        if len(eids) > 1:
-            raise IdpUnspecified("Too many IdPs to choose from: %s" % eids)
-        try:
-            loc = self.config.single_sign_on_services(eids.keys()[0],
-                                                        binding)[0]
-            return loc
-        except IndexError:
-            return IdpUnspecified("No IdP to send to given the premises")
-        
-    def service_url(self, binding=BINDING_HTTP_POST):
-        _res = self.config.endpoint("assertion_consumer_service", binding)
-        if _res:
-            return _res[0]
-        else:
-            return None
-
-    def _my_name(self):
-        return self.config.name
->>>>>>> eb53c062d261de66e86d8a6e2bbdfd7c17a753d5
 
     def authn(self, location, session_id, vorg="", scoping=None, log=None,
                 sign=None, binding=saml2.BINDING_HTTP_POST,
@@ -478,11 +344,7 @@ class Saml2Client(object):
         :param binding: The binding to use, default = HTTP POST
         :return: An AuthnRequest instance
         """
-<<<<<<< HEAD
         spentityid = self.config.entityid
-=======
-        spentityid = self._entityid()
->>>>>>> eb53c062d261de66e86d8a6e2bbdfd7c17a753d5
         if service_url_binding is None:
             service_url = self.service_url(binding)
         else:
@@ -589,11 +451,7 @@ class Saml2Client(object):
             version=VERSION,
             issue_instant=instant(),
             destination=destination,
-<<<<<<< HEAD
             issuer=self._issuer(issuer_id),
-=======
-            issuer=self.issuer(issuer_id),
->>>>>>> eb53c062d261de66e86d8a6e2bbdfd7c17a753d5
             subject=subject,
         )
         
@@ -638,12 +496,8 @@ class Saml2Client(object):
             log = self.logger
 
         session_id = sid()
-<<<<<<< HEAD
         issuer = self._issuer(issuer_id)
-=======
-        issuer = self.issuer(issuer_id)
->>>>>>> eb53c062d261de66e86d8a6e2bbdfd7c17a753d5
-        
+
         request = self.create_attribute_query(session_id, subject_id,
                     destination, issuer, attribute, sp_name_qualifier,
                     name_qualifier, nameid_format=nameid_format)
@@ -729,11 +583,7 @@ class Saml2Client(object):
             version=VERSION,
             issue_instant=instant(),
             destination=destination,
-<<<<<<< HEAD
             issuer=self._issuer(),
-=======
-            issuer=self.issuer(),
->>>>>>> eb53c062d261de66e86d8a6e2bbdfd7c17a753d5
             name_id = name_id
         )
     
@@ -945,12 +795,8 @@ class Saml2Client(object):
                 return None
             
             try:
-<<<<<<< HEAD
-                response = LogoutResponse(self.sec, return_addr, debug=self.debug,
-=======
-                response = LogoutResponse(self.sec, return_addr, debug=True, 
->>>>>>> eb53c062d261de66e86d8a6e2bbdfd7c17a753d5
-                                            log=log)
+                response = LogoutResponse(self.sec, return_addr,
+                                          debug=self.debug, log=log)
             except Exception, exc:
                 if log:
                     log.info("%s" % exc)
@@ -961,13 +807,8 @@ class Saml2Client(object):
             elif binding == BINDING_HTTP_POST:
                 xmlstr = base64.b64decode(xmlstr)
 
-<<<<<<< HEAD
             if log:
                 log.debug("XMLSTR: %s" % xmlstr)
-=======
-            if self.debug and log:
-                log.info("XMLSTR: %s" % xmlstr)
->>>>>>> eb53c062d261de66e86d8a6e2bbdfd7c17a753d5
 
             response = response.loads(xmlstr, False)
 
@@ -977,14 +818,9 @@ class Saml2Client(object):
             if not response:
                 return None
             
-<<<<<<< HEAD
             if log:
                 log.debug(response)
-=======
-            if self.debug and log:
-                log.info(response)
->>>>>>> eb53c062d261de66e86d8a6e2bbdfd7c17a753d5
-                
+
             return self.handle_logout_response(response, log)
 
         return response
@@ -1012,13 +848,8 @@ class Saml2Client(object):
             xml = decode_base64_and_inflate(saml_request)
 
             request = samlp.logout_request_from_string(xml)
-<<<<<<< HEAD
             if log:
                 log.debug(request)
-=======
-            if self.debug and log:
-                log.info(request)
->>>>>>> eb53c062d261de66e86d8a6e2bbdfd7c17a753d5
 
             if request.name_id.text == subject_id:
                 status = samlp.STATUS_SUCCESS
@@ -1082,11 +913,7 @@ class Saml2Client(object):
             version=VERSION,
             issue_instant=instant(),
             destination=destination,
-<<<<<<< HEAD
             issuer=self._issuer(),
-=======
-            issuer=self.issuer(),
->>>>>>> eb53c062d261de66e86d8a6e2bbdfd7c17a753d5
             in_response_to=request_id,
             status=status,
             )
@@ -1170,11 +997,7 @@ class Saml2Client(object):
         :return: AuthzDecisionQuery instance
         """
 
-<<<<<<< HEAD
         spentityid = self._issuer()
-=======
-        spentityid = self.issuer()
->>>>>>> eb53c062d261de66e86d8a6e2bbdfd7c17a753d5
         service_url = self.service_url()
         my_name = self._my_name()
 
@@ -1266,11 +1089,7 @@ class Saml2Client(object):
             the user agent.
         :return: A URL
         """
-<<<<<<< HEAD
         pdir = {"entityID": self.config.entityid}
-=======
-        pdir = {"entityID": self._entityid()}
->>>>>>> eb53c062d261de66e86d8a6e2bbdfd7c17a753d5
         if return_url:
             pdir["return"] = return_url
         if policy and policy != IDPDISC_POLICY:
