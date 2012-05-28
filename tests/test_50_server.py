@@ -287,7 +287,8 @@ class TestServer1():
         conf = config.SPConfig()
         conf.load_file("server_conf")
         self.client = client.Saml2Client(conf)
-        ava = { "givenName": ["Derek"], "surName": ["Jeter"], 
+
+        ava = { "givenName": ["Derek"], "surName": ["Jeter"],
                 "mail": ["derek@nyy.mlb.com"]}
 
         resp_str = self.server.authn_response(ava, 

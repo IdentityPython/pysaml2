@@ -249,4 +249,8 @@ def packager( identifier ):
     try:
         return PACKING[identifier]
     except KeyError:
+<<<<<<< HEAD
         raise Exception("Unkown binding type: %s" % identifier)
+=======
+        raise Exception("Unkown binding type: %s" % identifier)
+>>>>>>> eb53c062d261de66e86d8a6e2bbdfd7c17a753d5
