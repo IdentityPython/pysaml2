@@ -26,7 +26,7 @@ def key_size_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(KeySizeType_, xml_string)
 
 
-class CipherDataType_CipherValue(SamlBase):
+class CipherValue(SamlBase):
 
     c_tag = 'CipherValue'
     c_namespace = NAMESPACE
@@ -36,8 +36,8 @@ class CipherDataType_CipherValue(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
-def cipher_data_type__cipher_value_from_string(xml_string):
-    return saml2.create_class_from_xml_string(CipherDataType_CipherValue, xml_string)
+def cipher_value_from_string(xml_string):
+    return saml2.create_class_from_xml_string(CipherValue, xml_string)
 
 
 class TransformsType_(SamlBase):
@@ -70,7 +70,7 @@ def transforms_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(TransformsType_, xml_string)
 
 
-class AgreementMethodType_KA_Nonce(SamlBase):
+class KA_Nonce(SamlBase):
 
     c_tag = 'KA_Nonce'
     c_namespace = NAMESPACE
@@ -80,34 +80,34 @@ class AgreementMethodType_KA_Nonce(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
-def agreement_method_type__k_a__nonce_from_string(xml_string):
-    return saml2.create_class_from_xml_string(AgreementMethodType_KA_Nonce, xml_string)
+def k_a__nonce_from_string(xml_string):
+    return saml2.create_class_from_xml_string(KA_Nonce, xml_string)
 
 
-class AgreementMethodType_OriginatorKeyInfo(ds.KeyInfoType_):
+class OriginatorKeyInfo(ds.KeyInfo):
 
     c_tag = 'OriginatorKeyInfo'
     c_namespace = NAMESPACE
-    c_children = ds.KeyInfoType_.c_children.copy()
-    c_attributes = ds.KeyInfoType_.c_attributes.copy()
-    c_child_order = ds.KeyInfoType_.c_child_order[:]
-    c_cardinality = ds.KeyInfoType_.c_cardinality.copy()
+    c_children = ds.KeyInfo.c_children.copy()
+    c_attributes = ds.KeyInfo.c_attributes.copy()
+    c_child_order = ds.KeyInfo.c_child_order[:]
+    c_cardinality = ds.KeyInfo.c_cardinality.copy()
 
-def agreement_method_type__originator_key_info_from_string(xml_string):
-    return saml2.create_class_from_xml_string(AgreementMethodType_OriginatorKeyInfo, xml_string)
+def originator_key_info_from_string(xml_string):
+    return saml2.create_class_from_xml_string(OriginatorKeyInfo, xml_string)
 
 
-class AgreementMethodType_RecipientKeyInfo(ds.KeyInfoType_):
+class RecipientKeyInfo(ds.KeyInfo):
 
     c_tag = 'RecipientKeyInfo'
     c_namespace = NAMESPACE
-    c_children = ds.KeyInfoType_.c_children.copy()
-    c_attributes = ds.KeyInfoType_.c_attributes.copy()
-    c_child_order = ds.KeyInfoType_.c_child_order[:]
-    c_cardinality = ds.KeyInfoType_.c_cardinality.copy()
+    c_children = ds.KeyInfo.c_children.copy()
+    c_attributes = ds.KeyInfo.c_attributes.copy()
+    c_child_order = ds.KeyInfo.c_child_order[:]
+    c_cardinality = ds.KeyInfo.c_cardinality.copy()
 
-def agreement_method_type__recipient_key_info_from_string(xml_string):
-    return saml2.create_class_from_xml_string(AgreementMethodType_RecipientKeyInfo, xml_string)
+def recipient_key_info_from_string(xml_string):
+    return saml2.create_class_from_xml_string(RecipientKeyInfo, xml_string)
 
 
 class AgreementMethodType_(SamlBase):
@@ -119,11 +119,11 @@ class AgreementMethodType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{http://www.w3.org/2001/04/xmlenc#}KA_Nonce'] = ('k_a__nonce', AgreementMethodType_KA_Nonce)
+    c_children['{http://www.w3.org/2001/04/xmlenc#}KA_Nonce'] = ('k_a__nonce', KA_Nonce)
     c_cardinality['k_a__nonce'] = {"min":0, "max":1}
-    c_children['{http://www.w3.org/2001/04/xmlenc#}OriginatorKeyInfo'] = ('originator_key_info', AgreementMethodType_OriginatorKeyInfo)
+    c_children['{http://www.w3.org/2001/04/xmlenc#}OriginatorKeyInfo'] = ('originator_key_info', OriginatorKeyInfo)
     c_cardinality['originator_key_info'] = {"min":0, "max":1}
-    c_children['{http://www.w3.org/2001/04/xmlenc#}RecipientKeyInfo'] = ('recipient_key_info', AgreementMethodType_RecipientKeyInfo)
+    c_children['{http://www.w3.org/2001/04/xmlenc#}RecipientKeyInfo'] = ('recipient_key_info', RecipientKeyInfo)
     c_cardinality['recipient_key_info'] = {"min":0, "max":1}
     c_attributes['Algorithm'] = ('algorithm', 'anyURI', True)
     c_child_order.extend(['k_a__nonce', 'originator_key_info', 'recipient_key_info'])
@@ -210,7 +210,7 @@ def encryption_property_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(EncryptionPropertyType_, xml_string)
 
 
-class EncryptionMethodType_KeySize(KeySizeType_):
+class KeySize(KeySizeType_):
 
     c_tag = 'KeySize'
     c_namespace = NAMESPACE
@@ -219,11 +219,11 @@ class EncryptionMethodType_KeySize(KeySizeType_):
     c_child_order = KeySizeType_.c_child_order[:]
     c_cardinality = KeySizeType_.c_cardinality.copy()
 
-def encryption_method_type__key_size_from_string(xml_string):
-    return saml2.create_class_from_xml_string(EncryptionMethodType_KeySize, xml_string)
+def key_size_from_string(xml_string):
+    return saml2.create_class_from_xml_string(KeySize, xml_string)
 
 
-class EncryptionMethodType_OAEPparams(SamlBase):
+class OAEPparams(SamlBase):
 
     c_tag = 'OAEPparams'
     c_namespace = NAMESPACE
@@ -233,8 +233,8 @@ class EncryptionMethodType_OAEPparams(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
-def encryption_method_type__oae_pparams_from_string(xml_string):
-    return saml2.create_class_from_xml_string(EncryptionMethodType_OAEPparams, xml_string)
+def oae_pparams_from_string(xml_string):
+    return saml2.create_class_from_xml_string(OAEPparams, xml_string)
 
 
 class EncryptionMethodType_(SamlBase):
@@ -246,9 +246,9 @@ class EncryptionMethodType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{http://www.w3.org/2001/04/xmlenc#}KeySize'] = ('key_size', EncryptionMethodType_KeySize)
+    c_children['{http://www.w3.org/2001/04/xmlenc#}KeySize'] = ('key_size', KeySize)
     c_cardinality['key_size'] = {"min":0, "max":1}
-    c_children['{http://www.w3.org/2001/04/xmlenc#}OAEPparams'] = ('oae_pparams', EncryptionMethodType_OAEPparams)
+    c_children['{http://www.w3.org/2001/04/xmlenc#}OAEPparams'] = ('oae_pparams', OAEPparams)
     c_cardinality['oae_pparams'] = {"min":0, "max":1}
     c_attributes['Algorithm'] = ('algorithm', 'anyURI', True)
     c_child_order.extend(['key_size', 'oae_pparams'])
@@ -274,7 +274,7 @@ def encryption_method_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(EncryptionMethodType_, xml_string)
 
 
-class CipherReferenceType_Transforms(TransformsType_):
+class Transforms(TransformsType_):
 
     c_tag = 'Transforms'
     c_namespace = NAMESPACE
@@ -283,8 +283,8 @@ class CipherReferenceType_Transforms(TransformsType_):
     c_child_order = TransformsType_.c_child_order[:]
     c_cardinality = TransformsType_.c_cardinality.copy()
 
-def cipher_reference_type__transforms_from_string(xml_string):
-    return saml2.create_class_from_xml_string(CipherReferenceType_Transforms, xml_string)
+def transforms_from_string(xml_string):
+    return saml2.create_class_from_xml_string(Transforms, xml_string)
 
 
 class CipherReferenceType_(SamlBase):
@@ -296,7 +296,7 @@ class CipherReferenceType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{http://www.w3.org/2001/04/xmlenc#}Transforms'] = ('transforms', CipherReferenceType_Transforms)
+    c_children['{http://www.w3.org/2001/04/xmlenc#}Transforms'] = ('transforms', Transforms)
     c_cardinality['transforms'] = {"min":0, "max":1}
     c_attributes['URI'] = ('uri', 'anyURI', True)
     c_child_order.extend(['transforms'])
@@ -320,7 +320,7 @@ def cipher_reference_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(CipherReferenceType_, xml_string)
 
 
-class EncryptedType_EncryptionMethod(EncryptionMethodType_):
+class EncryptionMethod(EncryptionMethodType_):
 
     c_tag = 'EncryptionMethod'
     c_namespace = NAMESPACE
@@ -329,8 +329,8 @@ class EncryptedType_EncryptionMethod(EncryptionMethodType_):
     c_child_order = EncryptionMethodType_.c_child_order[:]
     c_cardinality = EncryptionMethodType_.c_cardinality.copy()
 
-def encrypted_type__encryption_method_from_string(xml_string):
-    return saml2.create_class_from_xml_string(EncryptedType_EncryptionMethod, xml_string)
+def encryption_method_from_string(xml_string):
+    return saml2.create_class_from_xml_string(EncryptionMethod, xml_string)
 
 
 
@@ -348,7 +348,7 @@ def agreement_method_from_string(xml_string):
     return saml2.create_class_from_xml_string(AgreementMethod, xml_string)
 
 
-class ReferenceList_DataReference(ReferenceType_):
+class DataReference(ReferenceType_):
 
     c_tag = 'DataReference'
     c_namespace = NAMESPACE
@@ -357,11 +357,11 @@ class ReferenceList_DataReference(ReferenceType_):
     c_child_order = ReferenceType_.c_child_order[:]
     c_cardinality = ReferenceType_.c_cardinality.copy()
 
-def reference_list__data_reference_from_string(xml_string):
-    return saml2.create_class_from_xml_string(ReferenceList_DataReference, xml_string)
+def data_reference_from_string(xml_string):
+    return saml2.create_class_from_xml_string(DataReference, xml_string)
 
 
-class ReferenceList_KeyReference(ReferenceType_):
+class KeyReference(ReferenceType_):
 
     c_tag = 'KeyReference'
     c_namespace = NAMESPACE
@@ -370,8 +370,8 @@ class ReferenceList_KeyReference(ReferenceType_):
     c_child_order = ReferenceType_.c_child_order[:]
     c_cardinality = ReferenceType_.c_cardinality.copy()
 
-def reference_list__key_reference_from_string(xml_string):
-    return saml2.create_class_from_xml_string(ReferenceList_KeyReference, xml_string)
+def key_reference_from_string(xml_string):
+    return saml2.create_class_from_xml_string(KeyReference, xml_string)
 
 
 class ReferenceList(SamlBase):
@@ -383,9 +383,9 @@ class ReferenceList(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{http://www.w3.org/2001/04/xmlenc#}DataReference'] = ('data_reference', [ReferenceList_DataReference])
+    c_children['{http://www.w3.org/2001/04/xmlenc#}DataReference'] = ('data_reference', [DataReference])
     c_cardinality['data_reference'] = {"min":0}
-    c_children['{http://www.w3.org/2001/04/xmlenc#}KeyReference'] = ('key_reference', [ReferenceList_KeyReference])
+    c_children['{http://www.w3.org/2001/04/xmlenc#}KeyReference'] = ('key_reference', [KeyReference])
     c_cardinality['key_reference'] = {"min":0}
     c_child_order.extend(['data_reference', 'key_reference'])
 
@@ -478,7 +478,7 @@ class CipherDataType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{http://www.w3.org/2001/04/xmlenc#}CipherValue'] = ('cipher_value', CipherDataType_CipherValue)
+    c_children['{http://www.w3.org/2001/04/xmlenc#}CipherValue'] = ('cipher_value', CipherValue)
     c_cardinality['cipher_value'] = {"min":0, "max":1}
     c_children['{http://www.w3.org/2001/04/xmlenc#}CipherReference'] = ('cipher_reference', CipherReference)
     c_cardinality['cipher_reference'] = {"min":0, "max":1}
@@ -540,7 +540,7 @@ class EncryptedType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{http://www.w3.org/2001/04/xmlenc#}EncryptionMethod'] = ('encryption_method', EncryptedType_EncryptionMethod)
+    c_children['{http://www.w3.org/2001/04/xmlenc#}EncryptionMethod'] = ('encryption_method', EncryptionMethod)
     c_cardinality['encryption_method'] = {"min":0, "max":1}
     c_children['{http://www.w3.org/2000/09/xmldsig#}KeyInfo'] = ('key_info', ds.KeyInfo)
     c_cardinality['key_info'] = {"min":0, "max":1}
@@ -595,7 +595,7 @@ def encrypted_data_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(EncryptedDataType_, xml_string)
 
 
-class EncryptedKeyType_CarriedKeyName(SamlBase):
+class CarriedKeyName(SamlBase):
 
     c_tag = 'CarriedKeyName'
     c_namespace = NAMESPACE
@@ -605,8 +605,8 @@ class EncryptedKeyType_CarriedKeyName(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
-def encrypted_key_type__carried_key_name_from_string(xml_string):
-    return saml2.create_class_from_xml_string(EncryptedKeyType_CarriedKeyName, xml_string)
+def carried_key_name_from_string(xml_string):
+    return saml2.create_class_from_xml_string(CarriedKeyName, xml_string)
 
 
 class EncryptedKeyType_(EncryptedType_):
@@ -620,7 +620,7 @@ class EncryptedKeyType_(EncryptedType_):
     c_cardinality = EncryptedType_.c_cardinality.copy()
     c_children['{http://www.w3.org/2001/04/xmlenc#}ReferenceList'] = ('reference_list', ReferenceList)
     c_cardinality['reference_list'] = {"min":0, "max":1}
-    c_children['{http://www.w3.org/2001/04/xmlenc#}CarriedKeyName'] = ('carried_key_name', EncryptedKeyType_CarriedKeyName)
+    c_children['{http://www.w3.org/2001/04/xmlenc#}CarriedKeyName'] = ('carried_key_name', CarriedKeyName)
     c_cardinality['carried_key_name'] = {"min":0, "max":1}
     c_attributes['Recipient'] = ('recipient', 'string', False)
     c_child_order.extend(['reference_list', 'carried_key_name'])
@@ -689,6 +689,10 @@ class EncryptedKey(EncryptedKeyType_):
 def encrypted_key_from_string(xml_string):
     return saml2.create_class_from_xml_string(EncryptedKey, xml_string)
 
+ds.KeyInfo.c_children['{http://www.w3.org/2000/09/xmlenc#}EncryptedKey'] =  (
+    'encrypted_key',
+    EncryptedKey)
+
 
 ELEMENT_FROM_STRING = {
     EncryptionMethodType_.c_tag: encryption_method_type__from_string,
@@ -710,17 +714,17 @@ ELEMENT_FROM_STRING = {
     EncryptionPropertiesType_.c_tag: encryption_properties_type__from_string,
     EncryptionProperty.c_tag: encryption_property_from_string,
     EncryptionPropertyType_.c_tag: encryption_property_type__from_string,
-    CipherDataType_CipherValue.c_tag: cipher_data_type__cipher_value_from_string,
-    AgreementMethodType_KA_Nonce.c_tag: agreement_method_type__k_a__nonce_from_string,
-    AgreementMethodType_OriginatorKeyInfo.c_tag: agreement_method_type__originator_key_info_from_string,
-    AgreementMethodType_RecipientKeyInfo.c_tag: agreement_method_type__recipient_key_info_from_string,
-    EncryptionMethodType_KeySize.c_tag: encryption_method_type__key_size_from_string,
-    EncryptionMethodType_OAEPparams.c_tag: encryption_method_type__oae_pparams_from_string,
-    CipherReferenceType_Transforms.c_tag: cipher_reference_type__transforms_from_string,
-    EncryptedType_EncryptionMethod.c_tag: encrypted_type__encryption_method_from_string,
-    ReferenceList_DataReference.c_tag: reference_list__data_reference_from_string,
-    ReferenceList_KeyReference.c_tag: reference_list__key_reference_from_string,
-    EncryptedKeyType_CarriedKeyName.c_tag: encrypted_key_type__carried_key_name_from_string,
+    CipherValue.c_tag: cipher_value_from_string,
+    KA_Nonce.c_tag: k_a__nonce_from_string,
+    OriginatorKeyInfo.c_tag: originator_key_info_from_string,
+    RecipientKeyInfo.c_tag: recipient_key_info_from_string,
+    KeySize.c_tag: key_size_from_string,
+    OAEPparams.c_tag: oae_pparams_from_string,
+    Transforms.c_tag: transforms_from_string,
+    EncryptionMethod.c_tag: encryption_method_from_string,
+    DataReference.c_tag: data_reference_from_string,
+    KeyReference.c_tag: key_reference_from_string,
+    CarriedKeyName.c_tag: carried_key_name_from_string,
 }
 
 ELEMENT_BY_TAG = {
@@ -743,17 +747,17 @@ ELEMENT_BY_TAG = {
     'EncryptionPropertiesType': EncryptionPropertiesType_,
     'EncryptionProperty': EncryptionProperty,
     'EncryptionPropertyType': EncryptionPropertyType_,
-    'CipherValue': CipherDataType_CipherValue,
-    'KA_Nonce': AgreementMethodType_KA_Nonce,
-    'OriginatorKeyInfo': AgreementMethodType_OriginatorKeyInfo,
-    'RecipientKeyInfo': AgreementMethodType_RecipientKeyInfo,
-    'KeySize': EncryptionMethodType_KeySize,
-    'OAEPparams': EncryptionMethodType_OAEPparams,
-    'Transforms': CipherReferenceType_Transforms,
-    'EncryptionMethod': EncryptedType_EncryptionMethod,
-    'DataReference': ReferenceList_DataReference,
-    'KeyReference': ReferenceList_KeyReference,
-    'CarriedKeyName': EncryptedKeyType_CarriedKeyName,
+    'CipherValue': CipherValue,
+    'KA_Nonce': KA_Nonce,
+    'OriginatorKeyInfo': OriginatorKeyInfo,
+    'RecipientKeyInfo': RecipientKeyInfo,
+    'KeySize': KeySize,
+    'OAEPparams': OAEPparams,
+    'Transforms': Transforms,
+    'EncryptionMethod': EncryptionMethod,
+    'DataReference': DataReference,
+    'KeyReference': KeyReference,
+    'CarriedKeyName': CarriedKeyName,
     'EncryptedType': EncryptedType_,
 }
 

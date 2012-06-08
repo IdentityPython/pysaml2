@@ -302,7 +302,7 @@ def pem_format(key):
     return "\n".join(["-----BEGIN CERTIFICATE-----",
         key,"-----END CERTIFICATE-----"])
         
-def _parse_xmlsec_output(output):
+def parse_xmlsec_output(output):
     """ Parse the output from xmlsec to try to find out if the 
     command was successfull or not.
     
@@ -369,7 +369,7 @@ def verify_signature(enctext, xmlsec_binary, cert_file=None, cert_type="pem",
         p_err = pof.stderr.read()
         if __DEBUG:
             print p_err
-        verified = _parse_xmlsec_output(p_err)
+        verified = parse_xmlsec_output(p_err)
     except XmlsecError, exc:
         if log:
             log.error(60*"=")

@@ -88,25 +88,6 @@ def ac_factory(path=""):
 def ac_factory_II(path):
     return ac_factory(path)
 
-#def ac_factory_old(path):
-#    acs = []
-#
-#    for dir_name, directories, files in os.walk(path):
-#        for d in list(directories):
-#            if d.startswith('.'):
-#                directories.remove(d)
-#
-#        if files:
-#            atco = AttributeConverter(os.path.basename(dir_name))
-#            for name in files:
-#                fname = os.path.join(dir_name, name)
-#                if name.endswith(".py"):
-#                    name = name[:-3]
-#                atco.set(name, fname)
-#            atco.adjust()
-#            acs.append(atco)
-#    return acs
-    
 def ava_fro(acs, statement):
     """  Translates attributes according to their name_formats into the local
      names.

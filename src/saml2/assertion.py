@@ -455,6 +455,7 @@ class Assertion(dict):
         :param issuer: Who is issuing the statement
         :param authn_class: The authentication class
         :param authn_auth: The authentication instance
+        :param authn_decl:
         :param encrypt: Whether to encrypt parts or all of the Assertion
         :param sec_context: The security context used when encrypting
         :return: An Assertion instance

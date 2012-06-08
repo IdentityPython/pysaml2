@@ -7,9 +7,7 @@
 import saml2
 from saml2 import SamlBase
 
-
 NAMESPACE = 'http://www.w3.org/2000/09/xmldsig#'
-
 
 ENCODING_BASE64 = 'http://www.w3.org/2000/09/xmldsig#base64'
 DIGEST_SHA1 = 'http://www.w3.org/2000/09/xmldsig#sha1'
@@ -1255,6 +1253,7 @@ class Reference(ReferenceType_):
 def reference_from_string(xml_string):
     return saml2.create_class_from_xml_string(Reference, xml_string)
 
+#import xmlenc as enc
 
 class KeyInfoType_(SamlBase):
     """The http://www.w3.org/2000/09/xmldsig#:KeyInfoType element """
@@ -1279,8 +1278,15 @@ class KeyInfoType_(SamlBase):
     c_cardinality['spki_data'] = {"min":0}
     c_children['{http://www.w3.org/2000/09/xmldsig#}MgmtData'] = ('mgmt_data', [MgmtData])
     c_cardinality['mgmt_data'] = {"min":0}
+    c_children['{http://www.w3.org/2000/09/xmlenc#}EncryptedKey'] =  (
+                                                            'encrypted_key',
+                                                            None)
+    c_cardinality['key_info'] = {"min":0, "max":1}
+
     c_attributes['Id'] = ('id', 'ID', False)
-    c_child_order.extend(['key_name', 'key_value', 'retrieval_method', 'x509_data', 'pgp_data', 'spki_data', 'mgmt_data'])
+    c_child_order.extend(['key_name', 'key_value', 'retrieval_method',
+                          'x509_data', 'pgp_data', 'spki_data', 'mgmt_data',
+                          'encrypted_key'])
 
     def __init__(self,
             key_name=None,
@@ -1290,6 +1296,7 @@ class KeyInfoType_(SamlBase):
             pgp_data=None,
             spki_data=None,
             mgmt_data=None,
+            encrypted_key=None,
             id=None,
             text=None,
             extension_elements=None,
@@ -1307,6 +1314,7 @@ class KeyInfoType_(SamlBase):
         self.pgp_data=pgp_data or []
         self.spki_data=spki_data or []
         self.mgmt_data=mgmt_data or []
+        self.encrypted_key=encrypted_key
         self.id=id
 
 def key_info_type__from_string(xml_string):
