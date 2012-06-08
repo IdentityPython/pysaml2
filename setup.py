@@ -55,7 +55,7 @@ setup(
     author='Roland Hedberg',
     author_email='roland.hedberg@adm.umu.se',
     license='Apache 2.0',
-    url='https://code.launchpad.net/~roland-hedberg/pysaml2/main',
+    url='https://github.com/rohe/pysaml2',
 
     packages=['saml2', 'xmldsig', 'xmlenc', 's2repoze', 's2repoze.plugins',
               "saml2/profile", "saml2/schema", "saml2/extension",
