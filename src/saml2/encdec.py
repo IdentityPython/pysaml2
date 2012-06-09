@@ -6,12 +6,10 @@ from subprocess import PIPE
 
 from tempfile import NamedTemporaryFile
 
-from saml2 import saml
-from saml2 import class_name
-
 from saml2.sigver import make_temp
 from saml2.sigver import parse_xmlsec_output
 from saml2.sigver import XmlsecError
+from saml2 import saml
 
 __author__ = 'rohe0002'
 
@@ -50,8 +48,9 @@ RSA_15 = "http://www.w3.org/2001/04/xmlenc#rsa-1_5"
 RSA_OAEP = "http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p"
 SHA1 = "http://www.w3.org/2000/09/xmldsig#sha1"
 AES128_CBC="http://www.w3.org/2001/04/xmlenc#aes128-cbc"
+TRIPLE_DES = "http://www.w3.org/2001/04/xmlenc#tripledes-cbc"
 
-def pre_encrypted_id(ident, public_key=None):
+def template(ident=None):
     """
     If an assertion is to be signed the signature part has to be preset
     with which algorithms to be used, this function returns such a
@@ -59,32 +58,22 @@ def pre_encrypted_id(ident, public_key=None):
 
     :param ident: The identifier of the assertion, so you know which assertion
         was signed
-    :param public_key: The base64 part of a PEM file
     :return: A preset signature part
     """
 
-    e_key_info = ds.KeyInfo(key_name=ds.KeyName())
     cipher_data = enc.CipherData(cipher_value=enc.CipherValue())
-    encryption_method = enc.EncryptionMethod(algorithm=RSA_OAEP)
-    encrypted_key = enc.EncryptedKey(key_info=e_key_info,
-                                     cipher_data=cipher_data,
-                                     encryption_method=encryption_method)
-    key_info = ds.KeyInfo(encrypted_key=encrypted_key)
-    encryption_method_ae = enc.EncryptionMethod(algorithm=AES128_CBC)
+    encryption_method = enc.EncryptionMethod(algorithm=TRIPLE_DES)
+    key_info = ds.KeyInfo(key_name=ds.KeyName())
     encrypted_data = enc.EncryptedData(
                             type = "http://www.w3.org/2001/04/xmlenc#Element",
-                            encryption_method=encryption_method_ae,
-                            key_info=key_info)
+                            encryption_method=encryption_method,
+                            key_info=key_info,
+                            cipher_data=cipher_data)
 
-    encrypted_id = saml.EncryptedID(encrypted_data=encrypted_data)
-    encrypted_data.id = "ENC%s" % ident
+    if ident:
+        encrypted_data.id = "%s" % ident
 
-    if public_key:
-        x509_data = ds.X509Data(x509_certificate=[ds.X509DataType_X509Certificate(
-            text=public_key)])
-        e_key_info.x509_data=x509_data
-
-    return encrypted_id
+    return encrypted_data
 
 # xmlsec decrypt --privkey-pem userkey.pem doc-encrypted.xml
 
@@ -158,47 +147,54 @@ def decrypt_message(enctext, xmlsec_binary, node_name, cert_file=None,
 # --output ClientEncrypted.xml EncryptionTemplate.xml
 
 # single value
-#xmlsec encrypt --pubkey-pem pub-userkey.pem
-# --session-key des-192
-# --xml-data doc-plain.xml
-# --output doc-encrypted-xpath.xml
-# --node-xpath /PayInfo/CreditCard/Number/text()
-# session-key-template.xml
+#/opt/local/bin/xmlsec1 encrypt --pubkey-cert-pem pubkey.pem
+# --session-key des-192 --xml-data pre_saml2_response.xml
+# --node-xpath '/*[local-name()="Response"]/*[local-name()="Assertion"]/*[local-name()="Subject"]/*[local-name()="EncryptedID"]/text()'
+# encryption_template.xml > enc.out
 
-def encrypt_using_xmlsec(xmlsec, doc, template, xpath=None, key=None,
-                               key_file=None, session_key=None, log=None):
+def create_xpath(path):
+    """
+    :param path: list of element names
+    """
+
+    return "/*".join(['[local-name()="%s"]' % e for e in path]) + "/text()"
+
+def encrypt_using_xmlsec(xmlsec, data, template, epath=None, key=None,
+                               key_file=None, key_file_type="pubkey-pem",
+                               session_key=None, log=None):
         """encrypting a value using xmlsec.
 
         :param xmlsec: Path to the xmlsec1 binary
-        :param xpath: Which value to encrypt, if not the whole document
+        :param data: A XML document from which the value should be picked.
+        :param template: The encyption part template
+        :param epath: Which value to encrypt, if not the whole document
             should be encrypted.
-        :param doc: Form which XML document the value should be picked.
         :param key: The key to be used for the encrypting, either this or
         :param key_file: The file where the key can be found
+        :param key_file_type: pubkey-pem, pubkey-der, pubkey-cert-pem,
+            pubkey-cert-der, privkey-der, privkey-pem, ...
         :param session_key: Key algorithm
+        :param log: log function
         :return: The signed statement
         """
 
         if not key_file and key:
             _, key_file = make_temp("%s" % key, ".pem")
 
-        _, fil = make_temp("%s" % template, decode=False)
-
         ntf = NamedTemporaryFile()
+        xpath = create_xpath(epath)
 
-        com_list = [xmlsec, "--encrypt",
+        com_list = [xmlsec, "encrypt",
                     "--output", ntf.name,
-                    "--pubkey-pem", key_file,
-                    "--xml-data", doc
-                    #"--id-attr:%s" % id_attr, klass_namn
-                    #"--store-signatures"
+                    "--xml-data", data,
+                    '--node-xpath', xpath,
+                    key_file_type, key_file
         ]
-        if xpath:
-            com_list.extend(["--node-xpath", xpath])
 
         if session_key:
             com_list.extend(["--session-key", session_key])
 
+        _, fil = make_temp("%s" % template, decode=False)
         com_list.append(fil)
 
         pof = Popen(com_list, stderr=PIPE, stdout=PIPE)
@@ -208,28 +204,39 @@ def encrypt_using_xmlsec(xmlsec, doc, template, xpath=None, key=None,
         # this doesn't work if --store-signatures are used
         if p_out == "":
             ntf.seek(0)
-            signed_statement = ntf.read()
-            if not signed_statement:
+            encrypted_statement = ntf.read()
+            if not encrypted_statement:
                 if log:
                     log.error(p_err)
                 else:
                     print >> sys.stderr, p_err
-                raise Exception("Signing failed")
+                raise Exception("Encryption failed")
             else:
-                return signed_statement
+                return encrypted_statement
         else:
             print >> sys.stderr, p_out
             print "E", p_err
-            raise Exception("Signing failed")
+            raise Exception("Encryption failed")
 
-def encrypt_id(response, xmlsec, key_file, identifier, log=None):
+def encrypt_id(response, xmlsec, key_file, key_file_type, identifier, log=None):
+    """
+    :param response: The response as a Response class instance
+    :param xmlsec: Where the xmlsec1 binaries reside
+    :param key_file: Which key file to use
+    :param key_file_type: The type of key file
+    :param identifier: The subject identifier
+
+    :return: statement with the subject identifier encrypted
+    """
     if not response.assertion[0].subject.encrypted_id:
-        response.assertion[0].subject.encrypted_id = pre_encrypted_id(
-                                                        identifier, key_file)
+        response.assertion[0].subject.encrypted_id = saml.EncryptedID(
+                                                                    identifier)
 
-    statement = encrypt_using_xmlsec(xmlsec, response,
-                            xpath="/Response/Assertion/Subject/NameID/text()",
+    statement = encrypt_using_xmlsec(xmlsec, "%s" % response,
+                            template=template(),
+                            epath=["Response","Assertion","Subject","NameID"],
                             key_file=key_file,
-                            #nodeid=identifier,
+                            key_file_type=key_file_type,
                             log=log)
+
     return statement
