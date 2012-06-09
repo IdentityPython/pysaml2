@@ -77,19 +77,20 @@ def template(ident=None):
 
 # xmlsec decrypt --privkey-pem userkey.pem doc-encrypted.xml
 
-def decrypt_message(enctext, xmlsec_binary, node_name, cert_file=None,
-                    cert_type="pem", debug=False, node_id=None,
-                    log=None, id_attr=""):
-    """ Verifies the signature of a XML document.
+def decrypt_message(enctext, xmlsec_binary, key_file=None,
+                    key_file_type="privkey-pem", id_attr="", node_name="",
+                    node_id=None, log=None, debug=False):
+    """ Decrypts an encrypted part of a XML document.
 
     :param enctext: XML document containing an encrypted part
     :param xmlsec_binary: The xmlsec1 binaries to be used
+    :param key_file: The key used to decrypt the message
+    :param key_file_type: The key file type
     :param node_name: The SAML class of the root node in the message
-    :param cert_file: The key used to decrypt the message
-    :param cert_type: The cert format
-    :param debug: To debug or not
     :param node_id: The identifier of the root node if any
     :param id_attr: Should normally be one of "id", "Id" or "ID"
+    :param log: A log function to use when logging
+    :param debug: To debug or not
     :return: The decrypted document if all was OK otherwise will raise an
         exception.
     """
@@ -100,8 +101,10 @@ def decrypt_message(enctext, xmlsec_binary, node_name, cert_file=None,
     _, fil = make_temp(enctext, decode=False)
 
     com_list = [xmlsec_binary, "--decrypt",
-                "--privkey-cert-%s" % cert_type, cert_file,
-                "--id-attr:%s" % id_attr, node_name]
+                "--%s" % key_file_type, key_file]
+
+    if id_attr:
+        com_list.extend(["--id-attr:%s" % id_attr, node_name])
 
 #    if debug:
 #        com_list.append("--store-signatures")
@@ -115,12 +118,12 @@ def decrypt_message(enctext, xmlsec_binary, node_name, cert_file=None,
         try:
             print " ".join(com_list)
         except TypeError:
-            print "cert_type", cert_type
-            print "cert_file", cert_file
+            print "key_file_type", key_file_type
+            print "key_file", key_file
             print "node_name", node_name
             print "fil", fil
             raise
-        print "%s: %s" % (cert_file, os.access(cert_file, os.F_OK))
+        print "%s: %s" % (key_file, os.access(key_file, os.F_OK))
         print "%s: %s" % (fil, os.access(fil, os.F_OK))
 
     pof = Popen(com_list, stderr=PIPE, stdout=PIPE)
