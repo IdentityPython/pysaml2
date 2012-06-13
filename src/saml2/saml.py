@@ -145,10 +145,9 @@ class AttributeValueBase(SamlBase):
             self.set_text(tree.text)
             try:
                 typ = self.extension_attributes[TYPE_EXTENSION]
-                _x = _verify_value_type(typ, getattr(self,"text"))
+                _verify_value_type(typ, getattr(self, "text"))
             except KeyError:
                 pass
-            #print _x
 
 class BaseIDAbstractType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:assertion:BaseIDAbstractType element """

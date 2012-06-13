@@ -64,7 +64,7 @@ def http_post_message(message, location, relay_state="", typ="SAMLRequest"):
                                 
     response.append("""<script type="text/javascript">""")
     response.append("     window.onload = function ()")
-    response.append(" { document.forms[0].submit(); ")
+    response.append(" { document.forms[0].submit(); }")
     response.append("""</script>""")
     response.append("</body>")
     

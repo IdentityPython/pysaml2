@@ -13,7 +13,6 @@ from saml2 import saml
 
 __author__ = 'rohe0002'
 
-import xmldsig as ds
 import xmlenc as enc
 
 #<EncryptedData
@@ -46,11 +45,29 @@ ENC_KEY_CLASS = "EncryptedKey"
 
 RSA_15 = "http://www.w3.org/2001/04/xmlenc#rsa-1_5"
 RSA_OAEP = "http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p"
-SHA1 = "http://www.w3.org/2000/09/xmldsig#sha1"
 AES128_CBC="http://www.w3.org/2001/04/xmlenc#aes128-cbc"
 TRIPLE_DES = "http://www.w3.org/2001/04/xmlenc#tripledes-cbc"
 
-def template(ident=None):
+# registered xmlsec transforms
+TRANSFORMS = ["base64","enveloped-signature","c14n","c14n-with-comments",
+              "c14n11","c14n11-with-comments","exc-c14n",
+              "exc-c14n-with-comments","xpath","xpath2","xpointer","xslt",
+              "aes128-cbc","aes192-cbc","aes256-cbc","kw-aes128","kw-aes192",
+              "kw-aes256","tripledes-cbc","kw-tripledes","dsa-sha1","hmac-md5",
+              "hmac-ripemd160","hmac-sha1","hmac-sha224","hmac-sha256",
+              "hmac-sha384","hmac-sha512","md5","ripemd160","rsa-md5",
+              "rsa-ripemd160","rsa-sha1","rsa-sha224","rsa-sha256","rsa-sha384",
+              "rsa-sha512","rsa-1_5","rsa-oaep-mgf1p","sha1","sha224","sha256",
+              "sha384","sha512"]
+
+ALGORITHM = {
+    "tripledes-cbc": TRIPLE_DES,
+    "aes128-cbc": AES128_CBC,
+    "rsa-1_5": RSA_15,
+    "rsa-oaep-mgf1p": RSA_OAEP
+}
+
+def template(ident=None, session_key="tripledes-cbc"):
     """
     If an assertion is to be signed the signature part has to be preset
     with which algorithms to be used, this function returns such a
@@ -62,12 +79,12 @@ def template(ident=None):
     """
 
     cipher_data = enc.CipherData(cipher_value=enc.CipherValue())
-    encryption_method = enc.EncryptionMethod(algorithm=TRIPLE_DES)
-    key_info = ds.KeyInfo(key_name=ds.KeyName())
+    encryption_method = enc.EncryptionMethod(algorithm=ALGORITHM[session_key])
+    #key_info = ds.KeyInfo(key_name=ds.KeyName())
     encrypted_data = enc.EncryptedData(
                             type = "http://www.w3.org/2001/04/xmlenc#Element",
                             encryption_method=encryption_method,
-                            key_info=key_info,
+                            #key_info=key_info,
                             cipher_data=cipher_data)
 
     if ident:
@@ -78,8 +95,9 @@ def template(ident=None):
 # xmlsec decrypt --privkey-pem userkey.pem doc-encrypted.xml
 
 def decrypt_message(enctext, xmlsec_binary, key_file=None,
-                    key_file_type="privkey-pem", id_attr="", node_name="",
-                    node_id=None, log=None, debug=False):
+                    key_file_type="privkey-pem", cafile=None,
+                    epath=None, id_attr="",
+                    node_name="", node_id=None, log=None, debug=False):
     """ Decrypts an encrypted part of a XML document.
 
     :param enctext: XML document containing an encrypted part
@@ -103,10 +121,21 @@ def decrypt_message(enctext, xmlsec_binary, key_file=None,
     com_list = [xmlsec_binary, "--decrypt",
                 "--%s" % key_file_type, key_file]
 
+    if key_file_type in ["privkey-pem", "privkey-der", "pkcs8-pem",
+                         "pkcs8-der"]:
+        if isinstance(cafile, basestring):
+            com_list.append(cafile)
+        else:
+            com_list.extend(cafile)
+
     if id_attr:
         com_list.extend(["--id-attr:%s" % id_attr, node_name])
 
-#    if debug:
+    elif epath:
+        xpath = create_xpath(epath)
+        com_list.extend(['--node-xpath', xpath])
+
+    #    if debug:
 #        com_list.append("--store-signatures")
 
     if node_id:
@@ -221,14 +250,15 @@ def encrypt_using_xmlsec(xmlsec, data, template, epath=None, key=None,
             print "E", p_err
             raise Exception("Encryption failed")
 
-def encrypt_id(response, xmlsec, key_file, key_file_type, identifier, log=None):
+def encrypt_id(response, xmlsec, key_file, key_file_type, identifier,
+               session_key, node_id="", log=None):
     """
     :param response: The response as a Response class instance
     :param xmlsec: Where the xmlsec1 binaries reside
     :param key_file: Which key file to use
     :param key_file_type: The type of key file
     :param identifier: The subject identifier
-
+    :param session_key: The type of key used to encrypt
     :return: statement with the subject identifier encrypted
     """
     if not response.assertion[0].subject.encrypted_id:
@@ -236,10 +266,12 @@ def encrypt_id(response, xmlsec, key_file, key_file_type, identifier, log=None):
                                                                     identifier)
 
     statement = encrypt_using_xmlsec(xmlsec, "%s" % response,
-                            template=template(),
+                            template=template(ident=node_id,
+                                              session_key=session_key),
                             epath=["Response","Assertion","Subject","NameID"],
                             key_file=key_file,
                             key_file_type=key_file_type,
+                            session_key=session_key,
                             log=log)
 
     return statement
