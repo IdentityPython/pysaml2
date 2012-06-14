@@ -107,6 +107,9 @@ class XmlsecError(Exception):
 class MissingKey(Exception):
     pass
 
+class DecryptError(Exception):
+    pass
+
 # --------------------------------------------------------------------------
 
 #def make_signed_instance(klass, spec, seccont, base64encode=False):
@@ -514,12 +517,20 @@ class SecurityContext(object):
             self.log.debug("Encryption command: %s" % " ".join(com_list))
 
         pof = Popen(com_list, stderr=PIPE, stdout=PIPE)
-        p_out = pof.stdout.read()
-        p_err = pof.stderr.read()
 
-        if self.debug:
-            self.log.debug("Encryption result (out): %s" % (p_out,))
-            self.log.debug("Encryption result (err): %s" % (p_err,))
+        p_err = pof.stderr.read()
+        try:
+            parse_xmlsec_output(p_err)
+        except XmlsecError, exc:
+            if self.debug:
+                p_out = pof.stdout.read()
+                self.log.error(60*"=")
+                self.log.error(p_out)
+                self.log.error(p_err)
+                self.log.error(60*"-")
+                self.log.error("%s" % exc)
+                self.log.error(60*"=")
+            raise DecryptError("%s" % (exc,))
 
         ntf.seek(0)
         return ntf.read()
@@ -546,17 +557,24 @@ class SecurityContext(object):
             self.log.debug("Decrypt command: %s" % " ".join(com_list))
 
         pof = Popen(com_list, stderr=PIPE, stdout=PIPE)
-        p_out = pof.stdout.read()
+
         p_err = pof.stderr.read()
-        
-        if self.debug:
-            self.log.debug("Decrypt result (out): %s" % (p_out,))
-            self.log.debug("Decrypt result (err): %s" % (p_err,))
+        try:
+            parse_xmlsec_output(p_err)
+        except XmlsecError, exc:
+            if self.debug:
+                p_out = pof.stdout.read()
+                self.log.error(60*"=")
+                self.log.error(p_out)
+                self.log.error(p_err)
+                self.log.error(60*"-")
+                self.log.error("%s" % exc)
+                self.log.error(60*"=")
+            raise DecryptError("%s" % (exc,))
 
         ntf.seek(0)
         return ntf.read()
 
-    
         
     def verify_signature(self, enctext, cert_file=None, cert_type="pem", 
                             node_name=NODE_NAME, node_id=None, id_attr=""):

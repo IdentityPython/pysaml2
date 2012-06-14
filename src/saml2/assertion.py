@@ -143,6 +143,8 @@ def filter_on_demands(ava, required=None, optional=None):
 def filter_on_wire_representation(ava, acs, required=None, optional=None):
     """
     :param ava: A dictionary with attributes and values
+    :param acs: List of tuples (Attribute Converter name,
+        Attribute Converter instance)
     :param required: A list of saml.Attributes
     :param optional: A list of saml.Attributes
     :return: Dictionary of expected/wanted attributes and values

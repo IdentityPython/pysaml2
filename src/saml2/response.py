@@ -253,49 +253,6 @@ class LogoutResponse(StatusResponse):
                                 debug)
         self.signature_check = self.sec.correctly_signed_logout_response
 
-#class AttributeResponse(StatusResponse):
-#    def __init__(self, sec_context, attribute_converters, entity_id,
-#                    return_addr=None, log=None, timeslack=0, debug=0):
-#        StatusResponse.__init__(self, sec_context, return_addr, log, timeslack,
-#                                debug)
-#        self.entity_id = entity_id
-#        self.attribute_converters = attribute_converters
-#        self.assertion = None
-#
-#    def get_identity(self):
-#        # The assertion can contain zero or one attributeStatements
-#        if not self.assertion.attribute_statement:
-#            self.log.error("Missing Attribute Statement")
-#            ava = {}
-#        else:
-#            assert len(self.assertion.attribute_statement) == 1
-#
-#            if self.debug:
-#                self.log.info("Attribute Statement: %s" % (
-#                                    self.assertion.attribute_statement[0],))
-#                for aconv in self.attribute_converters:
-#                    self.log.info(
-#                            "Converts name format: %s" % (aconv.name_format,))
-#
-#            ava = to_local(self.attribute_converters,
-#                            self.assertion.attribute_statement[0])
-#        return ava
-#
-#    def session_info(self):
-#        """ Returns a predefined set of information gleened from the
-#        response.
-#        :returns: Dictionary with information
-#        """
-#        if self.session_not_on_or_after > 0:
-#            nooa = self.session_not_on_or_after
-#        else:
-#            nooa = self.not_on_or_after
-#
-#        return { "ava": self.ava, "name_id": self.name_id,
-#                "came_from": self.came_from, "issuer": self.issuer(),
-#                "not_on_or_after": nooa,
-#                "authn_info": self.authn_info() }
-   
 class AuthnResponse(StatusResponse):
     """ This is where all the profile compliance is checked.
     This one does saml2int compliance. """
