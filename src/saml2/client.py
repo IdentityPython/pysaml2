@@ -385,7 +385,7 @@ class Saml2Client(object):
         :return: AuthnRequest response
         """
 
-        location = self._sso_location(entityid)
+        location = self._sso_location(entityid, binding)
         session_id = sid()
 
         _req_str = "%s" % self.authn(location, session_id, vorg, scoping, log,
