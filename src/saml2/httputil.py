@@ -1,7 +1,11 @@
+import logging
+
 __author__ = 'rohe0002'
 
 import cgi
 from urllib import quote
+
+logger = logging.getLogger(__name__)
 
 class Response(object):
     _template = None

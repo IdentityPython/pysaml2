@@ -21,6 +21,7 @@ programs.
 """
 
 import cookielib
+import logging
 import sys
 
 from saml2 import soap
@@ -37,11 +38,12 @@ from saml2.metadata import MetaData
 SERVICE = "urn:oasis:names:tc:SAML:2.0:profiles:SSO:ecp"
 PAOS_HEADER_INFO = 'ver="%s";"%s"' % (paos.NAMESPACE, SERVICE)
 
+logger = logging.getLogger(__name__)
+
 class Client(object):
     def __init__(self, user, passwd, sp="", idp=None, metadata_file=None,
                  xmlsec_binary=None, verbose=0, ca_certs="",
-                 disable_ssl_certificate_validation=True, logger=None,
-                 debug=False):
+                 disable_ssl_certificate_validation=True):
         """
         :param user: user name
         :param passwd: user password
@@ -55,15 +57,11 @@ class Client(object):
         :param disable_ssl_certificate_validation: If
             disable_ssl_certificate_validation is true, SSL cert validation
             will not be performed.
-        :param logger: Somewhere to write logs to
-        :param debug: Whether debug output is needed
         """
         self._idp = idp
         self._sp = sp
         self.user = user
         self.passwd = passwd
-        self.log = logger
-        self.debug = debug
         self._verbose = verbose
 
         if metadata_file:
@@ -83,9 +81,7 @@ class Client(object):
             disable_ssl_certificate_validation=disable_ssl_certificate_validation)
 
     def _debug_info(self, text):
-        if self.debug:
-            if self.log:
-                self.log.debug(text)
+        logger.debug(text)
 
         if self._verbose:
             print >> sys.stderr, text
@@ -104,8 +100,7 @@ class Client(object):
                                                               binding=binding)
                 if ssos:
                     self._idp = ssos[0]
-                    if self.debug:
-                        self.log.debug("IdP endpoint: '%s'" % self._idp)
+                    logger.debug("IdP endpoint: '%s'" % self._idp)
                     return self._idp
 
             raise Exception("No suitable endpoint found for entity id '%s'" % (
@@ -244,8 +239,7 @@ class Client(object):
         self._debug_info("[P3] IdP response: %s" % response)
 
         self.done_ecp = True
-        if self.debug:
-            self.log.debug("Done ECP")
+        logger.debug("Done ECP")
             
         return None
 
@@ -297,9 +291,7 @@ class Client(object):
         # header blocks may also be present
         try:
             respdict = soap.class_instances_from_soap_enveloped_saml_thingies(
-                response,
-                [paos, ecp,
-                 samlp])
+                                                response,[paos, ecp,samlp])
             self.ecp_conversation(respdict, idp_entity_id)
             # should by now be authenticated so this should go smoothly
             response = op(**opargs)

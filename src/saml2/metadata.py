@@ -18,6 +18,7 @@
 """
 Contains classes and functions to alleviate the handling of SAML metadata
 """
+import logging
 
 import httplib2
 import sys
@@ -57,6 +58,8 @@ from saml2.sigver import pem_format
 from saml2.validate import valid_instance, NotValid
 from saml2.country_codes import D_COUNTRIES
 
+logger = logging.getLogger(__name__)
+
 def metadata_extension_modules():
     _pre = "saml2.extension"
     res = []
@@ -86,8 +89,7 @@ def keep_updated(func, self=None, entity_id=None, *args, **kwargs):
 class MetaData(object):
     """ A class to manage metadata information """
     
-    def __init__(self, xmlsec_binary=None, attrconv=None, log=None):
-        self.log = log
+    def __init__(self, xmlsec_binary=None, attrconv=None):
         self.xmlsec_binary = xmlsec_binary
         self.attrconv = attrconv or []
         self._loc_key = {}
@@ -388,15 +390,9 @@ class MetaData(object):
     def do_entity_descriptor(self, entity_descr, source, valid_until=0):
         try:
             if not valid(entity_descr.valid_until):
-                if self.log:
-                    self.log.info(
-                        "Entity descriptor (entity id:%s) to old" % \
-                        entity_descr.entity_id)
-                else:
-                    print >> sys.stderr, \
-                        "Entity descriptor (entity id:%s) to old" % \
-                        entity_descr.entity_id
-                return 
+                logger.info("Entity descriptor (entity id:%s) to old" % (
+                                entity_descr.entity_id,))
+                return
         except AttributeError:
             pass
         
@@ -483,8 +479,7 @@ class MetaData(object):
                 self.import_metadata(content, (url, cert))
                 return True
         else:
-            if self.log:
-                self.log.info("Response status: %s" % response.status)
+            logger.info("Response status: %s" % response.status)
         return False
 
     @keep_updated

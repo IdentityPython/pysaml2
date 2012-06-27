@@ -2,6 +2,9 @@
 
 import shelve
 from saml2 import time_util
+import logging
+
+logger = logging.getLogger(__name__)
 
 # The assumption is that any subject may consist of data 
 # gathered from several different sources, all with their own

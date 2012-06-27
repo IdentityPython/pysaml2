@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 
@@ -14,6 +15,8 @@ from saml2 import saml
 __author__ = 'rohe0002'
 
 import xmlenc as enc
+
+logger = logging.getLogger(__name__)
 
 #<EncryptedData
 #  xmlns="http://www.w3.org/2001/04/xmlenc#"

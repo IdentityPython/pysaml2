@@ -1,4 +1,4 @@
-import sys
+import logging
 
 from attribute_converter import to_local
 from saml2 import time_util
@@ -9,20 +9,16 @@ from saml2.validate import valid_instance
 from saml2.validate import NotValid
 from saml2.response import IncorrectlySigned
 
+logger = logging.getLogger(__name__)
+
 def _dummy(_arg):
     return None
     
 class Request(object):
-    def __init__(self, sec_context, receiver_addrs, log=None, timeslack=0, 
-                    debug=0):
+    def __init__(self, sec_context, receiver_addrs, timeslack=0):
         self.sec = sec_context
         self.receiver_addrs = receiver_addrs
         self.timeslack = timeslack
-        self.log = log
-        self.debug = debug
-        if self.debug and not self.log:
-            self.debug = 0
-        
         self.xmlstr = ""
         self.name_id = ""
         self.message = None
@@ -38,40 +34,32 @@ class Request(object):
 
     def _loads(self, xmldata, decode=True):
         if decode:
-            if self.debug:
-                self.log.debug("Expected to decode and inflate xml data")
+            logger.debug("Expected to decode and inflate xml data")
             decoded_xml = s_utils.decode_base64_and_inflate(xmldata)
         else:
             decoded_xml = xmldata
     
         # own copy
         self.xmlstr = decoded_xml[:]
-        if self.debug:
-            self.log.info("xmlstr: %s" % (self.xmlstr,))
+        logger.info("xmlstr: %s" % (self.xmlstr,))
         try:
             self.message = self.signature_check(decoded_xml)
         except TypeError:
             raise
         except Exception, excp:
-            if self.log:
-                self.log.info("EXCEPTION: %s", excp)
+            logger.info("EXCEPTION: %s", excp)
     
         if not self.message:
-            if self.log:
-                self.log.error("Response was not correctly signed")
-                self.log.info(decoded_xml)
+            logger.error("Response was not correctly signed")
+            logger.info(decoded_xml)
             raise IncorrectlySigned()
-    
-        if self.debug:
-            self.log.info("request: %s" % (self.message,))
+
+        logger.info("request: %s" % (self.message,))
 
         try:
             valid_instance(self.message)
         except NotValid, exc:
-            if self.log:
-                self.log.error("Not valid request: %s" % exc.args[0])
-            else:
-                print >> sys.stderr, "Not valid request: %s" % exc.args[0]
+            logger.error("Not valid request: %s" % exc.args[0])
             raise
         
         return self
@@ -91,12 +79,8 @@ class Request(object):
         assert self.message.version == "2.0"
         if self.message.destination and \
             self.message.destination not in self.receiver_addrs:
-            if self.log:
-                self.log.error("%s != %s" % (self.message.destination, 
+            logger.error("%s != %s" % (self.message.destination,
                                                 self.receiver_addrs))
-            else:
-                print >> sys.stderr, "%s != %s" % (self.message.destination, 
-                                                    self.receiver_addrs)
             raise OtherError("Not destined for me!")
             
         assert self.issue_instant_ok()
@@ -138,16 +122,14 @@ class Request(object):
 class LogoutRequest(Request):
     def __init__(self, sec_context, receiver_addrs, log=None, timeslack=0, 
                     debug=0):
-        Request.__init__(self, sec_context, receiver_addrs, log, timeslack, 
-                            debug)
+        Request.__init__(self, sec_context, receiver_addrs, timeslack)
         self.signature_check = self.sec.correctly_signed_logout_request
         
             
 class AttributeQuery(Request):
     def __init__(self, sec_context, receiver_addrs, log=None, timeslack=0, 
                     debug=0):
-        Request.__init__(self, sec_context, receiver_addrs, log, timeslack, 
-                            debug)
+        Request.__init__(self, sec_context, receiver_addrs, timeslack)
         self.signature_check = self.sec.correctly_signed_attribute_query
     
     def attribute(self):
@@ -159,8 +141,7 @@ class AttributeQuery(Request):
 class AuthnRequest(Request):
     def __init__(self, sec_context, attribute_converters, receiver_addrs, 
                     log=None, timeslack=0, debug=0):
-        Request.__init__(self, sec_context, receiver_addrs, log, timeslack, 
-                            debug)
+        Request.__init__(self, sec_context, receiver_addrs, timeslack)
         self.attribute_converters = attribute_converters
         self.signature_check = self.sec.correctly_signed_authn_request
 
@@ -172,8 +153,7 @@ class AuthnRequest(Request):
 class AuthzRequest(Request):
     def __init__(self, sec_context, receiver_addrs, log=None, timeslack=0,
                     debug=0):
-        Request.__init__(self, sec_context, receiver_addrs, log, timeslack,
-                            debug)
+        Request.__init__(self, sec_context, receiver_addrs, timeslack)
         self.signature_check = self.sec.correctly_signed_logout_request
 
     def action(self):

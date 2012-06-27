@@ -18,6 +18,7 @@
 """Contains classes and functions that a SAML2.0 Identity provider (IdP) 
 or attribute authority (AA) may use to conclude its tasks.
 """
+import logging
 
 import shelve
 import sys
@@ -57,20 +58,20 @@ from saml2.config import config_factory
 
 from saml2.assertion import Assertion, Policy
 
+logger = logging.getLogger(__name__)
+
 class UnknownVO(Exception):
     pass
     
 class Identifier(object):
     """ A class that handles identifiers of objects """
-    def __init__(self, db, voconf=None, debug=0, log=None):
+    def __init__(self, db, voconf=None):
         if isinstance(db, basestring):
             self.map = shelve.open(db, writeback=True)
         else:
             self.map = db
         self.voconf = voconf
-        self.debug = debug
-        self.log = log
-        
+
     def _store(self, typ, entity_id, local, remote):
         self.map["|".join([typ, entity_id, "f", local])] = remote
         self.map["|".join([typ, entity_id, "b", remote])] = local
@@ -277,8 +278,7 @@ class Server(object):
                     idb = addr
                     
             if idb is not None:
-                self.ident = Identifier(idb, self.conf.virtual_organization,
-                                        self.debug, self.log)
+                self.ident = Identifier(idb, self.conf.virtual_organization)
             else:
                 raise Exception("Couldn't open identity database: %s" %
                                 (dbspec,))

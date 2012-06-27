@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import logging
 
 import time
 import base64
@@ -21,6 +22,8 @@ try:
 except ImportError:
     from md5 import md5
 import zlib
+
+logger = logging.getLogger(__name__)
 
 class VersionMismatch(Exception):
     pass
@@ -304,3 +307,35 @@ def verify_signature(secret, parts):
         return True
     else:
         return False
+
+
+FTICKS_FORMAT = "F-TICKS/SWAMID/2.0%s#"
+
+def fticks_log(sp, logf, idp_entity_id, user_id, secret, assertion):
+    """
+    'F-TICKS/' federationIdentifier '/' version *('#' attribute '=' value ) '#'
+    Allowed attributes:
+        TS	the login time stamp
+        RP	the relying party entityID
+        AP	the asserting party entityID (typcially the IdP)
+        PN	a sha256-hash of the local principal name and a unique key
+        AM	the authentication method URN
+
+    :param sp: Client instance
+    :param logf: The log function to use
+    :param idp_entity_id: IdP entity ID
+    :param user_id: The user identifier
+    :param secret: A salt to make the hash more secure
+    :param assertion: A SAML Assertion instance gotten from the IdP
+    """
+    csum = hmac.new(secret, digestmod=hashlib.sha1)
+    csum.update(user_id)
+
+    info = {
+        "TS": time.time(),
+        "RP": sp.entity_id,
+        "AP": idp_entity_id,
+        "PN": csum.hexdigest(),
+        "AM": assertion.AuthnStatement.AuthnContext.AuthnContextClassRef.text
+    }
+    logf.info(FTICKS_FORMAT % "#".join(["%s=%s" % (a,v) for a,v in info]))

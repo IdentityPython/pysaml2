@@ -18,6 +18,7 @@
 """
 Suppport for the client part of the SAML2.0 SOAP binding.
 """
+import logging
 
 from httplib2 import Http
 
@@ -36,6 +37,9 @@ except ImportError:
     except ImportError:
         #noinspection PyUnresolvedReferences
         from elementtree import ElementTree
+
+
+logger = logging.getLogger(__name__)
 
 class XmlParseError(Exception):
     pass
@@ -197,9 +201,8 @@ def soap_fault(message=None, actor=None, code=None, detail=None):
 
 class HTTPClient(object):
     """ For sending a message to a HTTP server using POST or GET """
-    def __init__(self, path, keyfile=None, certfile=None, log=None,
-                 cookiejar=None, ca_certs="",
-                 disable_ssl_certificate_validation=True):
+    def __init__(self, path, keyfile=None, certfile=None, cookiejar=None,
+                 ca_certs="", disable_ssl_certificate_validation=True):
         self.path = path
         if cookiejar is not None:
             self.cj = True
@@ -210,7 +213,7 @@ class HTTPClient(object):
             self.cj = False
             self.server = Http(ca_certs=ca_certs,
                 disable_ssl_certificate_validation=disable_ssl_certificate_validation)
-        self.log = log
+
         self.response = None
 
         if keyfile:
@@ -299,13 +302,12 @@ class HTTPClient(object):
 
 class SOAPClient(object):
     
-    def __init__(self, server_url, keyfile=None, certfile=None, log=None,
+    def __init__(self, server_url, keyfile=None, certfile=None,
                  cookiejar=None, ca_certs="",
                  disable_ssl_certificate_validation=True):
-        self.server = HTTPClient(server_url, keyfile, certfile, log,
-                cookiejar, ca_certs=ca_certs,
+        self.server = HTTPClient(server_url, keyfile, certfile, cookiejar,
+                                 ca_certs=ca_certs,
                 disable_ssl_certificate_validation=disable_ssl_certificate_validation)
-        self.log = log
         self.response = None
         
     def send(self, request, path=None, headers=None, sign=None, sec=None):
@@ -325,8 +327,7 @@ class SOAPClient(object):
 
         self.response = _response
         if _response:
-            if self.log:
-                self.log.info("SOAP response: %s" % _response)
+            logger.info("SOAP response: %s" % _response)
             return parse_soap_enveloped_saml_response(_response)
         else:
             return False

@@ -28,6 +28,9 @@ import base64
 import urllib
 from saml2.s_utils import deflate_and_base64_encode
 from saml2.soap import SOAPClient, HTTPClient
+import logging
+
+logger = logging.getLogger(__name__)
 
 try:
     from xml.etree import cElementTree as ElementTree

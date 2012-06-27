@@ -1,5 +1,7 @@
-
+import logging
 from saml2.cache import Cache
+
+logger = logging.getLogger(__name__)
 
 class Population(object):
     def __init__(self, cache=None):
@@ -33,8 +35,10 @@ class Population(object):
     def issuers_of_info(self, subject_id):
         return self.cache.entities(subject_id)
 
-    def get_identity(self, subject_id, entities=None, check_not_on_or_after=True):
-        return self.cache.get_identity(subject_id, entities, check_not_on_or_after)
+    def get_identity(self, subject_id, entities=None,
+                     check_not_on_or_after=True):
+        return self.cache.get_identity(subject_id, entities,
+                                       check_not_on_or_after)
 
     def get_info_from(self, subject_id, entity_id):
         return self.cache.get(subject_id, entity_id)

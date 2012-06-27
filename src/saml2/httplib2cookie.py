@@ -32,6 +32,7 @@
 #   CookieJar class with httplib2.
 #
 #
+import logging
 
 import re
 import cookielib
@@ -39,6 +40,8 @@ from httplib2 import Http
 
 import urllib
 import urllib2
+
+logger = logging.getLogger(__name__)
 
 class DummyRequest(object):
     """Simulated urllib2.Request object for httplib2

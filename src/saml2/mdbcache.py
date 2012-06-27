@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import logging
 
 __author__ = 'rolandh'
 
@@ -10,6 +11,8 @@ from datetime import datetime
 from saml2 import time_util
 from saml2.cache import ToOld
 from saml2.time_util import TIME_FORMAT
+
+logger = logging.getLogger(__name__)
 
 class Cache(object):
     def __init__(self, server=None, debug=0, db=None):

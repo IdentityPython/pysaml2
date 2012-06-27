@@ -14,6 +14,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import logging
 
 import re
 import sys
@@ -28,6 +29,7 @@ from saml2.s_utils import sid, MissingValue
 from saml2.s_utils import factory
 from saml2.s_utils import assertion_factory
 
+logger = logging.getLogger(__name__)
 
 def _filter_values(vals, vlist=None, must=False):
     """ Removes values from *vals* that does not appear in vlist

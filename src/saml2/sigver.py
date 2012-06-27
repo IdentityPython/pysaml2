@@ -20,6 +20,7 @@ Based on the use of xmlsec1 binaries and not the python xmlsec module.
 """
 
 import base64
+import logging
 import random
 import os
 import sys
@@ -39,6 +40,8 @@ from saml2.time_util import instant
 
 from tempfile import NamedTemporaryFile
 from subprocess import Popen, PIPE
+
+logger = logging.getLogger(__name__)
 
 SIG = "{%s#}%s" % (ds.NAMESPACE, "Signature")
 
@@ -321,9 +324,12 @@ def parse_xmlsec_output(output):
 
 __DEBUG = 0
 
+LOG_LINE = 60*"="+"\n%s\n"+60*"-"+"\n%s"+60*"="
+LOG_LINE_2 = 60*"="+"\n%s\n%s\n"+60*"-"+"\n%s"+60*"="
+
 def verify_signature(enctext, xmlsec_binary, cert_file=None, cert_type="pem",
                         node_name=NODE_NAME, debug=False, node_id=None,
-                        log=None, id_attr=""):
+                        id_attr=""):
     """ Verifies the signature of a XML document.
 
     :param enctext: The signed XML document
@@ -374,12 +380,7 @@ def verify_signature(enctext, xmlsec_binary, cert_file=None, cert_type="pem",
             print p_err
         verified = parse_xmlsec_output(p_err)
     except XmlsecError, exc:
-        if log:
-            log.error(60*"=")
-            log.error(p_out)
-            log.error(60*"-")
-            log.error("%s" % exc)
-            log.error(60*"=")            
+        logger.error(LOG_LINE % (p_out, exc))
         raise SignatureError("%s" % (exc,))
 
     return verified
@@ -421,12 +422,10 @@ def read_cert_from_file(cert_file, cert_type):
         data = open(cert_file).read()
         return base64.b64encode(str(data))
 
-def security_context(conf, log=None, debug=None):
+def security_context(conf, debug=None):
     """ Creates a security context based on the configuration
 
     :param conf: The configuration
-    :param log: A logger if different from the one specified in the
-        configuration
     :return: A SecurityContext instance
     """
     if not conf:
@@ -443,12 +442,11 @@ def security_context(conf, log=None, debug=None):
 
     return SecurityContext(conf.xmlsec_binary, conf.key_file,
                     cert_file=conf.cert_file, metadata=metadata,
-                    log=log, debug=debug,
-                    only_use_keys_in_metadata=_only_md)
+                    debug=debug, only_use_keys_in_metadata=_only_md)
 
 class SecurityContext(object):
     def __init__(self, xmlsec_binary, key_file="", key_type= "pem", 
-                    cert_file="", cert_type="pem", metadata=None, log=None, 
+                    cert_file="", cert_type="pem", metadata=None,
                     debug=False, template="", encrypt_key_type="des-192",
                     only_use_keys_in_metadata=False):
         
@@ -465,7 +463,6 @@ class SecurityContext(object):
         
         self.metadata = metadata
         self.only_use_keys_in_metadata = only_use_keys_in_metadata
-        self.log = log
         self.debug = debug
         
         if not template:
@@ -476,12 +473,8 @@ class SecurityContext(object):
             
         self.key_type = encrypt_key_type
 
-        if self.debug and not self.log:
-            self.debug = 0
-            
     def correctly_signed(self, xml, must=False):
-        if self.log:
-            self.log.info("verify correct signature")
+        logger.info("verify correct signature")
         return self.correctly_signed_response(xml, must)
 
     def encrypt(self, text, recv_key="", template="", key_type=""):
@@ -501,8 +494,7 @@ class SecurityContext(object):
         if not template:
             template = self.template
 
-        if self.log:
-            self.log.info("input len: %d" % len(text))
+        logger.info("input len: %d" % len(text))
         _, fil = make_temp("%s" % text, decode=False)
         ntf = NamedTemporaryFile()
 
@@ -513,8 +505,7 @@ class SecurityContext(object):
                      "--output", ntf.name,
                      template]
 
-        if self.debug:
-            self.log.debug("Encryption command: %s" % " ".join(com_list))
+        logger.debug("Encryption command: %s" % " ".join(com_list))
 
         pof = Popen(com_list, stderr=PIPE, stdout=PIPE)
 
@@ -522,14 +513,8 @@ class SecurityContext(object):
         try:
             parse_xmlsec_output(p_err)
         except XmlsecError, exc:
-            if self.debug:
-                p_out = pof.stdout.read()
-                self.log.error(60*"=")
-                self.log.error(p_out)
-                self.log.error(p_err)
-                self.log.error(60*"-")
-                self.log.error("%s" % exc)
-                self.log.error(60*"=")
+            p_out = pof.stdout.read()
+            logger.error(LOG_LINE_2 % (p_out, p_err, exc))
             raise DecryptError("%s" % (exc,))
 
         ntf.seek(0)
@@ -542,8 +527,7 @@ class SecurityContext(object):
         :return: The decrypted text
         """
 
-        if self.log:
-            self.log.info("input len: %d" % len(enctext))
+        logger.info("input len: %d" % len(enctext))
         _, fil = make_temp("%s" % enctext, decode=False)
         ntf = NamedTemporaryFile()
 
@@ -553,8 +537,7 @@ class SecurityContext(object):
                      "--id-attr:%s" % ID_ATTR, ENC_KEY_CLASS,
                      fil]
 
-        if self.debug:
-            self.log.debug("Decrypt command: %s" % " ".join(com_list))
+        logger.debug("Decrypt command: %s" % " ".join(com_list))
 
         pof = Popen(com_list, stderr=PIPE, stdout=PIPE)
 
@@ -562,14 +545,8 @@ class SecurityContext(object):
         try:
             parse_xmlsec_output(p_err)
         except XmlsecError, exc:
-            if self.debug:
-                p_out = pof.stdout.read()
-                self.log.error(60*"=")
-                self.log.error(p_out)
-                self.log.error(p_err)
-                self.log.error(60*"-")
-                self.log.error("%s" % exc)
-                self.log.error(60*"=")
+            p_out = pof.stdout.read()
+            logger.error(LOG_LINE_2 % (p_out, p_err, exc))
             raise DecryptError("%s" % (exc,))
 
         ntf.seek(0)
@@ -639,12 +616,10 @@ class SecurityContext(object):
                         verified = True
                         break
             except XmlsecError, exc:
-                if self.log:
-                    self.log.error("check_sig: %s" % exc)
+                logger.error("check_sig: %s" % exc)
                 pass
             except Exception, exc:
-                if self.log:
-                    self.log.error("check_sig: %s" % exc)
+                logger.error("check_sig: %s" % exc)
                 raise
 
         if not verified:
@@ -776,21 +751,18 @@ class SecurityContext(object):
             # Try to find the signing cert in the assertion
             for assertion in response.assertion:
                 if not assertion.signature:
-                    if self.debug:
-                        self.log.debug("unsigned")
+                    logger.debug("unsigned")
                     if must:
                         raise SignatureError("Signature missing")
                     continue
                 else:
-                    if self.debug:
-                        self.log.debug("signed")
+                    logger.debug("signed")
 
                 try:
                     self._check_signature(decoded_xml, assertion,
                                             class_name(assertion), origdoc)
                 except Exception, exc:
-                    if self.log:
-                        self.log.error("correctly_signed_response: %s" % exc)
+                    logger.error("correctly_signed_response: %s" % exc)
                     raise
             
         return response

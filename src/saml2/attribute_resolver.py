@@ -21,6 +21,11 @@ to do attribute aggregation.
 """
 import saml2
 
+import logging
+from saml2.client import Saml2Client
+
+logger = logging.getLogger(__name__)
+
 DEFAULT_BINDING = saml2.BINDING_SOAP
 
 class AttributeResolver(object):
@@ -32,7 +37,7 @@ class AttributeResolver(object):
             self.saml2client = saml2client
             self.metadata = saml2client.config.metadata
         else:
-            self.saml2client = saml2.client.Saml2Client(config)
+            self.saml2client = Saml2Client(config)
         
     def extend(self, subject_id, issuer, vo_members, name_id_format=None,
                 sp_name_qualifier=None, log=None, real_id=None):
@@ -42,7 +47,7 @@ class AttributeResolver(object):
         :param issuer: Who am I the poses the query
         :param vo_members: The entity IDs of the IdP who I'm going to ask
             for extra attributes
-        :param nameid_format: Used to make the IdPs aware of what's going
+        :param name_id_format: Used to make the IdPs aware of what's going
             on here
         :param log: Where to log exciting information
         :return: A dictionary with all the collected information about the

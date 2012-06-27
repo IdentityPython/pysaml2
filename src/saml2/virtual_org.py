@@ -1,14 +1,13 @@
+import logging
 from saml2.attribute_resolver import AttributeResolver
+
+logger = logging.getLogger(__name__)
 
 class VirtualOrg(object):
     def __init__(self, sp, vorg, log=None):
         self.sp = sp # The parent SP client instance 
         self.config = sp.config
         self.vorg_name = vorg
-        if log is None:
-            self.log = self.sp.logger
-        else:
-            self.log = log
         self.vorg_conf = self.config.vo_conf(self.vorg_name)
         
     def _cache_session(self, session_info):
@@ -44,8 +43,7 @@ class VirtualOrg(object):
         # Remove the ones I have cached data from about this subject
         vo_members = [m for m in vo_members if not self.sp.users.cache.active(
                                                                 subject_id, m)]
-        if self.log:
-            self.log.info("VO members (not cached): %s" % vo_members)
+        logger.info("VO members (not cached): %s" % vo_members)
         return vo_members
     
     def get_common_identifier(self, subject_id):
@@ -61,12 +59,9 @@ class VirtualOrg(object):
             return None
         
     def do_aggregation(self, subject_id, log=None):
-        if log is None:
-            log = self.log
-            
-        if log:
-            log.info("** Do VO aggregation **")
-            log.info("SubjectID: %s, VO:%s" % (subject_id, self.vorg_name))
+
+        logger.info("** Do VO aggregation **\nSubjectID: %s, VO:%s" % (
+                                                    subject_id, self.vorg_name))
         
         to_ask = self.members_to_ask(subject_id)
         if to_ask:
@@ -90,11 +85,9 @@ class VirtualOrg(object):
                                         log=log, real_id=subject_id):
                 _ = self._cache_session(session_info)
 
-            if log:
-                log.info(
-                    ">Issuers: %s" % self.sp.users.issuers_of_info(subject_id))
-                log.info(
-                    "AVA: %s" % (self.sp.users.get_identity(subject_id),))
+            logger.info(">Issuers: %s" % self.sp.users.issuers_of_info(
+                                                                    subject_id))
+            logger.info("AVA: %s" % (self.sp.users.get_identity(subject_id),))
             
             return True
         else:

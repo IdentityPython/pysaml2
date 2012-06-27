@@ -18,6 +18,7 @@
 """
 Contains classes used in the SAML ECP profile
 """
+import logging
 
 from saml2 import element_to_extension_element
 from saml2 import samlp
@@ -35,6 +36,8 @@ from saml2.s_utils import sid
 
 from saml2.response import authn_response
 
+logger = logging.getLogger(__name__)
+
 SERVICE = "urn:oasis:names:tc:SAML:2.0:profiles:SSO:ecp"
 
 def ecp_capable(headers):
@@ -49,14 +52,12 @@ def ecp_capable(headers):
 ACTOR = "http://schemas.xmlsoap.org/soap/actor/next"
 
 #noinspection PyUnusedLocal
-def ecp_auth_request(cls, entityid=None, relay_state="",
-                     log=None, sign=False):
+def ecp_auth_request(cls, entityid=None, relay_state="", sign=False):
     """ Makes an authentication request.
 
     :param entityid: The entity ID of the IdP to send the request to
     :param relay_state: To where the user should be returned after
         successfull log in.
-    :param log: Where to write log messages
     :param sign: Whether the request should be signed or not.
     :return: AuthnRequest response
     """
@@ -111,13 +112,11 @@ def ecp_auth_request(cls, entityid=None, relay_state="",
     # <samlp:AuthnRequest>
     # ----------------------------------------
 
-    if log:
-        log.info("entityid: %s, binding: %s" % (entityid, BINDING_SOAP))
+    logger.info("entityid: %s, binding: %s" % (entityid, BINDING_SOAP))
         
     location = cls._sso_location(entityid, binding=BINDING_SOAP)
     session_id = sid()
-    authn_req = cls.authn(location, session_id, log=log,
-                          binding=BINDING_PAOS,
+    authn_req = cls.authn(location, session_id, binding=BINDING_PAOS,
                           service_url_binding=BINDING_PAOS)
 
     body = soapenv.Body()
@@ -144,9 +143,7 @@ def handle_ecp_authn_response(cls, soap_message, outstanding=None):
            item.c_namespace == ecp.NAMESPACE:
             _relay_state = item
 
-    response = authn_response(cls.config, cls.service_url(),
-                              outstanding, log=cls.logger,
-                              debug=cls.debug,
+    response = authn_response(cls.config, cls.service_url(), outstanding,
                               allow_unsolicited=True)
 
     response.loads("%s" % rdict["body"], False, soap_message)
@@ -182,9 +179,8 @@ class ECPServer(Server):
 
     TODO: Still tentative
     """
-    def __init__(self, config_file="", config=None, _cache="",
-                    log=None, debug=0):
-        Server.__init__(self, config_file, config, _cache, log, debug)
+    def __init__(self, config_file="", config=None, _cache=""):
+        Server.__init__(self, config_file, config, _cache)
 
     def parse_ecp_authn_query(self):
         pass

@@ -18,6 +18,8 @@ from saml2.attribute_converter import ac_factory
 from saml2.assertion import Policy
 from saml2.sigver import get_xmlsec_binary
 
+logger = logging.getLogger(__name__)
+
 COMMON_ARGS = ["entityid", "xmlsec_binary", "debug", "key_file", "cert_file",
                 "secret", "accepted_time_diff", "name", "ca_certs",
                 "description",
@@ -84,8 +86,6 @@ LOG_HANDLER = {
 }
 
 LOG_FORMAT = "%(asctime)s %(name)s: %(levelname)s %(message)s"
-#LOG_FORMAT = "%(asctime)s %(name)s: %(levelname)s [%(sid)s][%(func)s] %
-# (message)s"
 
 class ConfigurationError(Exception):
     pass

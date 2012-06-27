@@ -17,6 +17,7 @@
 
 import calendar
 import base64
+import logging
 import sys
 
 from saml2 import samlp
@@ -37,6 +38,8 @@ from saml2.validate import validate_before
 from saml2.validate import valid_instance
 from saml2.validate import valid_address
 from saml2.validate import NotValid
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 
@@ -205,7 +208,7 @@ class StatusResponse(object):
         # print "issue_instant: %s" % self.response.issue_instant
         # print "%s < x < %s" % (lower, upper)
         issued_at = str_to_time(self.response.issue_instant)
-        return issued_at > lower and issued_at < upper
+        return lower < issued_at < upper
 
     def _verify(self):
         if self.request_id and self.in_response_to and \
