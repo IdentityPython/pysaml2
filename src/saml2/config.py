@@ -85,7 +85,7 @@ LOG_HANDLER = {
     "timerotate": logging.handlers.TimedRotatingFileHandler,
 }
 
-LOG_FORMAT = "%(asctime)s %(name)s: %(levelname)s %(message)s"
+LOG_FORMAT = "%(asctime)s %(name)s:%(levelname)s %(message)s"
 
 class ConfigurationError(Exception):
     pass
@@ -311,11 +311,6 @@ class Config(object):
         return handler
     
     def setup_logger(self):
-        try:
-            _logconf = self.logger
-        except KeyError:
-            return None
-
         if root_logger.level != logging.NOTSET: # Someone got there before me
             return root_logger
 

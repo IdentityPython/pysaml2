@@ -510,7 +510,8 @@ def make_plugin(rememberer_name=None, # plugin for remember
                  wayf="",
                  sid_store="",
                  identity_cache="",
-                 discovery=""
+                 discovery="",
+                 debug=0
                  ):
     
     if saml_conf is "":

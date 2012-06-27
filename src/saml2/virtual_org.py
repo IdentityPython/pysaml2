@@ -75,7 +75,7 @@ class VirtualOrg(object):
             
             com_identifier = self.get_common_identifier(subject_id)
                 
-            resolver = AttributeResolver(saml2client=self.sp)
+            resolver = AttributeResolver(self.sp)
             # extends returns a list of session_infos      
             for session_info in resolver.extend(com_identifier,
                                         self.sp.config.entityid, 

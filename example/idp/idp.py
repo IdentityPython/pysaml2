@@ -2,8 +2,9 @@
 
 import re
 import base64
-from cgi import parse_qs
-from saml2 import server
+#from cgi import parse_qs
+from urlparse import parse_qs
+from saml2 import server, root_logger
 from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
 from saml2 import time_util
 from Cookie import SimpleCookie
@@ -157,7 +158,8 @@ def slo(environ, start_response, user, logger):
         logger.info("REQ_INFO: %s" % req_info.message)
     except KeyError, exc:
         if logger: logger.info("logout request error: %s" % (exc,))
-        # return error reply
+        start_response('400 Bad request', [('Content-Type', 'text/plain')])
+        return ['Request parse error']
 
     # look for the subject
     subject = req_info.subject_id()
@@ -259,11 +261,17 @@ if __name__ == '__main__':
     import sys
     from wsgiref.simple_server import make_server
     import logging
-    LOG_FILENAME = "./idp.log"
+    from saml2.config import LOG_FORMAT, LOG_HANDLER
+
+    handler = LOG_HANDLER["rotating"]("./idp.log")
+    formatter = logging.Formatter(LOG_FORMAT)
+    handler.setFormatter(formatter)
+    root_logger.addHandler(handler)
+    root_logger.info("Logging started")
+    root_logger.setLevel(logging.INFO)
+
     PORT = 8088
-    
-    logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG)    
-    
+
     IDP = server.Server(sys.argv[1])
     SRV = make_server('localhost', PORT, APP_WITH_AUTH)
     print "IdP listening on port: %s" % PORT
