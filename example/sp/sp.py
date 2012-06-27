@@ -80,7 +80,6 @@ def slo(environ, start_response, user, logger):
         try:
             (sids, code, head, message) = client.saml_client.logout_response(
                                                 query["SAMLResponse"][0],
-                                                log=logger,
                                                 binding=BINDING_HTTP_REDIRECT)
             logger.info("LOGOUT reponse parsed OK")
         except KeyError:
@@ -98,8 +97,7 @@ def logout(environ, start_response, user, logger):
     logger.info("[logout] subject_id: '%s'" % (subject_id,))
     target = "/done"
     # What if more than one
-    tmp = client.saml_client.global_logout(subject_id, log=logger, 
-                                            return_to=target)
+    tmp = client.saml_client.global_logout(subject_id, return_to=target)
     logger.info("[logout] global_logout > %s" % (tmp,))
     (session_id, code, header, result) = tmp
 

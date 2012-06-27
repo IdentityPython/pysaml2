@@ -311,9 +311,8 @@ class Saml2Client(object):
         
         return signed_instance_factory(request, self.sec, to_sign)
 
-    def authn(self, location, session_id, vorg="", scoping=None, log=None,
-                sign=None, binding=saml2.BINDING_HTTP_POST,
-                service_url_binding=None):
+    def authn(self, location, session_id, vorg="", scoping=None, sign=None,
+              binding=saml2.BINDING_HTTP_POST, service_url_binding=None):
         """
         Construct a Authentication Request
 
@@ -321,7 +320,6 @@ class Saml2Client(object):
         :param session_id: The ID of the session
         :param vorg: The virtual organization if any that is involved
         :param scoping: How the request should be scoped, default == Not
-        :param log: A log function to use for logging
         :param sign: If the request should be signed
         :param binding: The binding to use, default = HTTP POST
         :return: An AuthnRequest instance
@@ -347,15 +345,14 @@ class Saml2Client(object):
                                   sign, binding=binding)
 
     def authenticate(self, entityid=None, relay_state="",
-                     binding=saml2.BINDING_HTTP_REDIRECT,
-                     log=None, vorg="", scoping=None, sign=None):
+                     binding=saml2.BINDING_HTTP_REDIRECT, vorg="",
+                     scoping=None, sign=None):
         """ Makes an authentication request.
 
         :param entityid: The entity ID of the IdP to send the request to
         :param relay_state: To where the user should be returned after
             successfull log in.
         :param binding: Which binding to use for sending the request
-        :param log: Where to write log messages
         :param vorg: The entity_id of the virtual organization I'm a member of
         :param scoping: For which IdPs this query are aimed.
         :param sign: Whether the request should be signed or not.
@@ -365,22 +362,18 @@ class Saml2Client(object):
         location = self._sso_location(entityid, binding)
         session_id = sid()
 
-        _req_str = "%s" % self.authn(location, session_id, vorg, scoping, log,
-                                       sign)
+        _req_str = "%s" % self.authn(location, session_id, vorg, scoping, sign)
 
-        if log:
-            log.info("AuthNReq: %s" % _req_str)
+        logger.info("AuthNReq: %s" % _req_str)
 
         if binding == saml2.BINDING_HTTP_POST:
             # No valid ticket; Send a form to the client
             # THIS IS NOT TO BE USED RIGHT NOW
-            if log:
-                log.info("HTTP POST")
+            logger.info("HTTP POST")
             (head, response) = http_post_message(_req_str, location,
                                                     relay_state)
         elif binding == saml2.BINDING_HTTP_REDIRECT:
-            if log:
-                log.info("HTTP REDIRECT")
+            logger.info("HTTP REDIRECT")
             (head, _body) = http_redirect_message(_req_str, location,
                                                     relay_state)
             response = head[0]
@@ -588,7 +581,7 @@ class Saml2Client(object):
                             sign, return_to)
         
     def _logout(self, subject_id, entity_ids, reason, expire, 
-                sign=None, log=None, return_to="/"):
+                sign=None, return_to="/"):
         
         # check time
         if not not_on_or_after(expire): # I've run out of time
@@ -635,11 +628,10 @@ class Saml2Client(object):
                     response = send_using_soap(request, destination, 
                                                 self.config.key_file,
                                                 self.config.cert_file,
-                                                log=log,
                                                 ca_certs=self.config.ca_certs)
                     if response:
                         logger.info("Verifying response")
-                        response = self.logout_response(response, log)
+                        response = self.logout_response(response)
 
                     if response:
                         not_done.remove(entity_id)
@@ -762,7 +754,7 @@ class Saml2Client(object):
 
         return response
 
-    def http_redirect_logout_request(self, get, subject_id, log=None):
+    def http_redirect_logout_request(self, get, subject_id):
         """ Deal with a LogoutRequest received through HTTP redirect
 
         :param get: The request as a dictionary 
@@ -934,7 +926,7 @@ class Saml2Client(object):
 
 #        authen_req = self.authn_request(session_id, location,
 #                                service_url, spentityid, my_name, vorg,
-#                                scoping, log, sign)
+#                                scoping, sign)
         
         request = samlp.AuthzDecisionQuery(action, evidence, resource,
                                            subject=subject,

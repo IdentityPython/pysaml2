@@ -190,11 +190,10 @@ def parse_soap_enveloped_saml(text, body_class, header_class=None):
 #     return response
 
 def send_using_http_post(request, destination, relay_state, key_file=None, 
-                        cert_file=None, log=None, ca_certs=""):
+                        cert_file=None, ca_certs=""):
 
-    http = HTTPClient(destination, key_file, cert_file, log, ca_certs)
-    if log:
-        log.info("HTTP client initiated")
+    http = HTTPClient(destination, key_file, cert_file, ca_certs)
+    logger.info("HTTP client initiated")
 
     if not isinstance(request, basestring):
         request = "%s" % (request,)
@@ -203,17 +202,15 @@ def send_using_http_post(request, destination, relay_state, key_file=None,
     try:
         response = http.post(message, headers)
     except Exception, exc:
-        if log:
-            log.info("HTTPClient exception: %s" % (exc,))
+        logger.info("HTTPClient exception: %s" % (exc,))
         return None
 
-    if log:
-        log.info("HTTP request sent and got response: %s" % response)
+    logger.info("HTTP request sent and got response: %s" % response)
 
     return response
 
-def send_using_soap(message, destination, key_file=None, cert_file=None, 
-                    log=None, ca_certs=""):
+def send_using_soap(message, destination, key_file=None, cert_file=None,
+                    ca_certs=""):
     """ 
     Actual construction of the SOAP message is done by the SOAPClient
     
@@ -221,23 +218,19 @@ def send_using_soap(message, destination, key_file=None, cert_file=None,
     :param destination: Where to send the message
     :param key_file: If HTTPS this is the client certificate
     :param cert_file: If HTTPS this a certificates file 
-    :param log: A log function to use for logging
     :param ca_certs: CA certificates to use when verifying server certificates
     :return: The response gotten from the other side interpreted by the 
         SOAPClient
     """
-    soapclient = SOAPClient(destination, key_file, cert_file, log, ca_certs)
-    if log:
-        log.info("SOAP client initiated")
+    soapclient = SOAPClient(destination, key_file, cert_file, ca_certs)
+    logger.info("SOAP client initiated")
     try:
         response = soapclient.send(message)
     except Exception, exc:
-        if log:
-            log.info("SoapClient exception: %s" % (exc,))
+        logger.info("SoapClient exception: %s" % (exc,))
         return None
 
-    if log:
-        log.info("SOAP request sent and got response: %s" % response)
+    logger.info("SOAP request sent and got response: %s" % response)
 
     return response
 

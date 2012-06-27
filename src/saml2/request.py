@@ -120,27 +120,23 @@ class Request(object):
         return self.message.issuer.text()
         
 class LogoutRequest(Request):
-    def __init__(self, sec_context, receiver_addrs, log=None, timeslack=0, 
-                    debug=0):
+    def __init__(self, sec_context, receiver_addrs, timeslack=0):
         Request.__init__(self, sec_context, receiver_addrs, timeslack)
         self.signature_check = self.sec.correctly_signed_logout_request
         
             
 class AttributeQuery(Request):
-    def __init__(self, sec_context, receiver_addrs, log=None, timeslack=0, 
-                    debug=0):
+    def __init__(self, sec_context, receiver_addrs, timeslack=0):
         Request.__init__(self, sec_context, receiver_addrs, timeslack)
         self.signature_check = self.sec.correctly_signed_attribute_query
     
     def attribute(self):
         """ Which attributes that are sought for """
-        
         return []
 
-
 class AuthnRequest(Request):
-    def __init__(self, sec_context, attribute_converters, receiver_addrs, 
-                    log=None, timeslack=0, debug=0):
+    def __init__(self, sec_context, attribute_converters, receiver_addrs,
+                 timeslack=0):
         Request.__init__(self, sec_context, receiver_addrs, timeslack)
         self.attribute_converters = attribute_converters
         self.signature_check = self.sec.correctly_signed_authn_request
@@ -151,8 +147,7 @@ class AuthnRequest(Request):
             
 
 class AuthzRequest(Request):
-    def __init__(self, sec_context, receiver_addrs, log=None, timeslack=0,
-                    debug=0):
+    def __init__(self, sec_context, receiver_addrs, timeslack=0):
         Request.__init__(self, sec_context, receiver_addrs, timeslack)
         self.signature_check = self.sec.correctly_signed_logout_request
 

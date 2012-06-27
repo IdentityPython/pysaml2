@@ -264,7 +264,7 @@ if __name__ == '__main__':
     
     logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG)    
     
-    IDP = server.Server(sys.argv[1], log=logging, debug=1)
+    IDP = server.Server(sys.argv[1])
     SRV = make_server('localhost', PORT, APP_WITH_AUTH)
     print "IdP listening on port: %s" % PORT
     SRV.serve_forever()

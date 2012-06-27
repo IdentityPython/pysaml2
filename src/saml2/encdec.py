@@ -51,6 +51,9 @@ RSA_OAEP = "http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p"
 AES128_CBC="http://www.w3.org/2001/04/xmlenc#aes128-cbc"
 TRIPLE_DES = "http://www.w3.org/2001/04/xmlenc#tripledes-cbc"
 
+LOG_LINE = 60*"="+"\n%s\n"+60*"-"+"\n%s"+60*"="
+LOG_LINE_2 = 60*"="+"\n%s\n%s\n"+60*"-"+"\n%s"+60*"="
+
 # registered xmlsec transforms
 TRANSFORMS = ["base64","enveloped-signature","c14n","c14n-with-comments",
               "c14n11","c14n11-with-comments","exc-c14n",
@@ -100,7 +103,7 @@ def template(ident=None, session_key="tripledes-cbc"):
 def decrypt_message(enctext, xmlsec_binary, key_file=None,
                     key_file_type="privkey-pem", cafile=None,
                     epath=None, id_attr="",
-                    node_name="", node_id=None, log=None, debug=False):
+                    node_name="", node_id=None, debug=False):
     """ Decrypts an encrypted part of a XML document.
 
     :param enctext: XML document containing an encrypted part
@@ -110,7 +113,6 @@ def decrypt_message(enctext, xmlsec_binary, key_file=None,
     :param node_name: The SAML class of the root node in the message
     :param node_id: The identifier of the root node if any
     :param id_attr: Should normally be one of "id", "Id" or "ID"
-    :param log: A log function to use when logging
     :param debug: To debug or not
     :return: The decrypted document if all was OK otherwise will raise an
         exception.
@@ -166,12 +168,7 @@ def decrypt_message(enctext, xmlsec_binary, key_file=None,
             print p_err
         verified = parse_xmlsec_output(p_err)
     except XmlsecError, exc:
-        if log:
-            log.error(60*"=")
-            log.error(p_out)
-            log.error(60*"-")
-            log.error("%s" % exc)
-            log.error(60*"=")
+        logger(LOG_LINE % (p_out, exc))
         raise DecryptionError("%s" % (exc,))
 
     return verified
@@ -196,7 +193,7 @@ def create_xpath(path):
 
 def encrypt_using_xmlsec(xmlsec, data, template, epath=None, key=None,
                                key_file=None, key_file_type="pubkey-pem",
-                               session_key=None, log=None):
+                               session_key=None):
         """encrypting a value using xmlsec.
 
         :param xmlsec: Path to the xmlsec1 binary
@@ -209,7 +206,6 @@ def encrypt_using_xmlsec(xmlsec, data, template, epath=None, key=None,
         :param key_file_type: pubkey-pem, pubkey-der, pubkey-cert-pem,
             pubkey-cert-der, privkey-der, privkey-pem, ...
         :param session_key: Key algorithm
-        :param log: log function
         :return: The signed statement
         """
 
@@ -241,20 +237,16 @@ def encrypt_using_xmlsec(xmlsec, data, template, epath=None, key=None,
             ntf.seek(0)
             encrypted_statement = ntf.read()
             if not encrypted_statement:
-                if log:
-                    log.error(p_err)
-                else:
-                    print >> sys.stderr, p_err
+                logger.error(p_err)
                 raise Exception("Encryption failed")
             else:
                 return encrypted_statement
         else:
-            print >> sys.stderr, p_out
-            print "E", p_err
+            logger.error(LOG_LINE % (p_out, p_err))
             raise Exception("Encryption failed")
 
 def encrypt_id(response, xmlsec, key_file, key_file_type, identifier,
-               session_key, node_id="", log=None):
+               session_key, node_id=""):
     """
     :param response: The response as a Response class instance
     :param xmlsec: Where the xmlsec1 binaries reside
@@ -274,7 +266,6 @@ def encrypt_id(response, xmlsec, key_file, key_file_type, identifier,
                             epath=["Response","Assertion","Subject","NameID"],
                             key_file=key_file,
                             key_file_type=key_file_type,
-                            session_key=session_key,
-                            log=log)
+                            session_key=session_key)
 
     return statement

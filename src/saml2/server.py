@@ -222,11 +222,7 @@ class Identifier(object):
         
 class Server(object):
     """ A class that does things that IdPs or AAs do """
-    def __init__(self, config_file="", config=None, _cache="",
-                    log=None, debug=0, stype="idp"):
-
-        self.log = log
-        self.debug = debug
+    def __init__(self, config_file="", config=None, _cache="", stype="idp"):
         self.ident = None
         if config_file:
             self.load_config(config_file, stype)
@@ -235,11 +231,10 @@ class Server(object):
         else:
             raise Exception("Missing configuration")
 
-        if self.log is None:
-            self.log = self.conf.setup_logger()
+        self.conf.setup_logger()
             
         self.metadata = self.conf.metadata
-        self.sec = security_context(self.conf, log)
+        self.sec = security_context(self.conf)
         self._cache = _cache
 
         # if cache:
@@ -308,17 +303,14 @@ class Server(object):
         """
         
         response = {}
-        if self.log:
-            _log_info = self.log.info
-        else:
-            _log_info = None
+        _log_info = logger.info
+        _log_debug = logger.debug
 
         # The addresses I should receive messages like this on
         receiver_addresses = self.conf.endpoint("single_sign_on_service",
                                                  binding)
-        if self.debug and self.log:
-            _log_info("receiver addresses: %s" % receiver_addresses)
-            _log_info("Binding: %s" % binding)
+        _log_info("receiver addresses: %s" % receiver_addresses)
+        _log_info("Binding: %s" % binding)
 
 
         try:
@@ -330,8 +322,7 @@ class Server(object):
 
         authn_request = AuthnRequest(self.sec,
                                      self.conf.attribute_converters,
-                                     receiver_addresses, log=self.log,
-                                     timeslack=timeslack)
+                                     receiver_addresses, timeslack=timeslack)
 
         if binding == BINDING_SOAP or binding == BINDING_PAOS:
             # not base64 decoding and unzipping
@@ -341,14 +332,12 @@ class Server(object):
         else:
             authn_request = authn_request.loads(enc_request)
 
-        if self.debug and self.log:
-            _log_info("Loaded authn_request")
+        _log_debug("Loaded authn_request")
 
         if authn_request:
             authn_request = authn_request.verify()
 
-        if self.debug and self.log:
-            _log_info("Verified authn_request")
+        _log_debug("Verified authn_request")
 
         if not authn_request:
             return None
@@ -363,14 +352,12 @@ class Server(object):
             consumer_url = self.metadata.consumer_url(sp_entity_id,
                                                       binding=_binding)
         except KeyError:
-            if self.log:
-                _log_info("Failed to find consumer URL for %s" % sp_entity_id)
-                _log_info("entities: %s" % self.metadata.entity.keys())
+            _log_info("Failed to find consumer URL for %s" % sp_entity_id)
+            _log_info("entities: %s" % self.metadata.entity.keys())
             raise UnknownPrincipal(sp_entity_id)
             
         if not consumer_url: # what to do ?
-            if self.log:
-                _log_info("Couldn't find a consumer URL binding=%s" % _binding)
+            _log_info("Couldn't find a consumer URL binding=%s" % _binding)
             raise UnsupportedBinding(sp_entity_id)
 
         response["sp_entity_id"] = sp_entity_id
@@ -381,11 +368,7 @@ class Server(object):
         
             if consumer_url != return_destination:
                 # serious error on someones behalf
-                if self.log:
-                    _log_info("%s != %s" % (consumer_url, return_destination))
-                else:
-                    print >> sys.stderr, \
-                                "%s != %s" % (consumer_url, return_destination)
+                _log_info("%s != %s" % (consumer_url, return_destination))
                 raise OtherError("ConsumerURL and return destination mismatch")
         
         response["consumer_url"] = consumer_url
@@ -418,7 +401,7 @@ class Server(object):
         attribute_query = attribute_query.loads(xml_string, decode=decode)
         attribute_query = attribute_query.verify()
 
-        self.log.info("KEYS: %s" % attribute_query.message.keys())
+        logger.info("KEYS: %s" % attribute_query.message.keys())
         # Subject is described in the a saml.Subject instance
         subject = attribute_query.subject_id()
         attribute = attribute_query.attribute()
@@ -688,16 +671,14 @@ class Server(object):
         try:
             slo = self.conf.endpoint("single_logout_service", binding)
         except IndexError:
-            if self.log:
-                self.log.info("enpoints: %s" % (self.conf.endpoints,))
-                self.log.info("binding wanted: %s" % (binding,))
+            logger.info("enpoints: %s" % (self.conf.endpoints,))
+            logger.info("binding wanted: %s" % (binding,))
             raise
 
         if not slo:
             raise Exception("No single_logout_server for that binding")
-        
-        if self.log:
-            self.log.info("Endpoint: %s" % slo)
+
+        logger.info("Endpoint: %s" % slo)
         req = LogoutRequest(self.sec, slo)
         if binding == BINDING_SOAP:
             lreq = soap.parse_soap_enveloped_saml_logout_request(text)
@@ -709,7 +690,7 @@ class Server(object):
             try:
                 req = req.loads(text)
             except Exception, exc:
-                self.log.error("%s" % (exc,))
+                logger.error("%s" % (exc,))
                 return None
 
         req = req.verify()
@@ -722,8 +703,8 @@ class Server(object):
             return req
 
 
-    def logout_response(self, request, bindings, status=None,
-                            sign=False, issuer=None):
+    def logout_response(self, request, bindings, status=None, sign=False,
+                        issuer=None):
         """ Create a LogoutResponse. What is returned depends on which binding
         is used.
         
@@ -746,17 +727,15 @@ class Server(object):
                 
 
         if not destinations:
-            if self.log:
-                self.log.error("Not way to return a response !!!")
+            logger.error("Not way to return a response !!!")
             return ("412 Precondition Failed",
                     [("Content-type", "text/html")],
                     ["No return way defined"])
         
         # Pick the first
         destination = destinations[0]
-        
-        if self.log:
-            self.log.info("Logout Destination: %s, binding: %s" % (destination,
+
+        logger.info("Logout Destination: %s, binding: %s" % (destination,
                                                                     binding))
         if not status: 
             status = success_status_factory()
@@ -793,9 +772,8 @@ class Server(object):
             if sign:
                 to_sign = [(class_name(response), mid)]
                 response = signed_instance_factory(response, self.sec, to_sign)
-                
-            if self.log:
-                self.log.info("Response: %s" % (response,))
+
+            logger.info("Response: %s" % (response,))
             if binding == BINDING_HTTP_REDIRECT:
                 (headers, message) = http_redirect_message(response, 
                                                             destination, 
