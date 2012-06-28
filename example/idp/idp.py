@@ -253,22 +253,13 @@ def application(environ, start_response):
 from repoze.who.config import make_middleware_with_config
 
 APP_WITH_AUTH = make_middleware_with_config(application, {"here":"."}, 
-                        './who.ini', log_file="app.log")
+                        './who.ini', log_file="repoze_who.log")
 
 # ----------------------------------------------------------------------------
 
 if __name__ == '__main__':
     import sys
     from wsgiref.simple_server import make_server
-    import logging
-    from saml2.config import LOG_FORMAT, LOG_HANDLER
-
-    handler = LOG_HANDLER["rotating"]("./idp.log")
-    formatter = logging.Formatter(LOG_FORMAT)
-    handler.setFormatter(formatter)
-    root_logger.addHandler(handler)
-    root_logger.info("Logging started")
-    root_logger.setLevel(logging.INFO)
 
     PORT = 8088
 

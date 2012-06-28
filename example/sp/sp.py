@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import logging
 
 import re
 from cgi import parse_qs
@@ -157,8 +158,9 @@ def application(environ, start_response):
             
     path = environ.get('PATH_INFO', '').lstrip('/')
     logger = environ.get('repoze.who.logger')
-    if logger:
-        logger.info( "<application> PATH: %s" % path)
+    logger.info("<application> PATH: %s" % path)
+    logger.info("logger name: %s" % logger.name)
+    logger.info(logging.Logger.manager.loggerDict)
     for regex, callback in urls:
         if user:
             match = re.search(regex, path)
@@ -177,7 +179,7 @@ def application(environ, start_response):
 from repoze.who.config import make_middleware_with_config
 
 app_with_auth = make_middleware_with_config(application, {"here":"."}, 
-                        './who.ini', log_file="sp.log")
+                        './who.ini', log_file="repoze_who.log")
 
 # ----------------------------------------------------------------------------
 PORT = 8087

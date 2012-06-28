@@ -111,7 +111,8 @@ class Saml2Client(object):
             raise Exception("Missing configuration")
 
         self.metadata = self.config.metadata
-
+        self.config.setup_logger()
+        
         # we copy the config.debug variable in an internal
         # field for convenience and because we may need to
         # change it during the tests

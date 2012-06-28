@@ -47,7 +47,7 @@ from saml2.profile import paos
 #from saml2.population import Population
 #from saml2.attribute_resolver import AttributeResolver
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("repoze.who.sp")
 
 PAOS_HEADER_INFO = 'ver="%s";"%s"' % (paos.NAMESPACE, ecp.SERVICE)
 
@@ -149,7 +149,7 @@ class SAML2Plugin(FormPluginBase):
         post_env = environ.copy()
         post_env['QUERY_STRING'] = ''
     
-        _ = get_body(environ, logger)
+        _ = get_body(environ)
         
         try:
             post = cgi.FieldStorage(
@@ -511,7 +511,6 @@ def make_plugin(rememberer_name=None, # plugin for remember
                  sid_store="",
                  identity_cache="",
                  discovery="",
-                 debug=0
                  ):
     
     if saml_conf is "":

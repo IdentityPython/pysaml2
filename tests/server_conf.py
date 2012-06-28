@@ -53,6 +53,6 @@ CONFIG={
             "maxBytes": 100000,
             "backupCount": 5,
         },
-        "loglevel": "warning",
+        "loglevel": "info",
     }
 }

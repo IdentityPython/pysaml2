@@ -42,4 +42,12 @@ CONFIG={
     # the identifier returned to a SP
     #"xmlsec_binary": "/usr/local/bin/xmlsec1",
     "attribute_map_dir" : "./attributemaps",
+    "logger": {
+        "rotating": {
+            "filename": "idp.log",
+            "maxBytes": 100000,
+            "backupCount": 5,
+            },
+        "loglevel": "debug",
+    }
 }

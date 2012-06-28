@@ -41,5 +41,13 @@ CONFIG = {
         },
     ],
     #"xmlsec_binary":"/usr/local/bin/xmlsec1",
-    "name_form": NAME_FORMAT_URI
+    "name_form": NAME_FORMAT_URI,
+    "logger": {
+        "rotating": {
+            "filename": "sp.log",
+            "maxBytes": 100000,
+            "backupCount": 5,
+            },
+        "loglevel": "debug",
+    }
 }

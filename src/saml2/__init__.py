@@ -63,7 +63,7 @@ except ImportError:
     except ImportError:
         from elementtree import ElementTree
 
-root_logger = logging.getLogger("pySAML2")
+root_logger = logging.getLogger(__name__)
 root_logger.level = logging.NOTSET
 
 NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:assertion'

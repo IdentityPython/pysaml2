@@ -314,13 +314,15 @@ class Config(object):
         if root_logger.level != logging.NOTSET: # Someone got there before me
             return root_logger
 
-        if _logconf is None:
-            return None
+        try:
+            _logconf = self._attr[""]["logger"]
+        except KeyError:
+            return root_logger
 
         try:
             root_logger.setLevel(LOG_LEVEL[_logconf["loglevel"].lower()])
         except KeyError: # reasonable default
-            root_logger.setLevel(logging.WARNING)
+            root_logger.setLevel(logging.INFO)
 
         root_logger.addHandler(self.log_handler())
         root_logger.info("Logging started")
