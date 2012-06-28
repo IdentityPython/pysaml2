@@ -250,7 +250,7 @@ def test_wayf():
     c.setup_logger()
 
     assert root_logger.level != logging.NOTSET
-    assert root_logger.level == logging.WARNING
+    assert root_logger.level == logging.INFO
     assert len(root_logger.handlers) == 1
     assert isinstance(root_logger.handlers[0],
                         logging.handlers.RotatingFileHandler)
@@ -258,8 +258,8 @@ def test_wayf():
     assert handler.backupCount == 5
     assert handler.maxBytes == 100000
     assert handler.mode == "a"
-    assert root_logger.name == "pySAML2"
-    assert root_logger.level == 30
+    assert root_logger.name == "saml2"
+    assert root_logger.level == 20
 
 def test_conf_syslog():
     c = SPConfig().load_file("server_conf_syslog")
@@ -285,7 +285,7 @@ def test_conf_syslog():
         assert handler.socktype == 2
     else:
         pass
-    assert root_logger.name == "pySAML2"
+    assert root_logger.name == "saml2"
     assert root_logger.level == 20
 
 #noinspection PyUnresolvedReferences

@@ -90,21 +90,21 @@ class TestResponse:
     #     assert isinstance(resp, StatusResponse)
     #     assert isinstance(resp, LogoutResponse)
 
-    def test_decrypt(self):
-        attr_stat = saml.attribute_statement_from_string(
-                            open("encrypted_attribute_statement.xml").read())
-
-        assert len(attr_stat.attribute) == 0
-        assert len(attr_stat.encrypted_attribute) == 4
-
-        xmlsec = get_xmlsec_binary()
-        sec = SecurityContext(xmlsec, key_file="private_key.pem")
-
-        resp = AuthnResponse(sec, None, "entity_id")
-        resp.decrypt_attributes(attr_stat)
-
-        assert len(attr_stat.attribute) == 4
-        assert len(attr_stat.encrypted_attribute) == 4
+#    def test_decrypt(self):
+#        attr_stat = saml.attribute_statement_from_string(
+#                            open("encrypted_attribute_statement.xml").read())
+#
+#        assert len(attr_stat.attribute) == 0
+#        assert len(attr_stat.encrypted_attribute) == 4
+#
+#        xmlsec = get_xmlsec_binary()
+#        sec = SecurityContext(xmlsec, key_file="private_key.pem")
+#
+#        resp = AuthnResponse(sec, None, "entity_id")
+#        resp.decrypt_attributes(attr_stat)
+#
+#        assert len(attr_stat.attribute) == 4
+#        assert len(attr_stat.encrypted_attribute) == 4
 
 
     def test_only_use_keys_in_metadata(self):

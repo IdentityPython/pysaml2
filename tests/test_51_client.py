@@ -517,11 +517,11 @@ class TestClient:
 
     def test_request_to_discovery_service(self):
         disc_url = "http://example.com/saml2/idp/disc"
-        url = self.client.request_to_discovery_service(disc_url)
+        url = self.client.discovery_service_request_url(disc_url)
         print url
         assert url == "http://example.com/saml2/idp/disc?entityID=urn%3Amace%3Aexample.com%3Asaml%3Aroland%3Asp"
 
-        url = self.client.request_to_discovery_service(disc_url,
+        url = self.client.discovery_service_request_url(disc_url,
                             return_url= "http://example.org/saml2/sp/ds")
 
         print url
@@ -532,14 +532,14 @@ class TestClient:
         params = urllib.urlencode(pdir)
         redirect_url = "http://example.com/saml2/sp/disc?%s" % params
 
-        entity_id = self.client.get_idp_from_discovery_service(url=redirect_url)
+        entity_id = self.client.discovery_service_response(url=redirect_url)
         assert entity_id == "http://example.org/saml2/idp/sso"
 
         pdir = {"idpID": "http://example.org/saml2/idp/sso"}
         params = urllib.urlencode(pdir)
         redirect_url = "http://example.com/saml2/sp/disc?%s" % params
 
-        entity_id = self.client.get_idp_from_discovery_service(url=redirect_url,
+        entity_id = self.client.discovery_service_response(url=redirect_url,
                                                         returnIDParam="idpID")
 
         assert entity_id == "http://example.org/saml2/idp/sso"
