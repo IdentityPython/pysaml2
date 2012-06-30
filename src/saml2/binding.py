@@ -23,6 +23,7 @@ Bindings normally consists of three parts:
 - how to package the information
 - which protocol to use
 """
+import urlparse
 import saml2
 import base64
 import urllib
@@ -95,8 +96,9 @@ def http_redirect_message(message, location, relay_state="",
     
     if relay_state:
         args["RelayState"] = relay_state
-        
-    login_url = "?".join([location, urllib.urlencode(args)])
+
+    glue_char = "&" if urlparse.urlparse(location).query else "?"
+    login_url = glue_char.join([location, urllib.urlencode(args)])
     headers = [('Location', login_url)]
     body = [""]
     
