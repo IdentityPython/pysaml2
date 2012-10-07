@@ -18,10 +18,11 @@
 import os
 import sys
 from importlib import import_module
+import urllib
 
 from saml2.s_utils import factory, do_ava
-from saml2 import saml
-from saml2.saml import NAME_FORMAT_URI
+from saml2 import saml, extension_elements_to_elements
+from saml2.saml import NAME_FORMAT_URI, NameID
 
 class UnknownNameFormat(Exception):
     pass
@@ -239,7 +240,22 @@ class AttributeConverter(object):
 
         val = []
         for value in attribute.attribute_value:
-            if not value.text:
+            if value.extension_elements:
+                ext = extension_elements_to_elements(value.extension_elements,
+                                                     [saml])
+                for ex in ext:
+                    if isinstance(ex, NameID):
+                        cval = {}
+                        for key, (name, type, mul) in ex.c_attributes.items():
+                            exv = getattr(ex, name)
+                            if exv:
+                                cval[name] = exv
+                        if ex.text:
+                            cval["text"] = ex.text.strip()
+                        val.append(urllib.urlencode(cval))
+                        #val.append("&".join(["%s=%s" % (k,v) for k,
+                        #                                         v in cval.items()]))
+            elif not value.text:
                 val.append('')
             else:
                 val.append(value.text.strip())

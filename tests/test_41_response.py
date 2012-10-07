@@ -8,9 +8,7 @@ from saml2.server import Server
 from saml2.response import response_factory
 from saml2.response import StatusResponse
 from saml2.response import AuthnResponse
-from saml2.sigver import SecurityContext
 from saml2.sigver import security_context
-from saml2.sigver import get_xmlsec_binary
 from saml2.sigver import MissingKey
 
 from pytest import raises
