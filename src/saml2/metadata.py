@@ -89,7 +89,8 @@ def keep_updated(func, self=None, entity_id=None, *args, **kwargs):
 class MetaData(object):
     """ A class to manage metadata information """
     
-    def __init__(self, xmlsec_binary=None, attrconv=None):
+    def __init__(self, xmlsec_binary=None, attrconv=None, ca_certs=None,
+                 disable_ssl_certificate_validation=False):
         self.xmlsec_binary = xmlsec_binary
         self.attrconv = attrconv or []
         self._loc_key = {}
@@ -97,7 +98,8 @@ class MetaData(object):
         self.entity = {}
         self.valid_to = None
         self.cache_until = None
-        self.http = httplib2.Http()
+        self.http = httplib2.Http(ca_certs=ca_certs,
+                                  disable_ssl_certificate_validation=disable_ssl_certificate_validation)
         self._import = {}
         self._wants = {}
         self._keys = {}
@@ -462,13 +464,14 @@ class MetaData(object):
                 self.do_entity_descriptor(entity_descr, source, 
                                             entities_descr.valid_until)
     
-    def import_external_metadata(self, url, cert=None):
+    def import_external_metadata(self, url, cert=None, ca_certs=None):
         """ Imports metadata by the use of HTTP GET.
         If the fingerprint is known the file will be checked for
         compliance before it is imported.
         
         :param url: The URL pointing to the metadata
         :param cert: A cert to use for checking the signature
+        :param ca_certs: Certificates to use to verify the HTTPS server certs
         :return: True if the import worked out, otherwise False
         """
         (response, content) = self.http.request(url)
@@ -697,9 +700,9 @@ class MetaData(object):
                         try:
                             name = org.organization_url[0]
                         except IndexError:
-                            name = ""
+                            name = None
 
-                if name:
+                if name is not None:
                     name = name.text
         except KeyError:
             name = ""
