@@ -30,6 +30,7 @@ COMMON_ARGS = ["entityid", "xmlsec_binary", "debug", "key_file", "cert_file",
                 "logger",
                 "only_use_keys_in_metadata",
                 "logout_requests_signed",
+                "disable_ssl_certificate_validation"
                 ]
 
 SP_ARGS = [
@@ -232,7 +233,17 @@ class Config(object):
         if acs is None:
             raise Exception("Missing attribute converter specification")
 
-        metad = metadata.MetaData(xmlsec_binary, acs)
+        try:
+            ca_certs = self.ca_certs
+        except:
+            ca_certs = None
+        try:
+            disable_ssl_certificate_validation = self.disable_ssl_certificate_validation
+        except:
+            disable_ssl_certificate_validation = False
+
+        metad = metadata.MetaData(xmlsec_binary, acs, ca_certs,
+                                  disable_ssl_certificate_validation)
         if "local" in metadata_conf:
             for mdfile in metadata_conf["local"]:
                 metad.import_metadata(open(mdfile).read(), mdfile)
