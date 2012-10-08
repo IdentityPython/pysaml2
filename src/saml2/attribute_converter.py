@@ -18,11 +18,10 @@
 import os
 import sys
 from importlib import import_module
-import urllib
 
 from saml2.s_utils import factory, do_ava
 from saml2 import saml, extension_elements_to_elements
-from saml2.saml import NAME_FORMAT_URI, NameID
+from saml2.saml import NAME_FORMAT_URI
 
 class UnknownNameFormat(Exception):
     pass
