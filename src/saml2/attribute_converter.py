@@ -244,17 +244,14 @@ class AttributeConverter(object):
                 ext = extension_elements_to_elements(value.extension_elements,
                                                      [saml])
                 for ex in ext:
-                    if isinstance(ex, NameID):
-                        cval = {}
-                        for key, (name, type, mul) in ex.c_attributes.items():
-                            exv = getattr(ex, name)
-                            if exv:
-                                cval[name] = exv
-                        if ex.text:
-                            cval["text"] = ex.text.strip()
-                        val.append(urllib.urlencode(cval))
-                        #val.append("&".join(["%s=%s" % (k,v) for k,
-                        #                                         v in cval.items()]))
+                    cval = {}
+                    for key, (name, type, mul) in ex.c_attributes.items():
+                        exv = getattr(ex, name)
+                        if exv:
+                            cval[name] = exv
+                    if ex.text:
+                        cval["value"] = ex.text.strip()
+                    val.append({ex.c_tag:cval})
             elif not value.text:
                 val.append('')
             else:
