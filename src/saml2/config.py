@@ -457,18 +457,7 @@ class IdPConfig(Config):
                                                      binding=binding)
 
     def assertion_consumer_services(self, entity_id, binding=BINDING_HTTP_POST):
-        try:
-            ssos = self.entity[entity_id]["sp_sso"]
-        except KeyError:
-            raise
-
-        res = []
-        for sso in ssos:
-            for acs in sso.assertion_consumer_service:
-                if acs.binding == binding:
-                    res.append(acs)
-
-        return res
+        return self.metadata.assertion_consumer_services(entity_id, binding)
 
     def authz_services(self, entity_id, binding=BINDING_SOAP):
         return self.metadata.authz_service_endpoints(entity_id, binding=binding)

@@ -679,7 +679,22 @@ class MetaData(object):
                     return acs.location
         
         return None
-    
+
+    @keep_updated
+    def assertion_consumer_services(self, entity_id, binding=BINDING_HTTP_POST):
+        try:
+            ssos = self.entity[entity_id]["sp_sso"]
+        except KeyError:
+            raise
+
+        res = []
+        for sso in ssos:
+            for acs in sso.assertion_consumer_service:
+                if acs.binding == binding:
+                    res.append(acs)
+
+        return res
+
     @keep_updated
     def name(self, entity_id):
         """ Find a name from the metadata about this entity id.
