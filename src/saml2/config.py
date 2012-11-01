@@ -10,7 +10,7 @@ import logging.handlers
 
 from importlib import import_module
 
-from saml2 import BINDING_SOAP, BINDING_HTTP_REDIRECT
+from saml2 import BINDING_SOAP, BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
 from saml2 import metadata
 from saml2 import root_logger
 
@@ -201,8 +201,10 @@ class Config(object):
         if not metadata_construction:
             if "xmlsec_binary" not in self._attr[""]:
                 self._attr[""]["xmlsec_binary"] = get_xmlsec_binary()
+
             # verify that xmlsec is where it's supposed to be
-            if not os.access(self._attr[""]["xmlsec_binary"], os.F_OK):
+            if not os.path.exists(self._attr[""]["xmlsec_binary"]):
+                #if not os.access(, os.F_OK):
                 raise Exception("xmlsec binary not in '%s' !" % (
                                             self._attr[""]["xmlsec_binary"]))
 
@@ -454,18 +456,22 @@ class IdPConfig(Config):
         return self.metadata.single_logout_services(entity_id, "sp",
                                                      binding=binding)
 
-    def assertion_consumer_services(self, entity_id, binding):
-        typ = "assertion_consumer_service"
-        if self.sp is None or entity_id in self.sp:
-            acs = self.metadata.sp_services(entity_id, typ, binding=binding)
-            if acs:
-                return [s[binding] for s in acs]
+    def assertion_consumer_services(self, entity_id, binding=BINDING_HTTP_POST):
+        try:
+            ssos = self.entity[entity_id]["sp_sso"]
+        except KeyError:
+            raise
 
-        return []
+        res = []
+        for sso in ssos:
+            for acs in sso.assertion_consumer_service:
+                if acs.binding == binding:
+                    res.append(acs)
+
+        return res
 
     def authz_services(self, entity_id, binding=BINDING_SOAP):
-        return self.metadata.authz_services(entity_id, "pdp",
-                                                     binding=binding)
+        return self.metadata.authz_service_endpoints(entity_id, binding=binding)
 
 def config_factory(typ, file):
     if typ == "sp":
