@@ -332,3 +332,18 @@ def test_ecp():
     assert eid == "http://example.com/idp"
     eid = cnf.ecp_endpoint("130.238.20.20")
     assert eid is None
+
+def test_assertion_consumer_service():
+    c = IdPConfig()
+    c.load_file("idp_conf")
+    c.context = "idp"
+
+    xml_src = open("inCommon-metadata.xml").read()
+    # A trick so outdated data is allowed
+    c.metadata.import_metadata(xml_src, "-")
+
+    print c.metadata.entity.keys()
+    entity_id = "https://www.zimride.com/shibboleth"
+    acs = c.assertion_consumer_services(entity_id)
+    assert len(acs) == 1
+    assert acs[0].location == 'https://www.zimride.com/Shibboleth.sso/SAML2/POST'
