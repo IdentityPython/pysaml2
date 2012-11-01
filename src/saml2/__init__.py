@@ -564,7 +564,12 @@ class SamlBase(ExtensionContainer):
         return new_tree
 
     def to_string(self, nspair=None):
-        """Converts the Saml object to a string containing XML."""
+        """Converts the Saml object to a string containing XML.
+
+        :param nspair: A dictionary of prefixes and uris to use when
+            constructing the text representation.
+        :return: String representation of the object
+        """
         if nspair:
             for prefix, uri in nspair.items():
                 try:
