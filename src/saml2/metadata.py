@@ -79,6 +79,8 @@ def keep_updated(func, self=None, entity_id=None, *args, **kwargs):
             try:
                 if not valid(self.entity[entity_id]["valid_until"]):
                     self.reload_entity(entity_id)
+                    if self.post_load_process:
+                        self.post_load_process()
             except KeyError:
                 pass
     except KeyError: # Unknown entity, handle downstream
@@ -90,7 +92,8 @@ class MetaData(object):
     """ A class to manage metadata information """
     
     def __init__(self, xmlsec_binary=None, attrconv=None, ca_certs=None,
-                 disable_ssl_certificate_validation=False):
+                 disable_ssl_certificate_validation=False,
+                 post_load_process=None):
         self.xmlsec_binary = xmlsec_binary
         self.attrconv = attrconv or []
         self._loc_key = {}
@@ -104,6 +107,7 @@ class MetaData(object):
         self._wants = {}
         self._keys = {}
         self._extension_modules = metadata_extension_modules()
+        self.post_load_process = post_load_process
 
     def _extensions(self, entity):
         if entity.extensions:
