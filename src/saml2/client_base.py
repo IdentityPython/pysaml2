@@ -80,7 +80,7 @@ class VerifyError(Exception):
 class LogoutError(Exception):
     pass
 
-class Saml2Client(object):
+class Base(object):
     """ The basic pySAML2 service provider class """
 
     def __init__(self, config=None, identity_cache=None, state_cache=None,
@@ -268,7 +268,7 @@ class Saml2Client(object):
 
         return id, signed_instance_factory(req, self.sec, to_sign)
 
-    def create_authn_request(self, destination, id, vorg="", scoping=None,
+    def create_authn_request(self, destination, id=0, vorg="", scoping=None,
                              binding=saml2.BINDING_HTTP_POST,
                              nameid_format=saml.NAMEID_FORMAT_TRANSIENT,
                              service_url_binding=None,
@@ -411,13 +411,13 @@ class Saml2Client(object):
         status = samlp.Status(
             status_code=samlp.StatusCode(value=status_code))
 
-        return self._message(LogoutResponse, destination,
-                                 in_response_to=request_id, status=status)
+        return destination, self._message(LogoutResponse, destination,
+                                          in_response_to=request_id,
+                                          status=status)
 
     #noinspection PyUnusedLocal
     def create_authz_decision_query(self, destination, action, id=0,
                                     evidence=None, resource=None, subject=None,
-                                    binding=saml2.BINDING_HTTP_REDIRECT,
                                     sign=None, consent=None,
                                     extensions=None):
         """ Creates an authz decision query.
