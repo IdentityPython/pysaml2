@@ -48,7 +48,7 @@ from saml2.population import Population
 from saml2.virtual_org import VirtualOrg
 from saml2.config import config_factory
 
-from saml2.response import response_factory
+from saml2.response import response_factory, attribute_response
 from saml2.response import LogoutResponse
 from saml2.response import AuthnResponse
 
@@ -415,7 +415,10 @@ class Base(object):
                                           in_response_to=request_id,
                                           status=status)
 
-    #noinspection PyUnusedLocal
+    # MUST use SOAP for
+    # AssertionIDRequest, SubjectQuery,
+    # AuthnQuery, AttributeQuery, or AuthzDecisionQuery
+
     def create_authz_decision_query(self, destination, action, id=0,
                                     evidence=None, resource=None, subject=None,
                                     sign=None, consent=None,
@@ -469,14 +472,9 @@ class Base(object):
                                                 resource, subject, binding,
                                                 sign)
 
-    #noinspection PyUnusedLocal
-    def authz_decision_query_response(self, response):
-        """ Verify that the response is OK """
-        pass
-
     def create_assertion_id_request(self, assertion_id_refs, destination=None,
-                                    id=0, consent=None, sign=False,
-                                    extensions=None):
+                                    id=0, consent=None, extensions=None,
+                                    sign=False):
 
         id_refs = [AssertionIDRef(text=s) for s in assertion_id_refs]
 
@@ -492,6 +490,7 @@ class Base(object):
         return self._message(AuthnQuery, destination, id, consent, extensions,
                              sign, subject=subject, session_index=session_index,
                              requested_auth_context=authn_context)
+
 
     # ======== response handling ===========
 
@@ -587,3 +586,44 @@ class Base(object):
 
         return response
 
+    #noinspection PyUnusedLocal
+    def authz_decision_query_response(self, response):
+        """ Verify that the response is OK
+        """
+        resp = samlp.response_from_string(response)
+        return resp
+
+    def assertion_id_request_response(self, response):
+        """ Verify that the response is OK
+        """
+        resp = samlp.response_from_string(response)
+        return resp
+
+    def authn_query_response(self, response):
+        """ Verify that the response is OK
+        """
+        resp = samlp.response_from_string(response)
+        return resp
+
+    def attribute_query_response(self, response, **kwargs):
+        try:
+            # synchronous operation
+            aresp = attribute_response(self.config, self.config.entityid)
+        except Exception, exc:
+            logger.error("%s", (exc,))
+            return None
+
+        _resp = aresp.loads(response, False, response).verify()
+        if _resp is None:
+            logger.error("Didn't like the response")
+            return None
+
+        session_info = _resp.session_info()
+
+        if session_info:
+            if "real_id" in kwargs:
+                session_info["name_id"] = kwargs["real_id"]
+            self.users.add_information_about_person(session_info)
+
+        logger.info("session: %s" % session_info)
+        return session_info

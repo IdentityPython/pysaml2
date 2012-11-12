@@ -20,6 +20,8 @@ to conclude its tasks.
 """
 
 import saml2
+from saml2.saml import AssertionIDRef
+
 try:
     from urlparse import parse_qs
 except ImportError:
@@ -32,11 +34,10 @@ from saml2.s_utils import decode_base64_and_inflate
 from saml2 import samlp, saml, class_name
 from saml2.sigver import pre_signature_part
 from saml2.sigver import signed_instance_factory
-from saml2.soap import SOAPClient
-from saml2.binding import send_using_soap, http_redirect_message
+from saml2.binding import send_using_soap
+from saml2.binding import http_redirect_message
 from saml2.binding import http_post_message
 from saml2.client_base import Base, LogoutError
-from saml2.response import attribute_response
 
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_SOAP
@@ -90,85 +91,6 @@ class Saml2Client(Base):
             raise Exception("Unknown binding type: %s" % binding)
 
         return session_id, response
-
-    
-    def do_attribute_query(self, subject_id, entityid,
-                           attribute=None, sp_name_qualifier=None,
-                           name_qualifier=None, nameid_format=None,
-                           real_id=None, consent=None, extensions=None,
-                           sign=False):
-        """ Does a attribute request to an attribute authority, this is
-        by default done over SOAP. Other bindings could be used but not
-        supported right now.
-        
-        :param subject_id: The identifier of the subject
-        :param entityid: To whom the query should be sent
-        :param attribute: A dictionary of attributes and values that is asked for
-        :param sp_name_qualifier: The unique identifier of the
-            service provider or affiliation of providers for whom the
-            identifier was generated.
-        :param name_qualifier: The unique identifier of the identity
-            provider that generated the identifier.
-        :param nameid_format: The format of the name ID
-        :param real_id: The identifier which is the key to this entity in the
-            identity database
-        :return: The attributes returned
-        """
-
-        location = self._sso_location(entityid, BINDING_SOAP)
-
-        id, request = self.create_attribute_query(location, 0, subject_id,
-                                                  attribute, sp_name_qualifier,
-                                                  name_qualifier,
-                                                  nameid_format,
-                                                  consent, extensions, sign)
-
-        logger.info("Request, created: %s" % request)
-        
-        soapclient = SOAPClient(location, self.config.key_file,
-                                self.config.cert_file,
-                                ca_certs=self.config.ca_certs)
-
-        logger.info("SOAP client initiated")
-
-        try:
-            response = soapclient.send(request)
-        except Exception, exc:
-            logger.info("SoapClient exception: %s" % (exc,))
-            return None
-        
-        logger.info("SOAP request sent and got response: %s" % response)
-#            fil = open("response.xml", "w")
-#            fil.write(response)
-#            fil.close()
-            
-        if response:
-            logger.info("Verifying response")
-            
-            try:
-                # synchronous operation
-                aresp = attribute_response(self.config, self.config.entityid)
-            except Exception, exc:
-                logger.error("%s", (exc,))
-                return None
-                
-            _resp = aresp.loads(response, False, soapclient.response).verify()
-            if _resp is None:
-                logger.error("Didn't like the response")
-                return None
-            
-            session_info = _resp.session_info()
-
-            if session_info:
-                if real_id is not None:
-                    session_info["name_id"] = real_id
-                self.users.add_information_about_person(session_info)
-
-            logger.info("session: %s" % session_info)
-            return session_info
-        else:
-            logger.info("No response")
-            return None
 
     def global_logout(self, subject_id, reason="", expire=None, sign=None,
                       return_to="/"):
@@ -382,13 +304,43 @@ class Saml2Client(Base):
         if binding == BINDING_HTTP_REDIRECT:
             return self.do_http_redirect_logout(request, subject_id)
 
+    # MUST use SOAP for
+    # AssertionIDRequest, SubjectQuery,
+    # AuthnQuery, AttributeQuery, or AuthzDecisionQuery
+
+    def _soap_query_response(self, destination, query_type, **kwargs):
+        _create_func = getattr(self, "create_%s" % query_type)
+        _response_func = getattr(self, "%s_response" % query_type)
+
+        id, query = _create_func(destination, **kwargs)
+
+        response = send_using_soap(query, destination,
+                                   self.config.key_file,
+                                   self.config.cert_file,
+                                   ca_certs=self.config.ca_certs)
+
+        if response:
+            logger.info("Verifying response")
+            if "response_args" in kwargs:
+                response = _response_func(response, **kwargs["response_args"])
+            else:
+                response = _response_func(response)
+
+        if response:
+            #not_done.remove(entity_id)
+            logger.info("OK response from %s" % destination)
+            return response
+        else:
+            logger.info("NOT OK response from %s" % destination)
+
+        return None
+
     #noinspection PyUnusedLocal
     def do_authz_decision_query(self, entity_id, action,
                                 subject_id, nameid_format,
                                 evidence=None, resource=None,
                                 sp_name_qualifier=None,
                                 name_qualifier=None,
-                                binding=BINDING_SOAP,
                                 consent=None, extensions=None, sign=False):
 
         subject = saml.Subject(
@@ -398,31 +350,103 @@ class Saml2Client(Base):
                                   name_qualifier=name_qualifier))
 
         for destination in self.config.authz_service_endpoints(entity_id,
-                                                               binding):
-            id, query = self.create_authz_decision_query(destination,
-                                                         action, evidence,
-                                                         resource, subject)
-
-            response = send_using_soap(query, destination,
-                                       self.config.key_file,
-                                       self.config.cert_file,
-                                       ca_certs=self.config.ca_certs)
-
-            if response:
-                logger.info("Verifying response")
-                response = self.authz_decision_query_response(response)
-
-            if response:
-                #not_done.remove(entity_id)
-                logger.info("OK response from %s" % destination)
-                return response
-            else:
-                logger.info("NOT OK response from %s" % destination)
+                                                               BINDING_SOAP):
+            resp = self._soap_query_response(destination,
+                                             "authz_decision_query",
+                                             action=action, evidence=evidence,
+                                             resource=resource, subject=subject)
+            if resp:
+                return resp
 
         return None
 
-    def do_assertion_id_request(self):
-        pass
+    def do_assertion_id_request(self, assertion_ids, entity_id,
+                                consent=None, extensions=None, sign=False):
 
-    def do_authn_query(self):
-        pass
+        destination = self.metadata.assertion_id_request_service(entity_id,
+                                                                 BINDING_SOAP)[0]
+
+        if isinstance(assertion_ids, basestring):
+            assertion_ids = [assertion_ids]
+
+        _id_refs = [AssertionIDRef(_id) for _id in assertion_ids]
+
+        return self._soap_query_response(destination, "assertion_id_request",
+                                         assertion_id_refs=_id_refs,
+                                         consent=consent, extensions=extensions,
+                                         sign=sign)
+
+
+    def do_authn_query(self, entity_id,
+                       consent=None, extensions=None, sign=False):
+
+        destination = self.metadata.authn_request_service(entity_id,
+                                                          BINDING_SOAP)[0]
+
+        return self._soap_query_response(destination, "authn_query",
+                                         consent=consent, extensions=extensions,
+                                         sign=sign)
+
+    def do_attribute_query(self, subject_id, entityid,
+                           attribute=None, sp_name_qualifier=None,
+                           name_qualifier=None, nameid_format=None,
+                           real_id=None, consent=None, extensions=None,
+                           sign=False):
+        """ Does a attribute request to an attribute authority, this is
+        by default done over SOAP. Other bindings could be used but not
+        supported right now.
+
+        :param subject_id: The identifier of the subject
+        :param entityid: To whom the query should be sent
+        :param attribute: A dictionary of attributes and values that is asked for
+        :param sp_name_qualifier: The unique identifier of the
+            service provider or affiliation of providers for whom the
+            identifier was generated.
+        :param name_qualifier: The unique identifier of the identity
+            provider that generated the identifier.
+        :param nameid_format: The format of the name ID
+        :param real_id: The identifier which is the key to this entity in the
+            identity database
+        :return: The attributes returned
+        """
+
+        location = self._sso_location(entityid, BINDING_SOAP)
+
+        response_args = {"real_id": real_id}
+
+        return self._soap_query_response(location, "attribute_query",
+                                         consent=consent, extensions=extensions,
+                                         sign=sign, subject_id=subject_id,
+                                         attribute=attribute,
+                                         sp_name_qualifier=sp_name_qualifier,
+                                         name_qualifier=name_qualifier,
+                                         nameid_format=nameid_format,
+                                         response_args=response_args)
+
+#        if response:
+#            logger.info("Verifying response")
+#
+#            try:
+#                # synchronous operation
+#                aresp = attribute_response(self.config, self.config.entityid)
+#            except Exception, exc:
+#                logger.error("%s", (exc,))
+#                return None
+#
+#            _resp = aresp.loads(response, False, soapclient.response).verify()
+#            if _resp is None:
+#                logger.error("Didn't like the response")
+#                return None
+#
+#            session_info = _resp.session_info()
+#
+#            if session_info:
+#                if real_id is not None:
+#                    session_info["name_id"] = real_id
+#                self.users.add_information_about_person(session_info)
+#
+#            logger.info("session: %s" % session_info)
+#            return session_info
+#        else:
+#            logger.info("No response")
+#            return None
