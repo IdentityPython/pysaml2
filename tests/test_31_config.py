@@ -192,7 +192,7 @@ def test_2():
     assert len(c._sp_idp) == 1
     assert c._sp_idp.keys() == [""]
     assert c._sp_idp.values() == ["https://example.com/saml2/idp/SSOService.php"]
-    assert c.only_use_keys_in_metadata is None
+    assert c.only_use_keys_in_metadata is True
     
 def test_minimum():
     minimum = {

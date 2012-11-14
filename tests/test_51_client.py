@@ -201,7 +201,7 @@ class TestClient:
         assert nid_policy.format == saml.NAMEID_FORMAT_TRANSIENT
 
     def test_create_auth_request_vo(self):
-        assert self.client.config.virtual_organization.keys() == [
+        assert self.client.config.vorg.keys() == [
                                     "urn:mace:example.com:it:tek"]
                                     
         ar_str = "%s" % self.client.create_authn_request(
@@ -337,7 +337,7 @@ class TestClient:
 
     def test_authenticate(self):
         print self.client.config.idps()
-        response = self.client.do_authenticate(
+        id, response = self.client.do_authenticate(
                                         "urn:mace:example.com:saml:roland:idp",
                                         "http://www.example.com/relay_state")
         assert response[0] == "Location"
@@ -349,7 +349,7 @@ class TestClient:
         authnreq = samlp.authn_request_from_string(saml_request)
 
     def test_authenticate_no_args(self):
-        response = self.client.do_authenticate(relay_state="http://www.example.com/relay_state")
+        id, response = self.client.do_authenticate(relay_state="http://www.example.com/relay_state")
         assert response[0] == "Location"
         o = urlparse(response[1])
         qdict = parse_qs(o.query)

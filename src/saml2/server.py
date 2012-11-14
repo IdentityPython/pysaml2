@@ -110,22 +110,18 @@ class Identifier(object):
             
             return temp_id
 
-    def _get_vo_identifier(self, sp_name_qualifier, userid, identity):
+    def _get_vo_identifier(self, sp_name_qualifier, identity):
         try:
-            vo_conf = self.voconf[sp_name_qualifier]
-            if "common_identifier" in vo_conf:
-                try:
-                    subj_id = identity[vo_conf["common_identifier"]]
-                except KeyError:
-                    raise MissingValue("Common identifier")
-            else:
-                return self.persistent_nameid(sp_name_qualifier, userid)
+            vo = self.voconf[sp_name_qualifier]
+            try:
+                subj_id = identity[vo.common_identifier]
+            except KeyError:
+                raise MissingValue("Common identifier")
         except (KeyError, TypeError):
             raise UnknownVO("%s" % sp_name_qualifier)
 
-        try:
-            nameid_format = vo_conf["nameid_format"]
-        except KeyError:
+        nameid_format = vo.nameid_format
+        if not nameid_format:
             nameid_format = saml.NAMEID_FORMAT_PERSISTENT
 
         return saml.NameID(format=nameid_format,
@@ -189,9 +185,9 @@ class Identifier(object):
         if name_id_policy and name_id_policy.sp_name_qualifier:
             try:
                 return self._get_vo_identifier(name_id_policy.sp_name_qualifier,
-                                                userid, identity)
-            except Exception:
-                pass
+                                               identity)
+            except Exception, exc:
+                print >> sys.stderr, "%s:%s" % (exc.__class__.__name__, exc)
 
         if sp_nid:
             nameid_format = sp_nid[0]

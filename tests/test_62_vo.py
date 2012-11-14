@@ -24,8 +24,8 @@ class TestVirtualOrg():
         conf.load_file("server_conf")
         self.sp = Saml2Client(conf)
 
-        vo_name = conf.virtual_organization.keys()[0]
-        self.vo = VirtualOrg(self.sp, vo_name)
+        vo_name = conf.vorg.keys()[0]
+        self.vo = conf.vorg[vo_name]
         add_derek_info(self.sp)
 
     def test_mta(self):
@@ -53,7 +53,7 @@ class TestVirtualOrg_2():
     def setup_class(self):
         conf = config.SPConfig()
         conf.load_file("server_conf")
-        vo_name = conf.virtual_organization.keys()[0]
+        vo_name = conf.vorg.keys()[0]
         self.sp = Saml2Client(conf, virtual_organization=vo_name)
         add_derek_info(self.sp)
 

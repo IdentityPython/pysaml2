@@ -6,7 +6,6 @@ from saml2.config import IdPConfig
 from saml2.server import Identifier
 from saml2.assertion import Policy
 
-
 def _eq(l1,l2):
     return set(l1) == set(l2)
 
@@ -34,6 +33,8 @@ CONFIG = IdPConfig().load({
             "common_identifier": "uid",
         },
         "http://vo.example.org/design":{
+            "nameid_format" : NAMEID_FORMAT_PERSISTENT,
+            "common_identifier": "uid",
         }
     }
 })
@@ -53,7 +54,7 @@ NAME_ID_POLICY_2 = """<?xml version="1.0" encoding="utf-8"?>
 
 class TestIdentifier():
     def setup_class(self):
-        self.id = Identifier("subject.db", CONFIG.virtual_organization)
+        self.id = Identifier("subject.db", CONFIG.vorg)
         
     def test_persistent_1(self):
         policy = Policy({
@@ -109,16 +110,17 @@ class TestIdentifier():
         })
         
         name_id_policy = samlp.name_id_policy_from_string(NAME_ID_POLICY_1)
+        print name_id_policy
+        print self.id.voconf
         nameid = self.id.construct_nameid(policy, "foobar", 
                                             "urn:mace:example.com:sp:1", 
                                             {"uid": "foobar01"},
                                             name_id_policy)
-        
+
+        print nameid
         assert _eq(nameid.keyswv(), ['text', 'sp_name_qualifier', 'format'])
         assert nameid.sp_name_qualifier == 'http://vo.example.org/biomed'
-        assert nameid.format == \
-                CONFIG.virtual_organization['http://vo.example.org/biomed'][
-                                                                "nameid_format"]
+        assert nameid.format == 'urn:oid:2.16.756.1.2.5.1.1.1-NameID'
         assert nameid.text == "foobar01"
 
     def test_vo_2(self):
@@ -142,5 +144,5 @@ class TestIdentifier():
         assert _eq(nameid.keyswv(), ['text', 'sp_name_qualifier', 'format'])
         assert nameid.sp_name_qualifier == 'http://vo.example.org/design'
         assert nameid.format == NAMEID_FORMAT_PERSISTENT
-        assert nameid.text != "foobar01"
+        assert nameid.text == "foobar01"
         

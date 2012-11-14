@@ -40,6 +40,8 @@ from repoze.who.plugins.form import FormPluginBase
 from saml2 import ecp
 
 from saml2.client import Saml2Client
+from saml2.discovery import discovery_service_response
+from saml2.discovery import discovery_service_request_url
 from saml2.s_utils import sid
 from saml2.config import config_factory
 from saml2.profile import paos
@@ -110,6 +112,8 @@ class ECP_response(object):
         start_response('%s %s' % (self.code, self.title),
                        [('Content-Type', "text/xml")])
         return [self.content]
+
+
 
 class SAML2Plugin(FormPluginBase):
 
@@ -242,14 +246,14 @@ class SAML2Plugin(FormPluginBase):
                     return self._wayf_redirect(came_from)
             elif self.discovery:
                 if query:
-                    idp_entity_id = self.saml_client.get_idp_from_discovery_service(
+                    idp_entity_id = discovery_service_response(
                                             query=environ.get("QUERY_STRING"))
                 else:
                     sid_ = sid()
                     self.outstanding_queries[sid_] = came_from
                     logger.info("Redirect to Discovery Service function")
-                    loc = self.saml_client.request_to_discovery_service(
-                                                                self.discovery)
+                    eid = self.saml_client.config.entity_id
+                    loc = discovery_service_request_url(eid, self.discovery)
                     return -1, HTTPSeeOther(headers = [('Location',loc)])
             else:
                 return -1, HTTPNotImplemented(detail='No WAYF or DJ present!')
@@ -273,13 +277,13 @@ class SAML2Plugin(FormPluginBase):
         environ["myapp.came_from"] = came_from
         logger.debug("[sp.challenge] RelayState >> %s" % came_from)
         
-        # Am I part of a virtual organization ?
+        # Am I part of a virtual organization or more than one ?
         try:
             vorg_name = environ["myapp.vo"]
         except KeyError:
             try:
-                vorg_name = self.saml_client.vorg.vorg_name
-            except AttributeError:
+                vorg_name = self.saml_client.vorg.keys()[1]
+            except IndexError:
                 vorg_name = ""
             
         logger.info("[sp.challenge] VO: %s" % vorg_name)
@@ -300,9 +304,9 @@ class SAML2Plugin(FormPluginBase):
             logger.info("[sp.challenge] idp_url: %s" % idp_url)
             # Do the AuthnRequest
 
-            (sid_, result) = self.saml_client.authenticate(idp_url,
-                                                    relay_state=came_from,
-                                                    vorg=vorg_name)
+            sid_, result = self.saml_client.do_authenticate(idp_url,
+                                                        relay_state=came_from,
+                                                        vorg=vorg_name)
 
             # remember the request
             self.outstanding_queries[sid_] = came_from
@@ -466,9 +470,9 @@ class SAML2Plugin(FormPluginBase):
 
         if "pysaml2_vo_expanded" not in identity:
             # is this a Virtual Organization situation
-            if self.saml_client.vorg:
+            for vo in self.saml_client.vorg.values():
                 try:
-                    if self.saml_client.vorg.do_aggregation(subject_id):
+                    if vo.do_aggregation(subject_id):
                         # Get the extended identity
                         identity["user"] = self.saml_client.users.get_identity(
                                                                 subject_id)[0]

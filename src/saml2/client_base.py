@@ -83,13 +83,12 @@ class Base(object):
     """ The basic pySAML2 service provider class """
 
     def __init__(self, config=None, identity_cache=None, state_cache=None,
-                 virtual_organization=None, config_file=""):
+                 virtual_organization="",config_file=""):
         """
         :param config: A saml2.config.Config instance
         :param identity_cache: Where the class should store identity information
         :param state_cache: Where the class should keep state information
-        :param virtual_organization: Which if any virtual organization this
-            SP belongs to
+        :param virtual_organization: A specific virtual organization
         """
 
         self.users = Population(identity_cache)
@@ -107,6 +106,10 @@ class Base(object):
         else:
             raise Exception("Missing configuration")
 
+        if self.config.vorg:
+            for vo in self.config.vorg.values():
+                vo.sp = self
+
         self.metadata = self.config.metadata
         self.config.setup_logger()
 
@@ -118,7 +121,10 @@ class Base(object):
         self.sec = security_context(self.config)
 
         if virtual_organization:
-            self.vorg = VirtualOrg(self, virtual_organization)
+            if isinstance(virtual_organization, basestring):
+                self.vorg = self.config.vorg[virtual_organization]
+            elif isinstance(virtual_organization, VirtualOrg):
+                self.vorg = virtual_organization
         else:
             self.vorg = None
 

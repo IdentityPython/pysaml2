@@ -45,6 +45,7 @@ class TestAuthnResponse:
                     policy=policy)
 
         self.conf = config_factory("sp", "server_conf")
+        self.conf.only_use_keys_in_metadata = False
         self.ar = authn_response(self.conf, "http://lingon.catalogix.se:8087/")
     
     def test_verify_1(self):

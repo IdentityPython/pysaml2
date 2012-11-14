@@ -269,7 +269,7 @@ class AuthnResponse(StatusResponse):
             elif self.allow_unsolicited:
                 pass
             else:
-                logger("Unsolicited response")
+                logger.exception("Unsolicited response")
                 raise Exception("Unsolicited response")
             
         return self

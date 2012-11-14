@@ -90,7 +90,7 @@ class Saml2Client(Base):
         else:
             raise Exception("Unknown binding type: %s" % binding)
 
-        return response
+        return req.id, response
 
     def global_logout(self, subject_id, reason="", expire=None, sign=None,
                       return_to="/"):

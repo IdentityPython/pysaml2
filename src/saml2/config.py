@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from saml2.virtual_org import VirtualOrg
 
 __author__ = 'rolandh'
 
@@ -113,7 +114,7 @@ class Config(object):
         self.name_form=None
         self.virtual_organization=None
         self.logger=None
-        self.only_use_keys_in_metadata=None
+        self.only_use_keys_in_metadata=True
         self.logout_requests_signed=None
         self.disable_ssl_certificate_validation=None
         self.context = ""
@@ -121,6 +122,7 @@ class Config(object):
         self.metadata=None
         self.policy=None
         self.serves = []
+        self.vorg = {}
 
 #    def copy_into(self, typ=""):
 #        if typ == "sp":
@@ -200,6 +202,13 @@ class Config(object):
         :return: The Configuration instance
         """
         for arg in COMMON_ARGS:
+            if arg == "virtual_organization":
+                if "virtual_organization" in cnf:
+                    for key,val in cnf["virtual_organization"].items():
+                        self.vorg[key] = VirtualOrg(None, key, val)
+                continue
+
+
             try:
                 setattr(self, arg, cnf[arg])
             except KeyError:
