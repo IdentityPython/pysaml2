@@ -19,7 +19,11 @@ XML_RESPONSE_FILE2 = "saml2_response.xml"
 
 def _eq(l1,l2):
     return set(l1) == set(l2)
-    
+
+IDENTITY = {"eduPersonAffiliation": ["staff", "member"],
+            "surName": ["Jeter"], "givenName": ["Derek"],
+            "mail": ["foo@gmail.com"]}
+
 class TestResponse:
     def setup_class(self):
         server = Server("idp_conf")
@@ -27,28 +31,28 @@ class TestResponse:
                                 "urn:mace:example.com:saml:roland:sp",
                                 "id12")
 
-        self._resp_ = server.do_response(
+        self._resp_ = server.create_response(
                     "id12",                       # in_response_to
                     "http://lingon.catalogix.se:8087/",   # consumer_url
                     "urn:mace:example.com:saml:roland:sp", # sp_entity_id
-                    {"eduPersonEntitlement":"Jeter"},
+                    IDENTITY,
                     name_id = name_id
                 )
                 
-        self._sign_resp_ = server.do_response(
+        self._sign_resp_ = server.create_response(
                     "id12",                       # in_response_to
                     "http://lingon.catalogix.se:8087/",   # consumer_url
                     "urn:mace:example.com:saml:roland:sp", # sp_entity_id
-                    {"eduPersonEntitlement":"Jeter"},
+                    IDENTITY,
                     name_id = name_id,
-                    sign=True
+                    sign_assertion=True
                 )
 
-        self._resp_authn = server.do_response(
+        self._resp_authn = server.create_response(
                     "id12",                       # in_response_to
                     "http://lingon.catalogix.se:8087/",   # consumer_url
                     "urn:mace:example.com:saml:roland:sp", # sp_entity_id
-                    {"eduPersonEntitlement":"Jeter"},
+                    IDENTITY,
                     name_id = name_id,
                     authn=(saml.AUTHN_PASSWORD, "http://www.example.com/login")
                 )

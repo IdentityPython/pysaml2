@@ -1,51 +1,48 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from saml2 import samlp, BINDING_HTTP_POST
-from saml2 import saml, config, class_name, make_instance
+from saml2 import saml
 from saml2.server import Server
-from saml2.response import authn_response, StatusResponse
+from saml2.response import authn_response
 from saml2.config import config_factory
 
 XML_RESPONSE_FILE = "saml_signed.xml"
 XML_RESPONSE_FILE2 = "saml2_response.xml"
 
-import os
-        
 def _eq(l1,l2):
     return set(l1) == set(l2)
-    
+
+IDENTITY = {"eduPersonAffiliation": ["staff", "member"],
+            "surName": ["Jeter"], "givenName": ["Derek"],
+            "mail": ["foo@gmail.com"]}
+
 class TestAuthnResponse:
     def setup_class(self):
         server = Server("idp_conf")
         name_id = server.ident.transient_nameid(
                             "urn:mace:example.com:saml:roland:sp","id12")
-
-        self._resp_ = server.do_response(
+        policy = server.conf.getattr("policy", "idp")
+        self._resp_ = server.create_response(
                     "id12",                       # in_response_to
                     "http://lingon.catalogix.se:8087/",   # consumer_url
                     "urn:mace:example.com:saml:roland:sp", # sp_entity_id
-                    {"eduPersonEntitlement":"Jeter"},
-                    name_id = name_id
-                )
+                    IDENTITY, name_id = name_id, policy=policy)
                 
-        self._sign_resp_ = server.do_response(
+        self._sign_resp_ = server.create_response(
                     "id12",                       # in_response_to
                     "http://lingon.catalogix.se:8087/",   # consumer_url
                     "urn:mace:example.com:saml:roland:sp", # sp_entity_id
-                    {"eduPersonEntitlement":"Jeter"},
-                    name_id = name_id,
-                    sign=True
-                )
+                    IDENTITY,
+                    name_id = name_id, sign_assertion=True, policy=policy)
 
-        self._resp_authn = server.do_response(
+        self._resp_authn = server.create_response(
                     "id12",                       # in_response_to
                     "http://lingon.catalogix.se:8087/",   # consumer_url
                     "urn:mace:example.com:saml:roland:sp", # sp_entity_id
-                    {"eduPersonEntitlement":"Jeter"},
+                    IDENTITY,
                     name_id = name_id,
-                    authn=(saml.AUTHN_PASSWORD, "http://www.example.com/login")
-                )
+                    authn=(saml.AUTHN_PASSWORD, "http://www.example.com/login"),
+                    policy=policy)
 
         self.conf = config_factory("sp", "server_conf")
         self.ar = authn_response(self.conf, "http://lingon.catalogix.se:8087/")
@@ -60,7 +57,7 @@ class TestAuthnResponse:
         print self.ar.__dict__
         assert self.ar.came_from == 'http://localhost:8088/sso'
         assert self.ar.session_id() == "id12"
-        assert self.ar.ava == {'eduPersonEntitlement': ['Jeter'] }
+        assert self.ar.ava == IDENTITY
         assert self.ar.name_id
         assert self.ar.issuer() == 'urn:mace:example.com:saml:roland:idp'
     
@@ -76,7 +73,7 @@ class TestAuthnResponse:
         print self.ar.__dict__
         assert self.ar.came_from == 'http://localhost:8088/sso'
         assert self.ar.session_id() == "id12"
-        assert self.ar.ava == {'eduPersonEntitlement': ['Jeter'] }
+        assert self.ar.ava == IDENTITY
         assert self.ar.issuer() == 'urn:mace:example.com:saml:roland:idp'
         assert self.ar.name_id
 

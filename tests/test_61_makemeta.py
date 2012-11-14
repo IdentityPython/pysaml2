@@ -186,7 +186,7 @@ def test_optional_attributes():
     
 def test_do_sp_sso_descriptor():
     conf = SPConfig().load(SP, metadata_construction=True)
-    spsso = metadata.do_sp_sso_descriptor(conf)
+    spsso = metadata.do_spsso_descriptor(conf)
     
     assert isinstance(spsso, md.SPSSODescriptor)
     assert _eq(spsso.keyswv(), ['authn_requests_signed', 
@@ -215,7 +215,7 @@ def test_do_sp_sso_descriptor_2():
     SP["service"]["sp"]["discovery_response"] = "http://example.com/sp/ds"
     
     conf = SPConfig().load(SP, metadata_construction=True)
-    spsso = metadata.do_sp_sso_descriptor(conf)
+    spsso = metadata.do_spsso_descriptor(conf)
 
     assert isinstance(spsso, md.SPSSODescriptor)
     print spsso.keyswv()
@@ -242,7 +242,7 @@ def test_entity_description():
     #confd = eval(open("../tests/server.config").read())
     confd = SPConfig().load_file("server_conf")
     print confd.attribute_converters
-    entd = metadata.entity_descriptor(confd, 1)
+    entd = metadata.entity_descriptor(confd)
     assert entd is not None
     print entd.keyswv()
     assert _eq(entd.keyswv(), ['valid_until', 'entity_id', 'contact_person',
@@ -252,7 +252,7 @@ def test_entity_description():
 
 def test_do_idp_sso_descriptor():
     conf = IdPConfig().load(IDP, metadata_construction=True)
-    idpsso = metadata.do_idp_sso_descriptor(conf)
+    idpsso = metadata.do_idpsso_descriptor(conf)
 
     assert isinstance(idpsso, md.IDPSSODescriptor)
     assert _eq(idpsso.keyswv(), ['protocol_support_enumeration', 

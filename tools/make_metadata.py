@@ -108,7 +108,7 @@ def main(args):
         if fil.endswith(".py"):
             fil = fil[:-3]
         cnf = Config().load_file(fil, metadata_construction=True)
-        eds.append(entity_descriptor(cnf, valid_for))
+        eds.append(entity_descriptor(cnf))
 
     secc = SecurityContext(xmlsec, keyfile, cert_file=pubkeyfile)
     if entitiesid:
@@ -118,7 +118,7 @@ def main(args):
     else:
         for eid in eds:
             if sign:
-                desc = sign_entity_descriptor(eid, valid_for, id, secc)
+                desc = sign_entity_descriptor(eid, id, secc)
             else:
                 desc = eid
             valid_instance(desc)

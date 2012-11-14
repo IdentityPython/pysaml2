@@ -7,6 +7,7 @@ try:
 except ImportError:
     xmlsec_path = '/opt/local/bin/xmlsec1'
 
+BASE = "http://localhost:8088"
 
 CONFIG = {
     "entityid" : "urn:mace:example.com:saml:roland:idp",
@@ -15,10 +16,10 @@ CONFIG = {
         "idp": {
             "endpoints" : {
                 "single_sign_on_service" : [
-                        ("http://localhost:8088/sso", BINDING_HTTP_REDIRECT)],
+                        ("%s/sso" % BASE, BINDING_HTTP_REDIRECT)],
                 "single_logout_service": [
-                        ("http://localhost:8088/slo", BINDING_SOAP),
-                        ("http://localhost:8088/slop",BINDING_HTTP_POST)]
+                        ("%s/slo" % BASE, BINDING_SOAP),
+                        ("%s/slop" % BASE,BINDING_HTTP_POST)]
             },
             "policy": {
                 "default": {
@@ -43,7 +44,7 @@ CONFIG = {
     "cert_file" : "test.pem",
     "xmlsec_binary" : xmlsec_path,
     "metadata": {
-        "local": ["metadata.xml", "vo_metadata.xml"],
+        "local": ["metadata_sp_1.xml", "vo_metadata.xml"],
     },
     "attribute_map_dir" : "attributemaps",
     "organization": {

@@ -20,7 +20,7 @@ to conclude its tasks.
 """
 
 import saml2
-from saml2.saml import AssertionIDRef
+from saml2.saml import AssertionIDRef, NAMEID_FORMAT_PERSISTENT
 
 try:
     from urlparse import parse_qs
@@ -51,6 +51,7 @@ class Saml2Client(Base):
 
     def do_authenticate(self, entityid=None, relay_state="",
                      binding=saml2.BINDING_HTTP_REDIRECT, vorg="",
+                     nameid_format=NAMEID_FORMAT_PERSISTENT,
                      scoping=None, consent=None, extensions=None, sign=None):
         """ Makes an authentication request.
 
@@ -68,11 +69,10 @@ class Saml2Client(Base):
 
         location = self._sso_location(entityid, binding)
 
-        session_id, _req_str = "%s" % self.create_authn_request(location, vorg,
-                                                                scoping,
-                                                                consent,
-                                                                extensions,
-                                                                sign)
+        req = self.create_authn_request(location, vorg, scoping, binding,
+                                        nameid_format, consent, extensions,
+                                        sign)
+        _req_str = "%s" % req
 
         logger.info("AuthNReq: %s" % _req_str)
 
@@ -90,7 +90,7 @@ class Saml2Client(Base):
         else:
             raise Exception("Unknown binding type: %s" % binding)
 
-        return session_id, response
+        return response
 
     def global_logout(self, subject_id, reason="", expire=None, sign=None,
                       return_to="/"):
@@ -146,8 +146,9 @@ class Saml2Client(Base):
                 destination = destinations[0]
 
                 logger.info("destination to provider: %s" % destination)
-                request = self.create_logout_request(subject_id, destination,
-                                                     entity_id, reason, expire)
+                request = self.create_logout_request(subject_id,
+                                                         destination, entity_id,
+                                                         reason, expire)
                 
                 to_sign = []
                 #if sign and binding != BINDING_HTTP_REDIRECT:
@@ -311,8 +312,13 @@ class Saml2Client(Base):
     def _soap_query_response(self, destination, query_type, **kwargs):
         _create_func = getattr(self, "create_%s" % query_type)
         _response_func = getattr(self, "%s_response" % query_type)
+        try:
+            response_args = kwargs["response_args"]
+            del kwargs["response_args"]
+        except KeyError:
+            response_args = None
 
-        id, query = _create_func(destination, **kwargs)
+        query = _create_func(destination, **kwargs)
 
         response = send_using_soap(query, destination,
                                    self.config.key_file,
@@ -321,8 +327,8 @@ class Saml2Client(Base):
 
         if response:
             logger.info("Verifying response")
-            if "response_args" in kwargs:
-                response = _response_func(response, **kwargs["response_args"])
+            if response_args:
+                response = _response_func(response, **response_args)
             else:
                 response = _response_func(response)
 
@@ -387,7 +393,7 @@ class Saml2Client(Base):
                                          consent=consent, extensions=extensions,
                                          sign=sign)
 
-    def do_attribute_query(self, subject_id, entityid,
+    def do_attribute_query(self, entityid, subject_id,
                            attribute=None, sp_name_qualifier=None,
                            name_qualifier=None, nameid_format=None,
                            real_id=None, consent=None, extensions=None,
@@ -396,8 +402,8 @@ class Saml2Client(Base):
         by default done over SOAP. Other bindings could be used but not
         supported right now.
 
-        :param subject_id: The identifier of the subject
         :param entityid: To whom the query should be sent
+        :param subject_id: The identifier of the subject
         :param attribute: A dictionary of attributes and values that is asked for
         :param sp_name_qualifier: The unique identifier of the
             service provider or affiliation of providers for whom the

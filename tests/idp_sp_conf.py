@@ -53,7 +53,7 @@ CONFIG = {
     "debug" : 1,
     "key_file" : "test.key",
     "cert_file" : "test.pem",
-    #"xmlsec_binary" : xmlsec_path,
+    "xmlsec_binary" : xmlsec_path,
     "metadata": {
         "local": ["metadata.xml", "vo_metadata.xml"],
     },

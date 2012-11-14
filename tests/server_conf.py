@@ -34,6 +34,7 @@ CONFIG={
     "subject_data": "subject_data.db",
     "accepted_time_diff": 60,
     "attribute_map_dir" : "attributemaps",
+    "valid_for": 6,
     "organization": {
         "name": ("AB Exempel", "se"),
         "display_name": ("AB Exempel", "se"),

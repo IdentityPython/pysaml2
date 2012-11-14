@@ -67,7 +67,7 @@ def filter_on_attributes(ava, required=None, optional=None):
     :param ava: An attribute value assertion as a dictionary
     :param required: list of RequestedAttribute instances defined to be 
         required
-    :param optional: list of     RequestedAttribute instances defined to be 
+    :param optional: list of RequestedAttribute instances defined to be
         optional
     :return: The modified attribute value assertion
     """
@@ -79,13 +79,15 @@ def filter_on_attributes(ava, required=None, optional=None):
     for attr in required:
         if attr.friendly_name in ava:
             values = [av.text for av in attr.attribute_value]
-            res[attr.friendly_name] = _filter_values(ava[attr.friendly_name], values, True)
+            res[attr.friendly_name] = _filter_values(ava[attr.friendly_name],
+                                                     values, True)
         elif attr.name in ava:
             values = [av.text for av in attr.attribute_value]
             res[attr.name] = _filter_values(ava[attr.name], values, True)
         else:
+            _name = attr.friendly_name or attr.name
             print >> sys.stderr, ava.keys()
-            raise MissingValue("Required attribute missing: '%s'" % (attr.friendly_name,))
+            raise MissingValue("Required attribute missing: '%s'" % (_name,))
 
     if optional is None:
         optional = []
@@ -94,9 +96,11 @@ def filter_on_attributes(ava, required=None, optional=None):
         if attr.friendly_name in ava:
             values = [av.text for av in attr.attribute_value]
             try:
-                res[attr.friendly_name].extend(_filter_values(ava[attr.friendly_name], values))
+                res[attr.friendly_name].extend(_filter_values(ava[attr.friendly_name],
+                                                              values))
             except KeyError:
-                res[attr.friendly_name] = _filter_values(ava[attr.friendly_name], values)
+                res[attr.friendly_name] = _filter_values(ava[attr.friendly_name],
+                                                         values)
         elif attr.name in ava:
             values = [av.text for av in attr.attribute_value]
             try:
@@ -379,8 +383,7 @@ class Policy(object):
             If the requirements can't be met an exception is raised.
         """
         if metadata:
-            (required, optional) = metadata.attribute_consumer(sp_entity_id)
-            #(required, optional) = metadata.wants(sp_entity_id)
+            (required, optional) = metadata.attribute_requirement(sp_entity_id)
         else:
             required = optional = None
         

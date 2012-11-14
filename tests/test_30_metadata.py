@@ -8,7 +8,7 @@ from saml2 import BINDING_SOAP
 from saml2 import md, saml, samlp
 from saml2 import time_util
 from saml2.saml import NAMEID_FORMAT_TRANSIENT, NAME_FORMAT_URI
-from saml2.attribute_converter import ac_factory
+from saml2.attribute_converter import ac_factory, to_local_name
 
 #from py.test import raises
 
@@ -48,38 +48,41 @@ def test_swami_1():
     md.import_metadata(_read_file(SWAMI_METADATA),"-")
     print len(md.entity)
     assert len(md.entity)
-    idps = dict([(id,ent["idp_sso"]) for id,ent in md.entity.items() \
-                if "idp_sso" in ent])
+    idps = dict([(id,ent["idpsso"]) for id,ent in md.entity.items() \
+                if "idpsso" in ent])
     print idps
     assert idps.keys()
-    idp_sso = md.single_sign_on_services(
+    idpsso = md.single_sign_on_services(
                     'https://idp.umu.se/saml2/idp/metadata.php')
     assert md.name('https://idp.umu.se/saml2/idp/metadata.php') == (
         u'Ume\xe5 University (SAML2)')
-    assert len(idp_sso) == 1
-    assert idp_sso == ['https://idp.umu.se/saml2/idp/SSOService.php']
+    assert len(idpsso) == 1
+    assert idpsso == ['https://idp.umu.se/saml2/idp/SSOService.php']
     print md._loc_key['https://idp.umu.se/saml2/idp/SSOService.php']
     ssocerts =  md.certs('https://idp.umu.se/saml2/idp/SSOService.php', "signing")
     print ssocerts
     assert len(ssocerts) == 1
-    print md._wants.keys()
-    assert _eq(md._wants.keys(),['https://sp.swamid.se/shibboleth',
-                                 'https://connect8.sunet.se/shibboleth',
-                                 'https://beta.lobber.se/shibboleth',
-                                 'https://connect.uninett.no/shibboleth',
-                                 'https://www.diva-portal.org/shibboleth',
-                                 'https://connect.sunet.se/shibboleth',
-                                 'https://crowd.nordu.net/shibboleth'])
-                                
-    print md.wants('https://www.diva-portal.org/shibboleth')
-    assert _eq(md.wants('https://www.diva-portal.org/shibboleth')[1].keys(),
+    sps = dict([(id,ent["spsso"]) for id,ent in md.entity.items()\
+                    if "spsso" in ent])
+
+    acs_sp = []
+    for nam, desc in sps.items():
+        if desc[0].attribute_consuming_service:
+            acs_sp.append(nam)
+
+    #print md.wants('https://www.diva-portal.org/shibboleth')
+    wants = md.attribute_requirement('https://connect8.sunet.se/shibboleth')
+    lnamn = [to_local_name(md.attrconv, attr) for attr in wants[1]]
+    assert _eq(lnamn,
                 ['mail', 'givenName', 'eduPersonPrincipalName', 'sn', 
                 'eduPersonScopedAffiliation'])
                 
-    assert md.wants('https://connect.sunet.se/shibboleth')[0] == {}
-    assert _eq(md.wants('https://connect.sunet.se/shibboleth')[1].keys(),
-                ['mail', 'givenName', 'eduPersonPrincipalName', 'sn',
-                'eduPersonScopedAffiliation'])
+    wants = md.attribute_requirement('https://beta.lobber.se/shibboleth')
+    assert wants[0] == []
+    lnamn = [to_local_name(md.attrconv, attr) for attr in wants[1]]
+    assert _eq(lnamn,
+                ['eduPersonScopedAffiliation', 'eduPersonEntitlement',
+                 'eduPersonPrincipalName', 'sn', 'mail', 'givenName'])
                 
 def test_incommon_1():
     md = metadata.MetaData(attrconv=ATTRCONV)
@@ -87,23 +90,39 @@ def test_incommon_1():
     print len(md.entity)
     assert len(md.entity) == 442
     idps = dict([
-        (id,ent["idp_sso"]) for id,ent in md.entity.items() if "idp_sso" in ent])
+        (id,ent["idpsso"]) for id,ent in md.entity.items() if "idpsso" in ent])
     print idps.keys()
     assert len(idps) == 53 # !!!!???? < 10%
     assert md.single_sign_on_services('urn:mace:incommon:uiuc.edu') == []
-    idp_sso = md.single_sign_on_services('urn:mace:incommon:alaska.edu')
-    assert len(idp_sso) == 1
-    print idp_sso
-    print md.wants
-    assert idp_sso == ['https://idp.alaska.edu/idp/profile/SAML2/Redirect/SSO']
-    
+    idpsso = md.single_sign_on_services('urn:mace:incommon:alaska.edu')
+    assert len(idpsso) == 1
+    print idpsso
+    assert idpsso == ['https://idp.alaska.edu/idp/profile/SAML2/Redirect/SSO']
+
+    sps = dict([(id,ent["spsso"]) for id,ent in md.entity.items()\
+                if "spsso" in ent])
+
+    acs_sp = []
+    for nam, desc in sps.items():
+        if desc[0].attribute_consuming_service:
+            acs_sp.append(nam)
+
+    assert len(acs_sp) == 0
+
+    # Look for attribute authorities
+    aas = dict([(id,ent["attribute_authority"]) for id,ent in md.entity.items()\
+                if "attribute_authority" in ent])
+
+    print aas.keys()
+    assert len(aas) == 53
+
 def test_example():
     md = metadata.MetaData(attrconv=ATTRCONV)
     md.import_metadata(_read_file(EXAMPLE_METADATA), "-")
     print len(md.entity)
     assert len(md.entity) == 1
-    idps = dict([(id,ent["idp_sso"]) for id,ent in md.entity.items() \
-                if "idp_sso" in ent])
+    idps = dict([(id,ent["idpsso"]) for id,ent in md.entity.items() \
+                if "idpsso" in ent])
     assert idps.keys() == [
             'http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php']
     print md._loc_key['http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php']
@@ -119,14 +138,14 @@ def test_switch_1():
     md.import_metadata(_read_file(SWITCH_METADATA), "-")
     print len(md.entity)
     assert len(md.entity) == 90
-    idps = dict([(id,ent["idp_sso"]) for id,ent in md.entity.items() \
-                if "idp_sso" in ent])
+    idps = dict([(id,ent["idpsso"]) for id,ent in md.entity.items() \
+                if "idpsso" in ent])
     print idps.keys()
-    idp_sso = md.single_sign_on_services(
+    idpsso = md.single_sign_on_services(
         'https://aai-demo-idp.switch.ch/idp/shibboleth')
-    assert len(idp_sso) == 1
-    print idp_sso
-    assert idp_sso == [
+    assert len(idpsso) == 1
+    print idpsso
+    assert idpsso == [
         'https://aai-demo-idp.switch.ch/idp/profile/SAML2/Redirect/SSO']
     assert len(idps) == 16
     aas = dict([(id,ent["attribute_authority"]) for id,ent in md.entity.items() \
@@ -138,7 +157,7 @@ def test_switch_1():
     assert len(aad.attribute_service) == 1
     assert len(aad.name_id_format) == 2
     dual = dict([(id,ent) for id,ent in md.entity.items() \
-                if "idp_sso" in ent and "sp_sso" in ent])
+                if "idpsso" in ent and "spsso" in ent])
     print len(dual)
     assert len(dual) == 0
 
@@ -150,25 +169,18 @@ def test_sp_metadata():
     assert len(md.entity) == 1
     assert md.entity.keys() == ['urn:mace:umu.se:saml:roland:sp']
     assert _eq(md.entity['urn:mace:umu.se:saml:roland:sp'].keys(), [
-                                    'valid_until',"organization","sp_sso",
+                                    'valid_until',"organization","spsso",
                                     'contact_person'])
-    print md.entity['urn:mace:umu.se:saml:roland:sp']["sp_sso"][0].keyswv()
-    (req,opt) = md.attribute_consumer('urn:mace:umu.se:saml:roland:sp')
+    print md.entity['urn:mace:umu.se:saml:roland:sp']["spsso"][0].keyswv()
+    (req,opt) = md.attribute_requirement('urn:mace:umu.se:saml:roland:sp')
     print req
     assert len(req) == 3
     assert len(opt) == 1
     assert opt[0].name == 'urn:oid:2.5.4.12'
     assert opt[0].friendly_name == 'title'
-    assert _eq([n.name for n in req],['urn:oid:2.5.4.4', 'urn:oid:2.5.4.42', 
-                                        'urn:oid:0.9.2342.19200300.100.1.3'])
+    assert _eq([n.name for n in req],['urn:oid:2.5.4.4', 'urn:oid:2.5.4.42',
+                                      'urn:oid:0.9.2342.19200300.100.1.3'])
     assert _eq([n.friendly_name for n in req],['surName', 'givenName', 'mail'])
-    print md.wants
-
-    assert md._wants.keys() == ['urn:mace:umu.se:saml:roland:sp']
-    assert _eq(md.wants('urn:mace:umu.se:saml:roland:sp')[0].keys(),
-                ["mail", "givenName", "sn"])
-    assert _eq(md.wants('urn:mace:umu.se:saml:roland:sp')[1].keys(),
-                ["title"])
 
 KALMAR2_URL = "https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2"
 KALMAR2_CERT = "kalmar2.pem"
@@ -180,7 +192,7 @@ KALMAR2_CERT = "kalmar2.pem"
 #    print len(md.entity)
 #    assert len(md.entity) > 20
 #    idps = dict([
-#        (id,ent["idp_sso"]) for id,ent in md.entity.items() if "idp_sso" in ent])
+#        (id,ent["idpsso"]) for id,ent in md.entity.items() if "idpsso" in ent])
 #    print idps.keys()
 #    assert len(idps) > 1
 #    assert "https://idp.umu.se/saml2/idp/metadata.php" in idps

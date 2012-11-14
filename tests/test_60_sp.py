@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import base64
+from saml2.saml import NAMEID_FORMAT_TRANSIENT
+from saml2.samlp import NameIDPolicy
 from s2repoze.plugins.sp import make_plugin
 from saml2.server import Server
 from saml2 import make_instance, samlp, saml
@@ -30,7 +32,9 @@ ENV1 = {'SERVER_SOFTWARE': 'CherryPy/3.1.2 WSGI Server',
     'wsgi.multiprocess': False, 
     'HTTP_ACCEPT_LANGUAGE': 'en-us', 
     'HTTP_ACCEPT_ENCODING': 'gzip, deflate'}
-    
+
+trans_name_policy = NameIDPolicy(format=NAMEID_FORMAT_TRANSIENT,
+                                 allow_create="true")
 class TestSP():
     def setup_class(self):
         self.sp = make_plugin("rem", saml_conf="server_conf")
@@ -42,15 +46,14 @@ class TestSP():
     def test_identify(self):
 
         # Create a SAMLResponse
-        ava = { "givenName": ["Derek"], "surname": ["Jeter"], 
+        ava = { "givenName": ["Derek"], "surName": ["Jeter"],
                 "mail": ["derek@nyy.mlb.com"]}
 
-        resp_str = "\n".join(self.server.authn_response(ava, 
-                    "id1", "http://lingon.catalogix.se:8087/", 
-                    "urn:mace:example.com:saml:roland:sp",
-                    samlp.NameIDPolicy(format=saml.NAMEID_FORMAT_TRANSIENT,
-                                        allow_create="true"),
-                    "foba0001@example.com"))
+        resp_str = "%s" % self.server.create_authn_response(ava, "id1",
+                                            "http://lingon.catalogix.se:8087/",
+                                            "urn:mace:example.com:saml:roland:sp",
+                                            trans_name_policy,
+                                            "foba0001@example.com")
 
         resp_str = base64.encodestring(resp_str)
         self.sp.outstanding_queries = {"id1":"http://www.example.com/service"}
@@ -60,4 +63,4 @@ class TestSP():
         assert session_info["came_from"] == 'http://www.example.com/service'
         assert session_info["ava"] == {'givenName': ['Derek'], 
                                         'mail': ['derek@nyy.mlb.com'], 
-                                        'sn': ['Jeter']}
+                                        'surName': ['Jeter']}

@@ -51,7 +51,6 @@ from saml2.saml import NAME_FORMAT_URI
 from saml2.time_util import in_a_while
 from saml2.time_util import valid
 from saml2.attribute_converter import from_local_name
-from saml2.attribute_converter import ava_fro
 from saml2.sigver import pre_signature_part
 from saml2.sigver import make_temp, cert_from_key_info, verify_signature
 from saml2.sigver import pem_format
@@ -104,7 +103,6 @@ class MetaData(object):
         self.http = httplib2.Http(ca_certs=ca_certs,
                                   disable_ssl_certificate_validation=disable_ssl_certificate_validation)
         self._import = {}
-        self._wants = {}
         self._keys = {}
         self._extension_modules = metadata_extension_modules()
         self.post_load_process = post_load_process
@@ -152,7 +150,7 @@ class MetaData(object):
                 except KeyError:
                     self._loc_key[ident] = {use: certs}
 
-    def _vo_metadata(self, entity_descr, entity, tag):
+    def _affiliation(self, entity_descr, entity, tag):
         """
         Pick out the Affiliation descriptors from an entity
         descriptor and store the information in a way which is easily
@@ -169,61 +167,26 @@ class MetaData(object):
         
             if members:
                 entity[tag] = members
-    
-    def _sp_metadata(self, entity_descr, entity, tag):
+
+            afd._certs = self._certs(afd.key_descriptor, "pem")
+            self._add_certs(entity_descr.entity_id, afd._certs)
+
+    def _spsso(self, dp, entity_descr):
         """
-        Pick out the SP SSO descriptors from an entity
-        descriptor and store the information in a way which is easily
-        accessible.
-        
-        :param entity_descr: A EntityDescriptor instance
+
+        :param dp:
+        :param entity_descr
+        :return:
         """
-        try:
-            ssd = entity_descr.spsso_descriptor
-        except AttributeError:
-            return
-        
-        ssds = []
-        required = []
-        optional = []
-        #print "..... %s ..... " % entity_descriptor.entity_id
-        for tssd in ssd:
-            # Only want to talk to SAML 2.0 entities
-            if samlp.NAMESPACE not in \
-                    tssd.protocol_support_enumeration.split(" "):
-                #print "<<<", idp.protocol_support_enumeration
-                continue
-            
-            ssds.append(tssd)
-            certs = self._certs(tssd.key_descriptor, "pem")
-            self._add_certs(entity_descr.entity_id, certs)
+        dp = self._role(dp, entity_descr)
 
-            self._extensions(tssd)
+        if dp._certs:
+            for acs in dp.assertion_consumer_service:
+                self._add_certs(acs.location, dp._certs)
 
-            for acs in tssd.attribute_consuming_service:
-                for attr in acs.requested_attribute:
-                    #print "==", attr
-                    if attr.is_required == "true":
-                        required.append(attr)
-                    else:
-                        optional.append(attr)
-            
-            for acs in tssd.assertion_consumer_service:
-                self._add_certs(acs.location, certs)
+        return dp
 
-        
-        if required or optional:
-            #print "REQ",required
-            #print "OPT",optional
-            self._wants[entity_descr.entity_id] = (ava_fro(self.attrconv,
-                                                                required),
-                                                        ava_fro(self.attrconv,
-                                                                optional))
-
-        if ssds:
-            entity[tag] = ssds
-    
-    def _idp_metadata(self, entity_descr, entity, tag):
+    def _idpsso(self, dp, entity_descr):
         """
         Pick out the IdP SSO descriptors from an entity
         descriptor and store the information in a way which is easily
@@ -231,32 +194,17 @@ class MetaData(object):
         
         :param entity_descr: A EntityDescriptor instance
         """
-        try:
-            isd = entity_descr.idpsso_descriptor
-        except AttributeError:
-            return
-        
-        idps = []
-        for tidp in isd:
-            if samlp.NAMESPACE not in \
-                    tidp.protocol_support_enumeration.split(" "):
-                #print "<<<", idp.protocol_support_enumeration
-                continue
-            
-            idps.append(tidp)
 
-            certs = self._certs(tidp.key_descriptor, "pem")
+        dp = self._role(dp, entity_descr)
+        if dp._certs:
+            for sso in dp.single_sign_on_service:
+                self._add_certs(sso.location, dp._certs)
 
-            self._add_certs(entity_descr.entity_id, certs)
-            for sso in tidp.single_sign_on_service:
-                self._add_certs(sso.location, certs)
+        self._extensions(dp)
 
-            self._extensions(tidp)
+        return dp
 
-        if idps:
-            entity[tag] = idps
-
-    def _aad_metadata(self, entity_descr, entity, tag):
+    def _attribute_authority(self, dp, entity_descr):
         """
         Pick out the attribute authority descriptors from an entity
         descriptor and store the information in a way which is easily
@@ -264,105 +212,107 @@ class MetaData(object):
         
         :param entity_descr: A EntityDescriptor instance
         """
-        try:
-            attr_auth_descr = entity_descr.attribute_authority_descriptor
-        except AttributeError:
-            #print "No Attribute AD: %s" % entity_descr.entity_id
-            return
-        
-        aads = []
-        for taad in attr_auth_descr:
-            # Remove everyone that doesn't talk SAML 2.0
-            #print "supported protocols", taad.protocol_support_enumeration
-            if samlp.NAMESPACE not in \
-                    taad.protocol_support_enumeration.split(" "):
-                continue
-            
-            # remove the bindings I can't handle
-            aserv = []
-            for attr_serv in taad.attribute_service:
-                #print "binding", attr_serv.binding
-                if attr_serv.binding == BINDING_SOAP:
-                    aserv.append(attr_serv)
-            
-            if not aserv:
-                continue
-            
-            taad.attribute_service = aserv
-            self._extensions(taad)
 
-            # gather all the certs and place them in temporary files
-            certs = self._certs(taad.key_descriptor, "pem")
-            self._add_certs(entity_descr.entity_id, certs)
+        # remove the bindings I can't handle
+        aserv = []
+        for attr_serv in dp.attribute_service:
+            #print "binding", attr_serv.binding
+            if attr_serv.binding == BINDING_SOAP:
+                aserv.append(attr_serv)
 
-            for sso in taad.attribute_service:
-                self._add_certs(sso.location, certs)
-            
-            aads.append(taad)
-        
-        if aads:
-            entity[tag] = aads
-    
-    def _pdp_metadata(self, entity_descr, entity, tag):
+        if not aserv:
+            return None
+
+        dp.attribute_service = aserv
+        dp = self._role(dp, entity_descr)
+
+        if dp._certs:
+            for attr_serv in dp.attribute_service:
+                self._add_certs(attr_serv.location, dp._certs)
+
+        return dp
+
+    def _pdp(self, dp, entity_descr):
+        aserv = []
+        for authz_serv in dp.authz_service:
+            #print "binding", attr_serv.binding
+            if authz_serv.binding == BINDING_SOAP:
+                aserv.append(authz_serv)
+
+        if not aserv:
+            return None
+
+        dp.authz_service = aserv
+        dp = self._role(dp, entity_descr)
+
+        if dp._certs:
+            for aus in dp.authz_service:
+                self._add_certs(aus.location, dp._certs)
+
+        return dp
+
+    def _authn_authority(self, dp, entity_descr):
         """
-        Pick out the PDP descriptors from an entity
+        AuthnAuthorityDescriptor
+        :return:
+        """
+
+        return self._role(dp, entity_descr)
+
+
+    def _role(self, dp, entity_descr):
+        """
+        RoleDescriptor
+        :return:
+        """
+        self._extensions(dp)
+
+        # gather all the certs and place them in temporary files
+        dp._certs = self._certs(dp.key_descriptor, "pem")
+        self._add_certs(entity_descr.entity_id, dp._certs)
+
+        return dp
+
+    def _roledescriptor(self, entity_descr, entity, tag, descriptor, func):
+        """
+        Pick out a specific descriptor from an entity
         descriptor and store the information in a way which is easily
         accessible.
 
-        *authz_service=None,
-        assertion_id_request_service=None,
-        name_id_format=None,
-        signature=None,
-        extensions=None,
-        key_descriptor=None,
-        organization=None,
-        contact_person=None,
-        id=None,
-        valid_until=None,
-        cache_duration=None,
-        *protocol_support_enumeration=None,
-        error_url=None,
-
         :param entity_descr: A EntityDescriptor instance
+        :param entity: The whole entity
+        :param tag: which tag to store the information under
+        :param descriptor: The descriptor type
+        :param func: A processing function specific for the descriptor type
         """
         try:
-            pdp_descr = entity_descr.pdp_descriptor
+            _descr = getattr(entity_descr, descriptor)
         except AttributeError:
             #print "No Attribute AD: %s" % entity_descr.entity_id
             return
 
-        pdps = []
-        for pdp in pdp_descr:
+        dps = []
+        if isinstance(_descr, list):
+            for dp in _descr:
+                # Remove everyone that doesn't talk SAML 2.0
+                if samlp.NAMESPACE not in \
+                        dp.protocol_support_enumeration.split(" "):
+                    continue
+
+                dp = func(dp, entity_descr)
+                if dp:
+                    dps.append(dp)
+        elif _descr:
+            dp = _descr
             # Remove everyone that doesn't talk SAML 2.0
-            #print "supported protocols", taad.protocol_support_enumeration
-            if samlp.NAMESPACE not in \
-                    pdp.protocol_support_enumeration.split(" "):
-                continue
+            if samlp.NAMESPACE in dp.protocol_support_enumeration.split(" "):
+                dp = func(dp, entity_descr)
+                if dp:
+                    dps.append(dp)
 
-            # remove the bindings I can't handle
-            aserv = []
-            for authz_serv in pdp.authz_service:
-                #print "binding", attr_serv.binding
-                if authz_serv.binding == BINDING_SOAP:
-                    aserv.append(authz_serv)
+        if dps:
+            entity[tag] = dps
 
-            if not aserv:
-                continue
-
-            pdp.authz_service = aserv
-            self._extensions(pdp)
-            
-            # gather all the certs and place them in temporary files
-            certs = self._certs(pdp.key_descriptor, "pem")
-            self._add_certs(entity_descr.entity_id, certs)
-
-            for aus in pdp.authz_service:
-                self._add_certs(aus.location, certs)
-
-            pdps.append(pdp)
-
-        if pdps:
-            entity[tag] = pdps
 
     def clear_from_source(self, source):
         """ Remove all the metadata references I have gotten from this source
@@ -419,13 +369,16 @@ class MetaData(object):
             entity["valid_until"] = valid_until
         elif entity_descr.valid_until:
             entity["valid_until"] = entity_descr.valid_until
-         
-        self._idp_metadata(entity_descr, entity, "idp_sso")
-        self._sp_metadata(entity_descr, entity, "sp_sso")
-        self._aad_metadata(entity_descr, entity,
-                            "attribute_authority")
-        self._vo_metadata(entity_descr, entity, "affiliation")
-        self._pdp_metadata(entity_descr, entity, "pdp")
+
+        # go through the different types of descriptors
+        for descr in ["idpsso", "attribute_authority", "authn_authority",
+                      "pdp", "role", "spsso"]:
+            func = getattr(self, "_%s" % descr)
+            self._roledescriptor(entity_descr, entity, descr,
+                                 "%s_descriptor" % descr, func)
+
+        self._affiliation(entity_descr, entity, "affiliation")
+
         try:
             entity["organization"] = entity_descr.organization
         except AttributeError:
@@ -492,7 +445,7 @@ class MetaData(object):
     @keep_updated
     def idp_services(self, entity_id, typ, binding=None):
         """ depreceated """
-        idps = self.entity[entity_id]["idp_sso"]
+        idps = self.entity[entity_id]["idpsso"]
         
         loc = {}
         for idp in idps: # None or one
@@ -504,7 +457,7 @@ class MetaData(object):
     @keep_updated
     def sp_services(self, entity_id, typ, binding=None):
         """ deprecated """
-        sps = self.entity[entity_id]["sp_sso"]
+        sps = self.entity[entity_id]["spsso"]
 
         loc = {}
         for sep in sps: # None or one
@@ -527,7 +480,7 @@ class MetaData(object):
 
         loc = []
         try:
-            idps = self.entity[entity_id]["idp_sso"]
+            idps = self.entity[entity_id]["idpsso"]
         except KeyError:
             return loc
         
@@ -554,7 +507,7 @@ class MetaData(object):
 
         loc = []
         try:
-            idps = self.entity[entity_id]["idp_sso"]
+            idps = self.entity[entity_id]["idpsso"]
         except KeyError:
             return loc
 
@@ -590,7 +543,7 @@ class MetaData(object):
         loc = []
         
         try:
-            sss = self.entity[entity_id]["%s_sso" % typ]
+            sss = self.entity[entity_id]["%ssso" % typ]
         except KeyError:
             return loc
 
@@ -663,7 +616,7 @@ class MetaData(object):
     @keep_updated
     def consumer_url(self, entity_id, binding=BINDING_HTTP_POST, _log=None):
         try:
-            ssos = self.entity[entity_id]["sp_sso"]
+            ssos = self.entity[entity_id]["spsso"]
         except KeyError:
             raise
         
@@ -683,7 +636,7 @@ class MetaData(object):
     @keep_updated
     def assertion_consumer_services(self, entity_id, binding=BINDING_HTTP_POST):
         try:
-            ssos = self.entity[entity_id]["sp_sso"]
+            ssos = self.entity[entity_id]["spsso"]
         except KeyError:
             raise
 
@@ -728,32 +681,40 @@ class MetaData(object):
 
         return name
 
+    def req_opt(self, acs):
+        req = []
+        opt = []
+        for attr in acs.requested_attribute:
+            if attr.is_required == "true":
+                req.append(attr)
+            else:
+                opt.append(attr)
+
+        return req, opt
+
     @keep_updated
-    def wants(self, entity_id):
+    #def attribute_consumer(self, entity_id, index=None):
+    def attribute_requirement(self, entity_id, index=None):
         try:
-            return self._wants[entity_id]
+            ssos = self.entity[entity_id]["spsso"]
         except KeyError:
-            return [], []
-    
-    @keep_updated
-    def attribute_consumer(self, entity_id):
-        try:
-            ssos = self.entity[entity_id]["sp_sso"]
-        except KeyError:
-            return [], []
-        
-        required = []
-        optional = []
-        # What if there is more than one ? Can't be ?
-        for acs in ssos[0].attribute_consuming_service:
-            for attr in acs.requested_attribute:
-                if attr.is_required == "true":
-                    required.append(attr)
-                else:
-                    optional.append(attr)
-        
-        return required, optional
-    
+            return {}, {}
+
+        acss = ssos[0].attribute_consuming_service
+        if acss is None or acss == []:
+            return {}, {}
+        elif len(acss) == 1:
+            return self.req_opt(acss[0])
+        else:
+            if index is None:
+                for acs in acss:
+                    if acs.default:
+                        return self.req_opt(acs)
+                # if I get here NO default was found, pick the first ?
+                return self.req_opt(acss[0])
+            else:
+                return self.req_opt(acss[index])
+
     def _orgname(self, org, langs=None):
         if not org:
             return ""
@@ -792,20 +753,20 @@ class MetaData(object):
             langs = ["en"]
 
         for entity_id, edict in self.entity.items():
-            if "idp_sso" in edict:
+            if "idpsso" in edict:
                 #idp_aa_check   self._valid(entity_id)
                 name = None
                 if "organization" in edict:
                     name = self._orgname(edict["organization"], langs)
 
                 if not name:
-                    name = self._location(edict["idp_sso"])[0]
-                idps[entity_id] = (name, edict["idp_sso"])
+                    name = self._location(edict["idpsso"])[0]
+                idps[entity_id] = (name, edict["idpsso"])
         return idps
 
     #noinspection PyUnusedLocal
     @keep_updated
-    def ui_info(self, entity_id, service="idp_sso"):
+    def ui_info(self, entity_id, service="idpsso"):
         inst = self.entity[entity_id][service]
 
     def export_discojuice_json(self, lang=None):
@@ -826,7 +787,7 @@ class MetaData(object):
         result = []
         for entity_id, entity in self.entity.items():
             try:
-                for _sso in entity['idp_sso']:
+                for _sso in entity['idpsso']:
                     rdict = {'entityID': entity_id,
                              'title': self._orgname(entity['organization'], lang)}
 
@@ -996,12 +957,7 @@ def do_requested_attribute(attributes, acs, is_required="false"):
         lista.append(md.RequestedAttribute(**args))
     return lista
 
-def do_uiinfo(conf):
-    try:
-        _uiinfo = conf.ui_info
-    except AttributeError:
-        return None
-
+def do_uiinfo(_uiinfo):
     uii = mdui.UIInfo()
     for attr in ['display_name', 'description', "information_url",
                  'privacy_statement_url']:
@@ -1157,13 +1113,14 @@ DEFAULT = {
     "want_authn_requests_signed": "false",
 }
 
-def do_sp_sso_descriptor(conf, cert=None):
+def do_spsso_descriptor(conf, cert=None):
     spsso = md.SPSSODescriptor()
     spsso.protocol_support_enumeration = samlp.NAMESPACE
 
-    if conf.endpoints:
-        for (endpoint, instlist) in do_endpoints(conf.endpoints,
-                                                    ENDPOINTS["sp"]).items():
+    endps = conf.getattr("endpoints", "sp")
+    if endps:
+        for (endpoint, instlist) in do_endpoints(endps,
+                                                 ENDPOINTS["sp"]).items():
             setattr(spsso, endpoint, instlist)
 
     if cert:
@@ -1171,7 +1128,7 @@ def do_sp_sso_descriptor(conf, cert=None):
 
     for key in ["want_assertions_signed", "authn_requests_signed"]:
         try:
-            val = getattr(conf, key)
+            val = conf.getattr(key, "sp")
             if val is None:
                 setattr(spsso, key, DEFAULT[key]) #default ?!
             else:
@@ -1181,16 +1138,15 @@ def do_sp_sso_descriptor(conf, cert=None):
             setattr(spsso, key, DEFAULTS[key])
 
     requested_attributes = []
-    if conf.required_attributes:
-        requested_attributes.extend(do_requested_attribute(
-                                            conf.required_attributes,
-                                            conf.attribute_converters,
-                                            is_required="true"))
+    acs = conf.attribute_converters
+    req = conf.getattr("required_attributes", "sp")
+    if req:
+        requested_attributes.extend(do_requested_attribute(req, acs,
+                                                           is_required="true"))
 
-    if conf.optional_attributes:
-        requested_attributes.extend(do_requested_attribute(
-                                            conf.optional_attributes,
-                                            conf.attribute_converters))
+    opt=conf.getattr("optional_attributes", "sp")
+    if opt:
+        requested_attributes.extend(do_requested_attribute(opt, acs))
 
     if requested_attributes:
         spsso.attribute_consuming_service = [md.AttributeConsumingService(
@@ -1211,43 +1167,47 @@ def do_sp_sso_descriptor(conf, cert=None):
         except KeyError:
             pass
 
-    if conf.discovery_response:
+    dresp = conf.getattr("discovery_response", "sp")
+    if dresp:
         if spsso.extensions is None:
             spsso.extensions = md.Extensions()
-        spsso.extensions.add_extension_element(do_idpdisc(conf.discovery_response))
+        spsso.extensions.add_extension_element(do_idpdisc(dresp))
 
     return spsso
 
-def do_idp_sso_descriptor(conf, cert=None):
+def do_idpsso_descriptor(conf, cert=None):
     idpsso = md.IDPSSODescriptor()
     idpsso.protocol_support_enumeration = samlp.NAMESPACE
 
-    if conf.endpoints:
-        for (endpoint, instlist) in do_endpoints(conf.endpoints,
-                                                    ENDPOINTS["idp"]).items():
+    endps = conf.getattr("endpoints", "idp")
+    if endps:
+        for (endpoint, instlist) in do_endpoints(endps,
+                                                 ENDPOINTS["idp"]).items():
             setattr(idpsso, endpoint, instlist)
 
-    if conf.scope:
+    scopes = conf.getattr("scope", "idp")
+    if scopes:
         if idpsso.extensions is None:
             idpsso.extensions = md.Extensions()
-        for scope in conf.scope:
+        for scope in scopes:
             mdscope = shibmd.Scope()
             mdscope.text = scope
             # unless scope contains '*'/'+'/'?' assume non regexp ?
             mdscope.regexp = "false"
             idpsso.extensions.add_extension_element(mdscope)
 
-    if conf.ui_info:
+    ui_info = conf.getattr("ui_info", "idp")
+    if ui_info:
         if idpsso.extensions is None:
             idpsso.extensions = md.Extensions()
-        idpsso.extensions.add_extension_element(do_uiinfo(conf))
+        idpsso.extensions.add_extension_element(do_uiinfo(ui_info))
 
     if cert:
         idpsso.key_descriptor = do_key_descriptor(cert)
 
     for key in ["want_authn_requests_signed"]:
         try:
-            val = getattr(conf,key)
+            val = conf.getattr(key, "idp")
             if val is None:
                 setattr(idpsso, key, DEFAULT["want_authn_requests_signed"])
             else:
@@ -1294,41 +1254,31 @@ def do_pdp_descriptor(conf, cert):
 
     return pdp
 
-def entity_descriptor(confd, valid_for):
+def entity_descriptor(confd):
     mycert = "".join(open(confd.cert_file).readlines()[1:-1])
-
-#    if "attribute_map_dir" in confd:
-#        attrconverters = ac_factory(confd.attribute_map_dir)
-#    else:
-#        attrconverters = [AttributeConverter()]
-
-    #if "attribute_maps" in confd:
-    #    (forward,backward) = parse_attribute_map(confd["attribute_maps"])
-    #else:
-    #    backward = {}
 
     entd = md.EntityDescriptor()
     entd.entity_id = confd.entityid
 
-    if valid_for:
-        entd.valid_until = in_a_while(hours=valid_for)
+    if confd.valid_for:
+        entd.valid_until = in_a_while(hours=int(confd.valid_for))
 
     if confd.organization is not None:
         entd.organization = do_organization_info(confd.organization)
     if confd.contact_person is not None:
         entd.contact_person = do_contact_person_info(confd.contact_person)
 
-    serves = confd.serves()
+    serves = confd.serves
     if not serves:
         raise Exception(
             'No service type ("sp","idp","aa") provided in the configuration')
     
     if "sp" in serves:
         confd.context = "sp"
-        entd.spsso_descriptor = do_sp_sso_descriptor(confd, mycert)
+        entd.spsso_descriptor = do_spsso_descriptor(confd, mycert)
     if "idp" in serves:
         confd.context = "idp"
-        entd.idpsso_descriptor = do_idp_sso_descriptor(confd, mycert)
+        entd.idpsso_descriptor = do_idpsso_descriptor(confd, mycert)
     if "aa" in serves:
         confd.context = "aa"
         entd.attribute_authority_descriptor = do_aa_descriptor(confd, mycert)
@@ -1366,10 +1316,7 @@ def entities_descriptor(eds, valid_for, name, ident, sign, secc):
         entities = md.entities_descriptor_from_string(xmldoc)
     return entities
 
-def sign_entity_descriptor(edesc, valid_for, ident, secc):
-    if valid_for:
-        edesc.valid_until = in_a_while(hours=valid_for)
-
+def sign_entity_descriptor(edesc, ident, secc):
     if not ident:
         ident = sid()
 

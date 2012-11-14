@@ -139,26 +139,17 @@ class TestServer1():
         assert status.status_code.value == samlp.STATUS_SUCCESS
 
     def test_parse_faulty_request(self):
-        authn_request = self.client.authn_request(
-                            query_id = "id1",
-                            destination = "http://www.example.com",
-                            service_url = "http://www.example.org",
-                            spentityid = "urn:mace:example.com:saml:roland:sp",
-                            my_name = "My real name",
-                        )
+        authn_request = self.client.create_authn_request(
+                                    destination = "http://www.example.com",
+                                    id = "id1")
 
         intermed = s_utils.deflate_and_base64_encode("%s" % authn_request)
         # should raise an error because faulty spentityid
         raises(OtherError, self.server.parse_authn_request, intermed)
 
     def test_parse_faulty_request_to_err_status(self):
-        authn_request = self.client.authn_request(
-                            query_id = "id1",
-                            destination = "http://www.example.com",
-                            service_url = "http://www.example.org",
-                            spentityid = "urn:mace:example.com:saml:roland:sp",
-                            my_name = "My real name",
-                        )
+        authn_request = self.client.create_authn_request(
+                                    destination = "http://www.example.com")
 
         intermed = s_utils.deflate_and_base64_encode("%s" % authn_request)
         try:
@@ -178,20 +169,17 @@ class TestServer1():
         assert status_code.status_code.value == samlp.STATUS_UNKNOWN_PRINCIPAL
 
     def test_parse_ok_request(self):
-        authn_request = self.client.authn_request(
-                            query_id = "id1",
-                            destination = "http://localhost:8088/sso",
-                            service_url = "http://localhost:8087/",
-                            spentityid = "urn:mace:example.com:saml:roland:sp",
-                            my_name = "My real name",
-                        )
+        authn_request = self.client.create_authn_request(
+                                    id = "id1",
+                                    destination = "http://localhost:8088/sso")
 
         print authn_request
         intermed = s_utils.deflate_and_base64_encode("%s" % authn_request)
+
         response = self.server.parse_authn_request(intermed)
         # returns a dictionary
         print response
-        assert response["consumer_url"] == "http://localhost:8087/"
+        assert response["consumer_url"] == "http://lingon.catalogix.se:8087/"
         assert response["id"] == "id1"
         name_id_policy = response["request"].name_id_policy
         assert _eq(name_id_policy.keyswv(), ["format", "allow_create"])
@@ -202,12 +190,16 @@ class TestServer1():
         name_id = self.server.ident.transient_nameid(
                                         "urn:mace:example.com:saml:roland:sp",
                                         "id12")
-        resp = self.server.do_response(
+        resp = self.server.create_response(
                     "id12",                         # in_response_to
                     "http://localhost:8087/",       # consumer_url
                     "urn:mace:example.com:saml:roland:sp", # sp_entity_id
-                    { "eduPersonEntitlement": "Short stop"}, # identity
-                    name_id
+                    {"eduPersonEntitlement": "Short stop",
+                     "surName": "Jeter",
+                     "givenName": "Derek",
+                     "mail": "derek.jeter@nyy.mlb.com"},
+                    name_id,
+                    policy= self.server.conf.getattr("policy")
                 )
 
         print resp.keyswv()
@@ -227,7 +219,7 @@ class TestServer1():
         assert assertion.attribute_statement
         attribute_statement = assertion.attribute_statement
         print attribute_statement
-        assert len(attribute_statement.attribute) == 1
+        assert len(attribute_statement.attribute) == 4
         attribute = attribute_statement.attribute[0]
         assert len(attribute.attribute_value) == 1
         assert attribute.friendly_name == "eduPersonEntitlement"
@@ -245,7 +237,7 @@ class TestServer1():
         assert confirmation.subject_confirmation_data.in_response_to == "id12"
 
     def test_sso_response_without_identity(self):
-        resp = self.server.do_response(
+        resp = self.server.create_response(
                     "id12",                             # in_response_to
                     "http://localhost:8087/",           # consumer_url
                     "urn:mace:example.com:saml:roland:sp", # sp_entity_id
@@ -263,8 +255,9 @@ class TestServer1():
 
     def test_sso_failure_response(self):
         exc = s_utils.MissingValue("eduPersonAffiliation missing")
-        resp = self.server.error_response("id12", "http://localhost:8087/", 
-                        "urn:mace:example.com:saml:roland:sp", exc )
+        resp = self.server.create_error_response("id12",
+                                    "http://localhost:8087/",
+                                    exc )
 
         print resp.keyswv()
         assert _eq(resp.keyswv(),['status', 'destination', 'in_response_to', 
@@ -291,14 +284,15 @@ class TestServer1():
         ava = { "givenName": ["Derek"], "surName": ["Jeter"],
                 "mail": ["derek@nyy.mlb.com"]}
 
-        resp_str = self.server.authn_response(ava, 
-                    "id1", "http://local:8087/", 
-                    "urn:mace:example.com:saml:roland:sp",
-                    samlp.NameIDPolicy(format=saml.NAMEID_FORMAT_TRANSIENT,
-                                        allow_create="true"),
-                    "foba0001@example.com")
+        npolicy = samlp.NameIDPolicy(format=saml.NAMEID_FORMAT_TRANSIENT,
+                                     allow_create="true")
+        resp_str = "%s" % self.server.create_authn_response(
+                                    ava, "id1", "http://local:8087/",
+                                    "urn:mace:example.com:saml:roland:sp",
+                                    npolicy,
+                                    "foba0001@example.com")
 
-        response = samlp.response_from_string("\n".join(resp_str))
+        response = samlp.response_from_string(resp_str)
         print response.keyswv()
         assert _eq(response.keyswv(),['status', 'destination', 'assertion', 
                         'in_response_to', 'issue_instant', 'version', 
@@ -318,14 +312,16 @@ class TestServer1():
         name_id = self.server.ident.transient_nameid(
                                         "urn:mace:example.com:saml:roland:sp",
                                         "id12")
+        ava = { "givenName": ["Derek"], "surName": ["Jeter"],
+                "mail": ["derek@nyy.mlb.com"]}
 
-        signed_resp = self.server.do_response(
+        signed_resp = self.server.create_response(
                     "id12",                                 # in_response_to
                     "http://lingon.catalogix.se:8087/",     # consumer_url
                     "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
-                    {"eduPersonEntitlement":"Jeter"},
+                    ava,
                     name_id = name_id,
-                    sign=True
+                    sign_assertion=True
                 )
 
         print "%s" % signed_resp
@@ -352,11 +348,11 @@ class TestServer1():
         }
         self.client.users.add_information_about_person(sinfo)
 
-        logout_request = self.client.construct_logout_request(
-                    subject_id="foba0001",
-                    destination = "http://localhost:8088/slop",
-                    issuer_entity_id = "urn:mace:example.com:saml:roland:idp",
-                    reason = "I'm tired of this")
+        logout_request = self.client.create_logout_request(
+                            destination = "http://localhost:8088/slop",
+                            subject_id="foba0001",
+                            issuer_entity_id = "urn:mace:example.com:saml:roland:idp",
+                            reason = "I'm tired of this")
 
         intermed = s_utils.deflate_and_base64_encode("%s" % (logout_request,))
 
@@ -379,10 +375,11 @@ class TestServer1():
         sp = client.Saml2Client(config_file="server_conf")
         sp.users.add_information_about_person(sinfo)
 
-        logout_request = sp.construct_logout_request(subject_id = "foba0001",
-                    destination = "http://localhost:8088/slo",
-                    issuer_entity_id = "urn:mace:example.com:saml:roland:idp",
-                    reason = "I'm tired of this")
+        logout_request = sp.create_logout_request(
+                        subject_id = "foba0001",
+                        destination = "http://localhost:8088/slo",
+                        issuer_entity_id = "urn:mace:example.com:saml:roland:idp",
+                        reason = "I'm tired of this")
 
         _ = s_utils.deflate_and_base64_encode("%s" % (logout_request,))
 
@@ -402,10 +399,12 @@ class TestServer2():
         self.server = Server("restrictive_idp_conf")
 
     def test_do_aa_reponse(self):
-        aa_policy = self.server.conf.policy
+        aa_policy = self.server.conf.getattr("policy", "idp")
         print aa_policy.__dict__
-        response = self.server.do_aa_response("aaa", "http://example.com/sp/", 
-                        "urn:mace:example.com:sp:1", IDENTITY.copy())
+        response = self.server.create_aa_response("aaa",
+                                                  "http://example.com/sp/",
+                                                  "urn:mace:example.com:sp:1",
+                                                  IDENTITY.copy())
 
         assert response is not None
         assert response.destination == "http://example.com/sp/"
@@ -439,7 +438,7 @@ def _logout_request(conf_file):
     }
     sp.users.add_information_about_person(sinfo)
 
-    return sp.construct_logout_request(
+    return sp.create_logout_request(
                 subject_id = "foba0001",
                 destination = "http://localhost:8088/slo",
                 issuer_entity_id = "urn:mace:example.com:saml:roland:idp",
@@ -452,7 +451,8 @@ class TestServerLogout():
         request = _logout_request("sp_slo_redirect_conf")
         print request
         bindings = [BINDING_HTTP_REDIRECT]
-        (resp, headers, message) = server.logout_response(request, bindings)
+        (resp, headers, message) = server.create_logout_response(request,
+                                                                 bindings)
         assert resp == '302 Found'
         assert len(headers) == 1
         assert headers[0][0] == "Location"

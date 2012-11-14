@@ -1006,7 +1006,7 @@ def logoutresponse_factory(sign=False, encrypt=False, **kwargs):
 
 def response_factory(sign=False, encrypt=False, **kwargs):
     response = samlp.Response(id=sid(), version=VERSION,
-                                issue_instant=instant())
+                              issue_instant=instant())
 
     if sign:
         response.signature = pre_signature_part(kwargs["id"])

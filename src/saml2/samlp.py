@@ -366,7 +366,8 @@ class AssertionIDRequestType_(RequestAbstractType_):
     c_attributes = RequestAbstractType_.c_attributes.copy()
     c_child_order = RequestAbstractType_.c_child_order[:]
     c_cardinality = RequestAbstractType_.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AssertionIDRef'] = ('assertion_id_ref', [saml.AssertionIDRef])
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AssertionIDRef'] = (
+                                'assertion_id_ref', [saml.AssertionIDRef])
     c_cardinality['assertion_id_ref'] = {"min":1}
     c_child_order.extend(['assertion_id_ref'])
 

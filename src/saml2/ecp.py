@@ -32,7 +32,6 @@ from saml2.profile import ecp
 from saml2.server import Server
 
 from saml2.schema import soapenv
-from saml2.s_utils import sid
 
 from saml2.response import authn_response
 
@@ -115,9 +114,9 @@ def ecp_auth_request(cls, entityid=None, relay_state="", sign=False):
     logger.info("entityid: %s, binding: %s" % (entityid, BINDING_SOAP))
         
     location = cls._sso_location(entityid, binding=BINDING_SOAP)
-    session_id = sid()
-    authn_req = cls.authn(location, session_id, binding=BINDING_PAOS,
-                          service_url_binding=BINDING_PAOS)
+    authn_req = cls.create_authn_request(location,
+                                         binding=BINDING_PAOS,
+                                         service_url_binding=BINDING_PAOS)
 
     body = soapenv.Body()
     body.extension_elements = [element_to_extension_element(authn_req)]
@@ -128,7 +127,7 @@ def ecp_auth_request(cls, entityid=None, relay_state="", sign=False):
 
     soap_envelope = soapenv.Envelope(header=header, body=body)
 
-    return session_id, "%s" % soap_envelope
+    return authn_req.id, "%s" % soap_envelope
 
 
 def handle_ecp_authn_response(cls, soap_message, outstanding=None):

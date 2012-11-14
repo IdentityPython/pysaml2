@@ -18,8 +18,7 @@
 """Contains classes and functions that a SAML2.0 Service Provider (SP) may use
 to conclude its tasks.
 """
-from random import random
-from saml2.saml import AssertionIDRef
+from saml2.saml import AssertionIDRef, NAMEID_FORMAT_TRANSIENT
 from saml2.samlp import AuthnQuery, LogoutRequest, AssertionIDRequest
 from saml2.samlp import AttributeQuery
 from saml2.samlp import AuthzDecisionQuery
@@ -35,7 +34,7 @@ except ImportError:
     from cgi import parse_qs
 
 from saml2.time_util import instant
-from saml2.s_utils import signature
+from saml2.s_utils import signature, rndstr
 from saml2.s_utils import sid
 from saml2.s_utils import do_attributes
 from saml2.s_utils import decode_base64_and_inflate
@@ -123,23 +122,17 @@ class Base(object):
         else:
             self.vorg = None
 
-        if "allow_unsolicited" in self.config:
-            self.allow_unsolicited = self.config.allow_unsolicited
-        else:
-            self.allow_unsolicited = False
-
-        if getattr(self.config, 'authn_requests_signed', 'false') == 'true':
-            self.authn_requests_signed_default = True
-        else:
-            self.authn_requests_signed_default = False
-
-        if getattr(self.config, 'logout_requests_signed', 'false') == 'true':
-            self.logout_requests_signed_default = True
-        else:
-            self.logout_requests_signed_default = False
+        for foo in ["allow_unsolicited", "authn_requests_signed",
+                   "logout_requests_signed"]:
+            if self.config.getattr("sp", foo) == 'true':
+                setattr(self, foo, True)
+            else:
+                setattr(self, foo, False)
 
         # extra randomness
-        self.seed = random()
+        self.seed = rndstr(32)
+        self.logout_requests_signed_default = True
+        self.allow_unsolicited = self.config.getattr("allow_unsolicited", "sp")
 
     #
     # Private methods
@@ -223,7 +216,7 @@ class Base(object):
         return True
 
     def service_url(self, binding=BINDING_HTTP_POST):
-        _res = self.config.endpoint("assertion_consumer_service", binding)
+        _res = self.config.endpoint("assertion_consumer_service", binding, "sp")
         if _res:
             return _res[0]
         else:
@@ -266,23 +259,23 @@ class Base(object):
 
         logger.info("REQUEST: %s" % req)
 
-        return id, signed_instance_factory(req, self.sec, to_sign)
+        return signed_instance_factory(req, self.sec, to_sign)
 
-    def create_authn_request(self, destination, id=0, vorg="", scoping=None,
+    def create_authn_request(self, destination, vorg="", scoping=None,
                              binding=saml2.BINDING_HTTP_POST,
-                             nameid_format=saml.NAMEID_FORMAT_TRANSIENT,
+                             nameid_format=NAMEID_FORMAT_TRANSIENT,
                              service_url_binding=None,
-                             consent=None, extensions=None, sign=None):
+                             id=0, consent=None, extensions=None, sign=None):
         """ Creates an authentication request.
         
         :param destination: Where the request should be sent.
-        :param id: The identifier for this request
         :param vorg: The virtual organization the service belongs to.
         :param scoping: The scope of the request
         :param binding: The protocol to use for the Response !!
         :param nameid_format: Format of the NameID
         :param service_url_binding: Where the reply should be sent dependent
             on reply binding.
+        :param id: The identifier for this request
         :param consent: Whether the principal have given her consent
         :param extensions: Possible extensions
         :param sign: Whether the request should be signed or not.
@@ -301,11 +294,12 @@ class Base(object):
             my_name = self._my_name()
 
         # Profile stuff, should be configurable
-        if nameid_format == saml.NAMEID_FORMAT_TRANSIENT:
+        if nameid_format is None or nameid_format == NAMEID_FORMAT_TRANSIENT:
             name_id_policy = samlp.NameIDPolicy(allow_create="true",
-                                                format=nameid_format)
+                                                format=NAMEID_FORMAT_TRANSIENT)
         else:
-            name_id_policy = samlp.NameIDPolicy(format=nameid_format)
+            name_id_policy = samlp.NameIDPolicy(allow_create="false",
+                                                format=nameid_format)
 
         if vorg:
             try:
@@ -317,20 +311,20 @@ class Base(object):
         return self._message(AuthnRequest, destination, id, consent,
                              extensions, sign,
                              assertion_consumer_service_url=service_url,
-                             protocol_binding= binding,
-                             name_id_policy = name_id_policy,
-                             provider_name = my_name,
-                             scoping = scoping)
+                             protocol_binding=binding,
+                             name_id_policy=name_id_policy,
+                             provider_name=my_name,
+                             scoping=scoping)
 
 
-    def create_attribute_query(self, destination, id, subject_id,
+    def create_attribute_query(self, destination, subject_id,
                                attribute=None, sp_name_qualifier=None,
                                name_qualifier=None, nameid_format=None,
-                               consent=None, extensions=None, sign=False):
+                               id=0, consent=None, extensions=None, sign=False,
+                               **kwargs):
         """ Constructs an AttributeQuery
         
         :param destination: To whom the query should be sent
-        :param id: The identifier of the session
         :param subject_id: The identifier of the subject
         :param attribute: A dictionary of attributes and values that is
             asked for. The key are one of 4 variants:
@@ -344,6 +338,7 @@ class Base(object):
         :param name_qualifier: The unique identifier of the identity
             provider that generated the identifier.
         :param nameid_format: The format of the name ID
+        :param id: The identifier of the session
         :param consent: Whether the principal have given her consent
         :param extensions: Possible extensions
         :param sign: Whether the query should be signed or not.
@@ -365,13 +360,12 @@ class Base(object):
                              attribute=attribute)
 
 
-    def create_logout_request(self, destination, id, subject_id,
-                              issuer_entity_id, reason=None, expire=None,
-                              consent=None, extensions=None, sign=False):
+    def create_logout_request(self, destination, subject_id, issuer_entity_id,
+                              reason=None, expire=None,
+                              id=0, consent=None, extensions=None, sign=False):
         """ Constructs a LogoutRequest
         
         :param destination: Destination of the request
-        :param id: Request identifier
         :param subject_id: The identifier of the subject
         :param issuer_entity_id: The entity ID of the IdP the request is
             target at.
@@ -379,6 +373,7 @@ class Base(object):
             form of a URI reference.
         :param expire: The time at which the request expires,
             after which the recipient may discard the message.
+        :param id: Request identifier
         :param consent: Whether the principal have given her consent
         :param extensions: Possible extensions
         :param sign: Whether the query should be signed or not.
@@ -419,21 +414,21 @@ class Base(object):
     # AssertionIDRequest, SubjectQuery,
     # AuthnQuery, AttributeQuery, or AuthzDecisionQuery
 
-    def create_authz_decision_query(self, destination, action, id=0,
+    def create_authz_decision_query(self, destination, action,
                                     evidence=None, resource=None, subject=None,
-                                    sign=None, consent=None,
-                                    extensions=None):
+                                    id=0, consent=None, extensions=None,
+                                    sign=None):
         """ Creates an authz decision query.
 
         :param destination: The IdP endpoint
         :param action: The action you want to perform (has to be at least one)
-        :param id: Message identifier
         :param evidence: Why you should be able to perform the action
         :param resource: The resource you want to perform the action on
         :param subject: Who wants to do the thing
-        :param sign: Whether the request should be signed or not.
+        :param id: Message identifier
         :param consent: If the principal gave her consent to this request
         :param extensions: Possible request extensions
+        :param sign: Whether the request should be signed or not.
         :return: AuthzDecisionQuery instance
         """
 
@@ -443,17 +438,20 @@ class Base(object):
 
     def create_authz_decision_query_using_assertion(self, destination, assertion,
                                                     action=None, resource=None,
-                                                    subject=None,
-                                                    binding=BINDING_HTTP_REDIRECT,
+                                                    subject=None, id=0,
+                                                    consent=None,
+                                                    extensions=None,
                                                     sign=False):
         """ Makes an authz decision query.
 
         :param destination: The IdP endpoint to send the request to
-        :param assertion:
-        :param action:
-        :param resource:
-        :param subject:
-        :param binding: Which binding to use for sending the request
+        :param assertion: An Assertion instance
+        :param action: The action you want to perform (has to be at least one)
+        :param resource: The resource you want to perform the action on
+        :param subject: Who wants to do the thing
+        :param id: Message identifier
+        :param consent: If the principal gave her consent to this request
+        :param extensions: Possible request extensions
         :param sign: Whether the request should be signed or not.
         :return: AuthzDecisionQuery instance
         """
@@ -469,24 +467,46 @@ class Base(object):
         return self.create_authz_decision_query(destination,
                                                 _action,
                                                 saml.Evidence(assertion=assertion),
-                                                resource, subject, binding,
-                                                sign)
+                                                resource, subject,
+                                                id=id,
+                                                consent=consent,
+                                                extensions=extensions,
+                                                sign=sign)
 
     def create_assertion_id_request(self, assertion_id_refs, destination=None,
                                     id=0, consent=None, extensions=None,
                                     sign=False):
+        """
 
+        :param assertion_id_refs:
+        :param destination: The IdP endpoint to send the request to
+        :param id: Message identifier
+        :param consent: If the principal gave her consent to this request
+        :param extensions: Possible request extensions
+        :param sign: Whether the request should be signed or not.
+        :return: AssertionIDRequest instance
+        """
         id_refs = [AssertionIDRef(text=s) for s in assertion_id_refs]
 
         return self._message(AssertionIDRequest, destination, id, consent,
                              extensions, sign, assertion_id_refs=id_refs )
 
 
-    def create_authn_query(self, subject, destination=None, id=0,
+    def create_authn_query(self, subject, destination=None,
                            authn_context=None, session_index="",
-                           consent=None, sign=False,
-                           extensions=None):
+                           id=0, consent=None, extensions=None, sign=False):
+        """
 
+        :param subject:
+        :param destination: The IdP endpoint to send the request to
+        :param authn_context:
+        :param session_index:
+        :param id: Message identifier
+        :param consent: If the principal gave her consent to this request
+        :param extensions: Possible request extensions
+        :param sign: Whether the request should be signed or not.
+        :return:
+        """
         return self._message(AuthnQuery, destination, id, consent, extensions,
                              sign, subject=subject, session_index=session_index,
                              requested_auth_context=authn_context)

@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 COMMON_ARGS = ["entityid", "xmlsec_binary", "debug", "key_file", "cert_file",
                 "secret", "accepted_time_diff", "name", "ca_certs",
-                "description",
+                "description", "valid_for",
                 "organization",
                 "contact_person",
                 "name_form",
@@ -97,48 +97,61 @@ class Config(object):
     def_context = ""
 
     def __init__(self):
-        self._attr = {"": {}, "sp": {}, "idp": {}, "aa": {}, "pdp": {}}
+        self.entityid = None
+        self.xmlsec_binary= None
+        self.debug=False
+        self.key_file=None
+        self.cert_file=None
+        self.secret=None
+        self.accepted_time_diff=None
+        self.name=None
+        self.ca_certs=None
+        self.description=None
+        self.valid_for=None
+        self.organization=None
+        self.contact_person=None
+        self.name_form=None
+        self.virtual_organization=None
+        self.logger=None
+        self.only_use_keys_in_metadata=None
+        self.logout_requests_signed=None
+        self.disable_ssl_certificate_validation=None
         self.context = ""
+        self.attribute_converters=None
+        self.metadata=None
+        self.policy=None
+        self.serves = []
 
-    def serves(self):
-        return [t for t in ["sp", "idp", "aa", "pdp"] if self._attr[t]]
-
-    def copy_into(self, typ=""):
-        if typ == "sp":
-            copy = SPConfig()
-        elif typ in ["idp", "aa"]:
-            copy = IdPConfig()
-        else:
-            copy = Config()
-        copy.context = typ
-        copy._attr = self._attr.copy()
-        return copy
-    
-    def __getattribute__(self, item):
-        if item == "context":
-            return object.__getattribute__(self, item)
-
-        _context = self.context
-        if item in ALL:
-            try:
-                return self._attr[_context][item]
-            except KeyError:
-                if _context:
-                    try:
-                        return self._attr[""][item]
-                    except KeyError:
-                        pass
-                return None
-        else:
-            return object.__getattribute__(self, item)
+#    def copy_into(self, typ=""):
+#        if typ == "sp":
+#            copy = SPConfig()
+#        elif typ in ["idp", "aa"]:
+#            copy = IdPConfig()
+#        else:
+#            copy = Config()
+#        copy.context = typ
+#        copy._attr = self._attr.copy()
+#        return copy
 
     def setattr(self, context, attr, val):
-        self._attr[context][attr] = val
+        if context == "":
+            setattr(self, attr, val)
+        else:
+            setattr(self, "_%s_%s" % (context,attr), val)
+
+    def getattr(self, attr, context=None):
+        if context is None:
+            context = self.context
+
+        if context == "":
+            return getattr(self, attr, None)
+        else:
+            return getattr(self, "_%s_%s" % (context,attr), None)
 
     def load_special(self, cnf, typ, metadata_construction=False):
         for arg in SPEC[typ]:
             try:
-                self._attr[typ][arg] = cnf[arg]
+                self.setattr(typ, arg, cnf[arg])
             except KeyError:
                 pass
 
@@ -147,9 +160,8 @@ class Config(object):
         self.context = self.def_context
 
     def load_complex(self, cnf, typ="", metadata_construction=False):
-        _attr_typ = self._attr[typ]
         try:
-            _attr_typ["policy"] = Policy(cnf["policy"])
+            self.setattr(typ, "policy", Policy(cnf["policy"]))
         except KeyError:
             pass
 
@@ -162,16 +174,20 @@ class Config(object):
             if not acs:
                 raise Exception(("No attribute converters, ",
                                     "something is wrong!!"))
-            try:
-                _attr_typ["attribute_converters"].extend(acs)
-            except KeyError:
-                _attr_typ["attribute_converters"] = acs
+
+            _acs = self.getattr("attribute_converters", typ)
+            if _acs:
+                _acs.extend(acs)
+            else:
+                self.setattr(typ, "attribute_converters", acs)
+
         except KeyError:
             pass
 
         if not metadata_construction:
             try:
-                _attr_typ["metadata"] = self.load_metadata(cnf["metadata"])
+                self.setattr(typ, "metadata",
+                             self.load_metadata(cnf["metadata"]))
             except KeyError:
                 pass
 
@@ -185,7 +201,7 @@ class Config(object):
         """
         for arg in COMMON_ARGS:
             try:
-                self._attr[""][arg] = cnf[arg]
+                setattr(self, arg, cnf[arg])
             except KeyError:
                 pass
 
@@ -194,19 +210,19 @@ class Config(object):
                 try:
                     self.load_special(cnf["service"][typ], typ,
                                     metadata_construction=metadata_construction)
-
+                    self.serves.append(typ)
                 except KeyError:
                     pass
 
         if not metadata_construction:
-            if "xmlsec_binary" not in self._attr[""]:
-                self._attr[""]["xmlsec_binary"] = get_xmlsec_binary()
+            if not self.xmlsec_binary:
+                self.xmlsec_binary = get_xmlsec_binary()
 
             # verify that xmlsec is where it's supposed to be
-            if not os.path.exists(self._attr[""]["xmlsec_binary"]):
+            if not os.path.exists(self.xmlsec_binary):
                 #if not os.access(, os.F_OK):
                 raise Exception("xmlsec binary not in '%s' !" % (
-                                            self._attr[""]["xmlsec_binary"]))
+                                                            self.xmlsec_binary))
 
         self.load_complex(cnf, metadata_construction=metadata_construction)
         self.context = self.def_context
@@ -258,7 +274,7 @@ class Config(object):
                 metad.import_external_metadata(spec["url"], cert)
         return metad
 
-    def endpoint(self, service, binding=None):
+    def endpoint(self, service, binding=None, context=None):
         """ Goes through the list of endpoint specifications for the
         given type of service and returnes the first endpoint that matches
         the given binding. If no binding is given any endpoint for that
@@ -270,13 +286,15 @@ class Config(object):
         """
         spec = []
         unspec = []
-        for endpspec in self.endpoints[service]:
-            try:
-                endp, bind = endpspec
-                if binding is None or bind == binding:
-                    spec.append(endp)
-            except ValueError:
-                unspec.append(endpspec)
+        endps = self.getattr("endpoints")
+        if endps and service in endps:
+            for endpspec in endps[service]:
+                try:
+                    endp, bind = endpspec
+                    if binding is None or bind == binding:
+                        spec.append(endp)
+                except ValueError:
+                    unspec.append(endpspec)
 
         if spec:
             return spec
@@ -327,9 +345,8 @@ class Config(object):
         if root_logger.level != logging.NOTSET: # Someone got there before me
             return root_logger
 
-        try:
-            _logconf = self._attr[""]["logger"]
-        except KeyError:
+        _logconf = self.logger
+        if _logconf is None:
             return root_logger
 
         try:
@@ -340,21 +357,7 @@ class Config(object):
         root_logger.addHandler(self.log_handler())
         root_logger.info("Logging started")
         return root_logger
-    
-    def keys(self):
-        keys = []
 
-        for dir in ["", "sp", "idp", "aa"]:
-            keys.extend(self._attr[dir].keys())
-
-        return list(set(keys))
-
-    def __contains__(self, item):
-        for dir in ["", "sp", "idp", "aa"]:
-            if item in self._attr[dir]:
-                return True
-        return False
-        
 class SPConfig(Config):
     def_context = "sp"
 
@@ -393,16 +396,20 @@ class SPConfig(Config):
         """
 
         res = []
-        if self.aa is None or entity_id in self.aa:
-            for aad in self.metadata.attribute_authority(entity_id):
-                for attrserv in aad.attribute_service:
-                    if attrserv.binding == binding:
-                        res.append(attrserv)
+        aa_eid = self.getattr("entity_id")
+        if aa_eid:
+            if entity_id in aa_eid:
+                for aad in self.metadata.attribute_authority(entity_id):
+                    for attrserv in aad.attribute_service:
+                        if attrserv.binding == binding:
+                            res.append(attrserv)
+        else:
+            return self.metadata.attribute_authority()
 
         return res
 
     def idps(self, langpref=None):
-        """ Returns a dictionary of usefull IdPs, the keys being the
+        """ Returns a dictionary of useful IdPs, the keys being the
         entity ID of the service and the names of the services as values
 
         :param langpref: The preferred languages of the name, the first match
@@ -411,12 +418,14 @@ class SPConfig(Config):
         """
         if langpref is None:
             langpref = ["en"]
-            
-        if self.idp:
+
+        eidp = self.getattr("entity_id")
+        if eidp:
             return dict([(e, nd[0]) for (e,
-                nd) in self.metadata.idps(langpref).items() if e in self.idp])
+                nd) in self.metadata.idps(langpref).items() if e in eidp])
         else:
-            return self.metadata.idps()
+            return dict([(e, nd[0]) for (e,
+                                         nd) in self.metadata.idps(langpref).items()])
 
     def vo_conf(self, vo_name):
         try:
@@ -431,8 +440,9 @@ class SPConfig(Config):
         :param ipaddress: The IP address of the user client
         :return: IdP entity ID or None
         """
-        if "ecp" in self._attr["sp"]:
-            for key, eid in self._attr["sp"]["ecp"].items():
+        _ecp = self.getattr("ecp")
+        if _ecp:
+            for key, eid in _ecp.items():
                 if re.match(key, ipaddress):
                     return eid
 

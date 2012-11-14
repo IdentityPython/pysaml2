@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 import logging
+import random
+import string
 
 import time
 import base64
@@ -101,10 +103,21 @@ def deflate_and_base64_encode( string_val ):
     :return: The deflated and encoded string
     """
     return base64.b64encode( zlib.compress( string_val )[2:-4] )
-    
+
+def rndstr(size=16):
+    """
+    Returns a string of random ascii characters or digits
+
+    :param size: The length of the string
+    :return: string
+    """
+    _basech = string.ascii_letters + string.digits
+    return "".join([random.choice(_basech) for _ in range(size)])
+
 def sid(seed=""):
     """The hash of the server time + seed makes an unique SID for each session.
-    
+    128-bits long so it fulfills the SAML2 requirements which states 128-160 bits
+
     :param seed: A seed string
     :return: The hex version of the digest, prefixed by 'id-' to make it 
         compliant with the NCName specification

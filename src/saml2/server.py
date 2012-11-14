@@ -258,7 +258,7 @@ class Server(object):
         try:
             # subject information is stored in a database
             # default database is a shelve database which is OK in some setups
-            dbspec = self.conf.subject_data
+            dbspec = self.conf.getattr("subject_data", "idp")
             idb = None
             if isinstance(dbspec, basestring):
                 idb = shelve.open(dbspec, writeback=True)
@@ -376,14 +376,15 @@ class Server(object):
 
         return response
                         
-    def wants(self, sp_entity_id):
-        """ Returns what attributes the SP requiers and which are optional
+    def wants(self, sp_entity_id, index=None):
+        """ Returns what attributes the SP requires and which are optional
         if any such demands are registered in the Metadata.
         
         :param sp_entity_id: The entity id of the SP
+        :param index: which of the attribute consumer services its all about
         :return: 2-tuple, list of required and list of optional attributes
         """
-        return self.metadata.requests(sp_entity_id)
+        return self.metadata.attribute_requirement(sp_entity_id, index)
         
     def parse_attribute_query(self, xml_string, decode=True):
         """ Parse an attribute query
@@ -410,28 +411,20 @@ class Server(object):
             
     # ------------------------------------------------------------------------
 
-    def _response(self, in_response_to, consumer_url=None, sp_entity_id=None, 
-                    identity=None, name_id=None, status=None, sign=False,
-                    policy=Policy(), authn=None, authn_decl=None, issuer=None):
+    def _response(self, in_response_to, consumer_url=None, status=None,
+                  issuer=None, sign=False, to_sign=None,
+                  **kwargs):
         """ Create a Response that adhers to the ??? profile.
         
         :param in_response_to: The session identifier of the request
         :param consumer_url: The URL which should receive the response
-        :param sp_entity_id: The entity identifier of the SP
-        :param identity: A dictionary with attributes and values that are
-            expected to be the bases for the assertion in the response.
-        :param name_id: The identifier of the subject
         :param status: The status of the response
-        :param sign: Whether the assertion should be signed or not 
-        :param policy: The attribute release policy for this instance
-        :param authn: A 2-tuple denoting the authn class and the authn
-            authority
-        :param authn_decl:
         :param issuer: The issuer of the response
+        :param sign: Whether the response should be signed or not
+        :param to_sign: What other parts to sign
+        :param kwargs: Extra key word arguments
         :return: A Response instance
         """
-                
-        to_sign = []
 
         if not status: 
             status = success_status_factory()
@@ -447,57 +440,25 @@ class Server(object):
         if consumer_url:
             response.destination = consumer_url
 
-        if identity:            
-            ast = Assertion(identity)
+        for key, val in kwargs.items():
+            setattr(response, key, val)
+
+        if sign:
             try:
-                ast.apply_policy(sp_entity_id, policy, self.metadata)
-            except MissingValue, exc:
-                return self.error_response(in_response_to, consumer_url, 
-                                               sp_entity_id, exc, name_id)
+                to_sign.append((class_name(response), response.id))
+            except AttributeError:
+                to_sign = [(class_name(response), response.id)]
 
-            if authn: # expected to be a 2-tuple class+authority
-                (authn_class, authn_authn) = authn
-                assertion = ast.construct(sp_entity_id, in_response_to, 
-                                            consumer_url, name_id,
-                                            self.conf.attribute_converters,
-                                            policy, issuer=_issuer, 
-                                            authn_class=authn_class, 
-                                            authn_auth=authn_authn)
-            elif authn_decl:
-                assertion = ast.construct(sp_entity_id, in_response_to, 
-                                            consumer_url, name_id,
-                                            self.conf.attribute_converters,
-                                            policy, issuer=_issuer, 
-                                            authn_decl=authn_decl)
-            else:
-                assertion = ast.construct(sp_entity_id, in_response_to, 
-                                            consumer_url, name_id,
-                                            self.conf.attribute_converters,
-                                            policy, issuer=_issuer)
-            
-            if sign:
-                assertion.signature = pre_signature_part(assertion.id,
-                                                        self.sec.my_cert, 1)
-                # Just the assertion or the response and the assertion ?
-                to_sign = [(class_name(assertion), assertion.id)]
 
-            # Store which assertion that has been sent to which SP about which
-            # subject.
-            
-            # self.cache.set(assertion.subject.name_id.text, 
-            #                 sp_entity_id, {"ava": identity, "authn": authn}, 
-            #                 assertion.conditions.not_on_or_after)
-            
-            response.assertion = assertion
-                
         return signed_instance_factory(response, self.sec, to_sign)
 
     # ------------------------------------------------------------------------
     
-    def do_response(self, in_response_to, consumer_url,
-                        sp_entity_id, identity=None, name_id=None, 
-                        status=None, sign=False, authn=None, authn_decl=None,
-                        issuer=None):
+    def create_response(self, in_response_to, consumer_url,
+                        sp_entity_id, identity=None, name_id=None,
+                        status=None, authn=None,
+                        authn_decl=None, issuer=None, policy=None,
+                        sign_assertion=False, sign_response=False):
         """ Create a response. A layer of indirection.
         
         :param in_response_to: The session identifier of the request
@@ -507,54 +468,92 @@ class Server(object):
             expected to be the bases for the assertion in the response.
         :param name_id: The identifier of the subject
         :param status: The status of the response
-        :param sign: Whether the assertion should be signed or not 
         :param authn: A 2-tuple denoting the authn class and the authn
             authority.
         :param authn_decl:
         :param issuer: The issuer of the response
-        :return: A Response instance.
+        :param sign_assertion: Whether the assertion should be signed or not
+        :param sign_response: Whether the response should be signed or not
+        :return: A response instance
         """
 
-        policy = self.conf.policy
+        to_sign = []
+        args = {}
+        if identity:
+            _issuer = self.issuer(issuer)
+            ast = Assertion(identity)
+            if policy is None:
+                policy = Policy()
+            try:
+                ast.apply_policy(sp_entity_id, policy, self.metadata)
+            except MissingValue, exc:
+                return self.create_error_response(in_response_to, consumer_url,
+                                                  exc, sign_response)
 
-        return self._response(in_response_to, consumer_url,
-                        sp_entity_id, identity, name_id, 
-                        status, sign, policy, authn, authn_decl, issuer)
+            if authn: # expected to be a 2-tuple class+authority
+                (authn_class, authn_authn) = authn
+                assertion = ast.construct(sp_entity_id, in_response_to,
+                                          consumer_url, name_id,
+                                          self.conf.attribute_converters,
+                                          policy, issuer=_issuer,
+                                          authn_class=authn_class,
+                                          authn_auth=authn_authn)
+            elif authn_decl:
+                assertion = ast.construct(sp_entity_id, in_response_to,
+                                          consumer_url, name_id,
+                                          self.conf.attribute_converters,
+                                          policy, issuer=_issuer,
+                                          authn_decl=authn_decl)
+            else:
+                assertion = ast.construct(sp_entity_id, in_response_to,
+                                          consumer_url, name_id,
+                                          self.conf.attribute_converters,
+                                          policy, issuer=_issuer)
+
+            if sign_assertion:
+                assertion.signature = pre_signature_part(assertion.id,
+                                                         self.sec.my_cert, 1)
+                # Just the assertion or the response and the assertion ?
+                to_sign = [(class_name(assertion), assertion.id)]
+
+            # Store which assertion that has been sent to which SP about which
+            # subject.
+
+            # self.cache.set(assertion.subject.name_id.text,
+            #                 sp_entity_id, {"ava": identity, "authn": authn},
+            #                 assertion.conditions.not_on_or_after)
+
+            args["assertion"] = assertion
+
+        return self._response(in_response_to, consumer_url, status, issuer,
+                              sign_response, to_sign, **args)
                         
     # ------------------------------------------------------------------------
     
-    def error_response(self, in_response_to, destination, spid, info, 
-                        name_id=None, sign=False, issuer=None):
+    def create_error_response(self, in_response_to, destination, info,
+                              sign=False, issuer=None):
         """ Create a error response.
         
         :param in_response_to: The identifier of the message this is a response
             to.
-            :param destination: The intended recipient of this message
-        :param spid: The entitiy ID of the SP that will get this.
+        :param destination: The intended recipient of this message
         :param info: Either an Exception instance or a 2-tuple consisting of
             error code and descriptive text
-        :param name_id:
-        :param sign: Whether the message should be signed or not
+        :param sign: Whether the response should be signed or not
         :param issuer: The issuer of the response
-        :return: A Response instance
+        :return: A response instance
         """
         status = error_status_factory(info)
-            
-        return self._response(
-                        in_response_to, # in_response_to
-                        destination,    # consumer_url
-                        spid,           # sp_entity_id
-                        name_id=name_id,
-                        status=status,
-                        sign=sign,
-                        issuer=issuer
-                        )
+
+        return self._response(in_response_to, destination, status, issuer,
+                              sign)
 
     # ------------------------------------------------------------------------
     #noinspection PyUnusedLocal
-    def do_aa_response(self, in_response_to, consumer_url, sp_entity_id, 
-                        identity=None, userid="", name_id=None, status=None, 
-                        sign=False, _name_id_policy=None, issuer=None):
+    def create_aa_response(self, in_response_to, consumer_url, sp_entity_id,
+                           identity=None, userid="", name_id=None, status=None,
+                           issuer=None, sign_assertion=False,
+                           sign_response=False):
         """ Create an attribute assertion response.
         
         :param in_response_to: The session identifier of the request
@@ -565,24 +564,27 @@ class Server(object):
         :param userid: A identifier of the user
         :param name_id: The identifier of the subject
         :param status: The status of the response
-        :param sign: Whether the assertion should be signed or not 
-        :param _name_id_policy: Policy for NameID creation.
         :param issuer: The issuer of the response
-        :return: A Response instance.
+        :param sign_assertion: Whether the assertion should be signed or not
+        :param sign_response: Whether the whole response should be signed
+        :return: A response instance
         """
 #        name_id = self.ident.construct_nameid(self.conf.policy, userid,
 #                                            sp_entity_id, identity)
-        
-        return self._response(in_response_to, consumer_url,
-                        sp_entity_id, identity, name_id, 
-                        status, sign, policy=self.conf.policy, issuer=issuer)
+
+        return self.create_response(in_response_to, consumer_url, sp_entity_id,
+                                    identity, name_id, status,
+                                    issuer=issuer,
+                                    policy=self.conf.getattr("policy", "aa"),
+                                    sign_assertion=sign_assertion,
+                                    sign_response=sign_response)
 
     # ------------------------------------------------------------------------
 
-    def authn_response(self, identity, in_response_to, destination,
-                        sp_entity_id, name_id_policy, userid, sign=False, 
-                        authn=None, sign_response=False, authn_decl=None,
-                        issuer=None, instance=False):
+    def create_authn_response(self, identity, in_response_to, destination,
+                              sp_entity_id, name_id_policy, userid,
+                              authn=None, authn_decl=None, issuer=None,
+                              sign_response=False, sign_assertion=False):
         """ Constructs an AuthenticationResponse
 
         :param identity: Information about an user
@@ -590,73 +592,50 @@ class Server(object):
             this response is an answer to.
         :param destination: Where the response should be sent
         :param sp_entity_id: The entity identifier of the Service Provider
-        :param name_id_policy: ...
+        :param name_id_policy: How the NameID should be constructed
         :param userid: The subject identifier
-        :param sign: Whether the assertion should be signed or not. This is
-            different from signing the response as such.
         :param authn: Information about the authentication
-        :param sign_response: The response can be signed separately from the 
-            assertions.
         :param authn_decl:
         :param issuer: Issuer of the response
-        :param instance: Whether to return the instance or a string
-            representation
-        :return: A XML string representing an authentication response
+        :param sign_assertion: Whether the assertion should be signed or not.
+        :param sign_response: Whether the response should be signed or not.
+        :return: A response instance
         """
 
         name_id = None
         try:
             nid_formats = []
-            for _sp in self.metadata.entity[sp_entity_id]["sp_sso"]:
+            for _sp in self.metadata.entity[sp_entity_id]["spsso"]:
                 nid_formats.extend([n.text for n in _sp.name_id_format])
 
-            policy = self.conf.policy
+            policy = self.conf.getattr("policy", "idp")
             name_id = self.ident.construct_nameid(policy, userid, sp_entity_id,
                                                     identity, name_id_policy,
                                                     nid_formats)
         except IOError, exc:
-            response = self.error_response(in_response_to, destination, 
-                                            sp_entity_id, exc, name_id)
+            response = self.create_error_response(in_response_to, destination,
+                                                  sp_entity_id, exc, name_id)
             return ("%s" % response).split("\n")
         
         try:
-            response = self.do_response(
-                            in_response_to, # in_response_to
-                            destination,    # consumer_url
-                            sp_entity_id,   # sp_entity_id
-                            identity,       # identity as dictionary
-                            name_id,
-                            sign=sign,      # If the assertion should be signed
-                            authn=authn,    # Information about the 
-                                            #   authentication
-                            authn_decl=authn_decl,
-                            issuer=issuer
-                        )
+            return self.create_response(in_response_to, # in_response_to
+                                        destination,    # consumer_url
+                                        sp_entity_id,   # sp_entity_id
+                                        identity,       # identity as dictionary
+                                        name_id,
+                                        authn=authn,    # Information about the
+                                                        #   authentication
+                                        authn_decl=authn_decl,
+                                        issuer=issuer,
+                                        policy=policy,
+                                        sign_assertion=sign_assertion,
+                                        sign_response=sign_response)
+
         except MissingValue, exc:
-            response = self.error_response(in_response_to, destination, 
-                                        sp_entity_id, exc, name_id)
+            return self.create_error_response(in_response_to, destination,
+                                                  sp_entity_id, exc, name_id)
         
 
-        if sign_response:
-            try:
-                response.signature = pre_signature_part(response.id,
-                                                        self.sec.my_cert, 2)
-        
-                return self.sec.sign_statement_using_xmlsec(response,
-                                                        class_name(response),
-                                                        nodeid=response.id)
-            except Exception, exc:
-                response = self.error_response(in_response_to, destination, 
-                                                sp_entity_id, exc, name_id)
-                if instance:
-                    return response
-                else:
-                    return ("%s" % response).split("\n")
-        else:
-            if instance:
-                return response
-            else:
-                return ("%s" % response).split("\n")
 
     def parse_logout_request(self, text, binding=BINDING_SOAP):
         """Parse a Logout Request
@@ -669,9 +648,9 @@ class Server(object):
         """
         
         try:
-            slo = self.conf.endpoint("single_logout_service", binding)
+            slo = self.conf.endpoint("single_logout_service", binding, "idp")
         except IndexError:
-            logger.info("enpoints: %s" % (self.conf.endpoints,))
+            logger.info("enpoints: %s" % self.conf.getattr("endpoints", "idp"))
             logger.info("binding wanted: %s" % (binding,))
             raise
 
@@ -703,8 +682,8 @@ class Server(object):
             return req
 
 
-    def logout_response(self, request, bindings, status=None, sign=False,
-                        issuer=None):
+    def create_logout_response(self, request, bindings, status=None,
+                               sign=False, issuer=None):
         """ Create a LogoutResponse. What is returned depends on which binding
         is used.
         
@@ -794,7 +773,7 @@ class Server(object):
             attribute - which attributes that the requestor wants back
             query - the whole query
         """
-        receiver_addresses = self.conf.endpoint("attribute_service")
+        receiver_addresses = self.conf.endpoint("attribute_service", "idp")
         attribute_query = AttributeQuery( self.sec, receiver_addresses)
 
         attribute_query = attribute_query.loads(xml_string)

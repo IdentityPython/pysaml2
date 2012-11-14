@@ -18,7 +18,7 @@ Sure you can send a AuthenticationRequest to an IdentityProvider or a
 AttributeQuery to an AttributeAuthority but in order to get what they
 return you have to sit behind a Web server. Well that is not really true since
 the AttributeQuery would be over SOAP and you would get the result over the
-conenction you have to the AttributeAuthority.
+connection you have to the AttributeAuthority.
 
 But anyway, you may get my point. This is middleware stuff !
 

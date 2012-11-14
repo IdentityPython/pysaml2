@@ -163,15 +163,15 @@ def test_1():
     c = SPConfig().load(sp1)
     c.context = "sp"
     print c
-    assert c.endpoints
-    assert c.name
-    assert c.idp
+    assert c._sp_endpoints
+    assert c._sp_name
+    assert c._sp_idp
     md = c.metadata
     assert isinstance(md, MetaData)
 
-    assert len(c.idp) == 1
-    assert c.idp.keys() == ["urn:mace:example.com:saml:roland:idp"]
-    assert c.idp.values() == [{'single_sign_on_service':
+    assert len(c._sp_idp) == 1
+    assert c._sp_idp.keys() == ["urn:mace:example.com:saml:roland:idp"]
+    assert c._sp_idp.values() == [{'single_sign_on_service':
         {'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect':
          'http://localhost:8088/sso/'}}]
 
@@ -182,15 +182,16 @@ def test_2():
     c.context = "sp"
 
     print c
-    assert c.endpoints
-    assert c.idp
-    assert c.optional_attributes
+    assert c._sp_endpoints
+    assert c.getattr("endpoints", "sp")
+    assert c._sp_idp
+    assert c._sp_optional_attributes
     assert c.name
-    assert c.required_attributes
+    assert c._sp_required_attributes
 
-    assert len(c.idp) == 1
-    assert c.idp.keys() == [""]
-    assert c.idp.values() == ["https://example.com/saml2/idp/SSOService.php"]
+    assert len(c._sp_idp) == 1
+    assert c._sp_idp.keys() == [""]
+    assert c._sp_idp.values() == ["https://example.com/saml2/idp/SSOService.php"]
     assert c.only_use_keys_in_metadata is None
     
 def test_minimum():
@@ -222,7 +223,7 @@ def test_idp_1():
     print c
     assert c.endpoint("single_sign_on_service")[0] == 'http://localhost:8088/'
 
-    attribute_restrictions = c.policy.get_attribute_restriction("")
+    attribute_restrictions = c.getattr("policy","idp").get_attribute_restriction("")
     assert attribute_restrictions["eduPersonAffiliation"][0].match("staff")
 
 def test_idp_2():
@@ -235,7 +236,7 @@ def test_idp_2():
     assert c.endpoint("single_logout_service",
                         BINDING_HTTP_REDIRECT) == ["http://localhost:8088/"]
 
-    attribute_restrictions = c.policy.get_attribute_restriction("")
+    attribute_restrictions = c.getattr("policy","idp").get_attribute_restriction("")
     assert attribute_restrictions["eduPersonAffiliation"][0].match("staff")
     
 def test_wayf():
@@ -313,15 +314,12 @@ def test_sp():
 
 def test_dual():
     cnf = Config().load_file("idp_sp_conf")
-    assert cnf.serves() == ["sp", "idp"]
 
-    spcnf = cnf.copy_into("sp")
-    assert isinstance(spcnf, SPConfig)
-    assert spcnf.context == "sp"
-
-    idpcnf = cnf.copy_into("idp")
-    assert isinstance(idpcnf, IdPConfig)
-    assert idpcnf.context == "idp"
+    spe = cnf.getattr("endpoints", "sp")
+    idpe = cnf.getattr("endpoints", "idp")
+    assert spe
+    assert idpe
+    assert spe != idpe
 
 def test_ecp():
     cnf = SPConfig()
