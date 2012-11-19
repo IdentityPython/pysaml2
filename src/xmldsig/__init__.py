@@ -216,7 +216,7 @@ def mgmt_data_from_string(xml_string):
     return saml2.create_class_from_xml_string(MgmtData, xml_string)
 
 
-class X509IssuerSerialType_X509IssuerName(SamlBase):
+class X509IssuerName(SamlBase):
 
     c_tag = 'X509IssuerName'
     c_namespace = NAMESPACE
@@ -226,11 +226,11 @@ class X509IssuerSerialType_X509IssuerName(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
-def x509_issuer_serial_type__x509_issuer_name_from_string(xml_string):
-    return saml2.create_class_from_xml_string(X509IssuerSerialType_X509IssuerName, xml_string)
+def x509_issuer_name_from_string(xml_string):
+    return saml2.create_class_from_xml_string(X509IssuerName, xml_string)
 
 
-class X509IssuerSerialType_X509SerialNumber(SamlBase):
+class X509SerialNumber(SamlBase):
 
     c_tag = 'X509SerialNumber'
     c_namespace = NAMESPACE
@@ -240,8 +240,8 @@ class X509IssuerSerialType_X509SerialNumber(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
-def x509_issuer_serial_type__x509_serial_number_from_string(xml_string):
-    return saml2.create_class_from_xml_string(X509IssuerSerialType_X509SerialNumber, xml_string)
+def x509_serial_number_from_string(xml_string):
+    return saml2.create_class_from_xml_string(X509SerialNumber, xml_string)
 
 
 class X509IssuerSerialType_(SamlBase):
@@ -253,8 +253,8 @@ class X509IssuerSerialType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{http://www.w3.org/2000/09/xmldsig#}X509IssuerName'] = ('x509_issuer_name', X509IssuerSerialType_X509IssuerName)
-    c_children['{http://www.w3.org/2000/09/xmldsig#}X509SerialNumber'] = ('x509_serial_number', X509IssuerSerialType_X509SerialNumber)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}X509IssuerName'] = ('x509_issuer_name', X509IssuerName)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}X509SerialNumber'] = ('x509_serial_number', X509SerialNumber)
     c_child_order.extend(['x509_issuer_name', 'x509_serial_number'])
 
     def __init__(self,
@@ -276,7 +276,7 @@ def x509_issuer_serial_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(X509IssuerSerialType_, xml_string)
 
 
-class PGPDataType_PGPKeyID(SamlBase):
+class PGPKeyID(SamlBase):
 
     c_tag = 'PGPKeyID'
     c_namespace = NAMESPACE
@@ -286,11 +286,11 @@ class PGPDataType_PGPKeyID(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
-def pgp_data_type__pgp_key_id_from_string(xml_string):
-    return saml2.create_class_from_xml_string(PGPDataType_PGPKeyID, xml_string)
+def pgp_key_id_from_string(xml_string):
+    return saml2.create_class_from_xml_string(PGPKeyID, xml_string)
 
 
-class PGPDataType_PGPKeyPacket(SamlBase):
+class PGPKeyPacket(SamlBase):
 
     c_tag = 'PGPKeyPacket'
     c_namespace = NAMESPACE
@@ -300,8 +300,8 @@ class PGPDataType_PGPKeyPacket(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
-def pgp_data_type__pgp_key_packet_from_string(xml_string):
-    return saml2.create_class_from_xml_string(PGPDataType_PGPKeyPacket, xml_string)
+def pgp_key_packet_from_string(xml_string):
+    return saml2.create_class_from_xml_string(PGPKeyPacket, xml_string)
 
 
 class PGPDataType_(SamlBase):
@@ -313,8 +313,8 @@ class PGPDataType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{http://www.w3.org/2000/09/xmldsig#}PGPKeyID'] = ('pgp_key_id', PGPDataType_PGPKeyID)
-    c_children['{http://www.w3.org/2000/09/xmldsig#}PGPKeyPacket'] = ('pgp_key_packet', PGPDataType_PGPKeyPacket)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}PGPKeyID'] = ('pgp_key_id', PGPKeyID)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}PGPKeyPacket'] = ('pgp_key_packet', PGPKeyPacket)
     c_cardinality['pgp_key_packet'] = {"min":0, "max":1}
     c_child_order.extend(['pgp_key_id', 'pgp_key_packet'])
 
@@ -337,7 +337,7 @@ def pgp_data_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(PGPDataType_, xml_string)
 
 
-class SPKIDataType_SPKISexp(SamlBase):
+class SPKISexp(SamlBase):
 
     c_tag = 'SPKISexp'
     c_namespace = NAMESPACE
@@ -347,8 +347,8 @@ class SPKIDataType_SPKISexp(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
-def spki_data_type__spki_sexp_from_string(xml_string):
-    return saml2.create_class_from_xml_string(SPKIDataType_SPKISexp, xml_string)
+def spki_sexp_from_string(xml_string):
+    return saml2.create_class_from_xml_string(SPKISexp, xml_string)
 
 
 class SPKIDataType_(SamlBase):
@@ -360,7 +360,7 @@ class SPKIDataType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{http://www.w3.org/2000/09/xmldsig#}SPKISexp'] = ('spki_sexp', [SPKIDataType_SPKISexp])
+    c_children['{http://www.w3.org/2000/09/xmldsig#}SPKISexp'] = ('spki_sexp', [SPKISexp])
     c_cardinality['spki_sexp'] = {"min":1}
     c_child_order.extend(['spki_sexp'])
 
@@ -526,7 +526,7 @@ def dsa_key_value_type__j_from_string(xml_string):
     return saml2.create_class_from_xml_string(DSAKeyValueType_J, xml_string)
 
 
-class DSAKeyValueType_Seed(CryptoBinary_):
+class Seed(CryptoBinary_):
 
     c_tag = 'Seed'
     c_namespace = NAMESPACE
@@ -535,11 +535,11 @@ class DSAKeyValueType_Seed(CryptoBinary_):
     c_child_order = CryptoBinary_.c_child_order[:]
     c_cardinality = CryptoBinary_.c_cardinality.copy()
 
-def dsa_key_value_type__seed_from_string(xml_string):
-    return saml2.create_class_from_xml_string(DSAKeyValueType_Seed, xml_string)
+def seed_from_string(xml_string):
+    return saml2.create_class_from_xml_string(Seed, xml_string)
 
 
-class DSAKeyValueType_PgenCounter(CryptoBinary_):
+class PgenCounter(CryptoBinary_):
 
     c_tag = 'PgenCounter'
     c_namespace = NAMESPACE
@@ -548,8 +548,8 @@ class DSAKeyValueType_PgenCounter(CryptoBinary_):
     c_child_order = CryptoBinary_.c_child_order[:]
     c_cardinality = CryptoBinary_.c_cardinality.copy()
 
-def dsa_key_value_type__pgen_counter_from_string(xml_string):
-    return saml2.create_class_from_xml_string(DSAKeyValueType_PgenCounter, xml_string)
+def pgen_counter_from_string(xml_string):
+    return saml2.create_class_from_xml_string(PgenCounter, xml_string)
 
 
 class DSAKeyValueType_(SamlBase):
@@ -570,9 +570,9 @@ class DSAKeyValueType_(SamlBase):
     c_children['{http://www.w3.org/2000/09/xmldsig#}Y'] = ('y', DSAKeyValueType_Y)
     c_children['{http://www.w3.org/2000/09/xmldsig#}J'] = ('j', DSAKeyValueType_J)
     c_cardinality['j'] = {"min":0, "max":1}
-    c_children['{http://www.w3.org/2000/09/xmldsig#}Seed'] = ('seed', DSAKeyValueType_Seed)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}Seed'] = ('seed', Seed)
     c_cardinality['seed'] = {"min":0, "max":1}
-    c_children['{http://www.w3.org/2000/09/xmldsig#}PgenCounter'] = ('pgen_counter', DSAKeyValueType_PgenCounter)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}PgenCounter'] = ('pgen_counter', PgenCounter)
     c_cardinality['pgen_counter'] = {"min":0, "max":1}
     c_child_order.extend(['p', 'q', 'g', 'y', 'j', 'seed', 'pgen_counter'])
 
@@ -605,7 +605,7 @@ def dsa_key_value_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(DSAKeyValueType_, xml_string)
 
 
-class RSAKeyValueType_Modulus(CryptoBinary_):
+class Modulus(CryptoBinary_):
 
     c_tag = 'Modulus'
     c_namespace = NAMESPACE
@@ -614,11 +614,11 @@ class RSAKeyValueType_Modulus(CryptoBinary_):
     c_child_order = CryptoBinary_.c_child_order[:]
     c_cardinality = CryptoBinary_.c_cardinality.copy()
 
-def rsa_key_value_type__modulus_from_string(xml_string):
-    return saml2.create_class_from_xml_string(RSAKeyValueType_Modulus, xml_string)
+def modulus_from_string(xml_string):
+    return saml2.create_class_from_xml_string(Modulus, xml_string)
 
 
-class RSAKeyValueType_Exponent(CryptoBinary_):
+class Exponent(CryptoBinary_):
 
     c_tag = 'Exponent'
     c_namespace = NAMESPACE
@@ -627,8 +627,8 @@ class RSAKeyValueType_Exponent(CryptoBinary_):
     c_child_order = CryptoBinary_.c_child_order[:]
     c_cardinality = CryptoBinary_.c_cardinality.copy()
 
-def rsa_key_value_type__exponent_from_string(xml_string):
-    return saml2.create_class_from_xml_string(RSAKeyValueType_Exponent, xml_string)
+def exponent_from_string(xml_string):
+    return saml2.create_class_from_xml_string(Exponent, xml_string)
 
 
 class RSAKeyValueType_(SamlBase):
@@ -640,8 +640,8 @@ class RSAKeyValueType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{http://www.w3.org/2000/09/xmldsig#}Modulus'] = ('modulus', RSAKeyValueType_Modulus)
-    c_children['{http://www.w3.org/2000/09/xmldsig#}Exponent'] = ('exponent', RSAKeyValueType_Exponent)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}Modulus'] = ('modulus', Modulus)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}Exponent'] = ('exponent', Exponent)
     c_child_order.extend(['modulus', 'exponent'])
 
     def __init__(self,
@@ -691,7 +691,7 @@ def canonicalization_method_from_string(xml_string):
     return saml2.create_class_from_xml_string(CanonicalizationMethod, xml_string)
 
 
-class SignatureMethodType_HMACOutputLength(HMACOutputLengthType_):
+class HMACOutputLength(HMACOutputLengthType_):
 
     c_tag = 'HMACOutputLength'
     c_namespace = NAMESPACE
@@ -700,8 +700,8 @@ class SignatureMethodType_HMACOutputLength(HMACOutputLengthType_):
     c_child_order = HMACOutputLengthType_.c_child_order[:]
     c_cardinality = HMACOutputLengthType_.c_cardinality.copy()
 
-def signature_method_type__hmac_output_length_from_string(xml_string):
-    return saml2.create_class_from_xml_string(SignatureMethodType_HMACOutputLength, xml_string)
+def hmac_output_length_from_string(xml_string):
+    return saml2.create_class_from_xml_string(HMACOutputLength, xml_string)
 
 
 class SignatureMethodType_(SamlBase):
@@ -713,7 +713,7 @@ class SignatureMethodType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{http://www.w3.org/2000/09/xmldsig#}HMACOutputLength'] = ('hmac_output_length', SignatureMethodType_HMACOutputLength)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}HMACOutputLength'] = ('hmac_output_length', HMACOutputLength)
     c_cardinality['hmac_output_length'] = {"min":0, "max":1}
     c_attributes['Algorithm'] = ('algorithm', 'anyURI', True)
     c_child_order.extend(['hmac_output_length'])
@@ -779,7 +779,7 @@ def digest_value_from_string(xml_string):
     return saml2.create_class_from_xml_string(DigestValue, xml_string)
 
 
-class X509DataType_X509IssuerSerial(X509IssuerSerialType_):
+class X509IssuerSerial(X509IssuerSerialType_):
 
     c_tag = 'X509IssuerSerial'
     c_namespace = NAMESPACE
@@ -788,11 +788,11 @@ class X509DataType_X509IssuerSerial(X509IssuerSerialType_):
     c_child_order = X509IssuerSerialType_.c_child_order[:]
     c_cardinality = X509IssuerSerialType_.c_cardinality.copy()
 
-def x509_data_type__x509_issuer_serial_from_string(xml_string):
-    return saml2.create_class_from_xml_string(X509DataType_X509IssuerSerial, xml_string)
+def x509_issuer_serial_from_string(xml_string):
+    return saml2.create_class_from_xml_string(X509IssuerSerial, xml_string)
 
 
-class X509DataType_X509SKI(SamlBase):
+class X509SKI(SamlBase):
 
     c_tag = 'X509SKI'
     c_namespace = NAMESPACE
@@ -802,11 +802,11 @@ class X509DataType_X509SKI(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
-def x509_data_type__x509_ski_from_string(xml_string):
-    return saml2.create_class_from_xml_string(X509DataType_X509SKI, xml_string)
+def x509_ski_from_string(xml_string):
+    return saml2.create_class_from_xml_string(X509SKI, xml_string)
 
 
-class X509DataType_X509SubjectName(SamlBase):
+class X509SubjectName(SamlBase):
 
     c_tag = 'X509SubjectName'
     c_namespace = NAMESPACE
@@ -816,11 +816,11 @@ class X509DataType_X509SubjectName(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
-def x509_data_type__x509_subject_name_from_string(xml_string):
-    return saml2.create_class_from_xml_string(X509DataType_X509SubjectName, xml_string)
+def x509_subject_name_from_string(xml_string):
+    return saml2.create_class_from_xml_string(X509SubjectName, xml_string)
 
 
-class X509DataType_X509Certificate(SamlBase):
+class X509Certificate(SamlBase):
 
     c_tag = 'X509Certificate'
     c_namespace = NAMESPACE
@@ -830,11 +830,11 @@ class X509DataType_X509Certificate(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
-def x509_data_type__x509_certificate_from_string(xml_string):
-    return saml2.create_class_from_xml_string(X509DataType_X509Certificate, xml_string)
+def x509_certificate_from_string(xml_string):
+    return saml2.create_class_from_xml_string(X509Certificate, xml_string)
 
 
-class X509DataType_X509CRL(SamlBase):
+class X509CRL(SamlBase):
 
     c_tag = 'X509CRL'
     c_namespace = NAMESPACE
@@ -844,8 +844,8 @@ class X509DataType_X509CRL(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
-def x509_data_type__x509_crl_from_string(xml_string):
-    return saml2.create_class_from_xml_string(X509DataType_X509CRL, xml_string)
+def x509_crl_from_string(xml_string):
+    return saml2.create_class_from_xml_string(X509CRL, xml_string)
 
 
 class X509DataType_(SamlBase):
@@ -857,15 +857,15 @@ class X509DataType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{http://www.w3.org/2000/09/xmldsig#}X509IssuerSerial'] = ('x509_issuer_serial', X509DataType_X509IssuerSerial)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}X509IssuerSerial'] = ('x509_issuer_serial', X509IssuerSerial)
     c_cardinality['x509_issuer_serial'] = {"min":0, "max":1}
-    c_children['{http://www.w3.org/2000/09/xmldsig#}X509SKI'] = ('x509_ski', X509DataType_X509SKI)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}X509SKI'] = ('x509_ski', X509SKI)
     c_cardinality['x509_ski'] = {"min":0, "max":1}
-    c_children['{http://www.w3.org/2000/09/xmldsig#}X509SubjectName'] = ('x509_subject_name', X509DataType_X509SubjectName)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}X509SubjectName'] = ('x509_subject_name', X509SubjectName)
     c_cardinality['x509_subject_name'] = {"min":0, "max":1}
-    c_children['{http://www.w3.org/2000/09/xmldsig#}X509Certificate'] = ('x509_certificate', X509DataType_X509Certificate)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}X509Certificate'] = ('x509_certificate', X509Certificate)
     c_cardinality['x509_certificate'] = {"min":0, "max":1}
-    c_children['{http://www.w3.org/2000/09/xmldsig#}X509CRL'] = ('x509_crl', X509DataType_X509CRL)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}X509CRL'] = ('x509_crl', X509CRL)
     c_cardinality['x509_crl'] = {"min":0, "max":1}
     c_child_order.extend(['x509_issuer_serial', 'x509_ski', 'x509_subject_name', 'x509_certificate', 'x509_crl'])
 
@@ -1543,26 +1543,26 @@ ELEMENT_FROM_STRING = {
     RSAKeyValue.c_tag: rsa_key_value_from_string,
     RSAKeyValueType_.c_tag: rsa_key_value_type__from_string,
     TransformType_XPath.c_tag: transform_type__x_path_from_string,
-    X509IssuerSerialType_X509IssuerName.c_tag: x509_issuer_serial_type__x509_issuer_name_from_string,
-    X509IssuerSerialType_X509SerialNumber.c_tag: x509_issuer_serial_type__x509_serial_number_from_string,
-    PGPDataType_PGPKeyID.c_tag: pgp_data_type__pgp_key_id_from_string,
-    PGPDataType_PGPKeyPacket.c_tag: pgp_data_type__pgp_key_packet_from_string,
-    SPKIDataType_SPKISexp.c_tag: spki_data_type__spki_sexp_from_string,
+    X509IssuerName.c_tag: x509_issuer_name_from_string,
+    X509SerialNumber.c_tag: x509_serial_number_from_string,
+    PGPKeyID.c_tag: pgp_key_id_from_string,
+    PGPKeyPacket.c_tag: pgp_key_packet_from_string,
+    SPKISexp.c_tag: spki_sexp_from_string,
     DSAKeyValueType_P.c_tag: dsa_key_value_type__p_from_string,
     DSAKeyValueType_Q.c_tag: dsa_key_value_type__q_from_string,
     DSAKeyValueType_G.c_tag: dsa_key_value_type__g_from_string,
     DSAKeyValueType_Y.c_tag: dsa_key_value_type__y_from_string,
     DSAKeyValueType_J.c_tag: dsa_key_value_type__j_from_string,
-    DSAKeyValueType_Seed.c_tag: dsa_key_value_type__seed_from_string,
-    DSAKeyValueType_PgenCounter.c_tag: dsa_key_value_type__pgen_counter_from_string,
-    RSAKeyValueType_Modulus.c_tag: rsa_key_value_type__modulus_from_string,
-    RSAKeyValueType_Exponent.c_tag: rsa_key_value_type__exponent_from_string,
-    SignatureMethodType_HMACOutputLength.c_tag: signature_method_type__hmac_output_length_from_string,
-    X509DataType_X509IssuerSerial.c_tag: x509_data_type__x509_issuer_serial_from_string,
-    X509DataType_X509SKI.c_tag: x509_data_type__x509_ski_from_string,
-    X509DataType_X509SubjectName.c_tag: x509_data_type__x509_subject_name_from_string,
-    X509DataType_X509Certificate.c_tag: x509_data_type__x509_certificate_from_string,
-    X509DataType_X509CRL.c_tag: x509_data_type__x509_crl_from_string,
+    Seed.c_tag: seed_from_string,
+    PgenCounter.c_tag: pgen_counter_from_string,
+    Modulus.c_tag: modulus_from_string,
+    Exponent.c_tag: exponent_from_string,
+    HMACOutputLength.c_tag: hmac_output_length_from_string,
+    X509IssuerSerial.c_tag: x509_issuer_serial_from_string,
+    X509SKI.c_tag: x509_ski_from_string,
+    X509SubjectName.c_tag: x509_subject_name_from_string,
+    X509Certificate.c_tag: x509_certificate_from_string,
+    X509CRL.c_tag: x509_crl_from_string,
 }
 
 ELEMENT_BY_TAG = {
@@ -1616,26 +1616,26 @@ ELEMENT_BY_TAG = {
     'RSAKeyValue': RSAKeyValue,
     'RSAKeyValueType': RSAKeyValueType_,
     'XPath': TransformType_XPath,
-    'X509IssuerName': X509IssuerSerialType_X509IssuerName,
-    'X509SerialNumber': X509IssuerSerialType_X509SerialNumber,
-    'PGPKeyID': PGPDataType_PGPKeyID,
-    'PGPKeyPacket': PGPDataType_PGPKeyPacket,
-    'SPKISexp': SPKIDataType_SPKISexp,
+    'X509IssuerName': X509IssuerName,
+    'X509SerialNumber': X509SerialNumber,
+    'PGPKeyID': PGPKeyID,
+    'PGPKeyPacket': PGPKeyPacket,
+    'SPKISexp': SPKISexp,
     'P': DSAKeyValueType_P,
     'Q': DSAKeyValueType_Q,
     'G': DSAKeyValueType_G,
     'Y': DSAKeyValueType_Y,
     'J': DSAKeyValueType_J,
-    'Seed': DSAKeyValueType_Seed,
-    'PgenCounter': DSAKeyValueType_PgenCounter,
-    'Modulus': RSAKeyValueType_Modulus,
-    'Exponent': RSAKeyValueType_Exponent,
-    'HMACOutputLength': SignatureMethodType_HMACOutputLength,
-    'X509IssuerSerial': X509DataType_X509IssuerSerial,
-    'X509SKI': X509DataType_X509SKI,
-    'X509SubjectName': X509DataType_X509SubjectName,
-    'X509Certificate': X509DataType_X509Certificate,
-    'X509CRL': X509DataType_X509CRL,
+    'Seed': Seed,
+    'PgenCounter': PgenCounter,
+    'Modulus': Modulus,
+    'Exponent': Exponent,
+    'HMACOutputLength': HMACOutputLength,
+    'X509IssuerSerial': X509IssuerSerial,
+    'X509SKI': X509SKI,
+    'X509SubjectName': X509SubjectName,
+    'X509Certificate': X509Certificate,
+    'X509CRL': X509CRL,
 }
 
 
