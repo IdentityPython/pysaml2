@@ -124,17 +124,6 @@ class Config(object):
         self.serves = []
         self.vorg = {}
 
-#    def copy_into(self, typ=""):
-#        if typ == "sp":
-#            copy = SPConfig()
-#        elif typ in ["idp", "aa"]:
-#            copy = IdPConfig()
-#        else:
-#            copy = Config()
-#        copy.context = typ
-#        copy._attr = self._attr.copy()
-#        return copy
-
     def setattr(self, context, attr, val):
         if context == "":
             setattr(self, attr, val)
