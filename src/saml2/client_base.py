@@ -19,7 +19,10 @@
 to conclude its tasks.
 """
 from saml2.saml import AssertionIDRef, NAMEID_FORMAT_TRANSIENT
-from saml2.samlp import AuthnQuery, LogoutRequest, AssertionIDRequest
+from saml2.samlp import AuthnQuery
+from saml2.samlp import LogoutRequest
+from saml2.samlp import AssertionIDRequest
+from saml2.samlp import NameIDMappingRequest
 from saml2.samlp import AttributeQuery
 from saml2.samlp import AuthzDecisionQuery
 from saml2.samlp import AuthnRequest
@@ -517,10 +520,47 @@ class Base(object):
                              sign, subject=subject, session_index=session_index,
                              requested_auth_context=authn_context)
 
+    def create_nameid_mapping_request(self, nameid_policy,
+                                      nameid=None, baseid=None,
+                                      encryptedid=None, destination=None,
+                                      id=0, consent=None, extensions=None,
+                                      sign=False):
+        """
+
+        :param nameid_policy:
+        :param nameid:
+        :param baseid:
+        :param encryptedid:
+        :param destination:
+        :param id: Message identifier
+        :param consent: If the principal gave her consent to this request
+        :param extensions: Possible request extensions
+        :param sign: Whether the request should be signed or not.
+        :return:
+        """
+
+        # One of them must be present
+        assert nameid or baseid or encryptedid
+
+        if nameid:
+            return self._message(NameIDMappingRequest, destination, id, consent,
+                                 extensions, sign, nameid_policy=nameid_policy,
+                                 nameid=nameid)
+        elif baseid:
+            return self._message(NameIDMappingRequest, destination, id, consent,
+                                 extensions, sign, nameid_policy=nameid_policy,
+                                 baseid=baseid)
+        else:
+            return self._message(NameIDMappingRequest, destination, id, consent,
+                                 extensions, sign, nameid_policy=nameid_policy,
+                                 encryptedid=encryptedid)
+
+    def create_manage_nameid_request(self):
+        pass
 
     # ======== response handling ===========
 
-    def response(self, post, outstanding, decode=True, asynchop=True):
+    def _response(self, post, outstanding, decode=True, asynchop=True):
         """ Deal with an AuthnResponse or LogoutResponse
 
         :param post: The reply as a dictionary
@@ -565,6 +605,10 @@ class Base(object):
                 logger.error("Response type not supported: %s" % (
                     saml2.class_name(resp),))
         return resp
+
+    def authn_request_response(self, post, outstanding, decode=True,
+                               asynchop=True):
+        return self._response(post, outstanding, decode, asynchop)
 
     def logout_response(self, xmlstr, binding=BINDING_SOAP):
         """ Deal with a LogoutResponse
