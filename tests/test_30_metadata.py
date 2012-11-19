@@ -2,11 +2,16 @@ import datetime
 import re
 #import os
 
-from saml2 import metadata, make_vals, make_instance
-from saml2 import NAMESPACE as SAML2_NAMESPACE
+from saml2 import metadata
+from saml2 import make_vals
+from saml2 import make_instance
+from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_SOAP
+from saml2 import BINDING_HTTP_ARTIFACT
 from saml2 import md, saml, samlp
 from saml2 import time_util
+from saml2 import NAMESPACE as SAML2_NAMESPACE
 from saml2.saml import NAMEID_FORMAT_TRANSIENT, NAME_FORMAT_URI
 from saml2.attribute_converter import ac_factory, to_local_name
 
@@ -52,7 +57,7 @@ def test_swami_1():
                 if "idpsso" in ent])
     print idps
     assert idps.keys()
-    idpsso = md.single_sign_on_services(
+    idpsso = md.single_sign_on_service(
                     'https://idp.umu.se/saml2/idp/metadata.php')
     assert md.name('https://idp.umu.se/saml2/idp/metadata.php') == (
         u'Ume\xe5 University (SAML2)')
@@ -93,8 +98,8 @@ def test_incommon_1():
         (id,ent["idpsso"]) for id,ent in md.entity.items() if "idpsso" in ent])
     print idps.keys()
     assert len(idps) == 53 # !!!!???? < 10%
-    assert md.single_sign_on_services('urn:mace:incommon:uiuc.edu') == []
-    idpsso = md.single_sign_on_services('urn:mace:incommon:alaska.edu')
+    assert md.single_sign_on_service('urn:mace:incommon:uiuc.edu') == []
+    idpsso = md.single_sign_on_service('urn:mace:incommon:alaska.edu')
     assert len(idpsso) == 1
     print idpsso
     assert idpsso == ['https://idp.alaska.edu/idp/profile/SAML2/Redirect/SSO']
@@ -115,6 +120,18 @@ def test_incommon_1():
 
     print aas.keys()
     assert len(aas) == 53
+
+def test_ext_2():
+    md = metadata.MetaData(attrconv=ATTRCONV)
+    md.import_metadata(_read_file("extended.xml"),"-")
+    # No specific binding defined
+
+    eid = [id for id,ent in md.entity.items() if "spsso" in ent]
+
+    endps = md.single_logout_service(eid[0], None)
+    assert len(endps) == 4
+    assert _eq([b for b, e in endps], [BINDING_SOAP, BINDING_HTTP_REDIRECT,
+                                       BINDING_HTTP_POST, BINDING_HTTP_ARTIFACT])
 
 def test_example():
     md = metadata.MetaData(attrconv=ATTRCONV)
@@ -141,7 +158,7 @@ def test_switch_1():
     idps = dict([(id,ent["idpsso"]) for id,ent in md.entity.items() \
                 if "idpsso" in ent])
     print idps.keys()
-    idpsso = md.single_sign_on_services(
+    idpsso = md.single_sign_on_service(
         'https://aai-demo-idp.switch.ch/idp/shibboleth')
     assert len(idpsso) == 1
     print idpsso
@@ -440,7 +457,6 @@ def test_attributes():
         assert ra[i].is_required == "True"
     assert ra[0].friendly_name == "surname"
     assert ra[0].name == 'urn:oid:2.5.4.4'
-    
 
 def test_extend():
     md = metadata.MetaData(attrconv=ATTRCONV)
@@ -477,6 +493,6 @@ def test_pdp():
     assert len(pdp.authz_service) == 1
     assert pdp.authz_service[0].location == "http://www.example.org/pysaml2/authz"
     assert pdp.authz_service[0].binding == BINDING_SOAP
-    endpoints = md.authz_service_endpoints("http://www.example.org/pysaml2/")
+    endpoints = md.authz_service("http://www.example.org/pysaml2/")
     assert len(endpoints) == 1
     assert endpoints[0] == "http://www.example.org/pysaml2/authz"
