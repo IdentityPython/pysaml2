@@ -31,7 +31,9 @@ except ImportError:
 from saml2.time_util import not_on_or_after
 from saml2.s_utils import decode_base64_and_inflate
 
-from saml2 import samlp, saml, class_name
+from saml2 import samlp
+from saml2 import saml
+from saml2 import class_name
 from saml2.sigver import pre_signature_part
 from saml2.sigver import signed_instance_factory
 from saml2.binding import send_using_soap
@@ -40,8 +42,8 @@ from saml2.binding import http_post_message
 from saml2.client_base import Base, LogoutError
 
 from saml2 import BINDING_HTTP_REDIRECT
-from saml2 import BINDING_SOAP
 from saml2 import BINDING_HTTP_POST
+from saml2 import BINDING_SOAP
 
 import logging
 logger = logging.getLogger(__name__)
@@ -309,7 +311,7 @@ class Saml2Client(Base):
     # AssertionIDRequest, SubjectQuery,
     # AuthnQuery, AttributeQuery, or AuthzDecisionQuery
 
-    def _soap_query_response(self, destination, query_type, **kwargs):
+    def use_soap(self, destination, query_type, **kwargs):
         _create_func = getattr(self, "create_%s" % query_type)
         _response_func = getattr(self, "%s_response" % query_type)
         try:
@@ -357,10 +359,9 @@ class Saml2Client(Base):
 
         for destination in self.config.authz_service_endpoints(entity_id,
                                                                BINDING_SOAP):
-            resp = self._soap_query_response(destination,
-                                             "authz_decision_query",
-                                             action=action, evidence=evidence,
-                                             resource=resource, subject=subject)
+            resp = self.use_soap(destination, "authz_decision_query",
+                                action=action, evidence=evidence,
+                                resource=resource, subject=subject)
             if resp:
                 return resp
 
@@ -377,11 +378,9 @@ class Saml2Client(Base):
 
         _id_refs = [AssertionIDRef(_id) for _id in assertion_ids]
 
-        return self._soap_query_response(destination, "assertion_id_request",
-                                         assertion_id_refs=_id_refs,
-                                         consent=consent, extensions=extensions,
-                                         sign=sign)
-
+        return self.use_soap(destination, "assertion_id_request",
+                            assertion_id_refs=_id_refs, consent=consent,
+                            extensions=extensions, sign=sign)
 
     def do_authn_query(self, entity_id,
                        consent=None, extensions=None, sign=False):
@@ -389,9 +388,8 @@ class Saml2Client(Base):
         destination = self.metadata.authn_request_service(entity_id,
                                                           BINDING_SOAP)[0]
 
-        return self._soap_query_response(destination, "authn_query",
-                                         consent=consent, extensions=extensions,
-                                         sign=sign)
+        return self.use_soap(destination, "authn_query",
+                            consent=consent, extensions=extensions, sign=sign)
 
     def do_attribute_query(self, entityid, subject_id,
                            attribute=None, sp_name_qualifier=None,
@@ -420,39 +418,10 @@ class Saml2Client(Base):
 
         response_args = {"real_id": real_id}
 
-        return self._soap_query_response(location, "attribute_query",
-                                         consent=consent, extensions=extensions,
-                                         sign=sign, subject_id=subject_id,
-                                         attribute=attribute,
-                                         sp_name_qualifier=sp_name_qualifier,
-                                         name_qualifier=name_qualifier,
-                                         nameid_format=nameid_format,
-                                         response_args=response_args)
-
-#        if response:
-#            logger.info("Verifying response")
-#
-#            try:
-#                # synchronous operation
-#                aresp = attribute_response(self.config, self.config.entityid)
-#            except Exception, exc:
-#                logger.error("%s", (exc,))
-#                return None
-#
-#            _resp = aresp.loads(response, False, soapclient.response).verify()
-#            if _resp is None:
-#                logger.error("Didn't like the response")
-#                return None
-#
-#            session_info = _resp.session_info()
-#
-#            if session_info:
-#                if real_id is not None:
-#                    session_info["name_id"] = real_id
-#                self.users.add_information_about_person(session_info)
-#
-#            logger.info("session: %s" % session_info)
-#            return session_info
-#        else:
-#            logger.info("No response")
-#            return None
+        return self.use_soap(location, "attribute_query", consent=consent,
+                            extensions=extensions, sign=sign,
+                            subject_id=subject_id, attribute=attribute,
+                            sp_name_qualifier=sp_name_qualifier,
+                            name_qualifier=name_qualifier,
+                            nameid_format=nameid_format,
+                            response_args=response_args)
