@@ -15,63 +15,22 @@ from repoze.who.interfaces import IChallenger
 from repoze.who.interfaces import IIdentifier
 from repoze.who.plugins.form import FormPlugin
 
-_DEFAULT_FORM = """
+_DEFAULT_FORM = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" >
 <html>
 <head>
-  <title>Demo Organization Log In</title>
+    <title>Demo Organization Log In</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 </head>
 <body>
     <div>
-        <b>Demo Organization Log In</b>
+        <strong>Demo Organization Log In</strong>
     </div>
-    <br/>
-    <form method="POST" action="?__do_login=true">
-        <table width="350" border="0" cellspacing="0" cellpadding="1">
-            <tr>
-                <td bgcolor="#999999">
-                    <table width="350" border="0" 
-                        cellpadding="3" cellspacing="0" bgcolor="#e6e6e6">
-                        <tr>
-                            <td colspan="2">
-                            </td>
-                        </tr>
-                        <tr>
-                            <td width="85">
-                                <font color="#CC3300" >
-                                    <strong>
-                                        &nbsp;Anv&auml;ndarnamn/Username:&nbsp;
-                                    </strong>
-                                </font>
-                            </td>
-                            <td width="295">
-                                <input type="text" name="login">
-                            </td>
-                        </tr>
-                        <tr>
-                            <td width="85">
-                                <font color="#CC3300">
-                                    <strong>
-                                        &nbsp;L&ouml;senord/Password:
-                                    </strong>
-                                </font>
-                            </td>
-                            <td width="295">
-                                <input type="password" name="password">
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colspan="2">&nbsp;
-                                <input name="submit" type="submit" value="Logga in">
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-		 	</tr>
-	 	</table>
-    %s
-  </form>
-  <pre>
-  </pre>
+    <form name="foo" method=POST action="?__do_login=true">
+        <input type="text" name="login">
+        <input type="password" name="password">
+        <input name="submit" type="submit" value="Logga in">
+        %s
+    </form>
 </body>
 </html>
 """
@@ -85,7 +44,7 @@ class FormHiddenPlugin(FormPlugin):
     # IIdentifier
     def identify(self, environ):
         logger = environ.get('repoze.who.logger','')
-        logger and logger.info("formplugin identify")
+        logger.info("formplugin identify")
         #logger and logger.info("environ keys: %s" % environ.keys())
         query = parse_dict_querystring(environ)
         # If the extractor finds a special query string on any request,
@@ -124,7 +83,7 @@ class FormHiddenPlugin(FormPlugin):
     # IChallenger
     def challenge(self, environ, status, app_headers, forget_headers):
         logger = environ.get('repoze.who.logger','')
-        logger and logger.info("formplugin challenge")
+        logger.info("formplugin challenge")
         if app_headers:
             location = LOCATION(app_headers)
             if location:
@@ -136,7 +95,7 @@ class FormHiddenPlugin(FormPlugin):
         for key, val in query.items():
             hidden.append(HIDDEN_PRE_LINE % ("_%s_" % key, val))
 
-        logger and logger.info("hidden: %s" % (hidden,))
+        logger.info("hidden: %s" % (hidden,))
         form = self.formbody or _DEFAULT_FORM
         form = form % "\n".join(hidden)
             

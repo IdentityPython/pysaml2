@@ -91,7 +91,7 @@ def sso(environ, start_response, user, logger):
     if REPOZE_ID_EQUIVALENT:
         identity[REPOZE_ID_EQUIVALENT] = userid
     try:
-        authn_resp = IDP.authn_response(identity, 
+        authn_resp = IDP.create_authn_response(identity,
                                         req_info["id"], 
                                         req_info["consumer_url"], 
                                         req_info["sp_entity_id"], 
@@ -174,7 +174,8 @@ def slo(environ, start_response, user, logger):
 
     # Either HTTP-Post or HTTP-redirect is possible
     bindings = [BINDING_HTTP_POST, BINDING_HTTP_REDIRECT]
-    (resp, headers, message) = IDP.logout_response(req_info.message, bindings)
+    (resp, headers, message) = IDP.create_logout_response(req_info.message,
+                                                          bindings)
     #headers.append(session.cookie(expire="now"))
     logger.info("Response code: %s" % (resp,))
     logger.info("Header: %s" % (headers,))
