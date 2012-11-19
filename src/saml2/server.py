@@ -345,15 +345,16 @@ class Server(object):
         try:
             # What's the binding ? ProtocolBinding
             _binding = authn_request.message.protocol_binding
-            consumer_url = self.metadata.consumer_url(sp_entity_id,
-                                                      binding=_binding)
+            consumer_url = self.metadata.assertion_consumer_service(sp_entity_id,
+                                                      binding=_binding)[0]
         except KeyError:
             _log_info("Failed to find consumer URL for %s" % sp_entity_id)
             _log_info("entities: %s" % self.metadata.entity.keys())
             raise UnknownPrincipal(sp_entity_id)
             
         if not consumer_url: # what to do ?
-            _log_info("Couldn't find a consumer URL binding=%s" % _binding)
+            _log_info("Couldn't find a consumer URL binding=%s entity_id=%s" % (
+                                        _binding,sp_entity_id))
             raise UnsupportedBinding(sp_entity_id)
 
         response["sp_entity_id"] = sp_entity_id

@@ -79,13 +79,19 @@ def get_xmlsec_binary(paths=None):
     if paths:
         for path in paths:
             fil = os.path.join(path, bin_name)
-            if os.access(fil, os.X_OK):
-                return fil
+            try:
+                if os.lstat(fil):
+                    return fil
+            except Exception:
+                pass
 
     for path in os.environ["PATH"].split(":"):
         fil = os.path.join(path, bin_name)
-        if os.access(fil, os.X_OK):
-            return fil
+        try:
+            if os.lstat(fil):
+                return fil
+        except Exception:
+            pass
 
     raise Exception("Can't find %s" % bin_name)
     
