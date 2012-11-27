@@ -24,7 +24,7 @@ import shelve
 import sys
 import memcache
 
-from saml2 import saml
+from saml2 import saml, BINDING_HTTP_POST
 from saml2 import class_name
 from saml2 import soap
 from saml2 import BINDING_HTTP_REDIRECT
@@ -342,13 +342,18 @@ class Server(object):
 
         sp_entity_id = authn_request.message.issuer.text
         # try to find return address in metadata
-        try:
-            # What's the binding ? ProtocolBinding
+        # What's the binding ? ProtocolBinding
+        if authn_request.message.protocol_binding == BINDING_HTTP_REDIRECT:
+            _binding = BINDING_HTTP_POST
+        else:
             _binding = authn_request.message.protocol_binding
+
+        try:
             consumer_url = self.metadata.assertion_consumer_service(sp_entity_id,
                                                       binding=_binding)[0]
         except (KeyError, IndexError):
             _log_info("Failed to find consumer URL for %s" % sp_entity_id)
+            _log_info("Binding: %s" % _binding)
             _log_info("entities: %s" % self.metadata.entity.keys())
             raise UnknownPrincipal(sp_entity_id)
 
