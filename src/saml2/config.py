@@ -370,8 +370,7 @@ class SPConfig(Config):
             the SOAP binding)
         :return: list of endpoints
         """
-        return self.metadata.single_logout_services(entity_id, "idp",
-                                                     binding=binding)
+        return self.metadata.single_logout_service(entity_id, binding=binding)
 
     def single_sign_on_services(self, entity_id,
                                 binding=BINDING_HTTP_REDIRECT):
@@ -381,8 +380,7 @@ class SPConfig(Config):
         :param binding: The preferred binding 
         :return: list of endpoints
         """
-        return self.metadata.single_sign_on_services(entity_id,
-                                                     binding=binding)
+        return self.metadata.single_sign_on_service(entity_id, binding=binding)
 
     def attribute_services(self, entity_id, binding=BINDING_SOAP):
         """ returns a list of endpoints to use for attribute requests to
@@ -461,8 +459,7 @@ class IdPConfig(Config):
         :return: list of endpoints
         """
     
-        return self.metadata.single_logout_services(entity_id, "sp",
-                                                     binding=binding)
+        return self.metadata.single_logout_service(entity_id, binding=binding)
 
     def assertion_consumer_services(self, entity_id, binding=BINDING_HTTP_POST):
         return self.metadata.assertion_consumer_services(entity_id, binding)
