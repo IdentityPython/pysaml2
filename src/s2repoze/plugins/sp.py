@@ -283,7 +283,7 @@ class SAML2Plugin(FormPluginBase):
         except KeyError:
             try:
                 vorg_name = self.saml_client.vorg.keys()[1]
-            except IndexError:
+            except (IndexError, AttributeError):
                 vorg_name = ""
             
         logger.info("[sp.challenge] VO: %s" % vorg_name)
@@ -335,7 +335,7 @@ class SAML2Plugin(FormPluginBase):
         try:
             # Evaluate the response, returns a AuthnResponse instance
             try:
-                authresp = self.saml_client.response(post,
+                authresp = self.saml_client.authn_request_response(post,
                                                      self.outstanding_queries)
             except Exception, excp:
                 logger.exception("Exception: %s" % (excp,))
