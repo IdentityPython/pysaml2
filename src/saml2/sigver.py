@@ -20,10 +20,12 @@ Based on the use of xmlsec1 binaries and not the python xmlsec module.
 """
 
 import base64
+from binascii import hexlify
 import logging
 import random
 import os
 import sys
+import M2Crypto
 
 import xmldsig as ds
 
@@ -286,6 +288,10 @@ def cert_from_key_info(key_info):
     """ Get all X509 certs from a KeyInfo instance. Care is taken to make sure
     that the certs are continues sequences of bytes.
 
+    All certificates appearing in an X509Data element MUST relate to the
+    validation key by either containing it or being part of a certification
+    chain that terminates in a certificate containing the validation key.
+
     :param key_info: The KeyInfo instance
     :return: A possibly empty list of certs
     """
@@ -309,6 +315,42 @@ def cert_from_instance(instance):
         if instance.signature.key_info:
             return cert_from_key_info(instance.signature.key_info)
     return []
+
+# =============================================================================
+from M2Crypto.__m2crypto import bn_to_mpi
+from M2Crypto.__m2crypto import hex_to_bn
+
+def intarr2long(arr):
+    return long(''.join(["%02x" % byte for byte in arr]), 16)
+
+def dehexlify(bi):
+    s = hexlify(bi)
+    return [int(s[i]+s[i+1], 16) for i in range(0,len(s),2)]
+
+def long_to_mpi(num):
+    """Converts a python integer or long to OpenSSL MPInt used by M2Crypto.
+    Borrowed from Snowball.Shared.Crypto"""
+    h = hex(num)[2:] # strip leading 0x in string
+    if len(h) % 2 == 1:
+        h = '0' + h # add leading 0 to get even number of hexdigits
+    return bn_to_mpi(hex_to_bn(h)) # convert using OpenSSL BinNum
+
+def base64_to_long(data):
+    _d = base64.urlsafe_b64decode(data + '==')
+    return intarr2long(dehexlify(_d))
+
+def key_from_key_value(key_info):
+    res = []
+    for value in key_info.key_value:
+        if value.rsa_key_value:
+            e = base64_to_long(value.rsa_key_value.exponent)
+            m = base64_to_long(value.rsa_key_value.modulus)
+            key = M2Crypto.RSA.new_pub_key((long_to_mpi(e),
+                                          long_to_mpi(m)))
+            res.append(key)
+    return res
+
+# =============================================================================
 
 def pem_format(key):
     return "\n".join(["-----BEGIN CERTIFICATE-----",
@@ -989,7 +1031,7 @@ def pre_signature_part(ident, public_key=None, identifier=None):
         signature.id = "Signature%d" % identifier
                                 
     if public_key:
-        x509_data = ds.X509Data(x509_certificate=[ds.X509DataType_X509Certificate(
+        x509_data = ds.X509Data(x509_certificate=[ds.X509Certificate(
                                                             text=public_key)])
         key_info = ds.KeyInfo(x509_data=x509_data)
         signature.key_info = key_info

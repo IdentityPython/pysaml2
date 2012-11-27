@@ -38,7 +38,9 @@ class LocalizedNameType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_attributes['{http://www.w3.org/XML/1998/namespace}lang'] = ('lang', 'string', True)
+    c_attributes['{http://www.w3.org/XML/1998/namespace}lang'] = ('lang',
+                                                                  'string',
+                                                                  True)
 
     def __init__(self,
             lang=None,
@@ -67,7 +69,9 @@ class LocalizedURIType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_attributes['{http://www.w3.org/XML/1998/namespace}lang'] = ('lang', 'anyURI', True)
+    c_attributes['{http://www.w3.org/XML/1998/namespace}lang'] = ('lang',
+                                                                  'anyURI',
+                                                                  True)
 
     def __init__(self,
             lang=None,
@@ -196,7 +200,8 @@ class OrganizationDisplayName(LocalizedNameType_):
     c_cardinality = LocalizedNameType_.c_cardinality.copy()
 
 def organization_display_name_from_string(xml_string):
-    return saml2.create_class_from_xml_string(OrganizationDisplayName, xml_string)
+    return saml2.create_class_from_xml_string(OrganizationDisplayName,
+                                              xml_string)
 
 
 class OrganizationURL(LocalizedURIType_):
@@ -293,7 +298,9 @@ class ContactTypeType_(SamlBase):
 
     c_tag = 'ContactTypeType'
     c_namespace = NAMESPACE
-    c_value_type = {'base': 'string', 'enumeration': ['technical', 'support', 'administrative', 'billing', 'other']}
+    c_value_type = {'base': 'string', 'enumeration': ['technical', 'support',
+                                                      'administrative',
+                                                      'billing', 'other']}
     c_children = SamlBase.c_children.copy()
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
@@ -329,7 +336,8 @@ class AdditionalMetadataLocationType_(SamlBase):
         self.namespace=namespace
 
 def additional_metadata_location_type__from_string(xml_string):
-    return saml2.create_class_from_xml_string(AdditionalMetadataLocationType_, xml_string)
+    return saml2.create_class_from_xml_string(AdditionalMetadataLocationType_,
+                                              xml_string)
 
 
 class AnyURIListType_(SamlBase):
@@ -387,7 +395,8 @@ class ArtifactResolutionService(IndexedEndpointType_):
     c_cardinality = IndexedEndpointType_.c_cardinality.copy()
 
 def artifact_resolution_service_from_string(xml_string):
-    return saml2.create_class_from_xml_string(ArtifactResolutionService, xml_string)
+    return saml2.create_class_from_xml_string(ArtifactResolutionService,
+                                              xml_string)
 
 
 class SingleLogoutService(EndpointType_):
@@ -472,7 +481,8 @@ class AssertionIDRequestService(EndpointType_):
     c_cardinality = EndpointType_.c_cardinality.copy()
 
 def assertion_id_request_service_from_string(xml_string):
-    return saml2.create_class_from_xml_string(AssertionIDRequestService, xml_string)
+    return saml2.create_class_from_xml_string(AssertionIDRequestService,
+                                              xml_string)
 
 
 class AttributeProfile(SamlBase):
@@ -565,7 +575,8 @@ class RequestedAttributeType_(saml.AttributeType_):
         self.is_required=is_required
 
 def requested_attribute_type__from_string(xml_string):
-    return saml2.create_class_from_xml_string(RequestedAttributeType_, xml_string)
+    return saml2.create_class_from_xml_string(RequestedAttributeType_,
+                                              xml_string)
 
 
 class AuthnQueryService(EndpointType_):
@@ -647,15 +658,24 @@ class OrganizationType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}Extensions'] = ('extensions', Extensions)
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}Extensions'] = (
+                                                                'extensions',
+                                                                Extensions)
     c_cardinality['extensions'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}OrganizationName'] = ('organization_name', [OrganizationName])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}OrganizationName'] = (
+                                                        'organization_name',
+                                                        [OrganizationName])
     c_cardinality['organization_name'] = {"min":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}OrganizationDisplayName'] = ('organization_display_name', [OrganizationDisplayName])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}OrganizationDisplayName'] = (
+                                                'organization_display_name',
+                                                [OrganizationDisplayName])
     c_cardinality['organization_display_name'] = {"min":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}OrganizationURL'] = ('organization_url', [OrganizationURL])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}OrganizationURL'] = (
+                                                        'organization_url',
+                                                        [OrganizationURL])
     c_cardinality['organization_url'] = {"min":1}
-    c_child_order.extend(['extensions', 'organization_name', 'organization_display_name', 'organization_url'])
+    c_child_order.extend(['extensions', 'organization_name',
+                          'organization_display_name', 'organization_url'])
 
     def __init__(self,
             extensions=None,
@@ -689,20 +709,29 @@ class ContactType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}Extensions'] = ('extensions', Extensions)
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}Extensions'] = ('extensions',
+                                                                      Extensions)
     c_cardinality['extensions'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}Company'] = ('company', Company)
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}Company'] = ('company',
+                                                                   Company)
     c_cardinality['company'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}GivenName'] = ('given_name', GivenName)
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}GivenName'] = ('given_name',
+                                                                     GivenName)
     c_cardinality['given_name'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}SurName'] = ('sur_name', SurName)
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}SurName'] = ('sur_name',
+                                                                   SurName)
     c_cardinality['sur_name'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}EmailAddress'] = ('email_address', [EmailAddress])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}EmailAddress'] = (
+                                                                'email_address',
+                                                                [EmailAddress])
     c_cardinality['email_address'] = {"min":0}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}TelephoneNumber'] = ('telephone_number', [TelephoneNumber])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}TelephoneNumber'] = (
+                                                            'telephone_number',
+                                                            [TelephoneNumber])
     c_cardinality['telephone_number'] = {"min":0}
     c_attributes['contactType'] = ('contact_type', ContactTypeType_, True)
-    c_child_order.extend(['extensions', 'company', 'given_name', 'sur_name', 'email_address', 'telephone_number'])
+    c_child_order.extend(['extensions', 'company', 'given_name', 'sur_name',
+                          'email_address', 'telephone_number'])
 
     def __init__(self,
             extensions=None,
@@ -744,7 +773,8 @@ class AdditionalMetadataLocation(AdditionalMetadataLocationType_):
     c_cardinality = AdditionalMetadataLocationType_.c_cardinality.copy()
 
 def additional_metadata_location_from_string(xml_string):
-    return saml2.create_class_from_xml_string(AdditionalMetadataLocation, xml_string)
+    return saml2.create_class_from_xml_string(AdditionalMetadataLocation,
+                                              xml_string)
 
 
 class KeyDescriptorType_(SamlBase):
@@ -756,8 +786,11 @@ class KeyDescriptorType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{http://www.w3.org/2000/09/xmldsig#}KeyInfo'] = ('key_info', ds.KeyInfo)
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}EncryptionMethod'] = ('encryption_method', [EncryptionMethod])
+    c_children['{http://www.w3.org/2000/09/xmldsig#}KeyInfo'] = ('key_info',
+                                                                 ds.KeyInfo)
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}EncryptionMethod'] = (
+                                                        'encryption_method',
+                                                        [EncryptionMethod])
     c_cardinality['encryption_method'] = {"min":0}
     c_attributes['use'] = ('use', KeyTypes_, False)
     c_child_order.extend(['key_info', 'encryption_method'])
@@ -848,22 +881,32 @@ class RoleDescriptorType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{http://www.w3.org/2000/09/xmldsig#}Signature'] = ('signature', ds.Signature)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}Signature'] = ('signature',
+                                                                   ds.Signature)
     c_cardinality['signature'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}Extensions'] = ('extensions', Extensions)
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}Extensions'] = ('extensions',
+                                                                      Extensions)
     c_cardinality['extensions'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}KeyDescriptor'] = ('key_descriptor', [KeyDescriptor])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}KeyDescriptor'] = (
+                                                            'key_descriptor',
+                                                            [KeyDescriptor])
     c_cardinality['key_descriptor'] = {"min":0}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}Organization'] = ('organization', Organization)
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}Organization'] = (
+                                                            'organization',
+                                                            Organization)
     c_cardinality['organization'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}ContactPerson'] = ('contact_person', [ContactPerson])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}ContactPerson'] = (
+                                                            'contact_person',
+                                                            [ContactPerson])
     c_cardinality['contact_person'] = {"min":0}
     c_attributes['ID'] = ('id', 'ID', False)
     c_attributes['validUntil'] = ('valid_until', 'dateTime', False)
     c_attributes['cacheDuration'] = ('cache_duration', 'duration', False)
-    c_attributes['protocolSupportEnumeration'] = ('protocol_support_enumeration', AnyURIListType_, True)
+    c_attributes['protocolSupportEnumeration'] = ('protocol_support_enumeration',
+                                                  AnyURIListType_, True)
     c_attributes['errorURL'] = ('error_url', 'anyURI', False)
-    c_child_order.extend(['signature', 'extensions', 'key_descriptor', 'organization', 'contact_person'])
+    c_child_order.extend(['signature', 'extensions', 'key_descriptor',
+                          'organization', 'contact_person'])
 
     def __init__(self,
             signature=None,
@@ -906,15 +949,25 @@ class SSODescriptorType_(RoleDescriptorType_):
     c_attributes = RoleDescriptorType_.c_attributes.copy()
     c_child_order = RoleDescriptorType_.c_child_order[:]
     c_cardinality = RoleDescriptorType_.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}ArtifactResolutionService'] = ('artifact_resolution_service', [ArtifactResolutionService])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}ArtifactResolutionService'] = (
+                                                'artifact_resolution_service',
+                                                [ArtifactResolutionService])
     c_cardinality['artifact_resolution_service'] = {"min":0}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}SingleLogoutService'] = ('single_logout_service', [SingleLogoutService])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}SingleLogoutService'] = (
+                                                'single_logout_service',
+                                                [SingleLogoutService])
     c_cardinality['single_logout_service'] = {"min":0}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}ManageNameIDService'] = ('manage_name_id_service', [ManageNameIDService])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}ManageNameIDService'] = (
+                                                'manage_name_id_service',
+                                                [ManageNameIDService])
     c_cardinality['manage_name_id_service'] = {"min":0}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}NameIDFormat'] = ('name_id_format', [NameIDFormat])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}NameIDFormat'] = (
+                                                'name_id_format',
+                                                [NameIDFormat])
     c_cardinality['name_id_format'] = {"min":0}
-    c_child_order.extend(['artifact_resolution_service', 'single_logout_service', 'manage_name_id_service', 'name_id_format'])
+    c_child_order.extend(['artifact_resolution_service',
+                          'single_logout_service', 'manage_name_id_service',
+                          'name_id_format'])
 
     def __init__(self,
             artifact_resolution_service=None,
@@ -965,18 +1018,31 @@ class IDPSSODescriptorType_(SSODescriptorType_):
     c_attributes = SSODescriptorType_.c_attributes.copy()
     c_child_order = SSODescriptorType_.c_child_order[:]
     c_cardinality = SSODescriptorType_.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}SingleSignOnService'] = ('single_sign_on_service', [SingleSignOnService])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}SingleSignOnService'] = (
+                                                    'single_sign_on_service',
+                                                    [SingleSignOnService])
     c_cardinality['single_sign_on_service'] = {"min":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}NameIDMappingService'] = ('name_id_mapping_service', [NameIDMappingService])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}NameIDMappingService'] = (
+                                                    'name_id_mapping_service',
+                                                    [NameIDMappingService])
     c_cardinality['name_id_mapping_service'] = {"min":0}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AssertionIDRequestService'] = ('assertion_id_request_service', [AssertionIDRequestService])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AssertionIDRequestService'] = (
+                                                'assertion_id_request_service',
+                                                [AssertionIDRequestService])
     c_cardinality['assertion_id_request_service'] = {"min":0}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AttributeProfile'] = ('attribute_profile', [AttributeProfile])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AttributeProfile'] = (
+                                                    'attribute_profile',
+                                                    [AttributeProfile])
     c_cardinality['attribute_profile'] = {"min":0}
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Attribute'] = ('attribute', [saml.Attribute])
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Attribute'] = (
+                                                    'attribute',
+                                                    [saml.Attribute])
     c_cardinality['attribute'] = {"min":0}
-    c_attributes['WantAuthnRequestsSigned'] = ('want_authn_requests_signed', 'boolean', False)
-    c_child_order.extend(['single_sign_on_service', 'name_id_mapping_service', 'assertion_id_request_service', 'attribute_profile', 'attribute'])
+    c_attributes['WantAuthnRequestsSigned'] = ('want_authn_requests_signed',
+                                               'boolean', False)
+    c_child_order.extend(['single_sign_on_service', 'name_id_mapping_service',
+                          'assertion_id_request_service', 'attribute_profile',
+                          'attribute'])
 
     def __init__(self,
             single_sign_on_service=None,
@@ -1042,15 +1108,22 @@ class AttributeConsumingServiceType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}ServiceName'] = ('service_name', [ServiceName])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}ServiceName'] = (
+                                                            'service_name',
+                                                            [ServiceName])
     c_cardinality['service_name'] = {"min":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}ServiceDescription'] = ('service_description', [ServiceDescription])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}ServiceDescription'] = (
+                                                        'service_description',
+                                                        [ServiceDescription])
     c_cardinality['service_description'] = {"min":0}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}RequestedAttribute'] = ('requested_attribute', [RequestedAttribute])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}RequestedAttribute'] = (
+                                                        'requested_attribute',
+                                                        [RequestedAttribute])
     c_cardinality['requested_attribute'] = {"min":1}
     c_attributes['index'] = ('index', 'unsignedShort', True)
     c_attributes['isDefault'] = ('is_default', 'boolean', False)
-    c_child_order.extend(['service_name', 'service_description', 'requested_attribute'])
+    c_child_order.extend(['service_name', 'service_description',
+                          'requested_attribute'])
 
     def __init__(self,
             service_name=None,
@@ -1074,7 +1147,8 @@ class AttributeConsumingServiceType_(SamlBase):
         self.is_default=is_default
 
 def attribute_consuming_service_type__from_string(xml_string):
-    return saml2.create_class_from_xml_string(AttributeConsumingServiceType_, xml_string)
+    return saml2.create_class_from_xml_string(AttributeConsumingServiceType_,
+                                              xml_string)
 
 
 class AuthnAuthorityDescriptorType_(RoleDescriptorType_):
@@ -1086,13 +1160,20 @@ class AuthnAuthorityDescriptorType_(RoleDescriptorType_):
     c_attributes = RoleDescriptorType_.c_attributes.copy()
     c_child_order = RoleDescriptorType_.c_child_order[:]
     c_cardinality = RoleDescriptorType_.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AuthnQueryService'] = ('authn_query_service', [AuthnQueryService])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AuthnQueryService'] = (
+                                                    'authn_query_service',
+                                                    [AuthnQueryService])
     c_cardinality['authn_query_service'] = {"min":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AssertionIDRequestService'] = ('assertion_id_request_service', [AssertionIDRequestService])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AssertionIDRequestService'] = (
+                                                'assertion_id_request_service',
+                                                [AssertionIDRequestService])
     c_cardinality['assertion_id_request_service'] = {"min":0}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}NameIDFormat'] = ('name_id_format', [NameIDFormat])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}NameIDFormat'] = (
+                                                    'name_id_format',
+                                                    [NameIDFormat])
     c_cardinality['name_id_format'] = {"min":0}
-    c_child_order.extend(['authn_query_service', 'assertion_id_request_service', 'name_id_format'])
+    c_child_order.extend(['authn_query_service', 'assertion_id_request_service',
+                          'name_id_format'])
 
     def __init__(self,
             authn_query_service=None,
@@ -1132,7 +1213,8 @@ class AuthnAuthorityDescriptorType_(RoleDescriptorType_):
         self.name_id_format=name_id_format or []
 
 def authn_authority_descriptor_type__from_string(xml_string):
-    return saml2.create_class_from_xml_string(AuthnAuthorityDescriptorType_, xml_string)
+    return saml2.create_class_from_xml_string(AuthnAuthorityDescriptorType_,
+                                              xml_string)
 
 
 class PDPDescriptorType_(RoleDescriptorType_):
@@ -1144,13 +1226,20 @@ class PDPDescriptorType_(RoleDescriptorType_):
     c_attributes = RoleDescriptorType_.c_attributes.copy()
     c_child_order = RoleDescriptorType_.c_child_order[:]
     c_cardinality = RoleDescriptorType_.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AuthzService'] = ('authz_service', [AuthzService])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AuthzService'] = (
+                                                            'authz_service',
+                                                            [AuthzService])
     c_cardinality['authz_service'] = {"min":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AssertionIDRequestService'] = ('assertion_id_request_service', [AssertionIDRequestService])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AssertionIDRequestService'] = (
+                                            'assertion_id_request_service',
+                                            [AssertionIDRequestService])
     c_cardinality['assertion_id_request_service'] = {"min":0}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}NameIDFormat'] = ('name_id_format', [NameIDFormat])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}NameIDFormat'] = (
+                                                            'name_id_format',
+                                                            [NameIDFormat])
     c_cardinality['name_id_format'] = {"min":0}
-    c_child_order.extend(['authz_service', 'assertion_id_request_service', 'name_id_format'])
+    c_child_order.extend(['authz_service', 'assertion_id_request_service',
+                          'name_id_format'])
 
     def __init__(self,
             authz_service=None,
@@ -1202,17 +1291,28 @@ class AttributeAuthorityDescriptorType_(RoleDescriptorType_):
     c_attributes = RoleDescriptorType_.c_attributes.copy()
     c_child_order = RoleDescriptorType_.c_child_order[:]
     c_cardinality = RoleDescriptorType_.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AttributeService'] = ('attribute_service', [AttributeService])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AttributeService'] = (
+                                                        'attribute_service',
+                                                        [AttributeService])
     c_cardinality['attribute_service'] = {"min":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AssertionIDRequestService'] = ('assertion_id_request_service', [AssertionIDRequestService])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AssertionIDRequestService'] = (
+                                            'assertion_id_request_service',
+                                            [AssertionIDRequestService])
     c_cardinality['assertion_id_request_service'] = {"min":0}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}NameIDFormat'] = ('name_id_format', [NameIDFormat])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}NameIDFormat'] = (
+                                                        'name_id_format',
+                                                        [NameIDFormat])
     c_cardinality['name_id_format'] = {"min":0}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AttributeProfile'] = ('attribute_profile', [AttributeProfile])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AttributeProfile'] = (
+                                                        'attribute_profile',
+                                                        [AttributeProfile])
     c_cardinality['attribute_profile'] = {"min":0}
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Attribute'] = ('attribute', [saml.Attribute])
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Attribute'] = (
+                                                        'attribute',
+                                                        [saml.Attribute])
     c_cardinality['attribute'] = {"min":0}
-    c_child_order.extend(['attribute_service', 'assertion_id_request_service', 'name_id_format', 'attribute_profile', 'attribute'])
+    c_child_order.extend(['attribute_service', 'assertion_id_request_service',
+                          'name_id_format', 'attribute_profile', 'attribute'])
 
     def __init__(self,
             attribute_service=None,
@@ -1256,7 +1356,8 @@ class AttributeAuthorityDescriptorType_(RoleDescriptorType_):
         self.attribute=attribute or []
 
 def attribute_authority_descriptor_type__from_string(xml_string):
-    return saml2.create_class_from_xml_string(AttributeAuthorityDescriptorType_, xml_string)
+    return saml2.create_class_from_xml_string(AttributeAuthorityDescriptorType_,
+                                              xml_string)
 
 
 class AffiliationDescriptorType_(SamlBase):
@@ -1268,19 +1369,28 @@ class AffiliationDescriptorType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{http://www.w3.org/2000/09/xmldsig#}Signature'] = ('signature', ds.Signature)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}Signature'] = ('signature',
+                                                                   ds.Signature)
     c_cardinality['signature'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}Extensions'] = ('extensions', Extensions)
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}Extensions'] = (
+                                                            'extensions',
+                                                            Extensions)
     c_cardinality['extensions'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AffiliateMember'] = ('affiliate_member', [AffiliateMember])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AffiliateMember'] = (
+                                                            'affiliate_member',
+                                                            [AffiliateMember])
     c_cardinality['affiliate_member'] = {"min":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}KeyDescriptor'] = ('key_descriptor', [KeyDescriptor])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}KeyDescriptor'] = (
+                                                            'key_descriptor',
+                                                            [KeyDescriptor])
     c_cardinality['key_descriptor'] = {"min":0}
-    c_attributes['affiliationOwnerID'] = ('affiliation_owner_id', EntityIDType_, True)
+    c_attributes['affiliationOwnerID'] = ('affiliation_owner_id', EntityIDType_,
+                                          True)
     c_attributes['validUntil'] = ('valid_until', 'dateTime', False)
     c_attributes['cacheDuration'] = ('cache_duration', 'duration', False)
     c_attributes['ID'] = ('id', 'ID', False)
-    c_child_order.extend(['signature', 'extensions', 'affiliate_member', 'key_descriptor'])
+    c_child_order.extend(['signature', 'extensions', 'affiliate_member',
+                          'key_descriptor'])
 
     def __init__(self,
             signature=None,
@@ -1310,7 +1420,8 @@ class AffiliationDescriptorType_(SamlBase):
         self.id=id
 
 def affiliation_descriptor_type__from_string(xml_string):
-    return saml2.create_class_from_xml_string(AffiliationDescriptorType_, xml_string)
+    return saml2.create_class_from_xml_string(AffiliationDescriptorType_,
+                                              xml_string)
 
 
 class RoleDescriptor(RoleDescriptorType_):
@@ -1352,7 +1463,8 @@ class AttributeConsumingService(AttributeConsumingServiceType_):
     c_cardinality = AttributeConsumingServiceType_.c_cardinality.copy()
 
 def attribute_consuming_service_from_string(xml_string):
-    return saml2.create_class_from_xml_string(AttributeConsumingService, xml_string)
+    return saml2.create_class_from_xml_string(AttributeConsumingService,
+                                              xml_string)
 
 
 class AuthnAuthorityDescriptor(AuthnAuthorityDescriptorType_):
@@ -1366,7 +1478,8 @@ class AuthnAuthorityDescriptor(AuthnAuthorityDescriptorType_):
     c_cardinality = AuthnAuthorityDescriptorType_.c_cardinality.copy()
 
 def authn_authority_descriptor_from_string(xml_string):
-    return saml2.create_class_from_xml_string(AuthnAuthorityDescriptor, xml_string)
+    return saml2.create_class_from_xml_string(AuthnAuthorityDescriptor,
+                                              xml_string)
 
 
 class PDPDescriptor(PDPDescriptorType_):
@@ -1394,7 +1507,8 @@ class AttributeAuthorityDescriptor(AttributeAuthorityDescriptorType_):
     c_cardinality = AttributeAuthorityDescriptorType_.c_cardinality.copy()
 
 def attribute_authority_descriptor_from_string(xml_string):
-    return saml2.create_class_from_xml_string(AttributeAuthorityDescriptor, xml_string)
+    return saml2.create_class_from_xml_string(AttributeAuthorityDescriptor,
+                                              xml_string)
 
 
 class AffiliationDescriptor(AffiliationDescriptorType_):
@@ -1420,13 +1534,20 @@ class SPSSODescriptorType_(SSODescriptorType_):
     c_attributes = SSODescriptorType_.c_attributes.copy()
     c_child_order = SSODescriptorType_.c_child_order[:]
     c_cardinality = SSODescriptorType_.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AssertionConsumerService'] = ('assertion_consumer_service', [AssertionConsumerService])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AssertionConsumerService'] = (
+                                                'assertion_consumer_service',
+                                                [AssertionConsumerService])
     c_cardinality['assertion_consumer_service'] = {"min":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AttributeConsumingService'] = ('attribute_consuming_service', [AttributeConsumingService])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AttributeConsumingService'] = (
+                                                'attribute_consuming_service',
+                                                [AttributeConsumingService])
     c_cardinality['attribute_consuming_service'] = {"min":0}
-    c_attributes['AuthnRequestsSigned'] = ('authn_requests_signed', 'boolean', False)
-    c_attributes['WantAssertionsSigned'] = ('want_assertions_signed', 'boolean', False)
-    c_child_order.extend(['assertion_consumer_service', 'attribute_consuming_service'])
+    c_attributes['AuthnRequestsSigned'] = ('authn_requests_signed', 'boolean',
+                                           False)
+    c_attributes['WantAssertionsSigned'] = ('want_assertions_signed', 'boolean',
+                                            False)
+    c_child_order.extend(['assertion_consumer_service',
+                          'attribute_consuming_service'])
 
     def __init__(self,
             assertion_consumer_service=None,
@@ -1502,35 +1623,63 @@ class EntityDescriptorType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{http://www.w3.org/2000/09/xmldsig#}Signature'] = ('signature', ds.Signature)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}Signature'] = ('signature',
+                                                                   ds.Signature)
     c_cardinality['signature'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}Extensions'] = ('extensions', Extensions)
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}Extensions'] = (
+                                                            'extensions',
+                                                            Extensions)
     c_cardinality['extensions'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}RoleDescriptor'] = ('role_descriptor', [RoleDescriptor])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}RoleDescriptor'] = (
+                                                            'role_descriptor',
+                                                            [RoleDescriptor])
     c_cardinality['role_descriptor'] = {"min":0}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}IDPSSODescriptor'] = ('idpsso_descriptor', [IDPSSODescriptor])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}IDPSSODescriptor'] = (
+                                                            'idpsso_descriptor',
+                                                            [IDPSSODescriptor])
     c_cardinality['idpsso_descriptor'] = {"min":0}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}SPSSODescriptor'] = ('spsso_descriptor', [SPSSODescriptor])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}SPSSODescriptor'] = (
+                                                            'spsso_descriptor',
+                                                            [SPSSODescriptor])
     c_cardinality['spsso_descriptor'] = {"min":0}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AuthnAuthorityDescriptor'] = ('authn_authority_descriptor', [AuthnAuthorityDescriptor])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AuthnAuthorityDescriptor'] = (
+                                            'authn_authority_descriptor',
+                                            [AuthnAuthorityDescriptor])
     c_cardinality['authn_authority_descriptor'] = {"min":0}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AttributeAuthorityDescriptor'] = ('attribute_authority_descriptor', [AttributeAuthorityDescriptor])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AttributeAuthorityDescriptor'] = (
+                                            'attribute_authority_descriptor',
+                                            [AttributeAuthorityDescriptor])
     c_cardinality['attribute_authority_descriptor'] = {"min":0}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}PDPDescriptor'] = ('pdp_descriptor', [PDPDescriptor])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}PDPDescriptor'] = (
+                                                            'pdp_descriptor',
+                                                            [PDPDescriptor])
     c_cardinality['pdp_descriptor'] = {"min":0}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AffiliationDescriptor'] = ('affiliation_descriptor', AffiliationDescriptor)
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AffiliationDescriptor'] = (
+                                                    'affiliation_descriptor',
+                                                    AffiliationDescriptor)
     c_cardinality['affiliation_descriptor'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}Organization'] = ('organization', Organization)
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}Organization'] = (
+                                                            'organization',
+                                                            Organization)
     c_cardinality['organization'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}ContactPerson'] = ('contact_person', [ContactPerson])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}ContactPerson'] = (
+                                                            'contact_person',
+                                                            [ContactPerson])
     c_cardinality['contact_person'] = {"min":0}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AdditionalMetadataLocation'] = ('additional_metadata_location', [AdditionalMetadataLocation])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}AdditionalMetadataLocation'] = (
+                                            'additional_metadata_location',
+                                            [AdditionalMetadataLocation])
     c_cardinality['additional_metadata_location'] = {"min":0}
     c_attributes['entityID'] = ('entity_id', EntityIDType_, True)
     c_attributes['validUntil'] = ('valid_until', 'dateTime', False)
     c_attributes['cacheDuration'] = ('cache_duration', 'duration', False)
     c_attributes['ID'] = ('id', 'ID', False)
-    c_child_order.extend(['signature', 'extensions', 'role_descriptor', 'idpsso_descriptor', 'spsso_descriptor', 'authn_authority_descriptor', 'attribute_authority_descriptor', 'pdp_descriptor', 'affiliation_descriptor', 'organization', 'contact_person', 'additional_metadata_location'])
+    c_child_order.extend(['signature', 'extensions', 'role_descriptor',
+                          'idpsso_descriptor', 'spsso_descriptor',
+                          'authn_authority_descriptor',
+                          'attribute_authority_descriptor', 'pdp_descriptor',
+                          'affiliation_descriptor', 'organization',
+                          'contact_person', 'additional_metadata_location'])
 
     def __init__(self,
             signature=None,
@@ -1604,18 +1753,24 @@ class EntitiesDescriptorType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{http://www.w3.org/2000/09/xmldsig#}Signature'] = ('signature', ds.Signature)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}Signature'] = ('signature',
+                                                                   ds.Signature)
     c_cardinality['signature'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}Extensions'] = ('extensions', Extensions)
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}Extensions'] = (
+                                                                'extensions',
+                                                                Extensions)
     c_cardinality['extensions'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}EntityDescriptor'] = ('entity_descriptor', [EntityDescriptor])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata}EntityDescriptor'] = (
+                                                            'entity_descriptor',
+                                                            [EntityDescriptor])
     c_cardinality['entity_descriptor'] = {"min":0}
     c_cardinality['entities_descriptor'] = {"min":0}
     c_attributes['validUntil'] = ('valid_until', 'dateTime', False)
     c_attributes['cacheDuration'] = ('cache_duration', 'duration', False)
     c_attributes['ID'] = ('id', 'ID', False)
     c_attributes['Name'] = ('name', 'string', False)
-    c_child_order.extend(['signature', 'extensions', 'entity_descriptor', 'entities_descriptor'])
+    c_child_order.extend(['signature', 'extensions', 'entity_descriptor',
+                          'entities_descriptor'])
 
     def __init__(self,
             signature=None,
@@ -1663,8 +1818,12 @@ def entities_descriptor_from_string(xml_string):
 
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-EntitiesDescriptorType_.c_children['{urn:oasis:names:tc:SAML:2.0:metadata}EntitiesDescriptor'] = ('entities_descriptor', [EntitiesDescriptor])
-EntitiesDescriptor.c_children['{urn:oasis:names:tc:SAML:2.0:metadata}EntitiesDescriptor'] = ('entities_descriptor', [EntitiesDescriptor])
+EntitiesDescriptorType_.c_children['{urn:oasis:names:tc:SAML:2.0:metadata}EntitiesDescriptor'] = (
+                                                    'entities_descriptor',
+                                                    [EntitiesDescriptor])
+EntitiesDescriptor.c_children['{urn:oasis:names:tc:SAML:2.0:metadata}EntitiesDescriptor'] = (
+                                                    'entities_descriptor',
+                                                    [EntitiesDescriptor])
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 ELEMENT_FROM_STRING = {

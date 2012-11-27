@@ -22,6 +22,7 @@ import logging
 
 import httplib2
 import sys
+from saml2.md import KeyTypes_
 import xmldsig as ds
 try:
     import json
@@ -1087,13 +1088,14 @@ def do_contact_person_info(lava):
 
     return cps
 
-def do_key_descriptor(cert):
+def do_key_descriptor(cert, use="signing"):
     return md.KeyDescriptor(
         key_info = ds.KeyInfo(
             x509_data=ds.X509Data(
-                x509_certificate=ds.X509DataType_X509Certificate(text=cert)
+                x509_certificate=ds.X509Certificate(text=cert)
                 )
-            )
+            ),
+        use=use
         )
 
 def do_requested_attribute(attributes, acs, is_required="false"):
