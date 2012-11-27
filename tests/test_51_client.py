@@ -270,7 +270,7 @@ class TestClient:
 
         resp_str = base64.encodestring(resp_str)
         
-        authn_response = self.client.response({"SAMLResponse":resp_str},
+        authn_response = self.client.authn_request_response({"SAMLResponse":resp_str},
                             {"id1":"http://foo.example.com/service"})
                             
         assert authn_response is not None
@@ -309,7 +309,7 @@ class TestClient:
 
         resp_str = base64.encodestring(resp_str)
         
-        self.client.response({"SAMLResponse":resp_str},
+        self.client.authn_request_response({"SAMLResponse":resp_str},
                             {"id2":"http://foo.example.com/service"})
         
         # Two persons in the cache
@@ -579,7 +579,8 @@ class TestClient:
         resp_str = base64.encodestring(resp_str)
 
         self.client.allow_unsolicited = True
-        authn_response = self.client.response({"SAMLResponse":resp_str}, ())
+        authn_response = self.client.authn_request_response(
+                                                {"SAMLResponse":resp_str}, ())
                             
         assert authn_response is not None
         assert authn_response.issuer() == IDP

@@ -6,7 +6,6 @@ from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.samlp import NameIDPolicy
 from s2repoze.plugins.sp import make_plugin
 from saml2.server import Server
-from saml2 import make_instance, samlp, saml
 
 ENV1 = {'SERVER_SOFTWARE': 'CherryPy/3.1.2 WSGI Server', 
     'SCRIPT_NAME': '', 
