@@ -130,6 +130,7 @@ class MetaData(object):
         self._extension_modules = metadata_extension_modules()
         self.post_load_process = post_load_process
         self.entities_descr = {}
+        self.entity_descr = {}
 
     def _extensions(self, entity):
         if entity.extensions:
@@ -430,6 +431,7 @@ class MetaData(object):
             entity_descr = md.entity_descriptor_from_string(xml_str)
             if entity_descr:
                 self.do_entity_descriptor(entity_descr, source)
+                self.entity_descr[source] = entity_descr
         else:
             try:
                 valid_instance(entities_descr)

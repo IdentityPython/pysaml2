@@ -1157,13 +1157,19 @@ class SubjectType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}BaseID'] = ('base_id', BaseID)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}BaseID'] = ('base_id',
+                                                                   BaseID)
     c_cardinality['base_id'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}NameID'] = ('name_id', NameID)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}NameID'] = ('name_id',
+                                                                   NameID)
     c_cardinality['name_id'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}EncryptedID'] = ('encrypted_id', EncryptedID)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}EncryptedID'] = (
+                                                                'encrypted_id',
+                                                                EncryptedID)
     c_cardinality['encrypted_id'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}SubjectConfirmation'] = ('subject_confirmation', [SubjectConfirmation])
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}SubjectConfirmation'] = (
+                                                    'subject_confirmation',
+                                                    [SubjectConfirmation])
     c_cardinality['subject_confirmation'] = {"min":0}
     c_child_order.extend(['base_id', 'name_id', 'encrypted_id', 'subject_confirmation'])
 
@@ -1368,26 +1374,41 @@ class AssertionType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Issuer'] = ('issuer', Issuer)
-    c_children['{http://www.w3.org/2000/09/xmldsig#}Signature'] = ('signature', ds.Signature)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Issuer'] = ('issuer',
+                                                                   Issuer)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}Signature'] = ('signature',
+                                                                   ds.Signature)
     c_cardinality['signature'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Subject'] = ('subject', Subject)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Subject'] = ('subject',
+                                                                    Subject)
     c_cardinality['subject'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Conditions'] = ('conditions', Conditions)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Conditions'] = (
+                                                                'conditions',
+                                                                Conditions)
     c_cardinality['conditions'] = {"min":0, "max":1}
     c_cardinality['advice'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Statement'] = ('statement', [Statement])
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Statement'] = (
+                                                                'statement',
+                                                                [Statement])
     c_cardinality['statement'] = {"min":0}
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AuthnStatement'] = ('authn_statement', [AuthnStatement])
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AuthnStatement'] = (
+                                                            'authn_statement',
+                                                            [AuthnStatement])
     c_cardinality['authn_statement'] = {"min":0}
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AuthzDecisionStatement'] = ('authz_decision_statement', [AuthzDecisionStatement])
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AuthzDecisionStatement'] = (
+                                                    'authz_decision_statement',
+                                                    [AuthzDecisionStatement])
     c_cardinality['authz_decision_statement'] = {"min":0}
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AttributeStatement'] = ('attribute_statement', [AttributeStatement])
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AttributeStatement'] = (
+                                                        'attribute_statement',
+                                                        [AttributeStatement])
     c_cardinality['attribute_statement'] = {"min":0}
     c_attributes['Version'] = ('version', 'string', True)
     c_attributes['ID'] = ('id', 'ID', True)
     c_attributes['IssueInstant'] = ('issue_instant', 'dateTime', True)
-    c_child_order.extend(['issuer', 'signature', 'subject', 'conditions', 'advice', 'statement', 'authn_statement', 'authz_decision_statement', 'attribute_statement'])
+    c_child_order.extend(['issuer', 'signature', 'subject', 'conditions',
+                          'advice', 'statement', 'authn_statement',
+                          'authz_decision_statement', 'attribute_statement'])
 
     def __init__(self,
             issuer=None,
