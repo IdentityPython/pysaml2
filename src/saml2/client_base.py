@@ -274,7 +274,8 @@ class Base(object):
                              binding=saml2.BINDING_HTTP_POST,
                              nameid_format=NAMEID_FORMAT_TRANSIENT,
                              service_url_binding=None,
-                             id=0, consent=None, extensions=None, sign=None):
+                             id=0, consent=None, extensions=None, sign=None,
+                             allow_create=False):
         """ Creates an authentication request.
         
         :param destination: Where the request should be sent.
@@ -288,6 +289,9 @@ class Base(object):
         :param consent: Whether the principal have given her consent
         :param extensions: Possible extensions
         :param sign: Whether the request should be signed or not.
+        :param allow_create: If the identity provider is allowed, in the course
+            of fulfilling the request, to create a new identifier to represent
+            the principal.
         :return: <samlp:AuthnRequest> instance
         """
 
@@ -302,12 +306,17 @@ class Base(object):
         else:
             my_name = self._my_name()
 
+        if allow_create:
+            allow_create="true"
+        else:
+            allow_create="false"
+
         # Profile stuff, should be configurable
         if nameid_format is None or nameid_format == NAMEID_FORMAT_TRANSIENT:
-            name_id_policy = samlp.NameIDPolicy(allow_create="true",
+            name_id_policy = samlp.NameIDPolicy(allow_create=allow_create,
                                                 format=NAMEID_FORMAT_TRANSIENT)
         else:
-            name_id_policy = samlp.NameIDPolicy(allow_create="false",
+            name_id_policy = samlp.NameIDPolicy(allow_create=allow_create,
                                                 format=nameid_format)
 
         if vorg:
