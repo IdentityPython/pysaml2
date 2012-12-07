@@ -129,7 +129,7 @@ class Base(object):
             elif isinstance(virtual_organization, VirtualOrg):
                 self.vorg = virtual_organization
         else:
-            self.vorg = None
+            self.vorg = {}
 
         for foo in ["allow_unsolicited", "authn_requests_signed",
                    "logout_requests_signed"]:

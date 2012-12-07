@@ -448,20 +448,19 @@ class SAML2Plugin(FormPluginBase):
     def add_metadata(self, environ, identity):
         """ Add information to the knowledge I have about the user """
         subject_id = identity['repoze.who.userid']
-
         logger = environ.get('repoze.who.logger','')
 
+        _cli = self.saml_client
         logger.debug("[add_metadata] for %s" % subject_id)
         try:
-            logger.debug("Issuers: %s" % self.saml_client.users.sources(
-                                                                    subject_id))
+            logger.debug("Issuers: %s" % _cli.users.sources(subject_id))
         except KeyError:
             pass
             
         if "user" not in identity:
             identity["user"] = {}
         try:
-            (ava, _) = self.saml_client.users.get_identity(subject_id)
+            (ava, _) = _cli.users.get_identity(subject_id)
             #now = time.gmtime()        
             logger.debug("[add_metadata] adds: %s" % ava)
             identity["user"].update(ava)
@@ -470,13 +469,12 @@ class SAML2Plugin(FormPluginBase):
 
         if "pysaml2_vo_expanded" not in identity:
             # is this a Virtual Organization situation
-            for vo in self.saml_client.vorg.values():
+            for vo in _cli.vorg.values():
                 try:
                     if vo.do_aggregation(subject_id):
                         # Get the extended identity
-                        identity["user"] = self.saml_client.users.get_identity(
-                                                                subject_id)[0]
-                        # Only do this once, mark that the identity has been 
+                        identity["user"] = _cli.users.get_identity(subject_id)[0]
+                        # Only do this once, mark that the identity has been
                         # expanded
                         identity["pysaml2_vo_expanded"] = 1
                 except KeyError:
