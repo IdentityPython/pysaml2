@@ -33,9 +33,13 @@ except ImportError:
 
 from decorator import decorator
 
-from saml2 import md, samlp, BINDING_HTTP_POST, BINDING_HTTP_REDIRECT
-from saml2 import BINDING_SOAP, class_name
-#from saml2 import saml
+from saml2 import md
+from saml2 import samlp
+from saml2 import BINDING_HTTP_POST
+from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_SOAP
+from saml2 import class_name
+from saml2 import saml
 
 # All included below this is only to save some space
 #from saml2.extension import shibmd
@@ -128,6 +132,7 @@ class MetaData(object):
         self._import = {}
         self._keys = {}
         self._extension_modules = metadata_extension_modules()
+        self._extension_modules.append(saml)
         self.post_load_process = post_load_process
         self.entities_descr = {}
         self.entity_descr = {}
