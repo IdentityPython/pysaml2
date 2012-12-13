@@ -94,8 +94,7 @@ class Saml2Client(Base):
 
         return req.id, response
 
-    def global_logout(self, subject_id, reason="", expire=None, sign=None,
-                      return_to="/"):
+    def global_logout(self, subject_id, reason="", expire=None, sign=None):
         """ More or less a layer of indirection :-/
         Bootstrapping the whole thing by finding all the IdPs that should
         be notified.
@@ -104,10 +103,9 @@ class Saml2Client(Base):
             logged out.
         :param reason: Why the subject wants to log out
         :param expire: The latest the log out should happen.
+            If this time has passed don't bother.
         :param sign: Whether the request should be signed or not.
             This also depends on what binding is used.
-        :param return_to: Where to send the user after she has been
-            logged out.
         :return: Depends on which binding is used:
             If the HTTP redirect binding then a HTTP redirect,
             if SOAP binding has been used the just the result of that
@@ -119,12 +117,19 @@ class Saml2Client(Base):
         # find out which IdPs/AAs I should notify
         entity_ids = self.users.issuers_of_info(subject_id)
 
-        return self.do_logout(subject_id, entity_ids, reason, expire,
-                            sign, return_to)
+        return self.do_logout(subject_id, entity_ids, reason, expire, sign)
         
-    def do_logout(self, subject_id, entity_ids, reason, expire,
-                sign=None, return_to="/"):
-        
+    def do_logout(self, subject_id, entity_ids, reason, expire, sign=None):
+        """
+
+        :param subject_id: Identifier of the Subject
+        :param entity_ids: Entity_ids for the IdPs that have provided
+            information concerning the subject
+        :param reason: The reason for doing the logout
+        :param expire: Try to logout before this time.
+        :param sign: Whether to sign the request or not
+        :return:
+        """
         # check time
         if not not_on_or_after(expire): # I've run out of time
             # Do the local logout anyway
@@ -188,13 +193,12 @@ class Saml2Client(Base):
                     rstate = self._relay_state(session_id)
 
                     self.state[session_id] = {"entity_id": entity_id,
-                                                "operation": "SLO",
-                                                "entity_ids": entity_ids,
-                                                "subject_id": subject_id,
-                                                "reason": reason,
-                                                "not_on_of_after": expire,
-                                                "sign": sign,
-                                                "return_to": return_to}
+                                              "operation": "SLO",
+                                              "entity_ids": entity_ids,
+                                              "subject_id": subject_id,
+                                              "reason": reason,
+                                              "not_on_of_after": expire,
+                                              "sign": sign}
                     
 
                     if binding == BINDING_HTTP_POST:
