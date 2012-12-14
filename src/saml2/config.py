@@ -263,6 +263,11 @@ class Config(object):
         if "local" in metadata_conf:
             for mdfile in metadata_conf["local"]:
                 metad.import_metadata(open(mdfile).read(), mdfile)
+        if "inline" in metadata_conf:
+            index = 1
+            for md in metadata_conf["inline"]:
+                metad.import_metadata(md, "inline_xml.%d" % index)
+                index += 1
         if "remote" in metadata_conf:
             for spec in metadata_conf["remote"]:
                 try:
