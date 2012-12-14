@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from saml2 import metadata
+from saml2 import metadata, element_to_extension_element
 from saml2 import SamlBase
 from saml2 import extension_elements_as_dict
 from saml2 import saml
@@ -11,6 +11,8 @@ from saml2.extension import idpdisc
 from saml2.extension import dri
 from saml2.extension import mdattr
 from saml2.extension import ui
+import xmldsig
+import xmlenc
 
 __author__ = 'rolandh'
 
@@ -52,7 +54,7 @@ def _eval(val):
 def to_dict(_dict):
     res = {}
     if isinstance(_dict, SamlBase):
-        res["__type__"] = "%s#%s" % (_dict.c_namespace,_dict.c_tag)
+        res["__type__"] = "%s&%s" % (_dict.c_namespace,_dict.c_tag)
         for key in _dict.keyswv():
             val = getattr(_dict, key)
             if key == "extension_elements":
@@ -88,13 +90,30 @@ _dict = to_dict(metad.entity)
 #print _dict
 SKIP = ["__type__", "_certs"]
 
+def _kwa(val, onts):
+    return dict([(k,_x(v, onts)) for k,v in val.items() if k not in SKIP])
+
 def _x(val, onts):
     if isinstance(val, dict):
         if "__type__" in val:
-            ns, typ = val["__type__"].split("#")
+            ns, typ = val["__type__"].split("&")
             cls = getattr(onts[ns], typ)
-            kwargs = dict([(k,_x(v, onts)) for k,v in val.items() if k != SKIP])
-            inst = cls(**kwargs)
+            if cls is md.Extensions:
+                lv = []
+                for key, ditems in val.items():
+                    if key in SKIP:
+                        continue
+                    for _k, items in ditems.items():
+                        for item in items:
+                            ns, typ = item["__type__"].split("&")
+                            cls = getattr(onts[ns], typ)
+                            kwargs = _kwa(item, onts)
+                            inst = cls(**kwargs)
+                            lv.append(element_to_extension_element(inst))
+                return lv
+            else:
+                kwargs = _kwa(val, onts)
+                inst = cls(**kwargs)
             return inst
         else:
             res = {}
@@ -120,7 +139,11 @@ ONTS = {
     dri.NAMESPACE: dri,
     ui.NAMESPACE: ui,
     idpdisc.NAMESPACE: idpdisc,
-    md.NAMESPACE: md
+    md.NAMESPACE: md,
+    xmldsig.NAMESPACE: xmldsig,
+    xmlenc.NAMESPACE: xmlenc
 }
 
 res = from_dict(_dict, ONTS)
+
+print res[res.keys()[0]]
