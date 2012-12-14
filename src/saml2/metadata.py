@@ -77,7 +77,7 @@ REQ2SRV = {
     # AuthnAuthority + IDP + PDP + AttributeAuthority
     "assertion_id_request": "assertion_id_request_service",
     # IDP + SP
-    "logout_query": "single_logout_service",
+    "logout_request": "single_logout_service",
     "manage_nameid_query": "manage_name_id_service",
     "artifact_query": "artifact_resolution_service",
     # SP
