@@ -378,15 +378,17 @@ class Base(object):
                              attribute=attribute)
 
 
-    def create_logout_request(self, destination, subject_id, issuer_entity_id,
+    def create_logout_request(self, destination, issuer_entity_id,
+                              subject_id=None, name_id=None,
                               reason=None, expire=None,
                               id=0, consent=None, extensions=None, sign=False):
         """ Constructs a LogoutRequest
         
         :param destination: Destination of the request
-        :param subject_id: The identifier of the subject
         :param issuer_entity_id: The entity ID of the IdP the request is
             target at.
+        :param subject_id: The identifier of the subject
+        :param name_id: A NameID instance identifying the subject
         :param reason: An indication of the reason for the logout, in the
             form of a URI reference.
         :param expire: The time at which the request expires,
@@ -398,16 +400,20 @@ class Base(object):
         :return: A LogoutRequest instance
         """
 
-        name_id = saml.NameID(
-            text = self.users.get_entityid(subject_id, issuer_entity_id,
-                                           False))
+        if subject_id:
+            name_id = saml.NameID(
+                text = self.users.get_entityid(subject_id, issuer_entity_id,
+                                               False))
+        if not name_id:
+            raise Exception("Missing subject identification")
 
         return self._message(LogoutRequest, destination, id,
-                             consent, extensions, sign, name_id = name_id,
+                             consent, extensions, sign, name_id=name_id,
                              reason=reason, not_on_or_after=expire)
 
     def create_logout_response(self, idp_entity_id, request_id,
-                             status_code, binding=BINDING_HTTP_REDIRECT):
+                                       status_code,
+                                       binding=BINDING_HTTP_REDIRECT):
         """ Constructs a LogoutResponse
 
         :param idp_entity_id: The entityid of the IdP that want to do the
@@ -619,7 +625,7 @@ class Base(object):
                                asynchop=True):
         return self._response(post, outstanding, decode, asynchop)
 
-    def logout_response(self, xmlstr, binding=BINDING_SOAP):
+    def logout_request_response(self, xmlstr, binding=BINDING_SOAP):
         """ Deal with a LogoutResponse
 
         :param xmlstr: The response as a xml string
