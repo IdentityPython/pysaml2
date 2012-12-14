@@ -189,7 +189,9 @@ class Identifier(object):
             except Exception, exc:
                 print >> sys.stderr, "%s:%s" % (exc.__class__.__name__, exc)
 
-        if sp_nid:
+        if name_id_policy:
+            nameid_format = name_id_policy.format
+        elif sp_nid:
             nameid_format = sp_nid[0]
         else:
             nameid_format = local_policy.get_nameid_format(sp_entity_id)
@@ -705,10 +707,9 @@ class Server(object):
                                                            binding)
             if destinations:
                 break
-                
 
         if not destinations:
-            logger.error("Not way to return a response !!!")
+            logger.error("No way to return a response !!!")
             return ("412 Precondition Failed",
                     [("Content-type", "text/html")],
                     ["No return way defined"])
