@@ -3,7 +3,7 @@ README for PySAML2
 
 Dependencies
 ------------
-Pylint should be compatible with any python >= 2.6 not 3.X yet.
+PySAML2 should be compatible with any python >= 2.6 not 3.X yet.
 To be able to sign/verify, encrypt/decrypt you need xmlsec1.
 The repoze stuff works best together with repoze.who .
 
@@ -39,7 +39,7 @@ Comments, support, bug reports
 
 Project page on : 
 
-https://code.launchpad.net/~roland-hedberg/pysaml2/main
+https://github.com/rohe/pysaml2
 
 Use the Pysaml2@uma.es mailing list. Since we do not have
 publicly available bug tracker yet, bug reports should be emailed

@@ -74,7 +74,7 @@ def get_xmlsec_binary(paths=None):
     if os.name == "posix":
         bin_name = "xmlsec1"
     elif os.name == "nt":
-        bin_name = "xmlsec"
+        bin_name = "xmlsec1.exe"
     else: # Default !?
         bin_name = "xmlsec1"
 
@@ -87,7 +87,7 @@ def get_xmlsec_binary(paths=None):
             except Exception:
                 pass
 
-    for path in os.environ["PATH"].split(":"):
+    for path in os.environ["PATH"].split(os.pathsep):
         fil = os.path.join(path, bin_name)
         try:
             if os.lstat(fil):
