@@ -5,6 +5,8 @@ import re
 from cgi import parse_qs
 from saml2 import BINDING_HTTP_REDIRECT
 
+logger = logging.getLogger("")
+
 # -----------------------------------------------------------------------------
 def dict_to_table(ava, lev=0, width=1):
     txt = ['<table border=%s bordercolor="black">\n' % width]
@@ -48,7 +50,7 @@ def dict_to_table(ava, lev=0, width=1):
 
 
 #noinspection PyUnusedLocal
-def whoami(environ, start_response, user, logger):
+def whoami(environ, start_response, user):
     identity = environ["repoze.who.identity"]["user"]
     if not identity:
         return not_authn(environ, start_response)
@@ -70,14 +72,13 @@ def not_authn(environ, start_response):
     return ['Unknown user']
 
 #noinspection PyUnusedLocal
-def slo(environ, start_response, user, logger):
+def slo(environ, start_response, user):
     # so here I might get either a LogoutResponse or a LogoutRequest
     client = environ['repoze.who.plugins']["saml2auth"]
     sids = None
     if "QUERY_STRING" in environ:
         query = parse_qs(environ["QUERY_STRING"])
-        if logger:
-            logger.info("query: %s" % query)
+        logger.info("query: %s" % query)
         try:
             (sids, code, head, message) = client.saml_client.logout_response(
                                                 query["SAMLResponse"][0],
@@ -92,13 +93,13 @@ def slo(environ, start_response, user, logger):
         return ["Successfull Logout"]
     
 #noinspection PyUnusedLocal
-def logout(environ, start_response, user, logger):
+def logout(environ, start_response, user):
     client = environ['repoze.who.plugins']["saml2auth"]
     subject_id = environ["repoze.who.identity"]['repoze.who.userid']
     logger.info("[logout] subject_id: '%s'" % (subject_id,))
     target = "/done"
     # What if more than one
-    tmp = client.saml_client.global_logout(subject_id, return_to=target)
+    tmp = client.saml_client.global_logout(subject_id)
     logger.info("[logout] global_logout > %s" % (tmp,))
     (session_id, code, header, result) = tmp
 
@@ -114,7 +115,7 @@ def logout(environ, start_response, user, logger):
             return ["Failed to logout from identity services"]
 
 #noinspection PyUnusedLocal
-def done(environ, start_response, user, logger):
+def done(environ, start_response, user):
     # remove cookie and stored info
     logger.info("[done] environ: %s" % environ)
     subject_id = environ["repoze.who.identity"]['repoze.who.userid']
@@ -157,10 +158,9 @@ def application(environ, start_response):
         user = environ.get("repoze.who.identity", "")
             
     path = environ.get('PATH_INFO', '').lstrip('/')
-    logger = environ.get('repoze.who.logger')
     logger.info("<application> PATH: %s" % path)
     logger.info("logger name: %s" % logger.name)
-    logger.info(logging.Logger.manager.loggerDict)
+    #logger.info(logging.Logger.manager.loggerDict)
     for regex, callback in urls:
         if user:
             match = re.search(regex, path)
@@ -169,7 +169,7 @@ def application(environ, start_response):
                     environ['myapp.url_args'] = match.groups()[0]
                 except IndexError:
                     environ['myapp.url_args'] = path
-                return callback(environ, start_response, user, logger)
+                return callback(environ, start_response, user)
         else:
              return not_authn(environ, start_response)
     return not_found(environ, start_response)

@@ -2,12 +2,16 @@
 
 import re
 import base64
+import logging
+
 #from cgi import parse_qs
 from urlparse import parse_qs
 from saml2 import server, root_logger
 from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
 from saml2 import time_util
 from Cookie import SimpleCookie
+
+logger = logging.getLogger("saml2.IDP")
 
 def _expiration(timeout, format=None):
     if timeout == "now":
@@ -63,7 +67,7 @@ FORM_SPEC = """<form name="myform" method="post" action="%s">
    <input type="hidden" name="RelayState" value="%s" />
 </form>"""
 
-def sso(environ, start_response, user, logger):
+def sso(environ, start_response, user):
     """ Supposted to return a POST """
     #edict = dict_to_table(environ)
     #if logger: logger.info("Environ keys: %s" % environ.keys())
@@ -107,7 +111,7 @@ def sso(environ, start_response, user, logger):
                 "<title>SAML 2.0 POST</title>",
                 "</head><body>",
                 FORM_SPEC % (req_info["consumer_url"],
-                             base64.b64encode("".join(authn_resp)), "/"),
+                             base64.b64encode(str(authn_resp)), "/"),
                 """<script type="text/javascript" language="JavaScript">""",
                 "     document.myform.submit();",
                 """</script>""",
@@ -116,7 +120,7 @@ def sso(environ, start_response, user, logger):
     start_response('200 OK', [('Content-Type', 'text/html')])
     return response
     
-def whoami(environ, start_response, user, logger):
+def whoami(environ, start_response, user):
     start_response('200 OK', [('Content-Type', 'text/html')])
     identity = environ["repoze.who.identity"].copy()
     for prop in ["login", "password"]:
@@ -127,19 +131,19 @@ def whoami(environ, start_response, user, logger):
     response = dict_to_table(identity)
     return response[:]
     
-def not_found(environ, start_response, logger):
+def not_found(environ, start_response):
     """Called if no URL matches."""
     start_response('404 NOT FOUND', [('Content-Type', 'text/plain')])
     return ['Not Found']
 
-def not_authn(environ, start_response, logger):
+def not_authn(environ, start_response):
     if "QUERY_STRING" in environ:
         query = parse_qs(environ["QUERY_STRING"])
-        if logger: logger.info("query: %s" % query)
+        logger.info("query: %s" % query)
     start_response('401 Unauthorized', [('Content-Type', 'text/plain')])
     return ['Unknown user']
 
-def slo(environ, start_response, user, logger):
+def slo(environ, start_response, user):
     """ Expects a HTTP-redirect logout request """
 
     query = None
@@ -231,9 +235,8 @@ def application(environ, start_response):
         user = environ.get("repoze.who.identity", "")
 
     path = environ.get('PATH_INFO', '').lstrip('/')
-    logger = environ.get('repoze.who.logger')
-    if logger: logger.info("<application> PATH: %s" % path)
-    if logger: logger.info("Cookie: %s" % (kaka,))
+    logger.info("<application> PATH: %s" % path)
+    logger.info("Cookie: %s" % (kaka,))
     for regex, callback in URLS:
         if user:
             match = re.search(regex, path)
@@ -242,12 +245,12 @@ def application(environ, start_response):
                     environ['myapp.url_args'] = match.groups()[0]
                 except IndexError:
                     environ['myapp.url_args'] = path
-                if logger: logger.info("callback: %s" % (callback,))
-                return callback(environ, start_response, user, logger)
+                logger.info("callback: %s" % (callback,))
+                return callback(environ, start_response, user)
         else:
-            if logger: logger.info("-- No USER --")
-            return not_authn(environ, start_response, logger)
-    return not_found(environ, start_response, logger)
+            logger.info("-- No USER --")
+            return not_authn(environ, start_response)
+    return not_found(environ, start_response)
 
 # ----------------------------------------------------------------------------
 
