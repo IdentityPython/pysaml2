@@ -197,7 +197,7 @@ class TestClient:
         assert ar.provider_name == "urn:mace:example.com:saml:roland:sp"
         assert ar.issuer.text == "urn:mace:example.com:saml:roland:sp"
         nid_policy = ar.name_id_policy
-        assert nid_policy.allow_create == "true"
+        assert nid_policy.allow_create == "false"
         assert nid_policy.format == saml.NAMEID_FORMAT_TRANSIENT
 
     def test_create_auth_request_vo(self):
