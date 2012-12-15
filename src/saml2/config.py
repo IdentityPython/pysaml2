@@ -361,12 +361,6 @@ class Config(object):
         root_logger.info("Logging started")
         return root_logger
 
-class SPConfig(Config):
-    def_context = "sp"
-
-    def __init__(self):
-        Config.__init__(self)
-
     def single_logout_services(self, entity_id, binding=BINDING_SOAP):
         """ returns a list of endpoints to use for sending logout requests to
 
@@ -376,6 +370,12 @@ class SPConfig(Config):
         :return: list of endpoints
         """
         return self.metadata.single_logout_service(entity_id, binding=binding)
+
+class SPConfig(Config):
+    def_context = "sp"
+
+    def __init__(self):
+        Config.__init__(self)
 
     def single_sign_on_services(self, entity_id,
                                 binding=BINDING_HTTP_REDIRECT):
@@ -454,17 +454,6 @@ class IdPConfig(Config):
     
     def __init__(self):
         Config.__init__(self)
-        
-    def single_logout_services(self, entity_id, binding=BINDING_SOAP):
-        """ returns a list of endpoints to use for sending logout requests to
-
-        :param entity_id: The entity ID of the service
-        :param binding: The preferred binding (which for logout by default is
-            the SOAP binding)
-        :return: list of endpoints
-        """
-    
-        return self.metadata.single_logout_service(entity_id, binding=binding)
 
     def assertion_consumer_services(self, entity_id, binding=BINDING_HTTP_POST):
         return self.metadata.assertion_consumer_services(entity_id, binding)
