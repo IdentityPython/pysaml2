@@ -1,9 +1,10 @@
 __author__ = 'rolandh'
 
 try:
-    from xmlsec_location import xmlsec_path
+    from saml2.sigver import get_xmlsec_binary
+    xmlsec_path = get_xmlsec_binary(["/opt/local/bin"])
 except ImportError:
-    xmlsec_path = '/opt/local/bin/xmlsec1'
+    xmlsec_path = '/usr/bin/xmlsec1'
 
 CONFIG={
     "entityid" : "urn:mace:example.com:saml:roland:sp",

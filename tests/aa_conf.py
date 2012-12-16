@@ -3,9 +3,10 @@ from saml2 import BINDING_SOAP, BINDING_HTTP_REDIRECT, NAME_FORMAT_URI
 BASE = "http://localhost:8089/"
 
 try:
-    from xmlsec_location import xmlsec_path
+    from saml2.sigver import get_xmlsec_binary
+    xmlsec_path = get_xmlsec_binary(["/opt/local/bin"])
 except ImportError:
-    xmlsec_path = '/opt/local/bin/xmlsec1'
+    xmlsec_path = '/usr/bin/xmlsec1'
 
 CONFIG={
     "service":{
