@@ -336,7 +336,7 @@ def test_assertion_consumer_service():
     c.load_file("idp_conf")
     c.context = "idp"
 
-    xml_src = open("inCommon-metadata.xml").read()
+    xml_src = open("InCommon-metadata.xml").read()
     # A trick so outdated data is allowed
     c.metadata.import_metadata(xml_src, "-")
 
