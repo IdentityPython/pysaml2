@@ -138,7 +138,7 @@ class TestClient:
                 if getattr(attribute,"friendly_name"):
                     assert False
                 seen.append("email")
-        assert set(seen) == {"givenName", "surname", "email"}
+        assert _leq(seen,["givenName", "surname", "email"])
         
     def test_create_attribute_query_3(self):
         req = self.client.create_attribute_query(
