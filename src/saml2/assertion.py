@@ -17,7 +17,6 @@
 import logging
 
 import re
-import sys
 import xmlenc
 
 from saml2 import saml
@@ -60,6 +59,19 @@ def _filter_values(vals, vlist=None, must=False):
     else:
         return res
 
+def _match(attr, ava):
+    if attr in ava:
+        return attr
+
+    _la = attr.lower()
+    if _la in ava:
+        return _la
+
+    for _at in ava.keys():
+        if _at.lower() == _la:
+            return _at
+
+    return None
 
 def filter_on_attributes(ava, required=None, optional=None):
     """ Filter
@@ -75,38 +87,40 @@ def filter_on_attributes(ava, required=None, optional=None):
     
     if required is None:
         required = []
-        
+
     for attr in required:
-        if attr.friendly_name in ava:
-            values = [av.text for av in attr.attribute_value]
-            res[attr.friendly_name] = _filter_values(ava[attr.friendly_name],
-                                                     values, True)
-        elif attr.name in ava:
-            values = [av.text for av in attr.attribute_value]
-            res[attr.name] = _filter_values(ava[attr.name], values, True)
-        else:
-            _name = attr.friendly_name or attr.name
-            print >> sys.stderr, ava.keys()
-            raise MissingValue("Required attribute missing: '%s'" % (_name,))
+        found = False
+        for nform in ["friendly_name", "name"]:
+            if nform in attr :
+                _fn = _match(attr[nform], ava)
+                if _fn:
+                    try:
+                        values = [av["text"] for av in attr["attribute_value"]]
+                    except KeyError:
+                        values = []
+                    res[_fn] = _filter_values(ava[_fn], values, True)
+                    found = True
+                    break
+
+        if not found:
+            raise MissingValue("Required attribute missing: '%s'" % (attr[nform],))
 
     if optional is None:
         optional = []
-        
+
     for attr in optional:
-        if attr.friendly_name in ava:
-            values = [av.text for av in attr.attribute_value]
-            try:
-                res[attr.friendly_name].extend(_filter_values(ava[attr.friendly_name],
-                                                              values))
-            except KeyError:
-                res[attr.friendly_name] = _filter_values(ava[attr.friendly_name],
-                                                         values)
-        elif attr.name in ava:
-            values = [av.text for av in attr.attribute_value]
-            try:
-                res[attr.name].extend(_filter_values(ava[attr.name], values))
-            except KeyError:
-                res[attr.name] = _filter_values(ava[attr.name], values)
+        for nform in ["friendly_name", "name"]:
+            if nform in attr :
+                _fn = _match(attr[nform], ava)
+                if _fn:
+                    try:
+                        values = [av["text"] for av in attr["attribute_value"]]
+                    except KeyError:
+                        values = []
+                    try:
+                        res[_fn].extend(_filter_values(ava[_fn],values))
+                    except KeyError:
+                        res[_fn] = _filter_values(ava[_fn],values)
     
     return res
 
@@ -123,12 +137,15 @@ def filter_on_demands(ava, required=None, optional=None):
     # Is all what's required there:
     if required is None:
         required = {}
-        
+
+    lava = dict([(k.lower(), k) for k in ava.keys()])
+
     for attr, vals in required.items():
-        if attr in ava:
+        attr = attr.lower()
+        if attr in lava:
             if vals:
                 for val in vals:
-                    if val not in ava[attr]:
+                    if val not in ava[lava[attr]]:
                         raise MissingValue(
                             "Required attribute value missing: %s,%s" % (attr,
                                                                         val))
@@ -137,12 +154,15 @@ def filter_on_demands(ava, required=None, optional=None):
 
     if optional is None:
         optional = {}
-        
+
+    oka = [k.lower() for k in required.keys()]
+    oka.extend([k.lower() for k in optional.keys()])
+
     # OK, so I can imaging releasing values that are not absolutely necessary
-    # but not attributes
-    for attr, vals in ava.items():
-        if attr not in required and attr not in optional:
-            del ava[attr]
+    # but not attributes that are not asked for.
+    for attr in lava.keys():
+        if attr not in oka:
+            del ava[lava[attr]]
     
     return ava
 
@@ -383,12 +403,14 @@ class Policy(object):
             If the requirements can't be met an exception is raised.
         """
         if metadata:
-            (required, optional) = metadata.attribute_requirement(sp_entity_id)
-        else:
-            required = optional = None
+            spec = metadata.attribute_requirement(sp_entity_id)
+            if spec:
+                return self.filter(ava, sp_entity_id, spec["required"],
+                                   spec["optional"])
+
+        return self.filter(ava, sp_entity_id, [], [])
         
-        return self.filter(ava, sp_entity_id, required, optional)
-    
+
     def conditions(self, sp_entity_id):
         """ Return a saml.Condition instance
         
@@ -510,4 +532,6 @@ class Assertion(dict):
         :param metadata: Metadata to use
         :return: The resulting AVA after the policy is applied
         """
-        return policy.restrict(self, sp_entity_id, metadata)
+        ava = policy.restrict(self, sp_entity_id, metadata)
+        self.update(ava)
+        return ava

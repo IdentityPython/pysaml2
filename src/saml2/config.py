@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from saml2.virtual_org import VirtualOrg
 
 __author__ = 'rolandh'
 
@@ -11,19 +10,42 @@ import logging.handlers
 
 from importlib import import_module
 
-from saml2 import BINDING_SOAP, BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
-from saml2 import metadata
 from saml2 import root_logger
 
 from saml2.attribute_converter import ac_factory
 from saml2.assertion import Policy
 from saml2.sigver import get_xmlsec_binary
+from saml2.mdstore import MetadataStore
+from saml2.virtual_org import VirtualOrg
 
 logger = logging.getLogger(__name__)
 
+from saml2 import md
+from saml2 import saml
+from saml2.extension import mdui
+from saml2.extension import idpdisc
+from saml2.extension import dri
+from saml2.extension import mdattr
+from saml2.extension import ui
+import xmldsig
+import xmlenc
+
+
+ONTS = {
+    saml.NAMESPACE: saml,
+    mdui.NAMESPACE: mdui,
+    mdattr.NAMESPACE: mdattr,
+    dri.NAMESPACE: dri,
+    ui.NAMESPACE: ui,
+    idpdisc.NAMESPACE: idpdisc,
+    md.NAMESPACE: md,
+    xmldsig.NAMESPACE: xmldsig,
+    xmlenc.NAMESPACE: xmlenc
+}
+
 COMMON_ARGS = ["entityid", "xmlsec_binary", "debug", "key_file", "cert_file",
                 "secret", "accepted_time_diff", "name", "ca_certs",
-                "description", "valid_for",
+                "description", "valid_for", "verify_ssl_cert",
                 "organization",
                 "contact_person",
                 "name_form",
@@ -107,6 +129,7 @@ class Config(object):
         self.accepted_time_diff=None
         self.name=None
         self.ca_certs=None
+        self.verify_ssl_cert = False
         self.description=None
         self.valid_for=None
         self.organization=None
@@ -254,28 +277,16 @@ class Config(object):
         except:
             ca_certs = None
         try:
-            disable_ssl_certificate_validation = self.disable_ssl_certificate_validation
+            disable_validation = self.disable_ssl_certificate_validation
         except:
-            disable_ssl_certificate_validation = False
+            disable_validation = False
 
-        metad = metadata.MetaData(xmlsec_binary, acs, ca_certs,
-                                  disable_ssl_certificate_validation)
-        if "local" in metadata_conf:
-            for mdfile in metadata_conf["local"]:
-                metad.import_metadata(open(mdfile).read(), mdfile)
-        if "inline" in metadata_conf:
-            index = 1
-            for md in metadata_conf["inline"]:
-                metad.import_metadata(md, "inline_xml.%d" % index)
-                index += 1
-        if "remote" in metadata_conf:
-            for spec in metadata_conf["remote"]:
-                try:
-                    cert = spec["cert"]
-                except KeyError:
-                    cert = None
-                metad.import_external_metadata(spec["url"], cert)
-        return metad
+        mds = MetadataStore(ONTS.values(), acs, xmlsec_binary, ca_certs,
+                            disable_ssl_certificate_validation=disable_validation)
+
+        mds.imp(metadata_conf)
+
+        return mds
 
     def endpoint(self, service, binding=None, context=None):
         """ Goes through the list of endpoint specifications for the
@@ -361,72 +372,11 @@ class Config(object):
         root_logger.info("Logging started")
         return root_logger
 
-    def single_logout_services(self, entity_id, binding=BINDING_SOAP):
-        """ returns a list of endpoints to use for sending logout requests to
-
-        :param entity_id: The entity ID of the service
-        :param binding: The preferred binding (which for logout by default is
-            the SOAP binding)
-        :return: list of endpoints
-        """
-        return self.metadata.single_logout_service(entity_id, binding=binding)
-
 class SPConfig(Config):
     def_context = "sp"
 
     def __init__(self):
         Config.__init__(self)
-
-    def single_sign_on_services(self, entity_id,
-                                binding=BINDING_HTTP_REDIRECT):
-        """ returns a list of endpoints to use for sending login requests to
-
-        :param entity_id: The entity ID of the service
-        :param binding: The preferred binding 
-        :return: list of endpoints
-        """
-        return self.metadata.single_sign_on_service(entity_id, binding=binding)
-
-    def attribute_services(self, entity_id, binding=BINDING_SOAP):
-        """ returns a list of endpoints to use for attribute requests to
-
-        :param entity_id: The entity ID of the service
-        :param binding: The preferred binding (which for logout by default is
-            the SOAP binding)
-        :return: list of endpoints
-        """
-
-        res = []
-        aa_eid = self.getattr("entity_id")
-        if aa_eid:
-            if entity_id in aa_eid:
-                for aad in self.metadata.attribute_authority(entity_id):
-                    for attrserv in aad.attribute_service:
-                        if attrserv.binding == binding:
-                            res.append(attrserv)
-        else:
-            return self.metadata.attribute_authority()
-
-        return res
-
-    def idps(self, langpref=None):
-        """ Returns a dictionary of useful IdPs, the keys being the
-        entity ID of the service and the names of the services as values
-
-        :param langpref: The preferred languages of the name, the first match
-            is used.
-        :return: Dictionary
-        """
-        if langpref is None:
-            langpref = ["en"]
-
-        eidp = self.getattr("entity_id")
-        if eidp:
-            return dict([(e, nd[0]) for (e,
-                nd) in self.metadata.idps(langpref).items() if e in eidp])
-        else:
-            return dict([(e, nd[0]) for (e,
-                                         nd) in self.metadata.idps(langpref).items()])
 
     def vo_conf(self, vo_name):
         try:
@@ -454,12 +404,6 @@ class IdPConfig(Config):
     
     def __init__(self):
         Config.__init__(self)
-
-    def assertion_consumer_services(self, entity_id, binding=BINDING_HTTP_POST):
-        return self.metadata.assertion_consumer_services(entity_id, binding)
-
-    def authz_services(self, entity_id, binding=BINDING_SOAP):
-        return self.metadata.authz_service_endpoints(entity_id, binding=binding)
 
 def config_factory(typ, file):
     if typ == "sp":

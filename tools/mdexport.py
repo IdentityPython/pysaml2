@@ -1,12 +1,8 @@
 #!/usr/bin/env python
 import sys
-from saml2 import metadata
+
 from saml2 import saml
 from saml2 import md
-from saml2.attribute_converter import ac_factory
-
-from saml2.mdie import to_dict
-
 from saml2.extension import mdui
 from saml2.extension import idpdisc
 from saml2.extension import dri
@@ -15,27 +11,30 @@ from saml2.extension import ui
 import xmldsig
 import xmlenc
 
+from saml2.mdstore import MetaDataFile, MetaDataExtern
+
 __author__ = 'rolandh'
 
 """
-A script that imports and verifies metadata and dumps it in a basic
+A script that imports and verifies metadata and then dumps it in a basic
 dictionary format.
 """
 
 MDIMPORT = {
     "swamid": {
         "url": "https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2",
-        "cert":"kalmar2.pem"
+        "cert":"kalmar2.pem",
+        "type": "external"
     },
     "incommon": {
-        "url": "file://InCommon-metadata.xml"
+        "file": "InCommon-metadata.xml",
+        "type": "local"
     },
     "test": {
-        "url": "file://mdtest.xml"
+        "file": "mdtest.xml",
+        "type": "local"
     }
 }
-
-ATTRCONV = ac_factory("attributemaps")
 
 ONTS = {
     saml.NAMESPACE: saml,
@@ -49,20 +48,17 @@ ONTS = {
     xmlenc.NAMESPACE: xmlenc
 }
 
+item = MDIMPORT[sys.argv[1]]
 
-metad = metadata.MetaData(xmlsec_binary="/opt/local/bin/xmlsec1",
-                       attrconv=ATTRCONV)
+metad = None
 
-for src in sys.argv[1:]:
-    spec = MDIMPORT[src]
-    url = spec["url"]
-    if url.startswith("file://"):
-        metad.import_metadata(open(url[7:]).read(), src)
-    else:
-        metad.import_external_metadata(url, spec["cert"])
+if item["type"] == "local":
+    metad = MetaDataFile(sys.argv[1], ONTS.values(), item["file"])
+elif item["type"] == "external":
+    metad = MetaDataExtern(sys.argv[1], ONTS.values(),
+                           item["url"], "/opt/local/bin/xmlsec1", item["cert"])
 
-_dict = to_dict(metad.entity, ONTS.values())
-
-import json
-print json.dumps(_dict, indent=2)
+if metad:
+    metad.load()
+    print metad.dumps()
 

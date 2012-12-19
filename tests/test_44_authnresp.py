@@ -14,7 +14,8 @@ def _eq(l1,l2):
 
 IDENTITY = {"eduPersonAffiliation": ["staff", "member"],
             "surName": ["Jeter"], "givenName": ["Derek"],
-            "mail": ["foo@gmail.com"]}
+            "mail": ["foo@gmail.com"],
+            "title": ["shortstop"]}
 
 class TestAuthnResponse:
     def setup_class(self):
@@ -49,7 +50,8 @@ class TestAuthnResponse:
         self.ar = authn_response(self.conf, "http://lingon.catalogix.se:8087/")
     
     def test_verify_1(self):
-        xml_response = ("%s" % (self._resp_,)).split("\n")[1]
+        xml_response = "%s" % (self._resp_,)
+        print xml_response
         self.ar.outstanding_queries = {"id12": "http://localhost:8088/sso"}
         self.ar.timeslack = 10000
         self.ar.loads(xml_response, decode=False)
@@ -58,12 +60,12 @@ class TestAuthnResponse:
         print self.ar.__dict__
         assert self.ar.came_from == 'http://localhost:8088/sso'
         assert self.ar.session_id() == "id12"
-        assert self.ar.ava == IDENTITY
+        assert self.ar.ava["eduPersonAffiliation"] == IDENTITY["eduPersonAffiliation"]
         assert self.ar.name_id
         assert self.ar.issuer() == 'urn:mace:example.com:saml:roland:idp'
     
     def test_verify_signed_1(self):
-        xml_response = ("%s" % (self._sign_resp_,)).split("\n",1)[1]
+        xml_response = self._sign_resp_
         print xml_response
         
         self.ar.outstanding_queries = {"id12": "http://localhost:8088/sso"}
@@ -74,7 +76,7 @@ class TestAuthnResponse:
         print self.ar.__dict__
         assert self.ar.came_from == 'http://localhost:8088/sso'
         assert self.ar.session_id() == "id12"
-        assert self.ar.ava == IDENTITY
+        assert self.ar.ava["sn"] == IDENTITY["surName"]
         assert self.ar.issuer() == 'urn:mace:example.com:saml:roland:idp'
         assert self.ar.name_id
 
@@ -95,7 +97,7 @@ class TestAuthnResponse:
         assert self.ar.name_id
 
     def test_verify_w_authn(self):
-        xml_response = ("%s" % (self._resp_authn,)).split("\n",1)[1]
+        xml_response = "%s" % (self._resp_authn,)
         self.ar.outstanding_queries = {"id12": "http://localhost:8088/sso"}
         self.ar.return_addr = "http://lingon.catalogix.se:8087/"
         self.ar.entity_id = "urn:mace:example.com:saml:roland:sp"

@@ -50,7 +50,7 @@ class AttributeResolver(object):
         """
         result = []
         for member in vo_members:            
-            for ass in self.metadata.attribute_services(member):
+            for ass in self.metadata.attribute_consuming_service(member):
                 for attr_serv in ass.attribute_service:
                     logger.info(
                             "Send attribute request to %s" % attr_serv.location)

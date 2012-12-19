@@ -1,6 +1,5 @@
 __author__ = 'rolandh'
 
-from saml2.virtual_org import VirtualOrg
 from saml2 import config
 from saml2.client import Saml2Client
 from saml2.time_util import str_to_time, in_a_while
@@ -12,7 +11,7 @@ def add_derek_info(sp):
     not_on_or_after = str_to_time(in_a_while(days=1))
     session_info = SESSION_INFO_PATTERN.copy()
     session_info["ava"] = {"givenName":["Derek"], "umuselin":["deje0001"]}
-    session_info["issuer"] = "https://toylan3.umdc.umu.se/shibboleth"
+    session_info["issuer"] = "urn:mace:example.com:saml:idp"
     session_info["name_id"] = "abcdefgh"
     session_info["not_on_or_after"] = not_on_or_after
     # subject_id, entity_id, info, timestamp
@@ -31,14 +30,13 @@ class TestVirtualOrg():
     def test_mta(self):
         aas = self.vo.members_to_ask("abcdefgh")
         print aas
-        assert len(aas) == 2
+        assert len(aas) == 1
         assert 'urn:mace:example.com:saml:aa' in aas
-        assert 'urn:mace:example.com:saml:idp' in aas
 
     def test_unknown_subject(self):
         aas = self.vo.members_to_ask("01234567")
         print aas
-        assert len(aas) == 0
+        assert len(aas) == 2
 
     def test_id(self):
         id = self.vo.get_common_identifier("abcdefgh")
@@ -60,14 +58,13 @@ class TestVirtualOrg_2():
     def test_mta(self):
         aas = self.sp.vorg.members_to_ask("abcdefgh")
         print aas
-        assert len(aas) == 2
+        assert len(aas) == 1
         assert 'urn:mace:example.com:saml:aa' in aas
-        assert 'urn:mace:example.com:saml:idp' in aas
 
     def test_unknown_subject(self):
         aas = self.sp.vorg.members_to_ask("01234567")
         print aas
-        assert len(aas) == 0
+        assert len(aas) == 2
 
     def test_id(self):
         id = self.sp.vorg.get_common_identifier("abcdefgh")

@@ -46,7 +46,7 @@ class TestSP():
 
         # Create a SAMLResponse
         ava = { "givenName": ["Derek"], "surName": ["Jeter"],
-                "mail": ["derek@nyy.mlb.com"]}
+                "mail": ["derek@nyy.mlb.com"], "title":["The man"]}
 
         resp_str = "%s" % self.server.create_authn_response(ava, "id1",
                                             "http://lingon.catalogix.se:8087/",
@@ -62,4 +62,5 @@ class TestSP():
         assert session_info["came_from"] == 'http://www.example.com/service'
         assert session_info["ava"] == {'givenName': ['Derek'], 
                                         'mail': ['derek@nyy.mlb.com'], 
-                                        'surName': ['Jeter']}
+                                        'sn': ['Jeter'],
+                                        'title': ['The man']}

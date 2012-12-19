@@ -282,8 +282,8 @@ class SAML2Plugin(FormPluginBase):
             vorg_name = environ["myapp.vo"]
         except KeyError:
             try:
-                vorg_name = self.saml_client.vorg.keys()[1]
-            except (IndexError, AttributeError):
+                vorg_name = self.saml_client.vorg._name
+            except AttributeError:
                 vorg_name = ""
             
         logger.info("[sp.challenge] VO: %s" % vorg_name)

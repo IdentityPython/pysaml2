@@ -232,7 +232,14 @@ def _instance(klass, ava, seccont, base64encode=False, elements_to_sign=None):
     
     return instance
 
-def signed_instance_factory(instance, seccont, elements_to_sign=None):    
+def signed_instance_factory(instance, seccont, elements_to_sign=None):
+    """
+
+    :param instance: The instance to be signed or not
+    :param seccont: The security context
+    :param elements_to_sign: Which parts if any that should be signed
+    :return: A class instance if not signed otherwise a string
+    """
     if elements_to_sign:
         signed_xml = "%s" % instance
         for (node_name, nodeid) in elements_to_sign:
@@ -242,7 +249,7 @@ def signed_instance_factory(instance, seccont, elements_to_sign=None):
         #print "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         #print "%s" % signed_xml
         #print "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-        return create_class_from_xml_string(instance.__class__, signed_xml)
+        return signed_xml
     else:
         return instance
 
@@ -632,7 +639,16 @@ class SecurityContext(object):
 
         # More trust in certs from metadata then certs in the XML document
         if self.metadata:
-            certs = self.metadata.certs(issuer, "signing")
+            try:
+                _certs = self.metadata.certs(issuer, "any", "signing")
+            except KeyError:
+                _certs = []
+            certs = []
+            for cert in _certs:
+                if isinstance(cert, basestring):
+                    certs.append(make_temp(pem_format(cert), ".pem", False))
+                else:
+                    certs.append(cert)
         else:
             certs = []
 
@@ -677,7 +693,7 @@ class SecurityContext(object):
 
     def check_signature(self, item, node_name=NODE_NAME, origdoc=None,
                         id_attr=""):
-        return self._check_signature( "%s" % (item,), item, node_name, origdoc,
+        return self._check_signature( origdoc, item, node_name, origdoc,
                                       id_attr=id_attr)
         
     def correctly_signed_logout_request(self, decoded_xml, must=False,

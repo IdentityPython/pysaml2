@@ -28,13 +28,17 @@ import saml2
 import base64
 import urllib
 from saml2.s_utils import deflate_and_base64_encode
-from saml2.soap import SOAPClient, HTTPClient
 import logging
 
 logger = logging.getLogger(__name__)
 
 try:
     from xml.etree import cElementTree as ElementTree
+    if ElementTree.VERSION < '1.3.0':
+        # cElementTree has no support for register_namespace
+        # neither _namespace_map, thus we sacrify performance
+        # for correctness
+        from xml.etree import ElementTree
 except ImportError:
     try:
         import cElementTree as ElementTree
@@ -48,7 +52,7 @@ FORM_SPEC = """<form method="post" action="%s">
    <input type="submit" value="Submit" />
 </form>"""
 
-def http_post_message(message, location, relay_state="", typ="SAMLRequest"):
+def http_form_post_message(message, location, relay_state="", typ="SAMLRequest"):
     """The HTTP POST binding defines a mechanism by which SAML protocol 
     messages may be transmitted within the base64-encoded content of a
     HTML form control.
@@ -73,9 +77,20 @@ def http_post_message(message, location, relay_state="", typ="SAMLRequest"):
     response.append("</body>")
     
     return [("Content-type", "text/html")], response
-    
-def http_redirect_message(message, location, relay_state="", 
-                            typ="SAMLRequest"):
+
+#noinspection PyUnresolvedReferences
+def http_post_message(message, location, relay_state="", typ="SAMLRequest"):
+    """
+
+    :param message:
+    :param location:
+    :param relay_state:
+    :param typ:
+    :return:
+    """
+    return [("Content-type", "text/xml")], message
+
+def http_redirect_message(message, location, relay_state="", typ="SAMLRequest"):
     """The HTTP Redirect binding defines a mechanism by which SAML protocol 
     messages can be transmitted within URL parameters.
     Messages are encoded for use with this binding using a URL encoding 
@@ -191,56 +206,15 @@ def parse_soap_enveloped_saml(text, body_class, header_class=None):
 # 
 #     return response
 
-def send_using_http_post(request, destination, relay_state, key_file=None, 
-                        cert_file=None, ca_certs=""):
 
-    http = HTTPClient(destination, key_file, cert_file, ca_certs)
-    logger.info("HTTP client initiated")
 
-    if not isinstance(request, basestring):
-        request = "%s" % (request,)
-        
-    (headers, message) = http_post_message(request, destination, relay_state)
-    try:
-        response = http.post(message, headers)
-    except Exception, exc:
-        logger.info("HTTPClient exception: %s" % (exc,))
-        return None
 
-    logger.info("HTTP request sent and got response: %s" % response)
-
-    return response
-
-def send_using_soap(message, destination, key_file=None, cert_file=None,
-                    ca_certs=""):
-    """ 
-    Actual construction of the SOAP message is done by the SOAPClient
-    
-    :param message: The SAML message to send
-    :param destination: Where to send the message
-    :param key_file: If HTTPS this is the client certificate
-    :param cert_file: If HTTPS this a certificates file 
-    :param ca_certs: CA certificates to use when verifying server certificates
-    :return: The response gotten from the other side interpreted by the 
-        SOAPClient
-    """
-    soapclient = SOAPClient(destination, key_file, cert_file, ca_certs)
-    logger.info("SOAP client initiated")
-    try:
-        response = soapclient.send(message)
-    except Exception, exc:
-        logger.info("SoapClient exception: %s" % (exc,))
-        return None
-
-    logger.info("SOAP request sent and got response: %s" % response)
-
-    return response
 
 # -----------------------------------------------------------------------------
 
 PACKING = {
     saml2.BINDING_HTTP_REDIRECT: http_redirect_message,
-    saml2.BINDING_HTTP_POST: http_post_message,
+    saml2.BINDING_HTTP_POST: http_form_post_message,
     }
     
 def packager( identifier ):

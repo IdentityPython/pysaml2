@@ -1,5 +1,5 @@
 import saml2
-from saml2 import metadata
+from saml2 import mdstore
 from saml2 import md
 from saml2 import BINDING_HTTP_POST
 from saml2 import extension_elements_to_elements

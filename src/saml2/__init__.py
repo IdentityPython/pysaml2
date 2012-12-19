@@ -539,16 +539,16 @@ class SamlBase(ExtensionContainer):
         ExtensionContainer._add_members_to_element_tree(self, tree)
         
     
-    def become_child_element_of(self, tree):
+    def become_child_element_of(self, node):
         """
         Note: Only for use with classes that have a c_tag and c_namespace class 
         member. It is in SamlBase so that it can be inherited but it should
         not be called on instances of SamlBase.
         
-        :param tree: The tree to which this instance should be a child
+        :param node: The node to which this instance should be a child
         """
         new_child = self._to_element_tree()
-        tree.append(new_child)
+        node.append(new_child)
 
     def _to_element_tree(self):
         """

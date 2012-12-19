@@ -83,14 +83,14 @@ def _kwa(val, onts):
     :param onts: Schemas to use in the conversion
     :return: A converted dictionary
     """
-    return dict([(k,_x(v, onts)) for k,v in val.items() if k not in EXP_SKIP])
+    return dict([(k,from_dict(v, onts)) for k,v in val.items() if k not in EXP_SKIP])
 
-def _x(val, onts):
+def from_dict(val, onts):
     """
-    Converts a dictionary into a pysaml2 metadata object
+    Converts a dictionary into a pysaml2 object
     :param val: A dictionary
     :param onts: Schemas to use in the conversion
-    :return: The pysaml2 metadata object
+    :return: The pysaml2 object instance
     """
     if isinstance(val, dict):
         if "__class__" in val:
@@ -115,22 +115,12 @@ def _x(val, onts):
         else:
             res = {}
             for key, v in val.items():
-                res[key] = _x(v, onts)
+                res[key] = from_dict(v, onts)
             return res
     elif isinstance(val, basestring):
         return val
     elif isinstance(val, list):
-        return [_x(v, onts) for v in val]
+        return [from_dict(v, onts) for v in val]
     else:
         return val
 
-def from_dict(_dict, onts):
-    """
-    Converts a dictionary into a pysaml2 metadata object.
-    The import interface.
-
-    :param val: A dictionary
-    :param onts: Schemas to use in the conversion
-    :return: The pysaml2 metadata object
-    """
-    return dict([(key, _x(val, onts)) for key, val in _dict.items()])

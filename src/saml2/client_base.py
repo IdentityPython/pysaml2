@@ -18,6 +18,9 @@
 """Contains classes and functions that a SAML2.0 Service Provider (SP) may use
 to conclude its tasks.
 """
+
+from saml2.httpbase import HTTPBase
+from saml2.mdstore import destinations
 from saml2.saml import AssertionIDRef, NAMEID_FORMAT_TRANSIENT
 from saml2.samlp import AuthnQuery
 from saml2.samlp import LogoutRequest
@@ -82,7 +85,10 @@ class VerifyError(Exception):
 class LogoutError(Exception):
     pass
 
-class Base(object):
+class NoServiceDefined(Exception):
+    pass
+
+class Base(HTTPBase):
     """ The basic pySAML2 service provider class """
 
     def __init__(self, config=None, identity_cache=None, state_cache=None,
@@ -109,6 +115,10 @@ class Base(object):
         else:
             raise Exception("Missing configuration")
 
+        HTTPBase.__init__(self, self.config.verify_ssl_cert,
+                          self.config.ca_certs, self.config.key_file,
+                          self.config.cert_file)
+
         if self.config.vorg:
             for vo in self.config.vorg.values():
                 vo.sp = self
@@ -129,7 +139,7 @@ class Base(object):
             elif isinstance(virtual_organization, VirtualOrg):
                 self.vorg = virtual_organization
         else:
-            self.vorg = {}
+            self.vorg = None
 
         for foo in ["allow_unsolicited", "authn_requests_signed",
                    "logout_requests_signed"]:
@@ -170,23 +180,22 @@ class Base(object):
     def _sso_location(self, entityid=None, binding=BINDING_HTTP_REDIRECT):
         if entityid:
             # verify that it's in the metadata
-            try:
-                return self.config.single_sign_on_services(entityid, binding)[0]
-            except IndexError:
-                logger.info("_sso_location: %s, %s" % (entityid,
-                                                       binding))
+            srvs = self.metadata.single_sign_on_service(entityid, binding)
+            if srvs:
+                return destinations(srvs)[0]
+            else:
+                logger.info("_sso_location: %s, %s" % (entityid, binding))
                 raise IdpUnspecified("No IdP to send to given the premises")
 
-        # get the idp location from the configuration alternative the
-        # metadata. If there is more than one IdP in the configuration
-        # raise exception
-        eids = self.config.idps()
+        # get the idp location from the metadata. If there is more than one
+        # IdP in the configuration raise exception
+        eids = self.metadata.with_descriptor("idpsso")
         if len(eids) > 1:
             raise IdpUnspecified("Too many IdPs to choose from: %s" % eids)
+
         try:
-            loc = self.config.single_sign_on_services(eids.keys()[0],
-                                                      binding)[0]
-            return loc
+            srvs = self.metadata.single_sign_on_service(eids.keys()[0], binding)
+            return destinations(srvs)[0]
         except IndexError:
             raise IdpUnspecified("No IdP to send to given the premises")
 
@@ -424,8 +433,9 @@ class Base(object):
         :return: A LogoutResponse instance
         """
 
-        destination = self.config.single_logout_services(idp_entity_id,
-                                                         binding)[0]
+        srvs = self.metadata.single_logout_services(idp_entity_id, "idpsso",
+                                                    binding=binding)
+        destination = destinations(srvs)[0]
 
         status = samlp.Status(
             status_code=samlp.StatusCode(value=status_code))

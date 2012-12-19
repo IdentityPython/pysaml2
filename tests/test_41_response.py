@@ -8,21 +8,20 @@ from saml2.server import Server
 from saml2.response import response_factory
 from saml2.response import StatusResponse
 from saml2.response import AuthnResponse
-from saml2.sigver import security_context
-from saml2.sigver import MissingKey
+from saml2.sigver import security_context, MissingKey
 
 from pytest import raises
 
 XML_RESPONSE_FILE = "saml_signed.xml"
 XML_RESPONSE_FILE2 = "saml2_response.xml"
 
-
 def _eq(l1,l2):
     return set(l1) == set(l2)
 
 IDENTITY = {"eduPersonAffiliation": ["staff", "member"],
             "surName": ["Jeter"], "givenName": ["Derek"],
-            "mail": ["foo@gmail.com"]}
+            "mail": ["foo@gmail.com"],
+            "title": ["shortstop"]}
 
 class TestResponse:
     def setup_class(self):
@@ -62,7 +61,7 @@ class TestResponse:
         self.conf = conf
         
     def test_1(self):
-        xml_response = ("%s" % (self._resp_,)).split("\n")[1]
+        xml_response = ("%s" % (self._resp_,))
         resp = response_factory(xml_response, self.conf, 
                                 return_addr="http://lingon.catalogix.se:8087/",
                                 outstanding_queries={"id12": "http://localhost:8088/sso"},
@@ -72,7 +71,7 @@ class TestResponse:
         assert isinstance(resp, AuthnResponse)
 
     def test_2(self):
-        xml_response = ("%s" % (self._sign_resp_,)).split("\n",1)[1]
+        xml_response = self._sign_resp_
         resp = response_factory(xml_response, self.conf,
                                 return_addr="http://lingon.catalogix.se:8087/",
                                 outstanding_queries={"id12": "http://localhost:8088/sso"},

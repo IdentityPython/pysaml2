@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from saml2.samlp import response_from_string
 
 from saml2.server import Server, Identifier
 from saml2 import samlp, saml, client, config
@@ -55,6 +56,8 @@ class TestIdentifier():
         if os.path.exists("foobar.db"):
             os.unlink("foobar.db")
 
+
+
 class TestServer1():
     def setup_class(self):
         self.server = Server("idp_conf")
@@ -62,6 +65,9 @@ class TestServer1():
         conf = config.SPConfig()
         conf.load_file("server_conf")
         self.client = client.Saml2Client(conf)
+
+    def teardown_class(self):
+        self.server.close_shelve_db()
 
     def test_issuer(self):
         issuer = self.server.issuer()
@@ -197,7 +203,8 @@ class TestServer1():
                     {"eduPersonEntitlement": "Short stop",
                      "surName": "Jeter",
                      "givenName": "Derek",
-                     "mail": "derek.jeter@nyy.mlb.com"},
+                     "mail": "derek.jeter@nyy.mlb.com",
+                     "title": "The man"},
                     name_id,
                     policy= self.server.conf.getattr("policy")
                 )
@@ -219,13 +226,15 @@ class TestServer1():
         assert assertion.attribute_statement
         attribute_statement = assertion.attribute_statement
         print attribute_statement
-        assert len(attribute_statement.attribute) == 4
-        attribute = attribute_statement.attribute[0]
-        assert len(attribute.attribute_value) == 1
-        assert attribute.friendly_name == "eduPersonEntitlement"
-        assert attribute.name == "urn:oid:1.3.6.1.4.1.5923.1.1.1.7"
-        assert attribute.name_format == "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
-        value = attribute.attribute_value[0]
+        assert len(attribute_statement.attribute) == 5
+        # Pick out one attribute
+        for attr in attribute_statement.attribute:
+            if attr.friendly_name == "edupersonentitlement":
+                break
+        assert len(attr.attribute_value) == 1
+        assert attr.name == "urn:oid:1.3.6.1.4.1.5923.1.1.1.7"
+        assert attr.name_format == "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
+        value = attr.attribute_value[0]
         assert value.text.strip() == "Short stop"
         assert value.get_type() == "xs:string"
         assert assertion.subject
@@ -282,7 +291,7 @@ class TestServer1():
         self.client = client.Saml2Client(conf)
 
         ava = { "givenName": ["Derek"], "surName": ["Jeter"],
-                "mail": ["derek@nyy.mlb.com"]}
+                "mail": ["derek@nyy.mlb.com"], "title": "The man"}
 
         npolicy = samlp.NameIDPolicy(format=saml.NAMEID_FORMAT_TRANSIENT,
                                      allow_create="true")
@@ -306,14 +315,14 @@ class TestServer1():
         assert len(assertion.attribute_statement) == 1
         astate = assertion.attribute_statement[0]
         print astate
-        assert len(astate.attribute) == 3
+        assert len(astate.attribute) == 4
 
     def test_signed_response(self):
         name_id = self.server.ident.transient_nameid(
                                         "urn:mace:example.com:saml:roland:sp",
                                         "id12")
         ava = { "givenName": ["Derek"], "surName": ["Jeter"],
-                "mail": ["derek@nyy.mlb.com"]}
+                "mail": ["derek@nyy.mlb.com"], "title": "The man"}
 
         signed_resp = self.server.create_response(
                     "id12",                                 # in_response_to
@@ -324,12 +333,13 @@ class TestServer1():
                     sign_assertion=True
                 )
 
-        print "%s" % signed_resp
+        print signed_resp
         assert signed_resp
 
+        sresponse = response_from_string(signed_resp)
         # It's the assertions that are signed not the response per se
-        assert len(signed_resp.assertion) == 1
-        assertion = signed_resp.assertion[0]
+        assert len(sresponse.assertion) == 1
+        assertion = sresponse.assertion[0]
 
         # Since the reponse is created dynamically I don't know the signature
         # value. Just that there should be one
@@ -384,19 +394,24 @@ class TestServer1():
         _ = s_utils.deflate_and_base64_encode("%s" % (logout_request,))
 
         saml_soap = make_soap_enveloped_saml_thingy(logout_request)
+        self.server.close_shelve_db()
         idp = Server("idp_soap_conf")
         request = idp.parse_logout_request(saml_soap)
+        idp.close_shelve_db()
         assert request
 
 #------------------------------------------------------------------------
 
 IDENTITY = {"eduPersonAffiliation": ["staff", "member"],
             "surName": ["Jeter"], "givenName": ["Derek"],
-            "mail": ["foo@gmail.com"]}
+            "mail": ["foo@gmail.com"], "title": "The man"}
 
 class TestServer2():
     def setup_class(self):
         self.server = Server("restrictive_idp_conf")
+
+    def teardown_class(self):
+        self.server.close_shelve_db()
 
     def test_do_aa_reponse(self):
         aa_policy = self.server.conf.getattr("policy", "idp")

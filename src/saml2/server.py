@@ -23,6 +23,11 @@ import logging
 import shelve
 import sys
 import memcache
+from saml2.pack import http_soap_message
+from saml2.pack import http_redirect_message
+from saml2.pack import http_post_message
+from saml2.httpbase import HTTPBase
+from saml2.mdstore import destinations
 
 from saml2 import saml, BINDING_HTTP_POST
 from saml2 import class_name
@@ -44,10 +49,6 @@ from saml2.s_utils import UnsupportedBinding
 from saml2.s_utils import error_status_factory
 
 from saml2.time_util import instant
-
-from saml2.binding import http_soap_message
-from saml2.binding import http_redirect_message
-from saml2.binding import http_post_message
 
 from saml2.sigver import security_context
 from saml2.sigver import signed_instance_factory
@@ -218,9 +219,10 @@ class Identifier(object):
             except KeyError:
                 return None
         
-class Server(object):
+class Server(HTTPBase):
     """ A class that does things that IdPs or AAs do """
     def __init__(self, config_file="", config=None, _cache="", stype="idp"):
+
         self.ident = None
         if config_file:
             self.load_config(config_file, stype)
@@ -228,6 +230,10 @@ class Server(object):
             self.conf = config
         else:
             raise Exception("Missing configuration")
+
+        HTTPBase.__init__(self, self.conf.verify_ssl_cert,
+                          self.conf.ca_certs, self.conf.key_file,
+                          self.conf.cert_file)
 
         self.conf.setup_logger()
             
@@ -277,7 +283,12 @@ class Server(object):
                                 (dbspec,))
         except AttributeError:
             self.ident = None
-    
+
+    def close_shelve_db(self):
+        """Close the shelve db to prevent file system locking issues"""
+        if self.ident:
+            self.ident.map.close()
+
     def issuer(self, entityid=None):
         """ Return an Issuer precursor """
         if entityid:
@@ -351,12 +362,13 @@ class Server(object):
             _binding = authn_request.message.protocol_binding
 
         try:
-            consumer_url = self.metadata.assertion_consumer_service(sp_entity_id,
-                                                      binding=_binding)[0]
+            srvs = self.metadata.assertion_consumer_service(sp_entity_id,
+                                                           binding=_binding)
+            consumer_url = destinations(srvs)[0]
         except (KeyError, IndexError):
             _log_info("Failed to find consumer URL for %s" % sp_entity_id)
             _log_info("Binding: %s" % _binding)
-            _log_info("entities: %s" % self.metadata.entity.keys())
+            _log_info("entities: %s" % self.metadata.keys())
             raise UnknownPrincipal(sp_entity_id)
 
         if not consumer_url: # what to do ?
@@ -609,8 +621,9 @@ class Server(object):
         name_id = None
         try:
             nid_formats = []
-            for _sp in self.metadata.entity[sp_entity_id]["spsso"]:
-                nid_formats.extend([n.text for n in _sp.name_id_format])
+            for _sp in self.metadata[sp_entity_id]["spsso_descriptor"]:
+                if "name_id_format" in _sp:
+                    nid_formats.extend([n.text for n in _sp["name_id_format"]])
 
             policy = self.conf.getattr("policy", "idp")
             name_id = self.ident.construct_nameid(policy, userid, sp_entity_id,
@@ -701,24 +714,24 @@ class Server(object):
         sp_entity_id = request.issuer.text.strip()
         
         binding = None
-        destinations = []
+        dests = []
         for binding in bindings:
-            destinations = self.conf.single_logout_services(sp_entity_id,
-                                                           binding)
-            if destinations:
+            srvs = self.metadata.single_logout_service(sp_entity_id, "spsso",
+                                                       binding=binding)
+            if srvs:
+                dests = destinations(srvs)
                 break
 
-        if not destinations:
+        if not dests:
             logger.error("No way to return a response !!!")
             return ("412 Precondition Failed",
                     [("Content-type", "text/html")],
                     ["No return way defined"])
         
         # Pick the first
-        destination = destinations[0]
+        destination = dests[0]
 
-        logger.info("Logout Destination: %s, binding: %s" % (destination,
-                                                                    binding))
+        logger.info("Logout Destination: %s, binding: %s" % (dests, binding))
         if not status: 
             status = success_status_factory()
 

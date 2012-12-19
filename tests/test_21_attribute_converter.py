@@ -53,11 +53,11 @@ class TestAC():
             except attribute_converter.UnknownNameFormat:
                 pass
         print ava.keys()
-        assert _eq(ava.keys(),['uid', 'swissEduPersonUniqueID', 
-                            'swissEduPersonHomeOrganizationType', 
-                            'eduPersonEntitlement', 
-                            'eduPersonAffiliation', 'sn', 'mail', 
-                            'swissEduPersonHomeOrganization', 'givenName'])
+        assert _eq(ava.keys(),['uid', 'swissedupersonuniqueid',
+                               'swissedupersonhomeorganizationtype',
+                               'eduPersonEntitlement', 'eduPersonAffiliation',
+                               'sn', 'mail', 'swissedupersonhomeorganization',
+                               'givenName'])
 
     def test_to_attrstat_1(self):
         ava = { "givenName": "Roland", "sn": "Hedberg" }
@@ -74,7 +74,7 @@ class TestAC():
             assert a1.friendly_name == "givenName"
             assert a1.name == 'urn:mace:dir:attribute-def:givenName'
             assert a1.name_format == BASIC_NF
-        elif a0.friendly_name == 'givenName':
+        elif a0.friendly_name == 'givenname':
             assert a0.name == 'urn:mace:dir:attribute-def:givenName'
             assert a0.name_format == BASIC_NF
             assert a1.friendly_name == "sn"
@@ -97,7 +97,7 @@ class TestAC():
             assert a1.friendly_name == "givenName"
             assert a1.name == 'urn:oid:2.5.4.42'
             assert a1.name_format == URI_NF
-        elif a0.friendly_name == 'givenName':
+        elif a0.friendly_name == 'givenname':
             assert a0.name == 'urn:oid:2.5.4.42'
             assert a0.name_format == URI_NF
             assert a1.friendly_name == "surname"

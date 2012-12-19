@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import base64
+from saml2.saml import assertion_from_string
+from saml2.samlp import response_from_string
 
 from saml2 import sigver
 from saml2 import class_name
@@ -125,7 +127,7 @@ class TestSecurity():
 
         print xmlsec_version(get_xmlsec_binary())
 
-        item = self.sec.check_signature(sass, node_name=class_name(sass))
+        item = self.sec.check_signature(sass, class_name(sass), sign_ass)
 
         assert isinstance(item, saml.Assertion)
 
@@ -141,17 +143,17 @@ class TestSecurity():
             
         assert s_response is not None
         print s_response
-        print
-        sass = s_response.assertion[0]
+        response = response_from_string(s_response)
+        sass = response.assertion[0]
         
         print sass
-        assert _eq(sass.keyswv(), ['attribute_statement', 'issue_instant', 
-                                'version', 'signature', 'id'])
+        assert _eq(sass.keyswv(), ['attribute_statement', 'issue_instant',
+                                   'version', 'signature', 'id'])
         assert sass.version == "2.0"
         assert sass.id == "11111"
 
-        item = self.sec.check_signature(s_response,
-                                        node_name=class_name(s_response))
+        item = self.sec.check_signature(response, class_name(response),
+                                        s_response)
         assert isinstance(item, samlp.Response)
         assert item.id == "22222"
 
@@ -177,14 +179,16 @@ class TestSecurity():
         s_response = sigver.signed_instance_factory(response, self.sec, to_sign)
 
         assert s_response is not None
-        sass = s_response.assertion[0]
+        response2 = response_from_string(s_response)
+
+        sass = response2.assertion[0]
         assert _eq(sass.keyswv(), ['attribute_statement', 'issue_instant',
                                 'version', 'signature', 'id'])
         assert sass.version == "2.0"
         assert sass.id == "11122"
 
-        item = self.sec.check_signature(s_response,
-                                        node_name=class_name(s_response))
+        item = self.sec.check_signature(response2, class_name(response),
+                                        s_response)
 
         assert isinstance(item, samlp.Response)
         
@@ -217,24 +221,21 @@ class TestSecurity():
 
         s_response = sigver.signed_instance_factory(response, self.sec, to_sign)
 
-        print s_response.keyswv()
-        print s_response.signature.keyswv()
-        print s_response.signature.key_info.keyswv()
+        response2 = response_from_string(s_response)
+
+        ci = "".join(sigver.cert_from_instance(response2)[0].split())
         
-        ci = "".join(sigver.cert_from_instance(s_response)[0].split())
-        
-        print ci
-        print self.sec.my_cert
-        
+
         assert ci == self.sec.my_cert
         
         res = self.sec.verify_signature("%s" % s_response, 
                                     node_name=class_name(samlp.Response()))
+
         assert res
-        res = self.sec._check_signature("%s" % s_response, s_response, 
-                                        class_name(s_response))
-        
-        assert res == s_response
+
+        res = self.sec._check_signature(s_response, response2,
+                                        class_name(response2), s_response)
+        assert res == response2
                 
     def test_sign_verify_assertion_with_cert_from_instance(self):
         assertion = factory( saml.Assertion,
@@ -251,16 +252,15 @@ class TestSecurity():
         to_sign = [(class_name(assertion), assertion.id)]
         s_assertion = sigver.signed_instance_factory(assertion, self.sec, to_sign)
         print s_assertion
-        
-        ci = "".join(sigver.cert_from_instance(s_assertion)[0].split())
+        ass = assertion_from_string(s_assertion)
+        ci = "".join(sigver.cert_from_instance(ass)[0].split())
         assert ci == self.sec.my_cert
         
-        res = self.sec.verify_signature("%s" % s_assertion, 
-                                    node_name=class_name(s_assertion))
+        res = self.sec.verify_signature("%s" % s_assertion,
+                                        node_name=class_name(ass))
         assert res 
         
-        res = self.sec._check_signature("%s" % s_assertion, s_assertion, 
-                                        class_name(s_assertion))
+        res = self.sec._check_signature(s_assertion, ass, class_name(ass))
         
         assert res
 
@@ -285,8 +285,9 @@ class TestSecurity():
                     
         s_response = sigver.signed_instance_factory(response, self.sec, to_sign)
 
+        response2 = response_from_string(s_response)
         # Change something that should make everything fail
-        s_response.id = "23456"
+        response2.id = "23456"
         raises(sigver.SignatureError, self.sec._check_signature,
-                "%s" % s_response, s_response, class_name(s_response))
+                s_response, response2, class_name(response2))
         

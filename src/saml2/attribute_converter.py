@@ -155,7 +155,24 @@ def to_local_name(acs, attr):
             return lattr
 
     return attr.friendly_name
-    
+
+def d_to_local_name(acs, attr):
+    """
+    :param acs: List of AttributeConverter instances
+    :param attr: an Attribute dictionary
+    :return: The local attribute name
+    """
+    for aconv in acs:
+        lattr = aconv.d_from_format(attr)
+        if lattr:
+            return lattr
+
+    # if everything else fails this might be good enough
+    try:
+        return attr["friendly_name"]
+    except KeyError:
+        raise Exception("Could not find local name for %s" % attr)
+
 class AttributeConverter(object):
     """ Converts from an attribute statement to a key,value dictionary and
         vice-versa """
@@ -165,28 +182,15 @@ class AttributeConverter(object):
         self._to = None
         self._fro = None
         
-#    def set(self, name, filename):
-#        if name == "to":
-#            self.set_to(filename)
-#        elif name == "fro":
-#            self.set_fro(filename)
-#        # else ignore
-#
-#    def set_fro(self, filename):
-#        self._fro = eval(open(filename).read())
-#
-#    def set_to(self, filename):
-#        self._to = eval(open(filename).read())
-#
     def adjust(self):
         """ If one of the transformations is not defined it is expected to
         be the mirror image of the other.
         """
         
         if self._fro is None and self._to is not None:
-            self._fro = dict([(value, key) for key, value in self._to.items()])
+            self._fro = dict([(value.lower(), key) for key, value in self._to.items()])
         if self._to is None and self.fro is not None:
-            self._to = dict([(value, key) for key, value in self._fro.items()])
+            self._to = dict([(value.lower, key) for key, value in self._fro.items()])
 
     def from_dict(self, mapdict):
         """ Import the attribute map from  a dictionary
@@ -196,11 +200,11 @@ class AttributeConverter(object):
 
         self.name_format = mapdict["identifier"]
         try:
-            self._fro = mapdict["fro"]
+            self._fro = dict([(k.lower(),v) for k,v in mapdict["fro"].items()])
         except KeyError:
             pass
         try:
-            self._to = mapdict["to"]
+            self._to = dict([(k.lower(),v) for k,v in mapdict["to"].items()])
         except KeyError:
             pass
 
@@ -230,12 +234,12 @@ class AttributeConverter(object):
         
     def ava_from(self, attribute):
         try:
-            attr = self._fro[attribute.name.strip()]
+            attr = self._fro[attribute.name.strip().lower()]
         except (AttributeError, KeyError):
             try:
-                attr = attribute.friendly_name.strip()
+                attr = attribute.friendly_name.strip().lower()
             except AttributeError:
-                attr = attribute.name.strip()
+                attr = attribute.name.strip().lower()
 
         val = []
         for value in attribute.attribute_value:
@@ -306,17 +310,37 @@ class AttributeConverter(object):
         if attr.name_format:
             if self.name_format == attr.name_format:
                 try:
-                    return self._fro[attr.name]
+                    return self._fro[attr.name.lower()]
                 except KeyError:
                     pass
         else: #don't know the name format so try all I have
             try:
-                return self._fro[attr.name]
+                return self._fro[attr.name.lower()]
             except KeyError:
                 pass
 
         return ""
-        
+
+    def d_from_format(self, attr):
+        """ Find out the local name of an attribute
+
+        :param attr: An Attribute dictionary
+        :return: The local attribute name or "" if no mapping could be made
+        """
+        if attr["name_format"]:
+            if self.name_format == attr["name_format"]:
+                try:
+                    return self._fro[attr["name"].lower()]
+                except KeyError:
+                    pass
+        else: #don't know the name format so try all I have
+            try:
+                return self._fro[attr["name"].lower()]
+            except KeyError:
+                pass
+
+        return ""
+
     def to_(self, attrvals):
         """ Create a list of Attribute instances.
 
@@ -325,6 +349,7 @@ class AttributeConverter(object):
         """
         attributes = []
         for key, value in attrvals.items():
+            key = key.lower()
             try:
                 attributes.append(factory(saml.Attribute,
                                             name=self._to[key],

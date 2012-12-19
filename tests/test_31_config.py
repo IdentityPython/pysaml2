@@ -3,10 +3,10 @@
 
 import sys
 import logging
+from saml2.mdstore import MetadataStore, name
 
 from saml2 import BINDING_HTTP_REDIRECT, BINDING_SOAP, BINDING_HTTP_POST
 from saml2.config import SPConfig, IdPConfig, Config
-from saml2.metadata import MetaData
 from py.test import raises
 
 from saml2 import root_logger
@@ -167,7 +167,7 @@ def test_1():
     assert c._sp_name
     assert c._sp_idp
     md = c.metadata
-    assert isinstance(md, MetaData)
+    assert isinstance(md, MetadataStore)
 
     assert len(c._sp_idp) == 1
     assert c._sp_idp.keys() == ["urn:mace:example.com:saml:roland:idp"]
@@ -243,10 +243,10 @@ def test_wayf():
     c = SPConfig().load_file("server_conf")
     c.context = "sp"
 
-    idps = c.idps()
-    assert idps == {'urn:mace:example.com:saml:roland:idp': 'Example Co.'}
-    idps = c.idps(["se","en"])
-    assert idps == {'urn:mace:example.com:saml:roland:idp': 'Exempel AB'}
+    idps = c.metadata.with_descriptor("idpsso")
+    ent = idps.values()[0]
+    assert name(ent) == 'Example Co.'
+    assert name(ent, "se") == 'Exempel AB'
 
     c.setup_logger()
 
@@ -306,11 +306,8 @@ def test_3():
 def test_sp():
     cnf = SPConfig()
     cnf.load_file("sp_1_conf")
-    assert cnf.single_logout_services("urn:mace:example.com:saml:roland:idp",
-                            BINDING_HTTP_POST) == ["http://localhost:8088/slo"]
     assert cnf.endpoint("assertion_consumer_service") == \
                                             ["http://lingon.catalogix.se:8087/"]
-    assert len(cnf.idps()) == 1
 
 def test_dual():
     cnf = Config().load_file("idp_sp_conf")
@@ -336,12 +333,9 @@ def test_assertion_consumer_service():
     c.load_file("idp_conf")
     c.context = "idp"
 
-    xml_src = open("InCommon-metadata.xml").read()
-    # A trick so outdated data is allowed
-    c.metadata.import_metadata(xml_src, "-")
+    c.metadata.load("local", "InCommon-metadata.xml")
 
-    print c.metadata.entity.keys()
     entity_id = "https://www.zimride.com/shibboleth"
-    acs = c.assertion_consumer_services(entity_id)
+    acs = c.metadata.assertion_consumer_service(entity_id)
     assert len(acs) == 1
-    assert acs[0].location == 'https://www.zimride.com/Shibboleth.sso/SAML2/POST'
+    assert acs[0]["location"] == 'https://www.zimride.com/Shibboleth.sso/SAML2/POST'
