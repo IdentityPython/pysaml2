@@ -20,12 +20,19 @@ Based on the use of xmlsec1 binaries and not the python xmlsec module.
 """
 
 import base64
-from binascii import hexlify
+from binascii import b2a_base64, hexlify
+import hashlib
 import logging
 import random
 import os
 import sys
 import M2Crypto
+try:
+    from Crypto.PublicKey import RSA
+    from Crypto.Util.number import long_to_bytes
+    HAS_PYCRYPTO = True
+except ImportError:
+    HAS_PYCRYPTO = False
 
 import xmldsig as ds
 
@@ -905,6 +912,31 @@ class SecurityContext(object):
                                             class_name(samlp.AttributeQuery()),
                                             key, key_file, nodeid,
                                             id_attr=id_attr)
+
+
+    def get_query_string_sign_algorithm(self):
+        return ds.SIG_RSA_SHA1
+
+    def sign_query_string(self, query_string):
+        if HAS_PYCRYPTO:
+            return self._rsa_sha1_signature(query_string)
+        else:
+            raise ValueError('PyCrypto is required to sign the query string')
+
+    def _rsa_sha1_signature(self, data):
+        key_file = open(security_context.key_file, 'r')
+        key = RSA.importKey(key_file.read())
+        digest = hashlib.sha1(data).digest()
+
+        # See http://www.w3.org/TR/xmldsig-core/#sec-SignatureAlg
+        SHA1_DIGESTINFO = '\x30\x21\x30\x09\x06\x05\x2b\x0e\x03\x02\x1a\x05\x00\x04\x14'
+        size = len(long_to_bytes(key.n))
+        filler = '\xff' * (size - len(SHA1_DIGESTINFO) - len(digest) - 3)
+        pkcs1 = '\x00\x01' + filler + '\x00' + SHA1_DIGESTINFO + digest
+        sig = key.sign(pkcs1, '')[0]
+        sig_bytes = long_to_bytes(sig)
+
+        return b2a_base64(sig_bytes)[:-1]
 
     def multiple_signatures(self, statement, to_sign, key=None, key_file=None):
         """

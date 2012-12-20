@@ -82,12 +82,14 @@ class Saml2Client(Base):
             # No valid ticket; Send a form to the client
             # THIS IS NOT TO BE USED RIGHT NOW
             logger.info("HTTP POST")
-            (head, response) = http_post_message(_req_str, location,
-                                                 relay_state)
+            (head, response) = http_post_message(req, location,
+                                                 relay_state,
+                                                 security_context=self.sec)
         elif binding == saml2.BINDING_HTTP_REDIRECT:
             logger.info("HTTP REDIRECT")
-            (head, _body) = http_redirect_message(_req_str, location,
-                                                  relay_state)
+            (head, _body) = http_redirect_message(req, location,
+                                                  relay_state,
+                                                  security_context=self.sec)
             response = head[0]
         else:
             raise Exception("Unknown binding type: %s" % binding)
@@ -208,8 +210,10 @@ class Saml2Client(Base):
                         code = "200 OK"
                     else:
                         (head, body) = http_redirect_message(request, 
-                                                            destination, 
-                                                            rstate)
+                                                             destination, 
+                                                             rstate,
+                                                             security_context=self.sec)
+
                         code = "302 Found"
             
                     return session_id, code, head, body
@@ -294,7 +298,8 @@ class Saml2Client(Base):
                 
             (headers, _body) = http_redirect_message(str(response), 
                                                      destination,
-                                                     rstate, 'SAMLResponse')
+                                                     rstate, 'SAMLResponse',
+                                                     security_context=self.sec)
 
         return headers, success
 
