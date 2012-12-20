@@ -75,7 +75,7 @@ def http_post_message(message, location, relay_state="", typ="SAMLRequest"):
     return [("Content-type", "text/html")], response
     
 def http_redirect_message(message, location, relay_state="", 
-                            typ="SAMLRequest"):
+                            typ="SAMLRequest", security_context=None):
     """The HTTP Redirect binding defines a mechanism by which SAML protocol 
     messages can be transmitted within URL parameters.
     Messages are encoded for use with this binding using a URL encoding 
@@ -88,20 +88,40 @@ def http_redirect_message(message, location, relay_state="",
     :param relay_state: for preserving and conveying state information
     :return: A tuple containing header information and a HTML message.
     """
-    
-    if not isinstance(message, basestring):
-        message = "%s" % (message,)
-        
-    args = {typ: deflate_and_base64_encode(message)}
-    
-    if relay_state:
-        args["RelayState"] = relay_state
+    is_signed = False
 
-    glue_char = "&" if urlparse.urlparse(location).query else "?"
-    login_url = glue_char.join([location, urllib.urlencode(args)])
+    if not isinstance(message, basestring):
+        if message.signature is not None:
+            is_signed = True
+            # Remove the signature from the message because we are
+            # going to sign the query string
+            message.signature = None
+
+        message = str(message)
+
+    # The args in the querystring need to be defined in
+    # an specific order. A dictionary is not ok here.
+    args = [(typ, deflate_and_base64_encode(message))]
+
+    if relay_state:
+        args.append(('RelayState', relay_state))
+
+    if is_signed:
+        if security_context is None:
+            raise ValueError('Security Context can not be None when signing')
+        args.append(('SigAlg', security_context.get_query_string_sign_algorithm()))
+
+        query_string = urllib.urlencode(args)
+        signature = security_context.sign_query_string(query_string)
+        query_string += '&' + urllib.urlencode([('Signature', signature)])
+
+    else:
+        query_string = urllib.urlencode(args)
+
+    login_url = "?".join([location, query_string])
     headers = [('Location', login_url)]
     body = [""]
-    
+
     return headers, body
 
 def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
