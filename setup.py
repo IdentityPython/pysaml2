@@ -20,7 +20,7 @@ from setuptools import setup
 __author__ = 'rohe0002'
 
 setup(
-    name="oic",
+    name="saml2test",
     version="0.3.0",
     description="SAML2 test tool",
     author = "Roland Hedberg",
@@ -37,4 +37,5 @@ setup(
                         "beautifulsoup4"],
 
     zip_safe=False,
+    scripts=["script/saml2c.py"]
     )

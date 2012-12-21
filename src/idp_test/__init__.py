@@ -1,10 +1,38 @@
+from importlib import import_module
 import json
 import argparse
 import sys
+import time
+
+import logging
+
+from saml2.config import SPConfig
+
+from idp_test.base import FatalError
+from idp_test.base import do_sequence
+from idp_test.httpreq import HTTPC
+#from saml2.config import Config
+from saml2.mdstore import MetadataStore, MetaData
+
+# Schemas supported
+from saml2 import md
+from saml2 import saml
+from saml2.extension import mdui
+from saml2.extension import idpdisc
+from saml2.extension import dri
+from saml2.extension import mdattr
+from saml2.extension import ui
+from saml2.metadata import entity_descriptor
+import xmldsig
+import xmlenc
+
+SCHEMA = [ dri, idpdisc, md, mdattr, mdui, saml, ui, xmldsig, xmlenc]
 
 __author__ = 'rolandh'
 
 import traceback
+
+logger = logging.getLogger("")
 
 def exception_trace(tag, exc, log=None):
     message = traceback.format_exception(*sys.exc_info())
@@ -15,15 +43,58 @@ def exception_trace(tag, exc, log=None):
         print >> sys.stderr, "[%s] ExcList: %s" % (tag, "".join(message),)
         print >> sys.stderr, "[%s] Exception: %s" % (tag, exc)
 
-class SAML2(object):
-    client_args = ["client_id", "redirect_uris", "password"]
+class Trace(object):
+    def __init__(self):
+        self.trace = []
+        self.start = time.time()
 
-    def __init__(self, operations_mod, client_class, msgfactory):
-        self.operations_mod = operations_mod
-        self.client_class = client_class
-        self.client = None
-        #self.trace = Trace()
-        self.msgfactory = msgfactory
+    def request(self, msg):
+        delta = time.time() - self.start
+        self.trace.append("%f --> %s" % (delta, msg))
+
+    def reply(self, msg):
+        delta = time.time() - self.start
+        self.trace.append("%f <-- %s" % (delta, msg))
+
+    def info(self, msg):
+        delta = time.time() - self.start
+        self.trace.append("%f %s" % (delta, msg))
+
+    def error(self, msg):
+        delta = time.time() - self.start
+        self.trace.append("%f [ERROR] %s" % (delta, msg))
+
+    def warning(self, msg):
+        delta = time.time() - self.start
+        self.trace.append("%f [WARNING] %s" % (delta, msg))
+
+    def __str__(self):
+        try:
+            return "\n".join([t.encode("utf-8") for t in self.trace])
+        except UnicodeDecodeError:
+            arr = []
+            for t in self.trace:
+                try:
+                    arr.append(t.encode("utf-8"))
+                except UnicodeDecodeError:
+                    arr.append(t)
+        return "\n".join(arr)
+
+    def clear(self):
+        self.trace = []
+
+    def __getitem__(self, item):
+        return self.trace[item]
+
+    def next(self):
+        for line in self.trace:
+            yield line
+
+class SAML2client(object):
+
+    def __init__(self, operations):
+        self.trace = Trace()
+        self.operations = operations
 
         self._parser = argparse.ArgumentParser()
         self._parser.add_argument('-d', dest='debug', action='store_true',
@@ -31,41 +102,55 @@ class SAML2(object):
         self._parser.add_argument('-v', dest='verbose', action='store_true',
                                   help="Print runtime information")
         self._parser.add_argument('-C', dest="ca_certs",
-                                  help="CA certs to use to verify HTTPS server certificates, if HTTPS is used and no server CA certs are defined then no cert verification is done")
+                                  help="CA certs to use to verify HTTPS server certificates, if HTTPS is used and no server CA certs are defined then no cert verification will be done")
         self._parser.add_argument('-J', dest="json_config_file",
                                   help="Script configuration")
+        self._parser.add_argument('-S', dest="sp_id", help="SP id")
+        self._parser.add_argument("-s", dest="list_sp_id", action="store_true",
+                                  help="List all the SP variants as a JSON object")
+        self._parser.add_argument('-m', dest="metadata", action='store_true',
+                                  help="Return the SP metadata")
         self._parser.add_argument("-l", dest="list", action="store_true",
                                   help="List all the test flows as a JSON object")
-        self._parser.add_argument("-H", dest="host", default="example.com",
-                                  help="Which host the script is running on, used to construct the key export URL")
-        self._parser.add_argument("flow", nargs="?", help="Which test flow to run")
+        self._parser.add_argument("oper", nargs="?", help="Which test to run")
 
-        self.args = None
-        self.pinfo = None
-        self.sequences = []
-        self.function_args = {}
-        self.signing_key = None
-        self.encryption_key = None
-        self.test_log = []
-        self.environ = {}
-        self._pop = None
-
-    def parse_args(self):
-        self.json_config= self.json_config_file()
-
-        try:
-            self.features = self.json_config["features"]
-        except KeyError:
-            self.features = {}
-
-        self.pinfo = self.provider_info()
-        self.client_conf(self.client_args)
+        self.interactions = None
+        self.entity_id = None
+        self.sp_config = None
 
     def json_config_file(self):
         if self.args.json_config_file == "-":
             return json.loads(sys.stdin.read())
         else:
             return json.loads(open(self.args.json_config_file).read())
+
+    def sp_configure(self, metadata_construction=False):
+        sys.path.insert(0, ".")
+        mod = import_module("config_file")
+        if self.args.sp_id is None:
+            if len(mod.CONFIG) == 1:
+                self.args.sp_id = mod.CONFIG.keys()[0]
+            else:
+                raise Exception("SP id undefined")
+
+        self.sp_config = SPConfig().load(mod.CONFIG[self.args.sp_id],
+                                         metadata_construction)
+
+    def setup(self):
+        self.json_config= self.json_config_file()
+
+        _jc = self.json_config
+
+        self.interactions = _jc["interaction"]
+        self.entity_id = _jc["entity_id"]
+
+        self.sp_configure()
+
+        metadata = MetadataStore(SCHEMA, self.sp_config.attribute_converters,
+                                 self.sp_config.xmlsec_binary)
+        metadata[0] = MetaData(SCHEMA, self.sp_config.attribute_converters,
+                               _jc["metadata"])
+        self.sp_config.metadata = metadata
 
     def test_summation(self, id):
         status = 0
@@ -91,75 +176,45 @@ class SAML2(object):
     def run(self):
         self.args = self._parser.parse_args()
 
-        if self.args.list:
-            return self.operations()
+        if self.args.metadata:
+            return self.make_meta()
+        elif self.args.list_sp_id:
+            return self.list_conf_id()
+        elif self.args.list:
+            return self.list_operations()
         else:
-            if not self.args.flow:
-                raise Exception("Missing flow specification")
-            self.args.flow = self.args.flow.strip("'")
-            self.args.flow = self.args.flow.strip('"')
+            if not self.args.oper:
+                raise Exception("Missing test case specification")
+            self.args.oper = self.args.oper.strip("'")
+            self.args.oper = self.args.oper.strip('"')
 
-            flow_spec = self.operations_mod.FLOWS[self.args.flow]
+        self.setup()
+
+        try:
             try:
-                block = flow_spec["block"]
+                oper = self.operations.OPERATIONS[self.args.oper]
             except KeyError:
-                block = {}
-
-            self.parse_args()
-            _seq = self.make_sequence()
-            interact = self.get_interactions()
-
-            try:
-                self.do_features(interact, _seq, block)
-            except Exception,exc:
-                exception_trace("do_features", exc)
-                _output = {"status": 4,
-                           "tests": [{"status": 4,
-                                      "message":"Couldn't run testflow: %s" % exc,
-                                      "id": "verify_features",
-                                      "name": "Make sure you don't do things you shouldn't"}]}
-                #print >> sys.stdout, json.dumps(_output)
+                print >> sys.stderr, "Undefined testcase"
                 return
 
-            tests = self.get_test()
-            self.client.state = "STATE0"
+            testres, trace = do_sequence(self.sp_config, oper, HTTPC(),
+                                         self.trace, self.interactions,
+                                         entity_id=self.json_config["entity_id"])
+            self.test_log = testres
+            sum = self.test_summation(self.args.oper)
+            print >>sys.stdout, json.dumps(sum)
+            if sum["status"] > 1 or self.args.debug:
+                print >> sys.stderr, trace
+        except FatalError:
+            pass
+        except Exception, err:
+            print >> sys.stderr, self.trace
+            print err
+            exception_trace("RUN", err)
 
-            self.environ.update({"provider_info": self.pinfo,
-                                 "client": self.client})
-
-            try:
-                except_exception = flow_spec["except_exception"]
-            except KeyError:
-                except_exception = False
-
-            try:
-                if self.args.verbose:
-                    print >> sys.stderr, "Set up done, running sequence"
-                testres, trace = run_sequence(self.client, _seq, self.trace,
-                                              interact, self.msgfactory,
-                                              self.environ, tests,
-                                              self.json_config["features"],
-                                              self.args.verbose, self.cconf,
-                                              except_exception)
-                self.test_log.extend(testres)
-                sum = self.test_summation(self.args.flow)
-                print >>sys.stdout, json.dumps(sum)
-                if sum["status"] > 1 or self.args.debug:
-                    print >>sys.stderr, trace
-            except Exception, err:
-                #print >> sys.stderr, self.trace
-                print err
-                exception_trace("RUN", err)
-
-            #if self._pop is not None:
-            #    self._pop.terminate()
-            if "keyprovider" in self.environ and self.environ["keyprovider"]:
-                # os.kill(self.environ["keyprovider"].pid, signal.SIGTERM)
-                self.environ["keyprovider"].terminate()
-
-    def operations(self):
+    def list_operations(self):
         lista = []
-        for key,val in self.operations_mod.FLOWS.items():
+        for key,val in self.operations.OPERATIONS.items():
             item = {"id": key,
                     "name": val["name"],}
             try:
@@ -178,112 +233,17 @@ class SAML2(object):
                     pass
 
             lista.append(item)
-
         print json.dumps(lista)
 
-    def provider_info(self):
-        # Should provide a Metadata class
-        res = {}
-        _jc = self.json_config["provider"]
+    def _get_operation(self, operation):
+        return self.operations.OPERATIONS[operation]
 
-        # Backward compatible
-        if "endpoints" in _jc:
-            try:
-                for endp, url in _jc["endpoints"].items():
-                    res[endp] = url
-            except KeyError:
-                pass
+    def make_meta(self):
+        self.sp_configure(True)
+        print entity_descriptor(self.sp_config)
 
-        for key in ProviderConfigurationResponse.c_param.keys():
-            try:
-                res[key] = _jc[key]
-            except KeyError:
-                pass
-
-        return res
-
-    def do_features(self, *args):
-        pass
-
-    def export(self):
-        pass
-
-    def client_conf(self, cprop):
-        if self.args.ca_certs:
-            self.client = self.client_class(ca_certs=self.args.ca_certs)
-        else:
-            try:
-                self.client = self.client_class(
-                    ca_certs=self.json_config["ca_certs"])
-            except (KeyError, TypeError):
-                self.client = self.client_class()
-
-        #self.client.http_request = self.client.http.crequest
-
-        # set the endpoints in the Client from the provider information
-        # If they are statically configured, if dynamic it happens elsewhere
-        for key, val in self.pinfo.items():
-            if key.endswith("_endpoint"):
-                setattr(self.client, key, val)
-
-        # Client configuration
-        self.cconf = self.json_config["client"]
-        # replace pattern with real value
-        _h = self.args.host
-        self.cconf["redirect_uris"] = [p % _h for p in self.cconf["redirect_uris"]]
-
-        try:
-            self.client.client_prefs = self.cconf["preferences"]
-        except KeyError:
-            pass
-
-        # set necessary information in the Client
-        for prop in cprop:
-            try:
-                setattr(self.client, prop, self.cconf[prop])
-            except KeyError:
-                pass
-
-    def make_sequence(self):
-        # Whatever is specified on the command line takes precedences
-        if self.args.flow:
-            sequence = flow2sequence(self.operations_mod, self.args.flow)
-        elif self.json_config and "flow" in self.json_config:
-            sequence = flow2sequence(self.operations_mod,
-                                     self.json_config["flow"])
-        else:
-            sequence = None
-
-        return sequence
-
-    def get_interactions(self):
-        interactions = []
-
-        if self.json_config:
-            try:
-                interactions = self.json_config["interaction"]
-            except KeyError:
-                pass
-
-        if self.args.interactions:
-            _int = self.args.interactions.replace("\'", '"')
-            if interactions:
-                interactions.update(json.loads(_int))
-            else:
-                interactions = json.loads(_int)
-
-        return interactions
-
-    def get_test(self):
-        if self.args.flow:
-            flow = self.operations_mod.FLOWS[self.args.flow]
-        elif self.json_config and "flow" in self.json_config:
-            flow = self.operations_mod.FLOWS[self.json_config["flow"]]
-        else:
-            flow = None
-
-        try:
-            return flow["tests"]
-        except KeyError:
-            return []
-
+    def list_conf_id(self):
+        sys.path.insert(0, ".")
+        mod = import_module("config_file")
+        _res = dict([(key, cnf["description"]) for key, cnf in mod.CONFIG.items()])
+        print json.dumps(_res)
