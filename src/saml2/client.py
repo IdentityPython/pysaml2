@@ -247,67 +247,6 @@ class Saml2Client(Base):
                                   status["reason"], status["not_on_or_after"],
                                   status["sign"])
 
-#    def do_http_redirect_logout(self, get, subject_id):
-#        """ Deal with a LogoutRequest received through HTTP redirect
-#        !! DON'T USE, NOT WORKING !!
-#
-#        :param get: The request as a dictionary
-#        :param subject_id: the id of the current logged user
-#        :return: a tuple with a list of header tuples (presently only location)
-#            and a status which will be True in case of success or False
-#            otherwise.
-#        """
-#        headers = []
-#        success = False
-#
-#        try:
-#            saml_request = get['SAMLRequest']
-#        except KeyError:
-#            return None
-#
-#        if saml_request:
-#            xml = decode_base64_and_inflate(saml_request)
-#
-#            request = samlp.logout_request_from_string(xml)
-#            logger.debug(request)
-#
-#            if request.name_id.text == subject_id:
-#                status = samlp.STATUS_SUCCESS
-#                success = self.local_logout(subject_id)
-#            else:
-#                status = samlp.STATUS_REQUEST_DENIED
-#
-#            destination, (id, response) = self.create_logout_response(
-#                                                            request.issuer.text,
-#                                                            request.id,
-#                                                            status)
-#
-#            logger.info("RESPONSE: {0:>s}".format(response))
-#
-#            if 'RelayState' in get:
-#                rstate = get['RelayState']
-#            else:
-#                rstate = ""
-#
-#            (headers, _body) = http_redirect_message(str(response),
-#                                                     destination,
-#                                                     rstate, 'SAMLResponse')
-#
-#        return headers, success
-#
-#    def handle_logout_request(self, request, subject_id,
-#                              binding=BINDING_HTTP_REDIRECT):
-#        """ Deal with a LogoutRequest
-#
-#        :param request: The request. The format depends on which binding is
-#            used.
-#        :param subject_id: the id of the current logged user
-#        :return: What is returned also depends on which binding is used.
-#        """
-#
-#        if binding == BINDING_HTTP_REDIRECT:
-#            return self.do_http_redirect_logout(request, subject_id)
-
     # MUST use SOAP for
     # AssertionIDRequest, SubjectQuery,
     # AuthnQuery, AttributeQuery, or AuthzDecisionQuery

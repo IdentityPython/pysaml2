@@ -2,8 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import base64
-from saml2.s_utils import decode_base64_and_inflate
-from saml2.samlp import response_from_string, logout_request_from_string
+from saml2.samlp import logout_request_from_string
 
 from saml2.client import Saml2Client
 from saml2 import samlp, BINDING_HTTP_POST
@@ -342,8 +341,13 @@ class TestClientWithDummy():
         self.client.send = self.server.receive
 
     def test_do_authn(self):
-        response = self.client.do_authenticate(IDP,
+        id, header, body = self.client.do_authenticate(IDP,
                                           "http://www.example.com/relay_state")
+
+        assert isinstance(id, basestring)
+        assert len(header) == 1
+        assert header[0][0] == "Location"
+        assert body == [""]
 
     def test_do_attribute_query(self):
         response = self.client.do_attribute_query(IDP,
@@ -388,7 +392,7 @@ class TestClientWithDummy():
         req = logout_request_from_string(xml_str)
         print req
         assert req.reason == "Tired"
-#
+
 #    def test_logout_2(self):
 #        """ one IdP/AA with BINDING_SOAP, can't actually send something"""
 #

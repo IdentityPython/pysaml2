@@ -49,7 +49,7 @@ from saml2.profile import paos
 #from saml2.population import Population
 #from saml2.attribute_resolver import AttributeResolver
 
-logger = logging.getLogger("repoze.who.sp")
+logger = logging.getLogger(__name__)
 
 PAOS_HEADER_INFO = 'ver="%s";"%s"' % (paos.NAMESPACE, ecp.SERVICE)
 
@@ -217,7 +217,7 @@ class SAML2Plugin(FormPluginBase):
                                                 detail='unknown ECP version')
 
 
-        idps = self.conf.idps()
+        idps = self.metadata.with_descriptor("idpsso")
         
         logger.info("IdP URL: %s" % idps)
 
@@ -270,7 +270,7 @@ class SAML2Plugin(FormPluginBase):
             # ignore right now?
             pass
 
-        logger = environ.get('repoze.who.logger','')
+        #logger = environ.get('repoze.who.logger','')
 
         # Which page was accessed to get here
         came_from = construct_came_from(environ)
@@ -304,18 +304,22 @@ class SAML2Plugin(FormPluginBase):
             logger.info("[sp.challenge] idp_url: %s" % idp_url)
             # Do the AuthnRequest
 
-            sid_, result = self.saml_client.do_authenticate(idp_url,
+            try:
+                sid_, headers, body = self.saml_client.do_authenticate(idp_url,
                                                         relay_state=came_from,
                                                         vorg=vorg_name)
+            except Exception, exc:
+                logger.exception(exc)
+                raise Exception("Authentication Error")
 
             # remember the request
             self.outstanding_queries[sid_] = came_from
 
-            if isinstance(result, tuple):
-                logger.debug('redirect to: %s' % result[1])
-                return HTTPSeeOther(headers=[result])
+            if body == [""] and headers[0][0] == "Location":
+                logger.debug('redirect to: %s' % headers[0][1])
+                return HTTPSeeOther(headers=headers)
             else :
-                return HTTPInternalServerError(detail='Incorrect returned data')
+                return body
 
     def _construct_identity(self, session_info):
         identity = {
@@ -373,7 +377,7 @@ class SAML2Plugin(FormPluginBase):
         """
         Tries do the identification 
         """
-        logger = environ.get('repoze.who.logger', '')
+        #logger = environ.get('repoze.who.logger', '')
 
         if "CONTENT_LENGTH" not in environ or not environ["CONTENT_LENGTH"]:
             logger.debug('[identify] get or empty post')
@@ -448,7 +452,7 @@ class SAML2Plugin(FormPluginBase):
     def add_metadata(self, environ, identity):
         """ Add information to the knowledge I have about the user """
         subject_id = identity['repoze.who.userid']
-        logger = environ.get('repoze.who.logger','')
+        #logger = environ.get('repoze.who.logger','')
 
         _cli = self.saml_client
         logger.debug("[add_metadata] for %s" % subject_id)
@@ -467,7 +471,7 @@ class SAML2Plugin(FormPluginBase):
         except KeyError:
             pass
 
-        if "pysaml2_vo_expanded" not in identity:
+        if "pysaml2_vo_expanded" not in identity and _cli.vorg:
             # is this a Virtual Organization situation
             for vo in _cli.vorg.values():
                 try:

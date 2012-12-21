@@ -6,12 +6,15 @@ import logging
 
 #from cgi import parse_qs
 from urlparse import parse_qs
-from saml2 import server, root_logger
+from saml2.saml import AUTHN_PASSWORD
+from saml2 import server
 from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
 from saml2 import time_util
 from Cookie import SimpleCookie
 
 logger = logging.getLogger("saml2.IDP")
+
+AUTHN = (AUTHN_PASSWORD, "http://www.example.com/login")
 
 def _expiration(timeout, format=None):
     if timeout == "now":
@@ -100,7 +103,8 @@ def sso(environ, start_response, user):
                                         req_info["consumer_url"], 
                                         req_info["sp_entity_id"], 
                                         req_info["request"].name_id_policy, 
-                                        userid)
+                                        userid,
+                                        authn=AUTHN)
     except Exception, excp:
         if logger: logger.error("Exception: %s" % (excp,))
         raise

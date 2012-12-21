@@ -5,7 +5,7 @@ import re
 from cgi import parse_qs
 from saml2 import BINDING_HTTP_REDIRECT
 
-logger = logging.getLogger("")
+logger = logging.getLogger("saml2.SP")
 
 # -----------------------------------------------------------------------------
 def dict_to_table(ava, lev=0, width=1):
