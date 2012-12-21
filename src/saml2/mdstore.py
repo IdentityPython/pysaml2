@@ -404,6 +404,9 @@ class MetadataStore(object):
 
         raise KeyError(item)
 
+    def __setitem__(self, key, value):
+        self.metadata[key] = value
+
     def entities(self):
         num = 0
         for md in self.metadata.values():
