@@ -23,7 +23,7 @@ class FatalError(Exception):
     pass
 
 def form_post(request, relay_state):
-    return "SAMLRequest=%s&RelayState=%s" % (base64.b64encode("%s" % request),
+    return "SAMLRequest=%s&RelayState=%s" % (base64.b64encode(request),
                                             relay_state)
 
 
@@ -222,41 +222,36 @@ def do_query(client, oper, httpc, trace, interaction, entity_id, environ, cjar,
         trace.info("SAML Request: %s" % _req_str)
         # depending on binding send the query
 
-        if args["binding"] is BINDING_HTTP_REDIRECT:
-            (head, _body) = http_redirect_message(_req_str, loc, relay_state)
-            res = httpc.request(head[0][1], "GET")
-            response_args["outstanding"] = {req.id: "/"}
-            # head should contain a redirect
-            # deal with redirect, should in the end give me a response
-            try:
-                response = intermit(client, res, httpc, environ, trace, cjar,
-                                    interaction, test_output, features)
-            except FatalError:
-                environ["FatalError"] = True
-                response = None
-
-            if isinstance(response, dict):
-                assert relay_state == response["RelayState"]
-        elif args["binding"] is BINDING_HTTP_POST:
-            body = form_post(_req_str, relay_state)
-            res = httpc.request(loc, "POST", data=body)
-            response_args["outstanding"] = {req.id: "/"}
-            # head should contain a redirect
-            # deal with redirect, should in the end give me a response
-            try:
-                response = intermit(client, res, httpc, environ, trace, cjar,
-                                    interaction, test_output, features)
-            except FatalError:
-                environ["FatalError"] = True
-                response = None
-
-        elif args["binding"] is BINDING_SOAP:
+        if args["binding"] is BINDING_SOAP:
             response = client.send_using_soap(_req_str, loc,
-                                              client.config.key_file,
-                                              client.config.cert_file,
-                                              ca_certs=client.config.ca_certs)
+                                          client.config.key_file,
+                                          client.config.cert_file,
+                                          ca_certs=client.config.ca_certs)
         else:
-            response = None
+            if args["binding"] is BINDING_HTTP_REDIRECT:
+                (head, _body) = http_redirect_message(_req_str, loc, relay_state)
+                # head should contain a redirect
+                res = httpc.request(head[0][1], "GET")
+            elif args["binding"] is BINDING_HTTP_POST:
+                body = form_post(_req_str, relay_state)
+                res = httpc.request(loc, "POST", data=body)
+            else:
+                res = None
+
+            if res:
+                response_args["outstanding"] = {req.id: "/"}
+                # deal with redirect, should in the end give me a response
+                try:
+                    response = intermit(client, res, httpc, environ, trace, cjar,
+                                        interaction, test_output, features)
+                except FatalError:
+                    environ["FatalError"] = True
+                    response = None
+
+                if isinstance(response, dict):
+                    assert relay_state == response["RelayState"]
+            else:
+                response = None
 
         if response:
             try:
