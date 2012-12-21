@@ -109,7 +109,7 @@ def logout(environ, start_response, user):
     else: # All was done using SOAP
         if result: 
             start_response("302 Found", [("Location", target)])
-            return ["Successfull Logout"]
+            return ["Successful Logout"]
         else:
             start_response("500 Internal Server Error")
             return ["Failed to logout from identity services"]

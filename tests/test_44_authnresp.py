@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from saml2.saml import AUTHN_PASSWORD
 
 from saml2 import saml
 from saml2.server import Server
@@ -22,28 +23,31 @@ class TestAuthnResponse:
         server = Server("idp_conf")
         name_id = server.ident.transient_nameid(
                             "urn:mace:example.com:saml:roland:sp","id12")
-        policy = server.conf.getattr("policy", "idp")
-        self._resp_ = server.create_response(
-                    "id12",                       # in_response_to
-                    "http://lingon.catalogix.se:8087/",   # consumer_url
-                    "urn:mace:example.com:saml:roland:sp", # sp_entity_id
-                    IDENTITY, name_id = name_id, policy=policy)
-                
-        self._sign_resp_ = server.create_response(
-                    "id12",                       # in_response_to
-                    "http://lingon.catalogix.se:8087/",   # consumer_url
-                    "urn:mace:example.com:saml:roland:sp", # sp_entity_id
-                    IDENTITY,
-                    name_id = name_id, sign_assertion=True, policy=policy)
+        authn = (AUTHN_PASSWORD, "http://www.example.com/login")
 
-        self._resp_authn = server.create_response(
-                    "id12",                       # in_response_to
-                    "http://lingon.catalogix.se:8087/",   # consumer_url
-                    "urn:mace:example.com:saml:roland:sp", # sp_entity_id
-                    IDENTITY,
-                    name_id = name_id,
-                    authn=(saml.AUTHN_PASSWORD, "http://www.example.com/login"),
-                    policy=policy)
+        self._resp_ = server.create_authn_response(
+                            IDENTITY,
+                            "id12",                       # in_response_to
+                            "http://lingon.catalogix.se:8087/",   # consumer_url
+                            "urn:mace:example.com:saml:roland:sp", # sp_entity_id
+                            name_id = name_id,
+                            authn=authn)
+                
+        self._sign_resp_ = server.create_authn_response(
+                            IDENTITY,
+                            "id12",                       # in_response_to
+                            "http://lingon.catalogix.se:8087/",   # consumer_url
+                            "urn:mace:example.com:saml:roland:sp", # sp_entity_id
+                            name_id = name_id, sign_assertion=True,
+                            authn=authn)
+
+        self._resp_authn = server.create_authn_response(
+                            IDENTITY,
+                            "id12",                       # in_response_to
+                            "http://lingon.catalogix.se:8087/",   # consumer_url
+                            "urn:mace:example.com:saml:roland:sp", # sp_entity_id
+                            name_id = name_id,
+                            authn=authn)
 
         self.conf = config_factory("sp", "server_conf")
         self.conf.only_use_keys_in_metadata = False

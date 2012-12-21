@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import base64
-from saml2.saml import NAMEID_FORMAT_TRANSIENT
+from saml2.saml import NAMEID_FORMAT_TRANSIENT, AUTHN_PASSWORD
 from saml2.samlp import NameIDPolicy
 from s2repoze.plugins.sp import make_plugin
 from saml2.server import Server
@@ -34,6 +34,9 @@ ENV1 = {'SERVER_SOFTWARE': 'CherryPy/3.1.2 WSGI Server',
 
 trans_name_policy = NameIDPolicy(format=NAMEID_FORMAT_TRANSIENT,
                                  allow_create="true")
+
+AUTHN = (AUTHN_PASSWORD, "http://www.example.com/login")
+
 class TestSP():
     def setup_class(self):
         self.sp = make_plugin("rem", saml_conf="server_conf")
@@ -52,7 +55,8 @@ class TestSP():
                                             "http://lingon.catalogix.se:8087/",
                                             "urn:mace:example.com:saml:roland:sp",
                                             trans_name_policy,
-                                            "foba0001@example.com")
+                                            "foba0001@example.com",
+                                            authn=AUTHN)
 
         resp_str = base64.encodestring(resp_str)
         self.sp.outstanding_queries = {"id1":"http://www.example.com/service"}

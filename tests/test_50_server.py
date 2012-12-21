@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from saml2.saml import AUTHN_PASSWORD
 from saml2.samlp import response_from_string
 
 from saml2.server import Server, Identifier
@@ -196,17 +197,17 @@ class TestServer1():
         name_id = self.server.ident.transient_nameid(
                                         "urn:mace:example.com:saml:roland:sp",
                                         "id12")
-        resp = self.server.create_response(
-                    "id12",                         # in_response_to
-                    "http://localhost:8087/",       # consumer_url
-                    "urn:mace:example.com:saml:roland:sp", # sp_entity_id
+        resp = self.server.create_authn_response(
                     {"eduPersonEntitlement": "Short stop",
                      "surName": "Jeter",
                      "givenName": "Derek",
                      "mail": "derek.jeter@nyy.mlb.com",
                      "title": "The man"},
-                    name_id,
-                    policy= self.server.conf.getattr("policy")
+                     "id12",                         # in_response_to
+                     "http://localhost:8087/",       # destination
+                     "urn:mace:example.com:saml:roland:sp", # sp_entity_id
+                     name_id=name_id,
+                     authn=(AUTHN_PASSWORD, "http://www.example.com/login")
                 )
 
         print resp.keyswv()
@@ -246,10 +247,13 @@ class TestServer1():
         assert confirmation.subject_confirmation_data.in_response_to == "id12"
 
     def test_sso_response_without_identity(self):
-        resp = self.server.create_response(
+        resp = self.server.create_authn_response(
+                    {},
                     "id12",                             # in_response_to
                     "http://localhost:8087/",           # consumer_url
                     "urn:mace:example.com:saml:roland:sp", # sp_entity_id
+                    userid="USER1",
+                    authn=(AUTHN_PASSWORD, "http://www.example.com/login")
                 )
 
         print resp.keyswv()
@@ -299,7 +303,9 @@ class TestServer1():
                                     ava, "id1", "http://local:8087/",
                                     "urn:mace:example.com:saml:roland:sp",
                                     npolicy,
-                                    "foba0001@example.com")
+                                    "foba0001@example.com",
+                                    authn=(AUTHN_PASSWORD,
+                                           "http://www.example.com/login"))
 
         response = samlp.response_from_string(resp_str)
         print response.keyswv()
@@ -308,9 +314,11 @@ class TestServer1():
                         'issuer', 'id'])
         print response.assertion[0].keyswv()
         assert len(response.assertion) == 1
-        assert _eq(response.assertion[0].keyswv(), ['authn_statement', 
-                    'attribute_statement', 'subject', 'issue_instant', 
-                    'version', 'issuer', 'conditions', 'id'])
+        assert _eq(response.assertion[0].keyswv(), ['attribute_statement',
+                                                    'issue_instant', 'version',
+                                                    'subject', 'conditions',
+                                                    'id', 'issuer',
+                                                    'authn_statement'])
         assertion = response.assertion[0]
         assert len(assertion.attribute_statement) == 1
         astate = assertion.attribute_statement[0]
@@ -324,14 +332,14 @@ class TestServer1():
         ava = { "givenName": ["Derek"], "surName": ["Jeter"],
                 "mail": ["derek@nyy.mlb.com"], "title": "The man"}
 
-        signed_resp = self.server.create_response(
-                    "id12",                                 # in_response_to
-                    "http://lingon.catalogix.se:8087/",     # consumer_url
-                    "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
-                    ava,
-                    name_id = name_id,
-                    sign_assertion=True
-                )
+        signed_resp = self.server.create_authn_response(
+                            ava,
+                            "id12",                                 # in_response_to
+                            "http://lingon.catalogix.se:8087/",     # consumer_url
+                            "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
+                            name_id = name_id,
+                            sign_assertion=True
+                        )
 
         print signed_resp
         assert signed_resp
@@ -465,25 +473,10 @@ class TestServerLogout():
         server = Server("idp_slo_redirect_conf")
         request = _logout_request("sp_slo_redirect_conf")
         print request
-        bindings = [BINDING_HTTP_REDIRECT]
-        (resp, headers, message) = server.create_logout_response(request,
-                                                                 bindings)
-        assert resp == '302 Found'
+        binding = BINDING_HTTP_REDIRECT
+        response = server.create_logout_response(request, binding)
+        headers, message = server.use_http_get(response, response.destination,
+                                               "/relay_state")
         assert len(headers) == 1
         assert headers[0][0] == "Location"
         assert message == ['']
-
-# class TestSign():
-#     def test_1(self):
-#         IDP = server.Server("restrictive_idp.config", debug=1)
-#         ava = { "givenName": ["Derek"], "surName": ["Jeter"], 
-#                 "mail": ["derek@nyy.mlb.com"]}
-# 
-#         authn_resp = IDP.authn_response(ava, 
-#                     "id1", "http://local:8087/", 
-#                     "urn:mace:example.com:saml:roland:sp",
-#                     samlp.NameIDPolicy(format=saml.NAMEID_FORMAT_TRANSIENT,
-#                                         allow_create="true"),
-#                     "foba0001@example.com", sign=True)
-#         print authn_resp
-#         assert False

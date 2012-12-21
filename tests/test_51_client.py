@@ -2,23 +2,20 @@
 # -*- coding: utf-8 -*-
 
 import base64
-import urllib
-from urlparse import urlparse, parse_qs
-
-from saml2.client import Saml2Client, LogoutError
-from saml2 import samlp, BINDING_HTTP_POST, BINDING_HTTP_REDIRECT
-from saml2 import BINDING_SOAP
-from saml2 import saml, config, class_name
-from saml2.discovery import discovery_service_request_url
-from saml2.discovery import discovery_service_response
-from saml2.saml import NAMEID_FORMAT_PERSISTENT
-from saml2.server import Server
 from saml2.s_utils import decode_base64_and_inflate
+from saml2.samlp import response_from_string, logout_request_from_string
+
+from saml2.client import Saml2Client
+from saml2 import samlp, BINDING_HTTP_POST
+from saml2 import saml, config, class_name
+from saml2.config import SPConfig
+from saml2.saml import NAMEID_FORMAT_PERSISTENT, NAMEID_FORMAT_TRANSIENT, \
+    AUTHN_PASSWORD
+from saml2.server import Server
 from saml2.time_util import in_a_while
-from saml2.assertion import Assertion
-from saml2.assertion import Policy
 
 from py.test import raises
+from fakeIDP import FakeIDP
 
 def for_me(condition, me ):
     for restriction in condition.audience_restriction:
@@ -55,6 +52,8 @@ REQ1 = { "1.2.14": """<?xml version='1.0' encoding='UTF-8'?>
 <ns0:AttributeQuery Destination="https://idp.example.com/idp/" ID="id1" IssueInstant="%s" Version="2.0" xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns1:Issuer Format="urn:oasis:names:tc:SAML:2.0:nameid-format:entity" xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion">urn:mace:example.com:saml:roland:sp</ns1:Issuer><ns1:Subject xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion"><ns1:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent">E8042FB4-4D5B-48C3-8E14-8EDD852790DD</ns1:NameID></ns1:Subject></ns0:AttributeQuery>""",
     "1.2.16":"""<?xml version='1.0' encoding='UTF-8'?>
 <ns0:AttributeQuery xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol" xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion" Destination="https://idp.example.com/idp/" ID="id1" IssueInstant="%s" Version="2.0"><ns1:Issuer Format="urn:oasis:names:tc:SAML:2.0:nameid-format:entity">urn:mace:example.com:saml:roland:sp</ns1:Issuer><ns1:Subject><ns1:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent">E8042FB4-4D5B-48C3-8E14-8EDD852790DD</ns1:NameID></ns1:Subject></ns0:AttributeQuery>"""}
+
+AUTHN = (AUTHN_PASSWORD, "http://www.example.com/login")
 
 class TestClient:
     def setup_class(self):
@@ -256,7 +255,8 @@ class TestClient:
                                 destination="http://lingon.catalogix.se:8087/",
                                 sp_entity_id="urn:mace:example.com:saml:roland:sp",
                                 name_id_policy=nameid_policy,
-                                userid="foba0001@example.com")
+                                userid="foba0001@example.com",
+                                authn=AUTHN)
 
         resp_str = "%s" % resp
 
@@ -298,7 +298,8 @@ class TestClient:
                                 destination="http://lingon.catalogix.se:8087/",
                                 sp_entity_id="urn:mace:example.com:saml:roland:sp",
                                 name_id_policy=nameid_policy,
-                                userid="also0001@example.com")
+                                userid="also0001@example.com",
+                                authn=AUTHN)
 
         resp_str = base64.encodestring(resp_str)
         
@@ -328,83 +329,65 @@ class TestClient:
         assert my_name == "urn:mace:example.com:saml:roland:sp"
 
 # Below can only be done with dummy Server
-#    def test_attribute_query(self):
-#        resp = self.client.do_attribute_query(
-#                "urn:mace:example.com:saml:roland:idp",
-#                "_e7b68a04488f715cda642fbdd90099f5",
-#                nameid_format=saml.NAMEID_FORMAT_TRANSIENT)
-#
-#        # since no one is answering on the other end
-#        assert resp is None
-#    def test_authenticate(self):
-#        print self.client.metadata.with_descriptor("idpsso")
-#        id, response = self.client.do_authenticate(
-#                                        "urn:mace:example.com:saml:roland:idp",
-#                                        "http://www.example.com/relay_state")
-#        assert response[0] == "Location"
-#        o = urlparse(response[1])
-#        qdict = parse_qs(o.query)
-#        assert _leq(qdict.keys(), ['SAMLRequest', 'RelayState'])
-#        saml_request = decode_base64_and_inflate(qdict["SAMLRequest"][0])
-#        print saml_request
-#        authnreq = samlp.authn_request_from_string(saml_request)
-#
-#    def test_authenticate_no_args(self):
-#        id, response = self.client.do_authenticate(relay_state="http://www.example.com/relay_state")
-#        assert response[0] == "Location"
-#        o = urlparse(response[1])
-#        qdict = parse_qs(o.query)
-#        assert _leq(qdict.keys(), ['SAMLRequest', 'RelayState'])
-#        saml_request = decode_base64_and_inflate(qdict["SAMLRequest"][0])
-#        assert qdict["RelayState"][0] == "http://www.example.com/relay_state"
-#        print saml_request
-#        authnreq = samlp.authn_request_from_string(saml_request)
-#        print authnreq.keyswv()
-#        assert authnreq.destination == "http://localhost:8088/sso"
-#        assert authnreq.assertion_consumer_service_url == "http://lingon.catalogix.se:8087/"
-#        assert authnreq.provider_name == "urn:mace:example.com:saml:roland:sp"
-#        assert authnreq.protocol_binding == BINDING_HTTP_REDIRECT
-#        name_id_policy = authnreq.name_id_policy
-#        assert name_id_policy.allow_create == "false"
-#        assert name_id_policy.format == NAMEID_FORMAT_PERSISTENT
-#        issuer = authnreq.issuer
-#        assert issuer.text == "urn:mace:example.com:saml:roland:sp"
-#
-#
-#    def test_logout_1(self):
-#        """ one IdP/AA with BINDING_HTTP_REDIRECT on single_logout_service"""
-#
-#        # information about the user from an IdP
-#        session_info = {
-#            "name_id": "123456",
-#            "issuer": "urn:mace:example.com:saml:roland:idp",
-#            "not_on_or_after": in_a_while(minutes=15),
-#            "ava": {
-#                "givenName": "Anders",
-#                "surName": "Andersson",
-#                "mail": "anders.andersson@example.com"
-#            }
-#        }
-#        self.client.users.add_information_about_person(session_info)
-#        entity_ids = self.client.users.issuers_of_info("123456")
-#        assert entity_ids == ["urn:mace:example.com:saml:roland:idp"]
-#        resp = self.client.global_logout("123456", "Tired",
-#                                         in_a_while(minutes=5))
-#        print resp
-#        assert resp
-#        assert resp[0] # a session_id
-#        assert resp[1] == '200 OK'
-#        assert resp[2] == [('Content-type', 'text/html')]
-#        assert resp[3][0] == '<head>'
-#        assert resp[3][1] == '<title>SAML 2.0 POST</title>'
-#        session_info = self.client.state[resp[0]]
-#        print session_info
-#        assert session_info["entity_id"] == entity_ids[0]
-#        assert session_info["subject_id"] == "123456"
-#        assert session_info["reason"] == "Tired"
-#        assert session_info["operation"] == "SLO"
-#        assert session_info["entity_ids"] == entity_ids
-#        assert session_info["sign"] == True
+
+IDP = "urn:mace:example.com:saml:roland:idp"
+class TestClientWithDummy():
+    def setup_class(self):
+        self.server = FakeIDP("idp_all_conf")
+
+        conf = SPConfig()
+        conf.load_file("servera_conf")
+        self.client = Saml2Client(conf)
+
+        self.client.send = self.server.receive
+
+    def test_do_authn(self):
+        response = self.client.do_authenticate(IDP,
+                                          "http://www.example.com/relay_state")
+
+    def test_do_attribute_query(self):
+        response = self.client.do_attribute_query(IDP,
+                                     "_e7b68a04488f715cda642fbdd90099f5",
+                                     attribute={"eduPersonAffiliation":None},
+                                     nameid_format=NAMEID_FORMAT_TRANSIENT)
+
+
+    def test_logout_1(self):
+        """ one IdP/AA logout from"""
+
+        # information about the user from an IdP
+        session_info = {
+            "name_id": "123456",
+            "issuer": "urn:mace:example.com:saml:roland:idp",
+            "not_on_or_after": in_a_while(minutes=15),
+            "ava": {
+                "givenName": "Anders",
+                "surName": "Andersson",
+                "mail": "anders.andersson@example.com"
+            }
+        }
+        self.client.users.add_information_about_person(session_info)
+        entity_ids = self.client.users.issuers_of_info("123456")
+        assert entity_ids == ["urn:mace:example.com:saml:roland:idp"]
+        resp = self.client.global_logout("123456", "Tired", in_a_while(minutes=5))
+        print resp
+        assert resp
+        assert len(resp) == 1
+        assert resp.keys() == entity_ids
+        item = resp[entity_ids[0]]
+        assert isinstance(item, tuple)
+        assert item[0] == [('Content-type', 'text/html')]
+        lead = "name=\"SAMLRequest\" value=\""
+        body = item[1][3]
+        i = body.find(lead)
+        i += len(lead)
+        j = i + body[i:].find('"')
+        info = body[i:j]
+        xml_str = base64.b64decode(info)
+        #xml_str = decode_base64_and_inflate(info)
+        req = logout_request_from_string(xml_str)
+        print req
+        assert req.reason == "Tired"
 #
 #    def test_logout_2(self):
 #        """ one IdP/AA with BINDING_SOAP, can't actually send something"""

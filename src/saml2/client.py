@@ -18,6 +18,7 @@
 """Contains classes and functions that a SAML2.0 Service Provider (SP) may use
 to conclude its tasks.
 """
+from saml2.samlp import logout_response_from_string
 import saml2
 
 try:
@@ -78,16 +79,16 @@ class Saml2Client(Base):
 
         if binding == saml2.BINDING_HTTP_POST:
             logger.info("HTTP POST")
-            response = self.send_using_http_post(_req_str, location,
+            (header, body) = self.use_http_form_post(_req_str, location,
                                                  relay_state)
         elif binding == saml2.BINDING_HTTP_REDIRECT:
             logger.info("HTTP REDIRECT")
-            response = self.send_using_http_get(_req_str, location,
+            (header, body) = self.use_http_get(_req_str, location,
                                                      relay_state)
         else:
             raise Exception("Unknown binding type: %s" % binding)
 
-        return req.id, response
+        return req.id, header, body
 
     def global_logout(self, subject_id, reason="", expire=None, sign=None):
         """ More or less a layer of indirection :-/
@@ -138,7 +139,8 @@ class Saml2Client(Base):
         for entity_id in entity_ids:
             response = False
 
-            for binding in [BINDING_SOAP, BINDING_HTTP_POST,
+            for binding in [#BINDING_SOAP,
+                            BINDING_HTTP_POST,
                             BINDING_HTTP_REDIRECT]:
                 srvs = self.metadata.single_logout_service(entity_id, "idpsso",
                                                            binding=binding)
@@ -148,12 +150,13 @@ class Saml2Client(Base):
                 destination = destinations(srvs)[0]
 
                 logger.info("destination to provider: %s" % destination)
-                request = self.create_logout_request(subject_id,
-                                                         destination, entity_id,
-                                                         reason, expire)
+                request = self.create_logout_request(destination, entity_id,
+                                                     subject_id, reason=reason,
+                                                     expire=expire)
                 
                 to_sign = []
-                #if sign and binding != BINDING_HTTP_REDIRECT:
+                if binding.startswith("http://"):
+                    sign = True
 
                 if sign is None:
                     sign = self.logout_requests_signed_default
@@ -176,10 +179,9 @@ class Saml2Client(Base):
                     if response:
                         not_done.remove(entity_id)
                         logger.info("OK response from %s" % destination)
-                        responses[entity_id] = response
+                        responses[entity_id] = logout_response_from_string(response)
                     else:
-                        logger.info(
-                                    "NOT OK response from %s" % destination)
+                        logger.info("NOT OK response from %s" % destination)
 
                 else:
                     session_id = request.id
@@ -195,21 +197,18 @@ class Saml2Client(Base):
                     
 
                     if binding == BINDING_HTTP_POST:
-                        response = self.send_using_http_post(srequest,
-                                                             destination,
-                                                             rstate)
+                        response = self.use_http_form_post(srequest,
+                                                           destination,
+                                                           rstate)
                     else:
-                        response = self.send_using_http_get(srequest,
-                                                            destination,
-                                                            rstate)
+                        response = self.use_http_get(srequest, destination,
+                                                     rstate)
 
-                    if response:
-                        not_done.remove(entity_id)
-                        logger.info("OK response from %s" % destination)
-                        responses[entity_id] = response
-                    else:
-                        logger.info(
-                            "NOT OK response from %s" % destination)
+                    responses[entity_id] = response
+                    not_done.remove(entity_id)
+
+                # only try one binding
+                break
 
         if not_done:
             # upstream should try later
@@ -407,10 +406,9 @@ class Saml2Client(Base):
                            attribute=None, sp_name_qualifier=None,
                            name_qualifier=None, nameid_format=None,
                            real_id=None, consent=None, extensions=None,
-                           sign=False):
+                           sign=False, binding=BINDING_SOAP):
         """ Does a attribute request to an attribute authority, this is
-        by default done over SOAP. Other bindings could be used but not
-        supported right now.
+        by default done over SOAP.
 
         :param entityid: To whom the query should be sent
         :param subject_id: The identifier of the subject
@@ -423,17 +421,36 @@ class Saml2Client(Base):
         :param nameid_format: The format of the name ID
         :param real_id: The identifier which is the key to this entity in the
             identity database
+        :param binding: Which binding to use
         :return: The attributes returned
         """
 
-        location = self._sso_location(entityid, BINDING_SOAP)
+        srvs = self.metadata.attribute_service(entityid, binding)
+        if srvs == []:
+            raise Exception("No attribute service support at entity")
 
-        response_args = {"real_id": real_id}
+        destination = destinations(srvs)[0]
 
-        return self.use_soap(location, "attribute_query", consent=consent,
-                            extensions=extensions, sign=sign,
-                            subject_id=subject_id, attribute=attribute,
-                            sp_name_qualifier=sp_name_qualifier,
-                            name_qualifier=name_qualifier,
-                            nameid_format=nameid_format,
-                            response_args=response_args)
+        if real_id:
+            response_args = {"real_id": real_id}
+        else:
+            response_args = {}
+
+        if binding == BINDING_SOAP:
+            return self.use_soap(destination, "attribute_query", consent=consent,
+                                extensions=extensions, sign=sign,
+                                subject_id=subject_id, attribute=attribute,
+                                sp_name_qualifier=sp_name_qualifier,
+                                name_qualifier=name_qualifier,
+                                nameid_format=nameid_format,
+                                response_args=response_args)
+        elif binding == BINDING_HTTP_POST:
+            return self.use_soap(destination, "attribute_query", consent=consent,
+                                 extensions=extensions, sign=sign,
+                                 subject_id=subject_id, attribute=attribute,
+                                 sp_name_qualifier=sp_name_qualifier,
+                                 name_qualifier=name_qualifier,
+                                 nameid_format=nameid_format,
+                                 response_args=response_args)
+        else:
+            raise Exception("Unsupported binding")

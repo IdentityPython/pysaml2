@@ -119,6 +119,9 @@ def http_redirect_message(message, location, relay_state="", typ="SAMLRequest"):
     
     return headers, body
 
+DUMMY_NAMESPACE = "http://example.org/"
+PREFIX = '<?xml version="1.0" encoding="UTF-8"?>'
+
 def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
     """ Returns a soap envelope containing a SAML request
     as a text string.
@@ -140,9 +143,22 @@ def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
     body.tag = '{%s}Body' % NAMESPACE
     envelope.append(body)
 
-    thingy.become_child_element_of(body)
-
-    return ElementTree.tostring(envelope, encoding="UTF-8")
+    if isinstance(thingy, basestring):
+        thingy = thingy.replace(PREFIX, "")
+        _child = ElementTree.Element('')
+        _child.tag = '{%s}FuddleMuddle' % DUMMY_NAMESPACE
+        body.append(_child)
+        _str = ElementTree.tostring(envelope, encoding="UTF-8")
+        # find an remove the namespace definition
+        i = _str.find(DUMMY_NAMESPACE)
+        j = _str.rfind("xmlns:", 0, i)
+        cut1 = _str[j:i+len(DUMMY_NAMESPACE)+1]
+        cut2 = "<%s:FuddleMuddle />" % (cut1[6:9],)
+        _str = _str.replace(cut1, "")
+        return _str.replace(cut2,thingy)
+    else:
+        thingy.become_child_element_of(body)
+        return ElementTree.tostring(envelope, encoding="UTF-8")
 
 def http_soap_message(message):
     return ([("Content-type", "application/soap+xml")],
@@ -187,28 +203,6 @@ def parse_soap_enveloped_saml(text, body_class, header_class=None):
                         break
                         
     return body, header
-
-# -----------------------------------------------------------------------------
-# def send_using_http_get(request, destination, key_file=None, cert_file=None, 
-#                     log=None):
-# 
-#     
-#     http = HTTPClient(destination, key_file, cert_file, log)
-#     if log: log.info("HTTP client initiated")
-# 
-#     try:
-#         response = http.get()
-#     except Exception, exc:
-#         if log: log.info("HTTPClient exception: %s" % (exc,))
-#         return None
-# 
-#     if log: log.info("HTTP request sent and got response: %s" % response)
-# 
-#     return response
-
-
-
-
 
 # -----------------------------------------------------------------------------
 

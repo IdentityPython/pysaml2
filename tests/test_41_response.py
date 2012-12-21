@@ -27,34 +27,30 @@ class TestResponse:
     def setup_class(self):
         server = Server("idp_conf")
         name_id = server.ident.transient_nameid(
-                                "urn:mace:example.com:saml:roland:sp",
-                                "id12")
+                                "urn:mace:example.com:saml:roland:sp","id12")
 
-        self._resp_ = server.create_response(
-                    "id12",                       # in_response_to
-                    "http://lingon.catalogix.se:8087/",   # consumer_url
-                    "urn:mace:example.com:saml:roland:sp", # sp_entity_id
-                    IDENTITY,
-                    name_id = name_id
-                )
+        self._resp_ = server.create_authn_response(IDENTITY,
+                                            "id12",     # in_response_to
+                                            "http://lingon.catalogix.se:8087/",   # consumer_url
+                                            "urn:mace:example.com:saml:roland:sp", # sp_entity_id
+                                            name_id=name_id)
                 
-        self._sign_resp_ = server.create_response(
-                    "id12",                       # in_response_to
-                    "http://lingon.catalogix.se:8087/",   # consumer_url
-                    "urn:mace:example.com:saml:roland:sp", # sp_entity_id
-                    IDENTITY,
-                    name_id = name_id,
-                    sign_assertion=True
-                )
+        self._sign_resp_ = server.create_authn_response(
+                                IDENTITY,
+                                "id12",                       # in_response_to
+                                "http://lingon.catalogix.se:8087/",   # consumer_url
+                                "urn:mace:example.com:saml:roland:sp", # sp_entity_id
+                                name_id = name_id,
+                                sign_assertion=True)
 
-        self._resp_authn = server.create_response(
-                    "id12",                       # in_response_to
-                    "http://lingon.catalogix.se:8087/",   # consumer_url
-                    "urn:mace:example.com:saml:roland:sp", # sp_entity_id
-                    IDENTITY,
-                    name_id = name_id,
-                    authn=(saml.AUTHN_PASSWORD, "http://www.example.com/login")
-                )
+        self._resp_authn = server.create_authn_response(
+                                IDENTITY,
+                                "id12",                       # in_response_to
+                                "http://lingon.catalogix.se:8087/",   # consumer_url
+                                "urn:mace:example.com:saml:roland:sp", # sp_entity_id
+                                name_id = name_id,
+                                authn=(saml.AUTHN_PASSWORD,
+                                       "http://www.example.com/login"))
         
         conf = config.SPConfig()
         conf.load_file("server_conf")
@@ -79,33 +75,6 @@ class TestResponse:
 
         assert isinstance(resp, StatusResponse)
         assert isinstance(resp, AuthnResponse)
-
-    # def test_3(self):
-    #     xml_response = ("%s" % (self._logout_resp,)).split("\n")[1]
-    #     sec = security_context(self.conf)
-    #     resp = response_factory(xml_response, self.conf, 
-    #                             return_addr="http://lingon.catalogix.se:8087/",
-    #                             outstanding_queries={"id12": "http://localhost:8088/sso"},
-    #                             timeslack=10000, decode=False)
-    # 
-    #     assert isinstance(resp, StatusResponse)
-    #     assert isinstance(resp, LogoutResponse)
-
-#    def test_decrypt(self):
-#        attr_stat = saml.attribute_statement_from_string(
-#                            open("encrypted_attribute_statement.xml").read())
-#
-#        assert len(attr_stat.attribute) == 0
-#        assert len(attr_stat.encrypted_attribute) == 4
-#
-#        xmlsec = get_xmlsec_binary()
-#        sec = SecurityContext(xmlsec, key_file="private_key.pem")
-#
-#        resp = AuthnResponse(sec, None, "entity_id")
-#        resp.decrypt_attributes(attr_stat)
-#
-#        assert len(attr_stat.attribute) == 4
-#        assert len(attr_stat.encrypted_attribute) == 4
 
 
     def test_only_use_keys_in_metadata(self):

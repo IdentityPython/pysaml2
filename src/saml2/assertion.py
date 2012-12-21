@@ -17,6 +17,7 @@
 import logging
 
 import re
+from saml2.saml import NAME_FORMAT_URI
 import xmlenc
 
 from saml2 import saml
@@ -237,6 +238,18 @@ def filter_attribute_value_assertions(ava, attribute_restrictions=None):
             del ava[attr]
     return ava
 
+def restriction_from_attribute_spec(attributes):
+    restr = {}
+    for attribute in attributes:
+        restr[attribute.name] = {}
+        for val in attribute.attribute_value:
+            if not val.text:
+                restr[attribute.name] = None
+                break
+            else:
+                restr[attribute.name] = re.compile(val.text)
+    return restr
+
 class Policy(object):
     """ handles restrictions on assertions """
     
@@ -302,7 +315,7 @@ class Policy(object):
         :param: The SP entity ID
         :retur: The format
         """
-        form = ""
+        form = NAME_FORMAT_URI
         
         try:
             form = self._restrictions[sp_entity_id]["name_form"]
@@ -489,9 +502,14 @@ class Assertion(dict):
         :param sec_context: The security context used when encrypting
         :return: An Assertion instance
         """
+
+        if policy:
+            _name_format = policy.get_name_form(sp_entity_id)
+        else:
+            _name_format = NAME_FORMAT_URI
+
         attr_statement = saml.AttributeStatement(attribute=from_local(
-                                attrconvs, self, 
-                                policy.get_name_form(sp_entity_id)))
+                                attrconvs, self, _name_format))
 
         if encrypt == "attributes":
             for attr in attr_statement.attribute:
@@ -505,12 +523,17 @@ class Assertion(dict):
 
         # start using now and for some time
         conds = policy.conditions(sp_entity_id)
-        
+
+        if authn_auth or authn_class or authn_decl:
+            _authn_statement = self._authn_statement(authn_class, authn_auth,
+                                                     authn_decl)
+        else:
+            _authn_statement = None
+
         return assertion_factory(
             issuer=issuer,
             attribute_statement = attr_statement,
-            authn_statement = self._authn_statement(authn_class, authn_auth, 
-                                                    authn_decl),
+            authn_statement = _authn_statement,
             conditions = conds,
             subject=factory( saml.Subject,
                 name_id=name_id,

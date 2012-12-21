@@ -648,13 +648,16 @@ class Base(HTTPBase):
         response = None
 
         if xmlstr:
-            try:
-                # expected return address
-                return_addr = self.config.endpoint("single_logout_service",
-                                                   binding=binding)[0]
-            except Exception:
-                logger.info("Not supposed to handle this!")
-                return None
+            if binding == BINDING_HTTP_REDIRECT:
+                try:
+                    # expected return address
+                    return_addr = self.config.endpoint("single_logout_service",
+                                                       binding=binding)[0]
+                except Exception:
+                    logger.info("Not supposed to handle this!")
+                    return None
+            else:
+                return_addr = None
 
             try:
                 response = LogoutResponse(self.sec, return_addr)

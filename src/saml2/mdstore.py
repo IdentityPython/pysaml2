@@ -1,0 +1,467 @@
+import logging
+import httplib2
+import sys
+import json
+from saml2.attribute_converter import ac_factory
+
+from saml2.mdie import to_dict
+
+from saml2 import md, samlp
+from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_HTTP_POST
+from saml2 import BINDING_SOAP
+from saml2.sigver import verify_signature
+from saml2.validate import valid_instance
+from saml2.time_util import valid
+from saml2.validate import NotValid
+
+__author__ = 'rolandh'
+
+logger = logging.getLogger(__name__)
+
+REQ2SRV = {
+    # IDP
+    "authn_request": "single_sign_on_service",
+    "nameid_mapping_request": "name_id_mapping_service",
+    # AuthnAuthority
+    "authn_query": "authn_query_service",
+    # AttributeAuthority
+    "attribute_query": "attribute_service",
+    # PDP
+    "authz_decision_query": "authz_service",
+    # AuthnAuthority + IDP + PDP + AttributeAuthority
+    "assertion_id_request": "assertion_id_request_service",
+    # IDP + SP
+    "logout_request": "single_logout_service",
+    "manage_nameid_query": "manage_name_id_service",
+    "artifact_query": "artifact_resolution_service",
+    # SP
+    "assertion_response": "assertion_consumer_service",
+    "attribute_response": "attribute_consuming_service",
+    }
+
+def destinations(srvs):
+    return [s["location"] for s in srvs]
+
+def attribute_requirement(entity):
+    res = {"required": [], "optional": []}
+    for acs in entity["attribute_consuming_service"]:
+        for attr in acs["requested_attribute"]:
+            if "is_required" in attr and attr["is_required"] == "true":
+                res["required"].append(attr)
+            else:
+                res["optional"].append(attr)
+    return res
+
+def name(ent, langpref="en"):
+    try:
+        org = ent["organization"]
+    except KeyError:
+        return None
+
+    for info in ["organization_display_name",
+                 "organization_name",
+                 "organization_url"]:
+        try:
+            for item in org[info]:
+                if item["lang"] == langpref:
+                    return item["text"]
+        except KeyError:
+            pass
+    return None
+
+class MetaData(object):
+    def __init__(self, onts, attrc, metadata=""):
+        self.onts = onts
+        self.attrc = attrc
+        self.entity = {}
+        self.metadata = metadata
+
+    def do_entity_descriptor(self, entity_descr):
+        try:
+            if not valid(entity_descr.valid_until):
+                logger.info("Entity descriptor (entity id:%s) to old" % (
+                    entity_descr.entity_id,))
+                return
+        except AttributeError:
+            pass
+
+        # have I seen this entity_id before ? If so if log: ignore it
+        if entity_descr.entity_id in self.entity:
+            print >> sys.stderr,\
+                "Duplicated Entity descriptor (entity id: '%s')" %\
+                entity_descr.entity_id
+            return
+
+        _ent = to_dict(entity_descr, self.onts)
+        flag = 0
+        # verify support for SAML2
+        for descr in ["spsso", "idpsso", "role", "authn_authority",
+                      "attribute_authority", "pdp", "affiliation"]:
+            _res = []
+            try:
+                _items = _ent["%s_descriptor" % descr]
+            except KeyError:
+                continue
+
+            if descr == "affiliation": # Not protocol specific
+                flag += 1
+                continue
+
+            for item in _items:
+                for prot in item["protocol_support_enumeration"].split(" "):
+                    if prot == samlp.NAMESPACE:
+                        item["protocol_support_enumeration"] = [prot]
+                        _res.append(item)
+                        break
+            if not _res:
+                del _ent["%s_descriptor" % descr]
+            else:
+                flag += 1
+
+        if flag:
+            self.entity[entity_descr.entity_id] = _ent
+
+    def parse(self, xmlstr):
+        self.entities_descr = md.entities_descriptor_from_string(xmlstr)
+
+        if not self.entities_descr:
+            self.entity_descr = md.entity_descriptor_from_string(xmlstr)
+            if self.entity_descr:
+                self.do_entity_descriptor(self.entity_descr)
+        else:
+            try:
+                valid_instance(self.entities_descr)
+            except NotValid, exc:
+                logger.error(exc.args[0])
+                return
+
+            try:
+                valid(self.entities_descr.valid_until)
+            except AttributeError:
+                pass
+
+            for entity_descr in self.entities_descr.entity_descriptor:
+                self.do_entity_descriptor(entity_descr)
+
+    def load(self):
+        self.parse(self.metadata)
+
+    def _service(self, entity_id, typ, service, binding=None):
+        """ Get me all services with a specified
+        entity ID and type, that supports the specified version of binding.
+
+        :param entity_id: The EntityId
+        :param typ: Type of service (idp, attribute_authority, ...)
+        :param service: which service that is sought for
+        :param binding: A binding identifier
+        :return: list of service descriptions.
+            Or if no binding was specified a list of 2-tuples (binding, srv)
+        """
+
+        try:
+            srvs = []
+            for t in self.entity[entity_id][typ]:
+                try:
+                    srvs.extend(t[service])
+                except KeyError:
+                    pass
+        except KeyError:
+            return None
+
+        if not srvs:
+            return srvs
+
+        if binding:
+            res = []
+            for srv in srvs:
+                if srv["binding"] == binding:
+                    res.append(srv)
+        else:
+            res = {}
+            for srv in srvs:
+                try:
+                    res[srv["binding"]].append(srv)
+                except KeyError:
+                    res[srv["binding"]] = [srv]
+        return res
+
+    def attribute_requirement(self, entity_id, index=0):
+        """ Returns what attributes the SP requires and which are optional
+        if any such demands are registered in the Metadata.
+
+        :param entity_id: The entity id of the SP
+        :param index: which of the attribute consumer services its all about
+        :return: 2-tuple, list of required and list of optional attributes
+        """
+
+        res = {"required": [], "optional": []}
+
+        try:
+            for sp in self.entity[entity_id]["spsso_descriptor"]:
+                _res = attribute_requirement(sp)
+                res["required"].extend(_res["required"])
+                res["optional"].extend(_res["optional"])
+        except KeyError:
+            return None
+
+        return res
+
+    def dumps(self):
+        return json.dumps(self.entity, indent=2)
+
+    def with_descriptor(self, descriptor):
+        res = {}
+        desc = "%s_descriptor" % descriptor
+        for id, ent in self.entity.items():
+            if desc in ent:
+                res[id] = ent
+        return res
+
+class MetaDataFile(MetaData):
+    def __init__(self, onts, attrc, filename):
+        MetaData.__init__(self, onts, attrc)
+        self.filename = filename
+
+    def load(self):
+        self.parse(open(self.filename).read())
+
+class MetaDataExtern(MetaData):
+    def __init__(self, onts, attrc, url, xmlsec_binary, cert, http):
+        MetaData.__init__(self, onts, attrc)
+        self.url = url
+        self.cert = cert
+        self.xmlsec_binary = xmlsec_binary
+        self.http = http
+
+    def load(self):
+        """ Imports metadata by the use of HTTP GET.
+        If the fingerprint is known the file will be checked for
+        compliance before it is imported.
+        """
+        (response, content) = self.http.request(self.url)
+        if response.status == 200:
+            if verify_signature(content, self.xmlsec_binary, self.cert,
+                                node_name="%s:%s" % (md.EntitiesDescriptor.c_namespace,
+                                                     md.EntitiesDescriptor.c_tag)):
+                self.parse(content)
+                return True
+        else:
+            logger.info("Response status: %s" % response.status)
+        return False
+
+class MetaDataMD(MetaData):
+    def __init__(self, onts, attrc, filename):
+        MetaData.__init__(self, onts, attrc)
+        self.filename = filename
+
+    def load(self):
+        self.entity = eval(open(self.filename).read())
+
+class MetadataStore(object):
+    def __init__(self, onts, attrc, xmlsec_binary=None, ca_certs=None,
+                 disable_ssl_certificate_validation=False):
+        self.onts = onts
+        self.attrc = attrc
+        self.http = httplib2.Http(ca_certs=ca_certs,
+                                  disable_ssl_certificate_validation=disable_ssl_certificate_validation)
+        self.xmlsec_binary = xmlsec_binary
+        self.ii = 0
+        self.metadata = {}
+
+    def load(self, type, *args, **kwargs):
+        if type == "local":
+            key = args[0]
+            md = MetaDataFile(self.onts, self.attrc, args[0])
+        elif type == "inline":
+            self.ii += 1
+            key = self.ii
+            md = MetaData(self.onts, self.attrc)
+        elif type == "remote":
+            key = kwargs["url"]
+            md = MetaDataExtern(self.onts, self.attrc,
+                                kwargs["url"], self.xmlsec_binary,
+                                kwargs["cert"], self.http)
+        elif type == "mdfile":
+            key = args[0]
+            md = MetaDataMD(self.onts, self.attrc, args[0])
+        else:
+            raise Exception("Unknown metadata type '%s'" % type)
+
+        md.load()
+        self.metadata[key] = md
+
+    def imp(self, spec):
+        for key, vals in spec.items():
+            for val in vals:
+                if isinstance(val, dict):
+                    self.load(key, **val)
+                else:
+                    self.load(key, val)
+
+    def _service(self, entity_id, typ, service, binding=None):
+        for key, md in self.metadata.items():
+            srvs = md._service(entity_id, typ, service, binding)
+            if srvs:
+                return srvs
+        return []
+
+    def single_sign_on_service(self, entity_id, binding=None):
+        # IDP
+
+        if binding is None:
+            binding = BINDING_HTTP_REDIRECT
+        return self._service(entity_id, "idpsso_descriptor",
+                             "single_sign_on_service", binding)
+
+    def name_id_mapping_service(self, entity_id, binding=None):
+        # IDP
+        if binding is None:
+            binding = BINDING_HTTP_REDIRECT
+        return self._service(entity_id, "idpsso_descriptor",
+                             "name_id_mapping_service", binding)
+
+    def authn_query_service(self, entity_id, binding=None):
+        # AuthnAuthority
+        if binding is None:
+            binding = BINDING_SOAP
+        return self._service(entity_id, "authn_authority_descriptor",
+                             "authn_query_service", binding)
+
+    def attribute_service(self, entity_id, binding=None):
+        # AttributeAuthority
+        if binding is None:
+            binding = BINDING_HTTP_REDIRECT
+        return self._service(entity_id, "attribute_authority_descriptor",
+                             "attribute_service", binding)
+
+    def authz_service(self, entity_id, binding=None):
+        # PDP
+        if binding is None:
+            binding = BINDING_SOAP
+        return self._service(entity_id, "pdp_descriptor",
+                             "authz_service", binding)
+
+    def assertion_id_request_service(self, entity_id, typ, binding=None):
+        # AuthnAuthority + IDP + PDP + AttributeAuthority
+        if binding is None:
+            binding = BINDING_SOAP
+        return self._service(entity_id, "%s_descriptor" % typ,
+                             "assertion_id_request_service", binding)
+
+    def single_logout_service(self, entity_id, typ, binding=None):
+        # IDP + SP
+        if binding is None:
+            binding = BINDING_HTTP_REDIRECT
+        return self._service(entity_id, "%s_descriptor" % typ,
+                             "single_logout_service", binding)
+
+    def manage_name_id_service(self, entity_id, typ, binding=None):
+        # IDP + SP
+        if binding is None:
+            binding = BINDING_HTTP_REDIRECT
+        return self._service(entity_id, "%s_descriptor" % typ,
+                             "manage_name_id_service", binding)
+
+    def artifact_resolution_service(self, entity_id, typ, binding=None):
+        # IDP + SP
+        if binding is None:
+            binding = BINDING_HTTP_REDIRECT
+        return self._service(entity_id, "%s_descriptor" % typ,
+                             "artifact_resolution_service", binding)
+
+    def assertion_consumer_service(self, entity_id, binding=None):
+        # SP
+        if binding is None:
+            binding = BINDING_HTTP_POST
+        return self._service(entity_id, "spsso_descriptor",
+                             "assertion_consumer_service", binding)
+
+    def attribute_consuming_service(self, entity_id, binding=None):
+        # SP
+        if binding is None:
+            binding = BINDING_HTTP_REDIRECT
+        return self._service(entity_id, "spsso_descriptor",
+                             "attribute_consuming_service", binding)
+
+    def attribute_requirement(self, entity_id, index=0):
+        for md in self.metadata.values():
+            if entity_id in md.entity:
+                return md.attribute_requirement(entity_id, index)
+
+    def keys(self):
+        res = []
+        for md in self.metadata.values():
+            res.extend(md.entity.keys())
+        return res
+
+    def __getitem__(self, item):
+        for md in self.metadata.values():
+            try:
+                return md.entity[item]
+            except KeyError:
+                pass
+
+        raise KeyError(item)
+
+    def entities(self):
+        num = 0
+        for md in self.metadata.values():
+            num += len(md.entity)
+
+        return num
+
+    def __len__(self):
+        return len(self.metadata)
+
+    def with_descriptor(self, descriptor):
+        res = {}
+        for md in self.metadata.values():
+            res.update(md.with_descriptor(descriptor))
+        return res
+
+    def name(self, entity_id, langpref="en"):
+        for md in self.metadata.values():
+            if entity_id in md.entity:
+                return name(md.entity[entity_id], langpref)
+
+    def certs(self, entity_id, descriptor, use="signing"):
+        ent = self.__getitem__(entity_id)
+        if descriptor == "any":
+            res = []
+            for descr in ["spsso", "idpsso", "role", "authn_authority",
+                          "attribute_authority", "pdp"]:
+                try:
+                    srvs = ent["%s_descriptor" % descr]
+                except KeyError:
+                    continue
+
+                for srv in srvs:
+                    for key in srv["key_descriptor"]:
+                        if "use" in key and key["use"] == use:
+                            for dat in key["key_info"]["x509_data"]:
+                                cert = dat["x509_certificate"]["text"]
+                                if cert not in res:
+                                    res.append(cert)
+                        elif not "use" in key:
+                            for dat in key["key_info"]["x509_data"]:
+                                cert = dat["x509_certificate"]["text"]
+                                if cert not in res:
+                                    res.append(cert)
+        else:
+            srvs = ent["%s_descriptor" % descriptor]
+
+            res = []
+            for srv in srvs:
+                for key in srv["key_descriptor"]:
+                    if "use" in key and key["use"] == use:
+                        for dat in key["key_info"]["x509_data"]:
+                            res.append(dat["x509_certificate"]["text"])
+                    elif not "use" in key:
+                        for dat in key["key_info"]["x509_data"]:
+                            res.append(dat["x509_certificate"]["text"])
+        return res
+
+    def vo_members(self, entity_id):
+        ad = self.__getitem__(entity_id)["affiliation_descriptor"]
+        return [m["text"] for m in ad["affiliate_member"]]

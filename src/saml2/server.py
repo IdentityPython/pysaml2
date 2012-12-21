@@ -57,7 +57,7 @@ from saml2.sigver import response_factory, logoutresponse_factory
 
 from saml2.config import config_factory
 
-from saml2.assertion import Assertion, Policy
+from saml2.assertion import Assertion, Policy, restriction_from_attribute_spec, filter_attribute_value_assertions
 
 logger = logging.getLogger(__name__)
 
@@ -194,8 +194,10 @@ class Identifier(object):
             nameid_format = name_id_policy.format
         elif sp_nid:
             nameid_format = sp_nid[0]
-        else:
+        elif local_policy:
             nameid_format = local_policy.get_nameid_format(sp_entity_id)
+        else:
+            raise Exception("Unknown NameID format")
 
         if nameid_format == saml.NAMEID_FORMAT_PERSISTENT:
             return self.persistent_nameid(sp_entity_id, userid)
@@ -470,7 +472,7 @@ class Server(HTTPBase):
 
     # ------------------------------------------------------------------------
     
-    def create_response(self, in_response_to, consumer_url,
+    def _authn_response(self, in_response_to, consumer_url,
                         sp_entity_id, identity=None, name_id=None,
                         status=None, authn=None,
                         authn_decl=None, issuer=None, policy=None,
@@ -569,7 +571,7 @@ class Server(HTTPBase):
     def create_aa_response(self, in_response_to, consumer_url, sp_entity_id,
                            identity=None, userid="", name_id=None, status=None,
                            issuer=None, sign_assertion=False,
-                           sign_response=False):
+                           sign_response=False, attributes=None):
         """ Create an attribute assertion response.
         
         :param in_response_to: The session identifier of the request
@@ -585,22 +587,53 @@ class Server(HTTPBase):
         :param sign_response: Whether the whole response should be signed
         :return: A response instance
         """
-#        name_id = self.ident.construct_nameid(self.conf.policy, userid,
-#                                            sp_entity_id, identity)
+        if not name_id and userid:
+            try:
+                name_id = self.ident.construct_nameid(self.conf.policy, userid,
+                                                      sp_entity_id, identity)
+                logger.warning("Unspecified NameID format")
+            except Exception:
+                pass
 
-        return self.create_response(in_response_to, consumer_url, sp_entity_id,
-                                    identity, name_id, status,
-                                    issuer=issuer,
-                                    policy=self.conf.getattr("policy", "aa"),
-                                    sign_assertion=sign_assertion,
-                                    sign_response=sign_response)
+        to_sign = []
+        args = {}
+        if identity:
+            _issuer = self.issuer(issuer)
+            ast = Assertion(identity)
+            policy = self.conf.getattr("policy", "aa")
+            if policy:
+                ast.apply_policy(sp_entity_id, policy)
+            else:
+                policy = Policy()
+
+            if attributes:
+                restr = restriction_from_attribute_spec(attributes)
+                ast = filter_attribute_value_assertions(ast)
+
+            assertion = ast.construct(sp_entity_id, in_response_to,
+                                      consumer_url, name_id,
+                                      self.conf.attribute_converters,
+                                      policy, issuer=_issuer)
+
+            if sign_assertion:
+                assertion.signature = pre_signature_part(assertion.id,
+                                                         self.sec.my_cert, 1)
+                # Just the assertion or the response and the assertion ?
+                to_sign = [(class_name(assertion), assertion.id)]
+
+
+            args["assertion"] = assertion
+
+        return self._response(in_response_to, consumer_url, status, issuer,
+                              sign_response, to_sign, **args)
 
     # ------------------------------------------------------------------------
 
     def create_authn_response(self, identity, in_response_to, destination,
-                              sp_entity_id, name_id_policy, userid,
-                              authn=None, authn_decl=None, issuer=None,
-                              sign_response=False, sign_assertion=False):
+                              sp_entity_id, name_id_policy=None, userid=None,
+                              name_id=None, authn=None, authn_decl=None,
+                              issuer=None, sign_response=False,
+                              sign_assertion=False):
         """ Constructs an AuthenticationResponse
 
         :param identity: Information about an user
@@ -618,24 +651,28 @@ class Server(HTTPBase):
         :return: A response instance
         """
 
-        name_id = None
-        try:
-            nid_formats = []
-            for _sp in self.metadata[sp_entity_id]["spsso_descriptor"]:
-                if "name_id_format" in _sp:
-                    nid_formats.extend([n.text for n in _sp["name_id_format"]])
+        policy = self.conf.getattr("policy", "idp")
 
-            policy = self.conf.getattr("policy", "idp")
-            name_id = self.ident.construct_nameid(policy, userid, sp_entity_id,
-                                                    identity, name_id_policy,
-                                                    nid_formats)
-        except IOError, exc:
-            response = self.create_error_response(in_response_to, destination,
-                                                  sp_entity_id, exc, name_id)
-            return ("%s" % response).split("\n")
+        if not name_id:
+            try:
+                nid_formats = []
+                for _sp in self.metadata[sp_entity_id]["spsso_descriptor"]:
+                    if "name_id_format" in _sp:
+                        nid_formats.extend([n.text for n in _sp["name_id_format"]])
+
+                name_id = self.ident.construct_nameid(policy, userid,
+                                                      sp_entity_id, identity,
+                                                      name_id_policy,
+                                                      nid_formats)
+            except IOError, exc:
+                response = self.create_error_response(in_response_to,
+                                                      destination,
+                                                      sp_entity_id,
+                                                      exc, name_id)
+                return ("%s" % response).split("\n")
         
         try:
-            return self.create_response(in_response_to, # in_response_to
+            return self._authn_response(in_response_to, # in_response_to
                                         destination,    # consumer_url
                                         sp_entity_id,   # sp_entity_id
                                         identity,       # identity as dictionary
@@ -699,86 +736,51 @@ class Server(HTTPBase):
             return req
 
 
-    def create_logout_response(self, request, bindings, status=None,
+    def create_logout_response(self, request, binding, status=None,
                                sign=False, issuer=None):
         """ Create a LogoutResponse. What is returned depends on which binding
         is used.
         
         :param request: The request this is a response to
-        :param bindings: Which bindings that can be used to send the response
+        :param binding: Which binding the request came in over
         :param status: The return status of the response operation
         :param issuer: The issuer of the message
-        :return: A 3-tuple consisting of HTTP return code, HTTP headers and 
-            possibly a message.
+        :return: A logout message.
         """
-        sp_entity_id = request.issuer.text.strip()
-        
-        binding = None
-        dests = []
-        for binding in bindings:
-            srvs = self.metadata.single_logout_service(sp_entity_id, "spsso",
-                                                       binding=binding)
-            if srvs:
-                dests = destinations(srvs)
-                break
+        mid = sid()
 
-        if not dests:
-            logger.error("No way to return a response !!!")
-            return ("412 Precondition Failed",
-                    [("Content-type", "text/html")],
-                    ["No return way defined"])
-        
-        # Pick the first
-        destination = dests[0]
-
-        logger.info("Logout Destination: %s, binding: %s" % (dests, binding))
-        if not status: 
+        if not status:
             status = success_status_factory()
 
-        mid = sid()
-        rcode = "200 OK"
-        
         # response and packaging differs depending on binding
-        
-        if binding == BINDING_SOAP:
-            response = logoutresponse_factory(
-                                sign=sign,
-                                id = mid,
-                                in_response_to = request.id,
-                                status = status,
-                                )
-            if sign:
-                to_sign = [(class_name(response), mid)]
-                response = signed_instance_factory(response, self.sec, to_sign)
-                
-            (headers, message) = http_soap_message(response)
-        else:
-            _issuer = self.issuer(issuer)
-            response = logoutresponse_factory(
-                                sign=sign,
-                                id = mid,
-                                in_response_to = request.id,
-                                status = status,
-                                issuer = _issuer,
-                                destination = destination,
-                                sp_entity_id = sp_entity_id,
-                                instant=instant(),
-                                )
-            if sign:
-                to_sign = [(class_name(response), mid)]
-                response = signed_instance_factory(response, self.sec, to_sign)
+        response = ""
+        if binding in [BINDING_SOAP, BINDING_HTTP_POST]:
+            response = logoutresponse_factory(sign=sign, id = mid,
+                                              in_response_to = request.id,
+                                              status = status)
+        elif binding == BINDING_HTTP_REDIRECT:
+            sp_entity_id = request.issuer.text.strip()
+            srvs = self.metadata.single_logout_service(sp_entity_id, "spsso")
+            if not srvs:
+                raise Exception("Nowhere to send the response")
 
-            logger.info("Response: %s" % (response,))
-            if binding == BINDING_HTTP_REDIRECT:
-                (headers, message) = http_redirect_message(response, 
-                                                            destination, 
-                                                            typ="SAMLResponse")
-                rcode = "302 Found"
-            else:
-                (headers, message) = http_post_message(response, destination,
-                                                        typ="SAMLResponse")
-                
-        return rcode, headers, message
+            destination = destinations(srvs)[0]
+
+            _issuer = self.issuer(issuer)
+            response = logoutresponse_factory(sign=sign, id = mid,
+                                              in_response_to = request.id,
+                                              status = status,
+                                              issuer = _issuer,
+                                              destination = destination,
+                                              sp_entity_id = sp_entity_id,
+                                              instant=instant())
+        if sign:
+            to_sign = [(class_name(response), mid)]
+            response = signed_instance_factory(response, self.sec, to_sign)
+
+        logger.info("Response: %s" % (response,))
+
+        return response
 
     def parse_authz_decision_query(self, xml_string):
         """ Parse an attribute query
