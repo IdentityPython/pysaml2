@@ -165,7 +165,7 @@ class HTTPBase(object):
         Send a message using GET, this is the HTTP-Redirect case so
         no direct response is expected to this request.
 
-        :param request:
+        :param message:
         :param destination:
         :param relay_state:
         :return: tuple (header, None)
