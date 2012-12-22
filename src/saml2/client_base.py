@@ -23,6 +23,8 @@ from saml2.httpbase import HTTPBase
 from saml2.mdstore import destinations
 from saml2.saml import AssertionIDRef, NAMEID_FORMAT_TRANSIENT
 from saml2.samlp import AuthnQuery
+from saml2.samlp import ArtifactResolve
+from saml2.samlp import artifact_resolve_from_string
 from saml2.samlp import LogoutRequest
 from saml2.samlp import AssertionIDRequest
 from saml2.samlp import NameIDMappingRequest
@@ -33,6 +35,8 @@ from saml2.samlp import AuthnRequest
 import saml2
 import time
 import base64
+from saml2.soap import parse_soap_enveloped_saml_artifact_resolve
+
 try:
     from urlparse import parse_qs
 except ImportError:
@@ -583,7 +587,27 @@ class Base(HTTPBase):
     def create_manage_nameid_request(self):
         pass
 
-    # ======== response handling ===========
+    def create_artifact_resolve(self, artifact, issuer, destination, id=0,
+                                consent=None, extensions=None, sign=False):
+        """
+
+        :param artifact:
+        :param issuer:
+        :param destination:
+        :param id:
+        :param consent:
+        :param extensions:
+        :param sign:
+        :return:
+        """
+
+        return self._message(ArtifactResolve, destination, id, consent,
+                             extensions, sign, artifact=artifact, issuer=issuer)
+
+    def create_artifact_response(self):
+        pass
+
+# ======== response handling ===========
 
     def _response(self, post, outstanding, decode=True, asynchop=True):
         """ Deal with an AuthnResponse or LogoutResponse
@@ -725,3 +749,15 @@ class Base(HTTPBase):
 
         logger.info("session: %s" % session_info)
         return session_info
+
+    def artifact_resolve_response(self, txt, **kwargs):
+        """
+        Always done over SOAP
+
+        :param txt:
+        :param kwargs:
+        :return:
+        """
+
+        _resp = parse_soap_enveloped_saml_artifact_resolve(txt)
+        return artifact_resolve_from_string(_resp)
