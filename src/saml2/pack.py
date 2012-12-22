@@ -66,9 +66,12 @@ def http_form_post_message(message, location, relay_state="", typ="SAMLRequest")
 
     if not isinstance(message, basestring):
         message = "%s" % (message,)
-        
-    response.append(FORM_SPEC % (location, typ, base64.b64encode(message),
-                                relay_state))
+
+    if typ == "SAMLRequest":
+        _msg = base64.b64encode(message)
+    else:
+        _msg = message
+    response.append(FORM_SPEC % (location, typ, _msg, relay_state))
                                 
     response.append("""<script type="text/javascript">""")
     response.append("     window.onload = function ()")
