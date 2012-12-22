@@ -6,6 +6,7 @@ import logging
 
 #from cgi import parse_qs
 from urlparse import parse_qs
+from saml2.pack import http_form_post_message
 from saml2.saml import AUTHN_PASSWORD
 from saml2 import server
 from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
@@ -71,7 +72,7 @@ FORM_SPEC = """<form name="myform" method="post" action="%s">
 </form>"""
 
 def sso(environ, start_response, user):
-    """ Supposted to return a POST """
+    """ Supposed to return a self issuing Form POST """
     #edict = dict_to_table(environ)
     #if logger: logger.info("Environ keys: %s" % environ.keys())
     logger.info("--- In SSO ---")
@@ -111,17 +112,9 @@ def sso(environ, start_response, user):
         
     if logger: logger.info("AuthNResponse: %s" % authn_resp)
 
-    response = ["<head>",
-                "<title>SAML 2.0 POST</title>",
-                "</head><body>",
-                FORM_SPEC % (req_info["consumer_url"],
-                             base64.b64encode(str(authn_resp)), "/"),
-                """<script type="text/javascript" language="JavaScript">""",
-                "     document.myform.submit();",
-                """</script>""",
-                "</body>"]
-
-    start_response('200 OK', [('Content-Type', 'text/html')])
+    headers, response = http_form_post_message(authn_resp,
+                                               req_info["consumer_url"], "/")
+    start_response('200 OK', headers)
     return response
     
 def whoami(environ, start_response, user):
