@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import base64
+import urllib
 from saml2.samlp import logout_request_from_string
 
 from saml2.client import Saml2Client
@@ -386,6 +387,30 @@ class TestClientWithDummy():
         req = logout_request_from_string(xml_str)
         print req
         assert req.reason == "Tired"
+
+    def test_post_sso(self):
+        id, http_args = self.client.prepare_for_authenticate(
+                                    "urn:mace:example.com:saml:roland:idp",
+                                    relay_state="really",
+                                    binding=BINDING_HTTP_POST)
+
+        # Normally a response would now be sent back to the users web client
+        # Here I fake what the client will do
+        # create the form post
+
+        _dic = unpack_form(http_args["data"][3])
+        http_args["data"] = urllib.urlencode(_dic)
+        http_args["method"] = "POST"
+        http_args["dummy"] = _dic["SAMLRequest"]
+        http_args["headers"] = [('Content-type','application/x-www-form-urlencoded')]
+
+        response = self.client.send(**http_args)
+
+        _dic = unpack_form(response["data"][3], "SAMLResponse")
+        resp = self.client.authn_request_response(_dic, {id: "/"})
+        ac = resp.assertion.authn_statement[0].authn_context
+        assert ac.authenticating_authority[0].text == 'http://www.example.com/login'
+        assert ac.authn_context_class_ref.text == AUTHN_PASSWORD
 
 #    def test_logout_2(self):
 #        """ one IdP/AA with BINDING_SOAP, can't actually send something"""
