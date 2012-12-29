@@ -1,7 +1,8 @@
+import base64
 import logging
 
 from attribute_converter import to_local
-from saml2 import time_util
+from saml2 import time_util, BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
 from saml2 import s_utils
 from saml2.s_utils import OtherError
 
@@ -32,10 +33,12 @@ class Request(object):
         self.message = None
         self.not_on_or_after = 0
 
-    def _loads(self, xmldata, decode=True):
-        if decode:
+    def _loads(self, xmldata, binding):
+        if binding == BINDING_HTTP_REDIRECT:
             logger.debug("Expected to decode and inflate xml data")
             decoded_xml = s_utils.decode_base64_and_inflate(xmldata)
+        elif binding == BINDING_HTTP_POST:
+            decoded_xml = base64.b64decode(xmldata)
         else:
             decoded_xml = xmldata
     
@@ -86,8 +89,8 @@ class Request(object):
         assert self.issue_instant_ok()
         return self
 
-    def loads(self, xmldata, decode=True):
-        return self._loads(xmldata, decode)
+    def loads(self, xmldata, binding):
+        return self._loads(xmldata, binding)
 
     def verify(self):
         try:

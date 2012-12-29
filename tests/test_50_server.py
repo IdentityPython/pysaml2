@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import base64
 from saml2.saml import AUTHN_PASSWORD
 from saml2.samlp import response_from_string
 
@@ -372,7 +373,7 @@ class TestServer1():
                             issuer_entity_id = "urn:mace:example.com:saml:roland:idp",
                             reason = "I'm tired of this")
 
-        intermed = s_utils.deflate_and_base64_encode("%s" % (logout_request,))
+        intermed = base64.b64encode("%s" % logout_request)
 
         #saml_soap = make_soap_enveloped_saml_thingy(logout_request)
         request = self.server.parse_logout_request(intermed, BINDING_HTTP_POST)
@@ -399,7 +400,7 @@ class TestServer1():
                         issuer_entity_id = "urn:mace:example.com:saml:roland:idp",
                         reason = "I'm tired of this")
 
-        _ = s_utils.deflate_and_base64_encode("%s" % (logout_request,))
+        #_ = s_utils.deflate_and_base64_encode("%s" % (logout_request,))
 
         saml_soap = make_soap_enveloped_saml_thingy(logout_request)
         self.server.close_shelve_db()
@@ -475,8 +476,8 @@ class TestServerLogout():
         print request
         binding = BINDING_HTTP_REDIRECT
         response = server.create_logout_response(request, binding)
-        headers, message = server.use_http_get(response, response.destination,
+        http_args = server.use_http_get(response, response.destination,
                                                "/relay_state")
-        assert len(headers) == 1
-        assert headers[0][0] == "Location"
-        assert message == ['']
+        assert len(http_args) == 2
+        assert http_args["headers"][0][0] == "Location"
+        assert http_args["data"] == ['']

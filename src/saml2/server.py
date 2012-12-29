@@ -23,9 +23,6 @@ import logging
 import shelve
 import sys
 import memcache
-from saml2.pack import http_soap_message
-from saml2.pack import http_redirect_message
-from saml2.pack import http_post_message
 from saml2.httpbase import HTTPBase
 from saml2.mdstore import destinations
 
@@ -338,10 +335,9 @@ class Server(HTTPBase):
         if binding == BINDING_SOAP or binding == BINDING_PAOS:
             # not base64 decoding and unzipping
             authn_request.debug=True
-            _log_info("Don't decode")
-            authn_request = authn_request.loads(enc_request, decode=False)
+            authn_request = authn_request.loads(enc_request, binding)
         else:
-            authn_request = authn_request.loads(enc_request)
+            authn_request = authn_request.loads(enc_request, binding)
 
         _log_debug("Loaded authn_request")
 
@@ -379,6 +375,7 @@ class Server(HTTPBase):
             raise UnsupportedBinding(sp_entity_id)
 
         response["sp_entity_id"] = sp_entity_id
+        response["binding"] = _binding
 
         if authn_request.message.assertion_consumer_service_url:
             return_destination = \
@@ -404,11 +401,11 @@ class Server(HTTPBase):
         """
         return self.metadata.attribute_requirement(sp_entity_id, index)
         
-    def parse_attribute_query(self, xml_string, decode=True):
+    def parse_attribute_query(self, xml_string, binding):
         """ Parse an attribute query
         
         :param xml_string: The Attribute Query as an XML string
-        :param decode: Whether the xmlstring is base64encoded and zipped
+        :param binding: Which binding that was used for the request
         :return: 3-Tuple containing:
             subject - identifier of the subject
             attribute - which attributes that the requestor wants back
@@ -417,7 +414,7 @@ class Server(HTTPBase):
         receiver_addresses = self.conf.endpoint("attribute_service")
         attribute_query = AttributeQuery( self.sec, receiver_addresses)
 
-        attribute_query = attribute_query.loads(xml_string, decode=decode)
+        attribute_query = attribute_query.loads(xml_string, binding)
         attribute_query = attribute_query.verify()
 
         logger.info("KEYS: %s" % attribute_query.message.keys())
@@ -716,12 +713,12 @@ class Server(HTTPBase):
         if binding == BINDING_SOAP:
             lreq = soap.parse_soap_enveloped_saml_logout_request(text)
             try:
-                req = req.loads(lreq, False) # Got it over SOAP so no base64+zip
+                req = req.loads(lreq, binding)
             except Exception:
                 return None
         else:
             try:
-                req = req.loads(text)
+                req = req.loads(text, binding)
             except Exception, exc:
                 logger.error("%s" % (exc,))
                 return None
@@ -782,7 +779,7 @@ class Server(HTTPBase):
 
         return response
 
-    def parse_authz_decision_query(self, xml_string):
+    def parse_authz_decision_query(self, xml_string, binding):
         """ Parse an attribute query
 
         :param xml_string: The Authz decision Query as an XML string
@@ -794,7 +791,7 @@ class Server(HTTPBase):
         receiver_addresses = self.conf.endpoint("attribute_service", "idp")
         attribute_query = AttributeQuery( self.sec, receiver_addresses)
 
-        attribute_query = attribute_query.loads(xml_string)
+        attribute_query = attribute_query.loads(xml_string, binding)
         attribute_query = attribute_query.verify()
 
         # Subject name is a BaseID,NameID or EncryptedID instance

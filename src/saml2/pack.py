@@ -67,7 +67,7 @@ def http_form_post_message(message, location, relay_state="", typ="SAMLRequest")
     if not isinstance(message, basestring):
         message = "%s" % (message,)
 
-    if typ == "SAMLRequest":
+    if typ == "SAMLRequest" or typ == "SAMLResponse":
         _msg = base64.b64encode(message)
     else:
         _msg = message
@@ -79,19 +79,19 @@ def http_form_post_message(message, location, relay_state="", typ="SAMLRequest")
     response.append("""</script>""")
     response.append("</body>")
     
-    return [("Content-type", "text/html")], response
+    return {"headers": [("Content-type", "text/html")], "data": response}
 
-#noinspection PyUnresolvedReferences
-def http_post_message(message, location, relay_state="", typ="SAMLRequest"):
-    """
-
-    :param message:
-    :param location:
-    :param relay_state:
-    :param typ:
-    :return:
-    """
-    return [("Content-type", "text/xml")], message
+##noinspection PyUnresolvedReferences
+#def http_post_message(message, location, relay_state="", typ="SAMLRequest"):
+#    """
+#
+#    :param message:
+#    :param location:
+#    :param relay_state:
+#    :param typ:
+#    :return:
+#    """
+#    return {"headers": [("Content-type", "text/xml")], "data": message}
 
 def http_redirect_message(message, location, relay_state="", typ="SAMLRequest"):
     """The HTTP Redirect binding defines a mechanism by which SAML protocol 
@@ -120,7 +120,7 @@ def http_redirect_message(message, location, relay_state="", typ="SAMLRequest"):
     headers = [('Location', login_url)]
     body = [""]
     
-    return headers, body
+    return {"headers":headers, "data":body}
 
 DUMMY_NAMESPACE = "http://example.org/"
 PREFIX = '<?xml version="1.0" encoding="UTF-8"?>'
@@ -164,12 +164,12 @@ def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
         return ElementTree.tostring(envelope, encoding="UTF-8")
 
 def http_soap_message(message):
-    return ([("Content-type", "application/soap+xml")],
-            make_soap_enveloped_saml_thingy(message))
+    return {"headers": [("Content-type", "application/soap+xml")],
+            "data": make_soap_enveloped_saml_thingy(message)}
     
 def http_paos(message, extra=None):
-    return ([("Content-type", "application/soap+xml")],
-            make_soap_enveloped_saml_thingy(message, extra))
+    return {"headers":[("Content-type", "application/soap+xml")],
+            "data": make_soap_enveloped_saml_thingy(message, extra)}
     
 def parse_soap_enveloped_saml(text, body_class, header_class=None):
     """Parses a SOAP enveloped SAML thing and returns header parts and body
@@ -219,3 +219,6 @@ def packager( identifier ):
         return PACKING[identifier]
     except KeyError:
         raise Exception("Unkown binding type: %s" % identifier)
+
+def factory(binding, message, location, relay_state="", typ="SAMLRequest"):
+    return PACKING[binding](message, location, relay_state, typ)

@@ -22,7 +22,7 @@ to conclude its tasks.
 from saml2.httpbase import HTTPBase
 from saml2.mdstore import destinations
 from saml2.saml import AssertionIDRef, NAMEID_FORMAT_TRANSIENT
-from saml2.samlp import AuthnQuery
+from saml2.samlp import AuthnQuery, ArtifactResponse, StatusCode, Status
 from saml2.samlp import ArtifactResolve
 from saml2.samlp import artifact_resolve_from_string
 from saml2.samlp import LogoutRequest
@@ -64,7 +64,7 @@ from saml2.response import AuthnResponse
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_SOAP
 from saml2 import BINDING_HTTP_POST
-from saml2 import BINDING_PAOS
+from saml2 import BINDING_PAOS, element_to_extension_element
 import logging
 
 logger = logging.getLogger(__name__)
@@ -156,6 +156,8 @@ class Base(HTTPBase):
         self.seed = rndstr(32)
         self.logout_requests_signed_default = True
         self.allow_unsolicited = self.config.getattr("allow_unsolicited", "sp")
+
+        self.artifact2response = {}
 
     #
     # Private methods
@@ -604,8 +606,29 @@ class Base(HTTPBase):
         return self._message(ArtifactResolve, destination, id, consent,
                              extensions, sign, artifact=artifact, issuer=issuer)
 
-    def create_artifact_response(self):
-        pass
+    def create_artifact_response(self, artifact, status_code, in_response_to,
+                                 id=0, consent=None, extensions=None,
+                                 sign=False):
+        """
+
+        :param artifact:
+        :param status_code:
+        :param in_response_to:
+        :param id:
+        :param consent:
+        :param extensions:
+        :param sign:
+        :return:
+        """
+
+        ee = element_to_extension_element(self.artifact2response[artifact])
+
+        status = Status(status_code=StatusCode(value=status_code))
+
+        return self._message(ArtifactResponse, "", id, consent,
+                             extensions, sign, in_response_to=in_response_to,
+                             status=status,
+                             extension_elements=[ee])
 
 # ======== response handling ===========
 

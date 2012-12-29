@@ -50,11 +50,34 @@ logger = logging.getLogger(__name__)
 class Saml2Client(Base):
     """ The basic pySAML2 service provider class """
 
-    def do_authenticate(self, entityid=None, relay_state="",
-                     binding=saml2.BINDING_HTTP_REDIRECT, vorg="",
-                     nameid_format=NAMEID_FORMAT_PERSISTENT,
-                     scoping=None, consent=None, extensions=None, sign=None):
-        """ Makes an authentication request.
+    def _request_info(self, binding, req_str, destination, relay_state):
+
+        if binding == saml2.BINDING_HTTP_POST:
+            logger.info("HTTP POST")
+            info = self.use_http_form_post(req_str, destination,
+                                                     relay_state)
+            info["url"] = destination
+            info["method"] = "GET"
+        elif binding == saml2.BINDING_HTTP_REDIRECT:
+            logger.info("HTTP REDIRECT")
+            info = self.use_http_get(req_str, destination,
+                                               relay_state)
+            info["url"] = destination
+            info["method"] = "GET"
+        elif binding == BINDING_SOAP:
+            info = self.use_soap(req_str, destination)
+        else:
+            raise Exception("Unknown binding type: %s" % binding)
+
+        return info
+
+
+    def prepare_for_authenticate(self, entityid=None, relay_state="",
+                                 binding=saml2.BINDING_HTTP_REDIRECT, vorg="",
+                                 nameid_format=NAMEID_FORMAT_PERSISTENT,
+                                 scoping=None, consent=None, extensions=None,
+                                 sign=None):
+        """ Makes all necessary preparations for an authentication request.
 
         :param entityid: The entity ID of the IdP to send the request to
         :param relay_state: To where the user should be returned after
@@ -65,30 +88,21 @@ class Saml2Client(Base):
         :param consent: Whether the principal have given her consent
         :param extensions: Possible extensions
         :param sign: Whether the request should be signed or not.
-        :return: AuthnRequest response
+        :return: session id and AuthnRequest info
         """
 
-        location = self._sso_location(entityid, binding)
+        destination = self._sso_location(entityid, binding)
 
-        req = self.create_authn_request(location, vorg, scoping, binding,
+        req = self.create_authn_request(destination, vorg, scoping, binding,
                                         nameid_format, consent, extensions,
                                         sign)
         _req_str = "%s" % req
 
         logger.info("AuthNReq: %s" % _req_str)
 
-        if binding == saml2.BINDING_HTTP_POST:
-            logger.info("HTTP POST")
-            (header, body) = self.use_http_form_post(_req_str, location,
-                                                 relay_state)
-        elif binding == saml2.BINDING_HTTP_REDIRECT:
-            logger.info("HTTP REDIRECT")
-            (header, body) = self.use_http_get(_req_str, location,
-                                                     relay_state)
-        else:
-            raise Exception("Unknown binding type: %s" % binding)
+        info = self._request_info(binding, _req_str, destination, relay_state)
 
-        return req.id, header, body
+        return req.id, info
 
     def global_logout(self, subject_id, reason="", expire=None, sign=None):
         """ More or less a layer of indirection :-/
@@ -169,12 +183,15 @@ class Saml2Client(Base):
                 logger.info("REQUEST: %s" % request)
 
                 srequest = signed_instance_factory(request, self.sec, to_sign)
-        
+                relay_state = self._relay_state(request.id)
+
+                http_info = self._request_info(binding, srequest,
+                                                    destination, relay_state)
+
                 if binding == BINDING_SOAP:
-                    response = self.send_using_soap(srequest, destination)
                     if response:
                         logger.info("Verifying response")
-                        response = self.logout_request_response(response)
+                        response = self.send(**http_info)
 
                     if response:
                         not_done.remove(entity_id)
@@ -184,27 +201,15 @@ class Saml2Client(Base):
                         logger.info("NOT OK response from %s" % destination)
 
                 else:
-                    session_id = request.id
-                    rstate = self._relay_state(session_id)
+                    self.state[request.id] = {"entity_id": entity_id,
+                                       "operation": "SLO",
+                                       "entity_ids": entity_ids,
+                                       "subject_id": subject_id,
+                                       "reason": reason,
+                                       "not_on_of_after": expire,
+                                       "sign": sign}
 
-                    self.state[session_id] = {"entity_id": entity_id,
-                                              "operation": "SLO",
-                                              "entity_ids": entity_ids,
-                                              "subject_id": subject_id,
-                                              "reason": reason,
-                                              "not_on_of_after": expire,
-                                              "sign": sign}
-                    
-
-                    if binding == BINDING_HTTP_POST:
-                        response = self.use_http_form_post(srequest,
-                                                           destination,
-                                                           rstate)
-                    else:
-                        response = self.use_http_get(srequest, destination,
-                                                     rstate)
-
-                    responses[entity_id] = response
+                    responses[entity_id] = http_info
                     not_done.remove(entity_id)
 
                 # only try one binding
@@ -247,11 +252,13 @@ class Saml2Client(Base):
                                   status["reason"], status["not_on_or_after"],
                                   status["sign"])
 
+    # ========================================================================
     # MUST use SOAP for
-    # AssertionIDRequest, SubjectQuery,
-    # AuthnQuery, AttributeQuery, or AuthzDecisionQuery
+    # AssertionIDRequest, SubjectQuery, AuthnQuery, AttributeQuery or
+    # AuthzDecisionQuery
+    # ========================================================================
 
-    def use_soap(self, destination, query_type, **kwargs):
+    def _use_soap(self, destination, query_type, **kwargs):
         _create_func = getattr(self, "create_%s" % query_type)
         _response_func = getattr(self, "%s_response" % query_type)
         try:
@@ -296,7 +303,7 @@ class Saml2Client(Base):
 
         srvs = self.metadata.authz_service(entity_id, BINDING_SOAP)
         for dest in destinations(srvs):
-            resp = self.use_soap(dest, "authz_decision_query",
+            resp = self._use_soap(dest, "authz_decision_query",
                                  action=action, evidence=evidence,
                                  resource=resource, subject=subject)
             if resp:
@@ -319,7 +326,7 @@ class Saml2Client(Base):
         _id_refs = [AssertionIDRef(_id) for _id in assertion_ids]
 
         for destination in destinations(srvs):
-            res = self.use_soap(destination, "assertion_id_request",
+            res = self._use_soap(destination, "assertion_id_request",
                                 assertion_id_refs=_id_refs, consent=consent,
                                 extensions=extensions, sign=sign)
             if res:
@@ -333,7 +340,7 @@ class Saml2Client(Base):
         srvs = self.metadata.authn_request_service(entity_id, BINDING_SOAP)
 
         for destination in destinations(srvs):
-            resp = self.use_soap(destination, "authn_query",
+            resp = self._use_soap(destination, "authn_query",
                                  consent=consent, extensions=extensions,
                                  sign=sign)
             if resp:
@@ -376,20 +383,22 @@ class Saml2Client(Base):
             response_args = {}
 
         if binding == BINDING_SOAP:
-            return self.use_soap(destination, "attribute_query", consent=consent,
-                                extensions=extensions, sign=sign,
-                                subject_id=subject_id, attribute=attribute,
-                                sp_name_qualifier=sp_name_qualifier,
-                                name_qualifier=name_qualifier,
-                                nameid_format=nameid_format,
-                                response_args=response_args)
+            return self._use_soap(destination, "attribute_query",
+                                  consent=consent, extensions=extensions,
+                                  sign=sign, subject_id=subject_id,
+                                  attribute=attribute,
+                                  sp_name_qualifier=sp_name_qualifier,
+                                  name_qualifier=name_qualifier,
+                                  nameid_format=nameid_format,
+                                  response_args=response_args)
         elif binding == BINDING_HTTP_POST:
-            return self.use_soap(destination, "attribute_query", consent=consent,
-                                 extensions=extensions, sign=sign,
-                                 subject_id=subject_id, attribute=attribute,
-                                 sp_name_qualifier=sp_name_qualifier,
-                                 name_qualifier=name_qualifier,
-                                 nameid_format=nameid_format,
-                                 response_args=response_args)
+            return self._use_soap(destination, "attribute_query",
+                                  consent=consent, extensions=extensions,
+                                  sign=sign, subject_id=subject_id,
+                                  attribute=attribute,
+                                  sp_name_qualifier=sp_name_qualifier,
+                                  name_qualifier=name_qualifier,
+                                  nameid_format=nameid_format,
+                                  response_args=response_args)
         else:
             raise Exception("Unsupported binding")

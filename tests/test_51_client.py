@@ -14,7 +14,7 @@ from saml2.server import Server
 from saml2.time_util import in_a_while
 
 from py.test import raises
-from fakeIDP import FakeIDP
+from fakeIDP import FakeIDP, unpack_form
 
 def for_me(condition, me ):
     for restriction in condition.audience_restriction:
@@ -341,13 +341,13 @@ class TestClientWithDummy():
         self.client.send = self.server.receive
 
     def test_do_authn(self):
-        id, header, body = self.client.do_authenticate(IDP,
+        id, http_args = self.client.prepare_for_authenticate(IDP,
                                           "http://www.example.com/relay_state")
 
         assert isinstance(id, basestring)
-        assert len(header) == 1
-        assert header[0][0] == "Location"
-        assert body == [""]
+        assert len(http_args) == 4
+        assert http_args["headers"][0][0] == "Location"
+        assert http_args["data"] == [""]
 
     def test_do_attribute_query(self):
         response = self.client.do_attribute_query(IDP,
@@ -378,17 +378,11 @@ class TestClientWithDummy():
         assert resp
         assert len(resp) == 1
         assert resp.keys() == entity_ids
-        item = resp[entity_ids[0]]
-        assert isinstance(item, tuple)
-        assert item[0] == [('Content-type', 'text/html')]
-        lead = "name=\"SAMLRequest\" value=\""
-        body = item[1][3]
-        i = body.find(lead)
-        i += len(lead)
-        j = i + body[i:].find('"')
-        info = body[i:j]
-        xml_str = base64.b64decode(info)
-        #xml_str = decode_base64_and_inflate(info)
+        http_args = resp[entity_ids[0]]
+        assert isinstance(http_args, dict)
+        assert http_args["headers"] == [('Content-type', 'text/html')]
+        info = unpack_form(http_args["data"][3])
+        xml_str = base64.b64decode(info["SAMLRequest"])
         req = logout_request_from_string(xml_str)
         print req
         assert req.reason == "Tired"

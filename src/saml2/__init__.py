@@ -470,6 +470,8 @@ class SamlBase(ExtensionContainer):
     #c_attribute_required = {}
     c_child_order = []
     c_cardinality = {}
+    c_any = None
+    c_any_attribute = None
     
     def _get_all_c_children_with_order(self):
         if len(self.c_child_order) > 0:
@@ -534,7 +536,8 @@ class SamlBase(ExtensionContainer):
             member = getattr(self, member_name)
             if member is not None:
                 tree.attrib[xml_attribute] = member
-        # Lastly, call the ExtensionContainers's _add_members_to_element_tree 
+
+        # Lastly, call the ExtensionContainers's _add_members_to_element_tree
         # to convert any extension attributes.
         ExtensionContainer._add_members_to_element_tree(self, tree)
         

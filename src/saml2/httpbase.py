@@ -159,7 +159,6 @@ class HTTPBase(object):
 
         return http_form_post_message(message, destination, relay_state)
 
-
     def use_http_get(self, message, destination, relay_state):
         """
         Send a message using GET, this is the HTTP-Redirect case so
@@ -175,9 +174,9 @@ class HTTPBase(object):
 
         return http_redirect_message(message, destination, relay_state)
 
-    def send_using_soap(self, request, destination, headers=None, sign=False):
+    def use_soap(self, request, destination, headers=None, sign=False):
         """
-        Send a message using SOAP+POST
+        Construct the necessary information for using SOAP+POST
 
         :param request:
         :param destination:
@@ -198,10 +197,24 @@ class HTTPBase(object):
                                                            nodeid=request.id)
             soap_message = _signed
 
+        return {"url": destination, "method": "POST",
+                "data":soap_message, "headers":headers}
+
+    def send_using_soap(self, request, destination, headers=None, sign=False):
+        """
+        Send a message using SOAP+POST
+
+        :param request:
+        :param destination:
+        :param headers:
+        :param sign:
+        :return:
+        """
+
         #_response = self.server.post(soap_message, headers, path=path)
         try:
-            response = self.send(destination, "POST", data=soap_message,
-                                 headers=headers)
+            response = self.send(self.use_soap(request, destination, headers,
+                                               sign))
         except Exception, exc:
             logger.info("HTTPClient exception: %s" % (exc,))
             return None

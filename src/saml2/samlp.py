@@ -88,6 +88,8 @@ class StatusDetailType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+    c_any = {"namespace":"##any", "processContents":"lax", "minOccurs":"0",
+             "maxOccurs":"unbounded"}
 
 def status_detail_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(StatusDetailType_, xml_string)
@@ -1433,6 +1435,7 @@ class ArtifactResponseType_(StatusResponseType_):
     c_attributes = StatusResponseType_.c_attributes.copy()
     c_child_order = StatusResponseType_.c_child_order[:]
     c_cardinality = StatusResponseType_.c_cardinality.copy()
+    c_any = {"namespace":"##any", "processContents":"lax", "minOccurs":"0"}
 
 def artifact_response_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(ArtifactResponseType_, xml_string)

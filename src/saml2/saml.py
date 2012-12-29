@@ -324,6 +324,9 @@ class SubjectConfirmationDataType_(SamlBase):
     c_attributes['Recipient'] = ('recipient', 'anyURI', False)
     c_attributes['InResponseTo'] = ('in_response_to', 'NCName', False)
     c_attributes['Address'] = ('address', 'string', False)
+    c_any = {"namespace":"##any", "processContents":"lax", "minOccurs":"0",
+             "maxOccurs":"unbounded"}
+    c_any_attribute = {"namespace":"##other", "processContents":"lax"}
 
     def __init__(self,
             not_before=None,
@@ -874,6 +877,7 @@ class AttributeType_(SamlBase):
     c_attributes['NameFormat'] = ('name_format', 'anyURI', False)
     c_attributes['FriendlyName'] = ('friendly_name', 'string', False)
     c_child_order.extend(['attribute_value'])
+    c_any_attribute = {"namespace":"##other", "processContents":"lax"}
 
     def __init__(self,
             attribute_value=None,
@@ -1481,6 +1485,7 @@ class AdviceType_(SamlBase):
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}EncryptedAssertion'] = ('encrypted_assertion', [EncryptedAssertion])
     c_cardinality['encrypted_assertion'] = {"min":0}
     c_child_order.extend(['assertion_id_ref', 'assertion_uri_ref', 'assertion', 'encrypted_assertion'])
+    c_any = {"namespace":"##other", "processContents":"lax"}
 
     def __init__(self,
             assertion_id_ref=None,

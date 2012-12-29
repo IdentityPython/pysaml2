@@ -29,7 +29,8 @@ CONFIG = {
         "idp": {
             "endpoints" : {
                 "single_sign_on_service" : [
-                    ("%s/sso" % BASE, BINDING_HTTP_REDIRECT)],
+                    ("%s/sso" % BASE, BINDING_HTTP_REDIRECT),
+                    ("%s/ssop" % BASE, BINDING_HTTP_POST)],
                 "single_logout_service": [
                     ("%s/slo" % BASE, BINDING_SOAP),
                     ("%s/slop" % BASE, BINDING_HTTP_POST)],
