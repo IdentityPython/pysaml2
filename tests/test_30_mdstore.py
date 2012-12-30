@@ -154,8 +154,7 @@ def test_ext_2():
     ents = mds.with_descriptor("spsso")
     for binding in [BINDING_SOAP, BINDING_HTTP_POST, BINDING_HTTP_ARTIFACT,
                     BINDING_HTTP_REDIRECT]:
-        assert mds.single_logout_service(ents.keys()[0], "spsso",
-                                         binding=binding)
+        assert mds.single_logout_service(ents.keys()[0], binding, "spsso")
 
 def test_example():
     mds = MetadataStore(ONTS.values(), ATTRCONV, xmlsec_path,

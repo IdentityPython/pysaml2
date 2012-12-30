@@ -23,15 +23,14 @@ import logging
 import shelve
 import sys
 import memcache
-from saml2.httpbase import HTTPBase
-from saml2.mdstore import destinations
+from saml2.entity import Entity
+from saml2.samlp import LogoutResponse
 
-from saml2 import saml, BINDING_HTTP_POST
+from saml2 import saml, VERSION
 from saml2 import class_name
 from saml2 import soap
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_SOAP
-from saml2 import BINDING_PAOS
 
 from saml2.request import AuthnRequest
 from saml2.request import AttributeQuery
@@ -40,19 +39,13 @@ from saml2.request import LogoutRequest
 from saml2.s_utils import sid
 from saml2.s_utils import MissingValue
 from saml2.s_utils import success_status_factory
-from saml2.s_utils import OtherError
-from saml2.s_utils import UnknownPrincipal
-from saml2.s_utils import UnsupportedBinding
 from saml2.s_utils import error_status_factory
 
 from saml2.time_util import instant
 
-from saml2.sigver import security_context
 from saml2.sigver import signed_instance_factory
 from saml2.sigver import pre_signature_part
-from saml2.sigver import response_factory, logoutresponse_factory
-
-from saml2.config import config_factory
+from saml2.sigver import response_factory
 
 from saml2.assertion import Assertion, Policy, restriction_from_attribute_spec, filter_attribute_value_assertions
 
@@ -218,50 +211,25 @@ class Identifier(object):
             except KeyError:
                 return None
         
-class Server(HTTPBase):
+class Server(Entity):
     """ A class that does things that IdPs or AAs do """
     def __init__(self, config_file="", config=None, _cache="", stype="idp"):
-
-        self.ident = None
-        if config_file:
-            self.load_config(config_file, stype)
-        elif config:
-            self.conf = config
-        else:
-            raise Exception("Missing configuration")
-
-        HTTPBase.__init__(self, self.conf.verify_ssl_cert,
-                          self.conf.ca_certs, self.conf.key_file,
-                          self.conf.cert_file)
-
-        self.conf.setup_logger()
-            
-        self.metadata = self.conf.metadata
-        self.sec = security_context(self.conf)
+        Entity.__init__(self, stype, config, config_file)
+        self.init_config(stype)
         self._cache = _cache
 
-        # if cache:
-        #     if isinstance(cache, basestring):
-        #         self.cache = Cache(cache)
-        #     else:
-        #         self.cache = cache
-        # else:
-        #     self.cache = Cache()
+    def init_config(self, stype="idp"):
+        """ Remaining init of the server configuration 
         
-    def load_config(self, config_file, stype="idp"):
-        """ Load the server configuration 
-        
-        :param config_file: The name of the configuration file
         :param stype: The type of Server ("idp"/"aa")
         """
-        self.conf = config_factory(stype, config_file)
         if stype == "aa":
             return
         
         try:
             # subject information is stored in a database
             # default database is a shelve database which is OK in some setups
-            dbspec = self.conf.getattr("subject_data", "idp")
+            dbspec = self.config.getattr("subject_data", "idp")
             idb = None
             if isinstance(dbspec, basestring):
                 idb = shelve.open(dbspec, writeback=True)
@@ -276,7 +244,7 @@ class Server(HTTPBase):
                     idb = addr
                     
             if idb is not None:
-                self.ident = Identifier(idb, self.conf.virtual_organization)
+                self.ident = Identifier(idb, self.config.virtual_organization)
             else:
                 raise Exception("Couldn't open identity database: %s" %
                                 (dbspec,))
@@ -294,7 +262,7 @@ class Server(HTTPBase):
             return saml.Issuer(text=entityid,
                                 format=saml.NAMEID_FORMAT_ENTITY)
         else:
-            return saml.Issuer(text=self.conf.entityid,
+            return saml.Issuer(text=self.config.entityid,
                                 format=saml.NAMEID_FORMAT_ENTITY)
         
     def parse_authn_request(self, enc_request, binding=BINDING_HTTP_REDIRECT):
@@ -315,81 +283,35 @@ class Server(HTTPBase):
         _log_debug = logger.debug
 
         # The addresses I should receive messages like this on
-        receiver_addresses = self.conf.endpoint("single_sign_on_service",
+        receiver_addresses = self.config.endpoint("single_sign_on_service",
                                                  binding)
         _log_info("receiver addresses: %s" % receiver_addresses)
         _log_info("Binding: %s" % binding)
 
 
         try:
-            timeslack = self.conf.accepted_time_diff
+            timeslack = self.config.accepted_time_diff
             if not timeslack:
                 timeslack = 0
         except AttributeError:
             timeslack = 0
 
         authn_request = AuthnRequest(self.sec,
-                                     self.conf.attribute_converters,
+                                     self.config.attribute_converters,
                                      receiver_addresses, timeslack=timeslack)
 
-        if binding == BINDING_SOAP or binding == BINDING_PAOS:
-            # not base64 decoding and unzipping
-            authn_request.debug=True
-            authn_request = authn_request.loads(enc_request, binding)
-        else:
-            authn_request = authn_request.loads(enc_request, binding)
+        authn_request = authn_request.loads(enc_request, binding)
 
         _log_debug("Loaded authn_request")
 
         if authn_request:
             authn_request = authn_request.verify()
-
-        _log_debug("Verified authn_request")
+            _log_debug("Verified authn_request")
 
         if not authn_request:
             return None
-            
-        response["id"] = authn_request.message.id # put in in_reply_to
-
-        sp_entity_id = authn_request.message.issuer.text
-        # try to find return address in metadata
-        # What's the binding ? ProtocolBinding
-        if authn_request.message.protocol_binding == BINDING_HTTP_REDIRECT:
-            _binding = BINDING_HTTP_POST
         else:
-            _binding = authn_request.message.protocol_binding
-
-        try:
-            srvs = self.metadata.assertion_consumer_service(sp_entity_id,
-                                                           binding=_binding)
-            consumer_url = destinations(srvs)[0]
-        except (KeyError, IndexError):
-            _log_info("Failed to find consumer URL for %s" % sp_entity_id)
-            _log_info("Binding: %s" % _binding)
-            _log_info("entities: %s" % self.metadata.keys())
-            raise UnknownPrincipal(sp_entity_id)
-
-        if not consumer_url: # what to do ?
-            _log_info("Couldn't find a consumer URL binding=%s entity_id=%s" % (
-                                        _binding,sp_entity_id))
-            raise UnsupportedBinding(sp_entity_id)
-
-        response["sp_entity_id"] = sp_entity_id
-        response["binding"] = _binding
-
-        if authn_request.message.assertion_consumer_service_url:
-            return_destination = \
-                        authn_request.message.assertion_consumer_service_url
-        
-            if consumer_url != return_destination:
-                # serious error on someones behalf
-                _log_info("%s != %s" % (consumer_url, return_destination))
-                raise OtherError("ConsumerURL and return destination mismatch")
-        
-        response["consumer_url"] = consumer_url
-        response["request"] = authn_request.message
-
-        return response
+            return authn_request
                         
     def wants(self, sp_entity_id, index=None):
         """ Returns what attributes the SP requires and which are optional
@@ -411,7 +333,7 @@ class Server(HTTPBase):
             attribute - which attributes that the requestor wants back
             query - the whole query
         """
-        receiver_addresses = self.conf.endpoint("attribute_service")
+        receiver_addresses = self.config.endpoint("attribute_service")
         attribute_query = AttributeQuery( self.sec, receiver_addresses)
 
         attribute_query = attribute_query.loads(xml_string, binding)
@@ -509,20 +431,20 @@ class Server(HTTPBase):
                 (authn_class, authn_authn) = authn
                 assertion = ast.construct(sp_entity_id, in_response_to,
                                           consumer_url, name_id,
-                                          self.conf.attribute_converters,
+                                          self.config.attribute_converters,
                                           policy, issuer=_issuer,
                                           authn_class=authn_class,
                                           authn_auth=authn_authn)
             elif authn_decl:
                 assertion = ast.construct(sp_entity_id, in_response_to,
                                           consumer_url, name_id,
-                                          self.conf.attribute_converters,
+                                          self.config.attribute_converters,
                                           policy, issuer=_issuer,
                                           authn_decl=authn_decl)
             else:
                 assertion = ast.construct(sp_entity_id, in_response_to,
                                           consumer_url, name_id,
-                                          self.conf.attribute_converters,
+                                          self.config.attribute_converters,
                                           policy, issuer=_issuer)
 
             if sign_assertion:
@@ -586,7 +508,7 @@ class Server(HTTPBase):
         """
         if not name_id and userid:
             try:
-                name_id = self.ident.construct_nameid(self.conf.policy, userid,
+                name_id = self.ident.construct_nameid(self.config.policy, userid,
                                                       sp_entity_id, identity)
                 logger.warning("Unspecified NameID format")
             except Exception:
@@ -597,7 +519,7 @@ class Server(HTTPBase):
         if identity:
             _issuer = self.issuer(issuer)
             ast = Assertion(identity)
-            policy = self.conf.getattr("policy", "aa")
+            policy = self.config.getattr("policy", "aa")
             if policy:
                 ast.apply_policy(sp_entity_id, policy)
             else:
@@ -609,7 +531,7 @@ class Server(HTTPBase):
 
             assertion = ast.construct(sp_entity_id, in_response_to,
                                       consumer_url, name_id,
-                                      self.conf.attribute_converters,
+                                      self.config.attribute_converters,
                                       policy, issuer=_issuer)
 
             if sign_assertion:
@@ -648,7 +570,7 @@ class Server(HTTPBase):
         :return: A response instance
         """
 
-        policy = self.conf.getattr("policy", "idp")
+        policy = self.config.getattr("policy", "idp")
 
         if not name_id:
             try:
@@ -699,9 +621,9 @@ class Server(HTTPBase):
         """
         
         try:
-            slo = self.conf.endpoint("single_logout_service", binding, "idp")
+            slo = self.config.endpoint("single_logout_service", binding, "idp")
         except IndexError:
-            logger.info("enpoints: %s" % self.conf.getattr("endpoints", "idp"))
+            logger.info("enpoints: %s" % self.config.getattr("endpoints", "idp"))
             logger.info("binding wanted: %s" % (binding,))
             raise
 
@@ -733,47 +655,49 @@ class Server(HTTPBase):
             return req
 
 
-    def create_logout_response(self, request, binding, status=None,
-                               sign=False, issuer=None):
-        """ Create a LogoutResponse. What is returned depends on which binding
-        is used.
-        
-        :param request: The request this is a response to
-        :param binding: Which binding the request came in over
+    def _status_response(self, response_class, issuer, status, sign=False,
+                         **kwargs):
+        """ Create a StatusResponse.
+
+        :param response_class: Which subclass of StatusResponse that should be
+            used
+        :param issuer: The issuer of the response message
         :param status: The return status of the response operation
-        :param issuer: The issuer of the message
-        :return: A logout message.
+        :param sign: Whether the response should be signed or not
+        :param kwargs: Extra arguments to the response class
+        :return: Class instance or string representation of the instance
         """
+
         mid = sid()
 
         if not status:
             status = success_status_factory()
 
-        # response and packaging differs depending on binding
-        response = ""
-        if binding in [BINDING_SOAP, BINDING_HTTP_POST]:
-            response = logoutresponse_factory(sign=sign, id = mid,
-                                              in_response_to = request.id,
-                                              status = status)
-        elif binding == BINDING_HTTP_REDIRECT:
-            sp_entity_id = request.issuer.text.strip()
-            srvs = self.metadata.single_logout_service(sp_entity_id, "spsso")
-            if not srvs:
-                raise Exception("Nowhere to send the response")
+        response = response_class(issuer=issuer, id=mid, version=VERSION,
+                                  issue_instant=instant(),
+                                  status=status, **kwargs)
 
-            destination = destinations(srvs)[0]
-
-            _issuer = self.issuer(issuer)
-            response = logoutresponse_factory(sign=sign, id = mid,
-                                              in_response_to = request.id,
-                                              status = status,
-                                              issuer = _issuer,
-                                              destination = destination,
-                                              sp_entity_id = sp_entity_id,
-                                              instant=instant())
         if sign:
+            response.signature = pre_signature_part(mid)
             to_sign = [(class_name(response), mid)]
             response = signed_instance_factory(response, self.sec, to_sign)
+
+        return response
+
+    def create_logout_response(self, request, bindings, status=None,
+                               sign=False, issuer=None):
+        """ Create a LogoutResponse.
+        
+        :param request: The request this is a response to
+        :param bindings: Which bindings that can be used for the response
+        :param status: The return status of the response operation
+        :param issuer: The issuer of the message
+        :return: HTTP args
+        """
+
+        rinfo = self.response_args(request, bindings, descr_type="spsso")
+        response = self._status_response(LogoutResponse, issuer, status,
+                                         sign=False, **rinfo)
 
         logger.info("Response: %s" % (response,))
 
@@ -788,7 +712,7 @@ class Server(HTTPBase):
             attribute - which attributes that the requestor wants back
             query - the whole query
         """
-        receiver_addresses = self.conf.endpoint("attribute_service", "idp")
+        receiver_addresses = self.config.endpoint("attribute_service", "idp")
         attribute_query = AttributeQuery( self.sec, receiver_addresses)
 
         attribute_query = attribute_query.loads(xml_string, binding)

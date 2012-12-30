@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
 import re
-import base64
 import logging
 
 #from cgi import parse_qs
 from urlparse import parse_qs
 from saml2.pack import http_form_post_message
+from saml2.s_utils import OtherError
 from saml2.saml import AUTHN_PASSWORD
 from saml2 import server
 from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
@@ -89,33 +89,53 @@ def sso(environ, start_response, user):
         return ['Unknown user']
         
     # base 64 encoded request
-    req_info = IDP.parse_authn_request(query["SAMLRequest"][0])
+    # Assume default binding, that is HTTP-redirect
+    req = IDP.parse_authn_request(query["SAMLRequest"][0])
+
+    if req is None:
+        start_response("500", [('Content-Type', 'text/plain')])
+        return ["Failed to parse the SAML request"]
+
     logger.info("parsed OK")
-    logger.info("%s" % req_info)
+    logger.info("%s" % req)
 
     identity = dict(environ["repoze.who.identity"]["user"])
     logger.info("Identity: %s" % (identity,))
     userid = environ["repoze.who.identity"]['repoze.who.userid']
     if REPOZE_ID_EQUIVALENT:
         identity[REPOZE_ID_EQUIVALENT] = userid
+
+    # What's the binding ? ProtocolBinding
+    if req.message.protocol_binding == BINDING_HTTP_REDIRECT:
+        _binding = BINDING_HTTP_POST
+    else:
+        _binding = req.message.protocol_binding
+
     try:
-        authn_resp = IDP.create_authn_response(identity,
-                                        req_info["id"], 
-                                        req_info["consumer_url"], 
-                                        req_info["sp_entity_id"], 
-                                        req_info["request"].name_id_policy, 
-                                        userid,
-                                        authn=AUTHN)
+        resp_args = IDP.response_args(req.message, [_binding])
+    except Exception:
+        raise
+
+    if req.message.assertion_consumer_service_url:
+        if req.message.assertion_consumer_service_url != resp_args["destination"]:
+            # serious error on someones behalf
+            logger.error("%s != %s" % (req.message.assertion_consumer_service_url,
+                                       resp_args["destination"]))
+            raise OtherError("ConsumerURL and return destination mismatch")
+
+    try:
+        authn_resp = IDP.create_authn_response(identity, userid, authn=AUTHN,
+                                               **resp_args)
     except Exception, excp:
-        if logger: logger.error("Exception: %s" % (excp,))
+        logger.error("Exception: %s" % (excp,))
         raise
         
-    if logger: logger.info("AuthNResponse: %s" % authn_resp)
+    logger.info("AuthNResponse: %s" % authn_resp)
 
-    headers, response = http_form_post_message(authn_resp,
-                                               req_info["consumer_url"], "/")
-    start_response('200 OK', headers)
-    return response
+    http_args = http_form_post_message(authn_resp, resp_args["destination"],
+                                       relay_state=query["RelayState"])
+    start_response('200 OK', http_args["headers"])
+    return http_args["data"]
     
 def whoami(environ, start_response, user):
     start_response('200 OK', [('Content-Type', 'text/html')])
@@ -165,26 +185,36 @@ def slo(environ, start_response, user):
     # look for the subject
     subject = req_info.subject_id()
     subject = subject.text.strip()
-    sp_entity_id = req_info.message.issuer.text.strip()
     logger.info("Logout subject: %s" % (subject,))
-    logger.info("local identifier: %s" % IDP.ident.local_name(sp_entity_id, 
-                                                                subject))
-    # remove the authentication
-    
+
     status = None
 
-    # Either HTTP-Post or HTTP-redirect is possible
+    # Either HTTP-Post or HTTP-redirect is possible, prefer HTTP-Post.
+    # Order matters
     bindings = [BINDING_HTTP_POST, BINDING_HTTP_REDIRECT]
-    (resp, headers, message) = IDP.create_logout_response(req_info.message,
-                                                          bindings)
-    #headers.append(session.cookie(expire="now"))
-    logger.info("Response code: %s" % (resp,))
-    logger.info("Header: %s" % (headers,))
+    try:
+        response = IDP.create_logout_response(req_info.message,
+                                                        bindings)
+        binding, destination = IDP.pick_binding(bindings,
+                                                "single_logout_service",
+                                                "spsso", response)
+
+        http_args = IDP.apply_binding(binding, "%s" % response, destination,
+                                      query["RelayState"], "SAMLResponse")
+
+    except Exception, exc:
+        start_response('400 Bad request', [('Content-Type', 'text/plain')])
+        return ['%s' % exc]
+
     delco = delete_cookie(environ, "pysaml2idp")
     if delco:
-        headers.append(delco)
-    start_response(resp, headers)
-    return message
+        http_args["headers"].append(delco)
+
+    if binding == BINDING_HTTP_POST:
+        start_response("200 OK", http_args["headers"])
+    else:
+        start_response("302 Found", http_args["headers"])
+    return http_args["data"]
 
 def delete_cookie(environ, name):
     kaka = environ.get("HTTP_COOKIE", '')

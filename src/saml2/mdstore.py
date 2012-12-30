@@ -306,7 +306,7 @@ class MetadataStore(object):
                 return srvs
         return []
 
-    def single_sign_on_service(self, entity_id, binding=None):
+    def single_sign_on_service(self, entity_id, binding=None, typ="idpsso"):
         # IDP
 
         if binding is None:
@@ -314,70 +314,76 @@ class MetadataStore(object):
         return self._service(entity_id, "idpsso_descriptor",
                              "single_sign_on_service", binding)
 
-    def name_id_mapping_service(self, entity_id, binding=None):
+    def name_id_mapping_service(self, entity_id, binding=None, typ="idpsso"):
         # IDP
         if binding is None:
             binding = BINDING_HTTP_REDIRECT
         return self._service(entity_id, "idpsso_descriptor",
                              "name_id_mapping_service", binding)
 
-    def authn_query_service(self, entity_id, binding=None):
+    def authn_query_service(self, entity_id, binding=None,
+                            typ="authn_authority"):
         # AuthnAuthority
         if binding is None:
             binding = BINDING_SOAP
         return self._service(entity_id, "authn_authority_descriptor",
                              "authn_query_service", binding)
 
-    def attribute_service(self, entity_id, binding=None):
+    def attribute_service(self, entity_id, binding=None,
+                          typ="attribute_authority"):
         # AttributeAuthority
         if binding is None:
             binding = BINDING_HTTP_REDIRECT
         return self._service(entity_id, "attribute_authority_descriptor",
                              "attribute_service", binding)
 
-    def authz_service(self, entity_id, binding=None):
+    def authz_service(self, entity_id, binding=None, typ="pdp"):
         # PDP
         if binding is None:
             binding = BINDING_SOAP
         return self._service(entity_id, "pdp_descriptor",
                              "authz_service", binding)
 
-    def assertion_id_request_service(self, entity_id, typ, binding=None):
+    def assertion_id_request_service(self, entity_id, binding=None, typ=None):
         # AuthnAuthority + IDP + PDP + AttributeAuthority
+        if typ is None:
+            raise AttributeError("Missing type specification")
         if binding is None:
             binding = BINDING_SOAP
         return self._service(entity_id, "%s_descriptor" % typ,
                              "assertion_id_request_service", binding)
 
-    def single_logout_service(self, entity_id, typ, binding=None):
+    def single_logout_service(self, entity_id, binding=None, typ=None):
         # IDP + SP
+        if typ is None:
+            raise AttributeError("Missing type specification")
         if binding is None:
             binding = BINDING_HTTP_REDIRECT
         return self._service(entity_id, "%s_descriptor" % typ,
                              "single_logout_service", binding)
 
-    def manage_name_id_service(self, entity_id, typ, binding=None):
+    def manage_name_id_service(self, entity_id, binding=None, typ=None):
         # IDP + SP
         if binding is None:
             binding = BINDING_HTTP_REDIRECT
         return self._service(entity_id, "%s_descriptor" % typ,
                              "manage_name_id_service", binding)
 
-    def artifact_resolution_service(self, entity_id, typ, binding=None):
+    def artifact_resolution_service(self, entity_id, binding=None, typ=None):
         # IDP + SP
         if binding is None:
             binding = BINDING_HTTP_REDIRECT
         return self._service(entity_id, "%s_descriptor" % typ,
                              "artifact_resolution_service", binding)
 
-    def assertion_consumer_service(self, entity_id, binding=None):
+    def assertion_consumer_service(self, entity_id, binding=None, typ="spsso"):
         # SP
         if binding is None:
             binding = BINDING_HTTP_POST
         return self._service(entity_id, "spsso_descriptor",
                              "assertion_consumer_service", binding)
 
-    def attribute_consuming_service(self, entity_id, binding=None):
+    def attribute_consuming_service(self, entity_id, binding=None, typ="spsso"):
         # SP
         if binding is None:
             binding = BINDING_HTTP_REDIRECT

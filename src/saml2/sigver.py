@@ -1054,19 +1054,19 @@ def pre_signature_part(ident, public_key=None, identifier=None):
     
     return signature
 
-def logoutresponse_factory(sign=False, encrypt=False, **kwargs):
-    response = samlp.LogoutResponse(id=sid(), version=VERSION,
-                                issue_instant=instant())
-
-    if sign:
-        response.signature = pre_signature_part(kwargs["id"])
-    if encrypt:
-        pass
-
-    for key, val in kwargs.items():
-        setattr(response, key, val)
-
-    return response
+#def logoutresponse_factory(sign=False, encrypt=False, **kwargs):
+#    response = samlp.LogoutResponse(id=sid(), version=VERSION,
+#                                issue_instant=instant())
+#
+#    if sign:
+#        response.signature = pre_signature_part(kwargs["id"])
+#    if encrypt:
+#        pass
+#
+#    for key, val in kwargs.items():
+#        setattr(response, key, val)
+#
+#    return response
 
 def response_factory(sign=False, encrypt=False, **kwargs):
     response = samlp.Response(id=sid(), version=VERSION,

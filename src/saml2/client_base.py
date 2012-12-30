@@ -18,8 +18,8 @@
 """Contains classes and functions that a SAML2.0 Service Provider (SP) may use
 to conclude its tasks.
 """
+from saml2.entity import Entity
 
-from saml2.httpbase import HTTPBase
 from saml2.mdstore import destinations
 from saml2.saml import AssertionIDRef, NAMEID_FORMAT_TRANSIENT
 from saml2.samlp import AuthnQuery, ArtifactResponse, StatusCode, Status
@@ -52,10 +52,8 @@ from saml2.s_utils import decode_base64_and_inflate
 from saml2 import samlp, saml, class_name
 from saml2 import VERSION
 from saml2.sigver import pre_signature_part
-from saml2.sigver import security_context, signed_instance_factory
+from saml2.sigver import signed_instance_factory
 from saml2.population import Population
-from saml2.virtual_org import VirtualOrg
-from saml2.config import config_factory
 
 from saml2.response import response_factory, attribute_response
 from saml2.response import LogoutResponse
@@ -92,7 +90,7 @@ class LogoutError(Exception):
 class NoServiceDefined(Exception):
     pass
 
-class Base(HTTPBase):
+class Base(Entity):
     """ The basic pySAML2 service provider class """
 
     def __init__(self, config=None, identity_cache=None, state_cache=None,
@@ -104,6 +102,8 @@ class Base(HTTPBase):
         :param virtual_organization: A specific virtual organization
         """
 
+        Entity.__init__(self, "sp", config, config_file, virtual_organization)
+
         self.users = Population(identity_cache)
 
         # for server state storage
@@ -111,39 +111,6 @@ class Base(HTTPBase):
             self.state = {} # in memory storage
         else:
             self.state = state_cache
-
-        if config:
-            self.config = config
-        elif config_file:
-            self.config = config_factory("sp", config_file)
-        else:
-            raise Exception("Missing configuration")
-
-        HTTPBase.__init__(self, self.config.verify_ssl_cert,
-                          self.config.ca_certs, self.config.key_file,
-                          self.config.cert_file)
-
-        if self.config.vorg:
-            for vo in self.config.vorg.values():
-                vo.sp = self
-
-        self.metadata = self.config.metadata
-        self.config.setup_logger()
-
-        # we copy the config.debug variable in an internal
-        # field for convenience and because we may need to
-        # change it during the tests
-        self.debug = self.config.debug
-
-        self.sec = security_context(self.config)
-
-        if virtual_organization:
-            if isinstance(virtual_organization, basestring):
-                self.vorg = self.config.vorg[virtual_organization]
-            elif isinstance(virtual_organization, VirtualOrg):
-                self.vorg = virtual_organization
-        else:
-            self.vorg = None
 
         for foo in ["allow_unsolicited", "authn_requests_signed",
                    "logout_requests_signed"]:

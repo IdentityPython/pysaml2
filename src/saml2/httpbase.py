@@ -144,7 +144,8 @@ class HTTPBase(object):
 
         return r
 
-    def use_http_form_post(self, message, destination, relay_state):
+    def use_http_form_post(self, message, destination, relay_state,
+                           typ="SAMLRequest"):
         """
         Return a form that will automagically execute and POST the message
         to the recipient.
@@ -152,14 +153,16 @@ class HTTPBase(object):
         :param message:
         :param destination:
         :param relay_state:
-        :return: tuple (header, message)
+        :param typ: Whether a Request, Response or Artifact
+        :return: dictionary
         """
         if not isinstance(message, basestring):
             request = "%s" % (message,)
 
-        return http_form_post_message(message, destination, relay_state)
+        return http_form_post_message(message, destination, relay_state, typ)
 
-    def use_http_get(self, message, destination, relay_state):
+    def use_http_get(self, message, destination, relay_state,
+                     typ="SAMLRequest"):
         """
         Send a message using GET, this is the HTTP-Redirect case so
         no direct response is expected to this request.
@@ -167,12 +170,13 @@ class HTTPBase(object):
         :param message:
         :param destination:
         :param relay_state:
-        :return: tuple (header, None)
+        :param typ: Whether a Request, Response or Artifact
+        :return: dictionary
         """
         if not isinstance(message, basestring):
             request = "%s" % (message,)
 
-        return http_redirect_message(message, destination, relay_state)
+        return http_redirect_message(message, destination, relay_state, typ)
 
     def use_soap(self, request, destination, headers=None, sign=False):
         """
@@ -182,7 +186,7 @@ class HTTPBase(object):
         :param destination:
         :param headers:
         :param sign:
-        :return:
+        :return: dictionary
         """
         if headers is None:
             headers = {"content-type": "application/soap+xml"}
@@ -224,4 +228,3 @@ class HTTPBase(object):
             return parse_soap_enveloped_saml_response(response)
         else:
             return False
-

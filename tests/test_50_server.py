@@ -76,7 +76,7 @@ class TestServer1():
         assert isinstance(issuer, saml.Issuer)
         assert _eq(issuer.keyswv(), ["text","format"])
         assert issuer.format == saml.NAMEID_FORMAT_ENTITY
-        assert issuer.text == self.server.conf.entityid
+        assert issuer.text == self.server.config.entityid
 
 
     def test_assertion(self):
@@ -184,15 +184,17 @@ class TestServer1():
         print authn_request
         intermed = s_utils.deflate_and_base64_encode("%s" % authn_request)
 
-        response = self.server.parse_authn_request(intermed)
+        req = self.server.parse_authn_request(intermed)
         # returns a dictionary
-        print response
-        assert response["consumer_url"] == "http://lingon.catalogix.se:8087/"
-        assert response["id"] == "id1"
-        name_id_policy = response["request"].name_id_policy
+        print req
+        resp_args = self.server.response_args(req.message, [BINDING_HTTP_POST],
+                                              descr_type="spsso")
+        assert resp_args["destination"] == "http://lingon.catalogix.se:8087/"
+        assert resp_args["in_response_to"] == "id1"
+        name_id_policy = resp_args["name_id_policy"]
         assert _eq(name_id_policy.keyswv(), ["format", "allow_create"])
         assert name_id_policy.format == saml.NAMEID_FORMAT_TRANSIENT
-        assert response["sp_entity_id"] == "urn:mace:example.com:saml:roland:sp"
+        assert resp_args["sp_entity_id"] == "urn:mace:example.com:saml:roland:sp"
 
     def test_sso_response_with_identity(self):
         name_id = self.server.ident.transient_nameid(
@@ -423,7 +425,7 @@ class TestServer2():
         self.server.close_shelve_db()
 
     def test_do_aa_reponse(self):
-        aa_policy = self.server.conf.getattr("policy", "idp")
+        aa_policy = self.server.config.getattr("policy", "idp")
         print aa_policy.__dict__
         response = self.server.create_aa_response("aaa",
                                                   "http://example.com/sp/",
@@ -474,10 +476,15 @@ class TestServerLogout():
         server = Server("idp_slo_redirect_conf")
         request = _logout_request("sp_slo_redirect_conf")
         print request
-        binding = BINDING_HTTP_REDIRECT
-        response = server.create_logout_response(request, binding)
-        http_args = server.use_http_get(response, response.destination,
-                                               "/relay_state")
-        assert len(http_args) == 2
+        bindings = [BINDING_HTTP_REDIRECT]
+        response = server.create_logout_response(request, bindings)
+        binding, destination = server.pick_binding(bindings,
+                                                   "single_logout_service",
+                                                   "spsso", request)
+
+        http_args = server.apply_binding(binding, "%s" % response, destination,
+                                         "relay_state", "SAMLResponse")
+
+        assert len(http_args) == 4
         assert http_args["headers"][0][0] == "Location"
         assert http_args["data"] == ['']

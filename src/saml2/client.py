@@ -18,6 +18,7 @@
 """Contains classes and functions that a SAML2.0 Service Provider (SP) may use
 to conclude its tasks.
 """
+from saml2.s_utils import sid
 from saml2.samlp import logout_response_from_string
 import saml2
 
@@ -50,28 +51,6 @@ logger = logging.getLogger(__name__)
 class Saml2Client(Base):
     """ The basic pySAML2 service provider class """
 
-    def _request_info(self, binding, req_str, destination, relay_state):
-
-        if binding == saml2.BINDING_HTTP_POST:
-            logger.info("HTTP POST")
-            info = self.use_http_form_post(req_str, destination,
-                                                     relay_state)
-            info["url"] = destination
-            info["method"] = "GET"
-        elif binding == saml2.BINDING_HTTP_REDIRECT:
-            logger.info("HTTP REDIRECT")
-            info = self.use_http_get(req_str, destination,
-                                               relay_state)
-            info["url"] = destination
-            info["method"] = "GET"
-        elif binding == BINDING_SOAP:
-            info = self.use_soap(req_str, destination)
-        else:
-            raise Exception("Unknown binding type: %s" % binding)
-
-        return info
-
-
     def prepare_for_authenticate(self, entityid=None, relay_state="",
                                  binding=saml2.BINDING_HTTP_REDIRECT, vorg="",
                                  nameid_format=NAMEID_FORMAT_PERSISTENT,
@@ -100,7 +79,7 @@ class Saml2Client(Base):
 
         logger.info("AuthNReq: %s" % _req_str)
 
-        info = self._request_info(binding, _req_str, destination, relay_state)
+        info = self.apply_binding(binding, _req_str, destination, relay_state)
 
         return req.id, info
 
@@ -156,8 +135,8 @@ class Saml2Client(Base):
             for binding in [#BINDING_SOAP,
                             BINDING_HTTP_POST,
                             BINDING_HTTP_REDIRECT]:
-                srvs = self.metadata.single_logout_service(entity_id, "idpsso",
-                                                           binding=binding)
+                srvs = self.metadata.single_logout_service(entity_id, binding,
+                                                           "idpsso")
                 if not srvs:
                     continue
 
@@ -185,8 +164,8 @@ class Saml2Client(Base):
                 srequest = signed_instance_factory(request, self.sec, to_sign)
                 relay_state = self._relay_state(request.id)
 
-                http_info = self._request_info(binding, srequest,
-                                                    destination, relay_state)
+                http_info = self.apply_binding(binding, srequest, destination,
+                                           relay_state)
 
                 if binding == BINDING_SOAP:
                     if response:
@@ -368,19 +347,28 @@ class Saml2Client(Base):
         :param real_id: The identifier which is the key to this entity in the
             identity database
         :param binding: Which binding to use
-        :return: The attributes returned
+        :return: The attributes returned if BINDING_SOAP was used.
+            HTTP args if BINDING_HTT_POST was used.
         """
 
-        srvs = self.metadata.attribute_service(entityid, binding)
-        if srvs == []:
-            raise Exception("No attribute service support at entity")
-
-        destination = destinations(srvs)[0]
 
         if real_id:
             response_args = {"real_id": real_id}
         else:
             response_args = {}
+
+        if not binding:
+            binding, destination = self.pick_binding([BINDING_SOAP,
+                                                      BINDING_HTTP_POST],
+                                                     "attribute_service",
+                                                     "attribute_authority",
+                                                     entity_id=entityid)
+        else:
+            srvs = self.metadata.attribute_service(entityid, binding)
+            if srvs is []:
+                raise Exception("No attribute service support at entity")
+
+            destination = destinations(srvs)[0]
 
         if binding == BINDING_SOAP:
             return self._use_soap(destination, "attribute_query",
@@ -392,13 +380,18 @@ class Saml2Client(Base):
                                   nameid_format=nameid_format,
                                   response_args=response_args)
         elif binding == BINDING_HTTP_POST:
-            return self._use_soap(destination, "attribute_query",
-                                  consent=consent, extensions=extensions,
-                                  sign=sign, subject_id=subject_id,
-                                  attribute=attribute,
-                                  sp_name_qualifier=sp_name_qualifier,
-                                  name_qualifier=name_qualifier,
-                                  nameid_format=nameid_format,
-                                  response_args=response_args)
+            mid = sid()
+            query = self.create_attribute_query(destination, subject_id,
+                                                attribute, sp_name_qualifier,
+                                                name_qualifier, nameid_format,
+                                                mid, consent, extensions,
+                                                sign)
+            self.state[query.id] = {"entity_id": entityid,
+                                      "operation": "AttributeQuery",
+                                      "subject_id": subject_id,
+                                      "sign": sign}
+            relay_state = self._relay_state(query.id)
+            return self.apply_binding(binding,"%s" % query, destination,
+                                      relay_state)
         else:
             raise Exception("Unsupported binding")
