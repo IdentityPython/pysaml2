@@ -2,7 +2,7 @@
 import logging
 
 import re
-from cgi import parse_qs
+from urlparse import parse_qs
 from saml2 import BINDING_HTTP_REDIRECT
 
 logger = logging.getLogger("saml2.SP")
@@ -75,19 +75,22 @@ def not_authn(environ, start_response):
 def slo(environ, start_response, user):
     # so here I might get either a LogoutResponse or a LogoutRequest
     client = environ['repoze.who.plugins']["saml2auth"]
+    sc = client.saml_client
     sids = None
     if "QUERY_STRING" in environ:
         query = parse_qs(environ["QUERY_STRING"])
         logger.info("query: %s" % query)
         try:
-            (sids, code, head, message) = client.saml_client.logout_response(
-                                                query["SAMLResponse"][0],
-                                                binding=BINDING_HTTP_REDIRECT)
-            logger.info("LOGOUT reponse parsed OK")
+            response = sc.logout_request_response(query["SAMLResponse"][0],
+                                                  binding=BINDING_HTTP_REDIRECT)
+            if response:
+                logger.info("LOGOUT response parsed OK")
         except KeyError:
             # return error reply
             pass
-    
+
+        if response is None:
+            request = sc.lo
     if not sids:
         start_response("302 Found", [("Location", "/done")])
         return ["Successfull Logout"]

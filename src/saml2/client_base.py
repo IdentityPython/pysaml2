@@ -120,7 +120,6 @@ class Base(Entity):
                 setattr(self, foo, False)
 
         # extra randomness
-        self.seed = rndstr(32)
         self.logout_requests_signed_default = True
         self.allow_unsolicited = self.config.getattr("allow_unsolicited", "sp")
 
@@ -137,18 +136,6 @@ class Base(Entity):
         else:
             vals.append(signature(self.config.secret, vals))
         return "|".join(vals)
-
-    def _issuer(self, entityid=None):
-        """ Return an Issuer instance """
-        if entityid:
-            if isinstance(entityid, saml.Issuer):
-                return entityid
-            else:
-                return saml.Issuer(text=entityid,
-                                   format=saml.NAMEID_FORMAT_ENTITY)
-        else:
-            return saml.Issuer(text=self.config.entityid,
-                               format=saml.NAMEID_FORMAT_ENTITY)
 
     def _sso_location(self, entityid=None, binding=BINDING_HTTP_REDIRECT):
         if entityid:
@@ -212,45 +199,6 @@ class Base(Entity):
             return _res[0]
         else:
             return None
-
-    def _message(self, request_cls, destination=None, id=0,
-                 consent=None, extensions=None, sign=False, **kwargs):
-        """
-        Some parameters appear in all requests so simplify by doing
-        it in one place
-
-        :param request_cls: The specific request type
-        :param destination: The recipient
-        :param id: A message identifier
-        :param consent: Whether the principal have given her consent
-        :param extensions: Possible extensions
-        :param kwargs: Key word arguments specific to one request type
-        :return: An instance of the request_cls
-        """
-        if not id:
-            id = sid(self.seed)
-
-        req = request_cls(id=id, version=VERSION, issue_instant=instant(),
-                          issuer=self._issuer(), **kwargs)
-
-        if destination:
-            req.destination = destination
-
-        if consent:
-            req.consent = consent
-
-        if extensions:
-            req.extensions = extensions
-
-        if sign:
-            req.signature = pre_signature_part(req.id, self.sec.my_cert, 1)
-            to_sign = [(class_name(req), req.id)]
-        else:
-            to_sign = []
-
-        logger.info("REQUEST: %s" % req)
-
-        return signed_instance_factory(req, self.sec, to_sign)
 
     def create_authn_request(self, destination, vorg="", scoping=None,
                              binding=saml2.BINDING_HTTP_POST,
@@ -359,63 +307,6 @@ class Base(Entity):
                              extensions, sign, subject=subject,
                              attribute=attribute)
 
-
-    def create_logout_request(self, destination, issuer_entity_id,
-                              subject_id=None, name_id=None,
-                              reason=None, expire=None,
-                              id=0, consent=None, extensions=None, sign=False):
-        """ Constructs a LogoutRequest
-        
-        :param destination: Destination of the request
-        :param issuer_entity_id: The entity ID of the IdP the request is
-            target at.
-        :param subject_id: The identifier of the subject
-        :param name_id: A NameID instance identifying the subject
-        :param reason: An indication of the reason for the logout, in the
-            form of a URI reference.
-        :param expire: The time at which the request expires,
-            after which the recipient may discard the message.
-        :param id: Request identifier
-        :param consent: Whether the principal have given her consent
-        :param extensions: Possible extensions
-        :param sign: Whether the query should be signed or not.
-        :return: A LogoutRequest instance
-        """
-
-        if subject_id:
-            name_id = saml.NameID(
-                text = self.users.get_entityid(subject_id, issuer_entity_id,
-                                               False))
-        if not name_id:
-            raise Exception("Missing subject identification")
-
-        return self._message(LogoutRequest, destination, id,
-                             consent, extensions, sign, name_id=name_id,
-                             reason=reason, not_on_or_after=expire)
-
-    def create_logout_response(self, idp_entity_id, request_id,
-                                       status_code,
-                                       binding=BINDING_HTTP_REDIRECT):
-        """ Constructs a LogoutResponse
-
-        :param idp_entity_id: The entityid of the IdP that want to do the
-            logout
-        :param request_id: The Id of the request we are replying to
-        :param status_code: The status code of the response
-        :param binding: The type of binding that will be used for the response
-        :return: A LogoutResponse instance
-        """
-
-        srvs = self.metadata.single_logout_services(idp_entity_id, "idpsso",
-                                                    binding=binding)
-        destination = destinations(srvs)[0]
-
-        status = samlp.Status(
-            status_code=samlp.StatusCode(value=status_code))
-
-        return destination, self._message(LogoutResponse, destination,
-                                          in_response_to=request_id,
-                                          status=status)
 
     # MUST use SOAP for
     # AssertionIDRequest, SubjectQuery,
@@ -597,10 +488,11 @@ class Base(Entity):
                              status=status,
                              extension_elements=[ee])
 
-# ======== response handling ===========
+    # ======== response handling ===========
 
-    def _response(self, post, outstanding, decode=True, asynchop=True):
-        """ Deal with an AuthnResponse or LogoutResponse
+    def parse_authn_request_response(self, post, outstanding, decode=True,
+                                     asynchop=True):
+        """ Deal with an AuthnResponse
 
         :param post: The reply as a dictionary
         :param outstanding: A dictionary with session IDs as keys and
@@ -645,79 +537,26 @@ class Base(Entity):
                     saml2.class_name(resp),))
         return resp
 
-    def authn_request_response(self, post, outstanding, decode=True,
-                               asynchop=True):
-        return self._response(post, outstanding, decode, asynchop)
-
-    def logout_request_response(self, xmlstr, binding=BINDING_SOAP):
-        """ Deal with a LogoutResponse
-
-        :param xmlstr: The response as a xml string
-        :param binding: What type of binding this message came through.
-        :return: None if the reply doesn't contain a valid SAML LogoutResponse,
-            otherwise the reponse if the logout was successful and None if it
-            was not.
-        """
-
-        response = None
-
-        if xmlstr:
-            if binding == BINDING_HTTP_REDIRECT:
-                try:
-                    # expected return address
-                    return_addr = self.config.endpoint("single_logout_service",
-                                                       binding=binding)[0]
-                except Exception:
-                    logger.info("Not supposed to handle this!")
-                    return None
-            else:
-                return_addr = None
-
-            try:
-                response = LogoutResponse(self.sec, return_addr)
-            except Exception, exc:
-                logger.info("%s" % exc)
-                return None
-
-            if binding == BINDING_HTTP_REDIRECT:
-                xmlstr = decode_base64_and_inflate(xmlstr)
-            elif binding == BINDING_HTTP_POST:
-                xmlstr = base64.b64decode(xmlstr)
-
-            logger.debug("XMLSTR: %s" % xmlstr)
-
-            response = response.loads(xmlstr, False)
-
-            if response:
-                response = response.verify()
-
-            if not response:
-                return None
-
-            logger.debug(response)
-
-        return response
-
     #noinspection PyUnusedLocal
-    def authz_decision_query_response(self, response):
+    def parse_authz_decision_query_response(self, response):
         """ Verify that the response is OK
         """
         resp = samlp.response_from_string(response)
         return resp
 
-    def assertion_id_request_response(self, response):
+    def parse_assertion_id_request_response(self, response):
         """ Verify that the response is OK
         """
         resp = samlp.response_from_string(response)
         return resp
 
-    def authn_query_response(self, response):
+    def parse_authn_query_response(self, response):
         """ Verify that the response is OK
         """
         resp = samlp.response_from_string(response)
         return resp
 
-    def attribute_query_response(self, response, **kwargs):
+    def parse_attribute_query_response(self, response, **kwargs):
         try:
             # synchronous operation
             aresp = attribute_response(self.config, self.config.entityid)
@@ -740,7 +579,7 @@ class Base(Entity):
         logger.info("session: %s" % session_info)
         return session_info
 
-    def artifact_resolve_response(self, txt, **kwargs):
+    def parse_artifact_resolve_response(self, txt, **kwargs):
         """
         Always done over SOAP
 

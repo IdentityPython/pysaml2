@@ -72,7 +72,7 @@ class TestServer1():
         self.server.close_shelve_db()
 
     def test_issuer(self):
-        issuer = self.server.issuer()
+        issuer = self.server._issuer()
         assert isinstance(issuer, saml.Issuer)
         assert _eq(issuer.keyswv(), ["text","format"])
         assert issuer.format == saml.NAMEID_FORMAT_ENTITY
@@ -88,7 +88,7 @@ class TestServer1():
                                     ("","","surName"): ("Jeter",""),
                                     ("","","givenName") :("Derek",""),
                                 }),
-            issuer=self.server.issuer(),
+            issuer=self.server._issuer(),
             )
 
         assert _eq(assertion.keyswv(),['attribute_statement', 'issuer', 'id',
@@ -128,9 +128,9 @@ class TestServer1():
                                             ("","","surName"): ("Jeter",""),
                                             ("","","givenName") :("Derek",""),
                                         }),
-                    issuer=self.server.issuer(),
+                    issuer=self.server._issuer(),
                 ),
-                issuer=self.server.issuer(),
+                issuer=self.server._issuer(),
             )
 
         print response.keyswv()

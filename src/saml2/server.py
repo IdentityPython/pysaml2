@@ -23,31 +23,26 @@ import logging
 import shelve
 import sys
 import memcache
+from saml2.samlp import AuthzDecisionQuery
 from saml2.entity import Entity
-from saml2.samlp import LogoutResponse
 
-from saml2 import saml, VERSION
+from saml2 import saml
 from saml2 import class_name
-from saml2 import soap
 from saml2 import BINDING_HTTP_REDIRECT
-from saml2 import BINDING_SOAP
 
 from saml2.request import AuthnRequest
 from saml2.request import AttributeQuery
-from saml2.request import LogoutRequest
 
 from saml2.s_utils import sid
 from saml2.s_utils import MissingValue
-from saml2.s_utils import success_status_factory
 from saml2.s_utils import error_status_factory
 
-from saml2.time_util import instant
-
-from saml2.sigver import signed_instance_factory
 from saml2.sigver import pre_signature_part
-from saml2.sigver import response_factory
 
-from saml2.assertion import Assertion, Policy, restriction_from_attribute_spec, filter_attribute_value_assertions
+from saml2.assertion import Assertion
+from saml2.assertion import Policy
+from saml2.assertion import restriction_from_attribute_spec
+from saml2.assertion import filter_attribute_value_assertions
 
 logger = logging.getLogger(__name__)
 
@@ -256,15 +251,18 @@ class Server(Entity):
         if self.ident:
             self.ident.map.close()
 
-    def issuer(self, entityid=None):
-        """ Return an Issuer precursor """
-        if entityid:
-            return saml.Issuer(text=entityid,
-                                format=saml.NAMEID_FORMAT_ENTITY)
-        else:
-            return saml.Issuer(text=self.config.entityid,
-                                format=saml.NAMEID_FORMAT_ENTITY)
-        
+    def wants(self, sp_entity_id, index=None):
+        """ Returns what attributes the SP requires and which are optional
+        if any such demands are registered in the Metadata.
+
+        :param sp_entity_id: The entity id of the SP
+        :param index: which of the attribute consumer services its all about
+        :return: 2-tuple, list of required and list of optional attributes
+        """
+        return self.metadata.attribute_requirement(sp_entity_id, index)
+
+    # -------------------------------------------------------------------------
+
     def parse_authn_request(self, enc_request, binding=BINDING_HTTP_REDIRECT):
         """Parse a Authentication Request
         
@@ -277,120 +275,35 @@ class Server(Entity):
             sp_entity_id - the entity id of the SP
             request - The verified request
         """
-        
-        response = {}
-        _log_info = logger.info
-        _log_debug = logger.debug
 
-        # The addresses I should receive messages like this on
-        receiver_addresses = self.config.endpoint("single_sign_on_service",
-                                                 binding)
-        _log_info("receiver addresses: %s" % receiver_addresses)
-        _log_info("Binding: %s" % binding)
+        return self._parse_request(enc_request, AuthnRequest,
+                                   "single_sign_on_service", binding,
+                                   "authentication_request")
 
-
-        try:
-            timeslack = self.config.accepted_time_diff
-            if not timeslack:
-                timeslack = 0
-        except AttributeError:
-            timeslack = 0
-
-        authn_request = AuthnRequest(self.sec,
-                                     self.config.attribute_converters,
-                                     receiver_addresses, timeslack=timeslack)
-
-        authn_request = authn_request.loads(enc_request, binding)
-
-        _log_debug("Loaded authn_request")
-
-        if authn_request:
-            authn_request = authn_request.verify()
-            _log_debug("Verified authn_request")
-
-        if not authn_request:
-            return None
-        else:
-            return authn_request
-                        
-    def wants(self, sp_entity_id, index=None):
-        """ Returns what attributes the SP requires and which are optional
-        if any such demands are registered in the Metadata.
-        
-        :param sp_entity_id: The entity id of the SP
-        :param index: which of the attribute consumer services its all about
-        :return: 2-tuple, list of required and list of optional attributes
-        """
-        return self.metadata.attribute_requirement(sp_entity_id, index)
-        
     def parse_attribute_query(self, xml_string, binding):
         """ Parse an attribute query
         
         :param xml_string: The Attribute Query as an XML string
         :param binding: Which binding that was used for the request
-        :return: 3-Tuple containing:
-            subject - identifier of the subject
-            attribute - which attributes that the requestor wants back
-            query - the whole query
-        """
-        receiver_addresses = self.config.endpoint("attribute_service")
-        attribute_query = AttributeQuery( self.sec, receiver_addresses)
-
-        attribute_query = attribute_query.loads(xml_string, binding)
-        attribute_query = attribute_query.verify()
-
-        logger.info("KEYS: %s" % attribute_query.message.keys())
-        # Subject is described in the a saml.Subject instance
-        subject = attribute_query.subject_id()
-        attribute = attribute_query.attribute()
-
-        return subject, attribute, attribute_query.message
-            
-    # ------------------------------------------------------------------------
-
-    def _response(self, in_response_to, consumer_url=None, status=None,
-                  issuer=None, sign=False, to_sign=None,
-                  **kwargs):
-        """ Create a Response that adhers to the ??? profile.
-        
-        :param in_response_to: The session identifier of the request
-        :param consumer_url: The URL which should receive the response
-        :param status: The status of the response
-        :param issuer: The issuer of the response
-        :param sign: Whether the response should be signed or not
-        :param to_sign: What other parts to sign
-        :param kwargs: Extra key word arguments
-        :return: A Response instance
+        :return: A query instance
         """
 
-        if not status: 
-            status = success_status_factory()
-
-        _issuer = self.issuer(issuer)
-
-        response = response_factory(
-            issuer=_issuer,
-            in_response_to = in_response_to,
-            status = status,
-            )
-
-        if consumer_url:
-            response.destination = consumer_url
-
-        for key, val in kwargs.items():
-            setattr(response, key, val)
-
-        if sign:
-            try:
-                to_sign.append((class_name(response), response.id))
-            except AttributeError:
-                to_sign = [(class_name(response), response.id)]
+        return self._parse_request(xml_string, AttributeQuery,
+                                   "attribute_service", binding)
 
 
-        return signed_instance_factory(response, self.sec, to_sign)
+    def parse_authz_decision_query(self, xml_string, binding):
+        """ Parse an attribute query
+
+        :param xml_string: The Authz decision Query as an XML string
+        :return: Query instance
+        """
+
+        return self._parse_request(xml_string, AuthzDecisionQuery,
+                                   "authz_service", binding)
 
     # ------------------------------------------------------------------------
-    
+
     def _authn_response(self, in_response_to, consumer_url,
                         sp_entity_id, identity=None, name_id=None,
                         status=None, authn=None,
@@ -417,7 +330,7 @@ class Server(Entity):
         to_sign = []
         args = {}
         if identity:
-            _issuer = self.issuer(issuer)
+            _issuer = self._issuer(issuer)
             ast = Assertion(identity)
             if policy is None:
                 policy = Policy()
@@ -486,6 +399,7 @@ class Server(Entity):
                               sign)
 
     # ------------------------------------------------------------------------
+
     #noinspection PyUnusedLocal
     def create_aa_response(self, in_response_to, consumer_url, sp_entity_id,
                            identity=None, userid="", name_id=None, status=None,
@@ -517,7 +431,7 @@ class Server(Entity):
         to_sign = []
         args = {}
         if identity:
-            _issuer = self.issuer(issuer)
+            _issuer = self._issuer(issuer)
             ast = Assertion(identity)
             policy = self.config.getattr("policy", "aa")
             if policy:
@@ -607,119 +521,3 @@ class Server(Entity):
         except MissingValue, exc:
             return self.create_error_response(in_response_to, destination,
                                                   sp_entity_id, exc, name_id)
-        
-
-
-    def parse_logout_request(self, text, binding=BINDING_SOAP):
-        """Parse a Logout Request
-        
-        :param text: The request in its transport format, if the binding is 
-            HTTP-Redirect or HTTP-Post the text *must* be the value of the 
-            SAMLRequest attribute.
-        :return: A validated LogoutRequest instance or None if validation 
-            failed.
-        """
-        
-        try:
-            slo = self.config.endpoint("single_logout_service", binding, "idp")
-        except IndexError:
-            logger.info("enpoints: %s" % self.config.getattr("endpoints", "idp"))
-            logger.info("binding wanted: %s" % (binding,))
-            raise
-
-        if not slo:
-            raise Exception("No single_logout_server for that binding")
-
-        logger.info("Endpoint: %s" % slo)
-        req = LogoutRequest(self.sec, slo)
-        if binding == BINDING_SOAP:
-            lreq = soap.parse_soap_enveloped_saml_logout_request(text)
-            try:
-                req = req.loads(lreq, binding)
-            except Exception:
-                return None
-        else:
-            try:
-                req = req.loads(text, binding)
-            except Exception, exc:
-                logger.error("%s" % (exc,))
-                return None
-
-        req = req.verify()
-        
-        if not req: # Not a valid request
-            # return a error message with status code element set to
-            # urn:oasis:names:tc:SAML:2.0:status:Requester
-            return None
-        else:
-            return req
-
-
-    def _status_response(self, response_class, issuer, status, sign=False,
-                         **kwargs):
-        """ Create a StatusResponse.
-
-        :param response_class: Which subclass of StatusResponse that should be
-            used
-        :param issuer: The issuer of the response message
-        :param status: The return status of the response operation
-        :param sign: Whether the response should be signed or not
-        :param kwargs: Extra arguments to the response class
-        :return: Class instance or string representation of the instance
-        """
-
-        mid = sid()
-
-        if not status:
-            status = success_status_factory()
-
-        response = response_class(issuer=issuer, id=mid, version=VERSION,
-                                  issue_instant=instant(),
-                                  status=status, **kwargs)
-
-        if sign:
-            response.signature = pre_signature_part(mid)
-            to_sign = [(class_name(response), mid)]
-            response = signed_instance_factory(response, self.sec, to_sign)
-
-        return response
-
-    def create_logout_response(self, request, bindings, status=None,
-                               sign=False, issuer=None):
-        """ Create a LogoutResponse.
-        
-        :param request: The request this is a response to
-        :param bindings: Which bindings that can be used for the response
-        :param status: The return status of the response operation
-        :param issuer: The issuer of the message
-        :return: HTTP args
-        """
-
-        rinfo = self.response_args(request, bindings, descr_type="spsso")
-        response = self._status_response(LogoutResponse, issuer, status,
-                                         sign=False, **rinfo)
-
-        logger.info("Response: %s" % (response,))
-
-        return response
-
-    def parse_authz_decision_query(self, xml_string, binding):
-        """ Parse an attribute query
-
-        :param xml_string: The Authz decision Query as an XML string
-        :return: 3-Tuple containing:
-            subject - identifier of the subject
-            attribute - which attributes that the requestor wants back
-            query - the whole query
-        """
-        receiver_addresses = self.config.endpoint("attribute_service", "idp")
-        attribute_query = AttributeQuery( self.sec, receiver_addresses)
-
-        attribute_query = attribute_query.loads(xml_string, binding)
-        attribute_query = attribute_query.verify()
-
-        # Subject name is a BaseID,NameID or EncryptedID instance
-        subject = attribute_query.subject_id()
-        attribute = attribute_query.attribute()
-
-        return subject, attribute, attribute_query.message
