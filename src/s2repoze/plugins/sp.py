@@ -38,6 +38,7 @@ from repoze.who.interfaces import IMetadataProvider
 from repoze.who.plugins.form import FormPluginBase
 
 from saml2 import ecp
+from saml2 import BINDING_HTTP_POST
 
 from saml2.client import Saml2Client
 from saml2.discovery import discovery_service_response
@@ -339,8 +340,10 @@ class SAML2Plugin(FormPluginBase):
         try:
             # Evaluate the response, returns a AuthnResponse instance
             try:
-                authresp = self.saml_client.authn_request_response(post,
-                                                     self.outstanding_queries)
+                authresp = self.saml_client.parse_authn_request_response(
+                                                    post["SAMLResponse"],
+                                                    BINDING_HTTP_POST,
+                                                    self.outstanding_queries)
             except Exception, excp:
                 logger.exception("Exception: %s" % (excp,))
                 raise

@@ -262,8 +262,9 @@ class TestClient:
 
         resp_str = base64.encodestring(resp_str)
         
-        authn_response = self.client.authn_request_response({"SAMLResponse":resp_str},
-                            {"id1":"http://foo.example.com/service"})
+        authn_response = self.client.parse_authn_request_response(
+                                    resp_str, BINDING_HTTP_POST,
+                                    {"id1":"http://foo.example.com/service"})
                             
         assert authn_response is not None
         assert authn_response.issuer() == IDP
@@ -303,7 +304,7 @@ class TestClient:
 
         resp_str = base64.encodestring(resp_str)
         
-        self.client.authn_request_response({"SAMLResponse":resp_str},
+        self.client.parse_authn_request_response(resp_str, BINDING_HTTP_POST,
                             {"id2":"http://foo.example.com/service"})
         
         # Two persons in the cache
@@ -407,7 +408,9 @@ class TestClientWithDummy():
         response = self.client.send(**http_args)
 
         _dic = unpack_form(response["data"][3], "SAMLResponse")
-        resp = self.client.authn_request_response(_dic, {id: "/"})
+        resp = self.client.parse_authn_request_response(_dic["SAMLResponse"],
+                                                        BINDING_HTTP_POST,
+                                                        {id: "/"})
         ac = resp.assertion.authn_statement[0].authn_context
         assert ac.authenticating_authority[0].text == 'http://www.example.com/login'
         assert ac.authn_context_class_ref.text == AUTHN_PASSWORD

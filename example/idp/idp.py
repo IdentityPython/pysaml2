@@ -5,8 +5,10 @@ import logging
 
 #from cgi import parse_qs
 from urlparse import parse_qs
+from saml2.httputil import Unauthorized, NotFound, BadRequest
+from saml2.httputil import ServiceError
+from saml2.httputil import Response
 from saml2.pack import http_form_post_message
-from saml2.s_utils import OtherError
 from saml2.saml import AUTHN_PASSWORD
 from saml2 import server
 from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
@@ -71,6 +73,7 @@ FORM_SPEC = """<form name="myform" method="post" action="%s">
    <input type="hidden" name="RelayState" value="%s" />
 </form>"""
 
+
 def sso(environ, start_response, user):
     """ Supposed to return a self issuing Form POST """
     #edict = dict_to_table(environ)
@@ -85,16 +88,16 @@ def sso(environ, start_response, user):
         query = environ["s2repoze.qinfo"]
 
     if not query:
-        start_response('401 Unauthorized', [('Content-Type', 'text/plain')])
-        return ['Unknown user']
+        resp = Unauthorized('Unknown user')
+        return resp(environ, start_response)
         
     # base 64 encoded request
     # Assume default binding, that is HTTP-redirect
     req = IDP.parse_authn_request(query["SAMLRequest"][0])
 
     if req is None:
-        start_response("500", [('Content-Type', 'text/plain')])
-        return ["Failed to parse the SAML request"]
+        resp = ServiceError("Failed to parse the SAML request")
+        return resp(environ, start_response)
 
     logger.info("parsed OK")
     logger.info("%s" % req)
@@ -112,7 +115,7 @@ def sso(environ, start_response, user):
         _binding = req.message.protocol_binding
 
     try:
-        resp_args = IDP.response_args(req.message, [_binding])
+        resp_args = IDP.response_args(req.message, [_binding], "spsso")
     except Exception:
         raise
 
@@ -121,7 +124,8 @@ def sso(environ, start_response, user):
             # serious error on someones behalf
             logger.error("%s != %s" % (req.message.assertion_consumer_service_url,
                                        resp_args["destination"]))
-            raise OtherError("ConsumerURL and return destination mismatch")
+            resp = BadRequest("ConsumerURL and return destination mismatch")
+            raise resp(environ, start_response)
 
     try:
         authn_resp = IDP.create_authn_response(identity, userid, authn=AUTHN,
@@ -134,43 +138,43 @@ def sso(environ, start_response, user):
 
     http_args = http_form_post_message(authn_resp, resp_args["destination"],
                                        relay_state=query["RelayState"])
-    start_response('200 OK', http_args["headers"])
-    return http_args["data"]
+
+    resp = Response(http_args["data"], headers=http_args["headers"])
+    return resp(environ, start_response)
     
 def whoami(environ, start_response, user):
-    start_response('200 OK', [('Content-Type', 'text/html')])
     identity = environ["repoze.who.identity"].copy()
     for prop in ["login", "password"]:
         try:
             del identity[prop]
         except KeyError:
             continue
-    response = dict_to_table(identity)
-    return response[:]
+    response = Response(dict_to_table(identity))
+    return response(environ, start_response)
     
 def not_found(environ, start_response):
     """Called if no URL matches."""
-    start_response('404 NOT FOUND', [('Content-Type', 'text/plain')])
-    return ['Not Found']
+    resp = NotFound('Not Found')
+    return resp(environ, start_response)
 
 def not_authn(environ, start_response):
     if "QUERY_STRING" in environ:
         query = parse_qs(environ["QUERY_STRING"])
         logger.info("query: %s" % query)
-    start_response('401 Unauthorized', [('Content-Type', 'text/plain')])
-    return ['Unknown user']
+    resp = Unauthorized('Unknown user')
+    return resp(environ, start_response)
 
 def slo(environ, start_response, user):
     """ Expects a HTTP-redirect logout request """
 
     query = None
     if "QUERY_STRING" in environ:
-        if logger: logger.info("Query string: %s" % environ["QUERY_STRING"])
+        logger.info("Query string: %s" % environ["QUERY_STRING"])
         query = parse_qs(environ["QUERY_STRING"])
 
     if not query:
-        start_response('401 Unauthorized', [('Content-Type', 'text/plain')])
-        return ['Unknown user']
+        resp = Unauthorized('Unknown user')
+        return resp(environ, start_response)
 
     try:
         req_info = IDP.parse_logout_request(query["SAMLRequest"][0],
@@ -178,9 +182,9 @@ def slo(environ, start_response, user):
         logger.info("LOGOUT request parsed OK")
         logger.info("REQ_INFO: %s" % req_info.message)
     except KeyError, exc:
-        if logger: logger.info("logout request error: %s" % (exc,))
-        start_response('400 Bad request', [('Content-Type', 'text/plain')])
-        return ['Request parse error']
+        logger.info("logout request error: %s" % (exc,))
+        resp = BadRequest('Request parse error')
+        return resp(environ, start_response)
 
     # look for the subject
     subject = req_info.subject_id()
@@ -203,18 +207,18 @@ def slo(environ, start_response, user):
                                       query["RelayState"], "SAMLResponse")
 
     except Exception, exc:
-        start_response('400 Bad request', [('Content-Type', 'text/plain')])
-        return ['%s' % exc]
+        resp = BadRequest('%s' % exc)
+        return resp(environ, start_response)
 
     delco = delete_cookie(environ, "pysaml2idp")
     if delco:
         http_args["headers"].append(delco)
 
     if binding == BINDING_HTTP_POST:
-        start_response("200 OK", http_args["headers"])
+        resp = Response(http_args["data"], headers=http_args["headers"])
     else:
-        start_response("302 Found", http_args["headers"])
-    return http_args["data"]
+        resp = NotFound(http_args["data"], headers=http_args["headers"])
+    return resp(environ, start_response)
 
 def delete_cookie(environ, name):
     kaka = environ.get("HTTP_COOKIE", '')

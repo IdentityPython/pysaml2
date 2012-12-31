@@ -22,10 +22,13 @@ from saml2.entity import Entity
 
 from saml2.mdstore import destinations
 from saml2.saml import AssertionIDRef, NAMEID_FORMAT_TRANSIENT
-from saml2.samlp import AuthnQuery, ArtifactResponse, StatusCode, Status
+from saml2.samlp import AuthnQuery
+from saml2.samlp import ArtifactResponse
+from saml2.samlp import StatusCode
+from saml2.samlp import Status
+from saml2.samlp import Response
 from saml2.samlp import ArtifactResolve
 from saml2.samlp import artifact_resolve_from_string
-from saml2.samlp import LogoutRequest
 from saml2.samlp import AssertionIDRequest
 from saml2.samlp import NameIDMappingRequest
 from saml2.samlp import AttributeQuery
@@ -34,7 +37,6 @@ from saml2.samlp import AuthnRequest
 
 import saml2
 import time
-import base64
 from saml2.soap import parse_soap_enveloped_saml_artifact_resolve
 
 try:
@@ -43,24 +45,17 @@ except ImportError:
     # Compatibility with Python <= 2.5
     from cgi import parse_qs
 
-from saml2.time_util import instant
-from saml2.s_utils import signature, rndstr
-from saml2.s_utils import sid
+from saml2.s_utils import signature
 from saml2.s_utils import do_attributes
-from saml2.s_utils import decode_base64_and_inflate
 
-from saml2 import samlp, saml, class_name
-from saml2 import VERSION
-from saml2.sigver import pre_signature_part
-from saml2.sigver import signed_instance_factory
+from saml2 import samlp, BINDING_SOAP
+from saml2 import saml
 from saml2.population import Population
 
-from saml2.response import response_factory, attribute_response
-from saml2.response import LogoutResponse
+from saml2.response import AttributeResponse
 from saml2.response import AuthnResponse
 
 from saml2 import BINDING_HTTP_REDIRECT
-from saml2 import BINDING_SOAP
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_PAOS, element_to_extension_element
 import logging
@@ -490,45 +485,39 @@ class Base(Entity):
 
     # ======== response handling ===========
 
-    def parse_authn_request_response(self, post, outstanding, decode=True,
-                                     asynchop=True):
+    def parse_authn_request_response(self, xmlstr, binding, outstanding):
         """ Deal with an AuthnResponse
 
-        :param post: The reply as a dictionary
+        :param xmlstr: The reply as a xml string
+        :param binding: Which binding that was used for the transport
         :param outstanding: A dictionary with session IDs as keys and
             the original web request from the user before redirection
             as values.
-        :param decode: Whether the response is Base64 encoded or not
-        :param asynchop: Whether the response was return over a asynchronous
-            connection. SOAP for instance is synchronous
-        :return: An response.AuthnResponse or response.LogoutResponse instance
+        :return: An response.AuthnResponse
         """
-        # If the request contains a samlResponse, try to validate it
-        try:
-            saml_response = post['SAMLResponse']
-        except KeyError:
-            return None
 
         try:
             _ = self.config.entityid
         except KeyError:
             raise Exception("Missing entity_id specification")
 
-        reply_addr = self.service_url()
-
         resp = None
-        if saml_response:
+        if xmlstr:
+            kwargs = {"outstanding_queries": outstanding,
+                      "allow_unsolicited": self.allow_unsolicited,
+                      "return_addr": self.service_url(),
+                      "entity_id": self.config.entityid,
+                      "attribute_converters": self.config.attribute_converters}
             try:
-                resp = response_factory(saml_response, self.config,
-                                        reply_addr, outstanding, decode=decode,
-                                        asynchop=asynchop,
-                                        allow_unsolicited=self.allow_unsolicited)
+                resp = self._parse_response(xmlstr, AuthnResponse,
+                                            "assertion_consumer_service",
+                                            binding, **kwargs)
             except Exception, exc:
                 logger.error("%s" % exc)
                 return None
+
             logger.debug(">> %s", resp)
 
-            resp = resp.verify()
             if isinstance(resp, AuthnResponse):
                 self.users.add_information_about_person(resp.session_info())
                 logger.info("--- ADDED person info ----")
@@ -537,47 +526,44 @@ class Base(Entity):
                     saml2.class_name(resp),))
         return resp
 
-    #noinspection PyUnusedLocal
-    def parse_authz_decision_query_response(self, response):
+    # ------------------------------------------------------------------------
+    # SubjectQuery, AuthnQuery, RequestedAuthnContext, AttributeQuery,
+    # AuthzDecisionQuery all get Response as response
+
+    def parse_authz_decision_query_response(self, response,
+                                            binding=BINDING_SOAP):
         """ Verify that the response is OK
         """
-        resp = samlp.response_from_string(response)
-        return resp
 
-    def parse_assertion_id_request_response(self, response):
+        return self._parse_response(response, Response, "", binding)
+
+    def parse_authn_query_response(self, response, binding=BINDING_SOAP):
         """ Verify that the response is OK
         """
-        resp = samlp.response_from_string(response)
-        return resp
+        return self._parse_response(response, Response, "", binding)
 
-    def parse_authn_query_response(self, response):
+    def parse_assertion_id_request_response(self, response, binding):
         """ Verify that the response is OK
         """
-        resp = samlp.response_from_string(response)
-        return resp
+        return self._parse_response(response, Response, "", binding)
 
-    def parse_attribute_query_response(self, response, **kwargs):
-        try:
-            # synchronous operation
-            aresp = attribute_response(self.config, self.config.entityid)
-        except Exception, exc:
-            logger.error("%s", (exc,))
-            return None
+    # ------------------------------------------------------------------------
 
-        _resp = aresp.loads(response, False, response).verify()
-        if _resp is None:
-            logger.error("Didn't like the response")
-            return None
+    def parse_attribute_query_response(self, response, binding):
 
-        session_info = _resp.session_info()
+        response = self._parse_response(response, AttributeResponse,
+                                        "attribute_consuming_service", binding)
 
-        if session_info:
-            if "real_id" in kwargs:
-                session_info["name_id"] = kwargs["real_id"]
-            self.users.add_information_about_person(session_info)
+#        session_info = response.session_info()
+#
+#        if session_info:
+#            if "real_id" in kwargs:
+#                session_info["name_id"] = kwargs["real_id"]
+#            self.users.add_information_about_person(session_info)
+#
+#        logger.info("session: %s" % session_info)
+#        return session_info
 
-        logger.info("session: %s" % session_info)
-        return session_info
 
     def parse_artifact_resolve_response(self, txt, **kwargs):
         """

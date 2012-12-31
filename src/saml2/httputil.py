@@ -39,7 +39,10 @@ class Response(object):
             mte = self.mako_lookup.get_template(self.mako_template)
             return [mte.render(**argv)]
         else:
-            return [message]
+            if isinstance(message, basestring):
+                return [message]
+            else:
+                return message
 
 class Created(Response):
     _status = "201 Created"
@@ -130,3 +133,26 @@ def getpath(environ):
     """Builds a path."""
     return ''.join([quote(environ.get('SCRIPT_NAME', '')),
         quote(environ.get('PATH_INFO', ''))])
+
+def get_post(environ):
+    # the environment variable CONTENT_LENGTH may be empty or missing
+    try:
+        request_body_size = int(environ.get('CONTENT_LENGTH', 0))
+    except ValueError:
+        request_body_size = 0
+
+    # When the method is POST the query string will be sent
+    # in the HTTP request body which is passed by the WSGI server
+    # in the file like wsgi.input environment variable.
+    return environ['wsgi.input'].read(request_body_size)
+
+def get_response(environ, start_response):
+    if environ.get("REQUEST_METHOD") == "GET":
+        query = environ.get("QUERY_STRING")
+    elif environ.get("REQUEST_METHOD") == "POST":
+        query = get_post(environ)
+    else:
+        resp = BadRequest("Unsupported method")
+        return resp(environ, start_response)
+
+    return query

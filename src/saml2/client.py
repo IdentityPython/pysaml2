@@ -239,7 +239,7 @@ class Saml2Client(Base):
 
     def _use_soap(self, destination, query_type, **kwargs):
         _create_func = getattr(self, "create_%s" % query_type)
-        _response_func = getattr(self, "%s_response" % query_type)
+        _response_func = getattr(self, "parse_%s_response" % query_type)
         try:
             response_args = kwargs["response_args"]
             del kwargs["response_args"]

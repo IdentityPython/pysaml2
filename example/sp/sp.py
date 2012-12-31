@@ -1,9 +1,16 @@
 #!/usr/bin/env python
+from Cookie import SimpleCookie
 import logging
 
 import re
 from urlparse import parse_qs
-from saml2 import BINDING_HTTP_REDIRECT
+from example.idp.idp import delete_cookie
+from saml2 import BINDING_HTTP_REDIRECT, time_util
+from saml2.httputil import Response
+from saml2.httputil import Unauthorized
+from saml2.httputil import NotFound
+from saml2.httputil import Redirect
+from saml2.httputil import ServiceError
 
 logger = logging.getLogger("saml2.SP")
 
@@ -48,6 +55,26 @@ def dict_to_table(ava, lev=0, width=1):
     txt.append('</table>\n')
     return txt
 
+def _expiration(timeout, format=None):
+    if timeout == "now":
+        return time_util.instant(format)
+    else:
+        # validity time should match lifetime of assertions
+        return time_util.in_a_while(minutes=timeout, format=format)
+
+def delete_cookie(environ, name):
+    kaka = environ.get("HTTP_COOKIE", '')
+    if kaka:
+        cookie_obj = SimpleCookie(kaka)
+        morsel = cookie_obj.get(name, None)
+        cookie = SimpleCookie()
+        cookie[name] = morsel
+        cookie[name]["expires"] =\
+        _expiration("now", "%a, %d-%b-%Y %H:%M:%S CET")
+        return tuple(cookie.output().split(": ", 1))
+    return None
+
+# ----------------------------------------------------------------------------
 
 #noinspection PyUnusedLocal
 def whoami(environ, start_response, user):
@@ -57,50 +84,56 @@ def whoami(environ, start_response, user):
     response = ["<h2>Your identity are supposed to be</h2>"]
     response.extend(dict_to_table(identity))
     response.extend("<a href='logout'>Logout</a>")
-    start_response('200 OK', [('Content-Type', 'text/html')])
-    return response[:]
+    resp = Response(response)
+    return resp(environ, start_response)
     
 #noinspection PyUnusedLocal
 def not_found(environ, start_response):
     """Called if no URL matches."""
-    start_response('404 NOT FOUND', [('Content-Type', 'text/plain')])
-    return ['Not Found']
+    resp = NotFound('Not Found')
+    return resp(environ, start_response)
 
 #noinspection PyUnusedLocal
 def not_authn(environ, start_response):
-    start_response('401 Unauthorized', [('Content-Type', 'text/plain')])
-    return ['Unknown user']
+    resp = Unauthorized('Unknown user')
+    return resp(environ, start_response)
 
 #noinspection PyUnusedLocal
 def slo(environ, start_response, user):
     # so here I might get either a LogoutResponse or a LogoutRequest
     client = environ['repoze.who.plugins']["saml2auth"]
     sc = client.saml_client
-    sids = None
+
     if "QUERY_STRING" in environ:
         query = parse_qs(environ["QUERY_STRING"])
         logger.info("query: %s" % query)
         try:
-            response = sc.logout_request_response(query["SAMLResponse"][0],
+            response = sc.parse_logout_request_response(query["SAMLResponse"][0],
                                                   binding=BINDING_HTTP_REDIRECT)
             if response:
                 logger.info("LOGOUT response parsed OK")
         except KeyError:
             # return error reply
-            pass
+            response = None
 
         if response is None:
             request = sc.lo
-    if not sids:
-        start_response("302 Found", [("Location", "/done")])
-        return ["Successfull Logout"]
+
+    headers = [("Location", "/done")]
+    delco = delete_cookie(environ, "pysaml2")
+    if delco:
+        headers.append(delco)
+    resp = Redirect("Successful Logout", headers=headers)
+    return resp(environ, start_response)
     
 #noinspection PyUnusedLocal
 def logout(environ, start_response, user):
+    # This is where it starts when a user wants to log out
     client = environ['repoze.who.plugins']["saml2auth"]
     subject_id = environ["repoze.who.identity"]['repoze.who.userid']
     logger.info("[logout] subject_id: '%s'" % (subject_id,))
     target = "/done"
+
     # What if more than one
     tmp = client.saml_client.global_logout(subject_id)
     logger.info("[logout] global_logout > %s" % (tmp,))
@@ -110,12 +143,13 @@ def logout(environ, start_response, user):
         start_response(code, header)
         return result
     else: # All was done using SOAP
-        if result: 
-            start_response("302 Found", [("Location", target)])
-            return ["Successful Logout"]
+        if result:
+            resp = Redirect("Successful Logout", headers=[("Location", target)])
+            return resp(environ, start_response)
         else:
+            resp = ServiceError("Failed to logout from identity services")
             start_response("500 Internal Server Error")
-            return ["Failed to logout from identity services"]
+            return []
 
 #noinspection PyUnusedLocal
 def done(environ, start_response, user):
