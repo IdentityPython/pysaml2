@@ -17,7 +17,7 @@ from saml2.config import Config
 # =============================================================================
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-v', dest='valid', action='store_true',
+parser.add_argument('-v', dest='valid',
                     help="How long, in days, the metadata is valid from the time of creation")
 parser.add_argument('-c', dest='cert', help='certificate')
 parser.add_argument('-e', dest='ed', action='store_true',
