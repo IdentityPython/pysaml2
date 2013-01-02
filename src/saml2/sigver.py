@@ -323,6 +323,9 @@ def cert_from_key_info_dict(key_info):
     :return: A possibly empty list of certs
     """
     res = []
+    if not "x509_data" in key_info:
+        return res
+
     for x509_data in key_info["x509_data"]:
         x509_certificate = x509_data["x509_certificate"]
         cert = x509_certificate["text"].strip()
@@ -378,6 +381,9 @@ def key_from_key_value(key_info):
 
 def key_from_key_value_dict(key_info):
     res = []
+    if not "key_value" in key_info:
+        return res
+
     for value in key_info["key_value"]:
         if "rsa_key_value" in value:
             e = base64_to_long(value["rsa_key_value"]["exponent"])
