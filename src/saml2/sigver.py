@@ -33,7 +33,6 @@ from saml2 import samlp
 from saml2 import class_name
 from saml2 import saml
 from saml2 import ExtensionElement
-from saml2 import create_class_from_xml_string
 from saml2 import VERSION
 
 from saml2.s_utils import sid
@@ -312,6 +311,26 @@ def cert_from_key_info(key_info):
         res.append(cert)
     return res
 
+def cert_from_key_info_dict(key_info):
+    """ Get all X509 certs from a KeyInfo dictionary. Care is taken to make sure
+    that the certs are continues sequences of bytes.
+
+    All certificates appearing in an X509Data element MUST relate to the
+    validation key by either containing it or being part of a certification
+    chain that terminates in a certificate containing the validation key.
+
+    :param key_info: The KeyInfo dictionary
+    :return: A possibly empty list of certs
+    """
+    res = []
+    for x509_data in key_info["x509_data"]:
+        x509_certificate = x509_data["x509_certificate"]
+        cert = x509_certificate["text"].strip()
+        cert = "\n".join(split_len("".join([
+        s.strip() for s in cert.split()]),64))
+        res.append(cert)
+    return res
+
 def cert_from_instance(instance):
     """ Find certificates that are part of an instance
 
@@ -354,6 +373,17 @@ def key_from_key_value(key_info):
             m = base64_to_long(value.rsa_key_value.modulus)
             key = M2Crypto.RSA.new_pub_key((long_to_mpi(e),
                                           long_to_mpi(m)))
+            res.append(key)
+    return res
+
+def key_from_key_value_dict(key_info):
+    res = []
+    for value in key_info["key_value"]:
+        if "rsa_key_value" in value:
+            e = base64_to_long(value["rsa_key_value"]["exponent"])
+            m = base64_to_long(value["rsa_key_value"]["modulus"])
+            key = M2Crypto.RSA.new_pub_key((long_to_mpi(e),
+                                            long_to_mpi(m)))
             res.append(key)
     return res
 
