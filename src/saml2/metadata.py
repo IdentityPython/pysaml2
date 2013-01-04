@@ -270,6 +270,17 @@ DEFAULT_BINDING = {
     "artifact_resolution_service": BINDING_SOAP
 }
 
+
+def _do_nameid_format(cls, conf, typ):
+    namef = conf.getattr("name_id_format", typ)
+    if namef:
+        if isinstance(namef, basestring):
+            ids = [md.NameIDFormat(namef)]
+        else:
+            ids = [md.NameIDFormat(text=form) for form in namef]
+        setattr(cls, "name_id_format", ids)
+
+
 def do_endpoints(conf, endpoints):
     service = {}
 
@@ -329,6 +340,8 @@ def do_spsso_descriptor(conf, cert=None):
         requested_attributes.extend(do_requested_attribute(req, acs,
                                                            is_required="true"))
 
+    _do_nameid_format(spsso, conf, "sp")
+
     opt=conf.getattr("optional_attributes", "sp")
     if opt:
         requested_attributes.extend(do_requested_attribute(opt, acs))
@@ -360,6 +373,7 @@ def do_spsso_descriptor(conf, cert=None):
 
     return spsso
 
+
 def do_idpsso_descriptor(conf, cert=None):
     idpsso = md.IDPSSODescriptor()
     idpsso.protocol_support_enumeration = samlp.NAMESPACE
@@ -369,6 +383,8 @@ def do_idpsso_descriptor(conf, cert=None):
         for (endpoint, instlist) in do_endpoints(endps,
                                                  ENDPOINTS["idp"]).items():
             setattr(idpsso, endpoint, instlist)
+
+    _do_nameid_format(idpsso, conf, "idp")
 
     scopes = conf.getattr("scope", "idp")
     if scopes:
@@ -402,6 +418,7 @@ def do_idpsso_descriptor(conf, cert=None):
 
     return idpsso
 
+
 def do_aa_descriptor(conf, cert):
     aad = md.AttributeAuthorityDescriptor()
     aad.protocol_support_enumeration = samlp.NAMESPACE
@@ -413,10 +430,13 @@ def do_aa_descriptor(conf, cert):
                                                  ENDPOINTS["aa"]).items():
             setattr(aad, endpoint, instlist)
 
+    _do_nameid_format(aad, conf, "aa")
+
     if cert:
         aad.key_descriptor = do_key_descriptor(cert)
 
     return aad
+
 
 def do_pdp_descriptor(conf, cert):
     """ Create a Policy Decision Point descriptor """
@@ -431,13 +451,7 @@ def do_pdp_descriptor(conf, cert):
                                                  ENDPOINTS["pdp"]).items():
             setattr(pdp, endpoint, instlist)
 
-    namef = conf.getattr("name_form", "pdp")
-    if namef:
-        if isinstance(namef, basestring):
-            ids = [md.NameIDFormat(namef)]
-        else:
-            ids = [md.NameIDFormat(text=form) for form in namef]
-        setattr(pdp, "name_id_format", ids)
+    _do_nameid_format(pdp, conf, "pdp")
 
     if cert:
         pdp.key_descriptor = do_key_descriptor(cert)

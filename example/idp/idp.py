@@ -128,8 +128,8 @@ def sso(environ, start_response, user):
             raise resp(environ, start_response)
 
     try:
-        authn_resp = IDP.create_authn_response(identity, userid, authn=AUTHN,
-                                               **resp_args)
+        authn_resp = IDP.create_authn_response(identity, userid=userid,
+                                               authn=AUTHN, **resp_args)
     except Exception, excp:
         logger.error("Exception: %s" % (excp,))
         raise
@@ -137,7 +137,8 @@ def sso(environ, start_response, user):
     logger.info("AuthNResponse: %s" % authn_resp)
 
     http_args = http_form_post_message(authn_resp, resp_args["destination"],
-                                       relay_state=query["RelayState"])
+                                       relay_state=query["RelayState"][0],
+                                       typ="SAMLResponse")
 
     resp = Response(http_args["data"], headers=http_args["headers"])
     return resp(environ, start_response)

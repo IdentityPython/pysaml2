@@ -320,7 +320,7 @@ def cert_from_key_info_dict(key_info):
     chain that terminates in a certificate containing the validation key.
 
     :param key_info: The KeyInfo dictionary
-    :return: A possibly empty list of certs
+    :return: A possibly empty list of certs in their text representation
     """
     res = []
     if not "x509_data" in key_info:

@@ -3,6 +3,7 @@ import cookielib
 import copy
 import requests
 import time
+from saml2.time_util import utc_now
 from saml2 import class_name
 from saml2.pack import http_form_post_message
 from saml2.pack import make_soap_enveloped_saml_thingy
@@ -44,6 +45,10 @@ class ConnectionError(Exception):
 
 def _since_epoch(cdate):
     # date format 'Wed, 06-Jun-2012 01:34:34 GMT'
+    if len(cdate) < 29: # somethings broken
+        if len(cdate) < 5:
+            return utc_now()
+
     cdate = cdate[5:-4]
     try:
         t = time.strptime(cdate, "%d-%b-%Y %H:%M:%S")

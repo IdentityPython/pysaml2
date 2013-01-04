@@ -69,7 +69,8 @@ SP_ARGS = [
             "ui_info",
             "discovery_response",
             "allow_unsolicited",
-            "ecp"
+            "ecp",
+            "name_id_format"
             ]
 
 AA_IDP_ARGS = ["want_authn_requests_signed",
@@ -79,13 +80,14 @@ AA_IDP_ARGS = ["want_authn_requests_signed",
                "scope",
                "endpoints",
                "metadata",
-               "ui_info"]
+               "ui_info",
+               "name_id_format"
+               ]
 
-PDP_ARGS = ["endpoints", "name_form"]
+PDP_ARGS = ["endpoints", "name_form", "name_id_format"]
 
 COMPLEX_ARGS = ["attribute_converters", "metadata", "policy"]
-ALL = COMMON_ARGS + SP_ARGS + AA_IDP_ARGS + PDP_ARGS + COMPLEX_ARGS
-
+ALL = set(COMMON_ARGS + SP_ARGS + AA_IDP_ARGS + PDP_ARGS + COMPLEX_ARGS)
 
 SPEC = {
     "": COMMON_ARGS + COMPLEX_ARGS,
@@ -135,6 +137,7 @@ class Config(object):
         self.organization=None
         self.contact_person=None
         self.name_form=None
+        self.nameid_form=None
         self.virtual_organization=None
         self.logger=None
         self.only_use_keys_in_metadata=True

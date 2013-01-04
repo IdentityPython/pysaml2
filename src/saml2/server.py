@@ -212,6 +212,8 @@ class Server(Entity):
         Entity.__init__(self, stype, config, config_file)
         self.init_config(stype)
         self._cache = _cache
+        self.ticket = {}
+        self.authn = {}
 
     def init_config(self, stype="idp"):
         """ Remaining init of the server configuration 
@@ -289,7 +291,8 @@ class Server(Entity):
         """
 
         return self._parse_request(xml_string, AttributeQuery,
-                                   "attribute_service", binding)
+                                   "attribute_service", binding,
+                                   "attribute_query")
 
 
     def parse_authz_decision_query(self, xml_string, binding):
@@ -300,7 +303,8 @@ class Server(Entity):
         """
 
         return self._parse_request(xml_string, AuthzDecisionQuery,
-                                   "authz_service", binding)
+                                   "authz_service", binding,
+                                   "authz_decision")
 
     # ------------------------------------------------------------------------
 
