@@ -68,16 +68,12 @@ def parse_soap_enveloped_saml_thingy(text, expected_tags):
     """Parses a SOAP enveloped SAML thing and returns the thing as
     a string.
     
-    :param text: The SOAP object as XML 
+    :param text: The SOAP object as XML string
     :param expected_tags: What the tag of the SAML thingy is expected to be.
     :return: SAML thingy as a string
     """
     envelope = ElementTree.fromstring(text)
-#    if True:
-#        fil = open("soap.xml", "w")
-#        fil.write(text)
-#        fil.close()
-        
+
     assert envelope.tag == '{%s}Envelope' % soapenv.NAMESPACE
     
     assert len(envelope) >= 1
