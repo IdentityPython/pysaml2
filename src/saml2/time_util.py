@@ -170,6 +170,7 @@ def time_in_a_while(days=0, seconds=0, microseconds=0, milliseconds=0,
     format of timedelta:
         timedelta([days[, seconds[, microseconds[, milliseconds[,
                     minutes[, hours[, weeks]]]]]]])
+    :return: UTC time
     """
     delta = timedelta(days, seconds, microseconds, milliseconds,
                       minutes, hours, weeks)
@@ -220,11 +221,17 @@ def shift_time(dtime, shift):
 
 # ---------------------------------------------------------------------------
 
-def str_to_time(timestr):
+def str_to_time(timestr, format=TIME_FORMAT):
+    """
+
+    :param timestr:
+    :param format:
+    :return: UTC time
+    """
     if not timestr:
         return 0
     try:
-        then = time.strptime(timestr, TIME_FORMAT)
+        then = time.strptime(timestr, format)
     except Exception: # assume it's a format problem
         try:
             elem = TIME_FORMAT_WITH_FRAGMENT.match(timestr)
