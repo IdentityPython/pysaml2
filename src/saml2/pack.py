@@ -147,6 +147,9 @@ def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
     envelope.append(body)
 
     if isinstance(thingy, basestring):
+        # remove the first XML version/encoding line
+        _part = thingy.split("\n")
+        thingy = _part[1]
         thingy = thingy.replace(PREFIX, "")
         _child = ElementTree.Element('')
         _child.tag = '{%s}FuddleMuddle' % DUMMY_NAMESPACE
