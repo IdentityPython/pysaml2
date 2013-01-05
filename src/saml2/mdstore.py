@@ -159,6 +159,8 @@ class MetaData(object):
             Or if no binding was specified a list of 2-tuples (binding, srv)
         """
 
+        logger.debug("_service(%s, %s, %s, %s)" % (entity_id, typ, service,
+                                                   binding))
         try:
             srvs = []
             for t in self.entity[entity_id][typ]:
@@ -185,6 +187,17 @@ class MetaData(object):
                 except KeyError:
                     res[srv["binding"]] = [srv]
         return res
+
+    def bindings(self, entity_id, typ, service):
+        """
+        Get me all the bindings that are registered for a service entity
+
+        :param entity_id:
+        :param service:
+        :return:
+        """
+
+        return self._service(entity_id, typ, service)
 
     def attribute_requirement(self, entity_id, index=0):
         """ Returns what attributes the SP requires and which are optional
@@ -217,6 +230,9 @@ class MetaData(object):
             if desc in ent:
                 res[id] = ent
         return res
+
+    def __str__(self):
+        return "%s" % (self.entity,)
 
 class MetaDataFile(MetaData):
     def __init__(self, onts, attrc, filename):
@@ -433,6 +449,7 @@ class MetadataStore(object):
         for md in self.metadata.values():
             if entity_id in md.entity:
                 return name(md.entity[entity_id], langpref)
+        return None
 
     def certs(self, entity_id, descriptor, use="signing"):
         ent = self.__getitem__(entity_id)
@@ -474,3 +491,17 @@ class MetadataStore(object):
     def vo_members(self, entity_id):
         ad = self.__getitem__(entity_id)["affiliation_descriptor"]
         return [m["text"] for m in ad["affiliate_member"]]
+
+    def bindings(self, entity_id, typ, service):
+        for md in self.metadata.values():
+            if entity_id in md.entity:
+                return md.bindings(entity_id, typ, service)
+
+        return None
+
+    def __str__(self):
+        _str = ["{"]
+        for key, val in self.metadata.items():
+            _str.append("%s: %s" % (key, val))
+        _str.append("}")
+        return "\n".join(_str)
