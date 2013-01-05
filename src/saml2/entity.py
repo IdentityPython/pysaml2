@@ -111,10 +111,13 @@ class Entity(HTTPBase):
             if srvs:
                 return binding, destinations(srvs)[0]
 
-        logger.error("Failed to find consumer URL for %s" % entity_id)
-        logger.error("Bindings: %s" % bindings)
+        logger.error("Failed to find consumer URL: %s, %s, %s" % (entity_id,
+                                                                  bindings,
+                                                                  descr_type))
+        #logger.error("Bindings: %s" % bindings)
+        #logger.error("Entities: %s" % self.metadata)
 
-        raise Exception("Unkown entity or unsupported binding")
+        raise Exception("Unkown entity or unsupported bindings")
 
     def response_args(self, message, bindings, descr_type):
         info = {"in_response_to": message.id}
@@ -387,9 +390,11 @@ class Entity(HTTPBase):
             elif binding == BINDING_HTTP_POST:
                 xmlstr = base64.b64decode(xmlstr)
             elif binding == BINDING_SOAP:
-                # The xmlstr is a SOAP message
-                func = getattr(soap, "parse_soap_enveloped_saml_response")
-                xmlstr = func(xmlstr)
+                # The xmlstr was a SOAP message but the SOAP part is
+                # removed
+                #func = getattr(soap, "parse_soap_enveloped_saml_response")
+                #xmlstr = func(xmlstr)
+                pass
 
             logger.debug("XMLSTR: %s" % xmlstr)
 
