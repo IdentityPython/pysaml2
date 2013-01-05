@@ -1,8 +1,11 @@
-from Cookie import SimpleCookie
+import calendar
 import cookielib
 import copy
+import re
+import urlparse
 import requests
 import time
+from Cookie import SimpleCookie
 from saml2.time_util import utc_now
 from saml2 import class_name
 from saml2.pack import http_form_post_message
@@ -44,23 +47,29 @@ class ConnectionError(Exception):
     pass
 
 def _since_epoch(cdate):
-    # date format 'Wed, 06-Jun-2012 01:34:34 GMT'
+    """
+    :param cdate: date format 'Wed, 06-Jun-2012 01:34:34 GMT'
+    :return: UTC time
+    """
+
     if len(cdate) < 29: # somethings broken
         if len(cdate) < 5:
             return utc_now()
 
-    cdate = cdate[5:-4]
+    cdate = cdate[5:]
     try:
-        t = time.strptime(cdate, "%d-%b-%Y %H:%M:%S")
+        t = time.strptime(cdate, "%d-%b-%Y %H:%M:%S %Z")
     except ValueError:
-        t = time.strptime(cdate, "%d-%b-%y %H:%M:%S")
-    return int(time.mktime(t))
+        t = time.strptime(cdate, "%d-%b-%y %H:%M:%S %Z")
+    #return int(time.mktime(t))
+    return calendar.timegm(t)
+
 
 class HTTPBase(object):
     def __init__(self, verify=True, ca_bundle=None, key_file=None,
                  cert_file=None):
         self.request_args = {"allow_redirects": False,}
-        self.cookies = {}
+        #self.cookies = {}
         self.cookiejar = cookielib.CookieJar()
 
         self.request_args["verify"] = verify
@@ -71,13 +80,25 @@ class HTTPBase(object):
         
         self.sec = None
         
-    def _cookies(self):
-        cookie_dict = {}
+    def cookies(self, url):
+        """
+        Return cookies that are matching the path and are still valid
 
+        :param url:
+        :return:
+        """
+        part = urlparse.urlparse(url)
+        cookie_dict = {}
+        now = utc_now()
         for _, a in list(self.cookiejar._cookies.items()):
-            for _, b in list(a.items()):
+            for _, b in a.items():
                 for cookie in list(b.values()):
                     # print cookie
+                    if cookie.expires <= now:
+                        continue
+                    if not re.match(cookie.path, part.path):
+                        continue
+
                     cookie_dict[cookie.name] = cookie.value
 
         return cookie_dict
@@ -125,7 +146,6 @@ class HTTPBase(object):
                     pass
             else:
                 new_cookie = cookielib.Cookie(**std_attr)
-
                 self.cookiejar.set_cookie(new_cookie)
 
     def send(self, url, method="GET", **kwargs):
@@ -134,7 +154,8 @@ class HTTPBase(object):
             _kwargs.update(kwargs)
 
         if self.cookiejar:
-            _kwargs["cookies"] = self._cookies()
+            _kwargs["cookies"] = self.cookies(url)
+
             #logger.info("SENT COOKIEs: %s" % (_kwargs["cookies"],))
         try:
             r = requests.request(method, url, **_kwargs)
@@ -222,14 +243,15 @@ class HTTPBase(object):
 
         #_response = self.server.post(soap_message, headers, path=path)
         try:
-            response = self.send(self.use_soap(request, destination, headers,
-                                               sign))
+            args = self.use_soap(request, destination, headers, sign)
+            response = self.send(**args)
         except Exception, exc:
             logger.info("HTTPClient exception: %s" % (exc,))
             return None
 
         if response:
-            logger.info("SOAP response: %s" % response)
-            return parse_soap_enveloped_saml_response(response)
+            xmlstr = response.text
+            logger.info("SOAP response: %s" % xmlstr)
+            return parse_soap_enveloped_saml_response(xmlstr)
         else:
             return False
