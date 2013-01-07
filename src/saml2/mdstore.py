@@ -2,7 +2,8 @@ import logging
 import httplib2
 import sys
 import json
-from saml2.attribute_converter import ac_factory
+
+from hashlib import sha1
 
 from saml2.mdie import to_dict
 
@@ -233,6 +234,20 @@ class MetaData(object):
 
     def __str__(self):
         return "%s" % (self.entity,)
+
+    def construct_source_id(self):
+        res = {}
+        for id,ent in self.entity.items():
+            for desc in ["spsso_descriptor", "idpsso_descriptor"]:
+                try:
+                    for srv in ent[desc]:
+                        if "artifact_resolution_service" in srv:
+                            s = sha1(id)
+                            res[s.digest()] = ent
+                except KeyError:
+                    pass
+
+        return res
 
 class MetaDataFile(MetaData):
     def __init__(self, onts, attrc, filename):
@@ -505,3 +520,9 @@ class MetadataStore(object):
             _str.append("%s: %s" % (key, val))
         _str.append("}")
         return "\n".join(_str)
+
+    def construct_source_id(self):
+        res = {}
+        for md in self.metadata.values():
+            res.update(md.construct_source_id())
+        return res

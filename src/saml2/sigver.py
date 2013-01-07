@@ -26,6 +26,7 @@ import random
 import os
 import sys
 import M2Crypto
+from saml2.samlp import Response
 
 import xmldsig as ds
 
@@ -839,7 +840,7 @@ class SecurityContext(object):
         :return: None if the signature can not be verified otherwise an instance
         """
         
-        response = samlp.response_from_string(decoded_xml)
+        response = samlp.any_response_from_string(decoded_xml)
         if not response:
             raise TypeError("Not a Response")
 
@@ -847,7 +848,7 @@ class SecurityContext(object):
             self._check_signature(decoded_xml, response, class_name(response),
                                   origdoc)
 
-        if response.assertion:
+        if isinstance(response, Response) and response.assertion:
             # Try to find the signing cert in the assertion
             for assertion in response.assertion:
                 if not assertion.signature:

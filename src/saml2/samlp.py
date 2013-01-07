@@ -1744,3 +1744,13 @@ ELEMENT_BY_TAG = {
 def factory(tag, **kwargs):
     return ELEMENT_BY_TAG[tag](**kwargs)
 
+def any_response_from_string(xmlstr):
+    for func in [status_response_type__from_string, response_from_string,
+                 artifact_response_from_string, logout_response_from_string,
+                 name_id_mapping_response_from_string,
+                 manage_name_id_response_from_string]:
+        resp = func(xmlstr)
+        if resp:
+            break
+
+    return resp

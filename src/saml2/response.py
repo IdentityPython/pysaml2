@@ -505,7 +505,10 @@ class AuthnResponse(StatusResponse):
             self._verify()
         except AssertionError:
             return None
-        
+
+        if not isinstance(self.response, samlp.Response):
+            return self
+
         if self.parse_assertion():
             return self
         else:
@@ -589,6 +592,19 @@ class AuthzResponse(AuthnResponse):
         self.attribute_converters = attribute_converters
         self.assertion = None
         self.context = "AuthzQuery"
+
+class ArtifactResponse(AuthnResponse):
+    def __init__(self, sec_context, attribute_converters, entity_id,
+                 return_addr=None, timeslack=0, asynchop=False, test=False):
+
+        AuthnResponse.__init__(self, sec_context, attribute_converters,
+                               entity_id, return_addr, timeslack=timeslack,
+                               asynchop=asynchop, test=test)
+        self.entity_id = entity_id
+        self.attribute_converters = attribute_converters
+        self.assertion = None
+        self.context = "ArtifactResolve"
+
 
 def response_factory(xmlstr, conf, return_addr=None,
                         outstanding_queries=None,

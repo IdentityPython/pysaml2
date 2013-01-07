@@ -71,6 +71,7 @@ def http_form_post_message(message, location, relay_state="", typ="SAMLRequest")
         _msg = base64.b64encode(message)
     else:
         _msg = message
+
     response.append(FORM_SPEC % (location, typ, _msg, relay_state))
                                 
     response.append("""<script type="text/javascript">""")
@@ -109,9 +110,14 @@ def http_redirect_message(message, location, relay_state="", typ="SAMLRequest"):
     
     if not isinstance(message, basestring):
         message = "%s" % (message,)
-        
-    args = {typ: deflate_and_base64_encode(message)}
-    
+
+    if typ in ["SAMLRequest", "SAMLResponse"]:
+        args = {typ: deflate_and_base64_encode(message)}
+    elif typ == "SAMLart":
+        args = {typ: message}
+    else:
+        raise Exception("Unknown message type: %s" % typ)
+
     if relay_state:
         args["RelayState"] = relay_state
 

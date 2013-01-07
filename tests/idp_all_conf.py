@@ -34,6 +34,9 @@ CONFIG = {
                 "single_logout_service": [
                     ("%s/slo" % BASE, BINDING_SOAP),
                     ("%s/slop" % BASE, BINDING_HTTP_POST)],
+                "artifact_resolution_service":[
+                    ("%s/ars" % BASE, BINDING_SOAP)
+                ]
             },
             "policy": {
                 "default": {

@@ -1,7 +1,13 @@
 import base64
 import logging
+from hashlib import sha1
+from saml2.soap import parse_soap_enveloped_saml_artifact_resolve
 
-from saml2 import samlp, request, soap
+from saml2 import samlp, saml, response
+from saml2 import request
+from saml2 import soap
+from saml2 import element_to_extension_element
+from saml2 import extension_elements_to_elements
 from saml2.saml import NameID
 from saml2.saml import Issuer
 from saml2.saml import NAMEID_FORMAT_ENTITY
@@ -12,6 +18,11 @@ from saml2.s_utils import rndstr
 from saml2.s_utils import success_status_factory
 from saml2.s_utils import decode_base64_and_inflate
 from saml2.samlp import AuthnRequest
+from saml2.samlp import artifact_resolve_from_string
+from saml2.samlp import Response
+from saml2.samlp import ArtifactResolve
+from saml2.samlp import ArtifactResponse
+from saml2.samlp import Artifact
 from saml2.samlp import LogoutRequest
 from saml2.samlp import AttributeQuery
 from saml2.mdstore import destinations
@@ -30,6 +41,30 @@ from saml2.virtual_org import VirtualOrg
 logger = logging.getLogger(__name__)
 
 __author__ = 'rolandh'
+
+ARTIFACT_TYPECODE = '\x00\x04'
+
+def create_artifact(entity_id, message_handle, endpoint_index = 0):
+    """
+    SAML_artifact   := B64(TypeCode EndpointIndex RemainingArtifact)
+    TypeCode        := Byte1Byte2
+    EndpointIndex   := Byte1Byte2
+
+    RemainingArtifact := SourceID MessageHandle
+    SourceID          := 20-byte_sequence
+    MessageHandle     := 20-byte_sequence
+
+    :param entity_id:
+    :param message_handle:
+    :param endpoint_index:
+    :return:
+    """
+    sourceid = sha1(entity_id)
+
+    ter = "%s%.2x%s%s" % (ARTIFACT_TYPECODE, endpoint_index,
+                             sourceid.digest(), message_handle)
+    return base64.b64encode(ter)
+
 
 
 class Entity(HTTPBase):
@@ -67,6 +102,9 @@ class Entity(HTTPBase):
                 self.vorg = virtual_organization
         else:
             self.vorg = None
+
+        self.artifact = {}
+        self.sourceid = self.metadata.construct_source_id()
 
     def _issuer(self, entityid=None):
         """ Return an Issuer instance """
@@ -129,13 +167,16 @@ class Entity(HTTPBase):
             rsrv = "single_logout_service"
         elif isinstance(message, AttributeQuery):
             rsrv = "attribute_consuming_service"
+        elif isinstance(message, ArtifactResolve):
+            rsrv = ""
         else:
             raise Exception("No support for this type of query")
 
-        binding, destination = self.pick_binding(bindings, rsrv,
-                                                 descr_type=descr_type,
-                                                 request=message)
-        info["destination"] = destination
+        if rsrv:
+            binding, destination = self.pick_binding(bindings, rsrv,
+                                                     descr_type=descr_type,
+                                                     request=message)
+            info["destination"] = destination
 
         return info
 
@@ -355,13 +396,52 @@ class Entity(HTTPBase):
 
         return response
 
+    def create_artifact_resolve(self, artifact, destination, id, consent=None,
+                                extensions=None, sign=False):
+        """
+        Create a ArtifactResolve request
+
+        :param artifact:
+        :param destination:
+        :param id:
+        :param consent:
+        :param extensions:
+        :param sign:
+        :return: The request message
+        """
+
+        artifact = Artifact(text=artifact)
+
+        return self._message(ArtifactResolve, destination, id,
+                             consent, extensions, sign, artifact=artifact)
+
+    def create_artifact_response(self, request, artifact, bindings=None,
+                                 status=None, sign=False, issuer=None):
+        """
+        Create an ArtifactResponse
+        :return:
+        """
+
+        rinfo = self.response_args(request, bindings, descr_type="spsso")
+        response = self._status_response(ArtifactResponse, issuer, status,
+                                         sign=False, **rinfo)
+
+        msg = element_to_extension_element(self.artifact[artifact])
+        response.extension_elements = [msg]
+
+        logger.info("Response: %s" % (response,))
+
+        return response
+
     # ------------------------------------------------------------------------
 
-    def _parse_response(self, xmlstr, request_cls, service, binding, **kwargs):
+    def _parse_response(self, xmlstr, response_cls, service, binding, **kwargs):
         """ Deal with a Response
 
         :param xmlstr: The response as a xml string
+        :param response_cls: What type of response it is
         :param binding: What type of binding this message came through.
+        :param kwargs: Extra key word arguments
         :return: None if the reply doesn't contain a valid SAML Response,
             otherwise the response.
         """
@@ -370,7 +450,7 @@ class Entity(HTTPBase):
 
         if xmlstr:
             if "return_addr" not in kwargs:
-                if binding == BINDING_HTTP_REDIRECT or BINDING_HTTP_POST:
+                if binding in [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST]:
                     try:
                         # expected return address
                         kwargs["return_addr"] = self.config.endpoint(service,
@@ -380,7 +460,7 @@ class Entity(HTTPBase):
                         return None
 
             try:
-                response = request_cls(self.sec, **kwargs)
+                response = response_cls(self.sec, **kwargs)
             except Exception, exc:
                 logger.info("%s" % exc)
                 return None
@@ -431,3 +511,83 @@ class Entity(HTTPBase):
         return self._parse_request(xmlstr, request.LogoutRequest,
                                    "single_logout_service", binding,
                                    "logout_request")
+
+    def use_artifact(self, message, endpoint_index=0):
+        """
+
+        :param message:
+        :param endpoint_index:
+        :return:
+        """
+        message_handle = sha1("%s" % message)
+        message_handle.update(rndstr())
+        mhd = message_handle.digest()
+        saml_art = create_artifact(self.config.entityid, mhd, endpoint_index)
+        self.artifact[saml_art] = message
+        return saml_art
+
+    def artifact2destination(self, artifact):
+        """
+        Translate an artifact into a receiver location
+
+        :param artifact: The Base64 encoded SAML artifact
+        :return:
+        """
+
+        _art = base64.b64decode(artifact)
+
+        assert _art[:2] == ARTIFACT_TYPECODE
+
+        endpoint_index = str(int(_art[2:4]))
+        entity = self.sourceid[_art[4:24]]
+
+        destination = None
+        for desc in entity["spsso_descriptor"]:
+            for srv in desc["artifact_resolution_service"]:
+                if srv["index"] == endpoint_index:
+                    destination = srv["location"]
+                    break
+
+        return destination
+
+    def artifact2message(self, artifact):
+        """
+
+        :param artifact: The Base64 encoded SAML artifact
+        :return: SAML message (request/response
+        """
+
+
+        destination = self.artifact2destination(artifact)
+
+        if not destination:
+            raise Exception("Missing endpoint location")
+
+        _sid = sid()
+        msg = self.create_artifact_resolve(artifact, destination, _sid)
+        response = self.send_using_soap(msg, destination)
+        return response
+
+    def parse_artifact_resolve(self, txt, **kwargs):
+        """
+        Always done over SOAP
+
+        :param txt: The SOAP enveloped ArtifactResolve
+        :param kwargs:
+        :return: An ArtifactResolve instance
+        """
+
+        _resp = parse_soap_enveloped_saml_artifact_resolve(txt)
+        return artifact_resolve_from_string(_resp)
+
+    def parse_artifact_resolve_response(self, xmlstr):
+        kwargs = {"entity_id": self.config.entityid,
+                  "attribute_converters": self.config.attribute_converters}
+
+        resp = self._parse_response(xmlstr, response.ArtifactResponse,
+                                    "artifact_resolve", BINDING_SOAP,
+                                    **kwargs)
+        # should just be one
+        elems = extension_elements_to_elements(resp.response.extension_elements,
+                                               [samlp, saml])
+        return elems[0]
