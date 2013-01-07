@@ -495,7 +495,7 @@ class Server(Entity):
                 nid_formats = []
                 for _sp in self.metadata[sp_entity_id]["spsso_descriptor"]:
                     if "name_id_format" in _sp:
-                        nid_formats.extend([n.text for n in _sp["name_id_format"]])
+                        nid_formats.extend([n["text"] for n in _sp["name_id_format"]])
 
                 name_id = self.ident.construct_nameid(policy, userid,
                                                       sp_entity_id, identity,
