@@ -19,7 +19,6 @@ from saml2.s_utils import success_status_factory
 from saml2.s_utils import decode_base64_and_inflate
 from saml2.samlp import AuthnRequest
 from saml2.samlp import artifact_resolve_from_string
-from saml2.samlp import Response
 from saml2.samlp import ArtifactResolve
 from saml2.samlp import ArtifactResponse
 from saml2.samlp import Artifact
@@ -526,7 +525,7 @@ class Entity(HTTPBase):
         self.artifact[saml_art] = message
         return saml_art
 
-    def artifact2destination(self, artifact):
+    def artifact2destination(self, artifact, descriptor):
         """
         Translate an artifact into a receiver location
 
@@ -542,7 +541,7 @@ class Entity(HTTPBase):
         entity = self.sourceid[_art[4:24]]
 
         destination = None
-        for desc in entity["spsso_descriptor"]:
+        for desc in entity["%s_descriptor" % descriptor]:
             for srv in desc["artifact_resolution_service"]:
                 if srv["index"] == endpoint_index:
                     destination = srv["location"]
@@ -553,10 +552,9 @@ class Entity(HTTPBase):
     def artifact2message(self, artifact):
         """
 
-        :param artifact: The Base64 encoded SAML artifact
-        :return: SAML message (request/response
+        :param artifact: The Base64 encoded SAML artifact as sent over the net
+        :return: A SAML message (request/response)
         """
-
 
         destination = self.artifact2destination(artifact)
 
@@ -565,8 +563,7 @@ class Entity(HTTPBase):
 
         _sid = sid()
         msg = self.create_artifact_resolve(artifact, destination, _sid)
-        response = self.send_using_soap(msg, destination)
-        return response
+        return self.send_using_soap(msg, destination)
 
     def parse_artifact_resolve(self, txt, **kwargs):
         """
