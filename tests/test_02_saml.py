@@ -828,12 +828,12 @@ class TestSubjectConfirmation:
     def testAccessors(self):
         """Test for SubjectConfirmation accessors"""
         self.sc.name_id = saml.name_id_from_string(saml2_data.TEST_NAME_ID)
-        self.sc.method = saml.SUBJECT_CONFIRMATION_METHOD_BEARER
+        self.sc.method = saml.SCM_BEARER
         self.sc.subject_confirmation_data = saml.subject_confirmation_data_from_string(
             saml2_data.TEST_SUBJECT_CONFIRMATION_DATA)
         new_sc = saml.subject_confirmation_from_string(self.sc.to_string())
         assert new_sc.name_id.sp_provided_id == "sp provided id"
-        assert new_sc.method == saml.SUBJECT_CONFIRMATION_METHOD_BEARER
+        assert new_sc.method == saml.SCM_BEARER
         assert new_sc.subject_confirmation_data.not_before == \
                                  "2007-08-31T01:05:02Z"
         assert new_sc.subject_confirmation_data.not_on_or_after == \
@@ -848,7 +848,7 @@ class TestSubjectConfirmation:
         sc = saml.subject_confirmation_from_string(
             saml2_data.TEST_SUBJECT_CONFIRMATION)
         assert sc.name_id.sp_provided_id == "sp provided id"
-        assert sc.method == saml.SUBJECT_CONFIRMATION_METHOD_BEARER
+        assert sc.method == saml.SCM_BEARER
         assert sc.subject_confirmation_data.not_before == "2007-08-31T01:05:02Z"
         assert sc.subject_confirmation_data.not_on_or_after == "2007-09-14T01:05:02Z"
         assert sc.subject_confirmation_data.recipient == "recipient"

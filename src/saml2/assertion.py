@@ -91,6 +91,7 @@ def filter_on_attributes(ava, required=None, optional=None):
 
     for attr in required:
         found = False
+        nform = ""
         for nform in ["friendly_name", "name"]:
             if nform in attr :
                 _fn = _match(attr[nform], ava)
@@ -538,7 +539,7 @@ class Assertion(dict):
             subject=factory( saml.Subject,
                 name_id=name_id,
                 subject_confirmation=factory( saml.SubjectConfirmation,
-                                method=saml.SUBJECT_CONFIRMATION_METHOD_BEARER,
+                                method=saml.SCM_BEARER,
                                 subject_confirmation_data=factory(
                                     saml.SubjectConfirmationData,
                                     in_response_to=in_response_to,

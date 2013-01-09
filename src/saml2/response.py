@@ -25,6 +25,9 @@ from saml2 import extension_element_to_element
 from saml2 import time_util
 
 from saml2.saml import attribute_from_string
+from saml2.saml import SCM_BEARER
+from saml2.saml import SCM_HOLDER_OF_KEY
+from saml2.saml import SCM_SENDER_VOUCHES
 from saml2.saml import encrypted_attribute_from_string
 from saml2.sigver import security_context
 from saml2.sigver import SignatureError
@@ -371,7 +374,40 @@ class AuthnResponse(StatusResponse):
             self.decrypt_attributes(_attr_statem)
             ava = to_local(self.attribute_converters, _attr_statem)
         return ava
-    
+
+    def _bearer_confirmed(self, data):
+     # These two will raise exception if untrue
+        validate_on_or_after(data.not_on_or_after, self.timeslack)
+        validate_before(data.not_before, self.timeslack)
+
+        # not_before must be < not_on_or_after
+        if not time_util.later_than(data.not_on_or_after, data.not_before):
+            return False
+
+        if self.asynchop and not self.came_from:
+            if data.in_response_to in self.outstanding_queries:
+                self.came_from = self.outstanding_queries[
+                                 data.in_response_to]
+                del self.outstanding_queries[data.in_response_to]
+            elif self.allow_unsolicited:
+                pass
+            else:
+                # This is where I don't allow unsolicited reponses
+                # Either in_response_to == None or has a value I don't
+                # recognize
+                logger.debug("in response to: '%s'" % data.in_response_to)
+                logger.info("outstanding queries: %s" % (
+                    self.outstanding_queries.keys(),))
+                raise Exception(
+                    "Combination of session id and requestURI I don't recall")
+        return True
+
+    def _holder_of_key_confirmed(self, data):
+        if not data.key_info:
+            return False
+        else:
+            return True
+
     def get_subject(self):
         """ The assertion must contain a Subject
         """
@@ -388,32 +424,19 @@ class AuthnResponse(StatusResponse):
                 if not valid_address(data.address):
                     # ignore this subject_confirmation
                     continue
-                    
-            # These two will raise exception if untrue
-            validate_on_or_after(data.not_on_or_after, self.timeslack)
-            validate_before(data.not_before, self.timeslack)
-            
-            # not_before must be < not_on_or_after
-            if not time_util.later_than(data.not_on_or_after, data.not_before):
-                continue
-            
-            if self.asynchop and not self.came_from:
-                if data.in_response_to in self.outstanding_queries:
-                    self.came_from = self.outstanding_queries[
-                                                        data.in_response_to]
-                    del self.outstanding_queries[data.in_response_to]
-                elif self.allow_unsolicited:
-                    pass
-                else:
-                    # This is where I don't allow unsolicited reponses
-                    # Either in_response_to == None or has a value I don't
-                    # recognize
-                    logger.debug("in response to: '%s'" % data.in_response_to)
-                    logger.info("outstanding queries: %s" % (
-                                            self.outstanding_queries.keys(),))
-                    raise Exception(
-                    "Combination of session id and requestURI I don't recall")
-                        
+
+            if subject_confirmation.method == SCM_BEARER:
+                if not self._bearer_confirmed(data):
+                    continue
+            elif subject_confirmation.method == SCM_HOLDER_OF_KEY:
+                if not self._holder_of_key_confirmed(data):
+                    continue
+            elif subject_confirmation.method == SCM_SENDER_VOUCHES:
+                pass
+            else:
+                raise ValueError("Unknown subject confirmation method: %s" % (
+                                    subject_confirmation.method,))
+
             subjconf.append(subject_confirmation)
             
         if not subjconf:
