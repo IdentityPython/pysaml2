@@ -284,16 +284,16 @@ not_on_or_after = before
 valid = before
 
 
-def later_than(then, that):
+def later_than(after, before):
     """ True if then is later or equal to that """
-    if isinstance(then, basestring):
-        then = str_to_time(then)
-    elif isinstance(then, int):
-        then = time.gmtime(then)
+    if isinstance(after, basestring):
+        after = str_to_time(after)
+    elif isinstance(after, int):
+        after = time.gmtime(after)
 
-    if isinstance(that, basestring):
-        that = str_to_time(that)
-    elif isinstance(that, int):
-        that = time.gmtime(that)
+    if isinstance(before, basestring):
+        before = str_to_time(before)
+    elif isinstance(before, int):
+        before = time.gmtime(before)
 
-    return then >= that
+    return after >= before
