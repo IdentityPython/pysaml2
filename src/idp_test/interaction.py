@@ -220,10 +220,9 @@ def do_click(httpc, form, **kwargs):
         _trace = False
 
     if form.method == "POST":
-        return httpc.request(url, "POST", data=request.data, headers=headers,
-                             trace=_trace)
+        return httpc.send(url, "POST", data=request.data, headers=headers)
     else:
-        return httpc.request(url, "GET", headers=headers, trace=_trace)
+        return httpc.send(url, "GET", headers=headers)
 
 def select_form(httpc, orig_response, **kwargs):
     """
@@ -293,7 +292,7 @@ def chose(httpc, orig_response, path, **kwargs):
     else:
         url = path
 
-    return httpc.request(url, "GET", trace=_trace)
+    return httpc.send(url, "GET", trace=_trace)
     #return resp, ""
 
 def post_form(httpc, orig_response, **kwargs):
