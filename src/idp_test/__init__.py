@@ -7,10 +7,10 @@ import time
 import logging
 
 from saml2.config import SPConfig
+from saml2.httpbase import HTTPBase
 
 from idp_test.base import FatalError
 from idp_test.base import do_sequence
-from idp_test.httpreq import HTTPC
 #from saml2.config import Config
 from saml2.mdstore import MetadataStore, MetaData
 
@@ -148,8 +148,10 @@ class SAML2client(object):
 
         metadata = MetadataStore(SCHEMA, self.sp_config.attribute_converters,
                                  self.sp_config.xmlsec_binary)
-        metadata[0] = MetaData(SCHEMA, self.sp_config.attribute_converters,
-                               _jc["metadata"])
+        md = MetaData(SCHEMA, self.sp_config.attribute_converters,
+                      _jc["metadata"])
+        md.load()
+        metadata[0] = md
         self.sp_config.metadata = metadata
 
     def test_summation(self, id):
@@ -197,7 +199,7 @@ class SAML2client(object):
                 print >> sys.stderr, "Undefined testcase"
                 return
 
-            testres, trace = do_sequence(self.sp_config, oper, HTTPC(),
+            testres, trace = do_sequence(self.sp_config, oper, HTTPBase(),
                                          self.trace, self.interactions,
                                          entity_id=self.json_config["entity_id"])
             self.test_log = testres
