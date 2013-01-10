@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-import base64
 import inspect
+import urllib
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_SOAP
@@ -8,7 +8,7 @@ from saml2.client import Saml2Client
 
 #from idp_test.check import ExpectedError
 from saml2.mdstore import REQ2SRV
-from saml2.pack import http_redirect_message
+from saml2.pack import http_redirect_message, http_form_post_message
 from saml2.s_utils import rndstr
 from idp_test.check import factory
 from idp_test.check import STATUSCODE
@@ -22,9 +22,31 @@ import cookielib
 class FatalError(Exception):
     pass
 
-def form_post(request, relay_state):
-    return "SAMLRequest=%s&RelayState=%s" % (base64.b64encode(request),
-                                            relay_state)
+def unpack_form(_str, ver="SAMLRequest"):
+    SR_STR = "name=\"%s\" value=\"" % ver
+    RS_STR = 'name="RelayState" value="'
+
+    i = _str.find(SR_STR)
+    i += len(SR_STR)
+    j = _str.find('"', i)
+
+    sr = _str[i:j]
+
+    k = _str.find(RS_STR, j)
+    k += len(RS_STR)
+    l = _str.find('"', k)
+
+    rs = _str[k:l]
+
+    return {ver:sr, "RelayState":rs}
+
+
+def form_post(_dict):
+    return urllib.urlencode(_dict)
+
+
+def tuple_list2dict(tl):
+    return dict(tl)
 
 
 def check_severity(stat, trace):
@@ -73,14 +95,14 @@ def intermit(client, response, httpc, environ, trace, cjar, interaction,
                 break
             else:
                 try:
-                    response = httpc.request(url, "GET", trace=trace)
+                    response = httpc.send(url, "GET")
                 except Exception, err:
                     raise FatalError("%s" % err)
 
                 content = response.text
                 trace.reply("CONTENT: %s" % content)
-                environ.update({"url": url, "response": response,
-                                "content":content})
+                environ.update({"url": url, "content":content})
+                environ["response"].append(response)
 
                 check = factory("check-http-response")()
                 stat = check(environ, test_output)
@@ -94,6 +116,7 @@ def intermit(client, response, httpc, environ, trace, cjar, interaction,
         try:
             _spec = pick_interaction(interaction, _base, content)
         except KeyError:
+            environ["url"] = url
             chk = factory("interaction-needed")()
             chk(environ, test_output)
             raise FatalError()
@@ -111,8 +134,8 @@ def intermit(client, response, httpc, environ, trace, cjar, interaction,
             if isinstance(response, dict):
                 return response
             content = response.text
-            environ.update({"url": url, "response": response,
-                            "content":content})
+            environ.update({"url": url, "content":content})
+            environ["response"].append(response)
 
             check = factory("check-http-response")()
             stat = check(environ, test_output)
@@ -143,10 +166,10 @@ def do_sequence(config, oper, httpc, trace, interaction, entity_id,
 
     client = Saml2Client(config)
     test_output = []
-    if client.metadata.entities_descr["-"]:
-        environ = {"metadata": client.metadata.entities_descr["-"]}
-    else:
-        environ = {"metadata": client.metadata.entity_descr["-"]}
+    environ = {"metadata": client.metadata,
+               "client": client,
+               "httpc": httpc,
+               "response": []}
 
     cjar = {"browser": cookielib.CookieJar(),
             "rp": cookielib.CookieJar(),
@@ -197,13 +220,16 @@ def do_query(client, oper, httpc, trace, interaction, entity_id, environ, cjar,
 
     httpc.cookiejar = cjar["browser"]
 
-    locations = getattr(client.metadata, REQ2SRV[query])(args["entity_id"],
-                                                         args["binding"])
+    srvs = getattr(client.metadata, REQ2SRV[query])(args["entity_id"],
+                                                    args["binding"],
+                                                    "idpsso")
 
     relay_state = rndstr()
-    _response_func = getattr(client, "%s_response" % query)
+    _response_func = getattr(client, "parse_%s_response" % query)
     response_args = {}
     qargs = args.copy()
+
+    use_artifact = getattr(oper, "use_artifact", False)
 
     qfunc = getattr(client, "create_%s" % query)
     # remove args the create function can't handle
@@ -212,29 +238,41 @@ def do_query(client, oper, httpc, trace, interaction, entity_id, environ, cjar,
         if arg not in fargs:
             del qargs[arg]
 
-    resp = None
-    for loc in locations:
+    for srv in srvs:
+        loc = srv["location"]
         qargs["destination"] = loc
+        environ["destination"] = loc
 
         req = qfunc(**qargs)
         environ["request"] = req
         _req_str = "%s" % req
-        trace.info("SAML Request: %s" % _req_str)
+        if use_artifact:
+            saml_art = client.use_artifact(_req_str, args["entity_id"])
+            trace.info("SAML Artifact: %s" % saml_art)
+            info_typ = "SAMLart"
+        else:
+            trace.info("SAML Request: %s" % _req_str)
+            info_typ = "SAMLRequest"
         # depending on binding send the query
 
         if args["binding"] is BINDING_SOAP:
-            response = client.send_using_soap(_req_str, loc,
-                                          client.config.key_file,
-                                          client.config.cert_file,
-                                          ca_certs=client.config.ca_certs)
+            response = httpc.send_using_soap(_req_str, loc)
+            response_args["binding"] = BINDING_SOAP
         else:
+            response_args["binding"] = BINDING_HTTP_POST
             if args["binding"] is BINDING_HTTP_REDIRECT:
-                (head, _body) = http_redirect_message(_req_str, loc, relay_state)
-                # head should contain a redirect
-                res = httpc.request(head[0][1], "GET")
+                htargs = http_redirect_message(_req_str, loc, relay_state,
+                                               info_typ)
+                #
+                res = httpc.send(htargs["headers"][0][1], "GET")
             elif args["binding"] is BINDING_HTTP_POST:
-                body = form_post(_req_str, relay_state)
-                res = httpc.request(loc, "POST", data=body)
+                htargs = http_form_post_message(_req_str, loc, relay_state,
+                                                info_typ)
+                info = unpack_form(htargs["data"][3])
+                data = form_post(info)
+                htargs["data"] = data
+                htargs["headers"] = tuple_list2dict(htargs["headers"])
+                res = httpc.send(loc, "POST", **htargs)
             else:
                 res = None
 
@@ -255,8 +293,10 @@ def do_query(client, oper, httpc, trace, interaction, entity_id, environ, cjar,
 
         if response:
             try:
+                if isinstance(response, dict):
+                    response = response["SAMLResponse"]
                 _resp = _response_func(response, **response_args)
-                environ["response"] = _resp
+                environ["response"].append(_resp)
                 trace.info("SAML Response: %s" % _resp)
                 try:
                     for test in oper.tests["post"]:
