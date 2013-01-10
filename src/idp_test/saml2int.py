@@ -1,10 +1,12 @@
-from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_HTTP_REDIRECT, BINDING_SOAP
 from saml2 import BINDING_HTTP_POST
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
+#from idp_test.check import CheckSubjectNameIDFormat
 from idp_test.check import CheckSaml2IntMetaData
 from idp_test.check import CheckSaml2IntAttributes
-from idp_test.check import CheckSubjectNameIDFormat
 from idp_test.check import CheckLogoutSupport
+from idp_test.check import VerifyLogout
+from idp_test.check import VerifyContent
 
 __author__ = 'rolandh'
 
@@ -23,8 +25,8 @@ class AuthnRequest(Request):
              "nameid_format": NAMEID_FORMAT_PERSISTENT,
              "allow_create": True}
     tests = {"pre": [CheckSaml2IntMetaData],
-             "post": [CheckSaml2IntAttributes,
-                    #  CheckSubjectNameIDFormat
+             "post": [CheckSaml2IntAttributes, VerifyContent
+                    #  CheckSubjectNameIDFormat,
                     ]}
 
 class AuthnRequestPost(AuthnRequest):
@@ -33,20 +35,26 @@ class AuthnRequestPost(AuthnRequest):
         self.args["binding"] = BINDING_HTTP_POST
 
 
+class AuthnRequest_using_Artifact(AuthnRequest):
+    def __init__(self):
+        AuthnRequest.__init__(self)
+        self.use_artifact = True
 
 class LogOutRequest(Request):
     request = "logout_request"
-    tests = {"pre": [CheckLogoutSupport]}
-    _args = {"binding": BINDING_HTTP_REDIRECT,
+    tests = {"pre": [CheckLogoutSupport],
+             "post": [VerifyLogout]}
+    _args = {"binding": BINDING_SOAP,
             # "sign": True
             }
 
     def setup(self, environ):
-        resp = environ["response"]
-        subj = resp.assertion.subject
+        resp = environ["response"][-1].response
+        assertion = resp.assertion[0]
+        subj = assertion.subject
         self.args["subject_id"] = subj.name_id.text
         #self.args["name_id"] = subj.name_id
-        self.args["issuer_entity_id"] = resp.assertion.issuer.text
+        self.args["issuer_entity_id"] = assertion.issuer.text
 
 OPERATIONS = {
     'basic-authn': {
@@ -65,7 +73,7 @@ OPERATIONS = {
     },
     'log-in-out': {
         "name": 'Absolute basic SAML2 AuthnRequest',
-        "descr": ('AuthnRequest using HTTP-redirect'),
+        "descr": ('AuthnRequest using HTTP-redirect followed by a logout'),
         "sequence": [AuthnRequest, LogOutRequest],
     }
 }
