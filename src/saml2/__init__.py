@@ -49,6 +49,7 @@
 #                 +"or http://effbot.org/zone/element-index.htm"
 
 import logging
+from saml2.validate import valid_instance
 
 try:
     from xml.etree import cElementTree as ElementTree
@@ -470,6 +471,7 @@ class SamlBase(ExtensionContainer):
     c_cardinality = {}
     c_any = None
     c_any_attribute = None
+    c_value_type = None
     
     def _get_all_c_children_with_order(self):
         if len(self.c_child_order) > 0:
@@ -781,7 +783,10 @@ class SamlBase(ExtensionContainer):
                     return 1,1
         return None
 
+    def verify(self):
+        return valid_instance(self)
 
+# ----------------------------------------------------------------------------
 
 def element_to_extension_element(element):
     """
