@@ -3,6 +3,10 @@
 #
 # Generated Mon May  2 14:23:33 2011 by parse_xsd.py version 0.4.
 #
+from saml2.validate import valid_ipv4, MustValueError
+from saml2.validate import valid_ipv6
+from saml2.validate import ShouldValueError
+from saml2.validate import valid_domain_name
 
 import saml2
 from saml2 import SamlBase
@@ -55,6 +59,8 @@ SCM_BEARER = "urn:oasis:names:tc:SAML:2.0:cm:bearer"
 # -----------------------------------------------------------------------------
 XSD = "xs:"
 NS_SOAP_ENC = "http://schemas.xmlsoap.org/soap/encoding/"
+
+# -----------------------------------------------------------------------------
 
 def _decode_attribute_value(typ, text):
 
@@ -322,7 +328,7 @@ class SubjectConfirmationDataType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_attributes['NotBefore'] = ('not_before', 'dateTime', False)
+    c_attributes['NotBefore'] = ('not_before', 'AsTime', False)
     c_attributes['NotOnOrAfter'] = ('not_on_or_after', 'dateTime', False)
     c_attributes['Recipient'] = ('recipient', 'anyURI', False)
     c_attributes['InResponseTo'] = ('in_response_to', 'NCName', False)
@@ -795,6 +801,18 @@ class SubjectLocality(SubjectLocalityType_):
     c_child_order = SubjectLocalityType_.c_child_order[:]
     c_cardinality = SubjectLocalityType_.c_cardinality.copy()
 
+    def verify(self):
+        if self.address:
+            # dotted-decimal IPv4 or RFC3513 IPv6 address
+            if valid_ipv4(self.address) or valid_ipv6(self.address):
+                pass
+            else:
+                raise ShouldValueError("Not an IPv4 or IPv6 address")
+        elif self.dns_name:
+            valid_domain_name(self.dns_name)
+
+        return SubjectLocalityType_.verify(self)
+
 def subject_locality_from_string(xml_string):
     return saml2.create_class_from_xml_string(SubjectLocality, xml_string)
 
@@ -844,6 +862,15 @@ class AuthnContextType_(SamlBase):
         self.authn_context_decl=authn_context_decl
         self.authn_context_decl_ref=authn_context_decl_ref
         self.authenticating_authority=authenticating_authority or []
+
+    def verify(self):
+        # either <AuthnContextDecl> or <AuthnContextDeclRef> not both
+        if self.authn_context_decl:
+            assert self.authn_context_decl_ref is None
+        elif self.authn_context_decl_ref:
+            assert self.authn_context_decl is None
+
+        return SamlBase.verify(self)
 
 def authn_context_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(AuthnContextType_, xml_string)
@@ -1065,6 +1092,14 @@ class ConditionsType_(SamlBase):
         self.proxy_restriction=proxy_restriction or []
         self.not_before=not_before
         self.not_on_or_after=not_on_or_after
+
+    def verify(self):
+        if self.one_time_use:
+            assert len(self.one_time_use) == 1
+        if self.proxy_restriction:
+            assert len(self.proxy_restriction) == 1
+
+        return SamlBase.verify(self)
 
 def conditions_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(ConditionsType_, xml_string)
@@ -1451,6 +1486,20 @@ class AssertionType_(SamlBase):
         self.version=version
         self.id=id
         self.issue_instant=issue_instant
+
+    def verify(self):
+        # If no statement MUST contain a subject element
+        if self.attribute_statement or self.statement or \
+            self.authn_statement or self.authz_decision_statement:
+            pass
+        elif not self.subject:
+            raise MustValueError("If no statement MUST contain a subject element")
+
+        if self.authn_statement and not self.subject:
+            raise MustValueError(
+                "An assertion with an AuthnStatement must contain a Subject")
+
+        return SamlBase.verify(self)
 
 def assertion_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(AssertionType_, xml_string)
