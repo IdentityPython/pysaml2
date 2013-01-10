@@ -447,6 +447,12 @@ class Entity(HTTPBase):
 
         response = None
 
+        if "asynchop" not in kwargs:
+            if binding == BINDING_SOAP:
+                kwargs["asynchop"] = False
+            else:
+                kwargs["asynchop"] = True
+
         if xmlstr:
             if "return_addr" not in kwargs:
                 if binding in [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST]:
