@@ -180,6 +180,22 @@ class Entity(HTTPBase):
         return info
 
     # ------------------------------------------------------------------------
+    def _sign(self, msg, mid=None, to_sign=None):
+        if to_sign is not None:
+            msg.signature = pre_signature_part(msg.id, self.sec.my_cert, 1)
+
+        if mid is None:
+            mid = msg.id
+
+        try:
+            to_sign.append([(class_name(msg), mid)])
+        except AttributeError:
+            to_sign = [(class_name(msg), mid)]
+
+        logger.info("REQUEST: %s" % msg)
+
+        return signed_instance_factory(msg, self.sec, to_sign)
+
     def _message(self, request_cls, destination=None, id=0,
                  consent=None, extensions=None, sign=False, **kwargs):
         """
@@ -210,14 +226,10 @@ class Entity(HTTPBase):
             req.extensions = extensions
 
         if sign:
-            req.signature = pre_signature_part(req.id, self.sec.my_cert, 1)
-            to_sign = [(class_name(req), req.id)]
+            return self._sign(req)
         else:
-            to_sign = []
-
-        logger.info("REQUEST: %s" % req)
-
-        return signed_instance_factory(req, self.sec, to_sign)
+            logger.info("REQUEST: %s" % req)
+            return req
 
     def _response(self, in_response_to, consumer_url=None, status=None,
                   issuer=None, sign=False, to_sign=None,
@@ -250,13 +262,11 @@ class Entity(HTTPBase):
             setattr(response, key, val)
 
         if sign:
-            try:
-                to_sign.append((class_name(response), response.id))
-            except AttributeError:
-                to_sign = [(class_name(response), response.id)]
-
-
-        return signed_instance_factory(response, self.sec, to_sign)
+            self._sign(response,to_sign=to_sign)
+        elif to_sign:
+            return signed_instance_factory(response, self.sec, to_sign)
+        else:
+            return response
 
     def _status_response(self, response_class, issuer, status, sign=False,
                          **kwargs):
@@ -281,11 +291,9 @@ class Entity(HTTPBase):
                                   status=status, **kwargs)
 
         if sign:
-            response.signature = pre_signature_part(mid)
-            to_sign = [(class_name(response), mid)]
-            response = signed_instance_factory(response, self.sec, to_sign)
-
-        return response
+            return self._sign(response, mid)
+        else:
+            return response
 
     # ------------------------------------------------------------------------
 
@@ -555,14 +563,15 @@ class Entity(HTTPBase):
 
         return destination
 
-    def artifact2message(self, artifact):
+    def artifact2message(self, artifact, descriptor):
         """
 
         :param artifact: The Base64 encoded SAML artifact as sent over the net
+        :param descriptor: The type of entity on the other side
         :return: A SAML message (request/response)
         """
 
-        destination = self.artifact2destination(artifact)
+        destination = self.artifact2destination(artifact, descriptor)
 
         if not destination:
             raise Exception("Missing endpoint location")
