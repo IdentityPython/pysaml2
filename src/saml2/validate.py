@@ -13,18 +13,28 @@ class NotValid(Exception):
 class OutsideCardinality(Exception):
     pass
 
+class MustValueError(ValueError):
+    pass
+
+class ShouldValueError(ValueError):
+    pass
+
 # --------------------- validators -------------------------------------
-# 
+#
+
+NCNAME = re.compile("(?P<NCName>[a-zA-Z_](\w|[_.-])*)")
+
 def valid_ncname(name):
-    exp = re.compile("(?P<NCName>[a-zA-Z_](\w|[_.-])*)")
-    match = exp.match(name)
+    match = NCNAME.match(name)
     if not match:
         raise NotValid("NCName")
     return True
-    
+
+
 def valid_id(oid):
     valid_ncname(oid)
-    
+
+
 def valid_any_uri(item):
     """very simplistic, ..."""
     try:
@@ -283,7 +293,7 @@ def valid(typ, value):
 
 def _valid_instance(instance, val):
     try:
-        valid_instance(val)
+        val.verify()
     except NotValid, exc:
         raise NotValid("Class '%s' instance: %s" % \
                             (instance.__class__.__name__,
@@ -298,22 +308,20 @@ ERROR_TEXT = "Wrong type of value '%s' on attribute '%s' expected it to be %s"
 def valid_instance(instance):
     instclass = instance.__class__
     class_name = instclass.__name__
-    try:
-        if instclass.c_value_type and instance.text:
-            try:
-                validate_value_type(instance.text.strip(), 
-                                        instclass.c_value_type)
-            except NotValid, exc:
-                raise NotValid("Class '%s' instance: %s" % (class_name, 
-                                                            exc.args[0]))
-    except AttributeError: # No c_value_type
-        pass
-        
+
+    if instclass.c_value_type and instance.text:
+        try:
+            validate_value_type(instance.text.strip(),
+                                    instclass.c_value_type)
+        except NotValid, exc:
+            raise NotValid("Class '%s' instance: %s" % (class_name,
+                                                        exc.args[0]))
+
     for (name, typ, required) in instclass.c_attributes.values():
         value = getattr(instance, name, '')
         if required and not value:
             txt = "Required value on property '%s' missing" % name
-            raise NotValid("Class '%s' instance: %s" % (class_name, txt))
+            raise MustValueError("Class '%s' instance: %s" % (class_name, txt))
         
         if value:
             try:
@@ -326,50 +334,64 @@ def valid_instance(instance):
                     validate_value_type(value, spec)
                 else:
                     valid(typ, value)
-            except NotValid, exc:
+            except (NotValid, ValueError), exc:
                 txt = ERROR_TEXT % (value, name, exc.args[0])
                 raise NotValid(
                             "Class '%s' instance: %s" % (class_name, txt))
         
     for (name, _spec) in instclass.c_children.values():
         value = getattr(instance, name, '')
-        
+
+        try:
+            _card = instclass.c_cardinality[name]
+            try:
+                _cmin = _card["min"]
+            except KeyError:
+                _cmin = None
+            try:
+                _cmax = _card["max"]
+            except KeyError:
+                _cmax = None
+        except KeyError:
+            _cmin = _cmax = _card = None
+
         if value:
-            if name in instclass.c_cardinality:
-                try:
-                    vlen = len(value)
-                except TypeError:
-                    vlen = 1
-                    
-                if "min" in instclass.c_cardinality[name] and \
-                    instclass.c_cardinality[name]["min"] > vlen:
-                    raise NotValid(
-                            "Class '%s' instance cardinality error: %s" % \
-                            (class_name, "less then min (%s<%s)" % \
-                                (vlen, instclass.c_cardinality[name]["min"])))
-                if "max" in instclass.c_cardinality[name] and \
-                    instclass.c_cardinality[name]["max"] < vlen:
-                    raise NotValid(
-                            "Class '%s' instance cardinality error: %s" % \
-                            (class_name, "more then max (%s>%s)" % \
-                                (vlen, instclass.c_cardinality[name]["max"])))
-            
             if isinstance(value, list):
+                _list = True
+                vlen = len(value)
+            else:
+                _list = False
+                vlen = 1
+
+            if _card:
+                if _cmin is not None and _cmin > vlen:
+                    raise NotValid(
+                            "Class '%s' instance cardinality error: %s" % \
+                            (class_name, "less then min (%s<%s)" % (vlen,
+                                                                    _cmin)))
+                if _cmax is not None and vlen > _cmax:
+                    raise NotValid(
+                            "Class '%s' instance cardinality error: %s" % \
+                            (class_name, "more then max (%s>%s)" % (vlen,
+                                                                    _cmax)))
+            
+            if _list:
                 for val in value:
                     # That it is the right class is handled elsewhere
                     _valid_instance(instance, val)
             else:
                 _valid_instance(instance, value)
         else:
-            try:
-                min = instclass.c_cardinality[name]["min"]
-                if min:
-                    print >> sys.stderr, \
-                                "Min cardinality for '%s': %s" % (name, min) 
-                    raise NotValid(
-                        "Class '%s' instance cardinality error: %s" % \
-                        (class_name, "too few values on %s" % name))
-            except KeyError:
-                pass
-    
+            if _cmin:
+                raise NotValid(
+                    "Class '%s' instance cardinality error: %s" % \
+                    (class_name, "too few values on %s" % name))
+
     return True
+
+def valid_domain_name(dns_name):
+    m = re.match(
+            "^[a-z0-9]+([-.]{1}[a-z0-9]+).[a-z]{2,5}(:[0-9]{1,5})?(\/.)?$",
+            dns_name, "ix")
+    if not m:
+        raise ValueError("Not a proper domain name")
