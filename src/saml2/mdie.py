@@ -1,5 +1,3 @@
-__author__ = 'rolandh'
-
 #!/usr/bin/env python
 from saml2 import element_to_extension_element
 from saml2 import extension_elements_to_elements
@@ -43,7 +41,8 @@ def _eval(val, onts):
 
 def to_dict(_dict, onts):
     """
-    Convert a pysaml2 SAML2 metadata format into a basic dictionary format
+    Convert a pysaml2 SAML2 message class instance into a basic dictionary
+    format.
     The export interface.
 
     :param _dict: The pysaml2 metadata instance
