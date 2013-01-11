@@ -1,11 +1,14 @@
 import calendar
-import sys
 import urlparse
 import re
 import time_util
 import struct
 import base64
 
+# Also defined in saml2.saml but can't import from there
+XSI_NAMESPACE = 'http://www.w3.org/2001/XMLSchema-instance'
+XSI_NIL = '{%s}nil' % XSI_NAMESPACE
+# ---------------------------------------------------------
 
 class NotValid(Exception):
     pass
@@ -48,24 +51,27 @@ def valid_any_uri(item):
     #     raise NotValid("AnyURI")
 
     return True
-    
+
+
 def valid_date_time(item):
     try:
         time_util.str_to_time(item)
     except Exception:
         raise NotValid("dateTime")
     return True
-    
+
+
 def valid_url(url):
     try:
-        part = urlparse.urlparse(url)
+        _ = urlparse.urlparse(url)
     except Exception:
         raise NotValid("URL")
         
     # if part[1] == "localhost" or part[1] == "127.0.0.1":
     #     raise NotValid("URL")
     return True
-    
+
+
 def validate_on_or_after(not_on_or_after, slack):
     if not_on_or_after:
         now = time_util.utc_now()
@@ -309,6 +315,11 @@ def valid_instance(instance):
     instclass = instance.__class__
     class_name = instclass.__name__
 
+    if instance.text:
+        _has_val = True
+    else:
+        _has_val = False
+
     if instclass.c_value_type and instance.text:
         try:
             validate_value_type(instance.text.strip(),
@@ -356,6 +367,7 @@ def valid_instance(instance):
             _cmin = _cmax = _card = None
 
         if value:
+            _has_val = True
             if isinstance(value, list):
                 _list = True
                 vlen = len(value)
@@ -386,6 +398,11 @@ def valid_instance(instance):
                 raise NotValid(
                     "Class '%s' instance cardinality error: %s" % \
                     (class_name, "too few values on %s" % name))
+
+        if not _has_val:
+            # Not allow unless xsi:nil="true"
+            assert instance.extension_attributes
+            assert instance.extension_attributes[XSI_NIL] == "true"
 
     return True
 
