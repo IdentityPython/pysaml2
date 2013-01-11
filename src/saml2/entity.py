@@ -179,9 +179,10 @@ class Entity(HTTPBase):
 
         return info
 
-    # ------------------------------------------------------------------------
-    def _sign(self, msg, mid=None, to_sign=None):
-        if to_sign is not None:
+    # --------------------------------------------------------------------------
+
+    def sign(self, msg, mid=None, to_sign=None):
+        if msg.signature is None:
             msg.signature = pre_signature_part(msg.id, self.sec.my_cert, 1)
 
         if mid is None:
@@ -226,7 +227,7 @@ class Entity(HTTPBase):
             req.extensions = extensions
 
         if sign:
-            return self._sign(req)
+            return self.sign(req)
         else:
             logger.info("REQUEST: %s" % req)
             return req
@@ -262,7 +263,7 @@ class Entity(HTTPBase):
             setattr(response, key, val)
 
         if sign:
-            self._sign(response,to_sign=to_sign)
+            self.sign(response,to_sign=to_sign)
         elif to_sign:
             return signed_instance_factory(response, self.sec, to_sign)
         else:
@@ -291,7 +292,7 @@ class Entity(HTTPBase):
                                   status=status, **kwargs)
 
         if sign:
-            return self._sign(response, mid)
+            return self.sign(response, mid)
         else:
             return response
 
