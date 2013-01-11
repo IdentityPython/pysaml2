@@ -31,11 +31,8 @@ except ImportError:
 from saml2.time_util import not_on_or_after
 
 from saml2 import saml
-from saml2 import class_name
 from saml2.saml import AssertionIDRef
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
-from saml2.sigver import pre_signature_part
-from saml2.sigver import signed_instance_factory
 from saml2.client_base import Base
 from saml2.client_base import LogoutError
 from saml2.client_base import NoServiceDefined
@@ -155,13 +152,10 @@ class Saml2Client(Base):
                     sign = self.logout_requests_signed_default
 
                 if sign:
-                    request.signature = pre_signature_part(request.id,
-                                                    self.sec.my_cert, 1)
-                    to_sign = [(class_name(request), request.id)]
+                    srequest = self.sign(request)
+                else:
+                    srequest = "%s" % request
 
-                logger.info("REQUEST: %s" % request)
-
-                srequest = signed_instance_factory(request, self.sec, to_sign)
                 relay_state = self._relay_state(request.id)
 
                 http_info = self.apply_binding(binding, srequest, destination,
