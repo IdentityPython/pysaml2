@@ -10,7 +10,7 @@ __author__ = 'rolandh'
 Functions used to import metadata from and export it to a pysaml2 format
 """
 
-IMP_SKIP = ["_certs", "e_e_"]
+IMP_SKIP = ["_certs", "e_e_", "_extatt"]
 EXP_SKIP = ["__class__"]
 
 # From pysaml2 SAML2 metadata format to Python dictionary
@@ -59,6 +59,8 @@ def to_dict(_dict, onts):
             if key == "extension_elements":
                 _eel = extension_elements_to_elements(val, onts)
                 _val = [_eval(_v, onts) for _v in _eel]
+            elif key == "extension_attributes":
+                _val = val
             else:
                 _val = _eval(val, onts)
 
