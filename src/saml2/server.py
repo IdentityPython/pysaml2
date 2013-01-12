@@ -34,6 +34,7 @@ from saml2 import BINDING_HTTP_REDIRECT
 
 from saml2.request import AuthnRequest
 from saml2.request import AttributeQuery
+from saml2.request import NameIDMappingRequest
 
 from saml2.s_utils import sid
 from saml2.s_utils import MissingValue
@@ -330,6 +331,17 @@ class Server(Entity):
         return self._parse_request(xml_string, AuthnQuery,
                                    "authn_query_service", binding,
                                    "authn_query")
+
+    def parse_nameid_mapping_request(self, xml_string, binding):
+        """ Parse a nameid mapping request
+
+        :param xml_string: The NameIDMappingRequest as an XML string
+        :return: Query instance
+        """
+
+        return self._parse_request(xml_string, NameIDMappingRequest,
+                                   "manage_name_id_service", binding,
+                                   "nameid_mapping_request")
 
     # ------------------------------------------------------------------------
 

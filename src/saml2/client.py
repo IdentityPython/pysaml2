@@ -352,9 +352,8 @@ class Saml2Client(Base):
             response_args = {}
 
         if not binding:
-            binding, destination = self.pick_binding([BINDING_SOAP,
-                                                      BINDING_HTTP_POST],
-                                                     "attribute_service",
+            binding, destination = self.pick_binding("attribute_service",
+                                                     None,
                                                      "attribute_authority",
                                                      entity_id=entityid)
         else:

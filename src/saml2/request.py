@@ -150,17 +150,16 @@ class AuthnRequest(Request):
                          attribute_converters, timeslack)
         self.signature_check = self.sec.correctly_signed_authn_request
 
-
     def attributes(self):
         return to_local(self.attribute_converters, self.message)
             
 
-class AuthzRequest(Request):
+class AuthzDecisionQuery(Request):
     def __init__(self, sec_context, receiver_addrs,
                  attribute_converters=None, timeslack=0):
         Request.__init__(self, sec_context, receiver_addrs,
                          attribute_converters, timeslack)
-        self.signature_check = self.sec.correctly_signed_logout_request
+        self.signature_check = self.sec.correctly_signed_authz_decision_query
 
     def action(self):
         """ Which action authorization is requested for """
@@ -173,3 +172,11 @@ class AuthzRequest(Request):
     def resource(self):
         """ On which resource the action is expected to occur """
         pass
+
+class NameIDMappingRequest(Request):
+    def __init__(self, sec_context, receiver_addrs, attribute_converters,
+                 timeslack=0):
+        Request.__init__(self, sec_context, receiver_addrs,
+                         attribute_converters, timeslack)
+        self.signature_check = self.sec.correctly_signed_nameid_mapping_request
+

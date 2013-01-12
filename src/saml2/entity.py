@@ -137,12 +137,15 @@ class Entity(HTTPBase):
 
         return info
 
-    def pick_binding(self, bindings, service, descr_type="", request=None,
+    def pick_binding(self, service, bindings=None, descr_type="", request=None,
                      entity_id=""):
         if request and not entity_id:
             entity_id = request.issuer.text.strip()
 
         sfunc = getattr(self.metadata, service)
+        if bindings is None:
+            bindings = self.config.preferred_binding[service]
+
         for binding in bindings:
             srvs = sfunc(entity_id, binding, descr_type)
             if srvs:
@@ -160,12 +163,14 @@ class Entity(HTTPBase):
         info = {"in_response_to": message.id}
         if isinstance(message, AuthnRequest):
             rsrv = "assertion_consumer_service"
+            descr_type = "sp_sso"
             info["sp_entity_id"] = message.issuer.text
             info["name_id_policy"] = message.name_id_policy
         elif isinstance(message, LogoutRequest):
             rsrv = "single_logout_service"
         elif isinstance(message, AttributeQuery):
             rsrv = "attribute_consuming_service"
+            descr_type = "sp_sso"
         elif isinstance(message, ManageNameIDRequest):
             rsrv = "manage_name_id_service"
         # The once below are solely SOAP
@@ -185,7 +190,7 @@ class Entity(HTTPBase):
                 else:
                     descr_type = "spsso"
 
-            binding, destination = self.pick_binding(bindings, rsrv,
+            binding, destination = self.pick_binding(rsrv, bindings,
                                                      descr_type=descr_type,
                                                      request=message)
             info["destination"] = destination
@@ -456,6 +461,20 @@ class Entity(HTTPBase):
 
     def create_manage_name_id_request(self):
         pass
+
+    def parse_manage_name_id_request(self, xmlstr, binding=BINDING_SOAP):
+        """ Deal with a LogoutRequest
+
+        :param xmlstr: The response as a xml string
+        :param binding: What type of binding this message came through.
+        :return: None if the reply doesn't contain a valid SAML LogoutResponse,
+            otherwise the reponse if the logout was successful and None if it
+            was not.
+        """
+
+        return self._parse_request(xmlstr, request.LogoutRequest,
+                                   "single_logout_service", binding,
+                                   "logout_request")
 
     def create_manage_name_id_response(self, request, bindings, status=None,
                                        sign=False, issuer=None):

@@ -11,6 +11,10 @@ import logging.handlers
 from importlib import import_module
 
 from saml2 import root_logger
+from saml2 import BINDING_SOAP
+from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_HTTP_POST
+from saml2 import BINDING_HTTP_ARTIFACT
 
 from saml2.attribute_converter import ac_factory
 from saml2.assertion import Policy
@@ -53,7 +57,8 @@ COMMON_ARGS = ["entityid", "xmlsec_binary", "debug", "key_file", "cert_file",
                 "logger",
                 "only_use_keys_in_metadata",
                 "logout_requests_signed",
-                "disable_ssl_certificate_validation"
+                "disable_ssl_certificate_validation",
+                "referred_binding"
                 ]
 
 SP_ARGS = [
@@ -116,6 +121,25 @@ LOG_HANDLER = {
 
 LOG_FORMAT = "%(asctime)s %(name)s:%(levelname)s %(message)s"
 
+_RPA = [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST, BINDING_HTTP_ARTIFACT]
+_PRA = [BINDING_HTTP_POST, BINDING_HTTP_REDIRECT, BINDING_HTTP_ARTIFACT]
+_SRPA = [BINDING_SOAP, BINDING_HTTP_REDIRECT, BINDING_HTTP_POST,
+         BINDING_HTTP_ARTIFACT]
+
+PREFERRED_BINDING={
+    "single_logout_service": _SRPA,
+    "manage_name_id_service": _SRPA,
+    "assertion_consumer_service": _PRA,
+    "single_sign_on_service": _RPA,
+    "name_id_mapping_service": [BINDING_SOAP],
+    "authn_query_service": [BINDING_SOAP],
+    "attribute_service": [BINDING_SOAP],
+    "authz_service": [BINDING_SOAP],
+    "assertion_id_request_service": [BINDING_SOAP],
+    "artifact_resolution_service": [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST],
+    "attribute_consuming_service": _RPA
+}
+
 class ConfigurationError(Exception):
     pass
 
@@ -152,6 +176,7 @@ class Config(object):
         self.policy=None
         self.serves = []
         self.vorg = {}
+        self.preferred_binding = PREFERRED_BINDING
 
     def setattr(self, context, attr, val):
         if context == "":
