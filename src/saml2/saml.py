@@ -99,14 +99,6 @@ def _verify_value_type(typ, val):
         return base64.decodestring(val)
 
 class AttributeValueBase(SamlBase):
-
-
-    def __setattr__(self, key, value):
-        if key == "text":
-            self.set_text(value)
-        else:
-            SamlBase.__setattr__(self,key, value)
-            
     def __init__(self,
                  text=None,
                  extension_elements=None,
@@ -126,6 +118,12 @@ class AttributeValueBase(SamlBase):
             self.extension_attributes = {XSI_NIL: 'true'}
         else:
             self.set_text(text)
+
+    def __setattr__(self, key, value):
+        if key == "text":
+            self.set_text(value)
+        else:
+            SamlBase.__setattr__(self,key, value)
 
     def verify(self):
         if not self.text:
@@ -150,6 +148,16 @@ class AttributeValueBase(SamlBase):
             except KeyError:
                 return ""
 
+    def clear_type(self):
+        try:
+            del self.extension_attributes[XSI_TYPE]
+        except KeyError:
+            pass
+        try:
+            del self._extatt[XSI_TYPE]
+        except KeyError:
+            pass
+
     def set_text(self, val, base64encode=False):
         typ = self.get_type()
         if base64encode:
@@ -161,7 +169,20 @@ class AttributeValueBase(SamlBase):
                 if not typ:
                     self.set_type("xs:string")
                 else:
-                    assert typ == "xs:string"
+                    try:
+                        assert typ == "xs:string"
+                    except AssertionError:
+                        if typ == "xs:int":
+                            _ = int(val)
+                        elif typ == "xs:boolean":
+                            if val.lower() not in ["true", "false"]:
+                                raise ValueError("Not a boolean")
+                        elif typ == "xs:float":
+                            _ = float(val)
+                        elif typ == "xs:base64Binary":
+                            pass
+                        else:
+                            ValueError("Type and value doesn't match")
             elif isinstance(val, bool):
                 if val:
                     val = "true"
@@ -206,6 +227,8 @@ class AttributeValueBase(SamlBase):
             self._convert_element_attribute_to_member(attribute, value)
         if tree.text:
             #print "set_text:", tree.text
+            # clear type
+            #self.clear_type()
             self.set_text(tree.text)
             try:
                 typ = self.extension_attributes[XSI_TYPE]

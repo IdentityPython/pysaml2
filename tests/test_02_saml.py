@@ -243,8 +243,8 @@ class TestSAMLBase:
         assert av.text == "true"
         av.set_text(False)
         assert av.text == "false"
-        av.set_text(491)
-        assert av.text == "491"
+        # can't change value to another type
+        raises(AssertionError, "av.set_text(491)")
 
         av = AttributeValue()
         av.set_text(None)
@@ -697,15 +697,6 @@ class TestAttribute:
         attribute = saml.attribute_from_string(BASIC_INT_AV)
         print attribute
         assert attribute.attribute_value[0].text == "23"
-
-    def test_basic_not_int(self):
-        # attr = saml.attribute_from_string(BASIC_NOT_INT_AV)
-        # print attr.__dict__.keys()
-        # print attr.attribute_value[0].__dict__.keys()
-        # print attr.attribute_value[0].type
-        # print attr.attribute_value[0].extension_attributes
-        # print attr
-        raises(ValueError, "saml.attribute_from_string(BASIC_NOT_INT_AV)")
 
     def test_basic_base64(self):
         attribute = saml.attribute_from_string(BASIC_BASE64_AV)
