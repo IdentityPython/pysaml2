@@ -21,7 +21,8 @@ to conclude its tasks.
 from saml2.entity import Entity
 
 from saml2.mdstore import destinations
-from saml2.saml import AssertionIDRef, NAMEID_FORMAT_TRANSIENT
+from saml2.saml import AssertionIDRef
+from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.samlp import AuthnQuery
 from saml2.samlp import Response
 from saml2.samlp import AssertionIDRequest
@@ -376,7 +377,7 @@ class Base(Entity):
         id_refs = [AssertionIDRef(text=s) for s in assertion_id_refs]
 
         return self._message(AssertionIDRequest, destination, id, consent,
-                             extensions, sign, assertion_id_refs=id_refs )
+                             extensions, sign, assertion_id_ref=id_refs )
 
 
     def create_authn_query(self, subject, destination=None,
@@ -384,10 +385,10 @@ class Base(Entity):
                            id=0, consent=None, extensions=None, sign=False):
         """
 
-        :param subject:
+        :param subject: The subject its all about as a <Subject> instance
         :param destination: The IdP endpoint to send the request to
-        :param authn_context:
-        :param session_index:
+        :param authn_context: list of <RequestedAuthnContext> instances
+        :param session_index: a specified session index
         :param id: Message identifier
         :param consent: If the principal gave her consent to this request
         :param extensions: Possible request extensions
@@ -396,7 +397,7 @@ class Base(Entity):
         """
         return self._message(AuthnQuery, destination, id, consent, extensions,
                              sign, subject=subject, session_index=session_index,
-                             requested_auth_context=authn_context)
+                             requested_authn_context=authn_context)
 
     def create_nameid_mapping_request(self, nameid_policy,
                                       nameid=None, baseid=None,

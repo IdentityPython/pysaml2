@@ -26,6 +26,13 @@ CONFIG = {
                 ]
             },
         },
+        "aq": {
+            "endpoints" : {
+                "authn_query_service": [
+                    ("%s/aqs" % BASE, BINDING_SOAP)
+                ]
+            },
+        },
         "idp": {
             "endpoints" : {
                 "single_sign_on_service" : [
@@ -36,6 +43,12 @@ CONFIG = {
                     ("%s/slop" % BASE, BINDING_HTTP_POST)],
                 "artifact_resolution_service":[
                     ("%s/ars" % BASE, BINDING_SOAP)
+                ],
+                "assertion_id_request_service": [
+                    ("%s/airs" % BASE, BINDING_SOAP)
+                ],
+                "authn_query_service": [
+                    ("%s/aqs" % BASE, BINDING_SOAP)
                 ]
             },
             "policy": {

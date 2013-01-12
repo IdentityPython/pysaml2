@@ -17,7 +17,7 @@ from saml2.s_utils import sid
 from saml2.s_utils import rndstr
 from saml2.s_utils import success_status_factory
 from saml2.s_utils import decode_base64_and_inflate
-from saml2.samlp import AuthnRequest
+from saml2.samlp import AuthnRequest, AssertionIDRequest
 from saml2.samlp import artifact_resolve_from_string
 from saml2.samlp import ArtifactResolve
 from saml2.samlp import ArtifactResponse
@@ -168,6 +168,8 @@ class Entity(HTTPBase):
             rsrv = "attribute_consuming_service"
         elif isinstance(message, ArtifactResolve):
             rsrv = ""
+        elif isinstance(message, AssertionIDRequest):
+            rsrv = ""
         else:
             raise Exception("No support for this type of query")
 
@@ -233,8 +235,7 @@ class Entity(HTTPBase):
             return req
 
     def _response(self, in_response_to, consumer_url=None, status=None,
-                  issuer=None, sign=False, to_sign=None,
-                  **kwargs):
+                  issuer=None, sign=False, to_sign=None, **kwargs):
         """ Create a Response that adhers to the ??? profile.
 
         :param in_response_to: The session identifier of the request
@@ -242,7 +243,7 @@ class Entity(HTTPBase):
         :param status: The status of the response
         :param issuer: The issuer of the response
         :param sign: Whether the response should be signed or not
-        :param to_sign: What other parts to sign
+        :param to_sign: If there are other parts to sign
         :param kwargs: Extra key word arguments
         :return: A Response instance
         """

@@ -417,7 +417,8 @@ class SubjectQueryAbstractType_(RequestAbstractType_):
     c_attributes = RequestAbstractType_.c_attributes.copy()
     c_child_order = RequestAbstractType_.c_child_order[:]
     c_cardinality = RequestAbstractType_.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Subject'] = ('subject', saml.Subject)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Subject'] = ('subject',
+                                                                    saml.Subject)
     c_child_order.extend(['subject'])
 
     def __init__(self,
@@ -1025,7 +1026,9 @@ class AuthnQueryType_(SubjectQueryAbstractType_):
     c_attributes = SubjectQueryAbstractType_.c_attributes.copy()
     c_child_order = SubjectQueryAbstractType_.c_child_order[:]
     c_cardinality = SubjectQueryAbstractType_.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}RequestedAuthnContext'] = ('requested_authn_context', RequestedAuthnContext)
+    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}RequestedAuthnContext'] = (
+                                                    'requested_authn_context',
+                                                    RequestedAuthnContext)
     c_cardinality['requested_authn_context'] = {"min":0, "max":1}
     c_attributes['SessionIndex'] = ('session_index', 'string', False)
     c_child_order.extend(['requested_authn_context'])

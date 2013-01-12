@@ -259,6 +259,9 @@ ENDPOINTS = {
     },
     "pdp": {
         "authz_service": (md.AuthzService, True)
+    },
+    "aq": {
+        "authn_query_service": (md.AuthnQueryService, True)
     }
 }
 
@@ -267,7 +270,8 @@ DEFAULT_BINDING = {
     "single_sign_on_service": BINDING_HTTP_REDIRECT,
     "single_logout_service": BINDING_HTTP_POST,
     "attribute_service": BINDING_SOAP,
-    "artifact_resolution_service": BINDING_SOAP
+    "artifact_resolution_service": BINDING_SOAP,
+    "authn_query_service": BINDING_SOAP
 }
 
 
@@ -347,23 +351,29 @@ def do_spsso_descriptor(conf, cert=None):
         requested_attributes.extend(do_requested_attribute(opt, acs))
 
     if requested_attributes:
-        spsso.attribute_consuming_service = [md.AttributeConsumingService(
-            requested_attribute=requested_attributes,
-            service_name= [md.ServiceName(lang="en",text=conf.name)],
-            index="1",
-            )]
-        try:
-            if conf.description:
-                try:
-                    (text, lang) = conf.description
-                except ValueError:
-                    text = conf.description
-                    lang = "en"
-                spsso.attribute_consuming_service[0].service_description = [
-                    md.ServiceDescription(text=text,
-                                          lang=lang)]
-        except KeyError:
-            pass
+        # endpoints that might publish requested attributes
+        if spsso.attribute_consuming_service:
+            for acs in spsso.attribute_consuming_service:
+                if not acs.requested_attribute:
+                    acs.requested_attribute = requested_attributes
+
+#        spsso.attribute_consuming_service = [md.AttributeConsumingService(
+#            requested_attribute=requested_attributes,
+#            service_name= [md.ServiceName(lang="en",text=conf.name)],
+#            index="1",
+#            )]
+#        try:
+#            if conf.description:
+#                try:
+#                    (text, lang) = conf.description
+#                except ValueError:
+#                    text = conf.description
+#                    lang = "en"
+#                spsso.attribute_consuming_service[0].service_description = [
+#                    md.ServiceDescription(text=text,
+#                                          lang=lang)]
+#        except KeyError:
+#            pass
 
     dresp = conf.getattr("discovery_response", "sp")
     if dresp:
@@ -438,6 +448,25 @@ def do_aa_descriptor(conf, cert):
     return aad
 
 
+def do_aq_descriptor(conf, cert):
+    aqs = md.AuthnAuthorityDescriptor()
+    aqs.protocol_support_enumeration = samlp.NAMESPACE
+
+    endps = conf.getattr("endpoints", "aq")
+
+    if endps:
+        for (endpoint, instlist) in do_endpoints(endps,
+                                                 ENDPOINTS["aq"]).items():
+            setattr(aqs, endpoint, instlist)
+
+    _do_nameid_format(aqs, conf, "aq")
+
+    if cert:
+        aqs.key_descriptor = do_key_descriptor(cert)
+
+    return aqs
+
+
 def do_pdp_descriptor(conf, cert):
     """ Create a Policy Decision Point descriptor """
     pdp = md.PDPDescriptor()
@@ -489,6 +518,9 @@ def entity_descriptor(confd):
     if "pdp" in serves:
         confd.context = "pdp"
         entd.pdp_descriptor = do_pdp_descriptor(confd, mycert)
+    if "aq" in serves:
+        confd.context = "aq"
+        entd.authn_authority_descriptor = do_aq_descriptor(confd, mycert)
 
     return entd
 

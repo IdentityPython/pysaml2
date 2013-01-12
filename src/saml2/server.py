@@ -24,6 +24,8 @@ import shelve
 import sys
 import memcache
 from saml2.samlp import AuthzDecisionQuery
+from saml2.samlp import AssertionIDRequest
+from saml2.samlp import AuthnQuery
 from saml2.entity import Entity
 
 from saml2 import saml
@@ -214,6 +216,7 @@ class Server(Entity):
         self._cache = _cache
         self.ticket = {}
         self.authn = {}
+        self.assertion = {}
 
     def init_config(self, stype="idp"):
         """ Remaining init of the server configuration 
@@ -306,6 +309,28 @@ class Server(Entity):
                                    "authz_service", binding,
                                    "authz_decision")
 
+    def parse_assertion_id_request(self, xml_string, binding):
+        """ Parse an assertion id query
+
+        :param xml_string: The AssertionIDRequest as an XML string
+        :return: Query instance
+        """
+
+        return self._parse_request(xml_string, AssertionIDRequest,
+                                   "assertion_id_request_service", binding,
+                                   "assertion_id_request")
+
+    def parse_authn_query(self, xml_string, binding):
+        """ Parse an authn query
+
+        :param xml_string: The AuthnQuery as an XML string
+        :return: Query instance
+        """
+
+        return self._parse_request(xml_string, AuthnQuery,
+                                   "authn_query_service", binding,
+                                   "authn_query")
+
     # ------------------------------------------------------------------------
 
     def _authn_response(self, in_response_to, consumer_url,
@@ -378,6 +403,8 @@ class Server(Entity):
             #                 assertion.conditions.not_on_or_after)
 
             args["assertion"] = assertion
+
+            self.assertion[assertion.id] = (assertion, to_sign)
 
         return self._response(in_response_to, consumer_url, status, issuer,
                               sign_response, to_sign, **args)
@@ -525,3 +552,33 @@ class Server(Entity):
         except MissingValue, exc:
             return self.create_error_response(in_response_to, destination,
                                                   sp_entity_id, exc, name_id)
+
+    def create_assertion_id_request_response(self, assertion_id, in_response_to,
+                                             issuer=None, sign_response=False,
+                                             status=None):
+        """
+
+        :param assertion_id:
+        :param in_response_to:
+        :param issuer:
+        :param sign_response:
+        :param status:
+        :return:
+        """
+        # Done over SOAP
+        args = {}
+        to_sign = []
+
+        for aid in assertion_id:
+            try:
+                (assertion, to_sign) = self.assertion[aid]
+                to_sign.extend(to_sign)
+                try:
+                    args["assertion"].append(assertion)
+                except KeyError:
+                    args["assertion"] = [assertion]
+            except KeyError:
+                pass
+
+        return self._response(in_response_to, "", status, issuer,
+                              sign_response, to_sign, **args)

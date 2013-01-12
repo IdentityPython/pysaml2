@@ -86,6 +86,8 @@ AA_IDP_ARGS = ["want_authn_requests_signed",
 
 PDP_ARGS = ["endpoints", "name_form", "name_id_format"]
 
+AQ_ARGS = ["endpoints"]
+
 COMPLEX_ARGS = ["attribute_converters", "metadata", "policy"]
 ALL = set(COMMON_ARGS + SP_ARGS + AA_IDP_ARGS + PDP_ARGS + COMPLEX_ARGS)
 
@@ -95,6 +97,7 @@ SPEC = {
     "idp": COMMON_ARGS + COMPLEX_ARGS + AA_IDP_ARGS,
     "aa": COMMON_ARGS + COMPLEX_ARGS + AA_IDP_ARGS,
     "pdp": COMMON_ARGS + COMPLEX_ARGS + PDP_ARGS,
+    "aq": COMMON_ARGS + COMPLEX_ARGS + AQ_ARGS,
 }
 
 # --------------- Logging stuff ---------------
@@ -230,7 +233,7 @@ class Config(object):
                 pass
 
         if "service" in cnf:
-            for typ in ["aa", "idp", "sp", "pdp"]:
+            for typ in ["aa", "idp", "sp", "pdp", "aq"]:
                 try:
                     self.load_special(cnf["service"][typ], typ,
                                     metadata_construction=metadata_construction)
@@ -412,7 +415,7 @@ def config_factory(typ, file):
     if typ == "sp":
         conf = SPConfig().load_file(file)
         conf.context = typ
-    elif typ in ["aa", "idp", "pdp"]:
+    elif typ in ["aa", "idp", "pdp", "aq"]:
         conf = IdPConfig().load_file(file)
         conf.context = typ
     else:
