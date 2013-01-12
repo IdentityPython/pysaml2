@@ -252,9 +252,7 @@ ENDPOINTS = {
         "artifact_resolution_service": (md.ArtifactResolutionService, True),
         "single_logout_service": (md.SingleLogoutService, False),
         "manage_name_id_service": (md.ManageNameIDService, False),
-
         "assertion_id_request_service": (md.AssertionIDRequestService, False),
-
         "attribute_service": (md.AttributeService, False)
     },
     "pdp": {

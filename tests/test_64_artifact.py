@@ -123,7 +123,7 @@ def test_artifact_flow():
 
     name_id = idp.ident.transient_nameid(sp.config.entityid, "derek")
 
-    resp_args = idp.response_args(spreq, [BINDING_HTTP_POST], "spsso")
+    resp_args = idp.response_args(spreq, [BINDING_HTTP_POST])
 
     response = idp.create_authn_response({"eduPersonEntitlement": "Short stop",
                                           "surName": "Jeter", "givenName": "Derek",

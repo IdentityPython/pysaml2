@@ -1,4 +1,7 @@
-from saml2 import BINDING_SOAP, BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
+from saml2 import BINDING_SOAP
+from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_HTTP_POST
+from saml2 import BINDING_HTTP_ARTIFACT
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.saml import NAME_FORMAT_URI
 
@@ -36,11 +39,14 @@ CONFIG = {
         "idp": {
             "endpoints" : {
                 "single_sign_on_service" : [
-                    ("%s/sso" % BASE, BINDING_HTTP_REDIRECT),
-                    ("%s/ssop" % BASE, BINDING_HTTP_POST)],
+                    ("%s/sso/redirect" % BASE, BINDING_HTTP_REDIRECT),
+                    ("%s/sso/post" % BASE, BINDING_HTTP_POST),
+                    ("%s/sso/art" % BASE, BINDING_HTTP_ARTIFACT)
+                ],
                 "single_logout_service": [
-                    ("%s/slo" % BASE, BINDING_SOAP),
-                    ("%s/slop" % BASE, BINDING_HTTP_POST)],
+                    ("%s/slo/soap" % BASE, BINDING_SOAP),
+                    ("%s/slo/post" % BASE, BINDING_HTTP_POST)
+                ],
                 "artifact_resolution_service":[
                     ("%s/ars" % BASE, BINDING_SOAP)
                 ],
@@ -49,6 +55,18 @@ CONFIG = {
                 ],
                 "authn_query_service": [
                     ("%s/aqs" % BASE, BINDING_SOAP)
+                ],
+                "manage_name_id_service":[
+                    ("%s/mni/soap" % BASE, BINDING_SOAP),
+                    ("%s/mni/post" % BASE, BINDING_HTTP_POST),
+                    ("%s/mni/redirect" % BASE, BINDING_HTTP_REDIRECT),
+                    ("%s/mni/art" % BASE, BINDING_HTTP_ARTIFACT)
+                ],
+                "name_id_mapping_service":[
+                    ("%s/nim/soap" % BASE, BINDING_SOAP),
+                    ("%s/nim/post" % BASE, BINDING_HTTP_POST),
+                    ("%s/nim/redirect" % BASE, BINDING_HTTP_REDIRECT),
+                    ("%s/nim/art" % BASE, BINDING_HTTP_ARTIFACT)
                 ]
             },
             "policy": {

@@ -17,7 +17,7 @@ from saml2.s_utils import sid
 from saml2.s_utils import rndstr
 from saml2.s_utils import success_status_factory
 from saml2.s_utils import decode_base64_and_inflate
-from saml2.samlp import AuthnRequest, AssertionIDRequest
+from saml2.samlp import AuthnRequest, AssertionIDRequest, ManageNameIDRequest, NameIDMappingRequest
 from saml2.samlp import artifact_resolve_from_string
 from saml2.samlp import ArtifactResolve
 from saml2.samlp import ArtifactResponse
@@ -156,7 +156,7 @@ class Entity(HTTPBase):
 
         raise Exception("Unkown entity or unsupported bindings")
 
-    def response_args(self, message, bindings, descr_type):
+    def response_args(self, message, bindings):
         info = {"in_response_to": message.id}
         if isinstance(message, AuthnRequest):
             rsrv = "assertion_consumer_service"
@@ -166,14 +166,23 @@ class Entity(HTTPBase):
             rsrv = "single_logout_service"
         elif isinstance(message, AttributeQuery):
             rsrv = "attribute_consuming_service"
+        elif isinstance(message, ManageNameIDRequest):
+            rsrv = "manage_name_id_service"
+        # The once below are solely SOAP
         elif isinstance(message, ArtifactResolve):
             rsrv = ""
         elif isinstance(message, AssertionIDRequest):
+            rsrv = ""
+        elif isinstance(message, NameIDMappingRequest):
             rsrv = ""
         else:
             raise Exception("No support for this type of query")
 
         if rsrv:
+            if self.entity_type == "sp":
+                descr_type = "idpsso"
+            else:
+                descr_type = "spsso"
             binding, destination = self.pick_binding(bindings, rsrv,
                                                      descr_type=descr_type,
                                                      request=message)
@@ -397,9 +406,10 @@ class Entity(HTTPBase):
         :return: HTTP args
         """
 
-        rinfo = self.response_args(request, bindings, descr_type="spsso")
+        rinfo = self.response_args(request, bindings)
+
         response = self._status_response(samlp.LogoutResponse, issuer, status,
-                                         sign=False, **rinfo)
+                                         sign, **rinfo)
 
         logger.info("Response: %s" % (response,))
 
@@ -431,12 +441,27 @@ class Entity(HTTPBase):
         :return:
         """
 
-        rinfo = self.response_args(request, bindings, descr_type="spsso")
+        rinfo = self.response_args(request, bindings)
         response = self._status_response(ArtifactResponse, issuer, status,
                                          sign=False, **rinfo)
 
         msg = element_to_extension_element(self.artifact[artifact])
         response.extension_elements = [msg]
+
+        logger.info("Response: %s" % (response,))
+
+        return response
+
+    def create_manage_name_id_request(self):
+        pass
+
+    def create_manage_name_id_response(self, request, bindings, status=None,
+                                       sign=False, issuer=None):
+
+        rinfo = self.response_args(request, bindings)
+
+        response = self._status_response(samlp.LogoutResponse, issuer, status,
+                                         sign=False, **rinfo)
 
         logger.info("Response: %s" % (response,))
 

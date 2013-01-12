@@ -89,7 +89,7 @@ class FakeIDP(Server):
             _binding = req.message.protocol_binding
 
         try:
-            resp_args = self.response_args(req.message, [_binding], "spsso")
+            resp_args = self.response_args(req.message, [_binding])
         except Exception:
             raise
 

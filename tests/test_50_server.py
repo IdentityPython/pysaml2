@@ -187,8 +187,7 @@ class TestServer1():
         req = self.server.parse_authn_request(intermed)
         # returns a dictionary
         print req
-        resp_args = self.server.response_args(req.message, [BINDING_HTTP_POST],
-                                              descr_type="spsso")
+        resp_args = self.server.response_args(req.message, [BINDING_HTTP_POST])
         assert resp_args["destination"] == "http://lingon.catalogix.se:8087/"
         assert resp_args["in_response_to"] == "id1"
         name_id_policy = resp_args["name_id_policy"]

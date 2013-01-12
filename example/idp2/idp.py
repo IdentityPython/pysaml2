@@ -97,8 +97,7 @@ def _sso(environ, start_response, query, binding, user):
 
     # base 64 encoded request
     req_info = IDP.parse_authn_request(query["SAMLRequest"][0], binding=binding)
-    resp_args = IDP.response_args(req_info.message, [BINDING_HTTP_POST],
-                                  descr_type="spsso")
+    resp_args = IDP.response_args(req_info.message, [BINDING_HTTP_POST])
     logger.info("parsed OK")
     logger.info("%s" % req_info)
 

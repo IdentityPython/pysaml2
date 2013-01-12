@@ -115,7 +115,7 @@ def sso(environ, start_response, user):
         _binding = req.message.protocol_binding
 
     try:
-        resp_args = IDP.response_args(req.message, [_binding], "spsso")
+        resp_args = IDP.response_args(req.message, [_binding])
     except Exception:
         raise
 

@@ -399,17 +399,17 @@ class Base(Entity):
                              sign, subject=subject, session_index=session_index,
                              requested_authn_context=authn_context)
 
-    def create_nameid_mapping_request(self, nameid_policy,
-                                      nameid=None, baseid=None,
-                                      encryptedid=None, destination=None,
+    def create_nameid_mapping_request(self, name_id_policy,
+                                      name_id=None, base_id=None,
+                                      encrypted_id=None, destination=None,
                                       id=0, consent=None, extensions=None,
                                       sign=False):
         """
 
-        :param nameid_policy:
-        :param nameid:
-        :param baseid:
-        :param encryptedid:
+        :param name_id_policy:
+        :param name_id:
+        :param base_id:
+        :param encrypted_id:
         :param destination:
         :param id: Message identifier
         :param consent: If the principal gave her consent to this request
@@ -419,20 +419,20 @@ class Base(Entity):
         """
 
         # One of them must be present
-        assert nameid or baseid or encryptedid
+        assert name_id or base_id or encrypted_id
 
-        if nameid:
+        if name_id:
             return self._message(NameIDMappingRequest, destination, id, consent,
-                                 extensions, sign, nameid_policy=nameid_policy,
-                                 nameid=nameid)
-        elif baseid:
+                                 extensions, sign, name_id_policy=name_id_policy,
+                                 name_id=name_id)
+        elif base_id:
             return self._message(NameIDMappingRequest, destination, id, consent,
-                                 extensions, sign, nameid_policy=nameid_policy,
-                                 baseid=baseid)
+                                 extensions, sign, name_id_policy=name_id_policy,
+                                 base_id=base_id)
         else:
             return self._message(NameIDMappingRequest, destination, id, consent,
-                                 extensions, sign, nameid_policy=nameid_policy,
-                                 encryptedid=encryptedid)
+                                 extensions, sign, name_id_policy=name_id_policy,
+                                 encrypted_id=encrypted_id)
 
     def create_manage_nameid_request(self):
         pass
