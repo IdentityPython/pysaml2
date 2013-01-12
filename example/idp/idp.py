@@ -200,9 +200,8 @@ def slo(environ, start_response, user):
     try:
         response = IDP.create_logout_response(req_info.message,
                                                         bindings)
-        binding, destination = IDP.pick_binding(bindings,
-                                                "single_logout_service",
-                                                "spsso", response)
+        binding, destination = IDP.pick_binding("single_logout_service",
+                                                bindings, "spsso", response)
 
         http_args = IDP.apply_binding(binding, "%s" % response, destination,
                                       query["RelayState"], "SAMLResponse")
