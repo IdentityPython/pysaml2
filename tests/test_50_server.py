@@ -477,9 +477,8 @@ class TestServerLogout():
         print request
         bindings = [BINDING_HTTP_REDIRECT]
         response = server.create_logout_response(request, bindings)
-        binding, destination = server.pick_binding(bindings,
-                                                   "single_logout_service",
-                                                   "spsso", request)
+        binding, destination = server.pick_binding("single_logout_service",
+                                                   None, "spsso", request)
 
         http_args = server.apply_binding(binding, "%s" % response, destination,
                                          "relay_state", "SAMLResponse")
