@@ -667,7 +667,7 @@ class SecurityContext(object):
                                 node_name, self.debug, node_id, id_attr)
         
     def _check_signature(self, decoded_xml, item, node_name=NODE_NAME,
-                         origdoc=None, id_attr=""):
+                         origdoc=None, id_attr="", must=False):
         #print item
         try:
             issuer = item.issuer.text.strip()
@@ -729,106 +729,63 @@ class SecurityContext(object):
         return item
 
     def check_signature(self, item, node_name=NODE_NAME, origdoc=None,
-                        id_attr=""):
-        return self._check_signature( origdoc, item, node_name, origdoc,
-                                      id_attr=id_attr)
-        
-    def correctly_signed_logout_request(self, decoded_xml, must=False,
-                                        origdoc=None):
-        """ Check if a request is correctly signed, if we have metadata for
-        the SP that sent the info use that, if not use the key that are in 
+                        id_attr="", must=False):
+        return self._check_signature(origdoc, item, node_name, origdoc,
+                                     id_attr=id_attr, must=must)
+
+    def correctly_signed_message(self, decoded_xml, msgtype, must=False,
+                                 origdoc=None):
+        """Check if a request is correctly signed, if we have metadata for
+        the entity that sent the info use that, if not use the key that are in
         the message if any.
 
-        :param decoded_xml: The SAML message as a XML string
-        :param must: Whether there must be a signature
-        :param origdoc: The original XML message
-        :return: None if the signature can not be verified otherwise
-            request as a samlp.Request instance
+        :param decoded_xml:
+        :param msgtype:
+        :param must:
+        :param origdoc:
+        :return:
         """
-        request = samlp.logout_request_from_string(decoded_xml)
-        if not request:
-            raise TypeError("Not a LogoutRequest")
 
-        if not request.signature:
+        _func = getattr(samlp, "%s_from_string" % msgtype)
+        msg = _func(decoded_xml)
+        if not msg:
+            raise TypeError("Not a %s" % msgtype)
+
+        if not msg.signature:
             if must:
                 raise SignatureError("Missing must signature")
             else:
-                return request
+                return msg
 
-        return self._check_signature(decoded_xml, request,
-                                     class_name(request), origdoc)
+        return self._check_signature(decoded_xml, msg, class_name(msg),
+                                     origdoc, must=must)
 
-    def correctly_signed_logout_response(self, decoded_xml, must=False,
-                                         origdoc=None):
-        """ Check if a request is correctly signed, if we have metadata for
-        the SP that sent the info use that, if not use the key that are in 
-        the message if any.
-
-        :param decoded_xml: The SAML message as a XML string
-        :param must: Whether there must be a signature
-        :return: None if the signature can not be verified otherwise 
-             the response as a samlp.LogoutResponse instance
-        """
-        response = samlp.logout_response_from_string(decoded_xml)
-        if not response:
-            raise TypeError("Not a LogoutResponse")
-
-        if not response.signature:
-            if must:
-                raise SignatureError("Missing must signature")
-            else:
-                return response
-
-        return self._check_signature(decoded_xml, response,
-                                     class_name(response), origdoc)
-    
     def correctly_signed_authn_request(self, decoded_xml, must=False,
                                        origdoc=None):
-        """ Check if a request is correctly signed, if we have metadata for
-        the SP that sent the info use that, if not use the key that are in 
-        the message if any.
-        
-        :param decoded_xml: The SAML message as a XML string
-        :param must: Whether there must be a signature
-        :return: None if the signature can not be verified otherwise 
-            request as a samlp.Request instance
-        """
-        request = samlp.authn_request_from_string(decoded_xml)
-        if not request:
-            raise TypeError("Not an AuthnRequest")
-            
-        if not request.signature:
-            if must:
-                raise SignatureError("Missing must signature")
-            else:
-                return request
+        return self.correctly_signed_message(decoded_xml, "authn_request",
+                                             must, origdoc)
 
-        return self._check_signature(decoded_xml, request,
-                                     class_name(request), origdoc=origdoc )
+    def correctly_signed_logout_request(self, decoded_xml, must=False,
+                                       origdoc=None):
+        return self.correctly_signed_message(decoded_xml, "logout_request",
+                                             must, origdoc)
 
     def correctly_signed_attribute_query(self, decoded_xml, must=False,
-                                         origdoc=None):
-        """ Check if a request is correctly signed, if we have metadata for
-        the SP that sent the info use that, if not use the key that are in
-        the message if any.
+                                       origdoc=None):
+        return self.correctly_signed_message(decoded_xml, "attribute_query",
+                                             must, origdoc)
 
-        :param decoded_xml: The SAML message as a XML string
-        :param must: Whether there must be a signature
-        :return: None if the signature can not be verified otherwise
-            request as a samlp.Request instance
-        """
-        request = samlp.attribute_query_from_string(decoded_xml)
-        if not request:
-            raise TypeError("Not an AttributeQuery")
+    def correctly_signed_authz_decision_query(self, decoded_xml, must=False,
+                                              origdoc=None):
+        return self.correctly_signed_message(decoded_xml,
+                                             "authz_decision_query", must,
+                                             origdoc)
 
-        if not request.signature:
-            if must:
-                raise SignatureError("Missing must signature")
-            else:
-                return request
-
-        return self._check_signature(decoded_xml, request,
-                                     class_name(request), origdoc=origdoc )
+    def correctly_signed_nameid_mapping_request(self, decoded_xml, must=False,
+                                                origdoc=None):
+        return self.correctly_signed_message(decoded_xml,
+                                             "name id_mapping_request",
+                                             must, origdoc)
 
     def correctly_signed_response(self, decoded_xml, must=False, origdoc=None):
         """ Check if a instance is correctly signed, if we have metadata for
