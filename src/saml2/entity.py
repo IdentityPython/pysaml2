@@ -156,7 +156,7 @@ class Entity(HTTPBase):
 
         raise Exception("Unkown entity or unsupported bindings")
 
-    def response_args(self, message, bindings):
+    def response_args(self, message, bindings, descr_type=""):
         info = {"in_response_to": message.id}
         if isinstance(message, AuthnRequest):
             rsrv = "assertion_consumer_service"
@@ -179,10 +179,12 @@ class Entity(HTTPBase):
             raise Exception("No support for this type of query")
 
         if rsrv:
-            if self.entity_type == "sp":
-                descr_type = "idpsso"
-            else:
-                descr_type = "spsso"
+            if not descr_type:
+                if self.entity_type == "sp":
+                    descr_type = "idpsso"
+                else:
+                    descr_type = "spsso"
+
             binding, destination = self.pick_binding(bindings, rsrv,
                                                      descr_type=descr_type,
                                                      request=message)
