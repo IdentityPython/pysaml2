@@ -936,17 +936,25 @@ class ManageNameIDRequestType_(RequestAbstractType_):
     c_attributes = RequestAbstractType_.c_attributes.copy()
     c_child_order = RequestAbstractType_.c_child_order[:]
     c_cardinality = RequestAbstractType_.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}NameID'] = ('name_id', saml.NameID)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}NameID'] = ('name_id',
+                                                                   saml.NameID)
     c_cardinality['name_id'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}EncryptedID'] = ('encrypted_id', saml.EncryptedID)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}EncryptedID'] = (
+                                                                'encrypted_id',
+                                                                saml.EncryptedID)
     c_cardinality['encrypted_id'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}NewID'] = ('new_id', NewID)
+    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}NewID'] = ('new_id',
+                                                                 NewID)
     c_cardinality['new_id'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}NewEncryptedID'] = ('new_encrypted_id', NewEncryptedID)
+    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}NewEncryptedID'] = (
+                                                            'new_encrypted_id',
+                                                            NewEncryptedID)
     c_cardinality['new_encrypted_id'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}Terminate'] = ('terminate', Terminate)
+    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}Terminate'] = ('terminate',
+                                                                     Terminate)
     c_cardinality['terminate'] = {"min":0, "max":1}
-    c_child_order.extend(['name_id', 'encrypted_id', 'new_id', 'new_encrypted_id', 'terminate'])
+    c_child_order.extend(['name_id', 'encrypted_id', 'new_id',
+                          'new_encrypted_id', 'terminate'])
 
     def __init__(self,
             name_id=None,
