@@ -36,19 +36,19 @@ class Request(object):
         self.not_on_or_after = 0
 
     def _loads(self, xmldata, binding):
-        if binding == BINDING_HTTP_REDIRECT:
-            logger.debug("Expected to decode and inflate xml data")
-            decoded_xml = s_utils.decode_base64_and_inflate(xmldata)
-        elif binding == BINDING_HTTP_POST:
-            decoded_xml = base64.b64decode(xmldata)
-        else:
-            decoded_xml = xmldata
+#        if binding == BINDING_HTTP_REDIRECT:
+#            logger.debug("Expected to decode and inflate xml data")
+#            decoded_xml = s_utils.decode_base64_and_inflate(xmldata)
+#        elif binding == BINDING_HTTP_POST:
+#            decoded_xml = base64.b64decode(xmldata)
+#        else:
+#            decoded_xml = xmldata
     
         # own copy
-        self.xmlstr = decoded_xml[:]
+        self.xmlstr = xmldata[:]
         logger.info("xmlstr: %s" % (self.xmlstr,))
         try:
-            self.message = self.signature_check(decoded_xml)
+            self.message = self.signature_check(xmldata)
         except TypeError:
             raise
         except Exception, excp:
@@ -56,7 +56,7 @@ class Request(object):
     
         if not self.message:
             logger.error("Response was not correctly signed")
-            logger.info(decoded_xml)
+            logger.info(xmldata)
             raise IncorrectlySigned()
 
         logger.info("request: %s" % (self.message,))
@@ -178,5 +178,5 @@ class NameIDMappingRequest(Request):
                  timeslack=0):
         Request.__init__(self, sec_context, receiver_addrs,
                          attribute_converters, timeslack)
-        self.signature_check = self.sec.correctly_signed_nameid_mapping_request
+        self.signature_check = self.sec.correctly_signed_name_id_mapping_request
 

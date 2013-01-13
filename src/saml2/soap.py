@@ -64,11 +64,11 @@ def parse_soap_enveloped_saml_artifact_response(text):
     expected_tag = '{%s}ArtifactResponse' % SAMLP_NAMESPACE
     return parse_soap_enveloped_saml_thingy(text, [expected_tag])
 
-def parse_soap_enveloped_saml_nameid_mapping_request(text):
+def parse_soap_enveloped_saml_name_id_mapping_request(text):
     expected_tag = '{%s}NameIDMappingRequest' % SAMLP_NAMESPACE
     return parse_soap_enveloped_saml_thingy(text, [expected_tag])
 
-def parse_soap_enveloped_saml_nameid_mapping_response(text):
+def parse_soap_enveloped_saml_name_id_mapping_response(text):
     expected_tag = '{%s}NameIDMappingResponse' % SAMLP_NAMESPACE
     return parse_soap_enveloped_saml_thingy(text, [expected_tag])
 

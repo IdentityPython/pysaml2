@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 REQ2SRV = {
     # IDP
     "authn_request": "single_sign_on_service",
-    "nameid_mapping_request": "name_id_mapping_service",
+    "name_id_mapping_request": "name_id_mapping_service",
     # AuthnAuthority
     "authn_query": "authn_query_service",
     # AttributeAuthority
@@ -34,7 +34,7 @@ REQ2SRV = {
     "assertion_id_request": "assertion_id_request_service",
     # IDP + SP
     "logout_request": "single_logout_service",
-    "manage_nameid_query": "manage_name_id_service",
+    "manage_name_id_query": "manage_name_id_service",
     "artifact_query": "artifact_resolution_service",
     # SP
     "assertion_response": "assertion_consumer_service",

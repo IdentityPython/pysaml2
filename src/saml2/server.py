@@ -23,7 +23,8 @@ import logging
 import shelve
 import sys
 import memcache
-from saml2.samlp import AuthzDecisionQuery
+from saml2.soap import parse_soap_enveloped_saml_name_id_mapping_request
+from saml2.samlp import AuthzDecisionQuery, NameIDMappingResponse
 from saml2.samlp import AssertionIDRequest
 from saml2.samlp import AuthnQuery
 from saml2.entity import Entity
@@ -332,7 +333,7 @@ class Server(Entity):
                                    "authn_query_service", binding,
                                    "authn_query")
 
-    def parse_nameid_mapping_request(self, xml_string, binding):
+    def parse_name_id_mapping_request(self, xml_string, binding):
         """ Parse a nameid mapping request
 
         :param xml_string: The NameIDMappingRequest as an XML string
@@ -341,7 +342,7 @@ class Server(Entity):
 
         return self._parse_request(xml_string, NameIDMappingRequest,
                                    "manage_name_id_service", binding,
-                                   "nameid_mapping_request")
+                                   "name_id_mapping_request")
 
     # ------------------------------------------------------------------------
 
@@ -594,3 +595,33 @@ class Server(Entity):
 
         return self._response(in_response_to, "", status, issuer,
                               sign_response, to_sign, **args)
+
+    def create_name_id_mapping_response(self, name_id=None, encrypted_id=None,
+                                        in_response_to=None,
+                                        issuer=None, sign_response=False,
+                                        status=None):
+        """
+        protocol for mapping a principal's name identifier into a
+        different name identifier for the same principal.
+        Done over soap.
+
+        :param name_id:
+        :param encrypted_id:
+        :param in_response_to:
+        :param issuer:
+        :param sign_response:
+        :param status:
+        :return:
+        """
+        # Done over SOAP
+
+        ms_args = self.message_args()
+
+        _resp = NameIDMappingResponse(name_id, encrypted_id,
+                                      in_response_to=in_response_to, **ms_args)
+
+        if sign_response:
+            return self.sign(_resp)
+        else:
+            logger.info("Message: %s" % _resp)
+            return _resp

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import base64
+from urlparse import parse_qs
 from saml2.saml import AUTHN_PASSWORD
 from saml2.samlp import response_from_string
 
@@ -151,17 +152,27 @@ class TestServer1():
                                     destination = "http://www.example.com",
                                     id = "id1")
 
-        intermed = s_utils.deflate_and_base64_encode("%s" % authn_request)
         # should raise an error because faulty spentityid
-        raises(OtherError, self.server.parse_authn_request, intermed)
+        binding = BINDING_HTTP_REDIRECT
+        htargs = self.client.apply_binding(binding, "%s" % authn_request,
+                                         "http://www.example.com", "abcd")
+        _dict = parse_qs(htargs["headers"][0][1].split('?')[1])
+        print _dict
+        raises(OtherError, self.server.parse_authn_request,
+              _dict["SAMLRequest"][0], binding)
 
     def test_parse_faulty_request_to_err_status(self):
         authn_request = self.client.create_authn_request(
                                     destination = "http://www.example.com")
 
-        intermed = s_utils.deflate_and_base64_encode("%s" % authn_request)
+        binding = BINDING_HTTP_REDIRECT
+        htargs = self.client.apply_binding(binding, "%s" % authn_request,
+                                         "http://www.example.com", "abcd")
+        _dict = parse_qs(htargs["headers"][0][1].split('?')[1])
+        print _dict
+
         try:
-            self.server.parse_authn_request(intermed)
+            self.server.parse_authn_request(_dict["SAMLRequest"][0], binding)
             status = None
         except OtherError, oe:
             print oe.args
@@ -182,9 +193,13 @@ class TestServer1():
                                     destination = "http://localhost:8088/sso")
 
         print authn_request
-        intermed = s_utils.deflate_and_base64_encode("%s" % authn_request)
+        binding = BINDING_HTTP_REDIRECT
+        htargs = self.client.apply_binding(binding, "%s" % authn_request,
+                                         "http://www.example.com", "abcd")
+        _dict = parse_qs(htargs["headers"][0][1].split('?')[1])
+        print _dict
 
-        req = self.server.parse_authn_request(intermed)
+        req = self.server.parse_authn_request(_dict["SAMLRequest"][0], binding)
         # returns a dictionary
         print req
         resp_args = self.server.response_args(req.message, [BINDING_HTTP_POST])

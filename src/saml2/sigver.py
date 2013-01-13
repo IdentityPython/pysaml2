@@ -781,10 +781,16 @@ class SecurityContext(object):
                                              "authz_decision_query", must,
                                              origdoc)
 
-    def correctly_signed_nameid_mapping_request(self, decoded_xml, must=False,
+    def correctly_signed_name_id_mapping_request(self, decoded_xml, must=False,
                                                 origdoc=None):
         return self.correctly_signed_message(decoded_xml,
-                                             "name id_mapping_request",
+                                             "name_id_mapping_request",
+                                             must, origdoc)
+
+    def correctly_signed_name_id_mapping_response(self, decoded_xml, must=False,
+                                                origdoc=None):
+        return self.correctly_signed_message(decoded_xml,
+                                             "name_id_mapping_response",
                                              must, origdoc)
 
     def correctly_signed_response(self, decoded_xml, must=False, origdoc=None):
