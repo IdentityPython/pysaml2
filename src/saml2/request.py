@@ -125,6 +125,7 @@ class Request(object):
         return self.message.issuer.text()
         
 class LogoutRequest(Request):
+    msgtype = "logout_request"
     def __init__(self, sec_context, receiver_addrs, attribute_converters=None,
                  timeslack=0):
         Request.__init__(self, sec_context, receiver_addrs,
@@ -133,6 +134,7 @@ class LogoutRequest(Request):
         
             
 class AttributeQuery(Request):
+    msgtype = "attribute_query"
     def __init__(self, sec_context, receiver_addrs, attribute_converters=None,
                  timeslack=0):
         Request.__init__(self, sec_context, receiver_addrs,
@@ -144,6 +146,7 @@ class AttributeQuery(Request):
         return []
 
 class AuthnRequest(Request):
+    msgtype = "auth_request"
     def __init__(self, sec_context, receiver_addrs, attribute_converters,
                  timeslack=0):
         Request.__init__(self, sec_context, receiver_addrs,
@@ -155,6 +158,7 @@ class AuthnRequest(Request):
             
 
 class AuthzDecisionQuery(Request):
+    msgtype = "authz_decision_query"
     def __init__(self, sec_context, receiver_addrs,
                  attribute_converters=None, timeslack=0):
         Request.__init__(self, sec_context, receiver_addrs,
@@ -174,6 +178,7 @@ class AuthzDecisionQuery(Request):
         pass
 
 class NameIDMappingRequest(Request):
+    msgtype = "name_id_mapping_request"
     def __init__(self, sec_context, receiver_addrs, attribute_converters,
                  timeslack=0):
         Request.__init__(self, sec_context, receiver_addrs,

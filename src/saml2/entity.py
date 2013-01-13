@@ -17,7 +17,10 @@ from saml2.s_utils import sid
 from saml2.s_utils import rndstr
 from saml2.s_utils import success_status_factory
 from saml2.s_utils import decode_base64_and_inflate
-from saml2.samlp import AuthnRequest, AssertionIDRequest, ManageNameIDRequest, NameIDMappingRequest
+from saml2.samlp import AuthnRequest
+from saml2.samlp import AssertionIDRequest
+from saml2.samlp import ManageNameIDRequest
+from saml2.samlp import NameIDMappingRequest
 from saml2.samlp import artifact_resolve_from_string
 from saml2.samlp import ArtifactResolve
 from saml2.samlp import ArtifactResponse
@@ -342,7 +345,7 @@ class Entity(HTTPBase):
 
     # ------------------------------------------------------------------------
 
-    def _parse_request(self, xmlstr, request_cls, service, binding, request):
+    def _parse_request(self, xmlstr, request_cls, service, binding):
         """Parse a Request
 
         :param xmlstr: The request in its transport format
@@ -372,7 +375,7 @@ class Entity(HTTPBase):
                                self.config.attribute_converters,
                                timeslack=timeslack)
 
-        xmlstr = self.unravel(xmlstr, binding, request)
+        xmlstr = self.unravel(xmlstr, binding, request_cls.msgtype)
         _request = _request.loads(xmlstr, binding)
 
         _log_debug("Loaded authn_request")
@@ -529,8 +532,7 @@ class Entity(HTTPBase):
         """
 
         return self._parse_request(xmlstr, request.LogoutRequest,
-                                   "single_logout_service", binding,
-                                   "logout_request")
+                                   "single_logout_service", binding)
 
     def create_manage_name_id_response(self, request, bindings, status=None,
                                        sign=False, issuer=None):
@@ -582,16 +584,7 @@ class Entity(HTTPBase):
                 logger.info("%s" % exc)
                 return None
 
-            if binding == BINDING_HTTP_REDIRECT:
-                xmlstr = decode_base64_and_inflate(xmlstr)
-            elif binding == BINDING_HTTP_POST:
-                xmlstr = base64.b64decode(xmlstr)
-            elif binding == BINDING_SOAP:
-                # The xmlstr was a SOAP message but the SOAP part is
-                # removed
-                #func = getattr(soap, "parse_soap_enveloped_saml_response")
-                #xmlstr = func(xmlstr)
-                pass
+            xmlstr = self.unravel(xmlstr, binding, response_cls.msgtype)
 
             logger.debug("XMLSTR: %s" % xmlstr)
 
@@ -626,8 +619,7 @@ class Entity(HTTPBase):
         """
 
         return self._parse_request(xmlstr, request.LogoutRequest,
-                                   "single_logout_service", binding,
-                                   "logout_request")
+                                   "single_logout_service", binding)
 
     def use_artifact(self, message, endpoint_index=0):
         """
