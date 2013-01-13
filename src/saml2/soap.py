@@ -39,6 +39,9 @@ logger = logging.getLogger(__name__)
 class XmlParseError(Exception):
     pass
 
+class WrongMessageType(Exception):
+    pass
+
 def parse_soap_enveloped_saml_response(text):
     tags = ['{%s}Response' % SAMLP_NAMESPACE, 
             '{%s}LogoutResponse' % SAMLP_NAMESPACE]
@@ -103,7 +106,8 @@ def parse_soap_enveloped_saml_thingy(text, expected_tags):
     if saml_part.tag in expected_tags:
         return ElementTree.tostring(saml_part, encoding="UTF-8")
     else:
-        return ""
+        raise WrongMessageType("Was '%s' expected '%s'" % (saml_part.tag,
+                                                            expected_tags))
 
 import re
 
