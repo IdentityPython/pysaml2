@@ -48,6 +48,7 @@ from saml2 import saml
 from saml2.population import Population
 
 from saml2.response import AttributeResponse
+from saml2.response import NameIDMappingResponse
 from saml2.response import AuthnResponse
 
 from saml2 import BINDING_HTTP_REDIRECT
@@ -399,7 +400,7 @@ class Base(Entity):
                              sign, subject=subject, session_index=session_index,
                              requested_authn_context=authn_context)
 
-    def create_nameid_mapping_request(self, name_id_policy,
+    def create_name_id_mapping_request(self, name_id_policy,
                                       name_id=None, base_id=None,
                                       encrypted_id=None, destination=None,
                                       id=0, consent=None, extensions=None,
@@ -506,15 +507,14 @@ class Base(Entity):
 
     def parse_attribute_query_response(self, response, binding):
 
-        response = self._parse_response(response, AttributeResponse,
-                                        "attribute_consuming_service", binding)
+        return self._parse_response(response, AttributeResponse,
+                                    "attribute_consuming_service", binding)
 
-#        session_info = response.session_info()
-#
-#        if session_info:
-#            if "real_id" in kwargs:
-#                session_info["name_id"] = kwargs["real_id"]
-#            self.users.add_information_about_person(session_info)
-#
-#        logger.info("session: %s" % session_info)
-#        return session_info
+    def parse_name_id_mapping_request_response(self, txt, binding=BINDING_SOAP):
+        """
+
+        :param txt: SOAP enveloped SAML message
+        :param binding: Just a placeholder, it's always BINDING_SOAP
+        :return: parsed and verified <NameIDMappingResponse> instance
+        """
+        return self._parse_response(txt, NameIDMappingResponse, "", binding)
