@@ -96,6 +96,8 @@ def attribute_response(conf, return_addr, timeslack=0, asynchop=False,
                                 test=test)
 
 class StatusResponse(object):
+    msgtype = "status_response"
+
     def __init__(self, sec_context, return_addr=None, timeslack=0,
                  request_id=0, asynchop=True):
         self.sec = sec_context
@@ -238,18 +240,29 @@ class StatusResponse(object):
         return self.response.issuer.text.strip()
         
 class LogoutResponse(StatusResponse):
+    msgtype = "logout_response"
     def __init__(self, sec_context, return_addr=None, timeslack=0,
                  asynchop=True):
         StatusResponse.__init__(self, sec_context, return_addr, timeslack,
                                 asynchop=asynchop)
         self.signature_check = self.sec.correctly_signed_logout_response
 
+class NameIDMappingResponse(StatusResponse):
+    msgtype = "name_id_mapping_response"
 
+    def __init__(self, sec_context, return_addr=None, timeslack=0,
+                 request_id=0, asynchop=True):
+        StatusResponse.__init__(self, sec_context, return_addr, timeslack,
+                                request_id, asynchop)
+        self.signature_check = self.sec.correctly_signed_name_id_mapping_response
+
+# ----------------------------------------------------------------------------
 
 class AuthnResponse(StatusResponse):
     """ This is where all the profile compliance is checked.
     This one does saml2int compliance. """
-    
+    msgtype = "authn_response"
+
     def __init__(self, sec_context, attribute_converters, entity_id, 
                     return_addr=None, outstanding_queries=None,
                     timeslack=0, asynchop=True, allow_unsolicited=False,
@@ -620,6 +633,8 @@ class AuthnResponse(StatusResponse):
         return "%s" % self.xmlstr
 
 class AttributeResponse(AuthnResponse):
+    msgtype = "attribute_response"
+
     def __init__(self, sec_context, attribute_converters, entity_id,
                     return_addr=None, timeslack=0, asynchop=False, test=False):
 
@@ -634,6 +649,7 @@ class AttributeResponse(AuthnResponse):
 class AuthzResponse(AuthnResponse):
     """ A successful response will be in the form of assertions containing
     authorization decision statements."""
+    msgtype = "authz_decision_response"
     def __init__(self, sec_context, attribute_converters, entity_id,
                     return_addr=None, timeslack=0, asynchop=False):
         AuthnResponse.__init__(self, sec_context, attribute_converters,
@@ -645,6 +661,7 @@ class AuthzResponse(AuthnResponse):
         self.context = "AuthzQuery"
 
 class ArtifactResponse(AuthnResponse):
+    msgtype = "artifact_response"
     def __init__(self, sec_context, attribute_converters, entity_id,
                  return_addr=None, timeslack=0, asynchop=False, test=False):
 
