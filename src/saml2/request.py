@@ -185,3 +185,10 @@ class NameIDMappingRequest(Request):
                          attribute_converters, timeslack)
         self.signature_check = self.sec.correctly_signed_name_id_mapping_request
 
+class ManageNameIDRequest(Request):
+    msgtype = "manage_name_id_request"
+    def __init__(self, sec_context, receiver_addrs, attribute_converters,
+                 timeslack=0):
+        Request.__init__(self, sec_context, receiver_addrs,
+                         attribute_converters, timeslack)
+        self.signature_check = self.sec.correctly_signed_manage_name_id_request

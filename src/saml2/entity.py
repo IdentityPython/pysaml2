@@ -531,8 +531,8 @@ class Entity(HTTPBase):
             was not.
         """
 
-        return self._parse_request(xmlstr, request.LogoutRequest,
-                                   "single_logout_service", binding)
+        return self._parse_request(xmlstr, request.ManageNameIDRequest,
+                                   "manage_name_id_service", binding)
 
     def create_manage_name_id_response(self, request, bindings, status=None,
                                        sign=False, issuer=None):

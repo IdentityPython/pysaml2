@@ -75,6 +75,10 @@ def parse_soap_enveloped_saml_name_id_mapping_response(text):
     expected_tag = '{%s}NameIDMappingResponse' % SAMLP_NAMESPACE
     return parse_soap_enveloped_saml_thingy(text, [expected_tag])
 
+def parse_soap_enveloped_saml_manage_name_id_request(text):
+    expected_tag = '{%s}ManageNameIDRequest' % SAMLP_NAMESPACE
+    return parse_soap_enveloped_saml_thingy(text, [expected_tag])
+
 #def parse_soap_enveloped_saml_logout_response(text):
 #    expected_tag = '{%s}LogoutResponse' % SAMLP_NAMESPACE
 #    return parse_soap_enveloped_saml_thingy(text, [expected_tag])
