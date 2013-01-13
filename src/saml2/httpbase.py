@@ -204,7 +204,7 @@ class HTTPBase(object):
 
         return http_redirect_message(message, destination, relay_state, typ)
 
-    def use_soap(self, request, destination, headers=None, sign=False):
+    def use_soap(self, request, destination="", headers=None, sign=False):
         """
         Construct the necessary information for using SOAP+POST
 
