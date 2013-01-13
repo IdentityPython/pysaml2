@@ -2,7 +2,8 @@ import base64
 from hashlib import sha1
 import urlparse
 from saml2.saml import AUTHN_PASSWORD
-from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
+from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_HTTP_POST
 from saml2.pack import http_redirect_message
 from saml2.client import Saml2Client
 
@@ -10,7 +11,6 @@ from saml2.entity import create_artifact
 from saml2.entity import ARTIFACT_TYPECODE
 from saml2.s_utils import sid
 from saml2.server import Server
-from saml2.soap import parse_soap_enveloped_saml_artifact_response
 
 __author__ = 'rolandh'
 
@@ -107,9 +107,7 @@ def test_artifact_flow():
 
     # ========== IDP ============
 
-    response = parse_soap_enveloped_saml_artifact_response(args["data"])
-
-    spreq = idp.parse_artifact_resolve_response(response)
+    spreq = idp.parse_artifact_resolve_response(args["data"])
 
     # should be the same as req above
 
@@ -173,9 +171,7 @@ def test_artifact_flow():
 
     # ========== SP ============
 
-    _response = parse_soap_enveloped_saml_artifact_response(args["data"])
-
-    sp_resp = sp.parse_artifact_resolve_response(_response)
+    sp_resp = sp.parse_artifact_resolve_response(args["data"])
 
 
     assert sp_resp.id == response.id
