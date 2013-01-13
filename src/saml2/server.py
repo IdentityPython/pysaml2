@@ -284,8 +284,7 @@ class Server(Entity):
         """
 
         return self._parse_request(enc_request, AuthnRequest,
-                                   "single_sign_on_service", binding,
-                                   "authentication_request")
+                                   "single_sign_on_service", binding)
 
     def parse_attribute_query(self, xml_string, binding):
         """ Parse an attribute query
@@ -296,8 +295,7 @@ class Server(Entity):
         """
 
         return self._parse_request(xml_string, AttributeQuery,
-                                   "attribute_service", binding,
-                                   "attribute_query")
+                                   "attribute_service", binding)
 
 
     def parse_authz_decision_query(self, xml_string, binding):
@@ -308,8 +306,7 @@ class Server(Entity):
         """
 
         return self._parse_request(xml_string, AuthzDecisionQuery,
-                                   "authz_service", binding,
-                                   "authz_decision")
+                                   "authz_service", binding)
 
     def parse_assertion_id_request(self, xml_string, binding):
         """ Parse an assertion id query
@@ -319,8 +316,7 @@ class Server(Entity):
         """
 
         return self._parse_request(xml_string, AssertionIDRequest,
-                                   "assertion_id_request_service", binding,
-                                   "assertion_id_request")
+                                   "assertion_id_request_service", binding)
 
     def parse_authn_query(self, xml_string, binding):
         """ Parse an authn query
@@ -330,8 +326,7 @@ class Server(Entity):
         """
 
         return self._parse_request(xml_string, AuthnQuery,
-                                   "authn_query_service", binding,
-                                   "authn_query")
+                                   "authn_query_service", binding)
 
     def parse_name_id_mapping_request(self, xml_string, binding):
         """ Parse a nameid mapping request
@@ -341,8 +336,7 @@ class Server(Entity):
         """
 
         return self._parse_request(xml_string, NameIDMappingRequest,
-                                   "manage_name_id_service", binding,
-                                   "name_id_mapping_request")
+                                   "manage_name_id_service", binding)
 
     # ------------------------------------------------------------------------
 
