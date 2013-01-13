@@ -146,6 +146,12 @@ class Entity(HTTPBase):
         if bindings is None:
             bindings = self.config.preferred_binding[service]
 
+        if not descr_type:
+            if self.entity_type == "sp":
+                descr_type = "idpsso"
+            else:
+                descr_type = "spsso"
+
         for binding in bindings:
             srvs = sfunc(entity_id, binding, descr_type)
             if srvs:
@@ -158,6 +164,13 @@ class Entity(HTTPBase):
         #logger.error("Entities: %s" % self.metadata)
 
         raise Exception("Unkown entity or unsupported bindings")
+
+    def message_args(self, id=0):
+        if not id:
+            id = sid(self.seed)
+
+        return {"id":id, "version":VERSION,
+                "issue_instant":instant(), "issuer":self._issuer()}
 
     def response_args(self, message, bindings, descr_type=""):
         info = {"in_response_to": message.id}
@@ -197,7 +210,20 @@ class Entity(HTTPBase):
 
         return info
 
-    # --------------------------------------------------------------------------
+    def unravel(self, txt, binding, msgtype="response"):
+        if binding == BINDING_HTTP_REDIRECT:
+            xmlstr = decode_base64_and_inflate(txt)
+        elif binding == BINDING_HTTP_POST:
+            xmlstr = base64.b64decode(txt)
+        elif binding == BINDING_SOAP:
+            func = getattr(soap, "parse_soap_enveloped_saml_%s" % msgtype)
+            xmlstr = func(txt)
+        else:
+            raise ValueError("Don't know how to handle '%s'")
+
+        return xmlstr
+
+# --------------------------------------------------------------------------
 
     def sign(self, msg, mid=None, to_sign=None):
         if msg.signature is None:
@@ -232,8 +258,9 @@ class Entity(HTTPBase):
         if not id:
             id = sid(self.seed)
 
-        req = request_cls(id=id, version=VERSION, issue_instant=instant(),
-                          issuer=self._issuer(), **kwargs)
+        kwargs.update(self.message_args(id))
+
+        req = request_cls(**kwargs)
 
         if destination:
             req.destination = destination
@@ -345,11 +372,7 @@ class Entity(HTTPBase):
                                self.config.attribute_converters,
                                timeslack=timeslack)
 
-        if binding == BINDING_SOAP:
-            # The xmlstr is a SOAP message
-            func = getattr(soap, "parse_soap_enveloped_saml_%s" % request )
-            xmlstr = func(xmlstr)
-
+        xmlstr = self.unravel(xmlstr, binding, request)
         _request = _request.loads(xmlstr, binding)
 
         _log_debug("Loaded authn_request")
@@ -459,8 +482,41 @@ class Entity(HTTPBase):
 
         return response
 
-    def create_manage_name_id_request(self):
-        pass
+    def create_manage_name_id_request(self, destination, id=0, consent=None,
+                                      extensions=None, sign=False,
+                                      name_id=None, new_id=None,
+                                      encrypted_id=None, new_encrypted_id=None):
+        """
+
+        :param destination:
+        :param id:
+        :param consent:
+        :param extensions:
+        :param sign:
+        :param name_id:
+        :param new_id:
+        :param encrypted_id:
+        :param new_encrypted_id:
+        :return:
+        """
+        kwargs = self.message_args(id)
+
+        if name_id:
+            kwargs["name_id"] = name_id
+        elif encrypted_id:
+            kwargs["encrypted_id"] = encrypted_id
+        else:
+            raise AttributeError("One of NameID or EncryptedNameID has to be provided")
+
+        if new_id:
+            kwargs["new_id"] = new_id
+        elif new_encrypted_id:
+            kwargs["new_encrypted_id"] = new_encrypted_id
+        else:
+            kwargs["terminate"] = ""
+
+        return self._message(ManageNameIDRequest, destination, consent=consent,
+                             extensions=extensions, sign=sign, **kwargs)
 
     def parse_manage_name_id_request(self, xmlstr, binding=BINDING_SOAP):
         """ Deal with a LogoutRequest
@@ -481,8 +537,8 @@ class Entity(HTTPBase):
 
         rinfo = self.response_args(request, bindings)
 
-        response = self._status_response(samlp.LogoutResponse, issuer, status,
-                                         sign=False, **rinfo)
+        response = self._status_response(samlp.ManageNameIDResponse, issuer,
+                                         status, sign=False, **rinfo)
 
         logger.info("Response: %s" % (response,))
 
