@@ -770,6 +770,11 @@ class SecurityContext(object):
         return self.correctly_signed_message(decoded_xml, "logout_request",
                                              must, origdoc)
 
+    def correctly_signed_logout_response(self, decoded_xml, must=False,
+                                        origdoc=None):
+        return self.correctly_signed_message(decoded_xml, "logout_response",
+                                             must, origdoc)
+
     def correctly_signed_attribute_query(self, decoded_xml, must=False,
                                        origdoc=None):
         return self.correctly_signed_message(decoded_xml, "attribute_query",
@@ -779,6 +784,12 @@ class SecurityContext(object):
                                               origdoc=None):
         return self.correctly_signed_message(decoded_xml,
                                              "authz_decision_query", must,
+                                             origdoc)
+
+    def correctly_signed_authz_decision_response(self, decoded_xml, must=False,
+                                              origdoc=None):
+        return self.correctly_signed_message(decoded_xml,
+                                             "authz_decision_response", must,
                                              origdoc)
 
     def correctly_signed_name_id_mapping_request(self, decoded_xml, must=False,
@@ -791,6 +802,18 @@ class SecurityContext(object):
                                                 origdoc=None):
         return self.correctly_signed_message(decoded_xml,
                                              "name_id_mapping_response",
+                                             must, origdoc)
+
+    def correctly_signed_artifact_request(self, decoded_xml, must=False,
+                                                  origdoc=None):
+        return self.correctly_signed_message(decoded_xml,
+                                             "artifact_request",
+                                             must, origdoc)
+
+    def correctly_signed_artifact_response(self, decoded_xml, must=False,
+                                          origdoc=None):
+        return self.correctly_signed_message(decoded_xml,
+                                             "artifact_response",
                                              must, origdoc)
 
     def correctly_signed_response(self, decoded_xml, must=False, origdoc=None):
