@@ -670,6 +670,8 @@ class AuthnQueryResponse(AuthnResponse):
         self.assertion = None
         self.context = "AuthnQueryResponse"
 
+    def condition_ok(self, lax=False): # Should I care about conditions ?
+        return True
 
 class AttributeResponse(AuthnResponse):
     msgtype = "attribute_response"

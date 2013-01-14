@@ -23,9 +23,7 @@ import logging
 import shelve
 import sys
 import memcache
-from saml2.samlp import AuthzDecisionQuery
 from saml2.samlp import NameIDMappingResponse
-from saml2.samlp import AuthnQuery
 from saml2.entity import Entity
 
 from saml2 import saml
@@ -36,6 +34,8 @@ from saml2.request import AuthnRequest
 from saml2.request import AssertionIDRequest
 from saml2.request import AttributeQuery
 from saml2.request import NameIDMappingRequest
+from saml2.request import AuthzDecisionQuery
+from saml2.request import AuthnQuery
 
 from saml2.s_utils import sid
 from saml2.s_utils import MissingValue
@@ -52,7 +52,10 @@ logger = logging.getLogger(__name__)
 
 class UnknownVO(Exception):
     pass
-    
+
+def context_match(cfilter, cntx):
+    return True
+
 class Identifier(object):
     """ A class that handles identifiers of objects """
     def __init__(self, db, voconf=None):
@@ -340,6 +343,34 @@ class Server(Entity):
 
     # ------------------------------------------------------------------------
 
+    def store_assertion(self, assertion, to_sign):
+        self.assertion[assertion.id] = (assertion, to_sign)
+
+    def get_assertion(self, id):
+        return self.assertion[id]
+
+    def store_authn_statement(self, authn_statement, name_id):
+        try:
+            self.authn[name_id.text].append(authn_statement)
+        except:
+            self.authn[name_id.text] = [authn_statement]
+
+    def get_authn_statements(self, subject, session_index=None,
+                             requested_context=None):
+        result = []
+        for statement in self.authn[subject.name_id.text]:
+            if session_index:
+                if statement.session_index != session_index:
+                    continue
+            if requested_context:
+                if not context_match(requested_context, statement.authn_context):
+                    continue
+            result.append(statement)
+
+        return result
+
+    # ------------------------------------------------------------------------
+
     def _authn_response(self, in_response_to, consumer_url,
                         sp_entity_id, identity=None, name_id=None,
                         status=None, authn=None,
@@ -384,12 +415,14 @@ class Server(Entity):
                                           policy, issuer=_issuer,
                                           authn_class=authn_class,
                                           authn_auth=authn_authn)
+                self.store_authn_statement(assertion.authn_statement, name_id)
             elif authn_decl:
                 assertion = ast.construct(sp_entity_id, in_response_to,
                                           consumer_url, name_id,
                                           self.config.attribute_converters,
                                           policy, issuer=_issuer,
                                           authn_decl=authn_decl)
+                self.store_authn_statement(assertion.authn_statement, name_id)
             else:
                 assertion = ast.construct(sp_entity_id, in_response_to,
                                           consumer_url, name_id,
@@ -411,7 +444,7 @@ class Server(Entity):
 
             args["assertion"] = assertion
 
-            self.assertion[assertion.id] = (assertion, to_sign)
+            self.store_assertion(assertion, to_sign)
 
         return self._response(in_response_to, consumer_url, status, issuer,
                               sign_response, to_sign, **args)
@@ -578,7 +611,7 @@ class Server(Entity):
 
         for aid in assertion_id:
             try:
-                (assertion, to_sign) = self.assertion[aid]
+                (assertion, to_sign) = self.get_assertion(aid)
                 to_sign.extend(to_sign)
                 try:
                     args["assertion"].append(assertion)
@@ -620,3 +653,29 @@ class Server(Entity):
             logger.info("Message: %s" % _resp)
             return _resp
 
+    def create_authn_query_response(self, subject, session_index=None,
+                                    requested_context=None, in_response_to=None,
+                                    issuer=None, sign_response=False,
+                                    status=None):
+        """
+        A successful <Response> will contain one or more assertions containing
+        authentication statements.
+
+        :return:
+        """
+
+        margs = self.message_args()
+        asserts = []
+        for statement in self.get_authn_statements(subject, session_index,
+                                                   requested_context):
+
+            asserts.append(saml.Assertion(authn_statement=statement,
+                                          subject=subject, **margs))
+
+        if asserts:
+            args = {"assertion": asserts}
+        else:
+            args = {}
+
+        return self._response(in_response_to, "", status, issuer,
+                              sign_response, to_sign=[], **args)

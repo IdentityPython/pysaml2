@@ -92,6 +92,15 @@ def parse_soap_enveloped_saml_assertion_id_response(text):
                     '{%s}AssertionIDResponse' % SAMLP_NAMESPACE]
     return parse_soap_enveloped_saml_thingy(text, tags)
 
+def parse_soap_enveloped_saml_authn_query(text):
+    expected_tag = '{%s}AuthnQuery' % SAMLP_NAMESPACE
+    return parse_soap_enveloped_saml_thingy(text, [expected_tag])
+
+def parse_soap_enveloped_saml_authn_query_response(text):
+    tags = ['{%s}Response' % SAMLP_NAMESPACE]
+    return parse_soap_enveloped_saml_thingy(text, tags)
+
+
 #def parse_soap_enveloped_saml_logout_response(text):
 #    expected_tag = '{%s}LogoutResponse' % SAMLP_NAMESPACE
 #    return parse_soap_enveloped_saml_thingy(text, [expected_tag])

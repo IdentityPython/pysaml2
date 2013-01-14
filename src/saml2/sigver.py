@@ -765,6 +765,11 @@ class SecurityContext(object):
         return self.correctly_signed_message(decoded_xml, "authn_request",
                                              must, origdoc)
 
+    def correctly_signed_authn_query(self, decoded_xml, must=False,
+                                       origdoc=None):
+        return self.correctly_signed_message(decoded_xml, "authn_query",
+                                             must, origdoc)
+
     def correctly_signed_logout_request(self, decoded_xml, must=False,
                                        origdoc=None):
         return self.correctly_signed_message(decoded_xml, "logout_request",

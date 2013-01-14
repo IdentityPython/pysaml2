@@ -492,13 +492,20 @@ class Base(Entity):
                                             binding=BINDING_SOAP):
         """ Verify that the response is OK
         """
+        kwargs = {"entity_id": self.config.entityid,
+                  "attribute_converters": self.config.attribute_converters}
 
-        return self._parse_response(response, AuthzResponse, "", binding)
+        return self._parse_response(response, AuthzResponse, "", binding,
+                                    **kwargs)
 
     def parse_authn_query_response(self, response, binding=BINDING_SOAP):
         """ Verify that the response is OK
         """
-        return self._parse_response(response, AuthnQueryResponse, "", binding)
+        kwargs = {"entity_id": self.config.entityid,
+                  "attribute_converters": self.config.attribute_converters}
+
+        return self._parse_response(response, AuthnQueryResponse, "", binding,
+                                    **kwargs)
 
     def parse_assertion_id_request_response(self, response, binding):
         """ Verify that the response is OK

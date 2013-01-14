@@ -157,6 +157,18 @@ class AuthnRequest(Request):
         return to_local(self.attribute_converters, self.message)
 
 
+class AuthnQuery(Request):
+    msgtype = "authn_query"
+    def __init__(self, sec_context, receiver_addrs, attribute_converters,
+                 timeslack=0):
+        Request.__init__(self, sec_context, receiver_addrs,
+                         attribute_converters, timeslack)
+        self.signature_check = self.sec.correctly_signed_authn_query
+
+    def attributes(self):
+        return to_local(self.attribute_converters, self.message)
+
+
 class AssertionIDRequest(Request):
     msgtype = "assertion_id_request"
     def __init__(self, sec_context, receiver_addrs, attribute_converters,
