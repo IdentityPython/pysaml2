@@ -822,6 +822,18 @@ class SecurityContext(object):
                                              "manage_name_id_request",
                                              must, origdoc)
 
+    def correctly_signed_manage_name_id_response(self, decoded_xml, must=False,
+                                                origdoc=None):
+        return self.correctly_signed_message(decoded_xml,
+                                             "manage_name_id_response", must,
+                                             origdoc)
+
+    def correctly_signed_assertion_id_request(self, decoded_xml, must=False,
+                                                origdoc=None):
+        return self.correctly_signed_message(decoded_xml,
+                                             "assertion_id_request", must,
+                                             origdoc)
+
     def correctly_signed_response(self, decoded_xml, must=False, origdoc=None):
         """ Check if a instance is correctly signed, if we have metadata for
         the IdP that sent the info use that, if not use the key that are in 

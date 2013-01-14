@@ -146,6 +146,7 @@ class Entity(HTTPBase):
             entity_id = request.issuer.text.strip()
 
         sfunc = getattr(self.metadata, service)
+
         if bindings is None:
             bindings = self.config.preferred_binding[service]
 
@@ -175,8 +176,9 @@ class Entity(HTTPBase):
         return {"id":id, "version":VERSION,
                 "issue_instant":instant(), "issuer":self._issuer()}
 
-    def response_args(self, message, bindings, descr_type=""):
+    def response_args(self, message, bindings=None, descr_type=""):
         info = {"in_response_to": message.id}
+
         if isinstance(message, AuthnRequest):
             rsrv = "assertion_consumer_service"
             descr_type = "sp_sso"
@@ -189,7 +191,9 @@ class Entity(HTTPBase):
             descr_type = "sp_sso"
         elif isinstance(message, ManageNameIDRequest):
             rsrv = "manage_name_id_service"
-        # The once below are solely SOAP
+        # The once below are solely SOAP so no return destination needed
+        elif isinstance(message, AssertionIDRequest):
+            rsrv = ""
         elif isinstance(message, ArtifactResolve):
             rsrv = ""
         elif isinstance(message, AssertionIDRequest):
@@ -209,6 +213,7 @@ class Entity(HTTPBase):
             binding, destination = self.pick_binding(rsrv, bindings,
                                                      descr_type=descr_type,
                                                      request=message)
+            #info["binding"] = binding
             info["destination"] = destination
 
         return info
@@ -488,7 +493,8 @@ class Entity(HTTPBase):
     def create_manage_name_id_request(self, destination, id=0, consent=None,
                                       extensions=None, sign=False,
                                       name_id=None, new_id=None,
-                                      encrypted_id=None, new_encrypted_id=None):
+                                      encrypted_id=None, new_encrypted_id=None,
+                                      terminate=None):
         """
 
         :param destination:
@@ -500,6 +506,7 @@ class Entity(HTTPBase):
         :param new_id:
         :param encrypted_id:
         :param new_encrypted_id:
+        :param terminate:
         :return:
         """
         kwargs = self.message_args(id)
@@ -515,8 +522,10 @@ class Entity(HTTPBase):
             kwargs["new_id"] = new_id
         elif new_encrypted_id:
             kwargs["new_encrypted_id"] = new_encrypted_id
+        elif terminate:
+            kwargs["terminate"] = terminate
         else:
-            kwargs["terminate"] = ""
+            raise AttributeError("One of NewID, NewEncryptedNameID or Terminate has to be provided")
 
         return self._message(ManageNameIDRequest, destination, consent=consent,
                              extensions=extensions, sign=sign, **kwargs)
@@ -534,13 +543,13 @@ class Entity(HTTPBase):
         return self._parse_request(xmlstr, request.ManageNameIDRequest,
                                    "manage_name_id_service", binding)
 
-    def create_manage_name_id_response(self, request, bindings, status=None,
-                                       sign=False, issuer=None):
+    def create_manage_name_id_response(self, request, bindings=None,
+                                       status=None, sign=False, issuer=None):
 
         rinfo = self.response_args(request, bindings)
 
         response = self._status_response(samlp.ManageNameIDResponse, issuer,
-                                         status, sign=False, **rinfo)
+                                         status, sign, **rinfo)
 
         logger.info("Response: %s" % (response,))
 
@@ -582,7 +591,7 @@ class Entity(HTTPBase):
                 response = response_cls(self.sec, **kwargs)
             except Exception, exc:
                 logger.info("%s" % exc)
-                return None
+                raise
 
             xmlstr = self.unravel(xmlstr, binding, response_cls.msgtype)
 
@@ -699,3 +708,7 @@ class Entity(HTTPBase):
         elems = extension_elements_to_elements(resp.response.extension_elements,
                                                [samlp, saml])
         return elems[0]
+
+    def parse_manage_name_id_response(self, xmlstr, binding=BINDING_SOAP):
+        return self._parse_response(xmlstr, response.ManageNameIDResponse,
+                                   "manage_name_id_service", binding)

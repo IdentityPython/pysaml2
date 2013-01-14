@@ -1,3 +1,4 @@
+from saml2 import BINDING_SOAP
 from saml2.samlp import NewID
 from saml2.saml import NameID, NAMEID_FORMAT_TRANSIENT
 from saml2.client import Saml2Client
@@ -29,3 +30,45 @@ def test_basic():
     print _req.message
 
     assert mid.id == _req.message.id
+
+def test_flow():
+    sp = Saml2Client(config_file="servera_conf")
+    idp = Server(config_file="idp_all_conf")
+
+    binding, destination = sp.pick_binding("manage_name_id_service",
+                                           entity_id=idp.config.entityid)
+
+    nameid = NameID(format=NAMEID_FORMAT_TRANSIENT, text="foobar")
+    newid = NewID(text="Barfoo")
+
+    mid = sp.create_manage_name_id_request(destination, name_id=nameid,
+                                           new_id=newid)
+
+    print mid
+    rargs = sp.apply_binding(binding, "%s" % mid, destination, "")
+
+    # --------- @IDP --------------
+
+    _req = idp.parse_manage_name_id_request(rargs["data"], binding)
+
+    print _req.message
+
+    mnir = idp.create_manage_name_id_response(_req.message, None)
+
+    if binding != BINDING_SOAP:
+        binding, destination = idp.pick_binding("manage_name_id_service",
+                                                entity_id=sp.config.entityid)
+    else:
+        destination = ""
+
+    respargs = idp.apply_binding(binding, "%s" % mnir, destination, "")
+
+    print respargs
+
+    # ---------- @SP ---------------
+
+    _response = sp.parse_manage_name_id_response(respargs["data"], binding)
+
+    print _response.response
+
+    assert _response.response.id == mnir.id

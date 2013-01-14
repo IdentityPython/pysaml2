@@ -256,6 +256,16 @@ class NameIDMappingResponse(StatusResponse):
                                 request_id, asynchop)
         self.signature_check = self.sec.correctly_signed_name_id_mapping_response
 
+class ManageNameIDResponse(StatusResponse):
+    msgtype = "manage_name_id_response"
+
+    def __init__(self, sec_context, return_addr=None, timeslack=0,
+                 request_id=0, asynchop=True):
+        StatusResponse.__init__(self, sec_context, return_addr, timeslack,
+                                request_id, asynchop)
+        self.signature_check = self.sec.correctly_signed_manage_name_id_response
+
+
 # ----------------------------------------------------------------------------
 
 class AuthnResponse(StatusResponse):
@@ -631,6 +641,35 @@ class AuthnResponse(StatusResponse):
     
     def __str__(self):
         return "%s" % self.xmlstr
+
+class AssertionIDResponse(AuthnResponse):
+    msgtype = "assertion_id_response"
+
+    def __init__(self, sec_context, attribute_converters, entity_id,
+                 return_addr=None, timeslack=0, asynchop=False, test=False):
+
+        AuthnResponse.__init__(self, sec_context, attribute_converters,
+                               entity_id, return_addr, timeslack=timeslack,
+                               asynchop=asynchop, test=test)
+        self.entity_id = entity_id
+        self.attribute_converters = attribute_converters
+        self.assertion = None
+        self.context = "AssertionIdResponse"
+
+class AuthnQueryResponse(AuthnResponse):
+    msgtype = "authn_query_response"
+
+    def __init__(self, sec_context, attribute_converters, entity_id,
+                 return_addr=None, timeslack=0, asynchop=False, test=False):
+
+        AuthnResponse.__init__(self, sec_context, attribute_converters,
+                               entity_id, return_addr, timeslack=timeslack,
+                               asynchop=asynchop, test=test)
+        self.entity_id = entity_id
+        self.attribute_converters = attribute_converters
+        self.assertion = None
+        self.context = "AuthnQueryResponse"
+
 
 class AttributeResponse(AuthnResponse):
     msgtype = "attribute_response"

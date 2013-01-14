@@ -23,9 +23,8 @@ import logging
 import shelve
 import sys
 import memcache
-from saml2.soap import parse_soap_enveloped_saml_name_id_mapping_request
-from saml2.samlp import AuthzDecisionQuery, NameIDMappingResponse
-from saml2.samlp import AssertionIDRequest
+from saml2.samlp import AuthzDecisionQuery
+from saml2.samlp import NameIDMappingResponse
 from saml2.samlp import AuthnQuery
 from saml2.entity import Entity
 
@@ -34,6 +33,7 @@ from saml2 import class_name
 from saml2 import BINDING_HTTP_REDIRECT
 
 from saml2.request import AuthnRequest
+from saml2.request import AssertionIDRequest
 from saml2.request import AttributeQuery
 from saml2.request import NameIDMappingRequest
 
@@ -619,3 +619,4 @@ class Server(Entity):
         else:
             logger.info("Message: %s" % _resp)
             return _resp
+

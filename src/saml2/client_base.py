@@ -24,7 +24,6 @@ from saml2.mdstore import destinations
 from saml2.saml import AssertionIDRef
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.samlp import AuthnQuery
-from saml2.samlp import Response
 from saml2.samlp import AssertionIDRequest
 from saml2.samlp import NameIDMappingRequest
 from saml2.samlp import AttributeQuery
@@ -48,6 +47,9 @@ from saml2 import saml
 from saml2.population import Population
 
 from saml2.response import AttributeResponse
+from saml2.response import AuthzResponse
+from saml2.response import AssertionIDResponse
+from saml2.response import AuthnQueryResponse
 from saml2.response import NameIDMappingResponse
 from saml2.response import AuthnResponse
 
@@ -491,17 +493,21 @@ class Base(Entity):
         """ Verify that the response is OK
         """
 
-        return self._parse_response(response, Response, "", binding)
+        return self._parse_response(response, AuthzResponse, "", binding)
 
     def parse_authn_query_response(self, response, binding=BINDING_SOAP):
         """ Verify that the response is OK
         """
-        return self._parse_response(response, Response, "", binding)
+        return self._parse_response(response, AuthnQueryResponse, "", binding)
 
     def parse_assertion_id_request_response(self, response, binding):
         """ Verify that the response is OK
         """
-        return self._parse_response(response, Response, "", binding)
+        kwargs = {"entity_id": self.config.entityid,
+                  "attribute_converters": self.config.attribute_converters}
+
+        return self._parse_response(response, AssertionIDResponse, "", binding,
+                                    **kwargs)
 
     # ------------------------------------------------------------------------
 

@@ -79,6 +79,19 @@ def parse_soap_enveloped_saml_manage_name_id_request(text):
     expected_tag = '{%s}ManageNameIDRequest' % SAMLP_NAMESPACE
     return parse_soap_enveloped_saml_thingy(text, [expected_tag])
 
+def parse_soap_enveloped_saml_manage_name_id_response(text):
+    expected_tag = '{%s}ManageNameIDResponse' % SAMLP_NAMESPACE
+    return parse_soap_enveloped_saml_thingy(text, [expected_tag])
+
+def parse_soap_enveloped_saml_assertion_id_request(text):
+    expected_tag = '{%s}AssertionIDRequest' % SAMLP_NAMESPACE
+    return parse_soap_enveloped_saml_thingy(text, [expected_tag])
+
+def parse_soap_enveloped_saml_assertion_id_response(text):
+    tags = ['{%s}Response' % SAMLP_NAMESPACE,
+                    '{%s}AssertionIDResponse' % SAMLP_NAMESPACE]
+    return parse_soap_enveloped_saml_thingy(text, tags)
+
 #def parse_soap_enveloped_saml_logout_response(text):
 #    expected_tag = '{%s}LogoutResponse' % SAMLP_NAMESPACE
 #    return parse_soap_enveloped_saml_thingy(text, [expected_tag])
@@ -110,8 +123,8 @@ def parse_soap_enveloped_saml_thingy(text, expected_tags):
     if saml_part.tag in expected_tags:
         return ElementTree.tostring(saml_part, encoding="UTF-8")
     else:
-        raise WrongMessageType("Was '%s' expected '%s'" % (saml_part.tag,
-                                                            expected_tags))
+        raise WrongMessageType("Was '%s' expected one of %s" % (saml_part.tag,
+                                                                expected_tags))
 
 import re
 
