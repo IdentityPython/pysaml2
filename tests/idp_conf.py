@@ -38,6 +38,8 @@ CONFIG = {
                 }
             },
             "subject_data": "subject_data.db",
+            #"domain": "umu.se",
+            #"name_qualifier": ""
         },
     },
     "debug" : 1,

@@ -119,22 +119,22 @@ class Entity(HTTPBase):
             return Issuer(text=self.config.entityid,
                           format=NAMEID_FORMAT_ENTITY)
 
-    def apply_binding(self, binding, req_str, destination, relay_state,
+    def apply_binding(self, binding, msg_str, destination, relay_state,
                           typ="SAMLRequest"):
 
         if binding == BINDING_HTTP_POST:
             logger.info("HTTP POST")
-            info = self.use_http_form_post(req_str, destination,
+            info = self.use_http_form_post(msg_str, destination,
                                            relay_state, typ)
             info["url"] = destination
             info["method"] = "GET"
         elif binding == BINDING_HTTP_REDIRECT:
             logger.info("HTTP REDIRECT")
-            info = self.use_http_get(req_str, destination, relay_state, typ)
+            info = self.use_http_get(msg_str, destination, relay_state, typ)
             info["url"] = destination
             info["method"] = "GET"
         elif binding == BINDING_SOAP:
-            info = self.use_soap(req_str, destination)
+            info = self.use_soap(msg_str, destination)
         else:
             raise Exception("Unknown binding type: %s" % binding)
 
@@ -433,13 +433,15 @@ class Entity(HTTPBase):
                              consent, extensions, sign, name_id=name_id,
                              reason=reason, not_on_or_after=expire)
 
-    def create_logout_response(self, request, bindings, status=None,
+    def create_logout_response(self, request, bindings=None, status=None,
                                sign=False, issuer=None):
         """ Create a LogoutResponse.
 
         :param request: The request this is a response to
         :param bindings: Which bindings that can be used for the response
+            If None the preferred bindings are gathered from the configuration
         :param status: The return status of the response operation
+            If None the operation is regarded as a Success.
         :param issuer: The issuer of the message
         :return: HTTP args
         """

@@ -86,7 +86,9 @@ AA_IDP_ARGS = ["want_authn_requests_signed",
                "endpoints",
                "metadata",
                "ui_info",
-               "name_id_format"
+               "name_id_format",
+               "domain",
+               "name_qualifier"
                ]
 
 PDP_ARGS = ["endpoints", "name_form", "name_id_format"]
@@ -177,6 +179,8 @@ class Config(object):
         self.serves = []
         self.vorg = {}
         self.preferred_binding = PREFERRED_BINDING
+        self.domain = ""
+        self.name_qualifier = ""
 
     def setattr(self, context, attr, val):
         if context == "":

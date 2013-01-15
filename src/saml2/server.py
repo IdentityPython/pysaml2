@@ -23,6 +23,8 @@ import logging
 import shelve
 import sys
 import memcache
+from hashlib import sha1
+
 from saml2.samlp import NameIDMappingResponse
 from saml2.entity import Entity
 
@@ -37,7 +39,6 @@ from saml2.request import NameIDMappingRequest
 from saml2.request import AuthzDecisionQuery
 from saml2.request import AuthnQuery
 
-from saml2.s_utils import sid
 from saml2.s_utils import MissingValue
 from saml2.s_utils import error_status_factory
 
@@ -48,171 +49,16 @@ from saml2.assertion import Policy
 from saml2.assertion import restriction_from_attribute_spec
 from saml2.assertion import filter_attribute_value_assertions
 
+from saml2.ident import IdentDB
+
 logger = logging.getLogger(__name__)
 
-class UnknownVO(Exception):
-    pass
 
 def context_match(cfilter, cntx):
+    # TODO
     return True
 
-class Identifier(object):
-    """ A class that handles identifiers of objects """
-    def __init__(self, db, voconf=None):
-        if isinstance(db, basestring):
-            self.map = shelve.open(db, writeback=True)
-        else:
-            self.map = db
-        self.voconf = voconf
 
-    def _store(self, typ, entity_id, local, remote):
-        self.map["|".join([typ, entity_id, "f", local])] = remote
-        self.map["|".join([typ, entity_id, "b", remote])] = local
-    
-    def _get_remote(self, typ, entity_id, local):
-        return self.map["|".join([typ, entity_id, "f", local])]
-
-    def _get_local(self, typ, entity_id, remote):
-        return self.map["|".join([typ, entity_id, "b", remote])]
-        
-    def persistent(self, entity_id, subject_id):
-        """ Keeps the link between a permanent identifier and a 
-        temporary/pseudo-temporary identifier for a subject
-        
-        The store supports look-up both ways: from a permanent local
-        identifier to a identifier used talking to a SP and from an
-        identifier given back by an SP to the local permanent.
-        
-        :param entity_id: SP entity ID or VO entity ID
-        :param subject_id: The local permanent identifier of the subject
-        :return: An arbitrary identifier for the subject unique to the
-            service/group of services/VO with a given entity_id
-        """
-        try:
-            return self._get_remote("persistent", entity_id, subject_id)
-        except KeyError:
-            temp_id = "xyz"
-            while True:
-                temp_id = sid()
-                try:
-                    self._get_local("persistent", entity_id, temp_id)
-                except KeyError:
-                    break
-            self._store("persistent", entity_id, subject_id, temp_id)
-            self.map.sync()
-            
-            return temp_id
-
-    def _get_vo_identifier(self, sp_name_qualifier, identity):
-        try:
-            vo = self.voconf[sp_name_qualifier]
-            try:
-                subj_id = identity[vo.common_identifier]
-            except KeyError:
-                raise MissingValue("Common identifier")
-        except (KeyError, TypeError):
-            raise UnknownVO("%s" % sp_name_qualifier)
-
-        nameid_format = vo.nameid_format
-        if not nameid_format:
-            nameid_format = saml.NAMEID_FORMAT_PERSISTENT
-
-        return saml.NameID(format=nameid_format,
-                            sp_name_qualifier=sp_name_qualifier,
-                            text=subj_id)
-    
-    def persistent_nameid(self, sp_name_qualifier, userid):
-        """ Get or create a persistent identifier for this object to be used
-        when communicating with servers using a specific SPNameQualifier
-        
-        :param sp_name_qualifier: An identifier for a 'context'
-        :param userid: The local permanent identifier of the object 
-        :return: A persistent random identifier.
-        """
-        subj_id = self.persistent(sp_name_qualifier, userid)
-        return saml.NameID(format=saml.NAMEID_FORMAT_PERSISTENT,
-                            sp_name_qualifier=sp_name_qualifier,
-                            text=subj_id)
-
-    def transient_nameid(self, sp_entity_id, userid):
-        """ Returns a random one-time identifier. One-time means it is
-        kept around as long as the session is active.
-        
-        :param sp_entity_id: A qualifier to bind the created identifier to
-        :param userid: The local persistent identifier for the subject.
-        :return: The created identifier,
-        """
-        temp_id = sid()
-        while True:
-            try:
-                _ = self._get_local("transient", sp_entity_id, temp_id)
-                temp_id = sid()
-            except KeyError:
-                break
-        self._store("transient", sp_entity_id, userid, temp_id)
-        self.map.sync()
-
-        return saml.NameID(format=saml.NAMEID_FORMAT_TRANSIENT,
-                            sp_name_qualifier=sp_entity_id,
-                            text=temp_id)
-
-    def email_nameid(self, sp_name_qualifier, userid):
-        return saml.NameID(format=saml.NAMEID_FORMAT_EMAILADDRESS,
-                       sp_name_qualifier=sp_name_qualifier,
-                       text=userid)
-
-    def construct_nameid(self, local_policy, userid, sp_entity_id,
-                        identity=None, name_id_policy=None, sp_nid=None):
-        """ Returns a name_id for the object. How the name_id is 
-        constructed depends on the context.
-        
-        :param local_policy: The policy the server is configured to follow
-        :param userid: The local permanent identifier of the object
-        :param sp_entity_id: The 'user' of the name_id
-        :param identity: Attribute/value pairs describing the object
-        :param name_id_policy: The policy the server on the other side wants
-            us to follow.
-        :param sp_nid: Name ID Formats from the SPs metadata
-        :return: NameID instance precursor
-        """
-        if name_id_policy and name_id_policy.sp_name_qualifier:
-            try:
-                return self._get_vo_identifier(name_id_policy.sp_name_qualifier,
-                                               identity)
-            except Exception, exc:
-                print >> sys.stderr, "%s:%s" % (exc.__class__.__name__, exc)
-
-        if name_id_policy:
-            nameid_format = name_id_policy.format
-        elif sp_nid:
-            nameid_format = sp_nid[0]
-        elif local_policy:
-            nameid_format = local_policy.get_nameid_format(sp_entity_id)
-        else:
-            raise Exception("Unknown NameID format")
-
-        if nameid_format == saml.NAMEID_FORMAT_PERSISTENT:
-            return self.persistent_nameid(sp_entity_id, userid)
-        elif nameid_format == saml.NAMEID_FORMAT_TRANSIENT:
-            return self.transient_nameid(sp_entity_id, userid)
-        elif nameid_format == saml.NAMEID_FORMAT_EMAILADDRESS:
-            return self.email_nameid(sp_entity_id, userid)
-
-    def local_name(self, entity_id, remote_id):
-        """ Get the local persistent name that has the specified remote ID.
-        
-        :param entity_id: The identifier of the entity that got the remote id
-        :param remote_id: The identifier that was exported
-        :return: Local identifier
-        """
-        try:
-            return self._get_local("persistent", entity_id, remote_id)
-        except KeyError:
-            try:
-                return self._get_local("transient", entity_id, remote_id)
-            except KeyError:
-                return None
-        
 class Server(Entity):
     """ A class that does things that IdPs or AAs do """
     def __init__(self, config_file="", config=None, _cache="", stype="idp"):
@@ -249,7 +95,7 @@ class Server(Entity):
                     idb = addr
                     
             if idb is not None:
-                self.ident = Identifier(idb, self.config.virtual_organization)
+                self.ident = IdentDB(idb)
             else:
                 raise Exception("Couldn't open identity database: %s" %
                                 (dbspec,))
@@ -349,16 +195,31 @@ class Server(Entity):
     def get_assertion(self, id):
         return self.assertion[id]
 
-    def store_authn_statement(self, authn_statement, name_id):
+    def store_authn_statement(self, authn_statement, subject):
+        """
+
+        :param authn_statement:
+        :param subject:
+        :return:
+        """
+        key = sha1("%s" % subject).digest()
         try:
-            self.authn[name_id.text].append(authn_statement)
+            self.authn[key].append(authn_statement)
         except:
-            self.authn[name_id.text] = [authn_statement]
+            self.authn[key] = [authn_statement]
 
     def get_authn_statements(self, subject, session_index=None,
                              requested_context=None):
+        """
+
+        :param subject:
+        :param session_index:
+        :param requested_context:
+        :return:
+        """
         result = []
-        for statement in self.authn[subject.name_id.text]:
+        key = sha1("%s" % subject).digest()
+        for statement in self.authn[key]:
             if session_index:
                 if statement.session_index != session_index:
                     continue
