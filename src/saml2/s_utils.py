@@ -42,7 +42,9 @@ class OtherError(Exception):
 class MissingValue(Exception):
     pass
 
-    
+class PolicyError(Exception):
+    pass
+
 EXCEPTION2STATUS = {
     VersionMismatch: samlp.STATUS_VERSION_MISMATCH,
     UnknownPrincipal: samlp.STATUS_UNKNOWN_PRINCIPAL,
