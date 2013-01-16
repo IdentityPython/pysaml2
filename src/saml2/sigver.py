@@ -999,63 +999,6 @@ class SecurityContext(object):
     
 # ===========================================================================
 
-# PRE_SIGNATURE = {
-#     "signed_info": {
-#         "signature_method": {
-#             "algorithm": ds.SIG_RSA_SHA1
-#         },
-#         "canonicalization_method": { 
-#             "algorithm": ds.ALG_EXC_C14N
-#         },
-#         "reference": {
-#             # must be replace by a uriref based on the assertion ID
-#             "uri": None, 
-#             "transforms": {
-#                 "transform": [{
-#                     "algorithm": ds.TRANSFORM_ENVELOPED,
-#                 },
-#                 {  
-#                     "algorithm": ds.ALG_EXC_C14N,
-#                     "inclusive_namespaces": {
-#                         "prefix_list": "ds saml2 saml2p xenc",
-#                     }   
-#                 }
-#                 ]
-#             },
-#             "digest_method":{
-#                 "algorithm": ds.DIGEST_SHA1,
-#             },
-#             "digest_value": "",
-#         }
-#     },
-#     "signature_value": None,
-# }
-#
-# def pre_signature_part(ident, public_key=None, id=None):
-#     """
-#     If an assertion is to be signed the signature part has to be preset
-#     with which algorithms to be used, this function returns such a
-#     preset part.
-#     
-#     :param ident: The identifier of the assertion, so you know which assertion
-#         was signed
-#     :param public_key: The base64 part of a PEM file
-#     :return: A preset signature part
-#     """
-#     
-#     presig = copy.deepcopy(PRE_SIGNATURE)
-#     presig["signed_info"]["reference"]["uri"] = "#%s" % ident
-#     if id:
-#         presig["id"] = "Signature%d" % id
-#     if public_key:
-#         presig["key_info"] = {
-#             "x509_data": {
-#                 "x509_certificate": public_key,
-#             }
-#         }    
-#         
-#     return presig
-
 
 def pre_signature_part(ident, public_key=None, identifier=None):
     """
@@ -1100,19 +1043,6 @@ def pre_signature_part(ident, public_key=None, identifier=None):
     
     return signature
 
-#def logoutresponse_factory(sign=False, encrypt=False, **kwargs):
-#    response = samlp.LogoutResponse(id=sid(), version=VERSION,
-#                                issue_instant=instant())
-#
-#    if sign:
-#        response.signature = pre_signature_part(kwargs["id"])
-#    if encrypt:
-#        pass
-#
-#    for key, val in kwargs.items():
-#        setattr(response, key, val)
-#
-#    return response
 
 def response_factory(sign=False, encrypt=False, **kwargs):
     response = samlp.Response(id=sid(), version=VERSION,
