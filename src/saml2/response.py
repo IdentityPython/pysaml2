@@ -16,7 +16,6 @@
 # limitations under the License.
 
 import calendar
-import base64
 import logging
 
 import xmldsig as ds
@@ -155,20 +154,20 @@ class StatusResponse(object):
         return self._postamble()
         
     def _loads(self, xmldata, decode=True, origxml=None):
-        if decode:
-            decoded_xml = base64.b64decode(xmldata)
-        else:
-            decoded_xml = xmldata
+#        if decode:
+#            decoded_xml = base64.b64decode(xmldata)
+#        else:
+#            decoded_xml = xmldata
     
         # own copy
-        self.xmlstr = decoded_xml[:]
+        self.xmlstr = xmldata[:]
         logger.debug("xmlstr: %s" % (self.xmlstr,))
 #            fil = open("response.xml", "w")
 #            fil.write(self.xmlstr)
 #            fil.close()
 
         try:
-            self.response = self.signature_check(decoded_xml, origdoc=origxml)
+            self.response = self.signature_check(xmldata, origdoc=origxml)
         except TypeError:
             raise
         except SignatureError:
