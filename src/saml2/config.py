@@ -335,7 +335,7 @@ class Config(object):
         """
         spec = []
         unspec = []
-        endps = self.getattr("endpoints")
+        endps = self.getattr("endpoints", context)
         if endps and service in endps:
             for endpspec in endps[service]:
                 try:
