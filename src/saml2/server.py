@@ -195,30 +195,31 @@ class Server(Entity):
     def get_assertion(self, id):
         return self.assertion[id]
 
-    def store_authn_statement(self, authn_statement, subject):
+    def store_authn_statement(self, authn_statement, name_id):
         """
 
         :param authn_statement:
-        :param subject:
+        :param name_id:
         :return:
         """
-        key = sha1("%s" % subject).digest()
+        nkey = sha1("%s" % name_id).hexdigest()
+        logger.debug("Store authn_statement under key: %s" % nkey)
         try:
-            self.authn[key].append(authn_statement)
+            self.authn[nkey].append(authn_statement)
         except:
-            self.authn[key] = [authn_statement]
+            self.authn[nkey] = [authn_statement]
 
-    def get_authn_statements(self, subject, session_index=None,
+    def get_authn_statements(self, name_id, session_index=None,
                              requested_context=None):
         """
 
-        :param subject:
+        :param name_id:
         :param session_index:
         :param requested_context:
         :return:
         """
         result = []
-        key = sha1("%s" % subject).digest()
+        key = sha1("%s" % name_id).hexdigest()
         for statement in self.authn[key]:
             if session_index:
                 if statement.session_index != session_index:
@@ -229,6 +230,11 @@ class Server(Entity):
             result.append(statement)
 
         return result
+
+    def remove_authn_statements(self, name_id):
+        nkey = sha1("%s" % name_id).hexdigest()
+
+        del self.authn[nkey]
 
     # ------------------------------------------------------------------------
 
@@ -354,8 +360,9 @@ class Server(Entity):
         """
         if not name_id and userid:
             try:
-                name_id = self.ident.construct_nameid(self.config.policy, userid,
-                                                      sp_entity_id, identity)
+                name_id = self.ident.construct_nameid(userid,
+                                                      self.config.policy,
+                                                      sp_entity_id)
                 logger.warning("Unspecified NameID format")
             except Exception:
                 pass
@@ -425,8 +432,8 @@ class Server(Entity):
                     if "name_id_format" in _sp:
                         nid_formats.extend([n["text"] for n in _sp["name_id_format"]])
 
-                name_id = self.ident.construct_nameid(policy, userid,
-                                                      sp_entity_id, identity,
+                name_id = self.ident.construct_nameid(userid, policy,
+                                                      sp_entity_id,
                                                       name_id_policy,
                                                       nid_formats)
             except IOError, exc:
@@ -527,7 +534,8 @@ class Server(Entity):
 
         margs = self.message_args()
         asserts = []
-        for statement in self.get_authn_statements(subject, session_index,
+        for statement in self.get_authn_statements(subject.name_id,
+                                                   session_index,
                                                    requested_context):
 
             asserts.append(saml.Assertion(authn_statement=statement,
