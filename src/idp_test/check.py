@@ -385,6 +385,21 @@ class VerifyContent(Check):
 
         return {}
 
+class VerifySuccessStatus(Check):
+    """ Verifies that the response was a success response """
+    id = "verify-success-status"
+
+    def _func(self, environ):
+        response = environ["response"][-1].response
+
+        try:
+            assert response.status.status_code.value == STATUS_SUCCESS
+        except AssertionError:
+            self._message = self.msg
+            self._status = CRITICAL
+
+        return {}
+
 def factory(id):
     for name, obj in inspect.getmembers(sys.modules[__name__]):
         if inspect.isclass(obj):

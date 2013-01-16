@@ -256,8 +256,14 @@ def do_query(client, oper, httpc, trace, interaction, entity_id, environ, cjar,
         # depending on binding send the query
 
         if args["binding"] is BINDING_SOAP:
-            response = httpc.send_using_soap(_req_str, loc)
-            response_args["binding"] = BINDING_SOAP
+            res = httpc.send_using_soap(_req_str, loc)
+            if res.status_code >= 400:
+                trace.info("Received a HTTP error (%d) '%s'" % (res.status_code,
+                                                                res.text))
+                break
+            else:
+                response_args["binding"] = BINDING_SOAP
+                response = res.text
         else:
             response_args["binding"] = BINDING_HTTP_POST
             if args["binding"] is BINDING_HTTP_REDIRECT:
@@ -275,6 +281,11 @@ def do_query(client, oper, httpc, trace, interaction, entity_id, environ, cjar,
                 res = httpc.send(loc, "POST", **htargs)
             else:
                 res = None
+
+            if res.status_code >= 400:
+                trace.info("Received a HTTP error (%d) '%s'" % (res.status_code,
+                                                                res.text))
+                break
 
             if res:
                 response_args["outstanding"] = {req.id: "/"}
