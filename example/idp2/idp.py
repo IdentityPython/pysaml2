@@ -4,17 +4,28 @@ import re
 import logging
 import urllib
 import time
+from hashlib import sha1
 
 from urlparse import parse_qs
-from saml2 import server, BINDING_SOAP
-from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
-from saml2 import time_util
 from Cookie import SimpleCookie
-from saml2.httputil import Response, Redirect, Unauthorized
-from saml2.pack import http_form_post_message
-from saml2.pack import http_soap_message
+
+from saml2 import server, BINDING_HTTP_ARTIFACT
+from saml2 import BINDING_SOAP
+from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_HTTP_POST
+from saml2 import time_util
+from saml2.httputil import Response
+from saml2.httputil import get_post
+from saml2.httputil import Redirect
+from saml2.httputil import Unauthorized
+from saml2.httputil import BadRequest
+from saml2.httputil import ServiceError
+from saml2.ident import Unknown
 from saml2.s_utils import rndstr
+from saml2.s_utils import PolicyError
 from saml2.saml import AUTHN_PASSWORD
+from saml2.saml import NAMEID_FORMAT_PERSISTENT
+from saml2.saml import NameID
 
 logger = logging.getLogger("saml2.idp")
 
@@ -68,17 +79,59 @@ def dict_to_table(ava, lev=0, width=1):
     txt.append('</table>\n')
     return txt
 
-def get_post(environ):
-    # the environment variable CONTENT_LENGTH may be empty or missing
-    try:
-        request_body_size = int(environ.get('CONTENT_LENGTH', 0))
-    except ValueError:
-        request_body_size = 0
+def unpack_redirect(environ):
+    if "QUERY_STRING" in environ:
+        _qs = environ["QUERY_STRING"]
+        return dict([(k,v[0]) for k,v in parse_qs(_qs).items()])
+    else:
+        return None
 
-    # When the method is POST the query string will be sent
-    # in the HTTP request body which is passed by the WSGI server
-    # in the file like wsgi.input environment variable.
-    return environ['wsgi.input'].read(request_body_size)
+def unpack_post(environ):
+    try:
+        return dict([(k,v[0]) for k,v in parse_qs(get_post(environ))])
+    except Exception:
+        return None
+
+def unpack_soap(environ):
+    try:
+        query = get_post(environ)
+        return {"SAMLRequest": query, "RelayState": ""}
+    except Exception:
+        return None
+
+def unpack_artifact(environ):
+    if environ["REQUEST_METHOD"] == "GET":
+        _dict = unpack_redirect(environ)
+    elif environ["REQUEST_METHOD"] == "POST":
+        _dict = unpack_post(environ)
+    else:
+        _dict = None
+    return _dict
+
+def dict2list_of_tuples(d):
+    return [(k,v) for k,v in d.items()]
+
+# -----------------------------------------------------------------------------
+
+def _operation(environ, start_response, user, _dict, func, binding):
+    logger.debug("_operation: %s" % _dict)
+    if not _dict:
+        resp = BadRequest('Error parsing request or no request')
+        return resp(environ, start_response)
+    else:
+        return func(environ, start_response, user, _dict["SAMLRequest"],
+                    binding, _dict["RelayState"])
+
+def _artifact_oper(environ, start_response, user, _dict, func):
+    if not _dict:
+        resp = BadRequest("Missing query")
+        return resp(environ, start_response)
+    else:
+        # exchange artifact for request
+        request = IDP.artifact2message(_dict["SAMLart"], "spsso")
+
+        return func(environ, start_response, user, request,
+                    BINDING_HTTP_ARTIFACT, _dict["RelayState"])
 
 # -----------------------------------------------------------------------------
 AUTHN = (AUTHN_PASSWORD, "http://lingon.catalogix.se/login")
@@ -89,17 +142,26 @@ FORM_SPEC = """<form name="myform" method="post" action="%s">
    <input type="hidden" name="RelayState" value="%s" />
 </form>"""
 
-def _sso(environ, start_response, query, binding, user):
+# -----------------------------------------------------------------------------
+# === Single log in ====
+# -----------------------------------------------------------------------------
+
+def _sso(environ, start_response, user, query, binding, relay_state=""):
+    logger.info("--- In SSO ---")
+    logger.debug("user: %s" % user)
+
     if not query:
         logger.info("Missing QUERY")
-        start_response('401 Unauthorized', [('Content-Type', 'text/plain')])
-        return ['Unknown user']
+        resp = Unauthorized('Unknown user')
+        return resp(environ, start_response)
 
     # base 64 encoded request
-    req_info = IDP.parse_authn_request(query["SAMLRequest"][0], binding=binding)
-    resp_args = IDP.response_args(req_info.message, [BINDING_HTTP_POST])
+    req_info = IDP.parse_authn_request(query, binding=binding)
     logger.info("parsed OK")
     logger.info("%s" % req_info)
+    _authn_req = req_info.message
+
+    resp_args = IDP.response_args(_authn_req)
 
     identity = USERS[user]
     logger.info("Identity: %s" % (identity,))
@@ -110,91 +172,95 @@ def _sso(environ, start_response, query, binding, user):
         authn_resp = IDP.create_authn_response(identity, userid=user,
                                                authn=AUTHN, **resp_args)
     except Exception, excp:
-        if logger: logger.error("Exception: %s" % (excp,))
-        raise
+        logger.error("Exception: %s" % (excp,))
+        resp = ServiceError("Exception: %s" % (excp,))
+        return resp(environ, start_response)
 
-    if logger: logger.info("AuthNResponse: %s" % authn_resp)
-
-    http_args = http_form_post_message(authn_resp, resp_args["destination"],
-                                       relay_state=query["RelayState"][0],
-                                       typ="SAMLResponse")
+    logger.info("AuthNResponse: %s" % authn_resp)
+    binding, destination = IDP.pick_binding("assertion_consumer_service",
+                                            entity_id=_authn_req.issuer.text)
+    http_args = IDP.apply_binding(binding, "%s" % authn_resp, destination,
+                                  relay_state, "SAMLResponse")
 
     resp = Response(http_args["data"], headers=http_args["headers"])
     return resp(environ, start_response)
 
 def sso(environ, start_response, user):
-    """ Supposted to return a POST """
+    """ This is the HTTP-redirect endpoint """
 
-    logger.info("--- In SSO ---")
-    logger.debug("user: %s" % user)
-    logger.info("Query string: %s" % environ["QUERY_STRING"])
-    extra = parse_qs(environ["QUERY_STRING"])
-    logger.info("EXTRA: %s" % extra)
+    _dict = unpack_redirect(environ)
+    logger.debug("_dict: %s" % _dict)
+    # pick up the stored original query
     logger.debug("keys: %s" % IDP.ticket.keys())
-    query = parse_qs(IDP.ticket[extra["key"][0]])
-    del IDP.ticket[extra["key"][0]]
+    _req = IDP.ticket[_dict["key"]]
+    del IDP.ticket[_dict["key"]]
 
-    return _sso(environ, start_response, query, BINDING_HTTP_REDIRECT, user)
+    return _operation(environ, start_response, user, _req, _sso,
+                      BINDING_HTTP_REDIRECT)
 
 def sso_post(environ, start_response, user):
+    """
+    The HTTP-Post endpoint
+    """
     logger.info("--- In SSO POST ---")
     logger.debug("user: %s" % user)
-    logger.info("Query string: %s" % environ["QUERY_STRING"])
-    extra = parse_qs(environ["QUERY_STRING"])
-    logger.info("EXTRA: %s" % extra)
+
+    _dict = unpack_post(environ)
+
+    logger.debug("message: %s" % _dict)
     logger.debug("keys: %s" % IDP.ticket.keys())
-    query = parse_qs(IDP.ticket[extra["key"][0]])
-    del IDP.ticket[extra["key"][0]]
+    _request = IDP.ticket[_dict["key"]]
+    del IDP.ticket[_dict["key"]]
 
-    return _sso(environ, start_response, query, BINDING_HTTP_POST, user)
+    return _operation(environ, start_response, user, _request, _sso,
+                      BINDING_HTTP_POST)
 
-def whoami(environ, start_response, user):
-    start_response('200 OK', [('Content-Type', 'text/html')])
-    identity = USERS[user].copy()
-    for prop in ["login", "password"]:
-        try:
-            del identity[prop]
-        except KeyError:
-            continue
-    response = dict_to_table(identity)
-    return response[:]
-    
-def not_found(environ, start_response):
-    """Called if no URL matches."""
-    start_response('404 NOT FOUND', [('Content-Type', 'text/plain')])
-    return ['Not Found']
+def sso_art(environ, start_response, user):
+    # Can be either by HTTP_Redirect or HTTP_POST
+    _dict = unpack_artifact(environ)
+    _request = IDP.ticket[_dict["key"]]
+    del IDP.ticket[_dict["key"]]
+    return _artifact_oper(environ, start_response, user, _request, _sso)
+
+# -----------------------------------------------------------------------------
+# === Authentication ====
+# -----------------------------------------------------------------------------
 
 def not_authn(environ, start_response):
-    # redirect to login page
+    # store the request and redirect to login page
     logger.info("not_authn ENV: %s" % environ)
 
     loc = "http://%s/login" % (environ["HTTP_HOST"])
 
-    headers = [('Content-Type', 'text/plain')]
     if environ["REQUEST_METHOD"] == "GET":
-        if "QUERY_STRING" in environ:
-            query = environ["QUERY_STRING"]
-            logger.info("query: %s" % query)
-            key = hash(query)
-            IDP.ticket[str(key)] = query
-            loc += "?%s" % urllib.urlencode({"came_from": environ["PATH_INFO"],
-                                             "key": key})
+        _dict = unpack_redirect(environ)
     elif environ["REQUEST_METHOD"] == "POST":
-        query = get_post(environ)
-        logger.info("query: %s" % query)
-        key = hash(query)
-        IDP.ticket[str(key)] = query
+        _dict = unpack_post(environ)
+    else:
+        _dict = None
+
+    if not _dict:
+        resp = BadRequest("Missing query")
+    else:
+        logger.info("query: %s" % _dict)
+        # store the original request
+        key = sha1("%s" % _dict).hexdigest()
+        IDP.ticket[str(key)] = _dict
+
         loc += "?%s" % urllib.urlencode({"came_from": environ["PATH_INFO"],
                                          "key": key})
+        headers = [('Content-Type', 'text/plain')]
 
-    logger.debug("location: %s" % loc)
-    logger.debug("headers: %s" % headers)
-    resp = Redirect(loc, headers=headers)
+        logger.debug("location: %s" % loc)
+        logger.debug("headers: %s" % headers)
+
+        resp = Redirect(loc, headers=headers)
+
     return resp(environ, start_response)
 
-def do_authentication(environ, start_response, sid, cookie=None):
+def do_authentication(environ, start_response, cookie=None):
     """
-    Put up the login form
+    Display the login form
     """
     query = parse_qs(environ["QUERY_STRING"])
 
@@ -216,13 +282,6 @@ def do_authentication(environ, start_response, sid, cookie=None):
     }
     logger.info("do_authentication argv: %s" % argv)
     return resp(environ, start_response, **argv)
-
-# ----------------------------------------------------------------------------
-
-PASSWD = [("roland", "dianakra"),
-          ("babs", "howes"),
-          ("upper", "crust")]
-
 
 def verify_username_and_password(dic):
     global PASSWD
@@ -256,6 +315,107 @@ def do_verify(environ, start_response, _user):
 
     return resp(environ, start_response)
 
+# -----------------------------------------------------------------------------
+# === Single log out ===
+# -----------------------------------------------------------------------------
+
+#def _subject_sp_info(req_info):
+#    # look for the subject
+#    subject = req_info.subject_id()
+#    subject = subject.text.strip()
+#    sp_entity_id = req_info.message.issuer.text.strip()
+#    return subject, sp_entity_id
+
+def _slo(environ, start_response, _, request, binding, relay_state=""):
+    logger.info("--- Single Log Out Service ---")
+    try:
+        req_info = IDP.parse_logout_request(request, binding)
+    except Exception, exc:
+        resp = BadRequest("%s" % exc)
+        return resp(environ, start_response)
+
+    msg = req_info.message
+    if msg.name_id:
+        lid = IDP.ident.find_local_id(msg.name_id)
+        logger.info("local identifier: %s" % lid)
+        # remove the authentication
+        try:
+            IDP.remove_authn_statements(msg.name_id)
+        except KeyError,exc:
+            resp = ServiceError("%s" % exc)
+            return resp(environ, start_response)
+
+    resp = IDP.create_logout_response(msg)
+
+    try:
+        hinfo = IDP.apply_binding(binding, "%s" % resp, "", relay_state)
+    except Exception, exc:
+        resp = ServiceError("%s" % exc)
+        return resp(environ, start_response)
+
+    logger.info("Header: %s" % (hinfo["headers"],))
+    #_tlh = dict2list_of_tuples(hinfo["headers"])
+    delco = delete_cookie(environ, "idpauthn")
+    if delco:
+        hinfo["headers"].append(delco)
+    resp = Response(hinfo["data"], headers=hinfo["headers"])
+    return resp(environ, start_response)
+
+# -- bindings --
+
+def slo(environ, start_response, user):
+    """ Expects a HTTP-redirect logout request """
+
+    _dict = unpack_redirect(environ)
+    return _operation(environ, start_response, user, _dict, _slo,
+                      BINDING_HTTP_REDIRECT)
+
+def slo_post(environ, start_response, user):
+    """ Expects a HTTP-POST logout request """
+
+    _dict = unpack_post(environ)
+    return _operation(environ, start_response, user, _dict, _slo,
+                      BINDING_HTTP_POST)
+
+def slo_art(environ, start_response, user):
+    # Can be either by HTTP_Redirect or HTTP_POST
+    _dict = unpack_artifact(environ)
+    return _artifact_oper(environ, start_response, user, _dict, _slo)
+
+def slo_soap(environ, start_response, user=None):
+    """
+    Single log out using HTTP_SOAP binding
+    """
+    _dict = unpack_soap(environ)
+    return _operation(environ, start_response, user, _dict, _slo,
+                      BINDING_SOAP)
+
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+
+def whoami(environ, start_response, user):
+    start_response('200 OK', [('Content-Type', 'text/html')])
+    identity = USERS[user].copy()
+    for prop in ["login", "password"]:
+        try:
+            del identity[prop]
+        except KeyError:
+            continue
+    response = dict_to_table(identity)
+    return response[:]
+
+def not_found(environ, start_response):
+    """Called if no URL matches."""
+    start_response('404 NOT FOUND', [('Content-Type', 'text/plain')])
+    return ['Not Found']
+
+
+PASSWD = [("roland", "dianakra"),
+          ("babs", "howes"),
+          ("upper", "crust")]
+
+# ----------------------------------------------------------------------------
+
 def kaka2user(kaka):
     logger.debug("KAKA: %s" % kaka)
     if kaka:
@@ -267,91 +427,213 @@ def kaka2user(kaka):
             logger.debug()
     return None
 
-# ===========================================================================
+# ----------------------------------------------------------------------------
+# Manage Name ID service
+# ----------------------------------------------------------------------------
 
-def _subject_sp_info(req_info):
-    # look for the subject
-    subject = req_info.subject_id()
-    subject = subject.text.strip()
-    sp_entity_id = req_info.message.issuer.text.strip()
-    return subject, sp_entity_id
+def _mni(environ, start_response, user, query, binding, relay_state=""):
+    logger.info("--- Manage Name ID Service ---")
+    req = IDP.parse_manage_name_id_response(query, binding)
 
-def _slo(environ, start_response, query, user):
-    try:
-        req_info = IDP.parse_logout_request(query["SAMLRequest"][0],
-                                            BINDING_HTTP_REDIRECT)
-        relay_state = query["SAMLRequest"][0]
-        logger.info("LOGOUT request parsed OK")
-        logger.info("REQ_INFO: %s" % req_info.message)
-    except KeyError, exc:
-        if logger: logger.info("logout request error: %s" % (exc,))
-        start_response('400 Bad request', [('Content-Type', 'text/plain')])
-        return ['Request parse error']
+    # Do the necessary stuff
+    in_response_to = req.message.id
+    name_id = NameID(format=NAMEID_FORMAT_PERSISTENT, text="foobar")
 
-    subject, sp_entity_id = _subject_sp_info(req_info)
-    logger.info("Logout subject: %s" % (subject,))
-    logger.info("local identifier: %s" % IDP.ident.local_name(sp_entity_id, 
-                                                                subject))
-    # remove the authentication
-    
-    status = None
+    info = IDP.response_args(req)
+    _resp = IDP.create_manage_name_id_response(name_id, **info)
 
-    # Either HTTP-Post or HTTP-redirect is possible
-    bindings = [BINDING_HTTP_POST, BINDING_HTTP_REDIRECT]
-    logger.debug("logout response to %s" % sp_entity_id)
-    logger.debug("entity info: %s" % IDP.metadata.entity[sp_entity_id]["spsso"][0])
-    (resp, headers, message) = IDP.create_logout_response(req_info.message,
-                                                          bindings)
-    #headers.append(session.cookie(expire="now"))
-    logger.info("Response code: %s" % (resp,))
-    logger.info("Header: %s" % (headers,))
-    delco = delete_cookie(environ, "idpauthn")
-    if delco:
-        headers.append(delco)
-    start_response(resp, headers)
-    return message
+    # It's using SOAP binding
+    hinfo = IDP.apply_binding(binding, "%s" % _resp, "", relay_state,
+                              "SAMLResponse")
 
-def slo(environ, start_response, user):
-    """ Expects a HTTP-redirect logout request """
-
-    query = None
-    if "QUERY_STRING" in environ:
-        logger.info("Query string: %s" % environ["QUERY_STRING"])
-        query = parse_qs(environ["QUERY_STRING"])
-
-    if not query:
-        start_response('401 Unauthorized', [('Content-Type', 'text/plain')])
-        return ['Unknown user']
-    else:
-        return _slo(environ, start_response, query, user)
-
-def slo_post(environ, start_response, user):
-    """ Expects a HTTP-POST logout request """
-
-    query = parse_qs(get_post(environ))
-    return _slo(environ, start_response, query, user)
-
-def slo_soap(environ, start_response, user):
-    soap_message = get_post(environ)
-    #logger.debug("info type: %s" % type(soap_message))
-    #logger.debug("SLO_SOAP: %s" % soap_message)
-    req_info = IDP.parse_logout_request("%s" % soap_message, BINDING_SOAP)
-
-    subject, sp_entity_id = _subject_sp_info(req_info)
-    logger.info("Logout subject: %s" % (subject,))
-    logger.info("local identifier: %s" % IDP.ident.local_name(sp_entity_id,
-                                                              subject))
-
-    response = IDP.create_logout_response(req_info.message, [BINDING_SOAP])
-    args = http_soap_message(response)
-
-    delco = delete_cookie(environ, "idpauthn")
-    if delco:
-        args["headers"].append(delco)
-
-    resp = Response(args["data"], headers=args["headers"])
+    resp = Response(hinfo["data"],
+                    headers=dict2list_of_tuples(hinfo["headers"]))
     return resp(environ, start_response)
 
+def mni(environ, start_response, user):
+    """ Expects a HTTP-redirect logout request """
+
+    _dict = unpack_redirect(environ)
+    return _operation(environ, start_response, user, _dict, _mni,
+                      BINDING_HTTP_REDIRECT)
+
+def mni_post(environ, start_response, user):
+    """ Expects a HTTP-POST logout request """
+
+    _dict = unpack_post(environ)
+    return _operation(environ, start_response, user, _dict, _mni,
+                      BINDING_HTTP_POST)
+
+def mni_soap(environ, start_response, user):
+    _dict = unpack_soap(environ)
+    return _operation(environ, start_response, user, _dict, _mni,
+                      BINDING_SOAP)
+
+def mni_art(environ, start_response, user):
+    # Could be by HTTP_REDIRECT or HTTP_POST
+    _dict = unpack_post(environ)
+    return _artifact_oper(environ, start_response, user, _dict, _mni)
+
+# ----------------------------------------------------------------------------
+# === Assertion ID request ===
+# ----------------------------------------------------------------------------
+
+# Only SOAP binding
+def assertion_id_request(environ, start_response, user=None):
+    logger.info("--- Assertion ID Service ---")
+    _dict = unpack_soap(environ)
+    _binding = BINDING_SOAP
+
+    if not _dict:
+        resp = BadRequest("Missing or faulty request")
+        return resp(environ, start_response)
+
+    req_info = IDP.parse_assertion_id_request("%s" % _dict["SAMLRequest"],
+                                              _binding)
+
+    asids = [x.text for x in req_info.message.assertion_id_ref]
+
+    resp_args = IDP.response_args(req_info.message, _binding, "spsso")
+    response = IDP.create_assertion_id_request_response(asids, **resp_args)
+    hinfo = IDP.apply_binding(_binding, "%s" % response, "","","SAMLResponse")
+
+    resp = Response(hinfo["data"], headers=hinfo["headers"])
+    return resp(environ, start_response)
+
+# ----------------------------------------------------------------------------
+# === Artifact resolve service ===
+# ----------------------------------------------------------------------------
+
+# Only SOAP binding
+def artifact_resolve_service(environ, start_response, user=None):
+    """
+    :param environ: Execution environment
+    :param start_response: Function to start the response with
+    """
+    logger.info("--- Artifact resolve Service ---")
+    _dict = unpack_soap(environ)
+    _binding = BINDING_SOAP
+
+    if not _dict:
+        resp = BadRequest("Missing or faulty request")
+        return resp(environ, start_response)
+
+    _req = IDP.parse_artifact_resolve("%s" % _dict["SAMLRequest"], _binding)
+
+    msg = IDP.create_artifact_response(_req, _req.artifact.text)
+
+    hinfo = IDP.apply_binding(_binding, "%s" % msg, "","","SAMLResponse")
+
+    resp = Response(hinfo["data"], headers=hinfo["headers"])
+    return resp(environ, start_response)
+
+# ----------------------------------------------------------------------------
+# === Authn query service ===
+# ----------------------------------------------------------------------------
+
+# Only SOAP binding
+def authn_query_service(environ, start_response, user=None):
+    """
+    :param environ: Execution environment
+    :param start_response: Function to start the response with
+    """
+    logger.info("--- Authn Query Service ---")
+    _dict = unpack_soap(environ)
+    _binding = BINDING_SOAP
+
+    if not _dict:
+        resp = BadRequest("Missing or faulty request")
+        return resp(environ, start_response)
+
+    _req = IDP.parse_authn_query("%s" % _dict["SAMLRequest"], _binding)
+    _query = _req.message
+
+    msg = IDP.create_authn_query_response(_query.subject,
+                                          _query.requested_authn_context,
+                                          _query.session_index)
+
+    logger.debug("response: %s" % msg)
+    hinfo = IDP.apply_binding(_binding, "%s" % msg, "","","SAMLResponse")
+
+    resp = Response(hinfo["data"], headers=hinfo["headers"])
+    return resp(environ, start_response)
+
+
+# ----------------------------------------------------------------------------
+# Name ID Mapping service
+# When an entity that shares an identifier for a principal with an identity
+# provider wishes to obtain a name identifier for the same principal in a
+# particular format or federation namespace, it can send a request to
+# the identity provider using this protocol.
+# ----------------------------------------------------------------------------
+
+
+def _nim(environ, start_response, user, query, binding, relay_state=""):
+    req = IDP.parse_manage_name_id_response(query, binding)
+
+    # Do the necessary stuff
+    try:
+        name_id = IDP.ident.handle_name_id_mapping_request()
+    except Unknown:
+        resp = BadRequest("Unknown entity")
+        return resp(environ, start_response)
+    except PolicyError:
+        resp = BadRequest("Unknown entity")
+        return resp(environ, start_response)
+
+    info = IDP.response_args(req)
+    _resp = IDP.create_manage_name_id_response(name_id, **info)
+
+    # It's using SOAP binding
+    hinfo = IDP.apply_binding(binding, "%s" % _resp, "", "", "SAMLResponse")
+
+    resp = Response(hinfo["data"],
+                    headers=dict2list_of_tuples(hinfo["headers"]))
+    return resp(environ, start_response)
+
+def nim(environ, start_response, user):
+    """ Expects a HTTP-redirect logout request """
+
+    _dict = unpack_redirect(environ)
+
+    if not _dict:
+        resp = Unauthorized('Unknown user')
+        return resp(environ, start_response)
+    else:
+        return _mni(environ, start_response, user, _dict["SAMLRequest"],
+                    BINDING_HTTP_REDIRECT, _dict["RelayState"])
+
+def nim_post(environ, start_response, user):
+    """ Expects a HTTP-POST logout request """
+
+    _dict = unpack_post(environ)
+    if not _dict:
+        resp = Unauthorized('Unknown user')
+        return resp(environ, start_response)
+    else:
+        return _mni(environ, start_response, user, _dict["SAMLRequest"],
+                    BINDING_HTTP_REDIRECT, _dict["RelayState"])
+
+def nim_soap(environ, start_response, user):
+
+    _dict = unpack_post(environ)
+    if not _dict:
+        resp = Unauthorized('Unknown user')
+        return resp(environ, start_response)
+    else:
+        return _mni(environ, start_response, user, _dict["SAMLRequest"],
+                    BINDING_HTTP_REDIRECT, _dict["RelayState"])
+
+def nim_art(environ, start_response, user):
+    # Could be by HTTP_REDIRECT or HTTP_POST
+
+    _dict = unpack_redirect(environ)
+    if not _dict:
+        _dict = unpack_post()
+    return _mni
+
+# ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 def delete_cookie(environ, name):
     kaka = environ.get("HTTP_COOKIE", '')
@@ -380,22 +662,49 @@ def set_cookie(name, path, value):
 AUTHN_URLS = [
     (r'whoami$', whoami),
     (r'whoami/(.*)$', whoami),
-    (r'post_sso$', sso_post),
-    (r'post_sso/(.*)$', sso_post),
-    (r'sso$', sso),
-    (r'sso/(.*)$', sso),
-    (r'logout$', slo),
-    (r'logout/(.*)$', slo),
-    (r'logout_post$', slo_post),
-    (r'logout_post/(.*)$', slo_post),
-    (r'logout_soap$', slo_soap),
-    (r'logout_soap/(.*)$', slo_soap),
+    # sso
+    (r'sso/post$', sso_post),
+    (r'sso/post/(.*)$', sso_post),
+    (r'sso/redirect$', sso),
+    (r'sso/redirect/(.*)$', sso),
+    (r'sso/art$', sso),
+    (r'sso/art/(.*)$', sso),
+    # slo
+    (r'slo/redirect$', slo),
+    (r'slo/redirect/(.*)$', slo),
+    (r'slo/post$', slo_post),
+    (r'slo/post/(.*)$', slo_post),
+    (r'slo/soap$', slo_soap),
+    (r'slo/soap/(.*)$', slo_soap),
+    #
+    (r'airs$', assertion_id_request),
+    (r'ars$', artifact_resolve_service),
+    # mni
+    (r'mni/post$', mni_post),
+    (r'mni/post/(.*)$', mni_post),
+    (r'mni/redirect$', mni),
+    (r'mni/redirect/(.*)$', mni),
+    (r'mni/art$', mni_art),
+    (r'mni/art/(.*)$', mni_art),
+    (r'mni/soap$', mni_soap),
+    (r'mni/soap/(.*)$', mni_soap),
+    # nim
+    (r'nim/post$', nim_post),
+    (r'nim/post/(.*)$', nim_post),
+    (r'nim/redirect$', nim),
+    (r'nim/redirect/(.*)$', nim),
+    (r'nim/art$', nim_art),
+    (r'nim/art/(.*)$', nim_art),
+    (r'nim/soap$', nim_soap),
+    (r'nim/soap/(.*)$', nim_soap),
+    #
+    (r'aqs$', authn_query_service)
 ]
 
 NON_AUTHN_URLS = [
     (r'login?(.*)$', do_authentication),
     (r'verify?(.*)$', do_verify),
-    ]
+]
 
 # ----------------------------------------------------------------------------
 
