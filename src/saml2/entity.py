@@ -1,6 +1,7 @@
 import base64
 import logging
 from hashlib import sha1
+from saml2.metadata import ENDPOINTS
 from saml2.soap import parse_soap_enveloped_saml_artifact_resolve
 
 from saml2 import samlp, saml, response
@@ -350,6 +351,16 @@ class Entity(HTTPBase):
 
     # ------------------------------------------------------------------------
 
+    def srv2typ(self, service):
+        for typ in ["aa", "pdp", "aq"]:
+            if service in ENDPOINTS[typ]:
+                if typ == "aa":
+                    return "attribute_authority"
+                elif typ == "aq":
+                    return  "authn_authority"
+                else:
+                    return typ
+
     def _parse_request(self, xmlstr, request_cls, service, binding):
         """Parse a Request
 
@@ -366,6 +377,12 @@ class Entity(HTTPBase):
         # The addresses I should receive messages like this on
         receiver_addresses = self.config.endpoint(service, binding,
                                                   self.entity_type)
+        if not receiver_addresses and self.entity_type == "idp":
+            for typ in ["aa", "aq", "pdp"]:
+                receiver_addresses = self.config.endpoint(service, binding, typ)
+                if receiver_addresses:
+                    break
+
         _log_info("receiver addresses: %s" % receiver_addresses)
         _log_info("Binding: %s" % binding)
 
@@ -383,11 +400,11 @@ class Entity(HTTPBase):
         xmlstr = self.unravel(xmlstr, binding, request_cls.msgtype)
         _request = _request.loads(xmlstr, binding)
 
-        _log_debug("Loaded authn_request")
+        _log_debug("Loaded request")
 
         if _request:
             _request = _request.verify()
-            _log_debug("Verified authn_request")
+            _log_debug("Verified request")
 
         if not _request:
             return None
