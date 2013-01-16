@@ -1,5 +1,7 @@
 import copy
 import shelve
+import logging
+
 from hashlib import sha256
 from urllib import quote
 from urllib import unquote
@@ -10,6 +12,8 @@ from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.saml import NAMEID_FORMAT_EMAILADDRESS
 
 __author__ = 'rolandh'
+
+logger = logging.getLogger(__name__)
 
 ATTR = ["name_qualifier", "sp_name_qualifier", "format", "sp_provided_id"]
 
@@ -94,7 +98,7 @@ class IdentDB(object):
         except KeyError:
             pass
 
-    def get_nameid(self, format, sp_name_qualifier, userid, name_qualifier):
+    def get_nameid(self, userid, format, sp_name_qualifier, name_qualifier):
         _id = self.create_id(format, name_qualifier, sp_name_qualifier)
 
         if format == NAMEID_FORMAT_EMAILADDRESS:
@@ -119,6 +123,10 @@ class IdentDB(object):
         :param name_qualifier:
         :return:
         """
+
+        logger.debug("local_policy: %s, name_id_policy: %s" % (local_policy,
+                                                               name_id_policy))
+
         if name_id_policy and name_id_policy.sp_name_qualifier:
             sp_name_qualifier = name_id_policy.sp_name_qualifier
         else:
@@ -139,7 +147,7 @@ class IdentDB(object):
 
     def construct_nameid(self, userid, local_policy=None,
                          sp_name_qualifier=None, name_id_policy=None,
-                         sp_nid=None, name_qualifier=""):
+                         name_qualifier=""):
         """ Returns a name_id for the object. How the name_id is
         constructed depends on the context.
 
