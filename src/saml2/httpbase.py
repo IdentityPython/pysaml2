@@ -215,9 +215,9 @@ class HTTPBase(object):
         :return: dictionary
         """
         if headers is None:
-            headers = {"content-type": "application/soap+xml"}
+            headers = [("content-type", "application/soap+xml")]
         else:
-            headers.update({"content-type": "application/soap+xml"})
+            headers.append(("content-type", "application/soap+xml"))
 
         soap_message = make_soap_enveloped_saml_thingy(request)
 
@@ -244,14 +244,15 @@ class HTTPBase(object):
         #_response = self.server.post(soap_message, headers, path=path)
         try:
             args = self.use_soap(request, destination, headers, sign)
+            args["headers"] = dict(args["headers"])
             response = self.send(**args)
         except Exception, exc:
             logger.info("HTTPClient exception: %s" % (exc,))
-            return None
+            raise
 
         if response:
             xmlstr = response.text
             logger.info("SOAP response: %s" % xmlstr)
-            return parse_soap_enveloped_saml_response(xmlstr)
+            return response
         else:
-            return False
+            return None
