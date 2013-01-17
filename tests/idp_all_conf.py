@@ -1,4 +1,4 @@
-from saml2 import BINDING_SOAP
+from saml2 import BINDING_SOAP, BINDING_URI
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_ARTIFACT
@@ -51,7 +51,7 @@ CONFIG = {
                     ("%s/ars" % BASE, BINDING_SOAP)
                 ],
                 "assertion_id_request_service": [
-                    ("%s/airs" % BASE, BINDING_SOAP)
+                    ("%s/airs" % BASE, BINDING_URI)
                 ],
                 "authn_query_service": [
                     ("%s/aqs" % BASE, BINDING_SOAP)

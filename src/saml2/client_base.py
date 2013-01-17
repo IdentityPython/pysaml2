@@ -513,9 +513,10 @@ class Base(Entity):
         kwargs = {"entity_id": self.config.entityid,
                   "attribute_converters": self.config.attribute_converters}
 
-        return self._parse_response(response, AssertionIDResponse, "", binding,
+        res = self._parse_response(response, AssertionIDResponse, "", binding,
                                     **kwargs)
-
+        return res
+    
     # ------------------------------------------------------------------------
 
     def parse_attribute_query_response(self, response, binding):

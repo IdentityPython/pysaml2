@@ -10,7 +10,7 @@ import logging.handlers
 
 from importlib import import_module
 
-from saml2 import root_logger
+from saml2 import root_logger, BINDING_URI
 from saml2 import BINDING_SOAP
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
@@ -137,7 +137,7 @@ PREFERRED_BINDING={
     "authn_query_service": [BINDING_SOAP],
     "attribute_service": [BINDING_SOAP],
     "authz_service": [BINDING_SOAP],
-    "assertion_id_request_service": [BINDING_SOAP],
+    "assertion_id_request_service": [BINDING_URI],
     "artifact_resolution_service": [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST],
     "attribute_consuming_service": _RPA
 }

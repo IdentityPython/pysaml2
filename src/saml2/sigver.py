@@ -746,7 +746,11 @@ class SecurityContext(object):
         :return:
         """
 
-        _func = getattr(samlp, "%s_from_string" % msgtype)
+        try:
+            _func = getattr(samlp, "%s_from_string" % msgtype)
+        except AttributeError:
+            _func = getattr(saml, "%s_from_string" % msgtype)
+
         msg = _func(decoded_xml)
         if not msg:
             raise TypeError("Not a %s" % msgtype)
@@ -837,6 +841,11 @@ class SecurityContext(object):
                                                 origdoc=None):
         return self.correctly_signed_message(decoded_xml,
                                              "assertion_id_request", must,
+                                             origdoc)
+
+    def correctly_signed_assertion_id_response(self, decoded_xml, must=False,
+                                              origdoc=None):
+        return self.correctly_signed_message(decoded_xml, "assertion", must,
                                              origdoc)
 
     def correctly_signed_response(self, decoded_xml, must=False, origdoc=None):

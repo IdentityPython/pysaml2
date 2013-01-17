@@ -4,7 +4,7 @@ from hashlib import sha1
 from saml2.metadata import ENDPOINTS
 from saml2.soap import parse_soap_enveloped_saml_artifact_resolve
 
-from saml2 import samlp, saml, response
+from saml2 import samlp, saml, response, BINDING_URI
 from saml2 import request
 from saml2 import soap
 from saml2 import element_to_extension_element
@@ -120,9 +120,18 @@ class Entity(HTTPBase):
             return Issuer(text=self.config.entityid,
                           format=NAMEID_FORMAT_ENTITY)
 
-    def apply_binding(self, binding, msg_str, destination, relay_state,
+    def apply_binding(self, binding, msg_str, destination="", relay_state="",
                           typ="SAMLRequest"):
+        """
+        Construct the necessary HTTP arguments dependent on Binding
 
+        :param binding: Which binding to use
+        :param msg_str: The return message as a string (XML)
+        :param destination: Where to send the message
+        :param relay_state: Relay_state if provided
+        :param typ: Which type of message this is
+        :return: A dictionary
+        """
         if binding == BINDING_HTTP_POST:
             logger.info("HTTP POST")
             info = self.use_http_form_post(msg_str, destination,
@@ -136,6 +145,8 @@ class Entity(HTTPBase):
             info["method"] = "GET"
         elif binding == BINDING_SOAP:
             info = self.use_soap(msg_str, destination)
+        elif binding == BINDING_URI:
+            info = self.use_http_uri(msg_str, typ, destination)
         else:
             raise Exception("Unknown binding type: %s" % binding)
 
@@ -227,8 +238,10 @@ class Entity(HTTPBase):
         elif binding == BINDING_SOAP:
             func = getattr(soap, "parse_soap_enveloped_saml_%s" % msgtype)
             xmlstr = func(txt)
+        elif binding == BINDING_URI:
+            xmlstr = txt
         else:
-            raise ValueError("Don't know how to handle '%s'")
+            raise ValueError("Don't know how to handle '%s'" % binding)
 
         return xmlstr
 

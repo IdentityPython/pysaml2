@@ -39,10 +39,11 @@ from saml2.request import NameIDMappingRequest
 from saml2.request import AuthzDecisionQuery
 from saml2.request import AuthnQuery
 
-from saml2.s_utils import MissingValue
+from saml2.s_utils import MissingValue, Unknown
+from saml2.s_utils import BadRequest
 from saml2.s_utils import error_status_factory
 
-from saml2.sigver import pre_signature_part
+from saml2.sigver import pre_signature_part, signed_instance_factory
 
 from saml2.assertion import Assertion
 from saml2.assertion import Policy
@@ -461,9 +462,7 @@ class Server(Entity):
             return self.create_error_response(in_response_to, destination,
                                                   sp_entity_id, exc, name_id)
 
-    def create_assertion_id_request_response(self, assertion_id, in_response_to,
-                                             issuer=None, sign_response=False,
-                                             status=None):
+    def create_assertion_id_request_response(self, assertion_id, sign=False):
         """
 
         :param assertion_id:
@@ -473,23 +472,20 @@ class Server(Entity):
         :param status:
         :return:
         """
-        # Done over SOAP
-        args = {}
-        to_sign = []
 
-        for aid in assertion_id:
-            try:
-                (assertion, to_sign) = self.get_assertion(aid)
-                to_sign.extend(to_sign)
-                try:
-                    args["assertion"].append(assertion)
-                except KeyError:
-                    args["assertion"] = [assertion]
-            except KeyError:
-                pass
+        try:
+            (assertion, to_sign) = self.get_assertion(assertion_id)
+        except KeyError:
+            raise Unknown
 
-        return self._response(in_response_to, "", status, issuer,
-                              sign_response, to_sign, **args)
+        if to_sign:
+            if assertion.signature is None:
+                assertion.signature = pre_signature_part(assertion.id,
+                                                         self.sec.my_cert, 1)
+
+            return signed_instance_factory(assertion, self.sec, to_sign)
+        else:
+            return assertion
 
     def create_name_id_mapping_response(self, name_id=None, encrypted_id=None,
                                         in_response_to=None,

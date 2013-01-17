@@ -8,6 +8,7 @@ from urllib import unquote
 from saml2.s_utils import rndstr
 from saml2.s_utils import PolicyError
 from saml2.saml import NameID
+from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.saml import NAMEID_FORMAT_EMAILADDRESS
 
@@ -156,12 +157,20 @@ class IdentDB(object):
         :param sp_name_qualifier: The 'user'/-s of the name_id
         :param name_id_policy: The policy the server on the other side wants
             us to follow.
-        :param sp_nid: Name ID Formats from the SPs metadata
+        :param name_qualifier: A domain qualifier
         :return: NameID instance precursor
         """
 
         args = self.nim_args(local_policy, sp_name_qualifier, name_id_policy)
         return self.get_nameid(userid, **args)
+
+    def transient_nameid(self, userid, sp_name_qualifier="", name_qualifier=""):
+        return self.get_nameid(userid, NAMEID_FORMAT_TRANSIENT,
+                               sp_name_qualifier, name_qualifier)
+
+    def permanent_nameid(self, userid, sp_name_qualifier="", name_qualifier=""):
+        return self.get_nameid(userid, NAMEID_FORMAT_PERSISTENT,
+                               sp_name_qualifier, name_qualifier)
 
     def find_local_id(self, name_id):
         """

@@ -3,7 +3,7 @@
 from saml2 import samlp
 from saml2.saml import NAMEID_FORMAT_PERSISTENT, NAMEID_FORMAT_TRANSIENT
 from saml2.config import IdPConfig
-from saml2.server import Identifier
+from saml2.ident import IdentDB
 from saml2.assertion import Policy
 
 def _eq(l1,l2):
@@ -54,7 +54,7 @@ NAME_ID_POLICY_2 = """<?xml version="1.0" encoding="utf-8"?>
 
 class TestIdentifier():
     def setup_class(self):
-        self.id = Identifier("subject.db", CONFIG.vorg)
+        self.id = IdentDB("subject.db", "example.com", "example")
         
     def test_persistent_1(self):
         policy = Policy({
@@ -67,21 +67,18 @@ class TestIdentifier():
             }
         })
         
-        nameid = self.id.construct_nameid(policy, "foobar", 
-                                            "urn:mace:example.com:sp:1")
+        nameid = self.id.construct_nameid("foobar", policy,
+                                          "urn:mace:example.com:sp:1")
         
-        assert _eq(nameid.keys(), ['text', 'sp_provided_id', 
-                            'sp_name_qualifier', 'name_qualifier', 'format'])
-        assert _eq(nameid.keyswv(), ['format', 'text', 'sp_name_qualifier'])
+        assert _eq(nameid.keyswv(), ['format', 'text', 'sp_name_qualifier',
+                                     'name_qualifier'])
         assert nameid.sp_name_qualifier == "urn:mace:example.com:sp:1"
         assert nameid.format == NAMEID_FORMAT_PERSISTENT
         
-        nameid_2 = self.id.construct_nameid(policy, "foobar", 
-                                            "urn:mace:example.com:sp:1")
+        id = self.id.find_local_id(nameid)
         
-        assert nameid != nameid_2
-        assert nameid.text == nameid_2.text
-        
+        assert id == "foobar"
+
     def test_transient_1(self):
         policy = Policy({
             "default": {
@@ -92,10 +89,11 @@ class TestIdentifier():
                 }
             }
         })
-        nameid = self.id.construct_nameid(policy, "foobar", 
-                                            "urn:mace:example.com:sp:1")
+        nameid = self.id.construct_nameid("foobar", policy,
+                                          "urn:mace:example.com:sp:1")
         
-        assert _eq(nameid.keyswv(), ['text', 'format', 'sp_name_qualifier'])
+        assert _eq(nameid.keyswv(), ['text', 'format', 'sp_name_qualifier',
+                                     'name_qualifier'])
         assert nameid.format == NAMEID_FORMAT_TRANSIENT
         
     def test_vo_1(self):
@@ -111,17 +109,16 @@ class TestIdentifier():
         
         name_id_policy = samlp.name_id_policy_from_string(NAME_ID_POLICY_1)
         print name_id_policy
-        print self.id.voconf
-        nameid = self.id.construct_nameid(policy, "foobar", 
-                                            "urn:mace:example.com:sp:1", 
-                                            {"uid": "foobar01"},
-                                            name_id_policy)
+        nameid = self.id.construct_nameid("foobar", policy,
+                                          'http://vo.example.org/biomed',
+                                          name_id_policy)
 
         print nameid
-        assert _eq(nameid.keyswv(), ['text', 'sp_name_qualifier', 'format'])
+        assert _eq(nameid.keyswv(), ['text', 'sp_name_qualifier', 'format',
+                                     'name_qualifier'])
         assert nameid.sp_name_qualifier == 'http://vo.example.org/biomed'
         assert nameid.format == 'urn:oid:2.16.756.1.2.5.1.1.1-NameID'
-        assert nameid.text == "foobar01"
+        assert nameid.text == "foobar"
 
     def test_vo_2(self):
         policy = Policy({
@@ -136,8 +133,8 @@ class TestIdentifier():
         
         name_id_policy = samlp.name_id_policy_from_string(NAME_ID_POLICY_2)
         
-        nameid = self.id.construct_nameid(policy, "foobar", 
-                                            "urn:mace:example.com:sp:1", 
+        nameid = self.id.construct_nameid("foobar", policy,
+                                          "urn:mace:example.com:sp:1",
                                             {"uid": "foobar01"},
                                             name_id_policy)
         

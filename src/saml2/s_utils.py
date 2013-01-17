@@ -29,8 +29,11 @@ logger = logging.getLogger(__name__)
 
 class VersionMismatch(Exception):
     pass
-    
-class UnknownPrincipal(Exception):
+
+class Unknown(Exception):
+    pass
+
+class UnknownPrincipal(Unknown):
     pass
     
 class UnsupportedBinding(Exception):
@@ -44,6 +47,10 @@ class MissingValue(Exception):
 
 class PolicyError(Exception):
     pass
+
+class BadRequest(Exception):
+    pass
+
 
 EXCEPTION2STATUS = {
     VersionMismatch: samlp.STATUS_VERSION_MISMATCH,

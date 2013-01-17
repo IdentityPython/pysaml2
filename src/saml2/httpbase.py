@@ -13,7 +13,6 @@ from saml2.pack import make_soap_enveloped_saml_thingy
 from saml2.pack import http_redirect_message
 
 import logging
-from saml2.soap import parse_soap_enveloped_saml_response
 
 logger = logging.getLogger(__name__)
 
@@ -203,6 +202,29 @@ class HTTPBase(object):
             request = "%s" % (message,)
 
         return http_redirect_message(message, destination, relay_state, typ)
+
+    def use_http_uri(self, message, typ, destination=""):
+        if typ == "SAMLResponse":
+            info = {
+                "data": message.split("\n")[1],
+                "headers": [
+                    ("Content-Type", "application/samlassertion+xml"),
+                    ("Cache-Control", "no-cache, no-store"),
+                    ("Pragma", "no-cache")
+                ]
+            }
+        elif typ == "SAMLRequest":
+            # msg should be an identifier
+            info = {
+                "data": "",
+                "headers": [
+                    ("Location", "%s?ID=%s" % (destination, message))
+                ]
+            }
+        else:
+            raise NotImplemented
+
+        return info
 
     def use_soap(self, request, destination="", headers=None, sign=False):
         """

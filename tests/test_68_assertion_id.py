@@ -2,9 +2,10 @@ from urlparse import parse_qs
 from urlparse import urlparse
 from saml2.samlp import AuthnRequest
 from saml2.samlp import NameIDPolicy
-from saml2.saml import AUTHN_PASSWORD
+from saml2.saml import AUTHN_PASSWORD, Assertion
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2 import BINDING_HTTP_POST
+from saml2 import BINDING_URI
 from saml2 import BINDING_SOAP
 from saml2.client import Saml2Client
 from saml2.server import Server
@@ -13,20 +14,28 @@ __author__ = 'rolandh'
 
 TAG1 = "name=\"SAMLRequest\" value="
 
-def get_msg(hinfo, binding):
+def get_msg(hinfo, binding, response=False):
     if binding == BINDING_SOAP:
-        xmlstr = hinfo["data"]
+        msg = hinfo["data"]
     elif binding == BINDING_HTTP_POST:
         _inp = hinfo["data"][3]
         i = _inp.find(TAG1)
         i += len(TAG1) + 1
         j = _inp.find('"', i)
-        xmlstr = _inp[i:j]
+        msg = _inp[i:j]
+    elif binding == BINDING_URI:
+        if response:
+            msg = hinfo["data"]
+        else:
+            msg = ""
+            for header, val in hinfo["headers"]:
+                if header == "Location":
+                    return parse_qs(val.split("?")[1])["ID"][0]
     else: # BINDING_HTTP_REDIRECT
         parts = urlparse(hinfo["headers"][0][1])
-        xmlstr = parse_qs(parts.query)["SAMLRequest"][0]
+        msg = parse_qs(parts.query)["SAMLRequest"][0]
 
-    return xmlstr
+    return msg
 
 def test_basic_flow():
     sp = Saml2Client(config_file="servera_conf")
@@ -42,7 +51,8 @@ def test_basic_flow():
 
     # == Create an AuthnRequest response
 
-    name_id = idp.ident.transient_nameid(sp.config.entityid, "id12")
+    name_id = idp.ident.transient_nameid("id12", sp.config.entityid)
+
     binding, destination = idp.pick_binding("assertion_consumer_service",
                                             entity_id=sp.config.entityid)
     resp = idp.create_authn_response({"eduPersonEntitlement": "Short stop",
@@ -73,32 +83,23 @@ def test_basic_flow():
     binding, destination = sp.pick_binding("assertion_id_request_service",
                                            entity_id=idp.config.entityid)
 
-    _req = sp.create_assertion_id_request([asid], destination)
-
-    hinfo = sp.apply_binding(binding, "%s" % _req, destination,
-                             "realy_stat")
+    hinfo = sp.apply_binding(binding, asid, destination)
 
     # ---------- @IDP ------------
 
-    xmlstr = get_msg(hinfo, binding)
-
-    rr = idp.parse_assertion_id_request(xmlstr, binding)
-
-    print rr
+    aid = get_msg(hinfo, binding, response=False)
 
     # == construct response
 
-    aids = [x.text for x in rr.message.assertion_id_ref]
-    resp_args = idp.response_args(rr.message)
-
-    resp = idp.create_assertion_id_request_response(aids, **resp_args)
+    resp = idp.create_assertion_id_request_response(aid)
 
     hinfo = idp.apply_binding(binding, "%s" % resp, None, "", "SAMLResponse")
 
     # ----------- @SP -------------
 
-    xmlstr = get_msg(hinfo, binding)
+    xmlstr = get_msg(hinfo, binding, response=True)
 
     final = sp.parse_assertion_id_request_response(xmlstr, binding)
 
-    print final
+    print final.response
+    assert isinstance(final.response, Assertion)

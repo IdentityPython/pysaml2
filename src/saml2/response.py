@@ -154,17 +154,10 @@ class StatusResponse(object):
         return self._postamble()
         
     def _loads(self, xmldata, decode=True, origxml=None):
-#        if decode:
-#            decoded_xml = base64.b64decode(xmldata)
-#        else:
-#            decoded_xml = xmldata
-    
+
         # own copy
         self.xmlstr = xmldata[:]
         logger.debug("xmlstr: %s" % (self.xmlstr,))
-#            fil = open("response.xml", "w")
-#            fil.write(self.xmlstr)
-#            fil.close()
 
         try:
             self.response = self.signature_check(xmldata, origdoc=origxml)
@@ -641,20 +634,6 @@ class AuthnResponse(StatusResponse):
     def __str__(self):
         return "%s" % self.xmlstr
 
-class AssertionIDResponse(AuthnResponse):
-    msgtype = "assertion_id_response"
-
-    def __init__(self, sec_context, attribute_converters, entity_id,
-                 return_addr=None, timeslack=0, asynchop=False, test=False):
-
-        AuthnResponse.__init__(self, sec_context, attribute_converters,
-                               entity_id, return_addr, timeslack=timeslack,
-                               asynchop=asynchop, test=test)
-        self.entity_id = entity_id
-        self.attribute_converters = attribute_converters
-        self.assertion = None
-        self.context = "AssertionIdResponse"
-
 class AuthnQueryResponse(AuthnResponse):
     msgtype = "authn_query_response"
 
@@ -747,3 +726,62 @@ def response_factory(xmlstr, conf, return_addr=None,
         return logoutresp
         
     return response
+
+# ===========================================================================
+# A class of it's own
+
+class AssertionIDResponse(object):
+    msgtype = "assertion_id_response"
+
+    def __init__(self, sec_context, attribute_converters, timeslack=0,
+                 **kwargs):
+
+        self.sec = sec_context
+        self.timeslack = timeslack
+        self.xmlstr = ""
+        self.name_id = ""
+        self.response = None
+        self.not_signed = False
+        self.attribute_converters = attribute_converters
+        self.assertion = None
+        self.context = "AssertionIdResponse"
+        self.signature_check = self.sec.correctly_signed_assertion_id_response
+
+    def loads(self, xmldata, decode=True, origxml=None):
+        # own copy
+        self.xmlstr = xmldata[:]
+        logger.debug("xmlstr: %s" % (self.xmlstr,))
+
+        try:
+            self.response = self.signature_check(xmldata, origdoc=origxml)
+            self.assertion = self.response
+        except TypeError:
+            raise
+        except SignatureError:
+            raise
+        except Exception, excp:
+            logger.exception("EXCEPTION: %s", excp)
+            raise
+
+        #print "<", self.response
+
+        return self._postamble()
+
+    def verify(self):
+        try:
+            valid_instance(self.response)
+        except NotValid, exc:
+            logger.error("Not valid response: %s" % exc.args[0])
+            raise
+        return self
+
+    def _postamble(self):
+        if not self.response:
+            logger.error("Response was not correctly signed")
+            if self.xmlstr:
+                logger.info(self.xmlstr)
+            raise IncorrectlySigned()
+
+        logger.debug("response: %s" % (self.response,))
+
+        return self
