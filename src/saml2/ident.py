@@ -133,7 +133,7 @@ class IdentDB(object):
         else:
             sp_name_qualifier = sp_name_qualifier
 
-        if name_id_policy:
+        if name_id_policy and name_id_policy.format:
             nameid_format = name_id_policy.format
         elif local_policy:
             nameid_format = local_policy.get_nameid_format(sp_name_qualifier)

@@ -117,8 +117,8 @@ class TestIdentifier():
         assert _eq(nameid.keyswv(), ['text', 'sp_name_qualifier', 'format',
                                      'name_qualifier'])
         assert nameid.sp_name_qualifier == 'http://vo.example.org/biomed'
-        assert nameid.format == 'urn:oid:2.16.756.1.2.5.1.1.1-NameID'
-        assert nameid.text == "foobar"
+        assert nameid.format == NAMEID_FORMAT_PERSISTENT
+        assert nameid.text != "foobar"
 
     def test_vo_2(self):
         policy = Policy({
@@ -134,12 +134,12 @@ class TestIdentifier():
         name_id_policy = samlp.name_id_policy_from_string(NAME_ID_POLICY_2)
         
         nameid = self.id.construct_nameid("foobar", policy,
-                                          "urn:mace:example.com:sp:1",
-                                            {"uid": "foobar01"},
-                                            name_id_policy)
+                                          'http://vo.example.org/design',
+                                          name_id_policy)
         
-        assert _eq(nameid.keyswv(), ['text', 'sp_name_qualifier', 'format'])
+        assert _eq(nameid.keyswv(), ['text', 'sp_name_qualifier', 'format',
+                                     'name_qualifier'])
         assert nameid.sp_name_qualifier == 'http://vo.example.org/design'
         assert nameid.format == NAMEID_FORMAT_PERSISTENT
-        assert nameid.text == "foobar01"
+        assert nameid.text != "foobar01"
         
