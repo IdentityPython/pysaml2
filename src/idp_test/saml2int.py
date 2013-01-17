@@ -90,6 +90,19 @@ class AuthnQuery(Request):
         assertion = resp.assertion[0]
         self.args["subject"] = assertion.subject
 
+class NameIDMappeingRequest(Request):
+    request = "name_id_mapping_request"
+    _args = {"binding": BINDING_HTTP_REDIRECT}
+
+    def __init__(self):
+        Request.__init__(self)
+        self.tests["post"].append(VerifySuccessStatus)
+
+    def setup(self, environ):
+        resp = environ["response"][-1].response
+        assertion = resp.assertion[0]
+        self.args["subject"] = assertion.subject
+
 # -----------------------------------------------------------------------------
 
 OPERATIONS = {
