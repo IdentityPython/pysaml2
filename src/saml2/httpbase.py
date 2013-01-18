@@ -294,7 +294,7 @@ class HTTPBase(object):
         if response:
             if response.status_code == 200:
                 logger.info("SOAP response: %s" % response.text)
-                return response.text
+                return response
             else:
                 raise HTTPError("%d:%s" % (response.status_code, response.error))
         else:

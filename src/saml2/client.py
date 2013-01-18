@@ -18,6 +18,7 @@
 """Contains classes and functions that a SAML2.0 Service Provider (SP) may use
 to conclude its tasks.
 """
+from saml2.httpbase import HTTPError
 from saml2.s_utils import sid
 from saml2.samlp import logout_response_from_string
 import saml2
@@ -244,7 +245,7 @@ class Saml2Client(Base):
 
         response = self.send_using_soap(query, destination)
 
-        if response:
+        if response.status_code == 200:
             if not response_args:
                 response_args = {"binding": BINDING_SOAP}
             else:
@@ -252,9 +253,11 @@ class Saml2Client(Base):
 
             logger.info("Verifying response")
             if response_args:
-                response = _response_func(response, **response_args)
+                response = _response_func(response.text, **response_args)
             else:
-                response = _response_func(response)
+                response = _response_func(response.text)
+        else:
+            raise HTTPError("%d:%s" % (response.status_code, response.error))
 
         if response:
             #not_done.remove(entity_id)
