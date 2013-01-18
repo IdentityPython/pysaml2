@@ -125,6 +125,7 @@ def parse_soap_enveloped_saml_thingy(text, expected_tags):
     """
     envelope = ElementTree.fromstring(text)
 
+    # Make sure it's a SOAP message
     assert envelope.tag == '{%s}Envelope' % soapenv.NAMESPACE
     
     assert len(envelope) >= 1

@@ -180,7 +180,7 @@ def _sso(environ, start_response, user, query, binding, relay_state=""):
     binding, destination = IDP.pick_binding("assertion_consumer_service",
                                             entity_id=_authn_req.issuer.text)
     http_args = IDP.apply_binding(binding, "%s" % authn_resp, destination,
-                                  relay_state, "SAMLResponse")
+                                  relay_state, response=True)
 
     resp = Response(http_args["data"], headers=http_args["headers"])
     return resp(environ, start_response)
@@ -495,7 +495,7 @@ def assertion_id_request(environ, start_response, user=None):
 
     resp_args = IDP.response_args(req_info.message, _binding, "spsso")
     response = IDP.create_assertion_id_request_response(asids, **resp_args)
-    hinfo = IDP.apply_binding(_binding, "%s" % response, "","","SAMLResponse")
+    hinfo = IDP.apply_binding(_binding, "%s" % response, "","",response=True)
 
     resp = Response(hinfo["data"], headers=hinfo["headers"])
     return resp(environ, start_response)
@@ -522,7 +522,7 @@ def artifact_resolve_service(environ, start_response, user=None):
 
     msg = IDP.create_artifact_response(_req, _req.artifact.text)
 
-    hinfo = IDP.apply_binding(_binding, "%s" % msg, "","","SAMLResponse")
+    hinfo = IDP.apply_binding(_binding, "%s" % msg, "","",response=True)
 
     resp = Response(hinfo["data"], headers=hinfo["headers"])
     return resp(environ, start_response)
@@ -553,7 +553,7 @@ def authn_query_service(environ, start_response, user=None):
                                           _query.session_index)
 
     logger.debug("response: %s" % msg)
-    hinfo = IDP.apply_binding(_binding, "%s" % msg, "","","SAMLResponse")
+    hinfo = IDP.apply_binding(_binding, "%s" % msg, "","",response=True)
 
     resp = Response(hinfo["data"], headers=hinfo["headers"])
     return resp(environ, start_response)
@@ -585,7 +585,7 @@ def _nim(environ, start_response, user, query, binding, relay_state=""):
     _resp = IDP.create_manage_name_id_response(name_id, **info)
 
     # It's using SOAP binding
-    hinfo = IDP.apply_binding(binding, "%s" % _resp, "", "", "SAMLResponse")
+    hinfo = IDP.apply_binding(binding, "%s" % _resp, "", "", response=True)
 
     resp = Response(hinfo["data"],
                     headers=dict2list_of_tuples(hinfo["headers"]))
@@ -629,8 +629,8 @@ def nim_art(environ, start_response, user):
 
     _dict = unpack_redirect(environ)
     if not _dict:
-        _dict = unpack_post()
-    return _mni
+        _dict = unpack_post(environ)
+    return _artifact_oper(environ, start_response, user, _dict, _mni)
 
 # ----------------------------------------------------------------------------
 # ----------------------------------------------------------------------------

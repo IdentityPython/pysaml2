@@ -119,7 +119,8 @@ def test_flow():
 
     print p_res
 
-    hinfo = idp.apply_binding(binding, "%s" % p_res, "", "state2", "SAMLResponse")
+    hinfo = idp.apply_binding(binding, "%s" % p_res, "", "state2",
+                              response=True)
 
     # ------- @SP ----------
 

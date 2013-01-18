@@ -349,7 +349,7 @@ class TestClientWithDummy():
         assert isinstance(id, basestring)
         assert len(http_args) == 4
         assert http_args["headers"][0][0] == "Location"
-        assert http_args["data"] == [""]
+        assert http_args["data"] == []
 
     def test_do_attribute_query(self):
         response = self.client.do_attribute_query(IDP,

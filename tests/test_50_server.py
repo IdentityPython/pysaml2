@@ -458,8 +458,8 @@ class TestServerLogout():
                                                    None, "spsso", request)
 
         http_args = server.apply_binding(binding, "%s" % response, destination,
-                                         "relay_state", "SAMLResponse")
+                                         "relay_state", response=True)
 
         assert len(http_args) == 4
         assert http_args["headers"][0][0] == "Location"
-        assert http_args["data"] == ['']
+        assert http_args["data"] == []

@@ -91,7 +91,7 @@ def test_basic_flow():
 
     resp = idp.create_assertion_id_request_response(aid)
 
-    hinfo = idp.apply_binding(binding, "%s" % resp, None, "", "SAMLResponse")
+    hinfo = idp.apply_binding(binding, "%s" % resp, None, "", response=True)
 
     # ----------- @SP -------------
 

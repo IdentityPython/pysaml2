@@ -204,7 +204,7 @@ def slo(environ, start_response, user):
                                                 bindings, "spsso", response)
 
         http_args = IDP.apply_binding(binding, "%s" % response, destination,
-                                      query["RelayState"], "SAMLResponse")
+                                      query["RelayState"], response=True)
 
     except Exception, exc:
         resp = BadRequest('%s' % exc)

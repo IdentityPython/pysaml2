@@ -2,6 +2,7 @@ import calendar
 import cookielib
 import copy
 import re
+import urllib
 import urlparse
 import requests
 import time
@@ -206,7 +207,19 @@ class HTTPBase(object):
 
         return http_redirect_message(message, destination, relay_state, typ)
 
-    def use_http_uri(self, message, typ, destination=""):
+    def use_http_artifact(self, message, destination="", relay_state=""):
+        if relay_state:
+            query = urllib.urlencode({"SAMLart": message,
+                                      "RelayState": relay_state})
+        else:
+            query = urllib.urlencode({"SAMLart": message})
+        info = {
+            "data": "",
+            "url": "%s?%s" % (destination, query)
+        }
+        return info
+
+    def use_http_uri(self, message, typ, destination="", relay_state=""):
         if typ == "SAMLResponse":
             info = {
                 "data": message.split("\n")[1],
@@ -218,9 +231,14 @@ class HTTPBase(object):
             }
         elif typ == "SAMLRequest":
             # msg should be an identifier
+            if relay_state:
+                query = urllib.urlencode({"ID": message,
+                                          "RelayState": relay_state})
+            else:
+                query = urllib.urlencode({"ID": message})
             info = {
                 "data": "",
-                "url": "%s?ID=%s" % (destination, message)
+                "url": "%s?%s" % (destination, query)
             }
         else:
             raise NotImplemented

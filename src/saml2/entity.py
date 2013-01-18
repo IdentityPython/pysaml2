@@ -4,7 +4,7 @@ from hashlib import sha1
 from saml2.metadata import ENDPOINTS
 from saml2.soap import parse_soap_enveloped_saml_artifact_resolve
 
-from saml2 import samlp, saml, response, BINDING_URI
+from saml2 import samlp, saml, response, BINDING_URI, BINDING_HTTP_ARTIFACT
 from saml2 import request
 from saml2 import soap
 from saml2 import element_to_extension_element
@@ -69,7 +69,6 @@ def create_artifact(entity_id, message_handle, endpoint_index = 0):
     return base64.b64encode(ter)
 
 
-
 class Entity(HTTPBase):
     def __init__(self, entity_type, config=None, config_file="",
                  virtual_organization=""):
@@ -121,7 +120,7 @@ class Entity(HTTPBase):
                           format=NAMEID_FORMAT_ENTITY)
 
     def apply_binding(self, binding, msg_str, destination="", relay_state="",
-                          typ="SAMLRequest"):
+                      response=False):
         """
         Construct the necessary HTTP arguments dependent on Binding
 
@@ -129,9 +128,15 @@ class Entity(HTTPBase):
         :param msg_str: The return message as a string (XML)
         :param destination: Where to send the message
         :param relay_state: Relay_state if provided
-        :param typ: Which type of message this is
+        :param response: Which type of message this is
         :return: A dictionary
         """
+        # unless if BINDING_HTTP_ARTIFACT
+        if response:
+            typ = "SAMLResponse"
+        else:
+            typ = "SAMLRequest"
+
         if binding == BINDING_HTTP_POST:
             logger.info("HTTP POST")
             info = self.use_http_form_post(msg_str, destination,
@@ -147,6 +152,14 @@ class Entity(HTTPBase):
             info = self.use_soap(msg_str, destination)
         elif binding == BINDING_URI:
             info = self.use_http_uri(msg_str, typ, destination)
+        elif binding == BINDING_HTTP_ARTIFACT:
+            typ = "SAMLart"
+            if response:
+                info = self.use_http_artifact(msg_str, destination, relay_state)
+                info["method"] = "GET"
+                info["status"] = 302
+            else:
+                info = self.use_http_artifact(msg_str, destination, relay_state)
         else:
             raise Exception("Unknown binding type: %s" % binding)
 

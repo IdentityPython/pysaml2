@@ -124,7 +124,7 @@ def http_redirect_message(message, location, relay_state="", typ="SAMLRequest"):
     glue_char = "&" if urlparse.urlparse(location).query else "?"
     login_url = glue_char.join([location, urllib.urlencode(args)])
     headers = [('Location', login_url)]
-    body = [""]
+    body = []
     
     return {"headers":headers, "data":body}
 
