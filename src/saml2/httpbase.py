@@ -262,6 +262,8 @@ class HTTPBase(object):
 
         soap_message = make_soap_enveloped_saml_thingy(request)
 
+        logger.error("SOAP message: %s" % soap_message)
+        
         if sign and self.sec:
             _signed = self.sec.sign_statement_using_xmlsec(soap_message,
                                                            class_name(request),
