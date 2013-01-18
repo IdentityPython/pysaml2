@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import inspect
 import urllib
-from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_HTTP_REDIRECT, BINDING_URI
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_SOAP
 from saml2.client import Saml2Client
@@ -279,6 +279,10 @@ def do_query(client, oper, httpc, trace, interaction, entity_id, environ, cjar,
                 htargs["data"] = data
                 htargs["headers"] = tuple_list2dict(htargs["headers"])
                 res = httpc.send(loc, "POST", **htargs)
+            elif args["binding"] == BINDING_URI:
+                response_args["binding"] = BINDING_URI
+                htargs = client.use_http_uri(_req_str, "SAMLRequest", loc)
+                res = httpc.send(htargs["url"], "GET")
             else:
                 res = None
 
@@ -288,17 +292,22 @@ def do_query(client, oper, httpc, trace, interaction, entity_id, environ, cjar,
                 break
 
             if res:
-                response_args["outstanding"] = {req.id: "/"}
-                # deal with redirect, should in the end give me a response
-                try:
-                    response = intermit(client, res, httpc, environ, trace, cjar,
-                                        interaction, test_output, features)
-                except FatalError:
-                    environ["FatalError"] = True
-                    response = None
+                if args["binding"] == BINDING_URI:
+                    response = res.text
+                else:
 
-                if isinstance(response, dict):
-                    assert relay_state == response["RelayState"]
+                    response_args["outstanding"] = {req.id: "/"}
+                    # deal with redirect, should in the end give me a response
+                    try:
+                        response = intermit(client, res, httpc, environ, trace,
+                                            cjar, interaction, test_output,
+                                            features)
+                    except FatalError:
+                        environ["FatalError"] = True
+                        response = None
+
+                    if isinstance(response, dict):
+                        assert relay_state == response["RelayState"]
             else:
                 response = None
 

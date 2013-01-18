@@ -1,4 +1,4 @@
-from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_HTTP_REDIRECT, BINDING_URI
 from saml2 import BINDING_SOAP
 from saml2 import BINDING_HTTP_POST
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
@@ -66,11 +66,7 @@ class LogOutRequest(Saml2IntRequest):
 
 class AssertionIDRequest(Request):
     request = "assertion_id_request"
-    _args = {"binding": BINDING_SOAP}
-
-    def __init__(self):
-        Request.__init__(self)
-        self.tests["post"].append(VerifySuccessStatus)
+    _args = {"binding": BINDING_URI}
 
     def setup(self, environ):
         resp = environ["response"][-1].response
@@ -92,7 +88,7 @@ class AuthnQuery(Request):
 
 class NameIDMappeingRequest(Request):
     request = "name_id_mapping_request"
-    _args = {"binding": BINDING_HTTP_REDIRECT}
+    _args = {"binding": BINDING_SOAP}
 
     def __init__(self):
         Request.__init__(self)

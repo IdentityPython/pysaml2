@@ -112,6 +112,8 @@ class SAML2client(object):
                                   help="Return the SP metadata")
         self._parser.add_argument("-l", dest="list", action="store_true",
                                   help="List all the test flows as a JSON object")
+        self._parser.add_argument("-c", dest="spconfig", default="config_file",
+                                  help="Configuration file for the SP")
         self._parser.add_argument("oper", nargs="?", help="Which test to run")
 
         self.interactions = None
@@ -126,7 +128,7 @@ class SAML2client(object):
 
     def sp_configure(self, metadata_construction=False):
         sys.path.insert(0, ".")
-        mod = import_module("config_file")
+        mod = import_module(self.args.spconfig)
         if self.args.sp_id is None:
             if len(mod.CONFIG) == 1:
                 self.args.sp_id = mod.CONFIG.keys()[0]
