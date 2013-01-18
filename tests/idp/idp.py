@@ -337,6 +337,7 @@ def _slo(environ, start_response, _, request, binding, relay_state=""):
     try:
         req_info = IDP.parse_logout_request(request, binding)
     except Exception, exc:
+        logger.error("Bad request: %s" % exc)
         resp = BadRequest("%s" % exc)
         return resp(environ, start_response)
 
@@ -348,6 +349,7 @@ def _slo(environ, start_response, _, request, binding, relay_state=""):
         try:
             IDP.remove_authn_statements(msg.name_id)
         except KeyError,exc:
+            logger.error("ServiceError: %s" % exc)
             resp = ServiceError("%s" % exc)
             return resp(environ, start_response)
 
@@ -356,6 +358,7 @@ def _slo(environ, start_response, _, request, binding, relay_state=""):
     try:
         hinfo = IDP.apply_binding(binding, "%s" % resp, "", relay_state)
     except Exception, exc:
+        logger.error("ServiceError: %s" % exc)
         resp = ServiceError("%s" % exc)
         return resp(environ, start_response)
 
