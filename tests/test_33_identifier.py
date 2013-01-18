@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import os
 
 from saml2 import samlp
 from saml2.saml import NAMEID_FORMAT_PERSISTENT, NAMEID_FORMAT_TRANSIENT
@@ -142,4 +143,33 @@ class TestIdentifier():
         assert nameid.sp_name_qualifier == 'http://vo.example.org/design'
         assert nameid.format == NAMEID_FORMAT_PERSISTENT
         assert nameid.text != "foobar01"
-        
+
+
+    def test_persistent_nameid(self):
+        sp_id = "urn:mace:umu.se:sp"
+        nameid = self.id.persistent_nameid("abcd0001", sp_id)
+        remote_id = nameid.text.strip()
+        print remote_id
+        local = self.id.find_local_id(nameid)
+        assert local == "abcd0001"
+
+        # Always get the same
+        nameid2 = self.id.persistent_nameid("abcd0001", sp_id)
+        assert nameid.text.strip() == nameid2.text.strip()
+
+    def test_transient_nameid(self):
+        sp_id = "urn:mace:umu.se:sp"
+        nameid = self.id.transient_nameid("abcd0001", sp_id)
+        remote_id = nameid.text.strip()
+        print remote_id
+        local = self.id.find_local_id(nameid)
+        assert local == "abcd0001"
+
+        # Getting a new, means really getting a new !
+        nameid2 = self.id.transient_nameid(sp_id, "abcd0001")
+        assert nameid.text.strip() != nameid2.text.strip()
+
+    def teardown_class(self):
+        if os.path.exists("foobar.db"):
+            os.unlink("foobar.db")
+

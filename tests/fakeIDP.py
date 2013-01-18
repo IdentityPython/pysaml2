@@ -34,6 +34,12 @@ def unpack_form(_str, ver="SAMLRequest"):
 
     return {ver:sr, "RelayState":rs}
 
+class DummyResponse(object):
+    def __init__(self, code, data, headers=None):
+        self.status_code = code
+        self.text = data
+        self.headers = headers or []
+
 class FakeIDP(Server):
     def __init__(self, config_file=""):
         Server.__init__(self, config_file)
@@ -52,12 +58,19 @@ class FakeIDP(Server):
         if method == "GET":
             path, query = url.split("?")
             qs_dict = parse_qs(kwargs["data"])
+            req = qs_dict["SAMLRequest"][0]
+            rstate = qs_dict["RelayState"][0]
         else:
+            # Could be either POST or SOAP
             path = url
-            qs_dict = parse_qs(kwargs["data"])
+            try:
+                qs_dict = parse_qs(kwargs["data"])
+                req = qs_dict["SAMLRequest"][0]
+                rstate = qs_dict["RelayState"][0]
+            except KeyError:
+                req = kwargs["data"]
+                rstate = ""
 
-        req = qs_dict["SAMLRequest"][0]
-        rstate = qs_dict["RelayState"][0]
         response = ""
 
         # Get service from path
@@ -105,9 +118,10 @@ class FakeIDP(Server):
 
         response = "%s" % authn_resp
 
-        return pack.factory(_binding, response,
+        _dict = pack.factory(_binding, response,
                             resp_args["destination"], relay_state,
                             "SAMLResponse")
+        return DummyResponse(200, **_dict)
 
     def attribute_query_endpoint(self, xml_str, binding):
         if binding == BINDING_SOAP:
@@ -139,7 +153,7 @@ class FakeIDP(Server):
         else: # Just POST
             response = "%s" % attr_resp
 
-        return response
+        return DummyResponse(200, response)
 
     def logout_endpoint(self, xml_str, binding):
         if binding == BINDING_SOAP:
@@ -164,4 +178,4 @@ class FakeIDP(Server):
         else: # Just POST
             response = "%s" % _resp
 
-        return response
+        return DummyResponse(200, response)

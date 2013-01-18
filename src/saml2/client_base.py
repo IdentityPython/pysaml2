@@ -364,24 +364,21 @@ class Base(Entity):
                                                 extensions=extensions,
                                                 sign=sign)
 
-    def create_assertion_id_request(self, assertion_id_refs, destination=None,
-                                    id=0, consent=None, extensions=None,
-                                    sign=False):
+    def create_assertion_id_request(self, assertion_id_refs, **kwargs):
         """
 
         :param assertion_id_refs:
-        :param destination: The IdP endpoint to send the request to
-        :param id: Message identifier
-        :param consent: If the principal gave her consent to this request
-        :param extensions: Possible request extensions
-        :param sign: Whether the request should be signed or not.
-        :return: AssertionIDRequest instance
+        :return: One ID ref
         """
-        id_refs = [AssertionIDRef(text=s) for s in assertion_id_refs]
+#        id_refs = [AssertionIDRef(text=s) for s in assertion_id_refs]
+#
+#        return self._message(AssertionIDRequest, destination, id, consent,
+#                             extensions, sign, assertion_id_ref=id_refs )
 
-        return self._message(AssertionIDRequest, destination, id, consent,
-                             extensions, sign, assertion_id_ref=id_refs )
-
+        if isinstance(assertion_id_refs, basestring):
+            return assertion_id_refs
+        else:
+            return assertion_id_refs[0]
 
     def create_authn_query(self, subject, destination=None,
                            authn_context=None, session_index="",
@@ -516,13 +513,16 @@ class Base(Entity):
         res = self._parse_response(response, AssertionIDResponse, "", binding,
                                     **kwargs)
         return res
-    
+
     # ------------------------------------------------------------------------
 
     def parse_attribute_query_response(self, response, binding):
+        kwargs = {"entity_id": self.config.entityid,
+                  "attribute_converters": self.config.attribute_converters}
 
         return self._parse_response(response, AttributeResponse,
-                                    "attribute_consuming_service", binding)
+                                    "attribute_consuming_service", binding,
+                                    **kwargs)
 
     def parse_name_id_mapping_request_response(self, txt, binding=BINDING_SOAP):
         """
@@ -531,4 +531,5 @@ class Base(Entity):
         :param binding: Just a placeholder, it's always BINDING_SOAP
         :return: parsed and verified <NameIDMappingResponse> instance
         """
+
         return self._parse_response(txt, NameIDMappingResponse, "", binding)

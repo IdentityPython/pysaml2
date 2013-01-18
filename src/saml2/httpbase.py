@@ -45,6 +45,9 @@ PAIRS = {
 class ConnectionError(Exception):
     pass
 
+class HTTPError(Exception):
+    pass
+
 def _since_epoch(cdate):
     """
     :param cdate: date format 'Wed, 06-Jun-2012 01:34:34 GMT'
@@ -217,9 +220,7 @@ class HTTPBase(object):
             # msg should be an identifier
             info = {
                 "data": "",
-                "headers": [
-                    ("Location", "%s?ID=%s" % (destination, message))
-                ]
+                "url": "%s?ID=%s" % (destination, message)
             }
         else:
             raise NotImplemented
@@ -273,8 +274,10 @@ class HTTPBase(object):
             raise
 
         if response:
-            xmlstr = response.text
-            logger.info("SOAP response: %s" % xmlstr)
-            return response
+            if response.status_code == 200:
+                logger.info("SOAP response: %s" % response.text)
+                return response.text
+            else:
+                raise HTTPError("%d:%s" % (response.status_code, response.error))
         else:
             return None

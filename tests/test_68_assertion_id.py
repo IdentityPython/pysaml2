@@ -28,9 +28,7 @@ def get_msg(hinfo, binding, response=False):
             msg = hinfo["data"]
         else:
             msg = ""
-            for header, val in hinfo["headers"]:
-                if header == "Location":
-                    return parse_qs(val.split("?")[1])["ID"][0]
+            return parse_qs(hinfo["url"].split("?")[1])["ID"][0]
     else: # BINDING_HTTP_REDIRECT
         parts = urlparse(hinfo["headers"][0][1])
         msg = parse_qs(parts.query)["SAMLRequest"][0]

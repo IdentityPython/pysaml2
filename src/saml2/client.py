@@ -245,6 +245,11 @@ class Saml2Client(Base):
         response = self.send_using_soap(query, destination)
 
         if response:
+            if not response_args:
+                response_args = {"binding": BINDING_SOAP}
+            else:
+                response_args["binding"] = BINDING_SOAP
+
             logger.info("Verifying response")
             if response_args:
                 response = _response_func(response, **response_args)

@@ -56,6 +56,11 @@ def parse_soap_enveloped_saml_attribute_query(text):
     expected_tag = '{%s}AttributeQuery' % SAMLP_NAMESPACE
     return parse_soap_enveloped_saml_thingy(text, [expected_tag])
 
+def parse_soap_enveloped_saml_attribute_response(text):
+    tags = ['{%s}Response' % SAMLP_NAMESPACE,
+            '{%s}AttributeResponse' % SAMLP_NAMESPACE]
+    return parse_soap_enveloped_saml_thingy(text, tags)
+
 def parse_soap_enveloped_saml_logout_request(text):
     expected_tag = '{%s}LogoutRequest' % SAMLP_NAMESPACE
     return parse_soap_enveloped_saml_thingy(text, [expected_tag])

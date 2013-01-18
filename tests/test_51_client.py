@@ -406,8 +406,8 @@ class TestClientWithDummy():
         http_args["headers"] = [('Content-type','application/x-www-form-urlencoded')]
 
         response = self.client.send(**http_args)
-
-        _dic = unpack_form(response["data"][3], "SAMLResponse")
+        print response.text
+        _dic = unpack_form(response.text[3], "SAMLResponse")
         resp = self.client.parse_authn_request_response(_dic["SAMLResponse"],
                                                         BINDING_HTTP_POST,
                                                         {id: "/"})

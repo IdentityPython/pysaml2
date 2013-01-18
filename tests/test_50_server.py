@@ -5,7 +5,8 @@ from urlparse import parse_qs
 from saml2.saml import AUTHN_PASSWORD
 from saml2.samlp import response_from_string
 
-from saml2.server import Server, Identifier
+from saml2.server import Server
+from saml2.ident import IdentDB
 from saml2 import samlp, saml, client, config
 from saml2 import s_utils
 from saml2 import sigver
@@ -20,45 +21,6 @@ import os
 
 def _eq(l1,l2):
     return set(l1) == set(l2)
-
-class TestIdentifier():
-    def setup_class(self):
-        self.ident = Identifier("foobar.db")
-
-    def test_persistent_nameid(self):
-        sp_id = "urn:mace:umu.se:sp"
-        nameid = self.ident.persistent_nameid(sp_id, "abcd0001")
-        remote_id = nameid.text.strip()
-        print remote_id
-        print self.ident.map
-        local = self.ident.local_name(sp_id, remote_id)
-        assert local == "abcd0001"
-        assert self.ident.local_name(sp_id, "pseudo random string") is None
-        assert self.ident.local_name(sp_id+":x", remote_id) is None
-
-        # Always get the same
-        nameid2 = self.ident.persistent_nameid(sp_id, "abcd0001")
-        assert nameid.text.strip() == nameid2.text.strip()
-
-    def test_transient_nameid(self):
-        sp_id = "urn:mace:umu.se:sp"
-        nameid = self.ident.transient_nameid(sp_id, "abcd0001")
-        remote_id = nameid.text.strip()
-        print remote_id
-        print self.ident.map
-        local = self.ident.local_name(sp_id, remote_id)
-        assert local == "abcd0001"
-        assert self.ident.local_name(sp_id, "pseudo random string") is None
-        assert self.ident.local_name(sp_id+":x", remote_id) is None
-
-        # Getting a new, means really getting a new !
-        nameid2 = self.ident.transient_nameid(sp_id, "abcd0001")
-        assert nameid.text.strip() != nameid2.text.strip()
-
-    def teardown_class(self):
-        if os.path.exists("foobar.db"):
-            os.unlink("foobar.db")
-
 
 
 class TestServer1():

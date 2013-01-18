@@ -16,7 +16,8 @@ __author__ = 'rolandh'
 
 logger = logging.getLogger(__name__)
 
-ATTR = ["name_qualifier", "sp_name_qualifier", "format", "sp_provided_id"]
+ATTR = ["name_qualifier", "sp_name_qualifier", "format", "sp_provided_id",
+        "text"]
 
 class Unknown(Exception):
     pass
@@ -168,9 +169,13 @@ class IdentDB(object):
         return self.get_nameid(userid, NAMEID_FORMAT_TRANSIENT,
                                sp_name_qualifier, name_qualifier)
 
-    def permanent_nameid(self, userid, sp_name_qualifier="", name_qualifier=""):
-        return self.get_nameid(userid, NAMEID_FORMAT_PERSISTENT,
-                               sp_name_qualifier, name_qualifier)
+    def persistent_nameid(self, userid, sp_name_qualifier="", name_qualifier=""):
+        nameid = self.match_local_id(userid, sp_name_qualifier, name_qualifier)
+        if nameid:
+            return nameid
+        else:
+            return self.get_nameid(userid, NAMEID_FORMAT_PERSISTENT,
+                                   sp_name_qualifier, name_qualifier)
 
     def find_local_id(self, name_id):
         """
@@ -191,8 +196,18 @@ class IdentDB(object):
                 nid = decode(val)
                 if nid.format == NAMEID_FORMAT_TRANSIENT:
                     continue
-                if getattr(nid, "sp_name_qualifier", "") == sp_name_qualifier:
-                    if getattr(nid, "name_qualifier", "") == name_qualifier:
+                snq = getattr(nid, "sp_name_qualifier", "")
+                if snq and snq == sp_name_qualifier:
+                    nq = getattr(nid, "name_qualifier", None)
+                    if nq and nq == name_qualifier:
+                        return nid
+                    elif not nq and not name_qualifier:
+                        return nid
+                elif not snq and not sp_name_qualifier:
+                    nq = getattr(nid, "name_qualifier", None)
+                    if nq and nq == name_qualifier:
+                        return nid
+                    elif not nq and not name_qualifier:
                         return nid
         except KeyError:
             pass
@@ -280,3 +295,6 @@ class IdentDB(object):
             return self.db["%s:%s" % (userid, entity_id)]
         except KeyError:
             return None
+
+    def close(self):
+        self.db.close()

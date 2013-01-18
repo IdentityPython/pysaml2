@@ -106,7 +106,7 @@ class Server(Entity):
     def close_shelve_db(self):
         """Close the shelve db to prevent file system locking issues"""
         if self.ident:
-            self.ident.map.close()
+            self.ident.db.close()
 
     def wants(self, sp_entity_id, index=None):
         """ Returns what attributes the SP requires and which are optional
