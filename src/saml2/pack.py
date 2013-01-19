@@ -166,8 +166,10 @@ def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
         i = _str.find(DUMMY_NAMESPACE)
         j = _str.rfind("xmlns:", 0, i)
         cut1 = _str[j:i+len(DUMMY_NAMESPACE)+1]
-        cut2 = "<%s:FuddleMuddle />" % (cut1[6:9],)
         _str = _str.replace(cut1, "")
+        first = _str.find("<%s:FuddleMuddle" % (cut1[6:9],))
+        last = _str.find(">", first+14)
+        cut2 = _str[first:last+1]
         return _str.replace(cut2,thingy)
     else:
         thingy.become_child_element_of(body)
