@@ -1,0 +1,8 @@
+The development has been done using Python 2.7.2 .
+It might work with earlier 2.7 version.
+
+A normal
+
+    python setup.py install
+
+should do the trick.
