@@ -4,6 +4,7 @@ __author__ = 'rohe0002'
 
 import cgi
 from urllib import quote
+from urlparse import parse_qs
 
 logger = logging.getLogger(__name__)
 
@@ -156,3 +157,32 @@ def get_response(environ, start_response):
         return resp(environ, start_response)
 
     return query
+
+def unpack_redirect(environ):
+    if "QUERY_STRING" in environ:
+        _qs = environ["QUERY_STRING"]
+        return dict([(k,v[0]) for k,v in parse_qs(_qs).items()])
+    else:
+        return None
+
+def unpack_post(environ):
+    try:
+        return dict([(k,v[0]) for k,v in parse_qs(get_post(environ))])
+    except Exception:
+        return None
+
+def unpack_soap(environ):
+    try:
+        query = get_post(environ)
+        return {"SAMLRequest": query, "RelayState": ""}
+    except Exception:
+        return None
+
+def unpack_artifact(environ):
+    if environ["REQUEST_METHOD"] == "GET":
+        _dict = unpack_redirect(environ)
+    elif environ["REQUEST_METHOD"] == "POST":
+        _dict = unpack_post(environ)
+    else:
+        _dict = None
+    return _dict
