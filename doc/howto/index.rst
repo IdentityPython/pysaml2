@@ -36,7 +36,5 @@ WSGI or non-WSGI environment.
    :maxdepth: 1
 
    config
-   wsgi/index
-   nonwsgi/index
 
    
