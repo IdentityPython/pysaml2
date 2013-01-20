@@ -328,6 +328,9 @@ class CheckSubjectNameIDFormat(Check):
         return res
 
 class CheckLogoutSupport(Check):
+    """
+    Verifies that the tested entity supports single log out
+    """
     id = "check-logout-support"
     msg = "Does not support logout"
 

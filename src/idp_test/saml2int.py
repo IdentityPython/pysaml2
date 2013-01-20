@@ -113,7 +113,7 @@ OPERATIONS = {
         "sequence": [AuthnRequestPost],
     },
     'log-in-out': {
-        "name": 'Absolute basic SAML2 AuthnRequest',
+        "name": 'Absolute basic SAML2 log in and out',
         "descr": ('AuthnRequest using HTTP-redirect followed by a logout'),
         "sequence": [AuthnRequest, LogOutRequest],
     },

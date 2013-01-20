@@ -105,9 +105,6 @@ class SAML2client(object):
                                   help="CA certs to use to verify HTTPS server certificates, if HTTPS is used and no server CA certs are defined then no cert verification will be done")
         self._parser.add_argument('-J', dest="json_config_file",
                                   help="Script configuration")
-        self._parser.add_argument('-S', dest="sp_id", help="SP id")
-        self._parser.add_argument("-s", dest="list_sp_id", action="store_true",
-                                  help="List all the SP variants as a JSON object")
         self._parser.add_argument('-m', dest="metadata", action='store_true',
                                   help="Return the SP metadata")
         self._parser.add_argument("-l", dest="list", action="store_true",
@@ -129,14 +126,7 @@ class SAML2client(object):
     def sp_configure(self, metadata_construction=False):
         sys.path.insert(0, ".")
         mod = import_module(self.args.spconfig)
-        if self.args.sp_id is None:
-            if len(mod.CONFIG) == 1:
-                self.args.sp_id = mod.CONFIG.keys()[0]
-            else:
-                raise Exception("SP id undefined")
-
-        self.sp_config = SPConfig().load(mod.CONFIG[self.args.sp_id],
-                                         metadata_construction)
+        self.sp_config = SPConfig().load(mod.CONFIG, metadata_construction)
 
     def setup(self):
         self.json_config= self.json_config_file()
@@ -144,7 +134,6 @@ class SAML2client(object):
         _jc = self.json_config
 
         self.interactions = _jc["interaction"]
-        self.entity_id = _jc["entity_id"]
 
         self.sp_configure()
 
@@ -156,6 +145,16 @@ class SAML2client(object):
         metadata[0] = md
         self.sp_config.metadata = metadata
 
+        try:
+            self.entity_id = _jc["entity_id"]
+            # Verify its the correct metadata
+            assert self.entity_id in md.entity.keys()
+        except KeyError:
+            if len(md.entity.keys()) == 1:
+                self.entity_id = md.entity.keys()[0]
+            else:
+                raise Exception("Don't know which entity to talk to")
+            
     def test_summation(self, id):
         status = 0
         for item in self.test_log:
@@ -182,8 +181,6 @@ class SAML2client(object):
 
         if self.args.metadata:
             return self.make_meta()
-        elif self.args.list_sp_id:
-            return self.list_conf_id()
         elif self.args.list:
             return self.list_operations()
         else:

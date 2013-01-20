@@ -9,7 +9,6 @@ metadata = open("./idp/idp.xml").read()
 
 info = {
     "entity_id": "%s/idp.xml" % BASE,
-    "sp_config": "sp_local_conf.py",
     "interaction": [
         {
             "matches": {
