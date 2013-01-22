@@ -37,7 +37,7 @@ from repoze.who.interfaces import IChallenger, IIdentifier, IAuthenticator
 from repoze.who.interfaces import IMetadataProvider
 from repoze.who.plugins.form import FormPluginBase
 
-from saml2 import ecp
+from saml2 import ecp, BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 
 from saml2.client import Saml2Client
@@ -259,7 +259,7 @@ class SAML2Plugin(FormPluginBase):
             else:
                 return -1, HTTPNotImplemented(detail='No WAYF or DJ present!')
 
-        logger.info("Choosen IdP: '%s'" % idp_entity_id)
+        logger.info("Chosen IdP: '%s'" % idp_entity_id)
         return 0, idp_entity_id
         
     #### IChallenger ####
@@ -276,7 +276,7 @@ class SAML2Plugin(FormPluginBase):
         # Which page was accessed to get here
         came_from = construct_came_from(environ)
         environ["myapp.came_from"] = came_from
-        logger.debug("[sp.challenge] RelayState >> %s" % came_from)
+        logger.debug("[sp.challenge] RelayState >> '%s'" % came_from)
         
         # Am I part of a virtual organization or more than one ?
         try:
@@ -301,26 +301,34 @@ class SAML2Plugin(FormPluginBase):
             self.outstanding_queries[done] = came_from
             return ECP_response(response)
         else:
-            idp_url = response
-            logger.info("[sp.challenge] idp_url: %s" % idp_url)
+            entity_id = response
+            logger.info("[sp.challenge] entity_id: %s" % entity_id)
             # Do the AuthnRequest
-
+            _cli = self.saml_client
+            _binding = BINDING_HTTP_REDIRECT
             try:
-                sid_, headers, body = self.saml_client.do_authenticate(idp_url,
-                                                        relay_state=came_from,
-                                                        vorg=vorg_name)
+                srvs = _cli.metadata.single_sign_on_service(entity_id, _binding)
+                logger.debug("srvs: %s" % srvs)
+                dest = srvs[0]["location"]
+                logger.debug("destination: %s" % dest)
+                req = _cli.create_authn_request(dest, vorg=vorg_name)
+                ht_args = _cli.apply_binding(_binding, "%s" % req,
+                                             destination=dest,
+                                             relay_state=came_from)
+                _sid = req.id
+                logger.debug("ht_args: %s" % ht_args)
             except Exception, exc:
                 logger.exception(exc)
-                raise Exception("Authentication Error")
+                raise Exception("Failed to construct the AuthnRequest: %s" % exc)
 
             # remember the request
-            self.outstanding_queries[sid_] = came_from
+            self.outstanding_queries[_sid] = came_from
 
-            if body == [""] and headers[0][0] == "Location":
-                logger.debug('redirect to: %s' % headers[0][1])
-                return HTTPSeeOther(headers=headers)
+            if not ht_args["data"] and ht_args["headers"][0][0] == "Location":
+                logger.debug('redirect to: %s' % ht_args["headers"][0][1])
+                return HTTPSeeOther(headers=ht_args["headers"])
             else :
-                return body
+                return ht_args["data"]
 
     def _construct_identity(self, session_info):
         identity = {

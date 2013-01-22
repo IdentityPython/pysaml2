@@ -14,7 +14,7 @@ from saml2.saml import Issuer
 from saml2.saml import NAMEID_FORMAT_ENTITY
 from saml2.response import LogoutResponse
 from saml2.time_util import instant
-from saml2.s_utils import sid
+from saml2.s_utils import sid, error_status_factory
 from saml2.s_utils import rndstr
 from saml2.s_utils import success_status_factory
 from saml2.s_utils import decode_base64_and_inflate
@@ -153,7 +153,6 @@ class Entity(HTTPBase):
         elif binding == BINDING_URI:
             info = self.use_http_uri(msg_str, typ, destination)
         elif binding == BINDING_HTTP_ARTIFACT:
-            typ = "SAMLart"
             if response:
                 info = self.use_http_artifact(msg_str, destination, relay_state)
                 info["method"] = "GET"
@@ -436,6 +435,26 @@ class Entity(HTTPBase):
             return None
         else:
             return _request
+
+    # ------------------------------------------------------------------------
+
+    def create_error_response(self, in_response_to, destination, info,
+                              sign=False, issuer=None):
+        """ Create a error response.
+
+        :param in_response_to: The identifier of the message this is a response
+            to.
+        :param destination: The intended recipient of this message
+        :param info: Either an Exception instance or a 2-tuple consisting of
+            error code and descriptive text
+        :param sign: Whether the response should be signed or not
+        :param issuer: The issuer of the response
+        :return: A response instance
+        """
+        status = error_status_factory(info)
+
+        return self._response(in_response_to, destination, status, issuer,
+                              sign)
 
     # ------------------------------------------------------------------------
 

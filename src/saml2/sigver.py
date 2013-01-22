@@ -452,6 +452,8 @@ def verify_signature(enctext, xmlsec_binary, cert_file=None, cert_type="pem",
         
     com_list.append(fil)
 
+    logger.debug("com_list: %s" % com_list)
+
     if __DEBUG: 
         try:
             print " ".join(com_list)
@@ -690,11 +692,12 @@ class SecurityContext(object):
             certs = []
 
         if not certs and not self.only_use_keys_in_metadata:
-            #print "==== Certs from instance ===="
+            logger.debug("==== Certs from instance ====")
             certs = [make_temp(pem_format(cert), ".pem",
                                False) for cert in cert_from_instance(item)]
-        #else:
-            #print "==== Certs from metadata ==== %s: %s ====" % (issuer,certs)
+        else:
+            logger.debug("==== Certs from metadata ==== %s: %s ====" % (issuer,
+                                                                        certs))
             
         if not certs:
             raise MissingKey("%s" % issuer)

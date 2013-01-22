@@ -1,4 +1,9 @@
 import logging
+from saml2 import BINDING_HTTP_ARTIFACT
+from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_HTTP_POST
+from saml2 import BINDING_URI
+from saml2 import BINDING_SOAP
 
 __author__ = 'rohe0002'
 
@@ -186,3 +191,29 @@ def unpack_artifact(environ):
     else:
         _dict = None
     return _dict
+
+def unpack_any(environ):
+    binding = ""
+    if environ['REQUEST_METHOD'].upper() == 'GET':
+    # Could be either redirect or artifact
+        _dict = unpack_redirect(environ)
+        if "ID" in _dict:
+            binding = BINDING_URI
+        elif "SAMLart" in _dict:
+            binding = BINDING_HTTP_ARTIFACT
+        else:
+            binding = BINDING_HTTP_REDIRECT
+    else:
+        content_type = environ.get('CONTENT_TYPE', 'application/soap+xml')
+        if content_type != 'application/soap+xml':
+            # normal post
+            _dict = unpack_post(environ)
+            if "SAMLart" in _dict:
+                binding = BINDING_HTTP_ARTIFACT
+            else:
+                binding = BINDING_HTTP_POST
+        else:
+            _dict = unpack_soap(environ)
+            binding = BINDING_SOAP
+
+    return _dict, binding

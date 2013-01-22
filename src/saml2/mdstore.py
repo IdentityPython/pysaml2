@@ -11,7 +11,7 @@ from saml2 import md, samlp
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_SOAP
-from saml2.sigver import verify_signature
+from saml2.sigver import verify_signature, split_len
 from saml2.validate import valid_instance
 from saml2.time_util import valid
 from saml2.validate import NotValid
@@ -70,6 +70,15 @@ def name(ent, langpref="en"):
         except KeyError:
             pass
     return None
+
+def repack_cert(cert):
+    part = cert.split("\n")
+    if len(part) == 1:
+        part = part[0].strip()
+        return "\n".join(split_len(part, 64))
+    else:
+        return "\n".join([s.strip() for s in part])
+
 
 class MetaData(object):
     def __init__(self, onts, attrc, metadata=""):
@@ -187,6 +196,23 @@ class MetaData(object):
                     res[srv["binding"]].append(srv)
                 except KeyError:
                     res[srv["binding"]] = [srv]
+        return res
+
+    def any(self, typ, service, binding=None):
+        """
+        Return any entity that matches the specification
+
+        :param typ:
+        :param service:
+        :param binding:
+        :return:
+        """
+        res = {}
+        for ent in self.entity.keys():
+            bind = self._service(ent, typ, service, binding)
+            if bind:
+                res[ent] = bind
+
         return res
 
     def bindings(self, entity_id, typ, service):
@@ -481,12 +507,12 @@ class MetadataStore(object):
                     for key in srv["key_descriptor"]:
                         if "use" in key and key["use"] == use:
                             for dat in key["key_info"]["x509_data"]:
-                                cert = dat["x509_certificate"]["text"]
+                                cert = repack_cert(dat["x509_certificate"]["text"])
                                 if cert not in res:
                                     res.append(cert)
                         elif not "use" in key:
                             for dat in key["key_info"]["x509_data"]:
-                                cert = dat["x509_certificate"]["text"]
+                                cert = repack_cert(dat["x509_certificate"]["text"])
                                 if cert not in res:
                                     res.append(cert)
         else:
@@ -526,3 +552,9 @@ class MetadataStore(object):
         for md in self.metadata.values():
             res.update(md.construct_source_id())
         return res
+
+    def items(self):
+        res = {}
+        for md in self.metadata.values():
+            res.update(md.entity)
+        return res.items()

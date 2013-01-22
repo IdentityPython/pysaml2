@@ -26,7 +26,8 @@ class Request(object):
         self.message = None
         self.not_on_or_after = 0
         self.attribute_converters = attribute_converters
-
+        self.binding = None
+        self.relay_state = ""
         self.signature_check = _dummy # has to be set !!!
     
     def _clear(self):
@@ -35,15 +36,7 @@ class Request(object):
         self.message = None
         self.not_on_or_after = 0
 
-    def _loads(self, xmldata, binding):
-#        if binding == BINDING_HTTP_REDIRECT:
-#            logger.debug("Expected to decode and inflate xml data")
-#            decoded_xml = s_utils.decode_base64_and_inflate(xmldata)
-#        elif binding == BINDING_HTTP_POST:
-#            decoded_xml = base64.b64decode(xmldata)
-#        else:
-#            decoded_xml = xmldata
-    
+    def _loads(self, xmldata, binding=None):
         # own copy
         self.xmlstr = xmldata[:]
         logger.info("xmlstr: %s" % (self.xmlstr,))
@@ -122,7 +115,7 @@ class Request(object):
                 pass
             
     def sender(self):
-        return self.message.issuer.text()
+        return self.message.issuer.text
         
 class LogoutRequest(Request):
     msgtype = "logout_request"

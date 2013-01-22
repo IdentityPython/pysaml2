@@ -198,7 +198,7 @@ class Base(Entity):
                              nameid_format=NAMEID_FORMAT_TRANSIENT,
                              service_url_binding=None,
                              id=0, consent=None, extensions=None, sign=None,
-                             allow_create=False):
+                             allow_create=False, **kwargs):
         """ Creates an authentication request.
         
         :param destination: Where the request should be sent.
@@ -215,39 +215,56 @@ class Base(Entity):
         :param allow_create: If the identity provider is allowed, in the course
             of fulfilling the request, to create a new identifier to represent
             the principal.
+        :param kwargs: Extra key word arguments
         :return: <samlp:AuthnRequest> instance
         """
 
-        if service_url_binding is None:
-            service_url = self.service_url(binding)
-        else:
-            service_url = self.service_url(service_url_binding)
+        try:
+            service_url = kwargs["assertion_consumer_service_url"]
+        except KeyError:
+            if service_url_binding is None:
+                service_url = self.service_url(binding)
+            else:
+                service_url = self.service_url(service_url_binding)
 
-        if binding == BINDING_PAOS:
-            my_name = None
-            location = None
-        else:
-            my_name = self._my_name()
+        try:
+            my_name = kwargs["provider_name"]
+        except KeyError:
+            if binding == BINDING_PAOS:
+                my_name = None
+            else:
+                my_name = self._my_name()
 
-        if allow_create:
-            allow_create="true"
-        else:
-            allow_create="false"
+        try:
+            name_id_policy = kwargs["name_id_policy"]
+        except:
+            if allow_create:
+                allow_create="true"
+            else:
+                allow_create="false"
 
-        # Profile stuff, should be configurable
-        if nameid_format is None or nameid_format == NAMEID_FORMAT_TRANSIENT:
-            name_id_policy = samlp.NameIDPolicy(allow_create=allow_create,
-                                                format=NAMEID_FORMAT_TRANSIENT)
-        else:
-            name_id_policy = samlp.NameIDPolicy(allow_create=allow_create,
-                                                format=nameid_format)
+            # Profile stuff, should be configurable
+            if nameid_format is None or nameid_format == NAMEID_FORMAT_TRANSIENT:
+                name_id_policy = samlp.NameIDPolicy(allow_create=allow_create,
+                                                    format=NAMEID_FORMAT_TRANSIENT)
+            else:
+                name_id_policy = samlp.NameIDPolicy(allow_create=allow_create,
+                                                    format=nameid_format)
 
-        if vorg:
-            try:
-                name_id_policy.sp_name_qualifier = vorg
-                name_id_policy.format = saml.NAMEID_FORMAT_PERSISTENT
-            except KeyError:
-                pass
+            if vorg:
+                try:
+                    name_id_policy.sp_name_qualifier = vorg
+                    name_id_policy.format = saml.NAMEID_FORMAT_PERSISTENT
+                except KeyError:
+                    pass
+
+        if extensions is None:
+            extensions = []
+        for key,val in kwargs.items():
+            if key not in AuthnRequest.c_attributes and \
+               key not in AuthnRequest.c_children:
+                # extension elements allowed
+                extensions.append(saml2.element_to_extension_element(val))
 
         return self._message(AuthnRequest, destination, id, consent,
                              extensions, sign,

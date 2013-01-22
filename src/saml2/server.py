@@ -318,26 +318,6 @@ class Server(Entity):
                               sign_response, to_sign, **args)
                         
     # ------------------------------------------------------------------------
-    
-    def create_error_response(self, in_response_to, destination, info,
-                              sign=False, issuer=None):
-        """ Create a error response.
-        
-        :param in_response_to: The identifier of the message this is a response
-            to.
-        :param destination: The intended recipient of this message
-        :param info: Either an Exception instance or a 2-tuple consisting of
-            error code and descriptive text
-        :param sign: Whether the response should be signed or not
-        :param issuer: The issuer of the response
-        :return: A response instance
-        """
-        status = error_status_factory(info)
-
-        return self._response(in_response_to, destination, status, issuer,
-                              sign)
-
-    # ------------------------------------------------------------------------
 
     #noinspection PyUnusedLocal
     def create_aa_response(self, in_response_to, consumer_url, sp_entity_id,

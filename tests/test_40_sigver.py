@@ -139,7 +139,7 @@ class TestSecurity():
         
         to_sign = [(class_name(self._assertion), self._assertion.id),
                     (class_name(response), response.id)]
-        s_response = sigver.signed_instance_factory( response, self.sec, to_sign)
+        s_response = sigver.signed_instance_factory(response, self.sec, to_sign)
             
         assert s_response is not None
         print s_response
