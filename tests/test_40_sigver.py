@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import base64
+from saml2.mdstore import MetadataStore
 from saml2.saml import assertion_from_string
 from saml2.samlp import response_from_string
 
@@ -291,3 +292,43 @@ class TestSecurity():
         raises(sigver.SignatureError, self.sec._check_signature,
                 s_response, response2, class_name(response2))
         
+
+class TestSecurityMetadata():
+    def setup_class(self):
+        xmlexec = get_xmlsec_binary()
+        md = MetadataStore([saml, samlp], None, xmlexec)
+        md.load("local", "metadata_cert.xml")
+
+        self.sec = sigver.SecurityContext(xmlexec, key_file=PRIV_KEY,
+                             cert_file=PUB_KEY, debug=1, metadata=md)
+
+        self._assertion = factory( saml.Assertion,
+                                   version="2.0",
+                                   id="11111",
+                                   issue_instant="2009-10-30T13:20:28Z",
+                                   signature=sigver.pre_signature_part("11111", self.sec.my_cert, 1),
+                                   attribute_statement=do_attribute_statement({
+                                       ("","","surName"): ("Foo",""),
+                                       ("","","givenName") :("Bar",""),
+                                       })
+        )
+
+    def test_sign_assertion(self):
+        ass = self._assertion
+        print ass
+        sign_ass = self.sec.sign_assertion_using_xmlsec("%s" % ass,
+                                                        nodeid=ass.id)
+        #print sign_ass
+        sass = saml.assertion_from_string(sign_ass)
+        #print sass
+        assert _eq(sass.keyswv(), ['attribute_statement', 'issue_instant',
+                                   'version', 'signature', 'id'])
+        assert sass.version == "2.0"
+        assert sass.id == "11111"
+        assert time_util.str_to_time(sass.issue_instant)
+
+        print xmlsec_version(get_xmlsec_binary())
+
+        item = self.sec.check_signature(sass, class_name(sass), sign_ass)
+
+        assert isinstance(item, saml.Assertion)
