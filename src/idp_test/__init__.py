@@ -11,6 +11,7 @@ from saml2.httpbase import HTTPBase
 
 from idp_test.base import FatalError
 from idp_test.base import do_sequence
+from idp_test.check import CheckSaml2IntMetaData
 #from saml2.config import Config
 from saml2.mdstore import MetadataStore, MetaData
 
@@ -26,7 +27,7 @@ from saml2.metadata import entity_descriptor
 import xmldsig
 import xmlenc
 
-SCHEMA = [ dri, idpdisc, md, mdattr, mdui, saml, ui, xmldsig, xmlenc]
+SCHEMA = [dri, idpdisc, md, mdattr, mdui, saml, ui, xmldsig, xmlenc]
 
 __author__ = 'rolandh'
 
@@ -185,6 +186,8 @@ class SAML2client(object):
             return self.make_meta()
         elif self.args.list:
             return self.list_operations()
+        elif self.args.oper == "check":
+            return self.verify_metadata()
         else:
             if not self.args.oper:
                 raise Exception("Missing test case specification")
@@ -250,3 +253,15 @@ class SAML2client(object):
         mod = import_module("config_file")
         _res = dict([(key, cnf["description"]) for key, cnf in mod.CONFIG.items()])
         print json.dumps(_res)
+
+    def verify_metadata(self):
+
+        metadata = MetadataStore(SCHEMA, None)
+        md = MetaData(SCHEMA, None, sys.stdin.read())
+        md.load()
+        metadata[0] = md
+        env = {"metadata": metadata}
+        chk = CheckSaml2IntMetaData()
+        output = []
+        res = chk(env, output)
+        print output
