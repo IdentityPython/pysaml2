@@ -264,4 +264,4 @@ class SAML2client(object):
         chk = CheckSaml2IntMetaData()
         output = []
         res = chk(env, output)
-        print output
+        print >> sys.stdout, res
