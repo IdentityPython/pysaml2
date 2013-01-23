@@ -175,6 +175,18 @@ def do_sequence(config, oper, httpc, trace, interaction, entity_id,
             "rp": cookielib.CookieJar(),
             "service": cookielib.CookieJar()}
 
+    try:
+        for test in oper["tests"]["pre"]:
+            chk = test()
+            stat = chk(environ, test_output)
+            try:
+                check_severity(stat, trace)
+            except FatalError:
+                environ["FatalError"] = True
+                raise
+    except KeyError:
+        pass
+
     environ["FatalError"] = False
     for op in oper["sequence"]:
         output = do_query(client, op(), httpc, trace, interaction, entity_id,
@@ -182,6 +194,19 @@ def do_sequence(config, oper, httpc, trace, interaction, entity_id,
         test_output.extend(output)
         if environ["FatalError"]:
             break
+
+    try:
+        for test in oper["tests"]["post"]:
+            chk = test()
+            stat = chk(environ, test_output)
+            try:
+                check_severity(stat, trace)
+            except FatalError:
+                environ["FatalError"] = True
+                raise
+    except KeyError:
+        pass
+
     return test_output, "%s" % trace
 
 
@@ -203,6 +228,7 @@ def do_query(client, oper, httpc, trace, interaction, entity_id, environ, cjar,
     oper.setup(environ)
     query = oper.request
     args = oper.args
+    environ["oper.args"] = oper.args
     args["entity_id"] = entity_id
     test_output = []
 
@@ -231,21 +257,32 @@ def do_query(client, oper, httpc, trace, interaction, entity_id, environ, cjar,
 
     use_artifact = getattr(oper, "use_artifact", False)
 
-    qfunc = getattr(client, "create_%s" % query)
-    # remove args the create function can't handle
-    fargs = inspect.getargspec(qfunc).args
-    for arg in qargs.keys():
-        if arg not in fargs:
-            del qargs[arg]
+    if "message" not in oper.args:
+        qfunc = getattr(client, "create_%s" % query)
+        # remove args the create function can't handle
+        fargs = inspect.getargspec(qfunc).args
+        if oper._class:
+            fargs.extend([p for p,c,r in oper._class.c_attributes.values()])
+            fargs.extend([p for p,c in oper._class.c_children.values()])
+        for arg in qargs.keys():
+            if arg not in fargs:
+                del qargs[arg]
 
     for srv in srvs:
         loc = srv["location"]
         qargs["destination"] = loc
         environ["destination"] = loc
 
-        req = qfunc(**qargs)
+        try:
+            req = oper.args["message"]
+        except KeyError:
+            req = qfunc(**qargs)
+
+        req = oper.modify_message(req)
+
         environ["request"] = req
         _req_str = "%s" % req
+
         if use_artifact:
             saml_art = client.use_artifact(_req_str, args["entity_id"])
             trace.info("SAML Artifact: %s" % saml_art)

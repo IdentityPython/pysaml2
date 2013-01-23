@@ -111,6 +111,8 @@ class SAML2client(object):
                                   help="List all the test flows as a JSON object")
         self._parser.add_argument("-c", dest="spconfig", default="config_file",
                                   help="Configuration file for the SP")
+        self._parser.add_argument("-P", dest="configpath", default=".",
+                                  help="Path to the configuration file for the SP")
         self._parser.add_argument("oper", nargs="?", help="Which test to run")
 
         self.interactions = None
@@ -124,7 +126,7 @@ class SAML2client(object):
             return json.loads(open(self.args.json_config_file).read())
 
     def sp_configure(self, metadata_construction=False):
-        sys.path.insert(0, ".")
+        sys.path.insert(0, self.args.configpath)
         mod = import_module(self.args.spconfig)
         self.sp_config = SPConfig().load(mod.CONFIG, metadata_construction)
 
@@ -154,7 +156,7 @@ class SAML2client(object):
                 self.entity_id = md.entity.keys()[0]
             else:
                 raise Exception("Don't know which entity to talk to")
-            
+
     def test_summation(self, id):
         status = 0
         for item in self.test_log:

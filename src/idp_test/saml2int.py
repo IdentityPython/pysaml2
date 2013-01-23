@@ -1,19 +1,23 @@
-from saml2 import BINDING_HTTP_REDIRECT, BINDING_URI
+from saml2 import BINDING_HTTP_REDIRECT, BINDING_URI, samlp
 from saml2 import BINDING_SOAP
 from saml2 import BINDING_HTTP_POST
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 #from idp_test.check import CheckSubjectNameIDFormat
 from idp_test.check import CheckSaml2IntMetaData
+from idp_test.check import VerifyNameIDPolicyUsage
 from idp_test.check import CheckSaml2IntAttributes
 from idp_test.check import CheckLogoutSupport
 from idp_test.check import VerifyLogout
 from idp_test.check import VerifyContent
 from idp_test.check import VerifySuccessStatus
 
+from saml2.samlp import NameIDPolicy
+
 __author__ = 'rolandh'
 
 class Request(object):
     _args = {}
+    _class = None
     tests = {"post":[VerifyContent], "pre":[]}
 
     def __init__(self):
@@ -22,13 +26,17 @@ class Request(object):
     def setup(self, environ):
         pass
 
-class Saml2IntRequest(Request):
-    tests = {"pre": [CheckSaml2IntMetaData],
-             "post": [CheckSaml2IntAttributes, VerifyContent
-                      #  CheckSubjectNameIDFormat,
-             ]}
+    def modify_message(self, message):
+        return message
 
-class AuthnRequest(Saml2IntRequest):
+#class Saml2IntRequest(Request):
+#    tests = {"pre": [],
+#             "post": [CheckSaml2IntAttributes, VerifyContent
+#                      #  CheckSubjectNameIDFormat,
+#             ]}
+
+class AuthnRequest(Request):
+    _class = samlp.AuthnRequest
     request = "authn_request"
     _args = {"binding": BINDING_HTTP_REDIRECT,
              "nameid_format": NAMEID_FORMAT_PERSISTENT,
@@ -45,16 +53,15 @@ class AuthnRequest_using_Artifact(AuthnRequest):
         AuthnRequest.__init__(self)
         self.use_artifact = True
 
-class LogOutRequest(Saml2IntRequest):
+class LogOutRequest(Request):
     request = "logout_request"
     _args = {"binding": BINDING_SOAP,
             # "sign": True
             }
 
     def __init__(self):
-        Saml2IntRequest.__init__(self)
+        Request.__init__(self)
         self.tests["pre"].append(CheckLogoutSupport)
-        self.tests["post"].remove(CheckSaml2IntAttributes)
         self.tests["post"].append(VerifyLogout)
 
     def setup(self, environ):
@@ -99,6 +106,18 @@ class NameIDMappeingRequest(Request):
         assertion = resp.assertion[0]
         self.args["subject"] = assertion.subject
 
+class AuthnRequest_NameIDPolicy1(AuthnRequest):
+    request = "authn_request"
+    _args = {"binding": BINDING_HTTP_REDIRECT,
+             "name_id_policy": NameIDPolicy(format=NAMEID_FORMAT_PERSISTENT,
+                                            sp_name_qualifier="Group1",
+                                            allow_create="true"),
+             "allow_create": True}
+
+    def __init__(self):
+        AuthnRequest.__init__(self)
+        self.tests["post"].append(VerifyNameIDPolicyUsage)
+
 # -----------------------------------------------------------------------------
 
 OPERATIONS = {
@@ -106,16 +125,21 @@ OPERATIONS = {
         "name": 'Absolute basic SAML2 AuthnRequest',
         "descr": ('AuthnRequest using HTTP-redirect'),
         "sequence": [AuthnRequest],
+        "tests": {"pre": [CheckSaml2IntMetaData],
+                  "post": [CheckSaml2IntAttributes]}
     },
     'basic-authn-post': {
         "name": 'Basic SAML2 AuthnRequest using HTTP POST',
         "descr": ('AuthnRequest using HTTP-POST'),
         "sequence": [AuthnRequestPost],
+        "tests": {"pre": [CheckSaml2IntMetaData],
+                  "post": [CheckSaml2IntAttributes]}
     },
     'log-in-out': {
         "name": 'Absolute basic SAML2 log in and out',
         "descr": ('AuthnRequest using HTTP-redirect followed by a logout'),
         "sequence": [AuthnRequest, LogOutRequest],
+        "tests": {"pre": [CheckSaml2IntMetaData],  "post": []}
     },
 #    'authn-artifact':{
 #        "name": "SAML2 AuthnRequest using an artifact",
@@ -126,10 +150,18 @@ OPERATIONS = {
         "name": 'AuthnRequest and then an AuthnQuery',
         "descr": ('AuthnRequest followed by an AuthnQuery'),
         "sequence": [AuthnRequest, AuthnQuery],
+        "tests": {"pre": [CheckSaml2IntMetaData],  "post": []}
     },
     'authn-assertion_id_request': {
         "name": 'AuthnRequest and then an AssertionIDRequest',
         "descr": ('AuthnRequest followed by an AssertionIDRequest'),
         "sequence": [AuthnRequest, AssertionIDRequest],
-        }
+        "tests": {"pre": [CheckSaml2IntMetaData],  "post": []}
+        },
+    'authn-with-name_id_policy': {
+        "name": 'SAML2 AuthnRequest with specific NameIDPolicy',
+        "descr": ('AuthnRequest with specific NameIDPolicy'),
+        "sequence": [AuthnRequest_NameIDPolicy1],
+        "tests": {"pre": [CheckSaml2IntMetaData],  "post": []}
+        },
 }
