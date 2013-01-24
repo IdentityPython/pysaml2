@@ -4,6 +4,8 @@ from hashlib import sha1
 from saml2.metadata import ENDPOINTS
 from saml2.profile import paos, ecp
 from saml2.soap import parse_soap_enveloped_saml_artifact_resolve
+from saml2.soap import class_instances_from_soap_enveloped_saml_thingies
+from saml2.soap import open_soap_envelope
 
 from saml2 import samlp
 from saml2 import saml
@@ -259,7 +261,7 @@ class Entity(HTTPBase):
         elif binding == BINDING_SOAP:
             func = getattr(soap, "parse_soap_enveloped_saml_%s" % msgtype)
             xmlstr = func(txt)
-        elif binding == BINDING_URI:
+        elif binding == BINDING_URI or binding is None:
             xmlstr = txt
         else:
             raise ValueError("Don't know how to handle '%s'" % binding)
@@ -272,10 +274,18 @@ class Entity(HTTPBase):
         :param text: The SOAP message
         :return: A dictionary with two keys "body" and "header"
         """
-        return soap.class_instances_from_soap_enveloped_saml_thingies(text,
+        return class_instances_from_soap_enveloped_saml_thingies(text,
                                                                       [paos,
                                                                        ecp,
                                                                        samlp])
+
+    def unpack_soap_message(self, text):
+        """
+        Picks out the parts of the SOAP message, body and headers apart
+        :param text: The SOAP message
+        :return: A dictionary with two keys "body"/"header"
+        """
+        return open_soap_envelope(text)
 
 # --------------------------------------------------------------------------
 

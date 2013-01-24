@@ -150,13 +150,25 @@ import re
 
 NS_AND_TAG = re.compile("\{([^}]+)\}(.*)")
 
+def instanciate_class(item, modules):
+    m = NS_AND_TAG.match(item.tag)
+    ns,tag = m.groups()
+    for module in modules:
+        if module.NAMESPACE == ns:
+            try:
+                target = module.ELEMENT_BY_TAG[tag]
+                return create_class_from_element_tree(target, item)
+            except KeyError:
+                continue
+    raise Exception("Unknown class: ns='%s', tag='%s'" % (ns, tag))
+
 def class_instances_from_soap_enveloped_saml_thingies(text, modules):
     """Parses a SOAP enveloped header and body SAML thing and returns the
     thing as a dictionary class instance.
 
     :param text: The SOAP object as XML
     :param modules: modules representing xsd schemas
-    :return: SAML thingy as a class instance
+    :return: The body and headers as class instances
     """
     try:
         envelope = ElementTree.fromstring(text)
@@ -170,31 +182,38 @@ def class_instances_from_soap_enveloped_saml_thingies(text, modules):
     for part in envelope:
         if part.tag == '{%s}Body' % soapenv.NAMESPACE:
             assert len(part) == 1
-            m = NS_AND_TAG.match(part[0].tag)
-            ns,tag = m.groups()
-            for module in modules:
-                if module.NAMESPACE == ns:
-                    try:
-                        target = module.ELEMENT_BY_TAG[tag]
-                        env["body"] = create_class_from_element_tree(target,
-                                                                     part[0])
-                    except KeyError:
-                        continue
+            env["body"] = instanciate_class(part[0], modules)
         elif part.tag == "{%s}Header" % soapenv.NAMESPACE:
             for item in part:
-                m = NS_AND_TAG.match(item.tag)
-                ns,tag = m.groups()
-                for module in modules:
-                    if module.NAMESPACE == ns:
-                        try:
-                            target = module.ELEMENT_BY_TAG[tag]
-                            env["header"].append(create_class_from_element_tree(
-                                                                    target,
-                                                                    item))
-                        except KeyError:
-                            continue
+                env["header"].append(instanciate_class(item, modules))
 
     return env
+
+def open_soap_envelope(text):
+    """
+
+    :param text: SOAP message
+    :return: dictionary with two keys "body"/"header"
+    """
+    try:
+        envelope = ElementTree.fromstring(text)
+    except Exception, exc:
+        raise XmlParseError("%s" % exc)
+
+    assert envelope.tag == '{%s}Envelope' % soapenv.NAMESPACE
+    assert len(envelope) >= 1
+    content = {"header":[], "body":None}
+
+    for part in envelope:
+        if part.tag == '{%s}Body' % soapenv.NAMESPACE:
+            assert len(part) == 1
+            content["body"] = ElementTree.tostring(part[0], encoding="UTF-8")
+        elif part.tag == "{%s}Header" % soapenv.NAMESPACE:
+            for item in part:
+                _str = ElementTree.tostring(item, encoding="UTF-8")
+                content["header"].append(_str)
+
+    return content
 
 def make_soap_enveloped_saml_thingy(thingy, headers=None):
     """ Returns a soap envelope containing a SAML request
