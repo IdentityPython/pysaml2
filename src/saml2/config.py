@@ -150,7 +150,8 @@ class ConfigurationError(Exception):
 class Config(object):
     def_context = ""
 
-    def __init__(self):
+    def __init__(self, homedir="."):
+        self._homedir = homedir
         self.entityid = None
         self.xmlsec_binary= None
         self.debug=False

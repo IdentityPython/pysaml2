@@ -18,13 +18,13 @@
 """Contains classes and functions that a SAML2.0 Service Provider (SP) may use
 to conclude its tasks.
 """
+from saml2.schema import soapenv
 from saml2.entity import Entity
 
 from saml2.mdstore import destinations
-from saml2.saml import AssertionIDRef
+from saml2.profile import paos, ecp
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.samlp import AuthnQuery
-from saml2.samlp import AssertionIDRequest
 from saml2.samlp import NameIDMappingRequest
 from saml2.samlp import AttributeQuery
 from saml2.samlp import AuthzDecisionQuery
@@ -32,6 +32,7 @@ from saml2.samlp import AuthnRequest
 
 import saml2
 import time
+from saml2.soap import make_soap_enveloped_saml_thingy
 
 try:
     from urlparse import parse_qs
@@ -42,8 +43,9 @@ except ImportError:
 from saml2.s_utils import signature
 from saml2.s_utils import do_attributes
 
-from saml2 import samlp, BINDING_SOAP
+from saml2 import samlp, BINDING_SOAP, element_to_extension_element
 from saml2 import saml
+from saml2 import soap
 from saml2.population import Population
 
 from saml2.response import AttributeResponse
@@ -70,6 +72,10 @@ FORM_SPEC = """<form method="post" action="%s">
 
 LAX = False
 IDPDISC_POLICY = "urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol:single"
+
+ECP_SERVICE = "urn:oasis:names:tc:SAML:2.0:profiles:SSO:ecp"
+ACTOR = "http://schemas.xmlsoap.org/soap/actor/next"
+MIME_PAOS = "application/vnd.paos+xml"
 
 class IdpUnspecified(Exception):
     pass
@@ -219,24 +225,27 @@ class Base(Entity):
         :return: <samlp:AuthnRequest> instance
         """
 
+        args = {}
         try:
-            service_url = kwargs["assertion_consumer_service_url"]
+            args["assertion_consumer_service_url"] = kwargs["assertion_consumer_service_url"]
         except KeyError:
             if service_url_binding is None:
                 service_url = self.service_url(binding)
             else:
                 service_url = self.service_url(service_url_binding)
+            args["assertion_consumer_service_url"] = service_url
 
         try:
-            my_name = kwargs["provider_name"]
+            args["provider_name"] = kwargs["provider_name"]
         except KeyError:
             if binding == BINDING_PAOS:
-                my_name = None
+                pass
             else:
-                my_name = self._my_name()
+                args["provider_name"] = self._my_name()
 
         try:
-            name_id_policy = kwargs["name_id_policy"]
+            args["name_id_policy"] = kwargs["name_id_policy"]
+            del kwargs["name_id_policy"]
         except:
             if allow_create:
                 allow_create="true"
@@ -257,22 +266,24 @@ class Base(Entity):
                     name_id_policy.format = saml.NAMEID_FORMAT_PERSISTENT
                 except KeyError:
                     pass
+            args["name_id_policy"] = name_id_policy
 
-        if extensions is None:
-            extensions = []
-        for key,val in kwargs.items():
-            if key not in AuthnRequest.c_attributes and \
-               key not in AuthnRequest.c_children:
-                # extension elements allowed
-                extensions.append(saml2.element_to_extension_element(val))
+        if kwargs:
+            if extensions is None:
+                extensions = []
+            fargs = [p for p,c,r in AuthnRequest.c_attributes.values()]
+            fargs.extend([p for p,c in AuthnRequest.c_children.values()])
+            for key,val in kwargs.items():
+                if key not in fargs:
+                    # extension elements allowed
+                    extensions.append(saml2.element_to_extension_element(val))
+                else:
+                    args[key] = val
 
         return self._message(AuthnRequest, destination, id, consent,
                              extensions, sign,
-                             assertion_consumer_service_url=service_url,
                              protocol_binding=binding,
-                             name_id_policy=name_id_policy,
-                             provider_name=my_name,
-                             scoping=scoping)
+                             scoping=scoping, **args)
 
 
     def create_attribute_query(self, destination, subject_id,
@@ -550,3 +561,87 @@ class Base(Entity):
         """
 
         return self._parse_response(txt, NameIDMappingResponse, "", binding)
+
+    # ------------------- ECP ------------------------------------------------
+
+    def create_ecp_authn_request(self, entityid=None, relay_state="", sign=False):
+        """ Makes an authentication request.
+
+        :param entityid: The entity ID of the IdP to send the request to
+        :param relay_state: A token that can be used by the SP to know
+            where to continue the conversation with the client
+        :param sign: Whether the request should be signed or not.
+        :return: SOAP message with the AuthnRequest
+        """
+
+        # ----------------------------------------
+        # <paos:Request>
+        # ----------------------------------------
+        my_url = self.service_url(BINDING_PAOS)
+
+        # must_understand and act according to the standard
+        #
+        paos_request = paos.Request(must_understand="1", actor=ACTOR,
+                                    response_consumer_url=my_url,
+                                    service = ECP_SERVICE)
+
+        # ----------------------------------------
+        # <ecp:RelayState>
+        # ----------------------------------------
+
+        relay_state = ecp.RelayState(actor=ACTOR, must_understand="1",
+                                     text=relay_state)
+
+        # ----------------------------------------
+        # <samlp:AuthnRequest>
+        # ----------------------------------------
+
+        logger.info("entityid: %s, binding: %s" % (entityid, BINDING_SOAP))
+
+        # The IDP publishes support for ECP by using the SOAP binding on
+        # SingleSignOnService
+        _, location = self.pick_binding("single_sign_on_service",
+                                        [BINDING_SOAP], entity_id=entityid)
+        authn_req = self.create_authn_request(location, binding=BINDING_SOAP,
+                                              service_url_binding=BINDING_PAOS)
+
+        # ----------------------------------------
+        # The SOAP envelope
+        # ----------------------------------------
+
+        soap_envelope = make_soap_enveloped_saml_thingy(authn_req,[paos_request,
+                                                                   relay_state])
+
+        return authn_req.id, "%s" % soap_envelope
+
+    def parse_ecp_authn_response(self, str, outstanding=None):
+        rdict = soap.class_instances_from_soap_enveloped_saml_thingies(str,
+                                                                       [paos,
+                                                                        ecp,
+                                                                        samlp])
+
+        _relay_state = None
+        for item in rdict["header"]:
+            if item.c_tag == "RelayState" and\
+               item.c_namespace == ecp.NAMESPACE:
+                _relay_state = item
+
+        response = self.parse_authn_request_response(rdict["body"],
+                                                     BINDING_PAOS, outstanding)
+
+        return response, _relay_state
+
+    def can_handle_ecp_response(self, response):
+        try:
+            accept = response.headers["accept"]
+        except KeyError:
+            try:
+                accept = response.headers["Accept"]
+            except KeyError:
+                return False
+
+        if MIME_PAOS in accept:
+            return True
+        else:
+            return False
+

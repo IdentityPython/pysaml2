@@ -2,9 +2,15 @@ import base64
 import logging
 from hashlib import sha1
 from saml2.metadata import ENDPOINTS
+from saml2.profile import paos, ecp
 from saml2.soap import parse_soap_enveloped_saml_artifact_resolve
 
-from saml2 import samlp, saml, response, BINDING_URI, BINDING_HTTP_ARTIFACT
+from saml2 import samlp
+from saml2 import saml
+from saml2 import response
+from saml2 import BINDING_URI
+from saml2 import BINDING_HTTP_ARTIFACT
+from saml2 import BINDING_PAOS
 from saml2 import request
 from saml2 import soap
 from saml2 import element_to_extension_element
@@ -106,7 +112,10 @@ class Entity(HTTPBase):
             self.vorg = None
 
         self.artifact = {}
-        self.sourceid = self.metadata.construct_source_id()
+        if self.metadata:
+            self.sourceid = self.metadata.construct_source_id()
+        else:
+            self.sourceid = {}
 
     def _issuer(self, entityid=None):
         """ Return an Issuer instance """
@@ -120,7 +129,7 @@ class Entity(HTTPBase):
                           format=NAMEID_FORMAT_ENTITY)
 
     def apply_binding(self, binding, msg_str, destination="", relay_state="",
-                      response=False):
+                      response=False, sign=False):
         """
         Construct the necessary HTTP arguments dependent on Binding
 
@@ -148,8 +157,8 @@ class Entity(HTTPBase):
             info = self.use_http_get(msg_str, destination, relay_state, typ)
             info["url"] = destination
             info["method"] = "GET"
-        elif binding == BINDING_SOAP:
-            info = self.use_soap(msg_str, destination)
+        elif binding == BINDING_SOAP or binding == BINDING_PAOS:
+            info = self.use_soap(msg_str, destination, sign=sign)
         elif binding == BINDING_URI:
             info = self.use_http_uri(msg_str, typ, destination)
         elif binding == BINDING_HTTP_ARTIFACT:
@@ -257,6 +266,17 @@ class Entity(HTTPBase):
 
         return xmlstr
 
+    def parse_soap_message(self, text):
+        """
+
+        :param text: The SOAP message
+        :return: A dictionary with two keys "body" and "header"
+        """
+        return soap.class_instances_from_soap_enveloped_saml_thingies(text,
+                                                                      [paos,
+                                                                       ecp,
+                                                                       samlp])
+
 # --------------------------------------------------------------------------
 
     def sign(self, msg, mid=None, to_sign=None):
@@ -292,7 +312,9 @@ class Entity(HTTPBase):
         if not id:
             id = sid(self.seed)
 
-        kwargs.update(self.message_args(id))
+        for key, val in self.message_args(id).items():
+            if key not in kwargs:
+                kwargs[key] = val
 
         req = request_cls(**kwargs)
 

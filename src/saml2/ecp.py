@@ -37,7 +37,6 @@ from saml2.response import authn_response
 
 logger = logging.getLogger(__name__)
 
-SERVICE = "urn:oasis:names:tc:SAML:2.0:profiles:SSO:ecp"
 
 def ecp_capable(headers):
     if "application/vnd.paos+xml" in headers["Accept"]:
@@ -48,7 +47,6 @@ def ecp_capable(headers):
 
     return False
 
-ACTOR = "http://schemas.xmlsoap.org/soap/actor/next"
 
 #noinspection PyUnusedLocal
 def ecp_auth_request(cls, entityid=None, relay_state="", sign=False):
@@ -68,7 +66,7 @@ def ecp_auth_request(cls, entityid=None, relay_state="", sign=False):
     # ----------------------------------------
     my_url = cls.service_url(BINDING_PAOS)
 
-    # must_understan and actor according to the standard
+    # must_understand and actor according to the standard
     #
     paos_request = paos.Request(must_understand="1", actor=ACTOR,
                                 response_consumer_url=my_url,

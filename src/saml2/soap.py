@@ -65,8 +65,8 @@ def parse_soap_enveloped_saml_logout_request(text):
     expected_tag = '{%s}LogoutRequest' % SAMLP_NAMESPACE
     return parse_soap_enveloped_saml_thingy(text, [expected_tag])
 
-def parse_soap_enveloped_saml_authentication_request(text):
-    expected_tag = '{%s}AuthenticationRequest' % SAMLP_NAMESPACE
+def parse_soap_enveloped_saml_authn_request(text):
+    expected_tag = '{%s}AuthnRequest' % SAMLP_NAMESPACE
     return parse_soap_enveloped_saml_thingy(text, [expected_tag])
 
 def parse_soap_enveloped_saml_artifact_resolve(text):

@@ -24,11 +24,12 @@ import shelve
 import sys
 import memcache
 from hashlib import sha1
+from saml2.schema import soapenv
 
-from saml2.samlp import NameIDMappingResponse
+from saml2.samlp import NameIDMappingResponse, Response
 from saml2.entity import Entity
 
-from saml2 import saml
+from saml2 import saml, element_to_extension_element
 from saml2 import class_name
 from saml2 import BINDING_HTTP_REDIRECT
 
@@ -40,8 +41,6 @@ from saml2.request import AuthzDecisionQuery
 from saml2.request import AuthnQuery
 
 from saml2.s_utils import MissingValue, Unknown
-from saml2.s_utils import BadRequest
-from saml2.s_utils import error_status_factory
 
 from saml2.sigver import pre_signature_part, signed_instance_factory
 
@@ -51,6 +50,8 @@ from saml2.assertion import restriction_from_attribute_spec
 from saml2.assertion import filter_attribute_value_assertions
 
 from saml2.ident import IdentDB
+#from saml2.profile import paos
+from saml2.profile import ecp
 
 logger = logging.getLogger(__name__)
 
@@ -448,7 +449,7 @@ class Server(Entity):
         :param assertion_id:
         :param in_response_to:
         :param issuer:
-        :param sign_response:
+        :param sign:
         :param status:
         :return:
         """
@@ -524,3 +525,40 @@ class Server(Entity):
 
         return self._response(in_response_to, "", status, issuer,
                               sign_response, to_sign=[], **args)
+
+    # ---------
+
+    def parse_ecp_authn_request(self):
+        pass
+
+    def create_ecp_authn_request_response(self, acs_url, identity,
+                                          in_response_to, destination,
+                                          sp_entity_id, name_id_policy=None,
+                                          userid=None, name_id=None, authn=None,
+                                          authn_decl=None, issuer=None,
+                                          sign_response=False,
+                                          sign_assertion=False):
+
+        # ----------------------------------------
+        # <ecp:Response
+        # ----------------------------------------
+
+        ecp_response = ecp.Response(assertion_consumer_service_url=acs_url)
+        header = soapenv.Header()
+        header.extension_elements = [element_to_extension_element(ecp_response)]
+
+        # ----------------------------------------
+        # <samlp:Response
+        # ----------------------------------------
+
+        response = self.create_authn_response(identity, in_response_to,
+                                              destination, sp_entity_id,
+                                              name_id_policy, userid, name_id,
+                                              authn, authn_decl, issuer,
+                                              sign_response, sign_assertion)
+        body = soapenv.Body()
+        body.extension_elements = [element_to_extension_element(response)]
+
+        soap_envelope = soapenv.Envelope(header=header, body=body)
+
+        return "%s" % soap_envelope

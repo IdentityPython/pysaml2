@@ -41,7 +41,8 @@ CONFIG = {
                 "single_sign_on_service" : [
                     ("%s/sso/redirect" % BASE, BINDING_HTTP_REDIRECT),
                     ("%s/sso/post" % BASE, BINDING_HTTP_POST),
-                    ("%s/sso/art" % BASE, BINDING_HTTP_ARTIFACT)
+                    ("%s/sso/art" % BASE, BINDING_HTTP_ARTIFACT),
+                    ("%s/sso/paos" % BASE, BINDING_SOAP)
                 ],
                 "single_logout_service": [
                     ("%s/slo/soap" % BASE, BINDING_SOAP),

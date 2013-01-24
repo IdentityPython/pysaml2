@@ -7,6 +7,7 @@ import urlparse
 import requests
 import time
 from Cookie import SimpleCookie
+from saml2.profile import paos
 from saml2.time_util import utc_now
 from saml2 import class_name
 from saml2.pack import http_form_post_message
@@ -67,6 +68,11 @@ def _since_epoch(cdate):
     #return int(time.mktime(t))
     return calendar.timegm(t)
 
+def set_list2dict(sl):
+    return dict(sl)
+
+def dict2set_list(dic):
+    return [(k,v) for k,v in dic.items()]
 
 class HTTPBase(object):
     def __init__(self, verify=True, ca_bundle=None, key_file=None,
@@ -82,6 +88,8 @@ class HTTPBase(object):
             self.request_args["cert"] = (cert_file, key_file)
         
         self.sec = None
+        self.user = None
+        self.passwd = None
         
     def cookies(self, url):
         """
@@ -158,6 +166,9 @@ class HTTPBase(object):
 
         if self.cookiejar:
             _kwargs["cookies"] = self.cookies(url)
+
+        if self.user and self.passwd:
+            _kwargs["auth"]= (self.user, self.passwd)
 
             #logger.info("SENT COOKIEs: %s" % (_kwargs["cookies"],))
         try:
@@ -245,7 +256,7 @@ class HTTPBase(object):
 
         return info
 
-    def use_soap(self, request, destination="", headers=None, sign=False):
+    def use_soap(self, request, destination="", soap_headers=None, sign=False):
         """
         Construct the necessary information for using SOAP+POST
 
@@ -255,15 +266,12 @@ class HTTPBase(object):
         :param sign:
         :return: dictionary
         """
-        if headers is None:
-            headers = [("content-type", "application/soap+xml")]
-        else:
-            headers.append(("content-type", "application/soap+xml"))
+        headers = [("content-type", "application/soap+xml")]
 
-        soap_message = make_soap_enveloped_saml_thingy(request)
+        soap_message = make_soap_enveloped_saml_thingy(request, soap_headers)
 
         logger.error("SOAP message: %s" % soap_message)
-        
+
         if sign and self.sec:
             _signed = self.sec.sign_statement_using_xmlsec(soap_message,
                                                            class_name(request),
@@ -301,3 +309,7 @@ class HTTPBase(object):
                 raise HTTPError("%d:%s" % (response.status_code, response.error))
         else:
             return None
+
+    def add_credentials(self, user, passwd):
+        self.user = user
+        self.passwd = passwd

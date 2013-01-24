@@ -139,7 +139,7 @@ class AttributeQuery(Request):
         return []
 
 class AuthnRequest(Request):
-    msgtype = "auth_request"
+    msgtype = "authn_request"
     def __init__(self, sec_context, receiver_addrs, attribute_converters,
                  timeslack=0):
         Request.__init__(self, sec_context, receiver_addrs,
