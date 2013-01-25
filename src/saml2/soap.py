@@ -110,6 +110,10 @@ def parse_soap_enveloped_saml_authn_query_response(text):
     tags = ['{%s}Response' % SAMLP_NAMESPACE]
     return parse_soap_enveloped_saml_thingy(text, tags)
 
+def parse_soap_enveloped_saml_authn_response(text):
+    tags = ['{%s}Response' % SAMLP_NAMESPACE]
+    return parse_soap_enveloped_saml_thingy(text, tags)
+
 
 #def parse_soap_enveloped_saml_logout_response(text):
 #    expected_tag = '{%s}LogoutResponse' % SAMLP_NAMESPACE

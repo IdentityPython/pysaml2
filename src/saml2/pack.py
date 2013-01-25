@@ -146,6 +146,7 @@ def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
         header.tag = '{%s}Header' % NAMESPACE
         envelope.append(header)
         for part in header_parts:
+            # This doesn't work if the headers are signed
             part.become_child_element_of(header)
 
     body = ElementTree.Element('')

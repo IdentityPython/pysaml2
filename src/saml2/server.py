@@ -187,7 +187,7 @@ class Server(Entity):
         """
 
         return self._parse_request(xml_string, NameIDMappingRequest,
-                                   "manage_name_id_service", binding)
+                                   "name_id_mapping_service", binding)
 
     # ------------------------------------------------------------------------
 

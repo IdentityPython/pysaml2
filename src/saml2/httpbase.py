@@ -7,7 +7,6 @@ import urlparse
 import requests
 import time
 from Cookie import SimpleCookie
-from saml2.profile import paos
 from saml2.time_util import utc_now
 from saml2 import class_name
 from saml2.pack import http_form_post_message
@@ -262,7 +261,7 @@ class HTTPBase(object):
 
         :param request:
         :param destination:
-        :param headers:
+        :param soap_headers:
         :param sign:
         :return: dictionary
         """
@@ -270,7 +269,7 @@ class HTTPBase(object):
 
         soap_message = make_soap_enveloped_saml_thingy(request, soap_headers)
 
-        logger.error("SOAP message: %s" % soap_message)
+        logger.debug("SOAP message: %s" % soap_message)
 
         if sign and self.sec:
             _signed = self.sec.sign_statement_using_xmlsec(soap_message,
@@ -301,14 +300,11 @@ class HTTPBase(object):
             logger.info("HTTPClient exception: %s" % (exc,))
             raise
 
-        if response:
-            if response.status_code == 200:
-                logger.info("SOAP response: %s" % response.text)
-                return response
-            else:
-                raise HTTPError("%d:%s" % (response.status_code, response.error))
+        if response.status_code == 200:
+            logger.info("SOAP response: %s" % response.text)
+            return response
         else:
-            return None
+            raise HTTPError("%d:%s" % (response.status_code, response.error))
 
     def add_credentials(self, user, passwd):
         self.user = user

@@ -18,7 +18,6 @@
 """Contains classes and functions that a SAML2.0 Service Provider (SP) may use
 to conclude its tasks.
 """
-from saml2.schema import soapenv
 from saml2.entity import Entity
 
 from saml2.mdstore import destinations
@@ -43,7 +42,7 @@ except ImportError:
 from saml2.s_utils import signature
 from saml2.s_utils import do_attributes
 
-from saml2 import samlp, BINDING_SOAP, element_to_extension_element
+from saml2 import samlp, BINDING_SOAP
 from saml2 import saml
 from saml2 import soap
 from saml2.population import Population
@@ -468,7 +467,7 @@ class Base(Entity):
 
     # ======== response handling ===========
 
-    def parse_authn_request_response(self, xmlstr, binding, outstanding):
+    def parse_authn_request_response(self, xmlstr, binding, outstanding=None):
         """ Deal with an AuthnResponse
 
         :param xmlstr: The reply as a xml string
@@ -564,7 +563,8 @@ class Base(Entity):
 
     # ------------------- ECP ------------------------------------------------
 
-    def create_ecp_authn_request(self, entityid=None, relay_state="", sign=False):
+    def create_ecp_authn_request(self, entityid=None, relay_state="",
+                                 sign=False, **kwargs):
         """ Makes an authentication request.
 
         :param entityid: The entity ID of the IdP to send the request to
@@ -596,14 +596,24 @@ class Base(Entity):
         # <samlp:AuthnRequest>
         # ----------------------------------------
 
-        logger.info("entityid: %s, binding: %s" % (entityid, BINDING_SOAP))
+        try:
+            authn_req = kwargs["authn_req"]
+        except KeyError:
+            try:
+                _binding = kwargs["binding"]
+            except KeyError:
+                _binding = BINDING_SOAP
+                kwargs["binding"] = _binding
 
-        # The IDP publishes support for ECP by using the SOAP binding on
-        # SingleSignOnService
-        _, location = self.pick_binding("single_sign_on_service",
-                                        [BINDING_SOAP], entity_id=entityid)
-        authn_req = self.create_authn_request(location, binding=BINDING_SOAP,
-                                              service_url_binding=BINDING_PAOS)
+            logger.debug("entityid: %s, binding: %s" % (entityid, _binding))
+
+            # The IDP publishes support for ECP by using the SOAP binding on
+            # SingleSignOnService
+            _, location = self.pick_binding("single_sign_on_service",
+                                            [_binding], entity_id=entityid)
+            authn_req = self.create_authn_request(location,
+                                                  service_url_binding=BINDING_PAOS,
+                                                  **kwargs)
 
         # ----------------------------------------
         # The SOAP envelope

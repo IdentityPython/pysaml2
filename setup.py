@@ -37,7 +37,7 @@ class PyTest(Command):
 install_requires=[
     # core dependencies
     'decorator',
-    'httplib2',
+    'requests >= 1.0.0',
     'paste',
     'zope.interface',
     'repoze.who == 1.0.18'

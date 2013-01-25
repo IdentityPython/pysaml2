@@ -98,7 +98,7 @@ def test_complete_flow():
     idp = Server(config_file="idp_all_conf")
 
     IDP_ENTITY_ID = idp.config.entityid
-    SP_ENTITY_ID = sp.config.entityid
+    #SP_ENTITY_ID = sp.config.entityid
 
     # ------------ @Client -----------------------------
 
@@ -170,11 +170,12 @@ def test_complete_flow():
         if item.c_tag == "Response" and item.c_namespace == ecp_prof.NAMESPACE:
             _ecp_response = item
 
-    _acs_url = _ecp_response.assertion_consumer_service_url
+    #_acs_url = _ecp_response.assertion_consumer_service_url
 
     # done phase2 at the client
 
-    ht_args = client.use_soap(idp_response, cargs["rc_url"], [cargs["relay_state"]])
+    ht_args = client.use_soap(idp_response, cargs["rc_url"],
+                              [cargs["relay_state"]])
 
     print ht_args
 
