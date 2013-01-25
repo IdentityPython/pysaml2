@@ -150,13 +150,11 @@ def intermit(client, response, httpc, environ, trace, cjar, interaction,
     return response
 
 
-def do_sequence(config, oper, httpc, trace, interaction, entity_id,
-                features=None):
+def do_sequence(config, oper, trace, interaction, entity_id, features=None):
     """
 
     :param config: SP configuration
     :param oper: A dictionary describing the operations to perform
-    :param httpc: A HTTP Client instance
     :param trace: A Trace instance that keep all the trace information
     :param interaction: A list of interaction definitions
     :param entity_id: The entity_id of the IdP
@@ -168,7 +166,7 @@ def do_sequence(config, oper, httpc, trace, interaction, entity_id,
     test_output = []
     environ = {"metadata": client.metadata,
                "client": client,
-               "httpc": httpc,
+               "entity_id": entity_id,
                "response": []}
 
     cjar = {"browser": cookielib.CookieJar(),
@@ -189,7 +187,7 @@ def do_sequence(config, oper, httpc, trace, interaction, entity_id,
 
     environ["FatalError"] = False
     for op in oper["sequence"]:
-        output = do_query(client, op(), httpc, trace, interaction, entity_id,
+        output = do_query(client, op(), trace, interaction, entity_id,
                           environ, cjar, features)
         test_output.extend(output)
         if environ["FatalError"]:
@@ -210,13 +208,12 @@ def do_sequence(config, oper, httpc, trace, interaction, entity_id,
     return test_output, "%s" % trace
 
 
-def do_query(client, oper, httpc, trace, interaction, entity_id, environ, cjar,
+def do_query(client, oper, trace, interaction, entity_id, environ, cjar,
              features=None):
     """
 
     :param client: A SAML2 client
     :param oper: A Request class instance
-    :param httpc: A HTTP Client instance
     :param trace: A Trace instance that keep all the trace information
     :param interaction: A list of interaction definitions
     :param entity_id: The entity_id of the IdP
@@ -228,7 +225,7 @@ def do_query(client, oper, httpc, trace, interaction, entity_id, environ, cjar,
     oper.setup(environ)
     query = oper.request
     args = oper.args
-    environ["oper.args"] = oper.args
+    environ["oper.args"] = oper.args.copy()
     args["entity_id"] = entity_id
     test_output = []
 
@@ -244,6 +241,7 @@ def do_query(client, oper, httpc, trace, interaction, entity_id, environ, cjar,
     except KeyError:
         pass
 
+    httpc = environ["client"]
     httpc.cookiejar = cjar["browser"]
 
     srvs = getattr(client.metadata, REQ2SRV[query])(args["entity_id"],
@@ -251,6 +249,7 @@ def do_query(client, oper, httpc, trace, interaction, entity_id, environ, cjar,
                                                     "idpsso")
 
     relay_state = rndstr()
+    environ["relay_state"] = relay_state
     _response_func = getattr(client, "parse_%s_response" % query)
     response_args = {}
     qargs = args.copy()
@@ -278,7 +277,7 @@ def do_query(client, oper, httpc, trace, interaction, entity_id, environ, cjar,
         except KeyError:
             req = qfunc(**qargs)
 
-        req = oper.modify_message(req)
+        req = oper.pre_processing(environ, req, args)
 
         environ["request"] = req
         _req_str = "%s" % req
@@ -350,7 +349,12 @@ def do_query(client, oper, httpc, trace, interaction, entity_id, environ, cjar,
 
         if response:
             try:
+                response = oper.post_processing(environ, response)
                 if isinstance(response, dict):
+                    try:
+                        assert relay_state == response["RelayState"]
+                    except KeyError:
+                        pass
                     response = response["SAMLResponse"]
                 _resp = _response_func(response, **response_args)
                 environ["response"].append(_resp)

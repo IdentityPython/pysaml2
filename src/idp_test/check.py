@@ -429,6 +429,32 @@ class VerifyNameIDPolicyUsage(Check):
                     self._status = WARNING
         return {}
 
+class VerifyNameIDMapping(Check):
+    """
+    Verify the nameID in the response is according to the provided
+    NameIDPolicy
+    """
+    id = "verify-name-id-policy-usage"
+
+    def _func(self, environ):
+        response = environ["response"][-1].response
+        nip = environ["oper.args"]["name_id_policy"]
+        nid = response.name_id
+        if nip.format:
+            try:
+                assert nid.format == nip.format
+            except AssertionError:
+                self._message = "Wrong NameID Format"
+                self._status = WARNING
+        if nip.sp_name_qualifier:
+            try:
+                assert nid.sp_name_qualifier == nip.sp_name_qualifier
+            except AssertionError:
+                self._message = "Wrong SPNameQualifier"
+                self._status = WARNING
+
+        return {}
+
 def factory(id):
     for name, obj in inspect.getmembers(sys.modules[__name__]):
         if inspect.isclass(obj):

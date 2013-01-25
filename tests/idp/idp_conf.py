@@ -47,7 +47,8 @@ CONFIG={
                 "single_sign_on_service" : [
                     ("%s/sso/redirect" % BASE, BINDING_HTTP_REDIRECT),
                     ("%s/sso/post" % BASE, BINDING_HTTP_POST),
-                    ("%s/sso/art" % BASE, BINDING_HTTP_ARTIFACT)
+                    ("%s/sso/art" % BASE, BINDING_HTTP_ARTIFACT),
+                    ("%s/sso/ecp" % BASE, BINDING_SOAP)
                 ],
                 "single_logout_service": [
                     ("%s/slo/soap" % BASE, BINDING_SOAP),
@@ -67,10 +68,7 @@ CONFIG={
                     ("%s/mni/art" % BASE, BINDING_HTTP_ARTIFACT)
                 ],
                 "name_id_mapping_service":[
-                    ("%s/nim/soap" % BASE, BINDING_SOAP),
-                    ("%s/nim/post" % BASE, BINDING_HTTP_POST),
-                    ("%s/nim/redirect" % BASE, BINDING_HTTP_REDIRECT),
-                    ("%s/nim/art" % BASE, BINDING_HTTP_ARTIFACT)
+                    ("%s/nim" % BASE, BINDING_SOAP),
                 ],
             },
             "policy": {

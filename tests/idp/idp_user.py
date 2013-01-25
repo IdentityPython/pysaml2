@@ -6,7 +6,7 @@ USERS = {
         "uid": "rohe0002"
     },
      "babs": {
-         "surname": "Guillen",
+         "surname": "Babs",
          "givenName": "Ozzie",
          "eduPersonAffiliation": "affiliate"
      },

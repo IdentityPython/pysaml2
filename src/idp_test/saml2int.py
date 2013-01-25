@@ -1,4 +1,4 @@
-from saml2 import BINDING_HTTP_REDIRECT, BINDING_URI, samlp
+from saml2 import BINDING_HTTP_REDIRECT, BINDING_URI, samlp, BINDING_PAOS
 from saml2 import BINDING_SOAP
 from saml2 import BINDING_HTTP_POST
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
@@ -10,6 +10,7 @@ from idp_test.check import CheckLogoutSupport
 from idp_test.check import VerifyLogout
 from idp_test.check import VerifyContent
 from idp_test.check import VerifySuccessStatus
+from idp_test.check import VerifyNameIDMapping
 
 from saml2.samlp import NameIDPolicy
 
@@ -26,7 +27,10 @@ class Request(object):
     def setup(self, environ):
         pass
 
-    def modify_message(self, message):
+    def pre_processing(self, environ, message, args):
+        return message
+
+    def post_processing(self, environ, message):
         return message
 
 #class Saml2IntRequest(Request):
@@ -93,18 +97,21 @@ class AuthnQuery(Request):
         assertion = resp.assertion[0]
         self.args["subject"] = assertion.subject
 
-class NameIDMappeingRequest(Request):
+class NameIDMappingRequest(Request):
     request = "name_id_mapping_request"
-    _args = {"binding": BINDING_SOAP}
+    _args = {"binding": BINDING_SOAP,
+             "name_id_policy": NameIDPolicy(format=NAMEID_FORMAT_PERSISTENT,
+                                            sp_name_qualifier="GroupOn",
+                                            allow_create="true")}
 
     def __init__(self):
         Request.__init__(self)
-        self.tests["post"].append(VerifySuccessStatus)
+        self.tests["post"].append(VerifyNameIDMapping)
 
     def setup(self, environ):
         resp = environ["response"][-1].response
         assertion = resp.assertion[0]
-        self.args["subject"] = assertion.subject
+        self.args["name_id"] = assertion.subject.name_id
 
 class AuthnRequest_NameIDPolicy1(AuthnRequest):
     request = "authn_request"
@@ -117,6 +124,29 @@ class AuthnRequest_NameIDPolicy1(AuthnRequest):
     def __init__(self):
         AuthnRequest.__init__(self)
         self.tests["post"].append(VerifyNameIDPolicyUsage)
+
+class ECP_AuthnRequest(AuthnRequest):
+    def __init__(self):
+        AuthnRequest.__init__(self)
+        self.args["binding"] = BINDING_SOAP
+        self.args["service_url_binding"] = BINDING_PAOS
+
+    def setup(self, environ):
+        _client = environ["client"]
+        _client.user = "babs"
+        _client.passwd = "howes"
+
+#    def pre_processing(self, environ, message, args):
+#        # first act as the SP
+#        self._orig_binding = args["binding"]
+#        args["binding"] = BINDING_SOAP
+#        return
+#
+#    def post_processing(self, environ, message):
+#        _client = environ["client"]
+#        rdict = _client.parse_soap_message(message)
+#        relay_state = rdict["header"][0].text
+#        return {"SAMLRequest": message, "RelayState": relay_state}
 
 # -----------------------------------------------------------------------------
 
@@ -164,4 +194,13 @@ OPERATIONS = {
         "sequence": [AuthnRequest_NameIDPolicy1],
         "tests": {"pre": [CheckSaml2IntMetaData],  "post": []}
         },
+    'ecp_authn': {
+        "name": "SAML2 AuthnRequest using ECP and PAOS",
+        "descr": "SAML2 AuthnRequest using ECP and PAOS",
+        "sequence":[ECP_AuthnRequest]
+    },
+    'nameid-mapping':{
+        "name": "Simple NameIDMapping request",
+        "sequence":[AuthnRequest, NameIDMappingRequest]
+    }
 }

@@ -203,7 +203,7 @@ class SAML2client(object):
                 print >> sys.stderr, "Undefined testcase"
                 return
 
-            testres, trace = do_sequence(self.sp_config, oper, HTTPBase(),
+            testres, trace = do_sequence(self.sp_config, oper,
                                          self.trace, self.interactions,
                                          entity_id=self.json_config["entity_id"])
             self.test_log = testres

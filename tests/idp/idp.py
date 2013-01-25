@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import base64
 
 import re
 import logging
@@ -9,7 +10,7 @@ from hashlib import sha1
 from urlparse import parse_qs
 from Cookie import SimpleCookie
 
-from saml2 import server, BINDING_HTTP_ARTIFACT, BINDING_URI
+from saml2 import server, BINDING_HTTP_ARTIFACT, BINDING_URI, BINDING_PAOS
 from saml2 import BINDING_SOAP
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
@@ -113,14 +114,15 @@ def dict2list_of_tuples(d):
 
 # -----------------------------------------------------------------------------
 
-def _operation(environ, start_response, user, _dict, func, binding):
+def _operation(environ, start_response, user, _dict, func, binding,
+               **kwargs):
     logger.debug("_operation: %s" % _dict)
     if not _dict:
         resp = BadRequest('Error parsing request or no request')
         return resp(environ, start_response)
     else:
         return func(environ, start_response, user, _dict["SAMLRequest"],
-                    binding, _dict["RelayState"])
+                    binding, _dict["RelayState"], **kwargs)
 
 def _artifact_oper(environ, start_response, user, _dict, func):
     if not _dict:
@@ -153,7 +155,8 @@ FORM_SPEC = """<form name="myform" method="post" action="%s">
 # === Single log in ====
 # -----------------------------------------------------------------------------
 
-def _sso(environ, start_response, user, query, binding, relay_state=""):
+def _sso(environ, start_response, user, query, binding, relay_state="",
+         response_bindings=None):
     logger.info("--- In SSO ---")
     logger.debug("user: %s" % user)
 
@@ -185,7 +188,9 @@ def _sso(environ, start_response, user, query, binding, relay_state=""):
 
     logger.info("AuthNResponse: %s" % authn_resp)
     binding, destination = IDP.pick_binding("assertion_consumer_service",
+                                            bindings=response_bindings,
                                             entity_id=_authn_req.issuer.text)
+    logger.debug("Binding: %s, destination: %s" % (binding, destination))
     http_args = IDP.apply_binding(binding, "%s" % authn_resp, destination,
                                   relay_state, response=True)
 
@@ -227,6 +232,36 @@ def sso_art(environ, start_response, user):
     _request = IDP.ticket[_dict["key"]]
     del IDP.ticket[_dict["key"]]
     return _artifact_oper(environ, start_response, user, _request, _sso)
+
+def sso_ecp(environ, start_response, user):
+    # The ECP interface
+    logger.info("--- ECP SSO ---")
+    logger.debug("ENVIRON: %s" % environ)
+    resp = None
+
+    try:
+        authz_info = environ["HTTP_AUTHORIZATION"]
+        if authz_info.startswith("Basic "):
+            _info = base64.b64decode(authz_info[6:])
+            logger.debug("Authz_info: %s" % _info)
+            try:
+                (user,passwd) = _info.split(":")
+                if PASSWD[user] != passwd:
+                    resp = Unauthorized()
+            except ValueError:
+                resp = Unauthorized()
+        else:
+            resp = Unauthorized()
+    except KeyError:
+        resp = Unauthorized()
+
+    if resp:
+        return resp(environ, start_response)
+
+    _dict = unpack_soap(environ)
+    # Basic auth ?!
+    return _operation(environ, start_response, user, _dict, _sso, BINDING_SOAP,
+                      response_bindings=[BINDING_PAOS])
 
 # -----------------------------------------------------------------------------
 # === Authentication ====
@@ -292,12 +327,10 @@ def do_authentication(environ, start_response, cookie=None):
 def verify_username_and_password(dic):
     global PASSWD
     # verify username and password
-    for user, pwd in PASSWD:
-        if user == dic["login"][0]:
-            if pwd == dic["password"][0]:
-                return True, user
-
-    return False, ""
+    if PASSWD[dic["login"][0]] == dic["password"][0]:
+        return True, dic["login"][0]
+    else:
+        return False, ""
 
 
 def do_verify(environ, start_response, _user):
@@ -419,9 +452,9 @@ def not_found(environ, start_response):
     return ['Not Found']
 
 
-PASSWD = [("roland", "dianakra"),
-          ("babs", "howes"),
-          ("upper", "crust")]
+PASSWD = {"roland": "dianakra",
+          "babs": "howes",
+          "upper": "crust"}
 
 # ----------------------------------------------------------------------------
 
@@ -582,11 +615,12 @@ def authn_query_service(environ, start_response, user=None):
 
 
 def _nim(environ, start_response, user, query, binding, relay_state=""):
-    req = IDP.parse_manage_name_id_response(query, binding)
-
+    req = IDP.parse_name_id_mapping_request(query, binding)
+    request = req.message
     # Do the necessary stuff
     try:
-        name_id = IDP.ident.handle_name_id_mapping_request()
+        name_id = IDP.ident.handle_name_id_mapping_request(request.name_id,
+                                                           request.name_id_policy)
     except Unknown:
         resp = BadRequest("Unknown entity")
         return resp(environ, start_response)
@@ -594,41 +628,19 @@ def _nim(environ, start_response, user, query, binding, relay_state=""):
         resp = BadRequest("Unknown entity")
         return resp(environ, start_response)
 
-    info = IDP.response_args(req)
-    _resp = IDP.create_manage_name_id_response(name_id, **info)
+    info = IDP.response_args(request)
+    _resp = IDP.create_name_id_mapping_response(name_id, **info)
 
-    # It's using SOAP binding
+    # Only SOAP
     hinfo = IDP.apply_binding(binding, "%s" % _resp, "", "", response=True)
 
-    resp = Response(hinfo["data"],
-                    headers=dict2list_of_tuples(hinfo["headers"]))
+    resp = Response(hinfo["data"], headers=hinfo["headers"])
     return resp(environ, start_response)
 
-def nim(environ, start_response, user):
-    """ Expects a HTTP-redirect logout request """
-
-    _dict = unpack_redirect(environ)
-    return _operation(environ, start_response, user, _dict, _nim,
-                      BINDING_HTTP_REDIRECT)
-
-def nim_post(environ, start_response, user):
-    """ Expects a HTTP-POST logout request """
-
-    _dict = unpack_post(environ)
-    return _operation(environ, start_response, user, _dict, _nim,
-                      BINDING_HTTP_POST)
-
 def nim_soap(environ, start_response, user):
+    _dict = unpack_soap(environ)
+    return _operation(environ, start_response, user, _dict, _nim, BINDING_SOAP)
 
-    _dict = unpack_post(environ)
-    return _operation(environ, start_response, user, _dict, _nim,
-                      BINDING_SOAP)
-
-def nim_art(environ, start_response, user):
-    # Could be by HTTP_REDIRECT or HTTP_POST
-
-    _dict = unpack_artifact(environ)
-    return _artifact_oper(environ, start_response, user, _dict, _nim)
 
 # ----------------------------------------------------------------------------
 # ----------------------------------------------------------------------------
@@ -687,14 +699,8 @@ AUTHN_URLS = [
     (r'mni/soap$', mni_soap),
     (r'mni/soap/(.*)$', mni_soap),
     # nim
-    (r'nim/post$', nim_post),
-    (r'nim/post/(.*)$', nim_post),
-    (r'nim/redirect$', nim),
-    (r'nim/redirect/(.*)$', nim),
-    (r'nim/art$', nim_art),
-    (r'nim/art/(.*)$', nim_art),
-    (r'nim/soap$', nim_soap),
-    (r'nim/soap/(.*)$', nim_soap),
+    (r'nim$', nim_soap),
+    (r'nim/(.*)$', nim_soap),
     #
     (r'aqs$', authn_query_service)
 ]
@@ -702,6 +708,7 @@ AUTHN_URLS = [
 NON_AUTHN_URLS = [
     (r'login?(.*)$', do_authentication),
     (r'verify?(.*)$', do_verify),
+    (r'sso/ecp$', sso_ecp),
 ]
 
 # ----------------------------------------------------------------------------
