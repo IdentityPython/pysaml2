@@ -23,7 +23,7 @@ from saml2.entity import Entity
 from saml2.mdstore import destinations
 from saml2.profile import paos, ecp
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
-from saml2.samlp import AuthnQuery
+from saml2.samlp import AuthnQuery, ManageNameIDRequest
 from saml2.samlp import NameIDMappingRequest
 from saml2.samlp import AttributeQuery
 from saml2.samlp import AuthzDecisionQuery
@@ -460,10 +460,6 @@ class Base(Entity):
             return self._message(NameIDMappingRequest, destination, id, consent,
                                  extensions, sign, name_id_policy=name_id_policy,
                                  encrypted_id=encrypted_id)
-
-    def create_manage_nameid_request(self):
-        pass
-
 
     # ======== response handling ===========
 

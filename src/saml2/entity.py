@@ -640,7 +640,8 @@ class Entity(HTTPBase):
                                    "manage_name_id_service", binding)
 
     def create_manage_name_id_response(self, request, bindings=None,
-                                       status=None, sign=False, issuer=None):
+                                       status=None, sign=False, issuer=None,
+                                       **kwargs):
 
         rinfo = self.response_args(request, bindings)
 
@@ -650,6 +651,10 @@ class Entity(HTTPBase):
         logger.info("Response: %s" % (response,))
 
         return response
+
+    def parse_manage_name_id_request_response(self, str, binding=BINDING_SOAP):
+        return self._parse_response(str, response.ManageNameIDResponse,
+                                    "manage_name_id_service", binding)
 
     # ------------------------------------------------------------------------
 
@@ -804,7 +809,3 @@ class Entity(HTTPBase):
         elems = extension_elements_to_elements(resp.response.extension_elements,
                                                [samlp, saml])
         return elems[0]
-
-    def parse_manage_name_id_response(self, xmlstr, binding=BINDING_SOAP):
-        return self._parse_response(xmlstr, response.ManageNameIDResponse,
-                                   "manage_name_id_service", binding)

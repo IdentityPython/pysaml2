@@ -34,7 +34,7 @@ REQ2SRV = {
     "assertion_id_request": "assertion_id_request_service",
     # IDP + SP
     "logout_request": "single_logout_service",
-    "manage_name_id_query": "manage_name_id_service",
+    "manage_name_id_request": "manage_name_id_service",
     "artifact_query": "artifact_resolution_service",
     # SP
     "assertion_response": "assertion_consumer_service",

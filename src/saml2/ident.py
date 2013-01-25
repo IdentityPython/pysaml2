@@ -66,16 +66,16 @@ class IdentDB(object):
             _id = self._create_id(format, name_qualifier, sp_name_qualifier)
         return _id
 
-    def store(self, id, name_id):
+    def store(self, ident, name_id):
         try:
-            val = self.db[id].split(" ")
+            val = self.db[ident].split(" ")
         except KeyError:
             val = []
 
         _cn = code(name_id)
         val.append(_cn)
-        self.db[id] = " ".join(val)
-        self.db[_cn] = id
+        self.db[ident] = " ".join(val)
+        self.db[_cn] = ident
 
     def remove_remote(self, name_id):
         _cn = code(name_id)
@@ -83,7 +83,7 @@ class IdentDB(object):
         try:
             vals = self.db[_id].split(" ")
             vals.remove(_cn)
-            self.db[id] = " ".join(vals)
+            self.db[_id] = " ".join(vals)
         except KeyError:
             pass
 
@@ -247,18 +247,18 @@ class IdentDB(object):
         Requests from the SP is about the SPProvidedID attribute.
         So this is about adding,replacing and removing said attribute.
 
-        :param name_id:
-        :param new_id:
-        :param new_encrypted_id:
-        :param terminate:
-        :return:
+        :param name_id: NameID instance
+        :param new_id: NewID instance
+        :param new_encrypted_id: NewEncryptedID instance
+        :param terminate: Terminate instance
+        :return: The modified name_id
         """
         _id = self.find_local_id(name_id)
 
         orig_name_id = copy.copy(name_id)
 
         if new_id:
-            name_id.sp_provided_id = new_id
+            name_id.sp_provided_id = new_id.text
         elif new_encrypted_id:
             # TODO
             pass
@@ -266,11 +266,11 @@ class IdentDB(object):
             name_id.sp_provided_id = None
         else:
             #NOOP
-            return True
+            return name_id
 
         self.remove_remote(orig_name_id)
-        self.store(id, name_id)
-        return True
+        self.store(_id, name_id)
+        return name_id
 
     def publish(self, userid, name_id, entity_id):
         """
