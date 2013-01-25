@@ -10,7 +10,10 @@ from hashlib import sha1
 from urlparse import parse_qs
 from Cookie import SimpleCookie
 
-from saml2 import server, BINDING_HTTP_ARTIFACT, BINDING_URI, BINDING_PAOS
+from saml2 import server
+from saml2 import BINDING_HTTP_ARTIFACT
+from saml2 import BINDING_URI
+from saml2 import BINDING_PAOS
 from saml2 import BINDING_SOAP
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
@@ -25,8 +28,6 @@ from saml2.ident import Unknown
 from saml2.s_utils import rndstr
 from saml2.s_utils import PolicyError
 from saml2.saml import AUTHN_PASSWORD
-from saml2.saml import NAMEID_FORMAT_PERSISTENT
-from saml2.saml import NameID
 
 logger = logging.getLogger("saml2.idp")
 
@@ -475,21 +476,24 @@ def kaka2user(kaka):
 
 def _mni(environ, start_response, user, query, binding, relay_state=""):
     logger.info("--- Manage Name ID Service ---")
-    req = IDP.parse_manage_name_id_response(query, binding)
+    req = IDP.parse_manage_name_id_request(query, binding)
+    request = req.message
 
     # Do the necessary stuff
-    in_response_to = req.message.id
-    name_id = NameID(format=NAMEID_FORMAT_PERSISTENT, text="foobar")
+    name_id = IDP.ident.handle_manage_name_id_request(request.name_id,
+                                                      request.new_id,
+                                                      request.new_encrypted_id,
+                                                      request.terminate)
 
-    info = IDP.response_args(req)
-    _resp = IDP.create_manage_name_id_response(name_id, **info)
+    logger.debug("New NameID: %s" % name_id)
+
+    _resp = IDP.create_manage_name_id_response(request)
 
     # It's using SOAP binding
     hinfo = IDP.apply_binding(binding, "%s" % _resp, "", relay_state,
                               response=True)
 
-    resp = Response(hinfo["data"],
-                    headers=dict2list_of_tuples(hinfo["headers"]))
+    resp = Response(hinfo["data"], headers=hinfo["headers"])
     return resp(environ, start_response)
 
 def mni(environ, start_response, user):

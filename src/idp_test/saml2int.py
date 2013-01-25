@@ -1,4 +1,7 @@
-from saml2 import BINDING_HTTP_REDIRECT, BINDING_URI, samlp, BINDING_PAOS
+from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_URI
+from saml2 import samlp
+from saml2 import BINDING_PAOS
 from saml2 import BINDING_SOAP
 from saml2 import BINDING_HTTP_POST
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
@@ -11,6 +14,7 @@ from idp_test.check import VerifyLogout
 from idp_test.check import VerifyContent
 from idp_test.check import VerifySuccessStatus
 from idp_test.check import VerifyNameIDMapping
+from idp_test.check import VerifySPProvidedID
 
 from saml2.samlp import NameIDPolicy
 
@@ -148,12 +152,26 @@ class ECP_AuthnRequest(AuthnRequest):
 #        relay_state = rdict["header"][0].text
 #        return {"SAMLRequest": message, "RelayState": relay_state}
 
+class ManageNameIDRequest(Request):
+    request = "manage_name_id_request"
+    _args = {"binding": BINDING_SOAP,
+             "new_id": samlp.NewID("New identifier")}
+
+    def __init__(self):
+        Request.__init__(self)
+        self.tests["post"].append(VerifySuccessStatus)
+
+    def setup(self, environ):
+        resp = environ["response"][-1].response
+        assertion = resp.assertion[0]
+        self.args["name_id"] = assertion.subject.name_id
+
 # -----------------------------------------------------------------------------
 
 OPERATIONS = {
     'basic-authn': {
         "name": 'Absolute basic SAML2 AuthnRequest',
-        "descr": ('AuthnRequest using HTTP-redirect'),
+        "descr": 'AuthnRequest using HTTP-redirect',
         "sequence": [AuthnRequest],
         "tests": {"pre": [CheckSaml2IntMetaData],
                   "post": [CheckSaml2IntAttributes]}
@@ -202,5 +220,9 @@ OPERATIONS = {
     'nameid-mapping':{
         "name": "Simple NameIDMapping request",
         "sequence":[AuthnRequest, NameIDMappingRequest]
+    },
+    'manage_nameid':{
+        "name": "Setting the SP provided ID by using ManageNameID",
+        "sequence":[AuthnRequest, ManageNameIDRequest]
     }
 }

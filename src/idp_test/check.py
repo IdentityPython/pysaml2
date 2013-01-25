@@ -431,10 +431,10 @@ class VerifyNameIDPolicyUsage(Check):
 
 class VerifyNameIDMapping(Check):
     """
-    Verify the nameID in the response is according to the provided
-    NameIDPolicy
+    Verify that a new NameID is issued and that it follows the
+    given policy.
     """
-    id = "verify-name-id-policy-usage"
+    id = "verify-name-id-mapping"
 
     def _func(self, environ):
         response = environ["response"][-1].response
@@ -452,6 +452,24 @@ class VerifyNameIDMapping(Check):
             except AssertionError:
                 self._message = "Wrong SPNameQualifier"
                 self._status = WARNING
+
+        return {}
+
+class VerifySPProvidedID(Check):
+    """
+    Verify that a the IdP allows the SP so set a SP provided ID
+    """
+    id = "verify-sp-provided-id"
+
+    def _func(self, environ):
+        response = environ["response"][-1].response
+        nip = environ["oper.args"]["new_id"]
+        nid = response.name_id
+        try:
+            assert nid.sp_provided_id == nip.new_id
+        except AssertionError:
+            self._message = "SP provided id not properly set"
+            self._status = WARNING
 
         return {}
 
