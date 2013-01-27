@@ -27,8 +27,7 @@ CONFIG={
         "aa": {
             "endpoints" : {
                 "attribute_service": [
-                    ("%s/attr/post" % BASE, BINDING_HTTP_POST),
-                    ("%s/attr/soap" % BASE, BINDING_SOAP)
+                    ("%s/attr" % BASE, BINDING_SOAP)
                 ]
             },
             "name_id_format": [NAMEID_FORMAT_TRANSIENT,

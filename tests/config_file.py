@@ -24,6 +24,7 @@ CONFIG = {
                     ("%s/acs/post" % BASE, BINDING_HTTP_POST),
                     ("%s/acs/redirect" % BASE, BINDING_HTTP_REDIRECT),
                     ("%s/acs/artifact" % BASE, BINDING_HTTP_ARTIFACT),
+                    #("%s/acs/soap" % BASE, BINDING_SOAP),
                     ("%s/ecp" % BASE, BINDING_PAOS)
                 ],
                 "single_logout_service": [

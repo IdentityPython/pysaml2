@@ -610,6 +610,45 @@ def authn_query_service(environ, start_response, user=None):
 
 
 # ----------------------------------------------------------------------------
+# === Attribute query service ===
+# ----------------------------------------------------------------------------
+
+# Only SOAP binding
+def attribute_query_service(environ, start_response, user=None):
+    """
+    :param environ: Execution environment
+    :param start_response: Function to start the response with
+    """
+    logger.info("--- Attribute Query Service ---")
+    _dict = unpack_soap(environ)
+    _binding = BINDING_SOAP
+
+    if not _dict:
+        resp = BadRequest("Missing or faulty request")
+        return resp(environ, start_response)
+
+    _req = IDP.parse_attribute_query("%s" % _dict["SAMLRequest"], _binding)
+    _query = _req.message
+
+    name_id = _query.subject.name_id
+    uid = IDP.ident.find_local_id(name_id)
+    logger.debug("Local uid: %s" % uid)
+    identity = EXTRA[uid]
+
+    # Comes in over SOAP so only need to construct the response
+    args = IDP.response_args(_query, [BINDING_SOAP])
+    msg = IDP.create_attribute_response(identity, destination="",
+                                        name_id=name_id, **args)
+
+    logger.debug("response: %s" % msg)
+    hinfo = IDP.apply_binding(_binding, "%s" % msg, "","",response=True)
+
+    resp = Response(hinfo["data"], headers=hinfo["headers"])
+    return resp(environ, start_response)
+
+
+
+# ----------------------------------------------------------------------------
 # Name ID Mapping service
 # When an entity that shares an identifier for a principal with an identity
 # provider wishes to obtain a name identifier for the same principal in a
@@ -706,7 +745,8 @@ AUTHN_URLS = [
     (r'nim$', nim_soap),
     (r'nim/(.*)$', nim_soap),
     #
-    (r'aqs$', authn_query_service)
+    (r'aqs$', authn_query_service),
+    (r'attr$', attribute_query_service)
 ]
 
 NON_AUTHN_URLS = [
@@ -785,6 +825,7 @@ LOOKUP = TemplateLookup(directories=[ROOT + 'templates', ROOT + 'htdocs'],
 if __name__ == '__main__':
     import sys
     from idp_user import USERS
+    from idp_user import EXTRA
     from wsgiref.simple_server import make_server
 
     PORT = 8088

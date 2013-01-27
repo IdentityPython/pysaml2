@@ -16,3 +16,11 @@ USERS = {
          "eduPersonAffiliation": "affiliate"
      },
 }
+
+EXTRA = {
+    "roland": {
+        "eduPersonEntitlement" : "urn:mace:swamid.se:foo:bar",
+        "schacGender": "male",
+        "schacUserPresenceID": "skype:pepe.perez"
+    }
+}

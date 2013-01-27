@@ -14,7 +14,6 @@ from idp_test.check import VerifyLogout
 from idp_test.check import VerifyContent
 from idp_test.check import VerifySuccessStatus
 from idp_test.check import VerifyNameIDMapping
-from idp_test.check import VerifySPProvidedID
 
 from saml2.samlp import NameIDPolicy
 
@@ -166,6 +165,15 @@ class ManageNameIDRequest(Request):
         assertion = resp.assertion[0]
         self.args["name_id"] = assertion.subject.name_id
 
+class AttributeQuery(Request):
+    request = "attribute_query"
+    _args = {"binding":BINDING_SOAP}
+
+    def setup(self, environ):
+        resp = environ["response"][-1].response
+        assertion = resp.assertion[0]
+        self.args["name_id"] = assertion.subject.name_id
+
 # -----------------------------------------------------------------------------
 
 OPERATIONS = {
@@ -224,5 +232,9 @@ OPERATIONS = {
     'manage_nameid':{
         "name": "Setting the SP provided ID by using ManageNameID",
         "sequence":[AuthnRequest, ManageNameIDRequest]
+    },
+    'attribute-query':{
+        "name": "Setting the SP provided ID by using ManageNameID",
+        "sequence":[AuthnRequest, AttributeQuery]
     }
 }
