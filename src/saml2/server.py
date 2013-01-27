@@ -26,7 +26,7 @@ import memcache
 from hashlib import sha1
 from saml2.schema import soapenv
 
-from saml2.samlp import NameIDMappingResponse, Response
+from saml2.samlp import NameIDMappingResponse
 from saml2.entity import Entity
 
 from saml2 import saml, element_to_extension_element
@@ -321,23 +321,25 @@ class Server(Entity):
     # ------------------------------------------------------------------------
 
     #noinspection PyUnusedLocal
-    def create_aa_response(self, in_response_to, consumer_url, sp_entity_id,
-                           identity=None, userid="", name_id=None, status=None,
-                           issuer=None, sign_assertion=False,
-                           sign_response=False, attributes=None):
+    def create_attribute_response(self, identity, in_response_to, destination,
+                                  sp_entity_id, userid="", name_id=None,
+                                  status=None, issuer=None,
+                                  sign_assertion=False, sign_response=False,
+                                  attributes=None):
         """ Create an attribute assertion response.
         
-        :param in_response_to: The session identifier of the request
-        :param consumer_url: The URL which should receive the response
-        :param sp_entity_id: The entity identifier of the SP
         :param identity: A dictionary with attributes and values that are
             expected to be the bases for the assertion in the response.
+        :param in_response_to: The session identifier of the request
+        :param destination: The URL which should receive the response
+        :param sp_entity_id: The entity identifier of the SP
         :param userid: A identifier of the user
         :param name_id: The identifier of the subject
         :param status: The status of the response
         :param issuer: The issuer of the response
         :param sign_assertion: Whether the assertion should be signed or not
         :param sign_response: Whether the whole response should be signed
+        :param attributes:
         :return: A response instance
         """
         if not name_id and userid:
@@ -365,7 +367,7 @@ class Server(Entity):
                 ast = filter_attribute_value_assertions(ast)
 
             assertion = ast.construct(sp_entity_id, in_response_to,
-                                      consumer_url, name_id,
+                                      destination, name_id,
                                       self.config.attribute_converters,
                                       policy, issuer=_issuer)
 
@@ -378,7 +380,7 @@ class Server(Entity):
 
             args["assertion"] = assertion
 
-        return self._response(in_response_to, consumer_url, status, issuer,
+        return self._response(in_response_to, destination, status, issuer,
                               sign_response, to_sign, **args)
 
     # ------------------------------------------------------------------------
@@ -447,10 +449,7 @@ class Server(Entity):
         """
 
         :param assertion_id:
-        :param in_response_to:
-        :param issuer:
         :param sign:
-        :param status:
         :return:
         """
 
