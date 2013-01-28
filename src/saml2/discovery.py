@@ -10,7 +10,7 @@ IDPDISC_POLICY = "urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol:si
 class DiscoveryServer(Entity):
     def __init__(self, config=None, config_file=""):
         Entity.__init__(self, "disco", config, config_file)
-port
+
     def parse_discovery_service_request(self, url="", query=""):
         if url:
             part = urlparse(url)
