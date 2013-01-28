@@ -1,67 +1,68 @@
-import urllib
+from urllib import urlencode
 from urlparse import urlparse, parse_qs
-from saml2.client_base import IDPDISC_POLICY
+from saml2.entity import Entity
+from saml2.response import VerificationError
 
 __author__ = 'rolandh'
 
-def discovery_service_request_url(entity_id, disc_url, return_url="",
-                                  policy="", returnIDParam="",
-                                  is_passive=False ):
-    """
-    Created the HTTP redirect URL needed to send the user to the
-    discovery service.
+IDPDISC_POLICY = "urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol:single"
 
-    :param disc_url: The URL of the discovery service
-    :param return_url: The discovery service MUST redirect the user agent
-        to this location in response to this request
-    :param policy: A parameter name used to indicate the desired behavior
-        controlling the processing of the discovery service
-    :param returnIDParam: A parameter name used to return the unique
-        identifier of the selected identity provider to the original
-        requester.
-    :param is_passive: A boolean value of "true" or "false" that controls
-        whether the discovery service is allowed to visibly interact with
-        the user agent.
-    :return: A URL
-    """
-    pdir = {"entityID": entity_id}
-    if return_url:
-        pdir["return"] = return_url
-    if policy and policy != IDPDISC_POLICY:
-        pdir["policy"] = policy
-    if returnIDParam:
-        pdir["returnIDParam"] = returnIDParam
-    if is_passive:
-        pdir["is_passive"] = "true"
+class DiscoveryServer(Entity):
+    def __init__(self, config=None, config_file=""):
+        Entity.__init__(self, "disco", config, config_file)
 
-    params = urllib.urlencode(pdir)
-    return "%s?%s" % (disc_url, params)
+    def parse_discovery_service_request(self, url="", query=""):
+        if url:
+            part = urlparse(url)
+            dsr = parse_qs(part[4])
+        elif query:
+            dsr = parse_qs(query)
+        else:
+            dsr = {}
 
-def discovery_service_response(query="", url="", returnIDParam=""):
-    """
-    Deal with the response url from a Discovery Service
+        # verify
 
-    :param url: the url the user was redirected back to
-    :param returnIDParam: This is where the identifier of the IdP is
-        place if it was specified in the query as not being 'entityID'
-    :return: The IdP identifier or "" if none was given
-    """
-
-    if url:
-        part = urlparse(url)
-        qsd = parse_qs(part[4])
-    elif query:
-        qsd = parse_qs(query)
-    else:
-        qsd = {}
-
-    if returnIDParam:
         try:
-            return qsd[returnIDParam][0]
+            assert dsr["isPassive"] in ["true", "false"]
         except KeyError:
-            return ""
-    else:
-        try:
-            return qsd["entityID"][0]
-        except KeyError:
-            return ""
+            pass
+
+        if "return" in dsr:
+            part = urlparse(dsr["return"])
+            if part.query:
+                qp = parse_qs(part.query)
+                if "returnIDParam" in dsr:
+                    assert dsr["returnIDParam"] not in qp.keys()
+                else:
+                    assert "entityID" not in qp.keys()
+        else:
+            # If metadata not used this is mandatory
+            raise VerificationError("Missing mandatory parameter 'return'")
+
+        if "policy" not in dsr:
+            dsr["policy"] = IDPDISC_POLICY
+
+        if "isPassive" in dsr and dsr["isPassive"] == "true":
+            dsr["isPassive"] = True
+        else:
+            dsr["isPassive"] = False
+
+        return dsr
+
+    # -----------------------------------------------------------------------------
+
+    def create_discovery_service_response(self, url, IDparam="entityID",
+                                          entity_id=None):
+        if entity_id:
+            qp = urlencode({IDparam:entity_id})
+
+            part = urlparse(url)
+            if part.query:
+                # Iff there is a query part add the new info at the end
+                url = "%s&%s" % (url, qp)
+            else:
+                url = "%s?%s" % (url, qp)
+
+        return url
+
+

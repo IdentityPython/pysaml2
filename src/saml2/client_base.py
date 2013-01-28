@@ -18,12 +18,15 @@
 """Contains classes and functions that a SAML2.0 Service Provider (SP) may use
 to conclude its tasks.
 """
+from urllib import urlencode
+from urlparse import urlparse
+
 from saml2.entity import Entity
 
 from saml2.mdstore import destinations
 from saml2.profile import paos, ecp
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
-from saml2.samlp import AuthnQuery, ManageNameIDRequest
+from saml2.samlp import AuthnQuery
 from saml2.samlp import NameIDMappingRequest
 from saml2.samlp import AttributeQuery
 from saml2.samlp import AuthzDecisionQuery
@@ -70,7 +73,6 @@ FORM_SPEC = """<form method="post" action="%s">
 </form>"""
 
 LAX = False
-IDPDISC_POLICY = "urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol:single"
 
 ECP_SERVICE = "urn:oasis:names:tc:SAML:2.0:profiles:SSO:ecp"
 ACTOR = "http://schemas.xmlsoap.org/soap/actor/next"
@@ -285,11 +287,9 @@ class Base(Entity):
                              scoping=scoping, **args)
 
 
-    def create_attribute_query(self, destination, subject_id,
-                               attribute=None, sp_name_qualifier=None,
-                               name_qualifier=None, nameid_format=None,
-                               id=0, consent=None, extensions=None, sign=False,
-                               **kwargs):
+    def create_attribute_query(self, destination, name_id=None,
+                               attribute=None, id=0, consent=None,
+                               extensions=None, sign=False, **kwargs):
         """ Constructs an AttributeQuery
         
         :param destination: To whom the query should be sent
@@ -314,11 +314,19 @@ class Base(Entity):
         """
 
 
-        subject = saml.Subject(
-            name_id = saml.NameID(text=subject_id,
-                                  format=nameid_format,
-                                  sp_name_qualifier=sp_name_qualifier,
-                                  name_qualifier=name_qualifier))
+        if name_id is None:
+            if "subject_id" in kwargs:
+                name_id = saml.NameID(text=kwargs["subject_id"])
+                for key in ["sp_name_qualifier", "name_qualifier",
+                            "nameid_form"]:
+                    try:
+                        setattr(name_id, key, kwargs[key])
+                    except KeyError:
+                        pass
+            else:
+                raise AttributeError("Missing required parameter")
+        subject = saml.Subject(name_id = name_id)
+
 
         if attribute:
             attribute = do_attributes(attribute)
@@ -651,3 +659,66 @@ class Base(Entity):
         else:
             return False
 
+    # ----------------------------------------------------------------------
+    # IDP discovery
+    # ----------------------------------------------------------------------
+
+    def create_discovery_service_request(self, url, entity_id, **kwargs):
+        """
+        Created the HTTP redirect URL needed to send the user to the
+        discovery service.
+
+        :param url: The URL of the discovery service
+        :param entity_id: The unique identifier of the service provider
+        :param return_url: The discovery service MUST redirect the user agent
+            to this location in response to this request
+        :param policy: A parameter name used to indicate the desired behavior
+            controlling the processing of the discovery service
+        :param returnIDParam: A parameter name used to return the unique
+            identifier of the selected identity provider to the original
+            requester.
+        :param is_passive: A boolean value True/False that controls
+            whether the discovery service is allowed to visibly interact with
+            the user agent.
+        :return: A URL
+        """
+        args = {"entityID": entity_id}
+        for key in ["return_url", "policy", "returnIDParam"]:
+            try:
+                args[key] = kwargs[key]
+            except KeyError:
+                pass
+
+        if "is_passive" in kwargs:
+            if kwargs["is_passive"]:
+                args["is_passive"] = "true"
+            else:
+                args["is_passive"] = "false"
+
+        params = urlencode(args)
+        return "%s?%s" % (url, params)
+
+    def parse_discovery_service_response(self, url="", query="",
+                                         returnIDParam="entityID"):
+        """
+        Deal with the response url from a Discovery Service
+
+        :param url: the url the user was redirected back to or
+        :param query: just the query part of the URL.
+        :param returnIDParam: This is where the identifier of the IdP is
+            place if it was specified in the query. Default is 'entityID'
+        :return: The IdP identifier or "" if none was given
+        """
+
+        if url:
+            part = urlparse(url)
+            qsd = parse_qs(part[4])
+        elif query:
+            qsd = parse_qs(query)
+        else:
+            qsd = {}
+
+        try:
+            return qsd[returnIDParam][0]
+        except KeyError:
+            return ""
