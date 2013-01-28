@@ -49,7 +49,10 @@ logger = logging.getLogger(__name__)
 
 class IncorrectlySigned(Exception):
     pass
-    
+
+class VerificationError(Exception):
+    pass
+
 # ---------------------------------------------------------------------------
 
 def _dummy(_):
@@ -483,7 +486,7 @@ class AuthnResponse(StatusResponse):
             subjconf.append(subject_confirmation)
             
         if not subjconf:
-            raise Exception("No valid subject confirmation")
+            raise VerificationError("No valid subject confirmation")
             
         subject.subject_confirmation = subjconf
         
@@ -506,7 +509,7 @@ class AuthnResponse(StatusResponse):
 #            self.authn_statement_ok(True)
 
         if not self.condition_ok():
-            return None
+            raise VerificationError("Condition not OK")
 
         logger.debug("--- Getting Identity ---")
 
@@ -521,11 +524,11 @@ class AuthnResponse(StatusResponse):
                 if self.allow_unsolicited:
                     pass
                 elif not self.came_from:
-                    return False
+                    raise VerificationError("Came from")
             return True
         except Exception, exc:
             logger.exception("get subject")
-            return False
+            raise
     
     def _encrypted_assertion(self, xmlstr):
         if xmlstr.encrypted_data:

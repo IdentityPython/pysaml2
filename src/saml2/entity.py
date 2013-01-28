@@ -222,6 +222,7 @@ class Entity(HTTPBase):
         elif isinstance(message, LogoutRequest):
             rsrv = "single_logout_service"
         elif isinstance(message, AttributeQuery):
+            info["sp_entity_id"] = message.issuer.text
             rsrv = "attribute_consuming_service"
             descr_type = "sp_sso"
         elif isinstance(message, ManageNameIDRequest):
@@ -237,6 +238,9 @@ class Entity(HTTPBase):
             rsrv = ""
         else:
             raise Exception("No support for this type of query")
+
+        if bindings == [BINDING_SOAP]:
+            return info
 
         if rsrv:
             if not descr_type:
