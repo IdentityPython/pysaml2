@@ -22,13 +22,15 @@ class DiscoveryServer(Entity):
 
         # verify
 
-        try:
-            assert dsr["isPassive"] in ["true", "false"]
-        except KeyError:
-            pass
+        for key in ["isPassive", "return_url", "returnIDParam", "policy"]:
+            try:
+                assert len(dsr[key]) == 1
+                dsr[key] = dsr[key][0]
+            except KeyError:
+                pass
 
-        if "return" in dsr:
-            part = urlparse(dsr["return"])
+        if "return_url" in dsr:
+            part = urlparse(dsr["return_url"])
             if part.query:
                 qp = parse_qs(part.query)
                 if "returnIDParam" in dsr:
@@ -37,33 +39,42 @@ class DiscoveryServer(Entity):
                     assert "entityID" not in qp.keys()
         else:
             # If metadata not used this is mandatory
-            raise VerificationError("Missing mandatory parameter 'return'")
+            raise VerificationError("Missing mandatory parameter 'return_url'")
 
         if "policy" not in dsr:
             dsr["policy"] = IDPDISC_POLICY
+
+        try:
+            assert dsr["isPassive"] in ["true", "false"]
+        except KeyError:
+            pass
 
         if "isPassive" in dsr and dsr["isPassive"] == "true":
             dsr["isPassive"] = True
         else:
             dsr["isPassive"] = False
 
+        if not "returnIDParam" in dsr:
+            dsr["returnIDParam"] = "entityID"
+
         return dsr
 
     # -------------------------------------------------------------------------
 
-    def create_discovery_service_response(self, url, IDparam="entityID",
+    def create_discovery_service_response(self, return_url,
+                                          returnIDParam="entityID",
                                           entity_id=None):
         if entity_id:
-            qp = urlencode({IDparam:entity_id})
+            qp = urlencode({returnIDParam:entity_id})
 
-            part = urlparse(url)
+            part = urlparse(return_url)
             if part.query:
                 # Iff there is a query part add the new info at the end
-                url = "%s&%s" % (url, qp)
+                return_url = "%s&%s" % (return_url, qp)
             else:
-                url = "%s?%s" % (url, qp)
+                return_url = "%s?%s" % (return_url, qp)
 
-        return url
+        return return_url
 
     def verify_sp_in_metadata(self, entity_id):
         if self.metadata:

@@ -677,7 +677,7 @@ class Base(Entity):
         :param returnIDParam: A parameter name used to return the unique
             identifier of the selected identity provider to the original
             requester.
-        :param is_passive: A boolean value True/False that controls
+        :param isPassive: A boolean value True/False that controls
             whether the discovery service is allowed to visibly interact with
             the user agent.
         :return: A URL
@@ -689,11 +689,11 @@ class Base(Entity):
             except KeyError:
                 pass
 
-        if "is_passive" in kwargs:
-            if kwargs["is_passive"]:
-                args["is_passive"] = "true"
+        if "isPassive" in kwargs:
+            if kwargs["isPassive"]:
+                args["isPassive"] = "true"
             else:
-                args["is_passive"] = "false"
+                args["isPassive"] = "false"
 
         params = urlencode(args)
         return "%s?%s" % (url, params)
