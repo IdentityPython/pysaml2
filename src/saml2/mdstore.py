@@ -4,6 +4,8 @@ import sys
 import json
 
 from hashlib import sha1
+from saml2.extension.idpdisc import BINDING_DISCO
+from saml2.extension.idpdisc import DiscoveryResponse
 
 from saml2.mdie import to_dict
 
@@ -39,6 +41,7 @@ REQ2SRV = {
     # SP
     "assertion_response": "assertion_consumer_service",
     "attribute_response": "attribute_consuming_service",
+    "discovery_service_request": "discovery_response"
     }
 
 def destinations(srvs):
@@ -196,6 +199,25 @@ class MetaData(object):
                     res[srv["binding"]].append(srv)
                 except KeyError:
                     res[srv["binding"]] = [srv]
+        return res
+
+    def _ext_service(self, entity_id, typ, service, binding):
+        try:
+            srvs = self.entity[entity_id][typ]
+        except KeyError:
+            return None
+
+        if not srvs:
+            return srvs
+
+        res = []
+        for srv in srvs:
+            if "extensions" in srv:
+                for elem in srv["extensions"]["extension_elements"]:
+                    if elem["__class__"] == service:
+                        if elem["binding"] == binding:
+                            res.append(elem)
+
         return res
 
     def any(self, typ, service, binding=None):
@@ -363,6 +385,13 @@ class MetadataStore(object):
                 return srvs
         return []
 
+    def _ext_service(self, entity_id, typ, service, binding=None):
+        for key, md in self.metadata.items():
+            srvs = md._ext_service(entity_id, typ, service, binding)
+            if srvs:
+                return srvs
+        return []
+
     def single_sign_on_service(self, entity_id, binding=None, typ="idpsso"):
         # IDP
 
@@ -433,19 +462,27 @@ class MetadataStore(object):
         return self._service(entity_id, "%s_descriptor" % typ,
                              "artifact_resolution_service", binding)
 
-    def assertion_consumer_service(self, entity_id, binding=None, typ="spsso"):
+    def assertion_consumer_service(self, entity_id, binding=None, _="spsso"):
         # SP
         if binding is None:
             binding = BINDING_HTTP_POST
         return self._service(entity_id, "spsso_descriptor",
                              "assertion_consumer_service", binding)
 
-    def attribute_consuming_service(self, entity_id, binding=None, typ="spsso"):
+    def attribute_consuming_service(self, entity_id, binding=None, _="spsso"):
         # SP
         if binding is None:
             binding = BINDING_HTTP_REDIRECT
         return self._service(entity_id, "spsso_descriptor",
                              "attribute_consuming_service", binding)
+
+    def discovery_response(self, entity_id, binding=None, _="spsso"):
+        if binding is None:
+            binding = BINDING_DISCO
+        return self._ext_service(entity_id, "spsso_descriptor",
+                                 "%s&%s" % (DiscoveryResponse.c_namespace,
+                                            DiscoveryResponse.c_tag),
+                                 binding)
 
     def attribute_requirement(self, entity_id, index=0):
         for md in self.metadata.values():

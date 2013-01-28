@@ -8,6 +8,7 @@ import saml2
 from saml2 import md
 
 NAMESPACE = 'urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol'
+BINDING_DISCO = "urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol"
 
 class DiscoveryResponse(md.IndexedEndpointType_):
     """The urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol:DiscoveryResponse element """

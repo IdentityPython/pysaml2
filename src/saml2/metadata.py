@@ -263,6 +263,12 @@ ENDPOINTS = {
     }
 }
 
+ENDPOINT_EXT = {
+    "sp": {
+        "discovery_response": (idpdisc.DiscoveryResponse, True)
+    }
+}
+
 DEFAULT_BINDING = {
     "assertion_consumer_service": BINDING_HTTP_POST,
     "single_sign_on_service": BINDING_HTTP_REDIRECT,
@@ -317,9 +323,16 @@ def do_spsso_descriptor(conf, cert=None):
 
     endps = conf.getattr("endpoints", "sp")
     if endps:
-        for (endpoint, instlist) in do_endpoints(endps,
-                                                 ENDPOINTS["sp"]).items():
+        for (endpoint, instlist) in do_endpoints(endps, ENDPOINTS["sp"]).items():
             setattr(spsso, endpoint, instlist)
+
+    ext = do_endpoints(endps, ENDPOINT_EXT["sp"])
+    if ext:
+        if spsso.extensions is None:
+            spsso.extensions = md.Extensions()
+        for vals in ext.values():
+            for val in vals:
+                spsso.extensions.add_extension_element(val)
 
     if cert:
         spsso.key_descriptor = do_key_descriptor(cert)
@@ -373,11 +386,6 @@ def do_spsso_descriptor(conf, cert=None):
 #        except KeyError:
 #            pass
 
-    dresp = conf.getattr("discovery_response", "sp")
-    if dresp:
-        if spsso.extensions is None:
-            spsso.extensions = md.Extensions()
-        spsso.extensions.add_extension_element(do_idpdisc(dresp))
 
     return spsso
 

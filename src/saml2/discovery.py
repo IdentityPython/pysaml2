@@ -49,7 +49,7 @@ class DiscoveryServer(Entity):
 
         return dsr
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
 
     def create_discovery_service_response(self, url, IDparam="entityID",
                                           entity_id=None):
@@ -65,4 +65,10 @@ class DiscoveryServer(Entity):
 
         return url
 
+    def verify_sp_in_metadata(self, entity_id):
+        if self.metadata:
+            endp = self.metadata.discovery_response(entity_id)
+            if endp:
+                return True
 
+        return False
