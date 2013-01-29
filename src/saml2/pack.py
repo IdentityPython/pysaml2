@@ -49,7 +49,6 @@ NAMESPACE = "http://schemas.xmlsoap.org/soap/envelope/"
 FORM_SPEC = """<form method="post" action="%s">
    <input type="hidden" name="%s" value="%s" />
    <input type="hidden" name="RelayState" value="%s" />
-   <input type="submit" value="Submit" />
 </form>"""
 
 def http_form_post_message(message, location, relay_state="", typ="SAMLRequest"):
