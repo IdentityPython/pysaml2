@@ -1,13 +1,19 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <ns0:EntityDescriptor xmlns:ns0="urn:oasis:names:tc:SAML:2.0:metadata"
-                      xmlns:ns1="http://www.w3.org/2000/09/xmldsig#"
+                      xmlns:ns1="urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol"
+                      xmlns:ns2="http://www.w3.org/2000/09/xmldsig#"
                       entityID="http://localhost:8087/sp.xml">
     <ns0:SPSSODescriptor AuthnRequestsSigned="false" WantAssertionsSigned="true"
                          protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+        <ns0:Extensions>
+            <ns1:DiscoveryResponse
+                    Binding="urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol"
+                    Location="http://localhost:8087/disco" index="1"/>
+        </ns0:Extensions>
         <ns0:KeyDescriptor use="signing">
-            <ns1:KeyInfo>
-                <ns1:X509Data>
-                    <ns1:X509Certificate>
+            <ns2:KeyInfo>
+                <ns2:X509Data>
+                    <ns2:X509Certificate>
                         MIIC8jCCAlugAwIBAgIJAJHg2V5J31I8MA0GCSqGSIb3DQEBBQUAMFoxCzAJBgNV
                         BAYTAlNFMQ0wCwYDVQQHEwRVbWVhMRgwFgYDVQQKEw9VbWVhIFVuaXZlcnNpdHkx
                         EDAOBgNVBAsTB0lUIFVuaXQxEDAOBgNVBAMTB1Rlc3QgU1AwHhcNMDkxMDI2MTMz
@@ -24,9 +30,9 @@
                         BQADgYEAMuRwwXRnsiyWzmRikpwinnhTmbooKm5TINPE7A7gSQ710RxioQePPhZO
                         zkM27NnHTrCe2rBVg0EGz7QTd1JIwLPvgoj4VTi/fSha/tXrYUaqc9AqU1kWI4WN
                         +vffBGQ09mo+6CffuFTZYeOhzP/2stAPwCTU4kxEoiy0KpZMANI=
-                    </ns1:X509Certificate>
-                </ns1:X509Data>
-            </ns1:KeyInfo>
+                    </ns2:X509Certificate>
+                </ns2:X509Data>
+            </ns2:KeyInfo>
         </ns0:KeyDescriptor>
         <ns0:ArtifactResolutionService
                 Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP"
@@ -60,16 +66,17 @@
                 Location="http://localhost:8087/ecp" index="4"/>
     </ns0:SPSSODescriptor>
     <ns0:Organization>
-        <ns0:OrganizationName xml:lang="se">SAML2Test</ns0:OrganizationName>
-        <ns0:OrganizationDisplayName xml:lang="se">SAML2Test
+        <ns0:OrganizationName xml:lang="se">AB Exempel</ns0:OrganizationName>
+        <ns0:OrganizationDisplayName xml:lang="se">AB Exempel
         </ns0:OrganizationDisplayName>
-        <ns0:OrganizationURL xml:lang="en">http://www.its.umu.se/
+        <ns0:OrganizationURL xml:lang="en">http://www.example.org
         </ns0:OrganizationURL>
     </ns0:Organization>
     <ns0:ContactPerson contactType="technical">
         <ns0:GivenName>Roland</ns0:GivenName>
         <ns0:SurName>Hedberg</ns0:SurName>
-        <ns0:EmailAddress>roland.hedberg@adm.umu.se</ns0:EmailAddress>
-        <ns0:TelephoneNumber>+46 70 6966844</ns0:TelephoneNumber>
+        <ns0:EmailAddress>tech@eample.com</ns0:EmailAddress>
+        <ns0:EmailAddress>tech@example.org</ns0:EmailAddress>
+        <ns0:TelephoneNumber>+46 70 100 0000</ns0:TelephoneNumber>
     </ns0:ContactPerson>
 </ns0:EntityDescriptor>

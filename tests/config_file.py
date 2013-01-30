@@ -4,14 +4,14 @@ from saml2 import BINDING_HTTP_ARTIFACT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2.sigver import get_xmlsec_binary
-
+from saml2.extension.idpdisc import BINDING_DISCO
 try:
     XMLSEC_BINARY = get_xmlsec_binary(["/opt/local/bin"])
 except Exception:
     XMLSEC_BINARY = ""
 
-#BASE = "http://lingon.ladok.umu.se:8087"
-BASE = "http://localhost:8087"
+BASE = "http://lingon.ladok.umu.se:8087"
+#BASE = "http://localhost:8087"
 
 CONFIG = {
     "entityid" : "%s/sp.xml" % BASE,
@@ -38,6 +38,9 @@ CONFIG = {
                     ("%s/mni" % BASE, BINDING_HTTP_REDIRECT),
                     ("%s/mni" % BASE, BINDING_SOAP),
                     ("%s/acs/artifact" % BASE, BINDING_HTTP_ARTIFACT)
+                ],
+                "discovery_response":[
+                    ("%s/disco" % BASE, BINDING_DISCO)
                 ]
             }
         }

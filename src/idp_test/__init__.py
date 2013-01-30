@@ -7,7 +7,6 @@ import time
 import logging
 
 from saml2.config import SPConfig
-from saml2.httpbase import HTTPBase
 
 from idp_test.base import FatalError
 from idp_test.base import do_sequence
@@ -142,8 +141,8 @@ class SAML2client(object):
 
         metadata = MetadataStore(SCHEMA, self.sp_config.attribute_converters,
                                  self.sp_config.xmlsec_binary)
-        md = MetaData(SCHEMA, self.sp_config.attribute_converters,
-                      _jc["metadata"])
+        info = _jc["metadata"].encode("utf-8")
+        md = MetaData(SCHEMA, self.sp_config.attribute_converters, info)
         md.load()
         metadata[0] = md
         self.sp_config.metadata = metadata
