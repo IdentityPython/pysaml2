@@ -29,6 +29,13 @@ def pick_interaction(interactions, _base="", content="", req=None):
                     break
                 if val in _bs.title.contents:
                     _match += 1
+                else:
+                    _c = _bs.title.contents
+                    if isinstance(_c, list) and not isinstance(_c, basestring):
+                        for _line in _c:
+                            if val in _line:
+                                _match +=1
+                                continue
             elif attr == "content":
                 if unic and val in unic:
                     _match += 1
