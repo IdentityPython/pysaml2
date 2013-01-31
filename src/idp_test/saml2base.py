@@ -15,9 +15,9 @@ from idp_test.check import VerifyContent
 from idp_test.check import VerifySuccessStatus
 from idp_test.check import VerifyNameIDMapping
 from idp_test.check import VerifyRedirectSingleSignOn
+from idp_test.check import VerifyPostSingleSignOn
 
 from saml2.samlp import NameIDPolicy
-from src.idp_test.check import VerifyPostSingleSignOn
 
 __author__ = 'rolandh'
 
