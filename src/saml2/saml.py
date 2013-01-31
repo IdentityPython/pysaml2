@@ -52,6 +52,12 @@ DECISION_TYPE_DENY = "Deny"
 DECISION_TYPE_INDETERMINATE = "Indeterminate"
 
 CONSENT_UNSPECIFIED = "urn:oasis:names:tc:SAML:2.0:consent:unspecified"
+CONSENT_OBTAINED = "urn:oasis:names:tc:SAML:2.0:consent:obtained"
+CONSENT_PRIOR = "urn:oasis:names:tc:SAML:2.0:consent:prior"
+CONSENT_IMPLICIT = "urn:oasis:names:tc:SAML:2.0:consent:current-implicit"
+CONSENT_EXPLICIT = "urn:oasis:names:tc:SAML:2.0:consent:current-explicit"
+CONSENT_UNAVAILABLE = "urn:oasis:names:tc:SAML:2.0:consent:unavailable"
+CONSENT_INAPPLICABLE = "urn:oasis:names:tc:SAML:2.0:consent:inapplicable"
 
 SCM_HOLDER_OF_KEY = "urn:oasis:names:tc:SAML:2.0:cm:holder-of-key"
 SCM_SENDER_VOUCHES = "urn:oasis:names:tc:SAML:2.0:cm:sender-vouches"
