@@ -320,11 +320,14 @@ class RequestAbstractType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Issuer'] = ('issuer', saml.Issuer)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Issuer'] = ('issuer',
+                                                                   saml.Issuer)
     c_cardinality['issuer'] = {"min":0, "max":1}
-    c_children['{http://www.w3.org/2000/09/xmldsig#}Signature'] = ('signature', ds.Signature)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}Signature'] = ('signature',
+                                                                   ds.Signature)
     c_cardinality['signature'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}Extensions'] = ('extensions', Extensions)
+    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}Extensions'] = ('extensions',
+                                                                      Extensions)
     c_cardinality['extensions'] = {"min":0, "max":1}
     c_attributes['ID'] = ('id', 'ID', True)
     c_attributes['Version'] = ('version', 'string', True)
@@ -1756,6 +1759,7 @@ def factory(tag, **kwargs):
     return ELEMENT_BY_TAG[tag](**kwargs)
 
 def any_response_from_string(xmlstr):
+    resp = None
     for func in [status_response_type__from_string, response_from_string,
                  artifact_response_from_string, logout_response_from_string,
                  name_id_mapping_response_from_string,
@@ -1764,4 +1768,6 @@ def any_response_from_string(xmlstr):
         if resp:
             break
 
+    if not resp:
+        raise Exception("Unknown response type")
     return resp
