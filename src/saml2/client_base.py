@@ -305,7 +305,7 @@ class Base(Entity):
             identifier was generated.
         :param name_qualifier: The unique identifier of the identity
             provider that generated the identifier.
-        :param nameid_format: The format of the name ID
+        :param format: The format of the name ID
         :param id: The identifier of the session
         :param consent: Whether the principal have given her consent
         :param extensions: Possible extensions
@@ -318,15 +318,22 @@ class Base(Entity):
             if "subject_id" in kwargs:
                 name_id = saml.NameID(text=kwargs["subject_id"])
                 for key in ["sp_name_qualifier", "name_qualifier",
-                            "nameid_form"]:
+                            "format"]:
                     try:
                         setattr(name_id, key, kwargs[key])
                     except KeyError:
                         pass
             else:
                 raise AttributeError("Missing required parameter")
-        subject = saml.Subject(name_id = name_id)
+        elif isinstance(name_id, basestring):
+            name_id = saml.NameID(text=name_id)
+            for key in ["sp_name_qualifier", "name_qualifier", "format"]:
+                try:
+                    setattr(name_id, key, kwargs[key])
+                except KeyError:
+                    pass
 
+        subject = saml.Subject(name_id = name_id)
 
         if attribute:
             attribute = do_attributes(attribute)
@@ -500,7 +507,7 @@ class Base(Entity):
                                             binding, **kwargs)
             except Exception, exc:
                 logger.error("%s" % exc)
-                return None
+                raise
 
             logger.debug(">> %s", resp)
 
