@@ -340,7 +340,7 @@ def do_query(client, oper, trace, interaction, entity_id, environ, cjar,
                                             features)
                     except FatalError:
                         environ["FatalError"] = True
-                        response = None
+                        raise
 
                     if isinstance(response, dict):
                         assert relay_state == response["RelayState"]

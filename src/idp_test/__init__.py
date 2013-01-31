@@ -95,6 +95,7 @@ class SAML2client(object):
     def __init__(self, operations):
         self.trace = Trace()
         self.operations = operations
+        self.tests = None
 
         self._parser = argparse.ArgumentParser()
         self._parser.add_argument('-d', dest='debug', action='store_true',
@@ -113,6 +114,8 @@ class SAML2client(object):
                                   help="Configuration file for the SP")
         self._parser.add_argument("-P", dest="configpath", default=".",
                                   help="Path to the configuration file for the SP")
+        self._parser.add_argument("-t", dest="testdefs",
+                                  help="Module describing the tests")
         self._parser.add_argument("oper", nargs="?", help="Which test to run")
 
         self.interactions = None
@@ -146,6 +149,9 @@ class SAML2client(object):
         md.load()
         metadata[0] = md
         self.sp_config.metadata = metadata
+
+        if self.args.testdefs:
+            self.tests = import_module("idp_test.%s" % self.args.testdefs)
 
         try:
             self.entity_id = _jc["entity_id"]
@@ -199,8 +205,15 @@ class SAML2client(object):
             try:
                 oper = self.operations.OPERATIONS[self.args.oper]
             except KeyError:
-                print >> sys.stderr, "Undefined testcase"
-                return
+                if self.tests:
+                    try:
+                        oper = self.tests.OPERATIONS[self.args.oper]
+                    except ValueError:
+                        print >> sys.stderr, "Undefined testcase"
+                        return
+                else:
+                    print >> sys.stderr, "Undefined testcase"
+                    return
 
             testres, trace = do_sequence(self.sp_config, oper,
                                          self.trace, self.interactions,
@@ -210,8 +223,10 @@ class SAML2client(object):
             print >>sys.stdout, json.dumps(sum)
             if sum["status"] > 1 or self.args.debug:
                 print >> sys.stderr, trace
-        except FatalError:
-            pass
+        except FatalError, err:
+            print >> sys.stderr, self.trace
+            print err
+            #exception_trace("RUN", err)
         except Exception, err:
             print >> sys.stderr, self.trace
             print err
@@ -238,6 +253,28 @@ class SAML2client(object):
                     pass
 
             lista.append(item)
+        if self.args.testdefs:
+            mod = import_module(self.args.testdefs, "idp_test")
+            for key,val in mod.OPERATIONS.items():
+                item = {"id": key,
+                        "name": val["name"],}
+                try:
+                    _desc = val["descr"]
+                    if isinstance(_desc, basestring):
+                        item["descr"] = _desc
+                    else:
+                        item["descr"] = "\n".join(_desc)
+                except KeyError:
+                    pass
+
+                for key in ["depends", "endpoints"]:
+                    try:
+                        item[key] = val[key]
+                    except KeyError:
+                        pass
+
+                lista.append(item)
+
         print json.dumps(lista)
 
     def _get_operation(self, operation):
