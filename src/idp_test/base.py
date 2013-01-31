@@ -119,7 +119,8 @@ def intermit(client, response, httpc, environ, trace, cjar, interaction,
             environ["url"] = url
             chk = factory("interaction-needed")()
             chk(environ, test_output)
-            raise FatalError()
+            trace.error("Page Content: %s" % content)
+            raise FatalError("interaction-needed")
 
         if len(_spec) > 2:
             trace.info(">> %s <<" % _spec["page-type"])
@@ -313,7 +314,9 @@ def do_query(client, oper, trace, interaction, entity_id, environ, cjar,
                 info = unpack_form(htargs["data"][3])
                 data = form_post(info)
                 htargs["data"] = data
-                htargs["headers"] = tuple_list2dict(htargs["headers"])
+                #htargs["headers"] = tuple_list2dict(htargs["headers"])
+                htargs["headers"] = [("Content-type",
+                                      'application/x-www-form-urlencoded')]
                 res = httpc.send(loc, "POST", **htargs)
             elif args["binding"] == BINDING_URI:
                 response_args["binding"] = BINDING_URI
