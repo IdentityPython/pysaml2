@@ -67,7 +67,7 @@ def test_flow():
 
     # ---------- @SP ---------------
 
-    _response = sp.parse_manage_name_id_response(respargs["data"], binding)
+    _response = sp.parse_manage_name_id_request_response(respargs["data"], binding)
 
     print _response.response
 

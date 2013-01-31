@@ -134,10 +134,10 @@ class FakeIDP(Server):
         userid = "Pavill"
 
         name_id = aquery.subject.name_id
-        attr_resp = self.create_aa_response(aquery.id,
+        attr_resp = self.create_attribute_response(extra, aquery.id,
                                             None,
                                             sp_entity_id=aquery.issuer.text,
-                                            identity=extra, name_id=name_id,
+                                            name_id=name_id,
                                             attributes=aquery.attribute)
 
         if binding == BINDING_SOAP:

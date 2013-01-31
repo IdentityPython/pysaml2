@@ -198,7 +198,7 @@ class TestClient:
         ar_str = "%s" % self.client.create_authn_request(
                                         "http://www.example.com/sso",
                                         "urn:mace:example.com:it:tek", # vo
-                                        format=NAMEID_FORMAT_PERSISTENT,
+                                        nameid_format=NAMEID_FORMAT_PERSISTENT,
                                         id="666")
               
         ar = samlp.authn_request_from_string(ar_str)

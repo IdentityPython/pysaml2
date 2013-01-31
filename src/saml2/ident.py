@@ -67,6 +67,9 @@ class IdentDB(object):
         return _id
 
     def store(self, ident, name_id):
+        if isinstance(ident, unicode):
+            ident = ident.encode("utf-8")
+
         try:
             val = self.db[ident].split(" ")
         except KeyError:
@@ -90,6 +93,9 @@ class IdentDB(object):
         del self.db[_cn]
 
     def remove_local(self, id):
+        if isinstance(id, unicode):
+            id = id.encode("utf-8")
+
         try:
             for val in self.db[id].split(" "):
                 try:
