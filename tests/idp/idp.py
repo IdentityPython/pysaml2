@@ -25,7 +25,7 @@ from saml2.httputil import Unauthorized
 from saml2.httputil import BadRequest
 from saml2.httputil import ServiceError
 from saml2.ident import Unknown
-from saml2.s_utils import rndstr
+from saml2.s_utils import rndstr, UnknownPrincipal, UnsupportedBinding
 from saml2.s_utils import PolicyError
 from saml2.saml import AUTHN_PASSWORD
 
@@ -172,7 +172,16 @@ def _sso(environ, start_response, user, query, binding, relay_state="",
     logger.info("%s" % req_info)
     _authn_req = req_info.message
 
-    resp_args = IDP.response_args(_authn_req)
+    try:
+        resp_args = IDP.response_args(_authn_req)
+    except UnknownPrincipal, excp:
+        #IDP.create_error_response()
+        resp = ServiceError("UnknownPrincipal: %s" % (excp,))
+        return resp(environ, start_response)
+    except UnsupportedBinding, excp:
+        #IDP.create_error_response()
+        resp = ServiceError("UnsupportedBinding: %s" % (excp,))
+        return resp(environ, start_response)
 
     identity = USERS[user]
     logger.info("Identity: %s" % (identity,))
