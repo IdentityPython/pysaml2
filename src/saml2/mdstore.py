@@ -13,6 +13,7 @@ from saml2 import md, samlp
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_SOAP
+from saml2.s_utils import UnsupportedBinding, UnknownPrincipal
 from saml2.sigver import verify_signature, split_len
 from saml2.validate import valid_instance
 from saml2.time_util import valid
@@ -43,6 +44,8 @@ REQ2SRV = {
     "attribute_response": "attribute_consuming_service",
     "discovery_service_request": "discovery_response"
     }
+
+# ---------------------------------------------------
 
 def destinations(srvs):
     return [s["location"] for s in srvs]
@@ -379,18 +382,36 @@ class MetadataStore(object):
                     self.load(key, val)
 
     def _service(self, entity_id, typ, service, binding=None):
+        known_principal = False
         for key, md in self.metadata.items():
             srvs = md._service(entity_id, typ, service, binding)
             if srvs:
                 return srvs
-        return []
+            elif srvs is None:
+                pass
+            else:
+                known_principal = True
+
+        if known_principal:
+            raise UnsupportedBinding(binding)
+        else:
+            raise UnknownPrincipal(entity_id)
 
     def _ext_service(self, entity_id, typ, service, binding=None):
+        known_principal = False
         for key, md in self.metadata.items():
             srvs = md._ext_service(entity_id, typ, service, binding)
             if srvs:
                 return srvs
-        return []
+            elif srvs is None:
+                pass
+            else:
+                known_principal = True
+
+        if known_principal:
+            raise UnsupportedBinding(binding)
+        else:
+            raise UnknownPrincipal(entity_id)
 
     def single_sign_on_service(self, entity_id, binding=None, typ="idpsso"):
         # IDP
