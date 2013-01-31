@@ -373,8 +373,9 @@ def do_query(client, oper, trace, interaction, entity_id, environ, cjar,
                     environ["FatalError"] = True
                 break
             except Exception, err:
+                trace.error("Exception %s" % err)
                 environ["exception"] = err
                 chk = factory("exception")()
                 chk(environ, test_output)
-
+                environ["FatalError"] = True
     return test_output
