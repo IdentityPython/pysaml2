@@ -31,6 +31,7 @@ from paste.httpexceptions import HTTPNotImplemented
 from paste.httpexceptions import HTTPInternalServerError
 from paste.request import parse_dict_querystring
 from paste.request import construct_url
+from saml2.client_base import ECP_SERVICE
 from zope.interface import implements
 
 from repoze.who.interfaces import IChallenger, IIdentifier, IAuthenticator
@@ -41,8 +42,6 @@ from saml2 import ecp, BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 
 from saml2.client import Saml2Client
-from saml2.discovery import discovery_service_response
-from saml2.discovery import discovery_service_request_url
 from saml2.s_utils import sid
 from saml2.config import config_factory
 from saml2.profile import paos
@@ -52,7 +51,7 @@ from saml2.profile import paos
 
 logger = logging.getLogger(__name__)
 
-PAOS_HEADER_INFO = 'ver="%s";"%s"' % (paos.NAMESPACE, ecp.SERVICE)
+PAOS_HEADER_INFO = 'ver="%s";"%s"' % (paos.NAMESPACE, ECP_SERVICE)
 
 def construct_came_from(environ):
     """ The URL that the user used when the process where interupted 
@@ -128,10 +127,10 @@ class SAML2Plugin(FormPluginBase):
         self.debug = debug        
         self.wayf = wayf
         self.saml_client = saml_client
-        self.discovery = discovery
         self.conf = config
         self.cache = cache
-                    
+        self.discosrv = discovery
+
         try:
             self.metadata = self.conf.metadata
         except KeyError:
@@ -245,16 +244,17 @@ class SAML2Plugin(FormPluginBase):
                     idp_entity_id = wayf_selected
                 else:
                     return self._wayf_redirect(came_from)
-            elif self.discovery:
+            elif self.discosrv:
                 if query:
-                    idp_entity_id = discovery_service_response(
+                    idp_entity_id = self.saml_client.parse_discovery_service_response(
                                             query=environ.get("QUERY_STRING"))
                 else:
                     sid_ = sid()
                     self.outstanding_queries[sid_] = came_from
                     logger.info("Redirect to Discovery Service function")
                     eid = self.saml_client.config.entity_id
-                    loc = discovery_service_request_url(eid, self.discovery)
+                    loc = self.saml_client.create_discovery_service_request(
+                                                            self.discosrv, eid)
                     return -1, HTTPSeeOther(headers = [('Location',loc)])
             else:
                 return -1, HTTPNotImplemented(detail='No WAYF or DJ present!')
