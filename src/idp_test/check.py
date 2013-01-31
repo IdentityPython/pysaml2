@@ -1,6 +1,8 @@
 import inspect
 import sys
 import traceback
+from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
+from saml2.s_utils import UnknownPrincipal, UnsupportedBinding
 from saml2.saml import NAMEID_FORMAT_TRANSIENT, NAMEID_FORMAT_PERSISTENT
 from saml2.saml import NAME_FORMAT_URI
 from saml2.samlp import STATUS_SUCCESS
@@ -457,7 +459,7 @@ class VerifyNameIDMapping(Check):
 
 class VerifySPProvidedID(Check):
     """
-    Verify that a the IdP allows the SP so set a SP provided ID
+    Verify that the IdP allows the SP so set a SP provided ID
     """
     id = "verify-sp-provided-id"
 
@@ -472,6 +474,39 @@ class VerifySPProvidedID(Check):
             self._status = WARNING
 
         return {}
+
+class VerifyBindingSupport(Check):
+    """
+    Verify that a IDP supports a specific binding for a specific service
+    """
+    id = "verify_binding"
+    service = ""
+    binding = ""
+
+    def _func(self, environ):
+        md = environ["metadata"]
+        entity_id = environ["entity_id"]
+        func = getattr(md, self.service, None)
+        try:
+            func(entity_id, self.binding)
+        except UnknownPrincipal:
+            self._message = "Unknown principal"
+            self._status = CRITICAL
+        except UnsupportedBinding:
+            self._message = "Unsupported binding"
+            self._status = CRITICAL
+
+        return {}
+
+class VerifyRedirectSingleSignOn(VerifyBindingSupport):
+    id = "verify_binding"
+    service = "single_sign_on_service"
+    binding = BINDING_HTTP_REDIRECT
+
+class VerifyPostSingleSignOn(VerifyBindingSupport):
+    id = "verify_binding"
+    service = "single_sign_on_service"
+    binding = BINDING_HTTP_POST
 
 def factory(id):
     for name, obj in inspect.getmembers(sys.modules[__name__]):
