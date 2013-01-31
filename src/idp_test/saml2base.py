@@ -14,8 +14,10 @@ from idp_test.check import VerifyLogout
 from idp_test.check import VerifyContent
 from idp_test.check import VerifySuccessStatus
 from idp_test.check import VerifyNameIDMapping
+from idp_test.check import VerifyRedirectSingleSignOn
 
 from saml2.samlp import NameIDPolicy
+from src.idp_test.check import VerifyPostSingleSignOn
 
 __author__ = 'rolandh'
 
@@ -181,14 +183,14 @@ OPERATIONS = {
         "name": 'Absolute basic SAML2 AuthnRequest',
         "descr": 'AuthnRequest using HTTP-redirect',
         "sequence": [AuthnRequest],
-        "tests": {"pre": [CheckSaml2IntMetaData],
+        "tests": {"pre": [CheckSaml2IntMetaData, VerifyRedirectSingleSignOn],
                   "post": [CheckSaml2IntAttributes]}
     },
     'basic-authn-post': {
         "name": 'Basic SAML2 AuthnRequest using HTTP POST',
         "descr": ('AuthnRequest using HTTP-POST'),
         "sequence": [AuthnRequestPost],
-        "tests": {"pre": [CheckSaml2IntMetaData],
+        "tests": {"pre": [CheckSaml2IntMetaData, VerifyPostSingleSignOn],
                   "post": [CheckSaml2IntAttributes]}
     },
     'log-in-out': {
