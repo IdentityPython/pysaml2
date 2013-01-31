@@ -181,8 +181,8 @@ class StatusResponse(object):
             logger.info("status: %s" % (status,))
             if status.status_code.value != samlp.STATUS_SUCCESS:
                 logger.info("Not successful operation: %s" % status)
-                raise Exception("Not successful according to: %s" % (
-                                                    status.status_code.value,))
+                raise Exception("%s from %s" % (status.status_message.text,
+                                                status.status_code.value,))
         return True
 
     def issue_instant_ok(self):
@@ -573,7 +573,7 @@ class AuthnResponse(StatusResponse):
         try:
             self._verify()
         except AssertionError:
-            return None
+            raise
 
         if not isinstance(self.response, samlp.Response):
             return self
