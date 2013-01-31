@@ -6,12 +6,11 @@ from saml2.saml import AUTHN_PASSWORD
 from saml2.samlp import response_from_string
 
 from saml2.server import Server
-from saml2.ident import IdentDB
 from saml2 import samlp, saml, client, config
 from saml2 import s_utils
 from saml2 import sigver
 from saml2 import time_util
-from saml2.s_utils import OtherError
+from saml2.s_utils import OtherError, UnsupportedBinding
 from saml2.s_utils import do_attribute_statement, factory
 from saml2.soap import make_soap_enveloped_saml_thingy
 from saml2 import BINDING_HTTP_POST, BINDING_HTTP_REDIRECT
@@ -208,6 +207,7 @@ class TestServer1():
         print attribute_statement
         assert len(attribute_statement.attribute) == 5
         # Pick out one attribute
+        attr = None
         for attr in attribute_statement.attribute:
             if attr.friendly_name == "edupersonentitlement":
                 break
@@ -400,13 +400,12 @@ class TestServer2():
     def teardown_class(self):
         self.server.close_shelve_db()
 
-    def test_do_aa_reponse(self):
+    def test_do_attribute_reponse(self):
         aa_policy = self.server.config.getattr("policy", "idp")
         print aa_policy.__dict__
-        response = self.server.create_aa_response("aaa",
+        response = self.server.create_attribute_response(IDENTITY.copy(), "aaa",
                                                   "http://example.com/sp/",
-                                                  "urn:mace:example.com:sp:1",
-                                                  IDENTITY.copy())
+                                                  "urn:mace:example.com:sp:1")
 
         assert response is not None
         assert response.destination == "http://example.com/sp/"
@@ -455,7 +454,8 @@ class TestServerLogout():
         bindings = [BINDING_HTTP_REDIRECT]
         response = server.create_logout_response(request, bindings)
         binding, destination = server.pick_binding("single_logout_service",
-                                                   None, "spsso", request)
+                                                   bindings, "spsso",
+                                                   request)
 
         http_args = server.apply_binding(binding, "%s" % response, destination,
                                          "relay_state", response=True)

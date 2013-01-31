@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from saml2 import BINDING_SOAP, BINDING_URI
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
@@ -98,7 +101,7 @@ CONFIG = {
     "attribute_map_dir" : "attributemaps",
     "organization": {
         "name": "Exempel AB",
-        "display_name": [("Exempel AB","se"),("Example Co.","en")],
+        "display_name": [("Exempel ÄB","se"),("Example Co.","en")],
         "url":"http://www.example.com/roland",
         },
     "contact_person": [{

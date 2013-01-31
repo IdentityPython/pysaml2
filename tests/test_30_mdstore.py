@@ -20,6 +20,7 @@ from saml2.extension import idpdisc
 from saml2.extension import dri
 from saml2.extension import mdattr
 from saml2.extension import ui
+from saml2.s_utils import UnknownPrincipal
 import xmldsig
 import xmlenc
 
@@ -123,7 +124,11 @@ def test_incommon_1():
     idps = mds.with_descriptor("idpsso")
     print idps.keys()
     assert len(idps) == 53 # !!!!???? < 10%
-    assert mds.single_sign_on_service('urn:mace:incommon:uiuc.edu') == []
+    try:
+        _ = mds.single_sign_on_service('urn:mace:incommon:uiuc.edu')
+    except UnknownPrincipal:
+        pass
+
     idpsso = mds.single_sign_on_service('urn:mace:incommon:alaska.edu')
     assert len(idpsso) == 1
     print idpsso

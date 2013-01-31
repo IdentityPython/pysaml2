@@ -67,7 +67,7 @@ class TestClient:
         req = self.client.create_attribute_query(
                                 "https://idp.example.com/idp/",
                                 "E8042FB4-4D5B-48C3-8E14-8EDD852790DD",
-                                nameid_format=saml.NAMEID_FORMAT_PERSISTENT,
+                                format=saml.NAMEID_FORMAT_PERSISTENT,
                                 id="id1")
         reqstr = "%s" % req.to_string()
 
@@ -109,7 +109,7 @@ class TestClient:
                 ("urn:oid:1.2.840.113549.1.9.1",
                 "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"):None,
                 },
-            nameid_format=saml.NAMEID_FORMAT_PERSISTENT,
+            format=saml.NAMEID_FORMAT_PERSISTENT,
             id="id1")
                 
         print req.to_string()
@@ -143,7 +143,7 @@ class TestClient:
         req = self.client.create_attribute_query(
                 "https://aai-demo-idp.switch.ch/idp/shibboleth",
                 "_e7b68a04488f715cda642fbdd90099f5",
-                nameid_format=saml.NAMEID_FORMAT_TRANSIENT,
+                format=saml.NAMEID_FORMAT_TRANSIENT,
                 id="id1")
                 
         assert isinstance(req, samlp.AttributeQuery)
@@ -198,7 +198,7 @@ class TestClient:
         ar_str = "%s" % self.client.create_authn_request(
                                         "http://www.example.com/sso",
                                         "urn:mace:example.com:it:tek", # vo
-                                        nameid_format=NAMEID_FORMAT_PERSISTENT,
+                                        format=NAMEID_FORMAT_PERSISTENT,
                                         id="666")
               
         ar = samlp.authn_request_from_string(ar_str)
