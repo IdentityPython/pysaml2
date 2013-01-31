@@ -121,7 +121,7 @@ class CheckHTTPResponse(CriticalError):
 
 class CheckSaml2IntMetaData(Check):
     """
-    Checks that the Metadata follows the profile
+    Checks that the Metadata follows the Saml2Int profile
     """
     id = "check-saml2int-metadata"
     msg = "Metadata error"
@@ -499,14 +499,50 @@ class VerifyBindingSupport(Check):
         return {}
 
 class VerifyRedirectSingleSignOn(VerifyBindingSupport):
-    id = "verify_binding"
+    id = "verify_sso_redirect_binding"
     service = "single_sign_on_service"
     binding = BINDING_HTTP_REDIRECT
 
 class VerifyPostSingleSignOn(VerifyBindingSupport):
-    id = "verify_binding"
+    id = "verify_sso_post_binding"
     service = "single_sign_on_service"
     binding = BINDING_HTTP_POST
+
+class VerifyNameIDFormatSupport(Check):
+    """
+    Verify that the IdP supports a specific NameID format
+    """
+    id = "verify-nameid-format-support"
+    name_format = ""
+
+    def _func(self, environ):
+        md = environ["metadata"]
+        entity = md[environ["entity_id"]]
+        for idp in entity["idpsso_descriptor"]:
+            for format in idp["name_id_format"]:
+                if self.name_format == format["text"]:
+                    return {}
+
+        self._message = "No support for NameIDFormat '%s'" % self.name_format
+        self._status = CRITICAL
+
+        return {}
+
+class VerifyPersistentNameIDFormatSupport(VerifyNameIDFormatSupport):
+    """
+    Verify that the IdP supports a Persistent NameID format
+    """
+    id = "verify-persistent-nameid-format-support"
+    name_format = NAMEID_FORMAT_PERSISTENT
+
+class VerifyTransientNameIDFormatSupport(VerifyNameIDFormatSupport):
+    """
+    Verify that the IdP supports a Transient NameID format
+    """
+    id = "verify-transient-nameid-format-support"
+    name_format = NAMEID_FORMAT_TRANSIENT
+
+# =============================================================================
 
 def factory(id):
     for name, obj in inspect.getmembers(sys.modules[__name__]):
