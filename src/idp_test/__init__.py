@@ -291,9 +291,13 @@ class SAML2client(object):
         print json.dumps(_res)
 
     def verify_metadata(self):
+        self.json_config= self.json_config_file()
+        self.sp_configure()
 
-        metadata = MetadataStore(SCHEMA, None)
-        md = MetaData(SCHEMA, None, sys.stdin.read())
+        metadata = MetadataStore(SCHEMA, self.sp_config.attribute_converters,
+                                 self.sp_config.xmlsec_binary)
+        info = self.json_config["metadata"].encode("utf-8")
+        md = MetaData(SCHEMA, self.sp_config.attribute_converters, info)
         md.load()
         metadata[0] = md
         env = {"metadata": metadata}
