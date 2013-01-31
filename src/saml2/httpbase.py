@@ -104,7 +104,7 @@ class HTTPBase(object):
             for _, b in a.items():
                 for cookie in list(b.values()):
                     # print cookie
-                    if cookie.expires <= now:
+                    if cookie.expires and cookie.expires <= now:
                         continue
                     if not re.match(cookie.path, part.path):
                         continue
