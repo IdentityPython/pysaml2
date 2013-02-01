@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import base64
 
 import re
 import logging
@@ -9,23 +10,24 @@ from hashlib import sha1
 from urlparse import parse_qs
 from Cookie import SimpleCookie
 
-from saml2 import server, BINDING_HTTP_ARTIFACT
+from saml2 import server
+from saml2 import BINDING_HTTP_ARTIFACT
+from saml2 import BINDING_URI
+from saml2 import BINDING_PAOS
 from saml2 import BINDING_SOAP
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import time_util
-from saml2.httputil import Response
+from saml2.httputil import Response, NotFound
 from saml2.httputil import get_post
 from saml2.httputil import Redirect
 from saml2.httputil import Unauthorized
 from saml2.httputil import BadRequest
 from saml2.httputil import ServiceError
 from saml2.ident import Unknown
-from saml2.s_utils import rndstr
+from saml2.s_utils import rndstr, UnknownPrincipal, UnsupportedBinding
 from saml2.s_utils import PolicyError
 from saml2.saml import AUTHN_PASSWORD
-from saml2.saml import NAMEID_FORMAT_PERSISTENT
-from saml2.saml import NameID
 
 logger = logging.getLogger("saml2.idp")
 
@@ -113,14 +115,15 @@ def dict2list_of_tuples(d):
 
 # -----------------------------------------------------------------------------
 
-def _operation(environ, start_response, user, _dict, func, binding):
+def _operation(environ, start_response, user, _dict, func, binding,
+               **kwargs):
     logger.debug("_operation: %s" % _dict)
     if not _dict:
         resp = BadRequest('Error parsing request or no request')
         return resp(environ, start_response)
     else:
         return func(environ, start_response, user, _dict["SAMLRequest"],
-                    binding, _dict["RelayState"])
+                    binding, _dict["RelayState"], **kwargs)
 
 def _artifact_oper(environ, start_response, user, _dict, func):
     if not _dict:
@@ -132,6 +135,13 @@ def _artifact_oper(environ, start_response, user, _dict, func):
 
         return func(environ, start_response, user, request,
                     BINDING_HTTP_ARTIFACT, _dict["RelayState"])
+
+def _response(environ, start_response, binding, http_args):
+    if binding == BINDING_HTTP_ARTIFACT:
+        resp = Redirect()
+    else:
+        resp = Response(http_args["data"], headers=http_args["headers"])
+    return resp(environ, start_response)
 
 # -----------------------------------------------------------------------------
 AUTHN = (AUTHN_PASSWORD, "http://lingon.catalogix.se/login")
@@ -146,7 +156,8 @@ FORM_SPEC = """<form name="myform" method="post" action="%s">
 # === Single log in ====
 # -----------------------------------------------------------------------------
 
-def _sso(environ, start_response, user, query, binding, relay_state=""):
+def _sso(environ, start_response, user, query, binding, relay_state="",
+         response_bindings=None):
     logger.info("--- In SSO ---")
     logger.debug("user: %s" % user)
 
@@ -161,7 +172,16 @@ def _sso(environ, start_response, user, query, binding, relay_state=""):
     logger.info("%s" % req_info)
     _authn_req = req_info.message
 
-    resp_args = IDP.response_args(_authn_req)
+    try:
+        resp_args = IDP.response_args(_authn_req)
+    except UnknownPrincipal, excp:
+        #IDP.create_error_response()
+        resp = ServiceError("UnknownPrincipal: %s" % (excp,))
+        return resp(environ, start_response)
+    except UnsupportedBinding, excp:
+        #IDP.create_error_response()
+        resp = ServiceError("UnsupportedBinding: %s" % (excp,))
+        return resp(environ, start_response)
 
     identity = USERS[user]
     logger.info("Identity: %s" % (identity,))
@@ -178,12 +198,13 @@ def _sso(environ, start_response, user, query, binding, relay_state=""):
 
     logger.info("AuthNResponse: %s" % authn_resp)
     binding, destination = IDP.pick_binding("assertion_consumer_service",
+                                            bindings=response_bindings,
                                             entity_id=_authn_req.issuer.text)
+    logger.debug("Binding: %s, destination: %s" % (binding, destination))
     http_args = IDP.apply_binding(binding, "%s" % authn_resp, destination,
                                   relay_state, response=True)
 
-    resp = Response(http_args["data"], headers=http_args["headers"])
-    return resp(environ, start_response)
+    return _response(environ, start_response, binding, http_args)
 
 def sso(environ, start_response, user):
     """ This is the HTTP-redirect endpoint """
@@ -221,6 +242,36 @@ def sso_art(environ, start_response, user):
     _request = IDP.ticket[_dict["key"]]
     del IDP.ticket[_dict["key"]]
     return _artifact_oper(environ, start_response, user, _request, _sso)
+
+def sso_ecp(environ, start_response, user):
+    # The ECP interface
+    logger.info("--- ECP SSO ---")
+    logger.debug("ENVIRON: %s" % environ)
+    resp = None
+
+    try:
+        authz_info = environ["HTTP_AUTHORIZATION"]
+        if authz_info.startswith("Basic "):
+            _info = base64.b64decode(authz_info[6:])
+            logger.debug("Authz_info: %s" % _info)
+            try:
+                (user,passwd) = _info.split(":")
+                if PASSWD[user] != passwd:
+                    resp = Unauthorized()
+            except ValueError:
+                resp = Unauthorized()
+        else:
+            resp = Unauthorized()
+    except KeyError:
+        resp = Unauthorized()
+
+    if resp:
+        return resp(environ, start_response)
+
+    _dict = unpack_soap(environ)
+    # Basic auth ?!
+    return _operation(environ, start_response, user, _dict, _sso, BINDING_SOAP,
+                      response_bindings=[BINDING_PAOS])
 
 # -----------------------------------------------------------------------------
 # === Authentication ====
@@ -286,12 +337,10 @@ def do_authentication(environ, start_response, cookie=None):
 def verify_username_and_password(dic):
     global PASSWD
     # verify username and password
-    for user, pwd in PASSWD:
-        if user == dic["login"][0]:
-            if pwd == dic["password"][0]:
-                return True, user
-
-    return False, ""
+    if PASSWD[dic["login"][0]] == dic["password"][0]:
+        return True, dic["login"][0]
+    else:
+        return False, ""
 
 
 def do_verify(environ, start_response, _user):
@@ -331,6 +380,7 @@ def _slo(environ, start_response, _, request, binding, relay_state=""):
     try:
         req_info = IDP.parse_logout_request(request, binding)
     except Exception, exc:
+        logger.error("Bad request: %s" % exc)
         resp = BadRequest("%s" % exc)
         return resp(environ, start_response)
 
@@ -342,6 +392,7 @@ def _slo(environ, start_response, _, request, binding, relay_state=""):
         try:
             IDP.remove_authn_statements(msg.name_id)
         except KeyError,exc:
+            logger.error("ServiceError: %s" % exc)
             resp = ServiceError("%s" % exc)
             return resp(environ, start_response)
 
@@ -350,6 +401,7 @@ def _slo(environ, start_response, _, request, binding, relay_state=""):
     try:
         hinfo = IDP.apply_binding(binding, "%s" % resp, "", relay_state)
     except Exception, exc:
+        logger.error("ServiceError: %s" % exc)
         resp = ServiceError("%s" % exc)
         return resp(environ, start_response)
 
@@ -410,9 +462,9 @@ def not_found(environ, start_response):
     return ['Not Found']
 
 
-PASSWD = [("roland", "dianakra"),
-          ("babs", "howes"),
-          ("upper", "crust")]
+PASSWD = {"roland": "dianakra",
+          "babs": "howes",
+          "upper": "crust"}
 
 # ----------------------------------------------------------------------------
 
@@ -433,21 +485,24 @@ def kaka2user(kaka):
 
 def _mni(environ, start_response, user, query, binding, relay_state=""):
     logger.info("--- Manage Name ID Service ---")
-    req = IDP.parse_manage_name_id_response(query, binding)
+    req = IDP.parse_manage_name_id_request(query, binding)
+    request = req.message
 
     # Do the necessary stuff
-    in_response_to = req.message.id
-    name_id = NameID(format=NAMEID_FORMAT_PERSISTENT, text="foobar")
+    name_id = IDP.ident.handle_manage_name_id_request(request.name_id,
+                                                      request.new_id,
+                                                      request.new_encrypted_id,
+                                                      request.terminate)
 
-    info = IDP.response_args(req)
-    _resp = IDP.create_manage_name_id_response(name_id, **info)
+    logger.debug("New NameID: %s" % name_id)
+
+    _resp = IDP.create_manage_name_id_response(request)
 
     # It's using SOAP binding
     hinfo = IDP.apply_binding(binding, "%s" % _resp, "", relay_state,
-                              "SAMLResponse")
+                              response=True)
 
-    resp = Response(hinfo["data"],
-                    headers=dict2list_of_tuples(hinfo["headers"]))
+    resp = Response(hinfo["data"], headers=hinfo["headers"])
     return resp(environ, start_response)
 
 def mni(environ, start_response, user):
@@ -478,25 +533,29 @@ def mni_art(environ, start_response, user):
 # === Assertion ID request ===
 # ----------------------------------------------------------------------------
 
-# Only SOAP binding
+# Only URI binding
 def assertion_id_request(environ, start_response, user=None):
     logger.info("--- Assertion ID Service ---")
-    _dict = unpack_soap(environ)
-    _binding = BINDING_SOAP
+    _binding = BINDING_URI
 
-    if not _dict:
+    _dict = unpack_artifact(environ)
+    logger.debug("INPUT: %s" % _dict)
+    # Presently only HTTP GET is supported
+    if "ID" in _dict:
+        aid = _dict["ID"]
+    else:
         resp = BadRequest("Missing or faulty request")
         return resp(environ, start_response)
 
-    req_info = IDP.parse_assertion_id_request("%s" % _dict["SAMLRequest"],
-                                              _binding)
+    try:
+        assertion = IDP.create_assertion_id_request_response(aid)
+    except Unknown:
+        resp = NotFound(aid)
+        return resp(environ, start_response)
 
-    asids = [x.text for x in req_info.message.assertion_id_ref]
+    hinfo = IDP.apply_binding(_binding, "%s" % assertion, response=True)
 
-    resp_args = IDP.response_args(req_info.message, _binding, "spsso")
-    response = IDP.create_assertion_id_request_response(asids, **resp_args)
-    hinfo = IDP.apply_binding(_binding, "%s" % response, "","",response=True)
-
+    logger.debug("HINFO: %s" % hinfo)
     resp = Response(hinfo["data"], headers=hinfo["headers"])
     return resp(environ, start_response)
 
@@ -560,6 +619,45 @@ def authn_query_service(environ, start_response, user=None):
 
 
 # ----------------------------------------------------------------------------
+# === Attribute query service ===
+# ----------------------------------------------------------------------------
+
+# Only SOAP binding
+def attribute_query_service(environ, start_response, user=None):
+    """
+    :param environ: Execution environment
+    :param start_response: Function to start the response with
+    """
+    logger.info("--- Attribute Query Service ---")
+    _dict = unpack_soap(environ)
+    _binding = BINDING_SOAP
+
+    if not _dict:
+        resp = BadRequest("Missing or faulty request")
+        return resp(environ, start_response)
+
+    _req = IDP.parse_attribute_query("%s" % _dict["SAMLRequest"], _binding)
+    _query = _req.message
+
+    name_id = _query.subject.name_id
+    uid = IDP.ident.find_local_id(name_id)
+    logger.debug("Local uid: %s" % uid)
+    identity = EXTRA[uid]
+
+    # Comes in over SOAP so only need to construct the response
+    args = IDP.response_args(_query, [BINDING_SOAP])
+    msg = IDP.create_attribute_response(identity, destination="",
+                                        name_id=name_id, **args)
+
+    logger.debug("response: %s" % msg)
+    hinfo = IDP.apply_binding(_binding, "%s" % msg, "","",response=True)
+
+    resp = Response(hinfo["data"], headers=hinfo["headers"])
+    return resp(environ, start_response)
+
+
+
+# ----------------------------------------------------------------------------
 # Name ID Mapping service
 # When an entity that shares an identifier for a principal with an identity
 # provider wishes to obtain a name identifier for the same principal in a
@@ -569,11 +667,12 @@ def authn_query_service(environ, start_response, user=None):
 
 
 def _nim(environ, start_response, user, query, binding, relay_state=""):
-    req = IDP.parse_manage_name_id_response(query, binding)
-
+    req = IDP.parse_name_id_mapping_request(query, binding)
+    request = req.message
     # Do the necessary stuff
     try:
-        name_id = IDP.ident.handle_name_id_mapping_request()
+        name_id = IDP.ident.handle_name_id_mapping_request(request.name_id,
+                                                           request.name_id_policy)
     except Unknown:
         resp = BadRequest("Unknown entity")
         return resp(environ, start_response)
@@ -581,56 +680,19 @@ def _nim(environ, start_response, user, query, binding, relay_state=""):
         resp = BadRequest("Unknown entity")
         return resp(environ, start_response)
 
-    info = IDP.response_args(req)
-    _resp = IDP.create_manage_name_id_response(name_id, **info)
+    info = IDP.response_args(request)
+    _resp = IDP.create_name_id_mapping_response(name_id, **info)
 
-    # It's using SOAP binding
+    # Only SOAP
     hinfo = IDP.apply_binding(binding, "%s" % _resp, "", "", response=True)
 
-    resp = Response(hinfo["data"],
-                    headers=dict2list_of_tuples(hinfo["headers"]))
+    resp = Response(hinfo["data"], headers=hinfo["headers"])
     return resp(environ, start_response)
 
-def nim(environ, start_response, user):
-    """ Expects a HTTP-redirect logout request """
-
-    _dict = unpack_redirect(environ)
-
-    if not _dict:
-        resp = Unauthorized('Unknown user')
-        return resp(environ, start_response)
-    else:
-        return _mni(environ, start_response, user, _dict["SAMLRequest"],
-                    BINDING_HTTP_REDIRECT, _dict["RelayState"])
-
-def nim_post(environ, start_response, user):
-    """ Expects a HTTP-POST logout request """
-
-    _dict = unpack_post(environ)
-    if not _dict:
-        resp = Unauthorized('Unknown user')
-        return resp(environ, start_response)
-    else:
-        return _mni(environ, start_response, user, _dict["SAMLRequest"],
-                    BINDING_HTTP_REDIRECT, _dict["RelayState"])
-
 def nim_soap(environ, start_response, user):
+    _dict = unpack_soap(environ)
+    return _operation(environ, start_response, user, _dict, _nim, BINDING_SOAP)
 
-    _dict = unpack_post(environ)
-    if not _dict:
-        resp = Unauthorized('Unknown user')
-        return resp(environ, start_response)
-    else:
-        return _mni(environ, start_response, user, _dict["SAMLRequest"],
-                    BINDING_HTTP_REDIRECT, _dict["RelayState"])
-
-def nim_art(environ, start_response, user):
-    # Could be by HTTP_REDIRECT or HTTP_POST
-
-    _dict = unpack_redirect(environ)
-    if not _dict:
-        _dict = unpack_post(environ)
-    return _artifact_oper(environ, start_response, user, _dict, _mni)
 
 # ----------------------------------------------------------------------------
 # ----------------------------------------------------------------------------
@@ -689,21 +751,17 @@ AUTHN_URLS = [
     (r'mni/soap$', mni_soap),
     (r'mni/soap/(.*)$', mni_soap),
     # nim
-    (r'nim/post$', nim_post),
-    (r'nim/post/(.*)$', nim_post),
-    (r'nim/redirect$', nim),
-    (r'nim/redirect/(.*)$', nim),
-    (r'nim/art$', nim_art),
-    (r'nim/art/(.*)$', nim_art),
-    (r'nim/soap$', nim_soap),
-    (r'nim/soap/(.*)$', nim_soap),
+    (r'nim$', nim_soap),
+    (r'nim/(.*)$', nim_soap),
     #
-    (r'aqs$', authn_query_service)
+    (r'aqs$', authn_query_service),
+    (r'attr$', attribute_query_service)
 ]
 
 NON_AUTHN_URLS = [
     (r'login?(.*)$', do_authentication),
     (r'verify?(.*)$', do_verify),
+    (r'sso/ecp$', sso_ecp),
 ]
 
 # ----------------------------------------------------------------------------
@@ -776,6 +834,7 @@ LOOKUP = TemplateLookup(directories=[ROOT + 'templates', ROOT + 'htdocs'],
 if __name__ == '__main__':
     import sys
     from idp_user import USERS
+    from idp_user import EXTRA
     from wsgiref.simple_server import make_server
 
     PORT = 8088

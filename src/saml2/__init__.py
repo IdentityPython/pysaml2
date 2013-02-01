@@ -1,20 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#
-# Copyright (C) 2006 Google Inc.
-# Copyright (C) 2009 Umeå University
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#            http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
 """Contains base classes representing SAML elements.
 
@@ -32,21 +17,6 @@
     provides methods and functions to convert SAML classes to and from strings.
 """
 
-# try:
-#     # lxml: best performance for XML processing
-#     import lxml.etree as ET
-# except ImportError:
-#     try:
-#         # Python 2.5+: batteries included
-#         import xml.etree.cElementTree as ET
-#     except ImportError:
-#         try:
-#             # Python <2.5: standalone ElementTree install
-#             import elementtree.cElementTree as ET
-#         except ImportError:
-#             raise ImportError, "lxml or ElementTree are not installed, "\
-#                 +"see http://codespeak.net/lxml "\
-#                 +"or http://effbot.org/zone/element-index.htm"
 
 import logging
 from saml2.validate import valid_instance

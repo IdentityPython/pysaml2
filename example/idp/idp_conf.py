@@ -41,7 +41,7 @@ CONFIG={
     # This database holds the map between a subjects local identifier and
     # the identifier returned to a SP
     #"xmlsec_binary": "/usr/local/bin/xmlsec1",
-    "attribute_map_dir" : "./attributemaps",
+    "attribute_map_dir" : "../attributemaps",
     "logger": {
         "rotating": {
             "filename": "idp.log",

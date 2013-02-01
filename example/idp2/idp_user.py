@@ -5,24 +5,22 @@ USERS = {
         "eduPersonAffiliation": "staff",
         "uid": "rohe0002"
     },
-     "ozzie": {
-         "surname": "Guillen",
+     "babs": {
+         "surname": "Babs",
          "givenName": "Ozzie",
          "eduPersonAffiliation": "affiliate"
      },
-     "derek": {
+     "upper": {
          "surname": "Jeter",
          "givenName": "Derek",
          "eduPersonAffiliation": "affiliate"
      },
-     "ichiro": {
-         "surname": "Suzuki",
-         "givenName": "Ischiro",
-         "eduPersonAffiliation": "affiliate"
-     },
-     "ryan": {
-         "surname": "Howard",
-         "givenName": "Ryan",
-         "eduPersonAffiliation": "affiliate"
-     }
+}
+
+EXTRA = {
+    "roland": {
+        "eduPersonEntitlement" : "urn:mace:swamid.se:foo:bar",
+        "schacGender": "male",
+        "schacUserPresenceID": "skype:pepe.perez"
+    }
 }
