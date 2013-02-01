@@ -1,7 +1,6 @@
 import inspect
 import sys
 import traceback
-from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
 from saml2.s_utils import UnknownPrincipal, UnsupportedBinding
 from saml2.saml import NAMEID_FORMAT_TRANSIENT, NAMEID_FORMAT_PERSISTENT
 from saml2.saml import NAME_FORMAT_URI
@@ -475,20 +474,43 @@ class VerifySPProvidedID(Check):
 
         return {}
 
-class VerifyBindingSupport(Check):
-    """
-    Verify that a IDP supports a specific binding for a specific service
-    """
-    id = "verify_binding"
-    service = ""
-    binding = ""
 
-    def _func(self, environ):
+
+class VerifyFunctionality(Check):
+    """
+    Verifies that the IdP supports the needed functionality
+    """
+
+    def _nameid_format_support(self, environ, nameid_format):
+        md = environ["metadata"]
+        entity = md[environ["entity_id"]]
+        for idp in entity["idpsso_descriptor"]:
+            for format in idp["name_id_format"]:
+                if nameid_format == format["text"]:
+                    return {}
+
+        self._message = "No support for NameIDFormat '%s'" % nameid_format
+        self._status = CRITICAL
+
+        return {}
+
+    def _srv_support(self, environ, service):
+        md = environ["metadata"]
+        entity = md[environ["entity_id"]]
+        for idp in entity["idpsso_descriptor"]:
+            if service in idp:
+                return {}
+
+        self._message = "No support for '%s'" % service
+        self._status = CRITICAL
+        return {}
+
+    def _binding_support(self, environ, service, binding):
         md = environ["metadata"]
         entity_id = environ["entity_id"]
-        func = getattr(md, self.service, None)
+        func = getattr(md, service, None)
         try:
-            func(entity_id, self.binding)
+            func(entity_id, binding)
         except UnknownPrincipal:
             self._message = "Unknown principal"
             self._status = CRITICAL
@@ -498,49 +520,27 @@ class VerifyBindingSupport(Check):
 
         return {}
 
-class VerifyRedirectSingleSignOn(VerifyBindingSupport):
-    id = "verify_sso_redirect_binding"
-    service = "single_sign_on_service"
-    binding = BINDING_HTTP_REDIRECT
-
-class VerifyPostSingleSignOn(VerifyBindingSupport):
-    id = "verify_sso_post_binding"
-    service = "single_sign_on_service"
-    binding = BINDING_HTTP_POST
-
-class VerifyNameIDFormatSupport(Check):
-    """
-    Verify that the IdP supports a specific NameID format
-    """
-    id = "verify-nameid-format-support"
-    name_format = ""
-
     def _func(self, environ):
-        md = environ["metadata"]
-        entity = md[environ["entity_id"]]
-        for idp in entity["idpsso_descriptor"]:
-            for format in idp["name_id_format"]:
-                if self.name_format == format["text"]:
-                    return {}
+        oper = environ["op"]
+        args = environ["oper.args"]
+        res = self._srv_support(environ, oper.request)
+        if self._status != "OK":
+            return res
 
-        self._message = "No support for NameIDFormat '%s'" % self.name_format
-        self._status = CRITICAL
+        res = self._binding_support(environ, oper.request,
+                                         args["binding"])
+        if self._status != "OK":
+            return res
 
-        return {}
+        if "nameid_format" in args:
+            res = self._nameid_format_support(environ, args["nameid_format"])
 
-class VerifyPersistentNameIDFormatSupport(VerifyNameIDFormatSupport):
-    """
-    Verify that the IdP supports a Persistent NameID format
-    """
-    id = "verify-persistent-nameid-format-support"
-    name_format = NAMEID_FORMAT_PERSISTENT
+        if "name_id_policy" in args:
+            res = self._nameid_format_support(environ,
+                                              args["name_id_policy"].format)
 
-class VerifyTransientNameIDFormatSupport(VerifyNameIDFormatSupport):
-    """
-    Verify that the IdP supports a Transient NameID format
-    """
-    id = "verify-transient-nameid-format-support"
-    name_format = NAMEID_FORMAT_TRANSIENT
+        return res
+
 
 # =============================================================================
 

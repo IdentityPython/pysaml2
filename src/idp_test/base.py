@@ -188,6 +188,7 @@ def do_sequence(config, oper, trace, interaction, entity_id, features=None):
 
     environ["FatalError"] = False
     for op in oper["sequence"]:
+        environ["op"] = op
         output = do_query(client, op(), trace, interaction, entity_id,
                           environ, cjar, features)
         test_output.extend(output)

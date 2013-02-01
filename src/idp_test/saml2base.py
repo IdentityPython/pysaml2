@@ -1,25 +1,25 @@
-from saml2 import BINDING_HTTP_REDIRECT
-from saml2 import BINDING_URI
 from saml2 import samlp
+from saml2 import BINDING_HTTP_POST
+from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_PAOS
 from saml2 import BINDING_SOAP
-from saml2 import BINDING_HTTP_POST
-from saml2.saml import NAMEID_FORMAT_PERSISTENT, NAMEID_FORMAT_TRANSIENT
+from saml2 import BINDING_URI
+from saml2.saml import NAMEID_FORMAT_PERSISTENT
+from saml2.saml import NAMEID_FORMAT_TRANSIENT
 
-from idp_test.check import CheckSaml2IntMetaData
-from idp_test.check import VerifyTransientNameIDFormatSupport
-from idp_test.check import VerifyNameIDPolicyUsage
-from idp_test.check import CheckSaml2IntAttributes
 from idp_test.check import CheckLogoutSupport
-from idp_test.check import VerifyLogout
+from idp_test.check import CheckSaml2IntAttributes
+from idp_test.check import CheckSaml2IntMetaData
+from idp_test.check import VerifyFunctionality
 from idp_test.check import VerifyContent
-from idp_test.check import VerifySuccessStatus
+from idp_test.check import VerifyLogout
 from idp_test.check import VerifyNameIDMapping
-from idp_test.check import VerifyRedirectSingleSignOn
-from idp_test.check import VerifyPostSingleSignOn
+from idp_test.check import VerifyNameIDPolicyUsage
+from idp_test.check import VerifyPersistentNameIDFormatSupport
+from idp_test.check import VerifySuccessStatus
+from idp_test.check import VerifyTransientNameIDFormatSupport
 
 from saml2.samlp import NameIDPolicy
-from idp_test.check import VerifyPersistentNameIDFormatSupport
 
 __author__ = 'rolandh'
 
@@ -52,9 +52,14 @@ class AuthnRequest(Request):
     _args = {"binding": BINDING_HTTP_REDIRECT,
              "nameid_format": NAMEID_FORMAT_PERSISTENT,
              "allow_create": True}
+    tests = {"pre": [VerifyFunctionality],
+             "post": [CheckSaml2IntAttributes]}
 
 
 class AuthnRequestPost(AuthnRequest):
+    tests = {"pre": [VerifyFunctionality],
+             "post": [CheckSaml2IntAttributes]}
+
     def __init__(self):
         AuthnRequest.__init__(self)
         self.args["binding"] = BINDING_HTTP_POST
@@ -67,6 +72,9 @@ class AuthnRequest_using_Artifact(AuthnRequest):
 
 
 class AuthnRequestPostTransient(AuthnRequest):
+    tests = {"pre": [VerifyFunctionality],
+             "post": [CheckSaml2IntAttributes]}
+
     def __init__(self):
         AuthnRequest.__init__(self)
         self.args["binding"] = BINDING_HTTP_POST
@@ -75,9 +83,8 @@ class AuthnRequestPostTransient(AuthnRequest):
 
 class LogOutRequest(Request):
     request = "logout_request"
-    _args = {"binding": BINDING_SOAP,
-            # "sign": True
-            }
+    _args = {"binding": BINDING_SOAP}
+    tests = {"pre": [VerifyFunctionality]}
 
     def __init__(self):
         Request.__init__(self)
@@ -94,6 +101,7 @@ class LogOutRequest(Request):
 class AssertionIDRequest(Request):
     request = "assertion_id_request"
     _args = {"binding": BINDING_URI}
+    tests = {"pre": [VerifyFunctionality]}
 
     def setup(self, environ):
         resp = environ["response"][-1].response
@@ -103,6 +111,7 @@ class AssertionIDRequest(Request):
 class AuthnQuery(Request):
     request = "authn_query"
     _args = {"binding": BINDING_SOAP}
+    tests = {"pre": [VerifyFunctionality]}
 
     def __init__(self):
         Request.__init__(self)
@@ -141,7 +150,23 @@ class AuthnRequest_NameIDPolicy1(AuthnRequest):
         AuthnRequest.__init__(self)
         self.tests["post"].append(VerifyNameIDPolicyUsage)
 
+class AuthnRequest_Transient(AuthnRequest):
+    request = "authn_request"
+    _args = {"binding": BINDING_HTTP_REDIRECT,
+             "name_id_policy": NameIDPolicy(format=NAMEID_FORMAT_TRANSIENT,
+                                            sp_name_qualifier="Group",
+                                            allow_create="true"),
+             "allow_create": True}
+
+    def __init__(self):
+        AuthnRequest.__init__(self)
+        self.tests["post"].append(VerifyNameIDPolicyUsage)
+        self.tests["pre"].remove(VerifyPersistentNameIDFormatSupport)
+        self.tests["pre"].append(VerifyTransientNameIDFormatSupport)
+
+
 class ECP_AuthnRequest(AuthnRequest):
+
     def __init__(self):
         AuthnRequest.__init__(self)
         self.args["binding"] = BINDING_SOAP
@@ -151,18 +176,6 @@ class ECP_AuthnRequest(AuthnRequest):
         _client = environ["client"]
         _client.user = "babs"
         _client.passwd = "howes"
-
-#    def pre_processing(self, environ, message, args):
-#        # first act as the SP
-#        self._orig_binding = args["binding"]
-#        args["binding"] = BINDING_SOAP
-#        return
-#
-#    def post_processing(self, environ, message):
-#        _client = environ["client"]
-#        rdict = _client.parse_soap_message(message)
-#        relay_state = rdict["header"][0].text
-#        return {"SAMLRequest": message, "RelayState": relay_state}
 
 class ManageNameIDRequest(Request):
     request = "manage_name_id_request"
@@ -190,29 +203,26 @@ class AttributeQuery(Request):
 # -----------------------------------------------------------------------------
 
 OPERATIONS = {
-    'basic-authn': {
+    'authn': {
         "name": 'Absolute basic SAML2 AuthnRequest',
         "descr": 'AuthnRequest using HTTP-redirect',
         "sequence": [AuthnRequest],
-        "tests": {"pre": [CheckSaml2IntMetaData, VerifyRedirectSingleSignOn,
-                          VerifyPersistentNameIDFormatSupport],
-                  "post": [CheckSaml2IntAttributes]}
+        "tests": {"pre": [CheckSaml2IntMetaData],
+                  "post": []}
     },
-    'basic-authn-post': {
+    'authn-post': {
         "name": 'Basic SAML2 AuthnRequest using HTTP POST',
         "descr": ('AuthnRequest using HTTP-POST'),
         "sequence": [AuthnRequestPost],
-        "tests": {"pre": [CheckSaml2IntMetaData, VerifyPostSingleSignOn,
-                          VerifyPersistentNameIDFormatSupport],
-                  "post": [CheckSaml2IntAttributes]}
+        "tests": {"pre": [CheckSaml2IntMetaData],
+                  "post": []}
     },
-    'basic-authn-post-transient': {
+    'authn-post-transient': {
         "name": 'AuthnRequest using HTTP POST expecting transient NameID',
         "descr": ('AuthnRequest using HTTP-POST'),
         "sequence": [AuthnRequestPostTransient],
-        "tests": {"pre": [CheckSaml2IntMetaData, VerifyPostSingleSignOn,
-                          VerifyTransientNameIDFormatSupport],
-                  "post": [CheckSaml2IntAttributes]}
+        "tests": {"pre": [CheckSaml2IntMetaData],
+                  "post": []}
     },
     'log-in-out': {
         "name": 'Absolute basic SAML2 log in and out',
