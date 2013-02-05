@@ -15,9 +15,7 @@ from idp_test.check import VerifyContent
 from idp_test.check import VerifyLogout
 from idp_test.check import VerifyNameIDMapping
 from idp_test.check import VerifyNameIDPolicyUsage
-from idp_test.check import VerifyPersistentNameIDFormatSupport
 from idp_test.check import VerifySuccessStatus
-from idp_test.check import VerifyTransientNameIDFormatSupport
 
 from saml2.samlp import NameIDPolicy
 
@@ -54,6 +52,34 @@ class AuthnRequest(Request):
              "allow_create": True}
     tests = {"pre": [VerifyFunctionality],
              "post": [CheckSaml2IntAttributes]}
+
+class DynAuthnRequest(Request):
+    _class = samlp.AuthnRequest
+    request = "authn_request"
+    _args = {}
+    tests = {}
+    name_id_formats = [NAMEID_FORMAT_TRANSIENT, NAMEID_FORMAT_PERSISTENT]
+    bindings = [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST]
+
+    def setup(self, environ):
+        metadata = environ["metadata"]
+        entity = metadata[environ["entity_id"]]
+        self.args = {"nameid_format":"", "binding":""}
+        for idp in entity["idpsso_descriptor"]:
+            for format in self.name_id_formats:
+                if self.args["nameid_format"]:
+                    break
+                for nif in idp["name_id_format"]:
+                    if nif["text"] == format:
+                        self.args["nameid_format"] = format
+                        break
+            for bind in self.bindings:
+                if self.args["binding"]:
+                    break
+                for sso in idp["single_sign_on_service"]:
+                    if sso["binding"] == bind:
+                        self.args["binding"] = bind
+                        break
 
 
 class AuthnRequestPost(AuthnRequest):
@@ -161,8 +187,6 @@ class AuthnRequest_Transient(AuthnRequest):
     def __init__(self):
         AuthnRequest.__init__(self)
         self.tests["post"].append(VerifyNameIDPolicyUsage)
-        self.tests["pre"].remove(VerifyPersistentNameIDFormatSupport)
-        self.tests["pre"].append(VerifyTransientNameIDFormatSupport)
 
 
 class ECP_AuthnRequest(AuthnRequest):
@@ -203,6 +227,13 @@ class AttributeQuery(Request):
 # -----------------------------------------------------------------------------
 
 OPERATIONS = {
+    'verify': {
+        "name": 'Verify connectivity',
+        "descr": 'Uses AuthnRequest to check connectivity',
+        "sequence": [DynAuthnRequest],
+        "tests": {"pre": [CheckSaml2IntMetaData],
+                  "post": []}
+    },
     'authn': {
         "name": 'Absolute basic SAML2 AuthnRequest',
         "descr": 'AuthnRequest using HTTP-redirect',
