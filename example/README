@@ -9,7 +9,7 @@ is idp/passwd and the ini file is idp/idp_user.ini.
 
 The passwords in passwd in clear text:
 
-roland:one
+roland:friend
 ozzie:two
 derek:three
 ryan:four
