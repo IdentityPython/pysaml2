@@ -40,7 +40,7 @@ install_requires=[
     'requests >= 1.0.0',
     'paste',
     'zope.interface',
-    'repoze.who == 1.0.18'
+    'repoze.who == 1.0.18',
     'm2crypto',
     ]
 
