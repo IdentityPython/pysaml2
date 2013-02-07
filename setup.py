@@ -41,6 +41,7 @@ install_requires=[
     'paste',
     'zope.interface',
     'repoze.who == 1.0.18'
+    'm2crypto',
     ]
 
 # only for Python 2.6
