@@ -9,7 +9,7 @@ import logging
 from saml2.config import SPConfig
 
 from idp_test.base import FatalError
-from idp_test.base import do_sequence
+from idp_test.base import Conversation
 from idp_test.check import CheckSaml2IntMetaData
 #from saml2.config import Config
 from saml2.mdstore import MetadataStore, MetaData
@@ -215,14 +215,15 @@ class SAML2client(object):
                     print >> sys.stderr, "Undefined testcase"
                     return
 
-            testres, trace = do_sequence(self.sp_config, oper,
-                                         self.trace, self.interactions,
-                                         entity_id=self.json_config["entity_id"])
-            self.test_log = testres
+            conv = Conversation(self.sp_config, self.trace, self.interactions,
+                                self.json_config["entity_id"])
+            conv.do_sequence(oper)
+            #testres, trace = do_sequence(oper,
+            self.test_log = conv.test_output
             sum = self.test_summation(self.args.oper)
             print >>sys.stdout, json.dumps(sum)
             if sum["status"] > 1 or self.args.debug:
-                print >> sys.stderr, trace
+                print >> sys.stderr, self.trace
         except FatalError, err:
             print >> sys.stderr, self.trace
             print err
