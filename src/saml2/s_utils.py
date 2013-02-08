@@ -27,16 +27,25 @@ import zlib
 
 logger = logging.getLogger(__name__)
 
+class SamlException(Exception):
+    pass
+
+class RequestVersionTooLow(SamlException):
+    pass
+
+class RequestVersionTooHigh(SamlException):
+    pass
+
+class UnknownPrincipal(SamlException):
+    pass
+
+class UnsupportedBinding(SamlException):
+    pass
+
 class VersionMismatch(Exception):
     pass
 
 class Unknown(Exception):
-    pass
-
-class UnknownPrincipal(Unknown):
-    pass
-    
-class UnsupportedBinding(Exception):
     pass
 
 class OtherError(Exception):
@@ -56,6 +65,8 @@ EXCEPTION2STATUS = {
     VersionMismatch: samlp.STATUS_VERSION_MISMATCH,
     UnknownPrincipal: samlp.STATUS_UNKNOWN_PRINCIPAL,
     UnsupportedBinding: samlp.STATUS_UNSUPPORTED_BINDING,
+    RequestVersionTooLow: samlp.STATUS_REQUEST_VERSION_TOO_LOW,
+    RequestVersionTooHigh: samlp.STATUS_REQUEST_VERSION_TOO_HIGH,
     OtherError: samlp.STATUS_UNKNOWN_PRINCIPAL,
     MissingValue: samlp.STATUS_REQUEST_UNSUPPORTED,
     # Undefined
