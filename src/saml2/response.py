@@ -26,6 +26,8 @@ from saml2 import saml
 from saml2 import extension_element_to_element
 from saml2 import time_util
 
+from saml2.s_utils import RequestVersionTooLow
+from saml2.s_utils import RequestVersionTooHigh
 from saml2.saml import attribute_from_string
 from saml2.saml import SCM_BEARER
 from saml2.saml import SCM_HOLDER_OF_KEY
@@ -209,9 +211,9 @@ class StatusResponse(object):
         except AssertionError:
             _ver = float(self.response.version)
             if _ver < 2.0:
-                raise RequestVersionTooLow
+                raise RequestVersionTooLow()
             else:
-                raise RequestVersionTooHigh
+                raise RequestVersionTooHigh()
 
         if self.asynchop:
             if self.response.destination and \
