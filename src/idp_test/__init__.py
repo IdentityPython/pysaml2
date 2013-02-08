@@ -114,8 +114,8 @@ class SAML2client(object):
                                   help="Configuration file for the SP")
         self._parser.add_argument("-P", dest="configpath", default=".",
                                   help="Path to the configuration file for the SP")
-        self._parser.add_argument("-t", dest="testdefs",
-                                  help="Module describing the tests")
+        self._parser.add_argument("-t", dest="testpackage",
+                                  help="Module describing tests")
         self._parser.add_argument("oper", nargs="?", help="Which test to run")
 
         self.interactions = None
@@ -150,8 +150,8 @@ class SAML2client(object):
         metadata[0] = md
         self.sp_config.metadata = metadata
 
-        if self.args.testdefs:
-            self.tests = import_module("idp_test.%s" % self.args.testdefs)
+        if self.args.testpackage:
+            self.tests = import_module("idp_test.package.%s" % self.args.testpackage)
 
         try:
             self.entity_id = _jc["entity_id"]
@@ -254,8 +254,8 @@ class SAML2client(object):
                     pass
 
             lista.append(item)
-        if self.args.testdefs:
-            mod = import_module(self.args.testdefs, "idp_test")
+        if self.args.testpackage:
+            mod = import_module(self.args.testpackage, "idp_test")
             for key,val in mod.OPERATIONS.items():
                 item = {"id": key,
                         "name": val["name"],}

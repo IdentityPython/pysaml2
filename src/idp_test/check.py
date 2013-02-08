@@ -1,6 +1,7 @@
 import inspect
 import sys
 import traceback
+from saml2.mdstore import REQ2SRV
 from saml2.s_utils import UnknownPrincipal, UnsupportedBinding
 from saml2.saml import NAMEID_FORMAT_TRANSIENT, NAMEID_FORMAT_PERSISTENT
 from saml2.saml import NAME_FORMAT_URI
@@ -523,7 +524,7 @@ class VerifyFunctionality(Check):
     def _func(self, environ):
         oper = environ["op"]
         args = environ["oper.args"]
-        res = self._srv_support(environ, oper.request)
+        res = self._srv_support(environ, REQ2SRV[oper.request])
         if self._status != "OK":
             return res
 

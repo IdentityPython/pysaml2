@@ -18,13 +18,13 @@ class DummyExtension(SamlBase):
     c_cardinality = SamlBase.c_cardinality.copy()
 
 class AuthnRequest_UnknownIssuer(AuthnRequest):
-    def pre_processing(self, environ, message, args):
+    def pre_processing(self, message, args):
         _issuer = message.issuer
         _issuer.text = "https://www.example.com/foobar.xml"
         return message
 
 class AuthnRequest_UnknownExtension(AuthnRequest):
-    def pre_processing(self, environ, message, args):
+    def pre_processing(self, message, args):
         message.extension = ExtensionContainer()
         message.extension.add_extension_element(DummyExtension(text="foo"))
         return message
