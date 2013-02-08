@@ -203,8 +203,16 @@ class StatusResponse(object):
                                                         self.in_response_to,
                                                         self.request_id))
             return None
-            
-        assert self.response.version == "2.0"
+
+        try:
+            assert self.response.version == "2.0"
+        except AssertionError:
+            _ver = float(self.response.version)
+            if _ver < 2.0:
+                raise RequestVersionTooLow
+            else:
+                raise RequestVersionTooHigh
+
         if self.asynchop:
             if self.response.destination and \
                 self.response.destination != self.return_addr:
