@@ -381,7 +381,12 @@ def do_verify(environ, start_response, _):
 
     logger.debug("do_verify: %s" % query)
 
-    _ok, user = verify_username_and_password(query)
+    try:
+        _ok, user = verify_username_and_password(query)
+    except KeyError:
+        _ok = False
+        user = None
+
     if not _ok:
         resp = Unauthorized("Unknown user or wrong password")
     else:
