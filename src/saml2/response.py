@@ -444,8 +444,7 @@ class AuthnResponse(StatusResponse):
 
         if self.asynchop and not self.came_from:
             if data.in_response_to in self.outstanding_queries:
-                self.came_from = self.outstanding_queries[
-                                 data.in_response_to]
+                self.came_from = self.outstanding_queries[data.in_response_to]
                 del self.outstanding_queries[data.in_response_to]
             elif self.allow_unsolicited:
                 pass
@@ -536,7 +535,7 @@ class AuthnResponse(StatusResponse):
                 elif not self.came_from:
                     raise VerificationError("Came from")
             return True
-        except Exception, exc:
+        except Exception:
             logger.exception("get subject")
             raise
     
@@ -553,9 +552,8 @@ class AuthnResponse(StatusResponse):
             logger.debug("Parsed decrypted assertion successfull")
 
             enc = self.response.encrypted_assertion[0].extension_elements[0]
-            assertion = extension_element_to_element(enc,
-                                                    saml.ELEMENT_FROM_STRING,
-                                                    namespace=saml.NAMESPACE)
+            assertion = extension_element_to_element(
+                enc, saml.ELEMENT_FROM_STRING, namespace=saml.NAMESPACE)
 
         logger.debug("Decrypted Assertion: %s" % assertion)
         return self._assertion(assertion)
@@ -563,7 +561,7 @@ class AuthnResponse(StatusResponse):
     def parse_assertion(self):
         try:
             assert len(self.response.assertion) == 1 or \
-                    len(self.response.encrypted_assertion) == 1
+                   len(self.response.encrypted_assertion) == 1
         except AssertionError:
             raise Exception("No assertion part")
         
@@ -609,8 +607,8 @@ class AuthnResponse(StatusResponse):
             if context:
                 aclass = context.authn_context_class_ref.text
                 try:
-                    authn_auth = [
-                            a.text for a in context.authenticating_authority]
+                    authn_auth = [a.text for a in
+                                  context.authenticating_authority]
                 except AttributeError:
                     authn_auth = []
                 res.append((aclass, authn_auth))
