@@ -9,7 +9,7 @@ from saml2.httputil import Response
 from saml2.httputil import Unauthorized
 from saml2.httputil import NotFound
 from saml2.httputil import Redirect
-from saml2.httputil import ServiceError
+#from saml2.httputil import ServiceError
 
 logger = logging.getLogger("saml2.SP")
 
@@ -134,21 +134,21 @@ def logout(environ, start_response, user):
     target = "/done"
 
     # What if more than one
-    tmp = client.saml_client.global_logout(subject_id)
-    logger.info("[logout] global_logout > %s" % (tmp,))
-    (session_id, code, header, result) = tmp
+    _dict = client.saml_client.global_logout(subject_id)
+    logger.info("[logout] global_logout > %s" % (_dict,))
 
-    if session_id:
-        start_response(code, header)
-        return result
-    else: # All was done using SOAP
-        if result:
-            resp = Redirect("Successful Logout", headers=[("Location", target)])
-            return resp(environ, start_response)
-        else:
-            resp = ServiceError("Failed to logout from identity services")
-            start_response("500 Internal Server Error")
-            return []
+    for key, item in _dict.item():
+        if isinstance(item, tuple):
+            binding, htargs = item
+        else:  # result from logout, should be OK
+            pass
+
+    resp = Redirect("Successful Logout", headers=[("Location", target)])
+    return resp(environ, start_response)
+    # else:
+    #     resp = ServiceError("Failed to logout from identity services")
+    #     start_response("500 Internal Server Error")
+    #     return []
 
 #noinspection PyUnusedLocal
 def done(environ, start_response, user):
