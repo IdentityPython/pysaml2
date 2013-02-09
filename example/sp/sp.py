@@ -4,7 +4,6 @@ import logging
 
 import re
 from urlparse import parse_qs
-from example.idp.idp import delete_cookie
 from saml2 import BINDING_HTTP_REDIRECT, time_util
 from saml2.httputil import Response
 from saml2.httputil import Unauthorized
@@ -55,12 +54,12 @@ def dict_to_table(ava, lev=0, width=1):
     txt.append('</table>\n')
     return txt
 
-def _expiration(timeout, format=None):
+def _expiration(timeout, tformat=None):
     if timeout == "now":
-        return time_util.instant(format)
+        return time_util.instant(tformat)
     else:
         # validity time should match lifetime of assertions
-        return time_util.in_a_while(minutes=timeout, format=format)
+        return time_util.in_a_while(minutes=timeout, format=tformat)
 
 def delete_cookie(environ, name):
     kaka = environ.get("HTTP_COOKIE", '')
