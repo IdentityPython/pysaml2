@@ -632,7 +632,7 @@ def kaka2user(kaka):
         if morsel:
             return IDP.authn[morsel.value]
         else:
-            logger.debug()
+            logger.debug("No idpauthn cookie")
     return None
 
 
