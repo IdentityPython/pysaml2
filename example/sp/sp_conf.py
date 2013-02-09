@@ -1,23 +1,23 @@
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2.saml import NAME_FORMAT_URI
 
-BASE= "http://localhost:8087/"
+BASE= "http://localhost:8087"
+#BASE= "http://lingon.catalogix.se:8087"
 
 CONFIG = {
-    "entityid" : "urn:mace:umu.se:saml:roland:sp",
+    "entityid" : "%s/sp.xml" % BASE,
     "description": "My SP",
     "service": {
         "sp":{
             "name" : "Rolands SP",
             "endpoints":{
                 "assertion_consumer_service": [BASE],
-                "single_logout_service" : [(BASE+"slo",
+                "single_logout_service" : [(BASE+"/slo",
                                             BINDING_HTTP_REDIRECT)],
             },
             "required_attributes": ["surname", "givenname",
                                     "edupersonaffiliation"],
             "optional_attributes": ["title"],
-            "idp": [ "urn:mace:umu.se:saml:roland:idp"],
         }
     },
     "debug" : 1,
@@ -25,7 +25,7 @@ CONFIG = {
     "cert_file" : "pki/mycert.pem",
     "attribute_map_dir" : "./attributemaps",
     "metadata" : {
-       "local": ["../idp/idp.xml"],
+       "local": ["../idp2/idp.xml"],
     },
     # -- below used by make_metadata --
     "organization": {

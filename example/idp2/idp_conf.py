@@ -79,7 +79,7 @@ CONFIG={
                     "name_form": NAME_FORMAT_URI
                 },
             },
-            "subject_data": "./idp.subject.db",
+            "subject_data": "./idp.subject",
             "name_id_format": [NAMEID_FORMAT_TRANSIENT,
                                NAMEID_FORMAT_PERSISTENT]
         },
@@ -88,7 +88,7 @@ CONFIG={
     "key_file" : "pki/mykey.pem",
     "cert_file" : "pki/mycert.pem",
     "metadata" : {
-        "local": ["../sp.xml"],
+        "local": ["../sp/sp.xml"],
     },
     "organization": {
         "display_name": "Rolands Identiteter",

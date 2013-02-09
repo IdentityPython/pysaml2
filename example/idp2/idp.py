@@ -31,7 +31,6 @@ from saml2.saml import AUTHN_PASSWORD
 
 logger = logging.getLogger("saml2.idp")
 
-
 def _expiration(timeout, tformat="%a, %d-%b-%Y %H:%M:%S GMT"):
     """
 
@@ -143,7 +142,9 @@ class Service(object):
         """
         Single log out using HTTP_SOAP binding
         """
+        logger.debug("- SOAP -")
         _dict = self.unpack_soap()
+        logger.debug("_dict: %s" % _dict)
         return self.operation(_dict, BINDING_SOAP)
 
     def uri(self):
@@ -424,7 +425,9 @@ class SLO(Service):
     def do(self, request, binding, relay_state=""):
         logger.info("--- Single Log Out Service ---")
         try:
-            req_info = IDP.parse_logout_request(request, binding)
+            _, body = request.split("\n")
+            logger.debug("req: '%s'" % body)
+            req_info = IDP.parse_logout_request(body, binding)
         except Exception, exc:
             logger.error("Bad request: %s" % exc)
             resp = BadRequest("%s" % exc)

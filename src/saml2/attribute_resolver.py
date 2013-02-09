@@ -35,16 +35,13 @@ class AttributeResolver(object):
         self.saml2client = saml2client
         self.metadata = saml2client.config.metadata
 
-    def extend(self, subject_id, issuer, vo_members, name_id_format=None,
-                sp_name_qualifier=None, real_id=None):
+    def extend(self, name_id, issuer, vo_members):
         """ 
-        :param subject_id: The identifier by which the subject is know
+        :param name_id: The identifier by which the subject is know
             among all the participents of the VO
         :param issuer: Who am I the poses the query
         :param vo_members: The entity IDs of the IdP who I'm going to ask
             for extra attributes
-        :param name_id_format: Used to make the IdPs aware of what's going
-            on here
         :return: A dictionary with all the collected information about the
             subject
         """
@@ -53,17 +50,13 @@ class AttributeResolver(object):
             for ass in self.metadata.attribute_consuming_service(member):
                 for attr_serv in ass.attribute_service:
                     logger.info(
-                            "Send attribute request to %s" % attr_serv.location)
+                        "Send attribute request to %s" % attr_serv.location)
                     if attr_serv.binding != BINDING_SOAP:
                         continue
                     # attribute query assumes SOAP binding
                     session_info = self.saml2client.attribute_query(
-                                        subject_id, 
-                                        attr_serv.location, 
-                                        issuer_id=issuer, 
-                                        sp_name_qualifier=sp_name_qualifier,
-                                        nameid_format=name_id_format, 
-                                        real_id=real_id)
+                        name_id, attr_serv.location, issuer_id=issuer,
+)
                     if session_info:
                         result.append(session_info)
         return result

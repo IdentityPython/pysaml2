@@ -20,7 +20,6 @@ to conclude its tasks.
 """
 from saml2.httpbase import HTTPError
 from saml2.s_utils import sid
-from saml2.samlp import logout_response_from_string
 import saml2
 
 try:
@@ -45,6 +44,7 @@ from saml2 import BINDING_SOAP
 
 import logging
 logger = logging.getLogger(__name__)
+
 
 class Saml2Client(Base):
     """ The basic pySAML2 service provider class """
@@ -81,12 +81,12 @@ class Saml2Client(Base):
 
         return req.id, info
 
-    def global_logout(self, subject_id, reason="", expire=None, sign=None):
+    def global_logout(self, name_id, reason="", expire=None, sign=None):
         """ More or less a layer of indirection :-/
         Bootstrapping the whole thing by finding all the IdPs that should
         be notified.
         
-        :param subject_id: The identifier of the subject that wants to be
+        :param name_id: The identifier of the subject that wants to be
             logged out.
         :param reason: Why the subject wants to log out
         :param expire: The latest the log out should happen.
@@ -99,17 +99,17 @@ class Saml2Client(Base):
             conversation. 
         """
 
-        logger.info("logout request for: %s" % subject_id)
+        logger.info("logout request for: %s" % name_id)
 
         # find out which IdPs/AAs I should notify
-        entity_ids = self.users.issuers_of_info(subject_id)
+        entity_ids = self.users.issuers_of_info(name_id)
 
-        return self.do_logout(subject_id, entity_ids, reason, expire, sign)
+        return self.do_logout(name_id, entity_ids, reason, expire, sign)
         
-    def do_logout(self, subject_id, entity_ids, reason, expire, sign=None):
+    def do_logout(self, name_id, entity_ids, reason, expire, sign=None):
         """
 
-        :param subject_id: Identifier of the Subject
+        :param name_id: Identifier of the Subject a NameID instance
         :param entity_ids: List of entity ids for the IdPs that have provided
             information concerning the subject
         :param reason: The reason for doing the logout
@@ -118,34 +118,33 @@ class Saml2Client(Base):
         :return:
         """
         # check time
-        if not not_on_or_after(expire): # I've run out of time
+        if not not_on_or_after(expire):  # I've run out of time
             # Do the local logout anyway
-            self.local_logout(subject_id)
+            self.local_logout(name_id)
             return 0, "504 Gateway Timeout", [], []
             
-        # for all where I can use the SOAP binding, do those first
         not_done = entity_ids[:]
         responses = {}
 
         for entity_id in entity_ids:
-            response = False
-
-            for binding in [BINDING_SOAP,
-                            BINDING_HTTP_POST,
+            logger.debug("Logout from '%s'" % entity_id)
+            # for all where I can use the SOAP binding, do those first
+            for binding in [BINDING_SOAP, BINDING_HTTP_POST,
                             BINDING_HTTP_REDIRECT]:
                 srvs = self.metadata.single_logout_service(entity_id, binding,
                                                            "idpsso")
                 if not srvs:
+                    logger.debug("No SLO '%s' service" % binding)
                     continue
 
                 destination = destinations(srvs)[0]
-
                 logger.info("destination to provider: %s" % destination)
                 request = self.create_logout_request(destination, entity_id,
-                                                     subject_id, reason=reason,
+                                                     name_id=name_id,
+                                                     reason=reason,
                                                      expire=expire)
                 
-                to_sign = []
+                #to_sign = []
                 if binding.startswith("http://"):
                     sign = True
 
@@ -160,28 +159,28 @@ class Saml2Client(Base):
                 relay_state = self._relay_state(request.id)
 
                 http_info = self.apply_binding(binding, srequest, destination,
-                                           relay_state)
+                                               relay_state)
 
                 if binding == BINDING_SOAP:
-                    if response:
-                        logger.info("Verifying response")
-                        response = self.send(**http_info)
+                    response = self.send(**http_info)
 
-                    if response:
+                    if response and response.status_code == 200:
                         not_done.remove(entity_id)
-                        logger.info("OK response from %s" % destination)
-                        responses[entity_id] = logout_response_from_string(response)
+                        response = response.text
+                        logger.info("Response: %s" % response)
+                        res = self.parse_logout_request_response(response)
+                        responses[entity_id] = res
                     else:
                         logger.info("NOT OK response from %s" % destination)
 
                 else:
                     self.state[request.id] = {"entity_id": entity_id,
-                                       "operation": "SLO",
-                                       "entity_ids": entity_ids,
-                                       "subject_id": subject_id,
-                                       "reason": reason,
-                                       "not_on_of_after": expire,
-                                       "sign": sign}
+                                              "operation": "SLO",
+                                              "entity_ids": entity_ids,
+                                              "name_id": name_id,
+                                              "reason": reason,
+                                              "not_on_of_after": expire,
+                                              "sign": sign}
 
                     responses[entity_id] = (binding, http_info)
                     not_done.remove(entity_id)
@@ -217,9 +216,9 @@ class Saml2Client(Base):
         issuer = response.issuer()
         logger.info("issuer: %s" % issuer)
         del self.state[response.in_response_to]
-        if status["entity_ids"] == [issuer]: # done
+        if status["entity_ids"] == [issuer]:  # done
             self.local_logout(status["subject_id"])
-            return 0, "200 Ok", [("Content-type","text/html")], []
+            return 0, "200 Ok", [("Content-type", "text/html")], []
         else:
             status["entity_ids"].remove(issuer)
             return self.do_logout(status["subject_id"], status["entity_ids"],
@@ -277,16 +276,15 @@ class Saml2Client(Base):
                                 consent=None, extensions=None, sign=False):
 
         subject = saml.Subject(
-            name_id = saml.NameID(text=subject_id,
-                                  format=nameid_format,
-                                  sp_name_qualifier=sp_name_qualifier,
-                                  name_qualifier=name_qualifier))
+            name_id=saml.NameID(text=subject_id, format=nameid_format,
+                                sp_name_qualifier=sp_name_qualifier,
+                                name_qualifier=name_qualifier))
 
         srvs = self.metadata.authz_service(entity_id, BINDING_SOAP)
         for dest in destinations(srvs):
             resp = self._use_soap(dest, "authz_decision_query",
-                                 action=action, evidence=evidence,
-                                 resource=resource, subject=subject)
+                                  action=action, evidence=evidence,
+                                  resource=resource, subject=subject)
             if resp:
                 return resp
 
@@ -308,8 +306,8 @@ class Saml2Client(Base):
 
         for destination in destinations(srvs):
             res = self._use_soap(destination, "assertion_id_request",
-                                assertion_id_refs=_id_refs, consent=consent,
-                                extensions=extensions, sign=sign)
+                                 assertion_id_refs=_id_refs, consent=consent,
+                                 extensions=extensions, sign=sign)
             if res:
                 return res
 
@@ -321,9 +319,8 @@ class Saml2Client(Base):
         srvs = self.metadata.authn_request_service(entity_id, BINDING_SOAP)
 
         for destination in destinations(srvs):
-            resp = self._use_soap(destination, "authn_query",
-                                 consent=consent, extensions=extensions,
-                                 sign=sign)
+            resp = self._use_soap(destination, "authn_query", consent=consent,
+                                  extensions=extensions, sign=sign)
             if resp:
                 return resp
 
@@ -339,7 +336,8 @@ class Saml2Client(Base):
 
         :param entityid: To whom the query should be sent
         :param subject_id: The identifier of the subject
-        :param attribute: A dictionary of attributes and values that is asked for
+        :param attribute: A dictionary of attributes and values that is
+            asked for
         :param sp_name_qualifier: The unique identifier of the
             service provider or affiliation of providers for whom the
             identifier was generated.
@@ -352,7 +350,6 @@ class Saml2Client(Base):
         :return: The attributes returned if BINDING_SOAP was used.
             HTTP args if BINDING_HTT_POST was used.
         """
-
 
         if real_id:
             response_args = {"real_id": real_id}

@@ -49,16 +49,20 @@ logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 
+
 class IncorrectlySigned(Exception):
     pass
+
 
 class VerificationError(Exception):
     pass
 
 # ---------------------------------------------------------------------------
 
+
 def _dummy(_):
     return None
+
 
 def for_me(condition, myself):
     # Am I among the intended audiences
@@ -72,6 +76,7 @@ def for_me(condition, myself):
     
     return False
 
+
 def authn_response(conf, return_addr, outstanding_queries=None, timeslack=0,
                    asynchop=True, allow_unsolicited=False):
     sec = security_context(conf)
@@ -82,8 +87,9 @@ def authn_response(conf, return_addr, outstanding_queries=None, timeslack=0,
             timeslack = 0
     
     return AuthnResponse(sec, conf.attribute_converters, conf.entityid,
-                        return_addr, outstanding_queries, timeslack,
-                        asynchop=asynchop, allow_unsolicited=allow_unsolicited)
+                         return_addr, outstanding_queries, timeslack,
+                         asynchop=asynchop, allow_unsolicited=allow_unsolicited)
+
 
 # comes in over SOAP so synchronous
 def attribute_response(conf, return_addr, timeslack=0, asynchop=False,
@@ -96,8 +102,9 @@ def attribute_response(conf, return_addr, timeslack=0, asynchop=False,
             timeslack = 0
 
     return AttributeResponse(sec, conf.attribute_converters, conf.entityid,
-                                return_addr, timeslack, asynchop=asynchop,
-                                test=test)
+                             return_addr, timeslack, asynchop=asynchop,
+                             test=test)
+
 
 class StatusResponse(object):
     msgtype = "status_response"
@@ -111,7 +118,7 @@ class StatusResponse(object):
         self.request_id = request_id
 
         self.xmlstr = ""
-        self.name_id = ""
+        self.name_id = None
         self.response = None
         self.not_on_or_after = 0
         self.in_response_to = None
@@ -121,7 +128,7 @@ class StatusResponse(object):
     
     def _clear(self):
         self.xmlstr = ""
-        self.name_id = ""
+        self.name_id = None
         self.response = None
         self.not_on_or_after = 0
         
@@ -149,9 +156,10 @@ class StatusResponse(object):
             # This will check signature on Assertion which is the default
             try:
                 self.response = self.sec.check_signature(instance)
-            except SignatureError: # The response as a whole might be signed or not
-                self.response = self.sec.check_signature(instance,
-                                                    samlp.NAMESPACE+":Response")
+            except SignatureError:
+                # The response as a whole might be signed or not
+                self.response = self.sec.check_signature(
+                    instance, samlp.NAMESPACE + ":Response")
         else:
             self.not_signed = True
             self.response = instance
@@ -190,9 +198,9 @@ class StatusResponse(object):
     def issue_instant_ok(self):
         """ Check that the response was issued at a reasonable time """
         upper = time_util.shift_time(time_util.time_in_a_while(days=1),
-                                    self.timeslack).timetuple()
+                                     self.timeslack).timetuple()
         lower = time_util.shift_time(time_util.time_a_while_ago(days=1),
-                                    -self.timeslack).timetuple()
+                                     -self.timeslack).timetuple()
         # print "issue_instant: %s" % self.response.issue_instant
         # print "%s < x < %s" % (lower, upper)
         issued_at = str_to_time(self.response.issue_instant)
@@ -200,10 +208,9 @@ class StatusResponse(object):
 
     def _verify(self):
         if self.request_id and self.in_response_to and \
-            self.in_response_to != self.request_id:
+                self.in_response_to != self.request_id:
             logger.error("Not the id I expected: %s != %s" % (
-                                                        self.in_response_to,
-                                                        self.request_id))
+                self.in_response_to, self.request_id))
             return None
 
         try:
@@ -217,9 +224,9 @@ class StatusResponse(object):
 
         if self.asynchop:
             if self.response.destination and \
-                self.response.destination != self.return_addr:
+                    self.response.destination != self.return_addr:
                 logger.error("%s != %s" % (self.response.destination,
-                                                    self.return_addr))
+                                           self.return_addr))
                 return None
             
         assert self.issue_instant_ok()
@@ -244,13 +251,16 @@ class StatusResponse(object):
     def issuer(self):
         return self.response.issuer.text.strip()
         
+
 class LogoutResponse(StatusResponse):
     msgtype = "logout_response"
+
     def __init__(self, sec_context, return_addr=None, timeslack=0,
                  asynchop=True):
         StatusResponse.__init__(self, sec_context, return_addr, timeslack,
                                 asynchop=asynchop)
         self.signature_check = self.sec.correctly_signed_logout_response
+
 
 class NameIDMappingResponse(StatusResponse):
     msgtype = "name_id_mapping_response"
@@ -260,6 +270,7 @@ class NameIDMappingResponse(StatusResponse):
         StatusResponse.__init__(self, sec_context, return_addr, timeslack,
                                 request_id, asynchop)
         self.signature_check = self.sec.correctly_signed_name_id_mapping_response
+
 
 class ManageNameIDResponse(StatusResponse):
     msgtype = "manage_name_id_response"
@@ -273,15 +284,16 @@ class ManageNameIDResponse(StatusResponse):
 
 # ----------------------------------------------------------------------------
 
+
 class AuthnResponse(StatusResponse):
     """ This is where all the profile compliance is checked.
     This one does saml2int compliance. """
     msgtype = "authn_response"
 
-    def __init__(self, sec_context, attribute_converters, entity_id, 
-                    return_addr=None, outstanding_queries=None,
-                    timeslack=0, asynchop=True, allow_unsolicited=False,
-                    test=False):
+    def __init__(self, sec_context, attribute_converters, entity_id,
+                 return_addr=None, outstanding_queries=None,
+                 timeslack=0, asynchop=True, allow_unsolicited=False,
+                 test=False):
 
         StatusResponse.__init__(self, sec_context, return_addr, timeslack,
                                 asynchop=asynchop)
@@ -335,7 +347,8 @@ class AuthnResponse(StatusResponse):
             if validate_on_or_after(authn_statement.session_not_on_or_after,
                                     self.timeslack):
                 self.session_not_on_or_after = calendar.timegm(
-                    time_util.str_to_time(authn_statement.session_not_on_or_after))
+                    time_util.str_to_time(
+                        authn_statement.session_not_on_or_after))
             else:
                 return False
         return True
@@ -364,8 +377,7 @@ class AuthnResponse(StatusResponse):
         try:
             if condition.not_on_or_after:
                 self.not_on_or_after = validate_on_or_after(
-                                                    condition.not_on_or_after,
-                                                    self.timeslack)
+                    condition.not_on_or_after, self.timeslack)
             if condition.not_before:
                 validate_before(condition.not_before, self.timeslack)
         except Exception, excp:
@@ -374,7 +386,6 @@ class AuthnResponse(StatusResponse):
                 raise
             else:
                 self.not_on_or_after = 0
-
 
         if not for_me(condition, self.entity_id):
             if not lax:
@@ -490,7 +501,7 @@ class AuthnResponse(StatusResponse):
                 pass
             else:
                 raise ValueError("Unknown subject confirmation method: %s" % (
-                                    subject_confirmation.method,))
+                    subject_confirmation.method,))
 
             subjconf.append(subject_confirmation)
             
@@ -501,7 +512,7 @@ class AuthnResponse(StatusResponse):
         
         # The subject must contain a name_id
         assert subject.name_id
-        self.name_id = subject.name_id.text.strip()
+        self.name_id = subject.name_id
         return self.name_id
     
     def _assertion(self, assertion):
@@ -561,7 +572,7 @@ class AuthnResponse(StatusResponse):
     def parse_assertion(self):
         try:
             assert len(self.response.assertion) == 1 or \
-                   len(self.response.encrypted_assertion) == 1
+                len(self.response.encrypted_assertion) == 1
         except AssertionError:
             raise Exception("No assertion part")
         
@@ -571,8 +582,7 @@ class AuthnResponse(StatusResponse):
         else:
             logger.debug("***Encrypted response***")
             return self._encrypted_assertion(
-                                        self.response.encrypted_assertion[0])
-        
+                self.response.encrypted_assertion[0])
 
     def verify(self):
         """ Verify that the assertion is syntactically correct and
@@ -615,7 +625,7 @@ class AuthnResponse(StatusResponse):
         return res
 
     def authz_decision_info(self):
-        res = {"permit":[], "deny": [], "indeterminate":[] }
+        res = {"permit": [], "deny": [], "indeterminate": []}
         for adstat in self.assertion.authz_decision_statement:
             # one of 'Permit', 'Deny', 'Indeterminate'
             res[adstat.decision.text.lower()] = adstat
@@ -632,18 +642,17 @@ class AuthnResponse(StatusResponse):
             nooa = self.not_on_or_after
 
         if self.context == "AuthzQuery":
-            return {"name_id": self.name_id,
-                    "came_from": self.came_from, "issuer": self.issuer(),
-                    "not_on_or_after": nooa,
+            return {"name_id": self.name_id, "came_from": self.came_from,
+                    "issuer": self.issuer(), "not_on_or_after": nooa,
                     "authz_decision_info": self.authz_decision_info() }
         else:
-            return { "ava": self.ava, "name_id": self.name_id,
+            return {"ava": self.ava, "name_id": self.name_id,
                     "came_from": self.came_from, "issuer": self.issuer(),
-                    "not_on_or_after": nooa,
-                    "authn_info": self.authn_info() }
+                    "not_on_or_after": nooa, "authn_info": self.authn_info()}
     
     def __str__(self):
         return "%s" % self.xmlstr
+
 
 class AuthnQueryResponse(AuthnResponse):
     msgtype = "authn_query_response"
@@ -659,39 +668,44 @@ class AuthnQueryResponse(AuthnResponse):
         self.assertion = None
         self.context = "AuthnQueryResponse"
 
-    def condition_ok(self, lax=False): # Should I care about conditions ?
+    def condition_ok(self, lax=False):  # Should I care about conditions ?
         return True
+
 
 class AttributeResponse(AuthnResponse):
     msgtype = "attribute_response"
 
     def __init__(self, sec_context, attribute_converters, entity_id,
-                    return_addr=None, timeslack=0, asynchop=False, test=False):
+                 return_addr=None, timeslack=0, asynchop=False, test=False):
 
         AuthnResponse.__init__(self, sec_context, attribute_converters,
-                                entity_id, return_addr, timeslack=timeslack,
-                                asynchop=asynchop, test=test)
+                               entity_id, return_addr, timeslack=timeslack,
+                               asynchop=asynchop, test=test)
         self.entity_id = entity_id
         self.attribute_converters = attribute_converters
         self.assertion = None
         self.context = "AttrQuery"
 
+
 class AuthzResponse(AuthnResponse):
     """ A successful response will be in the form of assertions containing
     authorization decision statements."""
     msgtype = "authz_decision_response"
+
     def __init__(self, sec_context, attribute_converters, entity_id,
-                    return_addr=None, timeslack=0, asynchop=False):
+                 return_addr=None, timeslack=0, asynchop=False):
         AuthnResponse.__init__(self, sec_context, attribute_converters,
-                                entity_id, return_addr,
-                                timeslack=timeslack, asynchop=asynchop)
+                               entity_id, return_addr, timeslack=timeslack,
+                               asynchop=asynchop)
         self.entity_id = entity_id
         self.attribute_converters = attribute_converters
         self.assertion = None
         self.context = "AuthzQuery"
 
+
 class ArtifactResponse(AuthnResponse):
     msgtype = "artifact_response"
+
     def __init__(self, sec_context, attribute_converters, entity_id,
                  return_addr=None, timeslack=0, asynchop=False, test=False):
 
@@ -704,10 +718,9 @@ class ArtifactResponse(AuthnResponse):
         self.context = "ArtifactResolve"
 
 
-def response_factory(xmlstr, conf, return_addr=None,
-                        outstanding_queries=None,
-                        timeslack=0, decode=True, request_id=0,
-                        origxml=None, asynchop=True, allow_unsolicited=False):
+def response_factory(xmlstr, conf, return_addr=None, outstanding_queries=None,
+                     timeslack=0, decode=True, request_id=0, origxml=None,
+                     asynchop=True, allow_unsolicited=False):
     sec_context = security_context(conf)
     if not timeslack:
         try:
@@ -723,9 +736,10 @@ def response_factory(xmlstr, conf, return_addr=None,
     try:
         response.loads(xmlstr, decode, origxml)
         if response.response.assertion or response.response.encrypted_assertion:
-            authnresp = AuthnResponse(sec_context, attribute_converters, 
-                            entity_id, return_addr, outstanding_queries,
-                            timeslack, asynchop, allow_unsolicited)
+            authnresp = AuthnResponse(sec_context, attribute_converters,
+                                      entity_id, return_addr,
+                                      outstanding_queries, timeslack, asynchop,
+                                      allow_unsolicited)
             authnresp.update(response)
             return authnresp
     except TypeError:
@@ -740,6 +754,7 @@ def response_factory(xmlstr, conf, return_addr=None,
 
 # ===========================================================================
 # A class of it's own
+
 
 class AssertionIDResponse(object):
     msgtype = "assertion_id_response"

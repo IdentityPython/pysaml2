@@ -154,9 +154,11 @@ def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
 
     if isinstance(thingy, basestring):
         # remove the first XML version/encoding line
+        logger.debug("thingy0: %s" % thingy)
         _part = thingy.split("\n")
-        thingy = _part[1]
+        thingy = "".join(_part[1:])
         thingy = thingy.replace(PREFIX, "")
+        logger.debug("thingy: %s" % thingy)
         _child = ElementTree.Element('')
         _child.tag = '{%s}FuddleMuddle' % DUMMY_NAMESPACE
         body.append(_child)
@@ -165,12 +167,12 @@ def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
         # find an remove the namespace definition
         i = _str.find(DUMMY_NAMESPACE)
         j = _str.rfind("xmlns:", 0, i)
-        cut1 = _str[j:i+len(DUMMY_NAMESPACE)+1]
+        cut1 = _str[j:i + len(DUMMY_NAMESPACE) + 1]
         _str = _str.replace(cut1, "")
         first = _str.find("<%s:FuddleMuddle" % (cut1[6:9],))
         last = _str.find(">", first+14)
         cut2 = _str[first:last+1]
-        return _str.replace(cut2,thingy)
+        return _str.replace(cut2, thingy)
     else:
         thingy.become_child_element_of(body)
         return ElementTree.tostring(envelope, encoding="UTF-8")
