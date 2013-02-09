@@ -204,7 +204,7 @@ class Base(Entity):
                              binding=saml2.BINDING_HTTP_POST,
                              nameid_format=NAMEID_FORMAT_TRANSIENT,
                              service_url_binding=None,
-                             id=0, consent=None, extensions=None, sign=None,
+                             sid=0, consent=None, extensions=None, sign=None,
                              allow_create=False, **kwargs):
         """ Creates an authentication request.
         
@@ -215,7 +215,7 @@ class Base(Entity):
         :param nameid_format: Format of the NameID
         :param service_url_binding: Where the reply should be sent dependent
             on reply binding.
-        :param id: The identifier for this request
+        :param sid: The identifier for this request
         :param consent: Whether the principal have given her consent
         :param extensions: Possible extensions
         :param sign: Whether the request should be signed or not.
@@ -281,14 +281,14 @@ class Base(Entity):
                 else:
                     args[key] = val
 
-        return self._message(AuthnRequest, destination, id, consent,
+        return self._message(AuthnRequest, destination, sid, consent,
                              extensions, sign,
                              protocol_binding=binding,
                              scoping=scoping, **args)
 
 
     def create_attribute_query(self, destination, name_id=None,
-                               attribute=None, id=0, consent=None,
+                               attribute=None, sid=0, consent=None,
                                extensions=None, sign=False, **kwargs):
         """ Constructs an AttributeQuery
         
@@ -306,7 +306,7 @@ class Base(Entity):
         :param name_qualifier: The unique identifier of the identity
             provider that generated the identifier.
         :param format: The format of the name ID
-        :param id: The identifier of the session
+        :param sid: The identifier of the session
         :param consent: Whether the principal have given her consent
         :param extensions: Possible extensions
         :param sign: Whether the query should be signed or not.
@@ -338,7 +338,7 @@ class Base(Entity):
         if attribute:
             attribute = do_attributes(attribute)
 
-        return self._message(AttributeQuery, destination, id, consent,
+        return self._message(AttributeQuery, destination, sid, consent,
                              extensions, sign, subject=subject,
                              attribute=attribute)
 
@@ -349,7 +349,7 @@ class Base(Entity):
 
     def create_authz_decision_query(self, destination, action,
                                     evidence=None, resource=None, subject=None,
-                                    id=0, consent=None, extensions=None,
+                                    sid=0, consent=None, extensions=None,
                                     sign=None):
         """ Creates an authz decision query.
 
@@ -358,20 +358,20 @@ class Base(Entity):
         :param evidence: Why you should be able to perform the action
         :param resource: The resource you want to perform the action on
         :param subject: Who wants to do the thing
-        :param id: Message identifier
+        :param sid: Message identifier
         :param consent: If the principal gave her consent to this request
         :param extensions: Possible request extensions
         :param sign: Whether the request should be signed or not.
         :return: AuthzDecisionQuery instance
         """
 
-        return self._message(AuthzDecisionQuery, destination, id, consent,
+        return self._message(AuthzDecisionQuery, destination, sid, consent,
                              extensions, sign, action=action, evidence=evidence,
                              resource=resource, subject=subject)
 
     def create_authz_decision_query_using_assertion(self, destination, assertion,
                                                     action=None, resource=None,
-                                                    subject=None, id=0,
+                                                    subject=None, sid=0,
                                                     consent=None,
                                                     extensions=None,
                                                     sign=False):
@@ -382,7 +382,7 @@ class Base(Entity):
         :param action: The action you want to perform (has to be at least one)
         :param resource: The resource you want to perform the action on
         :param subject: Who wants to do the thing
-        :param id: Message identifier
+        :param sid: Message identifier
         :param consent: If the principal gave her consent to this request
         :param extensions: Possible request extensions
         :param sign: Whether the request should be signed or not.
@@ -401,7 +401,7 @@ class Base(Entity):
                                                 _action,
                                                 saml.Evidence(assertion=assertion),
                                                 resource, subject,
-                                                id=id,
+                                                sid=sid,
                                                 consent=consent,
                                                 extensions=extensions,
                                                 sign=sign)
@@ -424,27 +424,27 @@ class Base(Entity):
 
     def create_authn_query(self, subject, destination=None,
                            authn_context=None, session_index="",
-                           id=0, consent=None, extensions=None, sign=False):
+                           sid=0, consent=None, extensions=None, sign=False):
         """
 
         :param subject: The subject its all about as a <Subject> instance
         :param destination: The IdP endpoint to send the request to
         :param authn_context: list of <RequestedAuthnContext> instances
         :param session_index: a specified session index
-        :param id: Message identifier
+        :param sid: Message identifier
         :param consent: If the principal gave her consent to this request
         :param extensions: Possible request extensions
         :param sign: Whether the request should be signed or not.
         :return:
         """
-        return self._message(AuthnQuery, destination, id, consent, extensions,
+        return self._message(AuthnQuery, destination, sid, consent, extensions,
                              sign, subject=subject, session_index=session_index,
                              requested_authn_context=authn_context)
 
     def create_name_id_mapping_request(self, name_id_policy,
                                       name_id=None, base_id=None,
                                       encrypted_id=None, destination=None,
-                                      id=0, consent=None, extensions=None,
+                                      sid=0, consent=None, extensions=None,
                                       sign=False):
         """
 
@@ -453,7 +453,7 @@ class Base(Entity):
         :param base_id:
         :param encrypted_id:
         :param destination:
-        :param id: Message identifier
+        :param sid: Message identifier
         :param consent: If the principal gave her consent to this request
         :param extensions: Possible request extensions
         :param sign: Whether the request should be signed or not.
@@ -464,15 +464,15 @@ class Base(Entity):
         assert name_id or base_id or encrypted_id
 
         if name_id:
-            return self._message(NameIDMappingRequest, destination, id, consent,
+            return self._message(NameIDMappingRequest, destination, sid, consent,
                                  extensions, sign, name_id_policy=name_id_policy,
                                  name_id=name_id)
         elif base_id:
-            return self._message(NameIDMappingRequest, destination, id, consent,
+            return self._message(NameIDMappingRequest, destination, sid, consent,
                                  extensions, sign, name_id_policy=name_id_policy,
                                  base_id=base_id)
         else:
-            return self._message(NameIDMappingRequest, destination, id, consent,
+            return self._message(NameIDMappingRequest, destination, sid, consent,
                                  extensions, sign, name_id_policy=name_id_policy,
                                  encrypted_id=encrypted_id)
 
@@ -635,8 +635,8 @@ class Base(Entity):
 
         return authn_req.id, "%s" % soap_envelope
 
-    def parse_ecp_authn_response(self, str, outstanding=None):
-        rdict = soap.class_instances_from_soap_enveloped_saml_thingies(str,
+    def parse_ecp_authn_response(self, txt, outstanding=None):
+        rdict = soap.class_instances_from_soap_enveloped_saml_thingies(txt,
                                                                        [paos,
                                                                         ecp,
                                                                         samlp])

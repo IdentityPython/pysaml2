@@ -130,7 +130,7 @@ class Saml2Client(Base):
         for entity_id in entity_ids:
             response = False
 
-            for binding in [#BINDING_SOAP,
+            for binding in [BINDING_SOAP,
                             BINDING_HTTP_POST,
                             BINDING_HTTP_REDIRECT]:
                 srvs = self.metadata.single_logout_service(entity_id, binding,
@@ -183,7 +183,7 @@ class Saml2Client(Base):
                                        "not_on_of_after": expire,
                                        "sign": sign}
 
-                    responses[entity_id] = http_info
+                    responses[entity_id] = (binding, http_info)
                     not_done.remove(entity_id)
 
                 # only try one binding
@@ -383,10 +383,8 @@ class Saml2Client(Base):
         elif binding == BINDING_HTTP_POST:
             mid = sid()
             query = self.create_attribute_query(destination, subject_id,
-                                                attribute, sp_name_qualifier,
-                                                name_qualifier, nameid_format,
-                                                mid, consent, extensions,
-                                                sign)
+                                                attribute, mid, consent,
+                                                extensions, sign)
             self.state[query.id] = {"entity_id": entityid,
                                       "operation": "AttributeQuery",
                                       "subject_id": subject_id,
@@ -396,3 +394,4 @@ class Saml2Client(Base):
                                       relay_state)
         else:
             raise Exception("Unsupported binding")
+
