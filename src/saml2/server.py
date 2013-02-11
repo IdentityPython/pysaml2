@@ -49,7 +49,7 @@ from saml2.assertion import Policy
 from saml2.assertion import restriction_from_attribute_spec
 from saml2.assertion import filter_attribute_value_assertions
 
-from saml2.ident import IdentDB
+from saml2.ident import IdentDB, code
 #from saml2.profile import paos
 from saml2.profile import ecp
 
@@ -70,6 +70,8 @@ class Server(Entity):
         self.ticket = {}
         self.authn = {}
         self.assertion = {}
+        self.user2uid = {}
+        self.uid2user = {}
 
     def init_config(self, stype="idp"):
         """ Remaining init of the server configuration 
@@ -194,8 +196,8 @@ class Server(Entity):
     def store_assertion(self, assertion, to_sign):
         self.assertion[assertion.id] = (assertion, to_sign)
 
-    def get_assertion(self, id):
-        return self.assertion[id]
+    def get_assertion(self, cid):
+        return self.assertion[cid]
 
     def store_authn_statement(self, authn_statement, name_id):
         """
@@ -204,7 +206,8 @@ class Server(Entity):
         :param name_id:
         :return:
         """
-        nkey = sha1("%s" % name_id).hexdigest()
+        logger.debug("store authn about: %s" % name_id)
+        nkey = sha1(code(name_id)).hexdigest()
         logger.debug("Store authn_statement under key: %s" % nkey)
         try:
             self.authn[nkey].append(authn_statement)
@@ -234,7 +237,8 @@ class Server(Entity):
         return result
 
     def remove_authn_statements(self, name_id):
-        nkey = sha1("%s" % name_id).hexdigest()
+        logger.debug("remove authn about: %s" % name_id)
+        nkey = sha1(code(name_id)).hexdigest()
 
         del self.authn[nkey]
 

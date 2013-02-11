@@ -204,11 +204,11 @@ class Entity(HTTPBase):
 
         raise Exception("Unkown entity or unsupported bindings")
 
-    def message_args(self, id=0):
-        if not id:
-            id = sid(self.seed)
+    def message_args(self, seid=0):
+        if not seid:
+            seid = sid(self.seed)
 
-        return {"id":id, "version":VERSION,
+        return {"id":seid, "version":VERSION,
                 "issue_instant":instant(), "issuer":self._issuer()}
 
     def response_args(self, message, bindings=None, descr_type=""):
