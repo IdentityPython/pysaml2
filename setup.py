@@ -41,7 +41,7 @@ install_requires=[
     'paste',
     'zope.interface',
     'repoze.who == 1.0.18',
-    'm2crypto',
+    'm2crypto'
     ]
 
 # only for Python 2.6
@@ -51,7 +51,7 @@ if sys.version_info < (2,7):
 setup(
     name='pysaml2',
     version='1.0.0dev',
-    description='Python implementation of SAML Version 2 to for instance be used in a WSGI environment',
+    description='Python implementation of SAML Version 2 to be used in a WSGI environment',
 #    long_description = read("README"),
     author='Roland Hedberg',
     author_email='roland.hedberg@adm.umu.se',

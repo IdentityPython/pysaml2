@@ -140,9 +140,9 @@ class HTTPBase(object):
                     if morsel["max-age"]:
                         std_attr["expires"] = _since_epoch(morsel["max-age"])
 
-            for att, set in PAIRS.items():
+            for att, item in PAIRS.items():
                 if std_attr[att]:
-                    std_attr[set] = True
+                    std_attr[item] = True
 
             if std_attr["domain"] and std_attr["domain"].startswith("."):
                 std_attr["domain_initial_dot"] = True

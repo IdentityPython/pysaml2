@@ -163,7 +163,7 @@ class FakeIDP(Server):
 
         req = logout_request_from_string(_str)
 
-        _resp = self.create_logout_response(req, binding)
+        _resp = self.create_logout_response(req, [binding])
 
         if binding == BINDING_SOAP:
             # SOAP packing

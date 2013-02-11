@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import base64
 from urlparse import parse_qs
-from saml2.saml import AUTHN_PASSWORD
+from saml2.saml import AUTHN_PASSWORD, NameID, NAMEID_FORMAT_TRANSIENT
 from saml2.samlp import response_from_string
 
 from saml2.server import Server
@@ -17,6 +17,9 @@ from saml2 import BINDING_HTTP_POST, BINDING_HTTP_REDIRECT
 
 from py.test import raises
 import os
+
+nid = NameID(name_qualifier="foo", format=NAMEID_FORMAT_TRANSIENT,
+             text="123456")
 
 def _eq(l1,l2):
     return set(l1) == set(l2)
@@ -150,13 +153,12 @@ class TestServer1():
 
     def test_parse_ok_request(self):
         authn_request = self.client.create_authn_request(
-                                    id = "id1",
-                                    destination = "http://localhost:8088/sso")
+            sid="id1", destination="http://localhost:8088/sso")
 
         print authn_request
         binding = BINDING_HTTP_REDIRECT
         htargs = self.client.apply_binding(binding, "%s" % authn_request,
-                                         "http://www.example.com", "abcd")
+                                           "http://www.example.com", "abcd")
         _dict = parse_qs(htargs["headers"][0][1].split('?')[1])
         print _dict
 
@@ -176,17 +178,17 @@ class TestServer1():
                                         "urn:mace:example.com:saml:roland:sp",
                                         "id12")
         resp = self.server.create_authn_response(
-                    {"eduPersonEntitlement": "Short stop",
-                     "surName": "Jeter",
-                     "givenName": "Derek",
-                     "mail": "derek.jeter@nyy.mlb.com",
-                     "title": "The man"},
-                     "id12",                         # in_response_to
-                     "http://localhost:8087/",       # destination
-                     "urn:mace:example.com:saml:roland:sp", # sp_entity_id
-                     name_id=name_id,
-                     authn=(AUTHN_PASSWORD, "http://www.example.com/login")
-                )
+            {"eduPersonEntitlement": "Short stop",
+             "surName": "Jeter",
+             "givenName": "Derek",
+             "mail": "derek.jeter@nyy.mlb.com",
+             "title": "The man"},
+            "id12",                         # in_response_to
+            "http://localhost:8087/",       # destination
+            "urn:mace:example.com:saml:roland:sp", # sp_entity_id
+            name_id=name_id,
+            authn=(AUTHN_PASSWORD, "http://www.example.com/login")
+        )
 
         print resp.keyswv()
         assert _eq(resp.keyswv(),['status', 'destination', 'assertion', 
@@ -335,7 +337,7 @@ class TestServer1():
     def test_slo_http_post(self):
         soon = time_util.in_a_while(days=1)
         sinfo = {
-            "name_id": "foba0001",
+            "name_id": nid,
             "issuer": "urn:mace:example.com:saml:roland:idp",
             "not_on_or_after" : soon,
             "user": {
@@ -346,10 +348,9 @@ class TestServer1():
         self.client.users.add_information_about_person(sinfo)
 
         logout_request = self.client.create_logout_request(
-                            destination = "http://localhost:8088/slop",
-                            subject_id="foba0001",
-                            issuer_entity_id = "urn:mace:example.com:saml:roland:idp",
-                            reason = "I'm tired of this")
+            destination="http://localhost:8088/slop", name_id=nid,
+            issuer_entity_id="urn:mace:example.com:saml:roland:idp",
+            reason="I'm tired of this")
 
         intermed = base64.b64encode("%s" % logout_request)
 
@@ -360,9 +361,9 @@ class TestServer1():
     def test_slo_soap(self):
         soon = time_util.in_a_while(days=1)
         sinfo = {
-            "name_id": "foba0001",
+            "name_id": nid,
             "issuer": "urn:mace:example.com:saml:roland:idp",
-            "not_on_or_after" : soon,
+            "not_on_or_after": soon,
             "user": {
                 "givenName": "Leo",
                 "surName": "Laport",
@@ -373,10 +374,9 @@ class TestServer1():
         sp.users.add_information_about_person(sinfo)
 
         logout_request = sp.create_logout_request(
-                        subject_id = "foba0001",
-                        destination = "http://localhost:8088/slo",
-                        issuer_entity_id = "urn:mace:example.com:saml:roland:idp",
-                        reason = "I'm tired of this")
+            name_id=nid, destination="http://localhost:8088/slo",
+            issuer_entity_id="urn:mace:example.com:saml:roland:idp",
+            reason="I'm tired of this")
 
         #_ = s_utils.deflate_and_base64_encode("%s" % (logout_request,))
 
@@ -429,7 +429,7 @@ def _logout_request(conf_file):
 
     soon = time_util.in_a_while(days=1)
     sinfo = {
-        "name_id": "foba0001",
+        "name_id": nid,
         "issuer": "urn:mace:example.com:saml:roland:idp",
         "not_on_or_after" : soon,
         "user": {
@@ -440,7 +440,7 @@ def _logout_request(conf_file):
     sp.users.add_information_about_person(sinfo)
 
     return sp.create_logout_request(
-                subject_id = "foba0001",
+                name_id = nid,
                 destination = "http://localhost:8088/slo",
                 issuer_entity_id = "urn:mace:example.com:saml:roland:idp",
                 reason = "I'm tired of this")
