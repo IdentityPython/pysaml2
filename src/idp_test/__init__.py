@@ -6,13 +6,14 @@ import time
 
 import logging
 
+from saml2.client import Saml2Client
 from saml2.config import SPConfig
+from saml2.mdstore import MetadataStore
+from saml2.mdstore import MetaData
 
 from idp_test.base import FatalError
 from idp_test.base import Conversation
 from idp_test.check import CheckSaml2IntMetaData
-#from saml2.config import Config
-from saml2.mdstore import MetadataStore, MetaData
 
 # Schemas supported
 from saml2 import md
@@ -34,6 +35,7 @@ import traceback
 
 logger = logging.getLogger("")
 
+
 def exception_trace(tag, exc, log=None):
     message = traceback.format_exception(*sys.exc_info())
     if log:
@@ -42,6 +44,7 @@ def exception_trace(tag, exc, log=None):
     else:
         print >> sys.stderr, "[%s] ExcList: %s" % (tag, "".join(message),)
         print >> sys.stderr, "[%s] Exception: %s" % (tag, exc)
+
 
 class Trace(object):
     def __init__(self):
@@ -90,20 +93,25 @@ class Trace(object):
         for line in self.trace:
             yield line
 
+
 class SAML2client(object):
 
-    def __init__(self, operations):
+    def __init__(self, operations, check_factory):
         self.trace = Trace()
         self.operations = operations
         self.tests = None
+        self.check_factory = check_factory
 
         self._parser = argparse.ArgumentParser()
         self._parser.add_argument('-d', dest='debug', action='store_true',
                                   help="Print debug information")
         self._parser.add_argument('-v', dest='verbose', action='store_true',
                                   help="Print runtime information")
-        self._parser.add_argument('-C', dest="ca_certs",
-                                  help="CA certs to use to verify HTTPS server certificates, if HTTPS is used and no server CA certs are defined then no cert verification will be done")
+        self._parser.add_argument(
+            '-C', dest="ca_certs",
+            help=("CA certs to use to verify HTTPS server certificates, ",
+                  "if HTTPS is used and no server CA certs are defined then ",
+                  "no cert verification will be done"))
         self._parser.add_argument('-J', dest="json_config_file",
                                   help="Script configuration")
         self._parser.add_argument('-m', dest="metadata", action='store_true',
@@ -134,7 +142,7 @@ class SAML2client(object):
         self.sp_config = SPConfig().load(mod.CONFIG, metadata_construction)
 
     def setup(self):
-        self.json_config= self.json_config_file()
+        self.json_config = self.json_config_file()
 
         _jc = self.json_config
 
@@ -151,7 +159,8 @@ class SAML2client(object):
         self.sp_config.metadata = metadata
 
         if self.args.testpackage:
-            self.tests = import_module("idp_test.package.%s" % self.args.testpackage)
+            self.tests = import_module("idp_test.package.%s" %
+                                       self.args.testpackage)
 
         try:
             self.entity_id = _jc["entity_id"]
@@ -163,7 +172,7 @@ class SAML2client(object):
             else:
                 raise Exception("Don't know which entity to talk to")
 
-    def test_summation(self, id):
+    def test_summation(self, sid):
         status = 0
         for item in self.test_log:
             if item["status"] > status:
@@ -172,17 +181,17 @@ class SAML2client(object):
         if status == 0:
             status = 1
 
-        sum = {
-            "id": id,
+        info = {
+            "id": sid,
             "status": status,
             "tests": self.test_log
         }
 
         if status == 5:
-            sum["url"] = self.test_log[-1]["url"]
-            sum["htmlbody"] = self.test_log[-1]["message"]
+            info["url"] = self.test_log[-1]["url"]
+            info["htmlbody"] = self.test_log[-1]["message"]
 
-        return sum
+        return info
 
     def run(self):
         self.args = self._parser.parse_args()
@@ -201,6 +210,7 @@ class SAML2client(object):
 
         self.setup()
 
+        self.client = Saml2Client(self.sp_config)
         try:
             try:
                 oper = self.operations.OPERATIONS[self.args.oper]
@@ -215,14 +225,16 @@ class SAML2client(object):
                     print >> sys.stderr, "Undefined testcase"
                     return
 
-            conv = Conversation(self.sp_config, self.trace, self.interactions,
-                                self.json_config["entity_id"])
+            conv = Conversation(self.client, self.sp_config, self.trace,
+                                self.interactions,
+                                check_factory = self.check_factory,
+                                entity_id = self.json_config["entity_id"])
             conv.do_sequence(oper)
             #testres, trace = do_sequence(oper,
             self.test_log = conv.test_output
-            sum = self.test_summation(self.args.oper)
-            print >>sys.stdout, json.dumps(sum)
-            if sum["status"] > 1 or self.args.debug:
+            tsum = self.test_summation(self.args.oper)
+            print >>sys.stdout, json.dumps(tsum)
+            if tsum["status"] > 1 or self.args.debug:
                 print >> sys.stderr, self.trace
         except FatalError, err:
             print >> sys.stderr, self.trace
@@ -235,9 +247,8 @@ class SAML2client(object):
 
     def list_operations(self):
         lista = []
-        for key,val in self.operations.OPERATIONS.items():
-            item = {"id": key,
-                    "name": val["name"],}
+        for key, val in self.operations.OPERATIONS.items():
+            item = {"id": key, "name": val["name"]}
             try:
                 _desc = val["descr"]
                 if isinstance(_desc, basestring):
@@ -256,9 +267,8 @@ class SAML2client(object):
             lista.append(item)
         if self.args.testpackage:
             mod = import_module(self.args.testpackage, "idp_test")
-            for key,val in mod.OPERATIONS.items():
-                item = {"id": key,
-                        "name": val["name"],}
+            for key, val in mod.OPERATIONS.items():
+                item = {"id": key, "name": val["name"]}
                 try:
                     _desc = val["descr"]
                     if isinstance(_desc, basestring):

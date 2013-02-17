@@ -1,6 +1,7 @@
 import inspect
 import sys
 import traceback
+from rrtest.check import CriticalError, Check
 from saml2.mdstore import REQ2SRV
 from saml2.s_utils import UnknownPrincipal, UnsupportedBinding
 from saml2.saml import NAMEID_FORMAT_TRANSIENT, NAMEID_FORMAT_PERSISTENT
@@ -21,65 +22,12 @@ INTERACTION = 5
 STATUSCODE = ["INFORMATION", "OK", "WARNING", "ERROR", "CRITICAL",
               "INTERACTION"]
 
-class Check():
-    """ General test
-    """
-    id = "check"
-    msg = "OK"
-
-    def __init__(self, **kwargs):
-        self._status = OK
-        self._message = ""
-        self.content = None
-        self.url = ""
-        self._kwargs = kwargs
-
-    def _func(self, environ):
-        return {}
-
-    def __call__(self, environ=None, output=None):
-        _stat =  self.response(**self._func(environ))
-        output.append(_stat)
-        return _stat
-
-    def response(self, **kwargs):
-        try:
-            name = " ".join([s.strip() for s in self.__doc__.strip().split("\n")])
-        except AttributeError:
-            name = ""
-
-        res = {
-            "id": self.id,
-            "status": self._status,
-            "name": name
-        }
-
-        if self._message:
-            res["message"] = self._message
-
-        if kwargs:
-            res.update(kwargs)
-
-        return res
-
-class ExpectedError(Check):
-    pass
-
-class CriticalError(Check):
-    status = CRITICAL
-
-class Error(Check):
-    status = ERROR
-
-class Other(CriticalError):
-    """ Other error """
-    msg  = "Other error"
 
 class WrapException(CriticalError):
     """
     A runtime exception
     """
-    id = "exception"
+    cid = "exception"
     msg = "Test tool exception"
 
     def _func(self, environ=None):
@@ -87,11 +35,12 @@ class WrapException(CriticalError):
         self._message = traceback.format_exception(*sys.exc_info())
         return {}
 
+
 class InteractionNeeded(CriticalError):
     """
     A Webpage was displayed for which no known interaction is defined.
     """
-    id = "interaction-needed"
+    cid = "interaction-needed"
     msg = "Unexpected page"
 
     def _func(self, environ=None):
@@ -99,18 +48,19 @@ class InteractionNeeded(CriticalError):
         self._message = None
         return {"url": environ["url"]}
 
+
 class CheckHTTPResponse(CriticalError):
     """
     Checks that the HTTP response status is within the 200 or 300 range
     """
-    id = "check-http-response"
+    cid = "check-http-response"
     msg = "IdP error"
 
     def _func(self, environ):
-        _response = environ["response"][-1]
+        _response = environ["response"]
 
         res = {}
-        if _response.status_code >= 400 :
+        if _response.status_code >= 400:
             self._status = self.status
             self._message = self.msg
             res["url"] = environ["url"]
@@ -119,11 +69,12 @@ class CheckHTTPResponse(CriticalError):
 
         return res
 
+
 class CheckSaml2IntMetaData(Check):
     """
     Checks that the Metadata follows the Saml2Int profile
     """
-    id = "check-saml2int-metadata"
+    cid = "check-saml2int-metadata"
     msg = "Metadata error"
 
     def verify_key_info(self, ki):
@@ -197,7 +148,8 @@ class CheckSaml2IntMetaData(Check):
             if "support" in item and "technical" in item:
                 pass
             elif "support" not in item and "technical" not in item:
-                self._message = "Missing technical and support contact information"
+                self._message = \
+                    "Missing technical and support contact information"
                 self._status = WARNING
             elif "technical" not in item:
                 self._message = "Missing technical contact information"
@@ -216,10 +168,10 @@ class CheckSaml2IntMetaData(Check):
             return res
         else:
             # should support Transient
-            item = {NAMEID_FORMAT_TRANSIENT:False}
-            for format in idpsso["name_id_format"]:
+            item = {NAMEID_FORMAT_TRANSIENT: False}
+            for nformat in idpsso["name_id_format"]:
                 try:
-                    item[format["text"]] = True
+                    item[nformat["text"]] = True
                 except KeyError:
                     pass
 
@@ -230,17 +182,18 @@ class CheckSaml2IntMetaData(Check):
 
         return res
 
+
 class CheckSaml2IntAttributes(Check):
     """
     Any <saml2:Attribute> elements exchanged via any SAML 2.0 messages,
     assertions, or metadata MUST contain a NameFormat of
     urn:oasis:names:tc:SAML:2.0:attrname-format:uri.
     """
-    id = "check-saml2int-attributes"
+    cid = "check-saml2int-attributes"
     msg = "Attribute error"
 
     def _func(self, environ):
-        response = environ["response"][-1]
+        response = environ["response"]
         try:
             opaque_identifier = environ["opaque_identifier"]
         except KeyError:
@@ -279,19 +232,22 @@ class CheckSaml2IntAttributes(Check):
 
         if opaque_identifier:
             try:
-                assert assertion.subject.name_id.format == NAMEID_FORMAT_PERSISTENT
+                assert assertion.subject.name_id.format == \
+                    NAMEID_FORMAT_PERSISTENT
             except AssertionError:
                 self._message = "NameID format should be PERSISTENT"
                 self._status = WARNING
 
         if name_format_not_specified:
             try:
-                assert assertion.subject.name_id.format == NAMEID_FORMAT_TRANSIENT
+                assert assertion.subject.name_id.format == \
+                    NAMEID_FORMAT_TRANSIENT
             except AssertionError:
                 self._message = "NameID format should be TRANSIENT"
                 self._status = WARNING
 
         return res
+
 
 class CheckSubjectNameIDFormat(Check):
     """
@@ -306,21 +262,21 @@ class CheckSubjectNameIDFormat(Check):
     of identifier, subject to any additional constraints due to the content of
     this element or the policies of the identity provider or principal.
     """
-    id = "check-saml2int-nameid-format"
+    cid = "check-saml2int-nameid-format"
     msg = "Attribute error"
 
     def _func(self, environ):
-        response = environ["response"][-1]
+        response = environ["response"]
         request = environ["request"]
 
-        res ={}
+        res = {}
         if request.name_id_policy:
-            format = request.name_id_policy.format
+            nformat = request.name_id_policy.format
             sp_name_qualifier = request.name_id_policy.sp_name_qualifier
 
             subj = response.assertion.subject
             try:
-                assert subj.name_id.format == format
+                assert subj.name_id.format == nformat
                 if sp_name_qualifier:
                     assert subj.name_id.sp_name_qualifier == sp_name_qualifier
             except AssertionError:
@@ -329,11 +285,12 @@ class CheckSubjectNameIDFormat(Check):
 
         return res
 
+
 class CheckLogoutSupport(Check):
     """
     Verifies that the tested entity supports single log out
     """
-    id = "check-logout-support"
+    cid = "check-logout-support"
     msg = "Does not support logout"
 
     def _func(self, environ):
@@ -352,13 +309,14 @@ class CheckLogoutSupport(Check):
 
         return {}
 
+
 class VerifyLogout(Check):
-    id = "verify-logout"
+    cid = "verify-logout"
     msg = "Logout failed"
 
     def _func(self, environ):
         # Check that the logout response says it was a success
-        resp = environ["response"][-1]
+        resp = environ["response"]
         status = resp.response.status
         try:
             assert status.status_code.value == STATUS_SUCCESS
@@ -377,25 +335,27 @@ class VerifyLogout(Check):
 
         return {}
 
+
 class VerifyContent(Check):
     """ Basic content verification class, does required and max/min checks
     """
-    id = "verify-content"
+    cid = "verify-content"
 
     def _func(self, environ):
         try:
-            environ["response"][-1].response.verify()
+            environ["saml_response"][-1].response.verify()
         except ValueError:
             self._status = CRITICAL
 
         return {}
 
+
 class VerifySuccessStatus(Check):
     """ Verifies that the response was a success response """
-    id = "verify-success-status"
+    cid = "verify-success-status"
 
     def _func(self, environ):
-        response = environ["response"][-1].response
+        response = environ["saml_response"][-1].response
 
         try:
             assert response.status.status_code.value == STATUS_SUCCESS
@@ -405,15 +365,16 @@ class VerifySuccessStatus(Check):
 
         return {}
 
+
 class VerifyNameIDPolicyUsage(Check):
     """
     Verify the nameID in the response is according to the provided
     NameIDPolicy
     """
-    id = "verify-name-id-policy-usage"
+    cid = "verify-name-id-policy-usage"
 
     def _func(self, environ):
-        response = environ["response"][-1].response
+        response = environ["saml_response"][-1].response
         nip = environ["oper.args"]["name_id_policy"]
         for assertion in response.assertion:
             nid = assertion.subject.name_id
@@ -431,15 +392,16 @@ class VerifyNameIDPolicyUsage(Check):
                     self._status = WARNING
         return {}
 
+
 class VerifyNameIDMapping(Check):
     """
     Verify that a new NameID is issued and that it follows the
     given policy.
     """
-    id = "verify-name-id-mapping"
+    cid = "verify-name-id-mapping"
 
     def _func(self, environ):
-        response = environ["response"][-1].response
+        response = environ["saml_response"][-1].response
         nip = environ["oper.args"]["name_id_policy"]
         nid = response.name_id
         if nip.format:
@@ -457,14 +419,15 @@ class VerifyNameIDMapping(Check):
 
         return {}
 
+
 class VerifySPProvidedID(Check):
     """
     Verify that the IdP allows the SP so set a SP provided ID
     """
-    id = "verify-sp-provided-id"
+    cid = "verify-sp-provided-id"
 
     def _func(self, environ):
-        response = environ["response"][-1].response
+        response = environ["saml_response"][-1].response
         nip = environ["oper.args"]["new_id"]
         nid = response.name_id
         try:
@@ -476,7 +439,6 @@ class VerifySPProvidedID(Check):
         return {}
 
 
-
 class VerifyFunctionality(Check):
     """
     Verifies that the IdP supports the needed functionality
@@ -486,8 +448,8 @@ class VerifyFunctionality(Check):
         md = environ["metadata"]
         entity = md[environ["entity_id"]]
         for idp in entity["idpsso_descriptor"]:
-            for format in idp["name_id_format"]:
-                if nameid_format == format["text"]:
+            for nformat in idp["name_id_format"]:
+                if nameid_format == nformat["text"]:
                     return {}
 
         self._message = "No support for NameIDFormat '%s'" % nameid_format
@@ -498,9 +460,11 @@ class VerifyFunctionality(Check):
     def _srv_support(self, environ, service):
         md = environ["metadata"]
         entity = md[environ["entity_id"]]
-        for idp in entity["idpsso_descriptor"]:
-            if service in idp:
-                return {}
+        for desc in ["idpsso_descriptor", "attribute_authority_descriptor",
+                     "auth_authority_descriptor"]:
+            for srvgrp in entity[desc]:
+                if service in srvgrp:
+                    return {}
 
         self._message = "No support for '%s'" % service
         self._status = CRITICAL
@@ -528,8 +492,7 @@ class VerifyFunctionality(Check):
         if self._status != "OK":
             return res
 
-        res = self._binding_support(environ, oper.request,
-                                         args["binding"])
+        res = self._binding_support(environ, oper.request, args["binding"])
         if self._status != "OK":
             return res
 
@@ -545,11 +508,11 @@ class VerifyFunctionality(Check):
 
 # =============================================================================
 
-def factory(id):
+def factory(cid):
     for name, obj in inspect.getmembers(sys.modules[__name__]):
         if inspect.isclass(obj):
             try:
-                if obj.id == id:
+                if obj.cid == cid:
                     return obj
             except AttributeError:
                 pass
