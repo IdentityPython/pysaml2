@@ -304,7 +304,7 @@ class HTTPBase(object):
             logger.info("SOAP response: %s" % response.text)
             return response
         else:
-            raise HTTPError("%d:%s" % (response.status_code, response.error))
+            raise HTTPError("%d:%s" % (response.status_code, response.content))
 
     def add_credentials(self, user, passwd):
         self.user = user

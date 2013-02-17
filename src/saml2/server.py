@@ -224,8 +224,14 @@ class Server(Entity):
         :return:
         """
         result = []
-        key = sha1("%s" % name_id).hexdigest()
-        for statement in self.authn[key]:
+        key = sha1(code(name_id)).hexdigest()
+        try:
+            statements = self.authn[key]
+        except KeyError:
+            logger.info("Unknown subject %s" % name_id)
+            return []
+
+        for statement in statements:
             if session_index:
                 if statement.session_index != session_index:
                     continue
