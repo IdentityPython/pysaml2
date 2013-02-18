@@ -146,7 +146,10 @@ class SAML2client(object):
 
         _jc = self.json_config
 
-        self.interactions = _jc["interaction"]
+        try:
+            self.interactions = _jc["interaction"]
+        except KeyError:
+            self.interactions = []
 
         self.sp_configure()
 
