@@ -30,7 +30,7 @@ class WrapException(CriticalError):
     cid = "exception"
     msg = "Test tool exception"
 
-    def _func(self, environ=None):
+    def _func(self, conv=None):
         self._status = self.status
         self._message = traceback.format_exception(*sys.exc_info())
         return {}
@@ -43,10 +43,10 @@ class InteractionNeeded(CriticalError):
     cid = "interaction-needed"
     msg = "Unexpected page"
 
-    def _func(self, environ=None):
+    def _func(self, conv=None):
         self._status = self.status
         self._message = None
-        return {"url": environ["url"]}
+        return {"url": conv.position}
 
 
 class CheckHTTPResponse(CriticalError):
@@ -56,14 +56,14 @@ class CheckHTTPResponse(CriticalError):
     cid = "check-http-response"
     msg = "IdP error"
 
-    def _func(self, environ):
-        _response = environ["response"]
+    def _func(self, conv):
+        _response = conv.response
 
         res = {}
         if _response.status_code >= 400:
             self._status = self.status
             self._message = self.msg
-            res["url"] = environ["url"]
+            res["url"] = conv.position
             res["http_status"] = _response.status_code
             res["content"] = _response.text
 
@@ -113,8 +113,8 @@ class CheckSaml2IntMetaData(Check):
 
         return True
 
-    def _func(self, environ):
-        mds = environ["metadata"].metadata[0]
+    def _func(self, conv):
+        mds = conv.client.metadata.metadata[0]
         # Should only be one
         ed = mds.entity.values()[0]
         res = {}
@@ -192,15 +192,15 @@ class CheckSaml2IntAttributes(Check):
     cid = "check-saml2int-attributes"
     msg = "Attribute error"
 
-    def _func(self, environ):
-        response = environ["response"]
+    def _func(self, conv):
+        response = conv.response
         try:
-            opaque_identifier = environ["opaque_identifier"]
-        except KeyError:
+            opaque_identifier = conv.opaque_identifier
+        except AttributeError:
             opaque_identifier = False
         try:
-            name_format_not_specified = environ["name_format_not_specified"]
-        except KeyError:
+            name_format_not_specified = conv.name_format_not_specified
+        except AttributeError:
             name_format_not_specified = False
 
         res = {}
@@ -265,9 +265,9 @@ class CheckSubjectNameIDFormat(Check):
     cid = "check-saml2int-nameid-format"
     msg = "Attribute error"
 
-    def _func(self, environ):
-        response = environ["response"]
-        request = environ["request"]
+    def _func(self, conv):
+        response = conv.response
+        request = conv.request
 
         res = {}
         if request.name_id_policy:
@@ -293,8 +293,8 @@ class CheckLogoutSupport(Check):
     cid = "check-logout-support"
     msg = "Does not support logout"
 
-    def _func(self, environ):
-        mds = environ["metadata"].metadata[0]
+    def _func(self, conv):
+        mds = conv.client.metadata.metadata[0]
         # Should only be one
         ed = mds.entity.values()[0]
 
@@ -314,9 +314,9 @@ class VerifyLogout(Check):
     cid = "verify-logout"
     msg = "Logout failed"
 
-    def _func(self, environ):
+    def _func(self, conv):
         # Check that the logout response says it was a success
-        resp = environ["response"]
+        resp = conv.response
         status = resp.response.status
         try:
             assert status.status_code.value == STATUS_SUCCESS
@@ -326,9 +326,9 @@ class VerifyLogout(Check):
 
         # Check that there are no valid cookies
         # should only result in a warning
-        httpc = environ["httpc"]
+        httpc = conv.client
         try:
-            assert httpc.cookies(environ["destination"]) == {}
+            assert httpc.cookies(conv.destination) == {}
         except AssertionError:
             self._message = "Remaining cookie ?"
             self._status = WARNING
@@ -341,9 +341,9 @@ class VerifyContent(Check):
     """
     cid = "verify-content"
 
-    def _func(self, environ):
+    def _func(self, conv):
         try:
-            environ["saml_response"][-1].response.verify()
+            conv.saml_response[-1].response.verify()
         except ValueError:
             self._status = CRITICAL
 
@@ -354,8 +354,8 @@ class VerifySuccessStatus(Check):
     """ Verifies that the response was a success response """
     cid = "verify-success-status"
 
-    def _func(self, environ):
-        response = environ["saml_response"][-1].response
+    def _func(self, conv):
+        response = conv.saml_response[-1].response
 
         try:
             assert response.status.status_code.value == STATUS_SUCCESS
@@ -373,9 +373,9 @@ class VerifyNameIDPolicyUsage(Check):
     """
     cid = "verify-name-id-policy-usage"
 
-    def _func(self, environ):
-        response = environ["saml_response"][-1].response
-        nip = environ["oper.args"]["name_id_policy"]
+    def _func(self, conv):
+        response = conv.saml_response[-1].response
+        nip = conv.oper.args["name_id_policy"]
         for assertion in response.assertion:
             nid = assertion.subject.name_id
             if nip.format:
@@ -400,9 +400,9 @@ class VerifyNameIDMapping(Check):
     """
     cid = "verify-name-id-mapping"
 
-    def _func(self, environ):
-        response = environ["saml_response"][-1].response
-        nip = environ["oper.args"]["name_id_policy"]
+    def _func(self, conv):
+        response = conv.saml_response[-1].response
+        nip = conv.oper.args["name_id_policy"]
         nid = response.name_id
         if nip.format:
             try:
@@ -426,9 +426,9 @@ class VerifySPProvidedID(Check):
     """
     cid = "verify-sp-provided-id"
 
-    def _func(self, environ):
-        response = environ["saml_response"][-1].response
-        nip = environ["oper.args"]["new_id"]
+    def _func(self, conv):
+        response = conv.saml_response[-1].response
+        nip = conv.oper.args["new_id"]
         nid = response.name_id
         try:
             assert nid.sp_provided_id == nip.new_id
@@ -444,9 +444,9 @@ class VerifyFunctionality(Check):
     Verifies that the IdP supports the needed functionality
     """
 
-    def _nameid_format_support(self, environ, nameid_format):
-        md = environ["metadata"]
-        entity = md[environ["entity_id"]]
+    def _nameid_format_support(self, conv, nameid_format):
+        md = conv.client.metadata
+        entity = md[conv.entity_id]
         for idp in entity["idpsso_descriptor"]:
             for nformat in idp["name_id_format"]:
                 if nameid_format == nformat["text"]:
@@ -457,9 +457,9 @@ class VerifyFunctionality(Check):
 
         return {}
 
-    def _srv_support(self, environ, service):
-        md = environ["metadata"]
-        entity = md[environ["entity_id"]]
+    def _srv_support(self, conv, service):
+        md = conv.client.metadata
+        entity = md[conv.entity_id]
         for desc in ["idpsso_descriptor", "attribute_authority_descriptor",
                      "auth_authority_descriptor"]:
             for srvgrp in entity[desc]:
@@ -470,9 +470,9 @@ class VerifyFunctionality(Check):
         self._status = CRITICAL
         return {}
 
-    def _binding_support(self, environ, service, binding):
-        md = environ["metadata"]
-        entity_id = environ["entity_id"]
+    def _binding_support(self, conv, service, binding):
+        md = conv.client.metadata
+        entity_id = conv.entity_id
         func = getattr(md, service, None)
         try:
             func(entity_id, binding)
@@ -485,22 +485,22 @@ class VerifyFunctionality(Check):
 
         return {}
 
-    def _func(self, environ):
-        oper = environ["op"]
-        args = environ["oper.args"]
-        res = self._srv_support(environ, REQ2SRV[oper.request])
+    def _func(self, conv):
+        oper = conv.oper
+        args = conv.oper.args
+        res = self._srv_support(conv, REQ2SRV[oper.request])
         if self._status != "OK":
             return res
 
-        res = self._binding_support(environ, oper.request, args["binding"])
+        res = self._binding_support(conv, oper.request, args["binding"])
         if self._status != "OK":
             return res
 
         if "nameid_format" in args:
-            res = self._nameid_format_support(environ, args["nameid_format"])
+            res = self._nameid_format_support(conv, args["nameid_format"])
 
         if "name_id_policy" in args:
-            res = self._nameid_format_support(environ,
+            res = self._nameid_format_support(conv,
                                               args["name_id_policy"].format)
 
         return res

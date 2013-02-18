@@ -24,11 +24,11 @@ class Check():
         self.url = ""
         self._kwargs = kwargs
 
-    def _func(self, environ):
+    def _func(self, conv):
         return {}
 
-    def __call__(self, environ=None, output=None):
-        _stat = self.response(**self._func(environ))
+    def __call__(self, conv=None, output=None):
+        _stat = self.response(**self._func(conv))
         output.append(_stat)
         return _stat
 

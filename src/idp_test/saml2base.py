@@ -27,9 +27,9 @@ class Request(object):
     _class = None
     tests = {"post": [VerifyContent], "pre": []}
 
-    def __init__(self, environ):
+    def __init__(self, conv):
         self.args = self._args.copy()
-        self.environ = environ
+        self.conv = conv
 
     def setup(self):
         pass
@@ -66,8 +66,8 @@ class DynAuthnRequest(Request):
     bindings = [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST]
 
     def setup(self):
-        metadata = self.environ["metadata"]
-        entity = metadata[self.environ["entity_id"]]
+        metadata = self.conv.client.metadata
+        entity = metadata[self.conv.entity_id]
         self.args = {"nameid_format": "", "binding": ""}
         for idp in entity["idpsso_descriptor"]:
             for nformat in self.name_id_formats:
@@ -90,14 +90,14 @@ class AuthnRequestPost(AuthnRequest):
     tests = {"pre": [VerifyFunctionality],
              "post": [CheckSaml2IntAttributes]}
 
-    def __init__(self, environ):
-        AuthnRequest.__init__(self, environ)
+    def __init__(self, conv):
+        AuthnRequest.__init__(self, conv)
         self.args["binding"] = BINDING_HTTP_POST
 
 
 class AuthnRequest_using_Artifact(AuthnRequest):
-    def __init__(self, environ):
-        AuthnRequest.__init__(self, environ)
+    def __init__(self, conv):
+        AuthnRequest.__init__(self, conv)
         self.use_artifact = True
 
 
@@ -105,8 +105,8 @@ class AuthnRequestPostTransient(AuthnRequest):
     tests = {"pre": [VerifyFunctionality],
              "post": [CheckSaml2IntAttributes]}
 
-    def __init__(self, environ):
-        AuthnRequest.__init__(self, environ)
+    def __init__(self, conv):
+        AuthnRequest.__init__(self, conv)
         self.args["binding"] = BINDING_HTTP_POST
         self.args["nameid_format"] = NAMEID_FORMAT_TRANSIENT
 
@@ -116,13 +116,13 @@ class LogOutRequest(Request):
     _args = {"binding": BINDING_SOAP}
     tests = {"pre": [VerifyFunctionality], "post": []}
 
-    def __init__(self, environ):
-        Request.__init__(self, environ)
+    def __init__(self, conv):
+        Request.__init__(self, conv)
         self.tests["pre"].append(CheckLogoutSupport)
         self.tests["post"].append(VerifyLogout)
 
     def setup(self):
-        resp = self.environ["saml_response"][-1].response
+        resp = self.conv.saml_response[-1].response
         assertion = resp.assertion[0]
         subj = assertion.subject
         self.args["name_id"] = subj.name_id
@@ -135,7 +135,7 @@ class AssertionIDRequest(Request):
     tests = {"pre": [VerifyFunctionality]}
 
     def setup(self):
-        resp = self.environ["saml_response"][-1].response
+        resp = self.conv.saml_response[-1].response
         assertion = resp.assertion[0]
         self.args["assertion_id_refs"] = [assertion.id]
 
@@ -145,12 +145,12 @@ class AuthnQuery(Request):
     _args = {"binding": BINDING_SOAP}
     tests = {"pre": [VerifyFunctionality], "post": []}
 
-    def __init__(self, environ):
-        Request.__init__(self, environ)
+    def __init__(self, conv):
+        Request.__init__(self, conv)
         self.tests["post"].append(VerifySuccessStatus)
 
     def setup(self):
-        resp = self.environ["saml_response"][-1].response
+        resp = self.conv.saml_response[-1].response
         assertion = resp.assertion[0]
         self.args["subject"] = assertion.subject
 
@@ -162,12 +162,12 @@ class NameIDMappingRequest(Request):
                                             sp_name_qualifier="GroupOn",
                                             allow_create="true")}
 
-    def __init__(self, environ):
-        Request.__init__(self, environ)
+    def __init__(self, conv):
+        Request.__init__(self, conv)
         self.tests["post"].append(VerifyNameIDMapping)
 
     def setup(self):
-        resp = self.environ["saml_response"][-1].response
+        resp = self.conv.saml_response[-1].response
         assertion = resp.assertion[0]
         self.args["name_id"] = assertion.subject.name_id
 
@@ -180,8 +180,8 @@ class AuthnRequest_NameIDPolicy1(AuthnRequest):
                                             allow_create="true"),
              "allow_create": True}
 
-    def __init__(self, environ):
-        AuthnRequest.__init__(self, environ)
+    def __init__(self, conv):
+        AuthnRequest.__init__(self, conv)
         self.tests["post"].append(VerifyNameIDPolicyUsage)
 
 
@@ -193,20 +193,20 @@ class AuthnRequest_Transient(AuthnRequest):
                                             allow_create="true"),
              "allow_create": True}
 
-    def __init__(self, environ):
-        AuthnRequest.__init__(self, environ)
+    def __init__(self, conv):
+        AuthnRequest.__init__(self, conv)
         self.tests["post"].append(VerifyNameIDPolicyUsage)
 
 
 class ECP_AuthnRequest(AuthnRequest):
 
-    def __init__(self, environ):
-        AuthnRequest.__init__(self, environ)
+    def __init__(self, conv):
+        AuthnRequest.__init__(self, conv)
         self.args["binding"] = BINDING_SOAP
         self.args["service_url_binding"] = BINDING_PAOS
 
     def setup(self):
-        _client = self.environ["client"]
+        _client = self.conv.client
         _client.user = "babs"
         _client.passwd = "howes"
 
@@ -216,12 +216,12 @@ class ManageNameIDRequest(Request):
     _args = {"binding": BINDING_SOAP,
              "new_id": samlp.NewID("New identifier")}
 
-    def __init__(self, environ):
-        Request.__init__(self, environ)
+    def __init__(self, conv):
+        Request.__init__(self, conv)
         self.tests["post"].append(VerifySuccessStatus)
 
     def setup(self):
-        resp = self.environ["saml_response"][-1].response
+        resp = self.conv.saml_response[-1].response
         assertion = resp.assertion[0]
         self.args["name_id"] = assertion.subject.name_id
 
@@ -231,7 +231,7 @@ class AttributeQuery(Request):
     _args = {"binding": BINDING_SOAP}
 
     def setup(self):
-        resp = self.environ["saml_response"][-1].response
+        resp = self.conv.saml_response[-1].response
         assertion = resp.assertion[0]
         self.args["name_id"] = assertion.subject.name_id
 

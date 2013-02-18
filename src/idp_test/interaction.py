@@ -9,6 +9,7 @@ from mechanize import ParseResponseEx
 from mechanize._form import ControlNotFoundError, AmbiguityError
 from mechanize._form import ListControl
 
+
 def pick_interaction(interactions, _base="", content="", req=None):
     unic = content
     if content:
@@ -34,7 +35,7 @@ def pick_interaction(interactions, _base="", content="", req=None):
                     if isinstance(_c, list) and not isinstance(_c, basestring):
                         for _line in _c:
                             if val in _line:
-                                _match +=1
+                                _match += 1
                                 continue
             elif attr == "content":
                 if unic and val in unic:
@@ -48,6 +49,7 @@ def pick_interaction(interactions, _base="", content="", req=None):
 
     raise KeyError("No interaction matched")
 
+
 class FlowException(Exception):
     def __init__(self, function="", content="", url=""):
         Exception.__init__(self)
@@ -57,6 +59,7 @@ class FlowException(Exception):
 
     def __str__(self):
         return json.dumps(self.__dict__)
+
 
 class RResponse():
     """
@@ -111,7 +114,7 @@ class RResponse():
                     part = self.text[self.index:]
                     self.index = self._len
                 else:
-                    part = self.text[self.index:self.index+size]
+                    part = self.text[self.index: self.index + size]
                     self.index += size
                 return part
         else:
@@ -127,7 +130,7 @@ def pick_form(response, url=None, **kwargs):
     :param url: The url the request was sent to
     :return: The picked form or None of no form matched the criteria.
     """
-    _txt = response.text
+    #_txt = response.text
 
     forms = ParseResponseEx(response)
     if not forms:
@@ -182,6 +185,7 @@ def pick_form(response, url=None, **kwargs):
 
     return _form
 
+
 def do_click(httpc, form, **kwargs):
     """
     Emulates the user clicking submit on a form.
@@ -192,7 +196,7 @@ def do_click(httpc, form, **kwargs):
     """
 
     if "click" in kwargs:
-        request=None
+        request = None
         _name = kwargs["click"]
         try:
             _ = form.find_control(name=_name)
@@ -221,15 +225,12 @@ def do_click(httpc, form, **kwargs):
         headers[key] = val
 
     url = request._Request__original
-    try:
-        _trace = kwargs["_trace_"]
-    except KeyError:
-        _trace = False
 
     if form.method == "POST":
         return httpc.send(url, "POST", data=request.data, headers=headers)
     else:
         return httpc.send(url, "GET", headers=headers)
+
 
 def select_form(httpc, orig_response, **kwargs):
     """
@@ -271,6 +272,7 @@ def select_form(httpc, orig_response, **kwargs):
 
     return do_click(httpc, form, **kwargs)
 
+
 #noinspection PyUnusedLocal
 def chose(httpc, orig_response, path, **kwargs):
     """
@@ -295,12 +297,13 @@ def chose(httpc, orig_response, path, **kwargs):
             _url = kwargs["location"]
 
         part = urlparse(_url)
-        url = "%s://%s%s" %  (part[0], part[1], path)
+        url = "%s://%s%s" % (part[0], part[1], path)
     else:
         url = path
 
     return httpc.send(url, "GET", trace=_trace)
     #return resp, ""
+
 
 def post_form(httpc, orig_response, **kwargs):
     """
@@ -318,8 +321,10 @@ def post_form(httpc, orig_response, **kwargs):
 
     return do_click(httpc, form, **kwargs)
 
+
 def NoneFunc():
     return None
+
 
 #noinspection PyUnusedLocal
 def parse(httpc, orig_response, **kwargs):
@@ -332,7 +337,8 @@ def parse(httpc, orig_response, **kwargs):
         raise Exception("Can't pick a form !!")
 
     return {"SAMLResponse": form["SAMLResponse"],
-            "RelayState":form["RelayState"]}
+            "RelayState": form["RelayState"]}
+
 
 #noinspection PyUnusedLocal
 def interaction(args):
@@ -348,6 +354,7 @@ def interaction(args):
 
 # ========================================================================
 
+
 class Operation(object):
     def __init__(self, args=None):
         if args:
@@ -360,10 +367,10 @@ class Operation(object):
         self.args.update(dic)
 
     #noinspection PyUnusedLocal
-    def post_op(self, result, environ, args):
+    def post_op(self, result, conv, args):
         pass
 
-    def __call__(self, httpc, environ, trace, location, response, content,
+    def __call__(self, httpc, conv, trace, location, response, content,
                  features):
         try:
             _args = self.args.copy()
@@ -379,7 +386,5 @@ class Operation(object):
             trace.reply("ARGS: %s" % _args)
 
         result = self.function(httpc, response, **_args)
-        self.post_op(result, environ, _args)
+        self.post_op(result, conv, _args)
         return result
-
-

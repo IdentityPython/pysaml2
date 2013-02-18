@@ -361,10 +361,10 @@ class Operation(object):
         self.args.update(dic)
 
     #noinspection PyUnusedLocal
-    def post_op(self, result, environ, args):
+    def post_op(self, result, conv, args):
         pass
 
-    def __call__(self, httpc, environ, trace, location, response, content,
+    def __call__(self, httpc, conv, trace, location, response, content,
                  features):
         intact = Interaction(httpc)
         function = intact.interaction(self.args)
@@ -383,5 +383,5 @@ class Operation(object):
             trace.reply("ARGS: %s" % _args)
 
         result = function(response, **_args)
-        self.post_op(result, environ, _args)
+        self.post_op(result, conv, _args)
         return result

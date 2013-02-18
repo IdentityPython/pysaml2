@@ -20,15 +20,15 @@ class Conversation():
         self.check_factory = check_factory
         self.msg_factory = msg_factory
 
-        self.environ = {"client": self.client, "response": None}
-
         self.cjar = {"browser": cookielib.CookieJar(),
                      "rp": cookielib.CookieJar(),
                      "service": cookielib.CookieJar()}
 
         self.last_response = None
         self.last_content = None
+        self.response = None
         self.interaction = Interaction(self.client, interaction)
+        self.exception = None
 
     def check_severity(self, stat):
         if stat["status"] >= 4:
@@ -50,14 +50,14 @@ class Conversation():
             chk = self.check_factory(test)(**kwargs)
         else:
             chk = test(**kwargs)
-        stat = chk(self.environ, self.test_output)
+        stat = chk(self, self.test_output)
         self.check_severity(stat)
 
     def err_check(self, test, err=None, bryt=True):
         if err:
-            self.environ["exception"] = err
+            self.exception = err
         chk = self.check_factory(test)()
-        chk(self.environ, self.test_output)
+        chk(self, self.test_output)
         if bryt:
             raise FatalError(test)
 
@@ -84,10 +84,17 @@ class Conversation():
 
         url = _response.url
         content = _response.text
-
         while not done:
+            rdseq = []
             while _response.status_code in [302, 301, 303]:
                 url = _response.headers["location"]
+                if url in rdseq:
+                    raise FatalError("Loop detected in redirects")
+                else:
+                    rdseq.append(url)
+                    if len(rdseq) > 8:
+                        raise FatalError(
+                            "Too long sequence of redirects: %s" % rdseq)
 
                 self.trace.reply("REDIRECT TO: %s" % url)
                 # If back to me
@@ -95,7 +102,7 @@ class Conversation():
                 for redirect_uri in self.my_endpoints():
                     if url.startswith(redirect_uri):
                         # Back at the RP
-                        self.environ["client"].cookiejar = self.cjar["rp"]
+                        self.client.cookiejar = self.cjar["rp"]
                         for_me = True
 
                 if for_me:
@@ -109,8 +116,9 @@ class Conversation():
 
                     content = _response.text
                     self.trace.reply("CONTENT: %s" % content)
-                    self.environ.update({"url": url, "content": content})
-                    self.environ["response"] = _response
+                    self.position = url
+                    self.last_content = content
+                    self.response = _response
 
                     self.do_check("check-http-response")
 
@@ -122,27 +130,28 @@ class Conversation():
             try:
                 _spec = self.interaction.pick_interaction(_base, content)
             except KeyError:
-                self.environ["url"] = url
+                self.position = url
                 self.trace.error("Page Content: %s" % content)
                 self.err_check("interaction-needed")
 
             if len(_spec) > 2:
                 self.trace.info(">> %s <<" % _spec["page-type"])
                 if _spec["page-type"] == "login":
-                    self.environ["login"] = content
+                    self.login_page = content
 
             _op = Operation(_spec["control"])
 
             try:
-                _response = _op(self.client, self.environ, self.trace, url,
+                _response = _op(self.client, self, self.trace, url,
                                 _response, content, self.features)
                 if isinstance(_response, dict):
                     self.last_response = _response
                     self.last_content = _response
                     return _response
                 content = _response.text
-                self.environ.update({"url": url, "content": content})
-                self.environ["response"] = _response
+                self.position = url
+                self.last_content = content
+                self.response = _response
 
                 self.do_check("check-http-response")
             except FatalError:
@@ -187,7 +196,7 @@ class Conversation():
             try:
                 self.do_query()
             except FatalError:
-                pass
+                raise
             except Exception, err:
                 self.err_check("exception", err)
 

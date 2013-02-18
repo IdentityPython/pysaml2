@@ -60,10 +60,6 @@ class Conversation(tool.Conversation):
                                    interaction, check_factory, msg_factory,
                                    features, verbose)
         self.entity_id = entity_id
-        self.environ.update({"metadata": self.client.metadata,
-                             "client": self.client, "entity_id": entity_id,
-                             "saml_response": []})
-
         self.cjar = {"browser": cookielib.CookieJar(),
                      "rp": cookielib.CookieJar(),
                      "service": cookielib.CookieJar()}
@@ -71,6 +67,12 @@ class Conversation(tool.Conversation):
         self.args = {}
         self.qargs = {}
         self.response_args = {}
+        self.saml_response = []
+        self.destination = ""
+        self.request = None
+        self.position = ""
+        self.response = None
+        self.oper = None
 
     def send(self):
         srvs = getattr(self.client.metadata, REQ2SRV[self.oper.request])(
@@ -88,7 +90,6 @@ class Conversation(tool.Conversation):
         _client = self.client
         loc = srv["location"]
         self.qargs["destination"] = loc
-        self.environ["destination"] = loc
         self.response_args = {}
         use_artifact = getattr(self.oper, "use_artifact", False)
 
@@ -97,10 +98,8 @@ class Conversation(tool.Conversation):
         except KeyError:
             req = self.qfunc(**self.qargs)
 
-        self.req = self.oper.pre_processing(req, self.args)
-
-        self.environ["request"] = self.req
-        str_req = "%s" % req
+        self.request = self.oper.pre_processing(req, self.args)
+        str_req = "%s" % self.request
 
         if use_artifact:
             saml_art = _client.use_artifact(str_req, self.args["entity_id"])
@@ -124,7 +123,7 @@ class Conversation(tool.Conversation):
             if self.args["binding"] is BINDING_HTTP_REDIRECT:
                 htargs = http_redirect_message(str_req, loc, self.relay_state,
                                                info_typ)
-                self.response_args["outstanding"] = {self.req.id: "/"}
+                self.response_args["outstanding"] = {self.request.id: "/"}
                 #
                 res = _client.send(htargs["headers"][0][1], "GET")
             elif self.args["binding"] is BINDING_HTTP_POST:
@@ -132,7 +131,7 @@ class Conversation(tool.Conversation):
                                                 info_typ)
                 info = unpack_form(htargs["data"][3])
                 data = form_post(info)
-                self.response_args["outstanding"] = {self.req.id: "/"}
+                self.response_args["outstanding"] = {self.request.id: "/"}
                 htargs["data"] = data
                 htargs["headers"] = [("Content-type",
                                       'application/x-www-form-urlencoded')]
@@ -151,11 +150,11 @@ class Conversation(tool.Conversation):
             self.last_content = None
 
     def init(self, phase):
-        self.environ["op"] = phase
-        _oper = phase(self.environ)
+        self.phase = phase
+        _oper = phase(self)
         _oper.setup()
         self.args = _oper.args
-        self.environ["oper.args"] = _oper.args.copy()
+        #self.oper.args = _oper.args.copy()
         self.args["entity_id"] = self.entity_id
         self.oper = _oper
         self.client.cookiejar = self.cjar["browser"]
@@ -168,7 +167,6 @@ class Conversation(tool.Conversation):
         self.response_func = getattr(_client, "parse_%s_response" % query)
         qargs = self.args.copy()
         self.relay_state = rndstr()
-        self.environ["relay_state"] = self.relay_state
 
         if "message" not in _oper.args:
             self.qfunc = getattr(_client, "create_%s" % query)
@@ -195,6 +193,7 @@ class Conversation(tool.Conversation):
         except AttributeError:
             pass
 
+        response = ""
         try:
             response = self.oper.post_processing(self.last_content)
             if isinstance(response, dict):
@@ -204,9 +203,10 @@ class Conversation(tool.Conversation):
                     pass
                 response = response["SAMLResponse"]
             _resp = self.response_func(response, **self.response_args)
-            self.environ["saml_response"].append(_resp)
+            self.saml_response.append(_resp)
             self.trace.info("SAML Response: %s" % _resp)
         except Exception, err:
+            self.trace.debug("Faulty response: %s" % response)
             self.trace.error("Exception %s" % err)
             self.err_check("exception", err)
 
