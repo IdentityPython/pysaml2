@@ -230,8 +230,8 @@ class SAML2client(object):
 
             conv = Conversation(self.client, self.sp_config, self.trace,
                                 self.interactions,
-                                check_factory = self.check_factory,
-                                entity_id = self.json_config["entity_id"])
+                                check_factory=self.check_factory,
+                                entity_id=self.entity_id)
             conv.do_sequence(oper)
             #testres, trace = do_sequence(oper,
             self.test_log = conv.test_output
