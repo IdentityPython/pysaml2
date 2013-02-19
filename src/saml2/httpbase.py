@@ -108,7 +108,7 @@ class HTTPBase(object):
         #if part.port:
         #    _domain = "%s:%s" % (part.hostname, part.port)
         #else:
-        _domain = part.netloc
+        _domain = part.hostname
 
         cookie_dict = {}
         now = utc_now()
@@ -135,7 +135,7 @@ class HTTPBase(object):
 
         logger.debug("Set Cookie '%s'" % kaka)
         part = urlparse.urlparse(request.url)
-        _domain = part.netloc
+        _domain = part.hostname
 
         for cookie_name, morsel in kaka.items():
             std_attr = ATTRS.copy()
