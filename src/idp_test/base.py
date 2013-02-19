@@ -55,7 +55,7 @@ def tuple_list2dict(tl):
 class Conversation(tool.Conversation):
     def __init__(self, client, config, trace, interaction,
                  check_factory, entity_id, msg_factory=None,
-                 features=None, verbose=False):
+                 features=None, verbose=False, **kwargs):
         tool.Conversation.__init__(self, client, config, trace,
                                    interaction, check_factory, msg_factory,
                                    features, verbose)
@@ -73,6 +73,7 @@ class Conversation(tool.Conversation):
         self.position = ""
         self.response = None
         self.oper = None
+        self.idp_constraints = kwargs
 
     def send(self):
         srvs = getattr(self.client.metadata, REQ2SRV[self.oper.request])(
@@ -158,6 +159,10 @@ class Conversation(tool.Conversation):
         self.args["entity_id"] = self.entity_id
         self.oper = _oper
         self.client.cookiejar = self.cjar["browser"]
+        try:
+            self.test_sequence(self.oper.tests["pre"])
+        except KeyError:
+            pass
 
     def setup_request(self):
         query = self.oper.request
@@ -204,6 +209,10 @@ class Conversation(tool.Conversation):
                 response = response["SAMLResponse"]
             _resp = self.response_func(response, **self.response_args)
             self.saml_response.append(_resp)
+            try:
+                self.test_sequence(self.oper.tests["post"])
+            except KeyError:
+                pass
             self.trace.info("SAML Response: %s" % _resp)
         except Exception, err:
             self.trace.debug("Faulty response: %s" % response)

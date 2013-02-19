@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from saml2.saml import NAME_FORMAT_URI
+
 __author__ = 'rolandh'
 
 import json
@@ -52,7 +54,8 @@ info = {
             }
         }
     ],
-    "metadata": metadata
+    "metadata": metadata,
+    "name_format": NAME_FORMAT_URI
 }
 
 print json.dumps(info)

@@ -1,12 +1,18 @@
 import inspect
 import sys
 import traceback
-from rrtest.check import CriticalError, Check
+
+from rrtest.check import CriticalError
+from rrtest.check import Check
+
 from saml2.mdstore import REQ2SRV
-from saml2.s_utils import UnknownPrincipal, UnsupportedBinding
-from saml2.saml import NAMEID_FORMAT_TRANSIENT, NAMEID_FORMAT_PERSISTENT
+from saml2.s_utils import UnknownPrincipal
+from saml2.s_utils import UnsupportedBinding
+from saml2.saml import NAMEID_FORMAT_PERSISTENT, NAME_FORMAT_UNSPECIFIED
+from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.saml import NAME_FORMAT_URI
 from saml2.samlp import STATUS_SUCCESS
+from saml2.samlp import Response
 from saml2.sigver import cert_from_key_info_dict
 from saml2.sigver import key_from_key_value_dict
 
@@ -193,7 +199,7 @@ class CheckSaml2IntAttributes(Check):
     msg = "Attribute error"
 
     def _func(self, conv):
-        response = conv.response
+        response = conv.saml_response[-1]
         try:
             opaque_identifier = conv.opaque_identifier
         except AttributeError:
@@ -266,7 +272,7 @@ class CheckSubjectNameIDFormat(Check):
     msg = "Attribute error"
 
     def _func(self, conv):
-        response = conv.response
+        response = conv.saml_response[-1].response
         request = conv.request
 
         res = {}
@@ -316,7 +322,7 @@ class VerifyLogout(Check):
 
     def _func(self, conv):
         # Check that the logout response says it was a success
-        resp = conv.response
+        resp = conv.saml_response[-1]
         status = resp.response.status
         try:
             assert status.status_code.value == STATUS_SUCCESS
@@ -506,7 +512,37 @@ class VerifyFunctionality(Check):
         return res
 
 
+class VerifyAttributeProfile(Check):
+    """
+    Verify that the correct attribute profile is used.
+    """
+    cid = "verify-attribute-profile"
+
+    def _func(self, conv):
+        # Should be a AuthnResponse or Response instance
+        response = conv.saml_response[-1]
+        assert isinstance(response.response, Response)
+
+        assertion = response.assertion
+
+        if assertion:
+            if assertion.attribute_statement:
+                atrstat = assertion.attribute_statement[0]
+                for attr in atrstat.attribute:
+                    try:
+                        assert attr.name_format == conv.idp_constraints[
+                            "name_format"]
+                    except AssertionError:
+                        if conv.idp_constraints[
+                                "name_format"] != NAME_FORMAT_UNSPECIFIED:
+                            self._message = \
+                                "Wrong name format: '%s'" % attr.name_format
+                            self._status = CRITICAL
+                            break
+        return {}
+
 # =============================================================================
+
 
 def factory(cid):
     for name, obj in inspect.getmembers(sys.modules[__name__]):

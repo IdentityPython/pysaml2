@@ -24,6 +24,7 @@ from saml2.extension import dri
 from saml2.extension import mdattr
 from saml2.extension import ui
 from saml2.metadata import entity_descriptor
+from saml2.saml import NAME_FORMAT_UNSPECIFIED
 import xmldsig
 import xmlenc
 
@@ -35,7 +36,7 @@ import traceback
 
 logger = logging.getLogger("")
 logger.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter("%(asctime)s %(name)s:%(levelname)s %(message)s")
 memoryhandler = logging.handlers.MemoryHandler(1024*10, logging.DEBUG)
 logger.addHandler(memoryhandler)
 
@@ -178,6 +179,11 @@ class SAML2client(object):
             else:
                 raise Exception("Don't know which entity to talk to")
 
+        try:
+            self.name_format = _jc["name_format"]
+        except KeyError:
+            self.name_format = NAME_FORMAT_UNSPECIFIED
+
     def test_summation(self, sid):
         status = 0
         for item in self.test_log:
@@ -239,10 +245,12 @@ class SAML2client(object):
                     print >> sys.stderr, "Undefined testcase"
                     return
 
+            kwargs = {"name_format": self.name_format}
+
             conv = Conversation(self.client, self.sp_config, self.trace,
                                 self.interactions,
                                 check_factory=self.check_factory,
-                                entity_id=self.entity_id)
+                                entity_id=self.entity_id, **kwargs)
             conv.do_sequence(oper)
             #testres, trace = do_sequence(oper,
             self.test_log = conv.test_output

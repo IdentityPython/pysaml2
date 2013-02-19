@@ -10,6 +10,7 @@ from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from idp_test.check import CheckLogoutSupport
 from idp_test.check import CheckSaml2IntAttributes
 from idp_test.check import CheckSaml2IntMetaData
+from idp_test.check import VerifyAttributeProfile
 from idp_test.check import VerifyFunctionality
 from idp_test.check import VerifyContent
 from idp_test.check import VerifyLogout
@@ -54,7 +55,7 @@ class AuthnRequest(Request):
              "nameid_format": NAMEID_FORMAT_PERSISTENT,
              "allow_create": True}
     tests = {"pre": [VerifyFunctionality],
-             "post": [CheckSaml2IntAttributes]}
+             "post": [CheckSaml2IntAttributes, VerifyAttributeProfile]}
 
 
 class DynAuthnRequest(Request):
@@ -87,9 +88,6 @@ class DynAuthnRequest(Request):
 
 
 class AuthnRequestPost(AuthnRequest):
-    tests = {"pre": [VerifyFunctionality],
-             "post": [CheckSaml2IntAttributes]}
-
     def __init__(self, conv):
         AuthnRequest.__init__(self, conv)
         self.args["binding"] = BINDING_HTTP_POST
@@ -102,9 +100,6 @@ class AuthnRequest_using_Artifact(AuthnRequest):
 
 
 class AuthnRequestPostTransient(AuthnRequest):
-    tests = {"pre": [VerifyFunctionality],
-             "post": [CheckSaml2IntAttributes]}
-
     def __init__(self, conv):
         AuthnRequest.__init__(self, conv)
         self.args["binding"] = BINDING_HTTP_POST
@@ -229,6 +224,8 @@ class ManageNameIDRequest(Request):
 class AttributeQuery(Request):
     request = "attribute_query"
     _args = {"binding": BINDING_SOAP}
+    tests = {"pre": [VerifyFunctionality],
+             "post": [CheckSaml2IntAttributes, VerifyAttributeProfile]}
 
     def setup(self):
         resp = self.conv.saml_response[-1].response
