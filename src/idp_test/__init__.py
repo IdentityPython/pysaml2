@@ -34,7 +34,10 @@ __author__ = 'rolandh'
 import traceback
 
 logger = logging.getLogger("")
-
+logger.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+memoryhandler = logging.handlers.MemoryHandler(1024*10, logging.DEBUG)
+logger.addHandler(memoryhandler)
 
 def exception_trace(tag, exc, log=None):
     message = traceback.format_exception(*sys.exc_info())
@@ -196,6 +199,14 @@ class SAML2client(object):
 
         return info
 
+    def pysaml_log(self):
+        print >> sys.stderr, 80 * ":"
+        stderrHandler = logging.StreamHandler(sys.stderr)
+        stderrHandler.setFormatter(formatter)
+        memoryhandler.setTarget(stderrHandler)
+        memoryhandler.flush()
+        memoryhandler.close()
+
     def run(self):
         self.args = self._parser.parse_args()
 
@@ -247,6 +258,9 @@ class SAML2client(object):
             print >> sys.stderr, self.trace
             print err
             exception_trace("RUN", err)
+
+        if self.args.debug:
+            self.pysaml_log()
 
     def list_operations(self):
         lista = []
