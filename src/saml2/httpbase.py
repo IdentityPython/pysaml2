@@ -133,9 +133,9 @@ class HTTPBase(object):
         if not kaka:
             return
 
-        logger.debug("Set Cookie '%s'" % kaka)
         part = urlparse.urlparse(request.url)
         _domain = part.hostname
+        logger.debug("%s: '%s'" % (_domain, kaka))
 
         for cookie_name, morsel in kaka.items():
             std_attr = ATTRS.copy()
