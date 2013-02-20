@@ -1,7 +1,9 @@
 import cookielib
 from rrtest import FatalError
 from rrtest.check import ExpectedError
-from rrtest.interaction import Interaction, Operation
+from rrtest.interaction import Interaction
+from rrtest.interaction import Operation
+from rrtest.interaction import InteractionNeeded
 from rrtest.status import STATUSCODE
 
 __author__ = 'rolandh'
@@ -129,6 +131,10 @@ class Conversation():
 
             try:
                 _spec = self.interaction.pick_interaction(_base, content)
+            except InteractionNeeded:
+                self.position = url
+                self.trace.error("Page Content: %s" % content)
+                raise
             except KeyError:
                 self.position = url
                 self.trace.error("Page Content: %s" % content)
@@ -195,6 +201,11 @@ class Conversation():
             self.init(phase)
             try:
                 self.do_query()
+            except InteractionNeeded:
+                self.test_output.append({"status": 4,
+                                         "message": self.last_content,
+                                         "id": "exception",
+                                         "name": "interaction needed"})
             except FatalError:
                 raise
             except Exception, err:

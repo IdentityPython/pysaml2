@@ -23,6 +23,9 @@ class FlowException(Exception):
         return json.dumps(self.__dict__)
 
 
+class InteractionNeeded(Exception):
+    pass
+
 def NoneFunc():
     return None
 
@@ -130,7 +133,7 @@ class Interaction(object):
             if _match == len(interaction["matches"]):
                 return interaction
 
-        raise KeyError("No interaction matched")
+        raise InteractionNeeded("No interaction matched")
 
     def pick_form(self, response, url=None, **kwargs):
         """
