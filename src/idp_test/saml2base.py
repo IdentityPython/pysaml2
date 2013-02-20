@@ -10,13 +10,15 @@ from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from idp_test.check import CheckLogoutSupport
 from idp_test.check import CheckSaml2IntAttributes
 from idp_test.check import CheckSaml2IntMetaData
-from idp_test.check import VerifyAttributeProfile
+from idp_test.check import VerifyAttributeNameFormat
 from idp_test.check import VerifyFunctionality
 from idp_test.check import VerifyContent
 from idp_test.check import VerifyLogout
 from idp_test.check import VerifyNameIDMapping
 from idp_test.check import VerifyNameIDPolicyUsage
 from idp_test.check import VerifySuccessStatus
+from idp_test.check import VerifySignatureAlgorithm
+from idp_test.check import VerifySignedPart
 
 from saml2.samlp import NameIDPolicy
 
@@ -55,7 +57,10 @@ class AuthnRequest(Request):
              "nameid_format": NAMEID_FORMAT_PERSISTENT,
              "allow_create": True}
     tests = {"pre": [VerifyFunctionality],
-             "post": [CheckSaml2IntAttributes, VerifyAttributeProfile]}
+             "post": [CheckSaml2IntAttributes,
+                      VerifyAttributeNameFormat,
+                      VerifySignedPart,
+                      VerifySignatureAlgorithm]}
 
 
 class DynAuthnRequest(Request):
@@ -225,7 +230,7 @@ class AttributeQuery(Request):
     request = "attribute_query"
     _args = {"binding": BINDING_SOAP}
     tests = {"pre": [VerifyFunctionality],
-             "post": [CheckSaml2IntAttributes, VerifyAttributeProfile]}
+             "post": [CheckSaml2IntAttributes, VerifyAttributeNameFormat]}
 
     def setup(self):
         resp = self.conv.saml_response[-1].response

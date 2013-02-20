@@ -133,6 +133,7 @@ class SAML2client(object):
         self.interactions = None
         self.entity_id = None
         self.sp_config = None
+        self.constraints = {}
 
     def json_config_file(self):
         if self.args.json_config_file == "-":
@@ -179,10 +180,10 @@ class SAML2client(object):
             else:
                 raise Exception("Don't know which entity to talk to")
 
-        try:
-            self.name_format = _jc["name_format"]
-        except KeyError:
-            self.name_format = NAME_FORMAT_UNSPECIFIED
+        if "constraints" in _jc:
+            self.constraints = _jc["constraints"]
+            if "name_format" not in self.constraints:
+                self.constraints["name_format"] = NAME_FORMAT_UNSPECIFIED
 
     def test_summation(self, sid):
         status = 0
@@ -245,12 +246,11 @@ class SAML2client(object):
                     print >> sys.stderr, "Undefined testcase"
                     return
 
-            kwargs = {"name_format": self.name_format}
-
             conv = Conversation(self.client, self.sp_config, self.trace,
                                 self.interactions,
                                 check_factory=self.check_factory,
-                                entity_id=self.entity_id, **kwargs)
+                                entity_id=self.entity_id,
+                                constraints=self.constraints)
             conv.do_sequence(oper)
             #testres, trace = do_sequence(oper,
             self.test_log = conv.test_output

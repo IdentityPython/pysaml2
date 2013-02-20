@@ -55,7 +55,7 @@ def tuple_list2dict(tl):
 class Conversation(tool.Conversation):
     def __init__(self, client, config, trace, interaction,
                  check_factory, entity_id, msg_factory=None,
-                 features=None, verbose=False, **kwargs):
+                 features=None, verbose=False, constraints=None):
         tool.Conversation.__init__(self, client, config, trace,
                                    interaction, check_factory, msg_factory,
                                    features, verbose)
@@ -73,7 +73,7 @@ class Conversation(tool.Conversation):
         self.position = ""
         self.response = None
         self.oper = None
-        self.idp_constraints = kwargs
+        self.idp_constraints = constraints
 
     def send(self):
         srvs = getattr(self.client.metadata, REQ2SRV[self.oper.request])(

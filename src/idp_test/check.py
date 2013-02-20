@@ -1,6 +1,7 @@
 import inspect
 import sys
 import traceback
+from time import mktime
 
 from rrtest.check import CriticalError
 from rrtest.check import Check
@@ -16,6 +17,9 @@ from saml2.samlp import Response
 from saml2.sigver import cert_from_key_info_dict
 from saml2.sigver import key_from_key_value_dict
 
+from M2Crypto.X509 import load_cert_string
+from saml2.time_util import utc_now, str_to_time
+
 __author__ = 'rolandh'
 
 INFORMATION = 0
@@ -27,6 +31,9 @@ INTERACTION = 5
 
 STATUSCODE = ["INFORMATION", "OK", "WARNING", "ERROR", "CRITICAL",
               "INTERACTION"]
+
+PREFIX = "-----BEGIN CERTIFICATE-----"
+POSTFIX = "-----END CERTIFICATE-----"
 
 
 class WrapException(CriticalError):
@@ -75,6 +82,14 @@ class CheckHTTPResponse(CriticalError):
 
         return res
 
+M2_TIME_FORMAT = "%b %d %H:%M:%S %Y"
+
+
+def to_time(_time):
+    assert _time.endswith(" GMT")
+    _time = _time[:-4]
+    return mktime(str_to_time(_time, M2_TIME_FORMAT))
+
 
 class CheckSaml2IntMetaData(Check):
     """
@@ -87,12 +102,28 @@ class CheckSaml2IntMetaData(Check):
         # key_info
         # one or more key_value and/or x509_data.X509Certificate
 
+        verified_x509_keys = []
+
         xkeys = cert_from_key_info_dict(ki)
         vkeys = key_from_key_value_dict(ki)
 
         if xkeys or vkeys:
-            pass
-        else:
+            if xkeys:
+                for key in xkeys:
+                    cert_str = "\n".join([PREFIX, key, POSTFIX])
+                    cert = load_cert_string(cert_str)
+                    not_before = to_time(str(cert.get_not_before()))
+                    not_after = to_time(str(cert.get_not_after()))
+                    try:
+                        assert not_before < utc_now()
+                        assert not_after > utc_now()
+                        verified_x509_keys.append(xkeys)
+                    except AssertionError:
+                        pass
+            if vkeys:  # don't expect this to happen
+                pass
+
+        if not verified_x509_keys:
             self._message = "Missing KeyValue or X509Data.X509Certificate"
             self._status = CRITICAL
             return False
@@ -512,13 +543,16 @@ class VerifyFunctionality(Check):
         return res
 
 
-class VerifyAttributeProfile(Check):
+class VerifyAttributeNameFormat(Check):
     """
-    Verify that the correct attribute profile is used.
+    Verify that the correct attribute name format is used.
     """
-    cid = "verify-attribute-profile"
+    cid = "verify-attribute-name-format"
 
     def _func(self, conv):
+        if "name_format" not in conv.idp_constraints:
+            return {}
+
         # Should be a AuthnResponse or Response instance
         response = conv.saml_response[-1]
         assert isinstance(response.response, Response)
@@ -539,6 +573,72 @@ class VerifyAttributeProfile(Check):
                                 "Wrong name format: '%s'" % attr.name_format
                             self._status = CRITICAL
                             break
+        return {}
+
+
+class VerifySignatureAlgorithm(Check):
+    """
+    verify that the used signature algorithm was one from an approved set.
+    """
+
+    def _sig_algo(self, signature, allowed):
+        try:
+            assert signature.signed_info.signature_method.algorithm in allowed
+        except AssertionError:
+            self._message= "Wrong algorithm used for signing: '%s'" % \
+                           signature.signed_info.signature_method.algorithm
+            self._status = CRITICAL
+            return False
+
+        return True
+
+    def _func(self, conv):
+        if "signature_algorithm" not in conv.idp_constraints:
+            return {}
+        else:
+            _algs = conv.idp_constraints["signature_algorithm"]
+
+        response = conv.saml_response[-1].response
+
+        if response.signature:
+            if not self._sig_algo(response.signature, _algs):
+                return {}
+
+        for assertion in response.assertion:
+            if not self._sig_algo(assertion.signature, _algs):
+                return {}
+
+        return {}
+
+
+class VerifySignedPart(Check):
+    """
+    verify that the correct part was signed.
+    """
+
+    def _func(self, conv):
+
+        if "signed_part" not in conv.idp_constraints:
+            return {}
+
+        response = conv.saml_response[-1].response
+        if "response" in conv.idp_constraints["signed_part"]:
+            if response.signature:
+                pass
+            else:
+                self._message= "Response not signed"
+                self._status = CRITICAL
+
+        if self._status == OK:
+            if "assertion" in conv.idp_constraints["signed_part"]:
+                for assertion in response.assertion:
+                    if assertion.signature:
+                        pass
+                    else:
+                        self._message = "Assertion not signed"
+                        self._status = CRITICAL
+                        break
+
         return {}
 
 # =============================================================================
