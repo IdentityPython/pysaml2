@@ -123,7 +123,9 @@ class Conversation():
                     self.last_content = content
                     self.response = _response
 
-                    self.do_check("check-http-response")
+                    if _response.status_code >= 400:
+                        done = True
+                        break
 
             if done or url is None:
                 break
@@ -160,7 +162,8 @@ class Conversation():
                 self.last_content = content
                 self.response = _response
 
-                self.do_check("check-http-response")
+                if _response.status_code >= 400:
+                    break
             except FatalError:
                 raise
             except Exception, err:
