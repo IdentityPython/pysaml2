@@ -119,12 +119,13 @@ class CheckSaml2IntMetaData(Check):
                         assert not_after > utc_now()
                         verified_x509_keys.append(xkeys)
                     except AssertionError:
-                        pass
+                        self._message = "Unusable key, to old"
             if vkeys:  # don't expect this to happen
                 pass
 
         if not verified_x509_keys:
-            self._message = "Missing KeyValue or X509Data.X509Certificate"
+            if not self._message:
+                self._message = "Missing KeyValue or X509Data.X509Certificate"
             self._status = CRITICAL
             return False
 
