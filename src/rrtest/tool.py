@@ -206,7 +206,9 @@ class Conversation():
                 self.test_output.append({"status": INTERACTION,
                                          "message": self.last_content,
                                          "id": "exception",
-                                         "name": "interaction needed"})
+                                         "name": "interaction needed",
+                                         "url": self.position})
+                break
             except FatalError:
                 raise
             except Exception, err:
