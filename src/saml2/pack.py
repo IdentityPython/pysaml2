@@ -23,12 +23,15 @@ Bindings normally consists of three parts:
 - how to package the information
 - which protocol to use
 """
+import hashlib
 import urlparse
 import saml2
 import base64
 import urllib
-from saml2.s_utils import deflate_and_base64_encode
+from saml2.s_utils import deflate_and_base64_encode, Unsupported
 import logging
+import M2Crypto
+from saml2.sigver import RSA_SHA1, rsa_load, x509_rsa_loads, pem_format
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +54,9 @@ FORM_SPEC = """<form method="post" action="%s">
    <input type="hidden" name="RelayState" value="%s" />
 </form>"""
 
-def http_form_post_message(message, location, relay_state="", typ="SAMLRequest"):
+
+def http_form_post_message(message, location, relay_state="",
+                           typ="SAMLRequest"):
     """The HTTP POST binding defines a mechanism by which SAML protocol 
     messages may be transmitted within the base64-encoded content of a
     HTML form control.
@@ -93,7 +98,47 @@ def http_form_post_message(message, location, relay_state="", typ="SAMLRequest")
 #    """
 #    return {"headers": [("Content-type", "text/xml")], "data": message}
 
-def http_redirect_message(message, location, relay_state="", typ="SAMLRequest"):
+
+class BadSignature(Exception):
+    """The signature is invalid."""
+    pass
+
+
+def sha1_digest(msg):
+    return hashlib.sha1(msg).digest()
+
+
+class Signer(object):
+    """Abstract base class for signing algorithms."""
+    def sign(self, msg, key):
+        """Sign ``msg`` with ``key`` and return the signature."""
+        raise NotImplementedError
+
+    def verify(self, msg, sig, key):
+        """Return True if ``sig`` is a valid signature for ``msg``."""
+        raise NotImplementedError
+
+
+class RSASigner(Signer):
+    def __init__(self, digest, algo):
+        self.digest = digest
+        self.algo = algo
+
+    def sign(self, msg, key):
+        return key.sign(self.digest(msg), self.algo)
+
+    def verify(self, msg, sig, key):
+        try:
+            return key.verify(self.digest(msg), sig, self.algo)
+        except M2Crypto.RSA.RSAError, e:
+            raise BadSignature(e)
+
+
+REQ_ORDER = ["SAMLRequest", "RelayState", "SigAlg"]
+RESP_ORDER = ["SAMLResponse", "RelayState", "SigAlg"]
+
+def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
+                          sigalg=None, key=None):
     """The HTTP Redirect binding defines a mechanism by which SAML protocol 
     messages can be transmitted within URL parameters.
     Messages are encoded for use with this binding using a URL encoding 
@@ -104,13 +149,21 @@ def http_redirect_message(message, location, relay_state="", typ="SAMLRequest"):
     :param message: The message
     :param location: Where the message should be posted to
     :param relay_state: for preserving and conveying state information
+    :param typ: What type of message it is SAMLRequest/SAMLResponse/SAMLart
+    :param sigalg: The signature algorithm to use.
+    :param key: Key to use for signing
     :return: A tuple containing header information and a HTML message.
     """
     
     if not isinstance(message, basestring):
         message = "%s" % (message,)
 
+    _order = None
     if typ in ["SAMLRequest", "SAMLResponse"]:
+        if typ == "SAMLRequest":
+            _order = REQ_ORDER
+        else:
+            _order = RESP_ORDER
         args = {typ: deflate_and_base64_encode(message)}
     elif typ == "SAMLart":
         args = {typ: message}
@@ -120,15 +173,66 @@ def http_redirect_message(message, location, relay_state="", typ="SAMLRequest"):
     if relay_state:
         args["RelayState"] = relay_state
 
+    if sigalg:
+        # sigalgs
+        # http://www.w3.org/2000/09/xmldsig#dsa-sha1
+        # http://www.w3.org/2000/09/xmldsig#rsa-sha1
+
+        args["SigAlg"] = sigalg
+
+        if sigalg == RSA_SHA1:
+            signer = RSASigner(sha1_digest, "sha1")
+            string = "&".join([urllib.urlencode({k: args[k]}) for k in _order])
+            args["Signature"] = base64.b64encode(signer.sign(string, key))
+            string = urllib.urlencode(args)
+        else:
+            raise Unsupported("Signing algorithm")
+    else:
+        string = urllib.urlencode(args)
+
     glue_char = "&" if urlparse.urlparse(location).query else "?"
-    login_url = glue_char.join([location, urllib.urlencode(args)])
+    login_url = glue_char.join([location, string])
     headers = [('Location', login_url)]
     body = []
     
-    return {"headers":headers, "data":body}
+    return {"headers": headers, "data": body}
+
+
+def verify_redirect_signature(info, cert):
+    """
+
+    :param info: A dictionary as produced by parse_qs, means all values are
+        lists.
+    :param cert: A certificate to use when verifying the signature
+    :return: True, if signature verified
+    """
+
+    if info["SigAlg"][0] == RSA_SHA1:
+        if "SAMLRequest" in info:
+            _order = REQ_ORDER
+        elif "SAMLResponse" in info:
+            _order = RESP_ORDER
+        else:
+            raise Unsupported(
+                "Verifying signature on something that should not be signed")
+        signer = RSASigner(sha1_digest, "sha1")
+        args = info.copy()
+        del args["Signature"] # everything but the signature
+        string = "&".join([urllib.urlencode({k: args[k][0]}) for k in _order])
+        _key = x509_rsa_loads(pem_format(cert))
+        _sign = base64.b64decode(info["Signature"][0])
+        try:
+            signer.verify(string, _sign, _key)
+            return True
+        except BadSignature:
+            return False
+    else:
+        raise Unsupported("Signature algorithm: %s" % info["SigAlg"])
+
 
 DUMMY_NAMESPACE = "http://example.org/"
 PREFIX = '<?xml version="1.0" encoding="UTF-8"?>'
+
 
 def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
     """ Returns a soap envelope containing a SAML request
@@ -170,21 +274,24 @@ def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
         cut1 = _str[j:i + len(DUMMY_NAMESPACE) + 1]
         _str = _str.replace(cut1, "")
         first = _str.find("<%s:FuddleMuddle" % (cut1[6:9],))
-        last = _str.find(">", first+14)
-        cut2 = _str[first:last+1]
+        last = _str.find(">", first + 14)
+        cut2 = _str[first:last + 1]
         return _str.replace(cut2, thingy)
     else:
         thingy.become_child_element_of(body)
         return ElementTree.tostring(envelope, encoding="UTF-8")
 
+
 def http_soap_message(message):
     return {"headers": [("Content-type", "application/soap+xml")],
             "data": make_soap_enveloped_saml_thingy(message)}
     
+
 def http_paos(message, extra=None):
-    return {"headers":[("Content-type", "application/soap+xml")],
+    return {"headers": [("Content-type", "application/soap+xml")],
             "data": make_soap_enveloped_saml_thingy(message, extra)}
     
+
 def parse_soap_enveloped_saml(text, body_class, header_class=None):
     """Parses a SOAP enveloped SAML thing and returns header parts and body
 
@@ -205,7 +312,7 @@ def parse_soap_enveloped_saml(text, body_class, header_class=None):
                     body = saml2.create_class_from_element_tree(body_class, sub)
                 except Exception:
                     raise Exception(
-                            "Wrong body type (%s) in SOAP envelope" % sub.tag)
+                        "Wrong body type (%s) in SOAP envelope" % sub.tag)
         elif part.tag == '{%s}Header' % NAMESPACE:
             if not header_class:
                 raise Exception("Header where I didn't expect one")
@@ -226,13 +333,15 @@ def parse_soap_enveloped_saml(text, body_class, header_class=None):
 PACKING = {
     saml2.BINDING_HTTP_REDIRECT: http_redirect_message,
     saml2.BINDING_HTTP_POST: http_form_post_message,
-    }
+}
     
-def packager( identifier ):
+
+def packager(identifier):
     try:
         return PACKING[identifier]
     except KeyError:
         raise Exception("Unkown binding type: %s" % identifier)
+
 
 def factory(binding, message, location, relay_state="", typ="SAMLRequest"):
     return PACKING[binding](message, location, relay_state, typ)
