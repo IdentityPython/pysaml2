@@ -23,15 +23,18 @@ Bindings normally consists of three parts:
 - how to package the information
 - which protocol to use
 """
-import hashlib
 import urlparse
 import saml2
 import base64
 import urllib
-from saml2.s_utils import deflate_and_base64_encode, Unsupported
+from saml2.s_utils import deflate_and_base64_encode
+from saml2.s_utils import Unsupported
 import logging
-import M2Crypto
-from saml2.sigver import RSA_SHA1, rsa_load, x509_rsa_loads, pem_format
+from saml2.sigver import RSA_SHA1
+from saml2.sigver import REQ_ORDER
+from saml2.sigver import RESP_ORDER
+from saml2.sigver import RSASigner
+from saml2.sigver import sha1_digest
 
 logger = logging.getLogger(__name__)
 
@@ -86,56 +89,6 @@ def http_form_post_message(message, location, relay_state="",
     
     return {"headers": [("Content-type", "text/html")], "data": response}
 
-##noinspection PyUnresolvedReferences
-#def http_post_message(message, location, relay_state="", typ="SAMLRequest"):
-#    """
-#
-#    :param message:
-#    :param location:
-#    :param relay_state:
-#    :param typ:
-#    :return:
-#    """
-#    return {"headers": [("Content-type", "text/xml")], "data": message}
-
-
-class BadSignature(Exception):
-    """The signature is invalid."""
-    pass
-
-
-def sha1_digest(msg):
-    return hashlib.sha1(msg).digest()
-
-
-class Signer(object):
-    """Abstract base class for signing algorithms."""
-    def sign(self, msg, key):
-        """Sign ``msg`` with ``key`` and return the signature."""
-        raise NotImplementedError
-
-    def verify(self, msg, sig, key):
-        """Return True if ``sig`` is a valid signature for ``msg``."""
-        raise NotImplementedError
-
-
-class RSASigner(Signer):
-    def __init__(self, digest, algo):
-        self.digest = digest
-        self.algo = algo
-
-    def sign(self, msg, key):
-        return key.sign(self.digest(msg), self.algo)
-
-    def verify(self, msg, sig, key):
-        try:
-            return key.verify(self.digest(msg), sig, self.algo)
-        except M2Crypto.RSA.RSAError, e:
-            raise BadSignature(e)
-
-
-REQ_ORDER = ["SAMLRequest", "RelayState", "SigAlg"]
-RESP_ORDER = ["SAMLResponse", "RelayState", "SigAlg"]
 
 def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
                           sigalg=None, key=None):
@@ -196,38 +149,6 @@ def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
     body = []
     
     return {"headers": headers, "data": body}
-
-
-def verify_redirect_signature(info, cert):
-    """
-
-    :param info: A dictionary as produced by parse_qs, means all values are
-        lists.
-    :param cert: A certificate to use when verifying the signature
-    :return: True, if signature verified
-    """
-
-    if info["SigAlg"][0] == RSA_SHA1:
-        if "SAMLRequest" in info:
-            _order = REQ_ORDER
-        elif "SAMLResponse" in info:
-            _order = RESP_ORDER
-        else:
-            raise Unsupported(
-                "Verifying signature on something that should not be signed")
-        signer = RSASigner(sha1_digest, "sha1")
-        args = info.copy()
-        del args["Signature"] # everything but the signature
-        string = "&".join([urllib.urlencode({k: args[k][0]}) for k in _order])
-        _key = x509_rsa_loads(pem_format(cert))
-        _sign = base64.b64decode(info["Signature"][0])
-        try:
-            signer.verify(string, _sign, _key)
-            return True
-        except BadSignature:
-            return False
-    else:
-        raise Unsupported("Signature algorithm: %s" % info["SigAlg"])
 
 
 DUMMY_NAMESPACE = "http://example.org/"
