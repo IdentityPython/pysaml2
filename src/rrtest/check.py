@@ -10,6 +10,7 @@ INTERACTION = 5
 STATUSCODE = ["INFORMATION", "OK", "WARNING", "ERROR", "CRITICAL",
               "INTERACTION"]
 
+
 class Check():
     """ General test
     """
@@ -69,5 +70,3 @@ class Error(Check):
 class Other(CriticalError):
     """ Other error """
     msg = "Other error"
-
-
