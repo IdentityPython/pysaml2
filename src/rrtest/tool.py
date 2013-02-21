@@ -1,6 +1,7 @@
 import cookielib
 from rrtest import FatalError
 from rrtest.check import ExpectedError
+from rrtest.check import INTERACTION
 from rrtest.interaction import Interaction
 from rrtest.interaction import Operation
 from rrtest.interaction import InteractionNeeded
@@ -202,7 +203,7 @@ class Conversation():
             try:
                 self.do_query()
             except InteractionNeeded:
-                self.test_output.append({"status": 4,
+                self.test_output.append({"status": INTERACTION,
                                          "message": self.last_content,
                                          "id": "exception",
                                          "name": "interaction needed"})
