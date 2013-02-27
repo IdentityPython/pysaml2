@@ -63,8 +63,10 @@ BINDING_HTTP_POST = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST'
 BINDING_HTTP_ARTIFACT = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact'
 BINDING_URI = 'urn:oasis:names:tc:SAML:2.0:bindings:URI'
 
+
 def class_name(instance):
     return "%s:%s" % (instance.c_namespace, instance.c_tag)
+
 
 def create_class_from_xml_string(target_class, xml_string):
     """Creates an instance of the target class from a string.
@@ -84,8 +86,8 @@ def create_class_from_xml_string(target_class, xml_string):
     return create_class_from_element_tree(target_class, tree)
 
 
-def create_class_from_element_tree(target_class, tree, namespace=None, 
-                                    tag=None):
+def create_class_from_element_tree(target_class, tree, namespace=None,
+                                   tag=None):
     """Instantiates the class and populates members according to the tree.
 
     Note: Only use this function with classes that have c_namespace and c_tag
@@ -116,9 +118,11 @@ def create_class_from_element_tree(target_class, tree, namespace=None,
     else:
         return None
 
+
 class Error(Exception):
     """Exception class thrown by this module."""
     pass
+
 
 class ExtensionElement(object):
     """XML which is not part of the SAML specification,
@@ -130,7 +134,7 @@ class ExtensionElement(object):
     """
     
     def __init__(self, tag, namespace=None, attributes=None,
-            children=None, text=None):
+                 children=None, text=None):
         """Constructor for ExtensionElement
 
         :param namespace: The XML namespace for this element.
@@ -254,6 +258,7 @@ class ExtensionElement(object):
                 
         return self
         
+
 def extension_element_from_string(xml_string):
     element_tree = ElementTree.fromstring(xml_string)
     return _extension_element_from_element_tree(element_tree)
@@ -263,7 +268,7 @@ def _extension_element_from_element_tree(element_tree):
     elementc_tag = element_tree.tag
     if '}' in elementc_tag:
         namespace = elementc_tag[1:elementc_tag.index('}')]
-        tag = elementc_tag[elementc_tag.index('}')+1:]
+        tag = elementc_tag[elementc_tag.index('}') + 1:]
     else: 
         namespace = None
         tag = elementc_tag
@@ -281,8 +286,8 @@ class ExtensionContainer(object):
     c_tag = ""
     c_namespace = ""
     
-    def __init__(self, text=None, extension_elements=None, 
-                    extension_attributes=None):
+    def __init__(self, text=None, extension_elements=None,
+                 extension_attributes=None):
 
         self.text = text
         self.extension_elements = extension_elements or []
@@ -299,7 +304,7 @@ class ExtensionContainer(object):
         
     def _convert_element_tree_to_member(self, child_tree):
         self.extension_elements.append(_extension_element_from_element_tree(
-                child_tree))
+            child_tree))
 
     def _convert_element_attribute_to_member(self, attribute, value):
         self.extension_attributes[attribute] = value
@@ -369,14 +374,12 @@ class ExtensionContainer(object):
     def add_extension_element(self, item):
         self.extension_elements.append(element_to_extension_element(item))
 
-
     def add_extension_attribute(self, name, value):
         self.extension_attributes[name] = value
 
-
         
 def make_vals(val, klass, klass_inst=None, prop=None, part=False,
-                base64encode=False):
+              base64encode=False):
     """
     Creates a class instance with a specified value, the specified
     class instance may be a value on a property in a defined class instance.
@@ -401,8 +404,8 @@ def make_vals(val, klass, klass_inst=None, prop=None, part=False,
             cinst = klass().set_text(val)
         except ValueError:
             if not part:
-                cis = [make_vals(sval, klass, klass_inst, prop, True, 
-                        base64encode) for sval in val]
+                cis = [make_vals(sval, klass, klass_inst, prop, True,
+                                 base64encode) for sval in val]
                 setattr(klass_inst, prop, cis)
             else:
                 raise
@@ -414,6 +417,7 @@ def make_vals(val, klass, klass_inst=None, prop=None, part=False,
             cis = [cinst]
             setattr(klass_inst, prop, cis)
     
+
 def make_instance(klass, spec, base64encode=False):
     """
     Constructs a class instance containing the specified information
@@ -424,6 +428,7 @@ def make_instance(klass, spec, base64encode=False):
     """
 
     return klass().loadd(spec, base64encode)
+
 
 class SamlBase(ExtensionContainer):
     """A foundation class on which SAML classes are built. It 
@@ -453,7 +458,7 @@ class SamlBase(ExtensionContainer):
         
     def _convert_element_tree_to_member(self, child_tree):
         # Find the element's tag in this class's list of child members
-        if self.__class__.c_children.has_key(child_tree.tag):
+        if child_tree.tag in self.__class__.c_children:
             member_name = self.__class__.c_children[child_tree.tag][0]
             member_class = self.__class__.c_children[child_tree.tag][1]
             # If the class member is supposed to contain a list, make sure the
@@ -463,27 +468,25 @@ class SamlBase(ExtensionContainer):
                 if getattr(self, member_name) is None:
                     setattr(self, member_name, [])
                 getattr(self, member_name).append(
-                        create_class_from_element_tree(
-                            member_class[0], child_tree))
+                    create_class_from_element_tree(member_class[0], child_tree))
             else:
-                setattr(self, member_name, 
-                            create_class_from_element_tree(member_class, 
-                                                            child_tree))
+                setattr(self, member_name,
+                        create_class_from_element_tree(member_class,
+                                                       child_tree))
         else:
-            ExtensionContainer._convert_element_tree_to_member(self, 
-                                                                child_tree)
+            ExtensionContainer._convert_element_tree_to_member(self, child_tree)
 
     def _convert_element_attribute_to_member(self, attribute, value):
         # Find the attribute in this class's list of attributes. 
-        if self.__class__.c_attributes.has_key(attribute):
+        if attribute in self.__class__.c_attributes:
             # Find the member of this class which corresponds to the XML 
             # attribute(lookup in current_class.c_attributes) and set this 
             # member to the desired value (using self.__dict__).
             setattr(self, self.__class__.c_attributes[attribute][0], value)
         else:
             # If it doesn't appear in the attribute list it's an extension
-            ExtensionContainer._convert_element_attribute_to_member(self, 
-                                                            attribute, value)
+            ExtensionContainer._convert_element_attribute_to_member(
+                self, attribute, value)
 
     # Three methods to create an ElementTree from an object
     def _add_members_to_element_tree(self, tree):
@@ -501,7 +504,7 @@ class SamlBase(ExtensionContainer):
                 member.become_child_element_of(tree)
         # Convert the members of this class which are XML attributes.
         for xml_attribute, attribute_info in \
-                    self.__class__.c_attributes.iteritems():
+                self.__class__.c_attributes.iteritems():
             (member_name, member_type, required) = attribute_info
             member = getattr(self, member_name)
             if member is not None:
@@ -510,8 +513,7 @@ class SamlBase(ExtensionContainer):
         # Lastly, call the ExtensionContainers's _add_members_to_element_tree
         # to convert any extension attributes.
         ExtensionContainer._add_members_to_element_tree(self, tree)
-        
-    
+
     def become_child_element_of(self, node):
         """
         Note: Only for use with classes that have a c_tag and c_namespace class 
@@ -532,7 +534,7 @@ class SamlBase(ExtensionContainer):
 
         """
         new_tree = ElementTree.Element('{%s}%s' % (self.__class__.c_namespace,
-                                                    self.__class__.c_tag))
+                                                   self.__class__.c_tag))
         self._add_members_to_element_tree(new_tree)
         return new_tree
 
@@ -621,7 +623,7 @@ class SamlBase(ExtensionContainer):
         elif val is None:
             pass
         else:
-            raise ValueError( "Type shouldn't be '%s'" % (val,))
+            raise ValueError("Type shouldn't be '%s'" % (val,))
         
         return self
         
@@ -659,16 +661,16 @@ class SamlBase(ExtensionContainer):
                 # means there can be a list of values
                 if isinstance(klassdef, list): 
                     make_vals(ava[prop], klassdef[0], self, prop,
-                                base64encode=base64encode)
+                              base64encode=base64encode)
                 else:
                     cis = make_vals(ava[prop], klassdef, self, prop, True,
-                                base64encode)
+                                    base64encode)
                     setattr(self, prop, cis)
 
         if "extension_elements" in ava:
             for item in ava["extension_elements"]:
                 self.extension_elements.append(ExtensionElement(
-                                                item["tag"]).loadd(item))
+                    item["tag"]).loadd(item))
             
         if "extension_attributes" in ava:
             for key, val in ava["extension_attributes"].items():
@@ -740,23 +742,24 @@ class SamlBase(ExtensionContainer):
             if child == prop:
                 if isinstance(klassdef, list):
                     try:
-                        min = self.c_cardinality["min"]
+                        _min = self.c_cardinality["min"]
                     except KeyError:
-                        min = 1
+                        _min = 1
                     try:
-                        max = self.c_cardinality["max"]
+                        _max = self.c_cardinality["max"]
                     except KeyError:
-                        max = "unbounded"
+                        _max = "unbounded"
 
-                    return min, max
+                    return _min, _max
                 else:
-                    return 1,1
+                    return 1, 1
         return None
 
     def verify(self):
         return valid_instance(self)
 
 # ----------------------------------------------------------------------------
+
 
 def element_to_extension_element(element):
     """
@@ -772,18 +775,20 @@ def element_to_extension_element(element):
     exel.attributes.update(element.extension_attributes)
     exel.children.extend(element.extension_elements)
     
-    for xml_attribute, (member_name, typ, req) in element.c_attributes.iteritems():
+    for xml_attribute, (member_name, typ, req) in \
+            element.c_attributes.iteritems():
         member_value = getattr(element, member_name)
         if member_value is not None:
             exel.attributes[xml_attribute] = member_value
                 
-    exel.children.extend([element_to_extension_element(c) \
-                                for c in element.children_with_values()])
+    exel.children.extend([element_to_extension_element(c) for c in
+                          element.children_with_values()])
     
     return exel
     
+
 def extension_element_to_element(extension_element, translation_functions,
-                                    namespace=None):
+                                 namespace=None):
     """ Convert an extension element to a normal element.
     In order to do this you need to have an idea of what type of 
     element it is. Or rather which module it belongs to.
@@ -811,6 +816,7 @@ def extension_element_to_element(extension_element, translation_functions,
             
     return None
         
+
 def extension_elements_to_elements(extension_elements, schemas):
     """ Create a list of elements each one matching one of the
     given extension elements. This is of course dependent on the access
@@ -828,13 +834,14 @@ def extension_elements_to_elements(extension_elements, schemas):
     for extension_element in extension_elements:
         for schema in schemas:
             inst = extension_element_to_element(extension_element,
-                                                    schema.ELEMENT_FROM_STRING,
-                                                    schema.NAMESPACE)
+                                                schema.ELEMENT_FROM_STRING,
+                                                schema.NAMESPACE)
             if inst:
                 res.append(inst)
                 break
 
     return res
+
 
 def extension_elements_as_dict(extension_elements, onts):
     ees_ = extension_elements_to_elements(extension_elements, onts)
