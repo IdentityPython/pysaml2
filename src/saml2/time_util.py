@@ -149,16 +149,16 @@ def add_duration(tid, duration):
             if days < 1:
                 pass
             elif days > maximum_day_in_month_for(year, month):
-                days = days - maximum_day_in_month_for(year, month)
+                days -= maximum_day_in_month_for(year, month)
                 carry = 1
             else:
                 break
             temp = month + carry
             month = modulo(temp, 1, 13)
-            year = year + f_quotient(temp, 1, 13)
+            year += f_quotient(temp, 1, 13)
     
-        return time.localtime(time.mktime((year, month, days, hour, minutes, 
-                                secs, 0, 0, -1)))
+        return time.localtime(time.mktime((year, month, days, hour, minutes,
+                                           secs, 0, 0, -1)))
     else:
         pass
 
@@ -232,7 +232,7 @@ def str_to_time(timestr, format=TIME_FORMAT):
         return 0
     try:
         then = time.strptime(timestr, format)
-    except Exception: # assume it's a format problem
+    except ValueError, err: # assume it's a format problem
         try:
             elem = TIME_FORMAT_WITH_FRAGMENT.match(timestr)
         except Exception, exc:

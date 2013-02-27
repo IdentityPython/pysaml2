@@ -31,6 +31,7 @@ from saml2.saml import AUTHN_PASSWORD
 
 logger = logging.getLogger("saml2.idp")
 
+
 def _expiration(timeout, tformat="%a, %d-%b-%Y %H:%M:%S GMT"):
     """
 
@@ -50,7 +51,7 @@ def _expiration(timeout, tformat="%a, %d-%b-%Y %H:%M:%S GMT"):
 
 
 def dict2list_of_tuples(d):
-    return [(k,v) for k,v in d.items()]
+    return [(k, v) for k, v in d.items()]
 
 # -----------------------------------------------------------------------------
 
@@ -65,7 +66,7 @@ class Service(object):
     def unpack_redirect(self):
         if "QUERY_STRING" in self.environ:
             _qs = self.environ["QUERY_STRING"]
-            return dict([(k,v[0]) for k,v in parse_qs(_qs).items()])
+            return dict([(k, v[0]) for k, v in parse_qs(_qs).items()])
         else:
             return None
     
@@ -270,8 +271,13 @@ class SSO(Service):
             IDP.ticket[key] = _dict
             _resp = key
         else:
-            _resp = IDP.ticket[_dict["key"]]
-            del IDP.ticket[_dict["key"]]
+            try:
+                _resp = IDP.ticket[_dict["key"]]
+                del IDP.ticket[_dict["key"]]
+            except KeyError:
+                key = sha1("%s" % _dict).hexdigest()
+                IDP.ticket[key] = _dict
+                _resp = key
 
         return _resp
 
@@ -391,8 +397,9 @@ def do_verify(environ, start_response, _):
     if not _ok:
         resp = Unauthorized("Unknown user or wrong password")
     else:
-        uid = rndstr()
-        IDP.authn[uid] = user
+        uid = rndstr(24)
+        IDP.uid2user[uid] = user
+        IDP.user2uid[user] = uid
         logger.debug("Register %s under '%s'" % (user, uid))
         kaka = set_cookie("idpauthn", "/", uid)
         lox = "http://%s%s?id=%s&key=%s" % (environ["HTTP_HOST"],
@@ -437,6 +444,8 @@ class SLO(Service):
         if msg.name_id:
             lid = IDP.ident.find_local_id(msg.name_id)
             logger.info("local identifier: %s" % lid)
+            del IDP.uid2user[IDP.user2uid[lid]]
+            del IDP.user2uid[lid]
             # remove the authentication
             try:
                 IDP.remove_authn_statements(msg.name_id)
@@ -445,7 +454,7 @@ class SLO(Service):
                 resp = ServiceError("%s" % exc)
                 return resp(self.environ, self.start_response)
     
-        resp = IDP.create_logout_response(msg)
+        resp = IDP.create_logout_response(msg, [binding])
     
         try:
             hinfo = IDP.apply_binding(binding, "%s" % resp, "", relay_state)
@@ -454,11 +463,11 @@ class SLO(Service):
             resp = ServiceError("%s" % exc)
             return resp(self.environ, self.start_response)
     
-        logger.info("Header: %s" % (hinfo["headers"],))
         #_tlh = dict2list_of_tuples(hinfo["headers"])
         delco = delete_cookie(self.environ, "idpauthn")
         if delco:
             hinfo["headers"].append(delco)
+        logger.info("Header: %s" % (hinfo["headers"],))
         resp = Response(hinfo["data"], headers=hinfo["headers"])
         return resp(self.environ, self.start_response)
     
@@ -475,9 +484,9 @@ class NMI(Service):
         request = req.message
     
         # Do the necessary stuff
-        name_id = IDP.ident.handle_manage_name_id_request(request.name_id,
-                        request.new_id, request.new_encrypted_id,
-                        request.terminate)
+        name_id = IDP.ident.handle_manage_name_id_request(
+            request.name_id, request.new_id, request.new_encrypted_id,
+            request.terminate)
     
         logger.debug("New NameID: %s" % name_id)
     
@@ -606,8 +615,8 @@ class NIM(Service):
         request = req.message
         # Do the necessary stuff
         try:
-            name_id = IDP.ident.handle_name_id_mapping_request(request.name_id,
-                                                        request.name_id_policy)
+            name_id = IDP.ident.handle_name_id_mapping_request(
+                request.name_id, request.name_id_policy)
         except Unknown:
             resp = BadRequest("Unknown entity")
             return resp(self.environ, self.start_response)
@@ -638,7 +647,10 @@ def kaka2user(kaka):
         cookie_obj = SimpleCookie(kaka)
         morsel = cookie_obj.get("idpauthn", None)
         if morsel:
-            return IDP.authn[morsel.value]
+            try:
+                return IDP.uid2user[morsel.value]
+            except KeyError:
+                return None
         else:
             logger.debug("No idpauthn cookie")
     return None
@@ -646,6 +658,7 @@ def kaka2user(kaka):
 
 def delete_cookie(environ, name):
     kaka = environ.get("HTTP_COOKIE", '')
+    logger.debug("delete KAKA: %s" % kaka)
     if kaka:
         cookie_obj = SimpleCookie(kaka)
         morsel = cookie_obj.get(name, None)
@@ -739,7 +752,7 @@ def application(environ, start_response):
         try:
             query = parse_qs(environ["QUERY_STRING"])
             logger.debug("QUERY: %s" % query)
-            user = IDP.authn[query["id"][0]]
+            user = IDP.uid2user[query["id"][0]]
         except KeyError:
             user = None
 

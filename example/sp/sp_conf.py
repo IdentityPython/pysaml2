@@ -5,14 +5,14 @@ BASE= "http://localhost:8087"
 #BASE= "http://lingon.catalogix.se:8087"
 
 CONFIG = {
-    "entityid" : "%s/sp.xml" % BASE,
+    "entityid": "%s/sp.xml" % BASE,
     "description": "My SP",
     "service": {
-        "sp":{
+        "sp": {
             "name" : "Rolands SP",
-            "endpoints":{
+            "endpoints": {
                 "assertion_consumer_service": [BASE],
-                "single_logout_service" : [(BASE+"/slo",
+                "single_logout_service": [(BASE + "/slo",
                                             BINDING_HTTP_REDIRECT)],
             },
             "required_attributes": ["surname", "givenname",
@@ -20,18 +20,16 @@ CONFIG = {
             "optional_attributes": ["title"],
         }
     },
-    "debug" : 1,
-    "key_file" : "pki/mykey.pem",
-    "cert_file" : "pki/mycert.pem",
-    "attribute_map_dir" : "./attributemaps",
-    "metadata" : {
-       "local": ["../idp2/idp.xml"],
-    },
+    "debug": 1,
+    "key_file": "pki/mykey.pem",
+    "cert_file": "pki/mycert.pem",
+    "attribute_map_dir": "./attributemaps",
+    "metadata": {"local": ["../idp2/idp.xml"]},
     # -- below used by make_metadata --
     "organization": {
         "name": "Exempel AB",
-        "display_name": [("Exempel AB","se"),("Example Co.","en")],
-        "url":"http://www.example.com/roland",
+        "display_name": [("Exempel AB", "se"), ("Example Co.", "en")],
+        "url": "http://www.example.com/roland",
     },
     "contact_person": [{
         "given_name":"John",
@@ -47,7 +45,7 @@ CONFIG = {
             "filename": "sp.log",
             "maxBytes": 100000,
             "backupCount": 5,
-            },
+        },
         "loglevel": "debug",
     }
 }

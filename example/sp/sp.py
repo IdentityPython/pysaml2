@@ -145,8 +145,10 @@ def logout(environ, start_response, user):
     # What if more than one
     _dict = client.saml_client.global_logout(subject_id)
     logger.info("[logout] global_logout > %s" % (_dict,))
+    rem = environ['repoze.who.plugins'][client.rememberer_name]
+    rem.forget(environ, subject_id)
 
-    for key, item in _dict.item():
+    for key, item in _dict.items():
         if isinstance(item, tuple):
             binding, htargs = item
         else:  # result from logout, should be OK
@@ -200,13 +202,15 @@ def application(environ, start_response):
         request is done
     :return: The response as a list of lines
     """
+    path = environ.get('PATH_INFO', '').lstrip('/')
+    logger.info("<application> PATH: %s" % path)
+
     user = environ.get("REMOTE_USER", "")
     if not user:
         user = environ.get("repoze.who.identity", "")
-            
-    path = environ.get('PATH_INFO', '').lstrip('/')
-    logger.info("<application> PATH: %s" % path)
-    logger.info("logger name: %s" % logger.name)
+        logger.info("repoze.who.identity: '%s'" % user)
+    else:
+        logger.info("REMOTE_USER: '%s'" % user)
     #logger.info(logging.Logger.manager.loggerDict)
     for regex, callback in urls:
         if user:

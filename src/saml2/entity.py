@@ -204,12 +204,12 @@ class Entity(HTTPBase):
 
         raise Exception("Unkown entity or unsupported bindings")
 
-    def message_args(self, id=0):
-        if not id:
-            id = sid(self.seed)
+    def message_args(self, seid=0):
+        if not seid:
+            seid = sid(self.seed)
 
-        return {"id":id, "version":VERSION,
-                "issue_instant":instant(), "issuer":self._issuer()}
+        return {"id": seid, "version": VERSION,
+                "issue_instant": instant(), "issuer": self._issuer()}
 
     def response_args(self, message, bindings=None, descr_type=""):
         info = {"in_response_to": message.id}
@@ -278,10 +278,9 @@ class Entity(HTTPBase):
         :param text: The SOAP message
         :return: A dictionary with two keys "body" and "header"
         """
-        return class_instances_from_soap_enveloped_saml_thingies(text,
-                                                                      [paos,
-                                                                       ecp,
-                                                                       samlp])
+        return class_instances_from_soap_enveloped_saml_thingies(text, [paos,
+                                                                        ecp,
+                                                                        samlp])
 
     def unpack_soap_message(self, text):
         """
@@ -367,8 +366,8 @@ class Entity(HTTPBase):
         _issuer = self._issuer(issuer)
 
         response = response_factory(issuer=_issuer,
-                                    in_response_to = in_response_to,
-                                    status = status)
+                                    in_response_to=in_response_to,
+                                    status=status)
 
         if consumer_url:
             response.destination = consumer_url
@@ -377,7 +376,7 @@ class Entity(HTTPBase):
             setattr(response, key, val)
 
         if sign:
-            self.sign(response,to_sign=to_sign)
+            self.sign(response, to_sign=to_sign)
         elif to_sign:
             return signed_instance_factory(response, self.sec, to_sign)
         else:
@@ -689,8 +688,8 @@ class Entity(HTTPBase):
                 if binding in [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST]:
                     try:
                         # expected return address
-                        kwargs["return_addr"] = self.config.endpoint(service,
-                                                           binding=binding)[0]
+                        kwargs["return_addr"] = self.config.endpoint(
+                            service, binding=binding)[0]
                     except Exception:
                         logger.info("Not supposed to handle this!")
                         return None

@@ -202,6 +202,7 @@ class MetaData(object):
                     res[srv["binding"]].append(srv)
                 except KeyError:
                     res[srv["binding"]] = [srv]
+        logger.debug("_service => %s" % res)
         return res
 
     def _ext_service(self, entity_id, typ, service, binding):

@@ -19,8 +19,8 @@ logger = logging.getLogger(__name__)
 
 __author__ = 'rolandh'
 
-ATTRS = {"version":None,
-         "name":"",
+ATTRS = {"version": None,
+         "name": "",
          "value": None,
          "port": None,
          "port_specified": False,
@@ -43,11 +43,14 @@ PAIRS = {
     "path": "path_specified"
 }
 
+
 class ConnectionError(Exception):
     pass
 
+
 class HTTPError(Exception):
     pass
+
 
 def _since_epoch(cdate):
     """
@@ -55,7 +58,7 @@ def _since_epoch(cdate):
     :return: UTC time
     """
 
-    if len(cdate) < 29: # somethings broken
+    if len(cdate) < 29:  # somethings broken
         if len(cdate) < 5:
             return utc_now()
 
@@ -67,16 +70,19 @@ def _since_epoch(cdate):
     #return int(time.mktime(t))
     return calendar.timegm(t)
 
+
 def set_list2dict(sl):
     return dict(sl)
 
+
 def dict2set_list(dic):
-    return [(k,v) for k,v in dic.items()]
+    return [(k, v) for k, v in dic.items()]
+
 
 class HTTPBase(object):
     def __init__(self, verify=True, ca_bundle=None, key_file=None,
                  cert_file=None):
-        self.request_args = {"allow_redirects": False,}
+        self.request_args = {"allow_redirects": False}
         #self.cookies = {}
         self.cookiejar = cookielib.CookieJar()
 
@@ -98,6 +104,12 @@ class HTTPBase(object):
         :return:
         """
         part = urlparse.urlparse(url)
+
+        #if part.port:
+        #    _domain = "%s:%s" % (part.hostname, part.port)
+        #else:
+        _domain = part.hostname
+
         cookie_dict = {}
         now = utc_now()
         for _, a in list(self.cookiejar._cookies.items()):
@@ -105,6 +117,8 @@ class HTTPBase(object):
                 for cookie in list(b.values()):
                     # print cookie
                     if cookie.expires and cookie.expires <= now:
+                        continue
+                    if not re.search("%s$" % cookie.domain, _domain):
                         continue
                     if not re.match(cookie.path, part.path):
                         continue
@@ -116,8 +130,13 @@ class HTTPBase(object):
     def set_cookie(self, kaka, request):
         """Returns a cookielib.Cookie based on a set-cookie header line"""
 
-        # default rfc2109=False
-        # max-age, httponly
+        if not kaka:
+            return
+
+        part = urlparse.urlparse(request.url)
+        _domain = part.hostname
+        logger.debug("%s: '%s'" % (_domain, kaka))
+
         for cookie_name, morsel in kaka.items():
             std_attr = ATTRS.copy()
             std_attr["name"] = cookie_name
@@ -133,9 +152,9 @@ class HTTPBase(object):
                 if attr in ATTRS:
                     if morsel[attr]:
                         if attr == "expires":
-                            std_attr[attr]=_since_epoch(morsel[attr])
+                            std_attr[attr] = _since_epoch(morsel[attr])
                         else:
-                            std_attr[attr]=morsel[attr]
+                            std_attr[attr] = morsel[attr]
                 elif attr == "max-age":
                     if morsel["max-age"]:
                         std_attr["expires"] = _since_epoch(morsel["max-age"])
@@ -144,10 +163,21 @@ class HTTPBase(object):
                 if std_attr[att]:
                     std_attr[item] = True
 
-            if std_attr["domain"] and std_attr["domain"].startswith("."):
-                std_attr["domain_initial_dot"] = True
+            if std_attr["domain"]:
+                if std_attr["domain"].startswith("."):
+                    std_attr["domain_initial_dot"] = True
+            else:
+                std_attr["domain"] = _domain
+                std_attr["domain_specified"] = True
 
             if morsel["max-age"] is 0:
+                try:
+                    self.cookiejar.clear(domain=std_attr["domain"],
+                                         path=std_attr["path"],
+                                         name=std_attr["name"])
+                except ValueError:
+                    pass
+            elif morsel["expires"] < utc_now():
                 try:
                     self.cookiejar.clear(domain=std_attr["domain"],
                                          path=std_attr["path"],
@@ -164,21 +194,22 @@ class HTTPBase(object):
             _kwargs.update(kwargs)
 
         if self.cookiejar:
-            _kwargs["cookies"] = self.cookies(url)
+            _cd = self.cookies(url)
+            if _cd:
+                _kwargs["cookies"] = _cd
+                logger.debug("Sent cookies: %s" % _kwargs["cookies"])
 
         if self.user and self.passwd:
-            _kwargs["auth"]= (self.user, self.passwd)
+            _kwargs["auth"] = (self.user, self.passwd)
 
-            #logger.info("SENT COOKIEs: %s" % (_kwargs["cookies"],))
         try:
             r = requests.request(method, url, **_kwargs)
         except requests.ConnectionError, exc:
             raise ConnectionError("%s" % exc)
 
         try:
-            #logger.info("RECEIVED COOKIEs: %s" % (r.headers["set-cookie"],))
             self.set_cookie(SimpleCookie(r.headers["set-cookie"]), r)
-        except AttributeError, err:
+        except AttributeError:
             pass
 
         return r
@@ -196,7 +227,7 @@ class HTTPBase(object):
         :return: dictionary
         """
         if not isinstance(message, basestring):
-            request = "%s" % (message,)
+            message = "%s" % (message,)
 
         return http_form_post_message(message, destination, relay_state, typ)
 
@@ -213,7 +244,7 @@ class HTTPBase(object):
         :return: dictionary
         """
         if not isinstance(message, basestring):
-            request = "%s" % (message,)
+            message = "%s" % (message,)
 
         return http_redirect_message(message, destination, relay_state, typ)
 
@@ -278,7 +309,7 @@ class HTTPBase(object):
             soap_message = _signed
 
         return {"url": destination, "method": "POST",
-                "data":soap_message, "headers":headers}
+                "data": soap_message, "headers": headers}
 
     def send_using_soap(self, request, destination, headers=None, sign=False):
         """
@@ -304,7 +335,7 @@ class HTTPBase(object):
             logger.info("SOAP response: %s" % response.text)
             return response
         else:
-            raise HTTPError("%d:%s" % (response.status_code, response.error))
+            raise HTTPError("%d:%s" % (response.status_code, response.content))
 
     def add_credentials(self, user, passwd):
         self.user = user

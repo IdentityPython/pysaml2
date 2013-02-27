@@ -18,6 +18,7 @@
 """Contains classes and functions that a SAML2.0 Service Provider (SP) may use
 to conclude its tasks.
 """
+from saml2.ident import decode
 from saml2.httpbase import HTTPError
 from saml2.s_utils import sid
 import saml2
@@ -99,11 +100,14 @@ class Saml2Client(Base):
             conversation. 
         """
 
+        if isinstance(name_id, basestring):
+            name_id = decode(name_id)
+
         logger.info("logout request for: %s" % name_id)
 
         # find out which IdPs/AAs I should notify
         entity_ids = self.users.issuers_of_info(name_id)
-
+        self.users.remove_person(name_id)
         return self.do_logout(name_id, entity_ids, reason, expire, sign)
         
     def do_logout(self, name_id, entity_ids, reason, expire, sign=None):
