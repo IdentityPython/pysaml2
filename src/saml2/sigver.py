@@ -76,7 +76,7 @@ def signed(item):
 def get_xmlsec_binary(paths=None):
     """
     Tries to find the xmlsec1 binary.
-    
+
     :param paths: Non-system path paths which should be searched when
         looking for xmlsec1
     :return: full name of the xmlsec1 binary found. If no binaries are
@@ -107,12 +107,12 @@ def get_xmlsec_binary(paths=None):
             pass
 
     raise Exception("Can't find %s" % bin_name)
-    
+
 try:
     XMLSEC_BINARY = get_xmlsec_binary()
 except Exception:
     XMLSEC_BINARY = ""
-    
+
 ID_ATTR = "ID"
 NODE_NAME = "urn:oasis:names:tc:SAML:2.0:assertion:Assertion"
 ENC_NODE_NAME = "urn:oasis:names:tc:SAML:2.0:assertion:EncryptedAssertion"
@@ -153,10 +153,10 @@ def _make_vals(val, klass, seccont, klass_inst=None, prop=None, part=False,
     """
     Creates a class instance with a specified value, the specified
     class instance may be a value on a property in a defined class instance.
-    
+
     :param val: The value
     :param klass: The value class
-    :param klass_inst: The class instance which has a property on which 
+    :param klass_inst: The class instance which has a property on which
         what this function returns is a value.
     :param prop: The property which the value should be assigned to.
     :param part: If the value is one of a possible list of values it should be
@@ -166,7 +166,7 @@ def _make_vals(val, klass, seccont, klass_inst=None, prop=None, part=False,
     cinst = None
 
     #print "make_vals(%s, %s)" % (val, klass)
-    
+
     if isinstance(val, dict):
         cinst = _instance(klass, val, seccont, base64encode=base64encode,
                           elements_to_sign=elements_to_sign)
@@ -175,23 +175,23 @@ def _make_vals(val, klass, seccont, klass_inst=None, prop=None, part=False,
             cinst = klass().set_text(val)
         except ValueError:
             if not part:
-                cis = [_make_vals(sval, klass, seccont, klass_inst, prop, 
+                cis = [_make_vals(sval, klass, seccont, klass_inst, prop,
                        True, base64encode, elements_to_sign) for sval in val]
                 setattr(klass_inst, prop, cis)
             else:
                 raise
-            
+
     if part:
         return cinst
-    else:        
-        if cinst:            
+    else:
+        if cinst:
             cis = [cinst]
             setattr(klass_inst, prop, cis)
-    
+
 
 def _instance(klass, ava, seccont, base64encode=False, elements_to_sign=None):
     instance = klass()
-    
+
     for prop in instance.c_attributes.values():
     #print "# %s" % (prop)
         if prop in ava:
@@ -204,7 +204,7 @@ def _instance(klass, ava, seccont, base64encode=False, elements_to_sign=None):
 
     if "text" in ava:
         instance.set_text(ava["text"], base64encode)
-        
+
     for prop, klassdef in instance.c_children.values():
         #print "## %s, %s" % (prop, klassdef)
         if prop in ava:
@@ -223,14 +223,14 @@ def _instance(klass, ava, seccont, base64encode=False, elements_to_sign=None):
         for item in ava["extension_elements"]:
             instance.extension_elements.append(
                 ExtensionElement(item["tag"]).loadd(item))
-        
+
     if "extension_attributes" in ava:
         for key, val in ava["extension_attributes"].items():
             instance.extension_attributes[key] = val
 
     if "signature" in ava:
-        elements_to_sign.append((class_name(instance), instance.id)) 
-    
+        elements_to_sign.append((class_name(instance), instance.id))
+
     return instance
 
 
@@ -259,29 +259,29 @@ def signed_instance_factory(instance, seccont, elements_to_sign=None):
 
 
 def create_id():
-    """ Create a string of 40 random characters from the set [a-p], 
+    """ Create a string of 40 random characters from the set [a-p],
     can be used as a unique identifier of objects.
-    
+
     :return: The string of random characters
     """
     ret = ""
     for _ in range(40):
         ret += chr(random.randint(0, 15) + ord('a'))
     return ret
-    
+
 
 def make_temp(string, suffix="", decode=True):
     """ xmlsec needs files in some cases where only strings exist, hence the
     need for this function. It creates a temporary file with the
     string as only content.
-    
+
     :param string: The information to be placed in the file
-    :param suffix: The temporary file might have to have a specific 
+    :param suffix: The temporary file might have to have a specific
         suffix in certain circumstances.
-    :param decode: The input string might be base64 coded. If so it 
+    :param decode: The input string might be base64 coded. If so it
         must, in some cases, be decoded before being placed in the file.
     :return: 2-tuple with file pointer ( so the calling function can
-        close the file) and filename (which is for instance needed by the 
+        close the file) and filename (which is for instance needed by the
         xmlsec function).
     """
     ntf = NamedTemporaryFile(suffix=suffix)
@@ -460,15 +460,15 @@ def x509_rsa_loads(string):
 def pem_format(key):
     return "\n".join(["-----BEGIN CERTIFICATE-----",
                       key, "-----END CERTIFICATE-----"])
-        
+
 
 def parse_xmlsec_output(output):
-    """ Parse the output from xmlsec to try to find out if the 
+    """ Parse the output from xmlsec to try to find out if the
     command was successfull or not.
-    
+
     :param output: The output from Popen
     :return: A boolean; True if the command was a success otherwise False
-    """ 
+    """
     for line in output.split("\n"):
         if line == "OK":
             return True
@@ -573,22 +573,22 @@ def verify_signature(enctext, xmlsec_binary, cert_file=None, cert_type="pem",
         id_attr = ID_ATTR
 
     _, fil = make_temp(enctext, decode=False)
-    
+
     com_list = [xmlsec_binary, "--verify",
-                "--pubkey-cert-%s" % cert_type, cert_file, 
+                "--pubkey-cert-%s" % cert_type, cert_file,
                 "--id-attr:%s" % id_attr, node_name]
-                
+
     if debug:
         com_list.append("--store-signatures")
-        
+
     if node_id:
         com_list.extend(["--node-id", node_id])
-        
+
     com_list.append(fil)
 
     logger.debug("com_list: %s" % com_list)
 
-    if __DEBUG: 
+    if __DEBUG:
         try:
             print " ".join(com_list)
         except TypeError:
@@ -626,7 +626,7 @@ def read_cert_from_file(cert_file, cert_type):
     """
     if not cert_file:
         return ""
-    
+
     if cert_type == "pem":
         line = open(cert_file).read().split("\n")
         if line[0] == "-----BEGIN CERTIFICATE-----":
@@ -660,7 +660,7 @@ def security_context(conf, debug=None):
     """
     if not conf:
         return None
-        
+
     if debug is None:
         debug = conf.debug
 
@@ -680,28 +680,28 @@ class SecurityContext(object):
                  cert_file="", cert_type="pem", metadata=None,
                  debug=False, template="", encrypt_key_type="des-192",
                  only_use_keys_in_metadata=False):
-        
+
         self.xmlsec = xmlsec_binary
-        
+
         # Your private key
         self.key_file = key_file
         self.key_type = key_type
-        
+
         # Your public key
         self.cert_file = cert_file
         self.cert_type = cert_type
         self.my_cert = read_cert_from_file(cert_file, cert_type)
-        
+
         self.metadata = metadata
         self.only_use_keys_in_metadata = only_use_keys_in_metadata
         self.debug = debug
-        
+
         if not template:
             this_dir, this_filename = os.path.split(__file__)
             self.template = os.path.join(this_dir, "xml", "template.xml")
         else:
             self.template = template
-            
+
         self.key_type = encrypt_key_type
 
     def correctly_signed(self, xml, must=False):
@@ -750,7 +750,7 @@ class SecurityContext(object):
 
     def decrypt(self, enctext):
         """ Decrypting an encrypted text by the use of a private key.
-        
+
         :param enctext: The encrypted text as a string
         :return: The decrypted text
         """
@@ -778,10 +778,10 @@ class SecurityContext(object):
         ntf.seek(0)
         return ntf.read()
 
-    def verify_signature(self, enctext, cert_file=None, cert_type="pem", 
+    def verify_signature(self, enctext, cert_file=None, cert_type="pem",
                          node_name=NODE_NAME, node_id=None, id_attr=""):
         """ Verifies the signature of a XML document.
-        
+
         :param enctext: The XML document as a string
         :param cert_file: The public key that was used to sign the document
         :param cert_type: The file type of the certificate
@@ -795,10 +795,10 @@ class SecurityContext(object):
         if not cert_file:
             cert_file = self.cert_file
             cert_type = self.cert_type
-            
+
         return verify_signature(enctext, self.xmlsec, cert_file, cert_type,
                                 node_name, self.debug, node_id, id_attr)
-        
+
     def _check_signature(self, decoded_xml, item, node_name=NODE_NAME,
                          origdoc=None, id_attr="", must=False):
         #print item
@@ -829,12 +829,12 @@ class SecurityContext(object):
         else:
             logger.debug("==== Certs from metadata ==== %s: %s ====" % (issuer,
                                                                         certs))
-            
+
         if not certs:
             raise MissingKey("%s" % issuer)
 
         #print certs
-        
+
         verified = False
         for _, pem_file in certs:
             try:
@@ -984,14 +984,14 @@ class SecurityContext(object):
 
     def correctly_signed_response(self, decoded_xml, must=False, origdoc=None):
         """ Check if a instance is correctly signed, if we have metadata for
-        the IdP that sent the info use that, if not use the key that are in 
+        the IdP that sent the info use that, if not use the key that are in
         the message if any.
-        
+
         :param decoded_xml: The SAML message as a XML string
         :param must: Whether there must be a signature
         :return: None if the signature can not be verified otherwise an instance
         """
-        
+
         response = samlp.any_response_from_string(decoded_xml)
         if not response:
             raise TypeError("Not a Response")
@@ -1017,16 +1017,16 @@ class SecurityContext(object):
                 except Exception, exc:
                     logger.error("correctly_signed_response: %s" % exc)
                     raise
-            
+
         return response
 
     #--------------------------------------------------------------------------
     # SIGNATURE PART
     #--------------------------------------------------------------------------
-    def sign_statement_using_xmlsec(self, statement, klass_namn, key=None, 
+    def sign_statement_using_xmlsec(self, statement, klass_namn, key=None,
                                     key_file=None, nodeid=None, id_attr=""):
         """Sign a SAML statement using xmlsec.
-        
+
         :param statement: The statement to be signed
         :param key: The key to be used for the signing, either this or
         :param key_file: The file where the key can be found
@@ -1043,14 +1043,14 @@ class SecurityContext(object):
 
         if not key and not key_file:
             key_file = self.key_file
-            
+
         _, fil = make_temp("%s" % statement, decode=False)
 
         ntf = NamedTemporaryFile()
 
-        com_list = [self.xmlsec, "--sign", 
+        com_list = [self.xmlsec, "--sign",
                     "--output", ntf.name,
-                    "--privkey-pem", key_file, 
+                    "--privkey-pem", key_file,
                     "--id-attr:%s" % id_attr, klass_namn
                     #"--store-signatures"
                     ]
@@ -1080,7 +1080,7 @@ class SecurityContext(object):
     def sign_assertion_using_xmlsec(self, statement, key=None, key_file=None,
                                     nodeid=None, id_attr=""):
         """Sign a SAML assertion using xmlsec.
-        
+
         :param statement: The statement to be signed
         :param key: The key to be used for the signing, either this or
         :param key_file: The file where the key can be found
@@ -1126,7 +1126,7 @@ class SecurityContext(object):
 
             if not item.signature:
                 item.signature = pre_signature_part(sid, self.cert_file)
-                
+
             statement = self.sign_statement_using_xmlsec(statement,
                                                          class_name(item),
                                                          key=key,
@@ -1134,7 +1134,7 @@ class SecurityContext(object):
                                                          nodeid=id,
                                                          id_attr=id_attr)
         return statement
-    
+
 # ===========================================================================
 
 
@@ -1143,7 +1143,7 @@ def pre_signature_part(ident, public_key=None, identifier=None):
     If an assertion is to be signed the signature part has to be preset
     with which algorithms to be used, this function returns such a
     preset part.
-    
+
     :param ident: The identifier of the assertion, so you know which assertion
         was signed
     :param public_key: The base64 part of a PEM file
@@ -1157,26 +1157,26 @@ def pre_signature_part(ident, public_key=None, identifier=None):
     trans1 = ds.Transform(algorithm=ds.ALG_EXC_C14N)
     transforms = ds.Transforms(transform=[trans0, trans1])
     digest_method = ds.DigestMethod(algorithm=ds.DIGEST_SHA1)
-    
+
     reference = ds.Reference(uri="#%s" % ident, digest_value=ds.DigestValue(),
                              transforms=transforms, digest_method=digest_method)
-                                
+
     signed_info = ds.SignedInfo(signature_method=signature_method,
                                 canonicalization_method=canonicalization_method,
                                 reference=reference)
-                                
+
     signature = ds.Signature(signed_info=signed_info,
                              signature_value=ds.SignatureValue())
-                                
+
     if identifier:
         signature.id = "Signature%d" % identifier
-                                
+
     if public_key:
         x509_data = ds.X509Data(
             x509_certificate=[ds.X509Certificate(text=public_key)])
         key_info = ds.KeyInfo(x509_data=x509_data)
         signature.key_info = key_info
-    
+
     return signature
 
 
