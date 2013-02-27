@@ -7,7 +7,7 @@ from saml2.soap import parse_soap_enveloped_saml_artifact_resolve
 from saml2.soap import class_instances_from_soap_enveloped_saml_thingies
 from saml2.soap import open_soap_envelope
 
-from saml2 import samlp
+from saml2 import samlp, SamlBase
 from saml2 import saml
 from saml2 import response
 from saml2 import BINDING_URI
@@ -55,7 +55,8 @@ __author__ = 'rolandh'
 
 ARTIFACT_TYPECODE = '\x00\x04'
 
-def create_artifact(entity_id, message_handle, endpoint_index = 0):
+
+def create_artifact(entity_id, message_handle, endpoint_index=0):
     """
     SAML_artifact   := B64(TypeCode EndpointIndex RemainingArtifact)
     TypeCode        := Byte1Byte2
@@ -73,7 +74,7 @@ def create_artifact(entity_id, message_handle, endpoint_index = 0):
     sourceid = sha1(entity_id)
 
     ter = "%s%.2x%s%s" % (ARTIFACT_TYPECODE, endpoint_index,
-                             sourceid.digest(), message_handle)
+                          sourceid.digest(), message_handle)
     return base64.b64encode(ter)
 
 
@@ -204,11 +205,11 @@ class Entity(HTTPBase):
 
         raise Exception("Unkown entity or unsupported bindings")
 
-    def message_args(self, seid=0):
-        if not seid:
-            seid = sid(self.seed)
+    def message_args(self, message_id=0):
+        if not message_id:
+            message_id = sid(self.seed)
 
-        return {"id": seid, "version": VERSION,
+        return {"id": message_id, "version": VERSION,
                 "issue_instant": instant(), "issuer": self._issuer()}
 
     def response_args(self, message, bindings=None, descr_type=""):
@@ -308,7 +309,7 @@ class Entity(HTTPBase):
 
         return signed_instance_factory(msg, self.sec, to_sign)
 
-    def _message(self, request_cls, destination=None, id=0,
+    def _message(self, request_cls, destination=None, message_id=0,
                  consent=None, extensions=None, sign=False, **kwargs):
         """
         Some parameters appear in all requests so simplify by doing
@@ -316,16 +317,16 @@ class Entity(HTTPBase):
 
         :param request_cls: The specific request type
         :param destination: The recipient
-        :param id: A message identifier
+        :param message_id: A message identifier
         :param consent: Whether the principal have given her consent
         :param extensions: Possible extensions
         :param kwargs: Key word arguments specific to one request type
         :return: An instance of the request_cls
         """
-        if not id:
-            id = sid(self.seed)
+        if not message_id:
+            message_id = sid(self.seed)
 
-        for key, val in self.message_args(id).items():
+        for key, val in self.message_args(message_id).items():
             if key not in kwargs:
                 kwargs[key] = val
 
@@ -346,9 +347,36 @@ class Entity(HTTPBase):
             logger.info("REQUEST: %s" % req)
             return req
 
+    def _add_info(self, msg, **kwargs):
+        """
+        Add information to a SAML message. If the attribute is not part of
+        what's defined in the SAML standard add it as an extension.
+
+        :param msg:
+        :param kwargs:
+        :return:
+        """
+
+        allowed_attributes = msg.keys()
+
+        # Should handle extensions here
+        for key, val in kwargs.items():
+            if key in allowed_attributes:
+                setattr(msg, key, val)
+            else:
+                if isinstance(val, SamlBase):
+                    _extel = [element_to_extension_element(val)]
+                elif isinstance(val, list):
+                    _extel = [element_to_extension_element(v) for v in val]
+
+                if msg.extension_elements:
+                    msg.extension_elements.extend(_extel)
+                else:
+                    msg.extension_elements = _extel
+
     def _response(self, in_response_to, consumer_url=None, status=None,
                   issuer=None, sign=False, to_sign=None, **kwargs):
-        """ Create a Response that adhers to the ??? profile.
+        """ Create a Response.
 
         :param in_response_to: The session identifier of the request
         :param consumer_url: The URL which should receive the response
@@ -372,8 +400,7 @@ class Entity(HTTPBase):
         if consumer_url:
             response.destination = consumer_url
 
-        for key, val in kwargs.items():
-            setattr(response, key, val)
+        self._add_info(response, **kwargs)
 
         if sign:
             self.sign(response, to_sign=to_sign)
@@ -495,8 +522,8 @@ class Entity(HTTPBase):
 
     def create_logout_request(self, destination, issuer_entity_id,
                               subject_id=None, name_id=None,
-                              reason=None, expire=None,
-                              id=0, consent=None, extensions=None, sign=False):
+                              reason=None, expire=None, message_id=0, 
+                              consent=None, extensions=None, sign=False):
         """ Constructs a LogoutRequest
 
         :param destination: Destination of the request
@@ -508,7 +535,7 @@ class Entity(HTTPBase):
             form of a URI reference.
         :param expire: The time at which the request expires,
             after which the recipient may discard the message.
-        :param id: Request identifier
+        :param message_id: Request identifier
         :param consent: Whether the principal have given her consent
         :param extensions: Possible extensions
         :param sign: Whether the query should be signed or not.
@@ -526,7 +553,7 @@ class Entity(HTTPBase):
         if not name_id:
             raise Exception("Missing subject identification")
 
-        return self._message(LogoutRequest, destination, id,
+        return self._message(LogoutRequest, destination, message_id,
                              consent, extensions, sign, name_id=name_id,
                              reason=reason, not_on_or_after=expire)
 
@@ -552,14 +579,14 @@ class Entity(HTTPBase):
 
         return response
 
-    def create_artifact_resolve(self, artifact, destination, id, consent=None,
+    def create_artifact_resolve(self, artifact, destination, sid, consent=None,
                                 extensions=None, sign=False):
         """
         Create a ArtifactResolve request
 
         :param artifact:
         :param destination:
-        :param id:
+        :param sid: session id
         :param consent:
         :param extensions:
         :param sign:
@@ -568,7 +595,7 @@ class Entity(HTTPBase):
 
         artifact = Artifact(text=artifact)
 
-        return self._message(ArtifactResolve, destination, id,
+        return self._message(ArtifactResolve, destination, sid,
                              consent, extensions, sign, artifact=artifact)
 
     def create_artifact_response(self, request, artifact, bindings=None,
@@ -580,7 +607,7 @@ class Entity(HTTPBase):
 
         rinfo = self.response_args(request, bindings)
         response = self._status_response(ArtifactResponse, issuer, status,
-                                         sign=False, **rinfo)
+                                         sign=sign, **rinfo)
 
         msg = element_to_extension_element(self.artifact[artifact])
         response.extension_elements = [msg]
@@ -589,15 +616,15 @@ class Entity(HTTPBase):
 
         return response
 
-    def create_manage_name_id_request(self, destination, id=0, consent=None,
-                                      extensions=None, sign=False,
+    def create_manage_name_id_request(self, destination, message_id=0, 
+                                      consent=None, extensions=None, sign=False,
                                       name_id=None, new_id=None,
                                       encrypted_id=None, new_encrypted_id=None,
                                       terminate=None):
         """
 
         :param destination:
-        :param id:
+        :param message_id:
         :param consent:
         :param extensions:
         :param sign:
@@ -608,14 +635,15 @@ class Entity(HTTPBase):
         :param terminate:
         :return:
         """
-        kwargs = self.message_args(id)
+        kwargs = self.message_args(message_id)
 
         if name_id:
             kwargs["name_id"] = name_id
         elif encrypted_id:
             kwargs["encrypted_id"] = encrypted_id
         else:
-            raise AttributeError("One of NameID or EncryptedNameID has to be provided")
+            raise AttributeError(
+                "One of NameID or EncryptedNameID has to be provided")
 
         if new_id:
             kwargs["new_id"] = new_id
@@ -624,7 +652,8 @@ class Entity(HTTPBase):
         elif terminate:
             kwargs["terminate"] = terminate
         else:
-            raise AttributeError("One of NewID, NewEncryptedNameID or Terminate has to be provided")
+            raise AttributeError(
+                "One of NewID, NewEncryptedNameID or Terminate has to be provided")
 
         return self._message(ManageNameIDRequest, destination, consent=consent,
                              extensions=extensions, sign=sign, **kwargs)
@@ -655,8 +684,9 @@ class Entity(HTTPBase):
 
         return response
 
-    def parse_manage_name_id_request_response(self, str, binding=BINDING_SOAP):
-        return self._parse_response(str, response.ManageNameIDResponse,
+    def parse_manage_name_id_request_response(self, string, 
+                                              binding=BINDING_SOAP):
+        return self._parse_response(string, response.ManageNameIDResponse,
                                     "manage_name_id_service", binding)
 
     # ------------------------------------------------------------------------
