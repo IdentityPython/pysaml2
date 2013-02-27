@@ -215,7 +215,7 @@ class Conversation(tool.Conversation):
                 pass
             self.trace.info("SAML Response: %s" % _resp)
         except Exception, err:
-            self.trace.debug("Faulty response: %s" % response)
+            self.trace.info("Faulty response: %s" % response)
             self.trace.error("Exception %s" % err)
             self.err_check("exception", err)
 
