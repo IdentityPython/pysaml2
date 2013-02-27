@@ -1,9 +1,7 @@
 import inspect
 import sys
-import traceback
 from time import mktime
 
-from rrtest.check import CriticalError
 from rrtest.check import Check
 
 from saml2.mdstore import REQ2SRV
@@ -35,52 +33,6 @@ STATUSCODE = ["INFORMATION", "OK", "WARNING", "ERROR", "CRITICAL",
 PREFIX = "-----BEGIN CERTIFICATE-----"
 POSTFIX = "-----END CERTIFICATE-----"
 
-
-class WrapException(CriticalError):
-    """
-    A runtime exception
-    """
-    cid = "exception"
-    msg = "Test tool exception"
-
-    def _func(self, conv=None):
-        self._status = self.status
-        self._message = traceback.format_exception(*sys.exc_info())
-        return {}
-
-
-class InteractionNeeded(CriticalError):
-    """
-    A Webpage was displayed for which no known interaction is defined.
-    """
-    cid = "interaction-needed"
-    msg = "Unexpected page"
-
-    def _func(self, conv=None):
-        self._status = self.status
-        self._message = None
-        return {"url": conv.position}
-
-
-class CheckHTTPResponse(CriticalError):
-    """
-    Checks that the HTTP response status is within the 200 or 300 range
-    """
-    cid = "check-http-response"
-    msg = "IdP error"
-
-    def _func(self, conv):
-        _response = conv.response
-
-        res = {}
-        if _response.status_code >= 400:
-            self._status = self.status
-            self._message = self.msg
-            res["url"] = conv.position
-            res["http_status"] = _response.status_code
-            res["content"] = _response.text
-
-        return res
 
 M2_TIME_FORMAT = "%b %d %H:%M:%S %Y"
 
@@ -586,8 +538,8 @@ class VerifySignatureAlgorithm(Check):
         try:
             assert signature.signed_info.signature_method.algorithm in allowed
         except AssertionError:
-            self._message= "Wrong algorithm used for signing: '%s'" % \
-                           signature.signed_info.signature_method.algorithm
+            self._message="Wrong algorithm used for signing: '%s'" % \
+                          signature.signed_info.signature_method.algorithm
             self._status = CRITICAL
             return False
 
@@ -627,7 +579,7 @@ class VerifySignedPart(Check):
             if response.signature:
                 pass
             else:
-                self._message= "Response not signed"
+                self._message = "Response not signed"
                 self._status = CRITICAL
 
         if self._status == OK:
