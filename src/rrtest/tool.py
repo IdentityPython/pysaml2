@@ -1,4 +1,6 @@
 import cookielib
+import sys
+import traceback
 from rrtest import FatalError
 from rrtest.check import ExpectedError
 from rrtest.check import INTERACTION
@@ -10,7 +12,12 @@ from rrtest.status import STATUSCODE
 __author__ = 'rolandh'
 
 
-class Conversation():
+class Conversation(object):
+    """
+    :ivar response: The received HTTP messages
+    :ivar protocol_response: List of the received protocol messages
+    """
+    
     def __init__(self, client, config, trace, interaction,
                  check_factory=None, msg_factory=None,
                  features=None, verbose=False):
@@ -27,6 +34,7 @@ class Conversation():
                      "rp": cookielib.CookieJar(),
                      "service": cookielib.CookieJar()}
 
+        self.protocol_response = []
         self.last_response = None
         self.last_content = None
         self.response = None
@@ -62,7 +70,9 @@ class Conversation():
         chk = self.check_factory(test)()
         chk(self, self.test_output)
         if bryt:
-            raise FatalError(test)
+            e = FatalError(test)
+            e.trace = "".join(traceback.format_exception(*sys.exc_info()))
+            raise e
 
     def test_sequence(self, sequence):
         for test in sequence:

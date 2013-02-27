@@ -26,6 +26,7 @@ class FlowException(Exception):
 class InteractionNeeded(Exception):
     pass
 
+
 def NoneFunc():
     return None
 
