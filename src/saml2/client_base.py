@@ -208,8 +208,8 @@ class Base(Entity):
     def create_authn_request(self, destination, vorg="", scoping=None,
                              binding=saml2.BINDING_HTTP_POST,
                              nameid_format=NAMEID_FORMAT_TRANSIENT,
-                             service_url_binding=None,
-                             sid=0, consent=None, extensions=None, sign=None,
+                             service_url_binding=None, message_id=0,
+                             consent=None, extensions=None, sign=None,
                              allow_create=False, **kwargs):
         """ Creates an authentication request.
         
@@ -220,7 +220,7 @@ class Base(Entity):
         :param nameid_format: Format of the NameID
         :param service_url_binding: Where the reply should be sent dependent
             on reply binding.
-        :param sid: The identifier for this request
+        :param message_id: The identifier for this request
         :param consent: Whether the principal have given her consent
         :param extensions: Possible extensions
         :param sign: Whether the request should be signed or not.
@@ -292,13 +292,13 @@ class Base(Entity):
         except KeyError:
             pass
 
-        return self._message(AuthnRequest, destination, sid, consent,
+        return self._message(AuthnRequest, destination, message_id, consent,
                              extensions, sign,
                              protocol_binding=binding,
                              scoping=scoping, **args)
 
     def create_attribute_query(self, destination, name_id=None,
-                               attribute=None, sid=0, consent=None,
+                               attribute=None, message_id=0, consent=None,
                                extensions=None, sign=False, **kwargs):
         """ Constructs an AttributeQuery
         
@@ -316,13 +316,12 @@ class Base(Entity):
         :param name_qualifier: The unique identifier of the identity
             provider that generated the identifier.
         :param format: The format of the name ID
-        :param sid: The identifier of the session
+        :param message_id: The identifier of the session
         :param consent: Whether the principal have given her consent
         :param extensions: Possible extensions
         :param sign: Whether the query should be signed or not.
         :return: An AttributeQuery instance
         """
-
 
         if name_id is None:
             if "subject_id" in kwargs:
@@ -348,7 +347,7 @@ class Base(Entity):
         if attribute:
             attribute = do_attributes(attribute)
 
-        return self._message(AttributeQuery, destination, sid, consent,
+        return self._message(AttributeQuery, destination, message_id, consent,
                              extensions, sign, subject=subject,
                              attribute=attribute)
 
@@ -357,7 +356,7 @@ class Base(Entity):
     # AuthnQuery, AttributeQuery, or AuthzDecisionQuery
     def create_authz_decision_query(self, destination, action,
                                     evidence=None, resource=None, subject=None,
-                                    sid=0, consent=None, extensions=None,
+                                    message_id=0, consent=None, extensions=None,
                                     sign=None):
         """ Creates an authz decision query.
 
@@ -366,32 +365,34 @@ class Base(Entity):
         :param evidence: Why you should be able to perform the action
         :param resource: The resource you want to perform the action on
         :param subject: Who wants to do the thing
-        :param sid: Message identifier
+        :param message_id: Message identifier
         :param consent: If the principal gave her consent to this request
         :param extensions: Possible request extensions
         :param sign: Whether the request should be signed or not.
         :return: AuthzDecisionQuery instance
         """
 
-        return self._message(AuthzDecisionQuery, destination, sid, consent,
-                             extensions, sign, action=action, evidence=evidence,
-                             resource=resource, subject=subject)
+        return self._message(AuthzDecisionQuery, destination, message_id,
+                             consent, extensions, sign, action=action,
+                             evidence=evidence, resource=resource,
+                             subject=subject)
 
     def create_authz_decision_query_using_assertion(self, destination,
                                                     assertion, action=None,
                                                     resource=None,
-                                                    subject=None, sid=0,
+                                                    subject=None, message_id=0,
                                                     consent=None,
                                                     extensions=None,
                                                     sign=False):
-        """ Makes an authz decision query.
+        """ Makes an authz decision query based on a previously received
+        Assertion.
 
         :param destination: The IdP endpoint to send the request to
         :param assertion: An Assertion instance
         :param action: The action you want to perform (has to be at least one)
         :param resource: The resource you want to perform the action on
         :param subject: Who wants to do the thing
-        :param sid: Message identifier
+        :param message_id: Message identifier
         :param consent: If the principal gave her consent to this request
         :param extensions: Possible request extensions
         :param sign: Whether the request should be signed or not.
@@ -408,8 +409,8 @@ class Base(Entity):
 
         return self.create_authz_decision_query(
             destination, _action, saml.Evidence(assertion=assertion),
-            resource, subject, sid=sid, consent=consent, extensions=extensions,
-            sign=sign)
+            resource, subject, message_id=message_id, consent=consent,
+            extensions=extensions, sign=sign)
 
     def create_assertion_id_request(self, assertion_id_refs, **kwargs):
         """
@@ -427,29 +428,29 @@ class Base(Entity):
         else:
             return assertion_id_refs[0]
 
-    def create_authn_query(self, subject, destination=None,
-                           authn_context=None, session_index="",
-                           sid=0, consent=None, extensions=None, sign=False):
+    def create_authn_query(self, subject, destination=None, authn_context=None,
+                           session_index="",
+                           message_id=0, consent=None, extensions=None, sign=False):
         """
 
         :param subject: The subject its all about as a <Subject> instance
         :param destination: The IdP endpoint to send the request to
         :param authn_context: list of <RequestedAuthnContext> instances
         :param session_index: a specified session index
-        :param sid: Message identifier
+        :param message_id: Message identifier
         :param consent: If the principal gave her consent to this request
         :param extensions: Possible request extensions
         :param sign: Whether the request should be signed or not.
         :return:
         """
-        return self._message(AuthnQuery, destination, sid, consent, extensions,
+        return self._message(AuthnQuery, destination, message_id, consent, extensions,
                              sign, subject=subject, session_index=session_index,
                              requested_authn_context=authn_context)
 
     def create_name_id_mapping_request(self, name_id_policy,
                                        name_id=None, base_id=None,
                                        encrypted_id=None, destination=None,
-                                       sid=0, consent=None, extensions=None,
+                                       message_id=0, consent=None, extensions=None,
                                        sign=False):
         """
 
@@ -458,7 +459,7 @@ class Base(Entity):
         :param base_id:
         :param encrypted_id:
         :param destination:
-        :param sid: Message identifier
+        :param message_id: Message identifier
         :param consent: If the principal gave her consent to this request
         :param extensions: Possible request extensions
         :param sign: Whether the request should be signed or not.
@@ -469,15 +470,15 @@ class Base(Entity):
         assert name_id or base_id or encrypted_id
 
         if name_id:
-            return self._message(NameIDMappingRequest, destination, sid,
+            return self._message(NameIDMappingRequest, destination, message_id,
                                  consent, extensions, sign,
                                  name_id_policy=name_id_policy, name_id=name_id)
         elif base_id:
-            return self._message(NameIDMappingRequest, destination, sid,
+            return self._message(NameIDMappingRequest, destination, message_id,
                                  consent, extensions, sign,
                                  name_id_policy=name_id_policy, base_id=base_id)
         else:
-            return self._message(NameIDMappingRequest, destination, sid,
+            return self._message(NameIDMappingRequest, destination, message_id,
                                  consent, extensions, sign,
                                  name_id_policy=name_id_policy,
                                  encrypted_id=encrypted_id)
