@@ -28,6 +28,7 @@ from saml2.ident import Unknown
 from saml2.s_utils import rndstr, UnknownPrincipal, UnsupportedBinding
 from saml2.s_utils import PolicyError
 from saml2.saml import AUTHN_PASSWORD
+from saml2.sigver import verify_redirect_signature
 
 logger = logging.getLogger("saml2.idp")
 
@@ -194,6 +195,7 @@ class SSO(Service):
         self.resp_args = {}
         self.binding_out = None
         self.destination = None
+        self.req_info = None
 
     def verify(self, query, binding):
         """
@@ -205,9 +207,11 @@ class SSO(Service):
             resp = Unauthorized('Unknown user')
             return resp(self.environ, self.start_response)
 
-        req_info = IDP.parse_authn_request(query, binding)
+        if not self.req_info:
+            self.req_info = IDP.parse_authn_request(query, binding)
+
         logger.info("parsed OK")
-        _authn_req = req_info.message
+        _authn_req = self.req_info.message
         logger.debug("%s" % _authn_req)
 
         self.binding_out, self.destination = IDP.pick_binding(
@@ -284,11 +288,25 @@ class SSO(Service):
     def redirect(self):
         """ This is the HTTP-redirect endpoint """
         logger.info("--- In SSO Redirect ---")
-        _resp = self._authn(self.unpack_redirect())
-        if isinstance(_resp, basestring):
-            return self.not_authn(_resp)
+        _info = self._authn(self.unpack_redirect())
+        if isinstance(_info, basestring):
+            return self.not_authn(_info)
 
-        return self.operation(_resp, BINDING_HTTP_REDIRECT)
+        if "SigAlg" in _info and "Signature" in _info:  # Signed request
+            self.req_info = IDP.parse_authn_request(_info["SAMLRequest"],
+                                                    BINDING_HTTP_REDIRECT)
+            issuer = self.req_info.message.issuer.text
+            _certs = IDP.metadata.certs(issuer, "any", "signing")
+            verified_ok = False
+            for cert in _certs:
+                if verify_redirect_signature(_info, cert):
+                    verified_ok = True
+                    break
+            if not verified_ok:
+                resp = BadRequest("Message signature verification failure")
+                return resp(self.environ, self.start_response)
+
+        return self.operation(_info, BINDING_HTTP_REDIRECT)
 
     def post(self):
         """
