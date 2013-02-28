@@ -1,6 +1,7 @@
 import inspect
 import sys
 from time import mktime
+from rrtest import check
 
 from rrtest.check import Check
 
@@ -597,13 +598,20 @@ class VerifySignedPart(Check):
 # =============================================================================
 
 
-def factory(cid):
-    for name, obj in inspect.getmembers(sys.modules[__name__]):
-        if inspect.isclass(obj):
-            try:
-                if obj.cid == cid:
-                    return obj
-            except AttributeError:
-                pass
+CLASS_CACHE = {}
 
-    return None
+
+def factory(cid, classes=CLASS_CACHE):
+    if len(classes) == 0:
+        check.factory(cid, classes)
+        for name, obj in inspect.getmembers(sys.modules[__name__]):
+            if inspect.isclass(obj):
+                try:
+                    classes[obj.cid] = obj
+                except AttributeError:
+                    pass
+
+    if cid in classes:
+        return classes[cid]
+    else:
+        return None
