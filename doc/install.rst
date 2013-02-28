@@ -33,6 +33,7 @@ Depending on how you are going to use PySAML2 you might also need
 * decorator
 * python-memcache
 * memcached
+* M2Crypto
 
 Quick build instructions
 ^^^^^^^^^^^^^^^^^^^^^^^^
