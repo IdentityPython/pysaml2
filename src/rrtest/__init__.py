@@ -1,9 +1,15 @@
 import time
+import requests
+from subprocess import Popen, PIPE
 
 __author__ = 'rolandh'
 
 
 class FatalError(Exception):
+    pass
+
+
+class HTTP_ERROR(Exception):
     pass
 
 
@@ -44,3 +50,39 @@ class Trace(object):
     def next(self):
         for line in self.trace:
             yield line
+
+
+def start_script(path, *args):
+    popen_args = [path]
+    popen_args.extend(args)
+    return Popen(popen_args, stdout=PIPE, stderr=PIPE)
+
+
+def stop_script_by_name(name):
+    import subprocess
+    import signal
+    import os
+
+    p = subprocess.Popen(['ps', '-A'], stdout=subprocess.PIPE)
+    out, err = p.communicate()
+
+    for line in out.splitlines():
+        if name in line:
+            pid = int(line.split(None, 1)[0])
+            os.kill(pid, signal.SIGKILL)
+
+
+def stop_script_by_pid(pid):
+    import signal
+    import os
+
+    os.kill(pid, signal.SIGKILL)
+
+
+def get_page(url):
+    resp = requests.get(url)
+    if resp.status_code == 200:
+        return resp.text
+    else:
+        raise HTTP_ERROR(resp.status)
+
