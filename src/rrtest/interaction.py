@@ -356,7 +356,7 @@ class Interaction(object):
 # ========================================================================
 
 
-class Operation(object):
+class Action(object):
     def __init__(self, args):
         self.args = args or {}
         self.request = None

@@ -13,6 +13,10 @@ class HTTP_ERROR(Exception):
     pass
 
 
+class Unknown(Exception):
+    pass
+
+
 class Trace(object):
     def __init__(self):
         self.trace = []
@@ -85,4 +89,3 @@ def get_page(url):
         return resp.text
     else:
         raise HTTP_ERROR(resp.status)
-
