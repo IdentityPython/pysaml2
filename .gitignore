@@ -1,0 +1,14 @@
+*.pyc
+*.~
+\#*
+.*~
+*.egg-info
+example/*/*.log
+example/*.db
+example/*/*.db
+tests/*.db
+tests/*.log
+build/
+dist/
+example/sp/identities
+subject.db

@@ -10,7 +10,7 @@ from saml2 import class_name
 from saml2 import time_util
 from saml2 import saml, samlp
 from saml2.s_utils import factory, do_attribute_statement
-from saml2.sigver import xmlsec_version, get_xmlsec_binary
+from saml2.sigver import xmlsec_version, get_xmlsec_cryptobackend, get_xmlsec_binary
 
 from py.test import raises
 
@@ -78,11 +78,10 @@ def test_cert_from_instance_ssp():
     print str(decoder.decode(der)).replace('.',"\n.")
     assert decoder.decode(der)
 
-    
 class TestSecurity():
     def setup_class(self):
-        xmlexec = get_xmlsec_binary()
-        self.sec = sigver.SecurityContext(xmlexec, key_file=PRIV_KEY,
+        crypto = get_xmlsec_cryptobackend()
+        self.sec = sigver.SecurityContext(crypto, key_file=PRIV_KEY,
                                           cert_file=PUB_KEY, debug=1)
 
         self._assertion = factory( saml.Assertion,
@@ -116,7 +115,7 @@ class TestSecurity():
         ass = self._assertion
         print ass
         sign_ass = self.sec.sign_assertion_using_xmlsec("%s" % ass,
-                                                        nodeid=ass.id)
+                                                        node_id=ass.id)
         #print sign_ass
         sass = saml.assertion_from_string(sign_ass)
         #print sass
@@ -137,7 +136,7 @@ class TestSecurity():
                 assertion=self._assertion,
                 id="22222",
                 signature=sigver.pre_signature_part("22222", self.sec.my_cert))
-        
+
         to_sign = [(class_name(self._assertion), self._assertion.id),
                     (class_name(response), response.id)]
         s_response = sigver.signed_instance_factory(response, self.sec, to_sign)
@@ -291,7 +290,7 @@ class TestSecurity():
         response2.id = "23456"
         raises(sigver.SignatureError, self.sec._check_signature,
                 s_response, response2, class_name(response2))
-        
+
 
 class TestSecurityMetadata():
     def setup_class(self):
@@ -299,7 +298,8 @@ class TestSecurityMetadata():
         md = MetadataStore([saml, samlp], None, xmlexec)
         md.load("local", "metadata_cert.xml")
 
-        self.sec = sigver.SecurityContext(xmlexec, key_file=PRIV_KEY,
+        crypto = get_xmlsec_cryptobackend()
+        self.sec = sigver.SecurityContext(crypto, key_file=PRIV_KEY,
                              cert_file=PUB_KEY, debug=1, metadata=md)
 
         self._assertion = factory( saml.Assertion,
@@ -317,7 +317,7 @@ class TestSecurityMetadata():
         ass = self._assertion
         print ass
         sign_ass = self.sec.sign_assertion_using_xmlsec("%s" % ass,
-                                                        nodeid=ass.id)
+                                                        node_id=ass.id)
         #print sign_ass
         sass = saml.assertion_from_string(sign_ass)
         #print sass
