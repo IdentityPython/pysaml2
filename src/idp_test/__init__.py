@@ -11,7 +11,8 @@ from saml2.config import SPConfig
 from saml2.mdstore import MetadataStore
 from saml2.mdstore import MetaData
 
-from idp_test.base import FatalError
+from rrtest import FatalError
+
 from idp_test.base import Conversation
 from idp_test.check import CheckSaml2IntMetaData
 

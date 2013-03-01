@@ -11,14 +11,11 @@ from saml2.pack import http_redirect_message, http_form_post_message
 from saml2.s_utils import rndstr
 
 from rrtest import tool
+from rrtest import FatalError
 
 __author__ = 'rohe0002'
 
 import cookielib
-
-
-class FatalError(Exception):
-    pass
 
 
 class HTTPError(Exception):
@@ -198,7 +195,7 @@ class Conversation(tool.Conversation):
         except AttributeError:
             pass
 
-        response = ""
+        _resp = None
         try:
             response = self.oper.post_processing(self.last_content)
             if isinstance(response, dict):
@@ -214,8 +211,14 @@ class Conversation(tool.Conversation):
             except KeyError:
                 pass
             self.trace.info("SAML Response: %s" % _resp)
+        except FatalError, ferr:
+            if _resp:
+                self.trace.info("Faulty response: %s" % _resp)
+            self.trace.error("Exception %s" % ferr)
+            raise
         except Exception, err:
-            self.trace.info("Faulty response: %s" % response)
+            if _resp:
+                self.trace.info("Faulty response: %s" % _resp)
             self.trace.error("Exception %s" % err)
             self.err_check("exception", err)
 
