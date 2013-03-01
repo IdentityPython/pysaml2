@@ -108,6 +108,7 @@ def get_xmlsec_binary(paths=None):
 
     raise Exception("Can't find %s" % bin_name)
 
+
 def get_xmlsec_cryptobackend(path=None, search_paths=None, debug=False):
     if path is None:
         path=get_xmlsec_binary(paths=search_paths)
@@ -658,7 +659,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         logger.info("Encryption input len: %d" % len(text))
         _, fil = make_temp("%s" % text, decode=False)
 
-        com_list = [self.xmlsec, "--encrypt", "--pubkey-pem", recv_key,
+        com_list = [self.xmlsec, "--encrypt", "--pubkey-cert-pem", recv_key,
                     "--session-key", key_type, "--xml-data", fil,
                     ]
 
@@ -698,12 +699,12 @@ class CryptoBackendXmlSec1(CryptoBackend):
             if stdout == "":
                 if signed_statement:
                     return signed_statement
-            logger.error("Signing operation failed :\nstdout : %s\nstderr : %s" \
-                             % (stdout, stderr))
+            logger.error(
+                "Signing operation failed :\nstdout : %s\nstderr : %s" % (
+                    stdout, stderr))
             raise Exception("Signing failed")
-        except DecryptError, exc:
+        except DecryptError:
             raise Exception("Signing failed")
-
 
     def validate_signature(self, enctext, cert_file, cert_type, node_name,
                            node_id, id_attr):
@@ -764,7 +765,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
             raise exception("%s" % (exc,))
 
         ntf.seek(0)
-        return (p_out, p_err, ntf.read())
+        return p_out, p_err, ntf.read()
 
 
 def security_context(conf, debug=None):
@@ -1143,7 +1144,7 @@ class SecurityContext(object):
 
     def sign_attribute_query_using_xmlsec(self, statement, **kwargs):
         """ Deprecated function. See sign_attribute_query(). """
-        return self.sign_attribute_query(statement, **kwargs);
+        return self.sign_attribute_query(statement, **kwargs)
 
     def sign_attribute_query(self, statement, **kwargs):
         """Sign a SAML attribute query.
@@ -1154,7 +1155,7 @@ class SecurityContext(object):
         :return: The signed statement
         """
         return self.sign_statement(statement, class_name(
-                samlp.AttributeQuery()), **kwargs)
+            samlp.AttributeQuery()), **kwargs)
 
     def multiple_signatures(self, statement, to_sign, key=None, key_file=None):
         """
