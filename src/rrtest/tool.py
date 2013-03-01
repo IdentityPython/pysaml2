@@ -253,7 +253,8 @@ class Conversation(object):
             except FatalError:
                 raise
             except Exception, err:
-                self.err_check("exception", err)
+                #self.err_check("exception", err)
+                raise
 
         try:
             self.test_sequence(oper["tests"]["post"])
