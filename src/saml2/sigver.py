@@ -1179,7 +1179,7 @@ class SecurityContext(object):
 
             statement = self.sign_statement(statement, class_name(item),
                                             key=key, key_file=key_file,
-                                            node_id=id, id_attr=id_attr)
+                                            node_id=sid, id_attr=id_attr)
         return statement
 
 
