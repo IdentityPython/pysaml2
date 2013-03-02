@@ -307,6 +307,10 @@ class MetaData(object):
 
 
 class MetaDataFile(MetaData):
+    """
+    Handles Metadata file on the same machine. The format of the file is
+    the SAML Metadata format.
+    """
     def __init__(self, onts, attrc, filename):
         MetaData.__init__(self, onts, attrc)
         self.filename = filename
@@ -316,6 +320,11 @@ class MetaDataFile(MetaData):
 
 
 class MetaDataExtern(MetaData):
+    """
+    Class that handles metadata store somewhere on the net.
+    Accessible but HTTP GET.
+    """
+
     def __init__(self, onts, attrc, url, xmlsec_binary, cert, http):
         MetaData.__init__(self, onts, attrc)
         self.url = url
@@ -342,6 +351,10 @@ class MetaDataExtern(MetaData):
 
 
 class MetaDataMD(MetaData):
+    """
+    Handles locally stored metadata, the file format is the text representation
+    of the Python representation of the metadata.
+    """
     def __init__(self, onts, attrc, filename):
         MetaData.__init__(self, onts, attrc)
         self.filename = filename
