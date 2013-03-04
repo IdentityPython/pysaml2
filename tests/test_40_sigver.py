@@ -131,6 +131,66 @@ class TestSecurity():
 
         assert isinstance(item, saml.Assertion)
 
+    def test_multiple_signatures_assertion(self):
+        ass = self._assertion
+        # basic test with two of the same
+        to_sign = [(ass, ass.id, ''),
+                   (ass, ass.id, '')
+                   ]
+        sign_ass = self.sec.multiple_signatures("%s" % ass, to_sign)
+        sass = saml.assertion_from_string(sign_ass)
+        assert _eq(sass.keyswv(), ['attribute_statement', 'issue_instant',
+                                   'version', 'signature', 'id'])
+        assert sass.version == "2.0"
+        assert sass.id == "11111"
+        assert time_util.str_to_time(sass.issue_instant)
+
+        print xmlsec_version(get_xmlsec_binary())
+
+        item = self.sec.check_signature(sass, class_name(sass),
+                                        sign_ass, must=True)
+
+        assert isinstance(item, saml.Assertion)
+
+    def test_multiple_signatures_response(self):
+        response = factory(samlp.Response,
+                           assertion=self._assertion,
+                           id="22222",
+                           signature=\
+                               sigver.pre_signature_part("22222",
+                                                         self.sec.my_cert))
+
+        # order is important, we can't validate if the signatures are made
+        # in the reverse order
+        to_sign = [(self._assertion, self._assertion.id, ''),
+                   (response, response.id, '')]
+
+        s_response = self.sec.multiple_signatures("%s" % response, to_sign)
+        assert s_response is not None
+        response = response_from_string(s_response)
+
+        item = self.sec.check_signature(response, class_name(response),
+                                        s_response, must=True)
+        assert item == response
+        assert item.id == "22222"
+
+        s_assertion = item.assertion[0]
+        assert isinstance(s_assertion, saml.Assertion)
+        # make sure the assertion was modified when we supposedly signed it
+        assert s_assertion != self._assertion
+
+        ci = "".join(sigver.cert_from_instance(s_assertion)[0].split())
+        assert ci == self.sec.my_cert
+
+        res = self.sec.check_signature(s_assertion, class_name(s_assertion),
+                                       s_response, must=True)
+        assert res == s_assertion
+        assert s_assertion.id == "11111"
+        assert s_assertion.version == "2.0"
+        assert _eq(s_assertion.keyswv(), ['attribute_statement', 'issue_instant',
+                                   'version', 'signature', 'id'])
+
+
     def test_sign_response(self):
         response = factory(samlp.Response,
                 assertion=self._assertion,
