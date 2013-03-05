@@ -322,13 +322,13 @@ class RequestAbstractType_(SamlBase):
     c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Issuer'] = ('issuer',
                                                                    saml.Issuer)
-    c_cardinality['issuer'] = {"min":0, "max":1}
+    c_cardinality['issuer'] = {"min": 0, "max": 1}
     c_children['{http://www.w3.org/2000/09/xmldsig#}Signature'] = ('signature',
                                                                    ds.Signature)
-    c_cardinality['signature'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}Extensions'] = ('extensions',
-                                                                      Extensions)
-    c_cardinality['extensions'] = {"min":0, "max":1}
+    c_cardinality['signature'] = {"min": 0, "max": 1}
+    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}Extensions'] = (
+        'extensions', Extensions)
+    c_cardinality['extensions'] = {"min": 0, "max": 1}
     c_attributes['ID'] = ('id', 'ID', True)
     c_attributes['Version'] = ('version', 'string', True)
     c_attributes['IssueInstant'] = ('issue_instant', 'dateTime', True)
@@ -466,11 +466,11 @@ class RequestedAuthnContextType_(SamlBase):
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AuthnContextClassRef'] = (
                                                 'authn_context_class_ref',
                                                 [saml.AuthnContextClassRef])
-    c_cardinality['authn_context_class_ref'] = {"min":0}
+    c_cardinality['authn_context_class_ref'] = {"min": 0}
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AuthnContextDeclRef'] = (
                                                 'authn_context_decl_ref',
                                                 [saml.AuthnContextDeclRef])
-    c_cardinality['authn_context_decl_ref'] = {"min":0}
+    c_cardinality['authn_context_decl_ref'] = {"min": 0}
     c_attributes['Comparison'] = ('comparison', AuthnContextComparisonType_, False)
     c_child_order.extend(['authn_context_class_ref', 'authn_context_decl_ref'])
 
@@ -507,7 +507,7 @@ class AttributeQueryType_(SubjectQueryAbstractType_):
     c_cardinality = SubjectQueryAbstractType_.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Attribute'] = ('attribute',
                                                                       [saml.Attribute])
-    c_cardinality['attribute'] = {"min":0}
+    c_cardinality['attribute'] = {"min": 0}
     c_child_order.extend(['attribute'])
 
     def __init__(self,
@@ -559,7 +559,7 @@ class AuthzDecisionQueryType_(SubjectQueryAbstractType_):
     c_cardinality['action'] = {"min":1}
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Evidence'] = ('evidence',
                                                                      saml.Evidence)
-    c_cardinality['evidence'] = {"min":0, "max":1}
+    c_cardinality['evidence'] = {"min": 0, "max": 1}
     c_attributes['Resource'] = ('resource', 'anyURI', True)
     c_child_order.extend(['action', 'evidence'])
 
@@ -701,13 +701,13 @@ class LogoutRequestType_(RequestAbstractType_):
     c_child_order = RequestAbstractType_.c_child_order[:]
     c_cardinality = RequestAbstractType_.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}BaseID'] = ('base_id', saml.BaseID)
-    c_cardinality['base_id'] = {"min":0, "max":1}
+    c_cardinality['base_id'] = {"min": 0, "max": 1}
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}NameID'] = ('name_id', saml.NameID)
-    c_cardinality['name_id'] = {"min":0, "max":1}
+    c_cardinality['name_id'] = {"min": 0, "max": 1}
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}EncryptedID'] = ('encrypted_id', saml.EncryptedID)
-    c_cardinality['encrypted_id'] = {"min":0, "max":1}
+    c_cardinality['encrypted_id'] = {"min": 0, "max": 1}
     c_children['{urn:oasis:names:tc:SAML:2.0:protocol}SessionIndex'] = ('session_index', [SessionIndex])
-    c_cardinality['session_index'] = {"min":0}
+    c_cardinality['session_index'] = {"min": 0}
     c_attributes['Reason'] = ('reason', 'string', False)
     c_attributes['NotOnOrAfter'] = ('not_on_or_after', 'dateTime', False)
     c_child_order.extend(['base_id', 'name_id', 'encrypted_id', 'session_index'])
@@ -765,11 +765,11 @@ class NameIDMappingRequestType_(RequestAbstractType_):
     c_child_order = RequestAbstractType_.c_child_order[:]
     c_cardinality = RequestAbstractType_.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}BaseID'] = ('base_id', saml.BaseID)
-    c_cardinality['base_id'] = {"min":0, "max":1}
+    c_cardinality['base_id'] = {"min": 0, "max": 1}
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}NameID'] = ('name_id', saml.NameID)
-    c_cardinality['name_id'] = {"min":0, "max":1}
+    c_cardinality['name_id'] = {"min": 0, "max": 1}
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}EncryptedID'] = ('encrypted_id', saml.EncryptedID)
-    c_cardinality['encrypted_id'] = {"min":0, "max":1}
+    c_cardinality['encrypted_id'] = {"min": 0, "max": 1}
     c_children['{urn:oasis:names:tc:SAML:2.0:protocol}NameIDPolicy'] = ('name_id_policy', NameIDPolicy)
     c_child_order.extend(['base_id', 'name_id', 'encrypted_id', 'name_id_policy'])
 
@@ -894,7 +894,7 @@ class IDPListType_(SamlBase):
     c_children['{urn:oasis:names:tc:SAML:2.0:protocol}IDPEntry'] = ('idp_entry', [IDPEntry])
     c_cardinality['idp_entry'] = {"min":1}
     c_children['{urn:oasis:names:tc:SAML:2.0:protocol}GetComplete'] = ('get_complete', GetComplete)
-    c_cardinality['get_complete'] = {"min":0, "max":1}
+    c_cardinality['get_complete'] = {"min": 0, "max": 1}
     c_child_order.extend(['idp_entry', 'get_complete'])
 
     def __init__(self,
@@ -941,21 +941,21 @@ class ManageNameIDRequestType_(RequestAbstractType_):
     c_cardinality = RequestAbstractType_.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}NameID'] = ('name_id',
                                                                    saml.NameID)
-    c_cardinality['name_id'] = {"min":0, "max":1}
+    c_cardinality['name_id'] = {"min": 0, "max": 1}
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}EncryptedID'] = (
                                                                 'encrypted_id',
                                                                 saml.EncryptedID)
-    c_cardinality['encrypted_id'] = {"min":0, "max":1}
+    c_cardinality['encrypted_id'] = {"min": 0, "max": 1}
     c_children['{urn:oasis:names:tc:SAML:2.0:protocol}NewID'] = ('new_id',
                                                                  NewID)
-    c_cardinality['new_id'] = {"min":0, "max":1}
+    c_cardinality['new_id'] = {"min": 0, "max": 1}
     c_children['{urn:oasis:names:tc:SAML:2.0:protocol}NewEncryptedID'] = (
                                                             'new_encrypted_id',
                                                             NewEncryptedID)
-    c_cardinality['new_encrypted_id'] = {"min":0, "max":1}
+    c_cardinality['new_encrypted_id'] = {"min": 0, "max": 1}
     c_children['{urn:oasis:names:tc:SAML:2.0:protocol}Terminate'] = ('terminate',
                                                                      Terminate)
-    c_cardinality['terminate'] = {"min":0, "max":1}
+    c_cardinality['terminate'] = {"min": 0, "max": 1}
     c_child_order.extend(['name_id', 'encrypted_id', 'new_id',
                           'new_encrypted_id', 'terminate'])
 
@@ -1040,7 +1040,7 @@ class AuthnQueryType_(SubjectQueryAbstractType_):
     c_children['{urn:oasis:names:tc:SAML:2.0:protocol}RequestedAuthnContext'] = (
                                                     'requested_authn_context',
                                                     RequestedAuthnContext)
-    c_cardinality['requested_authn_context'] = {"min":0, "max":1}
+    c_cardinality['requested_authn_context'] = {"min": 0, "max": 1}
     c_attributes['SessionIndex'] = ('session_index', 'string', False)
     c_child_order.extend(['requested_authn_context'])
 
@@ -1133,9 +1133,9 @@ class ScopingType_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:protocol}IDPList'] = ('idp_list', IDPList)
-    c_cardinality['idp_list'] = {"min":0, "max":1}
+    c_cardinality['idp_list'] = {"min": 0, "max": 1}
     c_children['{urn:oasis:names:tc:SAML:2.0:protocol}RequesterID'] = ('requester_id', [RequesterID])
-    c_cardinality['requester_id'] = {"min":0}
+    c_cardinality['requester_id'] = {"min": 0}
     c_attributes['ProxyCount'] = ('proxy_count', 'nonNegativeInteger', False)
     c_child_order.extend(['idp_list', 'requester_id'])
 
@@ -1183,24 +1183,33 @@ class AuthnRequestType_(RequestAbstractType_):
     c_attributes = RequestAbstractType_.c_attributes.copy()
     c_child_order = RequestAbstractType_.c_child_order[:]
     c_cardinality = RequestAbstractType_.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Subject'] = ('subject', saml.Subject)
-    c_cardinality['subject'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}NameIDPolicy'] = ('name_id_policy', NameIDPolicy)
-    c_cardinality['name_id_policy'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Conditions'] = ('conditions', saml.Conditions)
-    c_cardinality['conditions'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}RequestedAuthnContext'] = ('requested_authn_context', RequestedAuthnContext)
-    c_cardinality['requested_authn_context'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}Scoping'] = ('scoping', Scoping)
-    c_cardinality['scoping'] = {"min":0, "max":1}
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Subject'] = (
+        'subject', saml.Subject)
+    c_cardinality['subject'] = {"min": 0, "max": 1}
+    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}NameIDPolicy'] = (
+        'name_id_policy', NameIDPolicy)
+    c_cardinality['name_id_policy'] = {"min": 0, "max": 1}
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Conditions'] = (
+        'conditions', saml.Conditions)
+    c_cardinality['conditions'] = {"min": 0, "max": 1}
+    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}RequestedAuthnContext'] = (
+        'requested_authn_context', RequestedAuthnContext)
+    c_cardinality['requested_authn_context'] = {"min": 0, "max": 1}
+    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}Scoping'] = (
+        'scoping', Scoping)
+    c_cardinality['scoping'] = {"min": 0, "max": 1}
     c_attributes['ForceAuthn'] = ('force_authn', 'boolean', False)
     c_attributes['IsPassive'] = ('is_passive', 'boolean', False)
     c_attributes['ProtocolBinding'] = ('protocol_binding', 'anyURI', False)
-    c_attributes['AssertionConsumerServiceIndex'] = ('assertion_consumer_service_index', 'unsignedShort', False)
-    c_attributes['AssertionConsumerServiceURL'] = ('assertion_consumer_service_url', 'anyURI', False)
-    c_attributes['AttributeConsumingServiceIndex'] = ('attribute_consuming_service_index', 'unsignedShort', False)
+    c_attributes['AssertionConsumerServiceIndex'] = (
+        'assertion_consumer_service_index', 'unsignedShort', False)
+    c_attributes['AssertionConsumerServiceURL'] = (
+        'assertion_consumer_service_url', 'anyURI', False)
+    c_attributes['AttributeConsumingServiceIndex'] = (
+        'attribute_consuming_service_index', 'unsignedShort', False)
     c_attributes['ProviderName'] = ('provider_name', 'string', False)
-    c_child_order.extend(['subject', 'name_id_policy', 'conditions', 'requested_authn_context', 'scoping'])
+    c_child_order.extend(['subject', 'name_id_policy', 'conditions',
+                          'requested_authn_context', 'scoping'])
 
     def __init__(self,
             subject=None,
@@ -1283,9 +1292,9 @@ class StatusType_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:protocol}StatusMessage'] = ('status_message', StatusMessage)
-    c_cardinality['status_message'] = {"min":0, "max":1}
+    c_cardinality['status_message'] = {"min": 0, "max": 1}
     c_children['{urn:oasis:names:tc:SAML:2.0:protocol}StatusDetail'] = ('status_detail', StatusDetail)
-    c_cardinality['status_detail'] = {"min":0, "max":1}
+    c_cardinality['status_detail'] = {"min": 0, "max": 1}
     c_child_order.extend(['status_code', 'status_message', 'status_detail'])
 
     def __init__(self,
@@ -1333,11 +1342,11 @@ class StatusResponseType_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Issuer'] = ('issuer', saml.Issuer)
-    c_cardinality['issuer'] = {"min":0, "max":1}
+    c_cardinality['issuer'] = {"min": 0, "max": 1}
     c_children['{http://www.w3.org/2000/09/xmldsig#}Signature'] = ('signature', ds.Signature)
-    c_cardinality['signature'] = {"min":0, "max":1}
+    c_cardinality['signature'] = {"min": 0, "max": 1}
     c_children['{urn:oasis:names:tc:SAML:2.0:protocol}Extensions'] = ('extensions', Extensions)
-    c_cardinality['extensions'] = {"min":0, "max":1}
+    c_cardinality['extensions'] = {"min": 0, "max": 1}
     c_children['{urn:oasis:names:tc:SAML:2.0:protocol}Status'] = ('status', Status)
     c_attributes['ID'] = ('id', 'ID', True)
     c_attributes['InResponseTo'] = ('in_response_to', 'NCName', False)
@@ -1394,11 +1403,11 @@ class ResponseType_(StatusResponseType_):
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Assertion'] = (
                                                             'assertion',
                                                             [saml.Assertion])
-    c_cardinality['assertion'] = {"min":0}
+    c_cardinality['assertion'] = {"min": 0}
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}EncryptedAssertion'] = (
                                                     'encrypted_assertion',
                                                     [saml.EncryptedAssertion])
-    c_cardinality['encrypted_assertion'] = {"min":0}
+    c_cardinality['encrypted_assertion'] = {"min": 0}
     c_child_order.extend(['assertion', 'encrypted_assertion'])
 
     def __init__(self,
@@ -1493,9 +1502,9 @@ class NameIDMappingResponseType_(StatusResponseType_):
     c_child_order = StatusResponseType_.c_child_order[:]
     c_cardinality = StatusResponseType_.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}NameID'] = ('name_id', saml.NameID)
-    c_cardinality['name_id'] = {"min":0, "max":1}
+    c_cardinality['name_id'] = {"min": 0, "max": 1}
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}EncryptedID'] = ('encrypted_id', saml.EncryptedID)
-    c_cardinality['encrypted_id'] = {"min":0, "max":1}
+    c_cardinality['encrypted_id'] = {"min": 0, "max": 1}
     c_child_order.extend(['name_id', 'encrypted_id'])
 
     def __init__(self,
@@ -1590,7 +1599,7 @@ class StatusCodeType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_cardinality['status_code'] = {"min":0, "max":1}
+    c_cardinality['status_code'] = {"min": 0, "max": 1}
     c_attributes['Value'] = ('value', 'anyURI', True)
     c_child_order.extend(['status_code'])
 
