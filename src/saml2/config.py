@@ -128,7 +128,7 @@ _PRA = [BINDING_HTTP_POST, BINDING_HTTP_REDIRECT, BINDING_HTTP_ARTIFACT]
 _SRPA = [BINDING_SOAP, BINDING_HTTP_REDIRECT, BINDING_HTTP_POST,
          BINDING_HTTP_ARTIFACT]
 
-PREFERRED_BINDING={
+PREFERRED_BINDING = {
     "single_logout_service": _SRPA,
     "manage_name_id_service": _SRPA,
     "assertion_consumer_service": _PRA,
@@ -142,10 +142,12 @@ PREFERRED_BINDING={
     "attribute_consuming_service": _RPA
 }
 
+
 class ConfigurationError(Exception):
     pass
 
 # -----------------------------------------------------------------
+
 
 class Config(object):
     def_context = ""

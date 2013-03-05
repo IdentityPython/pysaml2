@@ -12,3 +12,16 @@ build/
 dist/
 example/sp/identities
 subject.db
+.idea
+.DS_store
+.gitignore
+debug_*
+*.log
+*.out
+tmp*
+*.tmp
+*.log.*
+*.db
+*egg-info*
+.coverage
+*.tmpl

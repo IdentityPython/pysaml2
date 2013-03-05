@@ -13,6 +13,7 @@ Functions used to import metadata from and export it to a pysaml2 format
 IMP_SKIP = ["_certs", "e_e_", "_extatt"]
 EXP_SKIP = ["__class__"]
 
+
 # From pysaml2 SAML2 metadata format to Python dictionary
 def _eval(val, onts):
     """
@@ -39,6 +40,7 @@ def _eval(val, onts):
         return lv
     return val
 
+
 def to_dict(_dict, onts):
     """
     Convert a pysaml2 SAML2 message class instance into a basic dictionary
@@ -46,12 +48,12 @@ def to_dict(_dict, onts):
     The export interface.
 
     :param _dict: The pysaml2 metadata instance
-    :param onts: Schemas to use for the conversion
+    :param onts: List of schemas to use for the conversion
     :return: The converted information
     """
     res = {}
     if isinstance(_dict, SamlBase):
-        res["__class__"] = "%s&%s" % (_dict.c_namespace,_dict.c_tag)
+        res["__class__"] = "%s&%s" % (_dict.c_namespace, _dict.c_tag)
         for key in _dict.keyswv():
             if key in IMP_SKIP:
                 continue
@@ -81,10 +83,13 @@ def _kwa(val, onts):
     Key word argument conversion
 
     :param val: A dictionary
-    :param onts: Schemas to use in the conversion
+    :param onts: dictionary with schemas to use in the conversion
+        schema namespase is the key in the dictionary
     :return: A converted dictionary
     """
-    return dict([(k,from_dict(v, onts)) for k,v in val.items() if k not in EXP_SKIP])
+    return dict([(k, from_dict(v, onts)) for k, v in val.items()
+                 if k not in EXP_SKIP])
+
 
 def from_dict(val, onts):
     """
@@ -124,4 +129,3 @@ def from_dict(val, onts):
         return [from_dict(v, onts) for v in val]
     else:
         return val
-

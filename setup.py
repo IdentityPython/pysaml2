@@ -62,10 +62,10 @@ setup(
               "saml2/profile", "saml2/schema", "saml2/extension",
               "saml2/attributemaps"],
 
-    package_dir = {'':'src'},
+    package_dir={'': 'src'},
     package_data={'': ['xml/*.xml']},
 
-    classifiers = ["Development Status :: 4 - Beta",
+    classifiers=["Development Status :: 4 - Beta",
         "License :: OSI Approved :: Apache Software License",
         "Topic :: Software Development :: Libraries :: Python Modules"],
 
@@ -77,18 +77,14 @@ setup(
         'python-memcached',
         'pytest',
         #'pytest-coverage',
-        ],
-
+    ],
     install_requires=install_requires,
-
     extras_require={
         'cjson': ['python-cjson'],
-        'pyasn1': ['pyasn1'],
         'pymongo': ['pymongo'],
-        'python-memcached': ['python-memcached']
+        'python-memcached': ['python-memcached'],
+        'mongodict': ['mongodict']
     },
-
     zip_safe=False,
-
-    cmdclass = {'test': PyTest},
+    cmdclass={'test': PyTest},
 )

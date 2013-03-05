@@ -32,19 +32,21 @@ TIME_FORMAT_WITH_FRAGMENT = re.compile(
     "^(\d{4,4}-\d{2,2}-\d{2,2}T\d{2,2}:\d{2,2}:\d{2,2})\.\d*Z$")
 
 # ---------------------------------------------------------------------------
-#I'm sure this is implemeted somewhere else cann't find it now though, so I
-#made an attempt.
+# I'm sure this is implemented somewhere else can't find it now though, so I
+# made an attempt.
 #Implemented according to 
 #http://www.w3.org/TR/2001/REC-xmlschema-2-20010502/
 #adding-durations-to-dateTimes
 
+
 def f_quotient(arg0, arg1, arg2=0):
     if arg2:
-        return int((arg0-arg1)/(arg2-arg1))
+        return int((arg0 - arg1) / (arg2 - arg1))
     elif not arg0:
         return 0
     else:
-        return int(arg0/arg1)
+        return int(arg0 / arg1)
+
 
 def modulo(arg0, arg1, arg2=0):
     if arg2:
@@ -66,6 +68,7 @@ D_FORMAT = [
     ("M", "tm_min"),
     ("S", "tm_sec")
 ]
+
 
 def parse_duration(duration):
     # (-)PnYnMnDTnHnMnS
@@ -95,17 +98,17 @@ def parse_duration(duration):
             try:
                 mod = duration[index:].index(code)
                 try:
-                    dic[typ] = int(duration[index:index+mod])
+                    dic[typ] = int(duration[index:index + mod])
                 except ValueError:
                     if code == "S":
                         try:
-                            dic[typ] = float(duration[index:index+mod])
+                            dic[typ] = float(duration[index:index + mod])
                         except ValueError:
                             raise Exception("Not a float")
                     else:
                         raise Exception(
-                                "Fractions not allow on anything byt seconds")
-                index = mod+index+1
+                            "Fractions not allow on anything byt seconds")
+                index = mod + index + 1
             except ValueError:
                 dic[typ] = 0
 
@@ -114,6 +117,7 @@ def parse_duration(duration):
         
     return sign, dic
     
+
 def add_duration(tid, duration):
     
     (sign, dur) = parse_duration(duration)
@@ -164,6 +168,7 @@ def add_duration(tid, duration):
 
 # ---------------------------------------------------------------------------
 
+
 def time_in_a_while(days=0, seconds=0, microseconds=0, milliseconds=0,
                     minutes=0, hours=0, weeks=0):
     """
@@ -210,6 +215,7 @@ def a_while_ago(days=0, seconds=0, microseconds=0, milliseconds=0,
 
 # ---------------------------------------------------------------------------
 
+
 def shift_time(dtime, shift):
     """ Adds/deletes an integer amount of seconds from a datetime specification
 
@@ -220,6 +226,7 @@ def shift_time(dtime, shift):
     return dtime + timedelta(seconds=shift)
 
 # ---------------------------------------------------------------------------
+
 
 def str_to_time(timestr, format=TIME_FORMAT):
     """
@@ -232,13 +239,13 @@ def str_to_time(timestr, format=TIME_FORMAT):
         return 0
     try:
         then = time.strptime(timestr, format)
-    except ValueError, err: # assume it's a format problem
+    except ValueError:  # assume it's a format problem
         try:
             elem = TIME_FORMAT_WITH_FRAGMENT.match(timestr)
         except Exception, exc:
             print >> sys.stderr, "Exception: %s on %s" % (exc, timestr)
             raise
-        then = time.strptime(elem.groups()[0]+"Z", TIME_FORMAT)
+        then = time.strptime(elem.groups()[0] + "Z", TIME_FORMAT)
 
     return time.gmtime(calendar.timegm(then))
 
@@ -248,13 +255,19 @@ def instant(format=TIME_FORMAT):
 
 # ---------------------------------------------------------------------------
 
+
 def utc_now():
     return calendar.timegm(time.gmtime())
 
 # ---------------------------------------------------------------------------
 
+
 def before(point):
-    """ True if point datetime specification is before now """
+    """ True if point datetime specification is before now.
+
+    NOTE: If point is specified it is supposed to be in local time.
+    Not UTC/GMT !! This is because that is what gmtime() expects.
+    """
     if not point:
         return True
 

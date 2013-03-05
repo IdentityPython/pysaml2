@@ -387,12 +387,11 @@ class Saml2Client(Base):
                                                 attribute, mid, consent,
                                                 extensions, sign)
             self.state[query.id] = {"entity_id": entityid,
-                                      "operation": "AttributeQuery",
-                                      "subject_id": subject_id,
-                                      "sign": sign}
+                                    "operation": "AttributeQuery",
+                                    "subject_id": subject_id,
+                                    "sign": sign}
             relay_state = self._relay_state(query.id)
-            return self.apply_binding(binding,"%s" % query, destination,
+            return self.apply_binding(binding, "%s" % query, destination,
                                       relay_state)
         else:
             raise Exception("Unsupported binding")
-

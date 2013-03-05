@@ -43,12 +43,14 @@ REQ2SRV = {
     "assertion_response": "assertion_consumer_service",
     "attribute_response": "attribute_consuming_service",
     "discovery_service_request": "discovery_response"
-    }
+}
 
 # ---------------------------------------------------
 
+
 def destinations(srvs):
     return [s["location"] for s in srvs]
+
 
 def attribute_requirement(entity):
     res = {"required": [], "optional": []}
@@ -59,6 +61,7 @@ def attribute_requirement(entity):
             else:
                 res["optional"].append(attr)
     return res
+
 
 def name(ent, langpref="en"):
     try:
@@ -76,6 +79,7 @@ def name(ent, langpref="en"):
         except KeyError:
             pass
     return None
+
 
 def repack_cert(cert):
     part = cert.split("\n")
@@ -120,14 +124,14 @@ class MetaData(object):
             except KeyError:
                 continue
 
-            if descr == "affiliation": # Not protocol specific
+            if descr == "affiliation":  # Not protocol specific
                 flag += 1
                 continue
 
             for item in _items:
                 for prot in item["protocol_support_enumeration"].split(" "):
                     if prot == samlp.NAMESPACE:
-                        item["protocol_support_enumeration"] = [prot]
+                        item["protocol_support_enumeration"] = prot
                         _res.append(item)
                         break
             if not _res:
@@ -279,9 +283,9 @@ class MetaData(object):
     def with_descriptor(self, descriptor):
         res = {}
         desc = "%s_descriptor" % descriptor
-        for id, ent in self.entity.items():
+        for eid, ent in self.entity.items():
             if desc in ent:
-                res[id] = ent
+                res[eid] = ent
         return res
 
     def __str__(self):
@@ -289,19 +293,24 @@ class MetaData(object):
 
     def construct_source_id(self):
         res = {}
-        for id,ent in self.entity.items():
+        for eid, ent in self.entity.items():
             for desc in ["spsso_descriptor", "idpsso_descriptor"]:
                 try:
                     for srv in ent[desc]:
                         if "artifact_resolution_service" in srv:
-                            s = sha1(id)
+                            s = sha1(eid)
                             res[s.digest()] = ent
                 except KeyError:
                     pass
 
         return res
 
+
 class MetaDataFile(MetaData):
+    """
+    Handles Metadata file on the same machine. The format of the file is
+    the SAML Metadata format.
+    """
     def __init__(self, onts, attrc, filename):
         MetaData.__init__(self, onts, attrc)
         self.filename = filename
@@ -309,7 +318,13 @@ class MetaDataFile(MetaData):
     def load(self):
         self.parse(open(self.filename).read())
 
+
 class MetaDataExtern(MetaData):
+    """
+    Class that handles metadata store somewhere on the net.
+    Accessible but HTTP GET.
+    """
+
     def __init__(self, onts, attrc, url, xmlsec_binary, cert, http):
         MetaData.__init__(self, onts, attrc)
         self.url = url
@@ -324,16 +339,22 @@ class MetaDataExtern(MetaData):
         """
         (response, content) = self.http.request(self.url)
         if response.status == 200:
-            if verify_signature(content, self.xmlsec_binary, self.cert,
-                                node_name="%s:%s" % (md.EntitiesDescriptor.c_namespace,
-                                                     md.EntitiesDescriptor.c_tag)):
+            if verify_signature(
+                    content, self.xmlsec_binary, self.cert,
+                    node_name="%s:%s" % (md.EntitiesDescriptor.c_namespace,
+                                         md.EntitiesDescriptor.c_tag)):
                 self.parse(content)
                 return True
         else:
             logger.info("Response status: %s" % response.status)
         return False
 
+
 class MetaDataMD(MetaData):
+    """
+    Handles locally stored metadata, the file format is the text representation
+    of the Python representation of the metadata.
+    """
     def __init__(self, onts, attrc, filename):
         MetaData.__init__(self, onts, attrc)
         self.filename = filename
@@ -341,35 +362,37 @@ class MetaDataMD(MetaData):
     def load(self):
         self.entity = eval(open(self.filename).read())
 
+
 class MetadataStore(object):
     def __init__(self, onts, attrc, xmlsec_binary=None, ca_certs=None,
                  disable_ssl_certificate_validation=False):
         self.onts = onts
         self.attrc = attrc
-        self.http = httplib2.Http(ca_certs=ca_certs,
-                                  disable_ssl_certificate_validation=disable_ssl_certificate_validation)
+        self.http = httplib2.Http(
+            ca_certs=ca_certs,
+            disable_ssl_certificate_validation=disable_ssl_certificate_validation)
         self.xmlsec_binary = xmlsec_binary
         self.ii = 0
         self.metadata = {}
 
-    def load(self, type, *args, **kwargs):
-        if type == "local":
+    def load(self, typ, *args, **kwargs):
+        if typ == "local":
             key = args[0]
             md = MetaDataFile(self.onts, self.attrc, args[0])
-        elif type == "inline":
+        elif typ == "inline":
             self.ii += 1
             key = self.ii
             md = MetaData(self.onts, self.attrc)
-        elif type == "remote":
+        elif typ == "remote":
             key = kwargs["url"]
             md = MetaDataExtern(self.onts, self.attrc,
                                 kwargs["url"], self.xmlsec_binary,
                                 kwargs["cert"], self.http)
-        elif type == "mdfile":
+        elif typ == "mdfile":
             key = args[0]
             md = MetaDataMD(self.onts, self.attrc, args[0])
         else:
-            raise Exception("Unknown metadata type '%s'" % type)
+            raise Exception("Unknown metadata type '%s'" % typ)
 
         md.load()
         self.metadata[key] = md
@@ -566,12 +589,14 @@ class MetadataStore(object):
                     for key in srv["key_descriptor"]:
                         if "use" in key and key["use"] == use:
                             for dat in key["key_info"]["x509_data"]:
-                                cert = repack_cert(dat["x509_certificate"]["text"])
+                                cert = repack_cert(
+                                    dat["x509_certificate"]["text"])
                                 if cert not in res:
                                     res.append(cert)
                         elif not "use" in key:
                             for dat in key["key_info"]["x509_data"]:
-                                cert = repack_cert(dat["x509_certificate"]["text"])
+                                cert = repack_cert(
+                                    dat["x509_certificate"]["text"])
                                 if cert not in res:
                                     res.append(cert)
         else:

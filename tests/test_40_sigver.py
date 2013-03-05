@@ -58,6 +58,7 @@ jjyG0hRT2mAQ9h+bkPmOvlEo/aH0xR68Z9hw4PF13w=="""
 
 from pyasn1.codec.der import decoder
  
+
 def test_cert_from_instance_1():
     xml_response = open(SIGNED).read()
     response = samlp.response_from_string(xml_response)
@@ -66,6 +67,7 @@ def test_cert_from_instance_1():
     assert len(certs) == 1
     print certs[0]
     assert certs[0] == CERT1
+
 
 def test_cert_from_instance_ssp():
     xml_response = open(SIMPLE_SAML_PHP_RESPONSE).read()
