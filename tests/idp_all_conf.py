@@ -88,9 +88,9 @@ CONFIG = {
                     # }
                 }
             },
-            "subject_data": "subject_data.db",
-            },
+            "subject_data": ("mongodb", "foo"),
         },
+    },
     "debug" : 1,
     "key_file" : "test.key",
     "cert_file" : "test.pem",

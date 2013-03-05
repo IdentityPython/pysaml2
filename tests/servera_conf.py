@@ -22,7 +22,7 @@ CONFIG={
     "description": "My own SP",
     "service": {
         "sp": {
-            "endpoints":{
+            "endpoints": {
                 "assertion_consumer_service": [
                     ("%s/" % BASE, BINDING_HTTP_POST),
                     ("%s/paos" % BASE, BINDING_PAOS),
@@ -47,45 +47,46 @@ CONFIG={
             "optional_attributes": ["title", "eduPersonAffiliation"],
             "idp": ["urn:mace:example.com:saml:roland:idp"],
             "name_id_format":[NAMEID_FORMAT_TRANSIENT, NAMEID_FORMAT_PERSISTENT]
-            }
+        }
     },
-    "debug" : 1,
-    "key_file" : "test.key",
-    "cert_file" : "test.pem",
+    "debug": 1,
+    "key_file": "test.key",
+    "cert_file": "test.pem",
     "ca_certs": "cacerts.txt",
     "xmlsec_binary" : xmlsec_path,
     "metadata": {
         "local": ["idp_all.xml", "vo_metadata.xml"],
-        },
-    "virtual_organization" : {
+    },
+    "virtual_organization": {
         "urn:mace:example.com:it:tek":{
-            "nameid_format" : "urn:oid:1.3.6.1.4.1.1466.115.121.1.15-NameID",
+            "nameid_format": "urn:oid:1.3.6.1.4.1.1466.115.121.1.15-NameID",
             "common_identifier": "umuselin",
-            }
+        }
     },
     "subject_data": "subject_data.db",
     "accepted_time_diff": 60,
-    "attribute_map_dir" : "attributemaps",
+    "attribute_map_dir": "attributemaps",
     #"valid_for": 6,
     "organization": {
         "name": ("AB Exempel", "se"),
         "display_name": ("AB Exempel", "se"),
         "url": "http://www.example.org",
         },
-    "contact_person": [{
-                           "given_name": "Roland",
-                           "sur_name": "Hedberg",
-                           "telephone_number": "+46 70 100 0000",
-                           "email_address": ["tech@eample.com", "tech@example.org"],
-                           "contact_type": "technical"
-                       },
-                       ],
+    "contact_person": [
+        {
+            "given_name": "Roland",
+            "sur_name": "Hedberg",
+            "telephone_number": "+46 70 100 0000",
+            "email_address": ["tech@eample.com", "tech@example.org"],
+            "contact_type": "technical"
+        },
+    ],
     "logger": {
         "rotating": {
             "filename": "sp.log",
-            "maxBytes": 100000,
+            "maxBytes": 500000,
             "backupCount": 5,
-            },
+        },
         "loglevel": "info",
-        }
+    }
 }
