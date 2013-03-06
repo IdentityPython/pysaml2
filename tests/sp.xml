@@ -2,13 +2,13 @@
 <ns0:EntityDescriptor xmlns:ns0="urn:oasis:names:tc:SAML:2.0:metadata"
                       xmlns:ns1="urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol"
                       xmlns:ns2="http://www.w3.org/2000/09/xmldsig#"
-                      entityID="http://localhost:8087/sp.xml">
+                      entityID="http://lingon.ladok.umu.se:8087/sp.xml">
     <ns0:SPSSODescriptor AuthnRequestsSigned="false" WantAssertionsSigned="true"
                          protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
         <ns0:Extensions>
             <ns1:DiscoveryResponse
                     Binding="urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol"
-                    Location="http://localhost:8087/disco" index="1"/>
+                    Location="http://lingon.ladok.umu.se:8087/disco" index="1"/>
         </ns0:Extensions>
         <ns0:KeyDescriptor use="signing">
             <ns2:KeyInfo>
@@ -36,34 +36,36 @@
         </ns0:KeyDescriptor>
         <ns0:ArtifactResolutionService
                 Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP"
-                Location="http://localhost:8087/ars" index="1"/>
+                Location="http://lingon.ladok.umu.se:8087/ars" index="1"/>
         <ns0:SingleLogoutService
                 Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP"
-                Location="http://localhost:8087/sls"/>
+                Location="http://lingon.ladok.umu.se:8087/sls"/>
         <ns0:ManageNameIDService
                 Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
-                Location="http://localhost:8087/mni"/>
+                Location="http://lingon.ladok.umu.se:8087/mni"/>
         <ns0:ManageNameIDService
                 Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
-                Location="http://localhost:8087/mni"/>
+                Location="http://lingon.ladok.umu.se:8087/mni"/>
         <ns0:ManageNameIDService
                 Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP"
-                Location="http://localhost:8087/mni"/>
+                Location="http://lingon.ladok.umu.se:8087/mni"/>
         <ns0:ManageNameIDService
                 Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact"
-                Location="http://localhost:8087/acs/artifact"/>
+                Location="http://lingon.ladok.umu.se:8087/acs/artifact"/>
         <ns0:AssertionConsumerService
                 Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
-                Location="http://localhost:8087/acs/post" index="1"/>
+                Location="http://lingon.ladok.umu.se:8087/acs/post" index="1"/>
         <ns0:AssertionConsumerService
                 Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
-                Location="http://localhost:8087/acs/redirect" index="2"/>
+                Location="http://lingon.ladok.umu.se:8087/acs/redirect"
+                index="2"/>
         <ns0:AssertionConsumerService
                 Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact"
-                Location="http://localhost:8087/acs/artifact" index="3"/>
+                Location="http://lingon.ladok.umu.se:8087/acs/artifact"
+                index="3"/>
         <ns0:AssertionConsumerService
                 Binding="urn:oasis:names:tc:SAML:2.0:bindings:PAOS"
-                Location="http://localhost:8087/ecp" index="4"/>
+                Location="http://lingon.ladok.umu.se:8087/ecp" index="4"/>
     </ns0:SPSSODescriptor>
     <ns0:Organization>
         <ns0:OrganizationName xml:lang="se">AB Exempel</ns0:OrganizationName>
