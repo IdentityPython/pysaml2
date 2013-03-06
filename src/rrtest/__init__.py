@@ -1,6 +1,8 @@
 import time
+import traceback
 import requests
 from subprocess import Popen, PIPE
+import sys
 
 __author__ = 'rolandh'
 
@@ -89,3 +91,13 @@ def get_page(url):
         return resp.text
     else:
         raise HTTP_ERROR(resp.status)
+
+
+def exception_trace(tag, exc, log=None):
+    message = traceback.format_exception(*sys.exc_info())
+    if log:
+        log.error("[%s] ExcList: %s" % (tag, "".join(message),))
+        log.error("[%s] Exception: %s" % (tag, exc))
+    else:
+        print >> sys.stderr, "[%s] ExcList: %s" % (tag, "".join(message),)
+        print >> sys.stderr, "[%s] Exception: %s" % (tag, exc)
