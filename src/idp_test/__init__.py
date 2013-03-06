@@ -2,7 +2,6 @@ from importlib import import_module
 import json
 import argparse
 import sys
-import time
 
 import logging
 
@@ -12,6 +11,8 @@ from saml2.mdstore import MetadataStore
 from saml2.mdstore import MetaData
 
 from rrtest import FatalError
+from rrtest import Trace
+from rrtest import exception_trace
 
 from idp_test.base import Conversation
 from idp_test.check import CheckSaml2IntMetaData
@@ -33,70 +34,11 @@ SCHEMA = [dri, idpdisc, md, mdattr, mdui, saml, ui, xmldsig, xmlenc]
 
 __author__ = 'rolandh'
 
-import traceback
-
 logger = logging.getLogger("")
 logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter("%(asctime)s %(name)s:%(levelname)s %(message)s")
 memoryhandler = logging.handlers.MemoryHandler(1024*10, logging.DEBUG)
 logger.addHandler(memoryhandler)
-
-def exception_trace(tag, exc, log=None):
-    message = traceback.format_exception(*sys.exc_info())
-    if log:
-        log.error("[%s] ExcList: %s" % (tag, "".join(message),))
-        log.error("[%s] Exception: %s" % (tag, exc))
-    else:
-        print >> sys.stderr, "[%s] ExcList: %s" % (tag, "".join(message),)
-        print >> sys.stderr, "[%s] Exception: %s" % (tag, exc)
-
-
-class Trace(object):
-    def __init__(self):
-        self.trace = []
-        self.start = time.time()
-
-    def request(self, msg):
-        delta = time.time() - self.start
-        self.trace.append("%f --> %s" % (delta, msg))
-
-    def reply(self, msg):
-        delta = time.time() - self.start
-        self.trace.append("%f <-- %s" % (delta, msg))
-
-    def info(self, msg):
-        delta = time.time() - self.start
-        self.trace.append("%f %s" % (delta, msg))
-
-    def error(self, msg):
-        delta = time.time() - self.start
-        self.trace.append("%f [ERROR] %s" % (delta, msg))
-
-    def warning(self, msg):
-        delta = time.time() - self.start
-        self.trace.append("%f [WARNING] %s" % (delta, msg))
-
-    def __str__(self):
-        try:
-            return "\n".join([t.encode("utf-8") for t in self.trace])
-        except UnicodeDecodeError:
-            arr = []
-            for t in self.trace:
-                try:
-                    arr.append(t.encode("utf-8"))
-                except UnicodeDecodeError:
-                    arr.append(t)
-        return "\n".join(arr)
-
-    def clear(self):
-        self.trace = []
-
-    def __getitem__(self, item):
-        return self.trace[item]
-
-    def next(self):
-        for line in self.trace:
-            yield line
 
 
 class SAML2client(object):
@@ -121,12 +63,14 @@ class SAML2client(object):
                                   help="Script configuration")
         self._parser.add_argument('-m', dest="metadata", action='store_true',
                                   help="Return the SP metadata")
-        self._parser.add_argument("-l", dest="list", action="store_true",
-                                  help="List all the test flows as a JSON object")
+        self._parser.add_argument(
+            "-l", dest="list", action="store_true",
+            help="List all the test flows as a JSON object")
         self._parser.add_argument("-c", dest="spconfig", default="config_file",
                                   help="Configuration file for the SP")
-        self._parser.add_argument("-P", dest="configpath", default=".",
-                                  help="Path to the configuration file for the SP")
+        self._parser.add_argument(
+            "-P", dest="configpath", default=".",
+            help="Path to the configuration file for the SP")
         self._parser.add_argument("-t", dest="testpackage",
                                   help="Module describing tests")
         self._parser.add_argument("oper", nargs="?", help="Which test to run")
@@ -324,11 +268,12 @@ class SAML2client(object):
     def list_conf_id(self):
         sys.path.insert(0, ".")
         mod = import_module("config_file")
-        _res = dict([(key, cnf["description"]) for key, cnf in mod.CONFIG.items()])
+        _res = dict([(key, cnf["description"]) for key, cnf in
+                    mod.CONFIG.items()])
         print json.dumps(_res)
 
     def verify_metadata(self):
-        self.json_config= self.json_config_file()
+        self.json_config = self.json_config_file()
         self.sp_configure()
 
         metadata = MetadataStore(SCHEMA, self.sp_config.attribute_converters,
