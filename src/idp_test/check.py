@@ -595,6 +595,13 @@ class VerifySignedPart(Check):
 
         return {}
 
+
+class VerifyEndpoint(Check):
+    def _func(self, conv):
+        response = conv.last_response
+        return {}
+
+
 # =============================================================================
 
 
