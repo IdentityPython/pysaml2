@@ -3,8 +3,6 @@ import json
 
 __author__ = 'rolandh'
 
-from oic.oauth2.message import ErrorResponse, MissingRequiredAttribute
-
 import traceback
 import sys
 
@@ -115,71 +113,8 @@ class CheckErrorResponse(ExpectedError):
             content_type = _response.headers["content-type"]
             if content_type is None:
                 res["content"] = _content
-            elif CONT_JSON in content_type:
-                try:
-                    self.err = ErrorResponse().deserialize(_content, "json")
-                    self.err.verify()
-                    res["content"] = self.err.to_json()
-                    #res["temp"] = err
-                except Exception:
-                    res["content"] = _content
             else:
                 res["content"] = _content
-        else:
-            # might still be an error message
-            try:
-                self.err = ErrorResponse().deserialize(_content, "json")
-                self.err.verify()
-                res["content"] = self.err.to_json()
-            except Exception:
-                self._message = "Expected error message"
-                self._status = CRITICAL
-
-            res["url"] = conv.position
-
-        return res
-
-
-class CheckRedirectErrorResponse(ExpectedError):
-    """
-    Checks that the HTTP response status is outside the 200 or 300 range
-    or that an error message has been received urlencoded in the form of a
-    redirection.
-    """
-    cid = "check-redirect-error-response"
-    msg = "OP error"
-
-    def _func(self, conv):
-        _response = conv.last_response
-
-        res = {}
-        try:
-            _loc = _response.headers["location"]
-            if "?" in _loc:
-                query = _loc.split("?")[1]
-            elif "#" in _loc:
-                query = _loc.split("#")[1]
-            else:  # ???
-                self._message = "Expected redirect"
-                self._status = CRITICAL
-                return res
-        except (KeyError, AttributeError):
-            self._message = "Expected redirect"
-            self._status = CRITICAL
-            return res
-
-        if _response.status_code == 302:
-            err = ErrorResponse().deserialize(query, "urlencoded")
-            try:
-                err.verify()
-                res["content"] = err.to_json()
-                conv.protocol_response.append((err, query))
-            except MissingRequiredAttribute:
-                self._message = "Expected error message"
-                self._status = CRITICAL
-        else:
-            self._message = "Expected error message"
-            self._status = CRITICAL
 
         return res
 
@@ -197,51 +132,10 @@ class VerifyBadRequestResponse(ExpectedError):
         _content = conv.last_content
         res = {}
         if _response.status_code == 400:
-            err = ErrorResponse().deserialize(_content, "json")
-            err.verify()
-            res["content"] = err.to_json()
-            conv.protocol_response.append((err, _content))
+            pass
         else:
             self._message = "Expected a 400 error message"
             self._status = CRITICAL
-
-        return res
-
-
-class VerifyErrorResponse(ExpectedError):
-    """
-    Verifies that the response received by the client via redirect was an Error
-    response.
-    """
-    cid = "verify-err-response"
-    msg = "OP error"
-
-    def _func(self, conv):
-        res = {}
-
-        response = conv.last_response
-        if response.status_code == 302:
-            _loc = response.headers["location"]
-            if "?" in _loc:
-                _query = _loc.split("?")[1]
-            elif "#" in _loc:
-                _query = _loc.split("#")[1]
-            else:
-                self._message = "Faulty error message"
-                self._status = ERROR
-                return
-
-            try:
-                err = ErrorResponse().deserialize(_query, "urlencoded")
-                err.verify()
-                #res["temp"] = err
-                res["message"] = err.to_dict()
-            except Exception:
-                self._message = "Faulty error message"
-                self._status = ERROR
-        else:
-            self._message = "Expected a redirect with an error message"
-            self._status = ERROR
 
         return res
 
@@ -309,27 +203,9 @@ class CheckHTTPResponse(CriticalError):
         if _response.status_code >= 400:
             self._status = self.status
             self._message = self.msg
-            if CONT_JSON in _response.headers["content-type"]:
-                try:
-                    err = ErrorResponse().deserialize(_content, "json")
-                    self._message = err.to_json()
-                except Exception:
-                    res["content"] = _content
-            else:
-                res["content"] = _content
+            res["content"] = _content
             res["url"] = conv.position
             res["http_status"] = _response.status_code
-        else:
-            # might still be an error message
-            try:
-                err = ErrorResponse().deserialize(_content, "json")
-                err.verify()
-                self._message = err.to_json()
-                self._status = self.status
-            except Exception:
-                pass
-
-            res["url"] = conv.position
 
         return res
 

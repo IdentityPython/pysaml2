@@ -81,6 +81,7 @@ class AuthnRequestTransient(AuthnRequest):
 
         self.tests["post"].append((VerifyEndpoint, url))
 
+
 class AuthnRequestEndpointIndex(AuthnRequest):
     def __init__(self, conv):
         AuthnRequest.__init__(self, conv)

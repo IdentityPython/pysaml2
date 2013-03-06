@@ -1,10 +1,10 @@
-from oic.oauth2 import rndstr
 from saml2 import config, NAMEID_FORMAT_EMAILADDRESS
 from saml2 import samlp
 from saml2 import BINDING_HTTP_POST
 from saml2 import VERSION
 
 from saml2.client import Saml2Client
+from saml2.s_utils import rndstr
 from saml2.time_util import instant
 
 __author__ = 'rolandh'
