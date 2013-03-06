@@ -19,6 +19,7 @@ from idp_test.check import VerifyNameIDPolicyUsage
 from idp_test.check import VerifySuccessStatus
 from idp_test.check import VerifySignatureAlgorithm
 from idp_test.check import VerifySignedPart
+from idp_test.check import VerifyEndpoint
 
 from saml2.samlp import NameIDPolicy
 
@@ -53,7 +54,8 @@ class Request(object):
 class AuthnRequest(Request):
     _class = samlp.AuthnRequest
     request = "authn_request"
-    _args = {"binding": BINDING_HTTP_REDIRECT,
+    _args = {"response_binding": BINDING_HTTP_POST,
+             "request_binding": BINDING_HTTP_REDIRECT,
              "nameid_format": NAMEID_FORMAT_PERSISTENT,
              "allow_create": True}
     tests = {"pre": [VerifyFunctionality],
@@ -63,10 +65,47 @@ class AuthnRequest(Request):
                       VerifySignatureAlgorithm]}
 
 
+class AuthnRequestTransient(AuthnRequest):
+    def __init__(self, conv):
+        AuthnRequest.__init__(self, conv)
+        self.args["nameid_format"] = NAMEID_FORMAT_TRANSIENT
+
+    def setup(self):
+        cnf = self.conv.client.config
+        endps = cnf.getattr("endpoints", "sp")
+        url = ""
+        for url, binding in endps["assertion_consumer_service"]:
+            if binding == BINDING_HTTP_POST:
+                self.args["assertion_consumer_service_url"] = url
+                break
+
+        self.tests["post"].append((VerifyEndpoint, url))
+
+class AuthnRequestEndpointIndex(AuthnRequest):
+    def __init__(self, conv):
+        AuthnRequest.__init__(self, conv)
+        self.args["attribute_consuming_service_index"] = 3
+
+    def setup(self):
+        cnf = self.conv.client.config
+        endps = cnf.getattr("endpoints", "sp")
+        acs3 = endps["assertion_consumer_service"][3]
+        self.tests["post"].append((VerifyEndpoint, acs3[0]))
+
+
+class AuthnRequestSpecEndpoint(AuthnRequest):
+    def setup(self):
+        cnf = self.conv.client.config
+        endps = cnf.getattr("endpoints", "sp")
+        acs3 = endps["assertion_consumer_service"][3]
+        self.args["assertion_consumer_service_url"] = acs3[0]
+        self.tests["post"].append((VerifyEndpoint, acs3[0]))
+
+
 class DynAuthnRequest(Request):
     _class = samlp.AuthnRequest
     request = "authn_request"
-    _args = {}
+    _args = {"response_binding": BINDING_HTTP_POST}
     tests = {}
     name_id_formats = [NAMEID_FORMAT_TRANSIENT, NAMEID_FORMAT_PERSISTENT]
     bindings = [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST]
@@ -74,7 +113,7 @@ class DynAuthnRequest(Request):
     def setup(self):
         metadata = self.conv.client.metadata
         entity = metadata[self.conv.entity_id]
-        self.args = {"nameid_format": "", "binding": ""}
+        self.args.update({"nameid_format": "", "request_binding": ""})
         for idp in entity["idpsso_descriptor"]:
             for nformat in self.name_id_formats:
                 if self.args["nameid_format"]:
@@ -84,18 +123,18 @@ class DynAuthnRequest(Request):
                         self.args["nameid_format"] = nformat
                         break
             for bind in self.bindings:
-                if self.args["binding"]:
+                if self.args["request_binding"]:
                     break
                 for sso in idp["single_sign_on_service"]:
-                    if sso["binding"] == bind:
-                        self.args["binding"] = bind
+                    if sso["request_binding"] == bind:
+                        self.args["request_binding"] = bind
                         break
 
 
 class AuthnRequestPost(AuthnRequest):
     def __init__(self, conv):
         AuthnRequest.__init__(self, conv)
-        self.args["binding"] = BINDING_HTTP_POST
+        self.args["request_binding"] = BINDING_HTTP_POST
 
 
 class AuthnRequest_using_Artifact(AuthnRequest):
@@ -104,16 +143,21 @@ class AuthnRequest_using_Artifact(AuthnRequest):
         self.use_artifact = True
 
 
-class AuthnRequestPostTransient(AuthnRequest):
+class AuthnRequestTransient(AuthnRequest):
     def __init__(self, conv):
         AuthnRequest.__init__(self, conv)
-        self.args["binding"] = BINDING_HTTP_POST
+        self.args["nameid_format"] = NAMEID_FORMAT_TRANSIENT
+
+
+class AuthnRequestPostTransient(AuthnRequestPost):
+    def __init__(self, conv):
+        AuthnRequest.__init__(self, conv)
         self.args["nameid_format"] = NAMEID_FORMAT_TRANSIENT
 
 
 class LogOutRequest(Request):
     request = "logout_request"
-    _args = {"binding": BINDING_SOAP}
+    _args = {"request_binding": BINDING_SOAP}
     tests = {"pre": [VerifyFunctionality], "post": []}
 
     def __init__(self, conv):
@@ -131,7 +175,7 @@ class LogOutRequest(Request):
 
 class AssertionIDRequest(Request):
     request = "assertion_id_request"
-    _args = {"binding": BINDING_URI}
+    _args = {"request_binding": BINDING_URI}
     tests = {"pre": [VerifyFunctionality]}
 
     def setup(self):
@@ -142,7 +186,7 @@ class AssertionIDRequest(Request):
 
 class AuthnQuery(Request):
     request = "authn_query"
-    _args = {"binding": BINDING_SOAP}
+    _args = {"request_binding": BINDING_SOAP}
     tests = {"pre": [VerifyFunctionality], "post": []}
 
     def __init__(self, conv):
@@ -157,7 +201,7 @@ class AuthnQuery(Request):
 
 class NameIDMappingRequest(Request):
     request = "name_id_mapping_request"
-    _args = {"binding": BINDING_SOAP,
+    _args = {"request_binding": BINDING_SOAP,
              "name_id_policy": NameIDPolicy(format=NAMEID_FORMAT_PERSISTENT,
                                             sp_name_qualifier="GroupOn",
                                             allow_create="true")}
@@ -173,28 +217,20 @@ class NameIDMappingRequest(Request):
 
 
 class AuthnRequest_NameIDPolicy1(AuthnRequest):
-    request = "authn_request"
-    _args = {"binding": BINDING_HTTP_REDIRECT,
-             "name_id_policy": NameIDPolicy(format=NAMEID_FORMAT_PERSISTENT,
-                                            sp_name_qualifier="Group1",
-                                            allow_create="true"),
-             "allow_create": True}
-
     def __init__(self, conv):
         AuthnRequest.__init__(self, conv)
+        self.args["name_id_policy"] = NameIDPolicy(
+            format=NAMEID_FORMAT_PERSISTENT, sp_name_qualifier="Group1",
+            allow_create="true")
         self.tests["post"].append(VerifyNameIDPolicyUsage)
 
 
-class AuthnRequest_Transient(AuthnRequest):
-    request = "authn_request"
-    _args = {"binding": BINDING_HTTP_REDIRECT,
-             "name_id_policy": NameIDPolicy(format=NAMEID_FORMAT_TRANSIENT,
-                                            sp_name_qualifier="Group",
-                                            allow_create="true"),
-             "allow_create": True}
-
+class AuthnRequest_TransientNameID(AuthnRequest):
     def __init__(self, conv):
         AuthnRequest.__init__(self, conv)
+        self.args["name_id_policy"] = NameIDPolicy(
+            format=NAMEID_FORMAT_TRANSIENT, sp_name_qualifier="Group",
+            allow_create="true")
         self.tests["post"].append(VerifyNameIDPolicyUsage)
 
 
@@ -202,7 +238,7 @@ class ECP_AuthnRequest(AuthnRequest):
 
     def __init__(self, conv):
         AuthnRequest.__init__(self, conv)
-        self.args["binding"] = BINDING_SOAP
+        self.args["request_binding"] = BINDING_SOAP
         self.args["service_url_binding"] = BINDING_PAOS
 
     def setup(self):
@@ -213,7 +249,7 @@ class ECP_AuthnRequest(AuthnRequest):
 
 class ManageNameIDRequest(Request):
     request = "manage_name_id_request"
-    _args = {"binding": BINDING_SOAP,
+    _args = {"request_binding": BINDING_SOAP,
              "new_id": samlp.NewID("New identifier")}
 
     def __init__(self, conv):
@@ -228,7 +264,7 @@ class ManageNameIDRequest(Request):
 
 class AttributeQuery(Request):
     request = "attribute_query"
-    _args = {"binding": BINDING_SOAP}
+    _args = {"request_binding": BINDING_SOAP}
     tests = {"pre": [VerifyFunctionality],
              "post": [CheckSaml2IntAttributes, VerifyAttributeNameFormat]}
 
@@ -254,6 +290,13 @@ OPERATIONS = {
         "tests": {"pre": [CheckSaml2IntMetaData],
                   "post": []}
     },
+    'authn-transient': {
+        "name": 'Basic SAML2 AuthnRequest, transient name ID',
+        "descr": 'AuthnRequest using HTTP-redirect',
+        "sequence": [AuthnRequestTransient],
+        "tests": {"pre": [CheckSaml2IntMetaData],
+                  "post": []}
+    },
     'authn-post': {
         "name": 'Basic SAML2 AuthnRequest using HTTP POST',
         "descr": 'AuthnRequest using HTTP-POST',
@@ -267,6 +310,18 @@ OPERATIONS = {
         "sequence": [AuthnRequestPostTransient],
         "tests": {"pre": [CheckSaml2IntMetaData],
                   "post": []}
+    },
+    'authn_endpoint_index': {
+        "name": '',
+        "descr": '',
+        "sequence": [AuthnRequestEndpointIndex],
+        "depend":["authn"]
+    },
+    'authn_specified_endpoint': {
+        "name": '',
+        "descr": '',
+        "sequence": [AuthnRequestSpecEndpoint],
+        "depend":["authn"]
     },
     'log-in-out': {
         "name": 'Absolute basic SAML2 log in and out',

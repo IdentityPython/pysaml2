@@ -5,7 +5,6 @@ from saml2 import BINDING_HTTP_REDIRECT, BINDING_URI
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_SOAP
 
-#from idp_test.check import ExpectedError
 from saml2.mdstore import REQ2SRV
 from saml2.pack import http_redirect_message, http_form_post_message
 from saml2.s_utils import rndstr
@@ -74,7 +73,7 @@ class Conversation(tool.Conversation):
 
     def send(self):
         srvs = getattr(self.client.metadata, REQ2SRV[self.oper.request])(
-            self.args["entity_id"], self.args["binding"], "idpsso")
+            self.args["entity_id"], self.args["request_binding"], "idpsso")
 
         response = None
         for srv in srvs:
@@ -108,7 +107,7 @@ class Conversation(tool.Conversation):
             info_typ = "SAMLRequest"
             # depending on binding send the query
 
-        if self.args["binding"] is BINDING_SOAP:
+        if self.args["request_binding"] is BINDING_SOAP:
             res = _client.send_using_soap(str_req, loc)
             if res.status_code >= 400:
                 self.trace.info("Received a HTTP error (%d) '%s'" % (
@@ -117,14 +116,14 @@ class Conversation(tool.Conversation):
             else:
                 self.response_args["binding"] = BINDING_SOAP
         else:
-            self.response_args["binding"] = BINDING_HTTP_POST
-            if self.args["binding"] is BINDING_HTTP_REDIRECT:
+            self.response_args["binding"] = self.args["response_binding"]
+            if self.args["request_binding"] is BINDING_HTTP_REDIRECT:
                 htargs = http_redirect_message(str_req, loc, self.relay_state,
                                                info_typ)
                 self.response_args["outstanding"] = {self.request.id: "/"}
                 #
                 res = _client.send(htargs["headers"][0][1], "GET")
-            elif self.args["binding"] is BINDING_HTTP_POST:
+            elif self.args["request_binding"] is BINDING_HTTP_POST:
                 htargs = http_form_post_message(str_req, loc, self.relay_state,
                                                 info_typ)
                 info = unpack_form(htargs["data"][3])
@@ -134,7 +133,7 @@ class Conversation(tool.Conversation):
                 htargs["headers"] = [("Content-type",
                                       'application/x-www-form-urlencoded')]
                 res = _client.send(loc, "POST", **htargs)
-            elif self.args["binding"] == BINDING_URI:
+            elif self.args["request_binding"] == BINDING_URI:
                 self.response_args["binding"] = BINDING_URI
                 htargs = _client.use_http_uri(str_req, "SAMLRequest", loc)
                 res = _client.send(htargs["url"], "GET")
