@@ -336,7 +336,7 @@ class Interaction(object):
         form = self.pick_form(response, **kwargs)
         #form.backwards_compatible = False
         if not form:
-            raise Exception("Can't pick a form !!")
+            raise InteractionNeeded("Can't pick a form !!")
 
         return {"SAMLResponse": form["SAMLResponse"],
                 "RelayState": form["RelayState"]}

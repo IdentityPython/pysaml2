@@ -21,7 +21,7 @@ class Conversation(object):
     
     def __init__(self, client, config, trace, interaction,
                  check_factory=None, msg_factory=None,
-                 features=None, verbose=False):
+                 features=None, verbose=False, expect_exception=None):
         self.client = client
         self.client_config = config
         self.trace = trace
@@ -30,6 +30,7 @@ class Conversation(object):
         self.verbose = verbose
         self.check_factory = check_factory
         self.msg_factory = msg_factory
+        self.expect_exception = expect_exception
 
         self.cjar = {"browser": cookielib.CookieJar(),
                      "rp": cookielib.CookieJar(),
@@ -175,7 +176,7 @@ class Conversation(object):
 
                 if _response.status_code >= 400:
                     break
-            except FatalError:
+            except (FatalError, InteractionNeeded):
                 raise
             except Exception, err:
                 self.err_check("exception", err, False)
@@ -233,7 +234,6 @@ class Conversation(object):
             self.handle_result()
 
     def do_sequence(self, oper):
-        # TODO: Find out why we start to look for an interaction on AccessTokenResponse
         try:
             self.test_sequence(oper["tests"]["pre"])
         except KeyError:
