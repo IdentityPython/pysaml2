@@ -756,7 +756,8 @@ def logout_request_type__from_string(xml_string):
 
 
 class NameIDMappingRequestType_(RequestAbstractType_):
-    """The urn:oasis:names:tc:SAML:2.0:protocol:NameIDMappingRequestType element """
+    """The urn:oasis:names:tc:SAML:2.0:protocol:NameIDMappingRequestType
+    element """
 
     c_tag = 'NameIDMappingRequestType'
     c_namespace = NAMESPACE
