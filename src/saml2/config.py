@@ -460,14 +460,14 @@ class IdPConfig(Config):
     def __init__(self):
         Config.__init__(self)
 
-def config_factory(typ, file):
+def config_factory(typ, filename):
     if typ == "sp":
-        conf = SPConfig().load_file(file)
+        conf = SPConfig().load_file(filename)
         conf.context = typ
     elif typ in ["aa", "idp", "pdp", "aq"]:
-        conf = IdPConfig().load_file(file)
+        conf = IdPConfig().load_file(filename)
         conf.context = typ
     else:
-        conf = Config().load_file(file)
+        conf = Config().load_file(filename)
         conf.context = typ
     return conf
