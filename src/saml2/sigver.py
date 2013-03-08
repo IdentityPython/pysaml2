@@ -636,7 +636,7 @@ class CryptoBackend():
     def decrypt(self, enctext, key_file):
         raise NotImplementedError()
 
-    def sign_statement(self, statement, class_name, key, key_file, nodeid,
+    def sign_statement(self, statement, class_name, key_file, nodeid,
                        id_attr):
         raise NotImplementedError()
 
@@ -678,7 +678,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
                                                       exception=DecryptError)
         return output
 
-    def sign_statement(self, statement, class_name, key, key_file, node_id,
+    def sign_statement(self, statement, class_name, key_file, node_id,
                        id_attr):
 
         _, fil = make_temp("%s" % statement, decode=False)
@@ -1122,7 +1122,7 @@ class SecurityContext(object):
         if not key and not key_file:
             key_file = self.key_file
 
-        return self.crypto.sign_statement(statement, class_name, key, key_file,
+        return self.crypto.sign_statement(statement, class_name, key_file,
                                           node_id, id_attr)
 
     def sign_assertion_using_xmlsec(self, statement, **kwargs):
