@@ -10,9 +10,9 @@ from saml2.config import SPConfig
 from saml2.mdstore import MetadataStore
 from saml2.mdstore import MetaData
 
-from rrtest import FatalError
-from rrtest import Trace
-from rrtest import exception_trace
+from srtest import FatalError
+from srtest import Trace
+from srtest import exception_trace
 
 from idp_test.base import Conversation
 from idp_test.check import CheckSaml2IntMetaData
@@ -209,7 +209,10 @@ class SAML2client(object):
             #exception_trace("RUN", err)
         except Exception, err:
             print >> sys.stderr, self.trace
-            print err
+            try:
+                print err
+            except (UnicodeDecodeError, UnicodeEncodeError):
+                print err.message.encode("utf-8", "replace")
             exception_trace("RUN", err)
 
         if self.args.debug:

@@ -9,8 +9,8 @@ from saml2.mdstore import REQ2SRV
 from saml2.pack import http_redirect_message, http_form_post_message
 from saml2.s_utils import rndstr
 
-from rrtest import tool
-from rrtest import FatalError
+from srtest import tool
+from srtest import FatalError
 
 __author__ = 'rohe0002'
 
@@ -78,7 +78,7 @@ class Conversation(tool.Conversation):
         response = None
         for srv in srvs:
             response = self._send(srv)
-            if response:
+            if response is not None:
                 break
 
         return response
@@ -140,11 +140,18 @@ class Conversation(tool.Conversation):
             else:
                 res = None
 
+            if res is not None and res.status_code >= 400:
+                self.trace.info("Received a HTTP error (%d) '%s'" % (
+                    res.status_code, res.text))
+                raise HTTPError(res.text)
+
         self.last_response = res
         try:
             self.last_content = res.text
         except AttributeError:
             self.last_content = None
+
+        return res
 
     def init(self, phase):
         self.phase = phase

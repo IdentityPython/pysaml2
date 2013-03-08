@@ -1,9 +1,9 @@
 import inspect
 import sys
 from time import mktime
-from rrtest import check
+from srtest import check
 
-from rrtest.check import Check
+from srtest.check import Check
 
 from saml2.mdstore import REQ2SRV
 from saml2.s_utils import UnknownPrincipal
