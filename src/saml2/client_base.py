@@ -283,16 +283,10 @@ class Base(Entity):
             args["name_id_policy"] = name_id_policy
 
         if kwargs:
-            if extensions is None:
-                extensions = []
-            fargs = [p for p, c, r in AuthnRequest.c_attributes.values()]
-            fargs.extend([p for p, c in AuthnRequest.c_children.values()])
-            for key, val in kwargs.items():
-                if key not in fargs:
-                    # extension elements allowed
-                    extensions.append(saml2.element_to_extension_element(val))
-                else:
-                    args[key] = val
+            _args, extensions = self._filter_args(AuthnRequest(), extensions,
+                                                  **kwargs)
+            args.update(_args)
+
         try:
             del args["id"]
         except KeyError:
@@ -363,7 +357,7 @@ class Base(Entity):
     def create_authz_decision_query(self, destination, action,
                                     evidence=None, resource=None, subject=None,
                                     message_id=0, consent=None, extensions=None,
-                                    sign=None):
+                                    sign=None, **kwargs):
         """ Creates an authz decision query.
 
         :param destination: The IdP endpoint
@@ -435,8 +429,8 @@ class Base(Entity):
             return assertion_id_refs[0]
 
     def create_authn_query(self, subject, destination=None, authn_context=None,
-                           session_index="",
-                           message_id=0, consent=None, extensions=None, sign=False):
+                           session_index="", message_id=0, consent=None,
+                           extensions=None, sign=False):
         """
 
         :param subject: The subject its all about as a <Subject> instance
