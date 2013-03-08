@@ -100,4 +100,8 @@ def exception_trace(tag, exc, log=None):
         log.error("[%s] Exception: %s" % (tag, exc))
     else:
         print >> sys.stderr, "[%s] ExcList: %s" % (tag, "".join(message),)
-        print >> sys.stderr, "[%s] Exception: %s" % (tag, exc)
+        try:
+            print >> sys.stderr, "[%s] Exception: %s" % (tag, exc)
+        except UnicodeEncodeError:
+            print >> sys.stderr, "[%s] Exception: %s" % (
+                tag, exc.message.encode("utf-8", "replace"))
