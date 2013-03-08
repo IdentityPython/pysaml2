@@ -22,6 +22,7 @@ SIMPLE_SAML_PHP_RESPONSE = "simplesamlphp_authnresponse.xml"
 PUB_KEY = "test.pem"
 PRIV_KEY = "test.key"
 
+
 def _eq(l1,l2):
     return set(l1) == set(l2)
 
@@ -77,8 +78,9 @@ def test_cert_from_instance_ssp():
     assert len(certs) == 1
     assert certs[0] == CERT_SSP
     der = base64.b64decode(certs[0])
-    print str(decoder.decode(der)).replace('.',"\n.")
+    print str(decoder.decode(der)).replace('.', "\n.")
     assert decoder.decode(der)
+
 
 class TestSecurity():
     def setup_class(self):
@@ -86,16 +88,17 @@ class TestSecurity():
         self.sec = sigver.SecurityContext(crypto, key_file=PRIV_KEY,
                                           cert_file=PUB_KEY, debug=1)
 
-        self._assertion = factory( saml.Assertion,
+        self._assertion = factory(
+            saml.Assertion,
             version="2.0",
             id="11111",
             issue_instant="2009-10-30T13:20:28Z",
             signature=sigver.pre_signature_part("11111", self.sec.my_cert, 1),
             attribute_statement=do_attribute_statement({
-                    ("","","surName"): ("Foo",""),
-                    ("","","givenName") :("Bar",""),
-                })
-            )
+                    ("", "", "surName"): ("Foo", ""),
+                    ("", "", "givenName"): ("Bar", ""),
+            })
+        )
 
     def test_verify_1(self):
         xml_response = open(SIGNED).read()
@@ -111,7 +114,7 @@ class TestSecurity():
     def test_non_verify_2(self):
         xml_response = open(FALSE_SIGNED).read()
         raises(sigver.SignatureError,self.sec.correctly_signed_response,
-                xml_response)
+               xml_response)
 
     def test_sign_assertion(self):
         ass = self._assertion
@@ -132,6 +135,65 @@ class TestSecurity():
         item = self.sec.check_signature(sass, class_name(sass), sign_ass)
 
         assert isinstance(item, saml.Assertion)
+
+    def test_multiple_signatures_assertion(self):
+        ass = self._assertion
+        # basic test with two of the same
+        to_sign = [(ass, ass.id, ''),
+                   (ass, ass.id, '')
+        ]
+        sign_ass = self.sec.multiple_signatures("%s" % ass, to_sign)
+        sass = saml.assertion_from_string(sign_ass)
+        assert _eq(sass.keyswv(), ['attribute_statement', 'issue_instant',
+                                   'version', 'signature', 'id'])
+        assert sass.version == "2.0"
+        assert sass.id == "11111"
+        assert time_util.str_to_time(sass.issue_instant)
+
+        print xmlsec_version(get_xmlsec_binary())
+
+        item = self.sec.check_signature(sass, class_name(sass),
+                                        sign_ass, must=True)
+
+        assert isinstance(item, saml.Assertion)
+
+    def test_multiple_signatures_response(self):
+        response = factory(samlp.Response,
+                           assertion=self._assertion,
+                           id="22222",
+                           signature=sigver.pre_signature_part(
+                               "22222", self.sec.my_cert))
+
+        # order is important, we can't validate if the signatures are made
+        # in the reverse order
+        to_sign = [(self._assertion, self._assertion.id, ''),
+                   (response, response.id, '')]
+
+        s_response = self.sec.multiple_signatures("%s" % response, to_sign)
+        assert s_response is not None
+        response = response_from_string(s_response)
+
+        item = self.sec.check_signature(response, class_name(response),
+                                        s_response, must=True)
+        assert item == response
+        assert item.id == "22222"
+
+        s_assertion = item.assertion[0]
+        assert isinstance(s_assertion, saml.Assertion)
+        # make sure the assertion was modified when we supposedly signed it
+        assert s_assertion != self._assertion
+
+        ci = "".join(sigver.cert_from_instance(s_assertion)[0].split())
+        assert ci == self.sec.my_cert
+
+        res = self.sec.check_signature(s_assertion, class_name(s_assertion),
+                                       s_response, must=True)
+        assert res == s_assertion
+        assert s_assertion.id == "11111"
+        assert s_assertion.version == "2.0"
+        assert _eq(s_assertion.keyswv(), ['attribute_statement',
+                                          'issue_instant',
+                                          'version', 'signature', 'id'])
 
     def test_sign_response(self):
         response = factory(samlp.Response,
