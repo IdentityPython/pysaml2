@@ -95,7 +95,7 @@ def from_dict(val, onts):
     """
     Converts a dictionary into a pysaml2 object
     :param val: A dictionary
-    :param onts: Schemas to use in the conversion
+    :param onts: Dictionary of schemas to use in the conversion
     :return: The pysaml2 object instance
     """
     if isinstance(val, dict):

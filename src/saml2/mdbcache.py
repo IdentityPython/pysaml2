@@ -14,6 +14,7 @@ from saml2.time_util import TIME_FORMAT
 
 logger = logging.getLogger(__name__)
 
+
 class Cache(object):
     def __init__(self, server=None, debug=0, db=None):
         if server:
@@ -191,7 +192,6 @@ class Cache(object):
         self._cache.update({"subject_id":subject_id,
                             "entity_id":entity_id},
                             {"$set": {"info":info}})
-
 
     def valid_to(self, subject_id, entity_id, newtime):
         """ """

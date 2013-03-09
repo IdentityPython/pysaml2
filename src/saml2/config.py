@@ -109,7 +109,8 @@ SPEC = {
 
 # --------------- Logging stuff ---------------
 
-LOG_LEVEL = {'debug': logging.DEBUG,
+LOG_LEVEL = {
+    'debug': logging.DEBUG,
     'info': logging.INFO,
     'warning': logging.WARNING,
     'error': logging.ERROR,
