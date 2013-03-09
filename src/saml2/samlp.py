@@ -1402,12 +1402,10 @@ class ResponseType_(StatusResponseType_):
     c_child_order = StatusResponseType_.c_child_order[:]
     c_cardinality = StatusResponseType_.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Assertion'] = (
-                                                            'assertion',
-                                                            [saml.Assertion])
+        'assertion', [saml.Assertion])
     c_cardinality['assertion'] = {"min": 0}
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}EncryptedAssertion'] = (
-                                                    'encrypted_assertion',
-                                                    [saml.EncryptedAssertion])
+        'encrypted_assertion', [saml.EncryptedAssertion])
     c_cardinality['encrypted_assertion'] = {"min": 0}
     c_child_order.extend(['assertion', 'encrypted_assertion'])
 
