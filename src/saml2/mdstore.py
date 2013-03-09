@@ -1,9 +1,9 @@
 import logging
-import httplib2
 import sys
 import json
 
 from hashlib import sha1
+from saml2.httpbase import HTTPBase
 from saml2.extension.idpdisc import BINDING_DISCO
 from saml2.extension.idpdisc import DiscoveryResponse
 
@@ -337,13 +337,13 @@ class MetaDataExtern(MetaData):
         If the fingerprint is known the file will be checked for
         compliance before it is imported.
         """
-        (response, content) = self.http.request(self.url)
+        response = self.http.send(self.url)
         if response.status == 200:
             if verify_signature(
-                    content, self.xmlsec_binary, self.cert,
+                    response.text, self.xmlsec_binary, self.cert,
                     node_name="%s:%s" % (md.EntitiesDescriptor.c_namespace,
                                          md.EntitiesDescriptor.c_tag)):
-                self.parse(content)
+                self.parse(response.text)
                 return True
         else:
             logger.info("Response status: %s" % response.status)
@@ -368,9 +368,8 @@ class MetadataStore(object):
                  disable_ssl_certificate_validation=False):
         self.onts = onts
         self.attrc = attrc
-        self.http = httplib2.Http(
-            ca_certs=ca_certs,
-            disable_ssl_certificate_validation=disable_ssl_certificate_validation)
+        self.http = HTTPBase(verify=disable_ssl_certificate_validation,
+                             ca_bundle=ca_certs)
         self.xmlsec_binary = xmlsec_binary
         self.ii = 0
         self.metadata = {}
