@@ -127,7 +127,7 @@ class DynAuthnRequest(Request):
                 if self.args["request_binding"]:
                     break
                 for sso in idp["single_sign_on_service"]:
-                    if sso["request_binding"] == bind:
+                    if sso["binding"] == bind:
                         self.args["request_binding"] = bind
                         break
 
