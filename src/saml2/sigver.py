@@ -958,8 +958,14 @@ class SecurityContext(object):
             cert_file = self.cert_file
             cert_type = self.cert_type
 
-        return verify_signature(signedtext, self.crypto, cert_file, cert_type,
-                                node_name, self.debug, node_id, id_attr)
+        if not id_attr:
+            id_attr = ID_ATTR
+
+        return self.crypto.validate_signature(signedtext, cert_file=cert_file,
+                                              cert_type=cert_type,
+                                              node_name=node_name,
+                                              node_id=node_id, id_attr=id_attr,
+                                              )
 
     def _check_signature(self, decoded_xml, item, node_name=NODE_NAME,
                          origdoc=None, id_attr="", must=False):
