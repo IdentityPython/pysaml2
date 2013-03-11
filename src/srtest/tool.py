@@ -1,14 +1,14 @@
 import cookielib
 import sys
 import traceback
-from rrtest.opfunc import Operation
-from rrtest import FatalError
-from rrtest.check import ExpectedError
-from rrtest.check import INTERACTION
-from rrtest.interaction import Interaction
-from rrtest.interaction import Action
-from rrtest.interaction import InteractionNeeded
-from rrtest.status import STATUSCODE
+from srtest.opfunc import Operation
+from srtest import FatalError
+from srtest.check import ExpectedError
+from srtest.check import INTERACTION
+from srtest.interaction import Interaction
+from srtest.interaction import Action
+from srtest.interaction import InteractionNeeded
+from srtest.status import STATUSCODE
 
 __author__ = 'rolandh'
 
