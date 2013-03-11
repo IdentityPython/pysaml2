@@ -347,6 +347,21 @@ class Entity(HTTPBase):
             logger.info("REQUEST: %s" % req)
             return req
 
+    def _filter_args(self, instance, extensions=None, **kwargs):
+        args = {}
+        if extensions is None:
+            extensions = []
+
+        allowed_attributes = instance.keys()
+        for key, val in kwargs.items():
+            if key in allowed_attributes:
+                args[key] = val
+            else:
+                # extension elements allowed ?
+                extensions.append(element_to_extension_element(val))
+
+        return args, extensions
+
     def _add_info(self, msg, **kwargs):
         """
         Add information to a SAML message. If the attribute is not part of
@@ -357,22 +372,15 @@ class Entity(HTTPBase):
         :return:
         """
 
-        allowed_attributes = msg.keys()
+        args, extensions = self._filter_args(msg, **kwargs)
+        for key, val in args.items():
+            setattr(msg, key, val)
 
-        # Should handle extensions here
-        for key, val in kwargs.items():
-            if key in allowed_attributes:
-                setattr(msg, key, val)
+        if extensions:
+            if msg.extension_elements:
+                msg.extension_elements.extend(extensions)
             else:
-                if isinstance(val, SamlBase):
-                    _extel = [element_to_extension_element(val)]
-                elif isinstance(val, list):
-                    _extel = [element_to_extension_element(v) for v in val]
-
-                if msg.extension_elements:
-                    msg.extension_elements.extend(_extel)
-                else:
-                    msg.extension_elements = _extel
+                msg.extension_elements = extensions
 
     def _response(self, in_response_to, consumer_url=None, status=None,
                   issuer=None, sign=False, to_sign=None, **kwargs):

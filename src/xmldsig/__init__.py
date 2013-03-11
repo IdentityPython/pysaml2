@@ -1180,6 +1180,7 @@ class RetrievalMethodType_(SamlBase):
         self.uri=uri
         self.type=type
 
+
 def retrieval_method_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(RetrievalMethodType_, xml_string)
 
@@ -1193,6 +1194,7 @@ class SignatureProperties(SignaturePropertiesType_):
     c_attributes = SignaturePropertiesType_.c_attributes.copy()
     c_child_order = SignaturePropertiesType_.c_child_order[:]
     c_cardinality = SignaturePropertiesType_.c_cardinality.copy()
+
 
 def signature_properties_from_string(xml_string):
     return saml2.create_class_from_xml_string(SignatureProperties, xml_string)
@@ -1242,6 +1244,7 @@ class ReferenceType_(SamlBase):
         self.uri=uri
         self.type=type
 
+
 def reference_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(ReferenceType_, xml_string)
 
@@ -1255,6 +1258,7 @@ class RetrievalMethod(RetrievalMethodType_):
     c_attributes = RetrievalMethodType_.c_attributes.copy()
     c_child_order = RetrievalMethodType_.c_child_order[:]
     c_cardinality = RetrievalMethodType_.c_cardinality.copy()
+
 
 def retrieval_method_from_string(xml_string):
     return saml2.create_class_from_xml_string(RetrievalMethod, xml_string)
@@ -1270,10 +1274,12 @@ class Reference(ReferenceType_):
     c_child_order = ReferenceType_.c_child_order[:]
     c_cardinality = ReferenceType_.c_cardinality.copy()
 
+
 def reference_from_string(xml_string):
     return saml2.create_class_from_xml_string(Reference, xml_string)
 
 #import xmlenc as enc
+
 
 class KeyInfoType_(SamlBase):
     """The http://www.w3.org/2000/09/xmldsig#:KeyInfoType element """
@@ -1290,8 +1296,8 @@ class KeyInfoType_(SamlBase):
     c_children['{http://www.w3.org/2000/09/xmldsig#}KeyValue'] = ('key_value',
                                                                   [KeyValue])
     c_cardinality['key_value'] = {"min":0}
-    c_children['{http://www.w3.org/2000/09/xmldsig#}RetrievalMethod'] = ('retrieval_method',
-                                                                         [RetrievalMethod])
+    c_children['{http://www.w3.org/2000/09/xmldsig#}RetrievalMethod'] = (
+        'retrieval_method', [RetrievalMethod])
     c_cardinality['retrieval_method'] = {"min":0}
     c_children['{http://www.w3.org/2000/09/xmldsig#}X509Data'] = ('x509_data',
                                                                   [X509Data])
@@ -1305,9 +1311,8 @@ class KeyInfoType_(SamlBase):
     c_children['{http://www.w3.org/2000/09/xmldsig#}MgmtData'] = ('mgmt_data',
                                                                   [MgmtData])
     c_cardinality['mgmt_data'] = {"min":0}
-    c_children['{http://www.w3.org/2000/09/xmlenc#}EncryptedKey'] =  (
-                                                            'encrypted_key',
-                                                            None)
+    c_children['{http://www.w3.org/2000/09/xmlenc#}EncryptedKey'] = (
+        'encrypted_key', None)
     c_cardinality['key_info'] = {"min":0, "max":1}
 
     c_attributes['Id'] = ('id', 'ID', False)
@@ -1316,33 +1321,32 @@ class KeyInfoType_(SamlBase):
                           'encrypted_key'])
 
     def __init__(self,
-            key_name=None,
-            key_value=None,
-            retrieval_method=None,
-            x509_data=None,
-            pgp_data=None,
-            spki_data=None,
-            mgmt_data=None,
-            encrypted_key=None,
-            id=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.key_name=key_name or []
-        self.key_value=key_value or []
-        self.retrieval_method=retrieval_method or []
-        self.x509_data=x509_data or []
-        self.pgp_data=pgp_data or []
-        self.spki_data=spki_data or []
-        self.mgmt_data=mgmt_data or []
-        self.encrypted_key=encrypted_key
-        self.id=id
+                 key_name=None,
+                 key_value=None,
+                 retrieval_method=None,
+                 x509_data=None,
+                 pgp_data=None,
+                 spki_data=None,
+                 mgmt_data=None,
+                 encrypted_key=None,
+                 id=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes
+                          )
+        self.key_name = key_name or []
+        self.key_value = key_value or []
+        self.retrieval_method = retrieval_method or []
+        self.x509_data = x509_data or []
+        self.pgp_data = pgp_data or []
+        self.spki_data = spki_data or []
+        self.mgmt_data = mgmt_data or []
+        self.encrypted_key = encrypted_key
+        self.id = id
 
 def key_info_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(KeyInfoType_, xml_string)

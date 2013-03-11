@@ -984,7 +984,8 @@ class SSODescriptorType_(RoleDescriptorType_):
                           'single_logout_service', 'manage_name_id_service',
                           'name_id_format'])
 
-    def __init__(self,
+    def __init__(
+            self,
             artifact_resolution_service=None,
             single_logout_service=None,
             manage_name_id_service=None,
@@ -1003,21 +1004,22 @@ class SSODescriptorType_(RoleDescriptorType_):
             extension_elements=None,
             extension_attributes=None,
         ):
-        RoleDescriptorType_.__init__(self, 
-                signature=signature,
-                extensions=extensions,
-                key_descriptor=key_descriptor,
-                organization=organization,
-                contact_person=contact_person,
-                id=id,
-                valid_until=valid_until,
-                cache_duration=cache_duration,
-                protocol_support_enumeration=protocol_support_enumeration,
-                error_url=error_url,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
+        RoleDescriptorType_.__init__(
+            self,
+            signature=signature,
+            extensions=extensions,
+            key_descriptor=key_descriptor,
+            organization=organization,
+            contact_person=contact_person,
+            id=id,
+            valid_until=valid_until,
+            cache_duration=cache_duration,
+            protocol_support_enumeration=protocol_support_enumeration,
+            error_url=error_url,
+            text=text,
+            extension_elements=extension_elements,
+            extension_attributes=extension_attributes,
+        )
         self.artifact_resolution_service=artifact_resolution_service or []
         self.single_logout_service=single_logout_service or []
         self.manage_name_id_service=manage_name_id_service or []

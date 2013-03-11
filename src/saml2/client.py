@@ -135,8 +135,13 @@ class Saml2Client(Base):
             # for all where I can use the SOAP binding, do those first
             for binding in [BINDING_SOAP, BINDING_HTTP_POST,
                             BINDING_HTTP_REDIRECT]:
-                srvs = self.metadata.single_logout_service(entity_id, binding,
-                                                           "idpsso")
+                try:
+                    srvs = self.metadata.single_logout_service(entity_id,
+                                                               binding,
+                                                               "idpsso")
+                except:
+                    srvs = None
+
                 if not srvs:
                     logger.debug("No SLO '%s' service" % binding)
                     continue

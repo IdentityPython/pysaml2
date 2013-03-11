@@ -123,16 +123,16 @@ class SAML2Plugin(FormPluginBase):
     implements(IChallenger, IIdentifier, IAuthenticator, IMetadataProvider)
     
     def __init__(self, rememberer_name, config, saml_client, wayf, cache,
-                 debug, sid_store=None, discovery=""):
+                 sid_store=None, discovery="", idp_query_param=""):
         FormPluginBase.__init__(self)
         
         self.rememberer_name = rememberer_name
-        self.debug = debug        
         self.wayf = wayf
         self.saml_client = saml_client
         self.conf = config
         self.cache = cache
         self.discosrv = discovery
+        self.idp_query_param = idp_query_param
 
         try:
             self.metadata = self.conf.metadata
@@ -222,44 +222,51 @@ class SAML2Plugin(FormPluginBase):
         
         logger.info("IdP URL: %s" % idps)
 
-        if len(idps) == 1:
-            # idps is a dictionary
-            idp_entity_id = idps.keys()[0]
-        elif not len(idps):
-            return -1, HTTPInternalServerError(detail='Misconfiguration')
-        else:
-            idp_entity_id = ""
-            logger.info("ENVIRON: %s" % environ)
-            query = environ.get('s2repoze.body', '')
-            if not query:
-                query = environ.get("QUERY_STRING", "")
-                
-            logger.info("<_pick_idp> query: %s" % query)
+        idp_entity_id = query = None
 
-            if self.wayf:
-                if query:
-                    try:
-                        wayf_selected = dict(parse_qs(query))[
-                            "wayf_selected"][0]
-                    except KeyError:
-                        return self._wayf_redirect(came_from)
-                    idp_entity_id = wayf_selected
-                else:
-                    return self._wayf_redirect(came_from)
-            elif self.discosrv:
-                if query:
-                    idp_entity_id = _cli.parse_discovery_service_response(
-                        query=environ.get("QUERY_STRING"))
-                else:
-                    sid_ = sid()
-                    self.outstanding_queries[sid_] = came_from
-                    logger.info("Redirect to Discovery Service function")
-                    eid = _cli.config.entity_id
-                    loc = _cli.create_discovery_service_request(self.discosrv,
-                                                                eid)
-                    return -1, HTTPSeeOther(headers=[('Location', loc)])
+        for key in ['s2repoze.body', "QUERY_STRING"]:
+            query = environ.get(key)
+            if query:
+                _idp_entity_id = dict(parse_qs(query))[self.idp_query_param][0]
+                if _idp_entity_id in idps:
+                    idp_entity_id = _idp_entity_id
+                break
+
+        if idp_entity_id is None:
+            if len(idps) == 1:
+                # idps is a dictionary
+                idp_entity_id = idps.keys()[0]
+            elif not len(idps):
+                return -1, HTTPInternalServerError(detail='Misconfiguration')
             else:
-                return -1, HTTPNotImplemented(detail='No WAYF or DJ present!')
+                idp_entity_id = ""
+                logger.info("ENVIRON: %s" % environ)
+
+                if self.wayf:
+                    if query:
+                        try:
+                            wayf_selected = dict(parse_qs(query))[
+                                "wayf_selected"][0]
+                        except KeyError:
+                            return self._wayf_redirect(came_from)
+                        idp_entity_id = wayf_selected
+                    else:
+                        return self._wayf_redirect(came_from)
+                elif self.discosrv:
+                    if query:
+                        idp_entity_id = _cli.parse_discovery_service_response(
+                            query=environ.get("QUERY_STRING"))
+                    else:
+                        sid_ = sid()
+                        self.outstanding_queries[sid_] = came_from
+                        logger.info("Redirect to Discovery Service function")
+                        eid = _cli.config.entity_id
+                        loc = _cli.create_discovery_service_request(
+                            self.discosrv, eid)
+                        return -1, HTTPSeeOther(headers=[('Location', loc)])
+                else:
+                    return -1, HTTPNotImplemented(
+                        detail='No WAYF or DJ present!')
 
         logger.info("Chosen IdP: '%s'" % idp_entity_id)
         return 0, idp_entity_id
@@ -523,6 +530,7 @@ def make_plugin(remember_name=None,  # plugin for remember
                 sid_store="",
                 identity_cache="",
                 discovery="",
+                idp_query_param=""
                 ):
     
     if saml_conf is "":
@@ -538,5 +546,5 @@ def make_plugin(remember_name=None,  # plugin for remember
                       virtual_organization=virtual_organization)
 
     plugin = SAML2Plugin(remember_name, conf, scl, wayf, cache, sid_store,
-                         discovery)
+                         discovery, idp_query_param)
     return plugin

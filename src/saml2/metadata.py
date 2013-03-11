@@ -132,7 +132,7 @@ def do_key_descriptor(cert, use="both"):
                         x509_certificate=ds.X509Certificate(text=cert)
                     )
                 ),
-                use="encrypting"
+                use="encryption"
             ),
             md.KeyDescriptor(
                 key_info=ds.KeyInfo(
@@ -143,7 +143,7 @@ def do_key_descriptor(cert, use="both"):
                 use="signing"
             )
         ]
-    elif use in ["signing", "encrypting"]:
+    elif use in ["signing", "encryption"]:
         md.KeyDescriptor(
             key_info=ds.KeyInfo(
                 x509_data=ds.X509Data(

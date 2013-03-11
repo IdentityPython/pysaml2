@@ -1199,12 +1199,10 @@ class AuthnStatementType_(StatementAbstractType_):
     c_child_order = StatementAbstractType_.c_child_order[:]
     c_cardinality = StatementAbstractType_.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}SubjectLocality'] = (
-                                                        'subject_locality',
-                                                        SubjectLocality)
+        'subject_locality', SubjectLocality)
     c_cardinality['subject_locality'] = {"min":0, "max":1}
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AuthnContext'] = (
-                                                        'authn_context',
-                                                        AuthnContext)
+        'authn_context', AuthnContext)
     c_attributes['AuthnInstant'] = ('authn_instant', 'dateTime', True)
     c_attributes['SessionIndex'] = ('session_index', 'string', False)
     c_attributes['SessionNotOnOrAfter'] = ('session_not_on_or_after',
@@ -1290,14 +1288,13 @@ class SubjectType_(SamlBase):
                                                                    NameID)
     c_cardinality['name_id'] = {"min":0, "max":1}
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}EncryptedID'] = (
-                                                                'encrypted_id',
-                                                                EncryptedID)
+        'encrypted_id', EncryptedID)
     c_cardinality['encrypted_id'] = {"min":0, "max":1}
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}SubjectConfirmation'] = (
-                                                    'subject_confirmation',
-                                                    [SubjectConfirmation])
+        'subject_confirmation', [SubjectConfirmation])
     c_cardinality['subject_confirmation'] = {"min":0}
-    c_child_order.extend(['base_id', 'name_id', 'encrypted_id', 'subject_confirmation'])
+    c_child_order.extend(['base_id', 'name_id', 'encrypted_id',
+                          'subject_confirmation'])
 
     def __init__(self,
             base_id=None,
@@ -1509,25 +1506,20 @@ class AssertionType_(SamlBase):
                                                                     Subject)
     c_cardinality['subject'] = {"min":0, "max":1}
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Conditions'] = (
-                                                                'conditions',
-                                                                Conditions)
+        'conditions', Conditions)
     c_cardinality['conditions'] = {"min":0, "max":1}
     c_cardinality['advice'] = {"min":0, "max":1}
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Statement'] = (
-                                                                'statement',
-                                                                [Statement])
+        'statement', [Statement])
     c_cardinality['statement'] = {"min":0}
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AuthnStatement'] = (
-                                                            'authn_statement',
-                                                            [AuthnStatement])
+        'authn_statement',[AuthnStatement])
     c_cardinality['authn_statement'] = {"min":0}
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AuthzDecisionStatement'] = (
-                                                    'authz_decision_statement',
-                                                    [AuthzDecisionStatement])
+        'authz_decision_statement', [AuthzDecisionStatement])
     c_cardinality['authz_decision_statement'] = {"min":0}
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AttributeStatement'] = (
-                                                        'attribute_statement',
-                                                        [AttributeStatement])
+        'attribute_statement', [AttributeStatement])
     c_cardinality['attribute_statement'] = {"min":0}
     c_attributes['Version'] = ('version', 'string', True)
     c_attributes['ID'] = ('id', 'ID', True)
