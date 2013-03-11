@@ -37,8 +37,10 @@ __author__ = 'rolandh'
 logger = logging.getLogger("")
 logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter("%(asctime)s %(name)s:%(levelname)s %(message)s")
+
+streamhandler = logging.StreamHandler(sys.stderr)
 memoryhandler = logging.handlers.MemoryHandler(1024*10, logging.DEBUG)
-logger.addHandler(memoryhandler)
+HANDLER = ""
 
 
 class SAML2client(object):
@@ -52,6 +54,8 @@ class SAML2client(object):
         self._parser = argparse.ArgumentParser()
         self._parser.add_argument('-d', dest='debug', action='store_true',
                                   help="Print debug information")
+        self._parser.add_argument('-L', dest='log', action='store_true',
+                                  help="Print log information")
         self._parser.add_argument('-v', dest='verbose', action='store_true',
                                   help="Print runtime information")
         self._parser.add_argument(
@@ -153,9 +157,8 @@ class SAML2client(object):
 
     def pysaml_log(self):
         print >> sys.stderr, 80 * ":"
-        stderrHandler = logging.StreamHandler(sys.stderr)
-        stderrHandler.setFormatter(formatter)
-        memoryhandler.setTarget(stderrHandler)
+        streamhandler.setFormatter(formatter)
+        memoryhandler.setTarget(streamhandler)
         memoryhandler.flush()
         memoryhandler.close()
 
@@ -173,6 +176,15 @@ class SAML2client(object):
                 raise Exception("Missing test case specification")
             self.args.oper = self.args.oper.strip("'")
             self.args.oper = self.args.oper.strip('"')
+
+        if self.args.log:
+            HANDLER = "stream"
+            streamhandler.setFormatter(formatter)
+            logger.addHandler(streamhandler)
+        elif self.args.debug:
+            HANDLER = "memory"
+            memoryhandler.setFormatter(formatter)
+            logger.addHandler(memoryhandler)
 
         self.setup()
 
@@ -215,7 +227,7 @@ class SAML2client(object):
                 print err.message.encode("utf-8", "replace")
             exception_trace("RUN", err)
 
-        if self.args.debug:
+        if self.args.debug and HANDLER == "memory":
             self.pysaml_log()
 
     def list_operations(self):

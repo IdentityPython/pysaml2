@@ -1,6 +1,8 @@
 import cookielib
 import sys
 import traceback
+import logging
+
 from srtest.opfunc import Operation
 from srtest import FatalError
 from srtest.check import ExpectedError
@@ -11,6 +13,8 @@ from srtest.interaction import InteractionNeeded
 from srtest.status import STATUSCODE
 
 __author__ = 'rolandh'
+
+logger = logging.getLogger(__name__)
 
 
 class Conversation(object):
