@@ -356,7 +356,7 @@ class Entity(HTTPBase):
         for key, val in kwargs.items():
             if key in allowed_attributes:
                 args[key] = val
-            else:
+            elif isinstance(val, SamlBase):
                 # extension elements allowed ?
                 extensions.append(element_to_extension_element(val))
 

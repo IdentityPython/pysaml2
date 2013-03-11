@@ -4,7 +4,6 @@
 import base64
 import urllib
 from saml2.response import LogoutResponse
-from saml2.samlp import logout_request_from_string
 
 from saml2.client import Saml2Client
 from saml2 import samlp, BINDING_HTTP_POST
@@ -61,6 +60,7 @@ AUTHN = (AUTHN_PASSWORD, "http://www.example.com/login")
 nid = NameID(name_qualifier="foo", format=NAMEID_FORMAT_TRANSIENT,
              text="123456")
 
+
 class TestClient:
     def setup_class(self):
         self.server = Server("idp_conf")
@@ -71,10 +71,10 @@ class TestClient:
     
     def test_create_attribute_query1(self):
         req = self.client.create_attribute_query(
-                                "https://idp.example.com/idp/",
-                                "E8042FB4-4D5B-48C3-8E14-8EDD852790DD",
-                                format=saml.NAMEID_FORMAT_PERSISTENT,
-                                sid="id1")
+            "https://idp.example.com/idp/",
+            "E8042FB4-4D5B-48C3-8E14-8EDD852790DD",
+            format=saml.NAMEID_FORMAT_PERSISTENT,
+            message_id="id1")
         reqstr = "%s" % req.to_string()
 
         assert req.destination == "https://idp.example.com/idp/"
@@ -91,7 +91,7 @@ class TestClient:
 
         print attrq.keyswv()
         assert _leq(attrq.keyswv(), ['destination', 'subject', 'issue_instant',
-                                    'version', 'id', 'issuer'])
+                                     'version', 'id', 'issuer'])
 
         assert attrq.destination == req.destination
         assert attrq.id == req.id
@@ -108,15 +108,15 @@ class TestClient:
             attribute={
                 ("urn:oid:2.5.4.42",
                 "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
-                "givenName"):None,
+                "givenName"): None,
                 ("urn:oid:2.5.4.4",
                 "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
-                "surname"):None,
+                "surname"): None,
                 ("urn:oid:1.2.840.113549.1.9.1",
-                "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"):None,
+                "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"): None,
                 },
             format=saml.NAMEID_FORMAT_PERSISTENT,
-            sid="id1")
+            message_id="id1")
                 
         print req.to_string()
         assert req.destination == "https://idp.example.com/idp/"
@@ -147,10 +147,10 @@ class TestClient:
         
     def test_create_attribute_query_3(self):
         req = self.client.create_attribute_query(
-                "https://aai-demo-idp.switch.ch/idp/shibboleth",
-                "_e7b68a04488f715cda642fbdd90099f5",
-                format=saml.NAMEID_FORMAT_TRANSIENT,
-                sid="id1")
+            "https://aai-demo-idp.switch.ch/idp/shibboleth",
+            "_e7b68a04488f715cda642fbdd90099f5",
+            format=saml.NAMEID_FORMAT_TRANSIENT,
+            message_id="id1")
                 
         assert isinstance(req, samlp.AttributeQuery)
         assert req.destination == "https://aai-demo-idp.switch.ch/idp/shibboleth"
@@ -183,8 +183,7 @@ class TestClient:
     
     def test_create_auth_request_0(self):
         ar_str = "%s" % self.client.create_authn_request(
-                                        "http://www.example.com/sso",
-                                        sid="id1")
+            "http://www.example.com/sso", message_id="id1")
         ar = samlp.authn_request_from_string(ar_str)
         print ar
         assert ar.assertion_consumer_service_url == "http://lingon.catalogix.se:8087/"
@@ -202,10 +201,10 @@ class TestClient:
                                     "urn:mace:example.com:it:tek"]
                                     
         ar_str = "%s" % self.client.create_authn_request(
-                                        "http://www.example.com/sso",
-                                        "urn:mace:example.com:it:tek", # vo
-                                        nameid_format=NAMEID_FORMAT_PERSISTENT,
-                                        sid="666")
+            "http://www.example.com/sso",
+            "urn:mace:example.com:it:tek",  # vo
+            nameid_format=NAMEID_FORMAT_PERSISTENT,
+            message_id="666")
               
         ar = samlp.authn_request_from_string(ar_str)
         print ar
@@ -225,9 +224,7 @@ class TestClient:
         #print self.client.config
         
         ar_str = "%s" % self.client.create_authn_request(
-                                        "http://www.example.com/sso",
-                                        sign=True,
-                                        sid="id1")
+            "http://www.example.com/sso", sign=True, message_id="id1")
 
         ar = samlp.authn_request_from_string(ar_str)
 
@@ -256,21 +253,22 @@ class TestClient:
         nameid_policy=samlp.NameIDPolicy(allow_create="false",
                                          format=saml.NAMEID_FORMAT_PERSISTENT)
 
-        resp = self.server.create_authn_response(identity=ava,
-                                in_response_to="id1",
-                                destination="http://lingon.catalogix.se:8087/",
-                                sp_entity_id="urn:mace:example.com:saml:roland:sp",
-                                name_id_policy=nameid_policy,
-                                userid="foba0001@example.com",
-                                authn=AUTHN)
+        resp = self.server.create_authn_response(
+            identity=ava,
+            in_response_to="id1",
+            destination="http://lingon.catalogix.se:8087/",
+            sp_entity_id="urn:mace:example.com:saml:roland:sp",
+            name_id_policy=nameid_policy,
+            userid="foba0001@example.com",
+            authn=AUTHN)
 
         resp_str = "%s" % resp
 
         resp_str = base64.encodestring(resp_str)
         
         authn_response = self.client.parse_authn_request_response(
-                                    resp_str, BINDING_HTTP_POST,
-                                    {"id1":"http://foo.example.com/service"})
+            resp_str, BINDING_HTTP_POST,
+            {"id1": "http://foo.example.com/service"})
                             
         assert authn_response is not None
         assert authn_response.issuer() == IDP
@@ -300,13 +298,13 @@ class TestClient:
                 "mail": ["alfonson@chc.mlb.com"], "title": ["outfielder"]}
 
         resp_str = "%s" % self.server.create_authn_response(
-                                identity=ava,
-                                in_response_to="id2",
-                                destination="http://lingon.catalogix.se:8087/",
-                                sp_entity_id="urn:mace:example.com:saml:roland:sp",
-                                name_id_policy=nameid_policy,
-                                userid="also0001@example.com",
-                                authn=AUTHN)
+            identity=ava,
+            in_response_to="id2",
+            destination="http://lingon.catalogix.se:8087/",
+            sp_entity_id="urn:mace:example.com:saml:roland:sp",
+            name_id_policy=nameid_policy,
+            userid="also0001@example.com",
+            authn=AUTHN)
 
         resp_str = base64.encodestring(resp_str)
         
