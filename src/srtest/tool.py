@@ -96,6 +96,8 @@ class Conversation(object):
 
     def intermit(self):
         _response = self.last_response
+        _last_action = None
+        _same_actions = 0
         if _response.status_code >= 400:
             done = True
         else:
@@ -116,6 +118,7 @@ class Conversation(object):
                             "Too long sequence of redirects: %s" % rdseq)
 
                 self.trace.reply("REDIRECT TO: %s" % url)
+                logger.debug("REDIRECT TO: %s" % url)
                 # If back to me
                 for_me = False
                 for redirect_uri in self.my_endpoints():
@@ -158,6 +161,13 @@ class Conversation(object):
                 self.position = url
                 self.trace.error("Page Content: %s" % content)
                 self.err_check("interaction-needed")
+
+            if _spec == _last_action:
+                _same_actions += 1
+                if _same_actions >= 3:
+                    raise InteractionNeeded("Interaction loop detection")
+            else:
+                _last_action = _spec
 
             if len(_spec) > 2:
                 self.trace.info(">> %s <<" % _spec["page-type"])
