@@ -251,7 +251,7 @@ def signed_instance_factory(instance, seccont, elements_to_sign=None):
     if elements_to_sign:
         signed_xml = "%s" % instance
         for (node_name, nodeid) in elements_to_sign:
-            signed_xml = seccont.sign_statement_using_xmlsec(
+            signed_xml = seccont.sign_statement(
                 signed_xml, class_name=node_name, node_id=nodeid)
 
         #print "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
@@ -766,6 +766,26 @@ class CryptoBackendXmlSec1(CryptoBackend):
         ntf.seek(0)
         return p_out, p_err, ntf.read()
 
+class CryptoBackendXMLSecurity(CryptoBackend):
+
+    def __init__(self, debug=False):
+        self.debug = debug
+
+    def sign_statement(self, statement, _class_name, key_file, _nodeid,
+                       _id_attr):
+        import xmlsec
+        import lxml.etree
+        xml = xmlsec.parse_xml(statement)
+        signed = xmlsec.sign(xml, key_file)
+        return lxml.etree.tostring(signed, xml_declaration=True)
+
+    def validate_signature(self, enctext, cert_file, cert_type, _node_name,
+                           _node_id, _id_attr):
+        if cert_type != "pem":
+            raise Unsupported("Only PEM certs supported here")
+        import xmlsec
+        xml = xmlsec.parse_xml(enctext)
+        return xmlsec.verify(xml, cert_file)
 
 def security_context(conf, debug=None):
     """ Creates a security context based on the configuration
@@ -786,6 +806,9 @@ def security_context(conf, debug=None):
         _only_md = False
 
     crypto = get_xmlsec_cryptobackend(conf.xmlsec_binary, debug=debug)
+    # Uncomment this to enable the new and somewhat untested pyXMLSecurity
+    # crypto backend.
+    #crypto = CryptoBackendXMLSecurity(debug=debug)
 
     return SecurityContext(crypto, conf.key_file,
                            cert_file=conf.cert_file, metadata=metadata,
