@@ -557,35 +557,6 @@ LOG_LINE = 60 * "=" + "\n%s\n" + 60 * "-" + "\n%s" + 60 * "="
 LOG_LINE_2 = 60 * "=" + "\n%s\n%s\n" + 60 * "-" + "\n%s" + 60 * "="
 
 
-def verify_signature(enctext, xmlsec_binary, cert_file=None, cert_type="pem",
-                     node_name=NODE_NAME, debug=False, node_id=None,
-                     id_attr=""):
-    """ Verifies the signature of a XML document.
-
-    :param enctext: The signed XML document
-    :param xmlsec_binary: The xmlsec1 binaries to be used (or CryptoBackend())
-    :param cert_file: The public key used to decrypt the signature
-    :param cert_type: The cert format
-    :param node_name: The SAML class of the root node in the signed document
-    :param debug: To debug or not
-    :param node_id: The identifier of the root node if any
-    :return: The signed document if all was OK otherwise will raise an
-        exception.
-    """
-
-    if not id_attr:
-        id_attr = ID_ATTR
-
-    crypto = xmlsec_binary
-    if not isinstance(crypto, CryptoBackend):
-        # backwards compatibility
-        crypto = CryptoBackendXmlSec1(xmlsec_binary, debug=debug)
-
-    return crypto.validate_signature(enctext, cert_file=cert_file,
-                                     cert_type=cert_type, node_name=node_name,
-                                     node_id=node_id, id_attr=id_attr,
-                                     )
-
 # ---------------------------------------------------------------------------
 
 
