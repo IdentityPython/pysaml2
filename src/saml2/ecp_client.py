@@ -67,6 +67,7 @@ class Client(Entity):
         config.key_file = key_file
         config.cert_file = cert_file
         config.ca_certs = ca_certs
+        config.xmlsec_binary = xmlsec_binary
 
         Entity.__init__(self, "sp", config)
         self._idp = idp
@@ -76,7 +77,7 @@ class Client(Entity):
         self._verbose = verbose
 
         if metadata_file:
-            self._metadata = MetadataStore([saml, samlp], None, xmlsec_binary)
+            self._metadata = MetadataStore([saml, samlp], None, config)
             self._metadata.load("local", metadata_file)
             logger.debug("Loaded metadata from '%s'" % metadata_file)
         else:

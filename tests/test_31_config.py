@@ -26,8 +26,8 @@ sp1 = {
             }
         }
     },
-    "key_file" : "mykey.pem",
-    "cert_file" : "mycert.pem",
+    "key_file" : "test.key",
+    "cert_file" : "test.pem",
     #"xmlsec_binary" : "/opt/local/bin/xmlsec1",
     "metadata": { 
         "local": ["metadata.xml", 

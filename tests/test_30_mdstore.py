@@ -12,6 +12,8 @@ from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_ARTIFACT
 from saml2 import saml
+from saml2 import sigver
+from saml2 import config
 from saml2.attribute_converter import ac_factory
 from saml2.attribute_converter import d_to_local_name
 
@@ -24,12 +26,8 @@ from saml2.s_utils import UnknownPrincipal
 import xmldsig
 import xmlenc
 
-try:
-    from saml2.sigver import get_xmlsec_binary
-    xmlsec_path = get_xmlsec_binary(["/opt/local/bin"])
-except ImportError:
-    xmlsec_path = '/usr/bin/xmlsec1'
-
+sec_config = config.Config()
+sec_config.xmlsec_binary = sigver.get_xmlsec_binary(["/opt/local/bin"])
 
 ONTS = {
     saml.NAMESPACE: saml,
@@ -86,7 +84,7 @@ def _fix_valid_until(xmlstring):
 
 def test_swami_1():
     UMU_IDP = 'https://idp.umu.se/saml2/idp/metadata.php'
-    mds = MetadataStore(ONTS.values(), ATTRCONV, xmlsec_path,
+    mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
                         disable_ssl_certificate_validation=True)
 
     mds.imp(METADATACONF["1"])
@@ -119,7 +117,7 @@ def test_swami_1():
                 
 
 def test_incommon_1():
-    mds = MetadataStore(ONTS.values(), ATTRCONV, xmlsec_path,
+    mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
                         disable_ssl_certificate_validation=True)
 
     mds.imp(METADATACONF["2"])
@@ -157,7 +155,7 @@ def test_incommon_1():
 
 
 def test_ext_2():
-    mds = MetadataStore(ONTS.values(), ATTRCONV, xmlsec_path,
+    mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
                         disable_ssl_certificate_validation=True)
 
     mds.imp(METADATACONF["3"])
@@ -170,7 +168,7 @@ def test_ext_2():
 
 
 def test_example():
-    mds = MetadataStore(ONTS.values(), ATTRCONV, xmlsec_path,
+    mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
                         disable_ssl_certificate_validation=True)
 
     mds.imp(METADATACONF["4"])
@@ -186,7 +184,7 @@ def test_example():
 
 
 def test_switch_1():
-    mds = MetadataStore(ONTS.values(), ATTRCONV, xmlsec_path,
+    mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
                         disable_ssl_certificate_validation=True)
 
     mds.imp(METADATACONF["5"])
@@ -214,7 +212,7 @@ def test_switch_1():
 
 
 def test_sp_metadata():
-    mds = MetadataStore(ONTS.values(), ATTRCONV, xmlsec_path,
+    mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
                         disable_ssl_certificate_validation=True)
 
     mds.imp(METADATACONF["6"])
