@@ -3,6 +3,7 @@ import traceback
 import requests
 from subprocess import Popen, PIPE
 import sys
+from srtest.check import CRITICAL
 
 __author__ = 'rolandh'
 
@@ -95,13 +96,10 @@ def get_page(url):
 
 def exception_trace(tag, exc, log=None):
     message = traceback.format_exception(*sys.exc_info())
-    if log:
-        log.error("[%s] ExcList: %s" % (tag, "".join(message),))
-        log.error("[%s] Exception: %s" % (tag, exc))
-    else:
-        print >> sys.stderr, "[%s] ExcList: %s" % (tag, "".join(message),)
-        try:
-            print >> sys.stderr, "[%s] Exception: %s" % (tag, exc)
-        except UnicodeEncodeError:
-            print >> sys.stderr, "[%s] Exception: %s" % (
-                tag, exc.message.encode("utf-8", "replace"))
+
+    try:
+        _exc = "Exception: %s" % exc
+    except UnicodeEncodeError:
+        _exc = "Exception: %s" % exc.message.encode("utf-8", "replace")
+
+    return {"status": CRITICAL, "message": _exc, "content": "".join(message)}

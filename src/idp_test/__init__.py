@@ -40,7 +40,6 @@ formatter = logging.Formatter("%(asctime)s %(name)s:%(levelname)s %(message)s")
 
 streamhandler = logging.StreamHandler(sys.stderr)
 memoryhandler = logging.handlers.MemoryHandler(1024*10, logging.DEBUG)
-HANDLER = ""
 
 
 class SAML2client(object):
@@ -163,6 +162,7 @@ class SAML2client(object):
         memoryhandler.close()
 
     def run(self):
+        HANDLER = ""
         self.args = self._parser.parse_args()
 
         if self.args.metadata:
@@ -189,6 +189,7 @@ class SAML2client(object):
         self.setup()
 
         self.client = Saml2Client(self.sp_config)
+        conv = None
         try:
             try:
                 oper = self.operations.OPERATIONS[self.args.oper]
@@ -216,16 +217,22 @@ class SAML2client(object):
             if tsum["status"] > 1 or self.args.debug:
                 print >> sys.stderr, self.trace
         except FatalError, err:
+            if conv:
+                self.test_log = conv.test_output
+                self.test_log.append(exception_trace("RUN", err))
+            else:
+                self.test_log = exception_trace("RUN", err)
+            tsum = self.test_summation(self.args.oper)
+            print >>sys.stdout, json.dumps(tsum)
             print >> sys.stderr, self.trace
-            print err
-            #exception_trace("RUN", err)
         except Exception, err:
-            print >> sys.stderr, self.trace
-            try:
-                print err
-            except (UnicodeDecodeError, UnicodeEncodeError):
-                print err.message.encode("utf-8", "replace")
-            exception_trace("RUN", err)
+            if conv:
+                self.test_log = conv.test_output
+                self.test_log.append(exception_trace("RUN", err))
+            else:
+                self.test_log = exception_trace("RUN", err)
+            tsum = self.test_summation(self.args.oper)
+            print >>sys.stdout, json.dumps(tsum)
 
         if self.args.debug and HANDLER == "memory":
             self.pysaml_log()
