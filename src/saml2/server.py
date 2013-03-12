@@ -23,7 +23,7 @@ import logging
 import shelve
 import sys
 import memcache
-from hashlib import sha1
+from saml2.sdb import SessionStorage
 from saml2.schema import soapenv
 
 from saml2.samlp import NameIDMappingResponse
@@ -49,16 +49,11 @@ from saml2.assertion import Policy
 from saml2.assertion import restriction_from_attribute_spec
 from saml2.assertion import filter_attribute_value_assertions
 
-from saml2.ident import IdentDB, code
+from saml2.ident import IdentDB
 #from saml2.profile import paos
 from saml2.profile import ecp
 
 logger = logging.getLogger(__name__)
-
-
-def context_match(cfilter, cntx):
-    # TODO
-    return True
 
 
 class Server(Entity):
@@ -72,6 +67,7 @@ class Server(Entity):
         self.assertion = {}
         self.user2uid = {}
         self.uid2user = {}
+        self.session_db = SessionStorage()
 
     def init_config(self, stype="idp"):
         """ Remaining init of the server configuration 
@@ -198,62 +194,6 @@ class Server(Entity):
 
     # ------------------------------------------------------------------------
 
-    def store_assertion(self, assertion, to_sign):
-        self.assertion[assertion.id] = (assertion, to_sign)
-
-    def get_assertion(self, cid):
-        return self.assertion[cid]
-
-    def store_authn_statement(self, authn_statement, name_id):
-        """
-
-        :param authn_statement:
-        :param name_id:
-        :return:
-        """
-        logger.debug("store authn about: %s" % name_id)
-        nkey = sha1(code(name_id)).hexdigest()
-        logger.debug("Store authn_statement under key: %s" % nkey)
-        try:
-            self.authn[nkey].append(authn_statement)
-        except:
-            self.authn[nkey] = [authn_statement]
-
-    def get_authn_statements(self, name_id, session_index=None,
-                             requested_context=None):
-        """
-
-        :param name_id:
-        :param session_index:
-        :param requested_context:
-        :return:
-        """
-        result = []
-        key = sha1(code(name_id)).hexdigest()
-        try:
-            statements = self.authn[key]
-        except KeyError:
-            logger.info("Unknown subject %s" % name_id)
-            return []
-
-        for statement in statements:
-            if session_index:
-                if statement.session_index != session_index:
-                    continue
-            if requested_context:
-                if not context_match(requested_context,
-                                     statement.authn_context):
-                    continue
-            result.append(statement)
-
-        return result
-
-    def remove_authn_statements(self, name_id):
-        logger.debug("remove authn about: %s" % name_id)
-        nkey = sha1(code(name_id)).hexdigest()
-
-        del self.authn[nkey]
-
     # ------------------------------------------------------------------------
 
     def _authn_response(self, in_response_to, consumer_url,
@@ -300,14 +240,16 @@ class Server(Entity):
                                           policy, issuer=_issuer,
                                           authn_class=authn_class,
                                           authn_auth=authn_authn)
-                self.store_authn_statement(assertion.authn_statement, name_id)
+                self.session_db.store_authn_statement(assertion.authn_statement,
+                                                      name_id)
             elif authn_decl:
                 assertion = ast.construct(sp_entity_id, in_response_to,
                                           consumer_url, name_id,
                                           self.config.attribute_converters,
                                           policy, issuer=_issuer,
                                           authn_decl=authn_decl)
-                self.store_authn_statement(assertion.authn_statement, name_id)
+                self.session_db.store_authn_statement(assertion.authn_statement,
+                                                      name_id)
             else:
                 assertion = ast.construct(sp_entity_id, in_response_to,
                                           consumer_url, name_id,
@@ -329,7 +271,7 @@ class Server(Entity):
 
             args["assertion"] = assertion
 
-            self.store_assertion(assertion, to_sign)
+            self.session_db.store_assertion(assertion, to_sign)
 
         return self._response(in_response_to, consumer_url, status, issuer,
                               sign_response, to_sign, **args)
@@ -447,10 +389,9 @@ class Server(Entity):
             return self._authn_response(in_response_to,  # in_response_to
                                         destination,     # consumer_url
                                         sp_entity_id,    # sp_entity_id
-                                        identity,        # identity as dictionary
+                                        identity,       # identity as dictionary
                                         name_id,
-                                        authn=authn,     # Information about the
-                                                         # authentication
+                                        authn=authn,
                                         authn_decl=authn_decl,
                                         issuer=issuer,
                                         policy=policy,
@@ -461,6 +402,7 @@ class Server(Entity):
             return self.create_error_response(in_response_to, destination,
                                               sp_entity_id, exc, name_id)
 
+    #noinspection PyUnusedLocal
     def create_assertion_id_request_response(self, assertion_id, sign=False):
         """
 
@@ -470,7 +412,7 @@ class Server(Entity):
         """
 
         try:
-            (assertion, to_sign) = self.get_assertion(assertion_id)
+            (assertion, to_sign) = self.session_db.get_assertion(assertion_id)
         except KeyError:
             raise Unknown
 
@@ -483,6 +425,7 @@ class Server(Entity):
         else:
             return assertion
 
+    #noinspection PyUnusedLocal
     def create_name_id_mapping_response(self, name_id=None, encrypted_id=None,
                                         in_response_to=None,
                                         issuer=None, sign_response=False,
@@ -526,9 +469,8 @@ class Server(Entity):
 
         margs = self.message_args()
         asserts = []
-        for statement in self.get_authn_statements(subject.name_id,
-                                                   session_index,
-                                                   requested_context):
+        for statement in self.session_db.get_authn_statements(
+                subject.name_id, session_index, requested_context):
 
             asserts.append(saml.Assertion(authn_statement=statement,
                                           subject=subject, **margs))

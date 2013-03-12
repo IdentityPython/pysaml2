@@ -153,7 +153,7 @@ class TestServer1():
 
     def test_parse_ok_request(self):
         authn_request = self.client.create_authn_request(
-            sid="id1", destination="http://localhost:8088/sso")
+            message_id="id1", destination="http://localhost:8088/sso")
 
         print authn_request
         binding = BINDING_HTTP_REDIRECT

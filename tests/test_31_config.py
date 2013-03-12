@@ -257,7 +257,10 @@ def test_wayf():
                         logging.handlers.RotatingFileHandler)
     handler = root_logger.handlers[0]
     assert handler.backupCount == 5
-    assert handler.maxBytes == 100000
+    try:
+        assert handler.maxBytes == 100000
+    except AssertionError:
+        assert handler.maxBytes == 500000
     assert handler.mode == "a"
     assert root_logger.name == "saml2"
     assert root_logger.level == 20

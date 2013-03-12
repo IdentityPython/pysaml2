@@ -41,7 +41,7 @@ def _eval(val, onts):
     return val
 
 
-def to_dict(_dict, onts):
+def to_dict(_dict, onts, mdb_safe=False):
     """
     Convert a pysaml2 SAML2 message class instance into a basic dictionary
     format.
@@ -67,6 +67,8 @@ def to_dict(_dict, onts):
                 _val = _eval(val, onts)
 
             if _val:
+                if mdb_safe:
+                    key = key.replace(".", "__")
                 res[key] = _val
     else:
         for key, val in _dict.items():
@@ -78,7 +80,7 @@ def to_dict(_dict, onts):
 
 # From Python dictionary to pysaml2 SAML2 metadata format
 
-def _kwa(val, onts):
+def _kwa(val, onts, mdb_safe=False):
     """
     Key word argument conversion
 
@@ -87,11 +89,17 @@ def _kwa(val, onts):
         schema namespase is the key in the dictionary
     :return: A converted dictionary
     """
-    return dict([(k, from_dict(v, onts)) for k, v in val.items()
-                 if k not in EXP_SKIP])
+    if not mdb_safe:
+        return dict([(k, from_dict(v, onts)) for k, v in val.items()
+                     if k not in EXP_SKIP])
+    else:
+        _skip = ["_id"]
+        _skip.extend(EXP_SKIP)
+        return dict([(k.replace("__", "."), from_dict(v, onts)) for k, v in
+                     val.items() if k not in _skip])
 
 
-def from_dict(val, onts):
+def from_dict(val, onts, mdb_safe=False):
     """
     Converts a dictionary into a pysaml2 object
     :param val: A dictionary
@@ -110,17 +118,19 @@ def from_dict(val, onts):
                     for item in ditems:
                         ns, typ = item["__class__"].split("&")
                         cls = getattr(onts[ns], typ)
-                        kwargs = _kwa(item, onts)
+                        kwargs = _kwa(item, onts, mdb_safe)
                         inst = cls(**kwargs)
                         lv.append(element_to_extension_element(inst))
                 return lv
             else:
-                kwargs = _kwa(val, onts)
+                kwargs = _kwa(val, onts, mdb_safe)
                 inst = cls(**kwargs)
             return inst
         else:
             res = {}
             for key, v in val.items():
+                if mdb_safe:
+                    key = key.replace("__", ".")
                 res[key] = from_dict(v, onts)
             return res
     elif isinstance(val, basestring):
