@@ -1,6 +1,7 @@
 __author__ = 'rohe0002'
 
 import json
+import logging
 
 from urlparse import urlparse
 from bs4 import BeautifulSoup
@@ -8,6 +9,8 @@ from bs4 import BeautifulSoup
 from mechanize import ParseResponseEx
 from mechanize._form import ControlNotFoundError, AmbiguityError
 from mechanize._form import ListControl
+
+logger = logging.getLogger(__name__)
 
 NO_CTRL = "No submit control with the name='%s' and value='%s' could be found"
 
@@ -279,6 +282,10 @@ class Interaction(object):
                     else:
                         raise
 
+        if form.action in kwargs["conv"].my_endpoints():
+            return {"SAMLResponse": form["SAMLResponse"],
+                    "RelayState": form["RelayState"]}
+
         return self.do_click(form, **kwargs)
 
     #noinspection PyUnusedLocal
@@ -378,9 +385,8 @@ class Action(object):
         except (KeyError, AttributeError):
             _args = {}
 
-        _args["_trace_"] = trace
-        _args["location"] = location
-        _args["features"] = features
+        _args.update({"_trace_": trace, "location": location,
+                      "features": features, "conv": conv})
 
         if trace:
             trace.reply("FUNCTION: %s" % function.__name__)
