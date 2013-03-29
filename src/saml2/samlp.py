@@ -556,7 +556,7 @@ class AuthzDecisionQueryType_(SubjectQueryAbstractType_):
     c_cardinality = SubjectQueryAbstractType_.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Action'] = ('action',
                                                                    [saml.Action])
-    c_cardinality['action'] = {"min":1}
+    c_cardinality['action'] = {"min": 1}
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Evidence'] = ('evidence',
                                                                      saml.Evidence)
     c_cardinality['evidence'] = {"min": 0, "max": 1}
@@ -1292,6 +1292,8 @@ class StatusType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+    # Added further down to avoid undefined references
+    #c_children['{urn:oasis:names:tc:SAML:2.0:protocol}StatusCode'] = ('status_code', StatusCode)
     c_children['{urn:oasis:names:tc:SAML:2.0:protocol}StatusMessage'] = ('status_message', StatusMessage)
     c_cardinality['status_message'] = {"min": 0, "max": 1}
     c_children['{urn:oasis:names:tc:SAML:2.0:protocol}StatusDetail'] = ('status_detail', StatusDetail)
