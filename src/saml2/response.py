@@ -17,6 +17,26 @@
 
 import calendar
 import logging
+from saml2.samlp import STATUS_VERSION_MISMATCH
+from saml2.samlp import STATUS_AUTHN_FAILED
+from saml2.samlp import STATUS_INVALID_ATTR_NAME_OR_VALUE
+from saml2.samlp import STATUS_INVALID_NAMEID_POLICY
+from saml2.samlp import STATUS_NO_AUTHN_CONTEXT
+from saml2.samlp import STATUS_NO_AVAILABLE_IDP
+from saml2.samlp import STATUS_NO_PASSIVE
+from saml2.samlp import STATUS_NO_SUPPORTED_IDP
+from saml2.samlp import STATUS_PARTIAL_LOGOUT
+from saml2.samlp import STATUS_PROXY_COUNT_EXCEEDED
+from saml2.samlp import STATUS_REQUEST_DENIED
+from saml2.samlp import STATUS_REQUEST_UNSUPPORTED
+from saml2.samlp import STATUS_REQUEST_VERSION_DEPRECATED
+from saml2.samlp import STATUS_REQUEST_VERSION_TOO_HIGH
+from saml2.samlp import STATUS_REQUEST_VERSION_TOO_LOW
+from saml2.samlp import STATUS_RESOURCE_NOT_RECOGNIZED
+from saml2.samlp import STATUS_TOO_MANY_RESPONSES
+from saml2.samlp import STATUS_UNKNOWN_ATTR_PROFILE
+from saml2.samlp import STATUS_UNKNOWN_PRINCIPAL
+from saml2.samlp import STATUS_UNSUPPORTED_BINDING
 
 import xmldsig as ds
 import xmlenc as xenc
@@ -61,6 +81,109 @@ class VerificationError(Exception):
 class StatusError(Exception):
     pass
 
+
+class StatusVersionMismatch(StatusError):
+    pass
+
+
+class StatusAuthnFailed(StatusError):
+    pass
+
+
+class StatusInvalidAttrNameOrValue(StatusError):
+    pass
+
+
+class StatusInvalidNameidPolicy(StatusError):
+    pass
+
+
+class StatusNoAuthnContext(StatusError):
+    pass
+
+
+class StatusNoAvailableIdp(StatusError):
+    pass
+
+
+class StatusNoPassive(StatusError):
+    pass
+
+
+class StatusNoSupportedIdp(StatusError):
+    pass
+
+
+class StatusPartialLogout(StatusError):
+    pass
+
+
+class StatusProxyCountExceeded(StatusError):
+    pass
+
+
+class StatusRequestDenied(StatusError):
+    pass
+
+
+class StatusRequestUnsupported(StatusError):
+    pass
+
+
+class StatusRequestVersionDeprecated(StatusError):
+    pass
+
+
+class StatusRequestVersionTooHigh(StatusError):
+    pass
+
+
+class StatusRequestVersionTooLow(StatusError):
+    pass
+
+
+class StatusResourceNotRecognized(StatusError):
+    pass
+
+
+class StatusTooManyResponses(StatusError):
+    pass
+
+
+class StatusUnknownAttrProfile(StatusError):
+    pass
+
+
+class StatusUnknownPrincipal(StatusError):
+    pass
+
+
+class StatusUnsupportedBinding(StatusError):
+    pass
+
+
+STATUSCODE2EXCEPTION = {
+    STATUS_VERSION_MISMATCH: StatusVersionMismatch,
+    STATUS_AUTHN_FAILED: StatusAuthnFailed,
+    STATUS_INVALID_ATTR_NAME_OR_VALUE: StatusInvalidAttrNameOrValue,
+    STATUS_INVALID_NAMEID_POLICY: StatusInvalidNameidPolicy,
+    STATUS_NO_AUTHN_CONTEXT: StatusNoAuthnContext,
+    STATUS_NO_AVAILABLE_IDP: StatusNoAvailableIdp,
+    STATUS_NO_PASSIVE: StatusNoPassive,
+    STATUS_NO_SUPPORTED_IDP: StatusNoSupportedIdp,
+    STATUS_PARTIAL_LOGOUT: StatusPartialLogout,
+    STATUS_PROXY_COUNT_EXCEEDED: StatusProxyCountExceeded,
+    STATUS_REQUEST_DENIED: StatusRequestDenied,
+    STATUS_REQUEST_UNSUPPORTED: StatusRequestUnsupported,
+    STATUS_REQUEST_VERSION_DEPRECATED: StatusRequestVersionDeprecated,
+    STATUS_REQUEST_VERSION_TOO_HIGH: StatusRequestVersionTooHigh,
+    STATUS_REQUEST_VERSION_TOO_LOW: StatusRequestVersionTooLow,
+    STATUS_RESOURCE_NOT_RECOGNIZED: StatusResourceNotRecognized,
+    STATUS_TOO_MANY_RESPONSES: StatusTooManyResponses,
+    STATUS_UNKNOWN_ATTR_PROFILE: StatusUnknownAttrProfile,
+    STATUS_UNKNOWN_PRINCIPAL: StatusUnknownPrincipal,
+    STATUS_UNSUPPORTED_BINDING: StatusUnsupportedBinding,
+}
 # ---------------------------------------------------------------------------
 
 
@@ -195,8 +318,14 @@ class StatusResponse(object):
             logger.info("status: %s" % (status,))
             if status.status_code.value != samlp.STATUS_SUCCESS:
                 logger.info("Not successful operation: %s" % status)
-                raise StatusError("%s from %s" % (status.status_message.text,
-                                                  status.status_code.value,))
+                if status.status_code.status_code:
+                    excep = STATUSCODE2EXCEPTION[
+                        status.status_code.status_code.value]
+                else:
+                    excep = StatusError
+                raise excep(
+                    "%s from %s" % (status.status_message.text,
+                                    status.status_code.value,))
         return True
 
     def issue_instant_ok(self):
@@ -648,7 +777,7 @@ class AuthnResponse(StatusResponse):
         if self.context == "AuthzQuery":
             return {"name_id": self.name_id, "came_from": self.came_from,
                     "issuer": self.issuer(), "not_on_or_after": nooa,
-                    "authz_decision_info": self.authz_decision_info() }
+                    "authz_decision_info": self.authz_decision_info()}
         else:
             return {"ava": self.ava, "name_id": self.name_id,
                     "came_from": self.came_from, "issuer": self.issuer(),
