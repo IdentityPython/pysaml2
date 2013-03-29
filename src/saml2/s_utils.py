@@ -11,7 +11,7 @@ import hmac
 # from python 2.5
 if sys.version_info >= (2, 5):
     import hashlib
-else: # before python 2.5
+else:  # before python 2.5
     import sha
 
 from saml2 import saml
