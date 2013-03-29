@@ -57,6 +57,10 @@ class IncorrectlySigned(Exception):
 class VerificationError(Exception):
     pass
 
+
+class StatusError(Exception):
+    pass
+
 # ---------------------------------------------------------------------------
 
 
@@ -191,8 +195,8 @@ class StatusResponse(object):
             logger.info("status: %s" % (status,))
             if status.status_code.value != samlp.STATUS_SUCCESS:
                 logger.info("Not successful operation: %s" % status)
-                raise Exception("%s from %s" % (status.status_message.text,
-                                                status.status_code.value,))
+                raise StatusError("%s from %s" % (status.status_message.text,
+                                                  status.status_code.value,))
         return True
 
     def issue_instant_ok(self):
