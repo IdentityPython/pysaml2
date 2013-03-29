@@ -353,7 +353,7 @@ class SAML2Plugin(FormPluginBase):
 
         return identity
         
-    def _eval_authn_response(self, environ, post):
+    def _eval_authn_response(self, environ, post, binding=BINDING_HTTP_POST):
         logger.info("Got AuthN response, checking..")
         logger.info("Outstanding: %s" % (self.outstanding_queries,))
 
@@ -361,8 +361,7 @@ class SAML2Plugin(FormPluginBase):
             # Evaluate the response, returns a AuthnResponse instance
             try:
                 authresp = self.saml_client.parse_authn_request_response(
-                    post["SAMLResponse"], BINDING_HTTP_POST,
-                    self.outstanding_queries)
+                    post["SAMLResponse"], binding, self.outstanding_queries)
             except Exception, excp:
                 logger.exception("Exception: %s" % (excp,))
                 raise
@@ -415,8 +414,13 @@ class SAML2Plugin(FormPluginBase):
 
         query = parse_dict_querystring(environ)
         logger.debug('[sp.identify] query: %s' % (query,))
-        
-        post = self._get_post(environ)
+
+        if "SAMLResponse" in query:
+            post = query
+            binding = BINDING_HTTP_REDIRECT
+        else:
+            post = self._get_post(environ)
+            binding = BINDING_HTTP_POST
 
         try:
             logger.debug('[sp.identify] post keys: %s' % (post.keys(),))
@@ -436,7 +440,8 @@ class SAML2Plugin(FormPluginBase):
                 #if self.debug:
                 try:
                     session_info = self._eval_authn_response(
-                        environ, cgi_field_storage_to_dict(post))
+                        environ, cgi_field_storage_to_dict(post),
+                        binding=binding)
                 except Exception:
                     return None
         except TypeError, exc:
