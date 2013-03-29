@@ -94,7 +94,7 @@ class Server(Entity):
                 elif typ == "memcached":
                     idb = memcache.Client(addr)
                 elif typ == "dict":  # in-memory dictionary
-                    idb = addr
+                    idb = {}
                 elif typ == "mongodb":
                     from mongodict import MongoDict
                     idb = MongoDict(host='localhost', port=27017,
@@ -401,6 +401,18 @@ class Server(Entity):
         except MissingValue, exc:
             return self.create_error_response(in_response_to, destination,
                                               sp_entity_id, exc, name_id)
+
+    def create_authn_request_response(self, identity, in_response_to,
+                                      destination, sp_entity_id,
+                                      name_id_policy=None, userid=None,
+                                      name_id=None, authn=None, authn_decl=None,
+                                      issuer=None, sign_response=False,
+                                      sign_assertion=False):
+
+        return self.create_authn_response(identity, in_response_to, destination,
+                                          sp_entity_id, name_id_policy, userid,
+                                          name_id, authn, authn_decl, issuer,
+                                          sign_response, sign_assertion)
 
     #noinspection PyUnusedLocal
     def create_assertion_id_request_response(self, assertion_id, sign=False):
