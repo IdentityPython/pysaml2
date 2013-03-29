@@ -28,9 +28,11 @@ info = {
                 "url": "%s/sso/redirect" % BASE,
                 "title": "SAML 2.0 POST"
             },
+            "page-type": "other",
             "control": {
-                "type": "response",
-                "pick": {"form": {"action":"%s/acs" % BASE}}
+                "index": 0,
+                "type": "form",
+                "set": {}
             }
         },
         {
@@ -38,9 +40,11 @@ info = {
                 "url": "%s/sso/post" % BASE,
                 "title": "SAML 2.0 POST"
             },
+            "page-type": "other",
             "control": {
-                "type": "response",
-                "pick": {"form": {"action":"%s/acs" % BASE}}
+                "index": 0,
+                "type": "form",
+                "set": {}
             }
         },
         {
@@ -48,9 +52,11 @@ info = {
                 "url": "%s/slo/post" % BASE,
                 "title": "SAML 2.0 POST"
             },
+            "page-type": "other",
             "control": {
-                "type": "response",
-                "pick": {"form": {"action":"%s/sls" % BASE}}
+                "index": 0,
+                "type": "form",
+                "set": {}
             }
         }
     ],

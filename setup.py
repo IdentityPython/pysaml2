@@ -26,17 +26,17 @@ setup(
     author = "Roland Hedberg",
     author_email = "roland.hedberg@adm.umu.se",
     license="Apache 2.0",
-    packages=["idp_test", "idp_test/package", "srtest"],
+    packages=["idp_test", "idp_test/package", "srtest", "sp_test"],
     package_dir = {"": "src"},
-    classifiers = ["Development Status :: 4 - Beta",
-                   "License :: OSI Approved :: Apache Software License",
-                   "Topic :: Software Development :: Libraries :: Python Modules"],
+    classifiers = [
+        "Development Status :: 4 - Beta",
+        "License :: OSI Approved :: Apache Software License",
+        "Topic :: Software Development :: Libraries :: Python Modules"],
     install_requires = ["pysaml2",
                         "mechanize",
                         "argparse",
                         "beautifulsoup4",
                         "mako"],
-
     zip_safe=False,
-    scripts=["script/saml2c.py"]
+    scripts=["script/saml2c.py", "script/saml2i.py"]
     )

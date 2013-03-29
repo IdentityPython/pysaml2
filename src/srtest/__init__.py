@@ -12,6 +12,10 @@ class FatalError(Exception):
     pass
 
 
+class CheckError(Exception):
+    pass
+
+
 class HTTP_ERROR(Exception):
     pass
 
