@@ -26,7 +26,7 @@ from saml2.s_utils import sid, error_status_factory
 from saml2.s_utils import rndstr
 from saml2.s_utils import success_status_factory
 from saml2.s_utils import decode_base64_and_inflate
-from saml2.samlp import AuthnRequest
+from saml2.samlp import AuthnRequest, AuthzDecisionQuery, AuthnQuery
 from saml2.samlp import AssertionIDRequest
 from saml2.samlp import ManageNameIDRequest
 from saml2.samlp import NameIDMappingRequest
@@ -54,6 +54,18 @@ logger = logging.getLogger(__name__)
 __author__ = 'rolandh'
 
 ARTIFACT_TYPECODE = '\x00\x04'
+
+SERVICE2MESSAGE = {
+    "single_sign_on_service": AuthnRequest,
+    "attribute_service": AttributeQuery,
+    "authz_service": AuthzDecisionQuery,
+    "assertion_id_request_service": AssertionIDRequest,
+    "authn_query_service": AuthnQuery,
+    "manage_name_id_service": ManageNameIDRequest,
+    "name_id_mapping_service": NameIDMappingRequest,
+    "artifact_resolve_service": ArtifactResolve,
+    "single_logout_service": LogoutRequest
+}
 
 
 def create_artifact(entity_id, message_handle, endpoint_index=0):
@@ -259,6 +271,7 @@ class Entity(HTTPBase):
         return info
 
     def unravel(self, txt, binding, msgtype="response"):
+        #logger.debug("unravel '%s'" % txt)
         if binding == BINDING_HTTP_REDIRECT:
             xmlstr = decode_base64_and_inflate(txt)
         elif binding == BINDING_HTTP_POST:
@@ -509,7 +522,7 @@ class Entity(HTTPBase):
     # ------------------------------------------------------------------------
 
     def create_error_response(self, in_response_to, destination, info,
-                              sign=False, issuer=None):
+                              sign=False, issuer=None, **kwargs):
         """ Create a error response.
 
         :param in_response_to: The identifier of the message this is a response
@@ -519,6 +532,7 @@ class Entity(HTTPBase):
             error code and descriptive text
         :param sign: Whether the response should be signed or not
         :param issuer: The issuer of the response
+        :param kwargs: To capture key,value pairs I don't care about
         :return: A response instance
         """
         status = error_status_factory(info)
