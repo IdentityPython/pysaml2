@@ -1,9 +1,7 @@
-import base64
 import logging
 
 from attribute_converter import to_local
-from saml2 import time_util, BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
-from saml2 import s_utils
+from saml2 import time_util
 from saml2.s_utils import OtherError
 
 from saml2.validate import valid_instance
@@ -12,9 +10,11 @@ from saml2.response import IncorrectlySigned
 
 logger = logging.getLogger(__name__)
 
+
 def _dummy(_arg):
     return None
     
+
 class Request(object):
     def __init__(self, sec_context, receiver_addrs, attribute_converters=None,
                  timeslack=0):
@@ -28,7 +28,7 @@ class Request(object):
         self.attribute_converters = attribute_converters
         self.binding = None
         self.relay_state = ""
-        self.signature_check = _dummy # has to be set !!!
+        self.signature_check = _dummy  # has to be set !!!
     
     def _clear(self):
         self.xmlstr = ""
@@ -65,9 +65,9 @@ class Request(object):
     def issue_instant_ok(self):
         """ Check that the request was issued at a reasonable time """
         upper = time_util.shift_time(time_util.time_in_a_while(days=1),
-                                    self.timeslack).timetuple()
+                                     self.timeslack).timetuple()
         lower = time_util.shift_time(time_util.time_a_while_ago(days=1),
-                                    -self.timeslack).timetuple()
+                                     - self.timeslack).timetuple()
         # print "issue_instant: %s" % self.message.issue_instant
         # print "%s < x < %s" % (lower, upper)
         issued_at = time_util.str_to_time(self.message.issue_instant)
@@ -76,7 +76,7 @@ class Request(object):
     def _verify(self):            
         assert self.message.version == "2.0"
         if self.message.destination and \
-            self.message.destination not in self.receiver_addrs:
+                self.message.destination not in self.receiver_addrs:
             logger.error("%s != %s" % (self.message.destination,
                                                 self.receiver_addrs))
             raise OtherError("Not destined for me!")
@@ -111,14 +111,16 @@ class Request(object):
                 return self.message.base_id
             elif self.message.name_id:
                 return self.message.name_id
-            else: # EncryptedID
+            else:  # EncryptedID
                 pass
             
     def sender(self):
         return self.message.issuer.text
         
+
 class LogoutRequest(Request):
     msgtype = "logout_request"
+
     def __init__(self, sec_context, receiver_addrs, attribute_converters=None,
                  timeslack=0):
         Request.__init__(self, sec_context, receiver_addrs,
@@ -128,6 +130,7 @@ class LogoutRequest(Request):
             
 class AttributeQuery(Request):
     msgtype = "attribute_query"
+
     def __init__(self, sec_context, receiver_addrs, attribute_converters=None,
                  timeslack=0):
         Request.__init__(self, sec_context, receiver_addrs,
@@ -138,8 +141,10 @@ class AttributeQuery(Request):
         """ Which attributes that are sought for """
         return []
 
+
 class AuthnRequest(Request):
     msgtype = "authn_request"
+
     def __init__(self, sec_context, receiver_addrs, attribute_converters,
                  timeslack=0):
         Request.__init__(self, sec_context, receiver_addrs,
@@ -152,6 +157,7 @@ class AuthnRequest(Request):
 
 class AuthnQuery(Request):
     msgtype = "authn_query"
+
     def __init__(self, sec_context, receiver_addrs, attribute_converters,
                  timeslack=0):
         Request.__init__(self, sec_context, receiver_addrs,
@@ -164,6 +170,7 @@ class AuthnQuery(Request):
 
 class AssertionIDRequest(Request):
     msgtype = "assertion_id_request"
+
     def __init__(self, sec_context, receiver_addrs, attribute_converters,
                  timeslack=0):
         Request.__init__(self, sec_context, receiver_addrs,
@@ -176,6 +183,7 @@ class AssertionIDRequest(Request):
 
 class AuthzDecisionQuery(Request):
     msgtype = "authz_decision_query"
+
     def __init__(self, sec_context, receiver_addrs,
                  attribute_converters=None, timeslack=0):
         Request.__init__(self, sec_context, receiver_addrs,
@@ -194,18 +202,34 @@ class AuthzDecisionQuery(Request):
         """ On which resource the action is expected to occur """
         pass
 
+
 class NameIDMappingRequest(Request):
     msgtype = "name_id_mapping_request"
+
     def __init__(self, sec_context, receiver_addrs, attribute_converters,
                  timeslack=0):
         Request.__init__(self, sec_context, receiver_addrs,
                          attribute_converters, timeslack)
         self.signature_check = self.sec.correctly_signed_name_id_mapping_request
 
+
 class ManageNameIDRequest(Request):
     msgtype = "manage_name_id_request"
+
     def __init__(self, sec_context, receiver_addrs, attribute_converters,
                  timeslack=0):
         Request.__init__(self, sec_context, receiver_addrs,
                          attribute_converters, timeslack)
         self.signature_check = self.sec.correctly_signed_manage_name_id_request
+
+SERVICE2REQUEST = {
+    "single_sign_on_service": AuthnRequest,
+    "attribute_service": AttributeQuery,
+    "authz_service": AuthzDecisionQuery,
+    "assertion_id_request_service": AssertionIDRequest,
+    "authn_query_service": AuthnQuery,
+    "manage_name_id_service": ManageNameIDRequest,
+    "name_id_mapping_service": NameIDMappingRequest,
+    #"artifact_resolve_service": ArtifactResolve,
+    "single_logout_service": LogoutRequest
+}
