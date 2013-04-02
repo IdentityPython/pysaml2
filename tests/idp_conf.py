@@ -2,11 +2,7 @@ from saml2 import BINDING_SOAP, BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.saml import NAME_FORMAT_URI
 
-try:
-    from saml2.sigver import get_xmlsec_binary
-    xmlsec_path = get_xmlsec_binary(["/opt/local/bin"])
-except ImportError:
-    xmlsec_path = '/usr/bin/xmlsec1'
+from pathutils import full_path, xmlsec_path
 
 BASE = "http://localhost:8088"
 
@@ -37,19 +33,20 @@ CONFIG = {
                     # }
                 }
             },
-            "subject_data": "subject_data.db",
+            "subject_data": full_path("subject_data.db"),
             #"domain": "umu.se",
             #"name_qualifier": ""
         },
     },
     "debug" : 1,
-    "key_file" : "test.key",
-    "cert_file" : "test.pem",
+    "key_file" : full_path("test.key"),
+    "cert_file" : full_path("test.pem"),
     "xmlsec_binary" : xmlsec_path,
     "metadata": {
-        "local": ["metadata_sp_1.xml", "vo_metadata.xml"],
+        "local": [full_path("metadata_sp_1.xml"),
+                  full_path("vo_metadata.xml")],
     },
-    "attribute_map_dir" : "attributemaps",
+    "attribute_map_dir" : full_path("attributemaps"),
     "organization": {
         "name": "Exempel AB",
         "display_name": [("Exempel AB","se"),("Example Co.","en")],

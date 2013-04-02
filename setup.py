@@ -18,20 +18,22 @@
 #
 import sys
 
-from distutils.core import  Command
 from setuptools import setup
+from setuptools.command.test import test as TestCommand
 
 
-class PyTest(Command):
-    user_options = []
-    def initialize_options(self):
-        pass
+class PyTest(TestCommand):
+
     def finalize_options(self):
-        pass
-    def run(self):
-        import sys, subprocess
-        errno = subprocess.call([sys.executable, 'runtests.py'])
-        raise SystemExit(errno)
+        TestCommand.finalize_options(self)
+        self.test_args = []
+        self.test_suite = True
+
+    def run_tests(self):
+        #import here, cause outside the eggs aren't loaded
+        import pytest
+        errno = pytest.main(self.test_args)
+        sys.exit(errno)
 
 
 install_requires=[
@@ -43,6 +45,16 @@ install_requires=[
     'repoze.who == 1.0.18',
     'm2crypto'
     ]
+
+tests_require=[
+    'mongodict',
+    'pyasn1',
+    'pymongo',
+    'python-memcached',
+    'pytest',
+    #'pytest-coverage',
+]
+
 
 # only for Python 2.6
 if sys.version_info < (2,7):
@@ -71,20 +83,12 @@ setup(
 
     scripts=["tools/parse_xsd2.py", "tools/make_metadata.py"],
 
-    tests_require=[
-        'pyasn1',
-        'pymongo',
-        'python-memcached',
-        'pytest',
-        #'pytest-coverage',
-    ],
-    install_requires=install_requires,
+    tests_require=tests_require,
     extras_require={
-        'cjson': ['python-cjson'],
-        'pymongo': ['pymongo'],
-        'python-memcached': ['python-memcached'],
-        'mongodict': ['mongodict']
+        'testing': tests_require,
     },
+    install_requires=install_requires,
     zip_safe=False,
+    test_suite='tests',
     cmdclass={'test': PyTest},
 )

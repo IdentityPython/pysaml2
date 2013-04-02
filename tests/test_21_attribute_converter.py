@@ -4,6 +4,8 @@ from saml2 import attribute_converter, saml
 
 from attribute_statement_data import *
 
+from pathutils import full_path
+
 def _eq(l1,l2):
     return set(l1) == set(l2)
 
@@ -17,7 +19,7 @@ def test_default():
 
 class TestAC():
     def setup_class(self):
-        self.acs = attribute_converter.ac_factory("attributemaps")
+        self.acs = attribute_converter.ac_factory(full_path("attributemaps"))
         
     def test_setup(self):
         print self.acs

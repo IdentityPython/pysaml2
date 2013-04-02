@@ -14,6 +14,8 @@ from saml2 import create_class_from_xml_string
 from saml2.profile import ecp as ecp_prof
 from saml2.client import Saml2Client
 
+from pathutils import dotname, full_path, xmlsec_path
+
 __author__ = 'rolandh'
 
 
@@ -23,26 +25,17 @@ def _eq(l1, l2):
     else:
         return len(l1) == len(l2)
 
-try:
-    from saml2.sigver import get_xmlsec_binary
-except ImportError:
-    get_xmlsec_binary = None
-
-if get_xmlsec_binary:
-    xmlsec_path = get_xmlsec_binary(["/opt/local/bin"])
-else:
-    xmlsec_path = '/usr/bin/xmlsec1'
-
 class DummyResponse(object):
     def __init__(self, headers):
         self.headers = headers
 
 def test_complete_flow():
-    client = ecp_client.Client("user", "password", metadata_file="idp_all.xml",
+    client = ecp_client.Client("user", "password",
+                               metadata_file=full_path("idp_all.xml"),
                                xmlsec_binary=xmlsec_path)
 
-    sp = Saml2Client(config_file="servera_conf")
-    idp = Server(config_file="idp_all_conf")
+    sp = Saml2Client(config_file=dotname("servera_conf"))
+    idp = Server(config_file=dotname("idp_all_conf"))
 
     IDP_ENTITY_ID = idp.config.entityid
     #SP_ENTITY_ID = sp.config.entityid

@@ -8,12 +8,14 @@ from saml2.config import SPConfig
 from saml2.sigver import rsa_load
 from urlparse import parse_qs
 
+from pathutils import dotname
+
 __author__ = 'rolandh'
 
-idp = Server(config_file="idp_all_conf")
+idp = Server(config_file=dotname("idp_all_conf"))
 
 conf = SPConfig()
-conf.load_file("servera_conf")
+conf.load_file(dotname("servera_conf"))
 sp = Saml2Client(conf)
 
 def test():

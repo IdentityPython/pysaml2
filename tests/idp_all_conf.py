@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 from saml2 import BINDING_SOAP, BINDING_URI
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
@@ -8,15 +7,7 @@ from saml2 import BINDING_HTTP_ARTIFACT
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.saml import NAME_FORMAT_URI
 
-try:
-    from saml2.sigver import get_xmlsec_binary
-except ImportError:
-    get_xmlsec_binary = None
-
-if get_xmlsec_binary:
-    xmlsec_path = get_xmlsec_binary(["/opt/local/bin"])
-else:
-    xmlsec_path = '/usr/bin/xmlsec1'
+from pathutils import full_path, xmlsec_path
 
 BASE = "http://localhost:8088"
 
@@ -92,13 +83,14 @@ CONFIG = {
         },
     },
     "debug" : 1,
-    "key_file" : "test.key",
-    "cert_file" : "test.pem",
+    "key_file" : full_path("test.key"),
+    "cert_file" : full_path("test.pem"),
     "xmlsec_binary" : xmlsec_path,
     "metadata": {
-        "local": ["servera.xml", "vo_metadata.xml"],
+        "local": [full_path("servera.xml"),
+                  full_path("vo_metadata.xml")],
         },
-    "attribute_map_dir" : "attributemaps",
+    "attribute_map_dir" : full_path("attributemaps"),
     "organization": {
         "name": "Exempel AB",
         "display_name": [("Exempel ÄB","se"),("Example Co.","en")],
