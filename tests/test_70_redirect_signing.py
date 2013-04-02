@@ -10,10 +10,10 @@ from urlparse import parse_qs
 
 __author__ = 'rolandh'
 
-idp = Server(config_file="idp_all_conf")
+idp = Server(config_file="tests.idp_all_conf")
 
 conf = SPConfig()
-conf.load_file("servera_conf")
+conf.load_file("tests.servera_conf")
 sp = Saml2Client(conf)
 
 def test():

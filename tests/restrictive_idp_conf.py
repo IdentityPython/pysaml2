@@ -3,11 +3,7 @@ from saml2.saml import NAME_FORMAT_URI
 
 BASE = "http://localhost:8089/"
 
-try:
-    from saml2.sigver import get_xmlsec_binary
-    xmlsec_path = get_xmlsec_binary(["/opt/local/bin"])
-except ImportError:
-    xmlsec_path = '/usr/bin/xmlsec1'
+from pathutils import full_path, xmlsec_path
 
 CONFIG = {
     "entityid" : "urn:mace:example.com:saml:roland:idpr",
@@ -35,14 +31,14 @@ CONFIG = {
                     }
                 }
             },
-            "subject_data": "subject_data.db",
+            "subject_data": full_path("subject_data.db"),
         }
     },
-    "key_file" : "test.key",
-    "cert_file" : "test.pem",
+    "key_file" : full_path("test.key"),
+    "cert_file" : full_path("test.pem"),
     "xmlsec_binary" : xmlsec_path,
     "metadata": {
-        "local": ["sp_0.metadata"],
+        "local": [full_path("sp_0.metadata")],
     },
-    "attribute_map_dir" : "attributemaps",
+    "attribute_map_dir" : full_path("attributemaps"),
 }

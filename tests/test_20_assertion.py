@@ -18,6 +18,8 @@ from saml2 import saml
 import xmldsig
 import xmlenc
 
+from pathutils import full_path
+
 ONTS = [saml, mdui, mdattr, dri, ui, idpdisc, md, xmldsig, xmlenc]
 
 def _eq(l1,l2):
@@ -283,7 +285,7 @@ def test_assertion_2():
     })
 
     ava = ava.apply_policy( "", policy )
-    acs = ac_factory("attributemaps")
+    acs = ac_factory(full_path("attributemaps"))
     attribute=from_local(acs, ava, policy.get_name_form(""))
 
     assert len(attribute) == 4
@@ -418,7 +420,7 @@ def test_filter_values_req_opt_4():
                 name="urn:oid:2.5.4.12",
                 name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri")]
 
-    acs = attribute_converter.ac_factory("attributemaps")
+    acs = attribute_converter.ac_factory(full_path("attributemaps"))
                     
     rava = attribute_converter.ava_fro(acs, r)
     oava = attribute_converter.ava_fro(acs, o)
@@ -589,7 +591,7 @@ def test_filter_on_wire_representation_1():
                 name="urn:oid:2.5.4.12",
                 name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri")]
 
-    acs = attribute_converter.ac_factory("attributemaps")
+    acs = attribute_converter.ac_factory(full_path("attributemaps"))
 
     ava = { "sn":["Hedberg"], "givenname":["Roland"],
             "edupersonaffiliation":["staff"],"uid":["rohe0002"]}
@@ -608,7 +610,7 @@ def test_filter_on_wire_representation_2():
                 name="urn:oid:2.5.4.12",
                 name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri")]
 
-    acs = attribute_converter.ac_factory("attributemaps")
+    acs = attribute_converter.ac_factory(full_path("attributemaps"))
 
     ava = { "sn":["Hedberg"], "givenname":["Roland"],
             "title":["Master"],"uid":["rohe0002"]}
