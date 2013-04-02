@@ -2,11 +2,7 @@ from saml2 import BINDING_HTTP_REDIRECT
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.saml import NAME_FORMAT_URI
 
-try:
-    from saml2.sigver import get_xmlsec_binary
-    xmlsec_path = get_xmlsec_binary(["/opt/local/bin"])
-except ImportError:
-    xmlsec_path = '/usr/bin/xmlsec1'
+from pathutils import full_path, xmlsec_path
 
 CONFIG = {
     "entityid" : "urn:mace:example.com:saml:roland:idp",
@@ -30,17 +26,17 @@ CONFIG = {
                     "nameid_format": NAMEID_FORMAT_PERSISTENT,
                 }
             },
-            "subject_data": "subject_data.db",
+            "subject_data": full_path("subject_data.db"),
         }
     },
     "debug" : 1,
-    "key_file" : "test.key",
-    "cert_file" : "test.pem",
+    "key_file" : full_path("test.key"),
+    "cert_file" : full_path("test.pem"),
     "xmlsec_binary" : xmlsec_path,
     "metadata": {
-        "local": ["sp_slo_redirect.xml"],
+        "local": [full_path("sp_slo_redirect.xml")],
     },
-    "attribute_map_dir" : "attributemaps",
+    "attribute_map_dir" : full_path("attributemaps"),
     "organization": {
         "name": "Exempel AB",
         "display_name": [("Exempel AB","se"),("Example Co.","en")],
