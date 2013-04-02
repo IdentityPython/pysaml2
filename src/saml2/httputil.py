@@ -13,6 +13,7 @@ from urlparse import parse_qs
 
 logger = logging.getLogger(__name__)
 
+
 class Response(object):
     _template = None
     _status = '200 OK'
@@ -50,8 +51,10 @@ class Response(object):
             else:
                 return message
 
+
 class Created(Response):
     _status = "201 Created"
+
 
 class Redirect(Response):
     _template = '<html>\n<head><title>Redirecting to %s</title></head>\n' \
@@ -65,6 +68,7 @@ class Redirect(Response):
         start_response(self.status, self.headers)
         return self.response((location, location, location))
 
+
 class SeeOther(Response):
     _template = '<html>\n<head><title>Redirecting to %s</title></head>\n' \
         '<body>\nYou are being redirected to <a href="%s">%s</a>\n' \
@@ -77,26 +81,33 @@ class SeeOther(Response):
         start_response(self.status, self.headers)
         return self.response((location, location, location))
 
+
 class Forbidden(Response):
     _status = '403 Forbidden'
     _template = "<html>Not allowed to mess with: '%s'</html>"
+
 
 class BadRequest(Response):
     _status = "400 Bad Request"
     _template = "<html>%s</html>"
 
+
 class Unauthorized(Response):
     _status = "401 Unauthorized"
     _template = "<html>%s</html>"
 
+
 class NotFound(Response):
     _status = '404 NOT FOUND'
+
 
 class NotAcceptable(Response):
     _status = '406 Not Acceptable'
 
+
 class ServiceError(Response):
     _status = '500 Internal Service Error'
+
 
 def extract(environ, empty=False, err=False):
     """Extracts strings in form data and returns a dict.
@@ -111,6 +122,7 @@ def extract(environ, empty=False, err=False):
         if len(value) == 1:
             formdata[key] = value[0]
     return formdata
+
 
 def geturl(environ, query=True, path=True):
     """Rebuilds a request URL (from PEP 333).
@@ -135,10 +147,12 @@ def geturl(environ, query=True, path=True):
         url.append('?' + environ['QUERY_STRING'])
     return ''.join(url)
 
+
 def getpath(environ):
     """Builds a path."""
     return ''.join([quote(environ.get('SCRIPT_NAME', '')),
-        quote(environ.get('PATH_INFO', ''))])
+                    quote(environ.get('PATH_INFO', ''))])
+
 
 def get_post(environ):
     # the environment variable CONTENT_LENGTH may be empty or missing
@@ -152,6 +166,7 @@ def get_post(environ):
     # in the file like wsgi.input environment variable.
     return environ['wsgi.input'].read(request_body_size)
 
+
 def get_response(environ, start_response):
     if environ.get("REQUEST_METHOD") == "GET":
         query = environ.get("QUERY_STRING")
@@ -163,6 +178,7 @@ def get_response(environ, start_response):
 
     return query
 
+
 def unpack_redirect(environ):
     if "QUERY_STRING" in environ:
         _qs = environ["QUERY_STRING"]
@@ -170,11 +186,13 @@ def unpack_redirect(environ):
     else:
         return None
 
+
 def unpack_post(environ):
     try:
         return dict([(k,v[0]) for k,v in parse_qs(get_post(environ))])
     except Exception:
         return None
+
 
 def unpack_soap(environ):
     try:
@@ -182,6 +200,7 @@ def unpack_soap(environ):
         return {"SAMLRequest": query, "RelayState": ""}
     except Exception:
         return None
+
 
 def unpack_artifact(environ):
     if environ["REQUEST_METHOD"] == "GET":
@@ -192,8 +211,8 @@ def unpack_artifact(environ):
         _dict = None
     return _dict
 
+
 def unpack_any(environ):
-    binding = ""
     if environ['REQUEST_METHOD'].upper() == 'GET':
     # Could be either redirect or artifact
         _dict = unpack_redirect(environ)
