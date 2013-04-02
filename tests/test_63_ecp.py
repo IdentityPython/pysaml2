@@ -14,7 +14,7 @@ from saml2 import create_class_from_xml_string
 from saml2.profile import ecp as ecp_prof
 from saml2.client import Saml2Client
 
-from pathutils import full_path, xmlsec_path
+from pathutils import dotname, full_path, xmlsec_path
 
 __author__ = 'rolandh'
 
@@ -34,8 +34,8 @@ def test_complete_flow():
                                metadata_file=full_path("idp_all.xml"),
                                xmlsec_binary=xmlsec_path)
 
-    sp = Saml2Client(config_file="tests.servera_conf")
-    idp = Server(config_file="tests.idp_all_conf")
+    sp = Saml2Client(config_file=dotname("servera_conf"))
+    idp = Server(config_file=dotname("idp_all_conf"))
 
     IDP_ENTITY_ID = idp.config.entityid
     #SP_ENTITY_ID = sp.config.entityid

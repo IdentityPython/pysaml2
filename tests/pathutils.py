@@ -7,6 +7,13 @@ def full_path(local_file):
     return os.path.join(BASEDIR, local_file)
 
 
+def dotname(module):
+    if not BASEDIR.endswith('tests'):
+        return 'tests.' + module
+    else:
+        return module
+
+
 try:
     from saml2.sigver import get_xmlsec_binary
 except ImportError:

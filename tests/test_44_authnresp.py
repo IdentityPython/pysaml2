@@ -7,7 +7,7 @@ from saml2.server import Server
 from saml2.response import authn_response
 from saml2.config import config_factory
 
-from pathutils import full_path
+from pathutils import dotname, full_path
 
 XML_RESPONSE_FILE = full_path("saml_signed.xml")
 XML_RESPONSE_FILE2 = full_path("saml2_response.xml")
@@ -22,7 +22,7 @@ IDENTITY = {"eduPersonAffiliation": ["staff", "member"],
 
 class TestAuthnResponse:
     def setup_class(self):
-        server = Server("tests.idp_conf")
+        server = Server(dotname("idp_conf"))
         name_id = server.ident.transient_nameid(
                             "urn:mace:example.com:saml:roland:sp","id12")
         authn = (AUTHN_PASSWORD, "http://www.example.com/login")
@@ -51,7 +51,7 @@ class TestAuthnResponse:
                             name_id = name_id,
                             authn=authn)
 
-        self.conf = config_factory("sp", "tests.server_conf")
+        self.conf = config_factory("sp", dotname("server_conf"))
         self.conf.only_use_keys_in_metadata = False
         self.ar = authn_response(self.conf, "http://lingon.catalogix.se:8087/")
     

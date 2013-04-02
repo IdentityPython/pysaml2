@@ -11,7 +11,7 @@ from py.test import raises
 
 from saml2 import root_logger
 
-from pathutils import full_path
+from pathutils import dotname, full_path
 
 sp1 = {
     "entityid" : "urn:mace:umu.se:saml:roland:sp",
@@ -297,7 +297,7 @@ def test_conf_syslog():
 #noinspection PyUnresolvedReferences
 def test_3():
     cnf = Config()
-    cnf.load_file("tests.sp_1_conf")
+    cnf.load_file(dotname("sp_1_conf"))
     assert cnf.entityid == "urn:mace:example.com:saml:roland:sp"
     assert cnf.debug == 1
     assert cnf.key_file == full_path("test.key")
@@ -310,12 +310,12 @@ def test_3():
 
 def test_sp():
     cnf = SPConfig()
-    cnf.load_file("tests.sp_1_conf")
+    cnf.load_file(dotname("sp_1_conf"))
     assert cnf.endpoint("assertion_consumer_service") == \
                                             ["http://lingon.catalogix.se:8087/"]
 
 def test_dual():
-    cnf = Config().load_file("tests.idp_sp_conf")
+    cnf = Config().load_file(dotname("idp_sp_conf"))
 
     spe = cnf.getattr("endpoints", "sp")
     idpe = cnf.getattr("endpoints", "idp")
@@ -335,7 +335,7 @@ def test_ecp():
 
 def test_assertion_consumer_service():
     c = IdPConfig()
-    c.load_file("tests.idp_conf")
+    c.load_file(dotname("idp_conf"))
     c.context = "idp"
 
     c.metadata.load("local", full_path("InCommon-metadata.xml"))

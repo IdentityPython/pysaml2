@@ -46,6 +46,16 @@ install_requires=[
     'm2crypto'
     ]
 
+tests_require=[
+    'mongodict',
+    'pyasn1',
+    'pymongo',
+    'python-memcached',
+    'pytest',
+    #'pytest-coverage',
+]
+
+
 # only for Python 2.6
 if sys.version_info < (2,7):
     install_requires.append('importlib')
@@ -73,14 +83,10 @@ setup(
 
     scripts=["tools/parse_xsd2.py", "tools/make_metadata.py"],
 
-    tests_require=[
-        'mongodict',
-        'pyasn1',
-        'pymongo',
-        'python-memcached',
-        'pytest',
-        #'pytest-coverage',
-    ],
+    tests_require=tests_require,
+    extras_require={
+        'testing': tests_require,
+    },
     install_requires=install_requires,
     zip_safe=False,
     test_suite='tests',
