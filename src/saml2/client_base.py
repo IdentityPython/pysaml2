@@ -50,7 +50,7 @@ from saml2 import saml
 from saml2 import soap
 from saml2.population import Population
 
-from saml2.response import AttributeResponse
+from saml2.response import AttributeResponse, StatusError
 from saml2.response import AuthzResponse
 from saml2.response import AssertionIDResponse
 from saml2.response import AuthnQueryResponse
@@ -512,6 +512,9 @@ class Base(Entity):
                 resp = self._parse_response(xmlstr, AuthnResponse,
                                             "assertion_consumer_service",
                                             binding, **kwargs)
+            except StatusError, err:
+                logger.error("SAML status error: %s" % err)
+                raise
             except Exception, exc:
                 logger.error("%s" % exc)
                 raise
