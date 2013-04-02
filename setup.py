@@ -74,6 +74,7 @@ setup(
     scripts=["tools/parse_xsd2.py", "tools/make_metadata.py"],
 
     tests_require=[
+        'mongodict',
         'pyasn1',
         'pymongo',
         'python-memcached',
@@ -81,12 +82,6 @@ setup(
         #'pytest-coverage',
     ],
     install_requires=install_requires,
-    extras_require={
-        'cjson': ['python-cjson'],
-        'pymongo': ['pymongo'],
-        'python-memcached': ['python-memcached'],
-        'mongodict': ['mongodict']
-    },
     zip_safe=False,
     test_suite='tests',
     cmdclass={'test': PyTest},
