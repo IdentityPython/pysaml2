@@ -227,10 +227,15 @@ class SAML2Plugin(FormPluginBase):
         for key in ['s2repoze.body', "QUERY_STRING"]:
             query = environ.get(key)
             if query:
-                _idp_entity_id = dict(parse_qs(query))[self.idp_query_param][0]
-                if _idp_entity_id in idps:
-                    idp_entity_id = _idp_entity_id
-                break
+                try:
+                    _idp_entity_id = dict(parse_qs(query))[
+                        self.idp_query_param][0]
+                    if _idp_entity_id in idps:
+                        idp_entity_id = _idp_entity_id
+                    break
+                except KeyError:
+                    logger.debug("No IdP entity ID in query: %s" % query)
+                    pass
 
         if idp_entity_id is None:
             if len(idps) == 1:
