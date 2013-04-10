@@ -19,11 +19,12 @@
 or attribute authority (AA) may use to conclude its tasks.
 """
 import logging
+import os
 
 import shelve
 import sys
 import memcache
-from saml2.sdb import SessionStorage
+from saml2.sdb import SessionStorage, SessionStorageMDB
 from saml2.schema import soapenv
 
 from saml2.samlp import NameIDMappingResponse
@@ -40,7 +41,7 @@ from saml2.request import NameIDMappingRequest
 from saml2.request import AuthzDecisionQuery
 from saml2.request import AuthnQuery
 
-from saml2.s_utils import MissingValue, Unknown
+from saml2.s_utils import MissingValue, Unknown, rndstr
 
 from saml2.sigver import pre_signature_part, signed_instance_factory
 
@@ -58,7 +59,8 @@ logger = logging.getLogger(__name__)
 
 class Server(Entity):
     """ A class that does things that IdPs or AAs do """
-    def __init__(self, config_file="", config=None, _cache="", stype="idp"):
+    def __init__(self, config_file="", config=None, _cache="", stype="idp",
+                 symkey=""):
         Entity.__init__(self, stype, config, config_file)
         self.init_config(stype)
         self._cache = _cache
@@ -67,7 +69,22 @@ class Server(Entity):
         self.assertion = {}
         self.user2uid = {}
         self.uid2user = {}
-        self.session_db = SessionStorage()
+        self.session_db = self.choose_session_storage()
+        # Needed for
+        self.symkey = symkey
+        self.seed = rndstr()
+        self.iv = os.urandom(16)
+
+    def choose_session_storage(self):
+        _spec = self.config.getattr("session_storage", "idp")
+        if not _spec or _spec.lower() == "memory":
+            return SessionStorage()
+        else:
+            typ, data = _spec
+            if typ.lower() == "mongodb":
+                return SessionStorageMDB(data)
+            else:
+                raise NotImplementedError("No such storage type implemented")
 
     def init_config(self, stype="idp"):
         """ Remaining init of the server configuration 
@@ -77,36 +94,33 @@ class Server(Entity):
         if stype == "aa":
             return
         
-        try:
-            # subject information is stored in a database
-            # default database is a shelve database which is OK in some setups
-            dbspec = self.config.getattr("subject_data", "idp")
-            idb = None
-            if not dbspec:
-                pass
-            elif isinstance(dbspec, basestring):
-                idb = shelve.open(dbspec, writeback=True)
-            else:  # database spec is a a 2-tuple (type, address)
-                print >> sys.stderr, "DBSPEC: %s" % (dbspec,)
-                (typ, addr) = dbspec
-                if typ == "shelve":
-                    idb = shelve.open(addr, writeback=True)
-                elif typ == "memcached":
-                    idb = memcache.Client(addr)
-                elif typ == "dict":  # in-memory dictionary
-                    idb = {}
-                elif typ == "mongodb":
-                    from mongodict import MongoDict
-                    idb = MongoDict(host='localhost', port=27017,
-                                    database=addr, collection='store')
+        # subject information is stored in a database
+        # default database is in memory which is OK in some setups
+        dbspec = self.config.getattr("subject_data", "idp")
+        idb = None
+        if not dbspec:
+            idb = {}
+        elif isinstance(dbspec, basestring):
+            idb = shelve.open(dbspec, writeback=True)
+        else:  # database spec is a a 2-tuple (type, address)
+            print >> sys.stderr, "DBSPEC: %s" % (dbspec,)
+            (typ, addr) = dbspec
+            if typ == "shelve":
+                idb = shelve.open(addr, writeback=True)
+            elif typ == "memcached":
+                idb = memcache.Client(addr)
+            elif typ == "dict":  # in-memory dictionary
+                idb = {}
+            elif typ == "mongodb":
+                from mongodict import MongoDict
+                idb = MongoDict(host='localhost', port=27017,
+                                database=addr, collection='store')
 
-            if idb is not None:
-                self.ident = IdentDB(idb)
-            else:
-                raise Exception("Couldn't open identity database: %s" %
-                                (dbspec,))
-        except AttributeError:
-            self.ident = None
+        if idb is not None:
+            self.ident = IdentDB(idb)
+        elif dbspec:
+            raise Exception("Couldn't open identity database: %s" %
+                            (dbspec,))
 
     def close_shelve_db(self):
         """Close the shelve db to prevent file system locking issues"""
