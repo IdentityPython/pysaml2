@@ -3,7 +3,6 @@ import base64
 
 import re
 import logging
-import urllib
 import time
 from hashlib import sha1
 
@@ -153,25 +152,27 @@ class Service(object):
         _dict = self.unpack_either()
         return self.operation(_dict, BINDING_SOAP)
 
+    # def not_authn(self, key):
+    #     """
+    #
+    #
+    #     :return:
+    #     """
+    #     loc = "http://%s/login" % (self.environ["HTTP_HOST"])
+    #     loc += "?%s" % urllib.urlencode({"came_from": self.environ[
+    #         "PATH_INFO"], "key": key})
+    #     headers = [('Content-Type', 'text/plain')]
+    #
+    #     logger.debug("location: %s" % loc)
+    #     logger.debug("headers: %s" % headers)
+    #
+    #     resp = Redirect(loc, headers=headers)
+    #
+    #     return resp(self.environ, self.start_response)
+
     def not_authn(self, key):
-        # store the request and redirect to login page
+        pass
 
-        """
-
-
-        :return:
-        """
-        loc = "http://%s/login" % (self.environ["HTTP_HOST"])
-        loc += "?%s" % urllib.urlencode({"came_from": self.environ[
-            "PATH_INFO"], "key": key})
-        headers = [('Content-Type', 'text/plain')]
-
-        logger.debug("location: %s" % loc)
-        logger.debug("headers: %s" % headers)
-
-        resp = Redirect(loc, headers=headers)
-    
-        return resp(self.environ, self.start_response)
 
 # -----------------------------------------------------------------------------
 AUTHN = (AUTHN_PASSWORD, "http://lingon.catalogix.se/login")
@@ -466,7 +467,7 @@ class SLO(Service):
             del IDP.user2uid[lid]
             # remove the authentication
             try:
-                IDP.remove_authn_statements(msg.name_id)
+                IDP.session_db.remove_authn_statements(msg.name_id)
             except KeyError, exc:
                 logger.error("ServiceError: %s" % exc)
                 resp = ServiceError("%s" % exc)
@@ -653,12 +654,9 @@ class NIM(Service):
         return resp(self.environ, self.start_response)
     
 
-
 # ----------------------------------------------------------------------------
 # Cookie handling
 # ----------------------------------------------------------------------------
-
-
 def kaka2user(kaka):
     logger.debug("KAKA: %s" % kaka)
     if kaka:
