@@ -79,7 +79,7 @@ CONFIG = {
                     # }
                 }
             },
-            "subject_data": ("mongodb", "foo"),
+            #"subject_data": ("mongodb", "foo"),
         },
     },
     "debug" : 1,

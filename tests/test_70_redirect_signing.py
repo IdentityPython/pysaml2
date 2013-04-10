@@ -18,6 +18,7 @@ conf = SPConfig()
 conf.load_file(dotname("servera_conf"))
 sp = Saml2Client(conf)
 
+
 def test():
     srvs = sp.metadata.single_sign_on_service(idp.config.entityid,
                                               BINDING_HTTP_REDIRECT)
