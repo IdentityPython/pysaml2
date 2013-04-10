@@ -47,49 +47,52 @@ ONTS = {
     xmlenc.NAMESPACE: xmlenc
 }
 
-COMMON_ARGS = ["entityid", "xmlsec_binary", "debug", "key_file", "cert_file",
-                "secret", "accepted_time_diff", "name", "ca_certs",
-                "description", "valid_for", "verify_ssl_cert",
-                "organization",
-                "contact_person",
-                "name_form",
-                "virtual_organization",
-                "logger",
-                "only_use_keys_in_metadata",
-                "logout_requests_signed",
-                "disable_ssl_certificate_validation",
-                "referred_binding"
-                ]
+COMMON_ARGS = [
+    "entityid", "xmlsec_binary", "debug", "key_file", "cert_file",
+    "secret", "accepted_time_diff", "name", "ca_certs",
+    "description", "valid_for", "verify_ssl_cert",
+    "organization",
+    "contact_person",
+    "name_form",
+    "virtual_organization",
+    "logger",
+    "only_use_keys_in_metadata",
+    "logout_requests_signed",
+    "disable_ssl_certificate_validation",
+    "referred_binding",
+    "session_storage"
+]
 
 SP_ARGS = [
-            "required_attributes",
-            "optional_attributes",
-            "idp",
-            "aa",
-            "subject_data",
-            "want_assertions_signed",
-            "authn_requests_signed",
-            "name_form",
-            "endpoints",
-            "ui_info",
-            "discovery_response",
-            "allow_unsolicited",
-            "ecp",
-            "name_id_format"
-            ]
+    "required_attributes",
+    "optional_attributes",
+    "idp",
+    "aa",
+    "subject_data",
+    "want_assertions_signed",
+    "authn_requests_signed",
+    "name_form",
+    "endpoints",
+    "ui_info",
+    "discovery_response",
+    "allow_unsolicited",
+    "ecp",
+    "name_id_format"
+]
 
-AA_IDP_ARGS = ["want_authn_requests_signed",
-               "provided_attributes",
-               "subject_data",
-               "sp",
-               "scope",
-               "endpoints",
-               "metadata",
-               "ui_info",
-               "name_id_format",
-               "domain",
-               "name_qualifier"
-               ]
+AA_IDP_ARGS = [
+    "want_authn_requests_signed",
+    "provided_attributes",
+    "subject_data",
+    "sp",
+    "scope",
+    "endpoints",
+    "metadata",
+    "ui_info",
+    "name_id_format",
+    "domain",
+    "name_qualifier"
+]
 
 PDP_ARGS = ["endpoints", "name_form", "name_id_format"]
 
