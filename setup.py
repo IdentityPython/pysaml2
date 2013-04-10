@@ -52,6 +52,7 @@ tests_require = [
     'pymongo',
     'python-memcached',
     'pytest',
+    'mako',
     #'pytest-coverage',
 ]
 
