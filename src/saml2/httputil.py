@@ -1,15 +1,22 @@
+import hashlib
+import hmac
 import logging
+import time
+import cgi
+
+from urllib import quote
+from urlparse import parse_qs
+from Cookie import SimpleCookie
+
 from saml2 import BINDING_HTTP_ARTIFACT
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_URI
 from saml2 import BINDING_SOAP
+from saml2 import time_util
 
 __author__ = 'rohe0002'
 
-import cgi
-from urllib import quote
-from urlparse import parse_qs
 
 logger = logging.getLogger(__name__)
 
@@ -182,14 +189,14 @@ def get_response(environ, start_response):
 def unpack_redirect(environ):
     if "QUERY_STRING" in environ:
         _qs = environ["QUERY_STRING"]
-        return dict([(k,v[0]) for k,v in parse_qs(_qs).items()])
+        return dict([(k, v[0]) for k, v in parse_qs(_qs).items()])
     else:
         return None
 
 
 def unpack_post(environ):
     try:
-        return dict([(k,v[0]) for k,v in parse_qs(get_post(environ))])
+        return dict([(k, v[0]) for k, v in parse_qs(get_post(environ))])
     except Exception:
         return None
 
@@ -236,3 +243,88 @@ def unpack_any(environ):
             binding = BINDING_SOAP
 
     return _dict, binding
+
+
+def _expiration(timeout, time_format=None):
+    if timeout == "now":
+        return time_util.instant(time_format)
+    else:
+        # validity time should match lifetime of assertions
+        return time_util.in_a_while(minutes=timeout, format=time_format)
+
+
+def cookie_signature(seed, *parts):
+    """Generates a cookie signature."""
+    sha1 = hmac.new(seed, digestmod=hashlib.sha1)
+    for part in parts:
+        if part:
+            sha1.update(part)
+    return sha1.hexdigest()
+
+
+def make_cookie(name, load, seed, expire=0, domain="",  path="",
+                timestamp=""):
+    """
+    Create and return a cookie
+
+    :param name: Cookie name
+    :param load: Cookie load
+    :param seed: A seed for the HMAC function
+    :param expire: Number of minutes before this cookie goes stale
+    :param domain: The domain of the cookie
+    :param path: The path specification for the cookie
+    :return: A tuple to be added to headers
+    """
+    cookie = SimpleCookie()
+    if not timestamp:
+        timestamp = str(int(time.mktime(time.gmtime())))
+    signature = cookie_signature(seed, load, timestamp)
+    cookie[name] = "|".join([load, timestamp, signature])
+    if path:
+        cookie[name]["path"] = path
+    if domain:
+        cookie[name]["domain"] = domain
+    if expire:
+        cookie[name]["expires"] = _expiration(expire,
+                                              "%a, %d-%b-%Y %H:%M:%S GMT")
+
+    return tuple(cookie.output().split(": ", 1))
+
+
+def parse_cookie(name, seed, kaka):
+    """Parses and verifies a cookie value
+
+    :param seed: A seed used for the HMAC signature
+    :param kaka: The cookie
+    :return: A tuple consisting of (payload, timestamp)
+    """
+    if not kaka:
+        return None
+
+    cookie_obj = SimpleCookie(kaka)
+    morsel = cookie_obj.get(name)
+
+    if morsel:
+        parts = morsel.value.split("|")
+        if len(parts) != 3:
+            return None
+            # verify the cookie signature
+        sig = cookie_signature(seed, parts[0], parts[1])
+        if sig != parts[2]:
+            raise Exception("Invalid cookie signature")
+
+        try:
+            return parts[0].strip(), parts[1]
+        except KeyError:
+            return None
+    else:
+        return None
+
+
+def cookie_parts(name, kaka):
+    cookie_obj = SimpleCookie(kaka)
+    morsel = cookie_obj.get(name)
+    if morsel:
+        return morsel.value.split("|")
+    else:
+        return None
