@@ -36,7 +36,7 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 
-install_requires=[
+install_requires = [
     # core dependencies
     'decorator',
     'requests >= 1.0.0',
@@ -44,9 +44,9 @@ install_requires=[
     'zope.interface',
     'repoze.who == 1.0.18',
     'm2crypto'
-    ]
+]
 
-tests_require=[
+tests_require = [
     'mongodict',
     'pyasn1',
     'pymongo',
