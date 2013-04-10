@@ -1,4 +1,3 @@
-import json
 import logging
 
 from hashlib import sha1
@@ -43,6 +42,8 @@ def context_match(cfilter, cntx):
 
 
 class SessionStorage(object):
+    """ In memory storage of session information """
+
     def __init__(self):
         self.db = {"assertion": {}, "authn": {}}
         self.assertion = self.db["assertion"]
@@ -108,6 +109,8 @@ class SessionStorage(object):
 
 
 class SessionStorageMDB(object):
+    """ Session information is stored in a MongoDB database"""
+
     def __init__(self, collection=""):
         connection = MongoClient()
         db = connection[collection]
@@ -142,15 +145,15 @@ class SessionStorageMDB(object):
 
         return nkey
 
-    def get_authn_statements(self, name_id=None, key="", session_index=None,
+    def get_authn_statements(self, name_id=None, session_index=None,
                              requested_context=None):
         """
 
         :param name_id: One of name_id or key can be used to get the authn
             statement
-        :param key:
-        :param session_index:
-        :param requested_context:
+        :param session_index: If match against a session index should be done
+        :param requested_context: Authn statements should match a specific
+            authn context
         :return:
         """
         result = []
@@ -178,4 +181,3 @@ class SessionStorageMDB(object):
         nkey = sha1(code(name_id)).hexdigest()
 
         del self.authn[nkey]
-
