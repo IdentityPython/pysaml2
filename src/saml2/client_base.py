@@ -125,7 +125,6 @@ class Base(Entity):
                 setattr(self, foo, False)
 
         # extra randomness
-        self.logout_requests_signed_default = True
         self.allow_unsolicited = self.config.getattr("allow_unsolicited", "sp")
 
         self.artifact2response = {}
