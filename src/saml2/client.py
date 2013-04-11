@@ -158,7 +158,7 @@ class Saml2Client(Base):
                     sign = True
 
                 if sign is None:
-                    sign = self.logout_requests_signed_default
+                    sign = self.logout_requests_signed
 
                 if sign:
                     srequest = self.sign(request)
