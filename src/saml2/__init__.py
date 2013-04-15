@@ -558,14 +558,6 @@ class SamlBase(ExtensionContainer):
     def __str__(self):
         return self.to_string()
 
-#    def _init_attribute(self, extension_attribute_id,
-#                extension_attribute_name, value=None):
-#
-#        self.c_attributes[extension_attribute_id] = (extension_attribute_name,
-#                                                    None, False)
-#        if value:
-#            self.__dict__[extension_attribute_name] = value
-                    
     def keyswv(self):
         """ Return the keys of attributes or children that has values
         
@@ -678,44 +670,37 @@ class SamlBase(ExtensionContainer):
             
         return self
     
-#    def complete(self):
-#        for prop, _typ, req in self.c_attributes.values():
-#            if req and not getattr(self, prop):
-#                return False
-#
-#        for prop, klassdef in self.c_children.values():
-#            try:
-#                restriction = self.c_cardinality[prop]
-#                val = getattr(self, prop)
-#                if val is None:
-#                    num = 0
-#                elif isinstance(val, list):
-#                    num = len(val)
-#                else:
-#                    num = 1
-#
-#                try:
-#                    minimum = restriction["min"]
-#                except KeyError:
-#                    minimum = 1
-#                if num < minimum:
-#                    return False
-#                try:
-#                    maximum = restriction["max"]
-#                except KeyError:
-#                    maximum = 1
-#                # what if max == 0 ??
-#                if maximum == "unbounded":
-#                    continue
-#                elif num > maximum:
-#                    return False
-#            except KeyError:
-#                # default cardinality: min=max=1
-#                if not getattr(self, prop):
-#                    return False
-#
-#        return True
-        
+    def __eq__(self, other):
+        try:
+            assert isinstance(other, SamlBase)
+        except AssertionError:
+            return False
+
+        if len(self.keyswv()) != len(other.keyswv()):
+            return False
+
+        for key in self.keyswv():
+            if key in ["_extatt"]:
+                continue
+            svals = self.__dict__[key]
+            ovals = other.__dict__[key]
+            if isinstance(svals, basestring):
+                if svals != ovals:
+                    return False
+            elif isinstance(svals, list):
+                for sval in svals:
+                    for oval in ovals:
+                        if sval == oval:
+                            break
+                    else:
+                        return False
+            else:
+                if svals == ovals:  # Since I only support '=='
+                    pass
+                else:
+                    return False
+        return True
+
     def child_class(self, child):
         """ Return the class a child element should be an instance of
 
