@@ -24,7 +24,8 @@ import os
 import shelve
 import sys
 import memcache
-from saml2.sdb import SessionStorage, SessionStorageMDB
+from saml2.mongo_store import IdentMDB, SessionStorageMDB
+from saml2.sdb import SessionStorage
 from saml2.schema import soapenv
 
 from saml2.samlp import NameIDMappingResponse
@@ -65,26 +66,34 @@ class Server(Entity):
         self.init_config(stype)
         self._cache = _cache
         self.ticket = {}
-        self.authn = {}
-        self.assertion = {}
         self.user2uid = {}
         self.uid2user = {}
+        #
         self.session_db = self.choose_session_storage()
         # Needed for
         self.symkey = symkey
         self.seed = rndstr()
         self.iv = os.urandom(16)
 
+    def support_AssertionIDRequest(self):
+        return True
+
+    def support_AuthnQuery(self):
+        return True
+
     def choose_session_storage(self):
         _spec = self.config.getattr("session_storage", "idp")
-        if not _spec or _spec.lower() == "memory":
+        if not _spec:
             return SessionStorage()
-        else:
+        elif isinstance(_spec, basestring):
+            if _spec.lower() == "memory":
+                return SessionStorage()
+        else:  # Should be tuple
             typ, data = _spec
             if typ.lower() == "mongodb":
                 return SessionStorageMDB(data)
-            else:
-                raise NotImplementedError("No such storage type implemented")
+
+        raise NotImplementedError("No such storage type implemented")
 
     def init_config(self, stype="idp"):
         """ Remaining init of the server configuration 
@@ -98,6 +107,7 @@ class Server(Entity):
         # default database is in memory which is OK in some setups
         dbspec = self.config.getattr("subject_data", "idp")
         idb = None
+        typ = ""
         if not dbspec:
             idb = {}
         elif isinstance(dbspec, basestring):
@@ -112,11 +122,11 @@ class Server(Entity):
             elif typ == "dict":  # in-memory dictionary
                 idb = {}
             elif typ == "mongodb":
-                from mongodict import MongoDict
-                idb = MongoDict(host='localhost', port=27017,
-                                database=addr, collection='store')
+                self.ident = IdentMDB(addr)
 
-        if idb is not None:
+        if typ == "mongodb":
+            pass
+        elif idb is not None:
             self.ident = IdentDB(idb)
         elif dbspec:
             raise Exception("Couldn't open identity database: %s" %
@@ -254,16 +264,12 @@ class Server(Entity):
                                           policy, issuer=_issuer,
                                           authn_class=authn_class,
                                           authn_auth=authn_authn)
-                self.session_db.store_authn_statement(assertion.authn_statement,
-                                                      name_id)
             elif authn_decl:
                 assertion = ast.construct(sp_entity_id, in_response_to,
                                           consumer_url, name_id,
                                           self.config.attribute_converters,
                                           policy, issuer=_issuer,
                                           authn_decl=authn_decl)
-                self.session_db.store_authn_statement(assertion.authn_statement,
-                                                      name_id)
             else:
                 assertion = ast.construct(sp_entity_id, in_response_to,
                                           consumer_url, name_id,
@@ -285,7 +291,8 @@ class Server(Entity):
 
             args["assertion"] = assertion
 
-            self.session_db.store_assertion(assertion, to_sign)
+            if self.support_AssertionIDRequest() or self.support_AuthnQuery():
+                self.session_db.store_assertion(assertion, to_sign)
 
         return self._response(in_response_to, consumer_url, status, issuer,
                               sign_response, to_sign, **args)
@@ -297,7 +304,7 @@ class Server(Entity):
                                   sp_entity_id, userid="", name_id=None,
                                   status=None, issuer=None,
                                   sign_assertion=False, sign_response=False,
-                                  attributes=None):
+                                  attributes=None, **kwargs):
         """ Create an attribute assertion response.
         
         :param identity: A dictionary with attributes and values that are
@@ -312,6 +319,7 @@ class Server(Entity):
         :param sign_assertion: Whether the assertion should be signed or not
         :param sign_response: Whether the whole response should be signed
         :param attributes:
+        :param kwargs: To catch extra keyword arguments
         :return: A response instance
         """
         if not name_id and userid:
@@ -360,7 +368,7 @@ class Server(Entity):
                               sp_entity_id, name_id_policy=None, userid=None,
                               name_id=None, authn=None, authn_decl=None,
                               issuer=None, sign_response=False,
-                              sign_assertion=False):
+                              sign_assertion=False, **kwargs):
         """ Constructs an AuthenticationResponse
 
         :param identity: Information about an user
@@ -387,18 +395,28 @@ class Server(Entity):
                     if "name_id_format" in _sp:
                         nid_formats.extend([n["text"] for n in
                                             _sp["name_id_format"]])
+                try:
+                    snq = name_id_policy.sp_name_qualifier
+                except AttributeError:
+                    snq = sp_entity_id
 
-                name_id = self.ident.construct_nameid(userid, policy,
-                                                      sp_entity_id,
-                                                      name_id_policy,
-                                                      nid_formats)
+                _nids = self.ident.find_nameid(userid, sp_name_qualifier=snq)
+                # either none or one
+                if _nids:
+                    name_id = _nids[0]
+                else:
+                    name_id = self.ident.construct_nameid(userid, policy,
+                                                          sp_entity_id,
+                                                          name_id_policy,
+                                                          nid_formats)
             except IOError, exc:
                 response = self.create_error_response(in_response_to,
                                                       destination,
                                                       sp_entity_id,
                                                       exc, name_id)
                 return ("%s" % response).split("\n")
-        
+
+
         try:
             return self._authn_response(in_response_to,  # in_response_to
                                         destination,     # consumer_url
@@ -421,7 +439,7 @@ class Server(Entity):
                                       name_id_policy=None, userid=None,
                                       name_id=None, authn=None, authn_decl=None,
                                       issuer=None, sign_response=False,
-                                      sign_assertion=False):
+                                      sign_assertion=False, **kwargs):
 
         return self.create_authn_response(identity, in_response_to, destination,
                                           sp_entity_id, name_id_policy, userid,
@@ -429,7 +447,8 @@ class Server(Entity):
                                           sign_response, sign_assertion)
 
     #noinspection PyUnusedLocal
-    def create_assertion_id_request_response(self, assertion_id, sign=False):
+    def create_assertion_id_request_response(self, assertion_id, sign=False,
+                                             **kwargs):
         """
 
         :param assertion_id:
@@ -455,7 +474,7 @@ class Server(Entity):
     def create_name_id_mapping_response(self, name_id=None, encrypted_id=None,
                                         in_response_to=None,
                                         issuer=None, sign_response=False,
-                                        status=None):
+                                        status=None, **kwargs):
         """
         protocol for mapping a principal's name identifier into a
         different name identifier for the same principal.
@@ -485,7 +504,7 @@ class Server(Entity):
     def create_authn_query_response(self, subject, session_index=None,
                                     requested_context=None, in_response_to=None,
                                     issuer=None, sign_response=False,
-                                    status=None):
+                                    status=None, **kwargs):
         """
         A successful <Response> will contain one or more assertions containing
         authentication statements.
@@ -520,7 +539,7 @@ class Server(Entity):
                                           userid=None, name_id=None, authn=None,
                                           authn_decl=None, issuer=None,
                                           sign_response=False,
-                                          sign_assertion=False):
+                                          sign_assertion=False, **kwargs):
 
         # ----------------------------------------
         # <ecp:Response
