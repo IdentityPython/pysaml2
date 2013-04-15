@@ -15,7 +15,7 @@ EXP_SKIP = ["__class__"]
 
 
 # From pysaml2 SAML2 metadata format to Python dictionary
-def _eval(val, onts):
+def _eval(val, onts, mdb_safe):
     """
     Convert a value to a basic dict format
     :param val: The value
@@ -29,12 +29,12 @@ def _eval(val, onts):
         else:
             return val
     elif isinstance(val, dict) or isinstance(val, SamlBase):
-        return to_dict(val, onts)
+        return to_dict(val, onts, mdb_safe)
     elif isinstance(val, list):
         lv = []
         for v in val:
             if isinstance(v, dict) or isinstance(v, SamlBase):
-                lv.append(to_dict(v, onts))
+                lv.append(to_dict(v, onts, mdb_safe))
             else:
                 lv.append(v)
         return lv
@@ -60,11 +60,14 @@ def to_dict(_dict, onts, mdb_safe=False):
             val = getattr(_dict, key)
             if key == "extension_elements":
                 _eel = extension_elements_to_elements(val, onts)
-                _val = [_eval(_v, onts) for _v in _eel]
+                _val = [_eval(_v, onts, mdb_safe) for _v in _eel]
             elif key == "extension_attributes":
-                _val = val
+                if mdb_safe:
+                    _val = {k.replace(".", "__"): v for k, v in val.items()}
+                else:
+                    _val = val
             else:
-                _val = _eval(val, onts)
+                _val = _eval(val, onts, mdb_safe)
 
             if _val:
                 if mdb_safe:
@@ -72,7 +75,7 @@ def to_dict(_dict, onts, mdb_safe=False):
                 res[key] = _val
     else:
         for key, val in _dict.items():
-            _val = _eval(val, onts)
+            _val = _eval(val, onts, mdb_safe)
             if _val:
                 res[key] = _val
     return res
