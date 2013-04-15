@@ -27,6 +27,7 @@ from saml2.s_utils import error_status_factory
 from saml2.s_utils import rndstr
 from saml2.s_utils import success_status_factory
 from saml2.s_utils import decode_base64_and_inflate
+from saml2.s_utils import UnsupportedBinding
 from saml2.samlp import AuthnRequest, AuthzDecisionQuery, AuthnQuery
 from saml2.samlp import AssertionIDRequest
 from saml2.samlp import ManageNameIDRequest
@@ -206,9 +207,12 @@ class Entity(HTTPBase):
                 descr_type = "spsso"
 
         for binding in bindings:
-            srvs = sfunc(entity_id, binding, descr_type)
-            if srvs:
-                return binding, destinations(srvs)[0]
+            try:
+                srvs = sfunc(entity_id, binding, descr_type)
+                if srvs:
+                    return binding, destinations(srvs)[0]
+            except UnsupportedBinding:
+                pass
 
         logger.error("Failed to find consumer URL: %s, %s, %s" % (entity_id,
                                                                   bindings,
