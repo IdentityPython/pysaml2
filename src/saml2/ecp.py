@@ -19,6 +19,8 @@
 Contains classes used in the SAML ECP profile
 """
 import logging
+from saml2.client_base import ACTOR
+from saml2.ecp_client import SERVICE
 
 from saml2 import element_to_extension_element
 from saml2 import samlp
@@ -70,7 +72,7 @@ def ecp_auth_request(cls, entityid=None, relay_state="", sign=False):
     #
     paos_request = paos.Request(must_understand="1", actor=ACTOR,
                                 response_consumer_url=my_url,
-                                service = SERVICE)
+                                service=SERVICE)
 
     eelist.append(element_to_extension_element(paos_request))
 
@@ -86,10 +88,11 @@ def ecp_auth_request(cls, entityid=None, relay_state="", sign=False):
 #
 #        idp_list = samlp.IDPList(idp_entry= [idp])
 #
-#        ecp_request = ecp.Request(actor = ACTOR, must_understand = "1",
-#                        provider_name = "Example Service Provider",
-#                        issuer=saml.Issuer(text="https://sp.example.org/entity"),
-#                        idp_list = idp_list)
+#        ecp_request = ecp.Request(
+#            actor = ACTOR, must_understand = "1",
+#            provider_name = "Example Service Provider",
+#            issuer=saml.Issuer(text="https://sp.example.org/entity"),
+#            idp_list = idp_list)
 #
 #        eelist.append(element_to_extension_element(ecp_request))
 
@@ -130,14 +133,11 @@ def ecp_auth_request(cls, entityid=None, relay_state="", sign=False):
 
 def handle_ecp_authn_response(cls, soap_message, outstanding=None):
     rdict = soap.class_instances_from_soap_enveloped_saml_thingies(
-                                                            soap_message,
-                                                            [paos, ecp,
-                                                             samlp])
+        soap_message, [paos, ecp, samlp])
 
     _relay_state = None
     for item in rdict["header"]:
-        if item.c_tag == "RelayState" and \
-           item.c_namespace == ecp.NAMESPACE:
+        if item.c_tag == "RelayState" and item.c_namespace == ecp.NAMESPACE:
             _relay_state = item
 
     response = authn_response(cls.config, cls.service_url(), outstanding,
@@ -170,6 +170,7 @@ def ecp_response(target_url, response):
     soap_envelope = soapenv.Envelope(header=header, body=body)
 
     return "%s" % soap_envelope
+
 
 class ECPServer(Server):
     """ This deals with what the IdP has to do
