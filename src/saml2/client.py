@@ -18,20 +18,22 @@
 """Contains classes and functions that a SAML2.0 Service Provider (SP) may use
 to conclude its tasks.
 """
+from saml2.request import LogoutRequest
+import saml2
+
+from saml2 import saml
+from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_HTTP_POST
+from saml2 import BINDING_SOAP
+
 from saml2.ident import decode
 from saml2.httpbase import HTTPError
 from saml2.s_utils import sid
-import saml2
-
-try:
-    from urlparse import parse_qs
-except ImportError:
-    # Compatibility with Python <= 2.5
-    from cgi import parse_qs
-
+from saml2.s_utils import status_message_factory
+from saml2.s_utils import success_status_factory
+from saml2.samlp import STATUS_REQUEST_DENIED
+from saml2.samlp import STATUS_UNKNOWN_PRINCIPAL
 from saml2.time_util import not_on_or_after
-
-from saml2 import saml
 from saml2.saml import AssertionIDRef
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.client_base import Base
@@ -39,9 +41,13 @@ from saml2.client_base import LogoutError
 from saml2.client_base import NoServiceDefined
 from saml2.mdstore import destinations
 
-from saml2 import BINDING_HTTP_REDIRECT
-from saml2 import BINDING_HTTP_POST
-from saml2 import BINDING_SOAP
+try:
+    from urlparse import parse_qs
+except ImportError:
+    # Compatibility with Python <= 2.5
+    from cgi import parse_qs
+
+
 
 import logging
 logger = logging.getLogger(__name__)
@@ -203,12 +209,12 @@ class Saml2Client(Base):
         
         return responses
 
-    def local_logout(self, subject_id):
+    def local_logout(self, name_id):
         """ Remove the user from the cache, equals local logout 
         
-        :param subject_id: The identifier of the subject
+        :param name_id: The identifier of the subject
         """
-        self.users.remove_person(subject_id)
+        self.users.remove_person(name_id)
         return True
 
     def handle_logout_response(self, response):
@@ -400,3 +406,48 @@ class Saml2Client(Base):
                                       relay_state)
         else:
             raise Exception("Unsupported binding")
+
+    def handle_logout_request(self, request, name_id, binding, sign=False,
+                              relay_state=""):
+        """
+        Deal with a LogoutRequest
+
+        :param request: The request as text string
+        :param name_id: The id of the current user
+        :param binding: Which binding the message came in over
+        :param sign: Whether the response will be signed or not
+        :return: Keyword arguments which can be used to send the response
+        """
+
+        _req = self._parse_request(request, LogoutRequest,
+                                   "single_logout_service", binding)
+
+        if _req.message.name_id == name_id:
+            try:
+                if self.local_logout(name_id):
+                    status = success_status_factory()
+                else:
+                    status = status_message_factory("Server error",
+                                                    STATUS_REQUEST_DENIED)
+            except KeyError:
+                status = status_message_factory("Server error",
+                                                STATUS_REQUEST_DENIED)
+        else:
+            status = status_message_factory("Wrong user",
+                                            STATUS_UNKNOWN_PRINCIPAL)
+
+        if binding == BINDING_SOAP:
+            response_bindings = [BINDING_SOAP]
+        elif binding == BINDING_HTTP_POST or BINDING_HTTP_REDIRECT:
+            response_bindings = [BINDING_HTTP_POST, BINDING_HTTP_REDIRECT]
+        else:
+            response_bindings = self.config.preferred_binding[
+                "single_logout_service"]
+
+        response = self.create_logout_response(_req.message, response_bindings,
+                                               status, sign)
+        rinfo = self.response_args(_req.message, response_bindings)
+
+        return self.apply_binding(rinfo["binding"], response,
+                                  rinfo["destination"], relay_state,
+                                  response=True)
