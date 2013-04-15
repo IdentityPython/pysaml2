@@ -417,6 +417,14 @@ class Saml2Client(Base):
         :param binding: Which binding the message came in over
         :param sign: Whether the response will be signed or not
         :return: Keyword arguments which can be used to send the response
+            what's returned follow different patterns for different bindings.
+            If the binding is BINDIND_SOAP, what is returned looks like this:
+            {
+                "data": <the SOAP enveloped response>
+                "url": "",
+                'headers': [('content-type', 'application/soap+xml')]
+                'method': "POST
+            }
         """
 
         _req = self._parse_request(request, LogoutRequest,
