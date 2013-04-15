@@ -58,14 +58,14 @@ tests_require = [
 
 
 # only for Python 2.6
-if sys.version_info < (2,7):
+if sys.version_info < (2, 7):
     install_requires.append('importlib')
 
 setup(
     name='pysaml2',
     version='1.0.1',
     description='Python implementation of SAML Version 2 to be used in a WSGI environment',
-#    long_description = read("README"),
+    # long_description = read("README"),
     author='Roland Hedberg',
     author_email='roland.hedberg@adm.umu.se',
     license='Apache 2.0',
