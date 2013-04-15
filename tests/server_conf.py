@@ -6,25 +6,26 @@ CONFIG={
     "description": "My own SP",
     "service": {
         "sp": {
-            "endpoints":{
-                "assertion_consumer_service": ["http://lingon.catalogix.se:8087/"],
+            "endpoints": {
+                "assertion_consumer_service": [
+                    "http://lingon.catalogix.se:8087/"],
             },
             "required_attributes": ["surName", "givenName", "mail"],
             "optional_attributes": ["title"],
             "idp": ["urn:mace:example.com:saml:roland:idp"],
         }
     },
-    "debug" : 1,
-    "key_file" : full_path("test.key"),
-    "cert_file" : full_path("test.pem"),
+    "debug": 1,
+    "key_file": full_path("test.key"),
+    "cert_file": full_path("test.pem"),
     "ca_certs": full_path("cacerts.txt"),
-    "xmlsec_binary" : xmlsec_path,
+    "xmlsec_binary": xmlsec_path,
     "metadata": {
         "local": [full_path("idp.xml"), full_path("vo_metadata.xml")],
     },
-    "virtual_organization" : {
+    "virtual_organization": {
         "urn:mace:example.com:it:tek":{
-            "nameid_format" : "urn:oid:1.3.6.1.4.1.1466.115.121.1.15-NameID",
+            "nameid_format": "urn:oid:1.3.6.1.4.1.1466.115.121.1.15-NameID",
             "common_identifier": "umuselin",
         }
     },

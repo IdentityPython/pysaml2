@@ -15,6 +15,7 @@ from saml2.server import Server
 
 TAG1 = "name=\"SAMLRequest\" value="
 
+
 def get_msg(hinfo, binding):
     if binding == BINDING_SOAP:
         xmlstr = hinfo["data"]
@@ -24,13 +25,14 @@ def get_msg(hinfo, binding):
         i += len(TAG1) + 1
         j = _inp.find('"', i)
         xmlstr = _inp[i:j]
-    else: # BINDING_HTTP_REDIRECT
+    else:  # BINDING_HTTP_REDIRECT
         parts = urlparse(hinfo["headers"][0][1])
         xmlstr = parse_qs(parts.query)["SAMLRequest"][0]
 
     return xmlstr
 
 # ------------------------------------------------------------------------
+
 
 def test_basic():
     sp = Saml2Client(config_file="servera_conf")
@@ -43,7 +45,8 @@ def test_basic():
         authn_context_class_ref=AuthnContextClassRef(
             text=AUTHN_PASSWORD))]
 
-    subject = Subject(text="abc", name_id=NameID(format=NAMEID_FORMAT_TRANSIENT))
+    subject = Subject(text="abc",
+                      name_id=NameID(format=NAMEID_FORMAT_TRANSIENT))
 
     aq = sp.create_authn_query(subject, destination, authn_context)
 
@@ -51,15 +54,17 @@ def test_basic():
 
     assert isinstance(aq, AuthnQuery)
 
+
 def test_flow():
     sp = Saml2Client(config_file="servera_conf")
     idp = Server(config_file="idp_all_conf")
 
     relay_state = "FOO"
     # -- dummy request ---
-    orig_req = AuthnRequest(issuer=sp._issuer(),
-                            name_id_policy=NameIDPolicy(allow_create="true",
-                                                        format=NAMEID_FORMAT_TRANSIENT))
+    orig_req = AuthnRequest(
+        issuer=sp._issuer(),
+        name_id_policy=NameIDPolicy(allow_create="true",
+                                    format=NAMEID_FORMAT_TRANSIENT))
 
     # == Create an AuthnRequest response
 
@@ -84,7 +89,7 @@ def test_flow():
 
     xmlstr = get_msg(hinfo, binding)
     aresp = sp.parse_authn_request_response(xmlstr, binding,
-                                            {resp.in_response_to :"/"})
+                                            {resp.in_response_to: "/"})
 
     binding, destination = sp.pick_binding("authn_query_service",
                                            entity_id=idp.config.entityid)
@@ -113,7 +118,6 @@ def test_flow():
     msg = pm.message
     assert msg.id == aq.id
 
-
     p_res = idp.create_authn_query_response(msg.subject, msg.session_index,
                                             msg.requested_authn_context)
 
@@ -131,3 +135,6 @@ def test_flow():
     print final
 
     assert final.response.id == p_res.id
+
+if __name__ == "__main__":
+    test_flow()

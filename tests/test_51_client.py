@@ -19,11 +19,13 @@ from saml2.time_util import in_a_while
 from py.test import raises
 from fakeIDP import FakeIDP, unpack_form
 
+
 def for_me(condition, me ):
     for restriction in condition.audience_restriction:
         audience = restriction.audience
         if audience.text.strip() == me:
             return True
+
 
 def ava(attribute_statement):
     result = {}
@@ -34,6 +36,7 @@ def ava(attribute_statement):
         for value in attribute.attribute_value:
             result[name].append(value.text.strip())
     return result
+
 
 def _leq(l1, l2):
     return set(l1) == set(l2)
@@ -107,14 +110,14 @@ class TestClient:
             "E8042FB4-4D5B-48C3-8E14-8EDD852790DD",
             attribute={
                 ("urn:oid:2.5.4.42",
-                "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
-                "givenName"): None,
+                 "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+                 "givenName"): None,
                 ("urn:oid:2.5.4.4",
-                "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
-                "surname"): None,
+                 "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+                 "surname"): None,
                 ("urn:oid:1.2.840.113549.1.9.1",
-                "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"): None,
-                },
+                 "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"): None,
+            },
             format=saml.NAMEID_FORMAT_PERSISTENT,
             message_id="id1")
                 
@@ -140,10 +143,10 @@ class TestClient:
                 seen.append("surname")
             elif attribute.name == "urn:oid:1.2.840.113549.1.9.1":
                 assert attribute.name_format == saml.NAME_FORMAT_URI
-                if getattr(attribute,"friendly_name"):
+                if getattr(attribute, "friendly_name"):
                     assert False
                 seen.append("email")
-        assert _leq(seen,["givenName", "surname", "email"])
+        assert _leq(seen, ["givenName", "surname", "email"])
         
     def test_create_attribute_query_3(self):
         req = self.client.create_attribute_query(
@@ -162,25 +165,6 @@ class TestClient:
         assert nameid.format == saml.NAMEID_FORMAT_TRANSIENT
         assert nameid.text == "_e7b68a04488f715cda642fbdd90099f5"
 
-
-    # def test_idp_entry(self):
-    #     idp_entry = self.client.idp_entry(name="Umeå Universitet",
-    #                         location="https://idp.umu.se/")
-    #     
-    #     assert idp_entry.name == "Umeå Universitet"
-    #     assert idp_entry.loc == "https://idp.umu.se/"
-    #     
-    # def test_scope(self):
-    #     entity_id = "urn:mace:example.com:saml:roland:idp"
-    #     locs = self.client.metadata.single_sign_on_services(entity_id)
-    #     scope = self.client.scoping_from_metadata(entity_id, locs)
-    #     
-    #     assert scope.idp_list
-    #     assert len(scope.idp_list.idp_entry) == 1
-    #     idp_entry = scope.idp_list.idp_entry[0]
-    #     assert idp_entry.name == 'Exempel AB'
-    #     assert idp_entry.loc == ['http://localhost:8088/sso']
-    
     def test_create_auth_request_0(self):
         ar_str = "%s" % self.client.create_authn_request(
             "http://www.example.com/sso", message_id="id1")
@@ -198,7 +182,7 @@ class TestClient:
 
     def test_create_auth_request_vo(self):
         assert self.client.config.vorg.keys() == [
-                                    "urn:mace:example.com:it:tek"]
+            "urn:mace:example.com:it:tek"]
                                     
         ar_str = "%s" % self.client.create_authn_request(
             "http://www.example.com/sso",
@@ -294,8 +278,8 @@ class TestClient:
 
         # --- authenticate another person
         
-        ava = { "givenName": ["Alfonson"], "surName": ["Soriano"],
-                "mail": ["alfonson@chc.mlb.com"], "title": ["outfielder"]}
+        ava = {"givenName": ["Alfonson"], "surName": ["Soriano"],
+               "mail": ["alfonson@chc.mlb.com"], "title": ["outfielder"]}
 
         resp_str = "%s" % self.server.create_authn_response(
             identity=ava,
@@ -308,8 +292,9 @@ class TestClient:
 
         resp_str = base64.encodestring(resp_str)
         
-        self.client.parse_authn_request_response(resp_str, BINDING_HTTP_POST,
-                            {"id2":"http://foo.example.com/service"})
+        self.client.parse_authn_request_response(
+            resp_str, BINDING_HTTP_POST,
+            {"id2": "http://foo.example.com/service"})
         
         # Two persons in the cache
         assert len(self.client.users.subjects()) == 2
@@ -336,6 +321,8 @@ class TestClient:
 # Below can only be done with dummy Server
 
 IDP = "urn:mace:example.com:saml:roland:idp"
+
+
 class TestClientWithDummy():
     def setup_class(self):
         self.server = FakeIDP("idp_all_conf")
@@ -347,8 +334,8 @@ class TestClientWithDummy():
         self.client.send = self.server.receive
 
     def test_do_authn(self):
-        sid, http_args = self.client.prepare_for_authenticate(IDP,
-                                          "http://www.example.com/relay_state")
+        sid, http_args = self.client.prepare_for_authenticate(
+            IDP, "http://www.example.com/relay_state")
 
         assert isinstance(sid, basestring)
         assert len(http_args) == 4
@@ -356,11 +343,10 @@ class TestClientWithDummy():
         assert http_args["data"] == []
 
     def test_do_attribute_query(self):
-        response = self.client.do_attribute_query(IDP,
-                                     "_e7b68a04488f715cda642fbdd90099f5",
-                                     attribute={"eduPersonAffiliation":None},
-                                     nameid_format=NAMEID_FORMAT_TRANSIENT)
-
+        response = self.client.do_attribute_query(
+            IDP, "_e7b68a04488f715cda642fbdd90099f5",
+            attribute={"eduPersonAffiliation":None},
+            nameid_format=NAMEID_FORMAT_TRANSIENT)
 
     def test_logout_1(self):
         """ one IdP/AA logout from"""
@@ -389,9 +375,8 @@ class TestClientWithDummy():
 
     def test_post_sso(self):
         sid, http_args = self.client.prepare_for_authenticate(
-                                    "urn:mace:example.com:saml:roland:idp",
-                                    relay_state="really",
-                                    binding=BINDING_HTTP_POST)
+            "urn:mace:example.com:saml:roland:idp", relay_state="really",
+            binding=BINDING_HTTP_POST)
 
         # Normally a response would now be sent back to the users web client
         # Here I fake what the client will do
@@ -415,3 +400,8 @@ class TestClientWithDummy():
             'http://www.example.com/login'
         assert ac.authn_context_class_ref.text == AUTHN_PASSWORD
 
+
+# if __name__ == "__main__":
+#     tc = TestClient()
+#     tc.setup_class()
+#     tc.test_response()
