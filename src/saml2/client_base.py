@@ -128,6 +128,7 @@ class Base(Entity):
         self.allow_unsolicited = self.config.getattr("allow_unsolicited", "sp")
 
         self.artifact2response = {}
+        self.logout_requests_signed = False
 
     #
     # Private methods
