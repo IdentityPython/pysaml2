@@ -67,6 +67,7 @@ class Client(Entity):
         config.key_file = key_file
         config.cert_file = cert_file
         config.ca_certs = ca_certs
+        config.xmlsec_binary = xmlsec_binary
 
         Entity.__init__(self, "sp", config)
         self._idp = idp
@@ -81,6 +82,8 @@ class Client(Entity):
             logger.debug("Loaded metadata from '%s'" % metadata_file)
         else:
             self._metadata = None
+
+        self.metadata = self._metadata
 
         self.cookie_handler = None
 
@@ -112,9 +115,9 @@ class Client(Entity):
             ht_args["headers"].extend(headers)
 
         logger.debug("[P2] Sending request: %s" % ht_args["data"])
-            
+
         # POST the request to the IdP
-        response = self.send(destination, **ht_args)
+        response = self.send(**ht_args)
 
         logger.debug("[P2] Got IdP response: %s" % response)
 
