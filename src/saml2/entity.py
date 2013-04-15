@@ -22,7 +22,8 @@ from saml2.saml import Issuer
 from saml2.saml import NAMEID_FORMAT_ENTITY
 from saml2.response import LogoutResponse
 from saml2.time_util import instant
-from saml2.s_utils import sid, error_status_factory
+from saml2.s_utils import sid
+from saml2.s_utils import error_status_factory
 from saml2.s_utils import rndstr
 from saml2.s_utils import success_status_factory
 from saml2.s_utils import decode_base64_and_inflate
@@ -225,11 +226,18 @@ class Entity(HTTPBase):
                 "issue_instant": instant(), "issuer": self._issuer()}
 
     def response_args(self, message, bindings=None, descr_type=""):
+        """
+
+        :param message: The message to which a reply is constructed
+        :param bindings: Which bindings can be used.
+        :param descr_type: Type of descriptor (spssp, idpsso, )
+        :return: Dictionary
+        """
         info = {"in_response_to": message.id}
 
         if isinstance(message, AuthnRequest):
             rsrv = "assertion_consumer_service"
-            descr_type = "sp_sso"
+            descr_type = "spsso"
             info["sp_entity_id"] = message.issuer.text
             info["name_id_policy"] = message.name_id_policy
         elif isinstance(message, LogoutRequest):
@@ -237,7 +245,7 @@ class Entity(HTTPBase):
         elif isinstance(message, AttributeQuery):
             info["sp_entity_id"] = message.issuer.text
             rsrv = "attribute_consuming_service"
-            descr_type = "sp_sso"
+            descr_type = "spsso"
         elif isinstance(message, ManageNameIDRequest):
             rsrv = "manage_name_id_service"
         # The once below are solely SOAP so no return destination needed
@@ -253,6 +261,8 @@ class Entity(HTTPBase):
             raise Exception("No support for this type of query")
 
         if bindings == [BINDING_SOAP]:
+            info["binding"] = BINDING_SOAP
+            info["destination"] = ""
             return info
 
         if rsrv:
@@ -265,7 +275,7 @@ class Entity(HTTPBase):
             binding, destination = self.pick_binding(rsrv, bindings,
                                                      descr_type=descr_type,
                                                      request=message)
-            #info["binding"] = binding
+            info["binding"] = binding
             info["destination"] = destination
 
         return info
@@ -445,6 +455,12 @@ class Entity(HTTPBase):
 
         mid = sid()
 
+        for key in ["destination", "binding"]:
+            try:
+                del kwargs[key]
+            except KeyError:
+                pass
+
         if not status:
             status = success_status_factory()
 
@@ -474,6 +490,7 @@ class Entity(HTTPBase):
 
         :param xmlstr: The request in its transport format
         :param request_cls: The type of requests I expect
+        :param service:
         :param binding: Which binding that was used to transport the message
             to this entity.
         :return: A request instance
@@ -730,7 +747,7 @@ class Entity(HTTPBase):
             kwargs["timeslack"] = self.config.accepted_time_diff
 
         if "asynchop" not in kwargs:
-            if binding == BINDING_SOAP:
+            if binding in [BINDING_SOAP, BINDING_PAOS]:
                 kwargs["asynchop"] = False
             else:
                 kwargs["asynchop"] = True
