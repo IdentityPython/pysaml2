@@ -113,7 +113,7 @@ class Server(Entity):
         elif isinstance(dbspec, basestring):
             idb = shelve.open(dbspec, writeback=True)
         else:  # database spec is a a 2-tuple (type, address)
-            print >> sys.stderr, "DBSPEC: %s" % (dbspec,)
+            #print >> sys.stderr, "DBSPEC: %s" % (dbspec,)
             (typ, addr) = dbspec
             if typ == "shelve":
                 idb = shelve.open(addr, writeback=True)
