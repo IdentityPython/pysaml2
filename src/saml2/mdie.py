@@ -63,7 +63,9 @@ def to_dict(_dict, onts, mdb_safe=False):
                 _val = [_eval(_v, onts, mdb_safe) for _v in _eel]
             elif key == "extension_attributes":
                 if mdb_safe:
-                    _val = {k.replace(".", "__"): v for k, v in val.items()}
+                    _val = dict([(k.replace(".", "__"), v) for k, v in
+                                 val.items()])
+                    #_val = {k.replace(".", "__"): v for k, v in val.items()}
                 else:
                     _val = val
             else:
