@@ -93,11 +93,10 @@ class AuthnRequest(Request):
     _class = samlp.AuthnRequest
 
 
-
 PHASES = {
-    "login": (Login, AuthnRequest, AuthnResponse),
+    "login": (Login, AuthnRequest, AuthnResponse, MatchResult),
     "login_redirect": (Login, AuthnRequest, AuthnResponse_redirect),
-    "login_error": (Login, AuthnRequest, ErrorResponse)
+    "login_error": (Login, AuthnRequest, ErrorResponse, AuthnRequest)
 }
 
 OPERATIONS = {
@@ -105,7 +104,7 @@ OPERATIONS = {
         "name": 'Basic Login test',
         "descr": 'Basic Login test',
         "sequence": ["login"],
-        "tests": {"pre": [], "post": [MatchResult]}
+        "tests": {"pre": [], "post": []}
     },
     'verify': {
         "name": 'Verify various aspects of the generated AuthnRequest message',

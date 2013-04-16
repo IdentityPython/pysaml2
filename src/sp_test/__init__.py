@@ -177,7 +177,8 @@ class Client(object):
         md = MetaData(SCHEMA, self.idp_config.attribute_converters, info)
         md.load()
         metadata[0] = md
-        self.idp_config.metadata = metadata
+        self.idp.metadata = metadata
+        #self.idp_config.metadata = metadata
 
         if self.args.testpackage:
             self.tests = import_module("sp_test.package.%s" %

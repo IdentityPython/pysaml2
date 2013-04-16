@@ -12,7 +12,7 @@ from saml2 import BINDING_HTTP_POST
 from saml2.request import SERVICE2REQUEST
 
 from srtest import CheckError
-from srtest.check import CheckHTTPResponse
+from srtest.check import CheckHTTPResponse, Check
 from srtest.check import ExpectedError
 from srtest.check import INTERACTION
 from srtest.check import STATUSCODE
@@ -121,16 +121,20 @@ class Conversation():
 
     def my_endpoints(self):
         for serv in ["aa", "aq", "idp"]:
-            for typ, spec in self._config.getattr("endpoints", serv).items():
-                for url, binding in spec:
-                    yield url
+            endpoints = self._config.getattr("endpoints", serv)
+            if endpoints:
+                for typ, spec in endpoints.items():
+                    for url, binding in spec:
+                        yield url
 
     def which_endpoint(self, url):
         for serv in ["aa", "aq", "idp"]:
-            for typ, spec in self._config.getattr("endpoints", serv).items():
-                for endp, binding in spec:
-                    if url.startswith(endp):
-                        return typ, binding
+            endpoints = self._config.getattr("endpoints", serv)
+            if endpoints:
+                for typ, spec in endpoints.items():
+                    for endp, binding in spec:
+                        if url.startswith(endp):
+                            return typ, binding
         return None
 
     def wb_send(self):
@@ -139,10 +143,28 @@ class Conversation():
         """
         self.last_response = self.instance.send(self.start_page)
 
-    def handle_result(self):
-        self.do_check(CheckHTTPResponse)
-        _txt = self.last_response.content
-        assert _txt.startswith("<h2>")
+    def handle_result(self, response=None):
+        #self.do_check(CheckHTTPResponse)
+        if response:
+            if isinstance(response, Check):
+                self.do_check(response)
+            else:
+                # A HTTP redirect or HTTP Post
+                if 300 < self.last_response.status_code <= 303:
+                    loc = self.last_response.headers["location"]
+                    # should be for me and be an <result> message
+                    self._endpoint, self._binding = self.which_endpoint(loc)
+                    self.handle_redirect()
+                    # Now self.saml_request should contain the message
+                    assert isinstance(self.saml_request.message,
+                                      response._class)
+                elif self.last_response.status_code >= 400:
+                    raise FatalError(self.last_response.reason)
+                else:  # a 2XX response
+                    pass
+        else:
+            _txt = self.last_response.content
+            assert _txt.startswith("<h2>")
 
     def handle_redirect(self):
         if self._binding == BINDING_HTTP_REDIRECT:
@@ -218,8 +240,11 @@ class Conversation():
             self.wb_send()
             self.intermit(flow[0]._interaction)
             self.handle_redirect()
-        self.send_idp_response(*flow[1:])
-        self.handle_result()
+        self.send_idp_response(flow[1], flow[2])
+        if len(flow) == 4:
+            self.handle_result(flow[3])
+        else:
+            self.handle_result()
 
     def do_sequence(self, oper, tests=None):
         try:
