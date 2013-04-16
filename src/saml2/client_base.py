@@ -210,7 +210,7 @@ class Base(Entity):
                              nameid_format=NAMEID_FORMAT_TRANSIENT,
                              service_url_binding=None, message_id=0,
                              consent=None, extensions=None, sign=None,
-                             allow_create=False, **kwargs):
+                             allow_create=False, sign_prepare=False, **kwargs):
         """ Creates an authentication request.
         
         :param destination: Where the request should be sent.
@@ -224,6 +224,7 @@ class Base(Entity):
         :param consent: Whether the principal have given her consent
         :param extensions: Possible extensions
         :param sign: Whether the request should be signed or not.
+        :param sign_prepare: Whether the signature should be prepared or not.
         :param allow_create: If the identity provider is allowed, in the course
             of fulfilling the request, to create a new identifier to represent
             the principal.
@@ -293,7 +294,7 @@ class Base(Entity):
             pass
 
         return self._message(AuthnRequest, destination, message_id, consent,
-                             extensions, sign,
+                             extensions, sign, sign_prepare,
                              protocol_binding=binding,
                              scoping=scoping, **args)
 

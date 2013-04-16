@@ -320,9 +320,12 @@ class Entity(HTTPBase):
 
 # --------------------------------------------------------------------------
 
-    def sign(self, msg, mid=None, to_sign=None):
+    def sign(self, msg, mid=None, to_sign=None, sign_prepare=False):
         if msg.signature is None:
             msg.signature = pre_signature_part(msg.id, self.sec.my_cert, 1)
+
+        if sign_prepare:
+            return msg
 
         if mid is None:
             mid = msg.id
@@ -333,11 +336,10 @@ class Entity(HTTPBase):
             to_sign = [(class_name(msg), mid)]
 
         logger.info("REQUEST: %s" % msg)
-
         return signed_instance_factory(msg, self.sec, to_sign)
 
     def _message(self, request_cls, destination=None, message_id=0,
-                 consent=None, extensions=None, sign=False, **kwargs):
+                 consent=None, extensions=None, sign=False, sign_prepare=False, **kwargs):
         """
         Some parameters appear in all requests so simplify by doing
         it in one place
@@ -347,6 +349,8 @@ class Entity(HTTPBase):
         :param message_id: A message identifier
         :param consent: Whether the principal have given her consent
         :param extensions: Possible extensions
+        :param sign: Whether the request should be signed or not.
+        :param sign_prepare: Whether the signature should be prepared or not.
         :param kwargs: Key word arguments specific to one request type
         :return: An instance of the request_cls
         """
@@ -369,7 +373,7 @@ class Entity(HTTPBase):
             req.extensions = extensions
 
         if sign:
-            return self.sign(req)
+            return self.sign(req, sign_prepare=sign_prepare)
         else:
             logger.info("REQUEST: %s" % req)
             return req
@@ -526,8 +530,9 @@ class Entity(HTTPBase):
                                self.config.attribute_converters,
                                timeslack=timeslack)
 
+        origdoc = xmlstr
         xmlstr = self.unravel(xmlstr, binding, request_cls.msgtype)
-        _request = _request.loads(xmlstr, binding)
+        _request = _request.loads(xmlstr, binding, origdoc=origdoc)
 
         _log_debug("Loaded request")
 
