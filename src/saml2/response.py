@@ -82,6 +82,10 @@ class StatusError(Exception):
     pass
 
 
+class UnsolicitedResponse(Exception):
+    pass
+
+
 class StatusVersionMismatch(StatusError):
     pass
 
@@ -454,8 +458,8 @@ class AuthnResponse(StatusResponse):
             elif self.allow_unsolicited:
                 pass
             else:
-                logger.exception("Unsolicited response")
-                raise Exception("Unsolicited response")
+                logger.exception("Unsolicited response %s" % self.in_response_to)
+                raise UnsolicitedResponse("Unsolicited response: %s" % self.in_response_to)
             
         return self
     
