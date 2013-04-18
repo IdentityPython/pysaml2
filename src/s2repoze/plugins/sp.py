@@ -447,8 +447,9 @@ class SAML2Plugin(FormPluginBase):
                     session_info = self._eval_authn_response(
                         environ, cgi_field_storage_to_dict(post),
                         binding=binding)
-                except Exception:
-                    return None
+                except Exception, err:
+                    environ["s2repoze.saml_error"] = err
+                    return {}
         except TypeError, exc:
             # might be a ECP (=SOAP) response
             body = environ.get('s2repoze.body', None)
@@ -456,8 +457,9 @@ class SAML2Plugin(FormPluginBase):
                 # might be a ECP response
                 try:
                     session_info = self.do_ecp_response(body, environ)
-                except Exception:
+                except Exception, err:
                     environ["post.fieldstorage"] = post
+                    environ["s2repoze.saml_error"] = err
                     return {}
             else:
                 exception_trace("sp.identity", exc, logger)
