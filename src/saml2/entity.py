@@ -151,7 +151,8 @@ class Entity(HTTPBase):
         Construct the necessary HTTP arguments dependent on Binding
 
         :param binding: Which binding to use
-        :param msg_str: The return message as a string (XML)
+        :param msg_str: The return message as a string (XML) if the message is
+            to be signed it MUST contain the signature element.
         :param destination: Where to send the message
         :param relay_state: Relay_state if provided
         :param response: Which type of message this is
