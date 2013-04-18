@@ -116,6 +116,13 @@ class ServiceError(Response):
     _status = '500 Internal Service Error'
 
 
+class NotImplemented(Response):
+    _status = "501 Not Implemented"
+    # override template since we need an environment variable
+    template = ('The request method %s is not implemented '
+                'for this server.\r\n%s')
+
+
 def extract(environ, empty=False, err=False):
     """Extracts strings in form data and returns a dict.
 
