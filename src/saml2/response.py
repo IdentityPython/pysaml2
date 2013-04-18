@@ -645,6 +645,7 @@ class AuthnResponse(StatusResponse):
         
         # The subject must contain a name_id
         assert subject.name_id
+        # Make certain the name id format
         self.name_id = subject.name_id
         return self.name_id
     
