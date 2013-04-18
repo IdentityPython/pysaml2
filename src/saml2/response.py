@@ -686,7 +686,7 @@ class AuthnResponse(StatusResponse):
     
     def _encrypted_assertion(self, xmlstr):
         if xmlstr.encrypted_data:
-            assertion_str = self.sec.decrypt(xmlstr.encrypted_data)
+            assertion_str = self.sec.decrypt(xmlstr.encrypted_data.to_string())
             assertion = saml.assertion_from_string(assertion_str)
         else:
             decrypt_xml = self.sec.decrypt(xmlstr)
