@@ -31,6 +31,7 @@ from saml2.s_utils import assertion_factory
 
 logger = logging.getLogger(__name__)
 
+
 def _filter_values(vals, vlist=None, must=False):
     """ Removes values from *vals* that does not appear in vlist
     
@@ -40,7 +41,7 @@ def _filter_values(vals, vlist=None, must=False):
     :return: The set of values after filtering
     """
     
-    if not vlist: # No value specified equals any value
+    if not vlist:  # No value specified equals any value
         return vals
     
     if isinstance(vlist, basestring):
@@ -60,6 +61,7 @@ def _filter_values(vals, vlist=None, must=False):
     else:
         return res
 
+
 def _match(attr, ava):
     if attr in ava:
         return attr
@@ -73,6 +75,7 @@ def _match(attr, ava):
             return _at
 
     return None
+
 
 def filter_on_attributes(ava, required=None, optional=None):
     """ Filter
@@ -93,7 +96,7 @@ def filter_on_attributes(ava, required=None, optional=None):
         found = False
         nform = ""
         for nform in ["friendly_name", "name"]:
-            if nform in attr :
+            if nform in attr:
                 _fn = _match(attr[nform], ava)
                 if _fn:
                     try:
@@ -105,14 +108,15 @@ def filter_on_attributes(ava, required=None, optional=None):
                     break
 
         if not found:
-            raise MissingValue("Required attribute missing: '%s'" % (attr[nform],))
+            raise MissingValue("Required attribute missing: '%s'" % (
+                attr[nform],))
 
     if optional is None:
         optional = []
 
     for attr in optional:
         for nform in ["friendly_name", "name"]:
-            if nform in attr :
+            if nform in attr:
                 _fn = _match(attr[nform], ava)
                 if _fn:
                     try:
@@ -120,11 +124,12 @@ def filter_on_attributes(ava, required=None, optional=None):
                     except KeyError:
                         values = []
                     try:
-                        res[_fn].extend(_filter_values(ava[_fn],values))
+                        res[_fn].extend(_filter_values(ava[_fn], values))
                     except KeyError:
-                        res[_fn] = _filter_values(ava[_fn],values)
+                        res[_fn] = _filter_values(ava[_fn], values)
     
     return res
+
 
 def filter_on_demands(ava, required=None, optional=None):
     """ Never return more than is needed. Filters out everything
@@ -150,7 +155,7 @@ def filter_on_demands(ava, required=None, optional=None):
                     if val not in ava[lava[attr]]:
                         raise MissingValue(
                             "Required attribute value missing: %s,%s" % (attr,
-                                                                        val))
+                                                                         val))
         else:
             raise MissingValue("Required attribute missing: %s" % (attr,))
 
@@ -167,6 +172,7 @@ def filter_on_demands(ava, required=None, optional=None):
             del ava[lava[attr]]
     
     return ava
+
 
 def filter_on_wire_representation(ava, acs, required=None, optional=None):
     """
@@ -208,6 +214,7 @@ def filter_on_wire_representation(ava, acs, required=None, optional=None):
 
     return res
 
+
 def filter_attribute_value_assertions(ava, attribute_restrictions=None):
     """ Will weed out attribute values and values according to the
     rules defined in the attribute restrictions. If filtering results in
@@ -239,6 +246,7 @@ def filter_attribute_value_assertions(ava, attribute_restrictions=None):
             del ava[attr]
     return ava
 
+
 def restriction_from_attribute_spec(attributes):
     restr = {}
     for attribute in attributes:
@@ -250,6 +258,7 @@ def restriction_from_attribute_spec(attributes):
             else:
                 restr[attribute.name] = re.compile(val.text)
     return restr
+
 
 class Policy(object):
     """ handles restrictions on assertions """
@@ -292,7 +301,7 @@ class Policy(object):
                     continue
                 
                 spec["attribute_restrictions"][key] = \
-                        [re.compile(value) for value in values]
+                    [re.compile(value) for value in values]
         
         return self._restrictions
     
@@ -336,7 +345,7 @@ class Policy(object):
         :param: lifetime as a dictionary 
         """
         # default is a hour
-        spec = {"hours":1}
+        spec = {"hours": 1}
         if not self._restrictions:
             return spec
         
@@ -363,11 +372,11 @@ class Policy(object):
         try:
             try:
                 restrictions = self._restrictions[sp_entity_id][
-                                                "attribute_restrictions"]
+                    "attribute_restrictions"]
             except KeyError:
                 try:
                     restrictions = self._restrictions["default"][
-                                                "attribute_restrictions"]
+                        "attribute_restrictions"]
                 except KeyError:
                     restrictions = None
         except KeyError:
@@ -398,10 +407,9 @@ class Policy(object):
         :param optional: Attributes that the SP regards as optional
         :return: A possibly modified AVA
         """
-                                
-        
-        ava = filter_attribute_value_assertions(ava,
-                                self.get_attribute_restriction(sp_entity_id))
+
+        ava = filter_attribute_value_assertions(
+            ava, self.get_attribute_restriction(sp_entity_id))
         
         if required or optional:
             ava = filter_on_attributes(ava, required, optional)
@@ -423,7 +431,6 @@ class Policy(object):
                                    spec["optional"])
 
         return self.filter(ava, sp_entity_id, [], [])
-        
 
     def conditions(self, sp_entity_id):
         """ Return a saml.Condition instance
@@ -431,13 +438,15 @@ class Policy(object):
         :param sp_entity_id: The SP entity ID
         :return: A saml.Condition instance
         """
-        return factory( saml.Conditions,
-                        not_before=instant(),
-                        # How long might depend on who's getting it
-                        not_on_or_after=self.not_on_or_after(sp_entity_id),
-                        audience_restriction=[factory( saml.AudienceRestriction,
-                                audience=factory(saml.Audience, 
-                                                text=sp_entity_id))])
+        return factory(saml.Conditions,
+                       not_before=instant(),
+                       # How long might depend on who's getting it
+                       not_on_or_after=self.not_on_or_after(sp_entity_id),
+                       audience_restriction=[factory(
+                           saml.AudienceRestriction,
+                           audience=factory(saml.Audience,
+                                            text=sp_entity_id))])
+
 
 class Assertion(dict):
     """ Handles assertions about subjects """
@@ -448,44 +457,46 @@ class Assertion(dict):
     def _authn_context_decl_ref(self, authn_class):
         # authn_class: saml.AUTHN_PASSWORD
         return factory(saml.AuthnContext, 
-                        authn_context_decl_ref=factory(
-                                saml.AuthnContextDeclRef, text=authn_class))
+                       authn_context_decl_ref=factory(
+                           saml.AuthnContextDeclRef, text=authn_class))
 
     def _authn_context_class_ref(self, authn_class, authn_auth=None):
         # authn_class: saml.AUTHN_PASSWORD
         cntx_class = factory(saml.AuthnContextClassRef, text=authn_class)
         if authn_auth:
             return factory(saml.AuthnContext, 
-                            authn_context_class_ref=cntx_class,
-                            authenticating_authority=factory(
-                                                saml.AuthenticatingAuthority,
-                                                text=authn_auth))
+                           authn_context_class_ref=cntx_class,
+                           authenticating_authority=factory(
+                               saml.AuthenticatingAuthority, text=authn_auth))
         else:
-            return factory(saml.AuthnContext, 
-                            authn_context_class_ref=cntx_class)
+            return factory(saml.AuthnContext,
+                           authn_context_class_ref=cntx_class)
         
-    def _authn_statement(self, authn_class=None, authn_auth=None, 
-                            authn_decl=None):
+    def _authn_statement(self, authn_class=None, authn_auth=None,
+                         authn_decl=None):
         if authn_class:
-            return factory(saml.AuthnStatement, 
-                        authn_instant=instant(), 
-                        session_index=sid(),
-                        authn_context=self._authn_context_class_ref(
-                                                    authn_class, authn_auth))
+            return factory(
+                saml.AuthnStatement,
+                authn_instant=instant(),
+                session_index=sid(),
+                authn_context=self._authn_context_class_ref(
+                    authn_class, authn_auth))
         elif authn_decl:
-            return factory(saml.AuthnStatement, 
-                        authn_instant=instant(), 
-                        session_index=sid(),
-                        authn_context=self._authn_context_decl_ref(authn_decl))
+            return factory(
+                saml.AuthnStatement,
+                authn_instant=instant(),
+                session_index=sid(),
+                authn_context=self._authn_context_decl_ref(authn_decl))
         else:
-            return factory(saml.AuthnStatement,
-                        authn_instant=instant(), 
-                        session_index=sid())
+            return factory(
+                saml.AuthnStatement,
+                authn_instant=instant(),
+                session_index=sid())
 
     def construct(self, sp_entity_id, in_response_to, consumer_url,
-                    name_id, attrconvs, policy, issuer, authn_class=None, 
-                    authn_auth=None, authn_decl=None, encrypt=None,
-                    sec_context=None):
+                  name_id, attrconvs, policy, issuer, authn_class=None,
+                  authn_auth=None, authn_decl=None, encrypt=None,
+                  sec_context=None):
         """ Construct the Assertion 
         
         :param sp_entity_id: The entityid of the SP
@@ -510,7 +521,7 @@ class Assertion(dict):
             _name_format = NAME_FORMAT_URI
 
         attr_statement = saml.AttributeStatement(attribute=from_local(
-                                attrconvs, self, _name_format))
+            attrconvs, self, _name_format))
 
         if encrypt == "attributes":
             for attr in attr_statement.attribute:
@@ -533,20 +544,21 @@ class Assertion(dict):
 
         return assertion_factory(
             issuer=issuer,
-            attribute_statement = attr_statement,
-            authn_statement = _authn_statement,
-            conditions = conds,
-            subject=factory( saml.Subject,
+            attribute_statement=attr_statement,
+            authn_statement=_authn_statement,
+            conditions=conds,
+            subject=factory(
+                saml.Subject,
                 name_id=name_id,
-                subject_confirmation=factory( saml.SubjectConfirmation,
-                                method=saml.SCM_BEARER,
-                                subject_confirmation_data=factory(
-                                    saml.SubjectConfirmationData,
-                                    in_response_to=in_response_to,
-                                    recipient=consumer_url,
-                                    not_on_or_after=policy.not_on_or_after(
-                                                            sp_entity_id)))),
-            )
+                subject_confirmation=factory(
+                    saml.SubjectConfirmation,
+                    method=saml.SCM_BEARER,
+                    subject_confirmation_data=factory(
+                        saml.SubjectConfirmationData,
+                        in_response_to=in_response_to,
+                        recipient=consumer_url,
+                        not_on_or_after=policy.not_on_or_after(sp_entity_id)))),
+        )
     
     def apply_policy(self, sp_entity_id, policy, metadata=None):
         """ Apply policy to the assertion I'm representing 
