@@ -1,6 +1,6 @@
 # An eduPersonTargetedID comprises
 # the entity name of the identity provider, the entity name of the service 
-# provider, and the opaque string value. 
+# provider, and a opaque string value.
 # These strings are separated by "!" symbols. This form is advocated by 
 # Internet2 and may overtake the other form in due course.
 
@@ -33,13 +33,13 @@ class Eptid(object):
     def __setitem__(self, key, value):
         self._db[key] = value
 
-    def get(self, idp, sp, args):
+    def get(self, idp, sp, *args):
         # key is a combination of sp_entity_id and object id
-        key = (".".join([sp, args[0]])).encode("utf-8")
+        key = ("__".join([sp, args[0]])).encode("utf-8")
         try:
             return self[key]
         except KeyError:
-            val = self.make(idp, sp, args[1])
+            val = self.make(idp, sp, args)
             self[key] = val
             return val
 

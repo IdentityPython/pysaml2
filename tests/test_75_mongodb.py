@@ -2,6 +2,7 @@ from saml2 import BINDING_HTTP_POST
 from saml2.saml import AUTHN_PASSWORD
 from saml2.client import Saml2Client
 from saml2.server import Server
+from saml2.mongo_store import EptidMDB
 
 __author__ = 'rolandh'
 
@@ -49,6 +50,27 @@ def test_flow():
 
     nids = idp2.ident.find_nameid("jeter")
     assert len(nids) == 1
+
+
+def test_eptid_mongo_db():
+    edb = EptidMDB("secret", "idp")
+    e1 = edb.get("idp_entity_id", "sp_entity_id", "user_id",
+                 "some other data")
+    print e1
+    assert e1.startswith("idp_entity_id!sp_entity_id!")
+    e2 = edb.get("idp_entity_id", "sp_entity_id", "user_id",
+                 "some other data")
+    assert e1 == e2
+
+    e3 = edb.get("idp_entity_id", "sp_entity_id", "user_2",
+                 "some other data")
+    print e3
+    assert e1 != e3
+
+    e4 = edb.get("idp_entity_id", "sp_entity_id2", "user_id",
+                 "some other data")
+    assert e4 != e1
+    assert e4 != e3
 
 if __name__ == "__main__":
     test_flow()

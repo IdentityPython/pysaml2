@@ -208,9 +208,9 @@ class MDB(object):
         doc.update(kwargs)
         _ = self.db.insert(doc)
 
-    def get(self, key=None, **kwargs):
-        if key:
-            doc = {self.primary_key: key}
+    def get(self, value=None, **kwargs):
+        if value:
+            doc = {self.primary_key: value}
             doc.update(kwargs)
             return [item for item in self.db.find(doc)]
         elif kwargs:
@@ -249,27 +249,23 @@ class MDB(object):
 
 #------------------------------------------------------------------------------
 class EptidMDB(Eptid):
-    primary_key = "eptid"
 
-    def __init__(self, secret, collection="", sub_collection=""):
+    def __init__(self, secret, collection="", sub_collection="eptid"):
         Eptid.__init__(self, secret)
         self.mdb = MDB(collection, sub_collection)
-        self.mdb.primary_key = "entity_id"
+        self.mdb.primary_key = "eptid_key"
 
     def __getitem__(self, key):
         res = self.mdb.get(key)
         if not res:
             raise KeyError(key)
         elif len(res) == 1:
-            return res[0]
+            return res[0]["eptid"]
         else:
             raise CorruptDatabase("Found more than one EPTID document")
 
     def __setitem__(self, key, value):
-        if key == self.mdb.primary_key:
-            _ = self.mdb.store(value)
-        else:
-            _ = self.mdb.store(**{key: value})
+        _ = self.mdb.store(key, **{"eptid": value})
 
 
 #------------------------------------------------------------------------------
