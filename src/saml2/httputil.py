@@ -123,6 +123,10 @@ class NotImplemented(Response):
                 'for this server.\r\n%s')
 
 
+class BadGateway(Response):
+    _status = "502 Bad Gateway"
+
+
 def extract(environ, empty=False, err=False):
     """Extracts strings in form data and returns a dict.
 
