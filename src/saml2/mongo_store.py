@@ -3,7 +3,7 @@ import logging
 
 from pymongo import MongoClient
 from saml2.eptid import Eptid
-from saml2.mdstore import MetaData
+from saml2.mdstore import MetaData, attribute_requirement
 from saml2.s_utils import PolicyError
 
 from saml2.ident import code, IdentDB, Unknown
@@ -249,7 +249,6 @@ class MDB(object):
 
 #------------------------------------------------------------------------------
 class EptidMDB(Eptid):
-
     def __init__(self, secret, collection="", sub_collection="eptid"):
         Eptid.__init__(self, secret)
         self.mdb = MDB(collection, sub_collection)
@@ -269,6 +268,16 @@ class EptidMDB(Eptid):
 
 
 #------------------------------------------------------------------------------
+def export_mdstore_to_mongo_db(mds, onts, collection, sub_collection=""):
+    mdb = MDB(collection, sub_collection)
+    mdb.primary_key = "entity_id"
+    for key, desc in mds.items():
+        kwargs = {
+            "entity_description": to_dict(desc, onts.values(), True),
+        }
+        mdb.store(key, **kwargs)
+
+
 class MetadataMDB(MetaData):
     def __init__(self, onts, attrc, collection="", sub_collection=""):
         MetaData.__init__(self, onts, attrc)
@@ -291,7 +300,7 @@ class MetadataMDB(MetaData):
 
     def _ext_service(self, entity_id, typ, service, binding):
         try:
-            srvs = self.entity[entity_id][typ]
+            srvs = self[entity_id][typ]
         except KeyError:
             return None
 
@@ -312,22 +321,23 @@ class MetadataMDB(MetaData):
         pass
 
     def items(self):
-        return self.mdb.items()
+        for key, item in self.mdb.items():
+            yield key, from_dict(item["entity_description"], self.onts, True)
 
     def keys(self):
         return self.mdb.keys()
 
     def __contains__(self, item):
-        pass
+        return item in self.mdb
 
-    def attribute_requirement(self):
-        pass
-
-    def with_descriptor(self):
-        pass
-
-    def construct_source_id(self):
-        pass
+    def __getitem__(self, item):
+        res = self.mdb.get(item)
+        if not res:
+            raise KeyError(item)
+        elif len(res) == 1:
+            return from_dict(res[0]["entity_description"], self.onts, True)
+        else:
+            raise CorruptDatabase("More then one document with key %s" % item)
 
     def bindings(self, entity_id, typ, service):
         pass

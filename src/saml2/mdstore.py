@@ -195,7 +195,7 @@ class MetaData(object):
                                                    binding))
         try:
             srvs = []
-            for t in self.entity[entity_id][typ]:
+            for t in self[entity_id][typ]:
                 try:
                     srvs.extend(t[service])
                 except KeyError:
@@ -223,7 +223,7 @@ class MetaData(object):
 
     def _ext_service(self, entity_id, typ, service, binding):
         try:
-            srvs = self.entity[entity_id][typ]
+            srvs = self[entity_id][typ]
         except KeyError:
             return None
 
@@ -250,7 +250,7 @@ class MetaData(object):
         :return:
         """
         res = {}
-        for ent in self.entity.keys():
+        for ent in self.keys():
             bind = self._service(ent, typ, service, binding)
             if bind:
                 res[ent] = bind
@@ -280,7 +280,7 @@ class MetaData(object):
         res = {"required": [], "optional": []}
 
         try:
-            for sp in self.entity[entity_id]["spsso_descriptor"]:
+            for sp in self[entity_id]["spsso_descriptor"]:
                 _res = attribute_requirement(sp)
                 res["required"].extend(_res["required"])
                 res["optional"].extend(_res["optional"])
@@ -290,22 +290,22 @@ class MetaData(object):
         return res
 
     def dumps(self):
-        return json.dumps(self.entity, indent=2)
+        return json.dumps(self.items(), indent=2)
 
     def with_descriptor(self, descriptor):
         res = {}
         desc = "%s_descriptor" % descriptor
-        for eid, ent in self.entity.items():
+        for eid, ent in self.items():
             if desc in ent:
                 res[eid] = ent
         return res
 
     def __str__(self):
-        return "%s" % (self.entity,)
+        return "%s" % self.items()
 
     def construct_source_id(self):
         res = {}
-        for eid, ent in self.entity.items():
+        for eid, ent in self.items():
             for desc in ["spsso_descriptor", "idpsso_descriptor"]:
                 try:
                     for srv in ent[desc]:
