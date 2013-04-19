@@ -252,6 +252,10 @@ class Saml2Client(object):
                 log.debug(">> %s", resp)
 
             resp = resp.verify()
+            if resp is None:
+                log.error("Response could not be verified")
+                return
+
             if isinstance(resp, AuthnResponse):
                 self.users.add_information_about_person(resp.session_info())
                 if log:
