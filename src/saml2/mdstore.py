@@ -98,7 +98,7 @@ class MetaData(object):
         self.metadata = metadata
 
     def items(self):
-        return self.entity
+        return self.entity.items()
 
     def keys(self):
         return self.entity.keys()
@@ -542,7 +542,7 @@ class MetadataStore(object):
 
     def attribute_requirement(self, entity_id, index=0):
         for md in self.metadata.values():
-            if entity_id in md.items():
+            if entity_id in md:
                 return md.attribute_requirement(entity_id, index)
 
     def keys(self):

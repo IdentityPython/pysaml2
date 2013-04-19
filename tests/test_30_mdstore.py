@@ -232,3 +232,6 @@ def test_sp_metadata():
                 'urn:oid:0.9.2342.19200300.100.1.3'])
     assert _eq([n["friendly_name"] for n in req["required"]],
                ['surName', 'givenName', 'mail'])
+
+if __name__ == "__main__":
+    test_swami_1()
