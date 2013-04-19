@@ -246,6 +246,9 @@ class MDB(object):
         else:
             return True
 
+    def reset(self):
+        self.db.drop()
+
 
 #------------------------------------------------------------------------------
 class EptidMDB(Eptid):
@@ -268,12 +271,60 @@ class EptidMDB(Eptid):
 
 
 #------------------------------------------------------------------------------
-def export_mdstore_to_mongo_db(mds, onts, collection, sub_collection=""):
+
+def protect(dic):
+    res = {}
+    for key, val in dic.items():
+        key = key.replace(".", "__")
+        if isinstance(val, basestring):
+            pass
+        elif isinstance(val, dict):
+            val = protect(val)
+        elif isinstance(val, list):
+            li = []
+            for va in val:
+                if isinstance(va, basestring):
+                    pass
+                elif isinstance(va, dict):
+                    va = protect(va)
+                # I don't think lists of lists will appear am I wrong ?
+                li.append(va)
+            val = li
+        res[key] = val
+    return res
+
+
+def unprotect(dic):
+    res = {}
+    for key, val in dic.items():
+        if key == "__class__":
+            pass
+        else:
+            key = key.replace("__", ".")
+        if isinstance(val, basestring):
+            pass
+        elif isinstance(val, dict):
+            val = unprotect(val)
+        elif isinstance(val, list):
+            li = []
+            for va in val:
+                if isinstance(va, basestring):
+                    pass
+                elif isinstance(val, dict):
+                    va = unprotect(va)
+                li.append(va)
+            val = li
+        res[key] = val
+    return res
+
+
+def export_mdstore_to_mongo_db(mds, collection, sub_collection=""):
     mdb = MDB(collection, sub_collection)
+    mdb.reset()
     mdb.primary_key = "entity_id"
     for key, desc in mds.items():
         kwargs = {
-            "entity_description": to_dict(desc, onts.values(), True),
+            "entity_description": protect(desc),
         }
         mdb.store(key, **kwargs)
 
@@ -283,20 +334,6 @@ class MetadataMDB(MetaData):
         MetaData.__init__(self, onts, attrc)
         self.mdb = MDB(collection, sub_collection)
         self.mdb.primary_key = "entity_id"
-
-    def _service(self, entity_id, typ, service, binding=None):
-        """ Get me all services with a specified
-        entity ID and type, that supports the specified version of binding.
-
-
-        :param entity_id: The EntityId
-        :param typ: Type of service (idp, attribute_authority, ...)
-        :param service: which service that is sought for
-        :param binding: A binding identifier
-        :return: list of service descriptions.
-            Or if no binding was specified a list of 2-tuples (binding, srv)
-        """
-        pass
 
     def _ext_service(self, entity_id, typ, service, binding):
         try:
@@ -322,10 +359,14 @@ class MetadataMDB(MetaData):
 
     def items(self):
         for key, item in self.mdb.items():
-            yield key, from_dict(item["entity_description"], self.onts, True)
+            yield key, unprotect(item["entity_description"])
 
     def keys(self):
         return self.mdb.keys()
+
+    def values(self):
+        for key, item in self.mdb.items():
+            yield unprotect(item["entity_description"])
 
     def __contains__(self, item):
         return item in self.mdb
@@ -335,7 +376,7 @@ class MetadataMDB(MetaData):
         if not res:
             raise KeyError(item)
         elif len(res) == 1:
-            return from_dict(res[0]["entity_description"], self.onts, True)
+            return unprotect(res[0]["entity_description"])
         else:
             raise CorruptDatabase("More then one document with key %s" % item)
 

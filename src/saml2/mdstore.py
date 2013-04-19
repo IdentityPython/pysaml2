@@ -103,6 +103,9 @@ class MetaData(object):
     def keys(self):
         return self.entity.keys()
 
+    def values(self):
+        return self.entity.keys()
+
     def __contains__(self, item):
         return item in self.entity
 

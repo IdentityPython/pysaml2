@@ -1,4 +1,5 @@
 from saml2 import BINDING_HTTP_POST
+from saml2.mdstore import MetadataStore
 from saml2.saml import AUTHN_PASSWORD
 from saml2.client import Saml2Client
 from saml2.server import Server
@@ -71,6 +72,8 @@ def test_eptid_mongo_db():
                  "some other data")
     assert e4 != e1
     assert e4 != e3
+
+
 
 if __name__ == "__main__":
     test_flow()

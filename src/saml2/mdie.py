@@ -79,6 +79,8 @@ def to_dict(_dict, onts, mdb_safe=False):
         for key, val in _dict.items():
             _val = _eval(val, onts, mdb_safe)
             if _val:
+                if mdb_safe and "." in key:
+                    key = key.replace(".", "__")
                 res[key] = _val
     return res
 
