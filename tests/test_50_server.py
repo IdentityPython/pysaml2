@@ -35,7 +35,7 @@ class TestServer1():
         self.client = client.Saml2Client(conf)
 
     def teardown_class(self):
-        self.server.close_shelve_db()
+        self.server.ident.close()
 
     def test_issuer(self):
         issuer = self.server._issuer()
@@ -382,10 +382,10 @@ class TestServer1():
         #_ = s_utils.deflate_and_base64_encode("%s" % (logout_request,))
 
         saml_soap = make_soap_enveloped_saml_thingy(logout_request)
-        self.server.close_shelve_db()
+        self.server.ident.close()
         idp = Server("idp_soap_conf")
         request = idp.parse_logout_request(saml_soap)
-        idp.close_shelve_db()
+        idp.ident.close()
         assert request
 
 #------------------------------------------------------------------------
@@ -400,7 +400,7 @@ class TestServer2():
         self.server = Server("restrictive_idp_conf")
 
     def teardown_class(self):
-        self.server.close_shelve_db()
+        self.server.ident.close()
 
     def test_do_attribute_reponse(self):
         aa_policy = self.server.config.getattr("policy", "idp")

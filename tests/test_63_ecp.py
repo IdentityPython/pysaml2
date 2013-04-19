@@ -25,9 +25,11 @@ def _eq(l1, l2):
     else:
         return len(l1) == len(l2)
 
+
 class DummyResponse(object):
     def __init__(self, headers):
         self.headers = headers
+
 
 def test_complete_flow():
     client = ecp_client.Client("user", "password",
