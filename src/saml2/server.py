@@ -23,7 +23,8 @@ import os
 
 import shelve
 import memcache
-from saml2.mongo_store import IdentMDB, SessionStorageMDB
+from saml2.eptid import EptidShelve, Eptid
+from saml2.mongo_store import IdentMDB, SessionStorageMDB, EptidMDB
 from saml2.sdb import SessionStorage
 from saml2.schema import soapenv
 
@@ -70,6 +71,7 @@ class Server(Entity):
         self.symkey = symkey
         self.seed = rndstr()
         self.iv = os.urandom(16)
+        self.eptid = None
 
     def support_AssertionIDRequest(self):
         return True
@@ -127,6 +129,20 @@ class Server(Entity):
         elif dbspec:
             raise Exception("Couldn't open identity database: %s" %
                             (dbspec,))
+
+        dbspec = self.config.getattr("edu_person_targeted_id", "idp")
+        if not dbspec:
+            pass
+        else:
+            typ = dbspec[0]
+            addr = dbspec[1]
+            secret = dbspec[2]
+            if typ == "shelve":
+                self.eptid = EptidShelve(secret, addr)
+            elif typ == "mongodb":
+                self.eptid = EptidMDB(secret, addr, *dbspec[3:])
+            else:
+                self.eptid = Eptid(secret)
 
     def wants(self, sp_entity_id, index=None):
         """ Returns what attributes the SP requires and which are optional

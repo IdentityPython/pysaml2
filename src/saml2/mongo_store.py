@@ -2,6 +2,8 @@ from hashlib import sha1
 import logging
 
 from pymongo import MongoClient
+from saml2.eptid import Eptid
+from saml2.mdstore import MetaData
 from saml2.s_utils import PolicyError
 
 from saml2.ident import code, IdentDB, Unknown
@@ -33,6 +35,10 @@ ONTS = {
 __author__ = 'rolandh'
 
 logger = logging.getLogger(__name__)
+
+
+class CorruptDatabase(Exception):
+    pass
 
 
 def context_match(cfilter, cntx):
@@ -185,6 +191,7 @@ class IdentMDB(IdentDB):
         pass
 
 
+#------------------------------------------------------------------------------
 class MDB(object):
     primary_key = "mdb"
 
@@ -193,8 +200,11 @@ class MDB(object):
         _db = connection[collection]
         self.db = _db[sub_collection]
 
-    def store(self, key, **kwargs):
-        doc = {self.primary_key: key}
+    def store(self, value, **kwargs):
+        if value:
+            doc = {self.primary_key: value}
+        else:
+            doc = {}
         doc.update(kwargs)
         _ = self.db.insert(doc)
 
@@ -217,6 +227,111 @@ class MDB(object):
             for item in self.db.find(doc):
                 self.db.remove(item["_id"])
 
+    def keys(self):
+        for item in self.db.find():
+            yield item[self.primary_key]
 
-class MDB_eptid(MDB):
-    primary_key = "userid"
+    def items(self):
+        for item in self.db.find():
+            _key = item[self.primary_key]
+            del item[self.primary_key]
+            del item["_id"]
+            yield _key, item
+
+    def __contains__(self, key):
+        doc = {self.primary_key: key}
+        res = [item for item in self.db.find(doc)]
+        if not res:
+            return False
+        else:
+            return True
+
+
+#------------------------------------------------------------------------------
+class EptidMDB(Eptid):
+    primary_key = "eptid"
+
+    def __init__(self, secret, collection="", sub_collection=""):
+        Eptid.__init__(self, secret)
+        self.mdb = MDB(collection, sub_collection)
+        self.mdb.primary_key = "entity_id"
+
+    def __getitem__(self, key):
+        res = self.mdb.get(key)
+        if not res:
+            raise KeyError(key)
+        elif len(res) == 1:
+            return res[0]
+        else:
+            raise CorruptDatabase("Found more than one EPTID document")
+
+    def __setitem__(self, key, value):
+        if key == self.mdb.primary_key:
+            _ = self.mdb.store(value)
+        else:
+            _ = self.mdb.store(**{key: value})
+
+
+#------------------------------------------------------------------------------
+class MetadataMDB(MetaData):
+    def __init__(self, onts, attrc, collection="", sub_collection=""):
+        MetaData.__init__(self, onts, attrc)
+        self.mdb = MDB(collection, sub_collection)
+        self.mdb.primary_key = "entity_id"
+
+    def _service(self, entity_id, typ, service, binding=None):
+        """ Get me all services with a specified
+        entity ID and type, that supports the specified version of binding.
+
+
+        :param entity_id: The EntityId
+        :param typ: Type of service (idp, attribute_authority, ...)
+        :param service: which service that is sought for
+        :param binding: A binding identifier
+        :return: list of service descriptions.
+            Or if no binding was specified a list of 2-tuples (binding, srv)
+        """
+        pass
+
+    def _ext_service(self, entity_id, typ, service, binding):
+        try:
+            srvs = self.entity[entity_id][typ]
+        except KeyError:
+            return None
+
+        if not srvs:
+            return srvs
+
+        res = []
+        for srv in srvs:
+            if "extensions" in srv:
+                for elem in srv["extensions"]["extension_elements"]:
+                    if elem["__class__"] == service:
+                        if elem["binding"] == binding:
+                            res.append(elem)
+
+        return res
+
+    def load(self):
+        pass
+
+    def items(self):
+        return self.mdb.items()
+
+    def keys(self):
+        return self.mdb.keys()
+
+    def __contains__(self, item):
+        pass
+
+    def attribute_requirement(self):
+        pass
+
+    def with_descriptor(self):
+        pass
+
+    def construct_source_id(self):
+        pass
+
+    def bindings(self, entity_id, typ, service):
+        pass
