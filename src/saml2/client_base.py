@@ -300,7 +300,8 @@ class Base(Entity):
 
     def create_attribute_query(self, destination, name_id=None,
                                attribute=None, message_id=0, consent=None,
-                               extensions=None, sign=False, **kwargs):
+                               extensions=None, sign=False, sign_prepare=False,
+                               **kwargs):
         """ Constructs an AttributeQuery
         
         :param destination: To whom the query should be sent
@@ -321,6 +322,7 @@ class Base(Entity):
         :param consent: Whether the principal have given her consent
         :param extensions: Possible extensions
         :param sign: Whether the query should be signed or not.
+        :param sign_prepare: Whether the Signature element should be added.
         :return: An AttributeQuery instance
         """
 
@@ -349,7 +351,7 @@ class Base(Entity):
             attribute = do_attributes(attribute)
 
         return self._message(AttributeQuery, destination, message_id, consent,
-                             extensions, sign, subject=subject,
+                             extensions, sign, sign_prepare, subject=subject,
                              attribute=attribute)
 
     # MUST use SOAP for
