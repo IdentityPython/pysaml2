@@ -22,7 +22,6 @@ import logging
 import os
 
 import shelve
-import sys
 import memcache
 from saml2.mongo_store import IdentMDB, SessionStorageMDB
 from saml2.sdb import SessionStorage
@@ -52,7 +51,6 @@ from saml2.assertion import restriction_from_attribute_spec
 from saml2.assertion import filter_attribute_value_assertions
 
 from saml2.ident import IdentDB
-#from saml2.profile import paos
 from saml2.profile import ecp
 
 logger = logging.getLogger(__name__)
@@ -60,14 +58,12 @@ logger = logging.getLogger(__name__)
 
 class Server(Entity):
     """ A class that does things that IdPs or AAs do """
-    def __init__(self, config_file="", config=None, _cache="", stype="idp",
+    def __init__(self, config_file="", config=None, cache=None, stype="idp",
                  symkey=""):
         Entity.__init__(self, stype, config, config_file)
         self.init_config(stype)
-        self._cache = _cache
+        self.cache = cache
         self.ticket = {}
-        self.user2uid = {}
-        self.uid2user = {}
         #
         self.session_db = self.choose_session_storage()
         # Needed for

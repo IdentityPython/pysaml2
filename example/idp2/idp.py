@@ -32,6 +32,12 @@ from saml2.sigver import verify_redirect_signature
 logger = logging.getLogger("saml2.idp")
 
 
+class Cache(object):
+    def __init__(self):
+        self.user2uid = {}
+        self.uid2user = {}
+
+
 def _expiration(timeout, tformat="%a, %d-%b-%Y %H:%M:%S GMT"):
     """
 
@@ -417,8 +423,8 @@ def do_verify(environ, start_response, _):
         resp = Unauthorized("Unknown user or wrong password")
     else:
         uid = rndstr(24)
-        IDP.uid2user[uid] = user
-        IDP.user2uid[user] = uid
+        IDP.cache.uid2user[uid] = user
+        IDP.cache.user2uid[user] = uid
         logger.debug("Register %s under '%s'" % (user, uid))
         kaka = set_cookie("idpauthn", "/", uid)
         lox = "http://%s%s?id=%s&key=%s" % (environ["HTTP_HOST"],
@@ -463,8 +469,8 @@ class SLO(Service):
         if msg.name_id:
             lid = IDP.ident.find_local_id(msg.name_id)
             logger.info("local identifier: %s" % lid)
-            del IDP.uid2user[IDP.user2uid[lid]]
-            del IDP.user2uid[lid]
+            del IDP.cache.uid2user[IDP.cache.user2uid[lid]]
+            del IDP.cache.user2uid[lid]
             # remove the authentication
             try:
                 IDP.session_db.remove_authn_statements(msg.name_id)
@@ -603,13 +609,13 @@ class ATTR(Service):
         _query = _req.message
 
         name_id = _query.subject.name_id
-        uid = IDP.ident.find_local_id(name_id)
+        uid = name_id.text
         logger.debug("Local uid: %s" % uid)
         identity = EXTRA[uid]
 
         # Comes in over SOAP so only need to construct the response
         args = IDP.response_args(_query, [BINDING_SOAP])
-        msg = IDP.create_attribute_response(identity, destination="",
+        msg = IDP.create_attribute_response(identity,
                                             name_id=name_id, **args)
 
         logger.debug("response: %s" % msg)
@@ -664,7 +670,7 @@ def kaka2user(kaka):
         morsel = cookie_obj.get("idpauthn", None)
         if morsel:
             try:
-                return IDP.uid2user[morsel.value]
+                return IDP.cache.uid2user[morsel.value]
             except KeyError:
                 return None
         else:
@@ -768,7 +774,7 @@ def application(environ, start_response):
         try:
             query = parse_qs(environ["QUERY_STRING"])
             logger.debug("QUERY: %s" % query)
-            user = IDP.uid2user[query["id"][0]]
+            user = IDP.cache.uid2user[query["id"][0]]
         except KeyError:
             user = None
 
@@ -816,6 +822,7 @@ ROOT = './'
 LOOKUP = TemplateLookup(directories=[ROOT + 'templates', ROOT + 'htdocs'],
                         module_directory=ROOT + 'modules',
                         input_encoding='utf-8', output_encoding='utf-8')
+
 # ----------------------------------------------------------------------------
 
 if __name__ == '__main__':
@@ -826,8 +833,10 @@ if __name__ == '__main__':
 
     PORT = 8088
 
-    IDP = server.Server(sys.argv[1])
+    IDP = server.Server(sys.argv[1], cache=Cache()
+)
     IDP.ticket = {}
+
     SRV = make_server('', PORT, application)
     print "IdP listening on port: %s" % PORT
     SRV.serve_forever()

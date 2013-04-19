@@ -177,8 +177,8 @@ class ECPServer(Server):
 
     TODO: Still tentative
     """
-    def __init__(self, config_file="", config=None, _cache=""):
-        Server.__init__(self, config_file, config, _cache)
+    def __init__(self, config_file="", config=None, cache=None):
+        Server.__init__(self, config_file, config, cache)
 
     def parse_ecp_authn_query(self):
         pass
