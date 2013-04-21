@@ -12,7 +12,7 @@ ex1 = """<AuthenticationContextDeclaration
 </AuthenticationContextDeclaration>"""
 
 from saml2.authn_context import pword
-
+from saml2.authn_context import authn_context_factory
 
 def test_passwd():
     length = pword.Length(min="4")
@@ -25,5 +25,12 @@ def test_passwd():
 
     assert inst == inst2
 
+
+def test_factory():
+    inst_pw = pword.authentication_context_declaration_from_string(ex1)
+    inst = authn_context_factory(ex1)
+
+    assert inst_pw == inst
+
 if __name__ == "__main__":
-    test_passwd()
+    test_factory()

@@ -9,6 +9,12 @@ PASSWORDPROTECTEDTRANSPORT = \
 PASSWORD = 'urn:oasis:names:tc:SAML:2.0:ac:classes:Password'
 TLSCLIENT = 'urn:oasis:names:tc:SAML:2.0:ac:classes:TLSClient'
 
+from saml2.authn_context import ippword
+from saml2.authn_context import mobiletwofactor
+from saml2.authn_context import ppt
+from saml2.authn_context import pword
+from saml2.authn_context import sslcert
+
 
 class Authn(object):
     def __init__(self):
@@ -69,3 +75,13 @@ class Authn(object):
             return True
         else:
             return False
+
+
+def authn_context_factory(text):
+    # brute force
+    for mod in [ippword, mobiletwofactor, ppt, pword, sslcert]:
+        inst = mod.authentication_context_declaration_from_string(text)
+        if inst:
+            return inst
+
+    return None
