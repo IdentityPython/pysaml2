@@ -73,7 +73,7 @@ setup(
 
     packages=['saml2', 'xmldsig', 'xmlenc', 's2repoze', 's2repoze.plugins',
               "saml2/profile", "saml2/schema", "saml2/extension",
-              "saml2/attributemaps"],
+              "saml2/attributemaps", "saml2/authn_context"],
 
     package_dir={'': 'src'},
     package_data={'': ['xml/*.xml']},

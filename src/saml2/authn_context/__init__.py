@@ -34,10 +34,13 @@ class Authn(object):
         if spec.authn_context_class_ref:
             _endpspec[spec.authn_context_class_ref.text] = target
         elif spec.authn_context_decl:
-            _endpspec[
-                spec.authn_context_decl.c_namespace] = spec.authn_context_decl
+            key = spec.authn_context_decl.c_namespace
+            try:
+                _endpspec[key].append((spec.authn_context_decl, target))
+            except KeyError:
+                _endpspec[key] = [(spec.authn_context_decl, target)]
 
-    def pick(self, endpoint, authn_context):
+    def pick(self, endpoint, req_authn_context):
         """
         Given which endpoint the request came in over and what
         authentication context is defined find out where to send the user next.
@@ -46,3 +49,23 @@ class Authn(object):
         :param authn_context: An AuthnContext instance
         :return: An URL
         """
+
+        try:
+            _endpspec = self.db[endpoint]
+        except KeyError:
+            self.db[endpoint] = {}
+            _endpspec = self.db[endpoint]
+
+        if req_authn_context.authn_context_class_ref:
+            return _endpspec[req_authn_context.authn_context_class_ref.text]
+        elif req_authn_context.authn_context_decl:
+            key = req_authn_context.authn_context_decl.c_namespace
+            for spec, target in _endpspec[key]:
+                if self.match(req_authn_context, spec):
+                    return target
+
+    def match(self, requested, provided):
+        if requested == provided:
+            return True
+        else:
+            return False

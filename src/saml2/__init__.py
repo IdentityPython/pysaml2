@@ -670,12 +670,20 @@ class SamlBase(ExtensionContainer):
             
         return self
     
+    def clear_text(self):
+        if self.text:
+            _text = self.text.strip()
+            if _text == "":
+                self.text = None
+
     def __eq__(self, other):
         try:
             assert isinstance(other, SamlBase)
         except AssertionError:
             return False
 
+        self.clear_text()
+        other.clear_text()
         if len(self.keyswv()) != len(other.keyswv()):
             return False
 
