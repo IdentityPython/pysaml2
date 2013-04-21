@@ -1,0 +1,48 @@
+__author__ = 'rolandh'
+
+INTERNETPROTOCOLPASSWORD = \
+    'urn:oasis:names:tc:SAML:2.0:ac:classes:InternetProtocolPassword'
+MOBILETWOFACTORCONTRACT = \
+    'urn:oasis:names:tc:SAML:2.0:ac:classes:MobileTwoFactorContract'
+PASSWORDPROTECTEDTRANSPORT = \
+    'urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport'
+PASSWORD = 'urn:oasis:names:tc:SAML:2.0:ac:classes:Password'
+TLSCLIENT = 'urn:oasis:names:tc:SAML:2.0:ac:classes:TLSClient'
+
+
+class Authn(object):
+    def __init__(self):
+        self.db = {}
+
+    def add(self, endpoint, spec, target):
+        """
+        Adds a new authentication endpoint.
+
+        :param endpoint: The service endpoint URL
+        :param spec: What the authentication endpoint offers in the form
+            of an AuthnContext
+        :param target: The URL of the authentication service
+        :return:
+        """
+
+        try:
+            _endpspec = self.db[endpoint]
+        except KeyError:
+            self.db[endpoint] = {}
+            _endpspec = self.db[endpoint]
+
+        if spec.authn_context_class_ref:
+            _endpspec[spec.authn_context_class_ref.text] = target
+        elif spec.authn_context_decl:
+            _endpspec[
+                spec.authn_context_decl.c_namespace] = spec.authn_context_decl
+
+    def pick(self, endpoint, authn_context):
+        """
+        Given which endpoint the request came in over and what
+        authentication context is defined find out where to send the user next.
+
+        :param endpoint: The service endpoint URL
+        :param authn_context: An AuthnContext instance
+        :return: An URL
+        """

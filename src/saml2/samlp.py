@@ -60,6 +60,7 @@ class ExtensionsType_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def extensions_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(ExtensionsType_, xml_string)
 
