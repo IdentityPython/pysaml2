@@ -1,3 +1,7 @@
+from saml2.saml import AuthnContext
+from saml2.saml import authn_context_from_string
+from saml2.saml import AuthnContextClassRef
+
 __author__ = 'rolandh'
 
 ex1 = """<AuthenticationContextDeclaration
@@ -11,16 +15,22 @@ ex1 = """<AuthenticationContextDeclaration
   </AuthnMethod>
 </AuthenticationContextDeclaration>"""
 
-from saml2.authn_context import pword
+from saml2.authn_context import pword, PASSWORDPROTECTEDTRANSPORT
+from saml2.authn_context import Authn
+from saml2.authn_context import authn_context_decl_from_extension_elements
 from saml2.authn_context import authn_context_factory
 
-def test_passwd():
-    length = pword.Length(min="4")
-    restricted_password = pword.RestrictedPassword(length=length)
-    authenticator = pword.Authenticator(restricted_password=restricted_password)
-    authn_method = pword.AuthnMethod(authenticator=authenticator)
-    inst = pword.AuthenticationContextDeclaration(authn_method=authn_method)
+length = pword.Length(min="4")
+restricted_password = pword.RestrictedPassword(length=length)
+authenticator = pword.Authenticator(restricted_password=restricted_password)
+authn_method = pword.AuthnMethod(authenticator=authenticator)
+ACD = pword.AuthenticationContextDeclaration(authn_method=authn_method)
 
+AUTHNCTXT = AuthnContext(authn_context_decl=ACD)
+
+
+def test_passwd():
+    inst = ACD
     inst2 = pword.authentication_context_declaration_from_string(ex1)
 
     assert inst == inst2
@@ -32,5 +42,38 @@ def test_factory():
 
     assert inst_pw == inst
 
+
+def test_authn_decl_in_authn_context():
+    authnctxt = AuthnContext(authn_context_decl=ACD)
+
+    acs = authn_context_from_string("%s" % authnctxt)
+    if acs.extension_elements:
+        cacd = authn_context_decl_from_extension_elements(
+            acs.extension_elements)
+        if cacd:
+            acs.authn_context_decl = cacd
+
+    assert acs.authn_context_decl == ACD
+
+
+def test_authn_1():
+    accr = AuthnContextClassRef(text=PASSWORDPROTECTEDTRANSPORT)
+    ac = AuthnContext(authn_context_class_ref=accr)
+    authn = Authn()
+    target = "https://example.org/login"
+    endpoint = "https://example.com/sso/redirect"
+    authn.add(endpoint, ac, target)
+
+    assert target == authn.pick(endpoint, ac)
+
+
+def test_authn_2():
+    authn = Authn()
+    target = "https://example.org/login"
+    endpoint = "https://example.com/sso/redirect"
+    authn.add(endpoint, AUTHNCTXT, target)
+
+    assert target == authn.pick(endpoint, AUTHNCTXT)
+
 if __name__ == "__main__":
-    test_factory()
+    test_authn_2()

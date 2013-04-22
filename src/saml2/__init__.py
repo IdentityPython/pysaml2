@@ -787,7 +787,7 @@ def extension_element_to_element(extension_element, translation_functions,
     element it is. Or rather which module it belongs to.
     
     :param extension_element: The extension element
-    :prama translation_functions: A dictionary which klass identifiers
+    :param translation_functions: A dictionary with class identifiers
         as keys and string-to-element translations functions as values
     :param namespace: The namespace of the translation functions.
     :return: An element instance or None

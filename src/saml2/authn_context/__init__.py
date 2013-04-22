@@ -1,5 +1,7 @@
 __author__ = 'rolandh'
 
+from saml2 import extension_elements_to_elements
+
 INTERNETPROTOCOLPASSWORD = \
     'urn:oasis:names:tc:SAML:2.0:ac:classes:InternetProtocolPassword'
 MOBILETWOFACTORCONTRACT = \
@@ -52,7 +54,8 @@ class Authn(object):
         authentication context is defined find out where to send the user next.
 
         :param endpoint: The service endpoint URL
-        :param authn_context: An AuthnContext instance
+        :param req_authn_context: The requested context as an AuthnContext
+            instance
         :return: An URL
         """
 
@@ -66,8 +69,8 @@ class Authn(object):
             return _endpspec[req_authn_context.authn_context_class_ref.text]
         elif req_authn_context.authn_context_decl:
             key = req_authn_context.authn_context_decl.c_namespace
-            for spec, target in _endpspec[key]:
-                if self.match(req_authn_context, spec):
+            for acd, target in _endpspec[key]:
+                if self.match(req_authn_context.authn_context_decl, acd):
                     return target
 
     def match(self, requested, provided):
@@ -85,3 +88,11 @@ def authn_context_factory(text):
             return inst
 
     return None
+
+def authn_context_decl_from_extension_elements(extelems):
+    res = extension_elements_to_elements(extelems, [ippword, mobiletwofactor,
+                                                    ppt, pword, sslcert])
+    try:
+        return res[0]
+    except IndexError:
+        return None
