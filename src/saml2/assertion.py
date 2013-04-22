@@ -454,14 +454,37 @@ class Assertion(dict):
     def __init__(self, dic=None):
         dict.__init__(self, dic)
     
-    def _authn_context_decl_ref(self, authn_class):
-        # authn_class: saml.AUTHN_PASSWORD
-        return factory(saml.AuthnContext, 
-                       authn_context_decl_ref=factory(
-                           saml.AuthnContextDeclRef, text=authn_class))
+    def _authn_context_decl(self, decl, authn_auth=None):
+        """
+        Construct the authn context with a authn context declaration
+        :param decl: The authn context declaration
+        :param authn_auth: Authenticating Authority
+        :return: An AuthnContext instance
+        """
+        return factory(saml.AuthnContext,
+                       authn_context_decl=decl,
+                       authenticating_authority=factory(
+                           saml.AuthenticatingAuthority, text=authn_auth))
+
+    def _authn_context_decl_ref(self, decl_ref, authn_auth=None):
+        """
+        Construct the authn context with a authn context declaration reference
+        :param decl_ref: The authn context declaration reference
+        :param authn_auth: Authenticating Authority
+        :return: An AuthnContext instance
+        """
+        return factory(saml.AuthnContext,
+                       authn_context_decl_ref=decl_ref,
+                       authenticating_authority=factory(
+                           saml.AuthenticatingAuthority, text=authn_auth))
 
     def _authn_context_class_ref(self, authn_class, authn_auth=None):
-        # authn_class: saml.AUTHN_PASSWORD
+        """
+        Construct the authn context with a authn context class reference
+        :param authn_class: The authn context class reference
+        :param authn_auth: Authenticating Authority
+        :return: An AuthnContext instance
+        """
         cntx_class = factory(saml.AuthnContextClassRef, text=authn_class)
         if authn_auth:
             return factory(saml.AuthnContext, 
@@ -473,7 +496,15 @@ class Assertion(dict):
                            authn_context_class_ref=cntx_class)
         
     def _authn_statement(self, authn_class=None, authn_auth=None,
-                         authn_decl=None):
+                         authn_decl=None, authn_decl_ref=None):
+        """
+        Construct the AuthnStatement
+        :param authn_class: Authentication Context Class reference
+        :param authn_auth: Authenticating Authority
+        :param authn_decl: Authentication Context Declaration
+        :param authn_decl_ref: Authentication Context Declaration reference
+        :return: An AuthnContext instance
+        """
         if authn_class:
             return factory(
                 saml.AuthnStatement,
@@ -486,7 +517,14 @@ class Assertion(dict):
                 saml.AuthnStatement,
                 authn_instant=instant(),
                 session_index=sid(),
-                authn_context=self._authn_context_decl_ref(authn_decl))
+                authn_context=self._authn_context_decl(authn_decl, authn_auth))
+        elif authn_decl_ref:
+            return factory(
+                saml.AuthnStatement,
+                authn_instant=instant(),
+                session_index=sid(),
+                authn_context=self._authn_context_decl_ref(authn_decl_ref,
+                                                           authn_auth))
         else:
             return factory(
                 saml.AuthnStatement,
@@ -496,7 +534,7 @@ class Assertion(dict):
     def construct(self, sp_entity_id, in_response_to, consumer_url,
                   name_id, attrconvs, policy, issuer, authn_class=None,
                   authn_auth=None, authn_decl=None, encrypt=None,
-                  sec_context=None):
+                  sec_context=None, authn_decl_ref=None):
         """ Construct the Assertion 
         
         :param sp_entity_id: The entityid of the SP
@@ -509,9 +547,10 @@ class Assertion(dict):
         :param issuer: Who is issuing the statement
         :param authn_class: The authentication class
         :param authn_auth: The authentication instance
-        :param authn_decl:
+        :param authn_decl: An Authentication Context declaration
         :param encrypt: Whether to encrypt parts or all of the Assertion
         :param sec_context: The security context used when encrypting
+        :param authn_decl_ref: An Authentication Context declaration reference
         :return: An Assertion instance
         """
 
@@ -536,9 +575,9 @@ class Assertion(dict):
         # start using now and for some time
         conds = policy.conditions(sp_entity_id)
 
-        if authn_auth or authn_class or authn_decl:
+        if authn_auth or authn_class or authn_decl or authn_decl_ref:
             _authn_statement = self._authn_statement(authn_class, authn_auth,
-                                                     authn_decl)
+                                                     authn_decl, authn_decl_ref)
         else:
             _authn_statement = None
 
