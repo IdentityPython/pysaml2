@@ -3,10 +3,11 @@
 
 import base64
 import urllib
+import urlparse
 from saml2.response import LogoutResponse
 
 from saml2.client import Saml2Client
-from saml2 import samlp, BINDING_HTTP_POST
+from saml2 import samlp, BINDING_HTTP_POST, BINDING_HTTP_REDIRECT
 from saml2 import saml, config, class_name
 from saml2.config import SPConfig
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
@@ -334,13 +335,22 @@ class TestClientWithDummy():
         self.client.send = self.server.receive
 
     def test_do_authn(self):
+        binding = BINDING_HTTP_REDIRECT
+        response_binding = BINDING_HTTP_POST
         sid, http_args = self.client.prepare_for_authenticate(
-            IDP, "http://www.example.com/relay_state")
+            IDP, "http://www.example.com/relay_state",
+            binding=binding, response_binding=response_binding)
 
         assert isinstance(sid, basestring)
         assert len(http_args) == 4
         assert http_args["headers"][0][0] == "Location"
         assert http_args["data"] == []
+        redirect_url = http_args["headers"][0][1]
+        _, _, _, _, qs, _ = urlparse.urlparse(redirect_url)
+        qs_dict = urlparse.parse_qs(qs)
+        req = self.server.parse_authn_request(qs_dict["SAMLRequest"][0], binding)
+        resp_args = self.server.response_args(req.message, [response_binding])
+        assert resp_args["binding"] == response_binding
 
     def test_do_attribute_query(self):
         response = self.client.do_attribute_query(
@@ -374,15 +384,21 @@ class TestClientWithDummy():
         assert isinstance(response, LogoutResponse)
 
     def test_post_sso(self):
+        binding=BINDING_HTTP_POST
+        response_binding=BINDING_HTTP_POST
         sid, http_args = self.client.prepare_for_authenticate(
             "urn:mace:example.com:saml:roland:idp", relay_state="really",
-            binding=BINDING_HTTP_POST)
+            binding=binding, response_binding=response_binding)
+        _dic = unpack_form(http_args["data"][3])
+
+        req = self.server.parse_authn_request(_dic["SAMLRequest"], binding)
+        resp_args = self.server.response_args(req.message, [response_binding])
+        assert resp_args["binding"] == response_binding
 
         # Normally a response would now be sent back to the users web client
         # Here I fake what the client will do
         # create the form post
 
-        _dic = unpack_form(http_args["data"][3])
         http_args["data"] = urllib.urlencode(_dic)
         http_args["method"] = "POST"
         http_args["dummy"] = _dic["SAMLRequest"]

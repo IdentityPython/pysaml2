@@ -60,7 +60,8 @@ class Saml2Client(Base):
                                  binding=saml2.BINDING_HTTP_REDIRECT, vorg="",
                                  nameid_format=NAMEID_FORMAT_PERSISTENT,
                                  scoping=None, consent=None, extensions=None,
-                                 sign=None):
+                                 sign=None,
+                                 response_binding=saml2.BINDING_HTTP_POST):
         """ Makes all necessary preparations for an authentication request.
 
         :param entityid: The entity ID of the IdP to send the request to
@@ -72,14 +73,15 @@ class Saml2Client(Base):
         :param consent: Whether the principal have given her consent
         :param extensions: Possible extensions
         :param sign: Whether the request should be signed or not.
+        :param response_binding: Which binding to use for receiving the response
         :return: session id and AuthnRequest info
         """
 
         destination = self._sso_location(entityid, binding)
 
-        req = self.create_authn_request(destination, vorg, scoping, binding,
-                                        nameid_format, consent, extensions,
-                                        sign)
+        req = self.create_authn_request(destination, vorg, scoping,
+                                        response_binding, nameid_format,
+                                        consent, extensions, sign)
         _req_str = "%s" % req
 
         logger.info("AuthNReq: %s" % _req_str)
