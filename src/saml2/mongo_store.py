@@ -3,7 +3,7 @@ import logging
 
 from pymongo import MongoClient
 from saml2.eptid import Eptid
-from saml2.mdstore import MetaData, attribute_requirement
+from saml2.mdstore import MetaData
 from saml2.s_utils import PolicyError
 
 from saml2.ident import code, IdentDB, Unknown
