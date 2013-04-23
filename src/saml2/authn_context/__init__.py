@@ -11,6 +11,11 @@ PASSWORDPROTECTEDTRANSPORT = \
 PASSWORD = 'urn:oasis:names:tc:SAML:2.0:ac:classes:Password'
 TLSCLIENT = 'urn:oasis:names:tc:SAML:2.0:ac:classes:TLSClient'
 
+AL1 = "http://idmanagement.gov/icam/2009/12/saml_2.0_profile/assurancelevel1"
+AL2 = "http://idmanagement.gov/icam/2009/12/saml_2.0_profile/assurancelevel2"
+AL3 = "http://idmanagement.gov/icam/2009/12/saml_2.0_profile/assurancelevel3"
+AL4 = "http://idmanagement.gov/icam/2009/12/saml_2.0_profile/assurancelevel4"
+
 from saml2.authn_context import ippword
 from saml2.authn_context import mobiletwofactor
 from saml2.authn_context import ppt
@@ -22,28 +27,43 @@ class AuthnBroker(object):
     def __init__(self):
         self.db = {}
 
-    def add(self, spec, target):
+    def add(self, spec, method, level=0, authn_authority=""):
         """
         Adds a new authentication method.
+        Assumes not more than one authentication method per AuthnContext
+        specification.
 
         :param spec: What the authentication endpoint offers in the form
             of an AuthnContext
-        :param target: The URL of the authentication service
+        :param method: A identifier of the authentication method.
+        :param level: security level, positive integers, 0 is lowest
         :return:
         """
 
         if spec.authn_context_class_ref:
-            self.db[spec.authn_context_class_ref.text] = target
+            _ref = spec.authn_context_class_ref.text
+            self.db[_ref] = {
+                "method": method,
+                "level": level,
+                "authn_auth": authn_authority
+            }
         elif spec.authn_context_decl:
             key = spec.authn_context_decl.c_namespace
+            _info = {
+                "method": method,
+                "decl": spec.authn_context_decl,
+                "level": level,
+                "authn_auth": authn_authority
+            }
             try:
-                self.db[key].append((spec.authn_context_decl, target))
+                self.db[key].append(_info)
             except KeyError:
-                self.db[key] = [(spec.authn_context_decl, target)]
+                self.db[key] = [_info]
 
     def pick(self, req_authn_context):
         """
-        Given the authentication context find out where to send the user next.
+        Given the authentication context find zero or more places where
+        the user could be sent next. Ordered according to security level.
 
         :param req_authn_context: The requested context as an AuthnContext
             instance
@@ -51,12 +71,29 @@ class AuthnBroker(object):
         """
 
         if req_authn_context.authn_context_class_ref:
-            return self.db[req_authn_context.authn_context_class_ref.text]
+            _ref = req_authn_context.authn_context_class_ref.text
+            try:
+                _info = self.db[_ref]
+            except KeyError:
+                return []
+            else:
+                _level = _info["level"]
+                res = []
+                for key, _dic in self.db.items():
+                    if key == _ref:
+                        continue
+                    elif _dic["level"] >= _level:
+                        res.append(_dic["method"])
+                res.insert(0, _info["method"])
+                return res
         elif req_authn_context.authn_context_decl:
             key = req_authn_context.authn_context_decl.c_namespace
-            for acd, target in self.db[key]:
-                if self.match(req_authn_context.authn_context_decl, acd):
-                    return target
+            _methods = []
+            for _dic in self.db[key]:
+                if self.match(req_authn_context.authn_context_decl,
+                              _dic["decl"]):
+                    _methods.append(_dic["method"])
+            return _methods
 
     def match(self, requested, provided):
         if requested == provided:
@@ -73,6 +110,7 @@ def authn_context_factory(text):
             return inst
 
     return None
+
 
 def authn_context_decl_from_extension_elements(extelems):
     res = extension_elements_to_elements(extelems, [ippword, mobiletwofactor,

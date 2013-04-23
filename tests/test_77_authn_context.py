@@ -15,7 +15,12 @@ ex1 = """<AuthenticationContextDeclaration
 from saml2.saml import AuthnContext
 from saml2.saml import authn_context_from_string
 from saml2.saml import AuthnContextClassRef
-from saml2.authn_context import pword, PASSWORDPROTECTEDTRANSPORT
+from saml2.authn_context import pword
+from saml2.authn_context import PASSWORDPROTECTEDTRANSPORT
+from saml2.authn_context import AL1
+from saml2.authn_context import AL2
+from saml2.authn_context import AL3
+from saml2.authn_context import AL4
 from saml2.authn_context import AuthnBroker
 from saml2.authn_context import authn_context_decl_from_extension_elements
 from saml2.authn_context import authn_context_factory
@@ -61,18 +66,64 @@ def test_authn_1():
     ac = AuthnContext(authn_context_class_ref=accr)
     authn = AuthnBroker()
     target = "https://example.org/login"
-    authn.add(ac, target)
+    authn.add(ac, target,)
 
-    assert target == authn.pick(ac)
+    methods = authn.pick(ac)
+    assert len(methods) == 1
+    assert target == methods[0]
 
 
 def test_authn_2():
     authn = AuthnBroker()
     target = "https://example.org/login"
-    endpoint = "https://example.com/sso/redirect"
     authn.add(AUTHNCTXT, target)
 
-    assert target == authn.pick(AUTHNCTXT)
+    method = authn.pick(AUTHNCTXT)
+    assert len(method) == 1
+    assert target == method[0]
+
+
+REF2METHOD = {
+    AL1: "https://example.com/authn/pin",
+    AL2: "https://example.com/authn/passwd",
+    AL3: "https://example.com/authn/multifact",
+    AL4: "https://example.com/authn/cert"
+}
+
+
+def test_authn_3():
+    authn = AuthnBroker()
+    level = 0
+    for ref in [AL1, AL2, AL3, AL4]:
+        level += 4
+        ac = AuthnContext(
+            authn_context_class_ref=AuthnContextClassRef(text=ref))
+
+        authn.add(ac, REF2METHOD[ref], level)
+
+    ac = AuthnContext(authn_context_class_ref=AuthnContextClassRef(text=AL1))
+
+    method = authn.pick(ac)
+    assert len(method) == 4
+    assert REF2METHOD[AL1] == method[0]
+
+    ac = AuthnContext(authn_context_class_ref=AuthnContextClassRef(text=AL2))
+
+    method = authn.pick(ac)
+    assert len(method) == 3
+    assert REF2METHOD[AL2] == method[0]
+
+    ac = AuthnContext(authn_context_class_ref=AuthnContextClassRef(text=AL3))
+
+    method = authn.pick(ac)
+    assert len(method) == 2
+    assert REF2METHOD[AL3] == method[0]
+
+    ac = AuthnContext(authn_context_class_ref=AuthnContextClassRef(text=AL4))
+
+    method = authn.pick(ac)
+    assert len(method) == 1
+    assert REF2METHOD[AL4] == method[0]
 
 if __name__ == "__main__":
-    test_authn_2()
+    test_authn_3()
