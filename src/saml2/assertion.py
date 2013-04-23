@@ -447,6 +447,24 @@ class Policy(object):
                            audience=factory(saml.Audience,
                                             text=sp_entity_id))])
 
+NAME = ["givenName", "surname", "initials", "displayName", "schacSn1",
+        "schacSn2"]
+STATIC_ORG_INFO = ["organizationName", ""]
+
+RESEARCH_AND_EDUCATION = "http://www.swamid.se/category/research-and-education"
+SFS_1993_1153 = "http://www.swamid.se/category/sfs-1993-1153"
+
+# EC_RELEASE = {
+#     "eduPersonPrincipalName", "eduPersonTargetedID", "mail", "email",
+#         "eduPersonScopedAffiliation"
+#     ]),
+#     "http://www.swamid.se/category/sfs-1993-1153": ["norEduPersonNIN"]
+# }
+
+
+class EntityCategories(object):
+    pass
+
 
 class Assertion(dict):
     """ Handles assertions about subjects """

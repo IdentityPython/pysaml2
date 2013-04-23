@@ -18,58 +18,43 @@ from saml2.authn_context import pword
 from saml2.authn_context import sslcert
 
 
-class Authn(object):
+class AuthnBroker(object):
     def __init__(self):
         self.db = {}
 
-    def add(self, endpoint, spec, target):
+    def add(self, spec, target):
         """
-        Adds a new authentication endpoint.
+        Adds a new authentication method.
 
-        :param endpoint: The service endpoint URL
         :param spec: What the authentication endpoint offers in the form
             of an AuthnContext
         :param target: The URL of the authentication service
         :return:
         """
 
-        try:
-            _endpspec = self.db[endpoint]
-        except KeyError:
-            self.db[endpoint] = {}
-            _endpspec = self.db[endpoint]
-
         if spec.authn_context_class_ref:
-            _endpspec[spec.authn_context_class_ref.text] = target
+            self.db[spec.authn_context_class_ref.text] = target
         elif spec.authn_context_decl:
             key = spec.authn_context_decl.c_namespace
             try:
-                _endpspec[key].append((spec.authn_context_decl, target))
+                self.db[key].append((spec.authn_context_decl, target))
             except KeyError:
-                _endpspec[key] = [(spec.authn_context_decl, target)]
+                self.db[key] = [(spec.authn_context_decl, target)]
 
-    def pick(self, endpoint, req_authn_context):
+    def pick(self, req_authn_context):
         """
-        Given which endpoint the request came in over and what
-        authentication context is defined find out where to send the user next.
+        Given the authentication context find out where to send the user next.
 
-        :param endpoint: The service endpoint URL
         :param req_authn_context: The requested context as an AuthnContext
             instance
         :return: An URL
         """
 
-        try:
-            _endpspec = self.db[endpoint]
-        except KeyError:
-            self.db[endpoint] = {}
-            _endpspec = self.db[endpoint]
-
         if req_authn_context.authn_context_class_ref:
-            return _endpspec[req_authn_context.authn_context_class_ref.text]
+            return self.db[req_authn_context.authn_context_class_ref.text]
         elif req_authn_context.authn_context_decl:
             key = req_authn_context.authn_context_decl.c_namespace
-            for acd, target in _endpspec[key]:
+            for acd, target in self.db[key]:
                 if self.match(req_authn_context.authn_context_decl, acd):
                     return target
 

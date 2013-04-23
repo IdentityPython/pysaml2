@@ -1,6 +1,3 @@
-from saml2.saml import AuthnContext
-from saml2.saml import authn_context_from_string
-from saml2.saml import AuthnContextClassRef
 
 __author__ = 'rolandh'
 
@@ -15,8 +12,11 @@ ex1 = """<AuthenticationContextDeclaration
   </AuthnMethod>
 </AuthenticationContextDeclaration>"""
 
+from saml2.saml import AuthnContext
+from saml2.saml import authn_context_from_string
+from saml2.saml import AuthnContextClassRef
 from saml2.authn_context import pword, PASSWORDPROTECTEDTRANSPORT
-from saml2.authn_context import Authn
+from saml2.authn_context import AuthnBroker
 from saml2.authn_context import authn_context_decl_from_extension_elements
 from saml2.authn_context import authn_context_factory
 
@@ -59,21 +59,20 @@ def test_authn_decl_in_authn_context():
 def test_authn_1():
     accr = AuthnContextClassRef(text=PASSWORDPROTECTEDTRANSPORT)
     ac = AuthnContext(authn_context_class_ref=accr)
-    authn = Authn()
+    authn = AuthnBroker()
     target = "https://example.org/login"
-    endpoint = "https://example.com/sso/redirect"
-    authn.add(endpoint, ac, target)
+    authn.add(ac, target)
 
-    assert target == authn.pick(endpoint, ac)
+    assert target == authn.pick(ac)
 
 
 def test_authn_2():
-    authn = Authn()
+    authn = AuthnBroker()
     target = "https://example.org/login"
     endpoint = "https://example.com/sso/redirect"
-    authn.add(endpoint, AUTHNCTXT, target)
+    authn.add(AUTHNCTXT, target)
 
-    assert target == authn.pick(endpoint, AUTHNCTXT)
+    assert target == authn.pick(AUTHNCTXT)
 
 if __name__ == "__main__":
     test_authn_2()
