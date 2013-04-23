@@ -327,9 +327,12 @@ class StatusResponse(object):
                         status.status_code.status_code.value]
                 else:
                     excep = StatusError
+                if status.status_message:
+                    msg = status.status_message.text
+                else:
+                    msg = "Unknown error"
                 raise excep(
-                    "%s from %s" % (status.status_message.text,
-                                    status.status_code.value,))
+                    "%s from %s" % (msg, status.status_code.value,))
         return True
 
     def issue_instant_ok(self):
