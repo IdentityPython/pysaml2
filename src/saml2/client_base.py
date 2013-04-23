@@ -42,7 +42,7 @@ except ImportError:
     # Compatibility with Python <= 2.5
     from cgi import parse_qs
 
-from saml2.s_utils import signature
+from saml2.s_utils import signature, UnravelError
 from saml2.s_utils import do_attributes
 
 from saml2 import samlp, BINDING_SOAP
@@ -496,7 +496,7 @@ class Base(Entity):
         :param outstanding: A dictionary with session IDs as keys and
             the original web request from the user before redirection
             as values.
-        :return: An response.AuthnResponse
+        :return: An response.AuthnResponse or None
         """
 
         try:
@@ -518,6 +518,8 @@ class Base(Entity):
             except StatusError, err:
                 logger.error("SAML status error: %s" % err)
                 raise
+            except UnravelError:
+                return None
             except Exception, exc:
                 logger.error("%s" % exc)
                 raise

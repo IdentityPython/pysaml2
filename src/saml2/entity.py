@@ -23,6 +23,7 @@ from saml2.saml import NAMEID_FORMAT_ENTITY
 from saml2.response import LogoutResponse
 from saml2.time_util import instant
 from saml2.s_utils import sid
+from saml2.s_utils import UnravelError
 from saml2.s_utils import error_status_factory
 from saml2.s_utils import rndstr
 from saml2.s_utils import success_status_factory
@@ -287,17 +288,22 @@ class Entity(HTTPBase):
 
     def unravel(self, txt, binding, msgtype="response"):
         #logger.debug("unravel '%s'" % txt)
-        if binding == BINDING_HTTP_REDIRECT:
-            xmlstr = decode_base64_and_inflate(txt)
-        elif binding == BINDING_HTTP_POST:
-            xmlstr = base64.b64decode(txt)
-        elif binding == BINDING_SOAP:
-            func = getattr(soap, "parse_soap_enveloped_saml_%s" % msgtype)
-            xmlstr = func(txt)
-        elif binding == BINDING_URI or binding is None:
-            xmlstr = txt
-        else:
+        if binding not in [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST,
+                           BINDING_SOAP, BINDING_URI, None]:
             raise ValueError("Don't know how to handle '%s'" % binding)
+        else:
+            try:
+                if binding == BINDING_HTTP_REDIRECT:
+                    xmlstr = decode_base64_and_inflate(txt)
+                elif binding == BINDING_HTTP_POST:
+                    xmlstr = base64.b64decode(txt)
+                elif binding == BINDING_SOAP:
+                    func = getattr(soap, "parse_soap_enveloped_saml_%s" % msgtype)
+                    xmlstr = func(txt)
+                else:
+                    xmlstr = txt
+            except Exception:
+                raise UnravelError()
 
         return xmlstr
 
@@ -780,6 +786,8 @@ class Entity(HTTPBase):
                 raise
 
             xmlstr = self.unravel(xmlstr, binding, response_cls.msgtype)
+            if not xmlstr:  # Not a valid reponse
+                return None
 
             logger.debug("XMLSTR: %s" % xmlstr)
 

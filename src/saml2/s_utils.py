@@ -76,6 +76,10 @@ class BadRequest(Exception):
     pass
 
 
+class UnravelError(Exception):
+    pass
+
+
 EXCEPTION2STATUS = {
     VersionMismatch: samlp.STATUS_VERSION_MISMATCH,
     UnknownPrincipal: samlp.STATUS_UNKNOWN_PRINCIPAL,
