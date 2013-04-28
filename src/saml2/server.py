@@ -229,8 +229,7 @@ class Server(Entity):
 
     def _authn_response(self, in_response_to, consumer_url,
                         sp_entity_id, identity=None, name_id=None,
-                        status=None, authn=None,
-                        authn_decl=None, issuer=None, policy=None,
+                        status=None, authn=None, issuer=None, policy=None,
                         sign_assertion=False, sign_response=False):
         """ Create a response. A layer of indirection.
         
@@ -241,9 +240,8 @@ class Server(Entity):
             expected to be the bases for the assertion in the response.
         :param name_id: The identifier of the subject
         :param status: The status of the response
-        :param authn: A 2-tuple denoting the authn class and the authn
-            authority.
-        :param authn_decl:
+        :param authn: A dictionary containing information about the
+            authn context.
         :param issuer: The issuer of the response
         :param sign_assertion: Whether the assertion should be signed or not
         :param sign_response: Whether the response should be signed or not
@@ -263,20 +261,21 @@ class Server(Entity):
                 return self.create_error_response(in_response_to, consumer_url,
                                                   exc, sign_response)
 
-            if authn:  # expected to be a 2-tuple class+authority
-                (authn_class, authn_authn) = authn
-                assertion = ast.construct(sp_entity_id, in_response_to,
-                                          consumer_url, name_id,
-                                          self.config.attribute_converters,
-                                          policy, issuer=_issuer,
-                                          authn_class=authn_class,
-                                          authn_auth=authn_authn)
-            elif authn_decl:
-                assertion = ast.construct(sp_entity_id, in_response_to,
-                                          consumer_url, name_id,
-                                          self.config.attribute_converters,
-                                          policy, issuer=_issuer,
-                                          authn_decl=authn_decl)
+            if authn:  # expected to be a dictionary
+                if "decl" in authn:
+                    assertion = ast.construct(sp_entity_id, in_response_to,
+                                              consumer_url, name_id,
+                                              self.config.attribute_converters,
+                                              policy, issuer=_issuer,
+                                              authn_decl=authn["decl"],
+                                              authn_auth=authn["authn_auth"])
+                else:
+                    assertion = ast.construct(sp_entity_id, in_response_to,
+                                              consumer_url, name_id,
+                                              self.config.attribute_converters,
+                                              policy, issuer=_issuer,
+                                              authn_class=authn["class_ref"],
+                                              authn_auth=authn["authn_auth"])
             else:
                 assertion = ast.construct(sp_entity_id, in_response_to,
                                           consumer_url, name_id,
@@ -373,9 +372,9 @@ class Server(Entity):
 
     def create_authn_response(self, identity, in_response_to, destination,
                               sp_entity_id, name_id_policy=None, userid=None,
-                              name_id=None, authn=None, authn_decl=None,
-                              issuer=None, sign_response=False,
-                              sign_assertion=False, **kwargs):
+                              name_id=None, authn=None, issuer=None,
+                              sign_response=False, sign_assertion=False,
+                              **kwargs):
         """ Constructs an AuthenticationResponse
 
         :param identity: Information about an user
@@ -385,8 +384,7 @@ class Server(Entity):
         :param sp_entity_id: The entity identifier of the Service Provider
         :param name_id_policy: How the NameID should be constructed
         :param userid: The subject identifier
-        :param authn: Information about the authentication
-        :param authn_decl:
+        :param authn: Information about the authentication context
         :param issuer: Issuer of the response
         :param sign_assertion: Whether the assertion should be signed or not.
         :param sign_response: Whether the response should be signed or not.
@@ -431,7 +429,6 @@ class Server(Entity):
                                         identity,       # identity as dictionary
                                         name_id,
                                         authn=authn,
-                                        authn_decl=authn_decl,
                                         issuer=issuer,
                                         policy=policy,
                                         sign_assertion=sign_assertion,
