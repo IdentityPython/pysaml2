@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 import base64
 from urlparse import parse_qs
-from saml2.saml import AUTHN_PASSWORD, NameID, NAMEID_FORMAT_TRANSIENT
+from saml2.authn_context import INTERNETPROTOCOLPASSWORD
+from saml2.saml import NameID, NAMEID_FORMAT_TRANSIENT
 from saml2.samlp import response_from_string
 
 from saml2.server import Server
@@ -20,6 +21,11 @@ from py.test import raises
 
 nid = NameID(name_qualifier="foo", format=NAMEID_FORMAT_TRANSIENT,
              text="123456")
+
+AUTHN = {
+    "class_ref": INTERNETPROTOCOLPASSWORD,
+    "authn_auth": "http://www.example.com/login"
+}
 
 
 def _eq(l1, l2):
@@ -192,7 +198,7 @@ class TestServer1():
             "http://localhost:8087/",       # destination
             "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
             name_id=name_id,
-            authn=(AUTHN_PASSWORD, "http://www.example.com/login")
+            authn=AUTHN
         )
 
         print resp.keyswv()
@@ -239,7 +245,7 @@ class TestServer1():
             "http://localhost:8087/",           # consumer_url
             "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
             userid="USER1",
-            authn=(AUTHN_PASSWORD, "http://www.example.com/login")
+            authn=AUTHN
         )
 
         print resp.keyswv()
@@ -287,8 +293,7 @@ class TestServer1():
         resp_str = "%s" % self.server.create_authn_response(
             ava, "id1", "http://local:8087/",
             "urn:mace:example.com:saml:roland:sp", npolicy,
-            "foba0001@example.com", authn=(AUTHN_PASSWORD,
-                                           "http://www.example.com/login"))
+            "foba0001@example.com", authn=AUTHN)
 
         response = samlp.response_from_string(resp_str)
         print response.keyswv()

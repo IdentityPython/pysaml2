@@ -4,6 +4,7 @@
 import base64
 import urllib
 import urlparse
+from saml2.authn_context import INTERNETPROTOCOLPASSWORD
 from saml2.response import LogoutResponse
 
 from saml2.client import Saml2Client
@@ -12,13 +13,18 @@ from saml2 import saml, config, class_name
 from saml2.config import SPConfig
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
-from saml2.saml import AUTHN_PASSWORD
 from saml2.saml import NameID
 from saml2.server import Server
 from saml2.time_util import in_a_while
 
 from py.test import raises
 from fakeIDP import FakeIDP, unpack_form
+
+
+AUTHN = {
+    "class_ref": INTERNETPROTOCOLPASSWORD,
+    "authn_auth": "http://www.example.com/login"
+}
 
 
 def for_me(condition, me ):
@@ -59,7 +65,6 @@ REQ1 = { "1.2.14": """<?xml version='1.0' encoding='UTF-8'?>
     "1.2.16":"""<?xml version='1.0' encoding='UTF-8'?>
 <ns0:AttributeQuery xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol" xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion" Destination="https://idp.example.com/idp/" ID="id1" IssueInstant="%s" Version="2.0"><ns1:Issuer Format="urn:oasis:names:tc:SAML:2.0:nameid-format:entity">urn:mace:example.com:saml:roland:sp</ns1:Issuer><ns1:Subject><ns1:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent">E8042FB4-4D5B-48C3-8E14-8EDD852790DD</ns1:NameID></ns1:Subject></ns0:AttributeQuery>"""}
 
-AUTHN = (AUTHN_PASSWORD, "http://www.example.com/login")
 
 nid = NameID(name_qualifier="foo", format=NAMEID_FORMAT_TRANSIENT,
              text="123456")
@@ -223,10 +228,10 @@ class TestClient:
         assert signed_info.reference[0].digest_value
         print "------------------------------------------------"
         try:
-            assert self.client.sec.correctly_signed_authn_request(ar_str,
-                    self.client.config.xmlsec_binary,
-                    self.client.config.metadata)
-        except Exception: # missing certificate
+            assert self.client.sec.correctly_signed_authn_request(
+                ar_str, self.client.config.xmlsec_binary,
+                self.client.config.metadata)
+        except Exception:  # missing certificate
             self.client.sec.verify_signature(ar_str, node_name=class_name(ar))
 
     def test_response(self):
@@ -299,7 +304,8 @@ class TestClient:
         
         # Two persons in the cache
         assert len(self.client.users.subjects()) == 2
-        issuers = [self.client.users.issuers_of_info(s) for s in self.client.users.subjects()]
+        issuers = [self.client.users.issuers_of_info(s) for s in
+                   self.client.users.subjects()]
         # The information I have about the subjects comes from the same source
         print issuers
         assert issuers == [[IDP], [IDP]]
@@ -348,7 +354,8 @@ class TestClientWithDummy():
         redirect_url = http_args["headers"][0][1]
         _, _, _, _, qs, _ = urlparse.urlparse(redirect_url)
         qs_dict = urlparse.parse_qs(qs)
-        req = self.server.parse_authn_request(qs_dict["SAMLRequest"][0], binding)
+        req = self.server.parse_authn_request(qs_dict["SAMLRequest"][0],
+                                              binding)
         resp_args = self.server.response_args(req.message, [response_binding])
         assert resp_args["binding"] == response_binding
 
@@ -384,8 +391,8 @@ class TestClientWithDummy():
         assert isinstance(response, LogoutResponse)
 
     def test_post_sso(self):
-        binding=BINDING_HTTP_POST
-        response_binding=BINDING_HTTP_POST
+        binding = BINDING_HTTP_POST
+        response_binding = BINDING_HTTP_POST
         sid, http_args = self.client.prepare_for_authenticate(
             "urn:mace:example.com:saml:roland:idp", relay_state="really",
             binding=binding, response_binding=response_binding)
@@ -414,7 +421,7 @@ class TestClientWithDummy():
         ac = resp.assertion.authn_statement[0].authn_context
         assert ac.authenticating_authority[0].text == \
             'http://www.example.com/login'
-        assert ac.authn_context_class_ref.text == AUTHN_PASSWORD
+        assert ac.authn_context_class_ref.text == INTERNETPROTOCOLPASSWORD
 
 
 # if __name__ == "__main__":

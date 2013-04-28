@@ -541,8 +541,7 @@ class Server(Entity):
                                           in_response_to, destination,
                                           sp_entity_id, name_id_policy=None,
                                           userid=None, name_id=None, authn=None,
-                                          authn_decl=None, issuer=None,
-                                          sign_response=False,
+                                          issuer=None, sign_response=False,
                                           sign_assertion=False, **kwargs):
 
         # ----------------------------------------
@@ -560,7 +559,7 @@ class Server(Entity):
         response = self.create_authn_response(identity, in_response_to,
                                               destination, sp_entity_id,
                                               name_id_policy, userid, name_id,
-                                              authn, authn_decl, issuer,
+                                              authn, issuer,
                                               sign_response, sign_assertion)
         body = soapenv.Body()
         body.extension_elements = [element_to_extension_element(response)]

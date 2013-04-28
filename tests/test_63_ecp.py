@@ -1,4 +1,4 @@
-from saml2.saml import AUTHN_PASSWORD
+from saml2.authn_context import INTERNETPROTOCOLPASSWORD
 from saml2.httpbase import set_list2dict
 from saml2.profile.ecp import RelayState
 from saml2.profile.paos import Request
@@ -18,6 +18,11 @@ from pathutils import dotname, full_path, xmlsec_path
 
 __author__ = 'rolandh'
 
+
+AUTHN = {
+    "class_ref": INTERNETPROTOCOLPASSWORD,
+    "authn_auth": "http://www.example.com/login"
+}
 
 def _eq(l1, l2):
     if len(l1) == len(l2):
@@ -54,7 +59,7 @@ def test_complete_flow():
 
     assert sp.can_handle_ecp_response(response)
 
-    id, message = sp.create_ecp_authn_request(IDP_ENTITY_ID, relay_state="XYZ")
+    sid, message = sp.create_ecp_authn_request(IDP_ENTITY_ID, relay_state="XYZ")
 
     # ------------ @Client -----------------------------
 
@@ -86,17 +91,15 @@ def test_complete_flow():
                                             [BINDING_PAOS],
                                             entity_id=sp_entity_id)
 
-    resp = idp.create_ecp_authn_request_response(destination,
-                                 {
-                                     "eduPersonEntitlement": "Short stop",
-                                     "surName": "Jeter",
-                                     "givenName": "Derek",
-                                     "mail": "derek.jeter@nyy.mlb.com",
-                                     "title": "The man"
-                                 },
-                                 req.message.id, destination, sp_entity_id,
-                                 name_id=name_id, authn=(AUTHN_PASSWORD,
-                                                         "http://www.example.com/login"))
+    resp = idp.create_ecp_authn_request_response(
+        destination, {"eduPersonEntitlement": "Short stop",
+                      "surName": "Jeter",
+                      "givenName": "Derek",
+                      "mail": "derek.jeter@nyy.mlb.com",
+                      "title": "The man"
+                      },
+        req.message.id, destination, sp_entity_id,
+        name_id=name_id, authn=AUTHN)
 
     # ------------ @Client -----------------------------
     # The client got the response from the IDP repackage and send it to the SP
@@ -134,7 +137,7 @@ def test_complete_flow():
 
     # parse the response
 
-    resp = sp.parse_authn_request_response(respdict["body"], None, {id: "/"})
+    resp = sp.parse_authn_request_response(respdict["body"], None, {sid: "/"})
 
     print resp.response
 

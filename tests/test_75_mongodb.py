@@ -1,11 +1,16 @@
 from saml2 import BINDING_HTTP_POST
-from saml2.mdstore import MetadataStore
-from saml2.saml import AUTHN_PASSWORD
+from saml2.authn_context import INTERNETPROTOCOLPASSWORD
 from saml2.client import Saml2Client
 from saml2.server import Server
 from saml2.mongo_store import EptidMDB
 
 __author__ = 'rolandh'
+
+
+AUTHN = {
+    "class_ref": INTERNETPROTOCOLPASSWORD,
+    "authn_auth": "http://www.example.com/login"
+}
 
 
 def _eq(l1, l2):
@@ -34,8 +39,7 @@ def test_flow():
                                       "mail": "derek.jeter@nyy.mlb.com",
                                       "title": "The man"},
                                       userid="jeter",
-                                      authn=(AUTHN_PASSWORD,
-                                             "http://www.example.com/login"),
+                                      authn=AUTHN,
                                       **rinfo)
 
     # What's stored away is the assertion

@@ -3,17 +3,24 @@ from saml2 import BINDING_SOAP, BINDING_HTTP_POST
 
 __author__ = 'rolandh'
 
-from saml2.samlp import RequestedAuthnContext, AuthnRequest, NameIDPolicy
+from saml2.authn_context import INTERNETPROTOCOLPASSWORD
+from saml2.authn_context import requested_authn_context
+from saml2.samlp import AuthnRequest
+from saml2.samlp import NameIDPolicy
 from saml2.samlp import AuthnQuery
 from saml2.client import Saml2Client
-from saml2.saml import AUTHN_PASSWORD
-from saml2.saml import AuthnContextClassRef
 from saml2.saml import Subject
 from saml2.saml import NameID
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.server import Server
 
 TAG1 = "name=\"SAMLRequest\" value="
+
+
+AUTHN = {
+    "class_ref": INTERNETPROTOCOLPASSWORD,
+    "authn_auth": "http://www.example.com/login"
+}
 
 
 def get_msg(hinfo, binding):
@@ -41,9 +48,7 @@ def test_basic():
     srvs = sp.metadata.authn_query_service(idp.config.entityid)
 
     destination = srvs[0]["location"]
-    authn_context = [RequestedAuthnContext(
-        authn_context_class_ref=AuthnContextClassRef(
-            text=AUTHN_PASSWORD))]
+    authn_context = requested_authn_context(INTERNETPROTOCOLPASSWORD)
 
     subject = Subject(text="abc",
                       name_id=NameID(format=NAMEID_FORMAT_TRANSIENT))
@@ -80,8 +85,7 @@ def test_flow():
                                      destination,
                                      sp.config.entityid,
                                      name_id=name_id,
-                                     authn=(AUTHN_PASSWORD,
-                                            "http://www.example.com/login"))
+                                     authn=AUTHN)
 
     hinfo = idp.apply_binding(binding, "%s" % resp, destination, relay_state)
 
@@ -94,9 +98,7 @@ def test_flow():
     binding, destination = sp.pick_binding("authn_query_service",
                                            entity_id=idp.config.entityid)
 
-    authn_context = [RequestedAuthnContext(
-        authn_context_class_ref=AuthnContextClassRef(
-            text=AUTHN_PASSWORD))]
+    authn_context = requested_authn_context(INTERNETPROTOCOLPASSWORD)
 
     subject = aresp.assertion.subject
 
