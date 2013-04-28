@@ -127,10 +127,14 @@ class AuthnBroker(object):
         else:
             _item = self.db["info"][_refs[0]]
             _level = _item["level"]
-            if _item["method"]:
-                res = [(_item["method"], _refs[0])]
+            if comparision_type != "better":
+                if _item["method"]:
+                    res = [(_item["method"], _refs[0])]
+                else:
+                    res = []
             else:
                 res = []
+
             for ref in _refs[1:]:
                 item = self.db[ref]
                 res.append((item["method"], ref))

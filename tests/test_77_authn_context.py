@@ -135,5 +135,18 @@ def test_authn_3():
     method, ref = info[0]
     assert REF2METHOD[AL4] == method
 
+    rac = requested_authn_context(AL1, "exact")
+
+    info = authn.pick(rac)
+    assert len(info) == 1
+    method, ref = info[0]
+    assert REF2METHOD[AL1] == method
+
+    rac = requested_authn_context(AL1, "better")
+
+    info = authn.pick(rac)
+    assert len(info) == 3
+
+
 if __name__ == "__main__":
-    test_authn_2()
+    test_authn_3()
