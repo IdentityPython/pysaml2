@@ -1,6 +1,12 @@
+from saml2.saml import AuthnContext, AuthnContextClassRef
+
 __author__ = 'rolandh'
 
+import hashlib
+
 from saml2 import extension_elements_to_elements
+
+UNSPECIFIED = "urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified"
 
 INTERNETPROTOCOLPASSWORD = \
     'urn:oasis:names:tc:SAML:2.0:ac:classes:InternetProtocolPassword'
@@ -22,10 +28,24 @@ from saml2.authn_context import ppt
 from saml2.authn_context import pword
 from saml2.authn_context import sslcert
 
+CMP_TYPE = ['exact', 'minimum', 'maximum', 'better']
+
 
 class AuthnBroker(object):
     def __init__(self):
-        self.db = {}
+        self.db = {"info": {}, "key": {}}
+
+    def exact(self, a, b):
+        return a == b
+
+    def minimum(self, a, b):
+        return b >= a
+
+    def maximum(self, a, b):
+        return b <= a
+
+    def better(self, a, b):
+        return b > a
 
     def add(self, spec, method, level=0, authn_authority=""):
         """
@@ -41,8 +61,9 @@ class AuthnBroker(object):
         """
 
         if spec.authn_context_class_ref:
-            _ref = spec.authn_context_class_ref.text
-            self.db[_ref] = {
+            key = spec.authn_context_class_ref.text
+            _info = {
+                "class_ref": key,
                 "method": method,
                 "level": level,
                 "authn_auth": authn_authority
@@ -55,12 +76,76 @@ class AuthnBroker(object):
                 "level": level,
                 "authn_auth": authn_authority
             }
-            try:
-                self.db[key].append(_info)
-            except KeyError:
-                self.db[key] = [_info]
+        else:
+            raise NotImplementedError()
 
-    def pick(self, req_authn_context):
+        m = hashlib.md5()
+        for attr in ["method", "level", "authn_auth"]:
+            m.update(str(_info[attr]))
+        try:
+            _txt = "%s" % _info["decl"]
+        except KeyError:
+            pass
+        else:
+            m.update(_txt)
+
+        _ref = m.hexdigest()
+        self.db["info"][_ref] = _info
+        try:
+            self.db["key"][key].append(_ref)
+        except KeyError:
+            self.db["key"][key] = [_ref]
+
+    def remove(self, spec, method=None, level=0, authn_authority=""):
+        if spec.authn_context_class_ref:
+            _cls_ref = spec.authn_context_class_ref.text
+            try:
+                _refs = self.db["key"][_cls_ref]
+            except KeyError:
+                return
+            else:
+                _remain = []
+                for _ref in _refs:
+                    item = self.db["info"][_ref]
+                    if method and method != item["method"]:
+                        _remain.append(_ref)
+                    if level and level != item["level"]:
+                        _remain.append(_ref)
+                    if authn_authority and \
+                            authn_authority != item["authn_authority"]:
+                        _remain.append(_ref)
+                if _remain:
+                    self.db[_cls_ref] = _remain
+
+    def _pick_by_class_ref(self, cls_ref, comparision_type="exact"):
+        func = getattr(self, comparision_type)
+        try:
+            _refs = self.db["key"][cls_ref]
+        except KeyError:
+            return []
+        else:
+            _item = self.db["info"][_refs[0]]
+            _level = _item["level"]
+            if _item["method"]:
+                res = [(_item["method"], _refs[0])]
+            else:
+                res = []
+            for ref in _refs[1:]:
+                item = self.db[ref]
+                res.append((item["method"], ref))
+                if func(_level, item["level"]):
+                    _level = item["level"]
+            for ref, _dic in self.db["info"].items():
+                if ref in _refs:
+                    continue
+                elif func(_level, _dic["level"]):
+                    if _dic["method"]:
+                        _val = (_dic["method"], ref)
+                        if _val not in res:
+                            res.append(_val)
+            return res
+
+    def pick(self, req_authn_context=None):
         """
         Given the authentication context find zero or more places where
         the user could be sent next. Ordered according to security level.
@@ -70,29 +155,25 @@ class AuthnBroker(object):
         :return: An URL
         """
 
+        if req_authn_context is None:
+            return self._pick_by_class_ref(UNSPECIFIED, "minimum")
         if req_authn_context.authn_context_class_ref:
-            _ref = req_authn_context.authn_context_class_ref.text
-            try:
-                _info = self.db[_ref]
-            except KeyError:
-                return []
+            if req_authn_context.comparison:
+                _cmp = req_authn_context.comparison
             else:
-                _level = _info["level"]
-                res = []
-                for key, _dic in self.db.items():
-                    if key == _ref:
-                        continue
-                    elif _dic["level"] >= _level:
-                        res.append(_dic["method"])
-                res.insert(0, _info["method"])
-                return res
+                _cmp = "minimum"
+            return self._pick_by_class_ref(
+                req_authn_context.authn_context_class_ref.text, _cmp)
         elif req_authn_context.authn_context_decl:
-            key = req_authn_context.authn_context_decl.c_namespace
+            _decl = req_authn_context.authn_context_decl
+            key = _decl.c_namespace
             _methods = []
-            for _dic in self.db[key]:
-                if self.match(req_authn_context.authn_context_decl,
-                              _dic["decl"]):
-                    _methods.append(_dic["method"])
+            for _ref in self.db["key"][key]:
+                _dic = self.db["info"][_ref]
+                if self.match(_decl, _dic["decl"]):
+                    _val = (_dic["method"], _ref)
+                    if _val not in _methods:
+                        _methods.append(_val)
             return _methods
 
     def match(self, requested, provided):
@@ -100,6 +181,9 @@ class AuthnBroker(object):
             return True
         else:
             return False
+
+    def __getitem__(self, ref):
+        return self.db["info"][ref]
 
 
 def authn_context_factory(text):
@@ -119,3 +203,7 @@ def authn_context_decl_from_extension_elements(extelems):
         return res[0]
     except IndexError:
         return None
+
+
+def authn_context_class_ref(ref):
+    return AuthnContext(authn_context_class_ref=AuthnContextClassRef(text=ref))
