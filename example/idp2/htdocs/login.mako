@@ -7,7 +7,8 @@
 
 <form action="${action}" method="post">
     <input type="hidden" name="key" value="${key}"/>
-    <input type="hidden" name="came_from" value="${came_from}"/>
+    <input type="hidden" name="authn_reference" value="${authn_reference}"/>
+    <input type="hidden" name="redirect_uri" value="${redirect_uri}"/>
 
     <div class="label">
         <label for="login">Username</label>

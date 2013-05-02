@@ -47,49 +47,53 @@ ONTS = {
     xmlenc.NAMESPACE: xmlenc
 }
 
-COMMON_ARGS = ["entityid", "xmlsec_binary", "debug", "key_file", "cert_file",
-                "secret", "accepted_time_diff", "name", "ca_certs",
-                "description", "valid_for", "verify_ssl_cert",
-                "organization",
-                "contact_person",
-                "name_form",
-                "virtual_organization",
-                "logger",
-                "only_use_keys_in_metadata",
-                "logout_requests_signed",
-                "disable_ssl_certificate_validation",
-                "referred_binding"
-                ]
+COMMON_ARGS = [
+    "entityid", "xmlsec_binary", "debug", "key_file", "cert_file",
+    "secret", "accepted_time_diff", "name", "ca_certs",
+    "description", "valid_for", "verify_ssl_cert",
+    "organization",
+    "contact_person",
+    "name_form",
+    "virtual_organization",
+    "logger",
+    "only_use_keys_in_metadata",
+    "logout_requests_signed",
+    "disable_ssl_certificate_validation",
+    "referred_binding",
+    "session_storage"
+]
 
 SP_ARGS = [
-            "required_attributes",
-            "optional_attributes",
-            "idp",
-            "aa",
-            "subject_data",
-            "want_assertions_signed",
-            "authn_requests_signed",
-            "name_form",
-            "endpoints",
-            "ui_info",
-            "discovery_response",
-            "allow_unsolicited",
-            "ecp",
-            "name_id_format"
-            ]
+    "required_attributes",
+    "optional_attributes",
+    "idp",
+    "aa",
+    "subject_data",
+    "want_assertions_signed",
+    "authn_requests_signed",
+    "name_form",
+    "endpoints",
+    "ui_info",
+    "discovery_response",
+    "allow_unsolicited",
+    "ecp",
+    "name_id_format"
+]
 
-AA_IDP_ARGS = ["want_authn_requests_signed",
-               "provided_attributes",
-               "subject_data",
-               "sp",
-               "scope",
-               "endpoints",
-               "metadata",
-               "ui_info",
-               "name_id_format",
-               "domain",
-               "name_qualifier"
-               ]
+AA_IDP_ARGS = [
+    "want_authn_requests_signed",
+    "provided_attributes",
+    "subject_data",
+    "sp",
+    "scope",
+    "endpoints",
+    "metadata",
+    "ui_info",
+    "name_id_format",
+    "domain",
+    "name_qualifier",
+    "edu_person_targeted_id",
+]
 
 PDP_ARGS = ["endpoints", "name_form", "name_id_format"]
 
@@ -156,30 +160,30 @@ class Config(object):
     def __init__(self, homedir="."):
         self._homedir = homedir
         self.entityid = None
-        self.xmlsec_binary= None
-        self.debug=False
-        self.key_file=None
-        self.cert_file=None
-        self.secret=None
-        self.accepted_time_diff=None
-        self.name=None
-        self.ca_certs=None
+        self.xmlsec_binary = None
+        self.debug = False
+        self.key_file = None
+        self.cert_file = None
+        self.secret = None
+        self.accepted_time_diff = None
+        self.name = None
+        self.ca_certs = None
         self.verify_ssl_cert = False
-        self.description=None
-        self.valid_for=None
-        self.organization=None
-        self.contact_person=None
-        self.name_form=None
-        self.nameid_form=None
-        self.virtual_organization=None
-        self.logger=None
-        self.only_use_keys_in_metadata=True
-        self.logout_requests_signed=None
-        self.disable_ssl_certificate_validation=None
+        self.description = None
+        self.valid_for = None
+        self.organization = None
+        self.contact_person = None
+        self.name_form = None
+        self.nameid_form = None
+        self.virtual_organization = None
+        self.logger = None
+        self.only_use_keys_in_metadata = True
+        self.logout_requests_signed = None
+        self.disable_ssl_certificate_validation = None
         self.context = ""
-        self.attribute_converters=None
-        self.metadata=None
-        self.policy=None
+        self.attribute_converters = None
+        self.metadata = None
+        self.policy = None
         self.serves = []
         self.vorg = {}
         self.preferred_binding = PREFERRED_BINDING
@@ -190,7 +194,7 @@ class Config(object):
         if context == "":
             setattr(self, attr, val)
         else:
-            setattr(self, "_%s_%s" % (context,attr), val)
+            setattr(self, "_%s_%s" % (context, attr), val)
 
     def getattr(self, attr, context=None):
         if context is None:
@@ -199,7 +203,7 @@ class Config(object):
         if context == "":
             return getattr(self, attr, None)
         else:
-            return getattr(self, "_%s_%s" % (context,attr), None)
+            return getattr(self, "_%s_%s" % (context, attr), None)
 
     def load_special(self, cnf, typ, metadata_construction=False):
         for arg in SPEC[typ]:
@@ -225,8 +229,7 @@ class Config(object):
                 acs = ac_factory()
 
             if not acs:
-                raise Exception(("No attribute converters, ",
-                                    "something is wrong!!"))
+                raise Exception("No attribute converters, something is wrong!!")
 
             _acs = self.getattr("attribute_converters", typ)
             if _acs:
@@ -270,23 +273,23 @@ class Config(object):
         for arg in COMMON_ARGS:
             if arg == "virtual_organization":
                 if "virtual_organization" in cnf:
-                    for key,val in cnf["virtual_organization"].items():
+                    for key, val in cnf["virtual_organization"].items():
                         self.vorg[key] = VirtualOrg(None, key, val)
                 continue
-
 
             try:
                 setattr(self, arg, _uc(cnf[arg]))
             except KeyError:
                 pass
-            except TypeError: # Something that can't be a string
+            except TypeError:  # Something that can't be a string
                 setattr(self, arg, cnf[arg])
 
         if "service" in cnf:
             for typ in ["aa", "idp", "sp", "pdp", "aq"]:
                 try:
-                    self.load_special(cnf["service"][typ], typ,
-                                    metadata_construction=metadata_construction)
+                    self.load_special(
+                        cnf["service"][typ], typ,
+                        metadata_construction=metadata_construction)
                     self.serves.append(typ)
                 except KeyError:
                     pass
@@ -298,8 +301,8 @@ class Config(object):
             # verify that xmlsec is where it's supposed to be
             if not os.path.exists(self.xmlsec_binary):
                 #if not os.access(, os.F_OK):
-                raise Exception("xmlsec binary not in '%s' !" % (
-                                                            self.xmlsec_binary))
+                raise Exception(
+                    "xmlsec binary not in '%s' !" % self.xmlsec_binary)
 
         self.load_complex(cnf, metadata_construction=metadata_construction)
         self.context = self.def_context
@@ -337,8 +340,9 @@ class Config(object):
         except:
             disable_validation = False
 
-        mds = MetadataStore(ONTS.values(), acs, xmlsec_binary, ca_certs,
-                            disable_ssl_certificate_validation=disable_validation)
+        mds = MetadataStore(
+            ONTS.values(), acs, xmlsec_binary, ca_certs,
+            disable_ssl_certificate_validation=disable_validation)
 
         mds.imp(metadata_conf)
 
@@ -392,7 +396,7 @@ class Config(object):
                             raise Exception("Unknown socktype!")
                     try:
                         handler = LOG_HANDLER[htyp](**args)
-                    except TypeError: # difference between 2.6 and 2.7
+                    except TypeError:  # difference between 2.6 and 2.7
                         del args["socktype"]
                         handler = LOG_HANDLER[htyp](**args)
                 else:
@@ -412,7 +416,7 @@ class Config(object):
         return handler
     
     def setup_logger(self):
-        if root_logger.level != logging.NOTSET: # Someone got there before me
+        if root_logger.level != logging.NOTSET:  # Someone got there before me
             return root_logger
 
         _logconf = self.logger
@@ -421,12 +425,13 @@ class Config(object):
 
         try:
             root_logger.setLevel(LOG_LEVEL[_logconf["loglevel"].lower()])
-        except KeyError: # reasonable default
+        except KeyError:  # reasonable default
             root_logger.setLevel(logging.INFO)
 
         root_logger.addHandler(self.log_handler())
         root_logger.info("Logging started")
         return root_logger
+
 
 class SPConfig(Config):
     def_context = "sp"
@@ -455,11 +460,13 @@ class SPConfig(Config):
 
         return None
 
+
 class IdPConfig(Config):
     def_context = "idp"
     
     def __init__(self):
         Config.__init__(self)
+
 
 def config_factory(typ, filename):
     if typ == "sp":

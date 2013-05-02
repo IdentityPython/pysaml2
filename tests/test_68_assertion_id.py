@@ -1,8 +1,9 @@
 from urlparse import parse_qs
 from urlparse import urlparse
+from saml2.authn_context import INTERNETPROTOCOLPASSWORD
 from saml2.samlp import AuthnRequest
 from saml2.samlp import NameIDPolicy
-from saml2.saml import AUTHN_PASSWORD, Assertion
+from saml2.saml import Assertion
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_URI
@@ -13,6 +14,13 @@ from saml2.server import Server
 __author__ = 'rolandh'
 
 TAG1 = "name=\"SAMLRequest\" value="
+
+
+AUTHN = {
+    "class_ref": INTERNETPROTOCOLPASSWORD,
+    "authn_auth": "http://www.example.com/login"
+}
+
 
 def get_msg(hinfo, binding, response=False):
     if binding == BINDING_SOAP:
@@ -29,11 +37,12 @@ def get_msg(hinfo, binding, response=False):
         else:
             msg = ""
             return parse_qs(hinfo["url"].split("?")[1])["ID"][0]
-    else: # BINDING_HTTP_REDIRECT
+    else:  # BINDING_HTTP_REDIRECT
         parts = urlparse(hinfo["headers"][0][1])
         msg = parse_qs(parts.query)["SAMLRequest"][0]
 
     return msg
+
 
 def test_basic_flow():
     sp = Saml2Client(config_file="servera_conf")
@@ -43,9 +52,9 @@ def test_basic_flow():
 
     relay_state = "FOO"
     # -- dummy request ---
-    orig_req = AuthnRequest(issuer=sp._issuer(),
-                            name_id_policy=NameIDPolicy(allow_create="true",
-                                                        format=NAMEID_FORMAT_TRANSIENT))
+    orig_req = AuthnRequest(
+        issuer=sp._issuer(), name_id_policy=NameIDPolicy(
+            allow_create="true", format=NAMEID_FORMAT_TRANSIENT))
 
     # == Create an AuthnRequest response
 
@@ -62,8 +71,7 @@ def test_basic_flow():
                                      destination,
                                      sp.config.entityid,
                                      name_id=name_id,
-                                     authn=(AUTHN_PASSWORD,
-                                            "http://www.example.com/login"))
+                                     authn=AUTHN)
 
     hinfo = idp.apply_binding(binding, "%s" % resp, destination, relay_state)
 
@@ -72,7 +80,7 @@ def test_basic_flow():
     xmlstr = get_msg(hinfo, binding)
 
     aresp = sp.parse_authn_request_response(xmlstr, binding,
-                                            {resp.in_response_to :"/"})
+                                            {resp.in_response_to: "/"})
 
     # == Look for assertion X
 

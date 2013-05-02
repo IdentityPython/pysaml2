@@ -3,7 +3,6 @@ import base64
 
 import re
 import logging
-import urllib
 import time
 from hashlib import sha1
 
@@ -18,19 +17,33 @@ from saml2 import BINDING_SOAP
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import time_util
-from saml2.httputil import Response, NotFound
+
+from saml2.authn_context import AuthnBroker
+from saml2.authn_context import PASSWORD
+from saml2.authn_context import UNSPECIFIED
+from saml2.authn_context import authn_context_class_ref
+from saml2.httputil import Response
+from saml2.httputil import NotFound
+from saml2.httputil import geturl
 from saml2.httputil import get_post
 from saml2.httputil import Redirect
 from saml2.httputil import Unauthorized
 from saml2.httputil import BadRequest
 from saml2.httputil import ServiceError
 from saml2.ident import Unknown
-from saml2.s_utils import rndstr, UnknownPrincipal, UnsupportedBinding
+from saml2.s_utils import rndstr
+from saml2.s_utils import UnknownPrincipal
+from saml2.s_utils import UnsupportedBinding
 from saml2.s_utils import PolicyError
-from saml2.saml import AUTHN_PASSWORD
 from saml2.sigver import verify_redirect_signature
 
 logger = logging.getLogger("saml2.idp")
+
+
+class Cache(object):
+    def __init__(self):
+        self.user2uid = {}
+        self.uid2user = {}
 
 
 def _expiration(timeout, tformat="%a, %d-%b-%Y %H:%M:%S GMT"):
@@ -153,28 +166,32 @@ class Service(object):
         _dict = self.unpack_either()
         return self.operation(_dict, BINDING_SOAP)
 
-    def not_authn(self, key):
-        # store the request and redirect to login page
+    # def not_authn(self, key):
+    #     """
+    #
+    #
+    #     :return:
+    #     """
+    #     loc = "http://%s/login" % (self.environ["HTTP_HOST"])
+    #     loc += "?%s" % urllib.urlencode({"came_from": self.environ[
+    #         "PATH_INFO"], "key": key})
+    #     headers = [('Content-Type', 'text/plain')]
+    #
+    #     logger.debug("location: %s" % loc)
+    #     logger.debug("headers: %s" % headers)
+    #
+    #     resp = Redirect(loc, headers=headers)
+    #
+    #     return resp(self.environ, self.start_response)
 
-        """
+    def not_authn(self, key, requested_authn_context):
+        ruri = geturl(self.environ, query=False)
+        return do_authentication(self.environ, self.start_response,
+                                 authn_context=requested_authn_context,
+                                 key=key, redirect_uri=ruri)
 
-
-        :return:
-        """
-        loc = "http://%s/login" % (self.environ["HTTP_HOST"])
-        loc += "?%s" % urllib.urlencode({"came_from": self.environ[
-            "PATH_INFO"], "key": key})
-        headers = [('Content-Type', 'text/plain')]
-
-        logger.debug("location: %s" % loc)
-        logger.debug("headers: %s" % headers)
-
-        resp = Redirect(loc, headers=headers)
-    
-        return resp(self.environ, self.start_response)
 
 # -----------------------------------------------------------------------------
-AUTHN = (AUTHN_PASSWORD, "http://lingon.catalogix.se/login")
 
 REPOZE_ID_EQUIVALENT = "uid"
 FORM_SPEC = """<form name="myform" method="post" action="%s">
@@ -187,6 +204,12 @@ FORM_SPEC = """<form name="myform" method="post" action="%s">
 # -----------------------------------------------------------------------------
 
 
+class AuthenticationNeeded(Exception):
+    def __init__(self, authn_context=None, *args, **kwargs):
+        Exception.__init__(*args, **kwargs)
+        self.authn_context = authn_context
+
+
 class SSO(Service):
     def __init__(self, environ, start_response, user=None):
         Service.__init__(self, environ, start_response, user)
@@ -197,7 +220,7 @@ class SSO(Service):
         self.destination = None
         self.req_info = None
 
-    def verify(self, query, binding):
+    def verify_request(self, query, binding):
         """
         :param query: The SAML query, transport encoded
         :param binding: Which binding the query came in over
@@ -237,7 +260,7 @@ class SSO(Service):
 
     def do(self, query, binding_in, relay_state=""):
         try:
-            resp_args, _resp = self.verify(query, binding_in)
+            resp_args, _resp = self.verify_request(query, binding_in)
         except UnknownPrincipal, excp:
             logger.error("UnknownPrincipal: %s" % (excp,))
             resp = ServiceError("UnknownPrincipal: %s" % (excp,))
@@ -254,8 +277,10 @@ class SSO(Service):
             if REPOZE_ID_EQUIVALENT:
                 identity[REPOZE_ID_EQUIVALENT] = self.user
             try:
-                _resp = IDP.create_authn_response(identity, userid=self.user,
-                                                  authn=AUTHN, **resp_args)
+                _resp = IDP.create_authn_response(
+                    identity, userid=self.user,
+                    authn=AUTHN_BROKER[self.environ["idp.authn_ref"]],
+                    **resp_args)
             except Exception, excp:
                 logger.error("Exception: %s" % (excp,))
                 resp = ServiceError("Exception: %s" % (excp,))
@@ -268,64 +293,80 @@ class SSO(Service):
         logger.debug("HTTPargs: %s" % http_args)
         return self.response(self.binding_out, http_args)
 
-    def _authn(self, _dict):
-        logger.debug("_auth: %s" % _dict)
-        if not self.user:
-            key = sha1("%s" % _dict).hexdigest()
-            IDP.ticket[key] = _dict
-            _resp = key
-        else:
-            try:
-                _resp = IDP.ticket[_dict["key"]]
-                del IDP.ticket[_dict["key"]]
-            except KeyError:
-                key = sha1("%s" % _dict).hexdigest()
-                IDP.ticket[key] = _dict
-                _resp = key
-
-        return _resp
+    def _store_request(self, _dict):
+        logger.debug("_store_request: %s" % _dict)
+        key = sha1(_dict["SAMLRequest"]).hexdigest()
+        # store the AuthnRequest
+        IDP.ticket[key] = _dict
+        return key
 
     def redirect(self):
         """ This is the HTTP-redirect endpoint """
         logger.info("--- In SSO Redirect ---")
-        _info = self._authn(self.unpack_redirect())
-        if isinstance(_info, basestring):
-            return self.not_authn(_info)
+        _info = self.unpack_redirect()
 
-        if "SigAlg" in _info and "Signature" in _info:  # Signed request
+        try:
+            _info = IDP.ticket[_info["key"]]
+            self.req_info = _info["req_info"]
+            del IDP.ticket[_info["key"]]
+        except KeyError:
             self.req_info = IDP.parse_authn_request(_info["SAMLRequest"],
                                                     BINDING_HTTP_REDIRECT)
-            issuer = self.req_info.message.issuer.text
-            _certs = IDP.metadata.certs(issuer, "any", "signing")
-            verified_ok = False
-            for cert in _certs:
-                if verify_redirect_signature(_info, cert):
-                    verified_ok = True
-                    break
-            if not verified_ok:
-                resp = BadRequest("Message signature verification failure")
-                return resp(self.environ, self.start_response)
+            _req = self.req_info.message
 
-        return self.operation(_info, BINDING_HTTP_REDIRECT)
+            if "SigAlg" in _info and "Signature" in _info:  # Signed request
+                issuer = _req.issuer.text
+                _certs = IDP.metadata.certs(issuer, "any", "signing")
+                verified_ok = False
+                for cert in _certs:
+                    if verify_redirect_signature(_info, cert):
+                        verified_ok = True
+                        break
+                if not verified_ok:
+                    resp = BadRequest("Message signature verification failure")
+                    return resp(self.environ, self.start_response)
+
+            if self.user:
+                if _req.force_authn:
+                    _info["req_info"] = self.req_info
+                    key = self._store_request(_info)
+                    return self.not_authn(key, _req.requested_authn_context)
+                else:
+                    return self.operation(_info, BINDING_HTTP_REDIRECT)
+            else:
+                _info["req_info"] = self.req_info
+                key = self._store_request(_info)
+                return self.not_authn(key, _req.requested_authn_context)
+        else:
+            return self.operation(_info, BINDING_HTTP_REDIRECT)
 
     def post(self):
         """
         The HTTP-Post endpoint
         """
         logger.info("--- In SSO POST ---")
-        _dict = self.unpack_either()
-        _resp = self._authn(_dict)
-        logger.debug("_req: %s" % _resp)
-        if isinstance(_resp, basestring):
-            return self.not_authn(_resp)
-        return self.operation(_resp, BINDING_HTTP_POST)
+        _info = self.unpack_either()
+        self.req_info = IDP.parse_authn_request(
+            _info["SAMLRequest"], BINDING_HTTP_POST)
+        _req = self.req_info.message
+        if self.user:
+            if _req.force_authn:
+                _info["req_info"] = self.req_info
+                key = self._store_request(_info)
+                return self.not_authn(key, _req.requested_authn_context)
+            else:
+                return self.operation(_info, BINDING_HTTP_POST)
+        else:
+            _info["req_info"] = self.req_info
+            key = self._store_request(_info)
+            return self.not_authn(key, _req.requested_authn_context)
 
-    def artifact(self):
-        # Can be either by HTTP_Redirect or HTTP_POST
-        _req = self._authn(self.unpack_either())
-        if isinstance(_req, basestring):
-            return self.not_authn(_req)
-        return self.artifact_operation(_req)
+    # def artifact(self):
+    #     # Can be either by HTTP_Redirect or HTTP_POST
+    #     _req = self._store_request(self.unpack_either())
+    #     if isinstance(_req, basestring):
+    #         return self.not_authn(_req)
+    #     return self.artifact_operation(_req)
 
     def ecp(self):
         # The ECP interface
@@ -361,32 +402,49 @@ class SSO(Service):
 # === Authentication ====
 # -----------------------------------------------------------------------------
 
+
+def do_authentication(environ, start_response, authn_context, key,
+                      redirect_uri):
+    """
+    Display the login form
+    """
+    logger.debug("Do authentication")
+    auth_info = AUTHN_BROKER.pick(authn_context)
+
+    if len(auth_info):
+        method, reference = auth_info[0]
+        logger.debug("Authn chosen: %s (ref=%s)" % (method, reference))
+        return method(environ, start_response, reference, key, redirect_uri)
+    else:
+        resp = Unauthorized("No usable authentication method")
+        return resp(environ, start_response)
+
+
+# -----------------------------------------------------------------------------
+
 PASSWD = {"roland": "dianakra",
           "babs": "howes",
           "upper": "crust"}
 
 
-def do_authentication(environ, start_response, cookie=None):
+def username_password_authn(environ, start_response, reference, key,
+                            redirect_uri):
     """
     Display the login form
     """
-    query = parse_qs(environ["QUERY_STRING"])
-
     logger.info("The login page")
-    if cookie:
-        headers = [cookie]
-    else:
-        headers = []
+    headers = []
 
     resp = Response(mako_template="login.mako", template_lookup=LOOKUP,
                     headers=headers)
 
     argv = {
         "action": "/verify",
-        "came_from": query["came_from"][0],
         "login": "",
         "password": "",
-        "key": query["key"][0]
+        "key": key,
+        "authn_reference": reference,
+        "redirect_uri": redirect_uri
     }
     logger.info("do_authentication argv: %s" % argv)
     return resp(environ, start_response, **argv)
@@ -416,13 +474,14 @@ def do_verify(environ, start_response, _):
         resp = Unauthorized("Unknown user or wrong password")
     else:
         uid = rndstr(24)
-        IDP.uid2user[uid] = user
-        IDP.user2uid[user] = uid
+        IDP.cache.uid2user[uid] = user
+        IDP.cache.user2uid[user] = uid
         logger.debug("Register %s under '%s'" % (user, uid))
-        kaka = set_cookie("idpauthn", "/", uid)
-        lox = "http://%s%s?id=%s&key=%s" % (environ["HTTP_HOST"],
-                                            query["came_from"][0], uid,
-                                            query["key"][0])
+
+        kaka = set_cookie("idpauthn", "/", uid, query["authn_reference"][0])
+
+        lox = "%s?id=%s&key=%s" % (query["redirect_uri"][0], uid,
+                                   query["key"][0])
         logger.debug("Redirect => %s" % lox)
         resp = Redirect(lox, headers=[kaka], content="text/html")
 
@@ -462,11 +521,11 @@ class SLO(Service):
         if msg.name_id:
             lid = IDP.ident.find_local_id(msg.name_id)
             logger.info("local identifier: %s" % lid)
-            del IDP.uid2user[IDP.user2uid[lid]]
-            del IDP.user2uid[lid]
+            del IDP.cache.uid2user[IDP.cache.user2uid[lid]]
+            del IDP.cache.user2uid[lid]
             # remove the authentication
             try:
-                IDP.remove_authn_statements(msg.name_id)
+                IDP.session_db.remove_authn_statements(msg.name_id)
             except KeyError, exc:
                 logger.error("ServiceError: %s" % exc)
                 resp = ServiceError("%s" % exc)
@@ -602,13 +661,13 @@ class ATTR(Service):
         _query = _req.message
 
         name_id = _query.subject.name_id
-        uid = IDP.ident.find_local_id(name_id)
+        uid = name_id.text
         logger.debug("Local uid: %s" % uid)
         identity = EXTRA[uid]
 
         # Comes in over SOAP so only need to construct the response
         args = IDP.response_args(_query, [BINDING_SOAP])
-        msg = IDP.create_attribute_response(identity, destination="",
+        msg = IDP.create_attribute_response(identity,
                                             name_id=name_id, **args)
 
         logger.debug("response: %s" % msg)
@@ -653,25 +712,23 @@ class NIM(Service):
         return resp(self.environ, self.start_response)
     
 
-
 # ----------------------------------------------------------------------------
 # Cookie handling
 # ----------------------------------------------------------------------------
-
-
-def kaka2user(kaka):
+def info_from_cookie(kaka):
     logger.debug("KAKA: %s" % kaka)
     if kaka:
         cookie_obj = SimpleCookie(kaka)
         morsel = cookie_obj.get("idpauthn", None)
         if morsel:
             try:
-                return IDP.uid2user[morsel.value]
+                key, ref = base64.b64decode(morsel.value).split(":")
+                return IDP.cache.uid2user[key], ref
             except KeyError:
-                return None
+                return None, None
         else:
             logger.debug("No idpauthn cookie")
-    return None
+    return None, None
 
 
 def delete_cookie(environ, name):
@@ -689,9 +746,9 @@ def delete_cookie(environ, name):
     return None
 
 
-def set_cookie(name, _, value):
+def set_cookie(name, _, *args):
     cookie = SimpleCookie()
-    cookie[name] = value
+    cookie[name] = base64.b64encode(":".join(args))
     cookie[name]['path'] = "/"
     cookie[name]["expires"] = _expiration(5)  # 5 minutes from now
     logger.debug("Cookie expires: %s" % cookie[name]["expires"])
@@ -765,12 +822,13 @@ def application(environ, start_response):
 
     if kaka:
         logger.info("= KAKA =")
-        user = kaka2user(kaka)
+        user, authn_ref = info_from_cookie(kaka)
+        environ["idp.authn_ref"] = authn_ref
     else:
         try:
             query = parse_qs(environ["QUERY_STRING"])
             logger.debug("QUERY: %s" % query)
-            user = IDP.uid2user[query["id"][0]]
+            user = IDP.cache.uid2user[query["id"][0]]
         except KeyError:
             user = None
 
@@ -818,18 +876,28 @@ ROOT = './'
 LOOKUP = TemplateLookup(directories=[ROOT + 'templates', ROOT + 'htdocs'],
                         module_directory=ROOT + 'modules',
                         input_encoding='utf-8', output_encoding='utf-8')
+
 # ----------------------------------------------------------------------------
 
 if __name__ == '__main__':
     import sys
+    import socket
     from idp_user import USERS
     from idp_user import EXTRA
     from wsgiref.simple_server import make_server
 
     PORT = 8088
 
-    IDP = server.Server(sys.argv[1])
+    AUTHN_BROKER = AuthnBroker()
+    AUTHN_BROKER.add(authn_context_class_ref(PASSWORD),
+                     username_password_authn, 10,
+                     "http://%s" % socket.gethostname())
+    AUTHN_BROKER.add(authn_context_class_ref(UNSPECIFIED),
+                     "", 0, "http://%s" % socket.gethostname())
+
+    IDP = server.Server(sys.argv[1], cache=Cache())
     IDP.ticket = {}
+
     SRV = make_server('', PORT, application)
     print "IdP listening on port: %s" % PORT
     SRV.serve_forever()

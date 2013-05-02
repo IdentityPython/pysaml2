@@ -7,12 +7,7 @@ from saml2 import BINDING_HTTP_ARTIFACT
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 
-try:
-    from saml2.sigver import get_xmlsec_binary
-    xmlsec_path = get_xmlsec_binary(["/opt/local/bin"])
-except ImportError:
-    xmlsec_path = '/usr/bin/xmlsec1'
-
+from pathutils import full_path, xmlsec_path
 
 BASE = "http://lingon.catalogix.se:8087"
 
@@ -50,12 +45,12 @@ CONFIG={
         }
     },
     "debug": 1,
-    "key_file": "test.key",
-    "cert_file": "test.pem",
-    "ca_certs": "cacerts.txt",
+    "key_file": full_path("test.key"),
+    "cert_file": full_path("test.pem"),
+    "ca_certs": full_path("cacerts.txt"),
     "xmlsec_binary" : xmlsec_path,
     "metadata": {
-        "local": ["idp_all.xml", "vo_metadata.xml"],
+        "local": [full_path("idp_all.xml"), full_path("vo_metadata.xml")],
     },
     "virtual_organization": {
         "urn:mace:example.com:it:tek":{
@@ -65,7 +60,7 @@ CONFIG={
     },
     "subject_data": "subject_data.db",
     "accepted_time_diff": 60,
-    "attribute_map_dir": "attributemaps",
+    "attribute_map_dir": full_path("attributemaps"),
     #"valid_for": 6,
     "organization": {
         "name": ("AB Exempel", "se"),

@@ -19,6 +19,8 @@ from saml2.saml import Attribute, NAME_FORMAT_URI, AttributeValue
 
 from py.test import raises
 
+from pathutils import full_path
+
 SUCCESS_STATUS = """<?xml version=\'1.0\' encoding=\'UTF-8\'?>
 <ns0:Status xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns0:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success" /></ns0:Status>"""
 
@@ -273,7 +275,7 @@ def test_subject():
 # ---------------------------------------------------------------------------
 
 def test_parse_attribute_map():
-    (forward, backward) = utils.parse_attribute_map(["attribute.map"])
+    (forward, backward) = utils.parse_attribute_map([full_path("attribute.map")])
     
     assert _eq(forward.keys(), backward.values())
     assert _eq(forward.values(), backward.keys())
@@ -300,7 +302,7 @@ def test_parse_attribute_map():
                                     
 
 def test_identity_attribute_0():
-    (forward, backward) = utils.parse_attribute_map(["attribute.map"])
+    (forward, backward) = utils.parse_attribute_map([full_path("attribute.map")])
     a = Attribute(name="urn:oid:2.5.4.4", name_format=NAME_FORMAT_URI,
                     friendly_name="surName")
     
@@ -308,14 +310,14 @@ def test_identity_attribute_0():
     assert utils.identity_attribute("friendly",a,forward) == "surName"
                                     
 def test_identity_attribute_1():
-    (forward, backward) = utils.parse_attribute_map(["attribute.map"])
+    (forward, backward) = utils.parse_attribute_map([full_path("attribute.map")])
     a = Attribute(name="urn:oid:2.5.4.4", name_format=NAME_FORMAT_URI)
     
     assert utils.identity_attribute("name",a,forward) == "urn:oid:2.5.4.4"
     assert utils.identity_attribute("friendly",a,forward) == "surName"
 
 def test_identity_attribute_2():
-    (forward, backward) = utils.parse_attribute_map(["attribute.map"])
+    (forward, backward) = utils.parse_attribute_map([full_path("attribute.map")])
     a = Attribute(name="urn:oid:2.5.4.5", name_format=NAME_FORMAT_URI)
     
     assert utils.identity_attribute("name",a,forward) == "urn:oid:2.5.4.5"

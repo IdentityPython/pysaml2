@@ -2,10 +2,10 @@ import base64
 from hashlib import sha1
 from urlparse import urlparse
 from urlparse import parse_qs
-from saml2.saml import AUTHN_PASSWORD
 from saml2 import BINDING_HTTP_ARTIFACT
 from saml2 import BINDING_SOAP
 from saml2 import BINDING_HTTP_POST
+from saml2.authn_context import INTERNETPROTOCOLPASSWORD
 from saml2.client import Saml2Client
 
 from saml2.entity import create_artifact
@@ -16,6 +16,13 @@ from saml2.server import Server
 __author__ = 'rolandh'
 
 TAG1 = "name=\"SAMLRequest\" value="
+
+
+AUTHN = {
+    "class_ref": INTERNETPROTOCOLPASSWORD,
+    "authn_auth": "http://www.example.com/login"
+}
+
 
 def get_msg(hinfo, binding, response=False):
     if binding == BINDING_SOAP:
@@ -43,6 +50,7 @@ def get_msg(hinfo, binding, response=False):
 
     return msg
 
+
 def test_create_artifact():
     b64art = create_artifact("http://sp.example.com/saml.xml",
                              "aabbccddeeffgghhiijj")
@@ -56,6 +64,7 @@ def test_create_artifact():
     assert art[4:24] == s.digest()
 
 SP = 'urn:mace:example.com:saml:roland:sp'
+
 
 def test_create_artifact_resolve():
     b64art = create_artifact(SP, "aabbccddeeffgghhiijj", 1)
@@ -88,8 +97,9 @@ def test_create_artifact_resolve():
 
     assert ar.artifact.text == b64art
 
+
 def test_artifact_flow():
-    SP = 'urn:mace:example.com:saml:roland:sp'
+    #SP = 'urn:mace:example.com:saml:roland:sp'
     sp = Saml2Client(config_file="servera_conf")
     idp = Server(config_file="idp_all_conf")
 
@@ -164,8 +174,7 @@ def test_artifact_flow():
                                           "mail": "derek.jeter@nyy.mlb.com",
                                           "title": "The man"},
                                          name_id=name_id,
-                                         authn=(AUTHN_PASSWORD,
-                                                "http://www.example.com/login"),
+                                         authn=AUTHN,
                                          **resp_args)
 
     print response
@@ -207,7 +216,7 @@ def test_artifact_flow():
     assert ar.artifact.text == artifact3
 
     # The IDP retrieves the response from the database using the artifact as the key
-    oreq = idp.artifact[ar.artifact.text]
+    #oreq = idp.artifact[ar.artifact.text]
 
     binding, destination = idp.pick_binding("artifact_resolution_service",
                                             entity_id=sp.config.entityid)

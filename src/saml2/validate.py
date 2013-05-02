@@ -10,14 +10,18 @@ XSI_NAMESPACE = 'http://www.w3.org/2001/XMLSchema-instance'
 XSI_NIL = '{%s}nil' % XSI_NAMESPACE
 # ---------------------------------------------------------
 
+
 class NotValid(Exception):
     pass
+
 
 class OutsideCardinality(Exception):
     pass
 
+
 class MustValueError(ValueError):
     pass
+
 
 class ShouldValueError(ValueError):
     pass
@@ -26,6 +30,7 @@ class ShouldValueError(ValueError):
 #
 
 NCNAME = re.compile("(?P<NCName>[a-zA-Z_](\w|[_.-])*)")
+
 
 def valid_ncname(name):
     match = NCNAME.match(name)
@@ -45,7 +50,7 @@ def valid_any_uri(item):
     except Exception:
         raise NotValid("AnyURI")
 
-    if part[0] == "urn" and part[1] == "": # A urn
+    if part[0] == "urn" and part[1] == "":  # A urn
         return True
     # elif part[1] == "localhost" or part[1] == "127.0.0.1":
     #     raise NotValid("AnyURI")
@@ -83,6 +88,7 @@ def validate_on_or_after(not_on_or_after, slack):
     else:
         return False
 
+
 def validate_before(not_before, slack):
     if not_before:
         now = time_util.utc_now()
@@ -92,11 +98,13 @@ def validate_before(not_before, slack):
 
     return True
 
+
 def valid_address(address):
     if not (valid_ipv4(address) or valid_ipv6(address)):
         raise NotValid("address")
     return True
     
+
 def valid_ipv4(address):
     parts = address.split(".")
     if len(parts) != 4:
@@ -137,9 +145,11 @@ IPV6_PATTERN = re.compile(r"""
     $
 """, re.VERBOSE | re.IGNORECASE | re.DOTALL)
     
+
 def valid_ipv6(address):
     """Validates IPv6 addresses. """
     return IPV6_PATTERN.match(address) is not None
+
 
 def valid_boolean(val):
     vall = val.lower()
@@ -148,12 +158,14 @@ def valid_boolean(val):
     else:
         raise NotValid("boolean")
         
+
 def valid_duration(val):
     try:
         time_util.parse_duration(val)
     except Exception:
         raise NotValid("duration")
     return True
+
 
 def valid_string(val):
     """ Expects unicode 
@@ -167,16 +179,17 @@ def valid_string(val):
             raise NotValid("string")
         if char == 0x09 or char == 0x0A or char == 0x0D:
             continue
-        elif char >= 0x20 and char <= 0xD7FF:
+        elif 0x20 <= char <= 0xD7FF:
             continue
-        elif char >= 0xE000 and char <= 0xFFFD:
+        elif 0xE000 <= char <= 0xFFFD:
             continue
-        elif char >= 0x10000 and char <= 0x10FFFF:
+        elif 0x10000 <= char <= 0x10FFFF:
             continue
         else:
             raise NotValid("string")
     return True
     
+
 def valid_unsigned_short(val):
     try:
         struct.pack("H", int(val))
@@ -187,6 +200,7 @@ def valid_unsigned_short(val):
         
     return True
     
+
 def valid_non_negative_integer(val):
     try:
         integer = int(val)
@@ -197,6 +211,7 @@ def valid_non_negative_integer(val):
         raise NotValid("non negative integer")
     return True
 
+
 def valid_integer(val):
     try:
         int(val)
@@ -204,12 +219,14 @@ def valid_integer(val):
         raise NotValid("integer")
     return True
     
+
 def valid_base64(val):
     try:
         base64.b64decode(val)
     except Exception:
         raise NotValid("base64")
     return True
+
 
 def valid_qname(val):
     """ A qname is either 
@@ -222,6 +239,7 @@ def valid_qname(val):
         return valid_ncname(prefix) and valid_ncname(localpart)
     except ValueError:
         return valid_ncname(val)
+
 
 def valid_anytype(val):
     """ Goes through all known type validators 
@@ -261,9 +279,11 @@ VALIDATOR = {
 
 # -----------------------------------------------------------------------------
 
+
 def validate_value_type(value, spec):
     """
-    c_value_type = {'base': 'string', 'enumeration': ['Permit', 'Deny', 'Indeterminate']}
+    c_value_type = {'base': 'string', 'enumeration': ['Permit', 'Deny',
+                                                      'Indeterminate']}
         {'member': 'anyURI', 'base': 'list'}
         {'base': 'anyURI'}
         {'base': 'NCName'}
@@ -278,13 +298,14 @@ def validate_value_type(value, spec):
                 raise NotValid("value not in enumeration")
         else:
             return valid_string(value)
-    elif spec["base"] == "list": #comma separated list of values
+    elif spec["base"] == "list":  # comma separated list of values
         for val in [v.strip() for v in value.split(",")]:
             valid(spec["member"], val)
     else:
         return valid(spec["base"], value)
         
     return True
+
 
 def valid(typ, value):
     try:
@@ -297,33 +318,34 @@ def valid(typ, value):
                 typ = "string"
         return VALIDATOR[typ](value)
 
+
 def _valid_instance(instance, val):
     try:
         val.verify()
     except NotValid, exc:
-        raise NotValid("Class '%s' instance: %s" % \
-                            (instance.__class__.__name__,
-                            exc.args[0]))
+        raise NotValid("Class '%s' instance: %s" % (
+            instance.__class__.__name__, exc.args[0]))
     except OutsideCardinality, exc:
         raise NotValid(
-                "Class '%s' instance cardinality error: %s" % \
-                (instance.__class__.__name__, exc.args[0]))
+            "Class '%s' instance cardinality error: %s" % (
+                instance.__class__.__name__, exc.args[0]))
 
 ERROR_TEXT = "Wrong type of value '%s' on attribute '%s' expected it to be %s"
+
 
 def valid_instance(instance):
     instclass = instance.__class__
     class_name = instclass.__name__
 
-    if instance.text:
-        _has_val = True
-    else:
-        _has_val = False
+    # if instance.text:
+    #     _has_val = True
+    # else:
+    #     _has_val = False
 
     if instclass.c_value_type and instance.text:
         try:
             validate_value_type(instance.text.strip(),
-                                    instclass.c_value_type)
+                                instclass.c_value_type)
         except NotValid, exc:
             raise NotValid("Class '%s' instance: %s" % (class_name,
                                                         exc.args[0]))
@@ -340,15 +362,14 @@ def valid_instance(instance):
                     if typ.c_value_type:
                         spec = typ.c_value_type
                     else:
-                        spec = {"base": "string"} # doI need a default
+                        spec = {"base": "string"}  # do I need a default
               
                     validate_value_type(value, spec)
                 else:
                     valid(typ, value)
             except (NotValid, ValueError), exc:
                 txt = ERROR_TEXT % (value, name, exc.args[0])
-                raise NotValid(
-                            "Class '%s' instance: %s" % (class_name, txt))
+                raise NotValid("Class '%s' instance: %s" % (class_name, txt))
         
     for (name, _spec) in instclass.c_children.values():
         value = getattr(instance, name, '')
@@ -367,7 +388,7 @@ def valid_instance(instance):
             _cmin = _cmax = _card = None
 
         if value:
-            _has_val = True
+            #_has_val = True
             if isinstance(value, list):
                 _list = True
                 vlen = len(value)
@@ -378,14 +399,14 @@ def valid_instance(instance):
             if _card:
                 if _cmin is not None and _cmin > vlen:
                     raise NotValid(
-                            "Class '%s' instance cardinality error: %s" % \
-                            (class_name, "less then min (%s<%s)" % (vlen,
-                                                                    _cmin)))
+                        "Class '%s' instance cardinality error: %s" % (
+                            class_name, "less then min (%s<%s)" % (vlen,
+                                                                   _cmin)))
                 if _cmax is not None and vlen > _cmax:
                     raise NotValid(
-                            "Class '%s' instance cardinality error: %s" % \
-                            (class_name, "more then max (%s>%s)" % (vlen,
-                                                                    _cmax)))
+                        "Class '%s' instance cardinality error: %s" % (
+                            class_name, "more then max (%s>%s)" % (vlen,
+                                                                   _cmax)))
             
             if _list:
                 for val in value:
@@ -396,8 +417,8 @@ def valid_instance(instance):
         else:
             if _cmin:
                 raise NotValid(
-                    "Class '%s' instance cardinality error: %s" % \
-                    (class_name, "too few values on %s" % name))
+                    "Class '%s' instance cardinality error: %s" % (
+                        class_name, "too few values on %s" % name))
 
 #    if not _has_val:
 #        if class_name != "RequestedAttribute":
@@ -407,9 +428,10 @@ def valid_instance(instance):
 
     return True
 
+
 def valid_domain_name(dns_name):
     m = re.match(
-            "^[a-z0-9]+([-.]{1}[a-z0-9]+).[a-z]{2,5}(:[0-9]{1,5})?(\/.)?$",
-            dns_name, "ix")
+        "^[a-z0-9]+([-.]{ 1 }[a-z0-9]+).[a-z]{2,5}(:[0-9]{1,5})?(\/.)?$",
+        dns_name, "ix")
     if not m:
         raise ValueError("Not a proper domain name")

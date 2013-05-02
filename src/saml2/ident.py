@@ -125,6 +125,26 @@ class IdentDB(object):
         self.store(userid, nameid)
         return nameid
 
+    def find_nameid(self, userid, **kwargs):
+        res = []
+        try:
+            _vals = self.db[userid]
+        except KeyError:
+            return res
+
+        for val in _vals.split(" "):
+            nid = decode(val)
+            if kwargs:
+                for key, val in kwargs.items():
+                    if getattr(nid, key, None) != val:
+                        break
+                else:
+                    res.append(nid)
+            else:
+                res.append(nid)
+
+        return res
+
     def nim_args(self, local_policy=None, sp_name_qualifier="",
                  name_id_policy=None, name_qualifier=""):
         """
@@ -191,7 +211,7 @@ class IdentDB(object):
 
     def find_local_id(self, name_id):
         """
-        Only find on persistent IDs
+        Only find persistent IDs
 
         :param name_id:
         :return:
@@ -285,30 +305,6 @@ class IdentDB(object):
         self.remove_remote(orig_name_id)
         self.store(_id, name_id)
         return name_id
-
-    def publish(self, userid, name_id, entity_id):
-        """
-        About userid I have published nameid to entity_id
-        Will gladly overwrite whatever was there before
-        :param userid:
-        :param name_id:
-        :param entity_id:
-        :return:
-        """
-
-        self.db["%s:%s" % (userid, entity_id)] = name_id
-
-    def published(self, userid, entity_id):
-        """
-
-        :param userid:
-        :param entity_id:
-        :return:
-        """
-        try:
-            return self.db["%s:%s" % (userid, entity_id)]
-        except KeyError:
-            return None
 
     def close(self):
         self.db.close()

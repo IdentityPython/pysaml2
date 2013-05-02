@@ -667,7 +667,8 @@ class CryptoBackendXmlSec1(CryptoBackend):
                     ]
 
         (_stdout, _stderr, output) = self._run_xmlsec(com_list, [template],
-                                                      exception=DecryptError)
+                                                      exception=DecryptError,
+                                                      validate_output=False)
         return output
 
     def decrypt(self, enctext, key_file):
@@ -679,7 +680,8 @@ class CryptoBackendXmlSec1(CryptoBackend):
                     ]
 
         (_stdout, _stderr, output) = self._run_xmlsec(com_list, [fil],
-                                                      exception=DecryptError)
+                                                      exception=DecryptError,
+                                                      validate_output=False)
         return output
 
     def sign_statement(self, statement, class_name, key_file, node_id,

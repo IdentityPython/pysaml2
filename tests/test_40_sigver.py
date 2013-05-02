@@ -14,13 +14,15 @@ from saml2.sigver import xmlsec_version, get_xmlsec_cryptobackend, get_xmlsec_bi
 
 from py.test import raises
 
-SIGNED = "saml_signed.xml"
-UNSIGNED = "saml_unsigned.xml"
-FALSE_SIGNED = "saml_false_signed.xml"
-SIMPLE_SAML_PHP_RESPONSE = "simplesamlphp_authnresponse.xml"
+from pathutils import full_path
 
-PUB_KEY = "test.pem"
-PRIV_KEY = "test.key"
+SIGNED = full_path("saml_signed.xml")
+UNSIGNED = full_path("saml_unsigned.xml")
+FALSE_SIGNED = full_path("saml_false_signed.xml")
+SIMPLE_SAML_PHP_RESPONSE = full_path("simplesamlphp_authnresponse.xml")
+
+PUB_KEY = full_path("test.pem")
+PRIV_KEY = full_path("test.key")
 
 
 def _eq(l1,l2):
@@ -360,7 +362,7 @@ class TestSecurityMetadata():
     def setup_class(self):
         xmlexec = get_xmlsec_binary()
         md = MetadataStore([saml, samlp], None, xmlexec)
-        md.load("local", "metadata_cert.xml")
+        md.load("local", full_path("metadata_cert.xml"))
 
         crypto = get_xmlsec_cryptobackend()
         self.sec = sigver.SecurityContext(crypto, key_file=PRIV_KEY,

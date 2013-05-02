@@ -24,11 +24,7 @@ from saml2.s_utils import UnknownPrincipal
 import xmldsig
 import xmlenc
 
-try:
-    from saml2.sigver import get_xmlsec_binary
-    xmlsec_path = get_xmlsec_binary(["/opt/local/bin"])
-except ImportError:
-    xmlsec_path = '/usr/bin/xmlsec1'
+from pathutils import full_path, xmlsec_path
 
 
 ONTS = {
@@ -43,32 +39,33 @@ ONTS = {
     xmlenc.NAMESPACE: xmlenc
 }
 
-ATTRCONV = ac_factory("attributemaps")
+ATTRCONV = ac_factory(full_path("attributemaps"))
 
 METADATACONF = {
     "1": {
-        "local": ["swamid-1.0.xml"]
+        "local": [full_path("swamid-1.0.xml")]
     },
     "2": {
-        "local": ["InCommon-metadata.xml"]
+        "local": [full_path("InCommon-metadata.xml")]
     },
     "3": {
-        "local": ["extended.xml"]
+        "local": [full_path("extended.xml")]
     },
     "7": {
-        "local": ["metadata_sp_1.xml", "InCommon-metadata.xml"],
+        "local": [full_path("metadata_sp_1.xml"),
+                  full_path("InCommon-metadata.xml")],
         "remote": [
             {"url": "https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2",
-             "cert": "kalmar2.pem"}]
+             "cert": full_path("kalmar2.pem")}]
     },
     "4": {
-        "local": ["metadata_example.xml"]
+        "local": [full_path("metadata_example.xml")]
     },
     "5": {
-        "local": ["metadata.aaitest.xml"]
+        "local": [full_path("metadata.aaitest.xml")]
     },
     "6": {
-        "local": ["metasp.xml"]
+        "local": [full_path("metasp.xml")]
     }
 }
 
@@ -235,3 +232,6 @@ def test_sp_metadata():
                 'urn:oid:0.9.2342.19200300.100.1.3'])
     assert _eq([n["friendly_name"] for n in req["required"]],
                ['surName', 'givenName', 'mail'])
+
+if __name__ == "__main__":
+    test_swami_1()

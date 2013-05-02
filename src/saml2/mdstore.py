@@ -97,6 +97,21 @@ class MetaData(object):
         self.entity = {}
         self.metadata = metadata
 
+    def items(self):
+        return self.entity.items()
+
+    def keys(self):
+        return self.entity.keys()
+
+    def values(self):
+        return self.entity.keys()
+
+    def __contains__(self, item):
+        return item in self.entity
+
+    def __getitem__(self, item):
+        return self.entity[item]
+
     def do_entity_descriptor(self, entity_descr):
         try:
             if not valid(entity_descr.valid_until):
@@ -183,7 +198,7 @@ class MetaData(object):
                                                    binding))
         try:
             srvs = []
-            for t in self.entity[entity_id][typ]:
+            for t in self[entity_id][typ]:
                 try:
                     srvs.extend(t[service])
                 except KeyError:
@@ -211,7 +226,7 @@ class MetaData(object):
 
     def _ext_service(self, entity_id, typ, service, binding):
         try:
-            srvs = self.entity[entity_id][typ]
+            srvs = self[entity_id][typ]
         except KeyError:
             return None
 
@@ -238,7 +253,7 @@ class MetaData(object):
         :return:
         """
         res = {}
-        for ent in self.entity.keys():
+        for ent in self.keys():
             bind = self._service(ent, typ, service, binding)
             if bind:
                 res[ent] = bind
@@ -268,7 +283,7 @@ class MetaData(object):
         res = {"required": [], "optional": []}
 
         try:
-            for sp in self.entity[entity_id]["spsso_descriptor"]:
+            for sp in self[entity_id]["spsso_descriptor"]:
                 _res = attribute_requirement(sp)
                 res["required"].extend(_res["required"])
                 res["optional"].extend(_res["optional"])
@@ -278,22 +293,22 @@ class MetaData(object):
         return res
 
     def dumps(self):
-        return json.dumps(self.entity, indent=2)
+        return json.dumps(self.items(), indent=2)
 
     def with_descriptor(self, descriptor):
         res = {}
         desc = "%s_descriptor" % descriptor
-        for eid, ent in self.entity.items():
+        for eid, ent in self.items():
             if desc in ent:
                 res[eid] = ent
         return res
 
     def __str__(self):
-        return "%s" % (self.entity,)
+        return "%s" % self.items()
 
     def construct_source_id(self):
         res = {}
-        for eid, ent in self.entity.items():
+        for eid, ent in self.items():
             for desc in ["spsso_descriptor", "idpsso_descriptor"]:
                 try:
                     for srv in ent[desc]:
@@ -530,19 +545,19 @@ class MetadataStore(object):
 
     def attribute_requirement(self, entity_id, index=0):
         for md in self.metadata.values():
-            if entity_id in md.entity:
+            if entity_id in md:
                 return md.attribute_requirement(entity_id, index)
 
     def keys(self):
         res = []
         for md in self.metadata.values():
-            res.extend(md.entity.keys())
+            res.extend(md.keys())
         return res
 
     def __getitem__(self, item):
         for md in self.metadata.values():
             try:
-                return md.entity[item]
+                return md[item]
             except KeyError:
                 pass
 
@@ -554,7 +569,7 @@ class MetadataStore(object):
     def entities(self):
         num = 0
         for md in self.metadata.values():
-            num += len(md.entity)
+            num += len(md.items())
 
         return num
 
@@ -569,8 +584,8 @@ class MetadataStore(object):
 
     def name(self, entity_id, langpref="en"):
         for md in self.metadata.values():
-            if entity_id in md.entity:
-                return name(md.entity[entity_id], langpref)
+            if entity_id in md.items():
+                return name(md[entity_id], langpref)
         return None
 
     def certs(self, entity_id, descriptor, use="signing"):
@@ -618,7 +633,7 @@ class MetadataStore(object):
 
     def bindings(self, entity_id, typ, service):
         for md in self.metadata.values():
-            if entity_id in md.entity:
+            if entity_id in md.items():
                 return md.bindings(entity_id, typ, service)
 
         return None
@@ -639,5 +654,5 @@ class MetadataStore(object):
     def items(self):
         res = {}
         for md in self.metadata.values():
-            res.update(md.entity)
+            res.update(md.items())
         return res.items()

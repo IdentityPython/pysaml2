@@ -60,6 +60,7 @@ class ExtensionsType_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def extensions_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(ExtensionsType_, xml_string)
 
@@ -75,6 +76,7 @@ class StatusMessage(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def status_message_from_string(xml_string):
     return saml2.create_class_from_xml_string(StatusMessage, xml_string)
 
@@ -88,8 +90,9 @@ class StatusDetailType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_any = {"namespace":"##any", "processContents":"lax", "minOccurs":"0",
-             "maxOccurs":"unbounded"}
+    c_any = {"namespace": "##any", "processContents": "lax", "minOccurs": "0",
+             "maxOccurs": "unbounded"}
+
 
 def status_detail_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(StatusDetailType_, xml_string)
@@ -106,6 +109,7 @@ class AuthnContextComparisonType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def authn_context_comparison_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(AuthnContextComparisonType_,
@@ -126,21 +130,22 @@ class NameIDPolicyType_(SamlBase):
     c_attributes['AllowCreate'] = ('allow_create', 'boolean', False)
 
     def __init__(self,
-            format=None,
-            sp_name_qualifier=None,
-            allow_create=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.format=format
-        self.sp_name_qualifier=sp_name_qualifier
-        self.allow_create=allow_create
+                 format=None,
+                 sp_name_qualifier=None,
+                 allow_create=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None,
+    ):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes,
+        )
+        self.format = format
+        self.sp_name_qualifier = sp_name_qualifier
+        self.allow_create = allow_create
+
 
 def name_id_policy_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(NameIDPolicyType_, xml_string)
@@ -156,6 +161,7 @@ class RequesterID(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def requester_id_from_string(xml_string):
     return saml2.create_class_from_xml_string(RequesterID, xml_string)
@@ -175,21 +181,22 @@ class IDPEntryType_(SamlBase):
     c_attributes['Loc'] = ('loc', 'anyURI', False)
 
     def __init__(self,
-            provider_id=None,
-            name=None,
-            loc=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.provider_id=provider_id
-        self.name=name
-        self.loc=loc
+                 provider_id=None,
+                 name=None,
+                 loc=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None,
+    ):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes,
+        )
+        self.provider_id = provider_id
+        self.name = name
+        self.loc = loc
+
 
 def idp_entry_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(IDPEntryType_, xml_string)
@@ -206,6 +213,7 @@ class GetComplete(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def get_complete_from_string(xml_string):
     return saml2.create_class_from_xml_string(GetComplete, xml_string)
 
@@ -220,6 +228,7 @@ class Artifact(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def artifact_from_string(xml_string):
     return saml2.create_class_from_xml_string(Artifact, xml_string)
@@ -236,6 +245,7 @@ class NewID(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def new_id_from_string(xml_string):
     return saml2.create_class_from_xml_string(NewID, xml_string)
 
@@ -250,6 +260,7 @@ class NewEncryptedID(saml.EncryptedElementType_):
     c_child_order = saml.EncryptedElementType_.c_child_order[:]
     c_cardinality = saml.EncryptedElementType_.c_cardinality.copy()
 
+
 def new_encrypted_id_from_string(xml_string):
     return saml2.create_class_from_xml_string(NewEncryptedID, xml_string)
 
@@ -263,6 +274,7 @@ class TerminateType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def terminate_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(TerminateType_, xml_string)
@@ -279,6 +291,7 @@ class SessionIndex(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def session_index_from_string(xml_string):
     return saml2.create_class_from_xml_string(SessionIndex, xml_string)
 
@@ -293,6 +306,7 @@ class Extensions(ExtensionsType_):
     c_child_order = ExtensionsType_.c_child_order[:]
     c_cardinality = ExtensionsType_.c_cardinality.copy()
 
+
 def extensions_from_string(xml_string):
     return saml2.create_class_from_xml_string(Extensions, xml_string)
 
@@ -306,6 +320,7 @@ class StatusDetail(StatusDetailType_):
     c_attributes = StatusDetailType_.c_attributes.copy()
     c_child_order = StatusDetailType_.c_child_order[:]
     c_cardinality = StatusDetailType_.c_cardinality.copy()
+
 
 def status_detail_from_string(xml_string):
     return saml2.create_class_from_xml_string(StatusDetail, xml_string)
@@ -337,31 +352,31 @@ class RequestAbstractType_(SamlBase):
     c_child_order.extend(['issuer', 'signature', 'extensions'])
 
     def __init__(self,
-            issuer=None,
-            signature=None,
-            extensions=None,
-            id=None,
-            version=None,
-            issue_instant=None,
-            destination=None,
-            consent=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.issuer=issuer
-        self.signature=signature
-        self.extensions=extensions
-        self.id=id
-        self.version=version
-        self.issue_instant=issue_instant
-        self.destination=destination
-        self.consent=consent
+                 issuer=None,
+                 signature=None,
+                 extensions=None,
+                 id=None,
+                 version=None,
+                 issue_instant=None,
+                 destination=None,
+                 consent=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None,
+    ):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes,
+        )
+        self.issuer = issuer
+        self.signature = signature
+        self.extensions = extensions
+        self.id = id
+        self.version = version
+        self.issue_instant = issue_instant
+        self.destination = destination
+        self.consent = consent
 
 
 class AssertionIDRequestType_(RequestAbstractType_):
@@ -374,41 +389,43 @@ class AssertionIDRequestType_(RequestAbstractType_):
     c_child_order = RequestAbstractType_.c_child_order[:]
     c_cardinality = RequestAbstractType_.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AssertionIDRef'] = (
-                                'assertion_id_ref', [saml.AssertionIDRef])
-    c_cardinality['assertion_id_ref'] = {"min":1}
+        'assertion_id_ref', [saml.AssertionIDRef])
+    c_cardinality['assertion_id_ref'] = {"min": 1}
     c_child_order.extend(['assertion_id_ref'])
 
     def __init__(self,
-            assertion_id_ref=None,
-            issuer=None,
-            signature=None,
-            extensions=None,
-            id=None,
-            version=None,
-            issue_instant=None,
-            destination=None,
-            consent=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        RequestAbstractType_.__init__(self, 
-                issuer=issuer,
-                signature=signature,
-                extensions=extensions,
-                id=id,
-                version=version,
-                issue_instant=issue_instant,
-                destination=destination,
-                consent=consent,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.assertion_id_ref=assertion_id_ref or []
+                 assertion_id_ref=None,
+                 issuer=None,
+                 signature=None,
+                 extensions=None,
+                 id=None,
+                 version=None,
+                 issue_instant=None,
+                 destination=None,
+                 consent=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None,
+    ):
+        RequestAbstractType_.__init__(self,
+                                      issuer=issuer,
+                                      signature=signature,
+                                      extensions=extensions,
+                                      id=id,
+                                      version=version,
+                                      issue_instant=issue_instant,
+                                      destination=destination,
+                                      consent=consent,
+                                      text=text,
+                                      extension_elements=extension_elements,
+                                      extension_attributes=extension_attributes,
+        )
+        self.assertion_id_ref = assertion_id_ref or []
+
 
 def assertion_id_request_type__from_string(xml_string):
-    return saml2.create_class_from_xml_string(AssertionIDRequestType_, xml_string)
+    return saml2.create_class_from_xml_string(AssertionIDRequestType_,
+                                              xml_string)
 
 
 class SubjectQueryAbstractType_(RequestAbstractType_):
@@ -425,33 +442,33 @@ class SubjectQueryAbstractType_(RequestAbstractType_):
     c_child_order.extend(['subject'])
 
     def __init__(self,
-            subject=None,
-            issuer=None,
-            signature=None,
-            extensions=None,
-            id=None,
-            version=None,
-            issue_instant=None,
-            destination=None,
-            consent=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        RequestAbstractType_.__init__(self, 
-                issuer=issuer,
-                signature=signature,
-                extensions=extensions,
-                id=id,
-                version=version,
-                issue_instant=issue_instant,
-                destination=destination,
-                consent=consent,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.subject=subject
+                 subject=None,
+                 issuer=None,
+                 signature=None,
+                 extensions=None,
+                 id=None,
+                 version=None,
+                 issue_instant=None,
+                 destination=None,
+                 consent=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None,
+    ):
+        RequestAbstractType_.__init__(self,
+                                      issuer=issuer,
+                                      signature=signature,
+                                      extensions=extensions,
+                                      id=id,
+                                      version=version,
+                                      issue_instant=issue_instant,
+                                      destination=destination,
+                                      consent=consent,
+                                      text=text,
+                                      extension_elements=extension_elements,
+                                      extension_attributes=extension_attributes,
+        )
+        self.subject = subject
 
 
 class RequestedAuthnContextType_(SamlBase):
@@ -463,33 +480,36 @@ class RequestedAuthnContextType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AuthnContextClassRef'] = (
-                                                'authn_context_class_ref',
-                                                [saml.AuthnContextClassRef])
+    c_children[
+        '{urn:oasis:names:tc:SAML:2.0:assertion}AuthnContextClassRef'] = (
+        'authn_context_class_ref',
+        [saml.AuthnContextClassRef])
     c_cardinality['authn_context_class_ref'] = {"min": 0}
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AuthnContextDeclRef'] = (
-                                                'authn_context_decl_ref',
-                                                [saml.AuthnContextDeclRef])
+        'authn_context_decl_ref',
+        [saml.AuthnContextDeclRef])
     c_cardinality['authn_context_decl_ref'] = {"min": 0}
-    c_attributes['Comparison'] = ('comparison', AuthnContextComparisonType_, False)
+    c_attributes['Comparison'] = ('comparison', AuthnContextComparisonType_,
+                                  False)
     c_child_order.extend(['authn_context_class_ref', 'authn_context_decl_ref'])
 
     def __init__(self,
-            authn_context_class_ref=None,
-            authn_context_decl_ref=None,
-            comparison=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.authn_context_class_ref=authn_context_class_ref or []
-        self.authn_context_decl_ref=authn_context_decl_ref or []
-        self.comparison=comparison
+                 authn_context_class_ref=None,
+                 authn_context_decl_ref=None,
+                 comparison=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None,
+    ):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes,
+        )
+        self.authn_context_class_ref = authn_context_class_ref or []
+        self.authn_context_decl_ref = authn_context_decl_ref or []
+        self.comparison = comparison
+
 
 def requested_authn_context_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(RequestedAuthnContextType_,
@@ -505,41 +525,43 @@ class AttributeQueryType_(SubjectQueryAbstractType_):
     c_attributes = SubjectQueryAbstractType_.c_attributes.copy()
     c_child_order = SubjectQueryAbstractType_.c_child_order[:]
     c_cardinality = SubjectQueryAbstractType_.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Attribute'] = ('attribute',
-                                                                      [saml.Attribute])
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Attribute'] = (
+        'attribute',
+        [saml.Attribute])
     c_cardinality['attribute'] = {"min": 0}
     c_child_order.extend(['attribute'])
 
     def __init__(self,
-            attribute=None,
-            subject=None,
-            issuer=None,
-            signature=None,
-            extensions=None,
-            id=None,
-            version=None,
-            issue_instant=None,
-            destination=None,
-            consent=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SubjectQueryAbstractType_.__init__(self, 
-                subject=subject,
-                issuer=issuer,
-                signature=signature,
-                extensions=extensions,
-                id=id,
-                version=version,
-                issue_instant=issue_instant,
-                destination=destination,
-                consent=consent,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.attribute=attribute or []
+                 attribute=None,
+                 subject=None,
+                 issuer=None,
+                 signature=None,
+                 extensions=None,
+                 id=None,
+                 version=None,
+                 issue_instant=None,
+                 destination=None,
+                 consent=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None,
+    ):
+        SubjectQueryAbstractType_.__init__(self,
+                                           subject=subject,
+                                           issuer=issuer,
+                                           signature=signature,
+                                           extensions=extensions,
+                                           id=id,
+                                           version=version,
+                                           issue_instant=issue_instant,
+                                           destination=destination,
+                                           consent=consent,
+                                           text=text,
+                                           extension_elements=extension_elements,
+                                           extension_attributes=extension_attributes,
+        )
+        self.attribute = attribute or []
+
 
 def attribute_query_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(AttributeQueryType_, xml_string)
@@ -555,8 +577,9 @@ class AuthzDecisionQueryType_(SubjectQueryAbstractType_):
     c_child_order = SubjectQueryAbstractType_.c_child_order[:]
     c_cardinality = SubjectQueryAbstractType_.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Action'] = ('action',
-                                                                   [saml.Action])
-    c_cardinality['action'] = {"min":1}
+                                                                   [
+                                                                       saml.Action])
+    c_cardinality['action'] = {"min": 1}
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Evidence'] = ('evidence',
                                                                      saml.Evidence)
     c_cardinality['evidence'] = {"min": 0, "max": 1}
@@ -564,39 +587,40 @@ class AuthzDecisionQueryType_(SubjectQueryAbstractType_):
     c_child_order.extend(['action', 'evidence'])
 
     def __init__(self,
-            action=None,
-            evidence=None,
-            resource=None,
-            subject=None,
-            issuer=None,
-            signature=None,
-            extensions=None,
-            id=None,
-            version=None,
-            issue_instant=None,
-            destination=None,
-            consent=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SubjectQueryAbstractType_.__init__(self, 
-                subject=subject,
-                issuer=issuer,
-                signature=signature,
-                extensions=extensions,
-                id=id,
-                version=version,
-                issue_instant=issue_instant,
-                destination=destination,
-                consent=consent,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.action=action or []
-        self.evidence=evidence
-        self.resource=resource
+                 action=None,
+                 evidence=None,
+                 resource=None,
+                 subject=None,
+                 issuer=None,
+                 signature=None,
+                 extensions=None,
+                 id=None,
+                 version=None,
+                 issue_instant=None,
+                 destination=None,
+                 consent=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None,
+    ):
+        SubjectQueryAbstractType_.__init__(self,
+                                           subject=subject,
+                                           issuer=issuer,
+                                           signature=signature,
+                                           extensions=extensions,
+                                           id=id,
+                                           version=version,
+                                           issue_instant=issue_instant,
+                                           destination=destination,
+                                           consent=consent,
+                                           text=text,
+                                           extension_elements=extension_elements,
+                                           extension_attributes=extension_attributes,
+        )
+        self.action = action or []
+        self.evidence = evidence
+        self.resource = resource
+
 
 def authz_decision_query_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(AuthzDecisionQueryType_,
@@ -613,6 +637,7 @@ class NameIDPolicy(NameIDPolicyType_):
     c_child_order = NameIDPolicyType_.c_child_order[:]
     c_cardinality = NameIDPolicyType_.c_cardinality.copy()
 
+
 def name_id_policy_from_string(xml_string):
     return saml2.create_class_from_xml_string(NameIDPolicy, xml_string)
 
@@ -626,6 +651,7 @@ class IDPEntry(IDPEntryType_):
     c_attributes = IDPEntryType_.c_attributes.copy()
     c_child_order = IDPEntryType_.c_child_order[:]
     c_cardinality = IDPEntryType_.c_cardinality.copy()
+
 
 def idp_entry_from_string(xml_string):
     return saml2.create_class_from_xml_string(IDPEntry, xml_string)
@@ -645,33 +671,34 @@ class ArtifactResolveType_(RequestAbstractType_):
     c_child_order.extend(['artifact'])
 
     def __init__(self,
-            artifact=None,
-            issuer=None,
-            signature=None,
-            extensions=None,
-            id=None,
-            version=None,
-            issue_instant=None,
-            destination=None,
-            consent=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        RequestAbstractType_.__init__(self, 
-                issuer=issuer,
-                signature=signature,
-                extensions=extensions,
-                id=id,
-                version=version,
-                issue_instant=issue_instant,
-                destination=destination,
-                consent=consent,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.artifact=artifact
+                 artifact=None,
+                 issuer=None,
+                 signature=None,
+                 extensions=None,
+                 id=None,
+                 version=None,
+                 issue_instant=None,
+                 destination=None,
+                 consent=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None,
+    ):
+        RequestAbstractType_.__init__(self,
+                                      issuer=issuer,
+                                      signature=signature,
+                                      extensions=extensions,
+                                      id=id,
+                                      version=version,
+                                      issue_instant=issue_instant,
+                                      destination=destination,
+                                      consent=consent,
+                                      text=text,
+                                      extension_elements=extension_elements,
+                                      extension_attributes=extension_attributes,
+        )
+        self.artifact = artifact
+
 
 def artifact_resolve_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(ArtifactResolveType_, xml_string)
@@ -687,6 +714,7 @@ class Terminate(TerminateType_):
     c_child_order = TerminateType_.c_child_order[:]
     c_cardinality = TerminateType_.c_cardinality.copy()
 
+
 def terminate_from_string(xml_string):
     return saml2.create_class_from_xml_string(Terminate, xml_string)
 
@@ -700,56 +728,62 @@ class LogoutRequestType_(RequestAbstractType_):
     c_attributes = RequestAbstractType_.c_attributes.copy()
     c_child_order = RequestAbstractType_.c_child_order[:]
     c_cardinality = RequestAbstractType_.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}BaseID'] = ('base_id', saml.BaseID)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}BaseID'] = (
+        'base_id', saml.BaseID)
     c_cardinality['base_id'] = {"min": 0, "max": 1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}NameID'] = ('name_id', saml.NameID)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}NameID'] = (
+        'name_id', saml.NameID)
     c_cardinality['name_id'] = {"min": 0, "max": 1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}EncryptedID'] = ('encrypted_id', saml.EncryptedID)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}EncryptedID'] = (
+        'encrypted_id', saml.EncryptedID)
     c_cardinality['encrypted_id'] = {"min": 0, "max": 1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}SessionIndex'] = ('session_index', [SessionIndex])
+    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}SessionIndex'] = (
+        'session_index', [SessionIndex])
     c_cardinality['session_index'] = {"min": 0}
     c_attributes['Reason'] = ('reason', 'string', False)
     c_attributes['NotOnOrAfter'] = ('not_on_or_after', 'dateTime', False)
-    c_child_order.extend(['base_id', 'name_id', 'encrypted_id', 'session_index'])
+    c_child_order.extend(
+        ['base_id', 'name_id', 'encrypted_id', 'session_index'])
 
     def __init__(self,
-            base_id=None,
-            name_id=None,
-            encrypted_id=None,
-            session_index=None,
-            reason=None,
-            not_on_or_after=None,
-            issuer=None,
-            signature=None,
-            extensions=None,
-            id=None,
-            version=None,
-            issue_instant=None,
-            destination=None,
-            consent=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        RequestAbstractType_.__init__(self, 
-                issuer=issuer,
-                signature=signature,
-                extensions=extensions,
-                id=id,
-                version=version,
-                issue_instant=issue_instant,
-                destination=destination,
-                consent=consent,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.base_id=base_id
-        self.name_id=name_id
-        self.encrypted_id=encrypted_id
-        self.session_index=session_index or []
-        self.reason=reason
-        self.not_on_or_after=not_on_or_after
+                 base_id=None,
+                 name_id=None,
+                 encrypted_id=None,
+                 session_index=None,
+                 reason=None,
+                 not_on_or_after=None,
+                 issuer=None,
+                 signature=None,
+                 extensions=None,
+                 id=None,
+                 version=None,
+                 issue_instant=None,
+                 destination=None,
+                 consent=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None,
+    ):
+        RequestAbstractType_.__init__(self,
+                                      issuer=issuer,
+                                      signature=signature,
+                                      extensions=extensions,
+                                      id=id,
+                                      version=version,
+                                      issue_instant=issue_instant,
+                                      destination=destination,
+                                      consent=consent,
+                                      text=text,
+                                      extension_elements=extension_elements,
+                                      extension_attributes=extension_attributes,
+        )
+        self.base_id = base_id
+        self.name_id = name_id
+        self.encrypted_id = encrypted_id
+        self.session_index = session_index or []
+        self.reason = reason
+        self.not_on_or_after = not_on_or_after
+
 
 def logout_request_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(LogoutRequestType_, xml_string)
@@ -765,52 +799,59 @@ class NameIDMappingRequestType_(RequestAbstractType_):
     c_attributes = RequestAbstractType_.c_attributes.copy()
     c_child_order = RequestAbstractType_.c_child_order[:]
     c_cardinality = RequestAbstractType_.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}BaseID'] = ('base_id', saml.BaseID)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}BaseID'] = (
+        'base_id', saml.BaseID)
     c_cardinality['base_id'] = {"min": 0, "max": 1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}NameID'] = ('name_id', saml.NameID)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}NameID'] = (
+        'name_id', saml.NameID)
     c_cardinality['name_id'] = {"min": 0, "max": 1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}EncryptedID'] = ('encrypted_id', saml.EncryptedID)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}EncryptedID'] = (
+        'encrypted_id', saml.EncryptedID)
     c_cardinality['encrypted_id'] = {"min": 0, "max": 1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}NameIDPolicy'] = ('name_id_policy', NameIDPolicy)
-    c_child_order.extend(['base_id', 'name_id', 'encrypted_id', 'name_id_policy'])
+    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}NameIDPolicy'] = (
+        'name_id_policy', NameIDPolicy)
+    c_child_order.extend(
+        ['base_id', 'name_id', 'encrypted_id', 'name_id_policy'])
 
     def __init__(self,
-            base_id=None,
-            name_id=None,
-            encrypted_id=None,
-            name_id_policy=None,
-            issuer=None,
-            signature=None,
-            extensions=None,
-            id=None,
-            version=None,
-            issue_instant=None,
-            destination=None,
-            consent=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        RequestAbstractType_.__init__(self, 
-                issuer=issuer,
-                signature=signature,
-                extensions=extensions,
-                id=id,
-                version=version,
-                issue_instant=issue_instant,
-                destination=destination,
-                consent=consent,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.base_id=base_id
-        self.name_id=name_id
-        self.encrypted_id=encrypted_id
-        self.name_id_policy=name_id_policy
+                 base_id=None,
+                 name_id=None,
+                 encrypted_id=None,
+                 name_id_policy=None,
+                 issuer=None,
+                 signature=None,
+                 extensions=None,
+                 id=None,
+                 version=None,
+                 issue_instant=None,
+                 destination=None,
+                 consent=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None,
+    ):
+        RequestAbstractType_.__init__(self,
+                                      issuer=issuer,
+                                      signature=signature,
+                                      extensions=extensions,
+                                      id=id,
+                                      version=version,
+                                      issue_instant=issue_instant,
+                                      destination=destination,
+                                      consent=consent,
+                                      text=text,
+                                      extension_elements=extension_elements,
+                                      extension_attributes=extension_attributes,
+        )
+        self.base_id = base_id
+        self.name_id = name_id
+        self.encrypted_id = encrypted_id
+        self.name_id_policy = name_id_policy
+
 
 def name_id_mapping_request_type__from_string(xml_string):
-    return saml2.create_class_from_xml_string(NameIDMappingRequestType_, xml_string)
+    return saml2.create_class_from_xml_string(NameIDMappingRequestType_,
+                                              xml_string)
 
 
 class AssertionIDRequest(AssertionIDRequestType_):
@@ -822,6 +863,7 @@ class AssertionIDRequest(AssertionIDRequestType_):
     c_attributes = AssertionIDRequestType_.c_attributes.copy()
     c_child_order = AssertionIDRequestType_.c_child_order[:]
     c_cardinality = AssertionIDRequestType_.c_cardinality.copy()
+
 
 def assertion_id_request_from_string(xml_string):
     return saml2.create_class_from_xml_string(AssertionIDRequest, xml_string)
@@ -837,6 +879,7 @@ class SubjectQuery(SubjectQueryAbstractType_):
     c_child_order = SubjectQueryAbstractType_.c_child_order[:]
     c_cardinality = SubjectQueryAbstractType_.c_cardinality.copy()
 
+
 def subject_query_from_string(xml_string):
     return saml2.create_class_from_xml_string(SubjectQuery, xml_string)
 
@@ -850,6 +893,7 @@ class RequestedAuthnContext(RequestedAuthnContextType_):
     c_attributes = RequestedAuthnContextType_.c_attributes.copy()
     c_child_order = RequestedAuthnContextType_.c_child_order[:]
     c_cardinality = RequestedAuthnContextType_.c_cardinality.copy()
+
 
 def requested_authn_context_from_string(xml_string):
     return saml2.create_class_from_xml_string(RequestedAuthnContext, xml_string)
@@ -865,6 +909,7 @@ class AttributeQuery(AttributeQueryType_):
     c_child_order = AttributeQueryType_.c_child_order[:]
     c_cardinality = AttributeQueryType_.c_cardinality.copy()
 
+
 def attribute_query_from_string(xml_string):
     return saml2.create_class_from_xml_string(AttributeQuery, xml_string)
 
@@ -879,6 +924,7 @@ class AuthzDecisionQuery(AuthzDecisionQueryType_):
     c_child_order = AuthzDecisionQueryType_.c_child_order[:]
     c_cardinality = AuthzDecisionQueryType_.c_cardinality.copy()
 
+
 def authz_decision_query_from_string(xml_string):
     return saml2.create_class_from_xml_string(AuthzDecisionQuery, xml_string)
 
@@ -892,26 +938,29 @@ class IDPListType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}IDPEntry'] = ('idp_entry', [IDPEntry])
-    c_cardinality['idp_entry'] = {"min":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}GetComplete'] = ('get_complete', GetComplete)
+    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}IDPEntry'] = (
+        'idp_entry', [IDPEntry])
+    c_cardinality['idp_entry'] = {"min": 1}
+    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}GetComplete'] = (
+        'get_complete', GetComplete)
     c_cardinality['get_complete'] = {"min": 0, "max": 1}
     c_child_order.extend(['idp_entry', 'get_complete'])
 
     def __init__(self,
-            idp_entry=None,
-            get_complete=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.idp_entry=idp_entry or []
-        self.get_complete=get_complete
+                 idp_entry=None,
+                 get_complete=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None,
+    ):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes,
+        )
+        self.idp_entry = idp_entry or []
+        self.get_complete = get_complete
+
 
 def idp_list_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(IDPListType_, xml_string)
@@ -926,6 +975,7 @@ class ArtifactResolve(ArtifactResolveType_):
     c_attributes = ArtifactResolveType_.c_attributes.copy()
     c_child_order = ArtifactResolveType_.c_child_order[:]
     c_cardinality = ArtifactResolveType_.c_cardinality.copy()
+
 
 def artifact_resolve_from_string(xml_string):
     return saml2.create_class_from_xml_string(ArtifactResolve, xml_string)
@@ -944,61 +994,64 @@ class ManageNameIDRequestType_(RequestAbstractType_):
                                                                    saml.NameID)
     c_cardinality['name_id'] = {"min": 0, "max": 1}
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}EncryptedID'] = (
-                                                                'encrypted_id',
-                                                                saml.EncryptedID)
+        'encrypted_id',
+        saml.EncryptedID)
     c_cardinality['encrypted_id'] = {"min": 0, "max": 1}
     c_children['{urn:oasis:names:tc:SAML:2.0:protocol}NewID'] = ('new_id',
                                                                  NewID)
     c_cardinality['new_id'] = {"min": 0, "max": 1}
     c_children['{urn:oasis:names:tc:SAML:2.0:protocol}NewEncryptedID'] = (
-                                                            'new_encrypted_id',
-                                                            NewEncryptedID)
+        'new_encrypted_id',
+        NewEncryptedID)
     c_cardinality['new_encrypted_id'] = {"min": 0, "max": 1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}Terminate'] = ('terminate',
-                                                                     Terminate)
+    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}Terminate'] = (
+        'terminate',
+        Terminate)
     c_cardinality['terminate'] = {"min": 0, "max": 1}
     c_child_order.extend(['name_id', 'encrypted_id', 'new_id',
                           'new_encrypted_id', 'terminate'])
 
     def __init__(self,
-            name_id=None,
-            encrypted_id=None,
-            new_id=None,
-            new_encrypted_id=None,
-            terminate=None,
-            issuer=None,
-            signature=None,
-            extensions=None,
-            id=None,
-            version=None,
-            issue_instant=None,
-            destination=None,
-            consent=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        RequestAbstractType_.__init__(self, 
-                issuer=issuer,
-                signature=signature,
-                extensions=extensions,
-                id=id,
-                version=version,
-                issue_instant=issue_instant,
-                destination=destination,
-                consent=consent,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.name_id=name_id
-        self.encrypted_id=encrypted_id
-        self.new_id=new_id
-        self.new_encrypted_id=new_encrypted_id
-        self.terminate=terminate
+                 name_id=None,
+                 encrypted_id=None,
+                 new_id=None,
+                 new_encrypted_id=None,
+                 terminate=None,
+                 issuer=None,
+                 signature=None,
+                 extensions=None,
+                 id=None,
+                 version=None,
+                 issue_instant=None,
+                 destination=None,
+                 consent=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None,
+    ):
+        RequestAbstractType_.__init__(self,
+                                      issuer=issuer,
+                                      signature=signature,
+                                      extensions=extensions,
+                                      id=id,
+                                      version=version,
+                                      issue_instant=issue_instant,
+                                      destination=destination,
+                                      consent=consent,
+                                      text=text,
+                                      extension_elements=extension_elements,
+                                      extension_attributes=extension_attributes,
+        )
+        self.name_id = name_id
+        self.encrypted_id = encrypted_id
+        self.new_id = new_id
+        self.new_encrypted_id = new_encrypted_id
+        self.terminate = terminate
+
 
 def manage_name_id_request_type__from_string(xml_string):
-    return saml2.create_class_from_xml_string(ManageNameIDRequestType_, xml_string)
+    return saml2.create_class_from_xml_string(ManageNameIDRequestType_,
+                                              xml_string)
 
 
 class LogoutRequest(LogoutRequestType_):
@@ -1010,6 +1063,7 @@ class LogoutRequest(LogoutRequestType_):
     c_attributes = LogoutRequestType_.c_attributes.copy()
     c_child_order = LogoutRequestType_.c_child_order[:]
     c_cardinality = LogoutRequestType_.c_cardinality.copy()
+
 
 def logout_request_from_string(xml_string):
     return saml2.create_class_from_xml_string(LogoutRequest, xml_string)
@@ -1025,6 +1079,7 @@ class NameIDMappingRequest(NameIDMappingRequestType_):
     c_child_order = NameIDMappingRequestType_.c_child_order[:]
     c_cardinality = NameIDMappingRequestType_.c_cardinality.copy()
 
+
 def name_id_mapping_request_from_string(xml_string):
     return saml2.create_class_from_xml_string(NameIDMappingRequest, xml_string)
 
@@ -1038,45 +1093,47 @@ class AuthnQueryType_(SubjectQueryAbstractType_):
     c_attributes = SubjectQueryAbstractType_.c_attributes.copy()
     c_child_order = SubjectQueryAbstractType_.c_child_order[:]
     c_cardinality = SubjectQueryAbstractType_.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}RequestedAuthnContext'] = (
-                                                    'requested_authn_context',
-                                                    RequestedAuthnContext)
+    c_children[
+        '{urn:oasis:names:tc:SAML:2.0:protocol}RequestedAuthnContext'] = (
+        'requested_authn_context',
+        RequestedAuthnContext)
     c_cardinality['requested_authn_context'] = {"min": 0, "max": 1}
     c_attributes['SessionIndex'] = ('session_index', 'string', False)
     c_child_order.extend(['requested_authn_context'])
 
     def __init__(self,
-            requested_authn_context=None,
-            session_index=None,
-            subject=None,
-            issuer=None,
-            signature=None,
-            extensions=None,
-            id=None,
-            version=None,
-            issue_instant=None,
-            destination=None,
-            consent=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SubjectQueryAbstractType_.__init__(self, 
-                subject=subject,
-                issuer=issuer,
-                signature=signature,
-                extensions=extensions,
-                id=id,
-                version=version,
-                issue_instant=issue_instant,
-                destination=destination,
-                consent=consent,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.requested_authn_context=requested_authn_context
-        self.session_index=session_index
+                 requested_authn_context=None,
+                 session_index=None,
+                 subject=None,
+                 issuer=None,
+                 signature=None,
+                 extensions=None,
+                 id=None,
+                 version=None,
+                 issue_instant=None,
+                 destination=None,
+                 consent=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None,
+    ):
+        SubjectQueryAbstractType_.__init__(self,
+                                           subject=subject,
+                                           issuer=issuer,
+                                           signature=signature,
+                                           extensions=extensions,
+                                           id=id,
+                                           version=version,
+                                           issue_instant=issue_instant,
+                                           destination=destination,
+                                           consent=consent,
+                                           text=text,
+                                           extension_elements=extension_elements,
+                                           extension_attributes=extension_attributes,
+        )
+        self.requested_authn_context = requested_authn_context
+        self.session_index = session_index
+
 
 def authn_query_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(AuthnQueryType_, xml_string)
@@ -1092,6 +1149,7 @@ class IDPList(IDPListType_):
     c_child_order = IDPListType_.c_child_order[:]
     c_cardinality = IDPListType_.c_cardinality.copy()
 
+
 def idp_list_from_string(xml_string):
     return saml2.create_class_from_xml_string(IDPList, xml_string)
 
@@ -1105,6 +1163,7 @@ class ManageNameIDRequest(ManageNameIDRequestType_):
     c_attributes = ManageNameIDRequestType_.c_attributes.copy()
     c_child_order = ManageNameIDRequestType_.c_child_order[:]
     c_cardinality = ManageNameIDRequestType_.c_cardinality.copy()
+
 
 def manage_name_id_request_from_string(xml_string):
     return saml2.create_class_from_xml_string(ManageNameIDRequest, xml_string)
@@ -1120,6 +1179,7 @@ class AuthnQuery(AuthnQueryType_):
     c_child_order = AuthnQueryType_.c_child_order[:]
     c_cardinality = AuthnQueryType_.c_cardinality.copy()
 
+
 def authn_query_from_string(xml_string):
     return saml2.create_class_from_xml_string(AuthnQuery, xml_string)
 
@@ -1133,29 +1193,32 @@ class ScopingType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}IDPList'] = ('idp_list', IDPList)
+    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}IDPList'] = (
+        'idp_list', IDPList)
     c_cardinality['idp_list'] = {"min": 0, "max": 1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}RequesterID'] = ('requester_id', [RequesterID])
+    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}RequesterID'] = (
+        'requester_id', [RequesterID])
     c_cardinality['requester_id'] = {"min": 0}
     c_attributes['ProxyCount'] = ('proxy_count', 'nonNegativeInteger', False)
     c_child_order.extend(['idp_list', 'requester_id'])
 
     def __init__(self,
-            idp_list=None,
-            requester_id=None,
-            proxy_count=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.idp_list=idp_list
-        self.requester_id=requester_id or []
-        self.proxy_count=proxy_count
+                 idp_list=None,
+                 requester_id=None,
+                 proxy_count=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None,
+    ):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes,
+        )
+        self.idp_list = idp_list
+        self.requester_id = requester_id or []
+        self.proxy_count = proxy_count
+
 
 def scoping_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(ScopingType_, xml_string)
@@ -1170,6 +1233,7 @@ class Scoping(ScopingType_):
     c_attributes = ScopingType_.c_attributes.copy()
     c_child_order = ScopingType_.c_child_order[:]
     c_cardinality = ScopingType_.c_cardinality.copy()
+
 
 def scoping_from_string(xml_string):
     return saml2.create_class_from_xml_string(Scoping, xml_string)
@@ -1193,7 +1257,8 @@ class AuthnRequestType_(RequestAbstractType_):
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Conditions'] = (
         'conditions', saml.Conditions)
     c_cardinality['conditions'] = {"min": 0, "max": 1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}RequestedAuthnContext'] = (
+    c_children[
+        '{urn:oasis:names:tc:SAML:2.0:protocol}RequestedAuthnContext'] = (
         'requested_authn_context', RequestedAuthnContext)
     c_cardinality['requested_authn_context'] = {"min": 0, "max": 1}
     c_children['{urn:oasis:names:tc:SAML:2.0:protocol}Scoping'] = (
@@ -1213,55 +1278,56 @@ class AuthnRequestType_(RequestAbstractType_):
                           'requested_authn_context', 'scoping'])
 
     def __init__(self,
-            subject=None,
-            name_id_policy=None,
-            conditions=None,
-            requested_authn_context=None,
-            scoping=None,
-            force_authn=None,
-            is_passive=None,
-            protocol_binding=None,
-            assertion_consumer_service_index=None,
-            assertion_consumer_service_url=None,
-            attribute_consuming_service_index=None,
-            provider_name=None,
-            issuer=None,
-            signature=None,
-            extensions=None,
-            id=None,
-            version=None,
-            issue_instant=None,
-            destination=None,
-            consent=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        RequestAbstractType_.__init__(self, 
-                issuer=issuer,
-                signature=signature,
-                extensions=extensions,
-                id=id,
-                version=version,
-                issue_instant=issue_instant,
-                destination=destination,
-                consent=consent,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.subject=subject
-        self.name_id_policy=name_id_policy
-        self.conditions=conditions
-        self.requested_authn_context=requested_authn_context
-        self.scoping=scoping
-        self.force_authn=force_authn
-        self.is_passive=is_passive
-        self.protocol_binding=protocol_binding
-        self.assertion_consumer_service_index=assertion_consumer_service_index
-        self.assertion_consumer_service_url=assertion_consumer_service_url
-        self.attribute_consuming_service_index=attribute_consuming_service_index
-        self.provider_name=provider_name
+                 subject=None,
+                 name_id_policy=None,
+                 conditions=None,
+                 requested_authn_context=None,
+                 scoping=None,
+                 force_authn=None,
+                 is_passive=None,
+                 protocol_binding=None,
+                 assertion_consumer_service_index=None,
+                 assertion_consumer_service_url=None,
+                 attribute_consuming_service_index=None,
+                 provider_name=None,
+                 issuer=None,
+                 signature=None,
+                 extensions=None,
+                 id=None,
+                 version=None,
+                 issue_instant=None,
+                 destination=None,
+                 consent=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None,
+    ):
+        RequestAbstractType_.__init__(self,
+                                      issuer=issuer,
+                                      signature=signature,
+                                      extensions=extensions,
+                                      id=id,
+                                      version=version,
+                                      issue_instant=issue_instant,
+                                      destination=destination,
+                                      consent=consent,
+                                      text=text,
+                                      extension_elements=extension_elements,
+                                      extension_attributes=extension_attributes,
+        )
+        self.subject = subject
+        self.name_id_policy = name_id_policy
+        self.conditions = conditions
+        self.requested_authn_context = requested_authn_context
+        self.scoping = scoping
+        self.force_authn = force_authn
+        self.is_passive = is_passive
+        self.protocol_binding = protocol_binding
+        self.assertion_consumer_service_index = assertion_consumer_service_index
+        self.assertion_consumer_service_url = assertion_consumer_service_url
+        self.attribute_consuming_service_index = attribute_consuming_service_index
+        self.provider_name = provider_name
+
 
 def authn_request_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(AuthnRequestType_, xml_string)
@@ -1276,6 +1342,7 @@ class AuthnRequest(AuthnRequestType_):
     c_attributes = AuthnRequestType_.c_attributes.copy()
     c_child_order = AuthnRequestType_.c_child_order[:]
     c_cardinality = AuthnRequestType_.c_cardinality.copy()
+
 
 def authn_request_from_string(xml_string):
     return saml2.create_class_from_xml_string(AuthnRequest, xml_string)
@@ -1292,28 +1359,33 @@ class StatusType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}StatusMessage'] = ('status_message', StatusMessage)
+    # Added further down to avoid undefined references
+    #c_children['{urn:oasis:names:tc:SAML:2.0:protocol}StatusCode'] = ('status_code', StatusCode)
+    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}StatusMessage'] = (
+        'status_message', StatusMessage)
     c_cardinality['status_message'] = {"min": 0, "max": 1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}StatusDetail'] = ('status_detail', StatusDetail)
+    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}StatusDetail'] = (
+        'status_detail', StatusDetail)
     c_cardinality['status_detail'] = {"min": 0, "max": 1}
     c_child_order.extend(['status_code', 'status_message', 'status_detail'])
 
     def __init__(self,
-            status_code=None,
-            status_message=None,
-            status_detail=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.status_code=status_code
-        self.status_message=status_message
-        self.status_detail=status_detail
+                 status_code=None,
+                 status_message=None,
+                 status_detail=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None,
+    ):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes,
+        )
+        self.status_code = status_code
+        self.status_message = status_message
+        self.status_detail = status_detail
+
 
 def status_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(StatusType_, xml_string)
@@ -1329,6 +1401,7 @@ class Status(StatusType_):
     c_child_order = StatusType_.c_child_order[:]
     c_cardinality = StatusType_.c_cardinality.copy()
 
+
 def status_from_string(xml_string):
     return saml2.create_class_from_xml_string(Status, xml_string)
 
@@ -1342,13 +1415,17 @@ class StatusResponseType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Issuer'] = ('issuer', saml.Issuer)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Issuer'] = (
+        'issuer', saml.Issuer)
     c_cardinality['issuer'] = {"min": 0, "max": 1}
-    c_children['{http://www.w3.org/2000/09/xmldsig#}Signature'] = ('signature', ds.Signature)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}Signature'] = (
+        'signature', ds.Signature)
     c_cardinality['signature'] = {"min": 0, "max": 1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}Extensions'] = ('extensions', Extensions)
+    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}Extensions'] = (
+        'extensions', Extensions)
     c_cardinality['extensions'] = {"min": 0, "max": 1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}Status'] = ('status', Status)
+    c_children['{urn:oasis:names:tc:SAML:2.0:protocol}Status'] = (
+        'status', Status)
     c_attributes['ID'] = ('id', 'ID', True)
     c_attributes['InResponseTo'] = ('in_response_to', 'NCName', False)
     c_attributes['Version'] = ('version', 'string', True)
@@ -1358,35 +1435,36 @@ class StatusResponseType_(SamlBase):
     c_child_order.extend(['issuer', 'signature', 'extensions', 'status'])
 
     def __init__(self,
-            issuer=None,
-            signature=None,
-            extensions=None,
-            status=None,
-            id=None,
-            in_response_to=None,
-            version=None,
-            issue_instant=None,
-            destination=None,
-            consent=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.issuer=issuer
-        self.signature=signature
-        self.extensions=extensions
-        self.status=status
-        self.id=id
-        self.in_response_to=in_response_to
-        self.version=version
-        self.issue_instant=issue_instant
-        self.destination=destination
-        self.consent=consent
+                 issuer=None,
+                 signature=None,
+                 extensions=None,
+                 status=None,
+                 id=None,
+                 in_response_to=None,
+                 version=None,
+                 issue_instant=None,
+                 destination=None,
+                 consent=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None,
+    ):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes,
+        )
+        self.issuer = issuer
+        self.signature = signature
+        self.extensions = extensions
+        self.status = status
+        self.id = id
+        self.in_response_to = in_response_to
+        self.version = version
+        self.issue_instant = issue_instant
+        self.destination = destination
+        self.consent = consent
+
 
 def status_response_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(StatusResponseType_, xml_string)
@@ -1410,39 +1488,40 @@ class ResponseType_(StatusResponseType_):
     c_child_order.extend(['assertion', 'encrypted_assertion'])
 
     def __init__(self,
-            assertion=None,
-            encrypted_assertion=None,
-            issuer=None,
-            signature=None,
-            extensions=None,
-            status=None,
-            id=None,
-            in_response_to=None,
-            version=None,
-            issue_instant=None,
-            destination=None,
-            consent=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        StatusResponseType_.__init__(self, 
-                issuer=issuer,
-                signature=signature,
-                extensions=extensions,
-                status=status,
-                id=id,
-                in_response_to=in_response_to,
-                version=version,
-                issue_instant=issue_instant,
-                destination=destination,
-                consent=consent,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.assertion=assertion or []
-        self.encrypted_assertion=encrypted_assertion or []
+                 assertion=None,
+                 encrypted_assertion=None,
+                 issuer=None,
+                 signature=None,
+                 extensions=None,
+                 status=None,
+                 id=None,
+                 in_response_to=None,
+                 version=None,
+                 issue_instant=None,
+                 destination=None,
+                 consent=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None,
+    ):
+        StatusResponseType_.__init__(self,
+                                     issuer=issuer,
+                                     signature=signature,
+                                     extensions=extensions,
+                                     status=status,
+                                     id=id,
+                                     in_response_to=in_response_to,
+                                     version=version,
+                                     issue_instant=issue_instant,
+                                     destination=destination,
+                                     consent=consent,
+                                     text=text,
+                                     extension_elements=extension_elements,
+                                     extension_attributes=extension_attributes,
+        )
+        self.assertion = assertion or []
+        self.encrypted_assertion = encrypted_assertion or []
+
 
 def response_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(ResponseType_, xml_string)
@@ -1457,7 +1536,8 @@ class ArtifactResponseType_(StatusResponseType_):
     c_attributes = StatusResponseType_.c_attributes.copy()
     c_child_order = StatusResponseType_.c_child_order[:]
     c_cardinality = StatusResponseType_.c_cardinality.copy()
-    c_any = {"namespace":"##any", "processContents":"lax", "minOccurs":"0"}
+    c_any = {"namespace": "##any", "processContents": "lax", "minOccurs": "0"}
+
 
 def artifact_response_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(ArtifactResponseType_, xml_string)
@@ -1473,6 +1553,7 @@ class ManageNameIDResponse(StatusResponseType_):
     c_child_order = StatusResponseType_.c_child_order[:]
     c_cardinality = StatusResponseType_.c_cardinality.copy()
 
+
 def manage_name_id_response_from_string(xml_string):
     return saml2.create_class_from_xml_string(ManageNameIDResponse, xml_string)
 
@@ -1487,6 +1568,7 @@ class LogoutResponse(StatusResponseType_):
     c_child_order = StatusResponseType_.c_child_order[:]
     c_cardinality = StatusResponseType_.c_cardinality.copy()
 
+
 def logout_response_from_string(xml_string):
     return saml2.create_class_from_xml_string(LogoutResponse, xml_string)
 
@@ -1500,49 +1582,53 @@ class NameIDMappingResponseType_(StatusResponseType_):
     c_attributes = StatusResponseType_.c_attributes.copy()
     c_child_order = StatusResponseType_.c_child_order[:]
     c_cardinality = StatusResponseType_.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}NameID'] = ('name_id', saml.NameID)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}NameID'] = (
+        'name_id', saml.NameID)
     c_cardinality['name_id'] = {"min": 0, "max": 1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}EncryptedID'] = ('encrypted_id', saml.EncryptedID)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}EncryptedID'] = (
+        'encrypted_id', saml.EncryptedID)
     c_cardinality['encrypted_id'] = {"min": 0, "max": 1}
     c_child_order.extend(['name_id', 'encrypted_id'])
 
     def __init__(self,
-            name_id=None,
-            encrypted_id=None,
-            issuer=None,
-            signature=None,
-            extensions=None,
-            status=None,
-            id=None,
-            in_response_to=None,
-            version=None,
-            issue_instant=None,
-            destination=None,
-            consent=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        StatusResponseType_.__init__(self, 
-                issuer=issuer,
-                signature=signature,
-                extensions=extensions,
-                status=status,
-                id=id,
-                in_response_to=in_response_to,
-                version=version,
-                issue_instant=issue_instant,
-                destination=destination,
-                consent=consent,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.name_id=name_id
-        self.encrypted_id=encrypted_id
+                 name_id=None,
+                 encrypted_id=None,
+                 issuer=None,
+                 signature=None,
+                 extensions=None,
+                 status=None,
+                 id=None,
+                 in_response_to=None,
+                 version=None,
+                 issue_instant=None,
+                 destination=None,
+                 consent=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None,
+    ):
+        StatusResponseType_.__init__(self,
+                                     issuer=issuer,
+                                     signature=signature,
+                                     extensions=extensions,
+                                     status=status,
+                                     id=id,
+                                     in_response_to=in_response_to,
+                                     version=version,
+                                     issue_instant=issue_instant,
+                                     destination=destination,
+                                     consent=consent,
+                                     text=text,
+                                     extension_elements=extension_elements,
+                                     extension_attributes=extension_attributes,
+        )
+        self.name_id = name_id
+        self.encrypted_id = encrypted_id
+
 
 def name_id_mapping_response_type__from_string(xml_string):
-    return saml2.create_class_from_xml_string(NameIDMappingResponseType_, xml_string)
+    return saml2.create_class_from_xml_string(NameIDMappingResponseType_,
+                                              xml_string)
 
 
 class Response(ResponseType_):
@@ -1554,6 +1640,7 @@ class Response(ResponseType_):
     c_attributes = ResponseType_.c_attributes.copy()
     c_child_order = ResponseType_.c_child_order[:]
     c_cardinality = ResponseType_.c_cardinality.copy()
+
 
 def response_from_string(xml_string):
     return saml2.create_class_from_xml_string(Response, xml_string)
@@ -1569,6 +1656,7 @@ class ArtifactResponse(ArtifactResponseType_):
     c_child_order = ArtifactResponseType_.c_child_order[:]
     c_cardinality = ArtifactResponseType_.c_cardinality.copy()
 
+
 def artifact_response_from_string(xml_string):
     return saml2.create_class_from_xml_string(ArtifactResponse, xml_string)
 
@@ -1582,6 +1670,7 @@ class NameIDMappingResponse(NameIDMappingResponseType_):
     c_attributes = NameIDMappingResponseType_.c_attributes.copy()
     c_child_order = NameIDMappingResponseType_.c_child_order[:]
     c_cardinality = NameIDMappingResponseType_.c_cardinality.copy()
+
 
 def name_id_mapping_response_from_string(xml_string):
     return saml2.create_class_from_xml_string(NameIDMappingResponse, xml_string)
@@ -1603,19 +1692,20 @@ class StatusCodeType_(SamlBase):
     c_child_order.extend(['status_code'])
 
     def __init__(self,
-            status_code=None,
-            value=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.status_code=status_code
-        self.value=value
+                 status_code=None,
+                 value=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None,
+    ):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes,
+        )
+        self.status_code = status_code
+        self.value = value
+
 
 def status_code_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(StatusCodeType_, xml_string)
@@ -1631,15 +1721,21 @@ class StatusCode(StatusCodeType_):
     c_child_order = StatusCodeType_.c_child_order[:]
     c_cardinality = StatusCodeType_.c_cardinality.copy()
 
+
 def status_code_from_string(xml_string):
     return saml2.create_class_from_xml_string(StatusCode, xml_string)
 
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-StatusType_.c_children['{urn:oasis:names:tc:SAML:2.0:protocol}StatusCode'] = ('status_code', StatusCode)
-Status.c_children['{urn:oasis:names:tc:SAML:2.0:protocol}StatusCode'] = ('status_code', StatusCode)
-StatusCodeType_.c_children['{urn:oasis:names:tc:SAML:2.0:protocol}StatusCode'] = ('status_code', StatusCode)
-StatusCode.c_children['{urn:oasis:names:tc:SAML:2.0:protocol}StatusCode'] = ('status_code', StatusCode)
+StatusType_.c_children['{urn:oasis:names:tc:SAML:2.0:protocol}StatusCode'] = (
+    'status_code', StatusCode)
+Status.c_children['{urn:oasis:names:tc:SAML:2.0:protocol}StatusCode'] = (
+    'status_code', StatusCode)
+StatusCodeType_.c_children[
+    '{urn:oasis:names:tc:SAML:2.0:protocol}StatusCode'] = (
+    'status_code', StatusCode)
+StatusCode.c_children['{urn:oasis:names:tc:SAML:2.0:protocol}StatusCode'] = (
+    'status_code', StatusCode)
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 ELEMENT_FROM_STRING = {
@@ -1765,6 +1861,7 @@ ELEMENT_BY_TAG = {
 
 def factory(tag, **kwargs):
     return ELEMENT_BY_TAG[tag](**kwargs)
+
 
 def any_response_from_string(xmlstr):
     resp = None

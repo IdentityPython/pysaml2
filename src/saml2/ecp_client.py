@@ -43,6 +43,7 @@ PAOS_HEADER_INFO = 'ver="%s";"%s"' % (paos.NAMESPACE, SERVICE)
 
 logger = logging.getLogger(__name__)
 
+
 class Client(Entity):
     def __init__(self, user, passwd, sp="", idp=None, metadata_file=None,
                  xmlsec_binary=None, verbose=0, ca_certs="",
@@ -63,10 +64,12 @@ class Client(Entity):
             will not be performed.
         """
         config = Config()
-        config.disable_ssl_certificate_validation = disable_ssl_certificate_validation
+        config.disable_ssl_certificate_validation = \
+            disable_ssl_certificate_validation
         config.key_file = key_file
         config.cert_file = cert_file
         config.ca_certs = ca_certs
+        config.xmlsec_binary = xmlsec_binary
 
         Entity.__init__(self, "sp", config)
         self._idp = idp
@@ -81,6 +84,8 @@ class Client(Entity):
             logger.debug("Loaded metadata from '%s'" % metadata_file)
         else:
             self._metadata = None
+
+        self.metadata = self._metadata
 
         self.cookie_handler = None
 
@@ -112,9 +117,9 @@ class Client(Entity):
             ht_args["headers"].extend(headers)
 
         logger.debug("[P2] Sending request: %s" % ht_args["data"])
-            
+
         # POST the request to the IdP
-        response = self.send(destination, **ht_args)
+        response = self.send(**ht_args)
 
         logger.debug("[P2] Got IdP response: %s" % response)
 
@@ -138,8 +143,7 @@ class Client(Entity):
 
         _ecp_response = None
         for item in respdict["header"]:
-            if item.c_tag == "Response" and\
-               item.c_namespace == ecp.NAMESPACE:
+            if item.c_tag == "Response" and item.c_namespace == ecp.NAMESPACE:
                 _ecp_response = item
 
         _acs_url = _ecp_response.assertion_consumer_service_url
@@ -295,7 +299,8 @@ class Client(Entity):
         #print "RESP",response, self.http.response
 
         if  response.status_code != 404:
-            raise Exception("Error performing operation: %s" % (response.error,))
+            raise Exception("Error performing operation: %s" % (
+                response.error,))
 
         return response
 
@@ -313,4 +318,3 @@ class Client(Entity):
     def put(self, url=None, data="", idp_entity_id=None, headers=None):
         return self.operation(url, idp_entity_id, "PUT", data=data,
                               headers=headers)
-

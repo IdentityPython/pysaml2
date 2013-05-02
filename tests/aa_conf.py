@@ -2,11 +2,8 @@
 from saml2 import BINDING_SOAP, BINDING_HTTP_REDIRECT, NAME_FORMAT_URI
 BASE = "http://localhost:8089/"
 
-try:
-    from saml2.sigver import get_xmlsec_binary
-    xmlsec_path = get_xmlsec_binary(["/opt/local/bin"])
-except ImportError:
-    xmlsec_path = '/usr/bin/xmlsec1'
+from pathutils import full_path, xmlsec_path
+
 
 CONFIG={
     "service":{
@@ -22,19 +19,19 @@ CONFIG={
                     "name_form": NAME_FORMAT_URI,
                 },
             },
-            "subject_data": "aa.db",
+            "subject_data": full_path("aa.db"),
         }
     },
     "entityid" : BASE+ "aa",
     "name" : "Rolands AA",
     "debug" : 1,
-    "key_file" : "test.key",
-    "cert_file" : "test.pem",
+    "key_file" : full_path("test.key"),
+    "cert_file" : full_path("test.pem"),
     #"xmlsec_binary" : xmlsec_path,
     "metadata": {
-        "local": ["metadata.xml", "vo_metadata.xml"],
+        "local": [full_path("metadata.xml"), full_path("vo_metadata.xml")],
     },
-    "attribute_map_dir" : "attributemaps",
+    "attribute_map_dir" : full_path("attributemaps"),
     "organization": {
         "name": "Exempel AB",
         "display_name": [("Exempel AB","se"),("Example Co.","en")],
