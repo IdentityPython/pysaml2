@@ -303,8 +303,9 @@ class HTTPBase(object):
         logger.debug("SOAP message: %s" % soap_message)
 
         if sign and self.sec:
-            _signed = self.sec.sign_statement_using_xmlsec(
-                soap_message, class_name=class_name(request), node_id=request.id)
+            _signed = self.sec.sign_statement(soap_message,
+                                              class_name=class_name(request),
+                                              nodeid=request.id)
             soap_message = _signed
 
         return {"url": destination, "method": "POST",

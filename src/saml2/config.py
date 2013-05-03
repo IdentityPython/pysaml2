@@ -323,11 +323,8 @@ class Config(object):
     def load_metadata(self, metadata_conf):
         """ Loads metadata into an internal structure """
 
-        xmlsec_binary = self.xmlsec_binary
         acs = self.attribute_converters
 
-        if xmlsec_binary is None:
-            raise Exception("Missing xmlsec1 specification")
         if acs is None:
             raise Exception("Missing attribute converter specification")
 
@@ -341,7 +338,7 @@ class Config(object):
             disable_validation = False
 
         mds = MetadataStore(
-            ONTS.values(), acs, xmlsec_binary, ca_certs,
+            ONTS.values(), acs, self, ca_certs,
             disable_ssl_certificate_validation=disable_validation)
 
         mds.imp(metadata_conf)
