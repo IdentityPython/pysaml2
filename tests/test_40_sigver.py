@@ -9,6 +9,7 @@ from saml2 import sigver
 from saml2 import class_name
 from saml2 import time_util
 from saml2 import saml, samlp
+from saml2 import config
 from saml2.s_utils import factory, do_attribute_statement
 from saml2.sigver import xmlsec_version, get_xmlsec_cryptobackend, get_xmlsec_binary
 
@@ -360,8 +361,9 @@ class TestSecurity():
 
 class TestSecurityMetadata():
     def setup_class(self):
-        xmlexec = get_xmlsec_binary()
-        md = MetadataStore([saml, samlp], None, xmlexec)
+        conf = config.SPConfig()
+        conf.load_file("server_conf")
+        md = MetadataStore([saml, samlp], None, conf)
         md.load("local", full_path("metadata_cert.xml"))
 
         crypto = get_xmlsec_cryptobackend()

@@ -14,10 +14,11 @@ from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_SOAP
 from saml2.s_utils import UnsupportedBinding, UnknownPrincipal
-from saml2.sigver import verify_signature, split_len
+from saml2.sigver import split_len
 from saml2.validate import valid_instance
 from saml2.time_util import valid
 from saml2.validate import NotValid
+from saml2.sigver import security_context
 
 __author__ = 'rolandh'
 
@@ -340,11 +341,19 @@ class MetaDataExtern(MetaData):
     Accessible but HTTP GET.
     """
 
-    def __init__(self, onts, attrc, url, xmlsec_binary, cert, http):
+    def __init__(self, onts, attrc, url, security, cert, http):
+        """
+        :params onts:
+        :params attrc:
+        :params url:
+        :params security: SecurityContext()
+        :params cert:
+        :params http:
+        """
         MetaData.__init__(self, onts, attrc)
         self.url = url
+        self.security = security
         self.cert = cert
-        self.xmlsec_binary = xmlsec_binary
         self.http = http
 
     def load(self):
@@ -354,10 +363,12 @@ class MetaDataExtern(MetaData):
         """
         response = self.http.send(self.url)
         if response.status == 200:
-            if verify_signature(
-                    response.text, self.xmlsec_binary, self.cert,
-                    node_name="%s:%s" % (md.EntitiesDescriptor.c_namespace,
-                                         md.EntitiesDescriptor.c_tag)):
+            node_name="%s:%s" % (md.EntitiesDescriptor.c_namespace,
+                                 md.EntitiesDescriptor.c_tag)
+            if self.security.verify_signature(response.text,
+                                              node_name=node_name,
+                                              cert_file=self.cert,
+                                              ):
                 self.parse(response.text)
                 return True
         else:
@@ -379,13 +390,20 @@ class MetaDataMD(MetaData):
 
 
 class MetadataStore(object):
-    def __init__(self, onts, attrc, xmlsec_binary=None, ca_certs=None,
+    def __init__(self, onts, attrc, config, ca_certs=None,
                  disable_ssl_certificate_validation=False):
+        """
+        :params onts:
+        :params attrc:
+        :params config: Config()
+        :params ca_certs:
+        :params disable_ssl_certificate_validation:
+        """
         self.onts = onts
         self.attrc = attrc
         self.http = HTTPBase(verify=disable_ssl_certificate_validation,
                              ca_bundle=ca_certs)
-        self.xmlsec_binary = xmlsec_binary
+        self.security = security_context(config)
         self.ii = 0
         self.metadata = {}
 
@@ -400,7 +418,7 @@ class MetadataStore(object):
         elif typ == "remote":
             key = kwargs["url"]
             md = MetaDataExtern(self.onts, self.attrc,
-                                kwargs["url"], self.xmlsec_binary,
+                                kwargs["url"], self.security,
                                 kwargs["cert"], self.http)
         elif typ == "mdfile":
             key = args[0]
