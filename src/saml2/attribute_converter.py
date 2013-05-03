@@ -23,8 +23,10 @@ from saml2.s_utils import factory, do_ava
 from saml2 import saml, extension_elements_to_elements
 from saml2.saml import NAME_FORMAT_URI
 
+
 class UnknownNameFormat(Exception):
     pass
+
 
 def load_maps(dirspec):
     """ load the attribute maps
@@ -34,7 +36,7 @@ def load_maps(dirspec):
         map as value. The map itself is a dictionary with two keys:
         "to" and "fro". The values for those keys are the actual mapping.
     """
-    map = {}
+    mapd = {}
     if dirspec not in sys.path:
         sys.path.insert(0, dirspec)
 
@@ -45,9 +47,10 @@ def load_maps(dirspec):
                 if key.startswith("__"):
                     continue
                 if isinstance(item, dict) and "to" in item and "fro" in item:
-                    map[item["identifier"]] = item
+                    mapd[item["identifier"]] = item
 
-    return map
+    return mapd
+
 
 def ac_factory(path=""):
     """Attribute Converter factory
@@ -68,13 +71,14 @@ def ac_factory(path=""):
                 for key, item in mod.__dict__.items():
                     if key.startswith("__"):
                         continue
-                    if isinstance(item, dict) and "to" in item and "fro" in item:
+                    if isinstance(item,
+                                  dict) and "to" in item and "fro" in item:
                         atco = AttributeConverter(item["identifier"])
                         atco.from_dict(item)
                         acs.append(atco)
     else:
-        for map in ["basic", "saml_uri", "shibboleth_uri"]:
-            mod = import_module(".%s" % map, "saml2.attributemaps")
+        for typ in ["basic", "saml_uri", "shibboleth_uri"]:
+            mod = import_module(".%s" % typ, "saml2.attributemaps")
             for key, item in mod.__dict__.items():
                 if key.startswith("__"):
                     continue
@@ -85,8 +89,10 @@ def ac_factory(path=""):
 
     return acs
 
+
 def ac_factory_II(path):
     return ac_factory(path)
+
 
 def ava_fro(acs, statement):
     """  Translates attributes according to their name_formats into the local
@@ -98,10 +104,11 @@ def ava_fro(acs, statement):
     """
     if not statement:
         return {}
-        
+
     acsdic = dict([(ac.name_format, ac) for ac in acs])
-    acsdic[None] = acsdic[NAME_FORMAT_URI]    
+    acsdic[None] = acsdic[NAME_FORMAT_URI]
     return dict([acsdic[a.name_format].ava_from(a) for a in statement])
+
 
 def to_local(acs, statement):
     """ Replaces the attribute names in a attribute value assertion with the
@@ -110,7 +117,7 @@ def to_local(acs, statement):
     """
     if not acs:
         acs = [AttributeConverter()]
-        
+
     ava = []
     for aconv in acs:
         try:
@@ -120,15 +127,17 @@ def to_local(acs, statement):
             pass
     return ava
 
+
 def from_local(acs, ava, name_format):
     for aconv in acs:
         #print ac.format, name_format
         if aconv.name_format == name_format:
             #print "Found a name_form converter"
             return aconv.to_(ava)
-            
+
     return None
-    
+
+
 def from_local_name(acs, attr, name_format):
     """
     :param acs: List of AttributeConverter instances
@@ -142,7 +151,8 @@ def from_local_name(acs, attr, name_format):
             #print "Found a name_form converter"
             return aconv.to_format(attr)
     return attr
-    
+
+
 def to_local_name(acs, attr):
     """
     :param acs: List of AttributeConverter instances
@@ -155,6 +165,7 @@ def to_local_name(acs, attr):
             return lattr
 
     return attr.friendly_name
+
 
 def d_to_local_name(acs, attr):
     """
@@ -173,24 +184,27 @@ def d_to_local_name(acs, attr):
     except KeyError:
         raise Exception("Could not find local name for %s" % attr)
 
+
 class AttributeConverter(object):
     """ Converts from an attribute statement to a key,value dictionary and
         vice-versa """
-        
+
     def __init__(self, name_format=""):
         self.name_format = name_format
         self._to = None
         self._fro = None
-        
+
     def adjust(self):
         """ If one of the transformations is not defined it is expected to
         be the mirror image of the other.
         """
-        
+
         if self._fro is None and self._to is not None:
-            self._fro = dict([(value.lower(), key) for key, value in self._to.items()])
+            self._fro = dict(
+                [(value.lower(), key) for key, value in self._to.items()])
         if self._to is None and self.fro is not None:
-            self._to = dict([(value.lower, key) for key, value in self._fro.items()])
+            self._to = dict(
+                [(value.lower, key) for key, value in self._fro.items()])
 
     def from_dict(self, mapdict):
         """ Import the attribute map from  a dictionary
@@ -200,11 +214,12 @@ class AttributeConverter(object):
 
         self.name_format = mapdict["identifier"]
         try:
-            self._fro = dict([(k.lower(),v) for k,v in mapdict["fro"].items()])
+            self._fro = dict(
+                [(k.lower(), v) for k, v in mapdict["fro"].items()])
         except KeyError:
             pass
         try:
-            self._to = dict([(k.lower(),v) for k,v in mapdict["to"].items()])
+            self._to = dict([(k.lower(), v) for k, v in mapdict["to"].items()])
         except KeyError:
             pass
 
@@ -214,7 +229,6 @@ class AttributeConverter(object):
         if self._fro is None or self._to is None:
             self.adjust()
 
-        
     def fail_safe_fro(self, statement):
         """ In case there is not formats defined """
         result = {}
@@ -229,9 +243,9 @@ class AttributeConverter(object):
                 if not value.text:
                     result[name].append('')
                 else:
-                    result[name].append(value.text.strip())    
+                    result[name].append(value.text.strip())
         return result
-        
+
     def ava_from(self, attribute):
         try:
             attr = self._fro[attribute.name.strip().lower()]
@@ -248,44 +262,44 @@ class AttributeConverter(object):
                                                      [saml])
                 for ex in ext:
                     cval = {}
-                    for key, (name, type, mul) in ex.c_attributes.items():
+                    for key, (name, typ, mul) in ex.c_attributes.items():
                         exv = getattr(ex, name)
                         if exv:
                             cval[name] = exv
                     if ex.text:
                         cval["value"] = ex.text.strip()
-                    val.append({ex.c_tag:cval})
+                    val.append({ex.c_tag: cval})
             elif not value.text:
                 val.append('')
             else:
                 val.append(value.text.strip())
 
         return attr, val
-        
+
     def fro(self, statement):
         """ Get the attributes and the attribute values 
         
         :param statement: The AttributeStatement.
         :return: A dictionary containing attributes and values
         """
-        
+
         if not self.name_format:
             return self.fail_safe_fro(statement)
-            
+
         result = {}
         for attribute in statement.attribute:
             if attribute.name_format and self.name_format and \
-                attribute.name_format != self.name_format:
+                    attribute.name_format != self.name_format:
                 raise UnknownNameFormat
-                
+
             (key, val) = self.ava_from(attribute)
             result[key] = val
-            
+
         if not result:
-            return self.fail_safe_fro(statement) 
+            return self.fail_safe_fro(statement)
         else:
             return result
-        
+
     def to_format(self, attr):
         """ Creates an Attribute instance with name, name_format and
         friendly_name
@@ -295,12 +309,12 @@ class AttributeConverter(object):
         """
         try:
             return factory(saml.Attribute,
-                            name=self._to[attr], 
-                            name_format=self.name_format,
-                            friendly_name=attr)
+                           name=self._to[attr],
+                           name_format=self.name_format,
+                           friendly_name=attr)
         except KeyError:
             return factory(saml.Attribute, name=attr)
-    
+
     def from_format(self, attr):
         """ Find out the local name of an attribute
          
@@ -313,7 +327,7 @@ class AttributeConverter(object):
                     return self._fro[attr.name.lower()]
                 except KeyError:
                     pass
-        else: #don't know the name format so try all I have
+        else:  # don't know the name format so try all I have
             try:
                 return self._fro[attr.name.lower()]
             except KeyError:
@@ -333,7 +347,7 @@ class AttributeConverter(object):
                     return self._fro[attr["name"].lower()]
                 except KeyError:
                     pass
-        else: #don't know the name format so try all I have
+        else:  # don't know the name format so try all I have
             try:
                 return self._fro[attr["name"].lower()]
             except KeyError:
@@ -352,13 +366,36 @@ class AttributeConverter(object):
             key = key.lower()
             try:
                 attributes.append(factory(saml.Attribute,
-                                            name=self._to[key],
-                                            name_format=self.name_format,
-                                            friendly_name=key,
-                                            attribute_value=do_ava(value)))
+                                          name=self._to[key],
+                                          name_format=self.name_format,
+                                          friendly_name=key,
+                                          attribute_value=do_ava(value)))
             except KeyError:
                 attributes.append(factory(saml.Attribute,
-                                            name=key,
-                                            attribute_value=do_ava(value)))
-        
+                                          name=key,
+                                          attribute_value=do_ava(value)))
+
+        return attributes
+
+
+class AttributeConverterNOOP(AttributeConverter):
+    """ Does a NOOP conversion, that is no conversion is made """
+
+    def __init__(self, name_format=""):
+        AttributeConverter.__init__(self, name_format)
+
+    def to_(self, attrvals):
+        """ Create a list of Attribute instances.
+
+        :param attrvals: A dictionary of attributes and values
+        :return: A list of Attribute instances
+        """
+        attributes = []
+        for key, value in attrvals.items():
+            key = key.lower()
+            attributes.append(factory(saml.Attribute,
+                                      name=key,
+                                      name_format=self.name_format,
+                                      attribute_value=do_ava(value)))
+
         return attributes

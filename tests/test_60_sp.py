@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import base64
-from saml2.saml import NAMEID_FORMAT_TRANSIENT, AUTHN_PASSWORD
+from saml2.authn_context import INTERNETPROTOCOLPASSWORD
+from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.samlp import NameIDPolicy
 from s2repoze.plugins.sp import make_plugin
 from saml2.server import Server
@@ -35,7 +36,11 @@ ENV1 = {'SERVER_SOFTWARE': 'CherryPy/3.1.2 WSGI Server',
 trans_name_policy = NameIDPolicy(format=NAMEID_FORMAT_TRANSIENT,
                                  allow_create="true")
 
-AUTHN = (AUTHN_PASSWORD, "http://www.example.com/login")
+AUTHN = {
+    "class_ref": INTERNETPROTOCOLPASSWORD,
+    "authn_auth": "http://www.example.com/login"
+}
+
 
 class TestSP():
     def setup_class(self):

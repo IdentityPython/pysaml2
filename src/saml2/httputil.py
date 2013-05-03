@@ -1,17 +1,25 @@
+import hashlib
+import hmac
 import logging
+import time
+import cgi
+
+from urllib import quote
+from urlparse import parse_qs
+from Cookie import SimpleCookie
+
 from saml2 import BINDING_HTTP_ARTIFACT
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_URI
 from saml2 import BINDING_SOAP
+from saml2 import time_util
 
 __author__ = 'rohe0002'
 
-import cgi
-from urllib import quote
-from urlparse import parse_qs
 
 logger = logging.getLogger(__name__)
+
 
 class Response(object):
     _template = None
@@ -50,8 +58,10 @@ class Response(object):
             else:
                 return message
 
+
 class Created(Response):
     _status = "201 Created"
+
 
 class Redirect(Response):
     _template = '<html>\n<head><title>Redirecting to %s</title></head>\n' \
@@ -65,6 +75,7 @@ class Redirect(Response):
         start_response(self.status, self.headers)
         return self.response((location, location, location))
 
+
 class SeeOther(Response):
     _template = '<html>\n<head><title>Redirecting to %s</title></head>\n' \
         '<body>\nYou are being redirected to <a href="%s">%s</a>\n' \
@@ -77,26 +88,44 @@ class SeeOther(Response):
         start_response(self.status, self.headers)
         return self.response((location, location, location))
 
+
 class Forbidden(Response):
     _status = '403 Forbidden'
     _template = "<html>Not allowed to mess with: '%s'</html>"
+
 
 class BadRequest(Response):
     _status = "400 Bad Request"
     _template = "<html>%s</html>"
 
+
 class Unauthorized(Response):
     _status = "401 Unauthorized"
     _template = "<html>%s</html>"
 
+
 class NotFound(Response):
     _status = '404 NOT FOUND'
+
 
 class NotAcceptable(Response):
     _status = '406 Not Acceptable'
 
+
 class ServiceError(Response):
     _status = '500 Internal Service Error'
+
+
+class NotImplemented(Response):
+    _status = "501 Not Implemented"
+    # override template since we need an environment variable
+    template = ('The request method %s is not implemented '
+                'for this server.\r\n%s')
+
+
+class BadGateway(Response):
+    _status = "502 Bad Gateway"
+
 
 def extract(environ, empty=False, err=False):
     """Extracts strings in form data and returns a dict.
@@ -111,6 +140,7 @@ def extract(environ, empty=False, err=False):
         if len(value) == 1:
             formdata[key] = value[0]
     return formdata
+
 
 def geturl(environ, query=True, path=True):
     """Rebuilds a request URL (from PEP 333).
@@ -135,10 +165,12 @@ def geturl(environ, query=True, path=True):
         url.append('?' + environ['QUERY_STRING'])
     return ''.join(url)
 
+
 def getpath(environ):
     """Builds a path."""
     return ''.join([quote(environ.get('SCRIPT_NAME', '')),
-        quote(environ.get('PATH_INFO', ''))])
+                    quote(environ.get('PATH_INFO', ''))])
+
 
 def get_post(environ):
     # the environment variable CONTENT_LENGTH may be empty or missing
@@ -152,6 +184,7 @@ def get_post(environ):
     # in the file like wsgi.input environment variable.
     return environ['wsgi.input'].read(request_body_size)
 
+
 def get_response(environ, start_response):
     if environ.get("REQUEST_METHOD") == "GET":
         query = environ.get("QUERY_STRING")
@@ -163,18 +196,21 @@ def get_response(environ, start_response):
 
     return query
 
+
 def unpack_redirect(environ):
     if "QUERY_STRING" in environ:
         _qs = environ["QUERY_STRING"]
-        return dict([(k,v[0]) for k,v in parse_qs(_qs).items()])
+        return dict([(k, v[0]) for k, v in parse_qs(_qs).items()])
     else:
         return None
 
+
 def unpack_post(environ):
     try:
-        return dict([(k,v[0]) for k,v in parse_qs(get_post(environ))])
+        return dict([(k, v[0]) for k, v in parse_qs(get_post(environ))])
     except Exception:
         return None
+
 
 def unpack_soap(environ):
     try:
@@ -182,6 +218,7 @@ def unpack_soap(environ):
         return {"SAMLRequest": query, "RelayState": ""}
     except Exception:
         return None
+
 
 def unpack_artifact(environ):
     if environ["REQUEST_METHOD"] == "GET":
@@ -192,8 +229,8 @@ def unpack_artifact(environ):
         _dict = None
     return _dict
 
+
 def unpack_any(environ):
-    binding = ""
     if environ['REQUEST_METHOD'].upper() == 'GET':
     # Could be either redirect or artifact
         _dict = unpack_redirect(environ)
@@ -217,3 +254,88 @@ def unpack_any(environ):
             binding = BINDING_SOAP
 
     return _dict, binding
+
+
+def _expiration(timeout, time_format=None):
+    if timeout == "now":
+        return time_util.instant(time_format)
+    else:
+        # validity time should match lifetime of assertions
+        return time_util.in_a_while(minutes=timeout, format=time_format)
+
+
+def cookie_signature(seed, *parts):
+    """Generates a cookie signature."""
+    sha1 = hmac.new(seed, digestmod=hashlib.sha1)
+    for part in parts:
+        if part:
+            sha1.update(part)
+    return sha1.hexdigest()
+
+
+def make_cookie(name, load, seed, expire=0, domain="",  path="",
+                timestamp=""):
+    """
+    Create and return a cookie
+
+    :param name: Cookie name
+    :param load: Cookie load
+    :param seed: A seed for the HMAC function
+    :param expire: Number of minutes before this cookie goes stale
+    :param domain: The domain of the cookie
+    :param path: The path specification for the cookie
+    :return: A tuple to be added to headers
+    """
+    cookie = SimpleCookie()
+    if not timestamp:
+        timestamp = str(int(time.mktime(time.gmtime())))
+    signature = cookie_signature(seed, load, timestamp)
+    cookie[name] = "|".join([load, timestamp, signature])
+    if path:
+        cookie[name]["path"] = path
+    if domain:
+        cookie[name]["domain"] = domain
+    if expire:
+        cookie[name]["expires"] = _expiration(expire,
+                                              "%a, %d-%b-%Y %H:%M:%S GMT")
+
+    return tuple(cookie.output().split(": ", 1))
+
+
+def parse_cookie(name, seed, kaka):
+    """Parses and verifies a cookie value
+
+    :param seed: A seed used for the HMAC signature
+    :param kaka: The cookie
+    :return: A tuple consisting of (payload, timestamp)
+    """
+    if not kaka:
+        return None
+
+    cookie_obj = SimpleCookie(kaka)
+    morsel = cookie_obj.get(name)
+
+    if morsel:
+        parts = morsel.value.split("|")
+        if len(parts) != 3:
+            return None
+            # verify the cookie signature
+        sig = cookie_signature(seed, parts[0], parts[1])
+        if sig != parts[2]:
+            raise Exception("Invalid cookie signature")
+
+        try:
+            return parts[0].strip(), parts[1]
+        except KeyError:
+            return None
+    else:
+        return None
+
+
+def cookie_parts(name, kaka):
+    cookie_obj = SimpleCookie(kaka)
+    morsel = cookie_obj.get(name)
+    if morsel:
+        return morsel.value.split("|")
+    else:
+        return None

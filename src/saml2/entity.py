@@ -22,11 +22,14 @@ from saml2.saml import Issuer
 from saml2.saml import NAMEID_FORMAT_ENTITY
 from saml2.response import LogoutResponse
 from saml2.time_util import instant
-from saml2.s_utils import sid, error_status_factory
+from saml2.s_utils import sid
+from saml2.s_utils import UnravelError
+from saml2.s_utils import error_status_factory
 from saml2.s_utils import rndstr
 from saml2.s_utils import success_status_factory
 from saml2.s_utils import decode_base64_and_inflate
-from saml2.samlp import AuthnRequest
+from saml2.s_utils import UnsupportedBinding
+from saml2.samlp import AuthnRequest, AuthzDecisionQuery, AuthnQuery
 from saml2.samlp import AssertionIDRequest
 from saml2.samlp import ManageNameIDRequest
 from saml2.samlp import NameIDMappingRequest
@@ -54,6 +57,18 @@ logger = logging.getLogger(__name__)
 __author__ = 'rolandh'
 
 ARTIFACT_TYPECODE = '\x00\x04'
+
+SERVICE2MESSAGE = {
+    "single_sign_on_service": AuthnRequest,
+    "attribute_service": AttributeQuery,
+    "authz_service": AuthzDecisionQuery,
+    "assertion_id_request_service": AssertionIDRequest,
+    "authn_query_service": AuthnQuery,
+    "manage_name_id_service": ManageNameIDRequest,
+    "name_id_mapping_service": NameIDMappingRequest,
+    "artifact_resolve_service": ArtifactResolve,
+    "single_logout_service": LogoutRequest
+}
 
 
 def create_artifact(entity_id, message_handle, endpoint_index=0):
@@ -137,7 +152,8 @@ class Entity(HTTPBase):
         Construct the necessary HTTP arguments dependent on Binding
 
         :param binding: Which binding to use
-        :param msg_str: The return message as a string (XML)
+        :param msg_str: The return message as a string (XML) if the message is
+            to be signed it MUST contain the signature element.
         :param destination: Where to send the message
         :param relay_state: Relay_state if provided
         :param response: Which type of message this is
@@ -193,9 +209,12 @@ class Entity(HTTPBase):
                 descr_type = "spsso"
 
         for binding in bindings:
-            srvs = sfunc(entity_id, binding, descr_type)
-            if srvs:
-                return binding, destinations(srvs)[0]
+            try:
+                srvs = sfunc(entity_id, binding, descr_type)
+                if srvs:
+                    return binding, destinations(srvs)[0]
+            except UnsupportedBinding:
+                pass
 
         logger.error("Failed to find consumer URL: %s, %s, %s" % (entity_id,
                                                                   bindings,
@@ -213,11 +232,18 @@ class Entity(HTTPBase):
                 "issue_instant": instant(), "issuer": self._issuer()}
 
     def response_args(self, message, bindings=None, descr_type=""):
+        """
+
+        :param message: The message to which a reply is constructed
+        :param bindings: Which bindings can be used.
+        :param descr_type: Type of descriptor (spssp, idpsso, )
+        :return: Dictionary
+        """
         info = {"in_response_to": message.id}
 
         if isinstance(message, AuthnRequest):
             rsrv = "assertion_consumer_service"
-            descr_type = "sp_sso"
+            descr_type = "spsso"
             info["sp_entity_id"] = message.issuer.text
             info["name_id_policy"] = message.name_id_policy
         elif isinstance(message, LogoutRequest):
@@ -225,7 +251,7 @@ class Entity(HTTPBase):
         elif isinstance(message, AttributeQuery):
             info["sp_entity_id"] = message.issuer.text
             rsrv = "attribute_consuming_service"
-            descr_type = "sp_sso"
+            descr_type = "spsso"
         elif isinstance(message, ManageNameIDRequest):
             rsrv = "manage_name_id_service"
         # The once below are solely SOAP so no return destination needed
@@ -241,6 +267,8 @@ class Entity(HTTPBase):
             raise Exception("No support for this type of query")
 
         if bindings == [BINDING_SOAP]:
+            info["binding"] = BINDING_SOAP
+            info["destination"] = ""
             return info
 
         if rsrv:
@@ -253,23 +281,29 @@ class Entity(HTTPBase):
             binding, destination = self.pick_binding(rsrv, bindings,
                                                      descr_type=descr_type,
                                                      request=message)
-            #info["binding"] = binding
+            info["binding"] = binding
             info["destination"] = destination
 
         return info
 
     def unravel(self, txt, binding, msgtype="response"):
-        if binding == BINDING_HTTP_REDIRECT:
-            xmlstr = decode_base64_and_inflate(txt)
-        elif binding == BINDING_HTTP_POST:
-            xmlstr = base64.b64decode(txt)
-        elif binding == BINDING_SOAP:
-            func = getattr(soap, "parse_soap_enveloped_saml_%s" % msgtype)
-            xmlstr = func(txt)
-        elif binding == BINDING_URI or binding is None:
-            xmlstr = txt
-        else:
+        #logger.debug("unravel '%s'" % txt)
+        if binding not in [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST,
+                           BINDING_SOAP, BINDING_URI, None]:
             raise ValueError("Don't know how to handle '%s'" % binding)
+        else:
+            try:
+                if binding == BINDING_HTTP_REDIRECT:
+                    xmlstr = decode_base64_and_inflate(txt)
+                elif binding == BINDING_HTTP_POST:
+                    xmlstr = base64.b64decode(txt)
+                elif binding == BINDING_SOAP:
+                    func = getattr(soap, "parse_soap_enveloped_saml_%s" % msgtype)
+                    xmlstr = func(txt)
+                else:
+                    xmlstr = txt
+            except Exception:
+                raise UnravelError()
 
         return xmlstr
 
@@ -293,9 +327,12 @@ class Entity(HTTPBase):
 
 # --------------------------------------------------------------------------
 
-    def sign(self, msg, mid=None, to_sign=None):
+    def sign(self, msg, mid=None, to_sign=None, sign_prepare=False):
         if msg.signature is None:
             msg.signature = pre_signature_part(msg.id, self.sec.my_cert, 1)
+
+        if sign_prepare:
+            return msg
 
         if mid is None:
             mid = msg.id
@@ -306,11 +343,10 @@ class Entity(HTTPBase):
             to_sign = [(class_name(msg), mid)]
 
         logger.info("REQUEST: %s" % msg)
-
         return signed_instance_factory(msg, self.sec, to_sign)
 
     def _message(self, request_cls, destination=None, message_id=0,
-                 consent=None, extensions=None, sign=False, **kwargs):
+                 consent=None, extensions=None, sign=False, sign_prepare=False, **kwargs):
         """
         Some parameters appear in all requests so simplify by doing
         it in one place
@@ -320,6 +356,8 @@ class Entity(HTTPBase):
         :param message_id: A message identifier
         :param consent: Whether the principal have given her consent
         :param extensions: Possible extensions
+        :param sign: Whether the request should be signed or not.
+        :param sign_prepare: Whether the signature should be prepared or not.
         :param kwargs: Key word arguments specific to one request type
         :return: An instance of the request_cls
         """
@@ -342,7 +380,7 @@ class Entity(HTTPBase):
             req.extensions = extensions
 
         if sign:
-            return self.sign(req)
+            return self.sign(req, sign_prepare=sign_prepare)
         else:
             logger.info("REQUEST: %s" % req)
             return req
@@ -356,7 +394,7 @@ class Entity(HTTPBase):
         for key, val in kwargs.items():
             if key in allowed_attributes:
                 args[key] = val
-            else:
+            elif isinstance(val, SamlBase):
                 # extension elements allowed ?
                 extensions.append(element_to_extension_element(val))
 
@@ -432,6 +470,12 @@ class Entity(HTTPBase):
 
         mid = sid()
 
+        for key in ["destination", "binding"]:
+            try:
+                del kwargs[key]
+            except KeyError:
+                pass
+
         if not status:
             status = success_status_factory()
 
@@ -461,6 +505,7 @@ class Entity(HTTPBase):
 
         :param xmlstr: The request in its transport format
         :param request_cls: The type of requests I expect
+        :param service:
         :param binding: Which binding that was used to transport the message
             to this entity.
         :return: A request instance
@@ -492,8 +537,9 @@ class Entity(HTTPBase):
                                self.config.attribute_converters,
                                timeslack=timeslack)
 
+        origdoc = xmlstr
         xmlstr = self.unravel(xmlstr, binding, request_cls.msgtype)
-        _request = _request.loads(xmlstr, binding)
+        _request = _request.loads(xmlstr, binding, origdoc=origdoc)
 
         _log_debug("Loaded request")
 
@@ -509,7 +555,7 @@ class Entity(HTTPBase):
     # ------------------------------------------------------------------------
 
     def create_error_response(self, in_response_to, destination, info,
-                              sign=False, issuer=None):
+                              sign=False, issuer=None, **kwargs):
         """ Create a error response.
 
         :param in_response_to: The identifier of the message this is a response
@@ -519,6 +565,7 @@ class Entity(HTTPBase):
             error code and descriptive text
         :param sign: Whether the response should be signed or not
         :param issuer: The issuer of the response
+        :param kwargs: To capture key,value pairs I don't care about
         :return: A response instance
         """
         status = error_status_factory(info)
@@ -716,7 +763,7 @@ class Entity(HTTPBase):
             kwargs["timeslack"] = self.config.accepted_time_diff
 
         if "asynchop" not in kwargs:
-            if binding == BINDING_SOAP:
+            if binding in [BINDING_SOAP, BINDING_PAOS]:
                 kwargs["asynchop"] = False
             else:
                 kwargs["asynchop"] = True
@@ -739,6 +786,8 @@ class Entity(HTTPBase):
                 raise
 
             xmlstr = self.unravel(xmlstr, binding, response_cls.msgtype)
+            if not xmlstr:  # Not a valid reponse
+                return None
 
             logger.debug("XMLSTR: %s" % xmlstr)
 

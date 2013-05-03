@@ -4,6 +4,10 @@ from saml2 import attribute_converter, saml
 
 from attribute_statement_data import *
 
+from pathutils import full_path
+from saml2.attribute_converter import AttributeConverterNOOP
+
+
 def _eq(l1,l2):
     return set(l1) == set(l2)
 
@@ -17,7 +21,7 @@ def test_default():
 
 class TestAC():
     def setup_class(self):
-        self.acs = attribute_converter.ac_factory("attributemaps")
+        self.acs = attribute_converter.ac_factory(full_path("attributemaps"))
         
     def test_setup(self):
         print self.acs
@@ -36,11 +40,13 @@ class TestAC():
             except attribute_converter.UnknownNameFormat:
                 pass
         print ava.keys()
-        assert _eq(ava.keys(),['givenName', 'displayName', 'uid', 
-            'eduPersonNickname', 'street', 'eduPersonScopedAffiliation', 
-            'employeeType', 'eduPersonAffiliation', 'eduPersonPrincipalName', 
-            'sn', 'postalCode', 'physicalDeliveryOfficeName', 'ou', 
-            'eduPersonTargetedID', 'cn'])
+        assert _eq(ava.keys(), ['givenName', 'displayName', 'uid',
+                                'eduPersonNickname', 'street',
+                                'eduPersonScopedAffiliation',
+                                'employeeType', 'eduPersonAffiliation',
+                                'eduPersonPrincipalName', 'sn', 'postalCode',
+                                'physicalDeliveryOfficeName', 'ou',
+                                'eduPersonTargetedID', 'cn'])
 
     def test_ava_fro_2(self):
         ats = saml.attribute_statement_from_string(STATEMENT2)
@@ -108,13 +114,17 @@ class TestAC():
                 
     def test_to_local_name(self):
     
-        attr = [saml.Attribute(friendly_name="surName", 
+        attr = [
+            saml.Attribute(
+                friendly_name="surName",
                 name="urn:oid:2.5.4.4",
                 name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"),
-            saml.Attribute(friendly_name="efternamn", 
+            saml.Attribute(
+                friendly_name="efternamn",
                 name="urn:oid:2.5.4.42",
                 name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"),
-            saml.Attribute(friendly_name="titel", 
+            saml.Attribute(
+                friendly_name="titel",
                 name="urn:oid:2.5.4.12",
                 name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri")]
                 
@@ -158,3 +168,23 @@ class TestAC():
 
         assert _eq(ava.keys(), oava.keys())
         
+
+def test_noop_attribute_conversion():
+    ava = {"urn:oid:2.5.4.4": "Roland", "urn:oid:2.5.4.42": "Hedberg" }
+    aconv = AttributeConverterNOOP(URI_NF)
+    res = aconv.to_(ava)
+
+    print res
+    assert len(res) == 2
+    for attr in res:
+        assert len(attr.attribute_value) == 1
+        if attr.name == "urn:oid:2.5.4.42":
+            assert attr.name_format == URI_NF
+            assert attr.attribute_value[0].text == "Hedberg"
+        elif attr.name == "urn:oid:2.5.4.4":
+            assert attr.name_format == URI_NF
+            assert attr.attribute_value[0].text == "Roland"
+
+
+if __name__ == "__main__":
+    test_noop_attribute_conversion()

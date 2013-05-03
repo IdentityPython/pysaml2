@@ -42,7 +42,7 @@ except ImportError:
     # Compatibility with Python <= 2.5
     from cgi import parse_qs
 
-from saml2.s_utils import signature
+from saml2.s_utils import signature, UnravelError
 from saml2.s_utils import do_attributes
 
 from saml2 import samlp, BINDING_SOAP
@@ -50,7 +50,7 @@ from saml2 import saml
 from saml2 import soap
 from saml2.population import Population
 
-from saml2.response import AttributeResponse
+from saml2.response import AttributeResponse, StatusError
 from saml2.response import AuthzResponse
 from saml2.response import AssertionIDResponse
 from saml2.response import AuthnQueryResponse
@@ -125,10 +125,10 @@ class Base(Entity):
                 setattr(self, foo, False)
 
         # extra randomness
-        self.logout_requests_signed_default = True
         self.allow_unsolicited = self.config.getattr("allow_unsolicited", "sp")
 
         self.artifact2response = {}
+        self.logout_requests_signed = False
 
     #
     # Private methods
@@ -210,7 +210,7 @@ class Base(Entity):
                              nameid_format=NAMEID_FORMAT_TRANSIENT,
                              service_url_binding=None, message_id=0,
                              consent=None, extensions=None, sign=None,
-                             allow_create=False, **kwargs):
+                             allow_create=False, sign_prepare=False, **kwargs):
         """ Creates an authentication request.
         
         :param destination: Where the request should be sent.
@@ -224,6 +224,7 @@ class Base(Entity):
         :param consent: Whether the principal have given her consent
         :param extensions: Possible extensions
         :param sign: Whether the request should be signed or not.
+        :param sign_prepare: Whether the signature should be prepared or not.
         :param allow_create: If the identity provider is allowed, in the course
             of fulfilling the request, to create a new identifier to represent
             the principal.
@@ -293,13 +294,14 @@ class Base(Entity):
             pass
 
         return self._message(AuthnRequest, destination, message_id, consent,
-                             extensions, sign,
+                             extensions, sign, sign_prepare,
                              protocol_binding=binding,
                              scoping=scoping, **args)
 
     def create_attribute_query(self, destination, name_id=None,
                                attribute=None, message_id=0, consent=None,
-                               extensions=None, sign=False, **kwargs):
+                               extensions=None, sign=False, sign_prepare=False,
+                               **kwargs):
         """ Constructs an AttributeQuery
         
         :param destination: To whom the query should be sent
@@ -320,6 +322,7 @@ class Base(Entity):
         :param consent: Whether the principal have given her consent
         :param extensions: Possible extensions
         :param sign: Whether the query should be signed or not.
+        :param sign_prepare: Whether the Signature element should be added.
         :return: An AttributeQuery instance
         """
 
@@ -348,7 +351,7 @@ class Base(Entity):
             attribute = do_attributes(attribute)
 
         return self._message(AttributeQuery, destination, message_id, consent,
-                             extensions, sign, subject=subject,
+                             extensions, sign, sign_prepare, subject=subject,
                              attribute=attribute)
 
     # MUST use SOAP for
@@ -493,7 +496,7 @@ class Base(Entity):
         :param outstanding: A dictionary with session IDs as keys and
             the original web request from the user before redirection
             as values.
-        :return: An response.AuthnResponse
+        :return: An response.AuthnResponse or None
         """
 
         try:
@@ -512,6 +515,11 @@ class Base(Entity):
                 resp = self._parse_response(xmlstr, AuthnResponse,
                                             "assertion_consumer_service",
                                             binding, **kwargs)
+            except StatusError, err:
+                logger.error("SAML status error: %s" % err)
+                raise
+            except UnravelError:
+                return None
             except Exception, exc:
                 logger.error("%s" % exc)
                 raise

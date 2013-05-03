@@ -227,10 +227,15 @@ class SAML2Plugin(FormPluginBase):
         for key in ['s2repoze.body', "QUERY_STRING"]:
             query = environ.get(key)
             if query:
-                _idp_entity_id = dict(parse_qs(query))[self.idp_query_param][0]
-                if _idp_entity_id in idps:
-                    idp_entity_id = _idp_entity_id
-                break
+                try:
+                    _idp_entity_id = dict(parse_qs(query))[
+                        self.idp_query_param][0]
+                    if _idp_entity_id in idps:
+                        idp_entity_id = _idp_entity_id
+                    break
+                except KeyError:
+                    logger.debug("No IdP entity ID in query: %s" % query)
+                    pass
 
         if idp_entity_id is None:
             if len(idps) == 1:
@@ -353,7 +358,7 @@ class SAML2Plugin(FormPluginBase):
 
         return identity
         
-    def _eval_authn_response(self, environ, post):
+    def _eval_authn_response(self, environ, post, binding=BINDING_HTTP_POST):
         logger.info("Got AuthN response, checking..")
         logger.info("Outstanding: %s" % (self.outstanding_queries,))
 
@@ -361,8 +366,7 @@ class SAML2Plugin(FormPluginBase):
             # Evaluate the response, returns a AuthnResponse instance
             try:
                 authresp = self.saml_client.parse_authn_request_response(
-                    post["SAMLResponse"], BINDING_HTTP_POST,
-                    self.outstanding_queries)
+                    post["SAMLResponse"], binding, self.outstanding_queries)
             except Exception, excp:
                 logger.exception("Exception: %s" % (excp,))
                 raise
@@ -415,8 +419,13 @@ class SAML2Plugin(FormPluginBase):
 
         query = parse_dict_querystring(environ)
         logger.debug('[sp.identify] query: %s' % (query,))
-        
-        post = self._get_post(environ)
+
+        if "SAMLResponse" in query:
+            post = query
+            binding = BINDING_HTTP_REDIRECT
+        else:
+            post = self._get_post(environ)
+            binding = BINDING_HTTP_POST
 
         try:
             logger.debug('[sp.identify] post keys: %s' % (post.keys(),))
@@ -436,9 +445,11 @@ class SAML2Plugin(FormPluginBase):
                 #if self.debug:
                 try:
                     session_info = self._eval_authn_response(
-                        environ, cgi_field_storage_to_dict(post))
-                except Exception:
-                    return None
+                        environ, cgi_field_storage_to_dict(post),
+                        binding=binding)
+                except Exception, err:
+                    environ["s2repoze.saml_error"] = err
+                    return {}
         except TypeError, exc:
             # might be a ECP (=SOAP) response
             body = environ.get('s2repoze.body', None)
@@ -446,8 +457,9 @@ class SAML2Plugin(FormPluginBase):
                 # might be a ECP response
                 try:
                     session_info = self.do_ecp_response(body, environ)
-                except Exception:
+                except Exception, err:
                     environ["post.fieldstorage"] = post
+                    environ["s2repoze.saml_error"] = err
                     return {}
             else:
                 exception_trace("sp.identity", exc, logger)

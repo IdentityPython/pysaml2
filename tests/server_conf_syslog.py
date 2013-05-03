@@ -1,10 +1,7 @@
 __author__ = 'rolandh'
 
-try:
-    from saml2.sigver import get_xmlsec_binary
-    xmlsec_path = get_xmlsec_binary(["/opt/local/bin"])
-except ImportError:
-    xmlsec_path = '/usr/bin/xmlsec1'
+from pathutils import full_path
+
 
 CONFIG={
     "entityid" : "urn:mace:example.com:saml:roland:sp",
@@ -21,11 +18,11 @@ CONFIG={
         }
     },
     "debug" : 1,
-    "key_file" : "test.key",
-    "cert_file" : "test.pem",
+    "key_file" : full_path("test.key"),
+    "cert_file" : full_path("test.pem"),
     #"xmlsec_binary" : xmlsec_path,
     "metadata": {
-        "local": ["idp.xml", "vo_metadata.xml"],
+        "local": [full_path("idp.xml"), full_path("vo_metadata.xml")],
     },
     "virtual_organization" : {
         "urn:mace:example.com:it:tek":{
@@ -33,9 +30,9 @@ CONFIG={
             "common_identifier": "umuselin",
         }
     },
-    "subject_data": "subject_data.db",
+    "subject_data": full_path("subject_data.db"),
     "accepted_time_diff": 60,
-    "attribute_map_dir" : "attributemaps",
+    "attribute_map_dir" : full_path("attributemaps"),
     "organization": {
         "name": ("AB Exempel", "se"),
         "display_name": ("AB Exempel", "se"),

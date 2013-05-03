@@ -18,23 +18,25 @@
 #
 import sys
 
-from distutils.core import  Command
 from setuptools import setup
+from setuptools.command.test import test as TestCommand
 
 
-class PyTest(Command):
-    user_options = []
-    def initialize_options(self):
-        pass
+class PyTest(TestCommand):
+
     def finalize_options(self):
-        pass
-    def run(self):
-        import sys, subprocess
-        errno = subprocess.call([sys.executable, 'runtests.py'])
-        raise SystemExit(errno)
+        TestCommand.finalize_options(self)
+        self.test_args = []
+        self.test_suite = True
+
+    def run_tests(self):
+        #import here, cause outside the eggs aren't loaded
+        import pytest
+        errno = pytest.main(self.test_args)
+        sys.exit(errno)
 
 
-install_requires=[
+install_requires = [
     # core dependencies
     'decorator',
     'requests >= 1.0.0',
@@ -42,17 +44,28 @@ install_requires=[
     'zope.interface',
     'repoze.who == 1.0.18',
     'm2crypto'
-    ]
+]
+
+tests_require = [
+    'mongodict',
+    'pyasn1',
+    'pymongo',
+    'python-memcached',
+    'pytest',
+    'mako',
+    #'pytest-coverage',
+]
+
 
 # only for Python 2.6
-if sys.version_info < (2,7):
+if sys.version_info < (2, 7):
     install_requires.append('importlib')
 
 setup(
     name='pysaml2',
-    version='1.0.0dev',
+    version='1.0.1',
     description='Python implementation of SAML Version 2 to be used in a WSGI environment',
-#    long_description = read("README"),
+    # long_description = read("README"),
     author='Roland Hedberg',
     author_email='roland.hedberg@adm.umu.se',
     license='Apache 2.0',
@@ -60,7 +73,7 @@ setup(
 
     packages=['saml2', 'xmldsig', 'xmlenc', 's2repoze', 's2repoze.plugins',
               "saml2/profile", "saml2/schema", "saml2/extension",
-              "saml2/attributemaps"],
+              "saml2/attributemaps", "saml2/authn_context"],
 
     package_dir={'': 'src'},
     package_data={'': ['xml/*.xml']},
@@ -71,20 +84,12 @@ setup(
 
     scripts=["tools/parse_xsd2.py", "tools/make_metadata.py"],
 
-    tests_require=[
-        'pyasn1',
-        'pymongo',
-        'python-memcached',
-        'pytest',
-        #'pytest-coverage',
-    ],
-    install_requires=install_requires,
+    tests_require=tests_require,
     extras_require={
-        'cjson': ['python-cjson'],
-        'pymongo': ['pymongo'],
-        'python-memcached': ['python-memcached'],
-        'mongodict': ['mongodict']
+        'testing': tests_require,
     },
+    install_requires=install_requires,
     zip_safe=False,
+    test_suite='tests',
     cmdclass={'test': PyTest},
 )

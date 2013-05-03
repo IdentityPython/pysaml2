@@ -1,4 +1,5 @@
-from saml2.saml import NameID, NAMEID_FORMAT_TRANSIENT
+from saml2.saml import NameID
+from saml2.saml import NAMEID_FORMAT_TRANSIENT
 
 __author__ = 'rolandh'
 
@@ -12,7 +13,7 @@ SESSION_INFO_PATTERN = {"ava": {}, "came from": "", "not_on_or_after": 0,
 nid = NameID(name_qualifier="foo", format=NAMEID_FORMAT_TRANSIENT,
              text="abcdefgh")
 nid0 = NameID(name_qualifier="foo", format=NAMEID_FORMAT_TRANSIENT,
-             text="01234567")
+              text="01234567")
 
 
 def add_derek_info(sp):

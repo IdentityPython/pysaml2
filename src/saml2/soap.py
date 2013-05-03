@@ -36,79 +36,98 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+
 class XmlParseError(Exception):
     pass
 
+
 class WrongMessageType(Exception):
     pass
+
 
 def parse_soap_enveloped_saml_response(text):
     tags = ['{%s}Response' % SAMLP_NAMESPACE, 
             '{%s}LogoutResponse' % SAMLP_NAMESPACE]
     return parse_soap_enveloped_saml_thingy(text, tags)
 
+
 def parse_soap_enveloped_saml_logout_response(text):
     tags = ['{%s}Response' % SAMLP_NAMESPACE,
             '{%s}LogoutResponse' % SAMLP_NAMESPACE]
     return parse_soap_enveloped_saml_thingy(text, tags)
 
+
 def parse_soap_enveloped_saml_attribute_query(text):
     expected_tag = '{%s}AttributeQuery' % SAMLP_NAMESPACE
     return parse_soap_enveloped_saml_thingy(text, [expected_tag])
+
 
 def parse_soap_enveloped_saml_attribute_response(text):
     tags = ['{%s}Response' % SAMLP_NAMESPACE,
             '{%s}AttributeResponse' % SAMLP_NAMESPACE]
     return parse_soap_enveloped_saml_thingy(text, tags)
 
+
 def parse_soap_enveloped_saml_logout_request(text):
     expected_tag = '{%s}LogoutRequest' % SAMLP_NAMESPACE
     return parse_soap_enveloped_saml_thingy(text, [expected_tag])
+
 
 def parse_soap_enveloped_saml_authn_request(text):
     expected_tag = '{%s}AuthnRequest' % SAMLP_NAMESPACE
     return parse_soap_enveloped_saml_thingy(text, [expected_tag])
 
+
 def parse_soap_enveloped_saml_artifact_resolve(text):
     expected_tag = '{%s}ArtifactResolve' % SAMLP_NAMESPACE
     return parse_soap_enveloped_saml_thingy(text, [expected_tag])
+
 
 def parse_soap_enveloped_saml_artifact_response(text):
     expected_tag = '{%s}ArtifactResponse' % SAMLP_NAMESPACE
     return parse_soap_enveloped_saml_thingy(text, [expected_tag])
 
+
 def parse_soap_enveloped_saml_name_id_mapping_request(text):
     expected_tag = '{%s}NameIDMappingRequest' % SAMLP_NAMESPACE
     return parse_soap_enveloped_saml_thingy(text, [expected_tag])
+
 
 def parse_soap_enveloped_saml_name_id_mapping_response(text):
     expected_tag = '{%s}NameIDMappingResponse' % SAMLP_NAMESPACE
     return parse_soap_enveloped_saml_thingy(text, [expected_tag])
 
+
 def parse_soap_enveloped_saml_manage_name_id_request(text):
     expected_tag = '{%s}ManageNameIDRequest' % SAMLP_NAMESPACE
     return parse_soap_enveloped_saml_thingy(text, [expected_tag])
+
 
 def parse_soap_enveloped_saml_manage_name_id_response(text):
     expected_tag = '{%s}ManageNameIDResponse' % SAMLP_NAMESPACE
     return parse_soap_enveloped_saml_thingy(text, [expected_tag])
 
+
 def parse_soap_enveloped_saml_assertion_id_request(text):
     expected_tag = '{%s}AssertionIDRequest' % SAMLP_NAMESPACE
     return parse_soap_enveloped_saml_thingy(text, [expected_tag])
 
+
 def parse_soap_enveloped_saml_assertion_id_response(text):
     tags = ['{%s}Response' % SAMLP_NAMESPACE,
-                    '{%s}AssertionIDResponse' % SAMLP_NAMESPACE]
+            '{%s}AssertionIDResponse' % SAMLP_NAMESPACE]
     return parse_soap_enveloped_saml_thingy(text, tags)
+
 
 def parse_soap_enveloped_saml_authn_query(text):
     expected_tag = '{%s}AuthnQuery' % SAMLP_NAMESPACE
     return parse_soap_enveloped_saml_thingy(text, [expected_tag])
 
+
 def parse_soap_enveloped_saml_authn_query_response(text):
     tags = ['{%s}Response' % SAMLP_NAMESPACE]
     return parse_soap_enveloped_saml_thingy(text, tags)
+
 
 def parse_soap_enveloped_saml_authn_response(text):
     tags = ['{%s}Response' % SAMLP_NAMESPACE]
@@ -154,9 +173,10 @@ import re
 
 NS_AND_TAG = re.compile("\{([^}]+)\}(.*)")
 
+
 def instanciate_class(item, modules):
     m = NS_AND_TAG.match(item.tag)
-    ns,tag = m.groups()
+    ns, tag = m.groups()
     for module in modules:
         if module.NAMESPACE == ns:
             try:
@@ -165,6 +185,7 @@ def instanciate_class(item, modules):
             except KeyError:
                 continue
     raise Exception("Unknown class: ns='%s', tag='%s'" % (ns, tag))
+
 
 def class_instances_from_soap_enveloped_saml_thingies(text, modules):
     """Parses a SOAP enveloped header and body SAML thing and returns the
@@ -181,7 +202,7 @@ def class_instances_from_soap_enveloped_saml_thingies(text, modules):
 
     assert envelope.tag == '{%s}Envelope' % soapenv.NAMESPACE
     assert len(envelope) >= 1
-    env = {"header":[], "body":None}
+    env = {"header": [], "body": None}
     
     for part in envelope:
         if part.tag == '{%s}Body' % soapenv.NAMESPACE:
@@ -192,6 +213,7 @@ def class_instances_from_soap_enveloped_saml_thingies(text, modules):
                 env["header"].append(instanciate_class(item, modules))
 
     return env
+
 
 def open_soap_envelope(text):
     """
@@ -206,7 +228,7 @@ def open_soap_envelope(text):
 
     assert envelope.tag == '{%s}Envelope' % soapenv.NAMESPACE
     assert len(envelope) >= 1
-    content = {"header":[], "body":None}
+    content = {"header": [], "body": None}
 
     for part in envelope:
         if part.tag == '{%s}Body' % soapenv.NAMESPACE:
@@ -218,6 +240,7 @@ def open_soap_envelope(text):
                 content["header"].append(_str)
 
     return content
+
 
 def make_soap_enveloped_saml_thingy(thingy, headers=None):
     """ Returns a soap envelope containing a SAML request
@@ -237,6 +260,7 @@ def make_soap_enveloped_saml_thingy(thingy, headers=None):
     soap_envelope.body.add_extension_element(thingy)
 
     return "%s" % soap_envelope
+
 
 def soap_fault(message=None, actor=None, code=None, detail=None):
     """ Create a SOAP Fault message

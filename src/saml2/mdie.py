@@ -15,7 +15,7 @@ EXP_SKIP = ["__class__"]
 
 
 # From pysaml2 SAML2 metadata format to Python dictionary
-def _eval(val, onts):
+def _eval(val, onts, mdb_safe):
     """
     Convert a value to a basic dict format
     :param val: The value
@@ -29,19 +29,19 @@ def _eval(val, onts):
         else:
             return val
     elif isinstance(val, dict) or isinstance(val, SamlBase):
-        return to_dict(val, onts)
+        return to_dict(val, onts, mdb_safe)
     elif isinstance(val, list):
         lv = []
         for v in val:
             if isinstance(v, dict) or isinstance(v, SamlBase):
-                lv.append(to_dict(v, onts))
+                lv.append(to_dict(v, onts, mdb_safe))
             else:
                 lv.append(v)
         return lv
     return val
 
 
-def to_dict(_dict, onts):
+def to_dict(_dict, onts, mdb_safe=False):
     """
     Convert a pysaml2 SAML2 message class instance into a basic dictionary
     format.
@@ -60,25 +60,34 @@ def to_dict(_dict, onts):
             val = getattr(_dict, key)
             if key == "extension_elements":
                 _eel = extension_elements_to_elements(val, onts)
-                _val = [_eval(_v, onts) for _v in _eel]
+                _val = [_eval(_v, onts, mdb_safe) for _v in _eel]
             elif key == "extension_attributes":
-                _val = val
+                if mdb_safe:
+                    _val = dict([(k.replace(".", "__"), v) for k, v in
+                                 val.items()])
+                    #_val = {k.replace(".", "__"): v for k, v in val.items()}
+                else:
+                    _val = val
             else:
-                _val = _eval(val, onts)
+                _val = _eval(val, onts, mdb_safe)
 
             if _val:
+                if mdb_safe:
+                    key = key.replace(".", "__")
                 res[key] = _val
     else:
         for key, val in _dict.items():
-            _val = _eval(val, onts)
+            _val = _eval(val, onts, mdb_safe)
             if _val:
+                if mdb_safe and "." in key:
+                    key = key.replace(".", "__")
                 res[key] = _val
     return res
 
 
 # From Python dictionary to pysaml2 SAML2 metadata format
 
-def _kwa(val, onts):
+def _kwa(val, onts, mdb_safe=False):
     """
     Key word argument conversion
 
@@ -87,11 +96,17 @@ def _kwa(val, onts):
         schema namespase is the key in the dictionary
     :return: A converted dictionary
     """
-    return dict([(k, from_dict(v, onts)) for k, v in val.items()
-                 if k not in EXP_SKIP])
+    if not mdb_safe:
+        return dict([(k, from_dict(v, onts)) for k, v in val.items()
+                     if k not in EXP_SKIP])
+    else:
+        _skip = ["_id"]
+        _skip.extend(EXP_SKIP)
+        return dict([(k.replace("__", "."), from_dict(v, onts)) for k, v in
+                     val.items() if k not in _skip])
 
 
-def from_dict(val, onts):
+def from_dict(val, onts, mdb_safe=False):
     """
     Converts a dictionary into a pysaml2 object
     :param val: A dictionary
@@ -110,17 +125,19 @@ def from_dict(val, onts):
                     for item in ditems:
                         ns, typ = item["__class__"].split("&")
                         cls = getattr(onts[ns], typ)
-                        kwargs = _kwa(item, onts)
+                        kwargs = _kwa(item, onts, mdb_safe)
                         inst = cls(**kwargs)
                         lv.append(element_to_extension_element(inst))
                 return lv
             else:
-                kwargs = _kwa(val, onts)
+                kwargs = _kwa(val, onts, mdb_safe)
                 inst = cls(**kwargs)
             return inst
         else:
             res = {}
             for key, v in val.items():
+                if mdb_safe:
+                    key = key.replace("__", ".")
                 res[key] = from_dict(v, onts)
             return res
     elif isinstance(val, basestring):

@@ -1,5 +1,5 @@
 from urlparse import parse_qs
-from saml2.saml import AUTHN_PASSWORD
+from saml2.authn_context import INTERNETPROTOCOLPASSWORD
 from saml2.samlp import attribute_query_from_string, logout_request_from_string
 from saml2 import BINDING_HTTP_REDIRECT, pack
 from saml2 import BINDING_HTTP_POST
@@ -15,6 +15,13 @@ TYP = {
     "GET": [BINDING_HTTP_REDIRECT],
     "POST": [BINDING_HTTP_POST, BINDING_SOAP]
 }
+
+
+AUTHN = {
+    "class_ref": INTERNETPROTOCOLPASSWORD,
+    "authn_auth": "http://www.example.com/login"
+}
+
 
 def unpack_form(_str, ver="SAMLRequest"):
     SR_STR = "name=\"%s\" value=\"" % ver
@@ -32,13 +39,15 @@ def unpack_form(_str, ver="SAMLRequest"):
 
     rs = _str[k:l]
 
-    return {ver:sr, "RelayState":rs}
+    return {ver: sr, "RelayState": rs}
+
 
 class DummyResponse(object):
     def __init__(self, code, data, headers=None):
         self.status_code = code
         self.text = data
         self.headers = headers or []
+
 
 class FakeIDP(Server):
     def __init__(self, config_file=""):
@@ -106,21 +115,20 @@ class FakeIDP(Server):
         except Exception:
             raise
 
-        identity = { "surName":"Hedberg", "givenName": "Roland",
-                     "title": "supertramp", "mail": "roland@example.com"}
+        identity = {"surName": "Hedberg", "givenName": "Roland",
+                    "title": "supertramp", "mail": "roland@example.com"}
         userid = "Pavill"
 
         authn_resp = self.create_authn_response(identity,
-                                               userid=userid,
-                                               authn=(AUTHN_PASSWORD,
-                                                      "http://www.example.com/login"),
-                                               **resp_args)
+                                                userid=userid,
+                                                authn=AUTHN,
+                                                **resp_args)
 
         response = "%s" % authn_resp
 
         _dict = pack.factory(_binding, response,
-                            resp_args["destination"], relay_state,
-                            "SAMLResponse")
+                             resp_args["destination"], relay_state,
+                             "SAMLResponse")
         return DummyResponse(200, **_dict)
 
     def attribute_query_endpoint(self, xml_str, binding):
@@ -131,26 +139,27 @@ class FakeIDP(Server):
 
         aquery = attribute_query_from_string(_str)
         extra = {"eduPersonAffiliation": "faculty"}
-        userid = "Pavill"
+        #userid = "Pavill"
 
         name_id = aquery.subject.name_id
         attr_resp = self.create_attribute_response(extra, aquery.id,
-                                            None,
-                                            sp_entity_id=aquery.issuer.text,
-                                            name_id=name_id,
-                                            attributes=aquery.attribute)
+                                                   None,
+                                                   sp_entity_id=aquery.issuer
+                                                   .text,
+                                                   name_id=name_id,
+                                                   attributes=aquery.attribute)
 
         if binding == BINDING_SOAP:
             # SOAP packing
             #headers = {"content-type": "application/soap+xml"}
             soap_message = make_soap_enveloped_saml_thingy(attr_resp)
-#            if self.sign and self.sec:
-#                _signed = self.sec.sign_statement_using_xmlsec(soap_message,
-#                                                               class_name(attr_resp),
-#                                                               nodeid=attr_resp.id)
-#                soap_message = _signed
+            #            if self.sign and self.sec:
+            #                _signed = self.sec.sign_statement_using_xmlsec(soap_message,
+            #                                                               class_name(attr_resp),
+            #                                                               nodeid=attr_resp.id)
+            #                soap_message = _signed
             response = "%s" % soap_message
-        else: # Just POST
+        else:  # Just POST
             response = "%s" % attr_resp
 
         return DummyResponse(200, response)
