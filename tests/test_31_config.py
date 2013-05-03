@@ -28,9 +28,8 @@ sp1 = {
             }
         }
     },
-    "key_file" : full_path("mykey.pem"),
-    "cert_file" : full_path("mycert.pem"),
-    #"xmlsec_binary" : "/opt/local/bin/xmlsec1",
+    "key_file" : full_path("test.key"),
+    "cert_file" : full_path("test.pem"),
     "metadata": { 
         "local": [full_path("metadata.xml"), 
                   full_path("urn-mace-swami.se-swamid-test-1.0-metadata.xml")],

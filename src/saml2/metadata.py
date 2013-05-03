@@ -596,8 +596,7 @@ def entities_descriptor(eds, valid_for, name, ident, sign, secc):
 
         entities.signature = pre_signature_part(ident, secc.my_cert, 1)
         entities.id = ident
-        xmldoc = secc.sign_statement_using_xmlsec("%s" % entities,
-                                                  class_name(entities))
+        xmldoc = secc.sign_statement("%s" % entities, class_name(entities))
         entities = md.entities_descriptor_from_string(xmldoc)
     return entities
 
@@ -608,5 +607,5 @@ def sign_entity_descriptor(edesc, ident, secc):
 
     edesc.signature = pre_signature_part(ident, secc.my_cert, 1)
     edesc.id = ident
-    xmldoc = secc.sign_statement_using_xmlsec("%s" % edesc, class_name(edesc))
+    xmldoc = secc.sign_statement("%s" % edesc, class_name(edesc))
     return md.entity_descriptor_from_string(xmldoc)

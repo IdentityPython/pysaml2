@@ -251,7 +251,7 @@ def signed_instance_factory(instance, seccont, elements_to_sign=None):
     if elements_to_sign:
         signed_xml = "%s" % instance
         for (node_name, nodeid) in elements_to_sign:
-            signed_xml = seccont.sign_statement_using_xmlsec(
+            signed_xml = seccont.sign_statement(
                 signed_xml, class_name=node_name, node_id=nodeid)
 
         #print "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
@@ -557,35 +557,6 @@ LOG_LINE = 60 * "=" + "\n%s\n" + 60 * "-" + "\n%s" + 60 * "="
 LOG_LINE_2 = 60 * "=" + "\n%s\n%s\n" + 60 * "-" + "\n%s" + 60 * "="
 
 
-def verify_signature(enctext, xmlsec_binary, cert_file=None, cert_type="pem",
-                     node_name=NODE_NAME, debug=False, node_id=None,
-                     id_attr=""):
-    """ Verifies the signature of a XML document.
-
-    :param enctext: The signed XML document
-    :param xmlsec_binary: The xmlsec1 binaries to be used (or CryptoBackend())
-    :param cert_file: The public key used to decrypt the signature
-    :param cert_type: The cert format
-    :param node_name: The SAML class of the root node in the signed document
-    :param debug: To debug or not
-    :param node_id: The identifier of the root node if any
-    :return: The signed document if all was OK otherwise will raise an
-        exception.
-    """
-
-    if not id_attr:
-        id_attr = ID_ATTR
-
-    crypto = xmlsec_binary
-    if not isinstance(crypto, CryptoBackend):
-        # backwards compatibility
-        crypto = CryptoBackendXmlSec1(xmlsec_binary, debug=debug)
-
-    return crypto.validate_signature(enctext, cert_file=cert_file,
-                                     cert_type=cert_type, node_name=node_name,
-                                     node_id=node_id, id_attr=id_attr,
-                                     )
-
 # ---------------------------------------------------------------------------
 
 
@@ -636,7 +607,7 @@ class CryptoBackend():
     def decrypt(self, enctext, key_file):
         raise NotImplementedError()
 
-    def sign_statement(self, statement, class_name, key, key_file, nodeid,
+    def sign_statement(self, statement, class_name, key_file, nodeid,
                        id_attr):
         raise NotImplementedError()
 
@@ -646,6 +617,10 @@ class CryptoBackend():
 
 
 class CryptoBackendXmlSec1(CryptoBackend):
+    """
+    CryptoBackend implementation using external binary xmlsec1 to sign
+    and verify XML documents.
+    """
 
     __DEBUG = 0
 
@@ -680,8 +655,19 @@ class CryptoBackendXmlSec1(CryptoBackend):
                                                       validate_output=False)
         return output
 
-    def sign_statement(self, statement, class_name, key, key_file, node_id,
+    def sign_statement(self, statement, class_name, key_file, node_id,
                        id_attr):
+        """
+        Sign an XML statement.
+
+        :param statement: The statement to be signed
+        :param class_name: string like 'urn:oasis:names:...:Assertion'
+        :param key_file: The file where the key can be found
+        :param node_id:
+        :param id_attr: The attribute name for the identifier, normally one of
+            'id','Id' or 'ID'
+        :return: The signed statement
+        """
 
         _, fil = make_temp("%s" % statement, decode=False)
 
@@ -707,9 +693,20 @@ class CryptoBackendXmlSec1(CryptoBackend):
         except DecryptError:
             raise Exception("Signing failed")
 
-    def validate_signature(self, enctext, cert_file, cert_type, node_name,
+    def validate_signature(self, signedtext, cert_file, cert_type, node_name,
                            node_id, id_attr):
-        _, fil = make_temp(enctext, decode=False)
+        """
+        Validate signature on XML document.
+
+        :param signedtext: The XML document as a string
+        :param cert_file: The public key that was used to sign the document
+        :param cert_type: The file type of the certificate
+        :param node_name: The name of the class that is signed
+        :param node_id: The identifier of the node
+        :param id_attr: Should normally be one of "id", "Id" or "ID"
+        :return: Boolean True if the signature was correct otherwise False.
+        """
+        _, fil = make_temp(signedtext, decode=False)
 
         com_list = [self.xmlsec, "--verify",
                     "--pubkey-cert-%s" % cert_type, cert_file,
@@ -768,6 +765,64 @@ class CryptoBackendXmlSec1(CryptoBackend):
         ntf.seek(0)
         return p_out, p_err, ntf.read()
 
+class CryptoBackendXMLSecurity(CryptoBackend):
+    """
+    CryptoBackend implementation using pyXMLSecurity to sign and verify
+    XML documents.
+
+    Encrypt and decrypt is currently unsupported by pyXMLSecurity.
+
+    pyXMLSecurity uses lxml (libxml2) to parse XML data, but otherwise
+    try to get by with native Python code. It does native Python RSA
+    signatures, or alternatively PyKCS11 to offload cryptographic work
+    to an external PKCS#11 module.
+    """
+
+    def __init__(self, debug=False):
+        CryptoBackend.__init__(self)
+        self.debug = debug
+
+    def sign_statement(self, statement, _class_name, key_file, _nodeid,
+                       _id_attr):
+        """
+        Sign an XML statement.
+
+        The parameters actually used in this CryptoBackend
+        implementation are :
+
+        :param statement: XML as string
+        :param key_file: xmlsec key_spec string(), filename,
+            "pkcs11://" URI or PEM data
+        :returns: Signed XML as string
+        """
+        import xmlsec
+        import lxml.etree
+        xml = xmlsec.parse_xml(statement)
+        signed = xmlsec.sign(xml, key_file)
+        return lxml.etree.tostring(signed, xml_declaration=True)
+
+    def validate_signature(self, signedtext, cert_file, cert_type, _node_name,
+                           _node_id, _id_attr):
+        """
+        Validate signature on XML document.
+
+        The parameters actually used in this CryptoBackend
+        implementation are :
+
+        :param signedtext: The signed XML data as string
+        :param cert_file: xmlsec key_spec string(), filename,
+            "pkcs11://" URI or PEM data
+        :param cert_type: string, must be 'pem' for now
+        :returns: True on successful validation, False otherwise
+        """
+        if cert_type != "pem":
+            raise Unsupported("Only PEM certs supported here")
+        import xmlsec
+        xml = xmlsec.parse_xml(signedtext)
+        try:
+            return xmlsec.verify(xml, cert_file)
+        except xmlsec.XMLSigException:
+            return False
 
 def security_context(conf, debug=None):
     """ Creates a security context based on the configuration
@@ -788,6 +843,9 @@ def security_context(conf, debug=None):
         _only_md = False
 
     crypto = get_xmlsec_cryptobackend(conf.xmlsec_binary, debug=debug)
+    # Uncomment this to enable the new and somewhat untested pyXMLSecurity
+    # crypto backend.
+    #crypto = CryptoBackendXMLSecurity(debug=debug)
 
     return SecurityContext(crypto, conf.key_file,
                            cert_file=conf.cert_file, metadata=metadata,
@@ -822,7 +880,7 @@ class SecurityContext(object):
         else:
             self.template = template
 
-        self.key_type = encrypt_key_type
+        self.encrypt_key_type = encrypt_key_type
 
     def correctly_signed(self, xml, must=False):
         logger.info("verify correct signature")
@@ -841,7 +899,7 @@ class SecurityContext(object):
         :result: An encrypted XML text
         """
         if not key_type:
-            key_type = self.key_type
+            key_type = self.encrypt_key_type
         if not template:
             template = self.template
 
@@ -855,11 +913,11 @@ class SecurityContext(object):
         """
         return self.crypto.decrypt(enctext, self.key_file)
 
-    def verify_signature(self, enctext, cert_file=None, cert_type="pem",
+    def verify_signature(self, signedtext, cert_file=None, cert_type="pem",
                          node_name=NODE_NAME, node_id=None, id_attr=""):
         """ Verifies the signature of a XML document.
 
-        :param enctext: The XML document as a string
+        :param signedtext: The XML document as a string
         :param cert_file: The public key that was used to sign the document
         :param cert_type: The file type of the certificate
         :param node_name: The name of the class that is signed
@@ -873,8 +931,14 @@ class SecurityContext(object):
             cert_file = self.cert_file
             cert_type = self.cert_type
 
-        return verify_signature(enctext, self.crypto, cert_file, cert_type,
-                                node_name, self.debug, node_id, id_attr)
+        if not id_attr:
+            id_attr = ID_ATTR
+
+        return self.crypto.validate_signature(signedtext, cert_file=cert_file,
+                                              cert_type=cert_type,
+                                              node_name=node_name,
+                                              node_id=node_id, id_attr=id_attr,
+                                              )
 
     def _check_signature(self, decoded_xml, item, node_name=NODE_NAME,
                          origdoc=None, id_attr="", must=False):
@@ -950,9 +1014,9 @@ class SecurityContext(object):
         the entity that sent the info use that, if not use the key that are in
         the message if any.
 
-        :param decoded_xml:
+        :param decoded_xml: The SAML message as a XML string
         :param msgtype:
-        :param must:
+        :param must: Whether there must be a signature
         :param origdoc:
         :return:
         """
@@ -1066,6 +1130,7 @@ class SecurityContext(object):
 
         :param decoded_xml: The SAML message as a XML string
         :param must: Whether there must be a signature
+        :param origdoc:
         :return: None if the signature can not be verified otherwise an instance
         """
 
@@ -1109,8 +1174,10 @@ class SecurityContext(object):
         """Sign a SAML statement.
 
         :param statement: The statement to be signed
+        :param class_name: string like 'urn:oasis:names:...:Assertion'
         :param key: The key to be used for the signing, either this or
         :param key_file: The file where the key can be found
+        :param node_id:
         :param id_attr: The attribute name for the identifier, normally one of
             'id','Id' or 'ID'
         :return: The signed statement
@@ -1124,7 +1191,7 @@ class SecurityContext(object):
         if not key and not key_file:
             key_file = self.key_file
 
-        return self.crypto.sign_statement(statement, class_name, key, key_file,
+        return self.crypto.sign_statement(statement, class_name, key_file,
                                           node_id, id_attr)
 
     def sign_assertion_using_xmlsec(self, statement, **kwargs):
@@ -1197,6 +1264,7 @@ def pre_signature_part(ident, public_key=None, identifier=None):
     :param ident: The identifier of the assertion, so you know which assertion
         was signed
     :param public_key: The base64 part of a PEM file
+    :param identifier:
     :return: A preset signature part
     """
 

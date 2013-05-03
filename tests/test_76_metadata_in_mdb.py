@@ -8,6 +8,7 @@ from saml2.attribute_converter import d_to_local_name, ac_factory
 
 from saml2 import saml
 from saml2 import md
+from saml2 import config
 
 from saml2.extension import mdui
 from saml2.extension import idpdisc
@@ -17,7 +18,7 @@ from saml2.extension import ui
 import xmldsig
 import xmlenc
 
-from pathutils import full_path, xmlsec_path
+from pathutils import full_path
 
 ONTS = {
     saml.NAMESPACE: saml,
@@ -39,8 +40,10 @@ def _eq(l1, l2):
 
 
 def test_metadata():
+    conf = config.Config()
+    conf.load_file("idp_conf_mdb")
     UMU_IDP = 'https://idp.umu.se/saml2/idp/metadata.php'
-    mds = MetadataStore(ONTS.values(), ATTRCONV, xmlsec_path,
+    mds = MetadataStore(ONTS.values(), ATTRCONV, conf,
                         disable_ssl_certificate_validation=True)
 
     mds.imp({"local": [full_path("swamid-1.0.xml")]})
