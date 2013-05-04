@@ -344,7 +344,7 @@ class Server(Entity):
             ast = Assertion(identity)
             policy = self.config.getattr("policy", "aa")
             if policy:
-                ast.apply_policy(sp_entity_id, policy)
+                ast.apply_policy(sp_entity_id, policy, self.metadata)
             else:
                 policy = Policy()
 

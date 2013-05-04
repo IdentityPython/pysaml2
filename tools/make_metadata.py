@@ -6,7 +6,7 @@ from saml2.metadata import entity_descriptor
 from saml2.metadata import entities_descriptor
 from saml2.metadata import sign_entity_descriptor
 
-from saml2.sigver import SecurityContext
+from saml2.sigver import SecurityContext, CryptoBackendXmlSec1
 from saml2.sigver import get_xmlsec_cryptobackend
 from saml2.sigver import get_xmlsec_binary
 from saml2.validate import valid_instance
@@ -61,9 +61,13 @@ for filespec in args.config:
     cnf = Config().load_file(fil, metadata_construction=True)
     eds.append(entity_descriptor(cnf))
 
-crypto = get_xmlsec_cryptobackend()
-secc = SecurityContext(crypto, key_file=args.keyfile,
-                              cert_file=args.cert, debug=1)
+if not xmlsec:
+    crypto = get_xmlsec_cryptobackend()
+else:
+    crypto = CryptoBackendXmlSec1(xmlsec)
+
+secc = SecurityContext(crypto, key_file=args.keyfile, cert_file=args.cert,
+                       debug=1)
 
 if args.id:
     desc = entities_descriptor(eds, valid_for, args.name, args.id,

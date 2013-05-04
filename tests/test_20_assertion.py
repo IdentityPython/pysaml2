@@ -731,5 +731,24 @@ def test_assertion_with_noop_attribute_conv():
             assert attr.attribute_value[0].text == "Roland"
 
 
+def test_filter_ava_5():
+    policy = Policy({
+        "default": {
+            "lifetime": {"minutes": 15},
+            #"attribute_restrictions": None  # means all I have
+            "entity_categories": ["swami", "edugain"]
+        }
+    })
+
+    ava = {"givenName": ["Derek"], "surName": ["Jeter"],
+           "mail": ["derek@nyy.mlb.com", "dj@example.com"]}
+
+    # No restrictions apply
+    ava = policy.filter(ava, "urn:mace:example.com:saml:curt:sp", [], [])
+
+    assert _eq(ava.keys(), ['mail', 'givenName', 'surName'])
+    assert _eq(ava["mail"], ["derek@nyy.mlb.com", "dj@example.com"])
+
+
 if __name__ == "__main__":
     test_assertion_with_noop_attribute_conv()

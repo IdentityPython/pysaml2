@@ -9,6 +9,8 @@ import sys
 import hmac
 
 # from python 2.5
+import imp
+
 if sys.version_info >= (2, 5):
     import hashlib
 else:  # before python 2.5
@@ -407,3 +409,30 @@ def fticks_log(sp, logf, idp_entity_id, user_id, secret, assertion):
         "AM": assertion.AuthnStatement.AuthnContext.AuthnContextClassRef.text
     }
     logf.info(FTICKS_FORMAT % "#".join(["%s=%s" % (a,v) for a,v in info]))
+
+
+def dynamic_importer(name, class_name=None):
+    """
+    Dynamically imports modules / classes
+    """
+    try:
+        fp, pathname, description = imp.find_module(name)
+    except ImportError:
+        print "unable to locate module: " + name
+        return None, None
+
+    try:
+        package = imp.load_module(name, fp, pathname, description)
+    except Exception, e:
+        raise
+
+    if class_name:
+        try:
+            _class = imp.load_module("%s.%s" % (name, class_name), fp,
+                                      pathname, description)
+        except Exception, e:
+            raise
+
+        return package, _class
+    else:
+        return package, None

@@ -46,6 +46,9 @@ REQ2SRV = {
     "discovery_service_request": "discovery_response"
 }
 
+
+ENTITYATTRIBUTES = "urn:oasis:names:tc:SAML:metadata:attribute&EntityAttributes"
+
 # ---------------------------------------------------
 
 
@@ -318,6 +321,16 @@ class MetaData(object):
                             res[s.digest()] = ent
                 except KeyError:
                     pass
+
+        return res
+
+    def entity_categories(self, entity_id):
+        res = []
+        if "extensions" in self[entity_id]:
+            for elem in self[entity_id]["extensions"]["extension_elements"]:
+                if elem["__class__"] == ENTITYATTRIBUTES:
+                    for attr in elem["attribute"]:
+                        res.append(attr["text"])
 
         return res
 
@@ -648,6 +661,17 @@ class MetadataStore(object):
     def vo_members(self, entity_id):
         ad = self.__getitem__(entity_id)["affiliation_descriptor"]
         return [m["text"] for m in ad["affiliate_member"]]
+
+    def entity_categories(self, entity_id):
+        ext = self.__getitem__(entity_id)["extensions"]
+        res = []
+        for elem in ext["extension_elements"]:
+            if elem["__class__"] == ENTITYATTRIBUTES:
+                for attr in elem["attribute"]:
+                    if attr["name"] == "http://macedir.org/entity-category":
+                        res.extend([v["text"] for v in attr["attribute_value"]])
+
+        return res
 
     def bindings(self, entity_id, typ, service):
         for md in self.metadata.values():

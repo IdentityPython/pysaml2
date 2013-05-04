@@ -60,7 +60,8 @@ COMMON_ARGS = [
     "logout_requests_signed",
     "disable_ssl_certificate_validation",
     "referred_binding",
-    "session_storage"
+    "session_storage",
+    "entity_category"
 ]
 
 SP_ARGS = [
@@ -189,6 +190,7 @@ class Config(object):
         self.preferred_binding = PREFERRED_BINDING
         self.domain = ""
         self.name_qualifier = ""
+        self.entity_category = ""
 
     def setattr(self, context, attr, val):
         if context == "":
