@@ -10,6 +10,7 @@ from saml2.extension import mdattr
 from saml2.extension import ui
 from pathutils import full_path
 from saml2.mdstore import MetadataStore
+from saml2.server import Server
 import xmldsig
 import xmlenc
 
@@ -101,5 +102,19 @@ def test_filter_ava3():
     assert _eq(ava.keys(), ['eduPersonTargetedID', "norEduPersonNIN"])
 
 
+def test_idp_policy_filter():
+    idp = Server("idp_conf_ec")
+
+    ava = {"givenName": ["Derek"], "surname": ["Jeter"],
+           "email": ["derek@nyy.mlb.com"], "c": ["USA"],
+           "eduPersonTargetedID": "foo!bar!xyz",
+           "norEduPersonNIN": "19800101134"}
+
+    policy = idp.config.getattr("policy", "idp")
+    policy.filter(ava, "urn:mace:example.com:saml:roland:sp", idp.metadata)
+
+    print ava
+    assert ava.keys() == ["eduPersonTargetedID"]  # because no entity category
+
 if __name__ == "__main__":
-    test_filter_ava2()
+    test_idp_policy_filter()

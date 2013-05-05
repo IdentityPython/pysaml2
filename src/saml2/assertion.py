@@ -22,7 +22,6 @@ from saml2.saml import NAME_FORMAT_URI
 import xmlenc
 
 from saml2 import saml
-from saml2 import entity_category
 
 from saml2.time_util import instant, in_a_while
 from saml2.attribute_converter import from_local
@@ -285,17 +284,14 @@ class Policy(object):
         
         self._restrictions = restrictions.copy()
         
-        for _, spec in self._restrictions.items():
-            if spec is None:
-                continue
-
+        for who, spec in self._restrictions.items():
             try:
-                _entcat = spec["entity_categories"]
+                items = spec["entity_categories"]
             except KeyError:
                 pass
             else:
                 ecs = []
-                for cat in _entcat:
+                for cat in items:
                     _mod = importlib.import_module(
                         "saml2.entity_category.%s" % cat)
                     ecs.append(_mod.RELEASE)
@@ -305,18 +301,18 @@ class Policy(object):
                 restr = spec["attribute_restrictions"]
             except KeyError:
                 continue
-            
+
             if restr is None:
                 continue
-            
+
             for key, values in restr.items():
                 if not values:
                     spec["attribute_restrictions"][key] = None
                     continue
-                
+
                 spec["attribute_restrictions"][key] = \
                     [re.compile(value) for value in values]
-        
+
         return self._restrictions
     
     def get_nameid_format(self, sp_entity_id):

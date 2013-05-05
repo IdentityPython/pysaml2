@@ -224,6 +224,13 @@ class Config(object):
         except KeyError:
             pass
 
+        # for srv, spec in cnf["service"].items():
+        #     try:
+        #         self.setattr(srv, "policy",
+        #                      Policy(cnf["service"][srv]["policy"]))
+        #     except KeyError:
+        #         pass
+
         try:
             try:
                 acs = ac_factory(cnf["attribute_map_dir"])
