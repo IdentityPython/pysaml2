@@ -14,7 +14,7 @@ from saml2 import create_class_from_xml_string
 from saml2.profile import ecp as ecp_prof
 from saml2.client import Saml2Client
 
-from pathutils import dotname, full_path, xmlsec_path
+from pathutils import dotname, full_path
 
 __author__ = 'rolandh'
 

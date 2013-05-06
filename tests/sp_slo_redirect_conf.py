@@ -2,7 +2,7 @@ from saml2 import BINDING_HTTP_REDIRECT
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.saml import NAME_FORMAT_URI
 
-from pathutils import full_path, xmlsec_path
+from pathutils import full_path
 
 HOME = "http://lingon.catalogix.se:8087/"
 CONFIG = {
@@ -26,7 +26,7 @@ CONFIG = {
     "debug" : 1,
     "key_file" : full_path("test.key"),
     "cert_file" : full_path("test.pem"),
-    "xmlsec_binary" : xmlsec_path,
+    "xmlsec_binary" : None,
     "metadata": {
         "local": [full_path("idp_slo_redirect.xml")],
     },
