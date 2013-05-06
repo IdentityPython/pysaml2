@@ -2,7 +2,7 @@
 from saml2 import BINDING_SOAP, BINDING_HTTP_REDIRECT, NAME_FORMAT_URI
 BASE = "http://localhost:8089/"
 
-from pathutils import full_path, xmlsec_path
+from pathutils import full_path
 
 
 CONFIG={
@@ -27,7 +27,7 @@ CONFIG={
     "debug" : 1,
     "key_file" : full_path("test.key"),
     "cert_file" : full_path("test.pem"),
-    #"xmlsec_binary" : xmlsec_path,
+    #"xmlsec_binary" : None,
     "metadata": {
         "local": [full_path("metadata.xml"), full_path("vo_metadata.xml")],
     },

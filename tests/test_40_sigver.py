@@ -11,7 +11,6 @@ from saml2 import time_util
 from saml2 import saml, samlp
 from saml2 import config
 from saml2.s_utils import factory, do_attribute_statement
-from saml2.sigver import xmlsec_version, get_xmlsec_cryptobackend, get_xmlsec_binary
 
 from py.test import raises
 
@@ -84,12 +83,33 @@ def test_cert_from_instance_ssp():
     print str(decoder.decode(der)).replace('.', "\n.")
     assert decoder.decode(der)
 
+class FakeConfig():
+    """
+    Configuration parameters for signature validation test cases.
+    """
+    xmlsec_binary = None
+    crypto_backend = 'xmlsec1'
+    only_use_keys_in_metadata = False
+    metadata = None
+    cert_file = PUB_KEY
+    key_file = PRIV_KEY
+    debug = False
 
 class TestSecurity():
+
     def setup_class(self):
-        crypto = get_xmlsec_cryptobackend()
-        self.sec = sigver.SecurityContext(crypto, key_file=PRIV_KEY,
-                                          cert_file=PUB_KEY, debug=1)
+        # This would be one way to initialize the security context :
+        #
+        #    conf = config.SPConfig()
+        #    conf.load_file("server_conf")
+        #    conf.only_use_keys_in_metadata = False
+        #
+        # but instead, FakeConfig() is used to really only use the minimal
+        # set of parameters needed for these test cases. Other test cases
+        # (TestSecurityMetadata below) excersise the SPConfig() mechanism.
+        #
+        conf = FakeConfig()
+        self.sec = sigver.security_context(FakeConfig())
 
         self._assertion = factory(
             saml.Assertion,
@@ -122,8 +142,7 @@ class TestSecurity():
     def test_sign_assertion(self):
         ass = self._assertion
         print ass
-        sign_ass = self.sec.sign_assertion_using_xmlsec("%s" % ass,
-                                                        node_id=ass.id)
+        sign_ass = self.sec.sign_assertion("%s" % ass, node_id=ass.id)
         #print sign_ass
         sass = saml.assertion_from_string(sign_ass)
         #print sass
@@ -133,7 +152,7 @@ class TestSecurity():
         assert sass.id == "11111"
         assert time_util.str_to_time(sass.issue_instant)
 
-        print xmlsec_version(get_xmlsec_binary())
+        print "Crypto version : %s" % (self.sec.crypto.version())
 
         item = self.sec.check_signature(sass, class_name(sass), sign_ass)
 
@@ -153,7 +172,7 @@ class TestSecurity():
         assert sass.id == "11111"
         assert time_util.str_to_time(sass.issue_instant)
 
-        print xmlsec_version(get_xmlsec_binary())
+        print "Crypto version : %s" % (self.sec.crypto.version())
 
         item = self.sec.check_signature(sass, class_name(sass),
                                         sign_ass, must=True)
@@ -366,9 +385,9 @@ class TestSecurityMetadata():
         md = MetadataStore([saml, samlp], None, conf)
         md.load("local", full_path("metadata_cert.xml"))
 
-        crypto = get_xmlsec_cryptobackend()
-        self.sec = sigver.SecurityContext(crypto, key_file=PRIV_KEY,
-                             cert_file=PUB_KEY, debug=1, metadata=md)
+        conf.metadata = md
+        conf.only_use_keys_in_metadata = False
+        self.sec = sigver.security_context(conf)
 
         self._assertion = factory( saml.Assertion,
                                    version="2.0",
@@ -384,8 +403,7 @@ class TestSecurityMetadata():
     def test_sign_assertion(self):
         ass = self._assertion
         print ass
-        sign_ass = self.sec.sign_assertion_using_xmlsec("%s" % ass,
-                                                        node_id=ass.id)
+        sign_ass = self.sec.sign_assertion("%s" % ass, node_id=ass.id)
         #print sign_ass
         sass = saml.assertion_from_string(sign_ass)
         #print sass
@@ -395,7 +413,7 @@ class TestSecurityMetadata():
         assert sass.id == "11111"
         assert time_util.str_to_time(sass.issue_instant)
 
-        print xmlsec_version(get_xmlsec_binary())
+        print "Crypto version : %s" % (self.sec.crypto.version())
 
         item = self.sec.check_signature(sass, class_name(sass), sign_ass)
 

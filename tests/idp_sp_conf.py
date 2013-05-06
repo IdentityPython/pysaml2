@@ -6,7 +6,7 @@ from saml2.saml import NAME_FORMAT_URI
 
 BASE = "http://localhost:8088/"
 
-from pathutils import full_path, xmlsec_path
+from pathutils import full_path
 
 CONFIG = {
     "entityid" : "urn:mace:example.com:saml:roland:idp",
@@ -49,7 +49,7 @@ CONFIG = {
     "debug" : 1,
     "key_file" : full_path("test.key"),
     "cert_file" : full_path("test.pem"),
-    "xmlsec_binary" : xmlsec_path,
+    "xmlsec_binary" : None,
     "metadata": {
         "local": [full_path("metadata.xml"), full_path("vo_metadata.xml")],
     },
