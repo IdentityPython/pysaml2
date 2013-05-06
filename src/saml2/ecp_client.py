@@ -48,28 +48,33 @@ class Client(Entity):
     def __init__(self, user, passwd, sp="", idp=None, metadata_file=None,
                  xmlsec_binary=None, verbose=0, ca_certs="",
                  disable_ssl_certificate_validation=True, key_file=None,
-                 cert_file=None):
+                 cert_file=None, config=None):
         """
         :param user: user name
         :param passwd: user password
         :param sp: The SP URL
         :param idp: The IdP PAOS endpoint
         :param metadata_file: Where the metadata file is if used
-        :param xmlsec_binary: Where the xmlsec1 binary can be found
+        :param xmlsec_binary: Where the xmlsec1 binary can be found (*)
         :param verbose: Chatty or not
         :param ca_certs: is the path of a file containing root CA certificates
-            for SSL server certificate validation.
+            for SSL server certificate validation (*)
         :param disable_ssl_certificate_validation: If
             disable_ssl_certificate_validation is true, SSL cert validation
-            will not be performed.
+            will not be performed (*)
+        :param key_file: Private key filename (*)
+        :param cert_file: Certificate filename (*)
+        :param config: Config() instance, overrides all the parameters marked
+            with an asterisk (*) above
         """
-        config = Config()
-        config.disable_ssl_certificate_validation = \
-            disable_ssl_certificate_validation
-        config.key_file = key_file
-        config.cert_file = cert_file
-        config.ca_certs = ca_certs
-        config.xmlsec_binary = xmlsec_binary
+        if not config:
+            config = Config()
+            config.disable_ssl_certificate_validation = \
+                disable_ssl_certificate_validation
+            config.key_file = key_file
+            config.cert_file = cert_file
+            config.ca_certs = ca_certs
+            config.xmlsec_binary = xmlsec_binary
 
         Entity.__init__(self, "sp", config)
         self._idp = idp

@@ -38,8 +38,7 @@ class DummyResponse(object):
 
 def test_complete_flow():
     client = ecp_client.Client("user", "password",
-                               metadata_file=full_path("idp_all.xml"),
-                               xmlsec_binary=xmlsec_path)
+                               metadata_file=full_path("idp_all.xml"))
 
     sp = Saml2Client(config_file=dotname("servera_conf"))
     idp = Server(config_file=dotname("idp_all_conf"))
