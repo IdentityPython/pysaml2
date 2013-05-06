@@ -59,7 +59,8 @@ COMMON_ARGS = [
     "logout_requests_signed",
     "disable_ssl_certificate_validation",
     "referred_binding",
-    "session_storage"
+    "session_storage",
+    "entity_category"
 ]
 
 SP_ARGS = [
@@ -188,6 +189,7 @@ class Config(object):
         self.preferred_binding = PREFERRED_BINDING
         self.domain = ""
         self.name_qualifier = ""
+        self.entity_category = ""
         self.crypto_backend = 'xmlsec1'
 
     def setattr(self, context, attr, val):
@@ -221,6 +223,13 @@ class Config(object):
             self.setattr(typ, "policy", Policy(cnf["policy"]))
         except KeyError:
             pass
+
+        # for srv, spec in cnf["service"].items():
+        #     try:
+        #         self.setattr(srv, "policy",
+        #                      Policy(cnf["service"][srv]["policy"]))
+        #     except KeyError:
+        #         pass
 
         try:
             try:

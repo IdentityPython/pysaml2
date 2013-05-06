@@ -328,10 +328,12 @@ class Server(Entity):
         :param kwargs: To catch extra keyword arguments
         :return: A response instance
         """
+
+        policy = self.config.getattr("policy", "aa")
+
         if not name_id and userid:
             try:
-                name_id = self.ident.construct_nameid(userid,
-                                                      self.config.policy,
+                name_id = self.ident.construct_nameid(userid, policy,
                                                       sp_entity_id)
                 logger.warning("Unspecified NameID format")
             except Exception:
@@ -342,9 +344,8 @@ class Server(Entity):
         if identity:
             _issuer = self._issuer(issuer)
             ast = Assertion(identity)
-            policy = self.config.getattr("policy", "aa")
             if policy:
-                ast.apply_policy(sp_entity_id, policy)
+                ast.apply_policy(sp_entity_id, policy, self.metadata)
             else:
                 policy = Policy()
 

@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 from saml2.time_util import in_a_while
-from saml2.extension import mdui, idpdisc, shibmd
-from saml2.saml import NAME_FORMAT_URI
+from saml2.extension import mdui, idpdisc, shibmd, mdattr
+from saml2.saml import NAME_FORMAT_URI, AttributeValue, Attribute
 from saml2.attribute_converter import from_local_name
-from saml2 import md
+from saml2 import md, saml
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_SOAP
@@ -548,6 +548,14 @@ def entity_descriptor(confd):
         entd.organization = do_organization_info(confd.organization)
     if confd.contact_person is not None:
         entd.contact_person = do_contact_person_info(confd.contact_person)
+
+    if confd.entity_category:
+        entd.extensions = md.Extensions()
+        ava = [AttributeValue(text=c) for c in confd.entity_category]
+        attr = Attribute(attribute_value=ava,
+                         name="http://macedir.org/entity-category")
+        item = mdattr.EntityAttributes(attribute=attr)
+        entd.extensions.add_extension_element(item)
 
     serves = confd.serves
     if not serves:

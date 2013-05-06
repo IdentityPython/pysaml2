@@ -7,6 +7,7 @@ __author__ = 'rolandh'
 
 IDPDISC_POLICY = "urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol:single"
 
+
 class DiscoveryServer(Entity):
     def __init__(self, config=None, config_file=""):
         Entity.__init__(self, "disco", config, config_file)
@@ -65,7 +66,7 @@ class DiscoveryServer(Entity):
                                           returnIDParam="entityID",
                                           entity_id=None):
         if entity_id:
-            qp = urlencode({returnIDParam:entity_id})
+            qp = urlencode({returnIDParam: entity_id})
 
             part = urlparse(return_url)
             if part.query:

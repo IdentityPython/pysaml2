@@ -22,12 +22,12 @@ else:
 #BASE = "http://lingon.catalogix.se:8088"
 BASE = "http://localhost:8088"
 
-CONFIG={
-    "entityid" : "%s/idp.xml" % BASE,
+CONFIG = {
+    "entityid": "%s/idp.xml" % BASE,
     "description": "My IDP",
     "service": {
         "aa": {
-            "endpoints" : {
+            "endpoints": {
                 "attribute_service": [
                     ("%s/attr" % BASE, BINDING_SOAP)
                 ]
@@ -36,16 +36,16 @@ CONFIG={
                                NAMEID_FORMAT_PERSISTENT]
         },
         "aq": {
-            "endpoints" : {
+            "endpoints": {
                 "authn_query_service": [
                     ("%s/aqs" % BASE, BINDING_SOAP)
                 ]
             },
         },
         "idp": {
-            "name" : "Rolands IdP",
-            "endpoints" : {
-                "single_sign_on_service" : [
+            "name": "Rolands IdP",
+            "endpoints": {
+                "single_sign_on_service": [
                     ("%s/sso/redirect" % BASE, BINDING_HTTP_REDIRECT),
                     ("%s/sso/post" % BASE, BINDING_HTTP_POST),
                     ("%s/sso/art" % BASE, BINDING_HTTP_ARTIFACT),
@@ -56,27 +56,28 @@ CONFIG={
                     ("%s/slo/post" % BASE, BINDING_HTTP_POST),
                     ("%s/slo/redirect" % BASE, BINDING_HTTP_REDIRECT)
                 ],
-                "artifact_resolve_service":[
+                "artifact_resolve_service": [
                     ("%s/ars" % BASE, BINDING_SOAP)
                 ],
                 "assertion_id_request_service": [
                     ("%s/airs" % BASE, BINDING_URI)
                 ],
-                "manage_name_id_service":[
+                "manage_name_id_service": [
                     ("%s/mni/soap" % BASE, BINDING_SOAP),
                     ("%s/mni/post" % BASE, BINDING_HTTP_POST),
                     ("%s/mni/redirect" % BASE, BINDING_HTTP_REDIRECT),
                     ("%s/mni/art" % BASE, BINDING_HTTP_ARTIFACT)
                 ],
-                "name_id_mapping_service":[
+                "name_id_mapping_service": [
                     ("%s/nim" % BASE, BINDING_SOAP),
                 ],
             },
             "policy": {
                 "default": {
-                    "lifetime": {"minutes":15},
+                    "lifetime": {"minutes": 15},
                     "attribute_restrictions": None, # means all I have
-                    "name_form": NAME_FORMAT_URI
+                    "name_form": NAME_FORMAT_URI,
+                    "entity_categories": ["swami", "edugain"]
                 },
             },
             "subject_data": "./idp.subject",
@@ -84,10 +85,10 @@ CONFIG={
                                NAMEID_FORMAT_PERSISTENT]
         },
     },
-    "debug" : 1,
-    "key_file" : "pki/mykey.pem",
-    "cert_file" : "pki/mycert.pem",
-    "metadata" : {
+    "debug": 1,
+    "key_file": "pki/mykey.pem",
+    "cert_file": "pki/mycert.pem",
+    "metadata": {
         "local": ["../sp/sp.xml"],
     },
     "organization": {
@@ -95,27 +96,28 @@ CONFIG={
         "name": "Rolands Identiteter",
         "url": "http://www.example.com",
     },
-    "contact_person": [{
-        "contact_type": "technical",
-        "given_name": "Roland",
-        "sur_name": "Hedberg",
-        "email_address": "technical@example.com"
-    },{
-        "contact_type": "support",
-        "given_name": "Support",
-        "email_address": "support@example.com"
-    },
+    "contact_person": [
+        {
+            "contact_type": "technical",
+            "given_name": "Roland",
+            "sur_name": "Hedberg",
+            "email_address": "technical@example.com"
+        }, {
+            "contact_type": "support",
+            "given_name": "Support",
+            "email_address": "support@example.com"
+        },
     ],
     # This database holds the map between a subjects local identifier and
     # the identifier returned to a SP
     "xmlsec_binary": xmlsec_path,
-    "attribute_map_dir" : "../attributemaps",
+    "attribute_map_dir": "../attributemaps",
     "logger": {
         "rotating": {
             "filename": "idp.log",
             "maxBytes": 500000,
             "backupCount": 5,
-            },
+        },
         "loglevel": "debug",
     }
 }

@@ -14,6 +14,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import importlib
 import logging
 
 import re
@@ -24,10 +25,10 @@ from saml2 import saml
 
 from saml2.time_util import instant, in_a_while
 from saml2.attribute_converter import from_local
-
 from saml2.s_utils import sid, MissingValue
 from saml2.s_utils import factory
 from saml2.s_utils import assertion_factory
+
 
 logger = logging.getLogger(__name__)
 
@@ -283,26 +284,35 @@ class Policy(object):
         
         self._restrictions = restrictions.copy()
         
-        for _, spec in self._restrictions.items():
-            if spec is None:
-                continue
-            
+        for who, spec in self._restrictions.items():
+            try:
+                items = spec["entity_categories"]
+            except KeyError:
+                pass
+            else:
+                ecs = []
+                for cat in items:
+                    _mod = importlib.import_module(
+                        "saml2.entity_category.%s" % cat)
+                    ecs.append(_mod.RELEASE)
+                spec["entity_categories"] = ecs
+
             try:
                 restr = spec["attribute_restrictions"]
             except KeyError:
                 continue
-            
+
             if restr is None:
                 continue
-            
+
             for key, values in restr.items():
                 if not values:
                     spec["attribute_restrictions"][key] = None
                     continue
-                
+
                 spec["attribute_restrictions"][key] = \
                     [re.compile(value) for value in values]
-        
+
         return self._restrictions
     
     def get_nameid_format(self, sp_entity_id):
@@ -383,7 +393,53 @@ class Policy(object):
             restrictions = None
         
         return restrictions
-    
+
+    def get_entity_categories_restriction(self, sp_entity_id, mds):
+        if not self._restrictions:
+            return None
+
+        restrictions = {}
+        ec_maps = []
+        try:
+            try:
+                ec_maps = self._restrictions[sp_entity_id]["entity_categories"]
+            except KeyError:
+                try:
+                    ec_maps = self._restrictions["default"]["entity_categories"]
+                except KeyError:
+                    pass
+        except KeyError:
+            pass
+
+        if ec_maps:
+            # always released
+            for ec_map in ec_maps:
+                try:
+                    attrs = ec_map[""]
+                except KeyError:
+                    pass
+                else:
+                    for attr in attrs:
+                        restrictions[attr] = None
+
+            try:
+                ecs = mds.entity_categories(sp_entity_id)
+            except KeyError:
+                pass
+            else:
+                for ec in ecs:
+                    for ec_map in ec_maps:
+                        try:
+                            attrs = ec_map[ec]
+                        except KeyError:
+                            pass
+                        else:
+                            for attr in attrs:
+                                restrictions[attr] = None
+
+        return restrictions
+
+
     def not_on_or_after(self, sp_entity_id):
         """ When the assertion stops being valid, should not be
         used after this time.
@@ -394,7 +450,7 @@ class Policy(object):
         
         return in_a_while(**self.get_lifetime(sp_entity_id))
     
-    def filter(self, ava, sp_entity_id, required=None, optional=None):
+    def filter(self, ava, sp_entity_id, mdstore, required=None, optional=None):
         """ What attribute and attribute values returns depends on what
         the SP has said it wants in the request or in the metadata file and
         what the IdP/AA wants to release. An assumption is that what the SP
@@ -408,8 +464,11 @@ class Policy(object):
         :return: A possibly modified AVA
         """
 
-        ava = filter_attribute_value_assertions(
-            ava, self.get_attribute_restriction(sp_entity_id))
+        _rest = self.get_attribute_restriction(sp_entity_id)
+        if _rest is None:
+            _rest = self.get_entity_categories_restriction(sp_entity_id,
+                                                           mdstore)
+        ava = filter_attribute_value_assertions(ava, _rest)
         
         if required or optional:
             ava = filter_on_attributes(ava, required, optional)
@@ -427,8 +486,8 @@ class Policy(object):
         if metadata:
             spec = metadata.attribute_requirement(sp_entity_id)
             if spec:
-                return self.filter(ava, sp_entity_id, spec["required"],
-                                   spec["optional"])
+                ava = self.filter(ava, sp_entity_id, metadata,
+                                  spec["required"], spec["optional"])
 
         return self.filter(ava, sp_entity_id, [], [])
 
@@ -447,19 +506,6 @@ class Policy(object):
                            audience=factory(saml.Audience,
                                             text=sp_entity_id))])
 
-NAME = ["givenName", "surname", "initials", "displayName", "schacSn1",
-        "schacSn2"]
-STATIC_ORG_INFO = ["organizationName", ""]
-
-RESEARCH_AND_EDUCATION = "http://www.swamid.se/category/research-and-education"
-SFS_1993_1153 = "http://www.swamid.se/category/sfs-1993-1153"
-
-# EC_RELEASE = {
-#     "eduPersonPrincipalName", "eduPersonTargetedID", "mail", "email",
-#         "eduPersonScopedAffiliation"
-#     ]),
-#     "http://www.swamid.se/category/sfs-1993-1153": ["norEduPersonNIN"]
-# }
 
 
 class EntityCategories(object):

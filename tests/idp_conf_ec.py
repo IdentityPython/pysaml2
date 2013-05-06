@@ -2,7 +2,7 @@ from saml2 import BINDING_SOAP, BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.saml import NAME_FORMAT_URI
 
-from pathutils import full_path
+from pathutils import full_path, xmlsec_path
 
 BASE = "http://localhost:8088"
 
@@ -21,16 +21,8 @@ CONFIG = {
             "policy": {
                 "default": {
                     "lifetime": {"minutes": 15},
-                    "attribute_restrictions": None,  # means all I have
+                    "entity_categories": ["swamid", "edugain"],
                     "name_form": NAME_FORMAT_URI,
-                },
-                "urn:mace:example.com:saml:roland:sp": {
-                    "lifetime": {"minutes": 5},
-                    "nameid_format": NAMEID_FORMAT_PERSISTENT,
-                    # "attribute_restrictions":{
-                    #     "givenName": None,
-                    #     "surName": None,
-                    # }
                 }
             },
             "subject_data": full_path("subject_data.db"),
@@ -41,7 +33,7 @@ CONFIG = {
     "debug": 1,
     "key_file": full_path("test.key"),
     "cert_file": full_path("test.pem"),
-    "xmlsec_binary": None,
+    "xmlsec_binary": xmlsec_path,
     "metadata": {
         "local": [full_path("metadata_sp_1.xml"),
                   full_path("vo_metadata.xml")],
