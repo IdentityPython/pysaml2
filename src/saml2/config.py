@@ -18,7 +18,6 @@ from saml2 import BINDING_HTTP_ARTIFACT
 
 from saml2.attribute_converter import ac_factory
 from saml2.assertion import Policy
-from saml2.sigver import get_xmlsec_binary
 from saml2.mdstore import MetadataStore
 from saml2.virtual_org import VirtualOrg
 
@@ -189,6 +188,7 @@ class Config(object):
         self.preferred_binding = PREFERRED_BINDING
         self.domain = ""
         self.name_qualifier = ""
+        self.crypto_backend = 'xmlsec1'
 
     def setattr(self, context, attr, val):
         if context == "":
@@ -293,16 +293,6 @@ class Config(object):
                     self.serves.append(typ)
                 except KeyError:
                     pass
-
-        if not metadata_construction:
-            if not self.xmlsec_binary:
-                self.xmlsec_binary = get_xmlsec_binary()
-
-            # verify that xmlsec is where it's supposed to be
-            if not os.path.exists(self.xmlsec_binary):
-                #if not os.access(, os.F_OK):
-                raise Exception(
-                    "xmlsec binary not in '%s' !" % self.xmlsec_binary)
 
         self.load_complex(cnf, metadata_construction=metadata_construction)
         self.context = self.def_context
