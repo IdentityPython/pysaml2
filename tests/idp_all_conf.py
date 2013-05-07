@@ -7,7 +7,7 @@ from saml2 import BINDING_HTTP_ARTIFACT
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.saml import NAME_FORMAT_URI
 
-from pathutils import full_path, xmlsec_path
+from pathutils import full_path
 
 BASE = "http://localhost:8088"
 
@@ -85,7 +85,7 @@ CONFIG = {
     "debug" : 1,
     "key_file" : full_path("test.key"),
     "cert_file" : full_path("test.pem"),
-    "xmlsec_binary" : xmlsec_path,
+    "xmlsec_binary" : None,
     "metadata": {
         "local": [full_path("servera.xml"),
                   full_path("vo_metadata.xml")],

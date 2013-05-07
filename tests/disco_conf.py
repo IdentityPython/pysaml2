@@ -1,6 +1,6 @@
 from saml2.extension.idpdisc import BINDING_DISCO
 
-from pathutils import full_path, xmlsec_path
+from pathutils import full_path
 
 BASE = "http://localhost:8088"
 
@@ -17,7 +17,7 @@ CONFIG = {
         },
     },
     "debug" : 1,
-    "xmlsec_binary" : xmlsec_path,
+    "xmlsec_binary" : None,
     "metadata": {
         "local": [full_path("servera.xml")],
     },
