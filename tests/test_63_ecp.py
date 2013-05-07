@@ -14,7 +14,7 @@ from saml2 import create_class_from_xml_string
 from saml2.profile import ecp as ecp_prof
 from saml2.client import Saml2Client
 
-from pathutils import dotname, full_path, xmlsec_path
+from pathutils import dotname, full_path
 
 __author__ = 'rolandh'
 
@@ -38,8 +38,7 @@ class DummyResponse(object):
 
 def test_complete_flow():
     client = ecp_client.Client("user", "password",
-                               metadata_file=full_path("idp_all.xml"),
-                               xmlsec_binary=xmlsec_path)
+                               metadata_file=full_path("idp_all.xml"))
 
     sp = Saml2Client(config_file=dotname("servera_conf"))
     idp = Server(config_file=dotname("idp_all_conf"))

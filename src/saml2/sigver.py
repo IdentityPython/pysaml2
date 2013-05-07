@@ -72,7 +72,7 @@ def signed(item):
     return False
 
 
-def get_xmlsec_binary(paths=None):
+def _get_xmlsec_binary(paths=None):
     """
     Tries to find the xmlsec1 binary.
 
@@ -107,17 +107,16 @@ def get_xmlsec_binary(paths=None):
 
     raise Exception("Can't find %s" % bin_name)
 
+def _get_xmlsec_cryptobackend(path=None, search_paths=None, debug=False):
+    """
+    Initialize a CryptoBackendXmlSec1 crypto backend.
 
-def get_xmlsec_cryptobackend(path=None, search_paths=None, debug=False):
+    This function is now internal to this module.
+    """
     if path is None:
-        path=get_xmlsec_binary(paths=search_paths)
+        path=_get_xmlsec_binary(paths=search_paths)
     return CryptoBackendXmlSec1(path, debug=debug)
 
-
-try:
-    XMLSEC_BINARY = get_xmlsec_binary()
-except Exception:
-    XMLSEC_BINARY = ""
 
 ID_ATTR = "ID"
 NODE_NAME = "urn:oasis:names:tc:SAML:2.0:assertion:Assertion"
@@ -144,14 +143,6 @@ class DecryptError(Exception):
 
 # --------------------------------------------------------------------------
 
-
-def xmlsec_version(execname):
-    com_list = [execname, "--version"]
-    pof = Popen(com_list, stderr=PIPE, stdout=PIPE)
-    try:
-        return pof.stdout.read().split(" ")[1]
-    except Exception:
-        return ""
 
 
 def _make_vals(val, klass, seccont, klass_inst=None, prop=None, part=False,
@@ -601,6 +592,9 @@ class CryptoBackend():
     def __init__(self, debug=False):
         self.debug = debug
 
+    def version(self):
+        raise NotImplementedError()
+
     def encrypt(self, text, recv_key, template, key_type):
         raise NotImplementedError()
 
@@ -628,6 +622,14 @@ class CryptoBackendXmlSec1(CryptoBackend):
         CryptoBackend.__init__(self, **kwargs)
         assert(isinstance(xmlsec_binary, basestring))
         self.xmlsec = xmlsec_binary
+
+    def version(self):
+        com_list = [self.xmlsec, "--version"]
+        pof = Popen(com_list, stderr=PIPE, stdout=PIPE)
+        try:
+            return pof.stdout.read().split(" ")[1]
+        except Exception:
+            return ""
 
     def encrypt(self, text, recv_key, template, key_type):
         logger.info("Encryption input len: %d" % len(text))
@@ -782,6 +784,11 @@ class CryptoBackendXMLSecurity(CryptoBackend):
         CryptoBackend.__init__(self)
         self.debug = debug
 
+    def version():
+        # XXX if XMLSecurity.__init__ included a __version__, that would be
+        # better than static 0.0 here.
+        return "XMLSecurity 0.0"
+
     def sign_statement(self, statement, _class_name, key_file, _nodeid,
                        _id_attr):
         """
@@ -842,10 +849,22 @@ def security_context(conf, debug=None):
     if _only_md is None:
         _only_md = False
 
-    crypto = get_xmlsec_cryptobackend(conf.xmlsec_binary, debug=debug)
-    # Uncomment this to enable the new and somewhat untested pyXMLSecurity
-    # crypto backend.
-    #crypto = CryptoBackendXMLSecurity(debug=debug)
+    if conf.crypto_backend == 'xmlsec1':
+        xmlsec_binary = conf.xmlsec_binary
+        if not xmlsec_binary:
+            xmlsec_binary = _get_xmlsec_binary()
+        # verify that xmlsec is where it's supposed to be
+        if not os.path.exists(xmlsec_binary):
+            #if not os.access(, os.F_OK):
+            raise Exception(
+                "xmlsec binary not in '%s' !" % xmlsec_binary)
+        crypto = _get_xmlsec_cryptobackend(xmlsec_binary, debug=debug)
+    elif conf.crypto_backend == 'XMLSecurity':
+        # new and somewhat untested pyXMLSecurity crypto backend.
+        crypto = CryptoBackendXMLSecurity(debug=debug)
+    else:
+        raise Exception('Unknown crypto_backend %s' % (
+                repr(conf.crypto_backend)))
 
     return SecurityContext(crypto, conf.key_file,
                            cert_file=conf.cert_file, metadata=metadata,

@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 import argparse
-import os 
+import os
 import sys
 from saml2.metadata import entity_descriptor
 from saml2.metadata import entities_descriptor
 from saml2.metadata import sign_entity_descriptor
 
-from saml2.sigver import SecurityContext, CryptoBackendXmlSec1
-from saml2.sigver import get_xmlsec_cryptobackend
-from saml2.sigver import get_xmlsec_binary
+from saml2.sigver import security_context
 from saml2.validate import valid_instance
 from saml2.config import Config
 
@@ -46,10 +44,7 @@ paths = [".", "/opt/local/bin"]
 if args.valid:
     # translate into hours
     valid_for = int(args.valid) * 24
-if args.xmlsec:
-    xmlsec = args.xmlsec
-else:
-    xmlsec = get_xmlsec_binary(paths)
+
 
 eds = []
 for filespec in args.config:
@@ -61,13 +56,12 @@ for filespec in args.config:
     cnf = Config().load_file(fil, metadata_construction=True)
     eds.append(entity_descriptor(cnf))
 
-if not xmlsec:
-    crypto = get_xmlsec_cryptobackend()
-else:
-    crypto = CryptoBackendXmlSec1(xmlsec)
-
-secc = SecurityContext(crypto, key_file=args.keyfile, cert_file=args.cert,
-                       debug=1)
+conf = Config()
+conf.key_file = args.keyfile
+conf.cert_file = args.cert
+conf.debug = 1
+conf.xmlsec_binary = args.xmlsec
+secc = security_context(conf)
 
 if args.id:
     desc = entities_descriptor(eds, valid_for, args.name, args.id,
