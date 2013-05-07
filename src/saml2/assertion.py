@@ -489,6 +489,7 @@ class Policy(object):
                 ava = self.filter(ava, sp_entity_id, metadata,
                                   spec["required"], spec["optional"])
 
+        return self.filter(ava, sp_entity_id, metadata, [])
 
     def conditions(self, sp_entity_id):
         """ Return a saml.Condition instance
