@@ -69,3 +69,17 @@ example/sp2/sp.xml
 example/sp2/sp_conf.py
 
 example/sp2/who.ini
+
+example/idp2/idp.xml
+
+example/idp2/idp_conf_test.py
+
+example/idp2/metadata.xml
+
+example/idp2/modules/login.mako.py
+
+example/idp2/modules/root.mako.py
+
+example/idp3/idp_conf_test.py
+
+update
