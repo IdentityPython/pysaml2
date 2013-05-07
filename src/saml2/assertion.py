@@ -459,6 +459,7 @@ class Policy(object):
         
         :param ava: The information about the subject as a dictionary
         :param sp_entity_id: The entity ID of the SP
+        :param mdstore: A Metadata store
         :param required: Attributes that the SP requires in the assertion
         :param optional: Attributes that the SP regards as optional
         :return: A possibly modified AVA
@@ -489,7 +490,7 @@ class Policy(object):
                 ava = self.filter(ava, sp_entity_id, metadata,
                                   spec["required"], spec["optional"])
 
-        return self.filter(ava, sp_entity_id, [], [])
+        return self.filter(ava, sp_entity_id, metadata, [], [])
 
     def conditions(self, sp_entity_id):
         """ Return a saml.Condition instance

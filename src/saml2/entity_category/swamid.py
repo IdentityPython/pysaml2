@@ -1,7 +1,7 @@
 __author__ = 'rolandh'
 
 
-NAME = ["givenName", "surname", "initials", "displayName"]
+NAME = ["givenName", "initials", "displayName", "sn"]
 STATIC_ORG_INFO = ["c", "o", "ou"]
 OTHER = ["eduPersonPrincipalName", "eduPersonScopedAffiliation", "email"]
 
