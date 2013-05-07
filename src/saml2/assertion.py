@@ -231,20 +231,24 @@ def filter_attribute_value_assertions(ava, attribute_restrictions=None):
         return ava
     
     for attr, vals in ava.items():
-        if attr in attribute_restrictions:
-            if attribute_restrictions[attr]:
-                rvals = []
-                for restr in attribute_restrictions[attr]:
-                    for val in vals:
-                        if restr.match(val):
-                            rvals.append(val)
-                
-                if rvals:
-                    ava[attr] = list(set(rvals))
-                else:
-                    del ava[attr]
-        else:
+        _attr = attr.lower()
+        try:
+            _rests = attribute_restrictions[_attr]
+        except KeyError:
             del ava[attr]
+        else:
+            if _rests is None:
+                continue
+            rvals = []
+            for restr in _rests:
+                for val in vals:
+                    if restr.match(val):
+                        rvals.append(val)
+
+            if rvals:
+                ava[attr] = list(set(rvals))
+            else:
+                del ava[attr]
     return ava
 
 
@@ -294,9 +298,11 @@ class Policy(object):
                 for cat in items:
                     _mod = importlib.import_module(
                         "saml2.entity_category.%s" % cat)
-                    ecs.append(_mod.RELEASE)
+                    _ec = {}
+                    for key, items in _mod.RELEASE.items():
+                        _ec[key] = [k.lower() for k in items]
+                    ecs.append(_ec)
                 spec["entity_categories"] = ecs
-
             try:
                 restr = spec["attribute_restrictions"]
             except KeyError:
@@ -307,11 +313,13 @@ class Policy(object):
 
             for key, values in restr.items():
                 if not values:
-                    spec["attribute_restrictions"][key] = None
+                    spec["attribute_restrictions"][key.lower()] = None
                     continue
 
-                spec["attribute_restrictions"][key] = \
+                spec["attribute_restrictions"][key.lower()] = \
                     [re.compile(value) for value in values]
+
+        logger.debug("policy restrictions: %s" % self._restrictions)
 
         return self._restrictions
     
@@ -439,7 +447,6 @@ class Policy(object):
 
         return restrictions
 
-
     def not_on_or_after(self, sp_entity_id):
         """ When the assertion stops being valid, should not be
         used after this time.
@@ -469,6 +476,7 @@ class Policy(object):
         if _rest is None:
             _rest = self.get_entity_categories_restriction(sp_entity_id,
                                                            mdstore)
+        logger.debug("filter based on: %s" % _rest)
         ava = filter_attribute_value_assertions(ava, _rest)
         
         if required or optional:

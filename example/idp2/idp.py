@@ -31,7 +31,7 @@ from saml2.httputil import Unauthorized
 from saml2.httputil import BadRequest
 from saml2.httputil import ServiceError
 from saml2.ident import Unknown
-from saml2.s_utils import rndstr
+from saml2.s_utils import rndstr, exception_trace
 from saml2.s_utils import UnknownPrincipal
 from saml2.s_utils import UnsupportedBinding
 from saml2.s_utils import PolicyError
@@ -282,7 +282,7 @@ class SSO(Service):
                     authn=AUTHN_BROKER[self.environ["idp.authn_ref"]],
                     **resp_args)
             except Exception, excp:
-                logger.error("Exception: %s" % (excp,))
+                logging.error(exception_trace(excp))
                 resp = ServiceError("Exception: %s" % (excp,))
                 return resp(self.environ, self.start_response)
 

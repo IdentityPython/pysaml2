@@ -1,6 +1,6 @@
 USERS = {
     "roland": {
-        "surname": "Hedberg",
+        "sn": "Hedberg",
         "givenName": "Roland",
         "eduPersonScopedAffiliation": "staff@example.com",
         "eduPersonPrincipalName": "rohe@example.com",

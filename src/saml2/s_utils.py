@@ -10,6 +10,7 @@ import hmac
 
 # from python 2.5
 import imp
+import traceback
 
 if sys.version_info >= (2, 5):
     import hashlib
@@ -436,3 +437,14 @@ def dynamic_importer(name, class_name=None):
         return package, _class
     else:
         return package, None
+
+
+def exception_trace(exc):
+    message = traceback.format_exception(*sys.exc_info())
+
+    try:
+        _exc = "Exception: %s" % exc
+    except UnicodeEncodeError:
+        _exc = "Exception: %s" % exc.message.encode("utf-8", "replace")
+
+    return {"message": _exc, "content": "".join(message)}
