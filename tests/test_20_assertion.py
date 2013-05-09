@@ -172,15 +172,15 @@ def test_ava_filter_2():
            "surName": "Jeter",
            "mail": "derek@example.com"}
 
-    raises(Exception, policy.filter, ava, 'urn:mace:umu.se:saml:roland:sp',
-           [mail], [gn, sn])
+    raises(MissingValue, policy.filter, ava, 'urn:mace:umu.se:saml:roland:sp',
+           None, [mail], [gn, sn])
 
     ava = {"givenName": "Derek",
            "surName": "Jeter"}
 
     # it wasn't there to begin with
     raises(Exception, policy.filter, ava, 'urn:mace:umu.se:saml:roland:sp',
-           [gn, sn, mail])
+           None, [gn, sn, mail])
 
 
 def test_filter_attribute_value_assertions_0(AVA):
@@ -643,7 +643,7 @@ def test_req_opt():
            'uid': 'rohe0002', 'edupersonaffiliation': 'staff'}
 
     sp_entity_id = "urn:mace:example.com:saml:curt:sp"
-    fava = policy.filter(ava, sp_entity_id, req, opt)
+    fava = policy.filter(ava, sp_entity_id, None, req, opt)
     assert fava
 
 
@@ -736,19 +736,20 @@ def test_filter_ava_5():
         "default": {
             "lifetime": {"minutes": 15},
             #"attribute_restrictions": None  # means all I have
-            "entity_categories": ["swami", "edugain"]
+            "entity_categories": ["swamid", "edugain"]
         }
     })
 
     ava = {"givenName": ["Derek"], "surName": ["Jeter"],
            "mail": ["derek@nyy.mlb.com", "dj@example.com"]}
 
-    # No restrictions apply
-    ava = policy.filter(ava, "urn:mace:example.com:saml:curt:sp", [], [])
+    ava = policy.filter(ava, "urn:mace:example.com:saml:curt:sp", None, [], [])
 
-    assert _eq(ava.keys(), ['mail', 'givenName', 'surName'])
-    assert _eq(ava["mail"], ["derek@nyy.mlb.com", "dj@example.com"])
+    # using entity_categories means there *always* are restrictions
+    # in this case the only allowed attribute is eduPersonTargetedID
+    # which isn't available in the ava hence zip is returned.
+    assert ava == {}
 
 
 if __name__ == "__main__":
-    test_assertion_with_noop_attribute_conv()
+    test_filter_ava_5()

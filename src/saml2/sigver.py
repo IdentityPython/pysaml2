@@ -72,7 +72,7 @@ def signed(item):
     return False
 
 
-def _get_xmlsec_binary(paths=None):
+def get_xmlsec_binary(paths=None):
     """
     Tries to find the xmlsec1 binary.
 
@@ -107,6 +107,7 @@ def _get_xmlsec_binary(paths=None):
 
     raise Exception("Can't find %s" % bin_name)
 
+
 def _get_xmlsec_cryptobackend(path=None, search_paths=None, debug=False):
     """
     Initialize a CryptoBackendXmlSec1 crypto backend.
@@ -114,7 +115,7 @@ def _get_xmlsec_cryptobackend(path=None, search_paths=None, debug=False):
     This function is now internal to this module.
     """
     if path is None:
-        path=_get_xmlsec_binary(paths=search_paths)
+        path = get_xmlsec_binary(paths=search_paths)
     return CryptoBackendXmlSec1(path, debug=debug)
 
 
@@ -142,7 +143,6 @@ class DecryptError(Exception):
     pass
 
 # --------------------------------------------------------------------------
-
 
 
 def _make_vals(val, klass, seccont, klass_inst=None, prop=None, part=False,
@@ -173,7 +173,8 @@ def _make_vals(val, klass, seccont, klass_inst=None, prop=None, part=False,
         except ValueError:
             if not part:
                 cis = [_make_vals(sval, klass, seccont, klass_inst, prop,
-                       True, base64encode, elements_to_sign) for sval in val]
+                                  True, base64encode, elements_to_sign) for sval
+                       in val]
                 setattr(klass_inst, prop, cis)
             else:
                 raise
@@ -485,6 +486,7 @@ def sha1_digest(msg):
 
 class Signer(object):
     """Abstract base class for signing algorithms."""
+
     def sign(self, msg, key):
         """Sign ``msg`` with ``key`` and return the signature."""
         raise NotImplementedError
@@ -544,6 +546,7 @@ def verify_redirect_signature(info, cert):
     else:
         raise Unsupported("Signature algorithm: %s" % info["SigAlg"])
 
+
 LOG_LINE = 60 * "=" + "\n%s\n" + 60 * "-" + "\n%s" + 60 * "="
 LOG_LINE_2 = 60 * "=" + "\n%s\n%s\n" + 60 * "-" + "\n%s" + 60 * "="
 
@@ -588,7 +591,6 @@ def read_cert_from_file(cert_file, cert_type):
 
 
 class CryptoBackend():
-
     def __init__(self, debug=False):
         self.debug = debug
 
@@ -620,7 +622,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
 
     def __init__(self, xmlsec_binary, **kwargs):
         CryptoBackend.__init__(self, **kwargs)
-        assert(isinstance(xmlsec_binary, basestring))
+        assert (isinstance(xmlsec_binary, basestring))
         self.xmlsec = xmlsec_binary
 
     def version(self):
@@ -637,7 +639,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
 
         com_list = [self.xmlsec, "--encrypt", "--pubkey-cert-pem", recv_key,
                     "--session-key", key_type, "--xml-data", fil,
-                    ]
+        ]
 
         (_stdout, _stderr, output) = self._run_xmlsec(com_list, [template],
                                                       exception=DecryptError,
@@ -650,7 +652,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
 
         com_list = [self.xmlsec, "--decrypt", "--privkey-pem",
                     key_file, "--id-attr:%s" % ID_ATTR, ENC_KEY_CLASS,
-                    ]
+        ]
 
         (_stdout, _stderr, output) = self._run_xmlsec(com_list, [fil],
                                                       exception=DecryptError,
@@ -677,7 +679,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
                     "--privkey-pem", key_file,
                     "--id-attr:%s" % id_attr, class_name,
                     #"--store-signatures"
-                    ]
+        ]
         if node_id:
             com_list.extend(["--node-id", node_id])
 
@@ -767,6 +769,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         ntf.seek(0)
         return p_out, p_err, ntf.read()
 
+
 class CryptoBackendXMLSecurity(CryptoBackend):
     """
     CryptoBackend implementation using pyXMLSecurity to sign and verify
@@ -804,6 +807,7 @@ class CryptoBackendXMLSecurity(CryptoBackend):
         """
         import xmlsec
         import lxml.etree
+
         xml = xmlsec.parse_xml(statement)
         signed = xmlsec.sign(xml, key_file)
         return lxml.etree.tostring(signed, xml_declaration=True)
@@ -825,11 +829,13 @@ class CryptoBackendXMLSecurity(CryptoBackend):
         if cert_type != "pem":
             raise Unsupported("Only PEM certs supported here")
         import xmlsec
+
         xml = xmlsec.parse_xml(signedtext)
         try:
             return xmlsec.verify(xml, cert_file)
         except xmlsec.XMLSigException:
             return False
+
 
 def security_context(conf, debug=None):
     """ Creates a security context based on the configuration
@@ -852,8 +858,8 @@ def security_context(conf, debug=None):
     if conf.crypto_backend == 'xmlsec1':
         xmlsec_binary = conf.xmlsec_binary
         if not xmlsec_binary:
-            xmlsec_binary = _get_xmlsec_binary()
-        # verify that xmlsec is where it's supposed to be
+            xmlsec_binary = get_xmlsec_binary()
+            # verify that xmlsec is where it's supposed to be
         if not os.path.exists(xmlsec_binary):
             #if not os.access(, os.F_OK):
             raise Exception(
@@ -864,7 +870,7 @@ def security_context(conf, debug=None):
         crypto = CryptoBackendXMLSecurity(debug=debug)
     else:
         raise Exception('Unknown crypto_backend %s' % (
-                repr(conf.crypto_backend)))
+            repr(conf.crypto_backend)))
 
     return SecurityContext(crypto, conf.key_file,
                            cert_file=conf.cert_file, metadata=metadata,
@@ -957,7 +963,7 @@ class SecurityContext(object):
                                               cert_type=cert_type,
                                               node_name=node_name,
                                               node_id=node_id, id_attr=id_attr,
-                                              )
+        )
 
     def _check_signature(self, decoded_xml, item, node_name=NODE_NAME,
                          origdoc=None, id_attr="", must=False):

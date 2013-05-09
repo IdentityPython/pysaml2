@@ -97,8 +97,11 @@ def filter_on_attributes(ava, required=None, optional=None):
         found = False
         nform = ""
         for nform in ["friendly_name", "name"]:
-            if nform in attr:
+            try:
                 _fn = _match(attr[nform], ava)
+            except KeyError:
+                pass
+            else:
                 if _fn:
                     try:
                         values = [av["text"] for av in attr["attribute_value"]]
@@ -239,6 +242,8 @@ def filter_attribute_value_assertions(ava, attribute_restrictions=None):
         else:
             if _rests is None:
                 continue
+            if isinstance(vals, basestring):
+                vals = [vals]
             rvals = []
             for restr in _rests:
                 for val in vals:
@@ -289,6 +294,8 @@ class Policy(object):
         self._restrictions = restrictions.copy()
         
         for who, spec in self._restrictions.items():
+            if spec is None:
+                continue
             try:
                 items = spec["entity_categories"]
             except KeyError:
@@ -311,14 +318,14 @@ class Policy(object):
             if restr is None:
                 continue
 
+            _are = {}
             for key, values in restr.items():
                 if not values:
-                    spec["attribute_restrictions"][key.lower()] = None
+                    _are[key.lower()] = None
                     continue
 
-                spec["attribute_restrictions"][key.lower()] = \
-                    [re.compile(value) for value in values]
-
+                _are[key.lower()] = [re.compile(value) for value in values]
+            spec["attribute_restrictions"] = _are
         logger.debug("policy restrictions: %s" % self._restrictions)
 
         return self._restrictions
@@ -430,20 +437,21 @@ class Policy(object):
                     for attr in attrs:
                         restrictions[attr] = None
 
-            try:
-                ecs = mds.entity_categories(sp_entity_id)
-            except KeyError:
-                pass
-            else:
-                for ec in ecs:
-                    for ec_map in ec_maps:
-                        try:
-                            attrs = ec_map[ec]
-                        except KeyError:
-                            pass
-                        else:
-                            for attr in attrs:
-                                restrictions[attr] = None
+            if mds:
+                try:
+                    ecs = mds.entity_categories(sp_entity_id)
+                except KeyError:
+                    pass
+                else:
+                    for ec in ecs:
+                        for ec_map in ec_maps:
+                            try:
+                                attrs = ec_map[ec]
+                            except KeyError:
+                                pass
+                            else:
+                                for attr in attrs:
+                                    restrictions[attr] = None
 
         return restrictions
 

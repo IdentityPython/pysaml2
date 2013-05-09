@@ -1,8 +1,12 @@
-from saml2 import BINDING_SOAP, BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
-from saml2.saml import NAMEID_FORMAT_PERSISTENT
+from saml2.sigver import get_xmlsec_binary
+from saml2 import BINDING_SOAP
+from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_HTTP_POST
 from saml2.saml import NAME_FORMAT_URI
 
-from pathutils import full_path, xmlsec_path
+from pathutils import full_path
+
+xmlsec_path = get_xmlsec_binary(["/opt/local/bin"])
 
 BASE = "http://localhost:8088"
 

@@ -50,12 +50,12 @@ def test_filter_ava():
         }
     })
 
-    ava = {"givenName": ["Derek"], "surname": ["Jeter"],
+    ava = {"givenName": ["Derek"], "sn": ["Jeter"],
            "email": ["derek@nyy.mlb.com", "dj@example.com"], "c": ["USA"]}
 
     ava = policy.filter(ava, "https://connect.sunet.se/shibboleth", MDS)
 
-    assert _eq(ava.keys(), ['email', 'givenName', 'surname', 'c'])
+    assert _eq(ava.keys(), ['email', 'givenName', 'sn', 'c'])
     assert _eq(ava["email"], ["derek@nyy.mlb.com", "dj@example.com"])
 
 
@@ -68,7 +68,7 @@ def test_filter_ava2():
         }
     })
 
-    ava = {"givenName": ["Derek"], "surname": ["Jeter"],
+    ava = {"givenName": ["Derek"], "sn": ["Jeter"],
            "email": ["derek@nyy.mlb.com"], "c": ["USA"],
            "eduPersonTargetedID": "foo!bar!xyz"}
 
@@ -92,7 +92,7 @@ def test_filter_ava3():
                         disable_ssl_certificate_validation=True)
     mds.imp({"local": [full_path("entity_cat_sfs_hei.xml")]})
 
-    ava = {"givenName": ["Derek"], "surname": ["Jeter"],
+    ava = {"givenName": ["Derek"], "sn": ["Jeter"],
            "email": ["derek@nyy.mlb.com"], "c": ["USA"],
            "eduPersonTargetedID": "foo!bar!xyz",
            "norEduPersonNIN": "19800101134"}
@@ -105,7 +105,7 @@ def test_filter_ava3():
 def test_idp_policy_filter():
     idp = Server("idp_conf_ec")
 
-    ava = {"givenName": ["Derek"], "surname": ["Jeter"],
+    ava = {"givenName": ["Derek"], "sn": ["Jeter"],
            "email": ["derek@nyy.mlb.com"], "c": ["USA"],
            "eduPersonTargetedID": "foo!bar!xyz",
            "norEduPersonNIN": "19800101134"}
