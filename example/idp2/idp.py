@@ -793,7 +793,7 @@ AUTHN_URLS = [
 ]
 
 NON_AUTHN_URLS = [
-    (r'login?(.*)$', do_authentication),
+    #(r'login?(.*)$', do_authentication),
     (r'verify?(.*)$', do_verify),
     (r'sso/ecp$', (SSO, "ecp")),
 ]
