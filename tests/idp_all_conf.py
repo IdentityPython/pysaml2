@@ -12,11 +12,11 @@ from pathutils import full_path
 BASE = "http://localhost:8088"
 
 CONFIG = {
-    "entityid" : "urn:mace:example.com:saml:roland:idp",
-    "name" : "Rolands IdP",
+    "entityid": "urn:mace:example.com:saml:roland:idp",
+    "name": "Rolands IdP",
     "service": {
         "aa": {
-            "endpoints" : {
+            "endpoints": {
                 "attribute_service": [
                     ("%s/aap" % BASE, BINDING_HTTP_POST),
                     ("%s/aas" % BASE, BINDING_SOAP)
@@ -24,15 +24,15 @@ CONFIG = {
             },
         },
         "aq": {
-            "endpoints" : {
+            "endpoints": {
                 "authn_query_service": [
                     ("%s/aqs" % BASE, BINDING_SOAP)
                 ]
             },
         },
         "idp": {
-            "endpoints" : {
-                "single_sign_on_service" : [
+            "endpoints": {
+                "single_sign_on_service": [
                     ("%s/sso/redirect" % BASE, BINDING_HTTP_REDIRECT),
                     ("%s/sso/post" % BASE, BINDING_HTTP_POST),
                     ("%s/sso/art" % BASE, BINDING_HTTP_ARTIFACT),
@@ -42,7 +42,7 @@ CONFIG = {
                     ("%s/slo/soap" % BASE, BINDING_SOAP),
                     ("%s/slo/post" % BASE, BINDING_HTTP_POST)
                 ],
-                "artifact_resolution_service":[
+                "artifact_resolution_service": [
                     ("%s/ars" % BASE, BINDING_SOAP)
                 ],
                 "assertion_id_request_service": [
@@ -51,13 +51,13 @@ CONFIG = {
                 "authn_query_service": [
                     ("%s/aqs" % BASE, BINDING_SOAP)
                 ],
-                "manage_name_id_service":[
+                "manage_name_id_service": [
                     ("%s/mni/soap" % BASE, BINDING_SOAP),
                     ("%s/mni/post" % BASE, BINDING_HTTP_POST),
                     ("%s/mni/redirect" % BASE, BINDING_HTTP_REDIRECT),
                     ("%s/mni/art" % BASE, BINDING_HTTP_ARTIFACT)
                 ],
-                "name_id_mapping_service":[
+                "name_id_mapping_service": [
                     ("%s/nim/soap" % BASE, BINDING_SOAP),
                     ("%s/nim/post" % BASE, BINDING_HTTP_POST),
                     ("%s/nim/redirect" % BASE, BINDING_HTTP_REDIRECT),
@@ -66,10 +66,10 @@ CONFIG = {
             },
             "policy": {
                 "default": {
-                    "lifetime": {"minutes":15},
+                    "lifetime": {"minutes": 15},
                     "attribute_restrictions": None, # means all I have
                     "name_form": NAME_FORMAT_URI,
-                    },
+                },
                 "urn:mace:example.com:saml:roland:sp": {
                     "lifetime": {"minutes": 5},
                     "nameid_format": NAMEID_FORMAT_PERSISTENT,
@@ -82,25 +82,26 @@ CONFIG = {
             #"subject_data": ("mongodb", "foo"),
         },
     },
-    "debug" : 1,
-    "key_file" : full_path("test.key"),
-    "cert_file" : full_path("test.pem"),
-    "xmlsec_binary" : None,
+    "debug": 1,
+    "key_file": full_path("test.key"),
+    "cert_file": full_path("test.pem"),
+    "xmlsec_binary": None,
     "metadata": {
         "local": [full_path("servera.xml"),
                   full_path("vo_metadata.xml")],
-        },
-    "attribute_map_dir" : full_path("attributemaps"),
+    },
+    "attribute_map_dir": full_path("attributemaps"),
     "organization": {
         "name": "Exempel AB",
-        "display_name": [("Exempel ÄB","se"),("Example Co.","en")],
-        "url":"http://www.example.com/roland",
+        "display_name": [("Exempel ÄB", "se"), ("Example Co.", "en")],
+        "url": "http://www.example.com/roland",
+    },
+    "contact_person": [
+        {
+            "given_name": "John",
+            "sur_name": "Smith",
+            "email_address": ["john.smith@example.com"],
+            "contact_type": "technical",
         },
-    "contact_person": [{
-                           "given_name":"John",
-                           "sur_name": "Smith",
-                           "email_address": ["john.smith@example.com"],
-                           "contact_type": "technical",
-                           },
-                       ],
-    }
+    ],
+}

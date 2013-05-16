@@ -1,8 +1,11 @@
-from saml2 import BINDING_SOAP, BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
+from saml2 import BINDING_SOAP
+from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_HTTP_POST
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.saml import NAME_FORMAT_URI
 
 from pathutils import full_path
+from pathutils import xmlsec_path
 
 BASE = "http://localhost:8088"
 
@@ -41,7 +44,7 @@ CONFIG = {
     "debug": 1,
     "key_file": full_path("test.key"),
     "cert_file": full_path("test.pem"),
-    "xmlsec_binary": None,
+    "xmlsec_binary": xmlsec_path,
     "metadata": {
         "local": [full_path("metadata_sp_1.xml"),
                   full_path("vo_metadata.xml")],

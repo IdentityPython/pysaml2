@@ -1,6 +1,7 @@
 from pathutils import full_path
+from pathutils import xmlsec_path
 
-CONFIG={
+CONFIG = {
     "entityid" : "urn:mace:example.com:saml:roland:sp",
     "name" : "urn:mace:example.com:saml:roland:sp",
     "description": "My own SP",
@@ -19,7 +20,7 @@ CONFIG={
     "key_file": full_path("test.key"),
     "cert_file": full_path("test.pem"),
     "ca_certs": full_path("cacerts.txt"),
-    "xmlsec_binary": None,
+    "xmlsec_binary": xmlsec_path,
     "metadata": {
         "local": [full_path("idp.xml"), full_path("vo_metadata.xml")],
     },

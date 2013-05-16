@@ -56,16 +56,15 @@ class TestSP():
         ava = { "givenName": ["Derek"], "surName": ["Jeter"],
                 "mail": ["derek@nyy.mlb.com"], "title":["The man"]}
 
-        resp_str = "%s" % self.server.create_authn_response(ava, "id1",
-                                            "http://lingon.catalogix.se:8087/",
-                                            "urn:mace:example.com:saml:roland:sp",
-                                            trans_name_policy,
-                                            "foba0001@example.com",
-                                            authn=AUTHN)
+        resp_str = "%s" % self.server.create_authn_response(
+            ava, "id1", "http://lingon.catalogix.se:8087/",
+            "urn:mace:example.com:saml:roland:sp", trans_name_policy,
+            "foba0001@example.com", authn=AUTHN)
 
         resp_str = base64.encodestring(resp_str)
         self.sp.outstanding_queries = {"id1":"http://www.example.com/service"}
-        session_info = self.sp._eval_authn_response({},{"SAMLResponse":resp_str})
+        session_info = self.sp._eval_authn_response({},
+            {"SAMLResponse": resp_str})
         
         assert len(session_info) > 1
         assert session_info["came_from"] == 'http://www.example.com/service'
@@ -73,3 +72,8 @@ class TestSP():
                                         'mail': ['derek@nyy.mlb.com'], 
                                         'sn': ['Jeter'],
                                         'title': ['The man']}
+
+if __name__ == "__main__":
+    _sp = TestSP()
+    _sp.setup_class()
+    _sp.test_identify()

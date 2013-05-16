@@ -49,7 +49,7 @@ CONFIG = {
     "key_file": full_path("test.key"),
     "cert_file": full_path("test.pem"),
     "ca_certs": full_path("cacerts.txt"),
-    "xmlsec_binary" : None,
+    "xmlsec_binary": None,
     "metadata": {
         "local": [full_path("idp_all.xml"), full_path("vo_metadata.xml")],
     },
