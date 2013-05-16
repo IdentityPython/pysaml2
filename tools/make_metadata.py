@@ -38,7 +38,7 @@ parser.add_argument(dest="config", nargs="+")
 args = parser.parse_args()
 
 valid_for = 0
-nspair = None
+nspair = {"xs": "http://www.w3.org/2001/XMLSchema"}
 paths = [".", "/opt/local/bin"]
 
 if args.valid:
