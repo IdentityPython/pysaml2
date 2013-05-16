@@ -17,6 +17,7 @@ from saml2 import request
 from saml2 import soap
 from saml2 import element_to_extension_element
 from saml2 import extension_elements_to_elements
+
 from saml2.saml import NameID
 from saml2.saml import Issuer
 from saml2.saml import NAMEID_FORMAT_ENTITY
@@ -791,7 +792,12 @@ class Entity(HTTPBase):
 
             logger.debug("XMLSTR: %s" % xmlstr)
 
-            response = response.loads(xmlstr, False)
+            try:
+                response = response.loads(xmlstr, False)
+            except Exception, err:
+                if "not well-formed" in "%s" % err:
+                    logger.error("Not well-formed XML")
+                    return None
 
             if response:
                 response = response.verify()

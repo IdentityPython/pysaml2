@@ -311,6 +311,7 @@ class StatusResponse(object):
             raise
         except Exception, excp:
             logger.exception("EXCEPTION: %s", excp)
+            raise
     
         #print "<", self.response
         

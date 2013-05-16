@@ -47,8 +47,6 @@ except ImportError:
     # Compatibility with Python <= 2.5
     from cgi import parse_qs
 
-
-
 import logging
 logger = logging.getLogger(__name__)
 

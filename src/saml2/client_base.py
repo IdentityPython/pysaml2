@@ -526,7 +526,9 @@ class Base(Entity):
 
             logger.debug(">> %s", resp)
 
-            if isinstance(resp, AuthnResponse):
+            if resp is None:
+                return None
+            elif isinstance(resp, AuthnResponse):
                 self.users.add_information_about_person(resp.session_info())
                 logger.info("--- ADDED person info ----")
             else:
