@@ -17,6 +17,7 @@ PASSWORDPROTECTEDTRANSPORT = \
     'urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport'
 PASSWORD = 'urn:oasis:names:tc:SAML:2.0:ac:classes:Password'
 TLSCLIENT = 'urn:oasis:names:tc:SAML:2.0:ac:classes:TLSClient'
+TIMESYNCTOKEN = "urn:oasis:names:tc:SAML:2.0:ac:classes:TimeSyncToken"
 
 AL1 = "http://idmanagement.gov/icam/2009/12/saml_2.0_profile/assurancelevel1"
 AL2 = "http://idmanagement.gov/icam/2009/12/saml_2.0_profile/assurancelevel2"
