@@ -122,7 +122,7 @@ class Client(object):
                 print >> sys.stderr, "Undefined testcase"
                 return
 
-        opers = [self.operations.PHASES[flow] for flow in oper["sequence"]]
+        opers = oper["sequence"]
 
         conv = Conversation(self.idp, self.idp_config, self.trace,
                             self.interactions, self.json_config,
@@ -203,7 +203,11 @@ class Client(object):
         pass
 
     def list_operations(self):
-        pass
+        res = []
+        for key, val in self.operations.OPERATIONS.items():
+            res.append({"id": key, "name": val["name"]})
+
+        print json.dumps(res)
 
     def verify_metadata(self):
         pass

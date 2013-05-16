@@ -211,6 +211,8 @@ class Conversation(tool.Conversation):
                     pass
                 response = response["SAMLResponse"]
             _resp = self.response_func(response, **self.response_args)
+            if not _resp:
+                return False
             self.saml_response.append(_resp)
             try:
                 self.test_sequence(self.oper.tests["post"])

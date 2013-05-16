@@ -1,6 +1,7 @@
 import inspect
 import sys
 from time import mktime
+from saml2.response import AttributeResponse
 from srtest import check
 
 from srtest.check import Check
@@ -199,7 +200,10 @@ class CheckSaml2IntAttributes(Check):
         # should be a list but isn't
         #assert len(response.assertion) == 1
         assertion = response.assertion
-        assert len(assertion.authn_statement) == 1
+        if isinstance(response, AttributeResponse):
+            pass
+        else:
+            assert len(assertion.authn_statement) == 1
         assert len(assertion.attribute_statement) < 2
 
         if assertion.attribute_statement:

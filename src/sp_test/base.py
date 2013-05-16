@@ -12,7 +12,7 @@ from saml2 import BINDING_HTTP_POST
 from saml2.request import SERVICE2REQUEST
 
 from srtest import CheckError
-from srtest.check import CheckHTTPResponse, Check
+from srtest.check import Check
 from srtest.check import ExpectedError
 from srtest.check import INTERACTION
 from srtest.check import STATUSCODE
@@ -146,40 +146,82 @@ class Conversation():
     def handle_result(self, response=None):
         #self.do_check(CheckHTTPResponse)
         if response:
-            if isinstance(response, Check):
+            if isinstance(response(), Check):
                 self.do_check(response)
             else:
                 # A HTTP redirect or HTTP Post
                 if 300 < self.last_response.status_code <= 303:
-                    loc = self.last_response.headers["location"]
-                    # should be for me and be an <result> message
-                    self._endpoint, self._binding = self.which_endpoint(loc)
-                    self.handle_redirect()
-                    # Now self.saml_request should contain the message
-                    assert isinstance(self.saml_request.message,
-                                      response._class)
-                elif self.last_response.status_code >= 400:
+                    self._redirect(self.last_response)
+
+                if self.last_response.status_code >= 400:
                     raise FatalError(self.last_response.reason)
-                else:  # a 2XX response
-                    pass
+
+                _txt = self.last_response.content
+                logger.debug("Content: %s" % _txt)
+                assert _txt.startswith("<h2>")
         else:
-            _txt = self.last_response.content
-            assert _txt.startswith("<h2>")
+            if 300 < self.last_response.status_code <= 303:
+                self._redirect(self.last_response)
+
+            if self.last_response.status_code == 200:
+                _txt = self.last_response.content
+                logger.debug("Content: %s" % _txt)
+                assert _txt.startswith("<h2>")
+            else:
+                raise FatalError("Did not expected error")
 
     def handle_redirect(self):
-        if self._binding == BINDING_HTTP_REDIRECT:
+        try:
             url, query = self.last_response.headers["location"].split("?")
-            _dict = parse_qs(query)
+        except KeyError:
+            return
+
+        _dict = parse_qs(query)
+        try:
+            self.relay_state = _dict["RelayState"][0]
+        except KeyError:
+            self.relay_state = ""
+        _str = _dict["SAMLRequest"][0]
+        self.saml_request = self.instance._parse_request(
+            _str, SERVICE2REQUEST[self._endpoint], self._endpoint,
+            self._binding)
+
+    def _redirect(self, _response):
+        rdseq = []
+        url = None
+        while _response.status_code in [302, 301, 303]:
+            url = _response.headers["location"]
+            if url in rdseq:
+                raise FatalError("Loop detected in redirects")
+            else:
+                rdseq.append(url)
+                if len(rdseq) > 8:
+                    raise FatalError(
+                        "Too long sequence of redirects: %s" % rdseq)
+
+            self.trace.reply("REDIRECT TO: %s" % url)
+            logger.debug("REDIRECT TO: %s" % url)
+            # If back to me
+            for_me = False
             try:
-                self.relay_state = _dict["RelayState"][0]
-            except KeyError:
-                self.relay_state = ""
-            _str = _dict["SAMLRequest"][0]
-            self.saml_request = self.instance._parse_request(
-                _str, SERVICE2REQUEST[self._endpoint], self._endpoint,
-                self._binding)
-        elif self._binding == BINDING_HTTP_POST:
-            pass
+                self._endpoint, self._binding = self.which_endpoint(url)
+                for_me = True
+            except TypeError:
+                pass
+
+            if for_me:
+                break
+            else:
+                try:
+                    _response = self.instance.send(url, "GET")
+                except Exception, err:
+                    raise FatalError("%s" % err)
+
+                self.last_response = _response
+
+                if _response.status_code >= 400:
+                    break
+        return url
 
     def send_idp_response(self, req, resp):
         """
@@ -207,6 +249,7 @@ class Conversation():
             func = getattr(self.instance, "create_%s_response" % _op)
 
         response = func(**args)
+        response = resp(self).pre_processing(response)
 
         info = self.instance.apply_binding(resp._binding, response,
                                            response.destination,
@@ -278,12 +321,16 @@ class Conversation():
         _last_action = None
         _same_actions = 0
         if _response.status_code >= 400:
-            done = True
-        else:
-            done = False
+            try:
+                self.last_content = _response.text
+            except AttributeError:
+                self.last_content = None
+            raise FatalError(
+                "HTTP response status code: %d" % _response.status_code)
 
         url = _response.url
         content = _response.text
+        done = False
         while not done:
             rdseq = []
             while _response.status_code in [302, 301, 303]:

@@ -22,6 +22,7 @@ from idp_test.check import VerifySignedPart
 from idp_test.check import VerifyEndpoint
 
 from saml2.samlp import NameIDPolicy
+from saml2.soap import parse_soap_enveloped_saml_response
 
 __author__ = 'rolandh'
 
@@ -79,7 +80,7 @@ class AuthnRequestTransient(AuthnRequest):
                 self.args["assertion_consumer_service_url"] = url
                 break
 
-        self.tests["post"].append((VerifyEndpoint, url))
+        self.tests["post"].append((VerifyEndpoint, {"endpoint": url}))
 
 
 class AuthnRequestEndpointIndex(AuthnRequest):
@@ -91,7 +92,7 @@ class AuthnRequestEndpointIndex(AuthnRequest):
         cnf = self.conv.client.config
         endps = cnf.getattr("endpoints", "sp")
         acs3 = endps["assertion_consumer_service"][3]
-        self.tests["post"].append((VerifyEndpoint, acs3[0]))
+        self.tests["post"].append((VerifyEndpoint, {"endpoint": acs3[0]}))
 
 
 class AuthnRequestSpecEndpoint(AuthnRequest):
@@ -100,7 +101,7 @@ class AuthnRequestSpecEndpoint(AuthnRequest):
         endps = cnf.getattr("endpoints", "sp")
         acs3 = endps["assertion_consumer_service"][3]
         self.args["assertion_consumer_service_url"] = acs3[0]
-        self.tests["post"].append((VerifyEndpoint, acs3[0]))
+        self.tests["post"].append((VerifyEndpoint, {"endpoint": acs3[0]}))
 
 
 class DynAuthnRequest(Request):
@@ -164,7 +165,7 @@ class LogOutRequest(Request):
     def __init__(self, conv):
         Request.__init__(self, conv)
         self.tests["pre"].append(CheckLogoutSupport)
-        self.tests["post"].append(VerifyLogout)
+        #self.tests["post"].append(VerifyLogout)
 
     def setup(self):
         resp = self.conv.saml_response[-1].response
@@ -176,7 +177,8 @@ class LogOutRequest(Request):
 
 class AssertionIDRequest(Request):
     request = "assertion_id_request"
-    _args = {"request_binding": BINDING_URI}
+    _args = {"request_binding": BINDING_URI,
+             "response_binding": None}
     tests = {"pre": [VerifyFunctionality]}
 
     def setup(self):
@@ -246,6 +248,10 @@ class ECP_AuthnRequest(AuthnRequest):
         _client = self.conv.client
         _client.user = "babs"
         _client.passwd = "howes"
+
+    # def post_processing(self, message):
+    #     # Unpacking SOAP message
+    #     return parse_soap_enveloped_saml_response(message)
 
 
 class ManageNameIDRequest(Request):

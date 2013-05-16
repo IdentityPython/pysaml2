@@ -32,6 +32,19 @@ class MatchResult(Check):
 
         return {}
 
+
+class ErrorResponse(Check):
+    cid = "saml-error"
+    msg = "Expected error message"
+
+    def _func(self, conv):
+        try:
+            assert conv.last_response.status_code >= 400
+        except AssertionError:
+            self._message = self.msg
+            self._status = CRITICAL
+        return {}
+
 # =============================================================================
 
 

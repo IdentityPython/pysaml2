@@ -107,7 +107,7 @@ class SAML2client(object):
         self.sp_configure()
 
         metadata = MetadataStore(SCHEMA, self.sp_config.attribute_converters,
-                                 self.sp_config.xmlsec_binary)
+                                 self.sp_config)
         info = _jc["metadata"].encode("utf-8")
         md = MetaData(SCHEMA, self.sp_config.attribute_converters, info)
         md.load()
