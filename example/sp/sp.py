@@ -126,11 +126,11 @@ def slo(environ, start_response, user):
         if response is None:
             request = sc.lo
 
-    headers = [("Location", "/done")]
+    headers = []
     delco = delete_cookie(environ, "pysaml2")
     if delco:
         headers.append(delco)
-    resp = Redirect("Successful Logout", headers=headers)
+    resp = Redirect("/done", headers=headers)
     return resp(environ, start_response)
     
 
