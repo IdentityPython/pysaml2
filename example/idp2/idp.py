@@ -306,9 +306,10 @@ class SSO(Service):
         _info = self.unpack_redirect()
 
         try:
-            _info = IDP.ticket[_info["key"]]
+            _key = _info["key"]
+            _info = IDP.ticket[_key]
             self.req_info = _info["req_info"]
-            del IDP.ticket[_info["key"]]
+            del IDP.ticket[_key]
         except KeyError:
             self.req_info = IDP.parse_authn_request(_info["SAMLRequest"],
                                                     BINDING_HTTP_REDIRECT)
@@ -832,40 +833,27 @@ def application(environ, start_response):
         except KeyError:
             user = None
 
+    url_patterns = AUTHN_URLS
     if not user:
         logger.info("-- No USER --")
-        for regex, callback in NON_AUTHN_URLS:
-            match = re.search(regex, path)
-            if match is not None:
-                try:
-                    environ['myapp.url_args'] = match.groups()[0]
-                except IndexError:
-                    environ['myapp.url_args'] = path
+        # insert NON_AUTHN_URLS first in case there is no user
+        url_patterns = NON_AUTHN_URLS + url_patterns
 
-                logger.debug("Callback: %s" % (callback,))
-                if isinstance(callback, tuple):
-                    cls = callback[0](environ, start_response, user)
-                    func = getattr(cls, callback[1])
-                    return func()
-                else:
-                    return callback(environ, start_response, user)
-        for regex, callback in AUTHN_URLS:
-            match = re.search(regex, path)
-            if match is not None:
+    for regex, callback in url_patterns:
+        match = re.search(regex, path)
+        if match is not None:
+            try:
+                environ['myapp.url_args'] = match.groups()[0]
+            except IndexError:
+                environ['myapp.url_args'] = path
+
+            logger.debug("Callback: %s" % (callback,))
+            if isinstance(callback, tuple):
                 cls = callback[0](environ, start_response, user)
                 func = getattr(cls, callback[1])
                 return func()
-    else:
-        for regex, callback in AUTHN_URLS:
-            match = re.search(regex, path)
-            if match is not None:
-                try:
-                    environ['myapp.url_args'] = match.groups()[0]
-                except IndexError:
-                    environ['myapp.url_args'] = path
-                cls = callback[0](environ, start_response, user)
-                func = getattr(cls, callback[1])
-                return func()
+            return callback(environ, start_response, user)
+
     return not_found(environ, start_response)
 
 # ----------------------------------------------------------------------------
