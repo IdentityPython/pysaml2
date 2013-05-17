@@ -306,9 +306,10 @@ class SSO(Service):
         _info = self.unpack_redirect()
 
         try:
-            _info = IDP.ticket[_info["key"]]
+            _key = _info["key"]
+            _info = IDP.ticket[_key]
             self.req_info = _info["req_info"]
-            del IDP.ticket[_info["key"]]
+            del IDP.ticket[_key]
         except KeyError:
             self.req_info = IDP.parse_authn_request(_info["SAMLRequest"],
                                                     BINDING_HTTP_REDIRECT)
