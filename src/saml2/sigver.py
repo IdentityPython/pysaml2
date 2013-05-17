@@ -603,7 +603,7 @@ class CryptoBackend():
     def decrypt(self, enctext, key_file):
         raise NotImplementedError()
 
-    def sign_statement(self, statement, class_name, key_file, nodeid,
+    def sign_statement(self, statement, class_name, key_file, node_id,
                        id_attr):
         raise NotImplementedError()
 
@@ -787,12 +787,12 @@ class CryptoBackendXMLSecurity(CryptoBackend):
         CryptoBackend.__init__(self)
         self.debug = debug
 
-    def version():
+    def version(self):
         # XXX if XMLSecurity.__init__ included a __version__, that would be
         # better than static 0.0 here.
         return "XMLSecurity 0.0"
 
-    def sign_statement(self, statement, _class_name, key_file, _nodeid,
+    def sign_statement(self, statement, _class_name, key_file, node_id,
                        _id_attr):
         """
         Sign an XML statement.
