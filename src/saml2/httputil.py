@@ -88,8 +88,15 @@ class SeeOther(Response):
     _status = '303 See Other'
 
     def __call__(self, environ, start_response, **kwargs):
-        location = self.message
-        self.headers.append(('location', location))
+        location = ""
+        if self.message:
+            location = self.message
+            self.headers.append(('location', location))
+        else:
+            for param, item in self.headers:
+                if param == "location":
+                    location = item
+                    break
         start_response(self.status, self.headers)
         return self.response((location, location, location))
 
@@ -154,9 +161,7 @@ def geturl(environ, query=True, path=True):
     :param path: Is path included in URI (default: True)
     """
     url = [environ['wsgi.url_scheme'] + '://']
-    if environ.get('HTTP_HOST'):
-        url.append(environ['HTTP_HOST'])
-    else:
+    if environ.get('SERVER_NAME'):
         url.append(environ['SERVER_NAME'])
         if environ['wsgi.url_scheme'] == 'https':
             if environ['SERVER_PORT'] != '443':
@@ -164,6 +169,8 @@ def geturl(environ, query=True, path=True):
         else:
             if environ['SERVER_PORT'] != '80':
                 url.append(':' + environ['SERVER_PORT'])
+    else:
+        url.append(environ['HTTP_HOST'])
     if path:
         url.append(getpath(environ))
     if query and environ.get('QUERY_STRING'):
