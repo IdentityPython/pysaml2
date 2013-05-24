@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 import sys
+import time
+from saml2.attribute_converter import ac_factory
+from saml2.mdstore import MetaDataMD, MetaDataFile
 
 __author__ = 'rolandh'
-
-from saml2.mdie import from_dict
 
 import xmldsig
 import xmlenc
@@ -27,7 +28,20 @@ ONTS = {
     xmldsig.NAMESPACE: xmldsig,
 }
 
-_dict = eval(open(sys.argv[1]).read())
-res = from_dict(_dict, ONTS)
+start = time.time()
+for i in range(1, 10):
+    mdmd = MetaDataMD(ONTS, ac_factory("../tests/attributemaps"), "swamid2.md")
+    mdmd.load()
 
-print res
+    _ = mdmd.keys()
+
+print time.time() - start
+
+start = time.time()
+for i in range(1, 10):
+    mdf = MetaDataFile(ONTS.values(), ac_factory("../tests/attributemaps"),
+                      "../tests/swamid-2.0.xml")
+    mdf.load()
+    _ = mdf.keys()
+
+print time.time() - start

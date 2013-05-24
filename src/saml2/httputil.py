@@ -154,16 +154,19 @@ def extract(environ, empty=False, err=False):
     return formdata
 
 
-def geturl(environ, query=True, path=True):
+def geturl(environ, query=True, path=True, use_server_name=False):
     """Rebuilds a request URL (from PEP 333).
+    You may want to chose to use the environment variables
+    server_name and server_port instead of http_host in some case.
+    The parameter use_server_name allows you to chose.
 
     :param query: Is QUERY_STRING included in URI (default: True)
     :param path: Is path included in URI (default: True)
+    :param use_server_name: If SERVER_NAME/_HOST should be used instead of
+        HTTP_HOST
     """
     url = [environ['wsgi.url_scheme'] + '://']
-    if environ.get('SERVER_NAME'):
-        url.append(environ['HTTP_HOST'])
-    else:
+    if use_server_name:
         url.append(environ['SERVER_NAME'])
         if environ['wsgi.url_scheme'] == 'https':
             if environ['SERVER_PORT'] != '443':
@@ -171,6 +174,8 @@ def geturl(environ, query=True, path=True):
         else:
             if environ['SERVER_PORT'] != '80':
                 url.append(':' + environ['SERVER_PORT'])
+    else:
+        url.append(environ['HTTP_HOST'])
     if path:
         url.append(getpath(environ))
     if query and environ.get('QUERY_STRING'):
