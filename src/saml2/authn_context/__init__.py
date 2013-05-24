@@ -3,8 +3,6 @@ from saml2.samlp import RequestedAuthnContext
 
 __author__ = 'rolandh'
 
-import hashlib
-
 from saml2 import extension_elements_to_elements
 
 UNSPECIFIED = "urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified"
@@ -36,6 +34,7 @@ CMP_TYPE = ['exact', 'minimum', 'maximum', 'better']
 class AuthnBroker(object):
     def __init__(self):
         self.db = {"info": {}, "key": {}}
+        self.next = 0
 
     def exact(self, a, b):
         return a == b
@@ -81,17 +80,8 @@ class AuthnBroker(object):
         else:
             raise NotImplementedError()
 
-        m = hashlib.md5()
-        for attr in ["method", "level", "authn_auth"]:
-            m.update(str(_info[attr]))
-        try:
-            _txt = "%s" % _info["decl"]
-        except KeyError:
-            pass
-        else:
-            m.update(_txt)
-
-        _ref = m.hexdigest()
+        self.next += 1
+        _ref = str(self.next)
         self.db["info"][_ref] = _info
         try:
             self.db["key"][key].append(_ref)
