@@ -23,15 +23,15 @@ class DiscoveryServer(Entity):
 
         # verify
 
-        for key in ["isPassive", "return_url", "returnIDParam", "policy"]:
+        for key in ["isPassive", "return", "returnIDParam", "policy"]:
             try:
                 assert len(dsr[key]) == 1
                 dsr[key] = dsr[key][0]
             except KeyError:
                 pass
 
-        if "return_url" in dsr:
-            part = urlparse(dsr["return_url"])
+        if "return" in dsr:
+            part = urlparse(dsr["return"])
             if part.query:
                 qp = parse_qs(part.query)
                 if "returnIDParam" in dsr:
@@ -40,7 +40,7 @@ class DiscoveryServer(Entity):
                     assert "entityID" not in qp.keys()
         else:
             # If metadata not used this is mandatory
-            raise VerificationError("Missing mandatory parameter 'return_url'")
+            raise VerificationError("Missing mandatory parameter 'return'")
 
         if "policy" not in dsr:
             dsr["policy"] = IDPDISC_POLICY
