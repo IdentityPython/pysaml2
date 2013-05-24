@@ -90,7 +90,8 @@ def whoami(environ, start_response, user):
         response = ["<h2>Your identity are supposed to be</h2>"]
         response.extend(dict_to_table(ava))
     else:
-        response = ["<h2>No information about you was returned</h2>"]
+        response = [
+            "<h2>The system did not return any information about you</h2>"]
 
     response.extend("<a href='logout'>Logout</a>")
     resp = Response(response)

@@ -9,7 +9,7 @@ CONFIG = {
     "description": "My SP",
     "service": {
         "sp": {
-            "name" : "Rolands SP",
+            "name": "Rolands SP",
             "endpoints": {
                 "assertion_consumer_service": [BASE],
                 "single_logout_service": [(BASE + "/slo",
