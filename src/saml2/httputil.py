@@ -162,6 +162,8 @@ def geturl(environ, query=True, path=True):
     """
     url = [environ['wsgi.url_scheme'] + '://']
     if environ.get('SERVER_NAME'):
+        url.append(environ['HTTP_HOST'])
+    else:
         url.append(environ['SERVER_NAME'])
         if environ['wsgi.url_scheme'] == 'https':
             if environ['SERVER_PORT'] != '443':
@@ -169,8 +171,6 @@ def geturl(environ, query=True, path=True):
         else:
             if environ['SERVER_PORT'] != '80':
                 url.append(':' + environ['SERVER_PORT'])
-    else:
-        url.append(environ['HTTP_HOST'])
     if path:
         url.append(getpath(environ))
     if query and environ.get('QUERY_STRING'):
