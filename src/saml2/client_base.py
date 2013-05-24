@@ -707,9 +707,17 @@ class Base(Entity):
         :return: A URL
         """
         args = {"entityID": entity_id}
-        for key in ["return", "policy", "returnIDParam"]:
+        for key in ["policy", "returnIDParam"]:
             try:
                 args[key] = kwargs[key]
+            except KeyError:
+                pass
+
+        try:
+            args["return"] = kwargs["return_url"]
+        except KeyError:
+            try:
+                args["return"] = kwargs["return"]
             except KeyError:
                 pass
 

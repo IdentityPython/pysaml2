@@ -62,9 +62,12 @@ class DiscoveryServer(Entity):
 
     # -------------------------------------------------------------------------
 
-    def create_discovery_service_response(self, return_url,
+    def create_discovery_service_response(self, return_url=None,
                                           returnIDParam="entityID",
-                                          entity_id=None):
+                                          entity_id=None, **kwargs):
+        if return_url is None:
+            return_url = kwargs["return"]
+            
         if entity_id:
             qp = urlencode({returnIDParam: entity_id})
 

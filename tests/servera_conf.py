@@ -8,6 +8,7 @@ from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 
 from pathutils import full_path
+from pathutils import xmlsec_path
 
 BASE = "http://lingon.catalogix.se:8087"
 
@@ -49,7 +50,7 @@ CONFIG = {
     "key_file": full_path("test.key"),
     "cert_file": full_path("test.pem"),
     "ca_certs": full_path("cacerts.txt"),
-    "xmlsec_binary": None,
+    "xmlsec_binary": xmlsec_path,
     "metadata": {
         "local": [full_path("idp_all.xml"), full_path("vo_metadata.xml")],
     },
