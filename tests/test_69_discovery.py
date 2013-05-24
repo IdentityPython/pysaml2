@@ -18,14 +18,14 @@ def test_construct_0():
     url = sp.create_discovery_service_request("http://example.com/saml/disco",
                                               "https://example.com/saml/sp.xml")
 
-    assert url ==  "http://example.com/saml/disco?entityID=https%3A%2F%2Fexample.com%2Fsaml%2Fsp.xml"
+    assert url == "http://example.com/saml/disco?entityID=https%3A%2F%2Fexample.com%2Fsaml%2Fsp.xml"
 
 def test_construct_1():
     sp = Saml2Client(config_file=dotname("servera_conf"))
     url = sp.create_discovery_service_request("http://example.com/saml/disco",
                                               "https://example.com/saml/sp.xml")
 
-    assert url ==  "http://example.com/saml/disco?entityID=https%3A%2F%2Fexample.com%2Fsaml%2Fsp.xml"
+    assert url == "http://example.com/saml/disco?entityID=https%3A%2F%2Fexample.com%2Fsaml%2Fsp.xml"
 
 def test_construct_deconstruct_request():
     sp = Saml2Client(config_file=dotname("servera_conf"))
