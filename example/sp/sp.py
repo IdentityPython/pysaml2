@@ -82,11 +82,16 @@ def delete_cookie(environ, name):
 
 #noinspection PyUnusedLocal
 def whoami(environ, start_response, user):
-    identity = environ["repoze.who.identity"]["user"]
-    if not identity:
+    nameid = environ["repoze.who.identity"]["login"]
+    ava = environ["repoze.who.identity"]["user"]
+    if not nameid:
         return not_authn(environ, start_response)
-    response = ["<h2>Your identity are supposed to be</h2>"]
-    response.extend(dict_to_table(identity))
+    if ava:
+        response = ["<h2>Your identity are supposed to be</h2>"]
+        response.extend(dict_to_table(ava))
+    else:
+        response = ["<h2>No information about you was returned</h2>"]
+
     response.extend("<a href='logout'>Logout</a>")
     resp = Response(response)
     return resp(environ, start_response)

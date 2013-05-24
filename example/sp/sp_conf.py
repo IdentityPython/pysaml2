@@ -38,7 +38,7 @@ CONFIG = {
         "contact_type": "technical",
         },
     ],
-    #"xmlsec_binary":"/usr/local/bin/xmlsec1",
+    #"xmlsec_binary":"/opt/local/bin/xmlsec1",
     "name_form": NAME_FORMAT_URI,
     "logger": {
         "rotating": {
