@@ -6,7 +6,7 @@ from saml2.mdstore import MetadataStore
 from saml2.mdstore import destinations
 from saml2.mdstore import name
 
-from saml2 import md
+from saml2 import md, sigver
 from saml2 import BINDING_SOAP
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
@@ -69,6 +69,9 @@ METADATACONF = {
     },
     "6": {
         "local": [full_path("metasp.xml")]
+    },
+    "8": {
+        "mdfile": [full_path("swamid.md")]
     }
 }
 
@@ -236,5 +239,15 @@ def test_sp_metadata():
     assert _eq([n["friendly_name"] for n in req["required"]],
                ['surName', 'givenName', 'mail'])
 
+
+def test_metadata_file():
+    sec_config.xmlsec_binary = sigver.get_xmlsec_binary(["/opt/local/bin"])
+    mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
+                        disable_ssl_certificate_validation=True)
+
+    mds.imp(METADATACONF["8"])
+    print len(mds.keys())
+    assert len(mds.keys()) == 560
+
 if __name__ == "__main__":
-    test_swami_1()
+    test_metadata_file()

@@ -88,8 +88,15 @@ class SeeOther(Response):
     _status = '303 See Other'
 
     def __call__(self, environ, start_response, **kwargs):
-        location = self.message
-        self.headers.append(('location', location))
+        location = ""
+        if self.message:
+            location = self.message
+            self.headers.append(('location', location))
+        else:
+            for param, item in self.headers:
+                if param == "location":
+                    location = item
+                    break
         start_response(self.status, self.headers)
         return self.response((location, location, location))
 
@@ -147,16 +154,19 @@ def extract(environ, empty=False, err=False):
     return formdata
 
 
-def geturl(environ, query=True, path=True):
+def geturl(environ, query=True, path=True, use_server_name=False):
     """Rebuilds a request URL (from PEP 333).
+    You may want to chose to use the environment variables
+    server_name and server_port instead of http_host in some case.
+    The parameter use_server_name allows you to chose.
 
     :param query: Is QUERY_STRING included in URI (default: True)
     :param path: Is path included in URI (default: True)
+    :param use_server_name: If SERVER_NAME/_HOST should be used instead of
+        HTTP_HOST
     """
     url = [environ['wsgi.url_scheme'] + '://']
-    if environ.get('HTTP_HOST'):
-        url.append(environ['HTTP_HOST'])
-    else:
+    if use_server_name:
         url.append(environ['SERVER_NAME'])
         if environ['wsgi.url_scheme'] == 'https':
             if environ['SERVER_PORT'] != '443':
@@ -164,6 +174,8 @@ def geturl(environ, query=True, path=True):
         else:
             if environ['SERVER_PORT'] != '80':
                 url.append(':' + environ['SERVER_PORT'])
+    else:
+        url.append(environ['HTTP_HOST'])
     if path:
         url.append(getpath(environ))
     if query and environ.get('QUERY_STRING'):

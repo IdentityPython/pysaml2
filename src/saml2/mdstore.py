@@ -108,7 +108,7 @@ class MetaData(object):
         return self.entity.keys()
 
     def values(self):
-        return self.entity.keys()
+        return self.entity.values()
 
     def __contains__(self, item):
         return item in self.entity
@@ -399,7 +399,8 @@ class MetaDataMD(MetaData):
         self.filename = filename
 
     def load(self):
-        self.entity = eval(open(self.filename).read())
+        for key, item in json.loads(open(self.filename).read()):
+            self.entity[key] = item
 
 
 class MetadataStore(object):

@@ -694,7 +694,7 @@ class Base(Entity):
 
         :param url: The URL of the discovery service
         :param entity_id: The unique identifier of the service provider
-        :param return_url: The discovery service MUST redirect the user agent
+        :param return: The discovery service MUST redirect the user agent
             to this location in response to this request
         :param policy: A parameter name used to indicate the desired behavior
             controlling the processing of the discovery service
@@ -707,9 +707,17 @@ class Base(Entity):
         :return: A URL
         """
         args = {"entityID": entity_id}
-        for key in ["return_url", "policy", "returnIDParam"]:
+        for key in ["policy", "returnIDParam"]:
             try:
                 args[key] = kwargs[key]
+            except KeyError:
+                pass
+
+        try:
+            args["return"] = kwargs["return_url"]
+        except KeyError:
+            try:
+                args["return"] = kwargs["return"]
             except KeyError:
                 pass
 

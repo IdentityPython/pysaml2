@@ -9,7 +9,7 @@ CONFIG = {
     "description": "My SP",
     "service": {
         "sp": {
-            "name" : "Rolands SP",
+            "name": "Rolands SP",
             "endpoints": {
                 "assertion_consumer_service": [BASE],
                 "single_logout_service": [(BASE + "/slo",
@@ -38,7 +38,7 @@ CONFIG = {
         "contact_type": "technical",
         },
     ],
-    #"xmlsec_binary":"/usr/local/bin/xmlsec1",
+    #"xmlsec_binary":"/opt/local/bin/xmlsec1",
     "name_form": NAME_FORMAT_URI,
     "logger": {
         "rotating": {
