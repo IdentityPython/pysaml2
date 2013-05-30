@@ -21,7 +21,7 @@ __author__ = 'rohe0002'
 
 setup(
     name="saml2test",
-    version="0.4.0",
+    version="0.4.1",
     description="SAML2 test tool",
     author = "Roland Hedberg",
     author_email = "roland.hedberg@adm.umu.se",
