@@ -157,8 +157,7 @@ class UsernamePasswordMako(UserAuthnMethod):
             info = self.aes.encrypt(self.srv.symkey,
                                     "::".join([_dict["login"][0], timestamp]))
             self.active[info] = timestamp
-            cookie = make_cookie(self.cookie_name, info, self.srv.seed,
-                                 expire=0, domain="", path="")
+            cookie = make_cookie(self.cookie_name, info, self.srv.seed)
             return_to = create_return_url(self.return_to, _dict["query"][0],
                                           **{self.query_param: "true"})
             resp = Redirect(return_to, headers=[cookie])
