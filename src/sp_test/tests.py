@@ -178,31 +178,31 @@ OPERATIONS = {
         "sequence": [],
         "tests": {"pre": [], "post": []}
     },
-    'sp-01':{
+    'sp-01': {
         "name": """SP should not accept a Response as valid, when the
 StatusCode is not success""",
         "sequence": [(Login, AuthnRequest, ErrorResponse, check.ErrorResponse)],
         "tests": {"pre": [], "post": []}
     },
-    'sp-02':{
+    'sp-02': {
         "name": "SP should accept a NameID with Format: persistent",
         "sequence": [(Login, AuthnRequest,
                       AuthnResponse_NameIDformat_persistent, None)],
         "tests": {"pre": [], "post": []}
     },
-    'sp-03':{
+    'sp-03': {
         "name": "SP should accept a NameID with Format: e-mail",
         "sequence": [(Login, AuthnRequest, AuthnResponse_NameIDformat_email,
                       None)],
         "tests": {"pre": [], "post": []}
     },
-    'sp-04':{
+    'sp-04': {
         "name": "Do SP work with unknown NameID Format, such as : foo",
         "sequence": [(Login, AuthnRequest, AuthnResponse_NameIDformat_foo,
                       None)],
         "tests": {"pre": [], "post": []}
     },
-    'sp-05':{
+    'sp-05': {
         "name": ("SP should accept a Response without a ",
                  "SubjectConfirmationData element. If confirmation method",
                  "is SCM_SENDER_VOUCHES"),
@@ -210,7 +210,7 @@ StatusCode is not success""",
                       AuthnResponse_without_SubjectConfirmationData_1, None)],
         "tests": {"pre": [], "post": []}
     },
-    'sp-06':{
+    'sp-06': {
         "name": ("SP should not accept a response InResponseTo ",
                  "which is chosen randomly"),
         "sequence": [(Login, AuthnRequest,
@@ -218,7 +218,7 @@ StatusCode is not success""",
                       check.ErrorResponse)],
         "tests": {"pre": [], "post": []}
     },
-    'sp-07':{
+    'sp-07': {
         "name": ("SP should not accept an assertion InResponseTo ",
                  "which is chosen randomly"),
         "sequence": [(Login, AuthnRequest,
@@ -226,7 +226,7 @@ StatusCode is not success""",
                       check.ErrorResponse)],
         "tests": {"pre": [], "post": []}
     },
-    'sp-08':{
+    'sp-08': {
         "name": ("SP should accept a Response without a ",
                  "SubjectConfirmationData element. If confirmation method",
                  "is SCM_SENDER_VOUCHES"),
@@ -235,7 +235,7 @@ StatusCode is not success""",
                       check.ErrorResponse)],
         "tests": {"pre": [], "post": []}
     },
-    'sp-09':{
+    'sp-09': {
         "name": ("Do the SP allow the InResponseTo attribute to be missing",
                  "from the SubjectConfirmationData element?"),
         "sequence": [(Login, AuthnRequest,
@@ -243,7 +243,7 @@ StatusCode is not success""",
                       check.ErrorResponse)],
         "tests": {"pre": [], "post": []}
     },
-    'sp-10':{
+    'sp-10': {
         "name": "SP should not accept a broken DestinationURL attribute",
         "sequence": [(Login, AuthnRequest,
                       AuthnResponse_broken_destination,

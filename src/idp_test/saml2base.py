@@ -13,7 +13,6 @@ from idp_test.check import CheckSaml2IntMetaData
 from idp_test.check import VerifyAttributeNameFormat
 from idp_test.check import VerifyFunctionality
 from idp_test.check import VerifyContent
-from idp_test.check import VerifyLogout
 from idp_test.check import VerifyNameIDMapping
 from idp_test.check import VerifyNameIDPolicyUsage
 from idp_test.check import VerifySuccessStatus
@@ -22,7 +21,6 @@ from idp_test.check import VerifySignedPart
 from idp_test.check import VerifyEndpoint
 
 from saml2.samlp import NameIDPolicy
-from saml2.soap import parse_soap_enveloped_saml_response
 
 __author__ = 'rolandh'
 
