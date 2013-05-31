@@ -428,7 +428,7 @@ class MetadataStore(object):
         elif typ == "inline":
             self.ii += 1
             key = self.ii
-            md = MetaData(self.onts, self.attrc)
+            md = MetaData(self.onts, self.attrc, args[0])
         elif typ == "remote":
             key = kwargs["url"]
             md = MetaDataExtern(self.onts, self.attrc,
