@@ -56,6 +56,10 @@ SIG = "{%s#}%s" % (ds.NAMESPACE, "Signature")
 RSA_SHA1 = "http://www.w3.org/2000/09/xmldsig#rsa-sha1"
 
 
+class CertificateTooOld(Exception):
+    pass
+
+
 def signed(item):
     if SIG in item.c_children.keys() and item.signature:
         return True

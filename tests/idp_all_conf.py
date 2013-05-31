@@ -80,6 +80,7 @@ CONFIG = {
                 }
             },
             #"subject_data": ("mongodb", "foo"),
+            "scope": ["example.com"]
         },
     },
     "debug": 1,
