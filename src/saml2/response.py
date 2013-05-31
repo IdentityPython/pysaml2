@@ -595,20 +595,22 @@ class AuthnResponse(StatusResponse):
             return False
 
         if self.asynchop and not self.came_from:
-            if data.in_response_to in self.outstanding_queries:
-                self.came_from = self.outstanding_queries[data.in_response_to]
-                del self.outstanding_queries[data.in_response_to]
-            elif self.allow_unsolicited:
-                pass
-            else:
-                # This is where I don't allow unsolicited reponses
-                # Either in_response_to == None or has a value I don't
-                # recognize
-                logger.debug("in response to: '%s'" % data.in_response_to)
-                logger.info("outstanding queries: %s" % (
-                    self.outstanding_queries.keys(),))
-                raise Exception(
-                    "Combination of session id and requestURI I don't recall")
+            if data.in_response_to:
+                if data.in_response_to in self.outstanding_queries:
+                    self.came_from = self.outstanding_queries[
+                        data.in_response_to]
+                    del self.outstanding_queries[data.in_response_to]
+                elif self.allow_unsolicited:
+                    pass
+                else:
+                    # This is where I don't allow unsolicited reponses
+                    # Either in_response_to == None or has a value I don't
+                    # recognize
+                    logger.debug("in response to: '%s'" % data.in_response_to)
+                    logger.info("outstanding queries: %s" % (
+                        self.outstanding_queries.keys(),))
+                    raise Exception(
+                        "Combination of session id and requestURI I don't recall")
         return True
 
     def _holder_of_key_confirmed(self, data):

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sys
+from saml2.sigver import _get_xmlsec_cryptobackend, SecurityContext
 from saml2.httpbase import HTTPBase
 
 from saml2 import saml
@@ -59,9 +60,10 @@ if args.type == "local":
 elif args.type == "external":
     ATTRCONV = ac_factory(args.attrsmap)
     httpc = HTTPBase()
+    crypto = _get_xmlsec_cryptobackend("/opt/local/bin/xmlsec1")
+    sc = SecurityContext(crypto)
     metad = MetaDataExtern(ONTS.values(), ATTRCONV, args.url,
-                           "/opt/local/bin/xmlsec1",
-                           args.cert, httpc)
+                           sc, cert=args.cert, http=httpc)
 
 if metad:
     metad.load()

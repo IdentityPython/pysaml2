@@ -375,7 +375,7 @@ class MetaDataExtern(MetaData):
         compliance before it is imported.
         """
         response = self.http.send(self.url)
-        if response.status == 200:
+        if response.status_code  == 200:
             node_name="%s:%s" % (md.EntitiesDescriptor.c_namespace,
                                  md.EntitiesDescriptor.c_tag)
             if self.security.verify_signature(response.text,
@@ -428,7 +428,7 @@ class MetadataStore(object):
         elif typ == "inline":
             self.ii += 1
             key = self.ii
-            md = MetaData(self.onts, self.attrc)
+            md = MetaData(self.onts, self.attrc, args[0])
         elif typ == "remote":
             key = kwargs["url"]
             md = MetaDataExtern(self.onts, self.attrc,
@@ -463,8 +463,10 @@ class MetadataStore(object):
                 known_principal = True
 
         if known_principal:
+            logger.error("Unsupported binding: %s (%s)" % (binding, entity_id))
             raise UnsupportedBinding(binding)
         else:
+            logger.error("Unknown principal: %s" % entity_id)
             raise UnknownPrincipal(entity_id)
 
     def _ext_service(self, entity_id, typ, service, binding=None):
