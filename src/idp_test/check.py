@@ -52,59 +52,6 @@ class CheckSaml2IntMetaData(Check):
     cid = "check-saml2int-metadata"
     msg = "Metadata error"
 
-    def verify_key_info(self, ki):
-        # key_info
-        # one or more key_value and/or x509_data.X509Certificate
-
-        verified_x509_keys = []
-
-        xkeys = cert_from_key_info_dict(ki)
-        vkeys = key_from_key_value_dict(ki)
-
-        if xkeys or vkeys:
-            if xkeys:
-                for key in xkeys:
-                    cert_str = "\n".join([PREFIX, key, POSTFIX])
-                    cert = load_cert_string(cert_str)
-                    not_before = to_time(str(cert.get_not_before()))
-                    not_after = to_time(str(cert.get_not_after()))
-                    try:
-                        assert not_before < utc_now()
-                        assert not_after > utc_now()
-                        verified_x509_keys.append(xkeys)
-                    except AssertionError:
-                        self._message = "Unusable key, to old"
-            if vkeys:  # don't expect this to happen
-                pass
-
-        if not verified_x509_keys:
-            if not self._message:
-                self._message = "Missing KeyValue or X509Data.X509Certificate"
-            self._status = CRITICAL
-            return False
-
-        if xkeys and vkeys:
-            # verify that it's the same keys TODO
-            pass
-
-        return True
-
-    def verify_key_descriptor(self, kd):
-        # key_info
-        if not self.verify_key_info(kd["key_info"]):
-            return False
-
-        # use
-        if "use" in kd:
-            try:
-                assert kd["use"] in ["encryption", "signing"]
-            except AssertionError:
-                self._message = "Unknown use specification: '%s'" % kd.use.text
-                self._status = CRITICAL
-                return False
-
-        return True
-
     def _func(self, conv):
         mds = conv.client.metadata.metadata[0]
         # Should only be one
@@ -113,9 +60,6 @@ class CheckSaml2IntMetaData(Check):
 
         assert len(ed["idpsso_descriptor"])
         idpsso = ed["idpsso_descriptor"][0]
-        for kd in idpsso["key_descriptor"]:
-            if not self.verify_key_descriptor(kd):
-                return res
 
         # contact person
         if "contact_person" not in idpsso and "contact_person" not in ed:
@@ -173,6 +117,70 @@ class CheckSaml2IntMetaData(Check):
                 return res
 
         return res
+
+
+class CheckATMetaData(CheckSaml2IntMetaData):
+    cid = "check-at-metadata"
+
+    def verify_key_info(self, ki):
+        # key_info
+        # one or more key_value and/or x509_data.X509Certificate
+
+        verified_x509_keys = []
+
+        xkeys = cert_from_key_info_dict(ki)
+        vkeys = key_from_key_value_dict(ki)
+
+        if xkeys or vkeys:
+            if xkeys:
+                # time validity is checked in cert_from_key_info_dict
+                verified_x509_keys.append(xkeys)
+            if vkeys:  # don't expect this to happen
+                pass
+
+        if not verified_x509_keys:
+            if cert_from_key_info_dict(ki, ignore_age=True):
+                self._message = "Keys too old"
+            else:
+                self._message = "Missing KeyValue or X509Data.X509Certificate"
+            self._status = CRITICAL
+            return False
+
+        if xkeys and vkeys:
+            # verify that it's the same keys TODO
+            pass
+
+        return True
+
+    def verify_key_descriptor(self, kd):
+        # key_info
+        if not self.verify_key_info(kd["key_info"]):
+            return False
+
+        # use
+        if "use" in kd:
+            try:
+                assert kd["use"] in ["encryption", "signing"]
+            except AssertionError:
+                self._message = "Unknown use specification: '%s'" % kd.use.text
+                self._status = CRITICAL
+                return False
+
+        return True
+
+    def _func(self, conv):
+        mds = conv.client.metadata.metadata[0]
+        # Should only be one
+        ed = mds.entity.values()[0]
+        res = {}
+
+        assert len(ed["idpsso_descriptor"])
+        idpsso = ed["idpsso_descriptor"][0]
+        for kd in idpsso["key_descriptor"]:
+            if not self.verify_key_descriptor(kd):
+                return res
+
+        return CheckSaml2IntMetaData._func(self, conv)
 
 
 class CheckSaml2IntAttributes(Check):
