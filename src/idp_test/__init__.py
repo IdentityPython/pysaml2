@@ -106,8 +106,11 @@ class SAML2client(object):
         self._parser.add_argument(
             "-l", dest="list", action="store_true",
             help="List all the test flows as a JSON object")
-        self._parser.add_argument("-c", dest="spconfig", default="config_file",
-                                  help="Configuration file for the SP")
+        self._parser.add_argument(
+            "-c", dest="spconfig", default="config_file",
+            help=("Configuration module for the SP Test Driver at the current"
+                  "directory or the path specified with the -P option. Do not"
+                  "use relative paths or filename extension."))
         self._parser.add_argument(
             "-P", dest="configpath", default=".",
             help="Path to the configuration file for the SP")
