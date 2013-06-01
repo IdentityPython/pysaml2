@@ -473,7 +473,8 @@ class VerifyFunctionality(Check):
         self._status = CRITICAL
         return {}
 
-    def _binding_support(self, conv, service, binding):
+    def _binding_support(self, conv, request, binding):
+        service = REQ2SRV[request]
         md = conv.client.metadata
         entity_id = conv.entity_id
         func = getattr(md, service, None)
@@ -492,11 +493,11 @@ class VerifyFunctionality(Check):
         oper = conv.oper
         args = conv.oper.args
         res = self._srv_support(conv, REQ2SRV[oper.request])
-        if self._status != "OK":
+        if self._status != OK:
             return res
 
-        res = self._binding_support(conv, oper.request, args["binding"])
-        if self._status != "OK":
+        res = self._binding_support(conv, oper.request, args["request_binding"])
+        if self._status != OK:
             return res
 
         if "nameid_format" in args:
