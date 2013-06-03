@@ -216,6 +216,14 @@ class Saml2Client(Base):
         self.users.remove_person(name_id)
         return True
 
+    def is_logged_in(self, name_id):
+        """ Check if user is in the cache
+        
+        :param name_id: The identifier of the subject
+        """
+        identity = self.users.get_identity(name_id)[0]
+        return bool(identity)
+        
     def handle_logout_response(self, response):
         """ handles a Logout response 
         

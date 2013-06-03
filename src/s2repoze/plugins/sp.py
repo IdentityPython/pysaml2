@@ -560,6 +560,9 @@ class SAML2Plugin(FormPluginBase):
     #noinspection PyUnusedLocal
     def authenticate(self, environ, identity=None):
         if identity:
+            tktuser = identity.get('repoze.who.plugins.auth_tkt.userid', None)
+            if tktuser and self.saml_client.is_logged_in(decode(tktuser)):
+                return tktuser
             return identity.get('login', None)
         else:
             return None
