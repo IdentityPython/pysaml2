@@ -54,24 +54,30 @@ def my_request_classifier(environ):
 zope.interface.directlyProvides(my_request_classifier, IRequestClassifier)
 
 class MyChallengeDecider:
-    def __init__(self, path_login=""):
+    def __init__(self, path_login="", path_logout=""):
         self.path_login = path_login
+        self.path_logout = path_logout
     def __call__(self, environ, status, _headers):
         if status.startswith('401 '):
             return True
         else:
-            # logout : need to "forget" => require a peculiar challenge
-            if environ.has_key('rwpc.logout'):
+            if environ.has_key('samlsp.pending'):
                 return True
+
+            uri = environ.get('REQUEST_URI', None)
+            if uri is None:
+                uri = construct_url(environ)
+
+            # require and challenge for logout and inform the challenge plugin that it is a logout we want
+            for regex in self.path_logout:
+                if regex.match(uri) is not None:
+                    environ['samlsp.logout'] = True
+                    return True
 
             # If the user is already authent, whatever happens(except logout), 
             #   don't make a challenge
             if environ.has_key('repoze.who.identity'): 
                 return False
-
-            uri = environ.get('REQUEST_URI', None)
-            if uri is None:
-                uri = construct_url(environ)
 
             # require a challenge for login
             for regex in self.path_login:
@@ -82,7 +88,7 @@ class MyChallengeDecider:
 
 
 
-def make_plugin(path_login = None):
+def make_plugin(path_login = None, path_logout = None):
     if path_login is None:
         raise ValueError(
             'must include path_login in configuration')
@@ -94,7 +100,14 @@ def make_plugin(path_login = None):
         if carg != '':
             list_login.append(re.compile(carg))
 
-    plugin = MyChallengeDecider(list_login)
+    list_logout = []
+    if path_logout is not None:
+        for arg in path_logout.splitlines():
+            carg = arg.lstrip()
+            if carg != '':
+                list_logout.append(re.compile(carg))
+
+    plugin = MyChallengeDecider(list_login, list_logout)
 
     return plugin
 
