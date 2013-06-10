@@ -524,7 +524,6 @@ class Policy(object):
                                             text=sp_entity_id))])
 
 
-
 class EntityCategories(object):
     pass
 

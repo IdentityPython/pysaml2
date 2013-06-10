@@ -3,7 +3,8 @@ __author__ = 'rolandh'
 
 NAME = ["givenName", "initials", "displayName", "sn"]
 STATIC_ORG_INFO = ["c", "o", "ou"]
-OTHER = ["eduPersonPrincipalName", "eduPersonScopedAffiliation", "email"]
+OTHER = ["eduPersonPrincipalName", "eduPersonScopedAffiliation", "email",
+         "mail"]
 
 # These give you access to information
 RESEARCH_AND_EDUCATION = "http://www.swamid.se/category/research-and-education"

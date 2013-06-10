@@ -654,9 +654,19 @@ class AuthnResponse(StatusResponse):
         subject.subject_confirmation = subjconf
         
         # The subject must contain a name_id
-        assert subject.name_id
-        # Make certain the name id format
-        self.name_id = subject.name_id
+        try:
+            assert subject.name_id
+            self.name_id = subject.name_id
+        except AssertionError:
+            if subject.encrypted_id:
+                # decrypt encrypted ID
+                _name_id_str = self.sec.decrypt(
+                    subject.encrypted_id.encrypted_data.to_string())
+                _name_id = saml.name_id_from_string(_name_id_str)
+                self.name_id = _name_id
+            else:
+                raise VerificationError("Missing NameID")
+
         return self.name_id
     
     def _assertion(self, assertion):
@@ -759,7 +769,10 @@ class AuthnResponse(StatusResponse):
         for astat in self.assertion.authn_statement:
             context = astat.authn_context
             if context:
-                aclass = context.authn_context_class_ref.text
+                try:
+                    aclass = context.authn_context_class_ref.text
+                except AttributeError:
+                    aclass = ""
                 try:
                     authn_auth = [a.text for a in
                                   context.authenticating_authority]

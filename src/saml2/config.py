@@ -191,6 +191,7 @@ class Config(object):
         self.name_qualifier = ""
         self.entity_category = ""
         self.crypto_backend = 'xmlsec1'
+        self.scope = ""
 
     def setattr(self, context, attr, val):
         if context == "":
