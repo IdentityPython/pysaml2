@@ -89,7 +89,7 @@ class Server(Entity):
         else:  # Should be tuple
             typ, data = _spec
             if typ.lower() == "mongodb":
-                return SessionStorageMDB(data)
+                return SessionStorageMDB(database=data, collection="session")
 
         raise NotImplementedError("No such storage type implemented")
 
@@ -120,7 +120,7 @@ class Server(Entity):
             elif typ == "dict":  # in-memory dictionary
                 idb = {}
             elif typ == "mongodb":
-                self.ident = IdentMDB(addr)
+                self.ident = IdentMDB(database=addr, collection="ident")
 
         if typ == "mongodb":
             pass
@@ -140,7 +140,8 @@ class Server(Entity):
             if typ == "shelve":
                 self.eptid = EptidShelve(secret, addr)
             elif typ == "mongodb":
-                self.eptid = EptidMDB(secret, addr, *dbspec[3:])
+                self.eptid = EptidMDB(secret, database=addr,
+                                      collection="eptid")
             else:
                 self.eptid = Eptid(secret)
 
