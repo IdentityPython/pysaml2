@@ -266,25 +266,28 @@ def _mdb_get_database(uri, **kwargs):
     :params database: name as string or (uri, name)
     :returns: pymongo database object
     """
+    if not "tz_aware" in kwargs:
+        # default, but not forced
+        kwargs["tz_aware"] = True
+
     connection_factory = MongoClient
     _parsed_uri = {}
     db_name = None
+    _conn = None
+
     try:
         _parsed_uri = pymongo.uri_parser.parse_uri(uri)
     except pymongo.errors.InvalidURI:
         # assume URI to be just the database name
         db_name = uri
+        _conn = MongoClient()
         pass
     else:
         if "replicaset" in _parsed_uri["options"]:
             connection_factory = MongoReplicaSetClient
         db_name = _parsed_uri.get("database", "pysaml2")
+        _conn = connection_factory(uri, **kwargs)
 
-    if not "tz_aware" in kwargs:
-        # default, but not forced
-        kwargs["tz_aware"] = True
-
-    _conn = connection_factory(uri, **kwargs)
     _db = _conn[db_name]
 
     if "username" in _parsed_uri:
