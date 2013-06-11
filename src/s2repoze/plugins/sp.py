@@ -419,7 +419,7 @@ class SAML2Plugin(FormPluginBase):
         #logger = environ.get('repoze.who.logger', '')
 
         query = parse_dict_querystring(environ)
-        if ("CONTENT_LENGTH" not in environ or not environ["CONTENT_LENGTH"]) and "SAMLResponse" not in query:
+        if ("CONTENT_LENGTH" not in environ or not environ["CONTENT_LENGTH"]) and "SAMLResponse" not in query and "SAMLRequest" not in query:
             logger.debug('[identify] get or empty post')
             return {}
         
@@ -434,7 +434,7 @@ class SAML2Plugin(FormPluginBase):
         query = parse_dict_querystring(environ)
         logger.debug('[sp.identify] query: %s' % (query,))
 
-        if "SAMLResponse" in query:
+        if "SAMLResponse" in query or "SAMLRequest" in query:
             post = query
             binding = BINDING_HTTP_REDIRECT
         else:
@@ -447,7 +447,21 @@ class SAML2Plugin(FormPluginBase):
             pass
             
         try:
-            if "SAMLResponse" not in post:
+            path_info = environ['PATH_INFO']
+            logout = False
+            if path_info in self.logout_endpoints:
+                logout = True
+
+            if logout and "SAMLRequest" in post:
+                print("logout request received")
+                try:
+                    response = self.saml_client.handle_logout_request(post["SAMLRequest"], self.saml_client.users.subjects()[0], binding)
+                    environ['samlsp.pending'] = self._handle_logout(response)
+                    return {}
+                except:
+                    import traceback
+                    traceback.print_exc()
+            elif "SAMLResponse" not in post:
                 logger.info("[sp.identify] --- NOT SAMLResponse ---")
                 # Not for me, put the post back where next in line can
                 # find it
@@ -457,10 +471,6 @@ class SAML2Plugin(FormPluginBase):
                 logger.info("[sp.identify] --- SAMLResponse ---")
                 # check for SAML2 authN response
                 #if self.debug:
-                path_info = environ['PATH_INFO']
-                logout = False
-                if path_info in self.logout_endpoints:
-                    logout = True
                 try:
                     if logout:
                         response = self.saml_client.parse_logout_request_response(post["SAMLResponse"], binding)
@@ -568,7 +578,10 @@ class SAML2Plugin(FormPluginBase):
             return None
 
     def _handle_logout(self, responses):
-        ht_args = responses[responses.keys()[0]][1]
+        if 'data' in responses:
+            ht_args = responses
+        else:
+            ht_args = responses[responses.keys()[0]][1]
         if not ht_args["data"] and ht_args["headers"][0][0] == "Location":
             logger.debug('redirect to: %s' % ht_args["headers"][0][1])
             return HTTPSeeOther(headers=ht_args["headers"])
