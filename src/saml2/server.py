@@ -155,8 +155,25 @@ class Server(Entity):
         """
         return self.metadata.attribute_requirement(sp_entity_id, index)
 
-    # -------------------------------------------------------------------------
+    def verify_assertion_consumer_service(self, request):
+        _acs = request.assertion_consumer_service_url
+        _aci = request.assertion_consumer_service_index
+        _binding = request.protocol_binding
+        _eid = request.issuer.text
+        if _acs:
+            # look up acs in for that binding in the metadata given the issuer
+            # Assuming the format is entity
+            for acs in self.metadata.assertion_consumer_service(_eid, _binding):
+                if _acs == acs.text:
+                    return True
+        elif _aci:
+            for acs in self.metadata.assertion_consumer_service(_eid, _binding):
+                if _aci == acs.index:
+                    return True
 
+        return False
+
+    # -------------------------------------------------------------------------
     def parse_authn_request(self, enc_request, binding=BINDING_HTTP_REDIRECT):
         """Parse a Authentication Request
         
