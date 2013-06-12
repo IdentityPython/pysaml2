@@ -347,7 +347,8 @@ class Entity(HTTPBase):
         return signed_instance_factory(msg, self.sec, to_sign)
 
     def _message(self, request_cls, destination=None, message_id=0,
-                 consent=None, extensions=None, sign=False, sign_prepare=False, **kwargs):
+                 consent=None, extensions=None, sign=False, sign_prepare=False,
+                 **kwargs):
         """
         Some parameters appear in all requests so simplify by doing
         it in one place

@@ -131,7 +131,8 @@ class SessionStorageMDB(object):
 
 
 class IdentMDB(IdentDB):
-    def __init__(self, database="", collection="ident", domain="", name_qualifier=""):
+    def __init__(self, database="", collection="ident", domain="",
+                 name_qualifier=""):
         IdentDB.__init__(self, None, domain, name_qualifier)
         self.mdb = MDB(database=database, collection=collection)
         self.mdb.primary_key = "user_id"
@@ -251,7 +252,6 @@ class MDB(object):
         self.db.drop()
 
 
-
 def _mdb_get_database(uri, **kwargs):
     """
     Helper-function to connect to MongoDB and return a database object.
@@ -291,9 +291,10 @@ def _mdb_get_database(uri, **kwargs):
         _db.authenticate(
             _parsed_uri.get("username", None),
             _parsed_uri.get("password", None)
-            )
+        )
 
     return _db
+
 
 #------------------------------------------------------------------------------
 class EptidMDB(Eptid):
@@ -332,7 +333,7 @@ def protect(dic):
                     pass
                 elif isinstance(va, dict):
                     va = protect(va)
-                # I don't think lists of lists will appear am I wrong ?
+                    # I don't think lists of lists will appear am I wrong ?
                 li.append(va)
             val = li
         res[key] = val
