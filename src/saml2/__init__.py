@@ -124,6 +124,10 @@ class Error(Exception):
     pass
 
 
+class SAMLError(Exception):
+    pass
+
+
 class ExtensionElement(object):
     """XML which is not part of the SAML specification,
     these are called extension elements. If a classes parser

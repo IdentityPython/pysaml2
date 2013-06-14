@@ -3,6 +3,7 @@ from urllib import urlencode
 from urlparse import parse_qs
 from urlparse import urlsplit
 import time
+from saml2 import SAMLError
 from saml2.cipher import AES
 from saml2.httputil import Response
 from saml2.httputil import make_cookie
@@ -15,7 +16,11 @@ __author__ = 'rolandh'
 logger = logging.getLogger(__name__)
 
 
-class AuthnFailure(Exception):
+class AuthnFailure(SAMLError):
+    pass
+
+
+class EncodeError(SAMLError):
     pass
 
 
@@ -35,7 +40,7 @@ class UserAuthnMethod(object):
 
 def url_encode_params(params=None):
     if not isinstance(params, dict):
-        raise Exception("You must pass in a dictionary!")
+        raise EncodeError("You must pass in a dictionary!")
     params_list = []
     for k, v in params.items():
         if isinstance(v, list):
@@ -209,7 +214,7 @@ class AuthnMethodChooser(object):
 
     def __call__(self, **kwargs):
         if not self.methods:
-            raise Exception("No authentication methods defined")
+            raise SAMLError("No authentication methods defined")
         elif len(self.methods) == 1:
             return self.methods[0]
         else:

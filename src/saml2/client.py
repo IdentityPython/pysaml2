@@ -21,7 +21,7 @@ to conclude its tasks.
 from saml2.request import LogoutRequest
 import saml2
 
-from saml2 import saml
+from saml2 import saml, SAMLError
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_SOAP
@@ -379,7 +379,7 @@ class Saml2Client(Base):
         else:
             srvs = self.metadata.attribute_service(entityid, binding)
             if srvs is []:
-                raise Exception("No attribute service support at entity")
+                raise SAMLError("No attribute service support at entity")
 
             destination = destinations(srvs)[0]
 
@@ -405,7 +405,7 @@ class Saml2Client(Base):
             return self.apply_binding(binding, "%s" % query, destination,
                                       relay_state)
         else:
-            raise Exception("Unsupported binding")
+            raise SAMLError("Unsupported binding")
 
     def handle_logout_request(self, request, name_id, binding, sign=False,
                               relay_state=""):

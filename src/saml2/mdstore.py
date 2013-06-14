@@ -9,7 +9,9 @@ from saml2.extension.idpdisc import DiscoveryResponse
 
 from saml2.mdie import to_dict
 
-from saml2 import md, samlp
+from saml2 import md
+from saml2 import samlp
+from saml2 import SAMLError
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_SOAP
@@ -378,10 +380,13 @@ class MetaDataExtern(MetaData):
         if response.status_code  == 200:
             node_name="%s:%s" % (md.EntitiesDescriptor.c_namespace,
                                  md.EntitiesDescriptor.c_tag)
-            if self.security.verify_signature(response.text,
-                                              node_name=node_name,
-                                              cert_file=self.cert,
-                                              ):
+            if self.cert:
+                if self.security.verify_signature(response.text,
+                                                  node_name=node_name,
+                                                  cert_file=self.cert):
+                    self.parse(response.text)
+                    return True
+            else:
                 self.parse(response.text)
                 return True
         else:
@@ -438,7 +443,7 @@ class MetadataStore(object):
             key = args[0]
             md = MetaDataMD(self.onts, self.attrc, args[0])
         else:
-            raise Exception("Unknown metadata type '%s'" % typ)
+            raise SAMLError("Unknown metadata type '%s'" % typ)
 
         md.load()
         self.metadata[key] = md

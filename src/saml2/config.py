@@ -10,7 +10,7 @@ import logging.handlers
 
 from importlib import import_module
 
-from saml2 import root_logger, BINDING_URI
+from saml2 import root_logger, BINDING_URI, SAMLError
 from saml2 import BINDING_SOAP
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
@@ -148,7 +148,7 @@ PREFERRED_BINDING = {
 }
 
 
-class ConfigurationError(Exception):
+class ConfigurationError(SAMLError):
     pass
 
 # -----------------------------------------------------------------
@@ -174,7 +174,7 @@ class Config(object):
         self.organization = None
         self.contact_person = None
         self.name_form = None
-        self.nameid_form = None
+        self.name_id_format = None
         self.virtual_organization = None
         self.logger = None
         self.only_use_keys_in_metadata = True
@@ -239,7 +239,7 @@ class Config(object):
                 acs = ac_factory()
 
             if not acs:
-                raise Exception("No attribute converters, something is wrong!!")
+                raise ConfigurationError("No attribute converters, something is wrong!!")
 
             _acs = self.getattr("attribute_converters", typ)
             if _acs:
@@ -326,7 +326,8 @@ class Config(object):
         acs = self.attribute_converters
 
         if acs is None:
-            raise Exception("Missing attribute converter specification")
+            raise ConfigurationError(
+                "Missing attribute converter specification")
 
         try:
             ca_certs = self.ca_certs
@@ -390,7 +391,7 @@ class Config(object):
                         elif args["socktype"] == "stream":
                             args["socktype"] = socket.SOCK_STREAM
                         else:
-                            raise Exception("Unknown socktype!")
+                            raise ConfigurationError("Unknown socktype!")
                     try:
                         handler = LOG_HANDLER[htyp](**args)
                     except TypeError:  # difference between 2.6 and 2.7

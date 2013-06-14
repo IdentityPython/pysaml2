@@ -23,7 +23,7 @@ programs.
 import cookielib
 import logging
 
-from saml2 import soap
+from saml2 import soap, SAMLError
 from saml2 import saml
 from saml2 import samlp
 from saml2 import BINDING_PAOS
@@ -129,7 +129,7 @@ class Client(Entity):
         logger.debug("[P2] Got IdP response: %s" % response)
 
         if response.status_code != 200:
-            raise Exception(
+            raise SAMLError(
                 "Request to IdP failed (%s): %s" % (response.status_code,
                                                     response.error))
 
@@ -137,7 +137,7 @@ class Client(Entity):
         respdict = self.parse_soap_message(response.text)
 
         if respdict is None:
-            raise Exception("Unexpected reply from the IdP")
+            raise SAMLError("Unexpected reply from the IdP")
 
         logger.debug("[P2] IdP response dict: %s" % respdict)
 
@@ -158,13 +158,13 @@ class Client(Entity):
             # Send an error message to the SP
             _ = self.send(rc_url, "POST", data=soap.soap_fault(error))
             # Raise an exception so the user knows something went wrong
-            raise Exception(error)
+            raise SAMLError(error)
         
         return idp_response
 
     def parse_sp_ecp_response(self, respdict):
         if respdict is None:
-            raise Exception("Unexpected reply from the SP")
+            raise SAMLError("Unexpected reply from the SP")
 
         logger.debug("[P1] SP response dict: %s" % respdict)
 
@@ -225,7 +225,7 @@ class Client(Entity):
             pass
         else:
             print response.error
-            raise Exception(
+            raise SAMLError(
                 "Error POSTing package to SP: %s" % response.error)
 
         logger.debug("[P3] SP response: %s" % response.text)
@@ -280,7 +280,7 @@ class Client(Entity):
         logger.debug("[Op] SP response: %s" % response)
 
         if response.status_code != 200:
-            raise Exception(
+            raise SAMLError(
                 "Request to SP failed: %s" % response.error)
 
         # The response might be a AuthnRequest instance in a SOAP envelope
@@ -304,7 +304,7 @@ class Client(Entity):
         #print "RESP",response, self.http.response
 
         if  response.status_code != 404:
-            raise Exception("Error performing operation: %s" % (
+            raise SAMLError("Error performing operation: %s" % (
                 response.error,))
 
         return response

@@ -33,7 +33,7 @@ from saml2.samlp import Response
 
 import xmldsig as ds
 
-from saml2 import samlp
+from saml2 import samlp, SAMLError
 from saml2 import class_name
 from saml2 import saml
 from saml2 import ExtensionElement
@@ -56,7 +56,36 @@ SIG = "{%s#}%s" % (ds.NAMESPACE, "Signature")
 RSA_SHA1 = "http://www.w3.org/2000/09/xmldsig#rsa-sha1"
 
 
-class CertificateTooOld(Exception):
+class SigverError(SAMLError):
+    pass
+
+
+class CertificateTooOld(SigverError):
+    pass
+
+
+class SignatureError(SigverError):
+    pass
+
+
+class XmlsecError(SigverError):
+    pass
+
+
+class MissingKey(SigverError):
+    pass
+
+
+class DecryptError(SigverError):
+    pass
+
+
+class BadSignature(SigverError):
+    """The signature is invalid."""
+    pass
+
+
+class CertificateError(SigverError):
     pass
 
 
@@ -109,7 +138,7 @@ def get_xmlsec_binary(paths=None):
         except Exception:
             pass
 
-    raise Exception("Can't find %s" % bin_name)
+    raise SigverError("Can't find %s" % bin_name)
 
 
 def _get_xmlsec_cryptobackend(path=None, search_paths=None, debug=False):
@@ -130,21 +159,6 @@ ENC_KEY_CLASS = "EncryptedKey"
 
 _TEST_ = True
 
-
-class SignatureError(Exception):
-    pass
-
-
-class XmlsecError(Exception):
-    pass
-
-
-class MissingKey(Exception):
-    pass
-
-
-class DecryptError(Exception):
-    pass
 
 # --------------------------------------------------------------------------
 
@@ -312,9 +326,9 @@ def to_time(_time):
 def active_cert(key):
     cert_str = pem_format(key)
     certificate = load_cert_string(cert_str)
-    not_before = to_time(str(certificate.get_not_before()))
-    not_after = to_time(str(certificate.get_not_after()))
     try:
+        not_before = to_time(str(certificate.get_not_before()))
+        not_after = to_time(str(certificate.get_not_after()))
         assert not_before < utc_now()
         assert not_after > utc_now()
         return True
@@ -479,11 +493,6 @@ def parse_xmlsec_output(output):
     raise XmlsecError(output)
 
 
-class BadSignature(Exception):
-    """The signature is invalid."""
-    pass
-
-
 def sha1_digest(msg):
     return hashlib.sha1(msg).digest()
 
@@ -576,7 +585,7 @@ def read_cert_from_file(cert_file, cert_type):
         elif line[0] == "-----BEGIN PUBLIC KEY-----":
             line = line[1:]
         else:
-            raise Exception("Strange beginning of PEM file")
+            raise CertificateError("Strange beginning of PEM file")
 
         while line[-1] == "":
             line = line[:-1]
@@ -586,7 +595,7 @@ def read_cert_from_file(cert_file, cert_type):
         elif line[-1] == "-----END PUBLIC KEY-----":
             line = line[:-1]
         else:
-            raise Exception("Strange end of PEM file")
+            raise CertificateError("Strange end of PEM file")
         return "".join(line)
 
     if cert_type in ["der", "cer", "crt"]:
@@ -638,7 +647,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
             return ""
 
     def encrypt(self, text, recv_key, template, key_type):
-        logger.info("Encryption input len: %d" % len(text))
+        logger.debug("Encryption input len: %d" % len(text))
         _, fil = make_temp("%s" % text, decode=False)
 
         com_list = [self.xmlsec, "--encrypt", "--pubkey-cert-pem", recv_key,
@@ -651,7 +660,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         return output
 
     def decrypt(self, enctext, key_file):
-        logger.info("Decrypt input len: %d" % len(enctext))
+        logger.debug("Decrypt input len: %d" % len(enctext))
         _, fil = make_temp("%s" % enctext, decode=False)
 
         com_list = [self.xmlsec, "--decrypt", "--privkey-pem",
@@ -697,9 +706,9 @@ class CryptoBackendXmlSec1(CryptoBackend):
             logger.error(
                 "Signing operation failed :\nstdout : %s\nstderr : %s" % (
                     stdout, stderr))
-            raise Exception("Signing failed")
+            raise SigverError("Signing failed")
         except DecryptError:
-            raise Exception("Signing failed")
+            raise SigverError("Signing failed")
 
     def validate_signature(self, signedtext, cert_file, cert_type, node_name,
                            node_id, id_attr):
@@ -866,14 +875,14 @@ def security_context(conf, debug=None):
             # verify that xmlsec is where it's supposed to be
         if not os.path.exists(xmlsec_binary):
             #if not os.access(, os.F_OK):
-            raise Exception(
+            raise SigverError(
                 "xmlsec binary not in '%s' !" % xmlsec_binary)
         crypto = _get_xmlsec_cryptobackend(xmlsec_binary, debug=debug)
     elif conf.crypto_backend == 'XMLSecurity':
         # new and somewhat untested pyXMLSecurity crypto backend.
         crypto = CryptoBackendXMLSecurity(debug=debug)
     else:
-        raise Exception('Unknown crypto_backend %s' % (
+        raise SigverError('Unknown crypto_backend %s' % (
             repr(conf.crypto_backend)))
 
     return SecurityContext(crypto, conf.key_file,
@@ -912,7 +921,7 @@ class SecurityContext(object):
         self.encrypt_key_type = encrypt_key_type
 
     def correctly_signed(self, xml, must=False):
-        logger.info("verify correct signature")
+        logger.debug("verify correct signature")
         return self.correctly_signed_response(xml, must)
 
     def encrypt(self, text, recv_key="", template="", key_type=""):

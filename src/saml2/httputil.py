@@ -8,7 +8,7 @@ from urllib import quote
 from urlparse import parse_qs
 from Cookie import SimpleCookie
 
-from saml2 import BINDING_HTTP_ARTIFACT
+from saml2 import BINDING_HTTP_ARTIFACT, SAMLError
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_URI
@@ -339,7 +339,7 @@ def parse_cookie(name, seed, kaka):
             # verify the cookie signature
         sig = cookie_signature(seed, parts[0], parts[1])
         if sig != parts[2]:
-            raise Exception("Invalid cookie signature")
+            raise SAMLError("Invalid cookie signature")
 
         try:
             return parts[0].strip(), parts[1]

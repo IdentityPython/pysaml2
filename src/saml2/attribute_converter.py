@@ -20,11 +20,15 @@ import sys
 from importlib import import_module
 
 from saml2.s_utils import factory, do_ava
-from saml2 import saml, extension_elements_to_elements
+from saml2 import saml, extension_elements_to_elements, SAMLError
 from saml2.saml import NAME_FORMAT_URI
 
 
-class UnknownNameFormat(Exception):
+class UnknownNameFormat(SAMLError):
+    pass
+
+
+class ConverterError(SAMLError):
     pass
 
 
@@ -182,7 +186,7 @@ def d_to_local_name(acs, attr):
     try:
         return attr["friendly_name"]
     except KeyError:
-        raise Exception("Could not find local name for %s" % attr)
+        raise ConverterError("Could not find local name for %s" % attr)
 
 
 class AttributeConverter(object):
@@ -224,7 +228,7 @@ class AttributeConverter(object):
             pass
 
         if self._fro is None and self._to is None:
-            raise Exception("Missing specifications")
+            raise ConverterError("Missing specifications")
 
         if self._fro is None or self._to is None:
             self.adjust()
