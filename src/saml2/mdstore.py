@@ -347,7 +347,16 @@ class MetaDataFile(MetaData):
         self.filename = filename
 
     def load(self):
-        self.parse(open(self.filename).read())
+        _txt = open(self.filename).read()
+        if self.cert:
+            if self.security.verify_signature(_txt,
+                                              node_name=node_name,
+                                              cert_file=self.cert):
+                self.parse(_txt)
+                return True
+        else:
+            self.parse(_txt)
+            return True
 
 
 class MetaDataExtern(MetaData):
@@ -377,17 +386,19 @@ class MetaDataExtern(MetaData):
         compliance before it is imported.
         """
         response = self.http.send(self.url)
-        if response.status_code  == 200:
-            node_name="%s:%s" % (md.EntitiesDescriptor.c_namespace,
-                                 md.EntitiesDescriptor.c_tag)
+        if response.status_code == 200:
+            node_name = "%s:%s" % (md.EntitiesDescriptor.c_namespace,
+                                   md.EntitiesDescriptor.c_tag)
+
+            _txt = response.text.encode("utf-8")
             if self.cert:
-                if self.security.verify_signature(response.text,
+                if self.security.verify_signature(_txt,
                                                   node_name=node_name,
                                                   cert_file=self.cert):
-                    self.parse(response.text)
+                    self.parse(_txt)
                     return True
             else:
-                self.parse(response.text)
+                self.parse(_txt)
                 return True
         else:
             logger.info("Response status: %s" % response.status)
