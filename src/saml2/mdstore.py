@@ -349,6 +349,9 @@ class MetaDataFile(MetaData):
     def load(self):
         _txt = open(self.filename).read()
         if self.cert:
+            node_name = "%s:%s" % (md.EntitiesDescriptor.c_namespace,
+                                   md.EntitiesDescriptor.c_tag)
+
             if self.security.verify_signature(_txt,
                                               node_name=node_name,
                                               cert_file=self.cert):
