@@ -342,9 +342,10 @@ class MetaDataFile(MetaData):
     Handles Metadata file on the same machine. The format of the file is
     the SAML Metadata format.
     """
-    def __init__(self, onts, attrc, filename):
+    def __init__(self, onts, attrc, filename, cert=None):
         MetaData.__init__(self, onts, attrc)
         self.filename = filename
+        self.cert = cert
 
     def load(self):
         _txt = open(self.filename).read()
