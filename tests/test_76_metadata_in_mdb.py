@@ -43,10 +43,12 @@ def test_metadata():
     conf = config.Config()
     conf.load_file("idp_conf_mdb")
     UMU_IDP = 'https://idp.umu.se/saml2/idp/metadata.php'
+    # Set up a Metadata store
     mds = MetadataStore(ONTS.values(), ATTRCONV, conf,
                         disable_ssl_certificate_validation=True)
 
-    mds.imp({"local": [full_path("swamid-1.0.xml")]})
+    # Import metadata from local file.
+    mds.imp({"local": [full_path("swamid-2.0.xml")]})
     assert len(mds) == 1  # One source
 
     export_mdstore_to_mongo_db(mds, "metadata", "test")
@@ -63,23 +65,29 @@ def test_metadata():
         'https://idp.umu.se/saml2/idp/SSOService.php']
 
     _name = name(mds[UMU_IDP])
-    assert _name == u'Umeå University (SAML2)'
+    assert _name == u'Ume\xe5 University'
     certs = mds.certs(UMU_IDP, "idpsso", "signing")
     assert len(certs) == 1
 
     sps = mds.with_descriptor("spsso")
-    assert len(sps) == 108
+    assert len(sps) == 356
 
-    wants = mds.attribute_requirement('https://connect8.sunet.se/shibboleth')
-    lnamn = [d_to_local_name(mds.attrc, attr) for attr in wants["optional"]]
+    wants = mds.attribute_requirement('https://connect.sunet.se/shibboleth')
+    assert wants["optional"] == []
+    lnamn = [d_to_local_name(mds.attrc, attr) for attr in wants["required"]]
     assert _eq(lnamn, ['eduPersonPrincipalName', 'mail', 'givenName', 'sn',
+                       'eduPersonScopedAffiliation', 'eduPersonAffiliation'])
+
+    wants = mds.attribute_requirement(
+        "https://gidp.geant.net/sp/module.php/saml/sp/metadata.php/default-sp")
+    # Optional
+    lnamn = [d_to_local_name(mds.attrc, attr) for attr in wants["optional"]]
+    assert _eq(lnamn, ['displayName', 'commonName', 'schacHomeOrganization',
+                       'eduPersonAffiliation', 'schacHomeOrganizationType'])
+    # Required
+    lnamn = [d_to_local_name(mds.attrc, attr) for attr in wants["required"]]
+    assert _eq(lnamn, ['eduPersonTargetedID', 'mail',
                        'eduPersonScopedAffiliation'])
-
-    wants = mds.attribute_requirement('https://beta.lobber.se/shibboleth')
-    assert wants["required"] == []
-    lnamn = [d_to_local_name(mds.attrc, attr) for attr in wants["optional"]]
-    assert _eq(lnamn, ['eduPersonPrincipalName', 'mail', 'givenName', 'sn',
-                       'eduPersonScopedAffiliation', 'eduPersonEntitlement'])
 
 if __name__ == "__main__":
     test_metadata()

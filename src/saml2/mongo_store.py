@@ -272,8 +272,6 @@ def _mdb_get_database(uri, **kwargs):
 
     connection_factory = MongoClient
     _parsed_uri = {}
-    db_name = None
-    _conn = None
 
     try:
         _parsed_uri = pymongo.uri_parser.parse_uri(uri)
@@ -367,8 +365,8 @@ def unprotect(dic):
     return res
 
 
-def export_mdstore_to_mongo_db(mds, collection, sub_collection=""):
-    mdb = MDB(collection, sub_collection)
+def export_mdstore_to_mongo_db(mds, database, collection, sub_collection=""):
+    mdb = MDB(database, collection, sub_collection=sub_collection)
     mdb.reset()
     mdb.primary_key = "entity_id"
     for key, desc in mds.items():
