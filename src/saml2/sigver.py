@@ -324,6 +324,13 @@ def to_time(_time):
 
 
 def active_cert(key):
+    """
+    Verifies that a key is active that is present time is after not_before
+    and before not_after.
+
+    :param key: The Key
+    :return: True if the key is active else False
+    """
     cert_str = pem_format(key)
     certificate = load_cert_string(cert_str)
     try:
@@ -333,6 +340,8 @@ def active_cert(key):
         assert not_after > utc_now()
         return True
     except AssertionError:
+        return False
+    except AttributeError:
         return False
 
 
@@ -871,7 +880,7 @@ def security_context(conf, debug=None):
     if conf.crypto_backend == 'xmlsec1':
         xmlsec_binary = conf.xmlsec_binary
         if not xmlsec_binary:
-            xmlsec_binary = get_xmlsec_binary()
+            xmlsec_binary = get_xmlsec_binary(conf.xmlsec_path)
             # verify that xmlsec is where it's supposed to be
         if not os.path.exists(xmlsec_binary):
             #if not os.access(, os.F_OK):
