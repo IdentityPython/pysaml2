@@ -60,7 +60,8 @@ COMMON_ARGS = [
     "disable_ssl_certificate_validation",
     "referred_binding",
     "session_storage",
-    "entity_category"
+    "entity_category",
+    "xmlsec_path"
 ]
 
 SP_ARGS = [
@@ -161,6 +162,7 @@ class Config(object):
         self._homedir = homedir
         self.entityid = None
         self.xmlsec_binary = None
+        self.xmlsec_path = []
         self.debug = False
         self.key_file = None
         self.cert_file = None
