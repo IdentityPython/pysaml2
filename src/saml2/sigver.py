@@ -880,7 +880,11 @@ def security_context(conf, debug=None):
     if conf.crypto_backend == 'xmlsec1':
         xmlsec_binary = conf.xmlsec_binary
         if not xmlsec_binary:
-            xmlsec_binary = get_xmlsec_binary(conf.xmlsec_path)
+            try:
+                _path = conf.xmlsec_path
+            except AttributeError:
+                _path = []
+            xmlsec_binary = get_xmlsec_binary(_path)
             # verify that xmlsec is where it's supposed to be
         if not os.path.exists(xmlsec_binary):
             #if not os.access(, os.F_OK):
