@@ -7,6 +7,7 @@ from saml2.server import Server
 from saml2.samlp import NameIDPolicy
 from saml2.samlp import NameIDMappingRequest
 
+
 def test_base_request():
     sp = Saml2Client(config_file="servera_conf")
     idp = Server(config_file="idp_all_conf")
@@ -25,6 +26,7 @@ def test_base_request():
     print nmr
 
     assert isinstance(nmr, NameIDMappingRequest)
+
 
 def test_request_response():
     sp = Saml2Client(config_file="servera_conf")
@@ -52,8 +54,8 @@ def test_request_response():
     in_response_to = req.message.id
     name_id = NameID(format=NAMEID_FORMAT_PERSISTENT, text="foobar")
 
-    idp_response = idp.create_name_id_mapping_response(name_id,
-                                                       in_response_to=in_response_to)
+    idp_response = idp.create_name_id_mapping_response(
+        name_id, in_response_to=in_response_to)
 
     print idp_response
 

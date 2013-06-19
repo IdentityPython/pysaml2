@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
-from saml2.mongo_store import export_mdstore_to_mongo_db, MetadataMDB
-from saml2.mdstore import MetadataStore, destinations, name
 
 __author__ = 'rolandh'
 
-from saml2.attribute_converter import d_to_local_name, ac_factory
+from saml2.attribute_converter import d_to_local_name
+from saml2.attribute_converter import ac_factory
+from saml2.mongo_store import export_mdstore_to_mongo_db
+from saml2.mongo_store import MetadataMDB
+from saml2.mdstore import MetadataStore
+from saml2.mdstore import destinations
+from saml2.mdstore import name
 
 from saml2 import saml
 from saml2 import md

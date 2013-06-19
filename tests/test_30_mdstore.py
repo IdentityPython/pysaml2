@@ -6,7 +6,8 @@ from saml2.mdstore import MetadataStore
 from saml2.mdstore import destinations
 from saml2.mdstore import name
 
-from saml2 import md, sigver
+from saml2 import md
+from saml2 import sigver
 from saml2 import BINDING_SOAP
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
