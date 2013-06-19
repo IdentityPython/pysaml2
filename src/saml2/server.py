@@ -130,6 +130,8 @@ class Server(Entity):
             raise Exception("Couldn't open identity database: %s" %
                             (dbspec,))
 
+        self.ident.name_qualifier = self.config.entityid
+
         dbspec = self.config.getattr("edu_person_targeted_id", "idp")
         if not dbspec:
             pass
@@ -431,8 +433,7 @@ class Server(Entity):
                 else:
                     name_id = self.ident.construct_nameid(userid, policy,
                                                           sp_entity_id,
-                                                          name_id_policy,
-                                                          nid_formats)
+                                                          name_id_policy)
             except IOError, exc:
                 response = self.create_error_response(in_response_to,
                                                       destination,

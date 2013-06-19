@@ -195,6 +195,11 @@ class IdentDB(object):
         """
 
         args = self.nim_args(local_policy, sp_name_qualifier, name_id_policy)
+        if name_qualifier:
+            args["name_qualifier"] = name_qualifier
+        else:
+            args["name_qualifier"] = self.name_qualifier
+
         return self.get_nameid(userid, **args)
 
     def transient_nameid(self, userid, sp_name_qualifier="", name_qualifier=""):
