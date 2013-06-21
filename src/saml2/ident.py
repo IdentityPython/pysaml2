@@ -5,6 +5,7 @@ import logging
 from hashlib import sha256
 from urllib import quote
 from urllib import unquote
+from saml2 import SAMLError
 from saml2.s_utils import rndstr
 from saml2.s_utils import PolicyError
 from saml2.saml import NameID
@@ -20,7 +21,7 @@ ATTR = ["name_qualifier", "sp_name_qualifier", "format", "sp_provided_id",
         "text"]
 
 
-class Unknown(Exception):
+class Unknown(SAMLError):
     pass
 
 
@@ -115,7 +116,7 @@ class IdentDB(object):
 
         if nformat == NAMEID_FORMAT_EMAILADDRESS:
             if not self.domain:
-                raise Exception("Can't issue email nameids, unknown domain")
+                raise SAMLError("Can't issue email nameids, unknown domain")
 
             _id = "%s@%s" % (_id, self.domain)
 
@@ -169,7 +170,7 @@ class IdentDB(object):
         elif local_policy:
             nameid_format = local_policy.get_nameid_format(sp_name_qualifier)
         else:
-            raise Exception("Unknown NameID format")
+            raise SAMLError("Unknown NameID format")
 
         if not name_qualifier:
             name_qualifier = self.name_qualifier
@@ -194,6 +195,11 @@ class IdentDB(object):
         """
 
         args = self.nim_args(local_policy, sp_name_qualifier, name_id_policy)
+        if name_qualifier:
+            args["name_qualifier"] = name_qualifier
+        else:
+            args["name_qualifier"] = self.name_qualifier
+
         return self.get_nameid(userid, **args)
 
     def transient_nameid(self, userid, sp_name_qualifier="", name_qualifier=""):

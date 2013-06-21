@@ -89,7 +89,7 @@ class Server(Entity):
         else:  # Should be tuple
             typ, data = _spec
             if typ.lower() == "mongodb":
-                return SessionStorageMDB(data)
+                return SessionStorageMDB(database=data, collection="session")
 
         raise NotImplementedError("No such storage type implemented")
 
@@ -120,7 +120,7 @@ class Server(Entity):
             elif typ == "dict":  # in-memory dictionary
                 idb = {}
             elif typ == "mongodb":
-                self.ident = IdentMDB(addr)
+                self.ident = IdentMDB(database=addr, collection="ident")
 
         if typ == "mongodb":
             pass
@@ -129,6 +129,8 @@ class Server(Entity):
         elif dbspec:
             raise Exception("Couldn't open identity database: %s" %
                             (dbspec,))
+
+        self.ident.name_qualifier = self.config.entityid
 
         dbspec = self.config.getattr("edu_person_targeted_id", "idp")
         if not dbspec:
@@ -140,7 +142,8 @@ class Server(Entity):
             if typ == "shelve":
                 self.eptid = EptidShelve(secret, addr)
             elif typ == "mongodb":
-                self.eptid = EptidMDB(secret, addr, *dbspec[3:])
+                self.eptid = EptidMDB(secret, database=addr,
+                                      collection="eptid")
             else:
                 self.eptid = Eptid(secret)
 
@@ -154,8 +157,25 @@ class Server(Entity):
         """
         return self.metadata.attribute_requirement(sp_entity_id, index)
 
-    # -------------------------------------------------------------------------
+    def verify_assertion_consumer_service(self, request):
+        _acs = request.assertion_consumer_service_url
+        _aci = request.assertion_consumer_service_index
+        _binding = request.protocol_binding
+        _eid = request.issuer.text
+        if _acs:
+            # look up acs in for that binding in the metadata given the issuer
+            # Assuming the format is entity
+            for acs in self.metadata.assertion_consumer_service(_eid, _binding):
+                if _acs == acs.text:
+                    return True
+        elif _aci:
+            for acs in self.metadata.assertion_consumer_service(_eid, _binding):
+                if _aci == acs.index:
+                    return True
 
+        return False
+
+    # -------------------------------------------------------------------------
     def parse_authn_request(self, enc_request, binding=BINDING_HTTP_REDIRECT):
         """Parse a Authentication Request
         
@@ -413,8 +433,7 @@ class Server(Entity):
                 else:
                     name_id = self.ident.construct_nameid(userid, policy,
                                                           sp_entity_id,
-                                                          name_id_policy,
-                                                          nid_formats)
+                                                          name_id_policy)
             except IOError, exc:
                 response = self.create_error_response(in_response_to,
                                                       destination,

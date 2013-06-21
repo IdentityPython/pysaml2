@@ -3,7 +3,7 @@ from saml2.time_util import in_a_while
 from saml2.extension import mdui, idpdisc, shibmd, mdattr
 from saml2.saml import NAME_FORMAT_URI, AttributeValue, Attribute
 from saml2.attribute_converter import from_local_name
-from saml2 import md, saml
+from saml2 import md, saml, SAMLError
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_SOAP
@@ -219,7 +219,7 @@ def do_uiinfo(_uiinfo):
         elif isinstance(val, list):
             for logga in val:
                 if not isinstance(logga, dict):
-                    raise Exception("Configuration error !!")
+                    raise SAMLError("Configuration error !!")
                 logo = mdui.Logo()
                 for attr, value in logga.items():
                     if attr in logo.keys():
@@ -245,7 +245,7 @@ def do_uiinfo(_uiinfo):
                     except KeyError:
                         pass
                 else:
-                    raise Exception("Configuration error: ui_info logo")
+                    raise SAMLError("Configuration error: ui_info logo")
                 inst.append(keyw)
         elif isinstance(val, dict):
             keyw = mdui.Keywords()
@@ -256,7 +256,7 @@ def do_uiinfo(_uiinfo):
                 pass
             inst.append(keyw)
         else:
-            raise Exception("Configuration Error: ui_info logo")
+            raise SAMLError("Configuration Error: ui_info logo")
     except KeyError:
         pass
 
@@ -559,7 +559,7 @@ def entity_descriptor(confd):
 
     serves = confd.serves
     if not serves:
-        raise Exception(
+        raise SAMLError(
             'No service type ("sp","idp","aa") provided in the configuration')
 
     if "sp" in serves:
@@ -595,11 +595,11 @@ def entities_descriptor(eds, valid_for, name, ident, sign, secc):
             ident = sid()
 
         if not secc.key_file:
-            raise Exception("If you want to do signing you should define " +
+            raise SAMLError("If you want to do signing you should define " +
                             "a key to sign with")
 
         if not secc.my_cert:
-            raise Exception("If you want to do signing you should define " +
+            raise SAMLError("If you want to do signing you should define " +
                             "where your public key are")
 
         entities.signature = pre_signature_part(ident, secc.my_cert, 1)

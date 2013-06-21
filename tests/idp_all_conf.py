@@ -86,7 +86,7 @@ CONFIG = {
     "debug": 1,
     "key_file": full_path("test.key"),
     "cert_file": full_path("test.pem"),
-    "xmlsec_binary": None,
+    "xmlsec_path": ["/usr/local/bin", "/opt/local/bin"],
     "metadata": {
         "local": [full_path("servera.xml"),
                   full_path("vo_metadata.xml")],

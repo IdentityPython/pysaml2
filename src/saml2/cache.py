@@ -2,7 +2,7 @@
 
 import shelve
 from saml2.ident import code, decode
-from saml2 import time_util
+from saml2 import time_util, SAMLError
 import logging
 
 logger = logging.getLogger(__name__)
@@ -12,11 +12,11 @@ logger = logging.getLogger(__name__)
 # timeout time.
 
 
-class ToOld(Exception):
+class ToOld(SAMLError):
     pass
 
 
-class CacheError(Exception):
+class CacheError(SAMLError):
     pass
 
 

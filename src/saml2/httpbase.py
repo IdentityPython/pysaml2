@@ -8,7 +8,7 @@ import requests
 import time
 from Cookie import SimpleCookie
 from saml2.time_util import utc_now
-from saml2 import class_name
+from saml2 import class_name, SAMLError
 from saml2.pack import http_form_post_message
 from saml2.pack import make_soap_enveloped_saml_thingy
 from saml2.pack import http_redirect_message
@@ -44,11 +44,11 @@ PAIRS = {
 }
 
 
-class ConnectionError(Exception):
+class ConnectionError(SAMLError):
     pass
 
 
-class HTTPError(Exception):
+class HTTPError(SAMLError):
     pass
 
 

@@ -45,7 +45,7 @@ except ImportError:
 from saml2.s_utils import signature, UnravelError
 from saml2.s_utils import do_attributes
 
-from saml2 import samlp, BINDING_SOAP
+from saml2 import samlp, BINDING_SOAP, SAMLError
 from saml2 import saml
 from saml2 import soap
 from saml2.population import Population
@@ -79,19 +79,19 @@ ACTOR = "http://schemas.xmlsoap.org/soap/actor/next"
 MIME_PAOS = "application/vnd.paos+xml"
 
 
-class IdpUnspecified(Exception):
+class IdpUnspecified(SAMLError):
     pass
 
 
-class VerifyError(Exception):
+class VerifyError(SAMLError):
     pass
 
 
-class LogoutError(Exception):
+class LogoutError(SAMLError):
     pass
 
 
-class NoServiceDefined(Exception):
+class NoServiceDefined(SAMLError):
     pass
 
 
@@ -267,15 +267,16 @@ class Base(Entity):
                 allow_create = "false"
 
             # Profile stuff, should be configurable
-            if nameid_format is None or \
-                    nameid_format == NAMEID_FORMAT_TRANSIENT:
+            if nameid_format is None:
                 name_id_policy = samlp.NameIDPolicy(
                     allow_create=allow_create, format=NAMEID_FORMAT_TRANSIENT)
+            elif nameid_format == "":
+                name_id_policy = None
             else:
                 name_id_policy = samlp.NameIDPolicy(allow_create=allow_create,
                                                     format=nameid_format)
 
-            if vorg:
+            if name_id_policy and vorg:
                 try:
                     name_id_policy.sp_name_qualifier = vorg
                     name_id_policy.format = saml.NAMEID_FORMAT_PERSISTENT
@@ -502,7 +503,7 @@ class Base(Entity):
         try:
             _ = self.config.entityid
         except KeyError:
-            raise Exception("Missing entity_id specification")
+            raise SAMLError("Missing entity_id specification")
 
         resp = None
         if xmlstr:
@@ -524,7 +525,7 @@ class Base(Entity):
                 logger.error("%s" % exc)
                 raise
 
-            logger.debug(">> %s", resp)
+            #logger.debug(">> %s", resp)
 
             if resp is None:
                 return None

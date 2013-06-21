@@ -409,6 +409,18 @@ class Policy(object):
         
         return restrictions
 
+    def entity_category_attributes(self, ec):
+        if not self._restrictions:
+            return None
+
+        ec_maps = self._restrictions["default"]["entity_categories"]
+        for ec_map in ec_maps:
+            try:
+                return ec_map[ec]
+            except KeyError:
+                pass
+        return []
+
     def get_entity_categories_restriction(self, sp_entity_id, mds):
         if not self._restrictions:
             return None

@@ -2,6 +2,9 @@ from hashlib import sha1
 import logging
 
 from pymongo import MongoClient
+from pymongo.mongo_replica_set_client import MongoReplicaSetClient
+import pymongo.uri_parser
+import pymongo.errors
 from saml2.eptid import Eptid
 from saml2.mdstore import MetaData
 from saml2.s_utils import PolicyError
@@ -49,10 +52,9 @@ def context_match(cfilter, cntx):
 class SessionStorageMDB(object):
     """ Session information is stored in a MongoDB database"""
 
-    def __init__(self, collection=""):
-        connection = MongoClient()
-        db = connection[collection]
-        self.assertion = db.assertion
+    def __init__(self, database="", collection="assertion", **kwargs):
+        db = _mdb_get_database(database, **kwargs)
+        self.assertion = db[collection]
 
     def store_assertion(self, assertion, to_sign):
         name_id = assertion.subject.name_id
@@ -129,9 +131,10 @@ class SessionStorageMDB(object):
 
 
 class IdentMDB(IdentDB):
-    def __init__(self, collection="", domain="", name_qualifier=""):
+    def __init__(self, database="", collection="ident", domain="",
+                 name_qualifier=""):
         IdentDB.__init__(self, None, domain, name_qualifier)
-        self.mdb = MDB(collection, "ident")
+        self.mdb = MDB(database=database, collection=collection)
         self.mdb.primary_key = "user_id"
 
     def in_store(self, _id):
@@ -195,10 +198,9 @@ class IdentMDB(IdentDB):
 class MDB(object):
     primary_key = "mdb"
 
-    def __init__(self, collection="", sub_collection=""):
-        connection = MongoClient()
-        _db = connection[collection]
-        self.db = _db[sub_collection]
+    def __init__(self, database, collection, **kwargs):
+        _db = _mdb_get_database(database, **kwargs)
+        self.db = _db[collection]
 
     def store(self, value, **kwargs):
         if value:
@@ -250,11 +252,56 @@ class MDB(object):
         self.db.drop()
 
 
+def _mdb_get_database(uri, **kwargs):
+    """
+    Helper-function to connect to MongoDB and return a database object.
+
+    The `uri' argument should be either a full MongoDB connection URI string,
+    or just a database name in which case a connection to the default mongo
+    instance at mongodb://localhost:27017 will be made.
+
+    Performs explicit authentication if a username is provided in a connection
+    string URI, since PyMongo does not always seem to do that as promised.
+
+    :params database: name as string or (uri, name)
+    :returns: pymongo database object
+    """
+    if not "tz_aware" in kwargs:
+        # default, but not forced
+        kwargs["tz_aware"] = True
+
+    connection_factory = MongoClient
+    _parsed_uri = {}
+
+    try:
+        _parsed_uri = pymongo.uri_parser.parse_uri(uri)
+    except pymongo.errors.InvalidURI:
+        # assume URI to be just the database name
+        db_name = uri
+        _conn = MongoClient()
+        pass
+    else:
+        if "replicaset" in _parsed_uri["options"]:
+            connection_factory = MongoReplicaSetClient
+        db_name = _parsed_uri.get("database", "pysaml2")
+        _conn = connection_factory(uri, **kwargs)
+
+    _db = _conn[db_name]
+
+    if "username" in _parsed_uri:
+        _db.authenticate(
+            _parsed_uri.get("username", None),
+            _parsed_uri.get("password", None)
+        )
+
+    return _db
+
+
 #------------------------------------------------------------------------------
 class EptidMDB(Eptid):
-    def __init__(self, secret, collection="", sub_collection="eptid"):
+    def __init__(self, secret, database="", collection="eptid"):
         Eptid.__init__(self, secret)
-        self.mdb = MDB(collection, sub_collection)
+        self.mdb = MDB(database, collection)
         self.mdb.primary_key = "eptid_key"
 
     def __getitem__(self, key):
@@ -287,7 +334,7 @@ def protect(dic):
                     pass
                 elif isinstance(va, dict):
                     va = protect(va)
-                # I don't think lists of lists will appear am I wrong ?
+                    # I don't think lists of lists will appear am I wrong ?
                 li.append(va)
             val = li
         res[key] = val
@@ -318,8 +365,8 @@ def unprotect(dic):
     return res
 
 
-def export_mdstore_to_mongo_db(mds, collection, sub_collection=""):
-    mdb = MDB(collection, sub_collection)
+def export_mdstore_to_mongo_db(mds, database, collection, sub_collection=""):
+    mdb = MDB(database, collection, sub_collection=sub_collection)
     mdb.reset()
     mdb.primary_key = "entity_id"
     for key, desc in mds.items():
@@ -330,9 +377,9 @@ def export_mdstore_to_mongo_db(mds, collection, sub_collection=""):
 
 
 class MetadataMDB(MetaData):
-    def __init__(self, onts, attrc, collection="", sub_collection=""):
+    def __init__(self, onts, attrc, database="", collection=""):
         MetaData.__init__(self, onts, attrc)
-        self.mdb = MDB(collection, sub_collection)
+        self.mdb = MDB(database, collection)
         self.mdb.primary_key = "entity_id"
 
     def _ext_service(self, entity_id, typ, service, binding):

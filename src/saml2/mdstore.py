@@ -9,7 +9,9 @@ from saml2.extension.idpdisc import DiscoveryResponse
 
 from saml2.mdie import to_dict
 
-from saml2 import md, samlp
+from saml2 import md
+from saml2 import samlp
+from saml2 import SAMLError
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_SOAP
@@ -340,12 +342,25 @@ class MetaDataFile(MetaData):
     Handles Metadata file on the same machine. The format of the file is
     the SAML Metadata format.
     """
-    def __init__(self, onts, attrc, filename):
+    def __init__(self, onts, attrc, filename, cert=None):
         MetaData.__init__(self, onts, attrc)
         self.filename = filename
+        self.cert = cert
 
     def load(self):
-        self.parse(open(self.filename).read())
+        _txt = open(self.filename).read()
+        if self.cert:
+            node_name = "%s:%s" % (md.EntitiesDescriptor.c_namespace,
+                                   md.EntitiesDescriptor.c_tag)
+
+            if self.security.verify_signature(_txt,
+                                              node_name=node_name,
+                                              cert_file=self.cert):
+                self.parse(_txt)
+                return True
+        else:
+            self.parse(_txt)
+            return True
 
 
 class MetaDataExtern(MetaData):
@@ -375,14 +390,19 @@ class MetaDataExtern(MetaData):
         compliance before it is imported.
         """
         response = self.http.send(self.url)
-        if response.status_code  == 200:
-            node_name="%s:%s" % (md.EntitiesDescriptor.c_namespace,
-                                 md.EntitiesDescriptor.c_tag)
-            if self.security.verify_signature(response.text,
-                                              node_name=node_name,
-                                              cert_file=self.cert,
-                                              ):
-                self.parse(response.text)
+        if response.status_code == 200:
+            node_name = "%s:%s" % (md.EntitiesDescriptor.c_namespace,
+                                   md.EntitiesDescriptor.c_tag)
+
+            _txt = response.text.encode("utf-8")
+            if self.cert:
+                if self.security.verify_signature(_txt,
+                                                  node_name=node_name,
+                                                  cert_file=self.cert):
+                    self.parse(_txt)
+                    return True
+            else:
+                self.parse(_txt)
                 return True
         else:
             logger.info("Response status: %s" % response.status)
@@ -438,7 +458,7 @@ class MetadataStore(object):
             key = args[0]
             md = MetaDataMD(self.onts, self.attrc, args[0])
         else:
-            raise Exception("Unknown metadata type '%s'" % typ)
+            raise SAMLError("Unknown metadata type '%s'" % typ)
 
         md.load()
         self.metadata[key] = md

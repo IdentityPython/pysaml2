@@ -7,7 +7,7 @@ from saml2.soap import parse_soap_enveloped_saml_artifact_resolve
 from saml2.soap import class_instances_from_soap_enveloped_saml_thingies
 from saml2.soap import open_soap_envelope
 
-from saml2 import samlp, SamlBase
+from saml2 import samlp, SamlBase, SAMLError
 from saml2 import saml
 from saml2 import response
 from saml2 import BINDING_URI
@@ -105,7 +105,7 @@ class Entity(HTTPBase):
         elif config_file:
             self.config = config_factory(entity_type, config_file)
         else:
-            raise Exception("Missing configuration")
+            raise SAMLError("Missing configuration")
 
         HTTPBase.__init__(self, self.config.verify_ssl_cert,
                           self.config.ca_certs, self.config.key_file,
@@ -189,7 +189,7 @@ class Entity(HTTPBase):
             else:
                 info = self.use_http_artifact(msg_str, destination, relay_state)
         else:
-            raise Exception("Unknown binding type: %s" % binding)
+            raise SAMLError("Unknown binding type: %s" % binding)
 
         return info
 
@@ -223,7 +223,7 @@ class Entity(HTTPBase):
         #logger.error("Bindings: %s" % bindings)
         #logger.error("Entities: %s" % self.metadata)
 
-        raise Exception("Unkown entity or unsupported bindings")
+        raise SAMLError("Unkown entity or unsupported bindings")
 
     def message_args(self, message_id=0):
         if not message_id:
@@ -265,7 +265,7 @@ class Entity(HTTPBase):
         elif isinstance(message, NameIDMappingRequest):
             rsrv = ""
         else:
-            raise Exception("No support for this type of query")
+            raise SAMLError("No support for this type of query")
 
         if bindings == [BINDING_SOAP]:
             info["binding"] = BINDING_SOAP
@@ -347,7 +347,8 @@ class Entity(HTTPBase):
         return signed_instance_factory(msg, self.sec, to_sign)
 
     def _message(self, request_cls, destination=None, message_id=0,
-                 consent=None, extensions=None, sign=False, sign_prepare=False, **kwargs):
+                 consent=None, extensions=None, sign=False, sign_prepare=False,
+                 **kwargs):
         """
         Some parameters appear in all requests so simplify by doing
         it in one place
@@ -607,7 +608,7 @@ class Entity(HTTPBase):
                 name_id = NameID(text=subject_id)
 
         if not name_id:
-            raise Exception("Missing subject identification")
+            raise SAMLError("Missing subject identification")
 
         return self._message(LogoutRequest, destination, message_id,
                              consent, extensions, sign, name_id=name_id,
@@ -805,7 +806,7 @@ class Entity(HTTPBase):
             if not response:
                 return None
 
-            logger.debug(response)
+            #logger.debug(response)
 
         return response
 
@@ -879,7 +880,7 @@ class Entity(HTTPBase):
         destination = self.artifact2destination(artifact, descriptor)
 
         if not destination:
-            raise Exception("Missing endpoint location")
+            raise SAMLError("Missing endpoint location")
 
         _sid = sid()
         msg = self.create_artifact_resolve(artifact, destination, _sid)

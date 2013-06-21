@@ -41,9 +41,11 @@ from saml2.samlp import STATUS_UNSUPPORTED_BINDING
 import xmldsig as ds
 import xmlenc as xenc
 
-from saml2 import samlp, extension_elements_to_elements
+from saml2 import samlp
 from saml2 import saml
 from saml2 import extension_element_to_element
+from saml2 import extension_elements_to_elements
+from saml2 import SAMLError
 from saml2 import time_util
 
 from saml2.s_utils import RequestVersionTooLow
@@ -70,19 +72,23 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 
-class IncorrectlySigned(Exception):
+class IncorrectlySigned(SAMLError):
     pass
 
 
-class VerificationError(Exception):
+class DecryptionFailed(SAMLError):
     pass
 
 
-class StatusError(Exception):
+class VerificationError(SAMLError):
     pass
 
 
-class UnsolicitedResponse(Exception):
+class StatusError(SAMLError):
+    pass
+
+
+class UnsolicitedResponse(SAMLError):
     pass
 
 
@@ -572,7 +578,7 @@ class AuthnResponse(StatusResponse):
 
             logger.debug("Attribute Statement: %s" % (_attr_statem,))
             for aconv in self.attribute_converters:
-                logger.info("Converts name format: %s" % (aconv.name_format,))
+                logger.debug("Converts name format: %s" % (aconv.name_format,))
 
             self.decrypt_attributes(_attr_statem)
             ava = to_local(self.attribute_converters, _attr_statem)
@@ -667,6 +673,7 @@ class AuthnResponse(StatusResponse):
             else:
                 raise VerificationError("Missing NameID")
 
+        logger.info("Subject NameID: %s" % self.name_id)
         return self.name_id
     
     def _assertion(self, assertion):
@@ -707,6 +714,8 @@ class AuthnResponse(StatusResponse):
     def _encrypted_assertion(self, xmlstr):
         if xmlstr.encrypted_data:
             assertion_str = self.sec.decrypt(xmlstr.encrypted_data.to_string())
+            if not assertion_str:
+                raise DecryptionFailed()
             assertion = saml.assertion_from_string(assertion_str)
         else:
             decrypt_xml = self.sec.decrypt(xmlstr)
