@@ -113,7 +113,6 @@ class Saml2Client(Base):
 
         # find out which IdPs/AAs I should notify
         entity_ids = self.users.issuers_of_info(name_id)
-        self.users.remove_person(name_id)
         return self.do_logout(name_id, entity_ids, reason, expire, sign)
         
     def do_logout(self, name_id, entity_ids, reason, expire, sign=None):
@@ -217,6 +216,14 @@ class Saml2Client(Base):
         self.users.remove_person(name_id)
         return True
 
+    def is_logged_in(self, name_id):
+        """ Check if user is in the cache
+        
+        :param name_id: The identifier of the subject
+        """
+        identity = self.users.get_identity(name_id)[0]
+        return bool(identity)
+        
     def handle_logout_response(self, response):
         """ handles a Logout response 
         
@@ -232,11 +239,11 @@ class Saml2Client(Base):
         logger.info("issuer: %s" % issuer)
         del self.state[response.in_response_to]
         if status["entity_ids"] == [issuer]:  # done
-            self.local_logout(status["subject_id"])
+            self.local_logout(status["name_id"])
             return 0, "200 Ok", [("Content-type", "text/html")], []
         else:
             status["entity_ids"].remove(issuer)
-            return self.do_logout(status["subject_id"], status["entity_ids"],
+            return self.do_logout(status["name_id"], status["entity_ids"],
                                   status["reason"], status["not_on_or_after"],
                                   status["sign"])
 

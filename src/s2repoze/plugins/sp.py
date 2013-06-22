@@ -24,9 +24,9 @@ import sys
 import platform
 import shelve
 import traceback
-from urlparse import parse_qs
+from urlparse import parse_qs, urlparse
 
-from paste.httpexceptions import HTTPSeeOther
+from paste.httpexceptions import HTTPSeeOther, HTTPRedirection
 from paste.httpexceptions import HTTPNotImplemented
 from paste.httpexceptions import HTTPInternalServerError
 from paste.request import parse_dict_querystring
@@ -133,6 +133,7 @@ class SAML2Plugin(FormPluginBase):
         self.cache = cache
         self.discosrv = discovery
         self.idp_query_param = idp_query_param
+        self.logout_endpoints = [urlparse(ep)[2] for ep in config.endpoint("single_logout_service")]
 
         try:
             self.metadata = self.conf.metadata
@@ -282,10 +283,22 @@ class SAML2Plugin(FormPluginBase):
 
         _cli = self.saml_client
 
-        # this challenge consist in logging out
-        if 'rwpc.logout' in environ:
-            # ignore right now?
-            pass
+
+        if 'REMOTE_USER' in environ:
+            name_id = decode(environ["REMOTE_USER"])
+
+            _cli = self.saml_client
+            path_info = environ['PATH_INFO']
+
+            if 'samlsp.logout' in environ:
+                responses = _cli.global_logout(name_id)
+                return self._handle_logout(responses)
+
+        if 'samlsp.pending' in environ:
+            response = environ['samlsp.pending']
+            if isinstance(response, HTTPRedirection):
+                response.headers += _forget_headers
+            return response
 
         #logger = environ.get('repoze.who.logger','')
 
@@ -405,7 +418,8 @@ class SAML2Plugin(FormPluginBase):
         """
         #logger = environ.get('repoze.who.logger', '')
 
-        if "CONTENT_LENGTH" not in environ or not environ["CONTENT_LENGTH"]:
+        query = parse_dict_querystring(environ)
+        if ("CONTENT_LENGTH" not in environ or not environ["CONTENT_LENGTH"]) and "SAMLResponse" not in query and "SAMLRequest" not in query:
             logger.debug('[identify] get or empty post')
             return {}
         
@@ -420,7 +434,7 @@ class SAML2Plugin(FormPluginBase):
         query = parse_dict_querystring(environ)
         logger.debug('[sp.identify] query: %s' % (query,))
 
-        if "SAMLResponse" in query:
+        if "SAMLResponse" in query or "SAMLRequest" in query:
             post = query
             binding = BINDING_HTTP_REDIRECT
         else:
@@ -433,7 +447,21 @@ class SAML2Plugin(FormPluginBase):
             pass
             
         try:
-            if "SAMLResponse" not in post:
+            path_info = environ['PATH_INFO']
+            logout = False
+            if path_info in self.logout_endpoints:
+                logout = True
+
+            if logout and "SAMLRequest" in post:
+                print("logout request received")
+                try:
+                    response = self.saml_client.handle_logout_request(post["SAMLRequest"], self.saml_client.users.subjects()[0], binding)
+                    environ['samlsp.pending'] = self._handle_logout(response)
+                    return {}
+                except:
+                    import traceback
+                    traceback.print_exc()
+            elif "SAMLResponse" not in post:
                 logger.info("[sp.identify] --- NOT SAMLResponse ---")
                 # Not for me, put the post back where next in line can
                 # find it
@@ -444,9 +472,23 @@ class SAML2Plugin(FormPluginBase):
                 # check for SAML2 authN response
                 #if self.debug:
                 try:
-                    session_info = self._eval_authn_response(
-                        environ, cgi_field_storage_to_dict(post),
-                        binding=binding)
+                    if logout:
+                        response = self.saml_client.parse_logout_request_response(post["SAMLResponse"], binding)
+                        if response:
+                            action = self.saml_client.handle_logout_response(response)
+                            request = None
+                            if type(action) == dict:
+                                request = self._handle_logout(action)
+                            else:
+                                #logout complete
+                                request = HTTPSeeOther(headers=[('Location', "/")])
+                            if request:
+                                environ['samlsp.pending'] = request
+                            return {}
+                    else:
+                        session_info = self._eval_authn_response(
+                            environ, cgi_field_storage_to_dict(post),
+                            binding=binding)
                 except Exception, err:
                     environ["s2repoze.saml_error"] = err
                     return {}
@@ -528,10 +570,23 @@ class SAML2Plugin(FormPluginBase):
     #noinspection PyUnusedLocal
     def authenticate(self, environ, identity=None):
         if identity:
+            tktuser = identity.get('repoze.who.plugins.auth_tkt.userid', None)
+            if tktuser and self.saml_client.is_logged_in(decode(tktuser)):
+                return tktuser
             return identity.get('login', None)
         else:
             return None
 
+    def _handle_logout(self, responses):
+        if 'data' in responses:
+            ht_args = responses
+        else:
+            ht_args = responses[responses.keys()[0]][1]
+        if not ht_args["data"] and ht_args["headers"][0][0] == "Location":
+            logger.debug('redirect to: %s' % ht_args["headers"][0][1])
+            return HTTPSeeOther(headers=ht_args["headers"])
+        else:
+            return ht_args["data"]
 
 def make_plugin(remember_name=None,  # plugin for remember
                 cache="",  # cache
