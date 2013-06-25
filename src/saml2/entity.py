@@ -339,7 +339,7 @@ class Entity(HTTPBase):
             mid = msg.id
 
         try:
-            to_sign.append([(class_name(msg), mid)])
+            to_sign += [(class_name(msg), mid)]
         except AttributeError:
             to_sign = [(class_name(msg), mid)]
 
