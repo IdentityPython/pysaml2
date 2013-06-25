@@ -451,7 +451,7 @@ class Entity(HTTPBase):
         self._add_info(response, **kwargs)
 
         if sign:
-            self.sign(response, to_sign=to_sign)
+            return self.sign(response, to_sign=to_sign)
         elif to_sign:
             return signed_instance_factory(response, self.sec, to_sign)
         else:
