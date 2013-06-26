@@ -337,7 +337,10 @@ class StatusResponse(object):
                 if status.status_message:
                     msg = status.status_message.text
                 else:
-                    msg = "Unknown error"
+                    try:
+                        msg = status.status_code.status_code.value
+                    except Exception:
+                        msg = "Unknown error"
                 raise excep(
                     "%s from %s" % (msg, status.status_code.value,))
         return True
