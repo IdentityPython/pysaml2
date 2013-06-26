@@ -87,10 +87,11 @@ class HTTPBase(object):
         self.cookiejar = cookielib.CookieJar()
 
         self.request_args["verify"] = verify
-        if ca_bundle:
-            self.request_args["verify"] = ca_bundle
-        if key_file:
-            self.request_args["cert"] = (cert_file, key_file)
+        if verify:
+            if ca_bundle:
+                self.request_args["verify"] = ca_bundle
+            if key_file:
+                self.request_args["cert"] = (cert_file, key_file)
         
         self.sec = None
         self.user = None
