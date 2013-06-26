@@ -49,6 +49,7 @@ parser.add_argument('-u', dest='url')
 parser.add_argument('-c', dest='cert')
 parser.add_argument('-a', dest='attrsmap')
 parser.add_argument('-o', dest='output')
+parser.add_argument('-x', dest='xmlsec')
 parser.add_argument(dest="item")
 args = parser.parse_args()
 
@@ -60,7 +61,7 @@ if args.type == "local":
 elif args.type == "external":
     ATTRCONV = ac_factory(args.attrsmap)
     httpc = HTTPBase()
-    crypto = _get_xmlsec_cryptobackend("/opt/local/bin/xmlsec1")
+    crypto = _get_xmlsec_cryptobackend(args.xmlsec)
     sc = SecurityContext(crypto)
     metad = MetaDataExtern(ONTS.values(), ATTRCONV, args.url,
                            sc, cert=args.cert, http=httpc)
