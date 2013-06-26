@@ -312,13 +312,17 @@ class Config(object):
         return self
 
     def load_file(self, config_file, metadata_construction=False):
-        if sys.path[0] != ".":
-            sys.path.insert(0, ".")
-
         if config_file.endswith(".py"):
             config_file = config_file[:-3]
 
-        mod = import_module(config_file)
+        head, tail = os.path.split(config_file)
+        if head == "":
+            if sys.path[0] != ".":
+                sys.path.insert(0, ".")
+        else:
+            sys.path.insert(0, head)
+
+        mod = import_module(tail)
         #return self.load(eval(open(config_file).read()))
         return self.load(mod.CONFIG, metadata_construction)
 
