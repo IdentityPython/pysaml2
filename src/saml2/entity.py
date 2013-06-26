@@ -1,4 +1,5 @@
 import base64
+from binascii import hexlify
 import logging
 from hashlib import sha1
 from saml2.metadata import ENDPOINTS
@@ -857,7 +858,10 @@ class Entity(HTTPBase):
 
         assert _art[:2] == ARTIFACT_TYPECODE
 
-        endpoint_index = str(int(_art[2:4]))
+        try:
+            endpoint_index = str(int(_art[2:4]))
+        except ValueError:
+            endpoint_index = str(int(hexlify(_art[2:4])))
         entity = self.sourceid[_art[4:24]]
 
         destination = None
