@@ -115,28 +115,30 @@ def get_xmlsec_binary(paths=None):
         found then an exception is raised.
     """
     if os.name == "posix":
-        bin_name = "xmlsec1"
+        bin_name = ["xmlsec1"]
     elif os.name == "nt":
-        bin_name = "xmlsec1.exe"
+        bin_name = ["xmlsec.exe", "xmlsec1.exe"]
     else:  # Default !?
-        bin_name = "xmlsec1"
+        bin_name = ["xmlsec1"]
 
     if paths:
-        for path in paths:
-            fil = os.path.join(path, bin_name)
+        for bname in bin_name:
+            for path in paths:
+                fil = os.path.join(path, bname)
+                try:
+                    if os.lstat(fil):
+                        return fil
+                except OSError:
+                    pass
+
+    for path in os.environ["PATH"].split(os.pathsep):
+        for bname in bin_name:
+            fil = os.path.join(path, bname)
             try:
                 if os.lstat(fil):
                     return fil
-            except Exception:
+            except OSError:
                 pass
-
-    for path in os.environ["PATH"].split(os.pathsep):
-        fil = os.path.join(path, bin_name)
-        try:
-            if os.lstat(fil):
-                return fil
-        except Exception:
-            pass
 
     raise SigverError("Can't find %s" % bin_name)
 
@@ -652,7 +654,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         pof = Popen(com_list, stderr=PIPE, stdout=PIPE)
         try:
             return pof.stdout.read().split(" ")[1]
-        except Exception:
+        except IndexError:
             return ""
 
     def encrypt(self, text, recv_key, template, key_type):
@@ -660,8 +662,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         _, fil = make_temp("%s" % text, decode=False)
 
         com_list = [self.xmlsec, "--encrypt", "--pubkey-cert-pem", recv_key,
-                    "--session-key", key_type, "--xml-data", fil,
-        ]
+                    "--session-key", key_type, "--xml-data", fil]
 
         (_stdout, _stderr, output) = self._run_xmlsec(com_list, [template],
                                                       exception=DecryptError,
@@ -673,8 +674,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         _, fil = make_temp("%s" % enctext, decode=False)
 
         com_list = [self.xmlsec, "--decrypt", "--privkey-pem",
-                    key_file, "--id-attr:%s" % ID_ATTR, ENC_KEY_CLASS,
-        ]
+                    key_file, "--id-attr:%s" % ID_ATTR, ENC_KEY_CLASS]
 
         (_stdout, _stderr, output) = self._run_xmlsec(com_list, [fil],
                                                       exception=DecryptError,
@@ -699,9 +699,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
 
         com_list = [self.xmlsec, "--sign",
                     "--privkey-pem", key_file,
-                    "--id-attr:%s" % id_attr, class_name,
-                    #"--store-signatures"
-        ]
+                    "--id-attr:%s" % id_attr, class_name]
         if node_id:
             com_list.extend(["--node-id", node_id])
 
