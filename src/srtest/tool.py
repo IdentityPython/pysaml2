@@ -2,6 +2,7 @@ import cookielib
 import sys
 import traceback
 import logging
+from urlparse import parse_qs
 
 from srtest.opfunc import Operation
 from srtest import FatalError
@@ -126,6 +127,15 @@ class Conversation(object):
                         # Back at the RP
                         self.client.cookiejar = self.cjar["rp"]
                         for_me = True
+                        try:
+                            base, query = url.split("?")
+                        except ValueError:
+                            pass
+                        else:
+                            _response = parse_qs(query)
+                            self.last_response = _response
+                            self.last_content = _response
+                            return _response
 
                 if for_me:
                     done = True
