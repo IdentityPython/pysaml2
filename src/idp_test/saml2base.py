@@ -1,11 +1,14 @@
 from saml2 import samlp
+from saml2 import BINDING_HTTP_ARTIFACT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_PAOS
 from saml2 import BINDING_SOAP
 from saml2 import BINDING_URI
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
+from saml2.saml import NAMEID_FORMAT_UNSPECIFIED
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
+from saml2.saml import NAMEID_FORMAT_EMAILADDRESS
 
 from idp_test.check import CheckLogoutSupport
 from idp_test.check import CheckSaml2IntAttributes
@@ -64,10 +67,61 @@ class AuthnRequest(Request):
                       VerifySignatureAlgorithm]}
 
 
-class AuthnRequestTransient(AuthnRequest):
+class AuthnRequestNID_Transient(AuthnRequest):
     def __init__(self, conv):
         AuthnRequest.__init__(self, conv)
         self.args["nameid_format"] = NAMEID_FORMAT_TRANSIENT
+
+    def setup(self):
+        cnf = self.conv.client.config
+        endps = cnf.getattr("endpoints", "sp")
+        url = ""
+        for url, binding in endps["assertion_consumer_service"]:
+            if binding == BINDING_HTTP_POST:
+                self.args["assertion_consumer_service_url"] = url
+                break
+
+        self.tests["post"].append((VerifyEndpoint, {"endpoint": url}))
+
+
+class AuthnRequestNID_Email(AuthnRequest):
+    def __init__(self, conv):
+        AuthnRequest.__init__(self, conv)
+        self.args["nameid_format"] = NAMEID_FORMAT_EMAILADDRESS
+
+    def setup(self):
+        cnf = self.conv.client.config
+        endps = cnf.getattr("endpoints", "sp")
+        url = ""
+        for url, binding in endps["assertion_consumer_service"]:
+            if binding == BINDING_HTTP_POST:
+                self.args["assertion_consumer_service_url"] = url
+                break
+
+        self.tests["post"].append((VerifyEndpoint, {"endpoint": url}))
+
+
+class AuthnRequestNID_Unspecified(AuthnRequest):
+    def __init__(self, conv):
+        AuthnRequest.__init__(self, conv)
+        self.args["nameid_format"] = NAMEID_FORMAT_UNSPECIFIED
+
+    def setup(self):
+        cnf = self.conv.client.config
+        endps = cnf.getattr("endpoints", "sp")
+        url = ""
+        for url, binding in endps["assertion_consumer_service"]:
+            if binding == BINDING_HTTP_POST:
+                self.args["assertion_consumer_service_url"] = url
+                break
+
+        self.tests["post"].append((VerifyEndpoint, {"endpoint": url}))
+
+
+class AuthnRequestNID_no(AuthnRequest):
+    def __init__(self, conv):
+        AuthnRequest.__init__(self, conv)
+        self.args["nameid_format"] = ""
 
     def setup(self):
         cnf = self.conv.client.config
@@ -85,6 +139,19 @@ class AuthnRequestEndpointIndex(AuthnRequest):
     def __init__(self, conv):
         AuthnRequest.__init__(self, conv)
         self.args["attribute_consuming_service_index"] = 3
+
+    def setup(self):
+        cnf = self.conv.client.config
+        endps = cnf.getattr("endpoints", "sp")
+        acs3 = endps["assertion_consumer_service"][3]
+        self.tests["post"].append((VerifyEndpoint, {"endpoint": acs3[0]}))
+
+
+class AuthnRequestEndpointIndexNIDTransient(AuthnRequest):
+    def __init__(self, conv):
+        AuthnRequest.__init__(self, conv)
+        self.args["attribute_consuming_service_index"] = 3
+        self.args["nameid_format"] = NAMEID_FORMAT_TRANSIENT
 
     def setup(self):
         cnf = self.conv.client.config
@@ -140,16 +207,19 @@ class AuthnRequestPost(AuthnRequest):
 class AuthnRequest_using_Artifact(AuthnRequest):
     def __init__(self, conv):
         AuthnRequest.__init__(self, conv)
-        self.use_artifact = True
+        self.args["response_binding"] = BINDING_HTTP_ARTIFACT
+        self.args["binding"] = BINDING_HTTP_ARTIFACT
 
 
-class AuthnRequestTransient(AuthnRequest):
+class AuthnRequest_using_ArtifactNID_Transient(AuthnRequest):
     def __init__(self, conv):
         AuthnRequest.__init__(self, conv)
         self.args["nameid_format"] = NAMEID_FORMAT_TRANSIENT
+        self.args["response_binding"] = BINDING_HTTP_ARTIFACT
+        self.args["binding"] = BINDING_HTTP_ARTIFACT
 
 
-class AuthnRequestPostTransient(AuthnRequestPost):
+class AuthnRequestPostNID_Transient(AuthnRequestPost):
     def __init__(self, conv):
         AuthnRequest.__init__(self, conv)
         self.args["nameid_format"] = NAMEID_FORMAT_TRANSIENT
@@ -180,8 +250,7 @@ class AssertionIDRequest(Request):
     tests = {"pre": [VerifyFunctionality]}
 
     def setup(self):
-        resp = self.conv.saml_response[-1].response
-        assertion = resp.assertion[0]
+        assertion = self.conv.saml_response[-1].assertion
         self.args["assertion_id_refs"] = [assertion.id]
 
 
@@ -195,8 +264,7 @@ class AuthnQuery(Request):
         self.tests["post"].append(VerifySuccessStatus)
 
     def setup(self):
-        resp = self.conv.saml_response[-1].response
-        assertion = resp.assertion[0]
+        assertion = self.conv.saml_response[-1].assertion
         self.args["subject"] = assertion.subject
 
 
@@ -212,8 +280,7 @@ class NameIDMappingRequest(Request):
         self.tests["post"].append(VerifyNameIDMapping)
 
     def setup(self):
-        resp = self.conv.saml_response[-1].response
-        assertion = resp.assertion[0]
+        assertion = self.conv.saml_response[-1].assertion
         self.args["name_id"] = assertion.subject.name_id
 
 
@@ -223,6 +290,16 @@ class AuthnRequest_NameIDPolicy1(AuthnRequest):
         self.args["name_id_policy"] = NameIDPolicy(
             format=NAMEID_FORMAT_PERSISTENT, sp_name_qualifier="Group1",
             allow_create="true")
+        self.tests["post"].append(VerifyNameIDPolicyUsage)
+
+
+class AuthnRequest_NameIDPolicy1Transient(AuthnRequest):
+    def __init__(self, conv):
+        AuthnRequest.__init__(self, conv)
+        self.args["name_id_policy"] = NameIDPolicy(
+            format=NAMEID_FORMAT_TRANSIENT, sp_name_qualifier="Group1",
+            allow_create="true")
+        self.args["nameid_format"] = NAMEID_FORMAT_TRANSIENT
         self.tests["post"].append(VerifyNameIDPolicyUsage)
 
 
@@ -262,8 +339,7 @@ class ManageNameIDRequest(Request):
         self.tests["post"].append(VerifySuccessStatus)
 
     def setup(self):
-        resp = self.conv.saml_response[-1].response
-        assertion = resp.assertion[0]
+        assertion = self.conv.saml_response[-1].assertion
         self.args["name_id"] = assertion.subject.name_id
 
 
@@ -274,18 +350,19 @@ class AttributeQuery(Request):
              "post": [CheckSaml2IntAttributes, VerifyAttributeNameFormat]}
 
     def setup(self):
-        resp = self.conv.saml_response[-1].response
-        assertion = resp.assertion[0]
+        assertion = self.conv.saml_response[-1].assertion
         self.args["name_id"] = assertion.subject.name_id
 
 # -----------------------------------------------------------------------------
 
 OPERATIONS = {
-    'attribute-query':{
-        "tc_id": "S2c-01",
-        "name": "",
-        "sequence":[AuthnRequest, AttributeQuery],
-        "depend":["authn"]
+    'verify': {
+        'tc_id': "S2c-16",
+        "name": 'Verify connectivity',
+        "descr": 'Uses AuthnRequest to check connectivity',
+        "sequence": [DynAuthnRequest],
+        "tests": {"pre": [CheckSaml2IntMetaData],
+                  "post": []}
     },
     'authn': {
         "tc_id": "S2c-02",
@@ -296,32 +373,40 @@ OPERATIONS = {
                   "post": []},
         "depend":["verify"]
     },
-    'authn_endpoint_index': {
-        "tc_id": "S2c-03",
-        "name": '',
-        "descr": '',
-        "sequence": [AuthnRequestEndpointIndex],
+    'authn-nid_transient': {
+        "tc_id": "S2c-10",
+        "name": 'Basic SAML2 AuthnRequest, transient name ID',
+        "descr": 'AuthnRequest using HTTP-redirect',
+        "sequence": [AuthnRequestNID_Transient],
+        "tests": {"pre": [CheckSaml2IntMetaData],
+                  "post": []},
         "depend":["authn"]
     },
-    'authn_specified_endpoint': {
-        "tc_id": "S2c-04",
-        "name": '',
-        "descr": '',
-        "sequence": [AuthnRequestSpecEndpoint],
+    'authn-nid_email': {
+        "tc_id": "S2c-20",
+        "name": 'Basic SAML2 AuthnRequest, email name ID',
+        "descr": 'AuthnRequest using HTTP-redirect',
+        "sequence": [AuthnRequestNID_Email],
+        "tests": {"pre": [CheckSaml2IntMetaData],
+                  "post": []},
         "depend":["authn"]
     },
-    #    'authn-artifact':{
-    #        'tc_id': "S2c-05",
-    #        "name": "SAML2 AuthnRequest using an artifact",
-    #        "descr": ('AuthnRequest using HTTP-redirect and artifact'),
-    #        "sequence": [AuthnRequest_using_Artifact]
-    #    }
-    'authn-assertion_id_request': {
-        "tc_id": "S2c-06",
-        "name": 'AuthnRequest and then an AssertionIDRequest',
-        "descr": 'AuthnRequest followed by an AssertionIDRequest',
-        "sequence": [AuthnRequest, AssertionIDRequest],
-        "tests": {"pre": [CheckSaml2IntMetaData],  "post": []},
+    'authn-nid_no': {
+        "tc_id": "S2c-21",
+        "name": 'Basic SAML2 AuthnRequest, no name ID format specified',
+        "descr": 'AuthnRequest using HTTP-redirect',
+        "sequence": [AuthnRequestNID_no],
+        "tests": {"pre": [CheckSaml2IntMetaData],
+                  "post": []},
+        "depend":["authn"]
+    },
+    'authn-nid_unspecified': {
+        "tc_id": "S2c-21",
+        "name": 'Basic SAML2 AuthnRequest, unspecified name ID format',
+        "descr": 'AuthnRequest using HTTP-redirect',
+        "sequence": [AuthnRequestNID_Unspecified],
+        "tests": {"pre": [CheckSaml2IntMetaData],
+                  "post": []},
         "depend":["authn"]
     },
     'authn-post': {
@@ -337,18 +422,70 @@ OPERATIONS = {
         "tc_id": "S2c-09",
         "name": 'AuthnRequest using HTTP POST expecting transient NameID',
         "descr": 'AuthnRequest using HTTP-POST',
-        "sequence": [AuthnRequestPostTransient],
+        "sequence": [AuthnRequestPostNID_Transient],
         "tests": {"pre": [CheckSaml2IntMetaData],
                   "post": []},
         "depend":["authn-post"]
     },
-    'authn-transient': {
-        "tc_id": "S2c-10",
-        "name": 'Basic SAML2 AuthnRequest, transient name ID',
-        "descr": 'AuthnRequest using HTTP-redirect',
-        "sequence": [AuthnRequestTransient],
-        "tests": {"pre": [CheckSaml2IntMetaData],
-                  "post": []},
+    'attribute-query':{
+        "tc_id": "S2c-01",
+        "name": "",
+        "sequence":[AuthnRequest, AttributeQuery],
+        "depend":["authn"]
+    },
+    'attribute-query-transient':{
+        "tc_id": "S2c-20",
+        "name": "",
+        "sequence":[AuthnRequestNID_Transient, AttributeQuery],
+        "depend":["authn"]
+    },
+    'authn_endpoint_index': {
+        "tc_id": "S2c-03",
+        "name": '',
+        "descr": '',
+        "sequence": [AuthnRequestEndpointIndex],
+        "depend":["authn"]
+    },
+    'authn_endpoint_index-transient': {
+        "tc_id": "S2c-03",
+        "name": '',
+        "descr": '',
+        "sequence": [AuthnRequestEndpointIndexNIDTransient],
+        "depend":["authn"]
+    },
+    'authn_specified_endpoint': {
+        "tc_id": "S2c-04",
+        "name": '',
+        "descr": '',
+        "sequence": [AuthnRequestSpecEndpoint],
+        "depend":["authn"]
+    },
+    'authn-artifact':{
+       'tc_id': "S2c-05",
+       "name": "SAML2 AuthnRequest using an artifact",
+       "descr": ('AuthnRequest using HTTP-redirect and artifact'),
+       "sequence": [AuthnRequest_using_Artifact]
+    },
+    'authn-artifact_nid-transient':{
+       'tc_id': "S2c-05",
+       "name": "SAML2 AuthnRequest expecting artifact response",
+       "descr": ('AuthnRequest using HTTP-redirect and artifact'),
+       "sequence": [AuthnRequest_using_ArtifactNID_Transient]
+    },
+    'authn-assertion_id_request': {
+        "tc_id": "S2c-06",
+        "name": 'AuthnRequest and then an AssertionIDRequest',
+        "descr": 'AuthnRequest followed by an AssertionIDRequest',
+        "sequence": [AuthnRequest, AssertionIDRequest],
+        "tests": {"pre": [CheckSaml2IntMetaData],  "post": []},
+        "depend":["authn"]
+    },
+    'authn-nid_transient-assertion_id_request': {
+        "tc_id": "S2c-26",
+        "name": 'AuthnRequest and then an AssertionIDRequest',
+        "descr": 'AuthnRequest followed by an AssertionIDRequest',
+        "sequence": [AuthnRequestNID_Transient, AssertionIDRequest],
+        "tests": {"pre": [CheckSaml2IntMetaData],  "post": []},
         "depend":["authn"]
     },
     'authn-with-name_id_policy': {
@@ -356,6 +493,14 @@ OPERATIONS = {
         "name": 'SAML2 AuthnRequest with specific NameIDPolicy',
         "descr": 'AuthnRequest with specific NameIDPolicy',
         "sequence": [AuthnRequest_NameIDPolicy1],
+        "tests": {"pre": [CheckSaml2IntMetaData],  "post": []},
+        "depend":["authn"]
+    },
+    'authn-with-name_id_policy_nid-transient': {
+        "tc_id": "S2c-31",
+        "name": 'SAML2 AuthnRequest with specific NameIDPolicy',
+        "descr": 'AuthnRequest with specific NameIDPolicy',
+        "sequence": [AuthnRequest_NameIDPolicy1Transient],
         "tests": {"pre": [CheckSaml2IntMetaData],  "post": []},
         "depend":["authn"]
     },
@@ -379,19 +524,17 @@ OPERATIONS = {
         "sequence":[AuthnRequest, ManageNameIDRequest],
         "depend":["authn"]
     },
+    'manage_nameid_nid-transient':{
+        "tc_id": "S2c-14",
+        "name": "Setting the SP provided ID by using ManageNameID",
+        "sequence":[AuthnRequestNID_Transient, ManageNameIDRequest],
+        "depend":["authn"]
+    },
     'nameid-mapping':{
         "tc_id": "S2c-15",
         "name": "Simple NameIDMapping request",
         "sequence":[AuthnRequest, NameIDMappingRequest],
         "depend":["authn"]
-    },
-    'verify': {
-        'tc_id': "S2c-16",
-        "name": 'Verify connectivity',
-        "descr": 'Uses AuthnRequest to check connectivity',
-        "sequence": [DynAuthnRequest],
-        "tests": {"pre": [CheckSaml2IntMetaData],
-                  "post": []}
     },
     'authn-authn_query': {
         "name": 'AuthnRequest and then an AuthnQuery',
