@@ -9,16 +9,17 @@ from srtest.check import Check
 from saml2.mdstore import REQ2SRV
 from saml2.s_utils import UnknownPrincipal
 from saml2.s_utils import UnsupportedBinding
-from saml2.saml import NAMEID_FORMAT_PERSISTENT, NAME_FORMAT_UNSPECIFIED
+from saml2.saml import NAMEID_FORMAT_PERSISTENT
+from saml2.saml import NAMEID_FORMAT_UNSPECIFIED
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
+from saml2.saml import NAME_FORMAT_UNSPECIFIED
 from saml2.saml import NAME_FORMAT_URI
 from saml2.samlp import STATUS_SUCCESS
 from saml2.samlp import Response
 from saml2.sigver import cert_from_key_info_dict
 from saml2.sigver import key_from_key_value_dict
 
-from M2Crypto.X509 import load_cert_string
-from saml2.time_util import utc_now, str_to_time
+from saml2.time_util import str_to_time
 
 __author__ = 'rolandh'
 
@@ -465,9 +466,14 @@ class VerifyFunctionality(Check):
         entity = md[conv.entity_id]
         for desc in ["idpsso_descriptor", "attribute_authority_descriptor",
                      "auth_authority_descriptor"]:
-            for srvgrp in entity[desc]:
-                if service in srvgrp:
-                    return {}
+            try:
+                srvgrps = entity[desc]
+            except KeyError:
+                pass
+            else:
+                for srvgrp in srvgrps:
+                    if service in srvgrp:
+                        return {}
 
         self._message = "No support for '%s'" % service
         self._status = CRITICAL
@@ -481,10 +487,10 @@ class VerifyFunctionality(Check):
         try:
             func(entity_id, binding)
         except UnknownPrincipal:
-            self._message = "Unknown principal"
+            self._message = "Unknown principal: %s" % entity_id
             self._status = CRITICAL
         except UnsupportedBinding:
-            self._message = "Unsupported binding"
+            self._message = "Unsupported binding at the IdP: %s" % binding
             self._status = CRITICAL
 
         return {}
@@ -500,12 +506,18 @@ class VerifyFunctionality(Check):
         if self._status != OK:
             return res
 
-        if "nameid_format" in args:
-            res = self._nameid_format_support(conv, args["nameid_format"])
+        if "nameid_format" in args and args["nameid_format"]:
+            if args["nameid_format"] == NAMEID_FORMAT_UNSPECIFIED:
+                pass
+            else:
+                res = self._nameid_format_support(conv, args["nameid_format"])
 
-        if "name_id_policy" in args:
-            res = self._nameid_format_support(conv,
-                                              args["name_id_policy"].format)
+        if "name_id_policy" in args and args["name_id_policy"]:
+            if args["name_id_policy"].format == NAMEID_FORMAT_UNSPECIFIED:
+                pass
+            else:
+                res = self._nameid_format_support(conv,
+                                                  args["name_id_policy"].format)
 
         return res
 
