@@ -50,7 +50,7 @@ tests_require = [
     'mongodict',
     'pyasn1',
     'pymongo',
-    'python-memcached',
+    'python-memcached == 1.51',
     'pytest',
     'mako',
     #'pytest-coverage',
