@@ -341,7 +341,7 @@ class Entity(HTTPBase):
 
         try:
             to_sign += [(class_name(msg), mid)]
-        except AttributeError:
+        except (AttributeError, TypeError):
             to_sign = [(class_name(msg), mid)]
 
         logger.info("REQUEST: %s" % msg)
