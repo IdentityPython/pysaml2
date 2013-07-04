@@ -207,9 +207,16 @@ class Conversation(tool.Conversation):
             if isinstance(response, dict):
                 try:
                     assert self.relay_state == response["RelayState"]
+                except AssertionError:
+                    assert self.relay_state == response["RelayState"][0]
                 except KeyError:
                     pass
-                response = response["SAMLResponse"]
+                if "SAMLResponse" in response:
+                    response = response["SAMLResponse"]
+                elif "SAMLart" in response:
+                    response = self.client.artifact2message(
+                        response["SAMLart"][0], "idpsso")
+
             _resp = self.response_func(response, **self.response_args)
             if not _resp:
                 return False
