@@ -107,7 +107,7 @@ class SAML2client(object):
             "-l", dest="list", action="store_true",
             help="List all the test flows as a JSON object")
         self._parser.add_argument(
-            "-c", dest="spconfig", default="config_file",
+            "-c", dest="spconfig", default="config",
             help=("Configuration module for the SP Test Driver at the current"
                   "directory or the path specified with the -P option. Do not"
                   "use relative paths or filename extension."))
@@ -118,6 +118,8 @@ class SAML2client(object):
                                   help="Module describing tests")
         self._parser.add_argument("-O", dest="operations",
                                   help="Tests")
+        self._parser.add_argument("-Y", dest="pysamllog", action='store_true',
+                                  help="Print PySAML2 logs")
         self._parser.add_argument("oper", nargs="?", help="Which test to run")
 
         self.interactions = None
@@ -284,7 +286,7 @@ class SAML2client(object):
             tsum = self.test_summation(self.args.oper)
             print >>sys.stdout, json.dumps(tsum)
 
-        if self.args.debug and HANDLER == "memory":
+        if self.args.pysamllog and HANDLER == "memory":
             self.pysaml_log()
 
     def list_operations(self):
@@ -339,7 +341,7 @@ class SAML2client(object):
 
     def list_conf_id(self):
         sys.path.insert(0, ".")
-        mod = import_module("config_file")
+        mod = import_module("config")
         _res = dict([(key, cnf["description"]) for key, cnf in
                     mod.CONFIG.items()])
         print json.dumps(_res)
