@@ -21,7 +21,7 @@ from importlib import import_module
 
 from saml2.s_utils import factory, do_ava
 from saml2 import saml, extension_elements_to_elements, SAMLError
-from saml2.saml import NAME_FORMAT_URI
+from saml2.saml import NAME_FORMAT_URI, NAME_FORMAT_UNSPECIFIED
 
 
 class UnknownNameFormat(SAMLError):
@@ -121,14 +121,22 @@ def to_local(acs, statement):
     """
     if not acs:
         acs = [AttributeConverter()]
+        acsd = {"": acs}
+    else:
+        acsd = dict([(a.name_format, a) for a in acs])
 
-    ava = []
-    for aconv in acs:
+    ava = {}
+    for attr in statement.attribute:
         try:
-            ava = aconv.fro(statement)
-            break
-        except UnknownNameFormat:
-            pass
+            key, val = acsd[attr.name_format].ava_from(attr)
+        except KeyError:
+            key, val = acs[0].lcd_ava_from(attr)
+
+        try:
+            ava[key].extend(val)
+        except KeyError:
+            ava[key] = val
+
     return ava
 
 
@@ -233,10 +241,39 @@ class AttributeConverter(object):
         if self._fro is None or self._to is None:
             self.adjust()
 
+    def lcd_ava_from(self, attribute):
+        """
+        In nothing else works, this should
+
+        :param attribute:
+        :return:
+        """
+        try:
+            name = attribute.friendly_name.strip()
+        except AttributeError:
+            name = attribute.name.strip()
+
+        values = []
+        for value in attribute.attribute_value:
+            if not value.text:
+                values.append('')
+            else:
+                values.append(value.text.strip())
+
+        return name, values
+
     def fail_safe_fro(self, statement):
-        """ In case there is not formats defined """
+        """ In case there is not formats defined or if the name format is
+        undefined
+
+        :param statement: AttributeStatement instance
+        :return: A dictionary with names and values
+        """
         result = {}
         for attribute in statement.attribute:
+            if attribute.name_format and \
+                    attribute.name_format != NAME_FORMAT_UNSPECIFIED:
+                continue
             try:
                 name = attribute.friendly_name.strip()
             except AttributeError:
@@ -281,8 +318,8 @@ class AttributeConverter(object):
         return attr, val
 
     def fro(self, statement):
-        """ Get the attributes and the attribute values 
-        
+        """ Get the attributes and the attribute values.
+
         :param statement: The AttributeStatement.
         :return: A dictionary containing attributes and values
         """
@@ -294,15 +331,12 @@ class AttributeConverter(object):
         for attribute in statement.attribute:
             if attribute.name_format and self.name_format and \
                     attribute.name_format != self.name_format:
-                raise UnknownNameFormat
+                continue
 
             (key, val) = self.ava_from(attribute)
             result[key] = val
 
-        if not result:
-            return self.fail_safe_fro(statement)
-        else:
-            return result
+        return result
 
     def to_format(self, attr):
         """ Creates an Attribute instance with name, name_format and

@@ -5,7 +5,7 @@ from saml2 import attribute_converter, saml
 from attribute_statement_data import *
 
 from pathutils import full_path
-from saml2.attribute_converter import AttributeConverterNOOP
+from saml2.attribute_converter import AttributeConverterNOOP, to_local
 
 
 def _eq(l1,l2):
@@ -15,9 +15,11 @@ BASIC_NF = 'urn:oasis:names:tc:SAML:2.0:attrname-format:basic'
 URI_NF = 'urn:oasis:names:tc:SAML:2.0:attrname-format:uri'
 SAML1 = 'urn:mace:shibboleth:1.0:attributeNamespace:uri'
 
+
 def test_default():
     acs = attribute_converter.ac_factory()
     assert acs
+
 
 class TestAC():
     def setup_class(self):
@@ -51,13 +53,10 @@ class TestAC():
     def test_ava_fro_2(self):
         ats = saml.attribute_statement_from_string(STATEMENT2)
         #print ats
-        ava = None
+        ava = {}
         for ac in self.acs:
-            try:
-                ava = ac.fro(ats)
-                break
-            except attribute_converter.UnknownNameFormat:
-                pass
+            ava.update(ac.fro(ats))
+
         print ava.keys()
         assert _eq(ava.keys(),['uid', 'swissedupersonuniqueid',
                                'swissedupersonhomeorganizationtype',
@@ -167,7 +166,12 @@ class TestAC():
         oava = basic_ac.fro(attr_state)
 
         assert _eq(ava.keys(), oava.keys())
-        
+
+    def test_unspecified_name_format(self):
+        ats = saml.attribute_statement_from_string(STATEMENT4)
+        ava = to_local(self.acs, ats)
+        assert ava == {'user_id': ['bob'], 'NameID': ['bobsnameagain']}
+
 
 def test_noop_attribute_conversion():
     ava = {"urn:oid:2.5.4.4": "Roland", "urn:oid:2.5.4.42": "Hedberg" }
@@ -187,4 +191,7 @@ def test_noop_attribute_conversion():
 
 
 if __name__ == "__main__":
-    test_noop_attribute_conversion()
+    t = TestAC()
+    t.setup_class()
+    t.test_ava_fro_2()
+    #test_noop_attribute_conversion()

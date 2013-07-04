@@ -430,6 +430,6 @@ class TestClientWithDummy():
 #     tc.test_response()
 
 if __name__ == "__main__":
-    tc = TestClientWithDummy()
+    tc = TestClient()
     tc.setup_class()
-    tc.test_post_sso()
+    tc.test_sign_auth_request_0()

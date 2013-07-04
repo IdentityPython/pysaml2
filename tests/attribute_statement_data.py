@@ -173,3 +173,13 @@ STATEMENT3 = """<?xml version='1.0' encoding='UTF-8'?>
         <ns0:AttributeValue>Roland</ns0:AttributeValue>
     </ns0:Attribute>
 </ns0:AttributeStatement>"""
+
+STATEMENT4 = """<?xml version='1.0' encoding='UTF-8'?>
+<ns0:AttributeStatement xmlns:ns0="urn:oasis:names:tc:SAML:2.0:assertion" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <ns0:Attribute Name="user_id" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:unspecified">
+        <ns0:AttributeValue xsi:type="xs:string">bob</ns0:AttributeValue>
+    </ns0:Attribute>
+    <ns0:Attribute Name="NameID" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:unspecified">
+        <ns0:AttributeValue xsi:type="xs:string">bobsnameagain</ns0:AttributeValue>
+    </ns0:Attribute>
+</ns0:AttributeStatement>"""
