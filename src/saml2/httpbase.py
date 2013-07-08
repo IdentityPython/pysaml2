@@ -212,6 +212,8 @@ class HTTPBase(object):
             self.set_cookie(SimpleCookie(r.headers["set-cookie"]), r)
         except AttributeError:
             pass
+        except KeyError:
+            pass
 
         return r
 
