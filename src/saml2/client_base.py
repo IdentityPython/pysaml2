@@ -507,11 +507,13 @@ class Base(Entity):
 
         resp = None
         if xmlstr:
-            kwargs = {"outstanding_queries": outstanding,
-                      "allow_unsolicited": self.allow_unsolicited,
-                      "return_addr": self.service_url(),
-                      "entity_id": self.config.entityid,
-                      "attribute_converters": self.config.attribute_converters}
+            kwargs = {
+                "outstanding_queries": outstanding,
+                "allow_unsolicited": self.allow_unsolicited,
+                "return_addr": self.service_url(),
+                "entity_id": self.config.entityid,
+                "attribute_converters": self.config.attribute_converters,
+                "allow_unknown_attributes": self.config.allow_unknown_attributes}
             try:
                 resp = self._parse_response(xmlstr, AuthnResponse,
                                             "assertion_consumer_service",
