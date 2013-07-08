@@ -23,6 +23,9 @@ from saml2.s_utils import factory, do_ava
 from saml2 import saml, extension_elements_to_elements, SAMLError
 from saml2.saml import NAME_FORMAT_URI, NAME_FORMAT_UNSPECIFIED
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 class UnknownNameFormat(SAMLError):
     pass
@@ -98,26 +101,30 @@ def ac_factory_II(path):
     return ac_factory(path)
 
 
-def ava_fro(acs, statement):
-    """  Translates attributes according to their name_formats into the local
-     names.
+# def ava_fro(acs, statement):
+#     """  Translates attributes according to their name_formats into the local
+#      names.
+#
+#     :param acs: AttributeConverter instances
+#     :param statement: A SAML statement
+#     :return: A dictionary with attribute names replaced with local names.
+#     """
+#     if not statement:
+#         return {}
+#
+#     acsdic = dict([(ac.name_format, ac) for ac in acs])
+#     acsdic[None] = acsdic[NAME_FORMAT_URI]
+#     return dict([acsdic[a.name_format].ava_from(a) for a in statement])
 
-    :param acs: AttributeConverter instances
-    :param statement: A SAML statement
-    :return: A dictionary with attribute names replaced with local names.
-    """
-    if not statement:
-        return {}
 
-    acsdic = dict([(ac.name_format, ac) for ac in acs])
-    acsdic[None] = acsdic[NAME_FORMAT_URI]
-    return dict([acsdic[a.name_format].ava_from(a) for a in statement])
-
-
-def to_local(acs, statement):
+def to_local(acs, statement, allow_unknown_attributes=False):
     """ Replaces the attribute names in a attribute value assertion with the
     equivalent name from a local name format.
 
+    :param acs: List of Attribute Converters
+    :param statement: The Attribute Statement
+    :param allow_unknown_attributes: If unknown attributes are allowed
+    :return: A key,values dictionary
     """
     if not acs:
         acs = [AttributeConverter()]
@@ -128,9 +135,26 @@ def to_local(acs, statement):
     ava = {}
     for attr in statement.attribute:
         try:
-            key, val = acsd[attr.name_format].ava_from(attr)
+            _func = acsd[attr.name_format].ava_from
         except KeyError:
-            key, val = acs[0].lcd_ava_from(attr)
+            if attr.name_format == NAME_FORMAT_UNSPECIFIED or \
+                    allow_unknown_attributes:
+                _func = acs[0].lcd_ava_from
+            else:
+                logger.info("Unsupported attribute name format: %s" % (
+                    attr.name_format,))
+                continue
+
+        try:
+            key, val = _func(attr)
+        except KeyError:
+            if allow_unknown_attributes:
+                key, val = acs[0].lcd_ava_from(attr)
+            else:
+                logger.info("Unknown attribute name: %s" % (attr,))
+                continue
+        except AttributeError:
+            continue
 
         try:
             ava[key].extend(val)
@@ -245,7 +269,7 @@ class AttributeConverter(object):
         """
         In nothing else works, this should
 
-        :param attribute:
+        :param attribute: An Attribute Instance
         :return:
         """
         try:
@@ -287,14 +311,19 @@ class AttributeConverter(object):
                     result[name].append(value.text.strip())
         return result
 
-    def ava_from(self, attribute):
+    def ava_from(self, attribute, allow_unknown=False):
         try:
             attr = self._fro[attribute.name.strip().lower()]
-        except (AttributeError, KeyError):
-            try:
-                attr = attribute.friendly_name.strip().lower()
-            except AttributeError:
-                attr = attribute.name.strip().lower()
+        except AttributeError:
+            attr = attribute.friendly_name.strip().lower()
+        except KeyError:
+            if allow_unknown:
+                try:
+                    attr = attribute.name.strip().lower()
+                except AttributeError:
+                    attr = attribute.friendly_name.strip().lower()
+            else:
+                raise
 
         val = []
         for value in attribute.attribute_value:
@@ -333,8 +362,12 @@ class AttributeConverter(object):
                     attribute.name_format != self.name_format:
                 continue
 
-            (key, val) = self.ava_from(attribute)
-            result[key] = val
+            try:
+                (key, val) = self.ava_from(attribute)
+            except (KeyError, AttributeError):
+                pass
+            else:
+                result[key] = val
 
         return result
 
