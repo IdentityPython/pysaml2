@@ -443,7 +443,7 @@ class AuthnResponse(StatusResponse):
     def __init__(self, sec_context, attribute_converters, entity_id,
                  return_addr=None, outstanding_queries=None,
                  timeslack=0, asynchop=True, allow_unsolicited=False,
-                 test=False):
+                 test=False, allow_unknown_attributes=False):
 
         StatusResponse.__init__(self, sec_context, return_addr, timeslack,
                                 asynchop=asynchop)
@@ -460,6 +460,7 @@ class AuthnResponse(StatusResponse):
         self.session_not_on_or_after = 0
         self.allow_unsolicited = allow_unsolicited
         self.test = test
+        self.allow_unknown_attributes = allow_unknown_attributes
 
     def loads(self, xmldata, decode=True, origxml=None):
         self._loads(xmldata, decode, origxml)
@@ -584,7 +585,8 @@ class AuthnResponse(StatusResponse):
                 logger.debug("Converts name format: %s" % (aconv.name_format,))
 
             self.decrypt_attributes(_attr_statem)
-            ava = to_local(self.attribute_converters, _attr_statem)
+            ava = to_local(self.attribute_converters, _attr_statem,
+                           self.allow_unknown_attributes)
         return ava
 
     def _bearer_confirmed(self, data):
