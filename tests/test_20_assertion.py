@@ -473,8 +473,8 @@ def test_filter_values_req_opt_4():
 
     acs = attribute_converter.ac_factory(full_path("attributemaps"))
 
-    rava = attribute_converter.ava_fro(acs, r)
-    oava = attribute_converter.ava_fro(acs, o)
+    rava = attribute_converter.to_local(acs, r)
+    oava = attribute_converter.to_local(acs, o)
 
     ava = {"sn": ["Hedberg"], "givenName": ["Roland"],
            "eduPersonAffiliation": ["staff"], "uid": ["rohe0002"]}
