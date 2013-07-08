@@ -5,7 +5,8 @@ from saml2 import attribute_converter, saml
 from attribute_statement_data import *
 
 from pathutils import full_path
-from saml2.attribute_converter import AttributeConverterNOOP, to_local
+from saml2.attribute_converter import AttributeConverterNOOP
+from saml2.attribute_converter import to_local
 
 
 def _eq(l1,l2):
@@ -58,11 +59,8 @@ class TestAC():
             ava.update(ac.fro(ats))
 
         print ava.keys()
-        assert _eq(ava.keys(),['uid', 'swissedupersonuniqueid',
-                               'swissedupersonhomeorganizationtype',
-                               'eduPersonEntitlement', 'eduPersonAffiliation',
-                               'sn', 'mail', 'swissedupersonhomeorganization',
-                               'givenName'])
+        assert _eq(ava.keys(), ['eduPersonEntitlement', 'eduPersonAffiliation',
+                                'uid', 'mail', 'givenName', 'sn'])
 
     def test_to_attrstat_1(self):
         ava = { "givenName": "Roland", "sn": "Hedberg" }
@@ -131,22 +129,22 @@ class TestAC():
         
         assert _eq(lan, ['sn', 'givenName', 'title'])
 
-    def test_ava_fro_1(self):
-    
-        attr = [saml.Attribute(friendly_name="surName", 
-                name="urn:oid:2.5.4.4",
-                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"),
-            saml.Attribute(friendly_name="efternamn", 
-                name="urn:oid:2.5.4.42",
-                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"),
-            saml.Attribute(friendly_name="titel", 
-                name="urn:oid:2.5.4.12",
-                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri")]
-            
-        result = attribute_converter.ava_fro(self.acs, attr)
-        
-        print result
-        assert result == {'givenName': [], 'sn': [], 'title': []}
+    # def test_ava_fro_1(self):
+    #
+    #     attr = [saml.Attribute(friendly_name="surName",
+    #             name="urn:oid:2.5.4.4",
+    #             name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"),
+    #         saml.Attribute(friendly_name="efternamn",
+    #             name="urn:oid:2.5.4.42",
+    #             name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"),
+    #         saml.Attribute(friendly_name="titel",
+    #             name="urn:oid:2.5.4.12",
+    #             name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri")]
+    #
+    #     result = attribute_converter.ava_fro(self.acs, attr)
+    #
+    #     print result
+    #     assert result == {'givenName': [], 'sn': [], 'title': []}
 
     def test_to_local_name_from_basic(self):
         attr = [saml.Attribute(
@@ -172,6 +170,21 @@ class TestAC():
         ava = to_local(self.acs, ats)
         assert ava == {'user_id': ['bob'], 'NameID': ['bobsnameagain']}
 
+    def test_mixed_attributes_1(self):
+        ats = saml.attribute_statement_from_string(STATEMENT_MIXED)
+        ava = to_local(self.acs, ats)
+        assert ava == {'eduPersonAffiliation': ['staff'],
+                       'givenName': ['Roland'], 'sn': ['Hedberg'],
+                       'uid': ['demouser'], 'user_id': ['bob']}
+
+        # Allow unknown
+        ava = to_local(self.acs, ats, True)
+        assert ava == {'eduPersonAffiliation': ['staff'],
+                       'givenName': ['Roland'], 'sn': ['Hedberg'],
+                       'swissEduPersonHomeOrganizationType': ['others'],
+                       'uid': ['demouser'], 'urn:example:com:foo': ['Thing'],
+                       'user_id': ['bob']}
+
 
 def test_noop_attribute_conversion():
     ava = {"urn:oid:2.5.4.4": "Roland", "urn:oid:2.5.4.42": "Hedberg" }
@@ -193,5 +206,5 @@ def test_noop_attribute_conversion():
 if __name__ == "__main__":
     t = TestAC()
     t.setup_class()
-    t.test_ava_fro_2()
+    t.test_mixed_attributes_1()
     #test_noop_attribute_conversion()
