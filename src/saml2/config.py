@@ -78,7 +78,8 @@ SP_ARGS = [
     "discovery_response",
     "allow_unsolicited",
     "ecp",
-    "name_id_format"
+    "name_id_format",
+    "allow_unknown_attributes"
 ]
 
 AA_IDP_ARGS = [
@@ -194,6 +195,7 @@ class Config(object):
         self.entity_category = ""
         self.crypto_backend = 'xmlsec1'
         self.scope = ""
+        self.allow_unknown_attributes = False
 
     def setattr(self, context, attr, val):
         if context == "":
