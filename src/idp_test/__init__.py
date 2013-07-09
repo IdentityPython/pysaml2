@@ -92,8 +92,6 @@ class SAML2client(object):
                                   help="Print debug information")
         self._parser.add_argument('-L', dest='log', action='store_true',
                                   help="Print log information")
-        self._parser.add_argument('-v', dest='verbose', action='store_true',
-                                  help="Print runtime information")
         self._parser.add_argument(
             '-C', dest="ca_certs",
             help=("CA certs to use to verify HTTPS server certificates, ",
@@ -112,8 +110,8 @@ class SAML2client(object):
                   "directory or the path specified with the -P option. Do not"
                   "use relative paths or filename extension."))
         self._parser.add_argument(
-            "-P", dest="configpath", default=".",
-            help="Path to the configuration file for the SP")
+            "-P", dest="path", default=".",
+            help="Path to the configuration stuff")
         self._parser.add_argument("-t", dest="testpackage",
                                   help="Module describing tests")
         self._parser.add_argument("-O", dest="operations",
@@ -127,6 +125,7 @@ class SAML2client(object):
         self.sp_config = None
         self.constraints = {}
         self.operations = None
+        self.args = None
 
     def json_config_file(self):
         if self.args.json_config_file == "-":
@@ -135,9 +134,30 @@ class SAML2client(object):
             return json.loads(open(self.args.json_config_file).read())
 
     def sp_configure(self, metadata_construction=False):
-        sys.path.insert(0, self.args.configpath)
+        """
+        Need to know where 4 different things are. The config, key_file and
+        cert_file files and the attributemaps directory
+        """
+        # Always first look in the present working directory
+        sys.path.insert(0, self.args.path)
+        if self.args.path != ".":
+            sys.path.insert(0, ".")
         mod = import_module(self.args.spconfig)
+
+        if self.args.path != ".":
+            for param in ["attribute_map_dir", "key_file", "cert_file"]:
+                if mod.CONFIG[param].startswith("/"):  # Absolute path
+                    continue
+
+                for _path in [".", self.args.path]:
+                    _obj = os.path.join(_path, mod.CONFIG[param])
+                    _obj = os.path.normpath(_obj)
+                    if os.path.exists(_obj):
+                        mod.CONFIG[param] = _obj
+                        break
+
         self.sp_config = SPConfig().load(mod.CONFIG, metadata_construction)
+
 
     def setup(self):
         self.json_config = self.json_config_file()
@@ -200,6 +220,9 @@ class SAML2client(object):
         return info
 
     def pysaml_log(self):
+        """
+        """
+
         print >> sys.stderr, 80 * ":"
         streamhandler.setFormatter(formatter)
         memoryhandler.setTarget(streamhandler)
@@ -265,7 +288,7 @@ class SAML2client(object):
             #testres, trace = do_sequence(oper,
             self.test_log = conv.test_output
             tsum = self.test_summation(self.args.oper)
-            print >>sys.stdout, json.dumps(tsum)
+            print >> sys.stdout, json.dumps(tsum)
             if tsum["status"] > 1 or self.args.debug:
                 print >> sys.stderr, self.trace
         except FatalError, err:
@@ -275,7 +298,7 @@ class SAML2client(object):
             else:
                 self.test_log = exception_trace("RUN", err)
             tsum = self.test_summation(self.args.oper)
-            print >>sys.stdout, json.dumps(tsum)
+            print >> sys.stdout, json.dumps(tsum)
             print >> sys.stderr, self.trace
         except Exception, err:
             if conv:
@@ -284,7 +307,7 @@ class SAML2client(object):
             else:
                 self.test_log = exception_trace("RUN", err)
             tsum = self.test_summation(self.args.oper)
-            print >>sys.stdout, json.dumps(tsum)
+            print >> sys.stdout, json.dumps(tsum)
 
         if self.args.pysamllog and HANDLER == "memory":
             self.pysaml_log()
@@ -309,6 +332,7 @@ class SAML2client(object):
                     pass
 
             lista.append(item)
+
         if self.args.testpackage:
             mod = import_module(self.args.testpackage, "idp_test")
             for key, val in mod.OPERATIONS.items():
