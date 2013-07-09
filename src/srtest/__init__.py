@@ -1,9 +1,13 @@
+import logging
 import time
 import traceback
 import requests
-from subprocess import Popen, PIPE
 import sys
+
+from subprocess import Popen, PIPE
 from srtest.check import CRITICAL
+
+logger = logging.getLogger(__name__)
 
 __author__ = 'rolandh'
 
