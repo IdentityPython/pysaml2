@@ -36,7 +36,6 @@ STATUSCODE = ["INFORMATION", "OK", "WARNING", "ERROR", "CRITICAL",
 PREFIX = "-----BEGIN CERTIFICATE-----"
 POSTFIX = "-----END CERTIFICATE-----"
 
-
 M2_TIME_FORMAT = "%b %d %H:%M:%S %Y"
 
 
@@ -238,6 +237,7 @@ class CheckSaml2IntAttributes(Check):
             try:
                 assert assertion.subject.name_id.format == \
                     NAMEID_FORMAT_PERSISTENT
+
             except AssertionError:
                 self._message = "NameID format should be PERSISTENT"
                 self._status = WARNING
@@ -546,8 +546,8 @@ class VerifyAttributeNameFormat(Check):
                         assert attr.name_format == conv.idp_constraints[
                             "name_format"]
                     except AssertionError:
-                        if conv.idp_constraints[
-                                "name_format"] != NAME_FORMAT_UNSPECIFIED:
+                        if NAME_FORMAT_UNSPECIFIED != conv.idp_constraints[
+                                "name_format"]:
                             self._message = \
                                 "Wrong name format: '%s'" % attr.name_format
                             self._status = CRITICAL
@@ -564,8 +564,8 @@ class VerifySignatureAlgorithm(Check):
         try:
             assert signature.signed_info.signature_method.algorithm in allowed
         except AssertionError:
-            self._message="Wrong algorithm used for signing: '%s'" % \
-                          signature.signed_info.signature_method.algorithm
+            self._message = "Wrong algorithm used for signing: '%s'" % \
+                            signature.signed_info.signature_method.algorithm
             self._status = CRITICAL
             return False
 
@@ -623,7 +623,7 @@ class VerifySignedPart(Check):
 
 class VerifyEndpoint(Check):
     def _func(self, conv):
-        response = conv.last_response
+        _ = conv.last_response
         return {}
 
 
