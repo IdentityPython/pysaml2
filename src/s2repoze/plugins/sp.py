@@ -36,7 +36,6 @@ from zope.interface import implements
 
 from repoze.who.interfaces import IChallenger, IIdentifier, IAuthenticator
 from repoze.who.interfaces import IMetadataProvider
-from repoze.who.plugins.form import FormPluginBase
 
 from saml2 import ecp, BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
@@ -66,7 +65,6 @@ def construct_came_from(environ):
     return came_from
     
 
-# FormPluginBase defines the methods remember and forget
 def cgi_field_storage_to_dict(field_storage):
     """Get a plain dictionary, rather than the '.value' system used by the
     cgi module."""
@@ -118,14 +116,12 @@ class ECP_response(object):
         return [self.content]
 
 
-class SAML2Plugin(FormPluginBase):
+class SAML2Plugin(object):
 
     implements(IChallenger, IIdentifier, IAuthenticator, IMetadataProvider)
     
     def __init__(self, rememberer_name, config, saml_client, wayf, cache,
                  sid_store=None, discovery="", idp_query_param=""):
-        FormPluginBase.__init__(self)
-        
         self.rememberer_name = rememberer_name
         self.wayf = wayf
         self.saml_client = saml_client
@@ -144,6 +140,24 @@ class SAML2Plugin(FormPluginBase):
         else:
             self.outstanding_queries = {}
         self.iam = platform.node()
+
+
+    def _get_rememberer(self, environ):
+        rememberer = environ['repoze.who.plugins'][self.rememberer_name]
+        return rememberer
+
+
+    #### IIdentifier ####
+    def remember(self, environ, identity):
+        rememberer = self._get_rememberer(environ)
+        return rememberer.remember(environ, identity)
+
+
+    #### IIdentifier ####
+    def forget(self, environ, identity):
+        rememberer = self._get_rememberer(environ)
+        return rememberer.forget(environ, identity)
+
 
     def _get_post(self, environ):
         """
