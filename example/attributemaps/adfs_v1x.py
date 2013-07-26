@@ -6,15 +6,15 @@
 MAP = {
     "identifier": "urn:oasis:names:tc:SAML:2.0:attrname-format:unspecified",
     "fro": {
-        'http://schemas.xmlsoap.org/claims/CommonName': 'commonName',
-        'http://schemas.xmlsoap.org/claims/EmailAddress': 'emailAddress',
-        'http://schemas.xmlsoap.org/claims/Group': 'group',
-        'http://schemas.xmlsoap.org/claims/UPN': 'upn',
+        'http://schemas.xmlsoap.org/claims/commonname': 'commonName',
+        'http://schemas.xmlsoap.org/claims/emailaddress': 'emailAddress',
+        'http://schemas.xmlsoap.org/claims/group': 'group',
+        'http://schemas.xmlsoap.org/claims/upn': 'upn',
         },
     "to": {
-        'commonName': 'http://schemas.xmlsoap.org/claims/CommonName',
-        'emailAddress': 'http://schemas.xmlsoap.org/claims/EmailAddress',
-        'group': 'http://schemas.xmlsoap.org/claims/Group',
-        'upn': 'http://schemas.xmlsoap.org/claims/UPN',
+        'commonName': 'http://schemas.xmlsoap.org/claims/commonname',
+        'emailAddress': 'http://schemas.xmlsoap.org/claims/emailaddress',
+        'group': 'http://schemas.xmlsoap.org/claims/group',
+        'upn': 'http://schemas.xmlsoap.org/claims/upn',
     }
 }
