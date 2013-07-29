@@ -316,7 +316,7 @@ class StatusResponse(object):
         except SignatureError:
             raise
         except Exception, excp:
-            logger.exception("EXCEPTION: %s", excp)
+            #logger.exception("EXCEPTION: %s", excp)
             raise
     
         #print "<", self.response
