@@ -126,6 +126,7 @@ LOG_HANDLER = {
     "rotating": logging.handlers.RotatingFileHandler,
     "syslog": logging.handlers.SysLogHandler,
     "timerotate": logging.handlers.TimedRotatingFileHandler,
+    "memory": logging.handlers.MemoryHandler,
 }
 
 LOG_FORMAT = "%(asctime)s %(name)s:%(levelname)s %(message)s"
