@@ -792,14 +792,14 @@ class Entity(HTTPBase):
             if not xmlstr:  # Not a valid reponse
                 return None
 
-            logger.debug("XMLSTR: %s" % xmlstr)
-
             try:
                 response = response.loads(xmlstr, False)
             except Exception, err:
                 if "not well-formed" in "%s" % err:
                     logger.error("Not well-formed XML")
                     return None
+
+            logger.debug("XMLSTR: %s" % xmlstr)
 
             if response:
                 response = response.verify()
