@@ -26,6 +26,8 @@ import shelve
 import traceback
 from urlparse import parse_qs, urlparse
 
+from StringIO import StringIO
+
 from paste.httpexceptions import HTTPSeeOther, HTTPRedirection
 from paste.httpexceptions import HTTPNotImplemented
 from paste.httpexceptions import HTTPInternalServerError
@@ -480,6 +482,8 @@ class SAML2Plugin(object):
                 # Not for me, put the post back where next in line can
                 # find it
                 environ["post.fieldstorage"] = post
+                # restore wsgi.input incase that is needed
+                environ['wsgi.input'] = StringIO(environ['s2repoze.body'])
                 return {}
             else:
                 logger.info("[sp.identify] --- SAMLResponse ---")
