@@ -119,7 +119,7 @@ class Base(Entity):
 
         for foo in ["allow_unsolicited", "authn_requests_signed",
                     "logout_requests_signed"]:
-            if self.config.getattr("sp", foo) == 'true':
+            if self.config.getattr(foo, "sp") == 'true':
                 setattr(self, foo, True)
             else:
                 setattr(self, foo, False)
