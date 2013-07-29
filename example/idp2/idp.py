@@ -61,6 +61,12 @@ def _expiration(timeout, tformat="%a, %d-%b-%Y %H:%M:%S GMT"):
         # validity time should match lifetime of assertions
         return time_util.in_a_while(minutes=timeout, format=tformat)
 
+
+def get_eptid(idp, req_info, session):
+    return idp.eptid.get(idp.config.entityid,
+                         req_info.sender(), session["permanent_id"],
+                         session["authn_auth"])
+
 # -----------------------------------------------------------------------------
 
 
@@ -272,7 +278,8 @@ class SSO(Service):
             return resp(self.environ, self.start_response)
 
         if not _resp:
-            identity = USERS[self.user]
+            identity = USERS[self.user].copy()
+            #identity["eduPersonTargetedID"] = get_eptid(IDP, query, session)
             logger.info("Identity: %s" % (identity,))
 
             if REPOZE_ID_EQUIVALENT:
