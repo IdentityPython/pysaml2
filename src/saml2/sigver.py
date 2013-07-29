@@ -479,6 +479,14 @@ def rsa_loads(key):
                                         M2Crypto.util.no_passphrase_callback)
 
 
+def rsa_eq(key1, key2):
+    # Check if two RSA keys are in fact the same
+    if key1.n == key2.n and key1.e == key2.e:
+        return True
+    else:
+        return False
+
+
 def x509_rsa_loads(string):
     cert = M2Crypto.X509.load_cert_string(string)
     return cert.get_pubkey().get_rsa()
@@ -900,6 +908,10 @@ def security_context(conf, debug=None):
                            cert_file=conf.cert_file, metadata=metadata,
                            debug=debug, only_use_keys_in_metadata=_only_md)
 
+
+# How to get a rsa pub key fingerprint from a certificate
+# openssl x509 -inform pem -noout -in server.crt -pubkey > publickey.pem
+# openssl rsa -inform pem -noout -in publickey.pem -pubin -modulus
 
 class SecurityContext(object):
     def __init__(self, crypto, key_file="", key_type="pem",
