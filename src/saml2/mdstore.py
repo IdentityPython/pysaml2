@@ -26,6 +26,11 @@ __author__ = 'rolandh'
 
 logger = logging.getLogger(__name__)
 
+
+class ToOld(Exception):
+    pass
+
+
 REQ2SRV = {
     # IDP
     "authn_request": "single_sign_on_service",
@@ -178,7 +183,8 @@ class MetaData(object):
                 return
 
             try:
-                valid(self.entities_descr.valid_until)
+                if not valid(self.entities_descr.valid_until):
+                    raise ToOld("Metadata not valid anymore")
             except AttributeError:
                 pass
 
