@@ -343,7 +343,7 @@ class SAML2client(object):
             tsum = self.test_summation(self.args.oper)
 
         if pp:
-            pp.pprint(json.dumps(tsum))
+            pp.pprint(tsum)
         else:
             print >> sys.stdout, json.dumps(tsum)
 
