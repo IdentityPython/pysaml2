@@ -101,6 +101,7 @@ class Interaction(object):
         self.who = "Form process"
 
     def pick_interaction(self, _base="", content="", req=None):
+        logger.info("pick_interaction baseurl: %s" % _base)
         unic = content
         if content:
             _bs = BeautifulSoup(content)
@@ -111,9 +112,11 @@ class Interaction(object):
             _match = 0
             for attr, val in interaction["matches"].items():
                 if attr == "url":
+                    logger.info("matching baseurl against: %s" % val)
                     if val == _base:
                         _match += 1
                 elif attr == "title":
+                    logger.info("matching %s against title" % val)
                     if _bs is None:
                         break
                     if _bs.title is None:
