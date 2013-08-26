@@ -7,15 +7,17 @@ import sys
 
 import logging
 import imp
+import xmldsig
+import xmlenc
 
 from saml2.client import Saml2Client
 from saml2.config import SPConfig
-from saml2.mdstore import MetadataStore
+from saml2.mdstore import MetadataStore, ToOld
 from saml2.mdstore import MetaData
 
-from srtest import FatalError
-from srtest import Trace
-from srtest import exception_trace
+from saml2test import FatalError
+from saml2test import exception_trace
+from saml2test import ContextFilter
 
 from idp_test.base import Conversation
 from idp_test.check import CheckSaml2IntMetaData
@@ -23,6 +25,7 @@ from idp_test.check import CheckSaml2IntMetaData
 # Schemas supported
 from saml2 import md
 from saml2 import saml
+from saml2 import root_logger
 from saml2.extension import mdui
 from saml2.extension import idpdisc
 from saml2.extension import dri
@@ -30,8 +33,6 @@ from saml2.extension import mdattr
 from saml2.extension import ui
 from saml2.metadata import entity_descriptor
 from saml2.saml import NAME_FORMAT_UNSPECIFIED
-import xmldsig
-import xmlenc
 
 SCHEMA = [dri, idpdisc, md, mdattr, mdui, saml, ui, xmldsig, xmlenc]
 
@@ -39,10 +40,32 @@ __author__ = 'rolandh'
 
 logger = logging.getLogger("")
 logger.setLevel(logging.DEBUG)
-formatter = logging.Formatter("%(asctime)s %(name)s:%(levelname)s %(message)s")
+#formatter = logging.Formatter("%(asctime)s %(name)s:%(levelname)s %(message)s")
+formatter_2 = logging.Formatter("%(delta).6f - %(levelname)s - [%(name)s] %(message)s")
 
-streamhandler = logging.StreamHandler(sys.stderr)
+cf = ContextFilter()
+cf.start()
+
 memoryhandler = logging.handlers.MemoryHandler(1024*10, logging.DEBUG)
+
+pys_streamhandler = logging.StreamHandler(sys.stderr)
+pys_streamhandler.setFormatter(formatter_2)
+
+pys_memoryhandler = logging.handlers.MemoryHandler(1024*10, logging.DEBUG)
+pys_memoryhandler.setFormatter(formatter_2)
+pys_memoryhandler.addFilter(cf)
+root_logger.addHandler(pys_memoryhandler)
+root_logger.setLevel(logging.DEBUG)
+
+tracelog = logging.getLogger(__name__)
+t_memoryhandler = logging.handlers.MemoryHandler(1024*10, logging.DEBUG)
+t_memoryhandler.addFilter(cf)
+tracelog.addHandler(t_memoryhandler)
+tracelog.setLevel(logging.DEBUG)
+
+saml2testlog = logging.getLogger("saml2test")
+saml2testlog.addHandler(t_memoryhandler)
+saml2testlog.setLevel(logging.DEBUG)
 
 
 def recursive_find_module(name, path=None):
@@ -83,7 +106,6 @@ def get_mod(name, path=None):
 class SAML2client(object):
 
     def __init__(self, check_factory):
-        self.trace = Trace()
         self.tests = None
         self.check_factory = check_factory
 
@@ -157,7 +179,8 @@ class SAML2client(object):
                         break
 
         self.sp_config = SPConfig().load(mod.CONFIG, metadata_construction)
-
+        if not self.args.ca_certs:
+            self.sp_config.verify_ssl_cert = False
 
     def setup(self):
         self.json_config = self.json_config_file()
@@ -219,15 +242,19 @@ class SAML2client(object):
 
         return info
 
-    def pysaml_log(self):
+    def output_log(self, memhndlr, hndlr2):
         """
         """
 
         print >> sys.stderr, 80 * ":"
-        streamhandler.setFormatter(formatter)
-        memoryhandler.setTarget(streamhandler)
-        memoryhandler.flush()
-        memoryhandler.close()
+        hndlr2.setFormatter(formatter_2)
+        memhndlr.setTarget(hndlr2)
+        memhndlr.flush()
+        memhndlr.close()
+        # pys_streamhandler.setFormatter(formatter_2)
+        # pys_memoryhandler.setTarget(pys_streamhandler)
+        # pys_memoryhandler.flush()
+        # pys_memoryhandler.close()
 
     def run(self):
         HANDLER = ""
@@ -254,14 +281,17 @@ class SAML2client(object):
 
         if self.args.log:
             HANDLER = "stream"
-            streamhandler.setFormatter(formatter)
-            logger.addHandler(streamhandler)
+        #     streamhandler.setFormatter(formatter_2)
+        #     logger.addHandler(streamhandler)
         elif self.args.debug:
             HANDLER = "memory"
-            memoryhandler.setFormatter(formatter)
-            logger.addHandler(memoryhandler)
+        #     memoryhandler.setFormatter(formatter_2)
+        #     logger.addHandler(memoryhandler)
 
-        self.setup()
+        try:
+            self.setup()
+        except (AttributeError, ToOld), err:
+            print >> sys.stdout, "Configuration Error: %s" % err
 
         self.client = Saml2Client(self.sp_config)
         conv = None
@@ -273,14 +303,14 @@ class SAML2client(object):
                     try:
                         oper = self.tests.OPERATIONS[self.args.oper]
                     except ValueError:
-                        print >> sys.stderr, "Undefined testcase"
+                        tracelog.error("Undefined testcase")
                         return
                 else:
-                    print >> sys.stderr, "Undefined testcase"
+                    tracelog.error("Undefined testcase")
                     return
 
-            conv = Conversation(self.client, self.sp_config, self.trace,
-                                self.interactions,
+            tracelog.info("Starting conversation")
+            conv = Conversation(self.client, self.sp_config, self.interactions,
                                 check_factory=self.check_factory,
                                 entity_id=self.entity_id,
                                 constraints=self.constraints)
@@ -289,8 +319,7 @@ class SAML2client(object):
             self.test_log = conv.test_output
             tsum = self.test_summation(self.args.oper)
             print >> sys.stdout, json.dumps(tsum)
-            if tsum["status"] > 1 or self.args.debug:
-                print >> sys.stderr, self.trace
+            err = None
         except FatalError, err:
             if conv:
                 self.test_log = conv.test_output
@@ -299,7 +328,6 @@ class SAML2client(object):
                 self.test_log = exception_trace("RUN", err)
             tsum = self.test_summation(self.args.oper)
             print >> sys.stdout, json.dumps(tsum)
-            print >> sys.stderr, self.trace
         except Exception, err:
             if conv:
                 self.test_log = conv.test_output
@@ -310,7 +338,10 @@ class SAML2client(object):
             print >> sys.stdout, json.dumps(tsum)
 
         if self.args.pysamllog and HANDLER == "memory":
-            self.pysaml_log()
+            self.output_log(pys_memoryhandler, pys_streamhandler)
+
+        if tsum["status"] > 1 or self.args.debug or err:
+            self.output_log(t_memoryhandler, pys_streamhandler)
 
     def list_operations(self):
         lista = []

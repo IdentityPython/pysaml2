@@ -2,9 +2,9 @@ import inspect
 import sys
 from time import mktime
 from saml2.response import AttributeResponse
-from srtest import check
 
-from srtest.check import Check
+from saml2test import check
+from saml2test.check import Check
 
 from saml2.mdstore import REQ2SRV
 from saml2.s_utils import UnknownPrincipal

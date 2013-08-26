@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 import inspect
+import logging
 import urllib
+import cookielib
+
 from saml2 import BINDING_HTTP_REDIRECT, BINDING_URI
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_SOAP
@@ -9,12 +12,12 @@ from saml2.mdstore import REQ2SRV
 from saml2.pack import http_redirect_message, http_form_post_message
 from saml2.s_utils import rndstr
 
-from srtest import tool
-from srtest import FatalError
+from saml2test import tool
+from saml2test import FatalError
 
 __author__ = 'rohe0002'
 
-import cookielib
+logger = logging.getLogger(__name__)
 
 
 class HTTPError(Exception):
@@ -49,10 +52,10 @@ def tuple_list2dict(tl):
 
 
 class Conversation(tool.Conversation):
-    def __init__(self, client, config, trace, interaction,
+    def __init__(self, client, config, interaction,
                  check_factory, entity_id, msg_factory=None,
                  features=None, verbose=False, constraints=None):
-        tool.Conversation.__init__(self, client, config, trace,
+        tool.Conversation.__init__(self, client, config,
                                    interaction, check_factory, msg_factory,
                                    features, verbose)
         self.entity_id = entity_id
@@ -100,17 +103,17 @@ class Conversation(tool.Conversation):
 
         if use_artifact:
             saml_art = _client.use_artifact(str_req, self.args["entity_id"])
-            self.trace.info("SAML Artifact: %s" % saml_art)
+            logger.info("SAML Artifact: %s" % saml_art)
             info_typ = "SAMLart"
         else:
-            self.trace.info("SAML Request: %s" % str_req)
+            logger.info("SAML Request: %s" % str_req)
             info_typ = "SAMLRequest"
             # depending on binding send the query
 
         if self.args["request_binding"] is BINDING_SOAP:
             res = _client.send_using_soap(str_req, loc)
             if res.status_code >= 400:
-                self.trace.info("Received a HTTP error (%d) '%s'" % (
+                logger.info("Received a HTTP error (%d) '%s'" % (
                     res.status_code, res.text))
                 raise HTTPError(res.text)
             else:
@@ -141,7 +144,7 @@ class Conversation(tool.Conversation):
                 res = None
 
             if res is not None and res.status_code >= 400:
-                self.trace.info("Received a HTTP error (%d) '%s'" % (
+                logger.info("Received a HTTP error (%d) '%s'" % (
                     res.status_code, res.text))
                 raise HTTPError(res.text)
 
@@ -225,16 +228,16 @@ class Conversation(tool.Conversation):
                 self.test_sequence(self.oper.tests["post"])
             except KeyError:
                 pass
-            self.trace.info("SAML Response: %s" % _resp)
+            logger.info("SAML Response: %s" % _resp)
         except FatalError, ferr:
             if _resp:
-                self.trace.info("Faulty response: %s" % _resp)
-            self.trace.error("Exception %s" % ferr)
+                logger.info("Faulty response: %s" % _resp)
+            logger.error("Exception %s" % ferr)
             raise
         except Exception, err:
             if _resp:
-                self.trace.info("Faulty response: %s" % _resp)
-            self.trace.error("Exception %s" % err)
+                logger.info("Faulty response: %s" % _resp)
+            logger.error("Exception %s" % err)
             self.err_check("exception", err)
 
         return True

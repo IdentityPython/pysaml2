@@ -1,6 +1,7 @@
 __author__ = 'rohe0002'
 
 import json
+import logging
 
 from urlparse import urlparse
 from bs4 import BeautifulSoup
@@ -9,6 +10,7 @@ from mechanize import ParseResponseEx
 from mechanize._form import ControlNotFoundError, AmbiguityError
 from mechanize._form import ListControl
 
+logger = logging.getLogger(__name__)
 
 def pick_interaction(interactions, _base="", content="", req=None):
     unic = content
@@ -285,10 +287,6 @@ def chose(httpc, orig_response, path, **kwargs):
     :return: The response do_click() returns
     """
 
-    try:
-        _trace = kwargs["trace"]
-    except KeyError:
-        _trace = False
 
     if not path.startswith("http"):
         try:
@@ -301,7 +299,7 @@ def chose(httpc, orig_response, path, **kwargs):
     else:
         url = path
 
-    return httpc.send(url, "GET", trace=_trace)
+    return httpc.send(url, "GET")
     #return resp, ""
 
 
@@ -370,20 +368,18 @@ class Operation(object):
     def post_op(self, result, conv, args):
         pass
 
-    def __call__(self, httpc, conv, trace, location, response, content,
+    def __call__(self, httpc, conv, location, response, content,
                  features):
         try:
             _args = self.args.copy()
         except (KeyError, AttributeError):
             _args = {}
 
-        _args["_trace_"] = trace
         _args["location"] = location
         _args["features"] = features
 
-        if trace:
-            trace.reply("FUNCTION: %s" % self.function.__name__)
-            trace.reply("ARGS: %s" % _args)
+        logger.info("--> FUNCTION: %s" % self.function.__name__)
+        logger.info("--> ARGS: %s" % _args)
 
         result = self.function(httpc, response, **_args)
         self.post_op(result, conv, _args)
