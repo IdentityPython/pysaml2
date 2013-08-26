@@ -165,10 +165,12 @@ class Conversation(object):
                 _spec = self.interaction.pick_interaction(_base, content)
             except InteractionNeeded:
                 self.position = url
+                logger.error("URL: %s" % url)
                 logger.error("Page Content: %s" % content)
                 raise
             except KeyError:
                 self.position = url
+                logger.error("URL: %s" % url)
                 logger.error("Page Content: %s" % content)
                 self.err_check("interaction-needed")
 

@@ -116,7 +116,7 @@ class Interaction(object):
                     if val == _base:
                         _match += 1
                 elif attr == "title":
-                    logger.info("matching %s against title" % val)
+                    logger.info("matching '%s' against title" % val)
                     if _bs is None:
                         break
                     if _bs.title is None:
