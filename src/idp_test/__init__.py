@@ -1,6 +1,7 @@
 from importlib import import_module
 import json
 import os
+import pprint
 import types
 import argparse
 import sys
@@ -140,6 +141,7 @@ class SAML2client(object):
                                   help="Tests")
         self._parser.add_argument("-Y", dest="pysamllog", action='store_true',
                                   help="Print PySAML2 logs")
+        self._parser.add_argument("-H", dest="pretty", action='store_true')
         self._parser.add_argument("oper", nargs="?", help="Which test to run")
 
         self.interactions = None
@@ -295,6 +297,12 @@ class SAML2client(object):
 
         self.client = Saml2Client(self.sp_config)
         conv = None
+
+        if self.args.pretty:
+            pp = pprint.PrettyPrinter(indent=4)
+        else:
+            pp = None
+
         try:
             try:
                 oper = self.operations.OPERATIONS[self.args.oper]
@@ -318,7 +326,6 @@ class SAML2client(object):
             #testres, trace = do_sequence(oper,
             self.test_log = conv.test_output
             tsum = self.test_summation(self.args.oper)
-            print >> sys.stdout, json.dumps(tsum)
             err = None
         except FatalError, err:
             if conv:
@@ -327,7 +334,6 @@ class SAML2client(object):
             else:
                 self.test_log = exception_trace("RUN", err)
             tsum = self.test_summation(self.args.oper)
-            print >> sys.stdout, json.dumps(tsum)
         except Exception, err:
             if conv:
                 self.test_log = conv.test_output
@@ -335,6 +341,10 @@ class SAML2client(object):
             else:
                 self.test_log = exception_trace("RUN", err)
             tsum = self.test_summation(self.args.oper)
+
+        if pp:
+            pp.pprint(json.dumps(tsum))
+        else:
             print >> sys.stdout, json.dumps(tsum)
 
         if self.args.pysamllog and HANDLER == "memory":
