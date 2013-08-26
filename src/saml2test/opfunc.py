@@ -1,5 +1,4 @@
-__author__ = 'rohe0002'
-
+import logging
 import json
 
 from urlparse import urlparse
@@ -7,6 +6,10 @@ from urlparse import urlparse
 from mechanize import ParseResponseEx
 from mechanize._form import ControlNotFoundError, AmbiguityError
 from mechanize._form import ListControl
+
+__author__ = 'rohe0002'
+
+logger = logging.getLogger(__name__)
 
 
 class FlowException(Exception):
@@ -88,16 +91,15 @@ class DResponse():
         self._len = len(message)
 
 
-def do_request(client, url, method, body="", headers=None, trace=False):
+def do_request(client, url, method, body="", headers=None):
     """
-    Sends a HTTP request. It handles trace logging if asked for
+    Sends a HTTP request.
 
     :param client: The client instance
     :param url: Where to send the request
     :param method: The HTTP method to use for the request
     :param body: The request body
     :param headers: The requset headers
-    :param trace: A class instance to use for trace logging
     :return: A tuple of
         url - the url the request was sent to
         response - the response to the request
@@ -106,19 +108,17 @@ def do_request(client, url, method, body="", headers=None, trace=False):
     if headers is None:
         headers = {}
 
-    if trace:
-        trace.request("URL: %s" % url)
-        trace.request("BODY: %s" % body)
-        trace.request("Headers: %s" % (headers,))
+    logger.info("--> URL: %s" % url)
+    logger.info("--> BODY: %s" % body)
+    logger.info("--> Headers: %s" % (headers,))
 
     response = client.http_request(url, method=method, data=body,
                                    headers=headers)
 
-    if trace:
-        trace.reply("RESPONSE: %s" % response)
-        trace.reply("CONTENT: %s" % response.text)
-        if response.cookies:
-            trace.reply("COOKIES: %s" % response.cookies)
+    logger.info("<-- RESPONSE: %s" % response)
+    logger.info("<-- CONTENT: %s" % response.text)
+    if response.cookies:
+        logger.info("<-- COOKIES: %s" % response.cookies)
 
     return url, response, response.text
 
@@ -223,15 +223,11 @@ def do_click(client, form, **kwargs):
         headers[key] = val
 
     url = request._Request__original
-    try:
-        _trace = kwargs["_trace_"]
-    except KeyError:
-        _trace = False
 
     if form.method == "POST":
-        return do_request(client, url, "POST", request.data, headers, _trace)
+        return do_request(client, url, "POST", request.data, headers)
     else:
-        return do_request(client, url, "GET", headers=headers, trace=_trace)
+        return do_request(client, url, "GET", headers=headers)
 
 
 def select_form(client, orig_response, content, **kwargs):
@@ -293,11 +289,6 @@ def chose(client, orig_response, content, path, **kwargs):
     :return: The response do_click() returns
     """
 
-    try:
-        _trace = kwargs["trace"]
-    except KeyError:
-        _trace = False
-
     if not path.startswith("http"):
         try:
             _url = orig_response.url
@@ -309,8 +300,7 @@ def chose(client, orig_response, content, path, **kwargs):
     else:
         url = path
 
-    return do_request(client, url, "GET", trace=_trace)
-    #return resp, ""
+    return do_request(client, url, "GET")
 
 
 def post_form(client, orig_response, content, **kwargs):
@@ -357,7 +347,6 @@ class Operation(object):
         self.args = args or {}
         self.request = None
         self.conv = conv
-        self.trace = conv.trace
         self.features = features
         self.cconf = conv.client_config
 
@@ -376,8 +365,8 @@ class Operation(object):
 
         _args["location"] = location
 
-        self.trace.reply("FUNCTION: %s" % self.function.__name__)
-        self.trace.reply("ARGS: %s" % (_args,))
+        logger.info("--> FUNCTION: %s" % self.function.__name__)
+        logger.info("--> ARGS: %s" % (_args,))
 
         result = self.function(self.conv.client, response, content, **_args)
         self.post_op(result, self.conv, _args)

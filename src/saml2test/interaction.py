@@ -98,6 +98,7 @@ class Interaction(object):
     def __init__(self, httpc, interactions=None):
         self.httpc = httpc
         self.interactions = interactions
+        self.who = "Form process"
 
     def pick_interaction(self, _base="", content="", req=None):
         unic = content
@@ -135,6 +136,7 @@ class Interaction(object):
                         _match += 1
 
             if _match == len(interaction["matches"]):
+                logger.info("Matched: %s" % interaction["matches"])
                 return interaction
 
         raise InteractionNeeded("No interaction matched")
@@ -146,6 +148,7 @@ class Interaction(object):
         :param response: A HTTP request response. A DResponse instance
         :param content: The HTTP response content
         :param url: The url the request was sent to
+        :param kwargs: Extra key word arguments
         :return: The picked form or None of no form matched the criteria.
         """
 
@@ -253,6 +256,7 @@ class Interaction(object):
         :param orig_response: The original response (as returned by requests)
         :return: The response do_click() returns
         """
+        logger.info("select_form")
         response = RResponse(orig_response)
         try:
             _url = response.url
@@ -300,11 +304,6 @@ class Interaction(object):
         :return: The response do_click() returns
         """
 
-        try:
-            _trace = kwargs["trace"]
-        except KeyError:
-            _trace = False
-
         if not path.startswith("http"):
             try:
                 _url = orig_response.url
@@ -316,7 +315,8 @@ class Interaction(object):
         else:
             url = path
 
-        return self.httpc.send(url, "GET", trace=_trace)
+        logger.info("GET %s" % url)
+        return self.httpc.send(url, "GET")
         #return resp, ""
 
     def post_form(self, orig_response, **kwargs):
@@ -375,8 +375,7 @@ class Action(object):
     def post_op(self, result, conv, args):
         pass
 
-    def __call__(self, httpc, conv, trace, location, response, content,
-                 features):
+    def __call__(self, httpc, conv, location, response, content, features):
         intact = Interaction(httpc)
         function = intact.interaction(self.args)
 
@@ -385,12 +384,10 @@ class Action(object):
         except (KeyError, AttributeError):
             _args = {}
 
-        _args.update({"_trace_": trace, "location": location,
-                      "features": features, "conv": conv})
+        _args.update({"location": location, "features": features, "conv": conv})
 
-        if trace:
-            trace.reply("FUNCTION: %s" % function.__name__)
-            trace.reply("ARGS: %s" % _args)
+        logger.info("<-- FUNCTION: %s" % function.__name__)
+        logger.info("<-- ARGS: %s" % _args)
 
         result = function(response, **_args)
         self.post_op(result, conv, _args)
