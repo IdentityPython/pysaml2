@@ -9,25 +9,73 @@ How to use SAML2test
 Before you can use SAML2test, you must get it installed.
 If you have not done so yet, read :ref:`install`.
 
-When you want to test a SAML2 entity with this tool you need 3 things:
+When you want to test a SAML2 entity with this tool you need following things:
 
-* A configuration of the tool, an example can be found in tests/config_file.py
-* A metadata file representing the tool
-* A configuration file that describes how to interact with the entity.
-    The metadata for the entity is part of this file. More about this below.
+#. The Tool Configuration, an example can be found in tests/idp_test/testdriver_config.py
+#. Attribute Maps mapping URNs, OIDs and friendly names
+#. Key files for the test tool
+#. A metadata file representing the tool
+#. The Interaction Configuration file describes how to interact with the entity to be tested.  The metadata for the entity is part of this file. An example can be found in tests/idp_test/test_target_config.py.
 
-Tool configuration
-::::::::::::::::::
+These files should be stored outside the saml2test package to have a clean separation between the package and its configuration. To create a directory for the configuration files copy the saml2test/tests including its contents.
 
-This is a normal PySAML2 configuration file. You can have more than one and
-then chose which one to use at run time by supplying the test script with
-an argument. If no configuration is explicitly chosen the default name is
-**config_file.py** .
 
-Interaction configuration file
-::::::::::::::::::::::::::::::
+(1) Tool Configuration (Testing an IDP)
+:::::::::::::::::::::::::::::::::::::::
 
-The configuration is structured as a Python dictionary.
+This is a normal `PySAML2 configuration file <http://pythonhosted.org/pysaml2/howto/config.html>`_. You can have more than one and then chose which one to use at run time by supplying the test script with an argument. If no configuration is explicitly provided than **tests/ipd_test/config.py** is provided as a default.
+
+This configuration mostly contains the test tool’s metadata structured as a Python dictionary. It doesn't vary a lot between testing different IdPs, except for the value of BASE, and optionally these control options:
+
+In addition to the configuration directives documented for the PySAML2 configuration file these may be used:
+
+accepted_time_diff
+..................
+Default: 60
+
+logger
+......
+Specify the logging options for the test run.
+
+only_use_keys_in_metadata
+.........................
+If true it ignore the validation path of signing keys. As of V0.4.0, this does not apply to TLS keys (which does not conform to [SAML MetaIOP].
+If false it does validate the signing certificate against the default CA keys of pysaml2. Add the directory to python path, like:
+export PYTHONPATH=/some_path/saml2test.conf   # Remember: no trailing slash in PYTHONPATH
+
+secret
+......
+Not being used currently
+
+You could also change organization and contact information if you'd like to.
+
+(2) Attribute Mapping
+:::::::::::::::::::::
+Attributes that may be contained in a SAML assertion must be defined in the attribute mapping as documented in the `PySAML2 config guide <http://pythonhosted.org/pysaml2/howto/config.html#attribute-map-dir>`_. If the ‚to‘ and ‚fro‘ mappings are exactly the same just one of them is required. But sometimes it is necessary to have both "to" and "from" because translation isn't symmetric. Like having "sn" and "surname" mapping to the same urn.
+
+You may copy the default mapping:
+cp -pr samle2test/tests/attributemaps. There must be one file per attribute namespace, i.e. attrname-format:basic needs to go into basic.py, and attrname-format:uri needs to go into saml_uri.py.
+
+
+(3) Key Files
+:::::::::::::
+The test tool’s metadata needs key files, both a private key and a certificate. The default files are provided in same2test/tests/keys as:
+mykey.pem
+mycert.pem
+To change file names, the references in the Tool Configuration need be be changed as well.
+
+(4) Test Tool Metadata
+::::::::::::::::::::::
+The test tool’s metadata is generated from the contents of the Tool Configuration, e.g. if testing an IDP:
+make_metadata.py idp_test_config.py > idp_test_sp_metadata.xml
+
+The resulting SAML2 metadata needs to be imported to the test target.
+
+
+(5) Interaction Configuration File
+::::::::::::::::::::::::::::::::::
+This configuration is structured as a Python dictionary.
+
 The keys are **entity_id**, **interaction** and **metadata**.
 
 entity_id
@@ -130,17 +178,22 @@ Script parameters::
       oper                 Which test to run
 
     optional arguments:
-      -h, --help           show this help message and exit
-      -d                   Print debug information
-      -v                   Print runtime information
-      -C CA_CERTS          CA certs to use to verify HTTPS server certificates, if
-                           HTTPS is used and no server CA certs are defined then
-                           no cert verification will be done
-      -J JSON_CONFIG_FILE  Script configuration
-      -m                   Return the SP metadata
-      -l                   List all the test flows as a JSON object
-      -c SPCONFIG          Configuration file for the SP
-
+      -C CA_CERTS           CA certs to use to verify HTTPS server certificates, if
+                            HTTPS is used and no server CA certs are defined then
+                            no cert verification will be done
+      -c SPCONFIG, --config Configuration module for the SP Test Driver at the current directory or the path specified with the -P option. Do not use relative paths or filename extension
+      -d, --debug           Print debug information
+      -h, --help            show this help message and exit
+      -H, --prettyprint     Human readable status output
+      -J JSON_CONFIG_FILE   Script configuration
+      -L, --log             Print HTTP log information # TODO: update documentation
+      -l, --list            List all the test flows as a JSON object
+      -m, --metadata        Return the SP metadata
+      -O, --operations      Operations module (generated from Repository as idp_saml2base.py)
+      -P, --configpath      Path to the configuration file for the SP
+      -t, --testpackage     Module describing tests (e.g. idp_samlbase.py generated from repository)
+      -Y, --pysamllog       Print pySAML2 logs
+      # TODO: show what goes to stdout and stderr
 
 To see what tests are available::
 
@@ -294,3 +347,4 @@ If all goes well but you still want to see all the interaction you can do::
     0.055864 <-- REDIRECT TO: http://localhost:8088/sso/redirect?id=zLvrjojPLLgbnDyq&key=331035cf0e26cdefc15759582e34994ac8e54971
 
     ... and so on ...
+
