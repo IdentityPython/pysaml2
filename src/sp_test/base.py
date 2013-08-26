@@ -11,14 +11,14 @@ from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2.request import SERVICE2REQUEST
 
-from srtest import CheckError
-from srtest.check import Check
-from srtest.check import ExpectedError
-from srtest.check import INTERACTION
-from srtest.check import STATUSCODE
-from srtest.interaction import Action
-from srtest.interaction import Interaction
-from srtest.interaction import InteractionNeeded
+from saml2test import CheckError
+from saml2test.check import Check
+from saml2test.check import ExpectedError
+from saml2test.check import INTERACTION
+from saml2test.check import STATUSCODE
+from saml2test.interaction import Action
+from saml2test.interaction import Interaction
+from saml2test.interaction import InteractionNeeded
 
 from sp_test.tests import ErrorResponse
 
@@ -32,13 +32,12 @@ camel2underscore = re.compile('((?<=[a-z0-9])[A-Z]|(?!^)[A-Z](?=[a-z]))')
 
 
 class Conversation():
-    def __init__(self, instance, config, trace, interaction, json_config,
+    def __init__(self, instance, config, interaction, json_config,
                  check_factory, entity_id, msg_factory=None,
                  features=None, verbose=False, constraints=None,
                  expect_exception=None):
         self.instance = instance
         self._config = config
-        self.trace = trace
         self.test_output = []
         self.features = features
         self.verbose = verbose
@@ -74,14 +73,14 @@ class Conversation():
 
     def check_severity(self, stat):
         if stat["status"] >= 4:
-            self.trace.error("WHERE: %s" % stat["id"])
-            self.trace.error("STATUS:%s" % STATUSCODE[stat["status"]])
+            logger.error("WHERE: %s" % stat["id"])
+            logger.error("STATUS:%s" % STATUSCODE[stat["status"]])
             try:
-                self.trace.error("HTTP STATUS: %s" % stat["http_status"])
+                logger.error("HTTP STATUS: %s" % stat["http_status"])
             except KeyError:
                 pass
             try:
-                self.trace.error("INFO: %s" % stat["message"])
+                logger.error("INFO: %s" % stat["message"])
             except KeyError:
                 pass
 
@@ -199,8 +198,7 @@ class Conversation():
                     raise FatalError(
                         "Too long sequence of redirects: %s" % rdseq)
 
-            self.trace.reply("REDIRECT TO: %s" % url)
-            logger.debug("REDIRECT TO: %s" % url)
+            logger.info("--> REDIRECT TO: %s" % url)
             # If back to me
             for_me = False
             try:
@@ -343,8 +341,6 @@ class Conversation():
                         raise FatalError(
                             "Too long sequence of redirects: %s" % rdseq)
 
-                self.trace.reply("REDIRECT TO: %s" % url)
-                logger.debug("REDIRECT TO: %s" % url)
                 # If back to me
                 for_me = False
                 try:
@@ -363,7 +359,7 @@ class Conversation():
                         raise FatalError("%s" % err)
 
                     content = _response.text
-                    self.trace.reply("CONTENT: %s" % content)
+                    logger.info("<-- CONTENT: %s" % content)
                     self.position = url
                     self.last_content = content
                     self.response = _response
@@ -381,11 +377,11 @@ class Conversation():
                 _spec = self.interaction.pick_interaction(_base, content)
             except InteractionNeeded:
                 self.position = url
-                self.trace.error("Page Content: %s" % content)
+                logger.error("Page Content: %s" % content)
                 raise
             except KeyError:
                 self.position = url
-                self.trace.error("Page Content: %s" % content)
+                logger.error("Page Content: %s" % content)
                 self.err_check("interaction-needed")
 
             if _spec == _last_action:
@@ -396,14 +392,14 @@ class Conversation():
                 _last_action = _spec
 
             if len(_spec) > 2:
-                self.trace.info(">> %s <<" % _spec["page-type"])
+                logger.info(">> %s <<" % _spec["page-type"])
                 if _spec["page-type"] == "login":
                     self.login_page = content
 
             _op = Action(_spec["control"])
 
             try:
-                _response = _op(self.instance, self, self.trace, url,
+                _response = _op(self.instance, self, logger, url,
                                 _response, content, self.features)
                 if isinstance(_response, dict):
                     self.last_response = _response

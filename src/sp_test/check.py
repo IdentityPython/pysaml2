@@ -1,10 +1,10 @@
 import inspect
 import sys
 
-from srtest.check import Check
-from srtest.check import CRITICAL
-from srtest import check
-from srtest.interaction import Interaction
+from saml2test.check import Check
+from saml2test.check import CRITICAL
+from saml2test import check
+from saml2test.interaction import Interaction
 
 __author__ = 'rolandh'
 

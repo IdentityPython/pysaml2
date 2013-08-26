@@ -3,25 +3,55 @@ import argparse
 import sys
 from importlib import import_module
 
-from idp_test import Trace, SCHEMA
+from idp_test import SCHEMA
+from saml2 import root_logger
 
 from saml2.mdstore import MetadataStore, MetaData
 from saml2.saml import NAME_FORMAT_UNSPECIFIED
 from saml2.server import Server
 from saml2.config import IdPConfig
+from saml2.config import logging
 
 from sp_test.base import Conversation
 
-from srtest import FatalError, CheckError
-from srtest import exception_trace
+from saml2test import FatalError
+from saml2test import CheckError
+from saml2test import ContextFilter
+from saml2test import exception_trace
 
 __author__ = 'rolandh'
+
+formatter_2 = logging.Formatter(
+    "%(delta).6f - %(levelname)s - [%(name)s] %(message)s")
+
+cf = ContextFilter()
+cf.start()
+
+memoryhandler = logging.handlers.MemoryHandler(1024*10, logging.DEBUG)
+
+pys_streamhandler = logging.StreamHandler(sys.stderr)
+pys_streamhandler.setFormatter(formatter_2)
+
+pys_memoryhandler = logging.handlers.MemoryHandler(1024*10, logging.DEBUG)
+pys_memoryhandler.setFormatter(formatter_2)
+pys_memoryhandler.addFilter(cf)
+root_logger.addHandler(pys_memoryhandler)
+root_logger.setLevel(logging.DEBUG)
+
+tracelog = logging.getLogger(__name__)
+t_memoryhandler = logging.handlers.MemoryHandler(1024*10, logging.DEBUG)
+t_memoryhandler.addFilter(cf)
+tracelog.addHandler(t_memoryhandler)
+tracelog.setLevel(logging.DEBUG)
+
+saml2testlog = logging.getLogger("saml2test")
+saml2testlog.addHandler(t_memoryhandler)
+saml2testlog.setLevel(logging.DEBUG)
 
 
 class Client(object):
 
     def __init__(self, operations, check_factory):
-        self.trace = Trace()
         self.operations = operations
         self.tests = None
         self.check_factory = check_factory
@@ -92,6 +122,16 @@ class Client(object):
 
         return info
 
+    def output_log(self, memhndlr, hndlr2):
+        """
+        """
+
+        print >> sys.stderr, 80 * ":"
+        hndlr2.setFormatter(formatter_2)
+        memhndlr.setTarget(hndlr2)
+        memhndlr.flush()
+        memhndlr.close()
+
     def run(self):
         self.args = self._parser.parse_args()
 
@@ -124,7 +164,7 @@ class Client(object):
 
         opers = oper["sequence"]
 
-        conv = Conversation(self.idp, self.idp_config, self.trace,
+        conv = Conversation(self.idp, self.idp_config,
                             self.interactions, self.json_config,
                             check_factory=self.check_factory,
                             entity_id=self.entity_id,
@@ -134,13 +174,11 @@ class Client(object):
             self.test_log = conv.test_output
             tsum = self.test_summation(self.args.oper)
             print >>sys.stdout, json.dumps(tsum)
-            if tsum["status"] > 1 or self.args.debug:
-                print >> sys.stderr, self.trace
+            err = None
         except CheckError, err:
             self.test_log = conv.test_output
             tsum = self.test_summation(self.args.oper)
             print >>sys.stdout, json.dumps(tsum)
-            print >> sys.stderr, self.trace
         except FatalError, err:
             if conv:
                 self.test_log = conv.test_output
@@ -149,7 +187,6 @@ class Client(object):
                 self.test_log = exception_trace("RUN", err)
             tsum = self.test_summation(self.args.oper)
             print >>sys.stdout, json.dumps(tsum)
-            print >> sys.stderr, self.trace
         except Exception, err:
             if conv:
                 self.test_log = conv.test_output
@@ -158,6 +195,12 @@ class Client(object):
                 self.test_log = exception_trace("RUN", err)
             tsum = self.test_summation(self.args.oper)
             print >>sys.stdout, json.dumps(tsum)
+
+        if self.args.pysamllog:
+            self.output_log(pys_memoryhandler, pys_streamhandler)
+
+        if tsum["status"] > 1 or self.args.debug or err:
+            self.output_log(t_memoryhandler, pys_streamhandler)
 
     def setup(self):
         self.json_config = self.json_config_file()
