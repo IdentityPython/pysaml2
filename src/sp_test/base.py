@@ -6,12 +6,11 @@ import urllib
 import sys
 
 from urlparse import parse_qs
-from rrtest import FatalError
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2.request import SERVICE2REQUEST
 
-from saml2test import CheckError
+from saml2test import CheckError, FatalError
 from saml2test.check import Check
 from saml2test.check import ExpectedError
 from saml2test.check import INTERACTION
