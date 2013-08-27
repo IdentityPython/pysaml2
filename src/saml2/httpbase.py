@@ -154,6 +154,11 @@ class HTTPBase(object):
                     if morsel[attr]:
                         if attr == "expires":
                             std_attr[attr] = _since_epoch(morsel[attr])
+                        elif attr == "path":
+                            if morsel[attr].endswith(","):
+                                std_attr[attr] = morsel[attr][:-1]
+                            else:
+                                std_attr[attr] = morsel[attr]
                         else:
                             std_attr[attr] = morsel[attr]
                 elif attr == "max-age":
@@ -204,6 +209,12 @@ class HTTPBase(object):
             _kwargs["auth"] = (self.user, self.passwd)
 
         try:
+            logger.debug("%s to %s" % (method, url))
+            for arg in ["cookies", "data", "auth"]:
+                try:
+                    logger.debug("%s: %s" % (arg.upper(), _kwargs[arg]))
+                except KeyError:
+                    pass
             r = requests.request(method, url, **_kwargs)
         except requests.ConnectionError, exc:
             raise ConnectionError("%s" % exc)
