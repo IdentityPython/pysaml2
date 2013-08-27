@@ -23,7 +23,7 @@ class Conversation(object):
     :ivar response: The received HTTP messages
     :ivar protocol_response: List of the received protocol messages
     """
-    
+
     def __init__(self, client, config, interaction,
                  check_factory=None, msg_factory=None,
                  features=None, verbose=False, expect_exception=None):
@@ -165,13 +165,17 @@ class Conversation(object):
                 _spec = self.interaction.pick_interaction(_base, content)
             except InteractionNeeded:
                 self.position = url
+                cnt = content.replace("\n", '').replace("\t", '').replace("\r",
+                                                                          '')
                 logger.error("URL: %s" % url)
-                logger.error("Page Content: %s" % content)
+                logger.error("Page Content: %s" % cnt)
                 raise
             except KeyError:
                 self.position = url
+                cnt = content.replace("\n", '').replace("\t", '').replace("\r",
+                                                                          '')
                 logger.error("URL: %s" % url)
-                logger.error("Page Content: %s" % content)
+                logger.error("Page Content: %s" % cnt)
                 self.err_check("interaction-needed")
 
             if _spec == _last_action:
@@ -270,8 +274,10 @@ class Conversation(object):
             try:
                 self.do_query()
             except InteractionNeeded:
+                cnt = self.last_content.replace("\n", '').replace(
+                    "\t", '').replace("\r", '')
                 self.test_output.append({"status": INTERACTION,
-                                         "message": self.last_content,
+                                         "message": cnt,
                                          "id": "exception",
                                          "name": "interaction needed",
                                          "url": self.position})

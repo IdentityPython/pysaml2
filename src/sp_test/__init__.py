@@ -73,13 +73,15 @@ class Client(object):
         self._parser.add_argument(
             "-l", dest="list", action="store_true",
             help="List all the test flows as a JSON object")
-        self._parser.add_argument("-c", dest="idpconfig", default="idp_conf",
+        self._parser.add_argument("-c", dest="config", default="config",
                                   help="Configuration file for the IdP")
         self._parser.add_argument(
             "-P", dest="configpath", default=".",
             help="Path to the configuration file for the IdP")
         self._parser.add_argument("-t", dest="testpackage",
                                   help="Module describing tests")
+        self._parser.add_argument("-Y", dest="pysamllog", action='store_true',
+                                  help="Print PySAML2 logs")
         self._parser.add_argument("oper", nargs="?", help="Which test to run")
 
         self.interactions = None
@@ -97,7 +99,7 @@ class Client(object):
 
     def idp_configure(self, metadata_construction=False):
         sys.path.insert(0, self.args.configpath)
-        mod = import_module(self.args.idpconfig)
+        mod = import_module(self.args.config)
         self.idp_config = IdPConfig().load(mod.CONFIG, metadata_construction)
         self.idp = Server(config=self.idp_config)
 
@@ -215,7 +217,7 @@ class Client(object):
         self.idp_configure()
 
         metadata = MetadataStore(SCHEMA, self.idp_config.attribute_converters,
-                                 self.idp_config.xmlsec_binary)
+                                 self.idp_config)
         info = _jc["metadata"].encode("utf-8")
         md = MetaData(SCHEMA, self.idp_config.attribute_converters, info)
         md.load()
