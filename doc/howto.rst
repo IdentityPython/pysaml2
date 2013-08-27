@@ -11,7 +11,7 @@ If you have not done so yet, read :ref:`install`.
 
 When you want to test a SAML2 entity with this tool you need following things:
 
-#. The Tool Configuration, an example can be found in tests/idp_test/testdriver_config.py
+#. The Tool Configuration, an example can be found in tests/idp_test/config.py
 #. Attribute Maps mapping URNs, OIDs and friendly names
 #. Key files for the test tool
 #. A metadata file representing the tool
@@ -169,8 +169,8 @@ Running the script
 
 Script parameters::
 
-    $ saml2c.py --help
-    usage: saml2c.py [-h] [-d] [-v] [-C CA_CERTS] [-J JSON_CONFIG_FILE] [-m] [-l]
+    $ idp_testdrv.py --help
+    usage: idp_testdrv.py [-h] [-d] [-v] [-C CA_CERTS] [-J JSON_CONFIG_FILE] [-m] [-l]
                      [-c SPCONFIG]
                      [oper]
 
@@ -197,7 +197,7 @@ Script parameters::
 
 To see what tests are available::
 
-    $ saml2c.py -l
+    $ idp_testdrv.py -l
     [
         {
             "id": "basic-authn",
@@ -224,7 +224,7 @@ To see what tests are available::
 
 A typical command would then be (reformated to be more readable)::
 
-    $ saml2c.py -J localhost.json 'log-in-out'
+    $ idp_testdrv.py -J localhost.json 'log-in-out'
     {
         "status": 1,
         "tests": [
@@ -286,7 +286,7 @@ conversation.
 If things go wrong you will get a trace log dump to stderr.
 If all goes well but you still want to see all the interaction you can do::
 
-    $ saml2c.py -J localhost.json -d 'basic-authn' 2> tracelog
+    $ idp_testdrv.py -J localhost.json -d 'basic-authn' 2> tracelog
     < same output as above >
     $ cat tracelog
     0.017364 SAML Request: <?xml version='1.0' encoding='UTF-8'?>
