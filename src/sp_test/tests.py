@@ -210,7 +210,7 @@ StatusCode is not success""",
                       AuthnResponse_without_SubjectConfirmationData_1, None)],
         "tests": {"pre": [], "post": []}
     },
-    'FL10': {
+    'FL09': {
         "name": ("SP should not accept a response InResponseTo ",
                  "which is chosen randomly"),
         "sequence": [(Login, AuthnRequest,
@@ -218,7 +218,7 @@ StatusCode is not success""",
                       check.ErrorResponse)],
         "tests": {"pre": [], "post": []}
     },
-    'sp-07': {
+    'FL10': {
         "name": ("SP should not accept an assertion InResponseTo ",
                  "which is chosen randomly"),
         "sequence": [(Login, AuthnRequest,
@@ -235,7 +235,7 @@ StatusCode is not success""",
                       check.ErrorResponse)],
         "tests": {"pre": [], "post": []}
     },
-    'sp-09': {
+    'FL12': {
         "name": ("Do the SP allow the InResponseTo attribute to be missing",
                  "from the SubjectConfirmationData element?"),
         "sequence": [(Login, AuthnRequest,
@@ -243,7 +243,7 @@ StatusCode is not success""",
                       check.ErrorResponse)],
         "tests": {"pre": [], "post": []}
     },
-    'sp-10': {
+    'FL13': {
         "name": "SP should not accept a broken DestinationURL attribute",
         "sequence": [(Login, AuthnRequest,
                       AuthnResponse_broken_destination,
