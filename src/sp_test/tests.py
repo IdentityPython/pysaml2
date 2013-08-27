@@ -155,6 +155,20 @@ class AuthnResponse_SubjectConfirmationData_no_inresponse(AuthnResponse):
         return message
 
 
+class AuthnResponse_wrong_Recipient(AuthnResponse):
+    def pre_processing(self, message, **kwargs):
+        _confirmation = message.assertion.subject.subject_confirmation
+        _confirmation.subject_confirmation_data.recipient = rndstr(16)
+        return message
+
+
+class AuthnResponse_missing_Recipient(AuthnResponse):
+    def pre_processing(self, message, **kwargs):
+        _confirmation = message.assertion.subject.subject_confirmation
+        _confirmation.subject_confirmation_data.recipient = None
+        return message
+
+
 class AuthnResponse_broken_destination(AuthnResponse):
     def pre_processing(self, message, **kwargs):
         message.destination = "NotAUrl"
@@ -245,6 +259,20 @@ StatusCode is not success""",
     },
     'FL13': {
         "name": "SP should not accept a broken DestinationURL attribute",
+        "sequence": [(Login, AuthnRequest,
+                      AuthnResponse_broken_destination,
+                      check.ErrorResponse)],
+        "tests": {"pre": [], "post": []}
+    },
+    'FL14a': {
+        "name": "SP should not accept wrong Recipient attribute",
+        "sequence": [(Login, AuthnRequest,
+                      AuthnResponse_broken_destination,
+                      check.ErrorResponse)],
+        "tests": {"pre": [], "post": []}
+    },
+    'FL14b': {
+        "name": "SP should not accept missing Recipient attribute",
         "sequence": [(Login, AuthnRequest,
                       AuthnResponse_broken_destination,
                       check.ErrorResponse)],

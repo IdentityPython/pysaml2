@@ -56,8 +56,8 @@ CONFIG = {
         },
     },
     "debug": 1,
-    "key_file": "pki/server.key",
-    "cert_file": "pki/server.crt",
+    "key_file": "../keys/mykey.pem",
+    "cert_file": "../keys/mycert.pem",
     "metadata": {},
     "organization": {
         "display_name": "Rolands Identiteter",

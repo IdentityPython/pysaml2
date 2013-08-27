@@ -67,7 +67,7 @@ To change file names, the references in the Tool Configuration need be be change
 (4) Test Tool Metadata
 ::::::::::::::::::::::
 The test tool’s metadata is generated from the contents of the Tool Configuration, e.g. if testing an IDP:
-make_metadata.py idp_test_config.py > idp_test_sp_metadata.xml
+make_metadata.py config.py > testdrv_metadata.xml
 
 The resulting SAML2 metadata needs to be imported to the test target.
 
