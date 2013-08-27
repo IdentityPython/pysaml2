@@ -205,7 +205,9 @@ class Conversation(object):
                 self.response = _response
 
                 if _response.status_code >= 400:
-                    break
+                    logger.error("Got status code '%s', error: %s" % (
+                        _response.status_code, content))
+                    raise FatalError()
             except (FatalError, InteractionNeeded):
                 raise
             except Exception, err:
