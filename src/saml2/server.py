@@ -24,7 +24,6 @@ import os
 import shelve
 
 from saml2.eptid import EptidShelve, Eptid
-from saml2.mongo_store import IdentMDB, SessionStorageMDB, EptidMDB
 from saml2.sdb import SessionStorage
 from saml2.schema import soapenv
 
@@ -89,6 +88,7 @@ class Server(Entity):
         else:  # Should be tuple
             typ, data = _spec
             if typ.lower() == "mongodb":
+                from saml2.mongo_store import SessionStorageMDB
                 return SessionStorageMDB(database=data, collection="session")
 
         raise NotImplementedError("No such storage type implemented")
@@ -121,6 +121,7 @@ class Server(Entity):
             elif typ == "dict":  # in-memory dictionary
                 idb = {}
             elif typ == "mongodb":
+                from saml2.mongo_store import IdentMDB
                 self.ident = IdentMDB(database=addr, collection="ident")
 
         if typ == "mongodb":
@@ -143,6 +144,7 @@ class Server(Entity):
             if typ == "shelve":
                 self.eptid = EptidShelve(secret, addr)
             elif typ == "mongodb":
+                from saml2.mongo_store import EptidMDB
                 self.eptid = EptidMDB(secret, database=addr,
                                       collection="eptid")
             else:
