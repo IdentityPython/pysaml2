@@ -443,12 +443,20 @@ class Server(Entity):
 
 
         try:
+            _authn = {"authn_auth": authn}
+            if "authn_decl" in kwargs and kwargs["authn_decl"]:
+                _authn["decl"] = kwargs["authn_decl"]
+            if "class_ref" in kwargs and kwargs["class_ref"]:
+                _authn["class_ref"] = kwargs["class_ref"]
+            else:
+                _authn["class_ref"] = None
+
             return self._authn_response(in_response_to,  # in_response_to
                                         destination,     # consumer_url
                                         sp_entity_id,    # sp_entity_id
                                         identity,       # identity as dictionary
                                         name_id,
-                                        authn=authn,
+                                        authn=_authn,
                                         issuer=issuer,
                                         policy=policy,
                                         sign_assertion=sign_assertion,
@@ -467,8 +475,9 @@ class Server(Entity):
 
         return self.create_authn_response(identity, in_response_to, destination,
                                           sp_entity_id, name_id_policy, userid,
-                                          name_id, authn, authn_decl, issuer,
-                                          sign_response, sign_assertion)
+                                          name_id, authn, issuer,
+                                          sign_response, sign_assertion,
+                                          authn_decl=authn_decl)
 
     #noinspection PyUnusedLocal
     def create_assertion_id_request_response(self, assertion_id, sign=False,
