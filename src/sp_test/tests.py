@@ -178,31 +178,31 @@ OPERATIONS = {
         "sequence": [],
         "tests": {"pre": [], "post": []}
     },
-    'sp-01': {
+    'FL03': {
         "name": """SP should not accept a Response as valid, when the
 StatusCode is not success""",
         "sequence": [(Login, AuthnRequest, ErrorResponse, check.ErrorResponse)],
         "tests": {"pre": [], "post": []}
     },
-    'sp-02': {
+    'FL04': {
         "name": "SP should accept a NameID with Format: persistent",
         "sequence": [(Login, AuthnRequest,
                       AuthnResponse_NameIDformat_persistent, None)],
         "tests": {"pre": [], "post": []}
     },
-    'sp-03': {
+    'FL05': {
         "name": "SP should accept a NameID with Format: e-mail",
         "sequence": [(Login, AuthnRequest, AuthnResponse_NameIDformat_email,
                       None)],
         "tests": {"pre": [], "post": []}
     },
-    'sp-04': {
+    'FL06': {
         "name": "Do SP work with unknown NameID Format, such as : foo",
         "sequence": [(Login, AuthnRequest, AuthnResponse_NameIDformat_foo,
                       None)],
         "tests": {"pre": [], "post": []}
     },
-    'sp-05': {
+    'FL07': {
         "name": ("SP should accept a Response without a ",
                  "SubjectConfirmationData element. If confirmation method",
                  "is SCM_SENDER_VOUCHES"),
@@ -210,7 +210,7 @@ StatusCode is not success""",
                       AuthnResponse_without_SubjectConfirmationData_1, None)],
         "tests": {"pre": [], "post": []}
     },
-    'sp-06': {
+    'FL10': {
         "name": ("SP should not accept a response InResponseTo ",
                  "which is chosen randomly"),
         "sequence": [(Login, AuthnRequest,
