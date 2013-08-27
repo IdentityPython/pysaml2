@@ -38,5 +38,5 @@ setup(
                         "beautifulsoup4",
                         "mako"],
     zip_safe=False,
-    scripts=["script/saml2c.py", "script/saml2i.py"]
+    scripts=["script/idp_testdrv.py", "script/sp_testdrv.py"]
     )

@@ -172,7 +172,7 @@ OPERATIONS = {
         "sequence": [(Login, AuthnRequest, AuthnResponse, None)],
         "tests": {"pre": [], "post": []}
     },
-    'verify': {
+    'FL02': {
         "name": 'Verify various aspects of the generated AuthnRequest message',
         "descr": 'Basic Login test',
         "sequence": [],

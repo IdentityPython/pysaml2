@@ -7,7 +7,7 @@ import json
 
 BASE = "http://localhost:8088"
 
-metadata = open("./idp/idp.xml").read()
+metadata = open("idp_test/idp.xml").read()
 
 info = {
     "entity_id": "%s/idp.xml" % BASE,
