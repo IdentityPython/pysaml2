@@ -22,7 +22,7 @@ import logging
 import os
 
 import shelve
-import memcache
+
 from saml2.eptid import EptidShelve, Eptid
 from saml2.mongo_store import IdentMDB, SessionStorageMDB, EptidMDB
 from saml2.sdb import SessionStorage
@@ -116,6 +116,7 @@ class Server(Entity):
             if typ == "shelve":
                 idb = shelve.open(addr, writeback=True)
             elif typ == "memcached":
+                import memcache
                 idb = memcache.Client(addr)
             elif typ == "dict":  # in-memory dictionary
                 idb = {}
