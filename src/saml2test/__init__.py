@@ -28,6 +28,10 @@ class Unknown(Exception):
     pass
 
 
+class OperationError(Exception):
+    pass
+
+
 # class Trace(object):
 #     def __init__(self):
 #         self.trace = []

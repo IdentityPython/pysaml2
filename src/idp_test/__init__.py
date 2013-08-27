@@ -16,7 +16,7 @@ from saml2.config import SPConfig
 from saml2.mdstore import MetadataStore, ToOld
 from saml2.mdstore import MetaData
 
-from saml2test import FatalError
+from saml2test import FatalError, OperationError
 from saml2test import exception_trace
 from saml2test import ContextFilter
 
@@ -327,6 +327,9 @@ class SAML2client(object):
             self.test_log = conv.test_output
             tsum = self.test_summation(self.args.oper)
             err = None
+        except OperationError, err:
+            self.test_log = conv.test_output
+            tsum = self.test_summation(self.args.oper)
         except FatalError, err:
             if conv:
                 self.test_log = conv.test_output

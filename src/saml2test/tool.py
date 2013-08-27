@@ -6,12 +6,13 @@ from urlparse import parse_qs
 
 from saml2test.opfunc import Operation
 from saml2test import FatalError
-from saml2test.check import ExpectedError
+from saml2test.check import ExpectedError, ERROR
 from saml2test.check import INTERACTION
 from saml2test.interaction import Interaction
 from saml2test.interaction import Action
 from saml2test.interaction import InteractionNeeded
 from saml2test.status import STATUSCODE
+from saml2test import OperationError
 
 __author__ = 'rolandh'
 
@@ -181,7 +182,13 @@ class Conversation(object):
             if _spec == _last_action:
                 _same_actions += 1
                 if _same_actions >= 3:
-                    raise InteractionNeeded("Interaction loop detection")
+                    self.test_output.append(
+                        {"status": ERROR,
+                         "message": "Interaction loop detection",
+                         #"id": "exception",
+                         #"name": "interaction needed",
+                         "url": self.position})
+                    raise OperationError()
             else:
                 _last_action = _spec
 
@@ -205,10 +212,17 @@ class Conversation(object):
                 self.response = _response
 
                 if _response.status_code >= 400:
-                    logger.error("Got status code '%s', error: %s" % (
-                        _response.status_code, content))
-                    raise FatalError()
-            except (FatalError, InteractionNeeded):
+                    txt = "Got status code '%s', error: %s" % (
+                        _response.status_code, content)
+                    logger.error(txt)
+                    self.test_output.append(
+                        {"status": ERROR,
+                         "message": txt,
+                         #"id": "exception",
+                         #"name": "interaction needed",
+                         "url": self.position})
+                    raise OperationError()
+            except (FatalError, InteractionNeeded, OperationError):
                 raise
             except Exception, err:
                 self.err_check("exception", err, False)
@@ -284,7 +298,7 @@ class Conversation(object):
                                          "name": "interaction needed",
                                          "url": self.position})
                 break
-            except FatalError:
+            except (FatalError, OperationError):
                 raise
             except Exception, err:
                 #self.err_check("exception", err)
