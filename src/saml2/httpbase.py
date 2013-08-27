@@ -203,7 +203,6 @@ class HTTPBase(object):
             _cd = self.cookies(url)
             if _cd:
                 _kwargs["cookies"] = _cd
-                logger.debug("Sent cookies: %s" % _kwargs["cookies"])
 
         if self.user and self.passwd:
             _kwargs["auth"] = (self.user, self.passwd)
@@ -216,6 +215,7 @@ class HTTPBase(object):
                 except KeyError:
                     pass
             r = requests.request(method, url, **_kwargs)
+            logger.debug("Response status: %s" % r.status_code)
         except requests.ConnectionError, exc:
             raise ConnectionError("%s" % exc)
 
