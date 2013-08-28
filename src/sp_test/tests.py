@@ -4,7 +4,7 @@ from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2.s_utils import rndstr
 
-from saml2.saml import AUTHN_PASSWORD, SCM_BEARER
+from saml2.saml import AUTHN_PASSWORD, SCM_BEARER, SubjectConfirmationData
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.saml import SCM_SENDER_VOUCHES
 from saml2.samlp import STATUS_AUTHN_FAILED
@@ -23,9 +23,6 @@ USER = {
         "sn": "Svensson"
     }
 }
-
-AUTHN = {"class_ref": AUTHN_PASSWORD,
-         "authn_auth": "http://lingon.catalogix.se/login"}
 
 
 class Response(object):
@@ -68,8 +65,6 @@ class AuthnResponse(Response):
     _response_args = {
         "identity": USER["adam"],
         "userid": "adam",
-        #"name_id": None,
-        "authn": AUTHN
     }
     _binding = BINDING_HTTP_POST
 
@@ -186,10 +181,12 @@ class AuthnResponse_broken_destination(AuthnResponse):
 class AuthnResponse_with_multiple_SubjectConfirmationData(AuthnResponse):
     def pre_processing(self, message, **kwargs):
         _confirmation = message.assertion.subject.subject_confirmation
-        _confirmation.subject_confirmation_data = None
-        _confirmation.method = SCM_BEARER
+        scd = SubjectConfirmationData(recipient="https://example.com")
+        _confirmation.append(scd)
         return message
 
+# Requests coming from the future and from the past.
+# unsigned/signed assertions
 
 PHASES = {
     "login_redirect": (Login, AuthnRequest, AuthnResponse_redirect),

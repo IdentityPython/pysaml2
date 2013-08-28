@@ -135,11 +135,16 @@ class Conversation():
                             return typ, binding
         return None
 
+    def _log_response(self, response):
+        logger.info("<-- Status: %s" % response.status_code)
+        logger.info("<-- Content: %s" % response.content)
+
     def wb_send(self):
         """
         The action that starts the whole sequence, a HTTP GET on a web page
         """
         self.last_response = self.instance.send(self.start_page)
+        self._log_response(self.last_response)
 
     def handle_result(self, response=None):
         #self.do_check(CheckHTTPResponse)
@@ -155,14 +160,12 @@ class Conversation():
                     raise FatalError(self.last_response.reason)
 
                 _txt = self.last_response.content
-                logger.debug("Content: %s" % _txt)
                 assert _txt.startswith("<h2>")
         else:
             if 300 < self.last_response.status_code <= 303:
                 self._redirect(self.last_response)
 
             _txt = self.last_response.content
-            logger.debug("Content: %s" % _txt)
             if self.last_response.status_code >= 400:
                 raise FatalError("Did not expected error")
 
@@ -212,8 +215,8 @@ class Conversation():
                 except Exception, err:
                     raise FatalError("%s" % err)
 
+                self._log_response(_response)
                 self.last_response = _response
-
                 if _response.status_code >= 400:
                     break
         return url
@@ -235,6 +238,11 @@ class Conversation():
         # Pick information from the request that should be in the response
         args = self.instance.response_args(self.saml_request.message,
                                            [resp._binding])
+        try:
+            args.update(self.json_config["args"][resp.__name__])
+        except KeyError:
+            pass
+
         args.update(resp._response_args)
 
         if resp == ErrorResponse:
@@ -247,7 +255,7 @@ class Conversation():
         response = resp(self).pre_processing(response)
 
         info = self.instance.apply_binding(resp._binding, response,
-                                           response.destination,
+                                           args["destination"],
                                            self.relay_state,
                                            "SAMLResponse", resp._sign)
 
@@ -266,6 +274,8 @@ class Conversation():
             info["headers"] = {
                 'Content-type': 'application/x-www-form-urlencoded'}
             self.last_response = self.instance.send(**info)
+
+        self._log_response(self.last_response)
 
     def do_flow(self, flow):
         """
@@ -355,8 +365,8 @@ class Conversation():
                     except Exception, err:
                         raise FatalError("%s" % err)
 
+                    self._log_response(_response)
                     content = _response.text
-                    logger.info("<-- CONTENT: %s" % content)
                     self.position = url
                     self.last_content = content
                     self.response = _response
