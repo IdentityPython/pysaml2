@@ -161,11 +161,9 @@ class Conversation():
             if 300 < self.last_response.status_code <= 303:
                 self._redirect(self.last_response)
 
-            if self.last_response.status_code == 200:
-                _txt = self.last_response.content
-                logger.debug("Content: %s" % _txt)
-                assert _txt.startswith("<h2>")
-            else:
+            _txt = self.last_response.content
+            logger.debug("Content: %s" % _txt)
+            if self.last_response.status_code >= 400:
                 raise FatalError("Did not expected error")
 
     def handle_redirect(self):
