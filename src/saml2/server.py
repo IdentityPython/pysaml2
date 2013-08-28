@@ -408,7 +408,8 @@ class Server(Entity):
         :param sp_entity_id: The entity identifier of the Service Provider
         :param name_id_policy: How the NameID should be constructed
         :param userid: The subject identifier
-        :param authn: Information about the authentication context
+        :param authn: Dictionary with information about the authentication
+            context
         :param issuer: Issuer of the response
         :param sign_assertion: Whether the assertion should be signed or not.
         :param sign_response: Whether the response should be signed or not.
@@ -444,15 +445,8 @@ class Server(Entity):
                                                       exc, name_id)
                 return ("%s" % response).split("\n")
 
-
         try:
-            _authn = {"authn_auth": authn}
-            if "authn_decl" in kwargs and kwargs["authn_decl"]:
-                _authn["decl"] = kwargs["authn_decl"]
-            if "class_ref" in kwargs and kwargs["class_ref"]:
-                _authn["class_ref"] = kwargs["class_ref"]
-            else:
-                _authn["class_ref"] = None
+            _authn = authn
 
             return self._authn_response(in_response_to,  # in_response_to
                                         destination,     # consumer_url
