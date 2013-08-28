@@ -6,9 +6,10 @@ import urllib
 import sys
 
 from urlparse import parse_qs
-from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_HTTP_REDIRECT, class_name
 from saml2 import BINDING_HTTP_POST
 from saml2.request import SERVICE2REQUEST
+from saml2.sigver import signed_instance_factory, pre_signature_part
 
 from saml2test import CheckError, FatalError
 from saml2test.check import Check
@@ -238,10 +239,13 @@ class Conversation():
         # Pick information from the request that should be in the response
         args = self.instance.response_args(self.saml_request.message,
                                            [resp._binding])
-        try:
-            args.update(self.json_config["args"][resp.__name__])
-        except KeyError:
-            pass
+        _mods = list(resp.__mro__[:])
+        _mods.reverse()
+        for m in _mods:
+            try:
+                args.update(self.json_config["args"][m.__name__])
+            except KeyError:
+                pass
 
         args.update(resp._response_args)
 
@@ -251,8 +255,30 @@ class Conversation():
             _op = camel2underscore.sub(r'_\1', req._class.c_tag).lower()
             func = getattr(self.instance, "create_%s_response" % _op)
 
+        sign = []
+        for styp in ["sign_assertion", "sign_response"]:
+            if styp in args:
+                del args[styp]
+                sign.append(styp)
+
         response = func(**args)
         response = resp(self).pre_processing(response)
+        # and now for signing
+        if sign:
+            to_sign = []
+            # Order is important, first assertion and then response if both
+            if "sign_assertion" in sign:
+                to_sign = [(class_name(response.assertion),
+                            response.assertion.id)]
+                response.assertion.signature = pre_signature_part(
+                    response.assertion.id, self.instance.sec.my_cert, 1)
+            if "sign_response" in sign:
+                to_sign = [(class_name(response), response.id)]
+                response.signature = pre_signature_part(
+                    response.id, self.instance.sec.my_cert, 1)
+
+            response = signed_instance_factory(response, self.instance.sec,
+                                               to_sign)
 
         info = self.instance.apply_binding(resp._binding, response,
                                            args["destination"],
