@@ -28,7 +28,11 @@ info = {
                 "sign_assertion": True,
                 "authn": AUTHN
             }
-        }
+        },
+    "identity": {
+        "given_name": "Roland",
+        "sn": "Hedberg"
+    }
 }
 
 print json.dumps(info)
