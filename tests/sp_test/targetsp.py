@@ -32,7 +32,8 @@ info = {
     "identity": {
         "given_name": "Roland",
         "sn": "Hedberg"
-    }
+    },
+    "userid": "roland"
 }
 
 print json.dumps(info)

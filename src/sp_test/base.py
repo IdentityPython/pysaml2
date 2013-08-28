@@ -249,8 +249,9 @@ class Conversation():
 
         args.update(resp._response_args)
 
-        if "identity" in self.json_config:
-            args["identity"] = self.json_config["identity"]
+        for param in ["identity", "userid"]:
+            if param in self.json_config:
+                args[param] = self.json_config[param]
 
         if resp == ErrorResponse:
             func = getattr(self.instance, "create_error_response")
