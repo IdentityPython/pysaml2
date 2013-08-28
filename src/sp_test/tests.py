@@ -24,7 +24,8 @@ USER = {
     }
 }
 
-AUTHN = (AUTHN_PASSWORD, "http://lingon.catalogix.se/login")
+AUTHN = {"class_ref": AUTHN_PASSWORD,
+         "authn_auth": "http://lingon.catalogix.se/login"}
 
 
 class Response(object):
@@ -151,27 +152,42 @@ class AuthnResponse_rnd_Response_assertion_inresponseto(AuthnResponse):
 class AuthnResponse_SubjectConfirmationData_no_inresponse(AuthnResponse):
     def pre_processing(self, message, **kwargs):
         _confirmation = message.assertion.subject.subject_confirmation
-        _confirmation.subject_confirmation_data.in_response_to = None
+        _confirmation[0].subject_confirmation_data.in_response_to = None
         return message
 
 
 class AuthnResponse_wrong_Recipient(AuthnResponse):
     def pre_processing(self, message, **kwargs):
         _confirmation = message.assertion.subject.subject_confirmation
-        _confirmation.subject_confirmation_data.recipient = rndstr(16)
+        _confirmation[0].subject_confirmation_data.recipient = rndstr(16)
         return message
 
 
 class AuthnResponse_missing_Recipient(AuthnResponse):
     def pre_processing(self, message, **kwargs):
         _confirmation = message.assertion.subject.subject_confirmation
-        _confirmation.subject_confirmation_data.recipient = None
+        _confirmation[0].subject_confirmation_data.recipient = None
+        return message
+
+
+class AuthnResponse_missing_Recipient(AuthnResponse):
+    def pre_processing(self, message, **kwargs):
+        _confirmation = message.assertion.subject.subject_confirmation
+        _confirmation[0].subject_confirmation_data.recipient = None
         return message
 
 
 class AuthnResponse_broken_destination(AuthnResponse):
     def pre_processing(self, message, **kwargs):
         message.destination = "NotAUrl"
+        return message
+
+
+class AuthnResponse_with_multiple_SubjectConfirmationData(AuthnResponse):
+    def pre_processing(self, message, **kwargs):
+        _confirmation = message.assertion.subject.subject_confirmation
+        _confirmation.subject_confirmation_data = None
+        _confirmation.method = SCM_BEARER
         return message
 
 
@@ -264,6 +280,7 @@ StatusCode is not success""",
                       check.ErrorResponse)],
         "tests": {"pre": [], "post": []}
     },
+    # New untested
     'FL14a': {
         "name": "SP should not accept wrong Recipient attribute",
         "sequence": [(Login, AuthnRequest,
@@ -278,51 +295,95 @@ StatusCode is not success""",
                       check.ErrorResponse)],
         "tests": {"pre": [], "post": []}
     },
+    'FL16': {
+        "name": "Send Response with multiple SubjectConfirmation elements with"
+                "SubjectConfirmationData/@Address-es, where only the last one"
+                " is correct",
+        "sequence": [(Login, AuthnRequest,
+                      AuthnResponse_broken_destination,
+                      check.ErrorResponse)],
+        "tests": {"pre": [], "post": []}
+    },
 }
 
 #￼
-# ￼SP should not accept a broken Recipient attribute in assertion SubjectConfirmationData/@Recipient
+# ￼SP should not accept a broken Recipient attribute in assertion
+# SubjectConfirmationData/@Recipient
 # ￼SP should not accept a broken DestinationURL attribute in response
-# ￼SP should accept a Response with two SubjectConfirmationData elements representing two recipients (test 1 of 2, correct one last)
-# ￼SP should accept a Response with two SubjectConfirmationData elements representing two recipients (test 1 of 2, correct one first)
-# ￼SP should accept a Response with two SubjectConfirmation elements representing two recipients (test 1 of 2, correct one last)
-# ￼SP should accept a Response with two SubjectConfirmation elements representing two recipients (test 1 of 2, correct one first)
-# ￼SP should accept a Response with a SubjectConfirmationData elements with a correct @Address attribute
-# ￼SP should nnot accept a Response with a SubjectConfirmationData elements with a incorrect @Address attribute
-# ￼SP should accept a Response with multiple SubjectConfirmation elements with /SubjectConfirmationData/@Address-es, where one is correct (test 1 of 2, correct o last)
-# ￼SP should accept a Response with multiple SubjectConfirmationData elements with /SubjectConfirmationData/@Address-es, where one is correct (test 1 of 2, corr one last)
-# ￼SP should accept a Response with multiple SubjectConfirmationData elements with /SubjectConfirmationData/@Address-es, where one is correct (test 1 of 2, corr one first)
+# ￼SP should accept a Response with two SubjectConfirmationData elements
+# representing two recipients (test 1 of 2, correct one last)
+# ￼SP should accept a Response with two SubjectConfirmationData elements
+# representing two recipients (test 1 of 2, correct one first)
+# ￼SP should accept a Response with two SubjectConfirmation elements
+# representing two recipients (test 1 of 2, correct one last)
+# ￼SP should accept a Response with two SubjectConfirmation elements
+# representing two recipients (test 1 of 2, correct one first)
+# ￼SP should accept a Response with a SubjectConfirmationData elements with a
+#  correct @Address attribute
+# ￼SP should nnot accept a Response with a SubjectConfirmationData elements
+# with a incorrect @Address attribute
+# ￼SP should accept a Response with multiple SubjectConfirmation elements
+# with /SubjectConfirmationData/@Address-es, where one is correct (test 1 of
+# 2, correct o last)
+# ￼SP should accept a Response with multiple SubjectConfirmationData elements
+#  with /SubjectConfirmationData/@Address-es, where one is correct (test 1 of
+#  2, corr one last)
+# ￼SP should accept a Response with multiple SubjectConfirmationData elements
+#  with /SubjectConfirmationData/@Address-es, where one is correct (test 1 of
+#  2, corr one first)
 # ￼SP Should not accept an assertion containing an uknown Condition
-# ￼SP should not accept a Response with a Condition with a NotBefore in the future.
-# ￼SP should not accept a Response with a Condition with a NotOnOrAfter in the past.
-# ￼SP should not accept a Response with a SubjectConfirmationData@NotOnOrAfter in the past
-# ￼SP should not accept a Response with a AuthnStatement where SessionNotOnOrAfter is set in the past
+# ￼SP should not accept a Response with a Condition with a NotBefore in the
+# future.
+# ￼SP should not accept a Response with a Condition with a NotOnOrAfter in
+# the past.
+# ￼SP should not accept a Response with a
+# SubjectConfirmationData@NotOnOrAfter in the past
+# ￼SP should not accept a Response with a AuthnStatement where
+# SessionNotOnOrAfter is set in the past
 # ￼SP should not accept a Response with a AuthnStatement missing
 # ￼SP should not accept an IssueInstant far (24 hours) into the future
 # ￼SP should not accept an IssueInstant far (24 hours) into the past
-# ￼SP should accept xs:datetime with millisecond precision http://www.w3.org/TR/xmlschema-2/#dateTime
-# ￼SP should accept xs:datetime with microsecond precision http://www.w3.org/TR/xmlschema-2/#dateTime
-# ￼SP should not accept a Response with a Condition with a empty set of Audience.
+# ￼SP should accept xs:datetime with millisecond precision http://www.w3
+# .org/TR/xmlschema-2/#dateTime
+# ￼SP should accept xs:datetime with microsecond precision http://www.w3
+# .org/TR/xmlschema-2/#dateTime
+# ￼SP should not accept a Response with a Condition with a empty set of
+# Audience.
 # ￼SP should not accept a Response with a Condition with a wrong Audience.
-# ￼SP should accept a Response with a Condition with an addition Audience prepended.
-# ￼SP should accept a Response with a Condition with an addition Audience appended.
-# ￼SP should not accept multiple AudienceRestrictions where the intersection is zero. (test 1 of 2)
-# ￼SP should not accept multiple AudienceRestrictions where the intersection is zero. (test 2 of 2)
-# ￼SP should accept multiple AudienceRestrictions where the intersection includes the correct audience.
+# ￼SP should accept a Response with a Condition with an addition Audience
+# prepended.
+# ￼SP should accept a Response with a Condition with an addition Audience
+# appended.
+# ￼SP should not accept multiple AudienceRestrictions where the intersection
+# is zero. (test 1 of 2)
+# ￼SP should not accept multiple AudienceRestrictions where the intersection
+# is zero. (test 2 of 2)
+# ￼SP should accept multiple AudienceRestrictions where the intersection
+# includes the correct audience.
 # ￼SP should accept that only the Assertion is signed instead of the Response.
 # ￼SP should accept that both the Response and the Assertion is signed.
 # ￼Do SP work when RelayState information is lost?
 # ￼Do SP accept an unknown Extensions element in the Response?
 # ￼SP MUST not accept response when the saml-namespace is invalid
 # ￼SP MUST NOT re-use the same ID in subsequent requests.
-# ￼SP MUST NOT accept a replayed Response. An identical Response/Assertion used a second time. [Profiles]: 4.1.4.5 POST-Specific Processing Rules (test 1 of 2: s inresponseto)
-# ￼SP MUST NOT accept a replayed Response. An identical Response/Assertion used a second time. [Profiles]: 4.1.4.5 POST-Specific Processing Rules (test 2 of 2: unsolicited response)
-# ￼SP SHOULD find attributes in a second AttributeStatement, not only in the first.
-# ￼SP SHOULD NOT accept an signed assertion embedded in an AttributeValue inside an unsigned assertion.
-# ￼SP SHOULD NOT accept an signed assertion embedded in an AttributeValue inside an unsigned assertion. (Signature moved out...)
-# ￼SP SHOULD NOT accept an signed assertion, where the signature is referring to another assertion.
-# ￼SP SHOULD find attributes in a second Assertion/AttributeStatement, not only in one of them (test 1 of 2 - attributes in first).
-# ￼SP SHOULD find attributes in a second Assertion/AttributeStatement, not only in one of them (test 2 of 2 - attributes in last).
+# ￼SP MUST NOT accept a replayed Response. An identical Response/Assertion
+# used a second time. [Profiles]: 4.1.4.5 POST-Specific Processing Rules (
+# test 1 of 2: s inresponseto)
+# ￼SP MUST NOT accept a replayed Response. An identical Response/Assertion
+# used a second time. [Profiles]: 4.1.4.5 POST-Specific Processing Rules (
+# test 2 of 2: unsolicited response)
+# ￼SP SHOULD find attributes in a second AttributeStatement, not only in the
+# first.
+# ￼SP SHOULD NOT accept an signed assertion embedded in an AttributeValue
+# inside an unsigned assertion.
+# ￼SP SHOULD NOT accept an signed assertion embedded in an AttributeValue
+# inside an unsigned assertion. (Signature moved out...)
+# ￼SP SHOULD NOT accept an signed assertion, where the signature is referring
+#  to another assertion.
+# ￼SP SHOULD find attributes in a second Assertion/AttributeStatement,
+# not only in one of them (test 1 of 2 - attributes in first).
+# ￼SP SHOULD find attributes in a second Assertion/AttributeStatement,
+# not only in one of them (test 2 of 2 - attributes in last).
 # ￼SP SHOULD NOT accept attributes in unsigned 2nd assertion. (test 1 of 2)
 # ￼SP SHOULD NOT accept attributes in unsigned 2nd assertion. (test 2 of 2)
 # ￼SP SHOULD NOT accept authnstatement in unsigned 2nd assertion. (test 1 of 2)
@@ -336,8 +397,12 @@ StatusCode is not success""",
 # ￼SP MUST NOT accept LogoutRequest when Issuer is wrong
 # ￼SP MUST NOT accept LogoutRequest when Destination is wrong
 # ￼SP MUST NOT accept unsigned LogoutRequest
-# ￼SP MUST accept LogoutRequest with sessionindex in a separate session, not relying on the session-cookie.
-# ￼SP MUST accept an LogoutRequest with no sessionindex (sent in separate session, no session-cookies)
-# ￼SP MUST accept an LogoutRequest with two sesionindexes (first valid) (sent in separate session, no session-cookies)
-# ￼SP MUST accept an LogoutRequest with two sesionindexes (second valid) (sent in separate session, no session-cookies)
+# ￼SP MUST accept LogoutRequest with sessionindex in a separate session,
+# not relying on the session-cookie.
+# ￼SP MUST accept an LogoutRequest with no sessionindex (sent in separate
+# session, no session-cookies)
+# ￼SP MUST accept an LogoutRequest with two sesionindexes (first valid) (sent
+#  in separate session, no session-cookies)
+# ￼SP MUST accept an LogoutRequest with two sesionindexes (second valid) (
+# sent in separate session, no session-cookies)
 # ￼Session fixtation check
