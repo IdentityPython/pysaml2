@@ -265,8 +265,8 @@ class Conversation():
             info["data"] = urllib.urlencode({"SAMLResponse": resp,
                                              "RelayState": self.relay_state})
             info["method"] = "POST"
-            info["headers"] = [('Content-type',
-                                'application/x-www-form-urlencoded')]
+            info["headers"] = {
+                'Content-type': 'application/x-www-form-urlencoded'}
             self.last_response = self.instance.send(**info)
 
     def do_flow(self, flow):
