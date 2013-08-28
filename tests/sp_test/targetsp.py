@@ -29,10 +29,14 @@ info = {
                 "authn": AUTHN
             }
         },
+    # This is the set of attributes and values that are returned in the
+    # SAML Assertion
     "identity": {
         "given_name": "Roland",
         "sn": "Hedberg"
     },
+    # This is the value of the NameID that is return in the Subject in the
+    # Assertion
     "userid": "roland"
 }
 
