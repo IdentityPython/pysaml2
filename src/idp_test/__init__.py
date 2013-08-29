@@ -105,7 +105,7 @@ class SAML2client(object):
         self._parser.add_argument('-L', dest='log', action='store_true',
                                   help="Print log information")
         self._parser.add_argument(
-            '-C', dest="ca_certs",
+            '-C', dest="§",
             help=("CA certs to use to verify HTTPS server certificates, ",
                   "if HTTPS is used and no server CA certs are defined then ",
                   "no cert verification will be done"))
@@ -131,6 +131,7 @@ class SAML2client(object):
         self._parser.add_argument("-Y", dest="pysamllog", action='store_true',
                                   help="Print PySAML2 logs")
         self._parser.add_argument("-H", dest="pretty", action='store_true')
+        self._parser.add_argument("-i", dest="insecure", action='store_true')
         self._parser.add_argument("oper", nargs="?", help="Which test to run")
 
         self.interactions = None
@@ -170,8 +171,14 @@ class SAML2client(object):
                         break
 
         self.sp_config = SPConfig().load(mod.CONFIG, metadata_construction)
-        if not self.args.ca_certs:
+
+        if not self.args.insecure:
             self.sp_config.verify_ssl_cert = False
+        else:
+            if self.args.ca_certs:
+                self.sp_config.ca_certs = self.args.ca_certs
+            else:
+                self.sp_config.ca_certs = "../keys/cacert.pem"
 
     def setup(self):
         self.json_config = self.json_config_file()

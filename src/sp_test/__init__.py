@@ -23,7 +23,8 @@ from saml2test import exception_trace
 __author__ = 'rolandh'
 
 #formatter = logging.Formatter("%(asctime)s %(name)s:%(levelname)s %(message)s")
-formatter_2 = logging.Formatter("%(delta).6f - %(levelname)s - [%(name)s] %(message)s")
+formatter_2 = logging.Formatter(
+    "%(delta).6f - %(levelname)s - [%(name)s] %(message)s")
 
 cf = ContextFilter()
 cf.start()
@@ -31,7 +32,7 @@ cf.start()
 streamhandler = logging.StreamHandler(sys.stderr)
 streamhandler.setFormatter(formatter_2)
 
-memoryhandler = logging.handlers.MemoryHandler(1024*10, logging.DEBUG)
+memoryhandler = logging.handlers.MemoryHandler(1024 * 10, logging.DEBUG)
 memoryhandler.addFilter(cf)
 
 logger = logging.getLogger(__name__)
@@ -39,40 +40,41 @@ logger.setLevel(logging.DEBUG)
 logger.addHandler(memoryhandler)
 logger.setLevel(logging.DEBUG)
 
-class Client(object):
 
+class Client(object):
     def __init__(self, operations, check_factory):
         self.operations = operations
         self.tests = None
         self.check_factory = check_factory
 
         self._parser = argparse.ArgumentParser()
-        self._parser.add_argument('-d', dest='debug', action='store_true',
-                                  help="Print debug information")
-        self._parser.add_argument('-v', dest='verbose', action='store_true',
-                                  help="Print runtime information")
+        self._parser.add_argument("-c", dest="config", default="config",
+                                  help="Configuration file for the IdP")
         self._parser.add_argument(
             '-C', dest="ca_certs",
             help=("CA certs to use to verify HTTPS server certificates, ",
                   "if HTTPS is used and no server CA certs are defined then ",
                   "no cert verification will be done"))
+        self._parser.add_argument('-d', dest='debug', action='store_true',
+                                  help="Print debug information")
+        self._parser.add_argument("-H", dest="pretty", action='store_true')
+        self._parser.add_argument("-i", dest="insecure", action='store_true')
         self._parser.add_argument('-J', dest="json_config_file",
                                   help="Script configuration")
-        self._parser.add_argument('-m', dest="metadata", action='store_true',
-                                  help="Return the IdP metadata")
         self._parser.add_argument(
             "-l", dest="list", action="store_true",
             help="List all the test flows as a JSON object")
-        self._parser.add_argument("-c", dest="config", default="config",
-                                  help="Configuration file for the IdP")
+        self._parser.add_argument('-m', dest="metadata", action='store_true',
+                                  help="Return the IdP metadata")
         self._parser.add_argument(
             "-P", dest="configpath", default=".",
             help="Path to the configuration file for the IdP")
         self._parser.add_argument("-t", dest="testpackage",
                                   help="Module describing tests")
+        self._parser.add_argument('-v', dest='verbose', action='store_true',
+                                  help="Print runtime information")
         self._parser.add_argument("-Y", dest="pysamllog", action='store_true',
                                   help="Print PySAML2 logs")
-        self._parser.add_argument("-H", dest="pretty", action='store_true')
         self._parser.add_argument("oper", nargs="?", help="Which test to run")
 
         self.interactions = None
@@ -92,6 +94,15 @@ class Client(object):
         sys.path.insert(0, self.args.configpath)
         mod = import_module(self.args.config)
         self.idp_config = IdPConfig().load(mod.CONFIG, metadata_construction)
+
+        if not self.args.insecure:
+            self.idp_config.verify_ssl_cert = False
+        else:
+            if self.args.ca_certs:
+                self.idp_config.ca_certs = self.args.ca_certs
+            else:
+                self.idp_config.ca_certs = "../keys/cacert.pem"
+
         self.idp = Server(config=self.idp_config)
 
     def test_summation(self, sid):
