@@ -1,8 +1,8 @@
 __author__ = 'rolandh'
 
 
-NAME = ["givenName", "initials", "displayName", "sn"]
-STATIC_ORG_INFO = ["c", "o", "ou"]
+NAME = ["givenName", "displayName", "sn"]
+STATIC_ORG_INFO = ["c", "o", "co"]
 OTHER = ["eduPersonPrincipalName", "eduPersonScopedAffiliation", "mail"]
 
 # These give you access to information
