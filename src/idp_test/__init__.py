@@ -47,22 +47,20 @@ formatter_2 = logging.Formatter("%(delta).6f - %(levelname)s - [%(name)s] %(mess
 cf = ContextFilter()
 cf.start()
 
-memoryhandler = logging.handlers.MemoryHandler(1024*10, logging.DEBUG)
+streamhandler = logging.StreamHandler(sys.stderr)
+streamhandler.setFormatter(formatter_2)
 
-pys_streamhandler = logging.StreamHandler(sys.stderr)
-pys_streamhandler.setFormatter(formatter_2)
+# pys_memoryhandler = logging.handlers.MemoryHandler(1024*10, logging.DEBUG)
+# pys_memoryhandler.setFormatter(formatter_2)
+# pys_memoryhandler.addFilter(cf)
+# root_logger.addHandler(pys_memoryhandler)
+# root_logger.setLevel(logging.DEBUG)
 
-pys_memoryhandler = logging.handlers.MemoryHandler(1024*10, logging.DEBUG)
-pys_memoryhandler.setFormatter(formatter_2)
-pys_memoryhandler.addFilter(cf)
-root_logger.addHandler(pys_memoryhandler)
-root_logger.setLevel(logging.DEBUG)
-
-tracelog = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 t_memoryhandler = logging.handlers.MemoryHandler(1024*10, logging.DEBUG)
 t_memoryhandler.addFilter(cf)
-tracelog.addHandler(t_memoryhandler)
-tracelog.setLevel(logging.DEBUG)
+logger.addHandler(t_memoryhandler)
+logger.setLevel(logging.DEBUG)
 
 saml2testlog = logging.getLogger("saml2test")
 saml2testlog.addHandler(t_memoryhandler)
@@ -253,14 +251,17 @@ class SAML2client(object):
         memhndlr.setTarget(hndlr2)
         memhndlr.flush()
         memhndlr.close()
-        # pys_streamhandler.setFormatter(formatter_2)
-        # pys_memoryhandler.setTarget(pys_streamhandler)
+        # streamhandler.setFormatter(formatter_2)
+        # pys_memoryhandler.setTarget(streamhandler)
         # pys_memoryhandler.flush()
         # pys_memoryhandler.close()
 
     def run(self):
-        HANDLER = ""
         self.args = self._parser.parse_args()
+
+        if self.args.pysamllog:
+            root_logger.addHandler(t_memoryhandler)
+            root_logger.setLevel(logging.DEBUG)
 
         if self.args.operations:
             path, name = os.path.split(self.args.operations)
@@ -280,15 +281,6 @@ class SAML2client(object):
                 raise Exception("Missing test case specification")
             self.args.oper = self.args.oper.strip("'")
             self.args.oper = self.args.oper.strip('"')
-
-        if self.args.log:
-            HANDLER = "stream"
-        #     streamhandler.setFormatter(formatter_2)
-        #     logger.addHandler(streamhandler)
-        elif self.args.debug:
-            HANDLER = "memory"
-        #     memoryhandler.setFormatter(formatter_2)
-        #     logger.addHandler(memoryhandler)
 
         try:
             self.setup()
@@ -311,13 +303,13 @@ class SAML2client(object):
                     try:
                         oper = self.tests.OPERATIONS[self.args.oper]
                     except ValueError:
-                        tracelog.error("Undefined testcase")
+                        logger.error("Undefined testcase")
                         return
                 else:
-                    tracelog.error("Undefined testcase")
+                    logger.error("Undefined testcase")
                     return
 
-            tracelog.info("Starting conversation")
+            logger.info("Starting conversation")
             conv = Conversation(self.client, self.sp_config, self.interactions,
                                 check_factory=self.check_factory,
                                 entity_id=self.entity_id,
@@ -350,11 +342,8 @@ class SAML2client(object):
         else:
             print >> sys.stdout, json.dumps(tsum)
 
-        if self.args.pysamllog and HANDLER == "memory":
-            self.output_log(pys_memoryhandler, pys_streamhandler)
-
         if tsum["status"] > 1 or self.args.debug or err:
-            self.output_log(t_memoryhandler, pys_streamhandler)
+            self.output_log(t_memoryhandler, streamhandler)
 
     def list_operations(self):
         lista = []
