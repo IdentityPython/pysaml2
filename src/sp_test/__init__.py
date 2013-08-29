@@ -1,4 +1,5 @@
 import json
+import pprint
 import argparse
 import sys
 from importlib import import_module
@@ -21,33 +22,22 @@ from saml2test import exception_trace
 
 __author__ = 'rolandh'
 
-formatter_2 = logging.Formatter(
-    "%(delta).6f - %(levelname)s - [%(name)s] %(message)s")
+#formatter = logging.Formatter("%(asctime)s %(name)s:%(levelname)s %(message)s")
+formatter_2 = logging.Formatter("%(delta).6f - %(levelname)s - [%(name)s] %(message)s")
 
 cf = ContextFilter()
 cf.start()
 
+streamhandler = logging.StreamHandler(sys.stderr)
+streamhandler.setFormatter(formatter_2)
+
 memoryhandler = logging.handlers.MemoryHandler(1024*10, logging.DEBUG)
+memoryhandler.addFilter(cf)
 
-pys_streamhandler = logging.StreamHandler(sys.stderr)
-pys_streamhandler.setFormatter(formatter_2)
-
-pys_memoryhandler = logging.handlers.MemoryHandler(1024*10, logging.DEBUG)
-pys_memoryhandler.setFormatter(formatter_2)
-pys_memoryhandler.addFilter(cf)
-root_logger.addHandler(pys_memoryhandler)
-root_logger.setLevel(logging.DEBUG)
-
-tracelog = logging.getLogger(__name__)
-t_memoryhandler = logging.handlers.MemoryHandler(1024*10, logging.DEBUG)
-t_memoryhandler.addFilter(cf)
-tracelog.addHandler(t_memoryhandler)
-tracelog.setLevel(logging.DEBUG)
-
-saml2testlog = logging.getLogger("saml2test")
-saml2testlog.addHandler(t_memoryhandler)
-saml2testlog.setLevel(logging.DEBUG)
-
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+logger.addHandler(memoryhandler)
+logger.setLevel(logging.DEBUG)
 
 class Client(object):
 
@@ -82,6 +72,7 @@ class Client(object):
                                   help="Module describing tests")
         self._parser.add_argument("-Y", dest="pysamllog", action='store_true',
                                   help="Print PySAML2 logs")
+        self._parser.add_argument("-H", dest="pretty", action='store_true')
         self._parser.add_argument("oper", nargs="?", help="Which test to run")
 
         self.interactions = None
@@ -137,6 +128,10 @@ class Client(object):
     def run(self):
         self.args = self._parser.parse_args()
 
+        if self.args.pysamllog:
+            root_logger.addHandler(memoryhandler)
+            root_logger.setLevel(logging.DEBUG)
+
         if self.args.metadata:
             return self.make_meta()
         elif self.args.list:
@@ -166,6 +161,12 @@ class Client(object):
 
         opers = oper["sequence"]
 
+        if self.args.pretty:
+            pp = pprint.PrettyPrinter(indent=4)
+        else:
+            pp = None
+
+        logger.info("Starting conversation")
         conv = Conversation(self.idp, self.idp_config,
                             self.interactions, self.json_config,
                             check_factory=self.check_factory,
@@ -175,12 +176,10 @@ class Client(object):
             conv.do_sequence(opers, oper["tests"])
             self.test_log = conv.test_output
             tsum = self.test_summation(self.args.oper)
-            print >>sys.stdout, json.dumps(tsum)
             err = None
         except CheckError, err:
             self.test_log = conv.test_output
             tsum = self.test_summation(self.args.oper)
-            print >>sys.stdout, json.dumps(tsum)
         except FatalError, err:
             if conv:
                 self.test_log = conv.test_output
@@ -188,7 +187,6 @@ class Client(object):
             else:
                 self.test_log = exception_trace("RUN", err)
             tsum = self.test_summation(self.args.oper)
-            print >>sys.stdout, json.dumps(tsum)
         except Exception, err:
             if conv:
                 self.test_log = conv.test_output
@@ -196,13 +194,14 @@ class Client(object):
             else:
                 self.test_log = exception_trace("RUN", err)
             tsum = self.test_summation(self.args.oper)
-            print >>sys.stdout, json.dumps(tsum)
 
-        if self.args.pysamllog:
-            self.output_log(pys_memoryhandler, pys_streamhandler)
+        if pp:
+            pp.pprint(tsum)
+        else:
+            print >> sys.stdout, json.dumps(tsum)
 
         if tsum["status"] > 1 or self.args.debug or err:
-            self.output_log(t_memoryhandler, pys_streamhandler)
+            self.output_log(memoryhandler, streamhandler)
 
     def setup(self):
         self.json_config = self.json_config_file()

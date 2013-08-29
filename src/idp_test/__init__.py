@@ -50,20 +50,11 @@ cf.start()
 streamhandler = logging.StreamHandler(sys.stderr)
 streamhandler.setFormatter(formatter_2)
 
-# pys_memoryhandler = logging.handlers.MemoryHandler(1024*10, logging.DEBUG)
-# pys_memoryhandler.setFormatter(formatter_2)
-# pys_memoryhandler.addFilter(cf)
-# root_logger.addHandler(pys_memoryhandler)
-# root_logger.setLevel(logging.DEBUG)
-
-logger = logging.getLogger(__name__)
-t_memoryhandler = logging.handlers.MemoryHandler(1024*10, logging.DEBUG)
-t_memoryhandler.addFilter(cf)
-logger.addHandler(t_memoryhandler)
-logger.setLevel(logging.DEBUG)
+memoryhandler = logging.handlers.MemoryHandler(1024*10, logging.DEBUG)
+memoryhandler.addFilter(cf)
 
 saml2testlog = logging.getLogger("saml2test")
-saml2testlog.addHandler(t_memoryhandler)
+saml2testlog.addHandler(memoryhandler)
 saml2testlog.setLevel(logging.DEBUG)
 
 
@@ -260,7 +251,7 @@ class SAML2client(object):
         self.args = self._parser.parse_args()
 
         if self.args.pysamllog:
-            root_logger.addHandler(t_memoryhandler)
+            root_logger.addHandler(memoryhandler)
             root_logger.setLevel(logging.DEBUG)
 
         if self.args.operations:
@@ -343,7 +334,7 @@ class SAML2client(object):
             print >> sys.stdout, json.dumps(tsum)
 
         if tsum["status"] > 1 or self.args.debug or err:
-            self.output_log(t_memoryhandler, streamhandler)
+            self.output_log(memoryhandler, streamhandler)
 
     def list_operations(self):
         lista = []
