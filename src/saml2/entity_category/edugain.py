@@ -1,6 +1,6 @@
 __author__ = 'rolandh'
 
-COC = "http://www.edugain.org/dataprotection/coc-eu-01-draft"
+COC = "http://www.geant.net/uri/dataprotection-code-of-conduct/v1/"
 
 RELEASE = {
     "": ["eduPersonTargetedID"],
