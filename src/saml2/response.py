@@ -596,6 +596,7 @@ class AuthnResponse(StatusResponse):
         if data.address:
             if not valid_address(data.address):
                 return False
+            # verify that I got it from the correct sender
 
         # These two will raise exception if untrue
         validate_on_or_after(data.not_on_or_after, self.timeslack)
@@ -824,6 +825,28 @@ class AuthnResponse(StatusResponse):
     def __str__(self):
         return "%s" % self.xmlstr
 
+    def verify_attesting_entity(self, address):
+        """
+        Assumes one assertion. At least one address specification has to be
+        correct.
+
+        :param address: IP address of attesting entity
+        :return: True/False
+        """
+
+        correct = 0
+        for subject_conf in self.assertion.subject.subject_confirmation:
+            if subject_conf.subject_confirmation_data.address:
+                if subject_conf.subject_confirmation_data.address == address:
+                    correct += 1
+            else:
+                correct += 1
+
+        if correct:
+            return True
+        else:
+            return False
+
 
 class AuthnQueryResponse(AuthnResponse):
     msgtype = "authn_query_response"
@@ -982,3 +1005,4 @@ class AssertionIDResponse(object):
         logger.debug("response: %s" % (self.response,))
 
         return self
+
