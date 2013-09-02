@@ -1,15 +1,17 @@
+import copy
 from saml2 import samlp
 from saml2 import NAMEID_FORMAT_EMAILADDRESS
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2.s_utils import rndstr
 
-from saml2.saml import AUTHN_PASSWORD, SCM_BEARER, SubjectConfirmationData
+from saml2.saml import SCM_BEARER, SubjectConfirmationData, SubjectConfirmation
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.saml import SCM_SENDER_VOUCHES
 from saml2.samlp import STATUS_AUTHN_FAILED
 from sp_test.check import VerifyContent
 from sp_test import check
+from saml2test import ip_addresses
 
 __author__ = 'rolandh'
 
@@ -178,12 +180,49 @@ class AuthnResponse_broken_destination(AuthnResponse):
         return message
 
 
-class AuthnResponse_with_multiple_SubjectConfirmationData(AuthnResponse):
+class AuthnResponse_correct_recipient_address(AuthnResponse):
     def pre_processing(self, message, **kwargs):
         _confirmation = message.assertion.subject.subject_confirmation
-        scd = SubjectConfirmationData(recipient="https://example.com")
-        _confirmation.append(scd)
+        if "localhost" in self.conv.entity_id:
+            addr = "127.0.0.1"
+        else:
+            addr = ip_addresses()[0]
+        _confirmation[0].subject_confirmation_data.address = addr
         return message
+
+
+class AuthnResponse_incorrect_recipient_address(AuthnResponse):
+    def pre_processing(self, message, **kwargs):
+        _confirmation = message.assertion.subject.subject_confirmation
+        _confirmation[0].subject_confirmation_data.address = "10.0.0.1"
+        return message
+
+
+class AuthnResponse_2_recipients_me_last(AuthnResponse):
+    def pre_processing(self, message, **kwargs):
+        _confirmation = message.assertion.subject.subject_confirmation
+        sc = copy.copy(_confirmation[0])
+        if "localhost" in self.conv.entity_id:
+            addr = "127.0.0.1"
+        else:
+            addr = ip_addresses()[0]
+        sc.subject_confirmation_data.address = addr
+        _confirmation.insert(0, sc)
+        return message
+
+
+class AuthnResponse_2_recipients_me_first(AuthnResponse):
+    def pre_processing(self, message, **kwargs):
+        _confirmation = message.assertion.subject.subject_confirmation
+        sc = copy.copy(_confirmation[0])
+        if "localhost" in self.conv.entity_id:
+            addr = "127.0.0.1"
+        else:
+            addr = ip_addresses()[0]
+        sc.subject_confirmation_data.address = addr
+        _confirmation.append(sc)
+        return message
+
 
 # Requests coming from the future and from the past.
 # unsigned/signed assertions
@@ -288,17 +327,40 @@ StatusCode is not success""",
     'FL14b': {
         "name": "SP should not accept missing Recipient attribute",
         "sequence": [(Login, AuthnRequest,
-                      AuthnResponse_broken_destination,
+                      AuthnResponse_missing_Recipient,
                       check.ErrorResponse)],
         "tests": {"pre": [], "post": []}
     },
-    'FL16': {
-        "name": "Send Response with multiple SubjectConfirmation elements with"
-                "SubjectConfirmationData/@Address-es, where only the last one"
-                " is correct",
+    'FL20': {
+        "name": "Accept a Response with a SubjectConfirmationData elements "
+                "with a correct @Address attribute",
         "sequence": [(Login, AuthnRequest,
-                      AuthnResponse_broken_destination,
+                      AuthnResponse_correct_recipient_address,
+                      None)],
+        "tests": {"pre": [], "post": []}
+    },
+    'FL21': {
+        "name": "Accept a Response with a SubjectConfirmationData elements "
+                "with a incorrect @Address attribute",
+        "sequence": [(Login, AuthnRequest,
+                      AuthnResponse_incorrect_recipient_address,
                       check.ErrorResponse)],
+        "tests": {"pre": [], "post": []}
+    },
+    'FL22': {
+        "name": "Accept a Response with two SubjectConfirmationData elements"
+                "representing two recipients (test 1 of 2, correct one last)",
+        "sequence": [(Login, AuthnRequest,
+                      AuthnResponse_2_recipients_me_last,
+                      None)],
+        "tests": {"pre": [], "post": []}
+    },
+    'FL23': {
+        "name": "Accept a Response with two SubjectConfirmationData elements"
+                "representing two recipients (test 1 of 2, correct one last)",
+        "sequence": [(Login, AuthnRequest,
+                      AuthnResponse_2_recipients_me_first,
+                      None)],
         "tests": {"pre": [], "post": []}
     },
 }
