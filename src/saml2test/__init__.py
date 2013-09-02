@@ -3,6 +3,7 @@ import time
 import traceback
 import requests
 import sys
+import socket
 
 from subprocess import Popen, PIPE
 from saml2test.check import CRITICAL
@@ -30,45 +31,6 @@ class Unknown(Exception):
 
 class OperationError(Exception):
     pass
-
-
-# class Trace(object):
-#     def __init__(self):
-#         self.trace = []
-#         self.start = time.time()
-#
-#     def request(self, msg):
-#         delta = time.time() - self.start
-#         self.trace.append("%f --> %s" % (delta, msg))
-#
-#     def reply(self, msg):
-#         delta = time.time() - self.start
-#         self.trace.append("%f <-- %s" % (delta, msg))
-#
-#     def info(self, msg, who="saml2client"):
-#         delta = time.time() - self.start
-#         self.trace.append("%f - INFO - [%s] %s" % (delta, who, msg))
-#
-#     def error(self, msg, who="saml2client"):
-#         delta = time.time() - self.start
-#         self.trace.append("%f - ERROR - [%s] %s" % (delta, who, msg))
-#
-#     def warning(self, msg, who="saml2client"):
-#         delta = time.time() - self.start
-#         self.trace.append("%f - WARNING - [%s] %s" % (delta, who, msg))
-#
-#     def __str__(self):
-#         return "\n". join([t.encode("utf-8") for t in self.trace])
-#
-#     def clear(self):
-#         self.trace = []
-#
-#     def __getitem__(self, item):
-#         return self.trace[item]
-#
-#     def next(self):
-#         for line in self.trace:
-#             yield line
 
 
 class ContextFilter(logging.Filter):
@@ -128,3 +90,8 @@ def exception_trace(tag, exc, log=None):
         _exc = "Exception: %s" % exc.message.encode("utf-8", "replace")
 
     return {"status": CRITICAL, "message": _exc, "content": "".join(message)}
+
+
+def ip_addresses():
+    return [ip for ip in socket.gethostbyname_ex(socket.gethostname())[2]
+            if not ip.startswith("127.")]
