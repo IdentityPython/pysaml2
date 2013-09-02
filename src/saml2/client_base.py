@@ -532,8 +532,9 @@ class Base(Entity):
             if resp is None:
                 return None
             elif isinstance(resp, AuthnResponse):
-                self.users.add_information_about_person(resp.session_info())
-                logger.info("--- ADDED person info ----")
+                #self.users.add_information_about_person(resp.session_info())
+                #logger.info("--- ADDED person info ----")
+                pass
             else:
                 logger.error("Response type not supported: %s" % (
                     saml2.class_name(resp),))
