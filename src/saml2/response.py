@@ -50,7 +50,7 @@ from saml2 import time_util
 
 from saml2.s_utils import RequestVersionTooLow
 from saml2.s_utils import RequestVersionTooHigh
-from saml2.saml import attribute_from_string
+from saml2.saml import attribute_from_string, XSI_TYPE
 from saml2.saml import SCM_BEARER
 from saml2.saml import SCM_HOLDER_OF_KEY
 from saml2.saml import SCM_SENDER_VOUCHES
@@ -201,9 +201,13 @@ def _dummy(_):
     return None
 
 
-def for_me(condition, myself):
-    # Am I among the intended audiences
-    for restriction in condition.audience_restriction:
+def for_me(conditions, myself):
+    """ Am I among the intended audiences """
+
+    if not conditions.audience_restriction: # No audience restriction
+        return True
+
+    for restriction in conditions.audience_restriction:
         for audience in restriction.audience:
             if audience.text.strip() == myself:
                 return True
@@ -443,7 +447,8 @@ class AuthnResponse(StatusResponse):
     def __init__(self, sec_context, attribute_converters, entity_id,
                  return_addr=None, outstanding_queries=None,
                  timeslack=0, asynchop=True, allow_unsolicited=False,
-                 test=False, allow_unknown_attributes=False):
+                 test=False, allow_unknown_attributes=False,
+                 **kwargs):
 
         StatusResponse.__init__(self, sec_context, return_addr, timeslack,
                                 asynchop=asynchop)
@@ -461,6 +466,8 @@ class AuthnResponse(StatusResponse):
         self.allow_unsolicited = allow_unsolicited
         self.test = test
         self.allow_unknown_attributes = allow_unknown_attributes
+        #
+        self.extension_schema = kwargs["extension_schema"]
 
     def loads(self, xmldata, decode=True, origxml=None):
         self._loads(xmldata, decode, origxml)
@@ -506,44 +513,50 @@ class AuthnResponse(StatusResponse):
         # check authn_statement.session_index
     
     def condition_ok(self, lax=False):
-        # The Identity Provider MUST include a <saml:Conditions> element
-        #print "Conditions",assertion.conditions
         if self.test:
             lax = True
-        assert self.assertion.conditions
-        condition = self.assertion.conditions
 
-        logger.debug("condition: %s" % condition)
+        # The Identity Provider MUST include a <saml:Conditions> element
+        assert self.assertion.conditions
+        conditions = self.assertion.conditions
+
+        logger.debug("conditions: %s" % conditions)
 
         # if no sub-elements or elements are supplied, then the
         # assertion is considered to be valid.
-        if not condition.keyswv():
+        if not conditions.keyswv():
             return True
 
         # if both are present NotBefore must be earlier than NotOnOrAfter
-        if condition.not_before and condition.not_on_or_after:
-            if not later_than(condition.not_on_or_after, condition.not_before):
+        if conditions.not_before and conditions.not_on_or_after:
+            if not later_than(conditions.not_on_or_after, conditions.not_before):
                 return False
 
         try:
-            if condition.not_on_or_after:
+            if conditions.not_on_or_after:
                 self.not_on_or_after = validate_on_or_after(
-                    condition.not_on_or_after, self.timeslack)
-            if condition.not_before:
-                validate_before(condition.not_before, self.timeslack)
+                    conditions.not_on_or_after, self.timeslack)
+            if conditions.not_before:
+                validate_before(conditions.not_before, self.timeslack)
         except Exception, excp:
-            logger.error("Exception on condition: %s" % (excp,))
+            logger.error("Exception on conditions: %s" % (excp,))
             if not lax:
                 raise
             else:
                 self.not_on_or_after = 0
 
-        if not for_me(condition, self.entity_id):
+        if not for_me(conditions, self.entity_id):
             if not lax:
-                #print condition
-                #print self.entity_id
                 raise Exception("Not for me!!!")
-        
+
+        if conditions.condition: # extra conditions
+            for cond in conditions.condition:
+                try:
+                    if cond.extension_attributes[XSI_TYPE] in self.extension_schema:
+                        pass
+                except KeyError:
+                    raise Exception("Unknown condition")
+
         return True
 
     def decrypt_attributes(self, attribute_statement):
@@ -924,6 +937,7 @@ def response_factory(xmlstr, conf, return_addr=None, outstanding_queries=None,
             
     attribute_converters = conf.attribute_converters
     entity_id = conf.entityid
+    extension_schema = conf.extension_schema
 
     response = StatusResponse(sec_context, return_addr, timeslack, request_id,
                               asynchop)
@@ -933,7 +947,8 @@ def response_factory(xmlstr, conf, return_addr=None, outstanding_queries=None,
             authnresp = AuthnResponse(sec_context, attribute_converters,
                                       entity_id, return_addr,
                                       outstanding_queries, timeslack, asynchop,
-                                      allow_unsolicited)
+                                      allow_unsolicited,
+                                      extension_schema=extension_schema)
             authnresp.update(response)
             return authnresp
     except TypeError:
