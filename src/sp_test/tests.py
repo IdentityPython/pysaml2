@@ -1,13 +1,14 @@
 import copy
-from saml2 import samlp
+from saml2 import samlp, SamlBase
 from saml2 import NAMEID_FORMAT_EMAILADDRESS
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2.s_utils import rndstr
 
-from saml2.saml import SCM_BEARER, SubjectConfirmationData, SubjectConfirmation
+from saml2.saml import SCM_BEARER, Condition, XSI_TYPE
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.saml import SCM_SENDER_VOUCHES
+from saml2.saml import ConditionAbstractType_
 from saml2.samlp import STATUS_AUTHN_FAILED
 from sp_test.check import VerifyContent
 from sp_test import check
@@ -25,6 +26,35 @@ USER = {
         "sn": "Svensson"
     }
 }
+
+
+# Extension class - extra condition
+class TimeRestriction(ConditionAbstractType_):
+    """ """
+
+    c_tag = 'TimeRestriction'
+    c_namespace = "urn:mace:umu.se:sso"
+    c_children = ConditionAbstractType_.c_children.copy()
+    c_attributes = ConditionAbstractType_.c_attributes.copy()
+    c_child_order = ConditionAbstractType_.c_child_order[:]
+    c_cardinality = ConditionAbstractType_.c_cardinality.copy()
+    c_attributes['StartTime'] = ('start_time', 'time', False)
+    c_attributes['EndTime'] = ('end_time', 'time', False)
+
+    def __init__(self,
+                 start_time=None,
+                 end_time=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
+        ConditionAbstractType_.__init__(
+            self, text=text, extension_elements=extension_elements,
+            extension_attributes=extension_attributes)
+        self.start_time = start_time
+        self.end_time = end_time
+
+
+# =============================================================================
 
 
 class Response(object):
@@ -224,6 +254,15 @@ class AuthnResponse_2_recipients_me_first(AuthnResponse):
         return message
 
 
+class AuthnResponse_unknown_condition(AuthnResponse):
+    def pre_processing(self, message, **kwargs):
+        conditions = message.assertion.conditions
+        conditions.condition = [Condition(
+            extension_elements=[TimeRestriction(start_time="08:00:00",
+                                                end_time="17:00:00")],
+            extension_attributes={XSI_TYPE: "foo:bas"})]
+        return message
+
 # Requests coming from the future and from the past.
 # unsigned/signed assertions
 
@@ -363,6 +402,13 @@ StatusCode is not success""",
                       None)],
         "tests": {"pre": [], "post": []}
     },
+    'FL26': {
+        "name": "Reject an assertion containing an unknown Condition",
+        "sequence": [(Login, AuthnRequest,
+                      AuthnResponse_unknown_condition,
+                      check.ErrorResponse)],
+        "tests": {"pre": [], "post": []}
+    }
 }
 
 #￼
