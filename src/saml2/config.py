@@ -61,7 +61,8 @@ COMMON_ARGS = [
     "referred_binding",
     "session_storage",
     "entity_category",
-    "xmlsec_path"
+    "xmlsec_path",
+    "extension_schemas"
 ]
 
 SP_ARGS = [
@@ -197,6 +198,7 @@ class Config(object):
         self.crypto_backend = 'xmlsec1'
         self.scope = ""
         self.allow_unknown_attributes = False
+        self.extension_schema = {}
 
     def setattr(self, context, attr, val):
         if context == "":
@@ -291,6 +293,11 @@ class Config(object):
                     for key, val in cnf["virtual_organization"].items():
                         self.vorg[key] = VirtualOrg(None, key, val)
                 continue
+            elif arg == "extension_schemas":
+                # List of filename of modules representing the schemas
+                for mod_file in cnf["extension_schemas"]:
+                    _mod = self._load(mod_file)
+                    self.extension_schema[_mod.NAMESPACE] = _mod
 
             try:
                 setattr(self, arg, _uc(cnf[arg]))
@@ -314,18 +321,21 @@ class Config(object):
 
         return self
 
-    def load_file(self, config_file, metadata_construction=False):
-        if config_file.endswith(".py"):
-            config_file = config_file[:-3]
-
-        head, tail = os.path.split(config_file)
+    def _load(self, fil):
+        head, tail = os.path.split(fil)
         if head == "":
             if sys.path[0] != ".":
                 sys.path.insert(0, ".")
         else:
             sys.path.insert(0, head)
 
-        mod = import_module(tail)
+        return import_module(tail)
+
+    def load_file(self, config_file, metadata_construction=False):
+        if config_file.endswith(".py"):
+            config_file = config_file[:-3]
+
+        mod = self._load(config_file)
         #return self.load(eval(open(config_file).read()))
         return self.load(mod.CONFIG, metadata_construction)
 
