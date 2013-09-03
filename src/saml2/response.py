@@ -467,7 +467,10 @@ class AuthnResponse(StatusResponse):
         self.test = test
         self.allow_unknown_attributes = allow_unknown_attributes
         #
-        self.extension_schema = kwargs["extension_schema"]
+        try:
+            self.extension_schema = kwargs["extension_schema"]
+        except KeyError:
+            self.extension_schema = {}
 
     def loads(self, xmldata, decode=True, origxml=None):
         self._loads(xmldata, decode, origxml)
@@ -554,8 +557,10 @@ class AuthnResponse(StatusResponse):
                 try:
                     if cond.extension_attributes[XSI_TYPE] in self.extension_schema:
                         pass
+                    else:
+                        raise Exception("Unknown condition")
                 except KeyError:
-                    raise Exception("Unknown condition")
+                    raise Exception("Missing xsi:type specification")
 
         return True
 

@@ -295,9 +295,10 @@ class Config(object):
                 continue
             elif arg == "extension_schemas":
                 # List of filename of modules representing the schemas
-                for mod_file in cnf["extension_schemas"]:
-                    _mod = self._load(mod_file)
-                    self.extension_schema[_mod.NAMESPACE] = _mod
+                if "extension_schemas" in cnf:
+                    for mod_file in cnf["extension_schemas"]:
+                        _mod = self._load(mod_file)
+                        self.extension_schema[_mod.NAMESPACE] = _mod
 
             try:
                 setattr(self, arg, _uc(cnf[arg]))
