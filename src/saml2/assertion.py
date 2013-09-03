@@ -675,8 +675,8 @@ class Assertion(dict):
 
         return assertion_factory(
             issuer=issuer,
-            attribute_statement=attr_statement,
-            authn_statement=_authn_statement,
+            attribute_statement=[attr_statement],
+            authn_statement=[_authn_statement],
             conditions=conds,
             subject=factory(
                 saml.Subject,
