@@ -5,11 +5,12 @@ from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2.s_utils import rndstr
 
-from saml2.saml import SCM_BEARER, Condition, XSI_TYPE
+from saml2.saml import SCM_BEARER, Condition, XSI_TYPE, Audience
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.saml import SCM_SENDER_VOUCHES
 from saml2.saml import ConditionAbstractType_
 from saml2.samlp import STATUS_AUTHN_FAILED
+from saml2.time_util import in_a_while, a_while_ago
 from sp_test.check import VerifyContent
 from sp_test import check
 from saml2test import ip_addresses
@@ -263,8 +264,100 @@ class AuthnResponse_unknown_condition(AuthnResponse):
             extension_attributes={XSI_TYPE: "foo:bas"})]
         return message
 
-# Requests coming from the future and from the past.
-# unsigned/signed assertions
+
+class AuthnResponse_future_NotBefore(AuthnResponse):
+    def pre_processing(self, message, **kwargs):
+        conditions = message.assertion.conditions
+        # Valid starting five hours from now
+        conditions.not_before = in_a_while(hours=5)
+        return message
+
+
+class AuthnResponse_past_NotOnOrAfter(AuthnResponse):
+    def pre_processing(self, message, **kwargs):
+        conditions = message.assertion.conditions
+        # Valid up until five hours ago
+        conditions.not_on_or_after = a_while_ago(hours=5)
+        return message
+
+
+class AuthnResponse_past_SubjectConfirmationData_NotOnOrAfter(AuthnResponse):
+    def pre_processing(self, message, **kwargs):
+        _confirmation = message.assertion.subject.subject_confirmation[0]
+        _confirmation.subject_confirmation_data.not_on_or_after = a_while_ago(
+            hours=5)
+        return message
+
+
+class AuthnResponse_future_SubjectConfirmationData_NotBefore(AuthnResponse):
+    def pre_processing(self, message, **kwargs):
+        _confirmation = message.assertion.subject.subject_confirmation[0]
+        _confirmation.subject_confirmation_data.not_before = in_a_while(
+            hours=5)
+        return message
+
+
+class AuthnResponse_past_AuthnStatement_SessionNotOnOrAfter(AuthnResponse):
+    def pre_processing(self, message, **kwargs):
+        _statement = message.assertion.authn_statement[0]
+        _statement.session_not_on_or_after = a_while_ago(hours=5)
+        return message
+
+
+class AuthnResponse_missing_AuthnStatement(AuthnResponse):
+    def pre_processing(self, message, **kwargs):
+        message.assertion.authn_statement = []
+        return message
+
+
+class AuthnResponse_future_24h_IssueInstant(AuthnResponse):
+    def pre_processing(self, message, **kwargs):
+        message.assertion.issue_instant = in_a_while(hours=24)
+        return message
+
+
+class AuthnResponse_past_24h_IssueInstant(AuthnResponse):
+    def pre_processing(self, message, **kwargs):
+        message.assertion.issue_instant = a_while_ago(hours=24)
+        return message
+
+
+class AuthnResponse_datetime_millisecond(AuthnResponse):
+    def pre_processing(self, message, **kwargs):
+        message.assertion.issue_instant = in_a_while(milliseconds=123)
+        return message
+
+
+class AuthnResponse_AudienceRestriction_no_audience(AuthnResponse):
+    def pre_processing(self, message, **kwargs):
+        conditions = message.assertion.conditions
+        conditions.audience_restriction[0].audience = None
+        return message
+
+
+class AuthnResponse_AudienceRestriction_wrong_audience(AuthnResponse):
+    def pre_processing(self, message, **kwargs):
+        conditions = message.assertion.conditions
+        conditions.audience_restriction[0].audience = [
+            Audience("http://saml.example.com")]
+        return message
+
+
+class AuthnResponse_AudienceRestriction_prepended_audience(AuthnResponse):
+    def pre_processing(self, message, **kwargs):
+        conditions = message.assertion.conditions
+        extra = Audience("http://saml.example.com")
+        conditions.audience_restriction[0].audience.insert(0, extra)
+        return message
+
+
+class AuthnResponse_AudienceRestriction_appended_audience(AuthnResponse):
+    def pre_processing(self, message, **kwargs):
+        conditions = message.assertion.conditions
+        extra = Audience("http://saml.example.com")
+        conditions.audience_restriction[0].audience.append(extra)
+        return message
+
 
 PHASES = {
     "login_redirect": (Login, AuthnRequest, AuthnResponse_redirect),
@@ -403,12 +496,112 @@ StatusCode is not success""",
         "tests": {"pre": [], "post": []}
     },
     'FL26': {
-        "name": "Reject an assertion containing an unknown Condition",
+        "name": "Reject an assertion containing an unknown Condition.",
         "sequence": [(Login, AuthnRequest,
                       AuthnResponse_unknown_condition,
                       check.ErrorResponse)],
         "tests": {"pre": [], "post": []}
-    }
+    },
+    'FL27': {
+        "name": "Reject a Response with a Condition with a NotBefore in the "
+                "future.",
+        "sequence": [(Login, AuthnRequest,
+                      AuthnResponse_future_NotBefore,
+                      check.ErrorResponse)],
+        "tests": {"pre": [], "post": []}
+    },
+    'FL28': {
+        "name": "Reject a Response with a Condition with a NotOnOrAfter in "
+                "the past.",
+        "sequence": [(Login, AuthnRequest,
+                      AuthnResponse_future_NotBefore,
+                      check.ErrorResponse)],
+        "tests": {"pre": [], "post": []}
+    },
+    'FL29': {
+        "name": "Reject a Response with a SubjectConfirmationData@NotOnOrAfter "
+                "in the past",
+        "sequence": [(Login, AuthnRequest,
+                      AuthnResponse_past_SubjectConfirmationData_NotOnOrAfter,
+                      check.ErrorResponse)],
+        "tests": {"pre": [], "post": []}
+    },
+    'FL24': {
+        "name": "Reject a Response with a SubjectConfirmationData@NotBefore "
+                "in the future",
+        "sequence": [(Login, AuthnRequest,
+                      AuthnResponse_future_SubjectConfirmationData_NotBefore,
+                      check.ErrorResponse)],
+        "tests": {"pre": [], "post": []}
+    },
+    'FL30': {
+        "name": "Reject a Response with an AuthnStatement where "
+                "SessionNotOnOrAfter is set in the past.",
+        "sequence": [(Login, AuthnRequest,
+                      AuthnResponse_past_AuthnStatement_SessionNotOnOrAfter,
+                      check.ErrorResponse)],
+        "tests": {"pre": [], "post": []}
+    },
+    'FL31': {
+        "name": "Reject a Response with an AuthnStatement missing",
+        "sequence": [(Login, AuthnRequest,
+                      AuthnResponse_missing_AuthnStatement,
+                      check.ErrorResponse)],
+        "tests": {"pre": [], "post": []}
+    },
+    'FL32': {
+        "name": "Reject an IssueInstant far (24 hours) into the future",
+        "sequence": [(Login, AuthnRequest,
+                      AuthnResponse_missing_AuthnStatement,
+                      check.ErrorResponse)],
+        "tests": {"pre": [], "post": []}
+    },
+    'FL33': {
+        "name": "Reject an IssueInstant far (24 hours) into the past",
+        "sequence": [(Login, AuthnRequest,
+                      AuthnResponse_missing_AuthnStatement,
+                      check.ErrorResponse)],
+        "tests": {"pre": [], "post": []}
+    },
+    'FL34': {
+        "name": "Accept xs:datetime with millisecond precision "
+                "http://www.w3.org/TR/xmlschema-2/#dateTime",
+        "sequence": [(Login, AuthnRequest,
+                      AuthnResponse_datetime_millisecond,
+                      None)],
+        "tests": {"pre": [], "post": []}
+    },
+    'FL36': {
+        "name": "Reject a Response with a Condition with a empty set of "
+                "Audience.",
+        "sequence": [(Login, AuthnRequest,
+                      AuthnResponse_AudienceRestriction_no_audience,
+                      check.ErrorResponse)],
+        "tests": {"pre": [], "post": []}
+    },
+    'FL37': {
+        "name": "Reject a Response with a Condition with a wrong Audience.",
+        "sequence": [(Login, AuthnRequest,
+                      AuthnResponse_AudienceRestriction_wrong_audience,
+                      check.ErrorResponse)],
+        "tests": {"pre": [], "post": []}
+    },
+    'FL38': {
+        "name": "Accept a Response with a Condition with an additional "
+                "Audience prepended",
+        "sequence": [(Login, AuthnRequest,
+                      AuthnResponse_AudienceRestriction_prepended_audience,
+                      None)],
+        "tests": {"pre": [], "post": []}
+    },
+    'FL39': {
+        "name": "Accept a Response with a Condition with an additional "
+                "Audience appended",
+        "sequence": [(Login, AuthnRequest,
+                      AuthnResponse_AudienceRestriction_appended_audience,
+                      None)],
+        "tests": {"pre": [], "post": []}
+    },
 }
 
 #￼
