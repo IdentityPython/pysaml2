@@ -532,8 +532,8 @@ class Policy(object):
                        not_on_or_after=self.not_on_or_after(sp_entity_id),
                        audience_restriction=[factory(
                            saml.AudienceRestriction,
-                           audience=factory(saml.Audience,
-                                            text=sp_entity_id))])
+                           audience=[factory(saml.Audience,
+                                             text=sp_entity_id)])])
 
 
 class EntityCategories(object):

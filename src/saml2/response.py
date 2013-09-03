@@ -208,6 +208,8 @@ def for_me(conditions, myself):
         return True
 
     for restriction in conditions.audience_restriction:
+        if not restriction.audience:
+            continue
         for audience in restriction.audience:
             if audience.text.strip() == myself:
                 return True
