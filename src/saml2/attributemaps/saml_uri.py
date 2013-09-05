@@ -9,6 +9,7 @@ PKCS_9 = "urn:oid:1.2.840.113549.1.9.1."
 UMICH = "urn:oid:1.3.6.1.4.1.250.1.57."
 SCHAC = "urn:oid:1.3.6.1.4.1.25178.2."
 
+
 MAP = {
     "identifier": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
     "fro": {
@@ -95,6 +96,7 @@ MAP = {
         NOREDUPERSON_OID+'3': 'norEduPersonBirthDate',
         UMICH+'57': 'labeledURI',
         UCL_DIR_PILOT+'1': 'uid',
+        UCL_DIR_PILOT+'43': 'co',
         SCHAC+'1': 'schacMotherTongue',
         SCHAC+'2': 'schacGender',
         SCHAC+'3': 'schacDateOfBirth',
@@ -217,6 +219,7 @@ MAP = {
         'domainComponent': UCL_DIR_PILOT+'25',
         'labeledURI': UMICH+'57',
         'uid': UCL_DIR_PILOT+'1',
+        'co': UCL_DIR_PILOT+'43',
         'schacMotherTongue':SCHAC+'1',
         'schacGender': SCHAC+'2',
         'schacDateOfBirth':SCHAC+'3',
