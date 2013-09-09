@@ -11,17 +11,17 @@ If you have not done so yet, read :ref:`install`.
 
 When you want to test a SAML2 entity with this tool you need following things:
 
-#. The Tool Configuration, an example can be found in tests/idp_test/config.py
+#. The Test Driver Configuration, an example can be found in tests/idp_test/config.py
 #. Attribute Maps mapping URNs, OIDs and friendly names
 #. Key files for the test tool
 #. A metadata file representing the tool
-#. The Interaction Configuration file describes how to interact with the entity to be tested.  The metadata for the entity is part of this file. An example can be found in tests/idp_test/test_target_config.py.
+#. The Test Target Configuration file describes how to interact with the entity to be tested.  The metadata for the entity is part of this file. An example can be found in tests/idp_test/test_target_config.py.
 
-These files should be stored outside the saml2test package to have a clean separation between the package and its configuration. To create a directory for the configuration files copy the saml2test/tests including its contents.
+These files should be stored outside the saml2test package to have a clean separation between the package and a particular test configuration. To create a directory for the configuration files copy the saml2test/tests including its contents.
 
 
-(1) Tool Configuration (Testing an IDP)
-:::::::::::::::::::::::::::::::::::::::
+(1) Test Driver Configuration
+:::::::::::::::::::::::::::::
 
 This is a normal `PySAML2 configuration file <http://pythonhosted.org/pysaml2/howto/config.html>`_. You can have more than one and then chose which one to use at run time by supplying the test script with an argument. If no configuration is explicitly provided than **tests/ipd_test/config.py** is provided as a default.
 
@@ -53,9 +53,10 @@ You could also change organization and contact information if you'd like to.
 :::::::::::::::::::::
 Attributes that may be contained in a SAML assertion must be defined in the attribute mapping as documented in the `PySAML2 config guide <http://pythonhosted.org/pysaml2/howto/config.html#attribute-map-dir>`_. If the ‚to‘ and ‚fro‘ mappings are exactly the same just one of them is required. But sometimes it is necessary to have both "to" and "from" because translation isn't symmetric. Like having "sn" and "surname" mapping to the same urn.
 
-You may copy the default mapping:
-cp -pr samle2test/tests/attributemaps. There must be one file per attribute namespace, i.e. attrname-format:basic needs to go into basic.py, and attrname-format:uri needs to go into saml_uri.py.
+You may copy the default mapping into your test configuration directory:
+cp -pr saml2test/tests/attributemaps .
 
+There must be one file per attribute namespace, i.e. attrname-format:basic needs to go into basic.py, and attrname-format:uri needs to go into saml_uri.py.
 
 (3) Key Files
 :::::::::::::
@@ -66,17 +67,17 @@ To change file names, the references in the Tool Configuration need be be change
 
 (4) Test Tool Metadata
 ::::::::::::::::::::::
-The test tool’s metadata is generated from the contents of the Tool Configuration, e.g. if testing an IDP:
+The test tool’s metadata is generated from the contents of the Tool Configuration, e.g.:
 make_metadata.py config.py > testdrv_metadata.xml
 
 The resulting SAML2 metadata needs to be imported to the test target.
 
 
-(5) Interaction Configuration File
+(5) Test Target Configuration File
 ::::::::::::::::::::::::::::::::::
-This configuration is structured as a Python dictionary.
+This configuration is contained in the "info" Python dictionary.
 
-The keys are **entity_id**, **interaction** and **metadata**.
+The keys are:
 
 entity_id
 .........
@@ -84,6 +85,39 @@ entity_id
 **entity_id** is really only necessary if there is more than one entity
 represented in the metadata. If not provided and if the **metadata** only
 describes one entity that entity's entityID is used.
+
+start_page
+..........
+
+URL for the initial request the test driver issues when executing an SP test.
+
+args
+....
+
+Contains a Python dictionary controlling some aspects of an Authnentication Response" with following structure::
+
+    "AuthnResponse": {
+        "sign_assertion": True,
+        "authn":  {"class_ref": AUTHN_PASSWORD_PROTECTED, # Authentication Context Class Reference
+                   "authn_auth": "http://authnservice.example.com/login"}  # Authenticating Authority
+    },
+
+identity
+........
+
+Contains a list of key-value pairs with attribute names and values, that the embedded IDP will include in assertions.
+Attribute Names in this context are friendly names, not URNs/OIDs.
+To obtain these attributes from the IDP there are three options:
+    #. include an EntityCategory in the EntityDescriptor of the SP. The EntityCategory must be defined in pysaml2.
+    #. include RequestedAttributes in the EntityDescriptor of the SP.
+    #. include RequestedAttributes in the AuthnRequest.
+These methods work additive. Attributes must be registered in the attribute map.
+
+userid
+......
+
+The UserID used as a base for the Assertion/Subject/NameID.
+
 
 interaction
 ...........
@@ -94,16 +128,18 @@ the script is told how to fake that there is a human behind the keyboard.
 It consists of a lists of dictionaries with the keys: **matches**,
 **page-type** and **control**.
 
+The idea is to use **matches** to **activated** a corresponding set of **controls**.
+
 matches
 -------
 
 **matches** is used to identify a page or a form within a page.
-There are four different things that can be used to match the form:
+There are four different things that can be used to match the page:
 
 * url : The action url
-* title : The title of the form, substring matching is used.
-* content: Something in the form, again substring matching is used, and finally
-* class:
+* title : The title of the page, substring matching is used.
+* content: Something in the page, again substring matching is used, and finally
+* class: (currently not used)
 
 Normally the front-end will pick out the necessary information by
 using a users interaction with the entity. If you are running this
@@ -164,36 +200,73 @@ This is then the metadata for the entity to be tested. As noted previously
 the metadata can actually describe more than one entity. In this case
 the **entity_id** must be specified explicitly.
 
-Running the script
-::::::::::::::::::
+Running the script testing an IDP
+:::::::::::::::::::::::::::::::::
 
-Script parameters::
+Synopsis::
 
     $ idp_testdrv.py --help
-    usage: idp_testdrv.py [-h] [-d] [-v] [-C CA_CERTS] [-J JSON_CONFIG_FILE] [-m] [-l]
-                     [-c SPCONFIG]
+    usage: idp_testdrv.py [-h] [-d] [-H] [-C CA_CERTS] [-J TT_CONFIG_FILE] [-m] [-l]
+                     [-c TD_CONFIG]
                      [oper]
 
     positional arguments:
       oper                 Which test to run
 
     optional arguments:
+      -C CA_CERTS            CA certs to use to verify HTTPS server certificates, if
+                             HTTPS is used and no server CA certs are defined then
+                             no cert verification will be done. For a generic validation you may use the ca_bundle.crt
+                             file that comes with Mozilla.
+      -c TD_CONFIG, --config Test driver configuration module at the current directory or the path specified
+                             with the -P option. Do not use relative paths or the .py filename extension
+      -d, --debug            Print debug information to stderr
+      -H, --prettyprint      Human readable status output
+      -h, --help             show this help message and exit
+      -J TT_CONFIG_FILE      Test target configuration in JSON format
+      -L, --log              Print HTTP log information # TODO: update documentation
+      -l, --list             List all the test operations as a JSON object
+      -m, --metadata         Return the SP metadata
+      -O, --operations       Operations module (generated from Repository as idp_saml2base.py)
+      -P, --configpath       Path to the configuration file for the SP
+      -t, --testpackage      Module describing tests (e.g. idp_samlbase.py generated from repository)
+      -Y, --pysamllog        Print pySAML2 logs to stderr
+
+Remember to generate the
+
+
+Running the script testing an SP
+::::::::::::::::::::::::::::::::
+
+Synopsis::
+
+    $ sp_testdrv.py --help
+    usage: sp_testdrv.py [-h] [-d] [-C CA_CERTS] [-J TT_CONFIG_FILE] [-m] [-l] [-c TD_CONFIG] [oper]
+
+    positional arguments:
+      oper                 Which test to run (mandatory except for options -h, -l and -m)
+
+    optional arguments:
       -C CA_CERTS           CA certs to use to verify HTTPS server certificates, if
                             HTTPS is used and no server CA certs are defined then
-                            no cert verification will be done
-      -c SPCONFIG, --config Configuration module for the SP Test Driver at the current directory or the path specified with the -P option. Do not use relative paths or filename extension
-      -d, --debug           Print debug information
+                            no cert verification will be done. For a generic validation you may use the ca_bundle.crt
+                            file that comes with Mozilla.
+      -c TD_CONFIG, --config Test driver configuration module at the current directory or the path specified
+                            with the -P option. Do not use relative paths or filename extension
+      -d, --debug           Print debug information to stderr
       -h, --help            show this help message and exit
-      -H, --prettyprint     Human readable status output
-      -J JSON_CONFIG_FILE   Script configuration
+      -J TT_CONFIG_FILE     Test target configuration in JSON format
       -L, --log             Print HTTP log information # TODO: update documentation
       -l, --list            List all the test flows as a JSON object
       -m, --metadata        Return the SP metadata
       -O, --operations      Operations module (generated from Repository as idp_saml2base.py)
       -P, --configpath      Path to the configuration file for the SP
-      -t, --testpackage     Module describing tests (e.g. idp_samlbase.py generated from repository)
-      -Y, --pysamllog       Print pySAML2 logs
-      # TODO: show what goes to stdout and stderr
+      -t, --testpackage     Module describing tests (e.g. sp_testbase.py generated from repository)
+      -Y, --pysamllog       Print pySAML2 logs to stderr
+
+
+Examples
+::::::::
 
 To see what tests are available::
 
@@ -275,10 +348,10 @@ The used status code are:
 
 0. INFORMATION
 1. OK
-2. WARNING
-3. ERROR
-4. CRITICAL
-5. INTERACTION
+2. WARNING  (the test target's behavior is according to the spec but may not be as expected )
+3. ERROR (the test target's behavior is not according to the spec)
+4. CRITICAL (the test driver threw an exception)
+5. INTERACTION (interaction needed but matching rule does not match - applies to final page in SP test as well)
 
 Then you get all the separate sub tests that has been run during the
 conversation.
