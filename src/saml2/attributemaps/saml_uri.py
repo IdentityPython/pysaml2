@@ -67,6 +67,7 @@ MAP = {
         X500ATTR_OID+'6': 'c',
         X500ATTR_OID+'5': 'serialNumber',
         X500ATTR_OID+'4': 'sn',
+        X500ATTR_OID+'3': 'cn',
         UCL_DIR_PILOT+'60': 'jpegPhoto',
         X500ATTR_OID+'65': 'pseudonym',
         NOREDUPERSON_OID+'5': 'norEduPersonNIN',
@@ -119,6 +120,8 @@ MAP = {
         SCHAC+'21': 'schacProjectSpecificRole',
         },
     "to": {
+        'cn': X500ATTR_OID+'3',
+        'commonName': X500ATTR_OID+'3',
         'roleOccupant': X500ATTR_OID+'33',
         'gn': X500ATTR_OID+'42',
         'norEduPersonNIN': NOREDUPERSON_OID+'5',
