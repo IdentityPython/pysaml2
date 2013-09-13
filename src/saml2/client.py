@@ -563,7 +563,8 @@ class Saml2Client(object):
             return None
     
     def construct_logout_request(self, subject_id, destination,
-                                    issuer_entity_id, reason=None, expire=None):
+                                    issuer_entity_id, reason=None, expire=None,
+                                    nameid_format=saml.NAMEID_FORMAT_TRANSIENT):
         """ Constructs a LogoutRequest
         
         :param subject_id: The identifier of the subject
@@ -581,7 +582,10 @@ class Saml2Client(object):
         # create NameID from subject_id
         name_id = saml.NameID(
             text = self.users.get_entityid(subject_id, issuer_entity_id,
-                                           False))
+                                           False),
+            format = nameid_format,
+            name_qualifier = issuer_entity_id,
+            sp_name_qualifier = self.config.entityid)
 
         request = samlp.LogoutRequest(
             id=session_id,
