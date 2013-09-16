@@ -49,7 +49,7 @@ from saml2 import VERSION
 from saml2 import class_name
 from saml2.config import config_factory
 from saml2.httpbase import HTTPBase
-from saml2.sigver import security_context, response_factory, SignatureError
+from saml2.sigver import security_context, response_factory, SigverError
 from saml2.sigver import pre_signature_part
 from saml2.sigver import signed_instance_factory
 from saml2.virtual_org import VirtualOrg
@@ -794,7 +794,7 @@ class Entity(HTTPBase):
 
             try:
                 response = response.loads(xmlstr, False)
-            except SignatureError, err:
+            except SigverError, err:
                 logger.error("Signature Error: %s" % err)
                 return None
             except Exception, err:
