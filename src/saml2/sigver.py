@@ -1055,6 +1055,9 @@ class SecurityContext(object):
             except XmlsecError, exc:
                 logger.error("check_sig: %s" % exc)
                 pass
+            except SignatureError, exc:
+                logger.error("check_sig: %s" % exc)
+                pass
             except Exception, exc:
                 logger.error("check_sig: %s" % exc)
                 raise
@@ -1203,9 +1206,14 @@ class SecurityContext(object):
             self._check_signature(decoded_xml, response, class_name(response),
                                   origdoc)
 
-        if isinstance(response, Response) and response.assertion:
+        if isinstance(response, Response) and (response.assertion or
+                                               response.encrypted_assertion):
             # Try to find the signing cert in the assertion
-            for assertion in response.assertion:
+            for assertion in (response.assertion or response.encrypted_assertion):
+                if response.encrypted_assertion:
+                    decoded_xml = self.decrypt(assertion.encrypted_data.to_string())
+                    assertion = saml.assertion_from_string(decoded_xml)
+
                 if not assertion.signature:
                     logger.debug("unsigned")
                     if must:
