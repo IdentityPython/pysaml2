@@ -473,7 +473,7 @@ class Entity(HTTPBase):
 
         mid = sid()
 
-        for key in ["destination", "binding"]:
+        for key in ["binding"]:
             try:
                 del kwargs[key]
             except KeyError:
