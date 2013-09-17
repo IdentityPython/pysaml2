@@ -482,8 +482,8 @@ class RequestedAuthnContextType_(SamlBase):
     c_cardinality = SamlBase.c_cardinality.copy()
     c_children[
         '{urn:oasis:names:tc:SAML:2.0:assertion}AuthnContextClassRef'] = (
-        'authn_context_class_ref',
-        [saml.AuthnContextClassRef])
+            'authn_context_class_ref',
+            [saml.AuthnContextClassRef])
     c_cardinality['authn_context_class_ref'] = {"min": 0}
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}AuthnContextDeclRef'] = (
         'authn_context_decl_ref',

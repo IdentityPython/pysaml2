@@ -9,7 +9,7 @@ OTHER = ["eduPersonPrincipalName", "eduPersonScopedAffiliation", "mail"]
 RESEARCH_AND_EDUCATION = "http://www.swamid.se/category/research-and-education"
 SFS_1993_1153 = "http://www.swamid.se/category/sfs-1993-1153"
 
-# presently these don't
+# presently these don't by themself
 EU = "http://www.swamid.se/category/eu-adequate-protection"
 NREN = "http://www.swamid.se/category/nren-service"
 HEI = "http://www.swamid.se/category/hei-service"
