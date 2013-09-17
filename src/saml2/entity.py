@@ -176,7 +176,7 @@ class Entity(HTTPBase):
         elif binding == BINDING_HTTP_REDIRECT:
             logger.info("HTTP REDIRECT")
             info = self.use_http_get(msg_str, destination, relay_state, typ)
-            info["url"] = destination
+            info["url"] = str(destination)
             info["method"] = "GET"
         elif binding == BINDING_SOAP or binding == BINDING_PAOS:
             info = self.use_soap(msg_str, destination, sign=sign)
