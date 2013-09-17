@@ -221,7 +221,7 @@ def for_me(conditions, myself):
 
 
 def authn_response(conf, return_addr, outstanding_queries=None, timeslack=0,
-                   asynchop=True, allow_unsolicited=False):
+                   asynchop=True, allow_unsolicited=False, want_assertions_signed=False):
     sec = security_context(conf)
     if not timeslack:
         try:
@@ -231,7 +231,8 @@ def authn_response(conf, return_addr, outstanding_queries=None, timeslack=0,
     
     return AuthnResponse(sec, conf.attribute_converters, conf.entityid,
                          return_addr, outstanding_queries, timeslack,
-                         asynchop=asynchop, allow_unsolicited=allow_unsolicited)
+                         asynchop=asynchop, allow_unsolicited=allow_unsolicited,
+                         want_assertions_signed=want_assertions_signed)
 
 
 # comes in over SOAP so synchronous
@@ -266,6 +267,7 @@ class StatusResponse(object):
         self.not_on_or_after = 0
         self.in_response_to = None
         self.signature_check = self.sec.correctly_signed_response
+        self.require_signature = False
         self.not_signed = False
         self.asynchop = asynchop
     
@@ -316,7 +318,7 @@ class StatusResponse(object):
         logger.debug("xmlstr: %s" % (self.xmlstr,))
 
         try:
-            self.response = self.signature_check(xmldata, origdoc=origxml)
+            self.response = self.signature_check(xmldata, origdoc=origxml, must=self.require_signature)
         except TypeError:
             raise
         except SignatureError:
@@ -449,7 +451,7 @@ class AuthnResponse(StatusResponse):
     def __init__(self, sec_context, attribute_converters, entity_id,
                  return_addr=None, outstanding_queries=None,
                  timeslack=0, asynchop=True, allow_unsolicited=False,
-                 test=False, allow_unknown_attributes=False,
+                 test=False, allow_unknown_attributes=False, want_assertions_signed=False,
                  **kwargs):
 
         StatusResponse.__init__(self, sec_context, return_addr, timeslack,
@@ -466,6 +468,7 @@ class AuthnResponse(StatusResponse):
         self.assertion = None
         self.session_not_on_or_after = 0
         self.allow_unsolicited = allow_unsolicited
+        self.require_signature = want_assertions_signed
         self.test = test
         self.allow_unknown_attributes = allow_unknown_attributes
         #
@@ -488,7 +491,7 @@ class AuthnResponse(StatusResponse):
                 raise UnsolicitedResponse("Unsolicited response: %s" % self.in_response_to)
             
         return self
-    
+
     def clear(self):
         self._clear()
         self.came_from = ""
@@ -934,7 +937,7 @@ class ArtifactResponse(AuthnResponse):
 
 def response_factory(xmlstr, conf, return_addr=None, outstanding_queries=None,
                      timeslack=0, decode=True, request_id=0, origxml=None,
-                     asynchop=True, allow_unsolicited=False):
+                     asynchop=True, allow_unsolicited=False, want_assertions_signed=False):
     sec_context = security_context(conf)
     if not timeslack:
         try:
@@ -955,7 +958,8 @@ def response_factory(xmlstr, conf, return_addr=None, outstanding_queries=None,
                                       entity_id, return_addr,
                                       outstanding_queries, timeslack, asynchop,
                                       allow_unsolicited,
-                                      extension_schema=extension_schema)
+                                      extension_schema=extension_schema,
+                                      want_assertions_signed=want_assertions_signed)
             authnresp.update(response)
             return authnresp
     except TypeError:
