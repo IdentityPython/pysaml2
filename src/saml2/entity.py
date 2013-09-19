@@ -613,7 +613,8 @@ class Entity(HTTPBase):
 
         return self._message(LogoutRequest, destination, message_id,
                              consent, extensions, sign, name_id=name_id,
-                             reason=reason, not_on_or_after=expire)
+                             reason=reason, not_on_or_after=expire,
+                             issuer=self._issuer(issuer_entity_id))
 
     def create_logout_response(self, request, bindings=None, status=None,
                                sign=False, issuer=None):
