@@ -138,7 +138,7 @@ class IdentMDB(IdentDB):
         self.mdb.primary_key = "user_id"
 
     def in_store(self, _id):
-        if [x for x in self.mdb.get(ident_id=id)]:
+        if [x for x in self.mdb.get(ident_id=_id)]:
             return True
         else:
             return False
