@@ -83,7 +83,8 @@ setup(
         "License :: OSI Approved :: Apache Software License",
         "Topic :: Software Development :: Libraries :: Python Modules"],
 
-    scripts=["tools/parse_xsd2.py", "tools/make_metadata.py"],
+    scripts=["tools/parse_xsd2.py", "tools/make_metadata.py",
+             "tools/mdexport.py"],
 
     tests_require=tests_require,
     extras_require={
