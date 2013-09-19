@@ -138,7 +138,7 @@ class IdentMDB(IdentDB):
         self.mdb.primary_key = "user_id"
 
     def in_store(self, _id):
-        if [x for x in self.mdb.get({"ident_id": _id})]:
+        if [x for x in self.mdb.get(ident_id=id)]:
             return True
         else:
             return False
@@ -171,13 +171,13 @@ class IdentMDB(IdentDB):
 
     def find_local_id(self, name_id):
         cnid = to_dict(name_id, ONTS.values(), True)
-        for item in self.mdb.get({"name_id": cnid}):
+        for item in self.mdb.get(name_id=cnid):
             return item[self.mdb.primary_key]
         return None
 
     def remove_remote(self, name_id):
         cnid = to_dict(name_id, ONTS.values(), True)
-        self.mdb.remove({"name_id": cnid})
+        self.mdb.remove(name_id=cnid)
 
     def handle_name_id_mapping_request(self, name_id, name_id_policy):
         _id = self.find_local_id(name_id)
@@ -211,7 +211,7 @@ class MDB(object):
         _ = self.db.insert(doc)
 
     def get(self, value=None, **kwargs):
-        if value:
+        if value is not None:
             doc = {self.primary_key: value}
             doc.update(kwargs)
             return [item for item in self.db.find(doc)]
