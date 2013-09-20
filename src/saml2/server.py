@@ -430,6 +430,9 @@ class Server(Entity):
                 except AttributeError:
                     snq = sp_entity_id
 
+                if not snq:
+                    snq = sp_entity_id
+
                 _nids = self.ident.find_nameid(userid, sp_name_qualifier=snq)
                 # either none or one
                 if _nids:
