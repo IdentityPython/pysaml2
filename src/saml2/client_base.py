@@ -118,14 +118,12 @@ class Base(Entity):
             self.state = state_cache
 
         for foo in ["allow_unsolicited", "authn_requests_signed",
-                    "logout_requests_signed"]:
-            if self.config.getattr(foo, "sp") == 'true':
+                    "logout_requests_signed", "want_assertions_signed"]:
+            v = self.config.getattr(foo, "sp")
+            if v is True or v == 'true':
                 setattr(self, foo, True)
             else:
                 setattr(self, foo, False)
-
-        # extra randomness
-        self.allow_unsolicited = self.config.getattr("allow_unsolicited", "sp")
 
         self.artifact2response = {}
         self.logout_requests_signed = False
@@ -510,6 +508,7 @@ class Base(Entity):
             kwargs = {
                 "outstanding_queries": outstanding,
                 "allow_unsolicited": self.allow_unsolicited,
+                "want_assertions_signed": self.want_assertions_signed,
                 "return_addr": self.service_url(),
                 "entity_id": self.config.entityid,
                 "attribute_converters": self.config.attribute_converters,
