@@ -124,11 +124,7 @@ class Base(Entity):
             else:
                 setattr(self, foo, False)
 
-        # extra randomness
-        self.allow_unsolicited = self.config.getattr("allow_unsolicited", "sp")
-
         self.artifact2response = {}
-        self.logout_requests_signed = False
 
     #
     # Private methods
@@ -533,8 +529,8 @@ class Base(Entity):
             if resp is None:
                 return None
             elif isinstance(resp, AuthnResponse):
-                #self.users.add_information_about_person(resp.session_info())
-                #logger.info("--- ADDED person info ----")
+                self.users.add_information_about_person(resp.session_info())
+                logger.info("--- ADDED person info ----")
                 pass
             else:
                 logger.error("Response type not supported: %s" % (
