@@ -58,7 +58,7 @@ class AuthnBroker(object):
             of an AuthnContext
         :param method: A identifier of the authentication method.
         :param level: security level, positive integers, 0 is lowest
-        :param reference: Desired unique reference to this spec
+        :param reference: Desired unique reference to this `spec'
         :return:
         """
 
@@ -85,6 +85,8 @@ class AuthnBroker(object):
         _ref = reference
         if _ref is None:
             _ref = str(self.next)
+
+        assert _ref not in self.db["info"]
         self.db["info"][_ref] = _info
         try:
             self.db["key"][key].append(_ref)
