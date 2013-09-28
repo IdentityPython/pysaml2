@@ -48,7 +48,7 @@ class AuthnBroker(object):
     def better(self, a, b):
         return b > a
 
-    def add(self, spec, method, level=0, authn_authority=""):
+    def add(self, spec, method, level=0, authn_authority="", reference=None):
         """
         Adds a new authentication method.
         Assumes not more than one authentication method per AuthnContext
@@ -58,6 +58,7 @@ class AuthnBroker(object):
             of an AuthnContext
         :param method: A identifier of the authentication method.
         :param level: security level, positive integers, 0 is lowest
+        :param reference: Desired unique reference to this `spec'
         :return:
         """
 
@@ -81,7 +82,11 @@ class AuthnBroker(object):
             raise NotImplementedError()
 
         self.next += 1
-        _ref = str(self.next)
+        _ref = reference
+        if _ref is None:
+            _ref = str(self.next)
+
+        assert _ref not in self.db["info"]
         self.db["info"][_ref] = _info
         try:
             self.db["key"][key].append(_ref)
