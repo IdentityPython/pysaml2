@@ -208,5 +208,5 @@ def authn_context_class_ref(ref):
 
 def requested_authn_context(class_ref, comparison="minimum"):
     return RequestedAuthnContext(
-        authn_context_class_ref=AuthnContextClassRef(text=class_ref),
+        authn_context_class_ref=[AuthnContextClassRef(text=class_ref)],
         comparison=comparison)
