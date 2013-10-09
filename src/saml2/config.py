@@ -112,7 +112,7 @@ class Config(object):
         copy.context = typ
         copy._attr = self._attr.copy()
         return copy
-    
+
     def __getattribute__(self, item):
         if item == "context":
             return object.__getattribute__(self, item)
@@ -221,6 +221,33 @@ class Config(object):
         #return self.load(eval(open(config_file).read()))
         return self.load(mod.CONFIG, metadata_construction)
 
+    def get_metadata_loader(self, func_spec):
+        if callable(func_spec):
+            return func_spec
+
+        i = func_spec.rfind('.')
+        module, attr = func_spec[:i], func_spec[i + 1:]
+        try:
+            mod = import_module(module)
+        except Exception, e:
+            raise RuntimeError('Cannot find metadata provider function %s: "%s"' % (func_spec, e))
+
+        try:
+            metadata_loader = getattr(mod, attr)
+        except AttributeError:
+            raise RuntimeError(
+                'Module "%s" does not define a "%s" metadata loader' %
+                (module, attr)
+                )
+
+        if not callable(metadata_loader):
+            raise RuntimeError(
+                'Metadata loader %s.%s must be callable' %
+                (module, attr)
+                )
+
+        return metadata_loader
+
     def load_metadata(self, metadata_conf):
         """ Loads metadata into an internal structure """
 
@@ -243,6 +270,11 @@ class Config(object):
                 except KeyError:
                     cert = None
                 metad.import_external_metadata(spec["url"], cert)
+        if 'loader' in metadata_conf:
+            for spec in metadata_conf['loader']:
+                loader = self.get_metadata_loader(spec)
+                metad.import_metadata(loader(), spec)
+
         return metad
 
     def endpoint(self, service, binding=None):
@@ -291,7 +323,7 @@ class Config(object):
                             raise Exception("Unknown socktype!")
                     try:
                         handler = LOG_HANDLER[htyp](**args)
-                    except TypeError: # difference between 2.6 and 2.7
+                    except TypeError:  # difference between 2.6 and 2.7
                         del args["socktype"]
                         handler = LOG_HANDLER[htyp](**args)
                 else:
@@ -309,14 +341,14 @@ class Config(object):
 
         handler.setFormatter(formatter)
         return handler
-    
+
     def setup_logger(self):
         try:
             _logconf = self.logger
         except KeyError:
             return None
 
-        if root_logger.level != logging.NOTSET: # Someone got there before me
+        if root_logger.level != logging.NOTSET:  # Someone got there before me
             return root_logger
 
         if _logconf is None:
@@ -324,13 +356,13 @@ class Config(object):
 
         try:
             root_logger.setLevel(LOG_LEVEL[_logconf["loglevel"].lower()])
-        except KeyError: # reasonable default
+        except KeyError:  # reasonable default
             root_logger.setLevel(logging.WARNING)
 
         root_logger.addHandler(self.log_handler())
         root_logger.info("Logging started")
         return root_logger
-    
+
     def keys(self):
         keys = []
 
@@ -344,7 +376,7 @@ class Config(object):
             if item in self._attr[dir]:
                 return True
         return False
-        
+
 class SPConfig(Config):
     def_context = "sp"
 
@@ -367,7 +399,7 @@ class SPConfig(Config):
         """ returns a list of endpoints to use for sending login requests to
 
         :param entity_id: The entity ID of the service
-        :param binding: The preferred binding 
+        :param binding: The preferred binding
         :return: list of endpoints
         """
         return self.metadata.single_sign_on_services(entity_id,
@@ -401,7 +433,7 @@ class SPConfig(Config):
         """
         if langpref is None:
             langpref = ["en"]
-            
+
         if self.idp:
             return dict([(e, nd[0]) for (e,
                 nd) in self.metadata.idps(langpref).items() if e in self.idp])
@@ -430,10 +462,10 @@ class SPConfig(Config):
 
 class IdPConfig(Config):
     def_context = "idp"
-    
+
     def __init__(self):
         Config.__init__(self)
-        
+
     def single_logout_services(self, entity_id, binding=BINDING_SOAP):
         """ returns a list of endpoints to use for sending logout requests to
 
@@ -442,7 +474,7 @@ class IdPConfig(Config):
             the SOAP binding)
         :return: list of endpoints
         """
-    
+
         return self.metadata.single_logout_services(entity_id, "sp",
                                                      binding=binding)
 
