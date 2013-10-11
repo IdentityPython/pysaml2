@@ -164,7 +164,7 @@ class AuthnBroker(object):
             else:
                 _cmp = "minimum"
             return self._pick_by_class_ref(
-                req_authn_context.authn_context_class_ref.text, _cmp)
+                req_authn_context.authn_context_class_ref[0].text, _cmp)
         elif req_authn_context.authn_context_decl_ref:
             if req_authn_context.comparison:
                 _cmp = req_authn_context.comparison
