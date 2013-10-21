@@ -356,7 +356,7 @@ class SAML2client(object):
             except KeyError:
                 pass
 
-            for key in ["depends", "endpoints"]:
+            for key in ["depend", "endpoints"]:
                 try:
                     item[key] = val[key]
                 except KeyError:
