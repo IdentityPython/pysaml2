@@ -479,13 +479,13 @@ class VerifyFunctionality(Check):
         self._status = CRITICAL
         return {}
 
-    def _binding_support(self, conv, request, binding):
+    def _binding_support(self, conv, request, binding, typ):
         service = REQ2SRV[request]
         md = conv.client.metadata
         entity_id = conv.entity_id
         func = getattr(md, service, None)
         try:
-            func(entity_id, binding)
+            func(entity_id, binding, typ)
         except UnknownPrincipal:
             self._message = "Unknown principal: %s" % entity_id
             self._status = CRITICAL
@@ -502,7 +502,8 @@ class VerifyFunctionality(Check):
         if self._status != OK:
             return res
 
-        res = self._binding_support(conv, oper.request, args["request_binding"])
+        res = self._binding_support(conv, oper.request, args["request_binding"],
+                                    "idpsso")
         if self._status != OK:
             return res
 
