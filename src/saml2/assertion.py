@@ -673,10 +673,9 @@ class Assertion(dict):
         else:
             _authn_statement = None
 
-        return assertion_factory(
+        _ass = assertion_factory(
             issuer=issuer,
             attribute_statement=[attr_statement],
-            authn_statement=[_authn_statement],
             conditions=conds,
             subject=factory(
                 saml.Subject,
@@ -691,6 +690,11 @@ class Assertion(dict):
                         not_on_or_after=policy.not_on_or_after(sp_entity_id)))]
             ),
         )
+
+        if _authn_statement:
+            _ass.authn_statement = [_authn_statement]
+
+        return _ass
     
     def apply_policy(self, sp_entity_id, policy, metadata=None):
         """ Apply policy to the assertion I'm representing 
