@@ -135,7 +135,7 @@ def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
 
         if sigalg == RSA_SHA1:
             signer = RSASigner(sha1_digest, "sha1")
-            string = "&".join([urllib.urlencode({k: args[k]}) for k in _order])
+            string = "&".join([urllib.urlencode({k: args[k]}) for k in _order if k in args])
             args["Signature"] = base64.b64encode(signer.sign(string, key))
             string = urllib.urlencode(args)
         else:
