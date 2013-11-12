@@ -61,6 +61,7 @@ class Server(Entity):
     def __init__(self, config_file="", config=None, cache=None, stype="idp",
                  symkey=""):
         Entity.__init__(self, stype, config, config_file)
+        self.eptid = None
         self.init_config(stype)
         self.cache = cache
         self.ticket = {}
@@ -70,7 +71,6 @@ class Server(Entity):
         self.symkey = symkey
         self.seed = rndstr()
         self.iv = os.urandom(16)
-        self.eptid = None
 
     def support_AssertionIDRequest(self):
         return True
