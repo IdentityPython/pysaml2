@@ -199,6 +199,7 @@ class UsernamePasswordMako(UserAuthnMethod):
 
 class SocialService(UserAuthnMethod):
     def __init__(self, social):
+        UserAuthnMethod.__init__(self, None)
         self.social = social
 
     def __call__(self, server_env, cookie=None, sid="", query="", **kwargs):
