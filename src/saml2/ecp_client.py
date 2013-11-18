@@ -23,10 +23,11 @@ programs.
 import cookielib
 import logging
 
-from saml2 import soap, SAMLError
+from saml2 import soap
 from saml2 import saml
 from saml2 import samlp
-from saml2 import BINDING_PAOS
+from saml2 import SAMLError
+from saml2 import BINDING_SOAP
 from saml2.client_base import MIME_PAOS
 from saml2.config import Config
 from saml2.entity import Entity
@@ -112,10 +113,10 @@ class Client(Entity):
         """
 
         _, destination = self.pick_binding("single_sign_on_service",
-                                           [BINDING_PAOS], "idpsso",
+                                           [BINDING_SOAP], "idpsso",
                                            entity_id=idp_entity_id)
 
-        ht_args = self.apply_binding(BINDING_PAOS, authn_request, destination,
+        ht_args = self.apply_binding(BINDING_SOAP, authn_request, destination,
                                      sign=sign)
 
         if headers:
@@ -162,7 +163,8 @@ class Client(Entity):
         
         return idp_response
 
-    def parse_sp_ecp_response(self, respdict):
+    @staticmethod
+    def parse_sp_ecp_response(respdict):
         if respdict is None:
             raise SAMLError("Unexpected reply from the SP")
 
