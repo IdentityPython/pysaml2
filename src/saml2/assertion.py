@@ -439,31 +439,33 @@ class Policy(object):
             pass
 
         if ec_maps:
-            # always released
-            for ec_map in ec_maps:
-                try:
-                    attrs = ec_map[""]
-                except KeyError:
-                    pass
-                else:
-                    for attr in attrs:
-                        restrictions[attr] = None
-
             if mds:
                 try:
                     ecs = mds.entity_categories(sp_entity_id)
                 except KeyError:
-                    pass
+                    for ec_map in ec_maps:
+                        for attr in ec_map[""]:
+                            restrictions[attr] = None
                 else:
-                    for ec in ecs:
-                        for ec_map in ec_maps:
-                            try:
-                                attrs = ec_map[ec]
-                            except KeyError:
-                                pass
+                    for ec_map in ec_maps:
+                        for key, val in ec_map.items():
+                            if key == "":  # always released
+                                attrs = val
+                            elif isinstance(key, tuple):
+                                attrs = val
+                                for _key in key:
+                                    try:
+                                        assert _key in ecs
+                                    except AssertionError:
+                                        attrs = []
+                                        break
+                            elif key in ecs:
+                                attrs = val
                             else:
-                                for attr in attrs:
-                                    restrictions[attr] = None
+                                attrs = []
+
+                            for attr in attrs:
+                                restrictions[attr] = None
 
         return restrictions
 
