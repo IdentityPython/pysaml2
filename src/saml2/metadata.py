@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+from saml2.sigver import security_context
+from saml2.config import Config
+from saml2.validate import valid_instance
 from saml2.time_util import in_a_while
 from saml2.extension import mdui, idpdisc, shibmd, mdattr
 from saml2.saml import NAME_FORMAT_URI, AttributeValue, Attribute
@@ -10,7 +13,8 @@ from saml2 import BINDING_SOAP
 from saml2 import samlp
 from saml2 import class_name
 import xmldsig as ds
-
+import sys
+import os
 from saml2.sigver import pre_signature_part
 
 from saml2.s_utils import factory
@@ -40,6 +44,45 @@ ORG_ATTR_TRANSL = {
     "organization_display_name": ("display_name", md.OrganizationDisplayName),
     "organization_url": ("url", md.OrganizationURL)
 }
+
+def create_metadata_string(configfile, config, valid, cert, keyfile, id, name, sign):
+    valid_for = 0
+    nspair = {"xs": "http://www.w3.org/2001/XMLSchema"}
+    paths = [".", "/opt/local/bin"]
+
+    if valid:
+        valid_for = int(valid) #Hours
+
+
+    eds = []
+    if config is not None:
+        eds.append(entity_descriptor(config))
+    else:
+        if configfile.endswith(".py"):
+            configfile = configfile[:-3]
+        config = Config().load_file(configfile, metadata_construction=True)
+        eds.append(entity_descriptor(config))
+
+    conf = Config()
+    conf.key_file = keyfile
+    conf.cert_file = cert
+    conf.debug = 1
+    conf.xmlsec_binary = config.xmlsec_binary
+    secc = security_context(conf)
+
+    if id:
+        desc = entities_descriptor(eds, valid_for, name, id,
+                                   sign, secc)
+        valid_instance(desc)
+        return desc.to_string(nspair)
+    else:
+        for eid in eds:
+            if sign:
+                desc = sign_entity_descriptor(eid, id, secc)
+            else:
+                desc = eid
+            valid_instance(desc)
+            return desc.to_string(nspair)
 
 
 def _localized_name(val, klass):

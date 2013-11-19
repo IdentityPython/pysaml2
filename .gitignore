@@ -83,3 +83,23 @@ example/idp2/modules/root.mako.py
 example/idp3/idp_conf_test.py
 
 update
+
+src/saml2/entity_category/swamid2.py
+
+example/idp2/IdpTestConf.py
+
+example/idp2/create_idp_conf.json
+
+example/idp2/create_idp_conf.py
+
+example/idp2/idpSaml2test.xml
+
+example/idp2/idp_conf.template
+
+example/idp2/idp_conf_saml2test.py
+
+example/sp/sp.xml
+
+example/idp2/idp_conf_local.py
+
+example/sp/sp_conf_local.py
