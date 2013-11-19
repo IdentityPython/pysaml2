@@ -1,4 +1,21 @@
 USERS = {
+    "haho0032": {
+        "sn": "Hoerberg",
+        "givenName": "Hans",
+        "eduPersonScopedAffiliation": "staff@example.com",
+        "eduPersonPrincipalName": "haho@example.com",
+        "uid": "haho",
+        "eduPersonTargetedID": "one!for!all",
+        "c": "SE",
+        "o": "Example Co.",
+        "ou": "IT",
+        "initials": "P",
+        "schacHomeOrganization": "example.com",
+        "email": "hans@example.com",
+        "displayName": "Hans Hoerberg",
+        "labeledURL": "http://www.example.com/haho My homepage",
+        "norEduPersonNIN": "SE199012315555"
+    },
     "roland": {
         "sn": "Hedberg",
         "givenName": "Roland",
@@ -10,7 +27,7 @@ USERS = {
         "o": "Example Co.",
         "ou": "IT",
         "initials": "P",
-        "schacHomeOrganization": "example.com",
+        #"schacHomeOrganization": "example.com",
         "email": "roland@example.com",
         "displayName": "P. Roland Hedberg",
         "labeledURL": "http://www.example.com/rohe My homepage",
