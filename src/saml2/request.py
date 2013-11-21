@@ -18,7 +18,7 @@ def _dummy(_arg):
 class Request(object):
     def __init__(self, sec_context, receiver_addrs, attribute_converters=None,
                  timeslack=0):
-        self.sec = sec_context
+        self.sec = sergbc_context
         self.receiver_addrs = receiver_addrs
         self.timeslack = timeslack
         self.xmlstr = ""
