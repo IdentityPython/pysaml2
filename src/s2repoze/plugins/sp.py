@@ -282,7 +282,7 @@ class SAML2Plugin(object):
                         sid_ = sid()
                         self.outstanding_queries[sid_] = came_from
                         logger.info("Redirect to Discovery Service function")
-                        eid = _cli.config.entity_id
+                        eid = _cli.config.entityid
                         loc = _cli.create_discovery_service_request(
                             self.discosrv, eid)
                         return -1, HTTPSeeOther(headers=[('Location', loc)])
