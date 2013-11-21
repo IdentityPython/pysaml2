@@ -33,6 +33,7 @@ from paste.httpexceptions import HTTPNotImplemented
 from paste.httpexceptions import HTTPInternalServerError
 from paste.request import parse_dict_querystring
 from paste.request import construct_url
+from saml2.httputil import SeeOther
 from saml2.client_base import ECP_SERVICE
 from zope.interface import implements
 
@@ -281,11 +282,15 @@ class SAML2Plugin(object):
                     else:
                         sid_ = sid()
                         self.outstanding_queries[sid_] = came_from
-                        logger.info("Redirect to Discovery Service function")
+                        logger.debug("Redirect to Discovery Service function")
                         eid = _cli.config.entityid
+                        ret = _cli.config.getattr("endpoints",
+                                                  "sp")["discovery_response"][0][0]
+                        ret += "?sid=%s" % sid_
                         loc = _cli.create_discovery_service_request(
-                            self.discosrv, eid)
-                        return -1, HTTPSeeOther(headers=[('Location', loc)])
+                            self.discosrv, eid, **{"return": ret})
+                        return -1, SeeOther(loc)
+
                 else:
                     return -1, HTTPNotImplemented(
                         detail='No WAYF or DJ present!')
@@ -366,6 +371,15 @@ class SAML2Plugin(object):
                 raise Exception(
                     "Failed to construct the AuthnRequest: %s" % exc)
 
+
+            try:
+                ret = _cli.config.getattr("endpoints","sp")["discovery_response"][0][0]
+                if (environ["PATH_INFO"]) in ret and ret.split(environ["PATH_INFO"])[1] == "":
+                    query = parse_qs(environ["QUERY_STRING"])
+                    sid = query["sid"][0]
+                    came_from = self.outstanding_queries[sid]
+            except:
+                pass
             # remember the request
             self.outstanding_queries[_sid] = came_from
 
