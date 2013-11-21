@@ -103,3 +103,7 @@ example/sp/sp.xml
 example/idp2/idp_conf_local.py
 
 example/sp/sp_conf_local.py
+
+example/sp/my_backup_sp_conf_local.py
+
+example/sp/backup_sp_conf_local.py
