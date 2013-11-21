@@ -45,6 +45,15 @@ ORG_ATTR_TRANSL = {
     "organization_url": ("url", md.OrganizationURL)
 }
 
+def metadata_tostring_fix(desc, nspair):
+    MDNS = '"urn:oasis:names:tc:SAML:2.0:metadata"'
+    XMLNSXS = " xmlns:xs=\"http://www.w3.org/2001/XMLSchema\""
+    xmlstring = desc.to_string(nspair)
+    if "\"xs:string\"" in xmlstring and XMLNSXS not in xmlstring:
+        xmlstring = xmlstring.replace(MDNS, MDNS+XMLNSXS)
+    return xmlstring
+
+
 def create_metadata_string(configfile, config, valid, cert, keyfile, id, name, sign):
     valid_for = 0
     nspair = {"xs": "http://www.w3.org/2001/XMLSchema"}
@@ -74,7 +83,8 @@ def create_metadata_string(configfile, config, valid, cert, keyfile, id, name, s
         desc = entities_descriptor(eds, valid_for, name, id,
                                    sign, secc)
         valid_instance(desc)
-        return desc.to_string(nspair)
+
+        return metadata_tostring_fix(desc, nspair)
     else:
         for eid in eds:
             if sign:
@@ -82,7 +92,7 @@ def create_metadata_string(configfile, config, valid, cert, keyfile, id, name, s
             else:
                 desc = eid
             valid_instance(desc)
-            return desc.to_string(nspair)
+            return metadata_tostring_fix(desc, nspair)
 
 
 def _localized_name(val, klass):
