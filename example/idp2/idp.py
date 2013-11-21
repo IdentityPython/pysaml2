@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import argparse
 import base64
 
 import re
@@ -8,6 +9,8 @@ from hashlib import sha1
 
 from urlparse import parse_qs
 from Cookie import SimpleCookie
+import subprocess
+import os
 
 from saml2 import server
 from saml2 import BINDING_HTTP_ARTIFACT
@@ -31,6 +34,7 @@ from saml2.httputil import Unauthorized
 from saml2.httputil import BadRequest
 from saml2.httputil import ServiceError
 from saml2.ident import Unknown
+from saml2.metadata import create_metadata_string
 from saml2.s_utils import rndstr, exception_trace
 from saml2.s_utils import UnknownPrincipal
 from saml2.s_utils import UnsupportedBinding
@@ -431,7 +435,8 @@ def do_authentication(environ, start_response, authn_context, key,
 
 # -----------------------------------------------------------------------------
 
-PASSWD = {"roland": "dianakra",
+PASSWD = {"haho0032": "qwerty",
+          "roland": "dianakra",
           "babs": "howes",
           "upper": "crust"}
 
@@ -809,6 +814,21 @@ NON_AUTHN_URLS = [
 
 # ----------------------------------------------------------------------------
 
+def metadata(environ, start_response):
+    try:
+        path = args.path
+        if path is None or len(path) == 0:
+            path = os.path.dirname(os.path.abspath( __file__ ))
+        if path[-1] != "/":
+            path += "/"
+        metadata = create_metadata_string(path+args.config, IDP.config,
+                                          args.valid, args.cert, args.keyfile,
+                                          args.id, args.name, args.sign)
+        start_response('200 OK', [('Content-Type', "text/xml")])
+        return metadata
+    except Exception as ex:
+        logger.error("An error occured while creating metadata:" + ex.message)
+        return not_found(environ, start_response)
 
 def application(environ, start_response):
     """
@@ -826,6 +846,10 @@ def application(environ, start_response):
     """
 
     path = environ.get('PATH_INFO', '').lstrip('/')
+
+    if path == "metadata":
+        return metadata(environ, start_response)
+
     kaka = environ.get("HTTP_COOKIE", None)
     logger.info("<application> PATH: %s" % path)
 
@@ -882,6 +906,21 @@ if __name__ == '__main__':
     from idp_user import EXTRA
     from wsgiref.simple_server import make_server
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-p', dest='path', help='Path to configuration file.')
+    parser.add_argument('-v', dest='valid',
+                        help="How long, in days, the metadata is valid from the time of creation")
+    parser.add_argument('-c', dest='cert', help='certificate')
+    parser.add_argument('-i', dest='id',
+                        help="The ID of the entities descriptor")
+    parser.add_argument('-k', dest='keyfile',
+                        help="A file with a key to sign the metadata with")
+    parser.add_argument('-n', dest='name')
+    parser.add_argument('-s', dest='sign', action='store_true',
+                        help="sign the metadata")
+    parser.add_argument(dest="config")
+    args = parser.parse_args()
+
     PORT = 8088
 
     AUTHN_BROKER = AuthnBroker()
@@ -891,7 +930,7 @@ if __name__ == '__main__':
     AUTHN_BROKER.add(authn_context_class_ref(UNSPECIFIED),
                      "", 0, "http://%s" % socket.gethostname())
 
-    IDP = server.Server(sys.argv[1], cache=Cache())
+    IDP = server.Server(args.config, cache=Cache())
     IDP.ticket = {}
 
     SRV = make_server('', PORT, application)

@@ -1,18 +1,27 @@
 #!/usr/bin/env python
 from Cookie import SimpleCookie
 import logging
+import os
 
+from sp_conf import CONFIG
 import re
+import subprocess
 from urlparse import parse_qs
+import argparse
 from saml2 import BINDING_HTTP_REDIRECT, time_util
 from saml2.httputil import Response
 from saml2.httputil import Unauthorized
 from saml2.httputil import NotFound
 from saml2.httputil import Redirect
 #from saml2.httputil import ServiceError
+from saml2.metadata import create_metadata_string
+from saml2.metadata import entities_descriptor
+from saml2.config import Config
+from saml2.sigver import security_context
 
 logger = logging.getLogger("saml2.SP")
 
+args = None
 # -----------------------------------------------------------------------------
 
 
@@ -193,6 +202,21 @@ urls = [
 
 # ----------------------------------------------------------------------------
 
+def metadata(environ, start_response):
+    try:
+        path = args.path
+        if path is None or len(path) == 0:
+            path = os.path.dirname(os.path.abspath( __file__ ))
+        if path[-1] != "/":
+            path += "/"
+        metadata = create_metadata_string(path+"sp_conf.py", None,
+                                          args.valid, args.cert, args.keyfile,
+                                          args.id, args.name, args.sign)
+        start_response('200 OK', [('Content-Type', "text/xml")])
+        return metadata
+    except Exception as ex:
+        logger.error("An error occured while creating metadata:" + ex.message)
+        return not_found(environ, start_response)
 
 def application(environ, start_response):
     """
@@ -210,6 +234,9 @@ def application(environ, start_response):
     """
     path = environ.get('PATH_INFO', '').lstrip('/')
     logger.info("<application> PATH: %s" % path)
+
+    if path == "metadata":
+        return metadata(environ, start_response)
 
     user = environ.get("REMOTE_USER", "")
     if not user:
@@ -243,7 +270,23 @@ app_with_auth = make_middleware_with_config(application, {"here": "."},
 # ----------------------------------------------------------------------------
 PORT = 8087
 
+
 if __name__ == '__main__':
+    #make_metadata arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-p', dest='path', help='Path to configuration file.')
+    parser.add_argument('-v', dest='valid', default="4",
+                        help="How long, in days, the metadata is valid from the time of creation")
+    parser.add_argument('-c', dest='cert', help='certificate')
+    parser.add_argument('-i', dest='id',
+                        help="The ID of the entities descriptor in the metadata")
+    parser.add_argument('-k', dest='keyfile',
+                        help="A file with a key to sign the metadata with")
+    parser.add_argument('-n', dest='name')
+    parser.add_argument('-s', dest='sign', action='store_true',
+                        help="sign the metadata")
+    args = parser.parse_args()
+
     from wsgiref.simple_server import make_server
     srv = make_server('', PORT, app_with_auth)
     print "SP listening on port: %s" % PORT
