@@ -195,10 +195,10 @@ class Base(Entity):
         """
         return True
 
-    def service_url(self, binding=BINDING_HTTP_POST):
+    def service_urls(self, binding=BINDING_HTTP_POST):
         _res = self.config.endpoint("assertion_consumer_service", binding, "sp")
         if _res:
-            return _res[0]
+            return _res
         else:
             return None
 
@@ -231,9 +231,9 @@ class Base(Entity):
 
         args = {}
         try:
-            args["assertion_consumer_service_url"] = kwargs[
-                "assertion_consumer_service_url"]
-            del kwargs["assertion_consumer_service_url"]
+            args["assertion_consumer_service_urls"] = kwargs[
+                "assertion_consumer_service_urls"]
+            del kwargs["assertion_consumer_service_urls"]
         except KeyError:
             try:
                 args["attribute_consuming_service_index"] = str(kwargs[
@@ -241,10 +241,10 @@ class Base(Entity):
                 del kwargs["attribute_consuming_service_index"]
             except KeyError:
                 if service_url_binding is None:
-                    service_url = self.service_url(binding)
+                    service_urls = self.service_urls(binding)
                 else:
-                    service_url = self.service_url(service_url_binding)
-                args["assertion_consumer_service_url"] = service_url
+                    service_urls = self.service_urls(service_url_binding)
+                args["assertion_consumer_service_urls"] = service_urls
 
         try:
             args["provider_name"] = kwargs["provider_name"]
@@ -508,7 +508,7 @@ class Base(Entity):
                 "outstanding_queries": outstanding,
                 "allow_unsolicited": self.allow_unsolicited,
                 "want_assertions_signed": self.want_assertions_signed,
-                "return_addr": self.service_url(),
+                "return_addrs": self.service_urls(),
                 "entity_id": self.config.entityid,
                 "attribute_converters": self.config.attribute_converters,
                 "allow_unknown_attributes": self.config.allow_unknown_attributes,
@@ -608,7 +608,7 @@ class Base(Entity):
         # ----------------------------------------
         # <paos:Request>
         # ----------------------------------------
-        my_url = self.service_url(BINDING_PAOS)
+        my_url = self.service_urls(BINDING_PAOS)[0]
 
         # must_understand and act according to the standard
         #
