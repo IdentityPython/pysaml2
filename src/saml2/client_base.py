@@ -231,20 +231,25 @@ class Base(Entity):
 
         args = {}
         try:
-            args["assertion_consumer_service_urls"] = kwargs[
-                "assertion_consumer_service_urls"]
+            args["assertion_consumer_service_url"] = kwargs[
+                "assertion_consumer_service_urls"][0]
             del kwargs["assertion_consumer_service_urls"]
         except KeyError:
             try:
-                args["attribute_consuming_service_index"] = str(kwargs[
-                    "attribute_consuming_service_index"])
-                del kwargs["attribute_consuming_service_index"]
+                args["assertion_consumer_service_url"] = kwargs[
+                    "assertion_consumer_service_url"]
+                del kwargs["assertion_consumer_service_urls"]
             except KeyError:
-                if service_url_binding is None:
-                    service_urls = self.service_urls(binding)
-                else:
-                    service_urls = self.service_urls(service_url_binding)
-                args["assertion_consumer_service_urls"] = service_urls
+                try:
+                    args["attribute_consuming_service_index"] = str(kwargs[
+                        "attribute_consuming_service_index"])
+                    del kwargs["attribute_consuming_service_index"]
+                except KeyError:
+                    if service_url_binding is None:
+                        service_urls = self.service_urls(binding)
+                    else:
+                        service_urls = self.service_urls(service_url_binding)
+                    args["assertion_consumer_service_url"] = service_urls[0]
 
         try:
             args["provider_name"] = kwargs["provider_name"]
