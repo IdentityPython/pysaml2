@@ -117,13 +117,15 @@ class Base(Entity):
         else:
             self.state = state_cache
 
+        self.logout_requests_signed = False
+        self.allow_unsolicited = False
+        self.authn_requests_signed = False
+        self.want_assertions_signed = False
         for foo in ["allow_unsolicited", "authn_requests_signed",
                     "logout_requests_signed", "want_assertions_signed"]:
             v = self.config.getattr(foo, "sp")
             if v is True or v == 'true':
                 setattr(self, foo, True)
-            else:
-                setattr(self, foo, False)
 
         self.artifact2response = {}
 
