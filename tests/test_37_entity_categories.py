@@ -102,6 +102,53 @@ def test_filter_ava3():
     assert _eq(ava.keys(), ['eduPersonTargetedID', "norEduPersonNIN"])
 
 
+def test_filter_ava4():
+    policy = Policy({
+        "default": {
+            "lifetime": {"minutes": 15},
+            #"attribute_restrictions": None  # means all I have
+            "entity_categories": ["swamid"]
+        }
+    })
+
+    mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
+                        disable_ssl_certificate_validation=True)
+    mds.imp({"local": [full_path("entity_cat_re_nren.xml")]})
+
+    ava = {"givenName": ["Derek"], "sn": ["Jeter"],
+           "mail": ["derek@nyy.mlb.com"], "c": ["USA"],
+           "eduPersonTargetedID": "foo!bar!xyz",
+           "norEduPersonNIN": "19800101134"}
+
+    ava = policy.filter(ava, "urn:mace:example.com:saml:roland:sp", mds)
+
+    assert _eq(ava.keys(), ['eduPersonTargetedID', "givenName", "c", "mail",
+                            "sn"])
+
+
+def test_filter_ava5():
+    policy = Policy({
+        "default": {
+            "lifetime": {"minutes": 15},
+            #"attribute_restrictions": None  # means all I have
+            "entity_categories": ["swamid"]
+        }
+    })
+
+    mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
+                        disable_ssl_certificate_validation=True)
+    mds.imp({"local": [full_path("entity_cat_re.xml")]})
+
+    ava = {"givenName": ["Derek"], "sn": ["Jeter"],
+           "mail": ["derek@nyy.mlb.com"], "c": ["USA"],
+           "eduPersonTargetedID": "foo!bar!xyz",
+           "norEduPersonNIN": "19800101134"}
+
+    ava = policy.filter(ava, "urn:mace:example.com:saml:roland:sp", mds)
+
+    assert _eq(ava.keys(), ['eduPersonTargetedID'])
+
+
 def test_idp_policy_filter():
     idp = Server("idp_conf_ec")
 

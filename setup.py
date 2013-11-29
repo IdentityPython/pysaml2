@@ -74,11 +74,10 @@ setup(
     packages=['saml2', 'xmldsig', 'xmlenc', 's2repoze', 's2repoze.plugins',
               "saml2/profile", "saml2/schema", "saml2/extension",
               "saml2/attributemaps", "saml2/authn_context",
-              "saml2/entity_category"],
+              "saml2/entity_category", "saml2/userinfo"],
 
     package_dir={'': 'src'},
     package_data={'': ['xml/*.xml']},
-
     classifiers=["Development Status :: 4 - Beta",
         "License :: OSI Approved :: Apache Software License",
         "Topic :: Software Development :: Libraries :: Python Modules"],

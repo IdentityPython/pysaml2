@@ -19,9 +19,12 @@ import os
 import sys
 from importlib import import_module
 
-from saml2.s_utils import factory, do_ava
-from saml2 import saml, extension_elements_to_elements, SAMLError
-from saml2.saml import NAME_FORMAT_URI, NAME_FORMAT_UNSPECIFIED
+from saml2.s_utils import factory
+from saml2.s_utils import do_ava
+from saml2 import saml
+from saml2 import extension_elements_to_elements
+from saml2 import SAMLError
+from saml2.saml import NAME_FORMAT_UNSPECIFIED
 
 import logging
 logger = logging.getLogger(__name__)
@@ -84,7 +87,9 @@ def ac_factory(path=""):
                         atco.from_dict(item)
                         acs.append(atco)
     else:
-        for typ in ["basic", "saml_uri", "shibboleth_uri"]:
+        from saml2 import attributemaps
+
+        for typ in attributemaps.__all__:
             mod = import_module(".%s" % typ, "saml2.attributemaps")
             for key, item in mod.__dict__.items():
                 if key.startswith("__"):

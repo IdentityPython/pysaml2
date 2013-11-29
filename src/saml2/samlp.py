@@ -576,12 +576,11 @@ class AuthzDecisionQueryType_(SubjectQueryAbstractType_):
     c_attributes = SubjectQueryAbstractType_.c_attributes.copy()
     c_child_order = SubjectQueryAbstractType_.c_child_order[:]
     c_cardinality = SubjectQueryAbstractType_.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Action'] = ('action',
-                                                                   [
-                                                                       saml.Action])
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Action'] = (
+        'action', [saml.Action])
     c_cardinality['action'] = {"min": 1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Evidence'] = ('evidence',
-                                                                     saml.Evidence)
+    c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Evidence'] = (
+        'evidence', saml.Evidence)
     c_cardinality['evidence'] = {"min": 0, "max": 1}
     c_attributes['Resource'] = ('resource', 'anyURI', True)
     c_child_order.extend(['action', 'evidence'])

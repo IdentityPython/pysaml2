@@ -61,6 +61,7 @@ class Server(Entity):
     def __init__(self, config_file="", config=None, cache=None, stype="idp",
                  symkey=""):
         Entity.__init__(self, stype, config, config_file)
+        self.eptid = None
         self.init_config(stype)
         self.cache = cache
         self.ticket = {}
@@ -70,7 +71,6 @@ class Server(Entity):
         self.symkey = symkey
         self.seed = rndstr()
         self.iv = os.urandom(16)
-        self.eptid = None
 
     def support_AssertionIDRequest(self):
         return True
@@ -207,9 +207,10 @@ class Server(Entity):
                                    "attribute_service", binding)
 
     def parse_authz_decision_query(self, xml_string, binding):
-        """ Parse an attribute query
+        """ Parse an authorization decision query
 
         :param xml_string: The Authz decision Query as an XML string
+        :param binding: Which binding that was used when receiving this query
         :return: Query instance
         """
 
@@ -220,6 +221,7 @@ class Server(Entity):
         """ Parse an assertion id query
 
         :param xml_string: The AssertionIDRequest as an XML string
+        :param binding: Which binding that was used when receiving this request
         :return: Query instance
         """
 
@@ -230,6 +232,7 @@ class Server(Entity):
         """ Parse an authn query
 
         :param xml_string: The AuthnQuery as an XML string
+        :param binding: Which binding that was used when receiving this query
         :return: Query instance
         """
 
@@ -240,6 +243,7 @@ class Server(Entity):
         """ Parse a nameid mapping request
 
         :param xml_string: The NameIDMappingRequest as an XML string
+        :param binding: Which binding that was used when receiving this request
         :return: Query instance
         """
 

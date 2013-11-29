@@ -614,7 +614,7 @@ class Entity(HTTPBase):
         return self._message(LogoutRequest, destination, message_id,
                              consent, extensions, sign, name_id=name_id,
                              reason=reason, not_on_or_after=expire,
-                             issuer=self._issuer(issuer_entity_id))
+                             issuer=self._issuer())
 
     def create_logout_response(self, request, bindings=None, status=None,
                                sign=False, issuer=None):
@@ -630,6 +630,9 @@ class Entity(HTTPBase):
         """
 
         rinfo = self.response_args(request, bindings)
+
+        if not issuer:
+            issuer = self._issuer()
 
         response = self._status_response(samlp.LogoutResponse, issuer, status,
                                          sign, **rinfo)
@@ -773,12 +776,12 @@ class Entity(HTTPBase):
                 kwargs["asynchop"] = True
 
         if xmlstr:
-            if "return_addr" not in kwargs:
+            if "return_addrs" not in kwargs:
                 if binding in [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST]:
                     try:
                         # expected return address
-                        kwargs["return_addr"] = self.config.endpoint(
-                            service, binding=binding)[0]
+                        kwargs["return_addrs"] = self.config.endpoint(
+                            service, binding=binding)
                     except Exception:
                         logger.info("Not supposed to handle this!")
                         return None

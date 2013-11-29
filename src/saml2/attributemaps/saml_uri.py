@@ -9,6 +9,7 @@ PKCS_9 = "urn:oid:1.2.840.113549.1.9.1."
 UMICH = "urn:oid:1.3.6.1.4.1.250.1.57."
 SCHAC = "urn:oid:1.3.6.1.4.1.25178.2."
 
+#urn:oid:1.3.6.1.4.1.1466.115.121.1.26
 
 MAP = {
     "identifier": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
@@ -223,6 +224,7 @@ MAP = {
         'labeledURI': UMICH+'57',
         'uid': UCL_DIR_PILOT+'1',
         'co': UCL_DIR_PILOT+'43',
+        'friendlyCountryName': UCL_DIR_PILOT+'43',
         'schacMotherTongue':SCHAC+'1',
         'schacGender': SCHAC+'2',
         'schacDateOfBirth':SCHAC+'3',

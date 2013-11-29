@@ -117,13 +117,15 @@ class Base(Entity):
         else:
             self.state = state_cache
 
+        self.logout_requests_signed = False
+        self.allow_unsolicited = False
+        self.authn_requests_signed = False
+        self.want_assertions_signed = False
         for foo in ["allow_unsolicited", "authn_requests_signed",
                     "logout_requests_signed", "want_assertions_signed"]:
             v = self.config.getattr(foo, "sp")
             if v is True or v == 'true':
                 setattr(self, foo, True)
-            else:
-                setattr(self, foo, False)
 
         self.artifact2response = {}
 
@@ -195,10 +197,10 @@ class Base(Entity):
         """
         return True
 
-    def service_url(self, binding=BINDING_HTTP_POST):
+    def service_urls(self, binding=BINDING_HTTP_POST):
         _res = self.config.endpoint("assertion_consumer_service", binding, "sp")
         if _res:
-            return _res[0]
+            return _res
         else:
             return None
 
@@ -232,19 +234,24 @@ class Base(Entity):
         args = {}
         try:
             args["assertion_consumer_service_url"] = kwargs[
-                "assertion_consumer_service_url"]
-            del kwargs["assertion_consumer_service_url"]
+                "assertion_consumer_service_urls"][0]
+            del kwargs["assertion_consumer_service_urls"]
         except KeyError:
             try:
-                args["attribute_consuming_service_index"] = str(kwargs[
-                    "attribute_consuming_service_index"])
-                del kwargs["attribute_consuming_service_index"]
+                args["assertion_consumer_service_url"] = kwargs[
+                    "assertion_consumer_service_url"]
+                del kwargs["assertion_consumer_service_urls"]
             except KeyError:
-                if service_url_binding is None:
-                    service_url = self.service_url(binding)
-                else:
-                    service_url = self.service_url(service_url_binding)
-                args["assertion_consumer_service_url"] = service_url
+                try:
+                    args["attribute_consuming_service_index"] = str(kwargs[
+                        "attribute_consuming_service_index"])
+                    del kwargs["attribute_consuming_service_index"]
+                except KeyError:
+                    if service_url_binding is None:
+                        service_urls = self.service_urls(binding)
+                    else:
+                        service_urls = self.service_urls(service_url_binding)
+                    args["assertion_consumer_service_url"] = service_urls[0]
 
         try:
             args["provider_name"] = kwargs["provider_name"]
@@ -508,7 +515,7 @@ class Base(Entity):
                 "outstanding_queries": outstanding,
                 "allow_unsolicited": self.allow_unsolicited,
                 "want_assertions_signed": self.want_assertions_signed,
-                "return_addr": self.service_url(),
+                "return_addrs": self.service_urls(),
                 "entity_id": self.config.entityid,
                 "attribute_converters": self.config.attribute_converters,
                 "allow_unknown_attributes": self.config.allow_unknown_attributes,
@@ -608,7 +615,7 @@ class Base(Entity):
         # ----------------------------------------
         # <paos:Request>
         # ----------------------------------------
-        my_url = self.service_url(BINDING_PAOS)
+        my_url = self.service_urls(BINDING_PAOS)[0]
 
         # must_understand and act according to the standard
         #

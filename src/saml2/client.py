@@ -118,7 +118,7 @@ class Saml2Client(Base):
     def do_logout(self, name_id, entity_ids, reason, expire, sign=None):
         """
 
-        :param name_id: Identifier of the Subject a NameID instance
+        :param name_id: Identifier of the Subject (a NameID instance)
         :param entity_ids: List of entity ids for the IdPs that have provided
             information concerning the subject
         :param reason: The reason for doing the logout
