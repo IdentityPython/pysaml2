@@ -315,6 +315,7 @@ def test_assertion_2():
                        'urn:oid:2.16.840.1.113730.3.1.241',
                        'urn:oid:0.9.2342.19200300.100.1.1'])
 
+
 # ----------------------------------------------------------------------------
 
 
@@ -751,5 +752,26 @@ def test_filter_ava_5():
     assert ava == {}
 
 
+def test_assertion_with_zero_attributes():
+    ava = {}
+    ast = Assertion(ava)
+    policy = Policy({
+        "default": {
+            "lifetime": {"minutes": 240},
+            "attribute_restrictions": None,  # means all I have
+            "name_form": NAME_FORMAT_URI
+        },
+    })
+    name_id = NameID(format=NAMEID_FORMAT_TRANSIENT, text="foobar")
+    issuer = Issuer(text="entityid", format=NAMEID_FORMAT_ENTITY)
+    msg = ast.construct("sp_entity_id", "in_response_to", "consumer_url",
+                        name_id, [AttributeConverterNOOP(NAME_FORMAT_URI)],
+                        policy, issuer=issuer, authn_decl=ACD ,
+                        authn_auth="authn_authn")
+
+    print msg
+    assert msg.attribute_statement == []
+
+
 if __name__ == "__main__":
-    test_filter_ava_5()
+    test_assertion_with_zero_attributes()

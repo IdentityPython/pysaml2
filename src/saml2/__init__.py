@@ -755,6 +755,22 @@ class SamlBase(ExtensionContainer):
     def verify(self):
         return valid_instance(self)
 
+    def empty(self):
+        for prop, _typ, _req in self.c_attributes.values():
+            if getattr(self, prop, None):
+                return False
+
+        for prop, klassdef in self.c_children.values():
+            if getattr(self, prop):
+                return False
+
+        for param in ["text", "extension_elements", "extension_attributes"]:
+            if getattr(self, param):
+                return False
+
+        return True
+
+
 # ----------------------------------------------------------------------------
 
 

@@ -433,6 +433,7 @@ class Saml2Client(Base):
                 'method': "POST
             }
         """
+        logger.info("logout request: %s" % request)
 
         _req = self._parse_request(request, LogoutRequest,
                                    "single_logout_service", binding)
