@@ -675,9 +675,9 @@ class Assertion(dict):
         else:
             _authn_statement = None
 
+
         _ass = assertion_factory(
             issuer=issuer,
-            attribute_statement=[attr_statement],
             conditions=conds,
             subject=factory(
                 saml.Subject,
@@ -695,6 +695,9 @@ class Assertion(dict):
 
         if _authn_statement:
             _ass.authn_statement = [_authn_statement]
+
+        if not attr_statement.empty():
+            _ass.attribute_statement=[attr_statement],
 
         return _ass
     
