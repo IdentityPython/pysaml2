@@ -697,7 +697,7 @@ class Assertion(dict):
             _ass.authn_statement = [_authn_statement]
 
         if not attr_statement.empty():
-            _ass.attribute_statement=[attr_statement],
+            _ass.attribute_statement=[attr_statement]
 
         return _ass
     
