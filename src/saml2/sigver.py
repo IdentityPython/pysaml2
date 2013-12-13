@@ -25,10 +25,13 @@ import hashlib
 import logging
 import random
 import os
+import ssl
 from time import mktime
 import urllib
-import M2Crypto
-from M2Crypto.X509 import load_cert_string
+from Crypto.PublicKey.RSA import importKey
+from Crypto.Signature import PKCS1_v1_5
+from Crypto.Util.asn1 import DerSequence
+from Crypto.PublicKey import RSA
 from saml2.samlp import Response
 
 import xmldsig as ds
@@ -55,6 +58,8 @@ SIG = "{%s#}%s" % (ds.NAMESPACE, "Signature")
 
 RSA_SHA1 = "http://www.w3.org/2000/09/xmldsig#rsa-sha1"
 
+from Crypto.Hash import SHA256, SHA384, SHA512, SHA
+
 
 class SigverError(SAMLError):
     pass
@@ -76,7 +81,7 @@ class MissingKey(SigverError):
     pass
 
 
-class DecryptError(SigverError):
+class DecryptError(XmlsecError):
     pass
 
 
@@ -334,7 +339,7 @@ def active_cert(key):
     :return: True if the key is active else False
     """
     cert_str = pem_format(key)
-    certificate = load_cert_string(cert_str)
+    certificate = importKey(cert_str)
     try:
         not_before = to_time(str(certificate.get_not_before()))
         not_after = to_time(str(certificate.get_not_after()))
@@ -412,8 +417,6 @@ def cert_from_instance(instance):
     return []
 
 # =============================================================================
-from M2Crypto.__m2crypto import bn_to_mpi
-from M2Crypto.__m2crypto import hex_to_bn
 
 
 def intarr2long(arr):
@@ -423,15 +426,6 @@ def intarr2long(arr):
 def dehexlify(bi):
     s = hexlify(bi)
     return [int(s[i] + s[i + 1], 16) for i in range(0, len(s), 2)]
-
-
-def long_to_mpi(num):
-    """Converts a python integer or long to OpenSSL MPInt used by M2Crypto.
-    Borrowed from Snowball.Shared.Crypto"""
-    h = hex(num)[2:]  # strip leading 0x in string
-    if len(h) % 2 == 1:
-        h = '0' + h  # add leading 0 to get even number of hexdigits
-    return bn_to_mpi(hex_to_bn(h))  # convert using OpenSSL BinNum
 
 
 def base64_to_long(data):
@@ -445,8 +439,7 @@ def key_from_key_value(key_info):
         if value.rsa_key_value:
             e = base64_to_long(value.rsa_key_value.exponent)
             m = base64_to_long(value.rsa_key_value.modulus)
-            key = M2Crypto.RSA.new_pub_key((long_to_mpi(e),
-                                            long_to_mpi(m)))
+            key = RSA.construct((m, e))
             res.append(key)
     return res
 
@@ -460,23 +453,22 @@ def key_from_key_value_dict(key_info):
         if "rsa_key_value" in value:
             e = base64_to_long(value["rsa_key_value"]["exponent"])
             m = base64_to_long(value["rsa_key_value"]["modulus"])
-            key = M2Crypto.RSA.new_pub_key((long_to_mpi(e),
-                                            long_to_mpi(m)))
+            key = RSA.construct((m, e))
             res.append(key)
     return res
 
 # =============================================================================
 
 
-def rsa_load(filename):
-    """Read a PEM-encoded RSA key pair from a file."""
-    return M2Crypto.RSA.load_key(filename, M2Crypto.util.no_passphrase_callback)
-
-
-def rsa_loads(key):
-    """Read a PEM-encoded RSA key pair from a string."""
-    return M2Crypto.RSA.load_key_string(key,
-                                        M2Crypto.util.no_passphrase_callback)
+#def rsa_load(filename):
+#    """Read a PEM-encoded RSA key pair from a file."""
+#    return M2Crypto.RSA.load_key(filename, M2Crypto.util.no_passphrase_callback)
+#
+#
+#def rsa_loads(key):
+#    """Read a PEM-encoded RSA key pair from a string."""
+#    return M2Crypto.RSA.load_key_string(key,
+#                                        M2Crypto.util.no_passphrase_callback)
 
 
 def rsa_eq(key1, key2):
@@ -487,14 +479,29 @@ def rsa_eq(key1, key2):
         return False
 
 
-def x509_rsa_loads(string):
-    cert = M2Crypto.X509.load_cert_string(string)
-    return cert.get_pubkey().get_rsa()
+def extract_rsa_key_from_x509_cert(pem):
+    # Convert from PEM to DER
+    der = ssl.PEM_cert_to_DER_cert(pem)
+
+    # Extract subjectPublicKeyInfo field from X.509 certificate (see RFC3280)
+    cert = DerSequence()
+    cert.decode(der)
+    tbsCertificate = DerSequence()
+    tbsCertificate.decode(cert[0])
+    subjectPublicKeyInfo = tbsCertificate[6]
+
+    # Initialize RSA key
+    rsa_key = RSA.importKey(subjectPublicKeyInfo)
+    return rsa_key
 
 
 def pem_format(key):
     return "\n".join(["-----BEGIN CERTIFICATE-----",
                       key, "-----END CERTIFICATE-----"])
+
+
+def import_rsa_key_from_file(filename):
+    return RSA.importKey(open(filename, 'r').read())
 
 
 def parse_xmlsec_output(output):
@@ -529,19 +536,25 @@ class Signer(object):
 
 
 class RSASigner(Signer):
-    def __init__(self, digest, algo):
+    def __init__(self, digest):
         self.digest = digest
-        self.algo = algo
 
     def sign(self, msg, key):
-        return key.sign(self.digest(msg), self.algo)
+        h = self.digest.new(msg)
+        signer = PKCS1_v1_5.new(key)
+        return signer.sign(h)
 
     def verify(self, msg, sig, key):
-        try:
-            return key.verify(self.digest(msg), sig, self.algo)
-        except M2Crypto.RSA.RSAError, e:
-            raise BadSignature(e)
+        h = self.digest.new(msg)
+        verifier = PKCS1_v1_5.new(key)
+        return verifier.verify(h, sig)
 
+SIGNER_ALGS = {
+    RSA_SHA1: RSASigner(SHA),
+    "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256": RSASigner(SHA256),
+    "http://www.w3.org/2001/04/xmldsig-more#rsa-sha384": RSASigner(SHA384),
+    "http://www.w3.org/2001/04/xmldsig-more#rsa-sha512": RSASigner(SHA512),
+}
 
 REQ_ORDER = ["SAMLRequest", "RelayState", "SigAlg"]
 RESP_ORDER = ["SAMLResponse", "RelayState", "SigAlg"]
@@ -556,27 +569,29 @@ def verify_redirect_signature(info, cert):
     :return: True, if signature verified
     """
 
-    if info["SigAlg"][0] == RSA_SHA1:
-        if "SAMLRequest" in info:
-            _order = REQ_ORDER
-        elif "SAMLResponse" in info:
-            _order = RESP_ORDER
-        else:
-            raise Unsupported(
-                "Verifying signature on something that should not be signed")
-        signer = RSASigner(sha1_digest, "sha1")
-        args = info.copy()
-        del args["Signature"]  # everything but the signature
-        string = "&".join([urllib.urlencode({k: args[k][0]}) for k in _order])
-        _key = x509_rsa_loads(pem_format(cert))
-        _sign = base64.b64decode(info["Signature"][0])
-        try:
-            signer.verify(string, _sign, _key)
-            return True
-        except BadSignature:
-            return False
-    else:
+    try:
+        signer = SIGNER_ALGS[info["SigAlg"][0]]
+    except KeyError:
         raise Unsupported("Signature algorithm: %s" % info["SigAlg"])
+    else:
+        if info["SigAlg"][0] == RSA_SHA1:
+            if "SAMLRequest" in info:
+                _order = REQ_ORDER
+            elif "SAMLResponse" in info:
+                _order = RESP_ORDER
+            else:
+                raise Unsupported(
+                    "Verifying signature on something that should not be signed")
+            args = info.copy()
+            del args["Signature"]  # everything but the signature
+            string = "&".join([urllib.urlencode({k: args[k][0]}) for k in _order])
+            _key = extract_rsa_key_from_x509_cert(pem_format(cert))
+            _sign = base64.b64decode(info["Signature"][0])
+            try:
+                signer.verify(string, _sign, _key)
+                return True
+            except BadSignature:
+                return False
 
 
 LOG_LINE = 60 * "=" + "\n%s\n" + 60 * "-" + "\n%s" + 60 * "="

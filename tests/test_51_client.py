@@ -318,9 +318,6 @@ class TestClient:
         location = self.client._sso_location()
         print location
         assert location == 'http://localhost:8088/sso'
-        service_url = self.client.service_url()
-        print service_url
-        assert service_url == "http://lingon.catalogix.se:8087/"
         my_name = self.client._my_name()
         print my_name
         assert my_name == "urn:mace:example.com:saml:roland:sp"
@@ -432,4 +429,4 @@ class TestClientWithDummy():
 if __name__ == "__main__":
     tc = TestClient()
     tc.setup_class()
-    tc.test_sign_auth_request_0()
+    tc.test_init_values()

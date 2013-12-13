@@ -9,7 +9,6 @@ from hashlib import sha1
 
 from urlparse import parse_qs
 from Cookie import SimpleCookie
-import subprocess
 import os
 
 from saml2 import server
@@ -125,7 +124,12 @@ class Service(object):
             resp = BadRequest('Error parsing request or no request')
             return resp(self.environ, self.start_response)
         else:
-            return self.do(_dict["SAMLRequest"], binding, _dict["RelayState"])
+            try:
+                return self.do(_dict["SAMLRequest"], binding,
+                               _dict["RelayState"])
+            except KeyError:
+                # Can live with no relay state
+                return self.do(_dict["SAMLRequest"], binding)
 
     def artifact_operation(self, _dict):
         if not _dict:
@@ -134,7 +138,11 @@ class Service(object):
         else:
             # exchange artifact for request
             request = IDP.artifact2message(_dict["SAMLart"], "spsso")
-            return self.do(request, BINDING_HTTP_ARTIFACT, _dict["RelayState"])
+            try:
+                return self.do(request, BINDING_HTTP_ARTIFACT,
+                               _dict["RelayState"])
+            except KeyError:
+                return self.do(request, BINDING_HTTP_ARTIFACT)
 
     def response(self, binding, http_args):
         if binding == BINDING_HTTP_ARTIFACT:
@@ -814,6 +822,7 @@ NON_AUTHN_URLS = [
 
 # ----------------------------------------------------------------------------
 
+
 def metadata(environ, start_response):
     try:
         path = args.path
@@ -829,6 +838,7 @@ def metadata(environ, start_response):
     except Exception as ex:
         logger.error("An error occured while creating metadata:" + ex.message)
         return not_found(environ, start_response)
+
 
 def application(environ, start_response):
     """
@@ -890,21 +900,15 @@ def application(environ, start_response):
 
 # ----------------------------------------------------------------------------
 
-from mako.lookup import TemplateLookup
-
-ROOT = './'
-LOOKUP = TemplateLookup(directories=[ROOT + 'templates', ROOT + 'htdocs'],
-                        module_directory=ROOT + 'modules',
-                        input_encoding='utf-8', output_encoding='utf-8')
 
 # ----------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    import sys
     import socket
     from idp_user import USERS
     from idp_user import EXTRA
     from wsgiref.simple_server import make_server
+    from mako.lookup import TemplateLookup
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', dest='path', help='Path to configuration file.')
@@ -918,8 +922,14 @@ if __name__ == '__main__':
     parser.add_argument('-n', dest='name')
     parser.add_argument('-s', dest='sign', action='store_true',
                         help="sign the metadata")
+    parser.add_argument('-m', dest='mako_root', default="./")
     parser.add_argument(dest="config")
     args = parser.parse_args()
+
+    _rot = args.mako_root
+    LOOKUP = TemplateLookup(directories=[_rot + 'templates', _rot + 'htdocs'],
+                            module_directory=_rot + 'modules',
+                            input_encoding='utf-8', output_encoding='utf-8')
 
     PORT = 8088
 

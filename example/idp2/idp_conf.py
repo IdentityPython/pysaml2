@@ -7,6 +7,7 @@ from saml2 import BINDING_SOAP
 from saml2.saml import NAME_FORMAT_URI
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
+import os.path
 
 try:
     from saml2.sigver import get_xmlsec_binary
@@ -18,6 +19,12 @@ if get_xmlsec_binary:
 else:
     xmlsec_path = '/usr/bin/xmlsec1'
 
+BASEDIR = os.path.abspath(os.path.dirname(__file__))
+
+
+def full_path(local_file):
+    return os.path.join(BASEDIR, local_file)
+
 #BASE = "http://lingon.ladok.umu.se:8088"
 #BASE = "http://lingon.catalogix.se:8088"
 BASE = "http://localhost:8088"
@@ -25,6 +32,7 @@ BASE = "http://localhost:8088"
 CONFIG = {
     "entityid": "%s/idp.xml" % BASE,
     "description": "My IDP",
+    "valid_for": 168,
     "service": {
         "aa": {
             "endpoints": {
@@ -86,10 +94,10 @@ CONFIG = {
         },
     },
     "debug": 1,
-    "key_file": "pki/mykey.pem",
-    "cert_file": "pki/mycert.pem",
+    "key_file": full_path("pki/mykey.pem"),
+    "cert_file": full_path("pki/mycert.pem"),
     "metadata": {
-        "local": ["../sp/sp.xml"],
+        "local": [full_path("../sp/sp.xml")],
     },
     "organization": {
         "display_name": "Rolands Identiteter",
@@ -111,7 +119,7 @@ CONFIG = {
     # This database holds the map between a subjects local identifier and
     # the identifier returned to a SP
     "xmlsec_binary": xmlsec_path,
-    "attribute_map_dir": "../attributemaps",
+    #"attribute_map_dir": "../attributemaps",
     "logger": {
         "rotating": {
             "filename": "idp.log",

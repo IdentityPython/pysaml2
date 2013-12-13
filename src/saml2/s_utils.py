@@ -401,13 +401,14 @@ def fticks_log(sp, logf, idp_entity_id, user_id, secret, assertion):
     """
     csum = hmac.new(secret, digestmod=hashlib.sha1)
     csum.update(user_id)
+    ac = assertion.AuthnStatement[0].AuthnContext[0]
 
     info = {
         "TS": time.time(),
         "RP": sp.entity_id,
         "AP": idp_entity_id,
         "PN": csum.hexdigest(),
-        "AM": assertion.AuthnStatement.AuthnContext.AuthnContextClassRef.text
+        "AM": ac.AuthnContextClassRef.text
     }
     logf.info(FTICKS_FORMAT % "#".join(["%s=%s" % (a,v) for a,v in info]))
 

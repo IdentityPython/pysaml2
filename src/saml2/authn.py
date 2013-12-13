@@ -4,7 +4,7 @@ from urlparse import parse_qs
 from urlparse import urlsplit
 import time
 from saml2 import SAMLError
-from saml2.cipher import AES
+from saml2.aes import AESCipher
 from saml2.httputil import Response
 from saml2.httputil import make_cookie
 from saml2.httputil import Redirect
@@ -110,7 +110,7 @@ class UsernamePasswordMako(UserAuthnMethod):
         self.return_to = return_to
         self.active = {}
         self.query_param = "upm_answer"
-        self.aes = AES(srv.iv)
+        self.aes = AESCipher(self.srv.symkey, srv.iv)
 
     def __call__(self, cookie=None, policy_url=None, logo_url=None,
                  query="", **kwargs):
@@ -159,8 +159,7 @@ class UsernamePasswordMako(UserAuthnMethod):
         try:
             assert _dict["password"][0] == self.passwd[_dict["login"][0]]
             timestamp = str(int(time.mktime(time.gmtime())))
-            info = self.aes.encrypt(self.srv.symkey,
-                                    "::".join([_dict["login"][0], timestamp]))
+            info = self.aes.encrypt("::".join([_dict["login"][0], timestamp]))
             self.active[info] = timestamp
             cookie = make_cookie(self.cookie_name, info, self.srv.seed)
             return_to = create_return_url(self.return_to, _dict["query"][0],
@@ -180,8 +179,7 @@ class UsernamePasswordMako(UserAuthnMethod):
                 info, timestamp = parse_cookie(self.cookie_name,
                                                self.srv.seed, cookie)
                 if self.active[info] == timestamp:
-                    uid, _ts = self.aes.decrypt(self.srv.symkey,
-                                                info).split("::")
+                    uid, _ts = self.aes.decrypt(info).split("::")
                     if timestamp == _ts:
                         return {"uid": uid}
             except Exception:

@@ -36,16 +36,20 @@ class AuthnBroker(object):
         self.db = {"info": {}, "key": {}}
         self.next = 0
 
-    def exact(self, a, b):
+    @staticmethod
+    def exact(a, b):
         return a == b
 
-    def minimum(self, a, b):
+    @staticmethod
+    def minimum(a, b):
         return b >= a
 
-    def maximum(self, a, b):
+    @staticmethod
+    def maximum(a, b):
         return b <= a
 
-    def better(self, a, b):
+    @staticmethod
+    def better(a, b):
         return b > a
 
     def add(self, spec, method, level=0, authn_authority="", reference=None):
@@ -164,7 +168,7 @@ class AuthnBroker(object):
             else:
                 _cmp = "minimum"
             return self._pick_by_class_ref(
-                req_authn_context.authn_context_class_ref.text, _cmp)
+                req_authn_context.authn_context_class_ref[0].text, _cmp)
         elif req_authn_context.authn_context_decl_ref:
             if req_authn_context.comparison:
                 _cmp = req_authn_context.comparison

@@ -30,11 +30,9 @@ import urllib
 from saml2.s_utils import deflate_and_base64_encode
 from saml2.s_utils import Unsupported
 import logging
-from saml2.sigver import RSA_SHA1
 from saml2.sigver import REQ_ORDER
 from saml2.sigver import RESP_ORDER
-from saml2.sigver import RSASigner
-from saml2.sigver import sha1_digest
+from saml2.sigver import SIGNER_ALGS
 
 logger = logging.getLogger(__name__)
 
@@ -133,13 +131,14 @@ def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
 
         args["SigAlg"] = sigalg
 
-        if sigalg == RSA_SHA1:
-            signer = RSASigner(sha1_digest, "sha1")
+        try:
+            signer = SIGNER_ALGS[sigalg]
+        except:
+            raise Unsupported("Signing algorithm")
+        else:
             string = "&".join([urllib.urlencode({k: args[k]}) for k in _order if k in args])
             args["Signature"] = base64.b64encode(signer.sign(string, key))
             string = urllib.urlencode(args)
-        else:
-            raise Unsupported("Signing algorithm")
     else:
         string = urllib.urlencode(args)
 

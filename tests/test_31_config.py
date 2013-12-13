@@ -47,6 +47,7 @@ sp1 = {
     },
     "attribute_map_dir": full_path("attributemaps"),
     "only_use_keys_in_metadata": True,
+    "xmlsec_path": ["/opt/local/bin"]
 }
 
 sp2 = {
@@ -367,4 +368,4 @@ def test_assertion_consumer_service():
         "location"] == 'https://www.zimride.com/Shibboleth.sso/SAML2/POST'
 
 if __name__ == "__main__":
-    test_idp_1()
+    test_1()

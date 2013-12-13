@@ -81,7 +81,7 @@ class SessionStorage(object):
                     continue
             if requested_context:
                 if not context_match(requested_context,
-                                     statement.authn_context):
+                                     statement[0].authn_context):
                     continue
             result.append(statement)
 

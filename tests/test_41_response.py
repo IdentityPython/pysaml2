@@ -72,7 +72,7 @@ class TestResponse:
     def test_1(self):
         xml_response = ("%s" % (self._resp_,))
         resp = response_factory(xml_response, self.conf,
-                                return_addr="http://lingon.catalogix.se:8087/",
+                                return_addrs=["http://lingon.catalogix.se:8087/"],
                                 outstanding_queries={
                                     "id12": "http://localhost:8088/sso"},
                                 timeslack=10000, decode=False)
@@ -83,7 +83,7 @@ class TestResponse:
     def test_2(self):
         xml_response = self._sign_resp_
         resp = response_factory(xml_response, self.conf,
-                                return_addr="http://lingon.catalogix.se:8087/",
+                                return_addrs=["http://lingon.catalogix.se:8087/"],
                                 outstanding_queries={
                                     "id12": "http://localhost:8088/sso"},
                                 timeslack=10000, decode=False)

@@ -68,9 +68,6 @@ METADATACONF = {
     "5": {
         "local": [full_path("metadata.aaitest.xml")]
     },
-    "6": {
-        "local": [full_path("metasp.xml")]
-    },
     "8": {
         "mdfile": [full_path("swamid.md")]
     }
@@ -129,10 +126,10 @@ def test_incommon_1():
     mds.imp(METADATACONF["2"])
 
     print mds.entities()
-    assert mds.entities() == 169
+    assert mds.entities() == 1727
     idps = mds.with_descriptor("idpsso")
     print idps.keys()
-    assert len(idps) == 53  # !!!!???? < 10%
+    assert len(idps) == 318  # ~ 18%
     try:
         _ = mds.single_sign_on_service('urn:mace:incommon:uiuc.edu')
     except UnknownPrincipal:
@@ -157,7 +154,7 @@ def test_incommon_1():
     aas = mds.with_descriptor("attribute_authority")
 
     print aas.keys()
-    assert len(aas) == 53
+    assert len(aas) == 180
 
 
 def test_ext_2():
@@ -194,7 +191,7 @@ def test_switch_1():
                         disable_ssl_certificate_validation=True)
 
     mds.imp(METADATACONF["5"])
-    assert len(mds.keys()) == 41
+    assert len(mds.keys()) == 167
     idps = mds.with_descriptor("idpsso")
     print idps.keys()
     idpsso = mds.single_sign_on_service(
@@ -203,7 +200,7 @@ def test_switch_1():
     print idpsso
     assert destinations(idpsso) == [
         'https://aai-demo-idp.switch.ch/idp/profile/SAML2/Redirect/SSO']
-    assert len(idps) == 16
+    assert len(idps) == 31
     aas = mds.with_descriptor("attribute_authority")
     print aas.keys()
     aad = aas['https://aai-demo-idp.switch.ch/idp/shibboleth']
@@ -215,30 +212,6 @@ def test_switch_1():
     dual = [eid for eid, ent in idps.items() if eid in sps]
     print len(dual)
     assert len(dual) == 0
-
-
-def test_sp_metadata():
-    mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
-                        disable_ssl_certificate_validation=True)
-
-    mds.imp(METADATACONF["6"])
-
-    assert len(mds.keys()) == 1
-    assert mds.keys() == ['urn:mace:umu.se:saml:roland:sp']
-    assert _eq(mds['urn:mace:umu.se:saml:roland:sp'].keys(),
-               ['entity_id', '__class__', 'spsso_descriptor'])
-
-    req = mds.attribute_requirement('urn:mace:umu.se:saml:roland:sp')
-    print req
-    assert len(req["required"]) == 3
-    assert len(req["optional"]) == 1
-    assert req["optional"][0]["name"] == 'urn:oid:2.5.4.12'
-    assert req["optional"][0]["friendly_name"] == 'title'
-    assert _eq([n["name"] for n in req["required"]],
-               ['urn:oid:2.5.4.4', 'urn:oid:2.5.4.42',
-                'urn:oid:0.9.2342.19200300.100.1.3'])
-    assert _eq([n["friendly_name"] for n in req["required"]],
-               ['surName', 'givenName', 'mail'])
 
 
 def test_metadata_file():

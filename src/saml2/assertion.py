@@ -422,6 +422,12 @@ class Policy(object):
         return []
 
     def get_entity_categories_restriction(self, sp_entity_id, mds):
+        """
+
+        :param sp_entity_id:
+        :param mds: MetadataStore instance
+        :return: A dictionary with restrictionsmetat
+        """
         if not self._restrictions:
             return None
 
@@ -697,7 +703,7 @@ class Assertion(dict):
             _ass.authn_statement = [_authn_statement]
 
         if not attr_statement.empty():
-            _ass.attribute_statement=[attr_statement],
+            _ass.attribute_statement=[attr_statement]
 
         return _ass
     

@@ -218,10 +218,10 @@ class TestServer1():
         assert assertion.attribute_statement
         attribute_statement = assertion.attribute_statement
         print attribute_statement
-        assert len(attribute_statement.attribute) == 5
+        assert len(attribute_statement[0].attribute) == 5
         # Pick out one attribute
         attr = None
-        for attr in attribute_statement.attribute:
+        for attr in attribute_statement[0].attribute:
             if attr.friendly_name == "edupersonentitlement":
                 break
         assert len(attr.attribute_value) == 1
@@ -233,7 +233,7 @@ class TestServer1():
         assert assertion.subject
         assert assertion.subject.name_id
         assert assertion.subject.subject_confirmation
-        confirmation = assertion.subject.subject_confirmation
+        confirmation = assertion.subject.subject_confirmation[0]
         print confirmation.keyswv()
         print confirmation.subject_confirmation_data
         assert confirmation.subject_confirmation_data.in_response_to == "id12"
@@ -426,8 +426,8 @@ class TestServer2():
         subject = assertion.subject
         #assert subject.name_id.format == saml.NAMEID_FORMAT_TRANSIENT
         assert subject.subject_confirmation
-        subject_confirmation = subject.subject_confirmation
-        assert subject_confirmation.subject_confirmation_data.in_response_to == "aaa"
+        subject_conf = subject.subject_confirmation[0]
+        assert subject_conf.subject_confirmation_data.in_response_to == "aaa"
 
 
 def _logout_request(conf_file):

@@ -17,6 +17,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+if requests.__version__ < "2.0.0":
+    DICT_HEADERS = False
+else:
+    DICT_HEADERS = True
+
 __author__ = 'rolandh'
 
 ATTRS = {"version": None,
@@ -206,6 +211,11 @@ class HTTPBase(object):
 
         if self.user and self.passwd:
             _kwargs["auth"] = (self.user, self.passwd)
+
+        if "headers" in _kwargs and isinstance(_kwargs["headers"], list):
+            if DICT_HEADERS:
+                # requests.request wants a dict of headers, not a list of tuples
+                _kwargs["headers"] = dict(_kwargs["headers"])
 
         try:
             logger.debug("%s to %s" % (method, url))

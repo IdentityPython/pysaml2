@@ -43,7 +43,7 @@ install_requires = [
     'paste',
     'zope.interface',
     'repoze.who',
-    'm2crypto'
+    'pycrypto', 'Crypto'
 ]
 
 tests_require = [

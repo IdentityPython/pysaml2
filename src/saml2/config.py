@@ -450,6 +450,15 @@ class Config(object):
         root_logger.info("Logging started")
         return root_logger
 
+    def endpoint2service(self, endpoint, context=None):
+        endps = self.getattr("endpoints", context)
+
+        for service, specs in endps.items():
+            for endp, binding in specs:
+                if endp == endpoint:
+                    return service, binding
+
+        return None, None
 
 class SPConfig(Config):
     def_context = "sp"
