@@ -21,6 +21,7 @@ from saml2.validate import valid_instance
 from saml2.time_util import valid
 from saml2.validate import NotValid
 from saml2.sigver import security_context
+from importlib import import_module
 
 __author__ = 'rolandh'
 
@@ -134,8 +135,8 @@ class MetaData(object):
 
         # have I seen this entity_id before ? If so if log: ignore it
         if entity_descr.entity_id in self.entity:
-            print >> sys.stderr,\
-                "Duplicated Entity descriptor (entity id: '%s')" %\
+            print >> sys.stderr, \
+                "Duplicated Entity descriptor (entity id: '%s')" % \
                 entity_descr.entity_id
             return
 
@@ -353,8 +354,11 @@ class MetaDataFile(MetaData):
         self.filename = filename
         self.cert = cert
 
+    def get_metadata_content(self):
+        return open(self.filename).read()
+
     def load(self):
-        _txt = open(self.filename).read()
+        _txt = self.get_metadata_content()
         if self.cert:
             node_name = "%s:%s" % (md.EntitiesDescriptor.c_namespace,
                                    md.EntitiesDescriptor.c_tag)
@@ -367,6 +371,49 @@ class MetaDataFile(MetaData):
         else:
             self.parse(_txt)
             return True
+
+
+class MetaDataLoader(MetaDataFile):
+    """
+    Handles Metadata file loaded by a passed in function.
+    The format of the file is the SAML Metadata format.
+    """
+    def __init__(self, onts, attrc, loader_callable, cert=None):
+        MetaData.__init__(self, onts, attrc)
+        self.metadata_provider_callable = self.get_metadata_loader(loader_callable)
+        self.cert = cert
+
+    def get_metadata_loader(self, func):
+        if callable(func):
+            return func
+
+        i = func.rfind('.')
+        module, attr = func[:i], func[i + 1:]
+        try:
+            mod = import_module(module)
+        except Exception, e:
+            raise RuntimeError('Cannot find metadata provider function %s: "%s"' % (func, e))
+
+        try:
+            metadata_loader = getattr(mod, attr)
+        except AttributeError:
+            raise RuntimeError(
+                'Module "%s" does not define a "%s" metadata loader' %
+                (module, attr)
+                )
+
+        if not callable(metadata_loader):
+            raise RuntimeError(
+                'Metadata loader %s.%s must be callable' %
+                (module, attr)
+                )
+
+        return metadata_loader
+
+
+
+    def get_metadata_content(self):
+        return self.metadata_provider_callable()
 
 
 class MetaDataExtern(MetaData):
@@ -463,6 +510,9 @@ class MetadataStore(object):
         elif typ == "mdfile":
             key = args[0]
             md = MetaDataMD(self.onts, self.attrc, args[0])
+        elif typ == "loader":
+            key = args[0]
+            md = MetaDataLoader(self.onts, self.attrc, args[0])
         else:
             raise SAMLError("Unknown metadata type '%s'" % typ)
 

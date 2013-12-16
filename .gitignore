@@ -13,6 +13,8 @@ dist/
 example/sp/identities
 subject.db
 .idea
+.project
+.pydevproject
 .DS_store
 .gitignore
 debug_*
