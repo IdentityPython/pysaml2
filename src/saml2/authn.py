@@ -3,6 +3,7 @@ from urllib import urlencode
 from urlparse import parse_qs
 from urlparse import urlsplit
 import time
+import ldap
 from saml2 import SAMLError
 from saml2.aes import AESCipher
 from saml2.httputil import Response
@@ -135,6 +136,9 @@ class UsernamePasswordMako(UserAuthnMethod):
         resp.message = mte.render(**argv)
         return resp
 
+    def _verify(self, pwd, user):
+        assert pwd == self.passwd[user]
+
     def verify(self, request, **kwargs):
         """
         Verifies that the given username and password was correct
@@ -157,7 +161,7 @@ class UsernamePasswordMako(UserAuthnMethod):
         logger.debug("passwd: %s" % self.passwd)
         # verify username and password
         try:
-            assert _dict["password"][0] == self.passwd[_dict["login"][0]]
+            self._verify(_dict["password"][0], _dict["login"][0])
             timestamp = str(int(time.mktime(time.gmtime())))
             info = self.aes.encrypt("::".join([_dict["login"][0], timestamp]))
             self.active[info] = timestamp
@@ -219,3 +223,33 @@ class AuthnMethodChooser(object):
         else:
             pass  # TODO
 
+
+class LDAPAuthn(UsernamePasswordMako):
+    def __init__(self, srv, ldapsrv, return_to,
+                 dn_pattern, mako_template, template_lookup):
+        """
+        :param srv: The server instance
+        :param ldapsrv: Which LDAP server to us
+        :param return_to: Where to send the user after authentication
+        :return:
+        """
+        UsernamePasswordMako.__init__(self, srv, mako_template, template_lookup,
+                                      None, return_to)
+
+        self.ldap = ldap.initialize(ldapsrv)
+        self.ldap.protocol_version = 3
+        self.ldap.set_option(ldap.OPT_REFERRALS, 0)
+        self.dn_pattern = dn_pattern
+
+    def _verify(self, pwd, user):
+        """
+        Verifies the username and password agains a LDAP server
+        :param pwd: The password
+        :param user: The username
+        :return: AssertionError if the LDAP verification failed.
+        """
+        _dn = self.dn_pattern % user
+        try:
+            self.ldap.simple_bind_s(_dn, pwd)
+        except Exception:
+            raise AssertionError()
