@@ -219,7 +219,10 @@ def error_status_factory(info):
             exc_val = EXCEPTION2STATUS[info.__class__]
         except KeyError:
             exc_val = samlp.STATUS_AUTHN_FAILED
-        msg = info.args[0]
+        try:
+            msg = info.args[0]
+        except IndexError:
+            msg = "%s" % info
         status = samlp.Status(
             status_message=samlp.StatusMessage(text=msg),
             status_code=samlp.StatusCode(
