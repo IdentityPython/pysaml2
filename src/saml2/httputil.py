@@ -47,7 +47,10 @@ class Response(object):
             self.headers.append(('Content-type', _content_type))
 
     def __call__(self, environ, start_response, **kwargs):
-        start_response(self.status, self.headers)
+        try:
+            start_response(self.status, self.headers)
+        except TypeError:
+            pass
         return self.response(self.message or geturl(environ), **kwargs)
 
     def _response(self, message="", **argv):
