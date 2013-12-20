@@ -54,14 +54,14 @@ def metadata_tostring_fix(desc, nspair):
     return xmlstring
 
 
-def create_metadata_string(configfile, config, valid, cert, keyfile, id, name, sign):
+def create_metadata_string(configfile, config, valid, cert, keyfile, id, name,
+                           sign):
     valid_for = 0
     nspair = {"xs": "http://www.w3.org/2001/XMLSchema"}
-    paths = [".", "/opt/local/bin"]
+    #paths = [".", "/opt/local/bin"]
 
     if valid:
-        valid_for = int(valid) #Hours
-
+        valid_for = int(valid)  # Hours
 
     eds = []
     if config is not None:
