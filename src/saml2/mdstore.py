@@ -777,3 +777,20 @@ class MetadataStore(object):
         for md in self.metadata.values():
             res.update(md.items())
         return res.items()
+
+    def _providers(self, descriptor):
+        res = []
+        for md in self.metadata.values():
+            for ent_id, ent_desc in md.items():
+                if "spsso_descriptor" in ent_desc:
+                    res.append(ent_id)
+        return res
+
+    def service_providers(self):
+        return self._providers("spsso_descriptor")
+
+    def identity_providers(self):
+        return self._providers("idpsso_descriptor")
+
+    def attribute_authorities(self):
+        return self._providers("attribute_authority")
