@@ -40,4 +40,4 @@ info = {
     "userid": "roland"
 }
 
-print json.dumps(info)
+print json.dumps(info, indent=4, sort_keys=True)

@@ -105,9 +105,9 @@ class SAML2client(object):
         self._parser.add_argument('-L', dest='log', action='store_true',
                                   help="Print log information")
         self._parser.add_argument(
-            '-C', dest="§",
-            help=("CA certs to use to verify HTTPS server certificates, ",
-                  "if HTTPS is used and no server CA certs are defined then ",
+            '-C', dest="ca_certs",
+            help=("CA certs to use to verify HTTPS server certificates, "
+                  "if HTTPS is used and no server CA certs are defined then "
                   "no cert verification will be done"))
         self._parser.add_argument('-J', dest="json_config_file",
                                   help="Script configuration")
@@ -338,7 +338,7 @@ class SAML2client(object):
         if pp:
             pp.pprint(tsum)
         else:
-            print >> sys.stdout, json.dumps(tsum)
+            print >> sys.stdout, json.dumps(tsum, indent=4, sort_keys=True)
 
         if tsum["status"] > 1 or self.args.debug or err:
             self.output_log(memoryhandler, streamhandler)
@@ -385,7 +385,7 @@ class SAML2client(object):
 
                 lista.append(item)
 
-        print json.dumps(lista)
+        print json.dumps(lista, indent=4, sort_keys=True)
 
     def _get_operation(self, operation):
         return self.operations.OPERATIONS[operation]
@@ -399,7 +399,7 @@ class SAML2client(object):
         mod = import_module("config")
         _res = dict([(key, cnf["description"]) for key, cnf in
                     mod.CONFIG.items()])
-        print json.dumps(_res)
+        print json.dumps(_res, indent=4, sort_keys=True)
 
     def verify_metadata(self):
         self.json_config = self.json_config_file()

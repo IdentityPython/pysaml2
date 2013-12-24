@@ -209,7 +209,7 @@ class Client(object):
         if pp:
             pp.pprint(tsum)
         else:
-            print >> sys.stdout, json.dumps(tsum)
+            print >> sys.stdout, json.dumps(tsum, indent=4, sort_keys=True)
 
         if tsum["status"] > 1 or self.args.debug or err:
             self.output_log(memoryhandler, streamhandler)
@@ -262,7 +262,7 @@ class Client(object):
         for key, val in self.operations.OPERATIONS.items():
             res.append({"id": key, "name": val["name"]})
 
-        print json.dumps(res)
+        print json.dumps(res, indent=4, sort_keys=True)
 
     def verify_metadata(self):
         pass
