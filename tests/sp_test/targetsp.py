@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from saml2.saml import AUTHN_PASSWORD
+from src import JSON_DUMPS_ARGS
 
 __author__ = 'rolandh'
 
@@ -40,4 +41,4 @@ info = {
     "userid": "roland"
 }
 
-print json.dumps(info, indent=4, sort_keys=True)
+print json.dumps(info, **JSON_DUMPS_ARGS)

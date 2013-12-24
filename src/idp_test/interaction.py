@@ -1,3 +1,5 @@
+from src import JSON_DUMPS_ARGS
+
 __author__ = 'rohe0002'
 
 import json
@@ -60,7 +62,7 @@ class FlowException(Exception):
         self.url = url
 
     def __str__(self):
-        return json.dumps(self.__dict__, indent=4, sort_keys=True)
+        return json.dumps(self.__dict__, **JSON_DUMPS_ARGS)
 
 
 class RResponse():

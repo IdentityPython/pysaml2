@@ -6,6 +6,7 @@ from urlparse import urlparse
 from mechanize import ParseResponseEx
 from mechanize._form import ControlNotFoundError, AmbiguityError
 from mechanize._form import ListControl
+from src import JSON_DUMPS_ARGS
 
 __author__ = 'rohe0002'
 
@@ -20,7 +21,7 @@ class FlowException(Exception):
         self.url = url
 
     def __str__(self):
-        return json.dumps(self.__dict__, indent=4, sort_keys=True)
+        return json.dumps(self.__dict__, **JSON_DUMPS_ARGS)
 
 
 class DResponse():

@@ -34,6 +34,7 @@ from saml2.extension import mdattr
 from saml2.extension import ui
 from saml2.metadata import entity_descriptor
 from saml2.saml import NAME_FORMAT_UNSPECIFIED
+from src import JSON_DUMPS_ARGS
 
 SCHEMA = [dri, idpdisc, md, mdattr, mdui, saml, ui, xmldsig, xmlenc]
 
@@ -338,7 +339,7 @@ class SAML2client(object):
         if pp:
             pp.pprint(tsum)
         else:
-            print >> sys.stdout, json.dumps(tsum, indent=4, sort_keys=True)
+            print >> sys.stdout, json.dumps(tsum, **JSON_DUMPS_ARGS)
 
         if tsum["status"] > 1 or self.args.debug or err:
             self.output_log(memoryhandler, streamhandler)
@@ -385,7 +386,7 @@ class SAML2client(object):
 
                 lista.append(item)
 
-        print json.dumps(lista, indent=4, sort_keys=True)
+        print json.dumps(lista, **JSON_DUMPS_ARGS)
 
     def _get_operation(self, operation):
         return self.operations.OPERATIONS[operation]
@@ -399,7 +400,7 @@ class SAML2client(object):
         mod = import_module("config")
         _res = dict([(key, cnf["description"]) for key, cnf in
                     mod.CONFIG.items()])
-        print json.dumps(_res, indent=4, sort_keys=True)
+        print json.dumps(_res, **JSON_DUMPS_ARGS)
 
     def verify_metadata(self):
         self.json_config = self.json_config_file()

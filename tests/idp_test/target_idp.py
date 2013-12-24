@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from saml2.saml import NAME_FORMAT_URI
+from src import JSON_DUMPS_ARGS
 
 __author__ = 'rolandh'
 
@@ -74,4 +75,4 @@ info = {
     "name_format": NAME_FORMAT_URI
 }
 
-print json.dumps(info, indent=4, sort_keys=True)
+print json.dumps(info, **JSON_DUMPS_ARGS)
