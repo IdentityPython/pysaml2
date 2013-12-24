@@ -20,7 +20,7 @@ class FlowException(Exception):
         self.url = url
 
     def __str__(self):
-        return json.dumps(self.__dict__)
+        return json.dumps(self.__dict__, indent=4, sort_keys=True)
 
 
 class DResponse():
