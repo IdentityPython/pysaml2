@@ -106,8 +106,8 @@ class SAML2client(object):
                                   help="Print log information")
         self._parser.add_argument(
             '-C', dest="ca_certs",
-            help=("CA certs to use to verify HTTPS server certificates, ",
-                  "if HTTPS is used and no server CA certs are defined then ",
+            help=("CA certs to use to verify HTTPS server certificates, "
+                  "if HTTPS is used and no server CA certs are defined then "
                   "no cert verification will be done"))
         self._parser.add_argument('-J', dest="json_config_file",
                                   help="Script configuration")
