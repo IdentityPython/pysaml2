@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from saml2.saml import NAME_FORMAT_URI
-from src import JSON_DUMPS_ARGS
+from commonArgs import JSON_DUMPS_ARGS
 
 __author__ = 'rolandh'
 

@@ -6,7 +6,7 @@ from urlparse import urlparse
 from mechanize import ParseResponseEx
 from mechanize._form import ControlNotFoundError, AmbiguityError
 from mechanize._form import ListControl
-from src import JSON_DUMPS_ARGS
+from commonArgs import JSON_DUMPS_ARGS
 
 __author__ = 'rohe0002'
 

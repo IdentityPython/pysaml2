@@ -34,14 +34,14 @@ from saml2.extension import mdattr
 from saml2.extension import ui
 from saml2.metadata import entity_descriptor
 from saml2.saml import NAME_FORMAT_UNSPECIFIED
-from src import JSON_DUMPS_ARGS
+from commonArgs import JSON_DUMPS_ARGS
 
 SCHEMA = [dri, idpdisc, md, mdattr, mdui, saml, ui, xmldsig, xmlenc]
 
 __author__ = 'rolandh'
 
-logger = logging.getLogger("")
-logger.setLevel(logging.DEBUG)
+#logger = logging.getLogger("")
+#logger.setLevel(logging.DEBUG)
 #formatter = logging.Formatter("%(asctime)s %(name)s:%(levelname)s %(message)s")
 formatter_2 = logging.Formatter("%(delta).6f - %(levelname)s - [%(name)s] %(message)s")
 
@@ -54,9 +54,14 @@ streamhandler.setFormatter(formatter_2)
 memoryhandler = logging.handlers.MemoryHandler(1024*10, logging.DEBUG)
 memoryhandler.addFilter(cf)
 
-saml2testlog = logging.getLogger("saml2test")
-saml2testlog.addHandler(memoryhandler)
-saml2testlog.setLevel(logging.DEBUG)
+#saml2testlog = logging.getLogger("saml2test")
+#saml2testlog.addHandler(memoryhandler)
+#saml2testlog.setLevel(logging.DEBUG)
+logger = logging.getLogger("saml2test")
+logger.setLevel(logging.DEBUG)
+logger.addHandler(memoryhandler)
+#logger.addHandler(streamhandler)
+logger.setLevel(logging.DEBUG)
 
 
 def recursive_find_module(name, path=None):

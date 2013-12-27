@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import copy
 from saml2 import samlp, SamlBase
 from saml2 import NAMEID_FORMAT_EMAILADDRESS
