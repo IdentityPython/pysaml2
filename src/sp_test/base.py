@@ -315,13 +315,19 @@ class Conversation():
         Un-solicited starts with the IDP sending something.
         """
         if len(flow) >= 3:
+            logger.info("TEST FLOW: Start by GET-ing the page")
             self.wb_send()
+            logger.info("TEST FLOW: Continuing with: %s" % flow[0].__name__)
             self.intermit(flow[0]._interaction)
+            logger.info("TEST FLOW: Handling redirect")
             self.handle_redirect()
+        logger.info("TEST FLOW: Sending IdP Response with expected request %s and response to be used %s" % flow[1].__name__, flow[2].__name__)
         self.send_idp_response(flow[1], flow[2])
         if len(flow) == 4:
+            logger.info("TEST FLOW Handling result with HTTP Response check for %s" % flow[3].__name__)
             self.handle_result(flow[3])
         else:
+            logger.info("TEST FLOW: Handling result (without HTTP Response check)")
             self.handle_result()
 
     def do_sequence(self, oper, tests=None):
