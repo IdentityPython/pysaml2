@@ -321,7 +321,7 @@ class Conversation():
             self.intermit(flow[0]._interaction)
             logger.info("TEST FLOW: Handling redirect")
             self.handle_redirect()
-        logger.info("TEST FLOW: Sending IdP Response with expected request %s and response to be used %s" % flow[1].__name__, flow[2].__name__)
+        logger.info("TEST FLOW: Sending IdP Response with expected request %s and response to be used %s" % (flow[1].__name__, flow[2].__name__))
         self.send_idp_response(flow[1], flow[2])
         if len(flow) == 4:
             logger.info("TEST FLOW Handling result with HTTP Response check for %s" % flow[3].__name__)
