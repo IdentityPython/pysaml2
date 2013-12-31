@@ -39,6 +39,10 @@ memoryhandler.addFilter(cf)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(memoryhandler)
+# The streamhandler variable should be added to the logger if 
+# you want to see the log messages as they are printed instead
+# of afterwards (mostly useful during debugging
+#logger.addHandler(streamhandler)
 logger.setLevel(logging.DEBUG)
 
 
