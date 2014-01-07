@@ -108,6 +108,7 @@ class MetaData(object):
         self.attrc = attrc
         self.entity = {}
         self.metadata = metadata
+        self.security = None
 
     def items(self):
         return self.entity.items()
@@ -185,7 +186,8 @@ class MetaData(object):
 
             try:
                 if not valid(self.entities_descr.valid_until):
-                    raise ToOld("Metadata not valid anymore")
+                    raise ToOld("Metadata not valid anymore, it's after %s" % (
+                        self.entities_descr.valid_until,))
             except AttributeError:
                 pass
 
