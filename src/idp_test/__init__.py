@@ -19,6 +19,7 @@ from saml2.mdstore import MetaData
 from saml2test import FatalError, OperationError
 from saml2test import exception_trace
 from saml2test import ContextFilter
+from saml2test import JSON_DUMPS_ARGS
 
 from idp_test.base import Conversation
 from idp_test.check import CheckSaml2IntMetaData
@@ -34,7 +35,6 @@ from saml2.extension import mdattr
 from saml2.extension import ui
 from saml2.metadata import entity_descriptor
 from saml2.saml import NAME_FORMAT_UNSPECIFIED
-from src import JSON_DUMPS_ARGS
 
 SCHEMA = [dri, idpdisc, md, mdattr, mdui, saml, ui, xmldsig, xmlenc]
 
@@ -141,6 +141,7 @@ class SAML2client(object):
         self.constraints = {}
         self.operations = None
         self.args = None
+        self.client = None
 
     def json_config_file(self):
         if self.args.json_config_file == "-":
@@ -285,14 +286,33 @@ class SAML2client(object):
             self.setup()
         except (AttributeError, ToOld), err:
             print >> sys.stdout, "Configuration Error: %s" % err
-
-        self.client = Saml2Client(self.sp_config)
-        conv = None
+            return
 
         if self.args.pretty:
             pp = pprint.PrettyPrinter(indent=4)
         else:
             pp = None
+
+        conv = None
+
+        try:
+            self.client = Saml2Client(self.sp_config)
+        except Exception, err:
+            if conv:
+                self.test_log = conv.test_output
+                self.test_log.append(exception_trace("RUN", err))
+            else:
+                self.test_log = exception_trace("RUN", err)
+            tsum = self.test_summation(self.args.oper)
+
+            if pp:
+                pp.pprint(tsum)
+            else:
+                print >> sys.stdout, json.dumps(tsum, **JSON_DUMPS_ARGS)
+
+            if tsum["status"] > 1 or self.args.debug or err:
+                self.output_log(memoryhandler, streamhandler)
+            return
 
         try:
             try:

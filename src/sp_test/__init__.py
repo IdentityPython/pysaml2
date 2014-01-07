@@ -19,7 +19,7 @@ from saml2test import FatalError
 from saml2test import CheckError
 from saml2test import ContextFilter
 from saml2test import exception_trace
-from src import JSON_DUMPS_ARGS
+from saml2test import JSON_DUMPS_ARGS
 
 __author__ = 'rolandh'
 
