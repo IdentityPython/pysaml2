@@ -168,7 +168,7 @@ class Conversation():
 
             _txt = self.last_response.content
             if self.last_response.status_code >= 400:
-                raise FatalError("Did not expected error")
+                raise FatalError("Unexpected error")
 
     def handle_redirect(self):
         try:
@@ -324,7 +324,11 @@ class Conversation():
         logger.info("TEST FLOW: Sending IdP Response with expected request %s and response to be used %s" % (flow[1].__name__, flow[2].__name__))
         self.send_idp_response(flow[1], flow[2])
         if len(flow) == 4:
-            logger.info("TEST FLOW Handling result with HTTP Response check for %s" % flow[3].__name__)
+            if flow[3] is None :
+                flowName = "None"
+            else:
+                flowName = flow[3].__name__
+            logger.info("TEST FLOW Handling result with HTTP Response check for %s" % flowName)
             self.handle_result(flow[3])
         else:
             logger.info("TEST FLOW: Handling result (without HTTP Response check)")
