@@ -855,8 +855,8 @@ class CryptoBackendXMLSecurity(CryptoBackend):
         signed = xmlsec.sign(xml, key_file)
         return lxml.etree.tostring(signed, xml_declaration=True)
 
-    def validate_signature(self, signedtext, cert_file, cert_type, _node_name,
-                           _node_id, _id_attr):
+    def validate_signature(self, signedtext, cert_file, cert_type, node_name,
+                           node_id, id_attr):
         """
         Validate signature on XML document.
 
