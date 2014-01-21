@@ -62,7 +62,8 @@ COMMON_ARGS = [
     "session_storage",
     "entity_category",
     "xmlsec_path",
-    "extension_schemas"
+    "extension_schemas",
+    "crypto_backend",
 ]
 
 SP_ARGS = [
