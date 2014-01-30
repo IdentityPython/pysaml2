@@ -129,3 +129,16 @@ CONFIG = {
         "loglevel": "debug",
     }
 }
+
+# Authentication contexts
+
+    #(r'verify?(.*)$', do_verify),
+
+CAS_SERVER = "https://cas.umu.se"
+CAS_VERIFY = "%s/verify_cas" % BASE
+PWD_VERIFY = "%s/verify_pwd" % BASE
+
+AUTHORIZATION = {
+    "CAS" : {"ACR": "CAS", "WEIGHT": 1, "URL": CAS_VERIFY},
+    "UserPassword" : {"ACR": "PASSWORD", "WEIGHT": 2, "URL": PWD_VERIFY}
+}
