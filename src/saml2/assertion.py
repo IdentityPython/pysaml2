@@ -578,7 +578,8 @@ class Assertion(dict):
                        authenticating_authority=factory(
                            saml.AuthenticatingAuthority, text=authn_auth))
 
-    def _authn_context_class_ref(self, authn_class, authn_auth=None):
+    @staticmethod
+    def _authn_context_class_ref(authn_class, authn_auth=None):
         """
         Construct the authn context with a authn context class reference
         :param authn_class: The authn context class reference
@@ -596,45 +597,62 @@ class Assertion(dict):
                            authn_context_class_ref=cntx_class)
         
     def _authn_statement(self, authn_class=None, authn_auth=None,
-                         authn_decl=None, authn_decl_ref=None):
+                         authn_decl=None, authn_decl_ref=None, authn_instant="",
+                         subject_locality=""):
         """
         Construct the AuthnStatement
         :param authn_class: Authentication Context Class reference
         :param authn_auth: Authenticating Authority
         :param authn_decl: Authentication Context Declaration
         :param authn_decl_ref: Authentication Context Declaration reference
+        :param authn_instant: When the Authentication was performed.
+            Assumed to be seconds since the Epoch.
+        :param subject_locality: Specifies the DNS domain name and IP address
+            for the system from which the assertion subject was apparently
+            authenticated.
         :return: An AuthnContext instance
         """
+        if authn_instant:
+            _instant = instant(time_stamp=authn_instant)
+        else:
+            _instant = instant()
+
         if authn_class:
-            return factory(
+            res = factory(
                 saml.AuthnStatement,
-                authn_instant=instant(),
+                authn_instant=_instant,
                 session_index=sid(),
                 authn_context=self._authn_context_class_ref(
                     authn_class, authn_auth))
         elif authn_decl:
-            return factory(
+            res = factory(
                 saml.AuthnStatement,
-                authn_instant=instant(),
+                authn_instant=_instant,
                 session_index=sid(),
                 authn_context=self._authn_context_decl(authn_decl, authn_auth))
         elif authn_decl_ref:
-            return factory(
+            res = factory(
                 saml.AuthnStatement,
-                authn_instant=instant(),
+                authn_instant=_instant,
                 session_index=sid(),
                 authn_context=self._authn_context_decl_ref(authn_decl_ref,
                                                            authn_auth))
         else:
-            return factory(
+            res = factory(
                 saml.AuthnStatement,
-                authn_instant=instant(),
+                authn_instant=_instant,
                 session_index=sid())
+
+        if subject_locality:
+            res.subject_locality = saml.SubjectLocality(text=subject_locality)
+
+        return res
 
     def construct(self, sp_entity_id, in_response_to, consumer_url,
                   name_id, attrconvs, policy, issuer, authn_class=None,
                   authn_auth=None, authn_decl=None, encrypt=None,
-                  sec_context=None, authn_decl_ref=None):
+                  sec_context=None, authn_decl_ref=None, authn_instant="",
+                  subject_locality=""):
         """ Construct the Assertion 
         
         :param sp_entity_id: The entityid of the SP
@@ -651,6 +669,10 @@ class Assertion(dict):
         :param encrypt: Whether to encrypt parts or all of the Assertion
         :param sec_context: The security context used when encrypting
         :param authn_decl_ref: An Authentication Context declaration reference
+        :param authn_instant: When the Authentication was performed
+        :param subject_locality: Specifies the DNS domain name and IP address
+            for the system from which the assertion subject was apparently
+            authenticated.
         :return: An Assertion instance
         """
 
@@ -677,7 +699,9 @@ class Assertion(dict):
 
         if authn_auth or authn_class or authn_decl or authn_decl_ref:
             _authn_statement = self._authn_statement(authn_class, authn_auth,
-                                                     authn_decl, authn_decl_ref)
+                                                     authn_decl, authn_decl_ref,
+                                                     authn_instant,
+                                                     subject_locality)
         else:
             _authn_statement = None
 

@@ -126,10 +126,10 @@ def test_incommon_1():
     mds.imp(METADATACONF["2"])
 
     print mds.entities()
-    assert mds.entities() == 1727
+    assert mds.entities() > 1700
     idps = mds.with_descriptor("idpsso")
     print idps.keys()
-    assert len(idps) == 318  # ~ 18%
+    assert len(idps) > 300  # ~ 18%
     try:
         _ = mds.single_sign_on_service('urn:mace:incommon:uiuc.edu')
     except UnknownPrincipal:
@@ -191,7 +191,7 @@ def test_switch_1():
                         disable_ssl_certificate_validation=True)
 
     mds.imp(METADATACONF["5"])
-    assert len(mds.keys()) == 167
+    assert len(mds.keys()) > 160
     idps = mds.with_descriptor("idpsso")
     print idps.keys()
     idpsso = mds.single_sign_on_service(
@@ -200,7 +200,7 @@ def test_switch_1():
     print idpsso
     assert destinations(idpsso) == [
         'https://aai-demo-idp.switch.ch/idp/profile/SAML2/Redirect/SSO']
-    assert len(idps) == 31
+    assert len(idps) > 30
     aas = mds.with_descriptor("attribute_authority")
     print aas.keys()
     aad = aas['https://aai-demo-idp.switch.ch/idp/shibboleth']

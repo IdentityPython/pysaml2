@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import base64
 from urlparse import parse_qs
+from saml2.assertion import Policy
 from saml2.authn_context import INTERNETPROTOCOLPASSWORD
 from saml2.saml import NameID, NAMEID_FORMAT_TRANSIENT
 from saml2.samlp import response_from_string
@@ -241,22 +242,46 @@ class TestServer1():
     def test_sso_response_without_identity(self):
         resp = self.server.create_authn_response(
             {},
-            "id12",                             # in_response_to
-            "http://localhost:8087/",           # consumer_url
+            "id12",                                 # in_response_to
+            "http://localhost:8087/",               # consumer_url
             "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
             userid="USER1",
-            authn=AUTHN
+            authn=AUTHN,
+            release_policy=Policy(),
+            best_effort=True
         )
 
         print resp.keyswv()
         assert _eq(resp.keyswv(), ['status', 'destination', 'in_response_to',
-                                   'issue_instant', 'version', 'id', 'issuer'])
+                                   'issue_instant', 'version', 'id', 'issuer',
+                                   'assertion'])
         assert resp.destination == "http://localhost:8087/"
         assert resp.in_response_to == "id12"
         assert resp.status
         assert resp.status.status_code.value == samlp.STATUS_SUCCESS
         assert resp.issuer.text == "urn:mace:example.com:saml:roland:idp"
-        assert not resp.assertion 
+        assert not resp.assertion.attribute_statement
+
+    def test_sso_response_specific_instant(self):
+        _authn = AUTHN.copy()
+        _authn["authn_instant"] = 1234567890
+
+        resp = self.server.create_authn_response(
+            {},
+            "id12",                             # in_response_to
+            "http://localhost:8087/",           # consumer_url
+            "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
+            userid="USER1",
+            authn=_authn,
+            best_effort=True
+        )
+
+        print resp.keyswv()
+        assert _eq(resp.keyswv(), ['status', 'destination', 'in_response_to',
+                                   'issue_instant', 'version', 'id', 'issuer',
+                                   'assertion'])
+        authn_statement = resp.assertion.authn_statement[0]
+        assert authn_statement.authn_instant == '2009-02-13T23:31:30Z'
 
     def test_sso_failure_response(self):
         exc = s_utils.MissingValue("eduPersonAffiliation missing")
@@ -477,4 +502,4 @@ class TestServerLogout():
 if __name__ == "__main__":
     ts = TestServer1()
     ts.setup_class()
-    ts.test_authn_response_0()
+    ts.test_sso_response_specific_instant()

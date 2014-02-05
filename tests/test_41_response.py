@@ -100,3 +100,8 @@ class TestResponse:
         # should fail
         raises(MissingKey,
                'sc.correctly_signed_response("%s" % self._sign_resp_)')
+
+if __name__ == "__main__":
+    t = TestResponse()
+    t.setup_class()
+    t.test_1()
