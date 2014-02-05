@@ -55,9 +55,18 @@ from saml2.profile import ecp
 
 logger = logging.getLogger(__name__)
 
+AUTHN_DICT_MAP = {
+    "decl": "authn_decl",
+    "authn_auth": "authn_auth",
+    "class_ref": "authn_class",
+    "authn_instant": "authn_instant",
+    "subject_locality": "subject_locality"
+}
+
 
 class Server(Entity):
     """ A class that does things that IdPs or AAs do """
+
     def __init__(self, config_file="", config=None, cache=None, stype="idp",
                  symkey=""):
         Entity.__init__(self, stype, config, config_file)
@@ -89,6 +98,7 @@ class Server(Entity):
             typ, data = _spec
             if typ.lower() == "mongodb":
                 from saml2.mongo_store import SessionStorageMDB
+
                 return SessionStorageMDB(database=data, collection="session")
 
         raise NotImplementedError("No such storage type implemented")
@@ -100,7 +110,7 @@ class Server(Entity):
         """
         if stype == "aa":
             return
-        
+
         # subject information is stored in a database
         # default database is in memory which is OK in some setups
         dbspec = self.config.getattr("subject_data", "idp")
@@ -117,11 +127,13 @@ class Server(Entity):
                 idb = shelve.open(addr, writeback=True)
             elif typ == "memcached":
                 import memcache
+
                 idb = memcache.Client(addr)
             elif typ == "dict":  # in-memory dictionary
                 idb = {}
             elif typ == "mongodb":
                 from saml2.mongo_store import IdentMDB
+
                 self.ident = IdentMDB(database=addr, collection="ident")
 
         if typ == "mongodb":
@@ -145,6 +157,7 @@ class Server(Entity):
                 self.eptid = EptidShelve(secret, addr)
             elif typ == "mongodb":
                 from saml2.mongo_store import EptidMDB
+
                 self.eptid = EptidMDB(secret, database=addr,
                                       collection="eptid")
             else:
@@ -257,7 +270,8 @@ class Server(Entity):
     def _authn_response(self, in_response_to, consumer_url,
                         sp_entity_id, identity=None, name_id=None,
                         status=None, authn=None, issuer=None, policy=None,
-                        sign_assertion=False, sign_response=False):
+                        sign_assertion=False, sign_response=False,
+                        best_effort=False):
         """ Create a response. A layer of indirection.
         
         :param in_response_to: The session identifier of the request
@@ -272,64 +286,62 @@ class Server(Entity):
         :param issuer: The issuer of the response
         :param sign_assertion: Whether the assertion should be signed or not
         :param sign_response: Whether the response should be signed or not
+        :param best_effort: Even if not the SPs demands can be met send a
+            response.
         :return: A response instance
         """
 
         to_sign = []
         args = {}
-        if identity:
-            _issuer = self._issuer(issuer)
-            ast = Assertion(identity)
-            if policy is None:
-                policy = Policy()
-            try:
-                ast.apply_policy(sp_entity_id, policy, self.metadata)
-            except MissingValue, exc:
+        #if identity:
+        _issuer = self._issuer(issuer)
+        ast = Assertion(identity)
+        if policy is None:
+            policy = Policy()
+        try:
+            ast.apply_policy(sp_entity_id, policy, self.metadata)
+        except MissingValue, exc:
+            if not best_effort:
                 return self.create_error_response(in_response_to, consumer_url,
                                                   exc, sign_response)
 
-            if authn:  # expected to be a dictionary
-                if "decl" in authn:
-                    assertion = ast.construct(sp_entity_id, in_response_to,
-                                              consumer_url, name_id,
-                                              self.config.attribute_converters,
-                                              policy, issuer=_issuer,
-                                              authn_decl=authn["decl"],
-                                              authn_auth=authn["authn_auth"])
-                else:
-                    assertion = ast.construct(sp_entity_id, in_response_to,
-                                              consumer_url, name_id,
-                                              self.config.attribute_converters,
-                                              policy, issuer=_issuer,
-                                              authn_class=authn["class_ref"],
-                                              authn_auth=authn["authn_auth"])
-            else:
-                assertion = ast.construct(sp_entity_id, in_response_to,
-                                          consumer_url, name_id,
-                                          self.config.attribute_converters,
-                                          policy, issuer=_issuer)
+        if authn:  # expected to be a dictionary
+            # Would like to use dict comprehension but ...
+            authn_args = dict([(AUTHN_DICT_MAP[k],
+                                v) for k, v in authn.items()])
 
-            if sign_assertion:
-                assertion.signature = pre_signature_part(assertion.id,
-                                                         self.sec.my_cert, 1)
-                # Just the assertion or the response and the assertion ?
-                to_sign = [(class_name(assertion), assertion.id)]
+            assertion = ast.construct(sp_entity_id, in_response_to,
+                                      consumer_url, name_id,
+                                      self.config.attribute_converters,
+                                      policy, issuer=_issuer,
+                                      **authn_args)
+        else:
+            assertion = ast.construct(sp_entity_id, in_response_to,
+                                      consumer_url, name_id,
+                                      self.config.attribute_converters,
+                                      policy, issuer=_issuer)
 
-            # Store which assertion that has been sent to which SP about which
-            # subject.
+        if sign_assertion:
+            assertion.signature = pre_signature_part(assertion.id,
+                                                     self.sec.my_cert, 1)
+            # Just the assertion or the response and the assertion ?
+            to_sign = [(class_name(assertion), assertion.id)]
 
-            # self.cache.set(assertion.subject.name_id.text,
-            #                 sp_entity_id, {"ava": identity, "authn": authn},
-            #                 assertion.conditions.not_on_or_after)
+        # Store which assertion that has been sent to which SP about which
+        # subject.
 
-            args["assertion"] = assertion
+        # self.cache.set(assertion.subject.name_id.text,
+        #                 sp_entity_id, {"ava": identity, "authn": authn},
+        #                 assertion.conditions.not_on_or_after)
 
-            if self.support_AssertionIDRequest() or self.support_AuthnQuery():
-                self.session_db.store_assertion(assertion, to_sign)
+        args["assertion"] = assertion
+
+        if self.support_AssertionIDRequest() or self.support_AuthnQuery():
+            self.session_db.store_assertion(assertion, to_sign)
 
         return self._response(in_response_to, consumer_url, status, issuer,
                               sign_response, to_sign, **args)
-                        
+
     # ------------------------------------------------------------------------
 
     #noinspection PyUnusedLocal
@@ -420,7 +432,15 @@ class Server(Entity):
         :return: A response instance
         """
 
-        policy = self.config.getattr("policy", "idp")
+        try:
+            policy = kwargs["release_policy"]
+        except KeyError:
+            policy = self.config.getattr("policy", "idp")
+
+        try:
+            best_effort = kwargs["best_effort"]
+        except KeyError:
+            best_effort = False
 
         if not name_id:
             try:
@@ -456,15 +476,16 @@ class Server(Entity):
             _authn = authn
 
             return self._authn_response(in_response_to,  # in_response_to
-                                        destination,     # consumer_url
-                                        sp_entity_id,    # sp_entity_id
-                                        identity,       # identity as dictionary
+                                        destination,  # consumer_url
+                                        sp_entity_id,  # sp_entity_id
+                                        identity,  # identity as dictionary
                                         name_id,
                                         authn=_authn,
                                         issuer=issuer,
                                         policy=policy,
                                         sign_assertion=sign_assertion,
-                                        sign_response=sign_response)
+                                        sign_response=sign_response,
+                                        best_effort=best_effort)
 
         except MissingValue, exc:
             return self.create_error_response(in_response_to, destination,
@@ -553,7 +574,6 @@ class Server(Entity):
         asserts = []
         for statement in self.session_db.get_authn_statements(
                 subject.name_id, session_index, requested_context):
-
             asserts.append(saml.Assertion(authn_statement=statement,
                                           subject=subject, **margs))
 
