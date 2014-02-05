@@ -252,7 +252,7 @@ def str_to_time(timestr, format=TIME_FORMAT):
 
 def instant(format=TIME_FORMAT, time_stamp=0):
     if time_stamp:
-        return time.strftime(format, time_stamp)
+        return time.strftime(format, time.gmtime(time_stamp))
     else:
         return time.strftime(format, time.gmtime())
 
