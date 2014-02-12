@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from saml2.saml import AUTHN_PASSWORD
-from commonArgs import JSON_DUMPS_ARGS
+#from commonArgs import JSON_DUMPS_ARGS
+from saml2test import JSON_DUMPS_ARGS
 
 __author__ = 'rolandh'
 

@@ -12,6 +12,8 @@ logger = logging.getLogger(__name__)
 
 __author__ = 'rolandh'
 
+JSON_DUMPS_ARGS = {"indent": 4, "sort_keys": True}
+
 
 class FatalError(Exception):
     pass
@@ -21,7 +23,7 @@ class CheckError(Exception):
     pass
 
 
-class HTTP_ERROR(Exception):
+class HttpError(Exception):
     pass
 
 
@@ -38,11 +40,15 @@ class ContextFilter(logging.Filter):
     This is a filter which injects time laps information into the log.
     """
 
+    def __init__(self, name=""):
+        logging.Filter.__init__(self, name)
+        self.startTime = 0
+
     def start(self):
-        self.start = time.time()
+        self.startTime = time.time()
 
     def filter(self, record):
-        record.delta = time.time() - self.start
+        record.delta = time.time() - self.startTime
         return True
 
 
@@ -78,7 +84,7 @@ def get_page(url):
     if resp.status_code == 200:
         return resp.text
     else:
-        raise HTTP_ERROR(resp.status)
+        raise HttpError(resp.status)
 
 
 def exception_trace(tag, exc, log=None):

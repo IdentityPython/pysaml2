@@ -13,13 +13,14 @@ from saml2.server import Server
 from saml2.config import IdPConfig
 from saml2.config import logging
 
-from sp_test.base import Conversation
+from base import Conversation
 
 from saml2test import FatalError
 from saml2test import CheckError
 from saml2test import ContextFilter
 from saml2test import exception_trace
-from commonArgs import JSON_DUMPS_ARGS
+#from commonArgs import JSON_DUMPS_ARGS
+from saml2test import JSON_DUMPS_ARGS
 
 __author__ = 'rolandh'
 
@@ -57,8 +58,8 @@ class Client(object):
                                   help="Configuration file for the IdP")
         self._parser.add_argument(
             '-C', dest="ca_certs",
-            help=("CA certs to use to verify HTTPS server certificates, ",
-                  "if HTTPS is used and no server CA certs are defined then ",
+            help=("CA certs to use to verify HTTPS server certificates, "
+                  "if HTTPS is used and no server CA certs are defined then "
                   "no cert verification will be done"))
         self._parser.add_argument('-d', dest='debug', action='store_true',
                                   help="Print debug information")

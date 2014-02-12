@@ -1,4 +1,5 @@
-from commonArgs import JSON_DUMPS_ARGS
+#from commonArgs import JSON_DUMPS_ARGS
+from saml2test import JSON_DUMPS_ARGS
 
 __author__ = 'rohe0002'
 
