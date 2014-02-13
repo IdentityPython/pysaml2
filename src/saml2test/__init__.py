@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 __author__ = 'rolandh'
 
-JSON_DUMPS_ARGS = {"ident": 4, "sort_keys": True}
+JSON_DUMPS_ARGS = {"indent": 4, "sort_keys": True}
 
 
 class FatalError(Exception):
@@ -42,13 +42,13 @@ class ContextFilter(logging.Filter):
 
     def __init__(self, name=""):
         logging.Filter.__init__(self, name)
-        self.start = 0
+        self._start = 0
 
     def start(self):
-        self.start = time.time()
+        self._start = time.time()
 
     def filter(self, record):
-        record.delta = time.time() - self.start
+        record.delta = time.time() - self._start
         return True
 
 
