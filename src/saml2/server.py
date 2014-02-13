@@ -307,8 +307,9 @@ class Server(Entity):
 
         if authn:  # expected to be a dictionary
             # Would like to use dict comprehension but ...
-            authn_args = dict([(AUTHN_DICT_MAP[k],
-                                v) for k, v in authn.items()])
+            authn_args = dict([
+                (AUTHN_DICT_MAP[k], v) for k, v in authn.items()
+                if k in AUTHN_DICT_MAP])
 
             assertion = ast.construct(sp_entity_id, in_response_to,
                                       consumer_url, name_id,
