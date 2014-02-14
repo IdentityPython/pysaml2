@@ -345,6 +345,26 @@ class MetaData(object):
 
         return res
 
+    def __eq__(self, other):
+        try:
+            assert isinstance(other, MetaData)
+        except AssertionError:
+            return False
+
+        if len(self.entity) != len(other.entity):
+            return False
+
+        if set(self.entity.keys()) != set(other.entity.keys()):
+            return False
+
+        for key, item in self.entity.items():
+            try:
+                assert item == other[key]
+            except AssertionError:
+                return False
+
+        return True
+
 
 class MetaDataFile(MetaData):
     """

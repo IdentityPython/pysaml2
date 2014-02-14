@@ -774,5 +774,27 @@ def test_assertion_with_zero_attributes():
     assert msg.attribute_statement == []
 
 
+def test_assertion_with_authn_instant():
+    ava = {}
+    ast = Assertion(ava)
+    policy = Policy({
+        "default": {
+            "lifetime": {"minutes": 240},
+            "attribute_restrictions": None,  # means all I have
+            "name_form": NAME_FORMAT_URI
+        },
+    })
+    name_id = NameID(format=NAMEID_FORMAT_TRANSIENT, text="foobar")
+    issuer = Issuer(text="entityid", format=NAMEID_FORMAT_ENTITY)
+    msg = ast.construct("sp_entity_id", "in_response_to", "consumer_url",
+                        name_id, [AttributeConverterNOOP(NAME_FORMAT_URI)],
+                        policy, issuer=issuer, authn_decl=ACD,
+                        authn_auth="authn_authn",
+                        authn_instant=1234567890)
+
+    print msg
+    assert msg.authn_statement[0].authn_instant == "2009-02-13T23:31:30Z"
+
+
 if __name__ == "__main__":
-    test_assertion_with_zero_attributes()
+    test_assertion_with_authn_instant()
