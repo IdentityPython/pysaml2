@@ -70,8 +70,7 @@ CONFIG = {
     "cert_file": "pki/localhost.ca.crt",
     "attribute_map_dir": "./attributemaps",
     "metadata": {
-        #"local": ["../idp2/idp_nocert.xml"]
-        "local": ["/Users/haho0032/Develop/svn/trunk/pyOpSamlProxy/idp_nocert.xml"]
+        "local": ["../idp2/idp_nocert.xml"]
     #    #"remote": [{"url": "http://130.239.201.5/role/idp.xml", "cert": None}],
     },
     #"metadata": {"local": ["/Users/haho0032/Develop/svn/trunk/pyOpSamlProxy/idp_nocert.xml"]},

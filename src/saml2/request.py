@@ -36,12 +36,12 @@ class Request(object):
         self.message = None
         self.not_on_or_after = 0
 
-    def _loads(self, xmldata, binding=None, origdoc=None):
+    def _loads(self, xmldata, binding=None, origdoc=None, must=None):
         # own copy
         self.xmlstr = xmldata[:]
         logger.info("xmlstr: %s" % (self.xmlstr,))
         try:
-            self.message = self.signature_check(xmldata, origdoc=origdoc)
+            self.message = self.signature_check(xmldata, origdoc=origdoc, must=must)
         except TypeError:
             raise
         except Exception, excp:
@@ -84,8 +84,8 @@ class Request(object):
         assert self.issue_instant_ok()
         return self
 
-    def loads(self, xmldata, binding, origdoc=None):
-        return self._loads(xmldata, binding, origdoc)
+    def loads(self, xmldata, binding, origdoc=None, must=None):
+        return self._loads(xmldata, binding, origdoc, must)
 
     def verify(self):
         try:

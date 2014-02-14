@@ -23,7 +23,9 @@ import logging
 import sys
 import platform
 import shelve
+import threading
 import traceback
+import saml2
 from urlparse import parse_qs, urlparse
 
 from StringIO import StringIO
@@ -133,7 +135,6 @@ class SAML2Plugin(object):
         self.discosrv = discovery
         self.idp_query_param = idp_query_param
         self.logout_endpoints = [urlparse(ep)[2] for ep in config.endpoint("single_logout_service")]
-
         try:
             self.metadata = self.conf.metadata
         except KeyError:
@@ -360,11 +361,18 @@ class SAML2Plugin(object):
                 logger.debug("srvs: %s" % srvs)
                 dest = srvs[0]["location"]
                 logger.debug("destination: %s" % dest)
-                req = _cli.create_authn_request(dest, vorg=vorg_name)
-                ht_args = _cli.apply_binding(_binding, "%s" % req,
-                                             destination=dest,
-                                             relay_state=came_from)
-                _sid = req.id
+
+                if _cli.authn_requests_signed:
+                    _sid = saml2.s_utils.sid(_cli.seed)
+                    msg_str = _cli.create_authn_request(dest, vorg=vorg_name, sign=_cli.authn_requests_signed,
+                                                        message_id=_sid)
+                else:
+                    req = _cli.create_authn_request(dest, vorg=vorg_name, sign=False)
+                    msg_str = "%s" % req
+                    _sid = req.id
+
+                ht_args = _cli.apply_binding(_binding, msg_str, destination=dest, relay_state=came_from)
+
                 logger.debug("ht_args: %s" % ht_args)
             except Exception, exc:
                 logger.exception(exc)

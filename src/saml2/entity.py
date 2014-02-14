@@ -542,7 +542,8 @@ class Entity(HTTPBase):
 
         origdoc = xmlstr
         xmlstr = self.unravel(xmlstr, binding, request_cls.msgtype)
-        _request = _request.loads(xmlstr, binding, origdoc=origdoc)
+        must = self.config.getattr("want_authn_requests_signed", "idp")
+        _request = _request.loads(xmlstr, binding, origdoc=origdoc, must=must)
 
         _log_debug("Loaded request")
 
