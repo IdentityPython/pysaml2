@@ -42,13 +42,13 @@ class ContextFilter(logging.Filter):
 
     def __init__(self, name=""):
         logging.Filter.__init__(self, name)
-        self.startTime = 0
+        self._start = 0
 
     def start(self):
-        self.startTime = time.time()
+        self._start = time.time()
 
     def filter(self, record):
-        record.delta = time.time() - self.startTime
+        record.delta = time.time() - self._start
         return True
 
 
