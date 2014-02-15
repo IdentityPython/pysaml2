@@ -144,6 +144,10 @@ class Server(Entity):
             raise Exception("Couldn't open identity database: %s" %
                             (dbspec,))
 
+        _domain = self.config.getattr("domain", "idp")
+        if _domain:
+            self.ident.domain = _domain
+
         self.ident.name_qualifier = self.config.entityid
 
         dbspec = self.config.getattr("edu_person_targeted_id", "idp")
@@ -458,7 +462,14 @@ class Server(Entity):
                 if not snq:
                     snq = sp_entity_id
 
-                _nids = self.ident.find_nameid(userid, sp_name_qualifier=snq)
+                kwa = {"sp_name_qualifier": snq}
+
+                try:
+                    kwa["format"] = name_id_policy.format
+                except AttributeError:
+                    pass
+
+                _nids = self.ident.find_nameid(userid, **kwa)
                 # either none or one
                 if _nids:
                     name_id = _nids[0]
