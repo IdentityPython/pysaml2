@@ -762,19 +762,28 @@ class AuthnResponse(StatusResponse):
         return self._assertion(assertion)
     
     def parse_assertion(self):
-        try:
-            assert len(self.response.assertion) == 1 or \
-                len(self.response.encrypted_assertion) == 1
-        except AssertionError:
-            raise Exception("No assertion part")
+        if self.context == "AuthnQuery":
+            # can contain one or more assertions
+            pass
+        else:  # This is a saml2int limitation
+            try:
+                assert len(self.response.assertion) == 1 or \
+                    len(self.response.encrypted_assertion) == 1
+            except AssertionError:
+                raise Exception("No assertion part")
         
         if self.response.assertion:
             logger.debug("***Unencrypted response***")
-            return self._assertion(self.response.assertion[0])
+            for assertion in self.response.assertion:
+                if not self._assertion(assertion):
+                    return False
+            return True
         else:
             logger.debug("***Encrypted response***")
-            return self._encrypted_assertion(
-                self.response.encrypted_assertion[0])
+            for assertion in self.response.encrypted_assertion:
+                if not self._encrypted_assertion(assertion):
+                    return False
+            return True
 
     def verify(self):
         """ Verify that the assertion is syntactically correct and
@@ -883,7 +892,7 @@ class AuthnQueryResponse(AuthnResponse):
         self.entity_id = entity_id
         self.attribute_converters = attribute_converters
         self.assertion = None
-        self.context = "AuthnQueryResponse"
+        self.context = "AuthnQuery"
 
     def condition_ok(self, lax=False):  # Should I care about conditions ?
         return True
