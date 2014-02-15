@@ -281,7 +281,7 @@ class IdentDB(object):
         # else create and return a new one
         return self.construct_nameid(_id, name_id_policy=name_id_policy)
 
-    def handle_manage_name_id_request(self, name_id, new_id="",
+    def handle_manage_name_id_request(self, name_id, new_id=None,
                                       new_encrypted_id="", terminate=""):
         """
         Requests from the SP is about the SPProvidedID attribute.
