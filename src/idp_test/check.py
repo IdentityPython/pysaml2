@@ -465,7 +465,7 @@ class VerifyFunctionality(Check):
         md = conv.client.metadata
         entity = md[conv.entity_id]
         for desc in ["idpsso_descriptor", "attribute_authority_descriptor",
-                     "auth_authority_descriptor"]:
+                     "authn_authority_descriptor"]:
             try:
                 srvgrps = entity[desc]
             except KeyError:
