@@ -291,7 +291,8 @@ class Entity(HTTPBase):
     def unravel(self, txt, binding, msgtype="response"):
         #logger.debug("unravel '%s'" % txt)
         if binding not in [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST,
-                           BINDING_SOAP, BINDING_URI, None]:
+                           BINDING_SOAP, BINDING_URI, BINDING_HTTP_ARTIFACT,
+                           None]:
             raise ValueError("Don't know how to handle '%s'" % binding)
         else:
             try:
@@ -302,6 +303,8 @@ class Entity(HTTPBase):
                 elif binding == BINDING_SOAP:
                     func = getattr(soap, "parse_soap_enveloped_saml_%s" % msgtype)
                     xmlstr = func(txt)
+                elif binding == BINDING_HTTP_ARTIFACT:
+                    xmlstr = base64.b64decode(txt)
                 else:
                     xmlstr = txt
             except Exception:
