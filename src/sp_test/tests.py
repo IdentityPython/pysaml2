@@ -1,16 +1,23 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import copy
-from saml2 import samlp, SamlBase
+from saml2 import samlp
 from saml2 import NAMEID_FORMAT_EMAILADDRESS
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2.s_utils import rndstr
 
-from saml2.saml import SCM_BEARER, Condition, XSI_TYPE, Audience
+from saml2.saml import SCM_BEARER
+from saml2.saml import Condition
+from saml2.saml import XSI_TYPE
+from saml2.saml import Audience
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.saml import SCM_SENDER_VOUCHES
 from saml2.saml import ConditionAbstractType_
 from saml2.samlp import STATUS_AUTHN_FAILED
-from saml2.time_util import in_a_while, a_while_ago
+from saml2.time_util import in_a_while
+from saml2.time_util import a_while_ago
 from sp_test.check import VerifyContent
 from sp_test import check
 from saml2test import ip_addresses
@@ -35,10 +42,10 @@ class TimeRestriction(ConditionAbstractType_):
 
     c_tag = 'TimeRestriction'
     c_namespace = "urn:mace:umu.se:sso"
-    c_children = ConditionAbstractType_.c_children.copy()
-    c_attributes = ConditionAbstractType_.c_attributes.copy()
+    c_children = copy.copy(ConditionAbstractType_.c_children)
+    c_attributes = copy.copy(ConditionAbstractType_.c_attributes)
     c_child_order = ConditionAbstractType_.c_child_order[:]
-    c_cardinality = ConditionAbstractType_.c_cardinality.copy()
+    c_cardinality = copy.copy(ConditionAbstractType_.c_cardinality)
     c_attributes['StartTime'] = ('start_time', 'time', False)
     c_attributes['EndTime'] = ('end_time', 'time', False)
 
@@ -188,13 +195,6 @@ class AuthnResponse_wrong_Recipient(AuthnResponse):
     def pre_processing(self, message, **kwargs):
         _confirmation = message.assertion.subject.subject_confirmation
         _confirmation[0].subject_confirmation_data.recipient = rndstr(16)
-        return message
-
-
-class AuthnResponse_missing_Recipient(AuthnResponse):
-    def pre_processing(self, message, **kwargs):
-        _confirmation = message.assertion.subject.subject_confirmation
-        _confirmation[0].subject_confirmation_data.recipient = None
         return message
 
 
