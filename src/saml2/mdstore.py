@@ -480,7 +480,7 @@ class MetaDataExtern(MetaData):
                 self.parse(_txt)
                 return True
         else:
-            logger.info("Response status: %s" % response.status)
+            logger.info("Response status: %s" % response.status_code)
         return False
 
 
