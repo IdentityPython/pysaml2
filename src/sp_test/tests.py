@@ -6,12 +6,16 @@ from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2.s_utils import rndstr
 
-from saml2.saml import SCM_BEARER, Condition, XSI_TYPE, Audience
+from saml2.saml import SCM_BEARER
+from saml2.saml import Condition
+from saml2.saml import XSI_TYPE
+from saml2.saml import Audience
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.saml import SCM_SENDER_VOUCHES
 from saml2.saml import ConditionAbstractType_
 from saml2.samlp import STATUS_AUTHN_FAILED
-from saml2.time_util import in_a_while, a_while_ago
+from saml2.time_util import in_a_while
+from saml2.time_util import a_while_ago
 from sp_test.check import VerifyContent
 from sp_test import check
 from saml2test import ip_addresses

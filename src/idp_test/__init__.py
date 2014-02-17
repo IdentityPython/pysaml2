@@ -67,7 +67,6 @@ logger.addHandler(memoryhandler)
 #logger.addHandler(streamhandler)
 logger.setLevel(logging.DEBUG)
 
-
 def recursive_find_module(name, path=None):
     parts = name.split(".")
 

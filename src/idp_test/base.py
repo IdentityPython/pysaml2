@@ -4,15 +4,19 @@ import logging
 import urllib
 import cookielib
 
-from saml2 import BINDING_HTTP_REDIRECT, BINDING_URI
+from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_URI
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_SOAP
+from saml2 import httpbase
 
 from saml2.mdstore import REQ2SRV
-from saml2.pack import http_redirect_message, http_form_post_message
+from saml2.pack import http_redirect_message
+from saml2.pack import http_form_post_message
 from saml2.s_utils import rndstr
 
 from saml2test import tool
+from saml2test import OperationError
 from saml2test import FatalError
 
 __author__ = 'rohe0002'
@@ -80,7 +84,14 @@ class Conversation(tool.Conversation):
 
         response = None
         for srv in srvs:
-            response = self._send(srv)
+            try:
+                response = self._send(srv)
+            except httpbase.ConnectionError, err:
+                logger.debug("IO error: %s" % err)
+                raise OperationError("IO error: %s" % err)
+            except Exception, err:
+                raise
+
             if response is not None:
                 break
 

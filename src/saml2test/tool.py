@@ -61,7 +61,7 @@ class Conversation(object):
             except KeyError:
                 pass
 
-            raise FatalError
+            raise OperationError
 
     def do_check(self, test, **kwargs):
         if isinstance(test, basestring):
