@@ -6,7 +6,6 @@ from urlparse import urlparse
 from mechanize import ParseResponseEx
 from mechanize._form import ControlNotFoundError, AmbiguityError
 from mechanize._form import ListControl
-#from commonArgs import JSON_DUMPS_ARGS
 from saml2test import JSON_DUMPS_ARGS
 
 

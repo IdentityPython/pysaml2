@@ -35,7 +35,6 @@ from saml2.extension import mdattr
 from saml2.extension import ui
 from saml2.metadata import entity_descriptor
 from saml2.saml import NAME_FORMAT_UNSPECIFIED
-#from commonArgs import JSON_DUMPS_ARGS
 
 SCHEMA = [dri, idpdisc, md, mdattr, mdui, saml, ui, xmldsig, xmlenc]
 
