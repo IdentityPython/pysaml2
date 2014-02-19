@@ -19,19 +19,12 @@ from saml2.samlp import Response
 from saml2.sigver import cert_from_key_info_dict
 from saml2.sigver import key_from_key_value_dict
 
+# Import the status codes used indicate the test results
+from saml2test.status import *
+
 from saml2.time_util import str_to_time
 
 __author__ = 'rolandh'
-
-INFORMATION = 0
-OK = 1
-WARNING = 2
-ERROR = 3
-CRITICAL = 4
-INTERACTION = 5
-
-STATUSCODE = ["INFORMATION", "OK", "WARNING", "ERROR", "CRITICAL",
-              "INTERACTION"]
 
 PREFIX = "-----BEGIN CERTIFICATE-----"
 POSTFIX = "-----END CERTIFICATE-----"

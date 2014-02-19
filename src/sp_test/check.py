@@ -1,8 +1,8 @@
 import inspect
 import sys
-
+# Import the status codes used indicate the test results
+from saml2test.status import *
 from saml2test.check import Check
-from saml2test.check import CRITICAL
 from saml2test import check
 from saml2test.interaction import Interaction
 
