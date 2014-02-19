@@ -23,7 +23,8 @@ from saml2test import JSON_DUMPS_ARGS
 
 __author__ = 'rolandh'
 
-#formatter = logging.Formatter("%(asctime)s %(name)s:%(levelname)s %(message)s")
+#formatter =
+#    logging.Formatter("%(asctime)s %(name)s:%(levelname)s %(message)s")
 formatter_2 = logging.Formatter(
     "%(delta).6f - %(levelname)s - [%(name)s] %(message)s")
 
@@ -40,7 +41,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(memoryhandler)
 
-# The streamhandler variable should be added to the logger if 
+# The streamhandler variable should be added to the logger if
 # you want to see the log messages as they are printed instead
 # of afterwards (mostly useful during debugging
 #logger.addHandler(streamhandler)
@@ -48,9 +49,8 @@ logger.setLevel(logging.DEBUG)
 
 
 class Client(object):
-    def __init__(self, operations, check_factory):
-        self.operations = operations
-        self.tests = None
+    def __init__(self, check_factory):
+        self.testsuite = None
         self.check_factory = check_factory
 
         self._parser = argparse.ArgumentParser()
@@ -76,7 +76,9 @@ class Client(object):
             "-P", dest="configpath", default=".",
             help="Path to the configuration file for the IdP")
         self._parser.add_argument("-t", dest="testpackage",
-                                  help="Module describing tests")
+                                  default="basicTests", help="Specifies the "
+                                  "test suite from which you wish to run "
+                                  "tests")
         self._parser.add_argument('-v', dest='verbose', action='store_true',
                                   help="Print runtime information")
         self._parser.add_argument("-Y", dest="pysamllog", action='store_true',
@@ -163,18 +165,15 @@ class Client(object):
 
         self.setup()
 
-        try:
-            oper = self.operations.OPERATIONS[self.args.oper]
-        except KeyError:
-            if self.tests:
-                try:
-                    oper = self.tests.OPERATIONS[self.args.oper]
-                except ValueError:
-                    print >> sys.stderr, "Undefined testcase"
-                    return
-            else:
+        if self.testsuite:
+            try:
+                oper = self.testsuite.OPERATIONS[self.args.oper]
+            except ValueError:
                 print >> sys.stderr, "Undefined testcase"
                 return
+        else:
+            print >> sys.stderr, "Undefined testcase"
+            return
 
         opers = oper["sequence"]
 
@@ -242,7 +241,7 @@ class Client(object):
         #self.idp_config.metadata = metadata
 
         if self.args.testpackage:
-            self.tests = import_module("sp_test.package.%s" %
+            self.testsuite = import_module("sp_test.testsuite.%s" %
                                        self.args.testpackage)
 
         try:
@@ -265,7 +264,7 @@ class Client(object):
 
     def list_operations(self):
         res = []
-        for key, val in self.operations.OPERATIONS.items():
+        for key, val in self.testsuite.OPERATIONS.items():
             res.append({"id": key, "name": val["name"]})
 
         print json.dumps(res, **JSON_DUMPS_ARGS)

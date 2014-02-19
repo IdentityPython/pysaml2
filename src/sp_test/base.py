@@ -20,8 +20,6 @@ from saml2test.interaction import Action
 from saml2test.interaction import Interaction
 from saml2test.interaction import InteractionNeeded
 
-from sp_test.tests import ErrorResponse
-
 __author__ = 'rolandh'
 
 import logging
@@ -253,7 +251,7 @@ class Conversation():
             if param in self.json_config:
                 args[param] = self.json_config[param]
 
-        if resp == ErrorResponse:
+        if getattr(resp, "_send_error", False) == True:
             func = getattr(self.instance, "create_error_response")
         else:
             _op = camel2underscore.sub(r'_\1', req._class.c_tag).lower()
@@ -321,17 +319,21 @@ class Conversation():
             self.intermit(flow[0]._interaction)
             logger.info("TEST FLOW: Handling redirect")
             self.handle_redirect()
-        logger.info("TEST FLOW: Sending IdP Response with expected request %s and response to be used %s" % (flow[1].__name__, flow[2].__name__))
+        logger.info("TEST FLOW: Sending IdP Response with expected request"
+                    " %s and response to be used %s" %
+                    (flow[1].__name__, flow[2].__name__))
         self.send_idp_response(flow[1], flow[2])
         if len(flow) == 4:
-            if flow[3] is None :
+            if flow[3] is None:
                 flowName = "None"
             else:
                 flowName = flow[3].__name__
-            logger.info("TEST FLOW Handling result with HTTP Response check for %s" % flowName)
+            logger.info("TEST FLOW Handling result with HTTP Response check"
+                        " for %s" % flowName)
             self.handle_result(flow[3])
         else:
-            logger.info("TEST FLOW: Handling result (without HTTP Response check)")
+            logger.info("TEST FLOW: Handling result (without HTTP Response "
+                        "check)")
             self.handle_result()
 
     def do_sequence(self, oper, tests=None):
