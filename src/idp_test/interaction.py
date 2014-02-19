@@ -14,6 +14,7 @@ from mechanize._form import ListControl
 
 logger = logging.getLogger(__name__)
 
+
 def pick_interaction(interactions, _base="", content="", req=None):
     unic = content
     if content:
@@ -277,7 +278,6 @@ def select_form(httpc, orig_response, **kwargs):
     return do_click(httpc, form, **kwargs)
 
 
-#noinspection PyUnusedLocal
 def chose(httpc, orig_response, path, **kwargs):
     """
     Sends a HTTP GET to a url given by the present url and the given
@@ -288,7 +288,6 @@ def chose(httpc, orig_response, path, **kwargs):
     :param path: The relative path to add to the base URL
     :return: The response do_click() returns
     """
-
 
     if not path.startswith("http"):
         try:
@@ -326,7 +325,6 @@ def NoneFunc():
     return None
 
 
-#noinspection PyUnusedLocal
 def parse(httpc, orig_response, **kwargs):
     # content is a form from which I get the SAMLResponse
     response = RResponse(orig_response)
@@ -340,7 +338,6 @@ def parse(httpc, orig_response, **kwargs):
             "RelayState": form["RelayState"]}
 
 
-#noinspection PyUnusedLocal
 def interaction(args):
     _type = args["type"]
     if _type == "form":

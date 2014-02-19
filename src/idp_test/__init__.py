@@ -42,8 +42,10 @@ __author__ = 'rolandh'
 
 #logger = logging.getLogger("")
 #logger.setLevel(logging.DEBUG)
-#formatter = logging.Formatter("%(asctime)s %(name)s:%(levelname)s %(message)s")
-formatter_2 = logging.Formatter("%(delta).6f - %(levelname)s - [%(name)s] %(message)s")
+#formatter = logging.Formatter("%(asctime)s %(name)s:%(levelname)s "
+#"%(message)s")
+formatter_2 = logging.Formatter("%(delta).6f - %(levelname)s - [%(name)s] "
+                                "%(message)s")
 
 cf = ContextFilter()
 cf.start()
@@ -51,7 +53,7 @@ cf.start()
 streamhandler = logging.StreamHandler(sys.stderr)
 streamhandler.setFormatter(formatter_2)
 
-memoryhandler = logging.handlers.MemoryHandler(1024*10, logging.DEBUG)
+memoryhandler = logging.handlers.MemoryHandler(1024 * 10, logging.DEBUG)
 memoryhandler.addFilter(cf)
 
 #saml2testlog = logging.getLogger("saml2test")
@@ -60,11 +62,12 @@ memoryhandler.addFilter(cf)
 logger = logging.getLogger("saml2test")
 logger.setLevel(logging.DEBUG)
 logger.addHandler(memoryhandler)
-# The streamhandler variable should be added to the logger if 
+# The streamhandler variable should be added to the logger if
 # you want to see the log messages as they are printed instead
 # of afterwards (mostly useful during debugging
 #logger.addHandler(streamhandler)
 logger.setLevel(logging.DEBUG)
+
 
 def recursive_find_module(name, path=None):
     parts = name.split(".")

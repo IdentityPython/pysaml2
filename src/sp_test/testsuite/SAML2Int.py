@@ -6,7 +6,7 @@ from saml2test.check import Check
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 
 # Import the status codes used indicate the test results
-from saml2test.status import *
+from saml2test.status import WARNING
 
 
 # TODO: change this IdP metadata check to an SP metadata check and

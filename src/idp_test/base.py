@@ -4,10 +4,8 @@ import logging
 import urllib
 import cookielib
 
-from saml2 import BINDING_HTTP_REDIRECT
-from saml2 import BINDING_URI
-from saml2 import BINDING_HTTP_POST
-from saml2 import BINDING_SOAP
+from saml2 import BINDING_HTTP_REDIRECT, BINDING_URI
+from saml2 import BINDING_HTTP_POST, BINDING_SOAP
 from saml2 import httpbase
 
 from saml2.mdstore import REQ2SRV
@@ -195,9 +193,9 @@ class Conversation(tool.Conversation):
             # remove args the create function can't handle
             fargs = inspect.getargspec(self.qfunc).args
             if _oper._class:
-                fargs.extend([p for p, c, r in
+                fargs.extend([p for p, _c, _r in
                               _oper._class.c_attributes.values()])
-                fargs.extend([p for p, c in _oper._class.c_children.values()])
+                fargs.extend([p for p, _c in _oper._class.c_children.values()])
             for arg in qargs.keys():
                 if arg not in fargs:
                     del qargs[arg]
@@ -205,7 +203,7 @@ class Conversation(tool.Conversation):
         self.qargs = qargs
 
     def my_endpoints(self):
-        return [e for e, b in self.client.config.getattr("endpoints", "sp")[
+        return [e for e, _b in self.client.config.getattr("endpoints", "sp")[
             "assertion_consumer_service"]]
 
     def handle_result(self):

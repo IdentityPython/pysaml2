@@ -14,8 +14,7 @@ from saml2.sigver import signed_instance_factory, pre_signature_part
 from saml2test import CheckError, FatalError
 from saml2test.check import Check
 from saml2test.check import ExpectedError
-from saml2test.check import INTERACTION
-from saml2test.check import STATUSCODE
+from saml2test.status import INTERACTION, STATUSCODE
 from saml2test.interaction import Action
 from saml2test.interaction import Interaction
 from saml2test.interaction import InteractionNeeded
@@ -120,8 +119,8 @@ class Conversation():
         for serv in ["aa", "aq", "idp"]:
             endpoints = self._config.getattr("endpoints", serv)
             if endpoints:
-                for typ, spec in endpoints.items():
-                    for url, binding in spec:
+                for _typ, spec in endpoints.items():
+                    for url, _binding in spec:
                         yield url
 
     def which_endpoint(self, url):
@@ -170,7 +169,7 @@ class Conversation():
 
     def handle_redirect(self):
         try:
-            url, query = self.last_response.headers["location"].split("?")
+            _url, query = self.last_response.headers["location"].split("?")
         except KeyError:
             return
 

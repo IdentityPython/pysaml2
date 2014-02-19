@@ -64,7 +64,7 @@ def stop_script_by_name(name):
     import os
 
     p = subprocess.Popen(['ps', '-A'], stdout=subprocess.PIPE)
-    out, err = p.communicate()
+    out, _err = p.communicate()
 
     for line in out.splitlines():
         if name in line:
