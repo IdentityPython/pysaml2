@@ -357,7 +357,7 @@ class AuthnResponse_AudienceRestriction_appended_audience(AuthnResponse):
         conditions.audience_restriction[0].audience.append(extra)
         return message
 
-OPERATIONS = {
+testcases = {
     'sp-00': {
         "name": 'Basic Login test',
         "descr": 'Basic Login test',

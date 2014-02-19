@@ -49,41 +49,76 @@ logger.setLevel(logging.DEBUG)
 
 
 class Client(object):
+    """
+    This is the SP testing client for saml2test. It contains the methods that
+    are required to set up and run the tests you request.
+    """
     def __init__(self, check_factory):
+        """
+        Creates a new SP testing client.
+
+        @param self: this SP testing client
+        @param check_factory: the factory containing the checks that are needed
+                              during the SP test
+        """
+
         self.testsuite = None
         self.check_factory = check_factory
 
         self._parser = argparse.ArgumentParser()
-        self._parser.add_argument("-c", dest="config", default="config",
+        self._parser.add_argument("-c",
+                                  dest="config",
+                                  default="config",
                                   help="Configuration file for the IdP")
-        self._parser.add_argument(
-            '-C', dest="ca_certs",
-            help=("CA certs to use to verify HTTPS server certificates, "
-                  "if HTTPS is used and no server CA certs are defined then "
-                  "no cert verification will be done"))
-        self._parser.add_argument('-d', dest='debug', action='store_true',
+        self._parser.add_argument('-C',
+                                  dest="ca_certs",
+                                  help="CA certs to use to verify HTTPS "
+                                  "server certificates, if HTTPS is used and "
+                                  "no server CA certs are defined then no "
+                                  "cert verification will be done")
+        self._parser.add_argument('-d',
+                                  dest='debug',
+                                  action='store_true',
                                   help="Print debug information")
-        self._parser.add_argument("-H", dest="pretty", action='store_true')
-        self._parser.add_argument("-i", dest="insecure", action='store_true')
-        self._parser.add_argument('-J', dest="json_config_file",
+        self._parser.add_argument("-H",
+                                  dest="pretty",
+                                  action='store_true')
+        self._parser.add_argument("-i",
+                                  dest="insecure",
+                                  action='store_true')
+        self._parser.add_argument('-J',
+                                  dest="json_config_file",
                                   help="Script configuration")
-        self._parser.add_argument(
-            "-l", dest="list", action="store_true",
-            help="List all the test flows as a JSON object")
-        self._parser.add_argument('-m', dest="metadata", action='store_true',
+        self._parser.add_argument("-l",
+                                  dest="list",
+                                  action="store_true",
+                                  help="List all the test flows as a JSON "
+                                  "object")
+        self._parser.add_argument('-m',
+                                  dest="metadata",
+                                  action='store_true',
                                   help="Return the IdP metadata")
-        self._parser.add_argument(
-            "-P", dest="configpath", default=".",
-            help="Path to the configuration file for the IdP")
-        self._parser.add_argument("-t", dest="testpackage",
-                                  default="basicTests", help="Specifies the "
-                                  "test suite from which you wish to run "
-                                  "tests")
-        self._parser.add_argument('-v', dest='verbose', action='store_true',
+        self._parser.add_argument("-P",
+                                  dest="configpath",
+                                  default=".",
+                                  help="Path to the configuration file for "
+                                  "the IdP")
+        self._parser.add_argument("-t",
+                                  dest="testsuite",
+                                  default="basicTests",
+                                  help="Specifies the test suite from which "
+                                  "you wish to run tests")
+        self._parser.add_argument('-v',
+                                  dest='verbose',
+                                  action='store_true',
                                   help="Print runtime information")
-        self._parser.add_argument("-Y", dest="pysamllog", action='store_true',
+        self._parser.add_argument("-Y",
+                                  dest="pysamllog",
+                                  action='store_true',
                                   help="Print PySAML2 logs")
-        self._parser.add_argument("oper", nargs="?", help="Which test to run")
+        self._parser.add_argument("oper",
+                                  nargs="?",
+                                  help="Which test to run")
 
         self.interactions = None
         self.entity_id = None
@@ -167,7 +202,7 @@ class Client(object):
 
         if self.testsuite:
             try:
-                oper = self.testsuite.OPERATIONS[self.args.oper]
+                oper = self.testsuite.testcases[self.args.oper]
             except ValueError:
                 print >> sys.stderr, "Undefined testcase"
                 return
@@ -240,9 +275,9 @@ class Client(object):
         self.idp.metadata = metadata
         #self.idp_config.metadata = metadata
 
-        if self.args.testpackage:
-            self.testsuite = import_module("sp_test.testsuite.%s" %
-                                       self.args.testpackage)
+        if self.args.testsuite:
+            self.testsuite = import_module("sp_test.testsuites.%s" %
+                                       self.args.testsuite)
 
         try:
             self.entity_id = _jc["entity_id"]
@@ -264,7 +299,7 @@ class Client(object):
 
     def list_operations(self):
         res = []
-        for key, val in self.testsuite.OPERATIONS.items():
+        for key, val in self.testsuite.testcases.items():
             res.append({"id": key, "name": val["name"]})
 
         print json.dumps(res, **JSON_DUMPS_ARGS)

@@ -45,8 +45,6 @@ class ErrorResponse(Check):
             self._status = CRITICAL
         return {}
 
-# =============================================================================
-
 
 CLASS_CACHE = {}
 
