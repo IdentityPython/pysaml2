@@ -21,8 +21,8 @@ from saml2test import exception_trace
 from saml2test import ContextFilter
 from saml2test import JSON_DUMPS_ARGS
 
-from idp_test.base import Conversation
-from idp_test.check import CheckSaml2IntMetaData
+from base import Conversation
+from check import CheckSaml2IntMetaData
 
 # Schemas supported
 from saml2 import md
@@ -40,8 +40,12 @@ SCHEMA = [dri, idpdisc, md, mdattr, mdui, saml, ui, xmldsig, xmlenc]
 
 __author__ = 'rolandh'
 
-#formatter = logging.Formatter("%(asctime)s %(name)s:%(levelname)s %(message)s")
-formatter_2 = logging.Formatter("%(delta).6f - %(levelname)s - [%(name)s] %(message)s")
+#logger = logging.getLogger("")
+#logger.setLevel(logging.DEBUG)
+#formatter = logging.Formatter("%(asctime)s %(name)s:%(levelname)s "
+#"%(message)s")
+formatter_2 = logging.Formatter("%(delta).6f - %(levelname)s - [%(name)s] "
+                                "%(message)s")
 
 cf = ContextFilter()
 cf.start()
@@ -49,14 +53,21 @@ cf.start()
 streamhandler = logging.StreamHandler(sys.stderr)
 streamhandler.setFormatter(formatter_2)
 
-memoryhandler = logging.handlers.MemoryHandler(1024*10, logging.DEBUG)
+memoryhandler = logging.handlers.MemoryHandler(1024 * 10, logging.DEBUG)
 memoryhandler.addFilter(cf)
 
+#saml2testlog = logging.getLogger("saml2test")
+#saml2testlog.addHandler(memoryhandler)
+#saml2testlog.setLevel(logging.DEBUG)
 logger = logging.getLogger("saml2test")
 logger.setLevel(logging.DEBUG)
 logger.addHandler(memoryhandler)
+# The streamhandler variable should be added to the logger if
+# you want to see the log messages as they are printed instead
+# of afterwards (mostly useful during debugging
 #logger.addHandler(streamhandler)
 logger.setLevel(logging.DEBUG)
+
 
 def recursive_find_module(name, path=None):
     parts = name.split(".")

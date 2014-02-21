@@ -1,6 +1,4 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 import copy
 from saml2 import samlp
 from saml2 import NAMEID_FORMAT_EMAILADDRESS
@@ -118,6 +116,7 @@ class ErrorResponse(Response):
         "info": (STATUS_AUTHN_FAILED, "Unknown user")
     }
     _binding = BINDING_HTTP_POST
+    _send_error = True
 
 
 class LogoutResponse(Response):
@@ -358,12 +357,7 @@ class AuthnResponse_AudienceRestriction_appended_audience(AuthnResponse):
         conditions.audience_restriction[0].audience.append(extra)
         return message
 
-
-PHASES = {
-    "login_redirect": (Login, AuthnRequest, AuthnResponse_redirect),
-}
-
-OPERATIONS = {
+testcases = {
     'sp-00': {
         "name": 'Basic Login test',
         "descr": 'Basic Login test',
@@ -379,7 +373,8 @@ OPERATIONS = {
     'FL03': {
         "name": """SP should not accept a Response as valid, when the
 StatusCode is not success""",
-        "sequence": [(Login, AuthnRequest, ErrorResponse, check.ErrorResponse)],
+        "sequence": [(Login, AuthnRequest, ErrorResponse,
+                      check.ErrorResponse)],
         "tests": {"pre": [], "post": []}
     },
     'FL04': {
@@ -519,8 +514,8 @@ StatusCode is not success""",
         "tests": {"pre": [], "post": []}
     },
     'FL29': {
-        "name": "Reject a Response with a SubjectConfirmationData@NotOnOrAfter "
-                "in the past",
+        "name": "Reject a Response with a "
+                "SubjectConfirmationData@NotOnOrAfter in the past",
         "sequence": [(Login, AuthnRequest,
                       AuthnResponse_past_SubjectConfirmationData_NotOnOrAfter,
                       check.ErrorResponse)],

@@ -6,6 +6,7 @@ __author__ = 'rolandh'
 
 from idp_test.saml2base import AuthnRequest
 
+
 class DummyExtension(SamlBase):
     """The urn:mace:umu.se:SAML:2.0:extension:foo element """
 
@@ -17,11 +18,13 @@ class DummyExtension(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 class AuthnRequest_UnknownIssuer(AuthnRequest):
     def pre_processing(self, message, args):
         _issuer = message.issuer
         _issuer.text = "https://www.example.com/foobar.xml"
         return message
+
 
 class AuthnRequest_UnknownExtension(AuthnRequest):
     def pre_processing(self, message, args):

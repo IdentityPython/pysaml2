@@ -1,20 +1,12 @@
 import inspect
 import json
-
-__author__ = 'rolandh'
-
 import traceback
 import sys
+# Import the status codes used indicate the test results
+from saml2test.status import INFORMATION, OK, ERROR, CRITICAL
 
-INFORMATION = 0
-OK = 1
-WARNING = 2
-ERROR = 3
-CRITICAL = 4
-INTERACTION = 5
 
-STATUSCODE = ["INFORMATION", "OK", "WARNING", "ERROR", "CRITICAL",
-              "INTERACTION"]
+__author__ = 'rolandh'
 
 CONT_JSON = "application/json"
 CONT_JWT = "application/jwt"
@@ -153,7 +145,7 @@ class VerifyError(Error):
             except Exception:
                 pass
 
-        item, msg = conv.protocol_response[-1]
+        item, _msg = conv.protocol_response[-1]
         try:
             assert item.type().endswith("ErrorResponse")
         except AssertionError:
@@ -247,9 +239,10 @@ class Parse(CriticalError):
 
         return {}
 
+
 def factory(cid, classes):
     if len(classes) == 0:
-        for name, obj in inspect.getmembers(sys.modules[__name__]):
+        for _name, obj in inspect.getmembers(sys.modules[__name__]):
             if inspect.isclass(obj):
                 try:
                     classes[obj.cid] = obj

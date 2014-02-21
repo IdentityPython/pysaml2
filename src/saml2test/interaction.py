@@ -389,7 +389,8 @@ class Action(object):
         except (KeyError, AttributeError):
             _args = {}
 
-        _args.update({"location": location, "features": features, "conv": conv})
+        _args.update({"location": location, "features": features,
+                      "conv": conv})
 
         logger.info("<-- FUNCTION: %s" % function.__name__)
         logger.info("<-- ARGS: %s" % _args)
