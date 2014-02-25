@@ -197,7 +197,7 @@ def do_key_descriptor(cert, use="both"):
             )
         ]
     elif use in ["signing", "encryption"]:
-        md.KeyDescriptor(
+        return md.KeyDescriptor(
             key_info=ds.KeyInfo(
                 x509_data=ds.X509Data(
                     x509_certificate=ds.X509Certificate(text=cert)
@@ -429,7 +429,8 @@ def do_spsso_descriptor(conf, cert=None):
                 spsso.extensions.add_extension_element(val)
 
     if cert:
-        spsso.key_descriptor = do_key_descriptor(cert, "both")
+        encryption_type = conf.encryption_type
+        spsso.key_descriptor = do_key_descriptor(cert, encryption_type)
 
     for key in ["want_assertions_signed", "authn_requests_signed"]:
         try:
