@@ -103,12 +103,13 @@ def repack_cert(cert):
 
 
 class MetaData(object):
-    def __init__(self, onts, attrc, metadata=""):
+    def __init__(self, onts, attrc, metadata="", node_name=None, **kwargs):
         self.onts = onts
         self.attrc = attrc
         self.entity = {}
         self.metadata = metadata
         self.security = None
+        self.node_name = node_name
 
     def items(self):
         return self.entity.items()
@@ -371,8 +372,8 @@ class MetaDataFile(MetaData):
     Handles Metadata file on the same machine. The format of the file is
     the SAML Metadata format.
     """
-    def __init__(self, onts, attrc, filename, cert=None):
-        MetaData.__init__(self, onts, attrc)
+    def __init__(self, onts, attrc, filename, cert=None, **kwargs):
+        MetaData.__init__(self, onts, attrc, **kwargs)
         self.filename = filename
         self.cert = cert
 
@@ -382,8 +383,9 @@ class MetaDataFile(MetaData):
     def load(self):
         _txt = self.get_metadata_content()
         if self.cert:
-            node_name = "%s:%s" % (md.EntitiesDescriptor.c_namespace,
-                                   md.EntitiesDescriptor.c_tag)
+            node_name = self.node_name \
+                      or "%s:%s" % (md.EntitiesDescriptor.c_namespace,
+                                    md.EntitiesDescriptor.c_tag)
 
             if self.security.verify_signature(_txt,
                                               node_name=node_name,
@@ -400,8 +402,8 @@ class MetaDataLoader(MetaDataFile):
     Handles Metadata file loaded by a passed in function.
     The format of the file is the SAML Metadata format.
     """
-    def __init__(self, onts, attrc, loader_callable, cert=None):
-        MetaData.__init__(self, onts, attrc)
+    def __init__(self, onts, attrc, loader_callable, cert=None, **kwargs):
+        MetaData.__init__(self, onts, attrc, **kwargs)
         self.metadata_provider_callable = self.get_metadata_loader(loader_callable)
         self.cert = cert
 
@@ -444,7 +446,7 @@ class MetaDataExtern(MetaData):
     Accessible but HTTP GET.
     """
 
-    def __init__(self, onts, attrc, url, security, cert, http):
+    def __init__(self, onts, attrc, url, security, cert, http, **kwargs):
         """
         :params onts:
         :params attrc:
@@ -453,7 +455,7 @@ class MetaDataExtern(MetaData):
         :params cert:
         :params http:
         """
-        MetaData.__init__(self, onts, attrc)
+        MetaData.__init__(self, onts, attrc, **kwargs)
         self.url = url
         self.security = security
         self.cert = cert
@@ -466,8 +468,9 @@ class MetaDataExtern(MetaData):
         """
         response = self.http.send(self.url)
         if response.status_code == 200:
-            node_name = "%s:%s" % (md.EntitiesDescriptor.c_namespace,
-                                   md.EntitiesDescriptor.c_tag)
+            node_name = self.node_name \
+                      or "%s:%s" % (md.EntitiesDescriptor.c_namespace,
+                                    md.EntitiesDescriptor.c_tag)
 
             _txt = response.text.encode("utf-8")
             if self.cert:
@@ -489,8 +492,8 @@ class MetaDataMD(MetaData):
     Handles locally stored metadata, the file format is the text representation
     of the Python representation of the metadata.
     """
-    def __init__(self, onts, attrc, filename):
-        MetaData.__init__(self, onts, attrc)
+    def __init__(self, onts, attrc, filenamen, **kwargs):
+        MetaData.__init__(self, onts, attrc, **kwargs)
         self.filename = filename
 
     def load(self):
@@ -523,12 +526,13 @@ class MetadataStore(object):
         elif typ == "inline":
             self.ii += 1
             key = self.ii
-            md = MetaData(self.onts, self.attrc, args[0])
+            md = MetaData(self.onts, self.attrc, args[0], **kwargs)
         elif typ == "remote":
             key = kwargs["url"]
             md = MetaDataExtern(self.onts, self.attrc,
                                 kwargs["url"], self.security,
-                                kwargs["cert"], self.http)
+                                kwargs["cert"], self.http,
+                                node_name=kwargs.get('node_name'))
         elif typ == "mdfile":
             key = args[0]
             md = MetaDataMD(self.onts, self.attrc, args[0])
