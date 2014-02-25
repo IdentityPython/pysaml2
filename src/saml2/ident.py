@@ -120,6 +120,9 @@ class IdentDB(object):
 
             _id = "%s@%s" % (_id, self.domain)
 
+        if nformat == NAMEID_FORMAT_PERSISTENT:
+            _id = userid
+
         nameid = NameID(format=nformat, sp_name_qualifier=sp_name_qualifier,
                         name_qualifier=name_qualifier, text=_id)
 
