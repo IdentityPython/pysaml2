@@ -48,7 +48,7 @@ ONTS = {
 
 COMMON_ARGS = [
     "entityid", "xmlsec_binary", "debug", "key_file", "cert_file",
-    "secret", "accepted_time_diff", "name", "ca_certs",
+    "encryption_type", "secret", "accepted_time_diff", "name", "ca_certs",
     "description", "valid_for", "verify_ssl_cert",
     "organization",
     "contact_person",
@@ -169,6 +169,7 @@ class Config(object):
         self.debug = False
         self.key_file = None
         self.cert_file = None
+        self.encryption_type = 'both'
         self.secret = None
         self.accepted_time_diff = None
         self.name = None
