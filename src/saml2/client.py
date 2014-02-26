@@ -117,7 +117,8 @@ class Saml2Client(Base):
         entity_ids = self.users.issuers_of_info(name_id)
         return self.do_logout(name_id, entity_ids, reason, expire, sign)
         
-    def do_logout(self, name_id, entity_ids, reason, expire, sign=None):
+    def do_logout(self, name_id, entity_ids, reason, expire, sign=None,
+                  expected_binding=None):
         """
 
         :param name_id: Identifier of the Subject (a NameID instance)
@@ -126,6 +127,8 @@ class Saml2Client(Base):
         :param reason: The reason for doing the logout
         :param expire: Try to logout before this time.
         :param sign: Whether to sign the request or not
+        :param expected_binding: Specify the expected binding then not try it
+            all
         :return:
         """
         # check time
@@ -142,6 +145,8 @@ class Saml2Client(Base):
             # for all where I can use the SOAP binding, do those first
             for binding in [BINDING_SOAP, BINDING_HTTP_POST,
                             BINDING_HTTP_REDIRECT]:
+                if expected_binding and binding != expected_binding:
+                    continue
                 try:
                     srvs = self.metadata.single_logout_service(entity_id,
                                                                binding,
