@@ -39,9 +39,11 @@ class TestAC():
         for ac in self.acs:
             try:
                 ava = ac.fro(ats)
-                break
             except attribute_converter.UnknownNameFormat:
                 pass
+            # break if we have something
+            if ava:
+                break
         print ava.keys()
         assert _eq(ava.keys(), ['givenName', 'displayName', 'uid',
                                 'eduPersonNickname', 'street',
