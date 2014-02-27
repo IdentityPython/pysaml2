@@ -844,6 +844,14 @@ def extension_elements_to_elements(extension_elements, schemas):
         according to the schemas.
     """
     res = []
+
+    if isinstance(schemas, list):
+        pass
+    elif isinstance(schemas, dict):
+        schemas = schemas.values()
+    else:
+        return res
+
     for extension_element in extension_elements:
         for schema in schemas:
             inst = extension_element_to_element(extension_element,
