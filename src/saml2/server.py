@@ -22,6 +22,7 @@ import logging
 import os
 
 import shelve
+import threading
 
 from saml2.eptid import EptidShelve, Eptid
 from saml2.sdb import SessionStorage
@@ -80,6 +81,7 @@ class Server(Entity):
         self.symkey = symkey
         self.seed = rndstr()
         self.iv = os.urandom(16)
+        self.lock = threading.Lock()
 
     def support_AssertionIDRequest(self):
         return True
@@ -326,7 +328,7 @@ class Server(Entity):
                                       self.config.attribute_converters,
                                       policy, issuer=_issuer)
 
-        if sign_assertion:
+        if sign_assertion is not None and sign_assertion:
             assertion.signature = pre_signature_part(assertion.id,
                                                      self.sec.my_cert, 1)
             # Just the assertion or the response and the assertion ?
@@ -486,6 +488,22 @@ class Server(Entity):
 
         try:
             _authn = authn
+
+
+            if (sign_assertion or sign_response) and self.sec.cert_handler.generate_cert():
+                with self.lock:
+                    self.sec.cert_handler.update_cert(True)
+                    return self._authn_response(in_response_to,  # in_response_to
+                                                destination,  # consumer_url
+                                                sp_entity_id,  # sp_entity_id
+                                                identity,  # identity as dictionary
+                                                name_id,
+                                                authn=_authn,
+                                                issuer=issuer,
+                                                policy=policy,
+                                                sign_assertion=sign_assertion,
+                                                sign_response=sign_response,
+                                                best_effort=best_effort)
 
             return self._authn_response(in_response_to,  # in_response_to
                                         destination,  # consumer_url

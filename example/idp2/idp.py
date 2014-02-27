@@ -297,10 +297,13 @@ class SSO(Service):
             if REPOZE_ID_EQUIVALENT:
                 identity[REPOZE_ID_EQUIVALENT] = self.user
             try:
+                sign_assertion = IDP.config.getattr("sign_assertion", "idp")
+                if sign_assertion is None:
+                    sign_assertion = False
                 _resp = IDP.create_authn_response(
                     identity, userid=self.user,
-                    authn=AUTHN_BROKER[self.environ["idp.authn_ref"]],
-                    **resp_args)
+                    authn=AUTHN_BROKER[self.environ["idp.authn_ref"]], sign_assertion=sign_assertion,
+                    sign_response=False, **resp_args)
             except Exception, excp:
                 logging.error(exception_trace(excp))
                 resp = ServiceError("Exception: %s" % (excp,))
@@ -322,6 +325,7 @@ class SSO(Service):
 
     def redirect(self):
         """ This is the HTTP-redirect endpoint """
+
         logger.info("--- In SSO Redirect ---")
         _info = self.unpack_redirect()
 
