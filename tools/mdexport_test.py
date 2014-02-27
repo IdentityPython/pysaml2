@@ -52,17 +52,21 @@ MDIMPORT = {
 }
 
 
-item = MDIMPORT[sys.argv[1]]
+def main():
+    item = MDIMPORT[sys.argv[1]]
 
-metad = None
+    metad = None
 
-if item["type"] == "local":
-    metad = MetaDataFile(sys.argv[1], ONTS.values(), item["file"])
-elif item["type"] == "external":
-    metad = MetaDataExtern(sys.argv[1], ONTS.values(),
-                           item["url"], "/opt/local/bin/xmlsec1", item["cert"])
+    if item["type"] == "local":
+        metad = MetaDataFile(sys.argv[1], ONTS.values(), item["file"])
+    elif item["type"] == "external":
+        metad = MetaDataExtern(sys.argv[1], ONTS.values(),
+                               item["url"], "/opt/local/bin/xmlsec1", item["cert"])
 
-if metad:
-    metad.load()
-    print metad.dumps()
+    if metad:
+        metad.load()
+        print metad.dumps()
 
+
+if __name__ == '__main__':
+    main()
