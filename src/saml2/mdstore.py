@@ -808,7 +808,7 @@ class MetadataStore(object):
         res = []
         for md in self.metadata.values():
             for ent_id, ent_desc in md.items():
-                if "spsso_descriptor" in ent_desc:
+                if descriptor in ent_desc:
                     res.append(ent_id)
         return res
 
