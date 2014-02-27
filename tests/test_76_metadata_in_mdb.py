@@ -74,7 +74,7 @@ def test_metadata():
     assert len(certs) == 1
 
     sps = mds.with_descriptor("spsso")
-    assert len(sps) == 418
+    assert len(sps) == 417
 
     wants = mds.attribute_requirement('https://connect.sunet.se/shibboleth')
     assert wants["optional"] == []

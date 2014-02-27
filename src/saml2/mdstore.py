@@ -492,7 +492,7 @@ class MetaDataMD(MetaData):
     Handles locally stored metadata, the file format is the text representation
     of the Python representation of the metadata.
     """
-    def __init__(self, onts, attrc, filenamen, **kwargs):
+    def __init__(self, onts, attrc, filename, **kwargs):
         MetaData.__init__(self, onts, attrc, **kwargs)
         self.filename = filename
 
