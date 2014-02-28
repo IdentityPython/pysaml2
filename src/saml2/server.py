@@ -83,6 +83,11 @@ class Server(Entity):
         self.iv = os.urandom(16)
         self.lock = threading.Lock()
 
+    def getvalid_certificate_str(self):
+        if self.sec.cert_handler is not None:
+            return self.sec.cert_handler._last_validated_cert
+        return None
+
     def support_AssertionIDRequest(self):
         return True
 

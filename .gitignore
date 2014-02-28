@@ -147,3 +147,5 @@ example/sp/sp_nocert.xml
 example/sp/sp_nocert2.xml
 
 example/sp/test.py
+
+example/sp/sp_conf.py

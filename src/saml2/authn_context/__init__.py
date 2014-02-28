@@ -136,7 +136,7 @@ class AuthnBroker(object):
                 res = []
 
             for ref in _refs[1:]:
-                item = self.db[ref]
+                item = self.db["info"][ref]
                 res.append((item["method"], ref))
                 if func(_level, item["level"]):
                     _level = item["level"]

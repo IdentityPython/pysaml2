@@ -964,6 +964,7 @@ class CertHandler(object):
         """
         self._verify_cert = False
         self._generate_cert = False
+        self._last_cert_verified = None #This cert do not have to be valid, it is just the last cert to be validated.
         if cert_type == "pem" and key_type == "pem":
             self._verify_cert = verify_cert is True
             self._security_context = security_context
@@ -993,6 +994,7 @@ class CertHandler(object):
     def verify_cert(self, cert_file):
         if self._verify_cert:
             cert_str = self._osw.read_str_from_file(cert_file, "pem")
+            self._last_validated_cert = cert_str
             if self._cert_handler_extra_class is not None and self._cert_handler_extra_class.use_validate_cert_func():
                 self._cert_handler_extra_class.validate_cert(cert_str, self._cert_str, self._key_str)
             else:
