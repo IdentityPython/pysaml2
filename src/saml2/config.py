@@ -2,6 +2,7 @@
 
 __author__ = 'rolandh'
 
+import copy
 import sys
 import os
 import re
@@ -48,7 +49,7 @@ ONTS = {
 
 COMMON_ARGS = [
     "entityid", "xmlsec_binary", "debug", "key_file", "cert_file",
-    "secret", "accepted_time_diff", "name", "ca_certs",
+    "encryption_type", "secret", "accepted_time_diff", "name", "ca_certs",
     "description", "valid_for", "verify_ssl_cert",
     "organization",
     "contact_person",
@@ -175,6 +176,7 @@ class Config(object):
         self.debug = False
         self.key_file = None
         self.cert_file = None
+        self.encryption_type = 'both'
         self.secret = None
         self.accepted_time_diff = None
         self.name = None
@@ -349,7 +351,7 @@ class Config(object):
 
         mod = self._load(config_file)
         #return self.load(eval(open(config_file).read()))
-        return self.load(mod.CONFIG, metadata_construction)
+        return self.load(copy.deepcopy(mod.CONFIG), metadata_construction)
 
     def load_metadata(self, metadata_conf):
         """ Loads metadata into an internal structure """

@@ -96,6 +96,7 @@ class TestIdentifier():
         assert _eq(nameid.keyswv(), ['text', 'format', 'sp_name_qualifier',
                                      'name_qualifier'])
         assert nameid.format == NAMEID_FORMAT_TRANSIENT
+        assert nameid.text != "foobar"
         
     def test_vo_1(self):
         policy = Policy({
@@ -119,7 +120,8 @@ class TestIdentifier():
                                      'name_qualifier'])
         assert nameid.sp_name_qualifier == 'http://vo.example.org/biomed'
         assert nameid.format == NAMEID_FORMAT_PERSISTENT
-        assert nameid.text != "foobar"
+        # we want to keep the user identifier in the nameid node
+        assert nameid.text == "foobar"
 
     def test_vo_2(self):
         policy = Policy({
