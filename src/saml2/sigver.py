@@ -32,6 +32,7 @@ from Crypto.PublicKey.RSA import importKey
 from Crypto.Signature import PKCS1_v1_5
 from Crypto.Util.asn1 import DerSequence
 from Crypto.PublicKey import RSA
+from saml2.cert import OpenSSLWrapper
 from saml2.samlp import Response
 
 import xmldsig as ds
@@ -549,6 +550,7 @@ class RSASigner(Signer):
         verifier = PKCS1_v1_5.new(key)
         return verifier.verify(h, sig)
 
+
 SIGNER_ALGS = {
     RSA_SHA1: RSASigner(SHA),
     "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256": RSASigner(SHA256),
@@ -921,18 +923,120 @@ def security_context(conf, debug=None):
 
     return SecurityContext(crypto, conf.key_file,
                            cert_file=conf.cert_file, metadata=metadata,
-                           debug=debug, only_use_keys_in_metadata=_only_md)
+                           debug=debug, only_use_keys_in_metadata=_only_md,
+                           cert_handler_extra_class=conf.cert_handler_extra_class,
+                           generate_cert_info=conf.generate_cert_info, tmp_cert_file=conf.tmp_cert_file,
+                           tmp_key_file=conf.tmp_key_file, validate_certificate=conf.validate_certificate)
+
+
+class CertHandlerExtra(object):
+    def __init__(self):
+        pass
+
+    def use_generate_cert_func(self):
+        raise Exception("use_generate_cert_func function must be implemented")
+
+    def generate_cert(self, generate_cert_info, root_cert_string, root_key_string):
+        raise Exception("generate_cert function must be implemented")
+        #Excepts to return (cert_string, key_string)
+
+    def use_validate_cert_func(self):
+        raise Exception("use_validate_cert_func function must be implemented")
+
+    def validate_cert(self, cert_str, root_cert_string, root_key_string):
+        raise Exception("validate_cert function must be implemented")
+        #Excepts to return True/False
+
+
+class CertHandler(object):
+    def __init__(self, security_context, cert_file=None, cert_type="pem", key_file=None, key_type="pem",
+                 generate_cert_info=None, cert_handler_extra_class=None, tmp_cert_file=None, tmp_key_file=None,
+                 verify_cert=False):
+        """
+        Initiates the class for handling certificates. Enables the certificates to either be a single certificate
+        as base functionality or makes it possible to generate a new certificate for each call to the function.
+        :param key_file:
+        :param key_type:
+        :param cert_file:
+        :param cert_type:
+        :param generate_cert:
+        :param cert_handler_extra_class:
+        """
+        self._verify_cert = False
+        self._generate_cert = False
+        self._last_cert_verified = None #This cert do not have to be valid, it is just the last cert to be validated.
+        if cert_type == "pem" and key_type == "pem":
+            self._verify_cert = verify_cert is True
+            self._security_context = security_context
+            self._osw = OpenSSLWrapper()
+            if key_file is not None:
+                self._key_str = self._osw.read_str_from_file(key_file, key_type)
+            else:
+                self._key_str = ""
+            if cert_file is not None:
+                self._cert_str = self._osw.read_str_from_file(cert_file, cert_type)
+            else:
+                self._cert_str = ""
+
+            self._tmp_cert_str = self._cert_str
+            self._tmp_key_str = self._key_str
+            self._tmp_cert_file = tmp_cert_file
+            self._tmp_key_file = tmp_key_file
+
+            self._cert_info = None
+            self._generate_cert_func_active = False
+            if generate_cert_info is not None and len(self._cert_str) > 0 and len(self._key_str) > 0 \
+               and tmp_key_file is not None and tmp_cert_file is not None:
+                self._generate_cert = True
+                self._cert_info = generate_cert_info
+                self._cert_handler_extra_class = cert_handler_extra_class
+
+    def verify_cert(self, cert_file):
+        if self._verify_cert:
+            cert_str = self._osw.read_str_from_file(cert_file, "pem")
+            self._last_validated_cert = cert_str
+            if self._cert_handler_extra_class is not None and self._cert_handler_extra_class.use_validate_cert_func():
+                self._cert_handler_extra_class.validate_cert(cert_str, self._cert_str, self._key_str)
+            else:
+                valid, mess = self._osw.verify(self._cert_str, cert_str)
+                logger.info("CertHandler.verify_cert: %s" % mess)
+                return valid
+        return True
+
+    def generate_cert(self):
+        return self._generate_cert
+
+    def update_cert(self, active=False):
+        if self._generate_cert and active:
+            if self._cert_handler_extra_class is not None and self._cert_handler_extra_class.use_generate_cert_func():
+                (self._tmp_cert_str, self._tmp_key_str) = \
+                    self._cert_handler_extra_class.generate_cert(self._cert_info, self._cert_str, self._key_str)
+            else:
+                self._tmp_cert_str, self._tmp_key_str = self._osw.create_certificate(self._cert_info, request=True)
+                self._tmp_cert_str = self._osw.create_cert_signed_certificate(self._cert_str, self._key_str,
+                                                                              self._tmp_cert_str)
+                valid, mess = self._osw.verify(self._cert_str, self._tmp_cert_str)
+            self._osw.write_str_to_file(self._tmp_cert_file, self._tmp_cert_str)
+            self._osw.write_str_to_file(self._tmp_key_file, self._tmp_key_str)
+            self._security_context.key_file = self._tmp_key_file
+            self._security_context.cert_file = self._tmp_cert_file
+            self._security_context.key_type = "pem"
+            self._security_context.cert_type = "pem"
+            self._security_context.my_cert = read_cert_from_file(self._security_context.cert_file,
+                                                                 self._security_context.cert_type)
 
 
 # How to get a rsa pub key fingerprint from a certificate
 # openssl x509 -inform pem -noout -in server.crt -pubkey > publickey.pem
 # openssl rsa -inform pem -noout -in publickey.pem -pubin -modulus
-
 class SecurityContext(object):
+    my_cert = None
+
     def __init__(self, crypto, key_file="", key_type="pem",
                  cert_file="", cert_type="pem", metadata=None,
                  debug=False, template="", encrypt_key_type="des-192",
-                 only_use_keys_in_metadata=False):
+                 only_use_keys_in_metadata=False, cert_handler_extra_class=None, generate_cert_info=None,
+                 tmp_cert_file=None, tmp_key_file=None, validate_certificate=None):
 
         self.crypto = crypto
         assert (isinstance(self.crypto, CryptoBackend))
@@ -944,7 +1048,13 @@ class SecurityContext(object):
         # Your public key
         self.cert_file = cert_file
         self.cert_type = cert_type
+
         self.my_cert = read_cert_from_file(cert_file, cert_type)
+
+        self.cert_handler = CertHandler(self, cert_file, cert_type, key_file, key_type, generate_cert_info,
+                                        cert_handler_extra_class, tmp_cert_file, tmp_key_file, validate_certificate)
+
+        self.cert_handler.update_cert(True)
 
         self.metadata = metadata
         self.only_use_keys_in_metadata = only_use_keys_in_metadata
@@ -1053,14 +1163,23 @@ class SecurityContext(object):
         #print certs
 
         verified = False
+        last_pem_file = None
         for _, pem_file in certs:
             try:
+                last_pem_file = pem_file
                 if origdoc is not None:
-                    if self.verify_signature(origdoc, pem_file,
-                                             node_name=node_name,
-                                             node_id=item.id, id_attr=id_attr):
-                        verified = True
-                        break
+                    try:
+                        if self.verify_signature(origdoc, pem_file,
+                                                 node_name=node_name,
+                                                 node_id=item.id, id_attr=id_attr):
+                            verified = True
+                            break
+                    except Exception:
+                        if self.verify_signature(decoded_xml, pem_file,
+                                                 node_name=node_name,
+                                                 node_id=item.id, id_attr=id_attr):
+                            verified = True
+                            break
                 else:
                     if self.verify_signature(decoded_xml, pem_file,
                                              node_name=node_name,
@@ -1079,6 +1198,10 @@ class SecurityContext(object):
 
         if not verified:
             raise SignatureError("Failed to verify signature")
+        else:
+            if not self.cert_handler.verify_cert(last_pem_file):
+                raise CertificateError("Invalid certificate!")
+
 
         return item
 
@@ -1222,7 +1345,7 @@ class SecurityContext(object):
                                   origdoc)
 
         if isinstance(response, Response) and (response.assertion or
-                                               response.encrypted_assertion):
+                                                   response.encrypted_assertion):
             # Try to find the signing cert in the assertion
             for assertion in (response.assertion or response.encrypted_assertion):
                 if response.encrypted_assertion:

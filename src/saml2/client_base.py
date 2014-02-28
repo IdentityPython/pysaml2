@@ -18,6 +18,7 @@
 """Contains classes and functions that a SAML2.0 Service Provider (SP) may use
 to conclude its tasks.
 """
+import threading
 from urllib import urlencode
 from urlparse import urlparse
 
@@ -110,7 +111,7 @@ class Base(Entity):
         Entity.__init__(self, "sp", config, config_file, virtual_organization)
 
         self.users = Population(identity_cache)
-
+        self.lock = threading.Lock()
         # for server state storage
         if state_cache is None:
             self.state = {}  # in memory storage
@@ -298,10 +299,18 @@ class Base(Entity):
         except KeyError:
             pass
 
+        if sign and self.sec.cert_handler.generate_cert():
+            with self.lock:
+                self.sec.cert_handler.update_cert(True)
+                return self._message(AuthnRequest, destination, message_id, consent,
+                                     extensions, sign, sign_prepare,
+                                     protocol_binding=binding,
+                                     scoping=scoping, **args)
         return self._message(AuthnRequest, destination, message_id, consent,
                              extensions, sign, sign_prepare,
                              protocol_binding=binding,
                              scoping=scoping, **args)
+
 
     def create_attribute_query(self, destination, name_id=None,
                                attribute=None, message_id=0, consent=None,

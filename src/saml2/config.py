@@ -63,7 +63,12 @@ COMMON_ARGS = [
     "session_storage",
     "entity_category",
     "xmlsec_path",
-    "extension_schemas"
+    "extension_schemas",
+    "cert_handler_extra_class",
+    "generate_cert_info",
+    "tmp_cert_file",
+    "tmp_key_file",
+    "validate_certificate"
 ]
 
 SP_ARGS = [
@@ -85,6 +90,7 @@ SP_ARGS = [
 ]
 
 AA_IDP_ARGS = [
+    "sign_assertion",
     "want_authn_requests_signed",
     "provided_attributes",
     "subject_data",
@@ -201,6 +207,11 @@ class Config(object):
         self.scope = ""
         self.allow_unknown_attributes = False
         self.extension_schema = {}
+        self.cert_handler_extra_class = None
+        self.generate_cert_info = None
+        self.tmp_cert_file = None
+        self.tmp_key_file = None
+        self.validate_certificate = None
 
     def setattr(self, context, attr, val):
         if context == "":
