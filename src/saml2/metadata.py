@@ -37,6 +37,7 @@ DEFAULTS = {
     "want_assertions_signed": "true",
     "authn_requests_signed": "false",
     "want_authn_requests_signed": "true",
+    "want_authn_requests_only_with_valid_cert": "false",
 }
 
 ORG_ATTR_TRANSL = {
@@ -407,6 +408,7 @@ DEFAULT = {
     "want_assertions_signed": "true",
     "authn_requests_signed": "false",
     "want_authn_requests_signed": "false",
+    "want_authn_requests_only_with_valid_cert": "false",
 }
 
 
@@ -522,6 +524,16 @@ def do_idpsso_descriptor(conf, cert=None):
             val = conf.getattr(key, "idp")
             if val is None:
                 setattr(idpsso, key, DEFAULT["want_authn_requests_signed"])
+            else:
+                setattr(idpsso, key, "%s" % val)
+        except KeyError:
+            setattr(idpsso, key, DEFAULTS[key])
+
+    for key in ["want_authn_requests_only_with_valid_cert"]:
+        try:
+            val = conf.getattr(key, "idp")
+            if val is None:
+                setattr(idpsso, key, DEFAULT["want_authn_requests_only_with_valid_cert"])
             else:
                 setattr(idpsso, key, "%s" % val)
         except KeyError:

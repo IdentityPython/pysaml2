@@ -1006,9 +1006,13 @@ class CertHandler(object):
     def generate_cert(self):
         return self._generate_cert
 
-    def update_cert(self, active=False):
-        if self._generate_cert and active:
-            if self._cert_handler_extra_class is not None and self._cert_handler_extra_class.use_generate_cert_func():
+    def update_cert(self, active=False, client_crt=None):
+        if (self._generate_cert and active) or client_crt is not None:
+            if client_crt is not None:
+                self._tmp_cert_str = client_crt
+                #No private key for signing
+                self._tmp_key_str = ""
+            elif self._cert_handler_extra_class is not None and self._cert_handler_extra_class.use_generate_cert_func():
                 (self._tmp_cert_str, self._tmp_key_str) = \
                     self._cert_handler_extra_class.generate_cert(self._cert_info, self._cert_str, self._key_str)
             else:
@@ -1127,7 +1131,7 @@ class SecurityContext(object):
         )
 
     def _check_signature(self, decoded_xml, item, node_name=NODE_NAME,
-                         origdoc=None, id_attr="", must=False):
+                         origdoc=None, id_attr="", must=False, only_valid_cert=False):
         #print item
         try:
             issuer = item.issuer.text.strip()
@@ -1196,7 +1200,7 @@ class SecurityContext(object):
                 logger.error("check_sig: %s" % exc)
                 raise
 
-        if not verified:
+        if (not verified) and (not only_valid_cert):
             raise SignatureError("Failed to verify signature")
         else:
             if not self.cert_handler.verify_cert(last_pem_file):
@@ -1211,7 +1215,7 @@ class SecurityContext(object):
                                      id_attr=id_attr, must=must)
 
     def correctly_signed_message(self, decoded_xml, msgtype, must=False,
-                                 origdoc=None):
+                                 origdoc=None, only_valid_cert=False):
         """Check if a request is correctly signed, if we have metadata for
         the entity that sent the info use that, if not use the key that are in
         the message if any.
@@ -1239,12 +1243,12 @@ class SecurityContext(object):
                 return msg
 
         return self._check_signature(decoded_xml, msg, class_name(msg),
-                                     origdoc, must=must)
+                                     origdoc, must=must, only_valid_cert=only_valid_cert)
 
     def correctly_signed_authn_request(self, decoded_xml, must=False,
-                                       origdoc=None):
+                                       origdoc=None, only_valid_cert=False):
         return self.correctly_signed_message(decoded_xml, "authn_request",
-                                             must, origdoc)
+                                             must, origdoc, only_valid_cert=only_valid_cert)
 
     def correctly_signed_authn_query(self, decoded_xml, must=False,
                                      origdoc=None):

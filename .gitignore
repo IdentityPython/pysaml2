@@ -149,3 +149,9 @@ example/sp/sp_nocert2.xml
 example/sp/test.py
 
 example/sp/sp_conf.py
+
+example/sp/nocert_sp_conf/sp.xml
+
+example/sp/nocert_sp_conf/sp_conf.py
+
+example/sp/nocert_sp_conf/who.ini
