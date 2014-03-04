@@ -1,11 +1,9 @@
+__author__ = 'haho0032'
+
 import base64
-import traceback
-from M2Crypto.util import passphrase_callback
 import datetime
 import dateutil.parser
 import pytz
-
-__author__ = 'haho0032'
 from OpenSSL import crypto
 from os.path import exists, join
 from os import remove
