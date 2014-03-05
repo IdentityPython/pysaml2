@@ -52,12 +52,16 @@ from saml2.time_util import str_to_time
 
 from tempfile import NamedTemporaryFile
 from subprocess import Popen, PIPE
+from xmlenc import EncryptionMethod, EncryptedKey, CipherData, CipherValue, \
+    EncryptedData
 
 logger = logging.getLogger(__name__)
 
 SIG = "{%s#}%s" % (ds.NAMESPACE, "Signature")
 
 RSA_SHA1 = "http://www.w3.org/2000/09/xmldsig#rsa-sha1"
+RSA_1_5 = "http://www.w3.org/2001/04/xmlenc#rsa-1_5"
+TRIPLE_DES_CBC = "http://www.w3.org/2001/04/xmlenc#tripledes-cbc"
 
 from Crypto.Hash import SHA256, SHA384, SHA512, SHA
 
@@ -1507,6 +1511,28 @@ def pre_signature_part(ident, public_key=None, identifier=None):
         signature.key_info = key_info
 
     return signature
+
+
+def pre_encryption_part(msg_enc=TRIPLE_DES_CBC, key_enc=RSA_1_5):
+    """
+
+    :param msg_enc:
+    :param key_enc:
+    :return:
+    """
+    msg_encryption_method = EncryptionMethod(algorithm=msg_enc)
+    key_encryption_method = EncryptionMethod(algorithm=key_enc)
+    encrypted_key = EncryptedKey(encryption_method=key_encryption_method,
+                                 key_info=ds.KeyInfo(
+                                     key_name=ds.KeyName(text="")),
+                                 cipher_data=CipherData(
+                                     cipher_value=CipherValue(text="")))
+    key_info = ds.KeyInfo(encrypted_key=encrypted_key)
+    encrypted_data = EncryptedData(
+        encryption_method=msg_encryption_method,
+        key_info=key_info,
+        cipher_data=CipherData(cipher_value=CipherValue(text="")))
+    return encrypted_data
 
 
 def response_factory(sign=False, encrypt=False, **kwargs):

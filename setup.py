@@ -43,7 +43,7 @@ install_requires = [
     'paste',
     'zope.interface',
     'repoze.who',
-    'pycrypto', #'Crypto'
+    'pycrypto',  # 'Crypto'
     'pytz'
 ]
 

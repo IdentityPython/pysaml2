@@ -5,7 +5,7 @@ import datetime
 import dateutil.parser
 import pytz
 from OpenSSL import crypto
-from os.path import exists, join
+from os.path import join
 from os import remove
 from Crypto.Util import asn1
 
@@ -228,7 +228,8 @@ class OpenSSLWrapper(object):
                 return False, message
             else:
                 cert_str = tmp_cert_str
-            return True, "Signed certificate is valid and correctly signed by CA certificate."
+            return (True,
+                "Signed certificate is valid and correctly signed by CA certificate.")
 
     def certificate_not_valid_yet(self, cert):
         starts_to_be_valid = dateutil.parser.parse(cert.get_notBefore())
