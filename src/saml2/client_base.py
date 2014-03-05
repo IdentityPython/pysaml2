@@ -231,7 +231,9 @@ class Base(Entity):
         :param kwargs: Extra key word arguments
         :return: <samlp:AuthnRequest> instance
         """
-
+        client_crt = None
+        if "client_crt" in kwargs:
+            client_crt = kwargs["client_crt"]
         args = {}
         try:
             args["assertion_consumer_service_url"] = kwargs[
@@ -299,9 +301,11 @@ class Base(Entity):
         except KeyError:
             pass
 
-        if sign and self.sec.cert_handler.generate_cert():
+        if (sign and self.sec.cert_handler.generate_cert()) or client_crt is not None:
             with self.lock:
-                self.sec.cert_handler.update_cert(True)
+                self.sec.cert_handler.update_cert(True, client_crt)
+                if client_crt is not None:
+                    sign_prepare = True
                 return self._message(AuthnRequest, destination, message_id, consent,
                                      extensions, sign, sign_prepare,
                                      protocol_binding=binding,

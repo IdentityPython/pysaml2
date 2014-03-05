@@ -92,6 +92,7 @@ SP_ARGS = [
 AA_IDP_ARGS = [
     "sign_assertion",
     "want_authn_requests_signed",
+    "want_authn_requests_only_with_valid_cert",
     "provided_attributes",
     "subject_data",
     "sp",

@@ -546,7 +546,12 @@ class Entity(HTTPBase):
         origdoc = xmlstr
         xmlstr = self.unravel(xmlstr, binding, request_cls.msgtype)
         must = self.config.getattr("want_authn_requests_signed", "idp")
-        _request = _request.loads(xmlstr, binding, origdoc=origdoc, must=must)
+        only_valid_cert = self.config.getattr("want_authn_requests_only_with_valid_cert", "idp")
+        if only_valid_cert is None:
+            only_valid_cert = False
+        if only_valid_cert:
+            must = True
+        _request = _request.loads(xmlstr, binding, origdoc=origdoc, must=must, only_valid_cert=only_valid_cert)
 
         _log_debug("Loaded request")
 
