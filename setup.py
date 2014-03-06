@@ -44,7 +44,8 @@ install_requires = [
     'zope.interface',
     'repoze.who',
     'pycrypto',  # 'Crypto'
-    'pytz'
+    'pytz',
+    'pyOpenSSL'
 ]
 
 tests_require = [
