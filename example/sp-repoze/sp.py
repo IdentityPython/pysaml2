@@ -270,6 +270,9 @@ app_with_auth = make_middleware_with_config(application, {"here": "."},
 # ----------------------------------------------------------------------------
 PORT = 8087
 
+# allow uwsgi or gunicorn mount
+# by moving some initialization out of __name__ == '__main__' section.
+# uwsgi -s 0.0.0.0:8087 --protocol http --callable app_with_auth --module idp
 
 if __name__ == '__main__':
     #make_metadata arguments

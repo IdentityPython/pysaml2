@@ -6,7 +6,7 @@
     <% self.seen_css.add(path) %>
 </%def>
 <%def name="css()" filter="trim">
-    ${css_link('/css/main.css', 'screen')}
+    ${css_link('/static/css/main.css', 'screen')}
 </%def>
 <%def name="pre()" filter="trim">
     <div class="header">
