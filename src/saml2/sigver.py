@@ -33,6 +33,7 @@ from Crypto.Signature import PKCS1_v1_5
 from Crypto.Util.asn1 import DerSequence
 from Crypto.PublicKey import RSA
 from saml2.cert import OpenSSLWrapper
+from saml2.saml import EncryptedAssertion
 from saml2.samlp import Response
 
 import xmldsig as ds
@@ -70,7 +71,8 @@ SIG = "{%s#}%s" % (ds.NAMESPACE, "Signature")
 RSA_SHA1 = "http://www.w3.org/2000/09/xmldsig#rsa-sha1"
 RSA_1_5 = "http://www.w3.org/2001/04/xmlenc#rsa-1_5"
 TRIPLE_DES_CBC = "http://www.w3.org/2001/04/xmlenc#tripledes-cbc"
-
+XMLTAG = "<?xml version='1.0'?>"
+PREFIX = "<?xml version='1.0' encoding='UTF-8'?>"
 
 
 class SigverError(SAMLError):
@@ -97,6 +99,10 @@ class DecryptError(XmlsecError):
     pass
 
 
+class EncryptError(XmlsecError):
+    pass
+
+
 class BadSignature(SigverError):
     """The signature is invalid."""
     pass
@@ -104,6 +110,25 @@ class BadSignature(SigverError):
 
 class CertificateError(SigverError):
     pass
+
+
+def rm_xmltag(statement):
+    try:
+        _t = statement.startswith(XMLTAG)
+    except TypeError:
+        statement = statement.decode("utf8")
+        _t = statement.startswith(XMLTAG)
+
+    if _t:
+        statement = statement[len(XMLTAG):]
+        if statement[0] == '\n':
+            statement = statement[1:]
+    elif statement.startswith(PREFIX):
+        statement = statement[len(PREFIX):]
+        if statement[0] == '\n':
+            statement = statement[1:]
+
+    return statement
 
 
 def signed(item):
@@ -228,7 +253,7 @@ def _instance(klass, ava, seccont, base64encode=False, elements_to_sign=None):
     instance = klass()
 
     for prop in instance.c_attributes.values():
-    #print "# %s" % (prop)
+        #print "# %s" % (prop)
         if prop in ava:
             if isinstance(ava[prop], bool):
                 setattr(instance, prop, "%s" % ava[prop])
@@ -290,6 +315,7 @@ def signed_instance_factory(instance, seccont, elements_to_sign=None):
     else:
         return instance
 
+
 # --------------------------------------------------------------------------
 
 
@@ -305,7 +331,7 @@ def create_id():
     return ret
 
 
-def make_temp(string, suffix="", decode=True):
+def make_temp(string, suffix="", decode=True, delete=True):
     """ xmlsec needs files in some cases where only strings exist, hence the
     need for this function. It creates a temporary file with the
     string as only content.
@@ -319,7 +345,7 @@ def make_temp(string, suffix="", decode=True):
         close the file) and filename (which is for instance needed by the
         xmlsec function).
     """
-    ntf = NamedTemporaryFile(suffix=suffix)
+    ntf = NamedTemporaryFile(suffix=suffix, delete=delete)
     if decode:
         ntf.write(base64.b64decode(string))
     else:
@@ -428,6 +454,7 @@ def cert_from_instance(instance):
                                       ignore_age=True)
     return []
 
+
 # =============================================================================
 
 
@@ -469,12 +496,14 @@ def key_from_key_value_dict(key_info):
             res.append(key)
     return res
 
+
 # =============================================================================
 
 
 #def rsa_load(filename):
 #    """Read a PEM-encoded RSA key pair from a file."""
-#    return M2Crypto.RSA.load_key(filename, M2Crypto.util.no_passphrase_callback)
+#    return M2Crypto.RSA.load_key(filename, M2Crypto.util
+# .no_passphrase_callback)
 #
 #
 #def rsa_loads(key):
@@ -594,10 +623,12 @@ def verify_redirect_signature(info, cert):
                 _order = RESP_ORDER
             else:
                 raise Unsupported(
-                    "Verifying signature on something that should not be signed")
+                    "Verifying signature on something that should not be "
+                    "signed")
             args = info.copy()
             del args["Signature"]  # everything but the signature
-            string = "&".join([urllib.urlencode({k: args[k][0]}) for k in _order])
+            string = "&".join(
+                [urllib.urlencode({k: args[k][0]}) for k in _order])
             _key = extract_rsa_key_from_x509_cert(pem_format(cert))
             _sign = base64.b64decode(info["Signature"][0])
             try:
@@ -660,6 +691,9 @@ class CryptoBackend():
     def encrypt(self, text, recv_key, template, key_type):
         raise NotImplementedError()
 
+    def encrypt_assertion(self, statement, recv_key, key_type):
+        raise NotImplementedError()
+
     def decrypt(self, enctext, key_file):
         raise NotImplementedError()
 
@@ -670,6 +704,10 @@ class CryptoBackend():
     def validate_signature(self, enctext, cert_file, cert_type, node_name,
                            node_id, id_attr):
         raise NotImplementedError()
+
+
+ASSERT_XPATH = ''.join(["/*[local-name()=\"%s\"]" % v for v in [
+    "Response", "EncryptedAssertion", "Assertion"]])
 
 
 class CryptoBackendXmlSec1(CryptoBackend):
@@ -703,6 +741,38 @@ class CryptoBackendXmlSec1(CryptoBackend):
         (_stdout, _stderr, output) = self._run_xmlsec(com_list, [template],
                                                       exception=DecryptError,
                                                       validate_output=False)
+        return output
+
+    def encrypt_assertion(self, statement, enc_key, template,
+                          key_type="des-192"):
+        """
+        --pubkey-cert-pem ../../example/idp2/pki/mycert.pem \
+    --session-key des-192 --xml-data pre_saml2_assertion.xml \
+    --node-xpath '/*[local-name()="Response"]/*[local-name(
+    )="EncryptedAssertion"]/*[local-name()="Assertion"]' \
+    enc-element-3des-kt-rsa1_5.tmpl > enc_3des_rsa_assertion.xml
+
+        :param statement:
+        :param cert_file:
+        :param cert_type:
+        :return:
+        """
+        statement = pre_encrypt_assertion(statement)
+        _, fil = make_temp("%s" % statement, decode=False, delete=False)
+        _, tmpl = make_temp("%s" % template, decode=False)
+
+        com_list = [self.xmlsec, "encrypt", "--pubkey-cert-pem", enc_key,
+                    "--session-key", key_type, "--xml-data", fil,
+                    "--node-xpath", ASSERT_XPATH]
+
+        (_stdout, _stderr, output) = self._run_xmlsec(com_list, [tmpl],
+                                                      exception=EncryptError,
+                                                      validate_output=False)
+
+        os.unlink(fil)
+        if not output:
+            raise EncryptError(_stderr)
+
         return output
 
     def decrypt(self, enctext, key_file):
@@ -1005,7 +1075,7 @@ class CertHandler(object):
             self._cert_info = None
             self._generate_cert_func_active = False
             if generate_cert_info is not None and len(self._cert_str) > 0 and \
-                    len(self._key_str) > 0 and tmp_key_file is not \
+                            len(self._key_str) > 0 and tmp_key_file is not \
                     None and tmp_cert_file is not None:
                 self._generate_cert = True
                 self._cert_info = generate_cert_info
@@ -1037,9 +1107,12 @@ class CertHandler(object):
             elif self._cert_handler_extra_class is not None and \
                     self._cert_handler_extra_class.use_generate_cert_func():
                 (self._tmp_cert_str, self._tmp_key_str) = \
-                    self._cert_handler_extra_class.generate_cert(self._cert_info, self._cert_str, self._key_str)
+                    self._cert_handler_extra_class.generate_cert(
+                        self._cert_info, self._cert_str, self._key_str)
             else:
-                self._tmp_cert_str, self._tmp_key_str = self._osw.create_certificate(self._cert_info, request=True)
+                self._tmp_cert_str, self._tmp_key_str = self._osw\
+                    .create_certificate(
+                    self._cert_info, request=True)
                 self._tmp_cert_str = self._osw.create_cert_signed_certificate(
                     self._cert_str, self._key_str, self._tmp_cert_str)
                 valid, mess = self._osw.verify(self._cert_str,
@@ -1122,6 +1195,19 @@ class SecurityContext(object):
             template = self.template
 
         return self.crypto.encrypt(text, recv_key, template, key_type)
+
+    def encrypt_assertion(self, statement, cert_file, cert_type="pem"):
+        """
+        --pubkey-cert-pem ../../example/idp2/pki/mycert.pem \
+    --session-key des-192 --xml-data pre_saml2_assertion.xml \
+    --node-xpath '/*[local-name()="Response"]/*[local-name(
+    )="EncryptedAssertion"]/*[local-name()="Assertion"]' \
+    enc-element-3des-kt-rsa1_5.tmpl > enc_3des_rsa_assertion.xml
+        :param statement:
+        :param cert_file:
+        :param cert_type:
+        :return:
+        """
 
     def decrypt(self, enctext):
         """ Decrypting an encrypted text by the use of a private key.
@@ -1236,7 +1322,6 @@ class SecurityContext(object):
         else:
             if not self.cert_handler.verify_cert(last_pem_file):
                 raise CertificateError("Invalid certificate!")
-
 
         return item
 
@@ -1390,9 +1475,10 @@ class SecurityContext(object):
                                   origdoc)
 
         if isinstance(response, Response) and (response.assertion or
-                                               response.encrypted_assertion):
+                                                   response.encrypted_assertion):
             # Try to find the signing cert in the assertion
-            for assertion in (response.assertion or response.encrypted_assertion):
+            for assertion in (
+                response.assertion or response.encrypted_assertion):
                 if response.encrypted_assertion:
                     decoded_xml = self.decrypt(
                         assertion.encrypted_data.to_string())
@@ -1551,26 +1637,79 @@ def pre_signature_part(ident, public_key=None, identifier=None):
     return signature
 
 
-def pre_encryption_part(msg_enc=TRIPLE_DES_CBC, key_enc=RSA_1_5):
+# <?xml version="1.0" encoding="UTF-8"?>
+# <EncryptedData Id="ED" Type="http://www.w3.org/2001/04/xmlenc#Element"
+# xmlns="http://www.w3.org/2001/04/xmlenc#">
+#     <EncryptionMethod Algorithm="http://www.w3
+# .org/2001/04/xmlenc#tripledes-cbc"/>
+#     <ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+#       <EncryptedKey Id="EK" xmlns="http://www.w3.org/2001/04/xmlenc#">
+#         <EncryptionMethod Algorithm="http://www.w3
+# .org/2001/04/xmlenc#rsa-1_5"/>
+#         <ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+#           <ds:KeyName>my-rsa-key</ds:KeyName>
+#         </ds:KeyInfo>
+#         <CipherData>
+#           <CipherValue>
+#           </CipherValue>
+#         </CipherData>
+#         <ReferenceList>
+#           <DataReference URI="#ED"/>
+#         </ReferenceList>
+#       </EncryptedKey>
+#     </ds:KeyInfo>
+#     <CipherData>
+#       <CipherValue>
+#       </CipherValue>
+#     </CipherData>
+# </EncryptedData>
+
+def pre_encryption_part(msg_enc=TRIPLE_DES_CBC, key_enc=RSA_1_5,
+                        key_name="my-rsa-key"):
     """
 
     :param msg_enc:
     :param key_enc:
+    :param key_name:
     :return:
     """
     msg_encryption_method = EncryptionMethod(algorithm=msg_enc)
     key_encryption_method = EncryptionMethod(algorithm=key_enc)
-    encrypted_key = EncryptedKey(encryption_method=key_encryption_method,
+    encrypted_key = EncryptedKey(id="EK",
+                                 encryption_method=key_encryption_method,
                                  key_info=ds.KeyInfo(
-                                     key_name=ds.KeyName(text="")),
+                                     key_name=ds.KeyName(text=key_name)),
                                  cipher_data=CipherData(
                                      cipher_value=CipherValue(text="")))
     key_info = ds.KeyInfo(encrypted_key=encrypted_key)
     encrypted_data = EncryptedData(
+        id="ED",
+        type="http://www.w3.org/2001/04/xmlenc#Element",
         encryption_method=msg_encryption_method,
         key_info=key_info,
         cipher_data=CipherData(cipher_value=CipherValue(text="")))
     return encrypted_data
+
+
+def pre_encrypt_assertion(response):
+    """
+    Move the assertion to within a encrypted_assertion
+    :param response: The response with one assertion
+    :return: The response but now with the assertion within an
+        encrypted_assertion.
+    """
+    assertion = response.assertion
+    response.assertion = None
+    response.encrypted_assertion = EncryptedAssertion()
+    response.encrypted_assertion.add_extension_element(assertion)
+    # txt = "%s" % response
+    # _ass = "%s" % assertion
+    # _ass = rm_xmltag(_ass)
+    # txt.replace(
+    #     "<ns1:EncryptedAssertion/>",
+    #     "<ns1:EncryptedAssertion>%s</ns1:EncryptedAssertion>" % _ass)
+
+    return response
 
 
 def response_factory(sign=False, encrypt=False, **kwargs):
