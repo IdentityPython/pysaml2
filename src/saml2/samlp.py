@@ -186,13 +186,11 @@ class IDPEntryType_(SamlBase):
                  loc=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.provider_id = provider_id
         self.name = name
         self.loc = loc
@@ -362,13 +360,11 @@ class RequestAbstractType_(SamlBase):
                  consent=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.issuer = issuer
         self.signature = signature
         self.extensions = extensions
@@ -405,8 +401,7 @@ class AssertionIDRequestType_(RequestAbstractType_):
                  consent=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         RequestAbstractType_.__init__(self,
                                       issuer=issuer,
                                       signature=signature,
@@ -418,8 +413,7 @@ class AssertionIDRequestType_(RequestAbstractType_):
                                       consent=consent,
                                       text=text,
                                       extension_elements=extension_elements,
-                                      extension_attributes=extension_attributes,
-        )
+                                      extension_attributes=extension_attributes)
         self.assertion_id_ref = assertion_id_ref or []
 
 
@@ -453,8 +447,7 @@ class SubjectQueryAbstractType_(RequestAbstractType_):
                  consent=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         RequestAbstractType_.__init__(self,
                                       issuer=issuer,
                                       signature=signature,
@@ -466,8 +459,7 @@ class SubjectQueryAbstractType_(RequestAbstractType_):
                                       consent=consent,
                                       text=text,
                                       extension_elements=extension_elements,
-                                      extension_attributes=extension_attributes,
-        )
+                                      extension_attributes=extension_attributes)
         self.subject = subject
 
 
@@ -499,13 +491,11 @@ class RequestedAuthnContextType_(SamlBase):
                  comparison=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.authn_context_class_ref = authn_context_class_ref or []
         self.authn_context_decl_ref = authn_context_decl_ref or []
         self.comparison = comparison
@@ -544,8 +534,7 @@ class AttributeQueryType_(SubjectQueryAbstractType_):
                  consent=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SubjectQueryAbstractType_.__init__(self,
                                            subject=subject,
                                            issuer=issuer,
@@ -558,8 +547,7 @@ class AttributeQueryType_(SubjectQueryAbstractType_):
                                            consent=consent,
                                            text=text,
                                            extension_elements=extension_elements,
-                                           extension_attributes=extension_attributes,
-        )
+                                           extension_attributes=extension_attributes)
         self.attribute = attribute or []
 
 
@@ -600,8 +588,7 @@ class AuthzDecisionQueryType_(SubjectQueryAbstractType_):
                  consent=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SubjectQueryAbstractType_.__init__(self,
                                            subject=subject,
                                            issuer=issuer,
@@ -614,8 +601,7 @@ class AuthzDecisionQueryType_(SubjectQueryAbstractType_):
                                            consent=consent,
                                            text=text,
                                            extension_elements=extension_elements,
-                                           extension_attributes=extension_attributes,
-        )
+                                           extension_attributes=extension_attributes)
         self.action = action or []
         self.evidence = evidence
         self.resource = resource
@@ -681,8 +667,7 @@ class ArtifactResolveType_(RequestAbstractType_):
                  consent=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         RequestAbstractType_.__init__(self,
                                       issuer=issuer,
                                       signature=signature,
@@ -694,8 +679,7 @@ class ArtifactResolveType_(RequestAbstractType_):
                                       consent=consent,
                                       text=text,
                                       extension_elements=extension_elements,
-                                      extension_attributes=extension_attributes,
-        )
+                                      extension_attributes=extension_attributes)
         self.artifact = artifact
 
 
@@ -761,8 +745,7 @@ class LogoutRequestType_(RequestAbstractType_):
                  consent=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         RequestAbstractType_.__init__(self,
                                       issuer=issuer,
                                       signature=signature,
@@ -774,8 +757,7 @@ class LogoutRequestType_(RequestAbstractType_):
                                       consent=consent,
                                       text=text,
                                       extension_elements=extension_elements,
-                                      extension_attributes=extension_attributes,
-        )
+                                      extension_attributes=extension_attributes)
         self.base_id = base_id
         self.name_id = name_id
         self.encrypted_id = encrypted_id
@@ -827,8 +809,7 @@ class NameIDMappingRequestType_(RequestAbstractType_):
                  consent=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         RequestAbstractType_.__init__(self,
                                       issuer=issuer,
                                       signature=signature,
@@ -840,8 +821,7 @@ class NameIDMappingRequestType_(RequestAbstractType_):
                                       consent=consent,
                                       text=text,
                                       extension_elements=extension_elements,
-                                      extension_attributes=extension_attributes,
-        )
+                                      extension_attributes=extension_attributes)
         self.base_id = base_id
         self.name_id = name_id
         self.encrypted_id = encrypted_id
@@ -950,13 +930,11 @@ class IDPListType_(SamlBase):
                  get_complete=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.idp_entry = idp_entry or []
         self.get_complete = get_complete
 
@@ -1026,8 +1004,7 @@ class ManageNameIDRequestType_(RequestAbstractType_):
                  consent=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         RequestAbstractType_.__init__(self,
                                       issuer=issuer,
                                       signature=signature,
@@ -1039,8 +1016,7 @@ class ManageNameIDRequestType_(RequestAbstractType_):
                                       consent=consent,
                                       text=text,
                                       extension_elements=extension_elements,
-                                      extension_attributes=extension_attributes,
-        )
+                                      extension_attributes=extension_attributes)
         self.name_id = name_id
         self.encrypted_id = encrypted_id
         self.new_id = new_id
@@ -1114,8 +1090,7 @@ class AuthnQueryType_(SubjectQueryAbstractType_):
                  consent=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SubjectQueryAbstractType_.__init__(self,
                                            subject=subject,
                                            issuer=issuer,
@@ -1128,8 +1103,7 @@ class AuthnQueryType_(SubjectQueryAbstractType_):
                                            consent=consent,
                                            text=text,
                                            extension_elements=extension_elements,
-                                           extension_attributes=extension_attributes,
-        )
+                                           extension_attributes=extension_attributes)
         self.requested_authn_context = requested_authn_context
         self.session_index = session_index
 
@@ -1207,13 +1181,11 @@ class ScopingType_(SamlBase):
                  proxy_count=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.idp_list = idp_list
         self.requester_id = requester_id or []
         self.proxy_count = proxy_count
@@ -1299,8 +1271,7 @@ class AuthnRequestType_(RequestAbstractType_):
                  consent=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         RequestAbstractType_.__init__(self,
                                       issuer=issuer,
                                       signature=signature,
@@ -1312,8 +1283,7 @@ class AuthnRequestType_(RequestAbstractType_):
                                       consent=consent,
                                       text=text,
                                       extension_elements=extension_elements,
-                                      extension_attributes=extension_attributes,
-        )
+                                      extension_attributes=extension_attributes)
         self.subject = subject
         self.name_id_policy = name_id_policy
         self.conditions = conditions
@@ -1347,8 +1317,6 @@ def authn_request_from_string(xml_string):
     return saml2.create_class_from_xml_string(AuthnRequest, xml_string)
 
 
-#..................
-# ['ManageNameIDResponse', 'Status', 'NameIDMappingResponse', 'ArtifactResponseType', 'NameIDMappingResponseType', 'StatusType', 'ArtifactResponse', 'StatusCode', 'StatusCodeType', 'LogoutResponse', 'StatusResponseType', 'Response', 'ResponseType']
 class StatusType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:protocol:StatusType element """
 
@@ -1359,7 +1327,8 @@ class StatusType_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
     # Added further down to avoid undefined references
-    #c_children['{urn:oasis:names:tc:SAML:2.0:protocol}StatusCode'] = ('status_code', StatusCode)
+    #c_children['{urn:oasis:names:tc:SAML:2.0:protocol}StatusCode'] = (
+    # 'status_code', StatusCode)
     c_children['{urn:oasis:names:tc:SAML:2.0:protocol}StatusMessage'] = (
         'status_message', StatusMessage)
     c_cardinality['status_message'] = {"min": 0, "max": 1}
@@ -1374,13 +1343,11 @@ class StatusType_(SamlBase):
                  status_detail=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.status_code = status_code
         self.status_message = status_message
         self.status_detail = status_detail
@@ -1446,13 +1413,11 @@ class StatusResponseType_(SamlBase):
                  consent=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.issuer = issuer
         self.signature = signature
         self.extensions = extensions
@@ -1501,8 +1466,7 @@ class ResponseType_(StatusResponseType_):
                  consent=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         StatusResponseType_.__init__(self,
                                      issuer=issuer,
                                      signature=signature,
@@ -1516,8 +1480,7 @@ class ResponseType_(StatusResponseType_):
                                      consent=consent,
                                      text=text,
                                      extension_elements=extension_elements,
-                                     extension_attributes=extension_attributes,
-        )
+                                     extension_attributes=extension_attributes)
         self.assertion = assertion or []
         self.encrypted_assertion = encrypted_assertion or []
 
@@ -1604,8 +1567,7 @@ class NameIDMappingResponseType_(StatusResponseType_):
                  consent=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         StatusResponseType_.__init__(self,
                                      issuer=issuer,
                                      signature=signature,
@@ -1619,8 +1581,7 @@ class NameIDMappingResponseType_(StatusResponseType_):
                                      consent=consent,
                                      text=text,
                                      extension_elements=extension_elements,
-                                     extension_attributes=extension_attributes,
-        )
+                                     extension_attributes=extension_attributes)
         self.name_id = name_id
         self.encrypted_id = encrypted_id
 
@@ -1695,13 +1656,11 @@ class StatusCodeType_(SamlBase):
                  value=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.status_code = status_code
         self.value = value
 

@@ -3,18 +3,23 @@ from saml2.sigver import security_context
 from saml2.config import Config
 from saml2.validate import valid_instance
 from saml2.time_util import in_a_while
-from saml2.extension import mdui, idpdisc, shibmd, mdattr
-from saml2.saml import NAME_FORMAT_URI, AttributeValue, Attribute
+from saml2.extension import mdui
+from saml2.extension import idpdisc
+from saml2.extension import shibmd
+from saml2.extension import mdattr
+from saml2.saml import NAME_FORMAT_URI
+from saml2.saml import AttributeValue
+from saml2.saml import Attribute
 from saml2.attribute_converter import from_local_name
-from saml2 import md, saml, SAMLError
+from saml2 import md, SAMLError
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_SOAP
 from saml2 import samlp
 from saml2 import class_name
+
 import xmldsig as ds
-import sys
-import os
+
 from saml2.sigver import pre_signature_part
 
 from saml2.s_utils import factory
@@ -291,7 +296,7 @@ def do_uiinfo(_uiinfo):
             for value in val:
                 keyw = mdui.Keywords()
                 if isinstance(value, basestring):
-                    keyw.text = " ".join(value)
+                    keyw.text = value
                 elif isinstance(value, dict):
                     keyw.text = " ".join(value["text"])
                     try:
