@@ -83,6 +83,7 @@ def test_cert_from_instance_ssp():
     print str(decoder.decode(der)).replace('.', "\n.")
     assert decoder.decode(der)
 
+
 class FakeConfig():
     """
     Configuration parameters for signature validation test cases.
@@ -94,6 +95,12 @@ class FakeConfig():
     cert_file = PUB_KEY
     key_file = PRIV_KEY
     debug = False
+    cert_handler_extra_class = None
+    generate_cert_info = False
+    tmp_cert_file = None
+    tmp_key_file = None
+    validate_certificate = False
+
 
 class TestSecurity():
 
@@ -418,3 +425,7 @@ class TestSecurityMetadata():
         item = self.sec.check_signature(sass, class_name(sass), sign_ass)
 
         assert isinstance(item, saml.Assertion)
+
+if __name__ == "__main__":
+    t = TestSecurity()
+    t.setup_class()

@@ -238,7 +238,7 @@ def test_idp_1():
     assert c.endpoint("single_sign_on_service")[0] == 'http://localhost:8088/'
 
     attribute_restrictions = c.getattr("policy",
-                                       "idp").get_attribute_restriction("")
+                                       "idp").get_attribute_restrictions("")
     assert attribute_restrictions["edupersonaffiliation"][0].match("staff")
 
 
@@ -253,7 +253,7 @@ def test_idp_2():
                       BINDING_HTTP_REDIRECT) == ["http://localhost:8088/"]
 
     attribute_restrictions = c.getattr("policy",
-                                       "idp").get_attribute_restriction("")
+                                       "idp").get_attribute_restrictions("")
     assert attribute_restrictions["edupersonaffiliation"][0].match("staff")
 
 
