@@ -362,7 +362,7 @@ class ACS(Service):
 
     def verify_attributes(self, ava):
         logger.info("SP: %s" % self.sp.config.entityid)
-        rest = POLICY.get_entity_categories_restriction(
+        rest = POLICY.get_entity_categories(
             self.sp.config.entityid, self.sp.metadata)
 
         akeys = [k.lower() for k in ava.keys()]
