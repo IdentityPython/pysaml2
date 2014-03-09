@@ -110,7 +110,9 @@ class MetaData(object):
         self.metadata = metadata
         self.security = None
         self.node_name = node_name
-
+        self.entities_descr = None
+        self.entity_descr = None
+        
     def items(self):
         return self.entity.items()
 
@@ -240,7 +242,7 @@ class MetaData(object):
         logger.debug("_service => %s" % res)
         return res
 
-    def _ext_service(self, entity_id, typ, service, binding):
+    def ext_service(self, entity_id, typ, service, binding):
         try:
             srvs = self[entity_id][typ]
         except KeyError:
@@ -384,8 +386,8 @@ class MetaDataFile(MetaData):
         _txt = self.get_metadata_content()
         if self.cert:
             node_name = self.node_name \
-                      or "%s:%s" % (md.EntitiesDescriptor.c_namespace,
-                                    md.EntitiesDescriptor.c_tag)
+                or "%s:%s" % (md.EntitiesDescriptor.c_namespace,
+                              md.EntitiesDescriptor.c_tag)
 
             if self.security.verify_signature(_txt,
                                               node_name=node_name,
@@ -404,10 +406,12 @@ class MetaDataLoader(MetaDataFile):
     """
     def __init__(self, onts, attrc, loader_callable, cert=None, **kwargs):
         MetaData.__init__(self, onts, attrc, **kwargs)
-        self.metadata_provider_callable = self.get_metadata_loader(loader_callable)
+        self.metadata_provider_callable = self.get_metadata_loader(
+            loader_callable)
         self.cert = cert
 
-    def get_metadata_loader(self, func):
+    @staticmethod
+    def get_metadata_loader(func):
         if callable(func):
             return func
 
@@ -416,25 +420,21 @@ class MetaDataLoader(MetaDataFile):
         try:
             mod = import_module(module)
         except Exception, e:
-            raise RuntimeError('Cannot find metadata provider function %s: "%s"' % (func, e))
+            raise RuntimeError(
+                'Cannot find metadata provider function %s: "%s"' % (func, e))
 
         try:
             metadata_loader = getattr(mod, attr)
         except AttributeError:
             raise RuntimeError(
-                'Module "%s" does not define a "%s" metadata loader' %
-                (module, attr)
-                )
+                'Module "%s" does not define a "%s" metadata loader' % (
+                    module, attr))
 
         if not callable(metadata_loader):
             raise RuntimeError(
-                'Metadata loader %s.%s must be callable' %
-                (module, attr)
-                )
+                'Metadata loader %s.%s must be callable' % (module, attr))
 
         return metadata_loader
-
-
 
     def get_metadata_content(self):
         return self.metadata_provider_callable()
@@ -469,8 +469,8 @@ class MetaDataExtern(MetaData):
         response = self.http.send(self.url)
         if response.status_code == 200:
             node_name = self.node_name \
-                      or "%s:%s" % (md.EntitiesDescriptor.c_namespace,
-                                    md.EntitiesDescriptor.c_tag)
+                or "%s:%s" % (md.EntitiesDescriptor.c_namespace,
+                              md.EntitiesDescriptor.c_tag)
 
             _txt = response.text.encode("utf-8")
             if self.cert:
@@ -522,28 +522,28 @@ class MetadataStore(object):
     def load(self, typ, *args, **kwargs):
         if typ == "local":
             key = args[0]
-            md = MetaDataFile(self.onts, self.attrc, args[0])
+            _md = MetaDataFile(self.onts, self.attrc, args[0])
         elif typ == "inline":
             self.ii += 1
             key = self.ii
-            md = MetaData(self.onts, self.attrc, args[0], **kwargs)
+            _md = MetaData(self.onts, self.attrc, args[0], **kwargs)
         elif typ == "remote":
             key = kwargs["url"]
-            md = MetaDataExtern(self.onts, self.attrc,
-                                kwargs["url"], self.security,
-                                kwargs["cert"], self.http,
-                                node_name=kwargs.get('node_name'))
+            _md = MetaDataExtern(self.onts, self.attrc,
+                                 kwargs["url"], self.security,
+                                 kwargs["cert"], self.http,
+                                 node_name=kwargs.get('node_name'))
         elif typ == "mdfile":
             key = args[0]
-            md = MetaDataMD(self.onts, self.attrc, args[0])
+            _md = MetaDataMD(self.onts, self.attrc, args[0])
         elif typ == "loader":
             key = args[0]
-            md = MetaDataLoader(self.onts, self.attrc, args[0])
+            _md = MetaDataLoader(self.onts, self.attrc, args[0])
         else:
             raise SAMLError("Unknown metadata type '%s'" % typ)
 
-        md.load()
-        self.metadata[key] = md
+        _md.load()
+        self.metadata[key] = _md
 
     def imp(self, spec):
         for key, vals in spec.items():
@@ -555,8 +555,8 @@ class MetadataStore(object):
 
     def _service(self, entity_id, typ, service, binding=None):
         known_principal = False
-        for key, md in self.metadata.items():
-            srvs = md._service(entity_id, typ, service, binding)
+        for key, _md in self.metadata.items():
+            srvs = _md._service(entity_id, typ, service, binding)
             if srvs:
                 return srvs
             elif srvs is None:
@@ -571,10 +571,10 @@ class MetadataStore(object):
             logger.error("Unknown principal: %s" % entity_id)
             raise UnknownPrincipal(entity_id)
 
-    def _ext_service(self, entity_id, typ, service, binding=None):
+    def ext_service(self, entity_id, typ, service, binding=None):
         known_principal = False
-        for key, md in self.metadata.items():
-            srvs = md._ext_service(entity_id, typ, service, binding)
+        for key, _md in self.metadata.items():
+            srvs = _md.ext_service(entity_id, typ, service, binding)
             if srvs:
                 return srvs
             elif srvs is None:
@@ -674,26 +674,26 @@ class MetadataStore(object):
     def discovery_response(self, entity_id, binding=None, _="spsso"):
         if binding is None:
             binding = BINDING_DISCO
-        return self._ext_service(entity_id, "spsso_descriptor",
-                                 "%s&%s" % (DiscoveryResponse.c_namespace,
-                                            DiscoveryResponse.c_tag),
-                                 binding)
+        return self.ext_service(entity_id, "spsso_descriptor",
+                                "%s&%s" % (DiscoveryResponse.c_namespace,
+                                           DiscoveryResponse.c_tag),
+                                binding)
 
     def attribute_requirement(self, entity_id, index=0):
-        for md in self.metadata.values():
-            if entity_id in md:
-                return md.attribute_requirement(entity_id, index)
+        for _md in self.metadata.values():
+            if entity_id in _md:
+                return _md.attribute_requirement(entity_id, index)
 
     def keys(self):
         res = []
-        for md in self.metadata.values():
-            res.extend(md.keys())
+        for _md in self.metadata.values():
+            res.extend(_md.keys())
         return res
 
     def __getitem__(self, item):
-        for md in self.metadata.values():
+        for _md in self.metadata.values():
             try:
-                return md[item]
+                return _md[item]
             except KeyError:
                 pass
 
@@ -704,8 +704,8 @@ class MetadataStore(object):
 
     def entities(self):
         num = 0
-        for md in self.metadata.values():
-            num += len(md.items())
+        for _md in self.metadata.values():
+            num += len(_md.items())
 
         return num
 
@@ -714,14 +714,14 @@ class MetadataStore(object):
 
     def with_descriptor(self, descriptor):
         res = {}
-        for md in self.metadata.values():
-            res.update(md.with_descriptor(descriptor))
+        for _md in self.metadata.values():
+            res.update(_md.with_descriptor(descriptor))
         return res
 
     def name(self, entity_id, langpref="en"):
-        for md in self.metadata.values():
-            if entity_id in md.items():
-                return name(md[entity_id], langpref)
+        for _md in self.metadata.values():
+            if entity_id in _md.items():
+                return name(_md[entity_id], langpref)
         return None
 
     def certs(self, entity_id, descriptor, use="signing"):
@@ -779,9 +779,9 @@ class MetadataStore(object):
         return res
 
     def bindings(self, entity_id, typ, service):
-        for md in self.metadata.values():
-            if entity_id in md.items():
-                return md.bindings(entity_id, typ, service)
+        for _md in self.metadata.values():
+            if entity_id in _md.items():
+                return _md.bindings(entity_id, typ, service)
 
         return None
 
@@ -794,20 +794,20 @@ class MetadataStore(object):
 
     def construct_source_id(self):
         res = {}
-        for md in self.metadata.values():
-            res.update(md.construct_source_id())
+        for _md in self.metadata.values():
+            res.update(_md.construct_source_id())
         return res
 
     def items(self):
         res = {}
-        for md in self.metadata.values():
-            res.update(md.items())
+        for _md in self.metadata.values():
+            res.update(_md.items())
         return res.items()
 
     def _providers(self, descriptor):
         res = []
-        for md in self.metadata.values():
-            for ent_id, ent_desc in md.items():
+        for _md in self.metadata.values():
+            for ent_id, ent_desc in _md.items():
                 if descriptor in ent_desc:
                     res.append(ent_id)
         return res
