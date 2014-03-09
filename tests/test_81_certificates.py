@@ -30,8 +30,9 @@ class TestGenerateCertificates(unittest.TestCase):
 
         osw = OpenSSLWrapper()
 
-        ca_cert, ca_key = osw.create_certificate(cert_info_ca, request=False, write_to_file=True,
-                                                        cert_dir="/Users/haho0032/Develop/openSSL/pki")
+        ca_cert, ca_key = osw.create_certificate(cert_info_ca, request=False,
+                                                 write_to_file=True,
+                                                 cert_dir="pki")
 
         req_cert_str, req_key_str = osw.create_certificate(cert_info, request=True)
 

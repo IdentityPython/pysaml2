@@ -213,3 +213,7 @@ def test_xmlsec_cryptobackend():
     t = TestPKCS11()
     t.setup_class()
     t.test_SAML_sign_with_pkcs11()
+
+
+if __name__ == "__main__":
+    test_xmlsec_cryptobackend()
