@@ -315,7 +315,6 @@ class Base(Entity):
                              protocol_binding=binding,
                              scoping=scoping, **args)
 
-
     def create_attribute_query(self, destination, name_id=None,
                                attribute=None, message_id=0, consent=None,
                                extensions=None, sign=False, sign_prepare=False,
