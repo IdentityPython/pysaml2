@@ -103,7 +103,8 @@ def repack_cert(cert):
 
 
 class MetaData(object):
-    def __init__(self, onts, attrc, metadata="", node_name=None, **kwargs):
+    def __init__(self, onts, attrc, metadata="", node_name=None,
+                 check_validity=True, **kwargs):
         self.onts = onts
         self.attrc = attrc
         self.entity = {}
@@ -112,6 +113,7 @@ class MetaData(object):
         self.node_name = node_name
         self.entities_descr = None
         self.entity_descr = None
+        self.check_validity = check_validity
         
     def items(self):
         return self.entity.items()
@@ -129,13 +131,14 @@ class MetaData(object):
         return self.entity[item]
 
     def do_entity_descriptor(self, entity_descr):
-        try:
-            if not valid(entity_descr.valid_until):
-                logger.info("Entity descriptor (entity id:%s) to old" % (
-                    entity_descr.entity_id,))
-                return
-        except AttributeError:
-            pass
+        if self.check_validity:
+            try:
+                if not valid(entity_descr.valid_until):
+                    logger.info("Entity descriptor (entity id:%s) to old" % (
+                        entity_descr.entity_id,))
+                    return
+            except AttributeError:
+                pass
 
         # have I seen this entity_id before ? If so if log: ignore it
         if entity_descr.entity_id in self.entity:
@@ -187,12 +190,14 @@ class MetaData(object):
                 logger.error(exc.args[0])
                 return
 
-            try:
-                if not valid(self.entities_descr.valid_until):
-                    raise ToOld("Metadata not valid anymore, it's after %s" % (
-                        self.entities_descr.valid_until,))
-            except AttributeError:
-                pass
+            if self.check_validity:
+                try:
+                    if not valid(self.entities_descr.valid_until):
+                        raise ToOld(
+                            "Metadata not valid anymore, it's after %s" % (
+                                self.entities_descr.valid_until,))
+                except AttributeError:
+                    pass
 
             for entity_descr in self.entities_descr.entity_descriptor:
                 self.do_entity_descriptor(entity_descr)

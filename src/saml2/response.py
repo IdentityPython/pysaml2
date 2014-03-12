@@ -451,8 +451,8 @@ class AuthnResponse(StatusResponse):
     def __init__(self, sec_context, attribute_converters, entity_id,
                  return_addrs=None, outstanding_queries=None,
                  timeslack=0, asynchop=True, allow_unsolicited=False,
-                 test=False, allow_unknown_attributes=False, want_assertions_signed=False,
-                 **kwargs):
+                 test=False, allow_unknown_attributes=False,
+                 want_assertions_signed=False, **kwargs):
 
         StatusResponse.__init__(self, sec_context, return_addrs, timeslack,
                                 asynchop=asynchop)

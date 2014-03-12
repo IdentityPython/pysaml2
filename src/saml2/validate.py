@@ -248,6 +248,8 @@ def valid_anytype(val):
     :return: True is value is valid otherwise an exception is raised
     """
     for validator in VALIDATOR.values():
+        if validator == valid_anytype:  # To hinder recursion
+            continue
         try:
             if validator(val):
                 return True

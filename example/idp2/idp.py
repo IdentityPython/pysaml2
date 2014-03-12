@@ -943,10 +943,10 @@ from mako.lookup import TemplateLookup
 
 AUTHN_BROKER = AuthnBroker()
 AUTHN_BROKER.add(authn_context_class_ref(PASSWORD),
-             username_password_authn, 10,
-             "http://%s" % socket.gethostname())
+                 username_password_authn, 10,
+                 "http://%s" % socket.gethostname())
 AUTHN_BROKER.add(authn_context_class_ref(UNSPECIFIED),
-             "", 0, "http://%s" % socket.gethostname())
+                 "", 0, "http://%s" % socket.gethostname())
 
 IDP = server.Server(args.config, cache=Cache())
 IDP.ticket = {}
