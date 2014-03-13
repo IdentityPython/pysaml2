@@ -206,7 +206,7 @@ Running the script testing an IDP
 Synopsis::
 
     $ idp_testdrv.py --help
-    usage: idp_testdrv.py [-h] [-d] [-H] [-C CA_CERTS] [-J TT_CONFIG_FILE] [-m] [-l]
+    usage: idp_testdrv.py [-h] [-d] [-H] [-i] [-C CA_CERTS] [-J TT_CONFIG_FILE] [-m] [-l]
                      [-c TD_CONFIG]
                      [oper]
 
@@ -215,14 +215,15 @@ Synopsis::
 
     optional arguments:
       -C CA_CERTS            CA certs to use to verify HTTPS server certificates, if
-                             HTTPS is used and no server CA certs are defined then
-                             no cert verification will be done. For a generic validation you may use the ca_bundle.crt
-                             file that comes with Mozilla.
+                             HTTPS is used and server certs are passed with -C then
+                             the default cert verification will be done using keys/cacert.pem,
+                             which is derived from Mozilla's ca_bundle.crt.
       -c TD_CONFIG, --config Test driver configuration module at the current directory or the path specified
                              with the -P option. Do not use relative paths or the .py filename extension
       -d, --debug            Print debug information to stderr
       -H, --prettyprint      Human readable status output
       -h, --help             show this help message and exit
+      -i, --insecure         do not check TLS certificate (overriding -C option)
       -J TT_CONFIG_FILE      Test target configuration in JSON format
       -L, --log              Print HTTP log information # TODO: update documentation
       -l, --list             List all the test operations as a JSON object
@@ -248,14 +249,14 @@ Synopsis::
 
     optional arguments:
       -C CA_CERTS           CA certs to use to verify HTTPS server certificates, if
-                            HTTPS is used and no server CA certs are defined then
-                            no cert verification will be done. For a generic validation you may use the ca_bundle.crt
-                            file that comes with Mozilla.
+                            HTTPS is used and server certs are passed with -C then
+                            the default cert verification will be done using keys/cacert.pem,
+                            which is derived from Mozilla's ca_bundle.crt.
       -c TD_CONFIG, --config Test driver configuration module at the current directory or the path specified
                             with the -P option. Do not use relative paths or filename extension
       -d, --debug           Print debug information to stderr
       -h, --help            show this help message and exit
-      -i, --insecure        do not check TLS certificate
+      -i, --insecure        do not check TLS certificate (overriding -C option)
       -J TT_CONFIG_FILE     Test target configuration in JSON format
       -L, --log             Print HTTP log information # TODO: update documentation
       -l, --list            List all the test flows as a JSON object
