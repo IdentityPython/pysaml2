@@ -254,12 +254,6 @@ class Saml2Client(Base):
                                   status["reason"], status["not_on_or_after"],
                                   status["sign"])
 
-    # ========================================================================
-    # MUST use SOAP for
-    # AssertionIDRequest, SubjectQuery, AuthnQuery, AttributeQuery or
-    # AuthzDecisionQuery
-    # ========================================================================
-
     def _use_soap(self, destination, query_type, **kwargs):
         _create_func = getattr(self, "create_%s" % query_type)
         _response_func = getattr(self, "parse_%s_response" % query_type)
@@ -432,13 +426,14 @@ class Saml2Client(Base):
         :param sign: Whether the response will be signed or not
         :return: Keyword arguments which can be used to send the response
             what's returned follow different patterns for different bindings.
-            If the binding is BINDIND_SOAP, what is returned looks like this:
-            {
-                "data": <the SOAP enveloped response>
-                "url": "",
-                'headers': [('content-type', 'application/soap+xml')]
-                'method': "POST
-            }
+            If the binding is BINDIND_SOAP, what is returned looks like this::
+
+                {
+                    "data": <the SOAP enveloped response>
+                    "url": "",
+                    'headers': [('content-type', 'application/soap+xml')]
+                    'method': "POST
+                }
         """
         logger.info("logout request: %s" % request)
 

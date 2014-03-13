@@ -113,8 +113,9 @@ def _localized_name(val, klass):
 
 
 def do_organization_info(ava):
-    """ decription of an organization in the configuration is
-    a dictionary of keys and values, where the values might be tuples:
+    """
+    Description of an organization in the configuration is
+    a dictionary of keys and values, where the values might be tuples::
 
         "organization": {
             "name": ("AB Exempel", "se"),
