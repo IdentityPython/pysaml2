@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 from saml2.authn_context import INTERNETPROTOCOLPASSWORD
 
-from saml2 import saml
 from saml2.server import Server
 from saml2.response import authn_response
 from saml2.config import config_factory
