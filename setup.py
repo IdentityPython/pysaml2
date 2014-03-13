@@ -45,7 +45,8 @@ install_requires = [
     'repoze.who',
     'pycrypto',  # 'Crypto'
     'pytz',
-    'pyOpenSSL'
+    'pyOpenSSL',
+    'python-dateutil'
 ]
 
 tests_require = [
