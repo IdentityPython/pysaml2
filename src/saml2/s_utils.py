@@ -413,7 +413,7 @@ def fticks_log(sp, logf, idp_entity_id, user_id, secret, assertion):
         "PN": csum.hexdigest(),
         "AM": ac.AuthnContextClassRef.text
     }
-    logf.info(FTICKS_FORMAT % "#".join(["%s=%s" % (a,v) for a,v in info]))
+    logf.info(FTICKS_FORMAT % "#".join(["%s=%s" % (a, v) for a, v in info]))
 
 
 def dynamic_importer(name, class_name=None):
@@ -428,14 +428,14 @@ def dynamic_importer(name, class_name=None):
 
     try:
         package = imp.load_module(name, fp, pathname, description)
-    except Exception, e:
+    except Exception:
         raise
 
     if class_name:
         try:
             _class = imp.load_module("%s.%s" % (name, class_name), fp,
-                                      pathname, description)
-        except Exception, e:
+                                     pathname, description)
+        except Exception:
             raise
 
         return package, _class
@@ -452,3 +452,34 @@ def exception_trace(exc):
         _exc = "Exception: %s" % exc.message.encode("utf-8", "replace")
 
     return {"message": _exc, "content": "".join(message)}
+
+
+def rec_factory(cls, **kwargs):
+    _inst = cls()
+    for key, val in kwargs.items():
+        if key in ["text", "lang"]:
+            setattr(_inst, key, val)
+        elif key in _inst.c_attributes:
+            try:
+                val = str(val)
+            except Exception:
+                continue
+            else:
+                setattr(_inst, key, val)
+        elif key in _inst.c_child_order:
+            for tag, _cls in _inst.c_children.values():
+                if tag == key:
+                    if isinstance(_cls, list):
+                        _cls = _cls[0]
+                        claim = []
+                        if isinstance(val, list):
+                            for v in val:
+                                claim.append(rec_factory(_cls, **v))
+                        else:
+                            claim.append(rec_factory(_cls, **val))
+                    else:
+                        claim = rec_factory(_cls, **val)
+                    setattr(_inst, key, claim)
+                    break
+
+    return _inst

@@ -23,6 +23,7 @@ import xmldsig as ds
 from saml2.sigver import pre_signature_part
 
 from saml2.s_utils import factory
+from saml2.s_utils import rec_factory
 from saml2.s_utils import sid
 
 __author__ = 'rolandh'
@@ -51,6 +52,7 @@ ORG_ATTR_TRANSL = {
     "organization_url": ("url", md.OrganizationURL)
 }
 
+
 def metadata_tostring_fix(desc, nspair):
     MDNS = '"urn:oasis:names:tc:SAML:2.0:metadata"'
     XMLNSXS = " xmlns:xs=\"http://www.w3.org/2001/XMLSchema\""
@@ -60,7 +62,7 @@ def metadata_tostring_fix(desc, nspair):
     return xmlstring
 
 
-def create_metadata_string(configfile, config, valid, cert, keyfile, id, name,
+def create_metadata_string(configfile, config, valid, cert, keyfile, mid, name,
                            sign):
     valid_for = 0
     nspair = {"xs": "http://www.w3.org/2001/XMLSchema"}
@@ -85,8 +87,8 @@ def create_metadata_string(configfile, config, valid, cert, keyfile, id, name,
     conf.xmlsec_binary = config.xmlsec_binary
     secc = security_context(conf)
 
-    if id:
-        desc = entities_descriptor(eds, valid_for, name, id,
+    if mid:
+        desc = entities_descriptor(eds, valid_for, name, mid,
                                    sign, secc)
         valid_instance(desc)
 
@@ -94,7 +96,7 @@ def create_metadata_string(configfile, config, valid, cert, keyfile, id, name,
     else:
         for eid in eds:
             if sign:
-                desc = sign_entity_descriptor(eid, id, secc)
+                desc = sign_entity_descriptor(eid, mid, secc)
             else:
                 desc = eid
             valid_instance(desc)
@@ -372,6 +374,21 @@ DEFAULT_BINDING = {
 }
 
 
+def do_extensions(mname, item):
+    try:
+        _mod = __import__("saml2.extension.%s" % mname, globals(), locals(),
+                          mname)
+    except ImportError:
+        return None
+    else:
+        res = []
+
+        for _cname, ava in item.items():
+            cls = getattr(_mod, _cname)
+            res.append(rec_factory(cls, **ava))
+    return res
+
+
 def _do_nameid_format(cls, conf, typ):
     namef = conf.getattr("name_id_format", typ)
     if namef:
@@ -421,19 +438,30 @@ def do_spsso_descriptor(conf, cert=None):
     spsso = md.SPSSODescriptor()
     spsso.protocol_support_enumeration = samlp.NAMESPACE
 
+    exts = conf.getattr("extensions", "sp")
+    if exts:
+        if spsso.extensions is None:
+            spsso.extensions = md.Extensions()
+
+        for key, val in exts.items():
+            _ext = do_extensions(key, val)
+            if _ext:
+                for _e in _ext:
+                    spsso.extensions.add_extension_element(_e)
+
     endps = conf.getattr("endpoints", "sp")
     if endps:
         for (endpoint, instlist) in do_endpoints(endps,
                                                  ENDPOINTS["sp"]).items():
             setattr(spsso, endpoint, instlist)
 
-    ext = do_endpoints(endps, ENDPOINT_EXT["sp"])
-    if ext:
-        if spsso.extensions is None:
-            spsso.extensions = md.Extensions()
-        for vals in ext.values():
-            for val in vals:
-                spsso.extensions.add_extension_element(val)
+    # ext = do_endpoints(endps, ENDPOINT_EXT["sp"])
+    # if ext:
+    #     if spsso.extensions is None:
+    #         spsso.extensions = md.Extensions()
+    #     for vals in ext.values():
+    #         for val in vals:
+    #             spsso.extensions.add_extension_element(val)
 
     if cert:
         encryption_type = conf.encryption_type

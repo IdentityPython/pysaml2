@@ -201,6 +201,18 @@ def valid_unsigned_short(val):
     return True
     
 
+def valid_positive_integer(val):
+    try:
+        integer = int(val)
+    except ValueError:
+        raise NotValid("positive integer")
+
+    if integer > 0:
+        return True
+    else:
+        raise NotValid("positive integer")
+
+
 def valid_non_negative_integer(val):
     try:
         integer = int(val)
@@ -269,6 +281,7 @@ VALIDATOR = {
     "dateTime": valid_date_time,
     "anyURI": valid_any_uri,
     "nonNegativeInteger": valid_non_negative_integer,
+    "PositiveInteger": valid_positive_integer,
     "boolean": valid_boolean,
     "unsignedShort": valid_unsigned_short,
     "duration": valid_duration,
