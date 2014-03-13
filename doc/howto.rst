@@ -241,7 +241,7 @@ Running the script testing an SP
 Synopsis::
 
     $ sp_testdrv.py --help
-    usage: sp_testdrv.py [-h] [-d] [-C CA_CERTS] [-J TT_CONFIG_FILE] [-m] [-l] [-c TD_CONFIG] [oper]
+    usage: sp_testdrv.py [-h] [-d] [-C CA_CERTS] [-i] [-J TT_CONFIG_FILE] [-m] [-l] [-c TD_CONFIG] [-t TEST_PACKAGE] [oper]
 
     positional arguments:
       oper                 Which test to run (mandatory except for options -h, -l and -m)
@@ -255,6 +255,7 @@ Synopsis::
                             with the -P option. Do not use relative paths or filename extension
       -d, --debug           Print debug information to stderr
       -h, --help            show this help message and exit
+      -i, --insecure        do not check TLS certificate
       -J TT_CONFIG_FILE     Test target configuration in JSON format
       -L, --log             Print HTTP log information # TODO: update documentation
       -l, --list            List all the test flows as a JSON object
