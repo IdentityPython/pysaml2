@@ -44,9 +44,9 @@ Once you have installed all the necessary prerequisites a simple::
 
 will install the basic code.
 
-Note for rhel/centos 6: cffi depends on libffi-devel to compile
+Note for rhel/centos 6: cffi depends on libffi-devel, and cryptography on openssl-devel to compile
 So you might want first to do:
-yum install libffi-devel
+yum install libffi-devel openssl-devel
 
 After this you ought to be able to run the tests without an hitch.
 The tests are based on the pypy test environment, so::
