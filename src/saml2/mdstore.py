@@ -773,7 +773,8 @@ class MetadataStore(object):
         return [m["text"] for m in ad["affiliate_member"]]
 
     def entity_categories(self, entity_id):
-        ext = self.__getitem__(entity_id)["extensions"]
+        ent = self.__getitem__(entity_id)
+        ext = ent["extensions"]
         res = []
         for elem in ext["extension_elements"]:
             if elem["__class__"] == ENTITYATTRIBUTES:
