@@ -216,6 +216,7 @@ def test_schac():
     for ac in acs:
         try:
             res = ac.ava_from(attr)
+            assert res[0] == "schacHomeOrganization"
         except KeyError:
             pass
 

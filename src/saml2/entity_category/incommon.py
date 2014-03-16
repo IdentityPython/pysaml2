@@ -1,10 +1,11 @@
 __author__ = 'rolandh'
 
-INC = "http://id.incommon.org/category/research-and-scholarship"
+RESEARCH_AND_SCHOLARSHIP = "http://id.incommon.org/category/research-and-scholarship"
 
 RELEASE = {
     "": ["eduPersonTargetedID"],
-    INC: ["eduPersonPrincipalName", "eduPersonScopedAffiliation", "mail",
-          "givenName", "sn", "displayName"]
+    RESEARCH_AND_SCHOLARSHIP: ["eduPersonPrincipalName",
+                               "eduPersonScopedAffiliation", "mail",
+                               "givenName", "sn", "displayName"]
 }
 
