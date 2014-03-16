@@ -7,6 +7,7 @@ from attribute_statement_data import *
 from pathutils import full_path
 from saml2.attribute_converter import AttributeConverterNOOP
 from saml2.attribute_converter import to_local
+from saml2.saml import attribute_from_string
 
 
 def _eq(l1,l2):
@@ -205,8 +206,22 @@ def test_noop_attribute_conversion():
             assert attr.attribute_value[0].text == "Roland"
 
 
+ava = """<?xml version='1.0' encoding='UTF-8'?>
+<ns0:Attribute xmlns:ns0="urn:oasis:names:tc:SAML:2.0:assertion" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" FriendlyName="schacHomeOrganization" Name="urn:oid:1.3.6.1.4.1.25178.1.2.9" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"><ns0:AttributeValue xsi:nil="true" xsi:type="xs:string">uu.se</ns0:AttributeValue></ns0:Attribute>"""
+
+
+def test_schac():
+    attr = attribute_from_string(ava)
+    acs = attribute_converter.ac_factory()
+    for ac in acs:
+        try:
+            res = ac.ava_from(attr)
+        except KeyError:
+            pass
+
+
 if __name__ == "__main__":
-    t = TestAC()
-    t.setup_class()
-    t.test_mixed_attributes_1()
-    #test_noop_attribute_conversion()
+    # t = TestAC()
+    # t.setup_class()
+    # t.test_mixed_attributes_1()
+    test_schac()
