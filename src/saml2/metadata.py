@@ -474,7 +474,7 @@ def do_spsso_descriptor(conf, cert=None):
             if val is None:
                 setattr(spsso, key, DEFAULT[key])  # default ?!
             else:
-                strval = "{0:>s}".format(val)
+                strval = "{0:>s}".format(str(val))
                 setattr(spsso, key, strval.lower())
         except KeyError:
             setattr(spsso, key, DEFAULTS[key])
