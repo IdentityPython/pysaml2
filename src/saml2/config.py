@@ -70,7 +70,8 @@ COMMON_ARGS = [
     "verify_encrypt_cert",
     "tmp_cert_file",
     "tmp_key_file",
-    "validate_certificate"
+    "validate_certificate",
+    "extensions"
 ]
 
 SP_ARGS = [
@@ -219,6 +220,7 @@ class Config(object):
         self.tmp_cert_file = None
         self.tmp_key_file = None
         self.validate_certificate = None
+        self.extensions = {}
 
     def setattr(self, context, attr, val):
         if context == "":
@@ -336,6 +338,9 @@ class Config(object):
                     self.serves.append(typ)
                 except KeyError:
                     pass
+
+        if "extensions" in cnf:
+            self.do_extensions(cnf["extensions"])
 
         self.load_complex(cnf, metadata_construction=metadata_construction)
         self.context = self.def_context
@@ -479,6 +484,11 @@ class Config(object):
                     return service, binding
 
         return None, None
+
+    def do_extensions(self, extensions):
+        for key, val in extensions.items():
+            self.extensions[key] = val
+
 
 class SPConfig(Config):
     def_context = "sp"

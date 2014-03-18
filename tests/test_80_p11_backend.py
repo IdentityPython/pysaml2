@@ -4,7 +4,8 @@ Testing CryptoBackendXMLSecurity with SoftHSM as backend
 
 # Command to convert test.pem to PKCS#8 PEM format readable by softhsm :
 #
-#  openssl pkcs8 -topk8 -inform PEM -outform PEM -in test.key -out test.key.p8 -nocrypt
+#  openssl pkcs8 -topk8 -inform PEM -outform PEM -in test.key -out test.key.p8
+# -nocrypt
 #
 
 __author__ = 'leifj'  # based on p11_test from pyXMLSecurity

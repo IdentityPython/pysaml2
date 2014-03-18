@@ -10,8 +10,8 @@ Install PySAML2
 ---------------
 
 For all this to work you need to have Python installed. 
-The development has been done using 2.6.
-There is no 3.X version yet.
+The development has been done using 2.7.
+There is now a 3.X version.
 
 Prerequisites
 ^^^^^^^^^^^^^
@@ -21,19 +21,17 @@ if it's recent enough, or if the Python is too old you have to install it,
 for instance by getting it from the Python Package Instance by using 
 easy_install.
 
-You also need xmlsec which you can download from http://www.aleksey.com/xmlsec/
+You also need xmlsec1 which you can download from http://www.aleksey.com/xmlsec/
 
-If you're on OS X you can get xmlsec installed from MacPorts or Fink.
+If you're on OS X you can get xmlsec1 installed from MacPorts or Fink.
 
 Depending on how you are going to use PySAML2 you might also need
 
 * Mako
 * pyASN1
-* repoze.who (make sure you get 1.0.16 and not 2.0)
-* decorator
+* repoze.who
 * python-memcache
 * memcached
-* M2Crypto
 
 Quick build instructions
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -43,6 +41,10 @@ Once you have installed all the necessary prerequisites a simple::
     python setup.py install
 
 will install the basic code.
+
+Note for rhel/centos 6: cffi depends on libffi-devel, and cryptography on openssl-devel to compile
+So you might want first to do:
+yum install libffi-devel openssl-devel
 
 After this you ought to be able to run the tests without an hitch.
 The tests are based on the pypy test environment, so::

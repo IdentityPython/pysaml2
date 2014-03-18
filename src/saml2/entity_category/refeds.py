@@ -1,6 +1,6 @@
 __author__ = 'rolandh'
 
-RESEARCH_AND_SCHOLARSHIP = "http://id.incommon.org/category/research-and-scholarship"
+RESEARCH_AND_SCHOLARSHIP = "http://refeds.org/category/research-and-scholarship"
 
 RELEASE = {
     "": ["eduPersonTargetedID"],

@@ -2,7 +2,7 @@ __author__ = 'rolandh'
 
 
 NAME = ["givenName", "displayName", "sn"]
-STATIC_ORG_INFO = ["c", "o", "co"]
+STATIC_ORG_INFO = ["c", "o", "co", "norEduOrgAcronym", "schacHomeOrganization"]
 OTHER = ["eduPersonPrincipalName", "eduPersonScopedAffiliation", "mail"]
 
 # These give you access to information
