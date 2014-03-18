@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import argparse
 import base64
-
+import xmldsig as ds
 import re
 import logging
 import time
@@ -24,6 +24,7 @@ from saml2.authn_context import AuthnBroker
 from saml2.authn_context import PASSWORD
 from saml2.authn_context import UNSPECIFIED
 from saml2.authn_context import authn_context_class_ref
+from saml2.extension import pefim
 from saml2.httputil import Response
 from saml2.httputil import NotFound
 from saml2.httputil import geturl
@@ -38,7 +39,7 @@ from saml2.s_utils import rndstr, exception_trace
 from saml2.s_utils import UnknownPrincipal
 from saml2.s_utils import UnsupportedBinding
 from saml2.s_utils import PolicyError
-from saml2.sigver import verify_redirect_signature
+from saml2.sigver import verify_redirect_signature, cert_from_instance, encrypt_cert_from_item
 
 logger = logging.getLogger("saml2.idp")
 
@@ -125,8 +126,9 @@ class Service(object):
             return resp(self.environ, self.start_response)
         else:
             try:
+                _encrypt_cert = encrypt_cert_from_item(_dict["req_info"].message)
                 return self.do(_dict["SAMLRequest"], binding,
-                               _dict["RelayState"])
+                               _dict["RelayState"], encrypt_cert=_encrypt_cert)
             except KeyError:
                 # Can live with no relay state
                 return self.do(_dict["SAMLRequest"], binding)
@@ -151,7 +153,7 @@ class Service(object):
             resp = Response(http_args["data"], headers=http_args["headers"])
         return resp(self.environ, self.start_response)
 
-    def do(self, query, binding, relay_state=""):
+    def do(self, query, binding, relay_state="", encrypt_cert=None):
         pass
 
     def redirect(self):
@@ -277,7 +279,7 @@ class SSO(Service):
 
         return resp_args, _resp
 
-    def do(self, query, binding_in, relay_state=""):
+    def do(self, query, binding_in, relay_state="", encrypt_cert=None):
         try:
             resp_args, _resp = self.verify_request(query, binding_in)
         except UnknownPrincipal, excp:
@@ -297,13 +299,10 @@ class SSO(Service):
             if REPOZE_ID_EQUIVALENT:
                 identity[REPOZE_ID_EQUIVALENT] = self.user
             try:
-                sign_assertion = IDP.config.getattr("sign_assertion", "idp")
-                if sign_assertion is None:
-                    sign_assertion = False
                 _resp = IDP.create_authn_response(
                     identity, userid=self.user,
-                    authn=AUTHN_BROKER[self.environ["idp.authn_ref"]], sign_assertion=sign_assertion,
-                    sign_response=False, **resp_args)
+                    authn=AUTHN_BROKER[self.environ["idp.authn_ref"]], sign_response=False, encrypt_cert=encrypt_cert,
+                    **resp_args)
             except Exception, excp:
                 logging.error(exception_trace(excp))
                 resp = ServiceError("Exception: %s" % (excp,))
@@ -537,7 +536,7 @@ def not_found(environ, start_response):
 #    return subject, sp_entity_id
 
 class SLO(Service):
-    def do(self, request, binding, relay_state=""):
+    def do(self, request, binding, relay_state="", encrypt_cert=None):
         logger.info("--- Single Log Out Service ---")
         try:
             _, body = request.split("\n")
@@ -589,7 +588,7 @@ class SLO(Service):
 
 class NMI(Service):
     
-    def do(self, query, binding, relay_state=""):
+    def do(self, query, binding, relay_state="", encrypt_cert=None):
         logger.info("--- Manage Name ID Service ---")
         req = IDP.parse_manage_name_id_request(query, binding)
         request = req.message
@@ -617,7 +616,7 @@ class NMI(Service):
 
 # Only URI binding
 class AIDR(Service):
-    def do(self, aid, binding, relay_state=""):
+    def do(self, aid, binding, relay_state="", encrypt_cert=None):
         logger.info("--- Assertion ID Service ---")
 
         try:
@@ -646,7 +645,7 @@ class AIDR(Service):
 # ----------------------------------------------------------------------------
 
 class ARS(Service):
-    def do(self, request, binding, relay_state=""):
+    def do(self, request, binding, relay_state="", encrypt_cert=None):
         _req = IDP.parse_artifact_resolve(request, binding)
 
         msg = IDP.create_artifact_response(_req, _req.artifact.text)
@@ -664,7 +663,7 @@ class ARS(Service):
 
 # Only SOAP binding
 class AQS(Service):
-    def do(self, request, binding, relay_state=""):
+    def do(self, request, binding, relay_state="", encrypt_cert=None):
         logger.info("--- Authn Query Service ---")
         _req = IDP.parse_authn_query(request, binding)
         _query = _req.message
@@ -688,7 +687,7 @@ class AQS(Service):
 
 # Only SOAP binding
 class ATTR(Service):
-    def do(self, request, binding, relay_state=""):
+    def do(self, request, binding, relay_state="", encrypt_cert=None):
         logger.info("--- Attribute Query Service ---")
 
         _req = IDP.parse_attribute_query(request, binding)
@@ -721,7 +720,7 @@ class ATTR(Service):
 
 
 class NIM(Service):
-    def do(self, query, binding, relay_state=""):
+    def do(self, query, binding, relay_state="", encrypt_cert=None):
         req = IDP.parse_name_id_mapping_request(query, binding)
         request = req.message
         # Do the necessary stuff

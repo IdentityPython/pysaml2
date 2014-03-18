@@ -65,7 +65,9 @@ COMMON_ARGS = [
     "xmlsec_path",
     "extension_schemas",
     "cert_handler_extra_class",
+    "generate_cert_func",
     "generate_cert_info",
+    "verify_encrypt_cert",
     "tmp_cert_file",
     "tmp_key_file",
     "validate_certificate"
@@ -91,6 +93,8 @@ SP_ARGS = [
 
 AA_IDP_ARGS = [
     "sign_assertion",
+    "sign_response",
+    "encrypt_assertion",
     "want_authn_requests_signed",
     "want_authn_requests_only_with_valid_cert",
     "provided_attributes",
@@ -209,6 +213,8 @@ class Config(object):
         self.allow_unknown_attributes = False
         self.extension_schema = {}
         self.cert_handler_extra_class = None
+        self.verify_encrypt_cert = None
+        self.generate_cert_func = None
         self.generate_cert_info = None
         self.tmp_cert_file = None
         self.tmp_key_file = None

@@ -155,3 +155,9 @@ example/sp/nocert_sp_conf/sp.xml
 example/sp/nocert_sp_conf/sp_conf.py
 
 example/sp/nocert_sp_conf/who.ini
+
+example/sp-repoze/my_sp.xml
+
+example/sp-repoze/pki/localhost.ca.crt
+
+example/sp-repoze/pki/localhost.ca.key

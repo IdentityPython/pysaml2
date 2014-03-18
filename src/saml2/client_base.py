@@ -234,7 +234,9 @@ class Base(Entity):
         client_crt = None
         if "client_crt" in kwargs:
             client_crt = kwargs["client_crt"]
+
         args = {}
+
         try:
             args["assertion_consumer_service_url"] = kwargs[
                 "assertion_consumer_service_urls"][0]
@@ -505,7 +507,7 @@ class Base(Entity):
 
     # ======== response handling ===========
 
-    def parse_authn_request_response(self, xmlstr, binding, outstanding=None):
+    def parse_authn_request_response(self, xmlstr, binding, outstanding=None, outstanding_certs=None):
         """ Deal with an AuthnResponse
 
         :param xmlstr: The reply as a xml string
@@ -525,6 +527,7 @@ class Base(Entity):
         if xmlstr:
             kwargs = {
                 "outstanding_queries": outstanding,
+                "outstanding_certs": outstanding_certs,
                 "allow_unsolicited": self.allow_unsolicited,
                 "want_assertions_signed": self.want_assertions_signed,
                 "return_addrs": self.service_urls(),

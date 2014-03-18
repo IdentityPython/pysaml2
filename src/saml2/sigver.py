@@ -33,12 +33,14 @@ from Crypto.Signature import PKCS1_v1_5
 from Crypto.Util.asn1 import DerSequence
 from Crypto.PublicKey import RSA
 from saml2.cert import OpenSSLWrapper
+from saml2.extension import pefim
 from saml2.saml import EncryptedAssertion
-from saml2.samlp import Response
+from saml2.samlp import Response, response_from_string
 
 import xmldsig as ds
+import xmlenc as enc
 
-from saml2 import samlp, SAMLError
+from saml2 import samlp, SAMLError, extension_elements_to_elements
 from saml2 import class_name
 from saml2 import saml
 from saml2 import ExtensionElement
@@ -765,9 +767,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
                     "--session-key", key_type, "--xml-data", fil,
                     "--node-xpath", ASSERT_XPATH]
 
-        (_stdout, _stderr, output) = self._run_xmlsec(com_list, [tmpl],
-                                                      exception=EncryptError,
-                                                      validate_output=False)
+        (_stdout, _stderr, output) = self._run_xmlsec(com_list, [tmpl], exception=EncryptError, validate_output=False)
 
         os.unlink(fil)
         if not output:
@@ -1011,6 +1011,25 @@ def security_context(conf, debug=None):
         tmp_key_file=conf.tmp_key_file,
         validate_certificate=conf.validate_certificate)
 
+def encrypt_cert_from_item(item):
+    _encrypt_cert = None
+    try:
+        _elem = extension_elements_to_elements(item.extension_elements[0].children,
+                                               [pefim, ds])
+        if len(_elem) == 1:
+            _encrypt_cert = _elem[0].x509_data[0].x509_certificate.text
+        else:
+            certs = cert_from_instance(item)
+            if len(certs) > 0:
+                _encrypt_cert = certs[0]
+        if _encrypt_cert is not None:
+            if _encrypt_cert.find("-----BEGIN CERTIFICATE-----\n") == -1:
+                _encrypt_cert = "-----BEGIN CERTIFICATE-----\n" + _encrypt_cert
+            if _encrypt_cert.find("-----END CERTIFICATE-----\n") == -1:
+                _encrypt_cert = _encrypt_cert + "-----END CERTIFICATE-----\n"
+    except Exception:
+        return None
+    return _encrypt_cert
 
 class CertHandlerExtra(object):
     def __init__(self):
@@ -1480,9 +1499,14 @@ class SecurityContext(object):
             for assertion in (
                 response.assertion or response.encrypted_assertion):
                 if response.encrypted_assertion:
-                    decoded_xml = self.decrypt(
-                        assertion.encrypted_data.to_string())
-                    assertion = saml.assertion_from_string(decoded_xml)
+                    assertion_list = extension_elements_to_elements(assertion.extension_elements, [saml])
+                    if len(assertion_list) > 0:
+                        assertion = saml.assertion_from_string(str(assertion_list[0]))
+                        response.assertion.append(assertion)
+                    else:
+                        decoded_xml = self.decrypt(assertion.encrypted_data.to_string())
+                        assertion = saml.assertion_from_string(decoded_xml)
+                        response.assertion.append(assertion)
 
                 if not assertion.signature:
                     logger.debug("unsigned")
