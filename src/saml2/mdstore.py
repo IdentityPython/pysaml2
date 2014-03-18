@@ -56,6 +56,8 @@ REQ2SRV = {
 
 
 ENTITYATTRIBUTES = "urn:oasis:names:tc:SAML:metadata:attribute&EntityAttributes"
+ENTITY_CATEGORY = "http://macedir.org/entity-category"
+ENTITY_CATEGORY_SUPPORT = "http://macedir.org/entity-category-support"
 
 # ---------------------------------------------------
 
@@ -598,14 +600,14 @@ class MetadataStore(object):
         if binding is None:
             binding = BINDING_HTTP_REDIRECT
         return self.service(entity_id, "idpsso_descriptor",
-                             "single_sign_on_service", binding)
+                            "single_sign_on_service", binding)
 
     def name_id_mapping_service(self, entity_id, binding=None, typ="idpsso"):
         # IDP
         if binding is None:
             binding = BINDING_HTTP_REDIRECT
         return self.service(entity_id, "idpsso_descriptor",
-                             "name_id_mapping_service", binding)
+                            "name_id_mapping_service", binding)
 
     def authn_query_service(self, entity_id, binding=None,
                             typ="authn_authority"):
@@ -613,7 +615,7 @@ class MetadataStore(object):
         if binding is None:
             binding = BINDING_SOAP
         return self.service(entity_id, "authn_authority_descriptor",
-                             "authn_query_service", binding)
+                            "authn_query_service", binding)
 
     def attribute_service(self, entity_id, binding=None,
                           typ="attribute_authority"):
@@ -621,7 +623,7 @@ class MetadataStore(object):
         if binding is None:
             binding = BINDING_HTTP_REDIRECT
         return self.service(entity_id, "attribute_authority_descriptor",
-                             "attribute_service", binding)
+                            "attribute_service", binding)
 
     def authz_service(self, entity_id, binding=None, typ="pdp"):
         # PDP
@@ -774,13 +776,35 @@ class MetadataStore(object):
 
     def entity_categories(self, entity_id):
         ent = self.__getitem__(entity_id)
-        ext = ent["extensions"]
         res = []
-        for elem in ext["extension_elements"]:
-            if elem["__class__"] == ENTITYATTRIBUTES:
-                for attr in elem["attribute"]:
-                    if attr["name"] == "http://macedir.org/entity-category":
-                        res.extend([v["text"] for v in attr["attribute_value"]])
+        try:
+            ext = ent["extensions"]
+        except KeyError:
+            pass
+        else:
+            for elem in ext["extension_elements"]:
+                if elem["__class__"] == ENTITYATTRIBUTES:
+                    for attr in elem["attribute"]:
+                        if attr["name"] == ENTITY_CATEGORY:
+                            res.extend([v["text"] for v in
+                                        attr["attribute_value"]])
+
+        return res
+
+    def supported_entity_categories(self, entity_id):
+        ent = self.__getitem__(entity_id)
+        res = []
+        try:
+            ext = ent["extensions"]
+        except KeyError:
+            pass
+        else:
+            for elem in ext["extension_elements"]:
+                if elem["__class__"] == ENTITYATTRIBUTES:
+                    for attr in elem["attribute"]:
+                        if attr["name"] == ENTITY_CATEGORY_SUPPORT:
+                            res.extend([v["text"] for v in
+                                        attr["attribute_value"]])
 
         return res
 
