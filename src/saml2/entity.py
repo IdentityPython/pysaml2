@@ -839,12 +839,13 @@ class Entity(HTTPBase):
 
             logger.debug("XMLSTR: %s" % xmlstr)
 
-            for encrypted_assertion in response.response.encrypted_assertion:
-                if encrypted_assertion.extension_elements is not None:
-                    assertion_list = extension_elements_to_elements(encrypted_assertion.extension_elements, [saml])
-                    for assertion in assertion_list:
-                        _assertion = saml.assertion_from_string(str(assertion))
-                        response.response.assertion.append(_assertion)
+            if hasattr(response.response, 'encrypted_assertion'):
+                for encrypted_assertion in response.response.encrypted_assertion:
+                    if encrypted_assertion.extension_elements is not None:
+                        assertion_list = extension_elements_to_elements(encrypted_assertion.extension_elements, [saml])
+                        for assertion in assertion_list:
+                            _assertion = saml.assertion_from_string(str(assertion))
+                            response.response.assertion.append(_assertion)
 
             if response:
                 response = response.verify()
