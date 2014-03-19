@@ -427,7 +427,8 @@ class Server(Entity):
     def create_authn_response(self, identity, in_response_to, destination,
                               sp_entity_id, name_id_policy=None, userid=None,
                               name_id=None, authn=None, issuer=None,
-                              sign_response=False, sign_assertion=None, encrypt_cert=None, **kwargs):
+                              sign_response=None, sign_assertion=None, encrypt_cert=None, encrypt_assertion=None,
+                              **kwargs):
         """ Constructs an AuthenticationResponse
 
         :param identity: Information about an user
@@ -465,7 +466,11 @@ class Server(Entity):
         if sign_response is None:
             sign_response = False
 
-        encrypt_assertion = self.config.getattr("encrypt_assertion", "idp")
+        if encrypt_assertion is None:
+            encrypt_assertion = self.config.getattr("encrypt_assertion", "idp")
+        if encrypt_assertion is None:
+            encrypt_assertion = False
+
         if encrypt_assertion:
             if encrypt_cert is not None:
                 verify_encrypt_cert = self.config.getattr("verify_encrypt_cert", "idp")

@@ -1474,7 +1474,7 @@ class SecurityContext(object):
         return self.correctly_signed_message(decoded_xml, "assertion", must,
                                              origdoc, only_valid_cert)
 
-    def correctly_signed_response(self, decoded_xml, must=False, origdoc=None):
+    def correctly_signed_response(self, decoded_xml, must=False, origdoc=None, require_response_signature=False):
         """ Check if a instance is correctly signed, if we have metadata for
         the IdP that sent the info use that, if not use the key that are in
         the message if any.
@@ -1492,26 +1492,18 @@ class SecurityContext(object):
         if response.signature:
             self._check_signature(decoded_xml, response, class_name(response),
                                   origdoc)
+        elif require_response_signature:
+            raise SignatureError("Signature missing for response")
 
         if isinstance(response, Response) and (response.assertion or
                                                    response.encrypted_assertion):
             # Try to find the signing cert in the assertion
             for assertion in (
                 response.assertion or response.encrypted_assertion):
-                if response.encrypted_assertion:
-                    assertion_list = extension_elements_to_elements(assertion.extension_elements, [saml])
-                    if len(assertion_list) > 0:
-                        assertion = saml.assertion_from_string(str(assertion_list[0]))
-                        response.assertion.append(assertion)
-                    else:
-                        decoded_xml = self.decrypt(assertion.encrypted_data.to_string())
-                        assertion = saml.assertion_from_string(decoded_xml)
-                        response.assertion.append(assertion)
-
-                if not assertion.signature:
+                if not hasattr(assertion, 'signature') or not assertion.signature:
                     logger.debug("unsigned")
                     if must:
-                        raise SignatureError("Signature missing")
+                        raise SignatureError("Signature missing for assertion")
                     continue
                 else:
                     logger.debug("signed")

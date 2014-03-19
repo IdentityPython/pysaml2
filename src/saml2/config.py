@@ -80,6 +80,7 @@ SP_ARGS = [
     "idp",
     "aa",
     "subject_data",
+    "want_response_signed",
     "want_assertions_signed",
     "authn_requests_signed",
     "name_form",

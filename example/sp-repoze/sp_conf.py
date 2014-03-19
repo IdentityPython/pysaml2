@@ -78,6 +78,7 @@ CONFIG = {
             #Information needed for generated cert (NO CERT) solution.
             "authn_requests_signed": "true", #Will sign the request!
             "want_assertions_signed": "false", #Demands that the assertion is signed.
+            "want_response_signed": "true",
             "allow_unsolicited": "true", #Allows the message not to be ment for this sp.
             #############################################################
             "name": "LocalTestSPHans",

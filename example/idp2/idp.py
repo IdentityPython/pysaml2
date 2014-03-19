@@ -301,7 +301,7 @@ class SSO(Service):
             try:
                 _resp = IDP.create_authn_response(
                     identity, userid=self.user,
-                    authn=AUTHN_BROKER[self.environ["idp.authn_ref"]], sign_response=False, encrypt_cert=encrypt_cert,
+                    authn=AUTHN_BROKER[self.environ["idp.authn_ref"]], encrypt_cert=encrypt_cert,
                     **resp_args)
             except Exception, excp:
                 logging.error(exception_trace(excp))

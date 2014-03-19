@@ -460,10 +460,16 @@ class Entity(HTTPBase):
             return signed_instance_factory(response, self.sec, to_sign)
 
         if encrypt_assertion:
+            sign_class = [(class_name(response), response.id)]
+            if sign:
+                response.signature = pre_signature_part(response.id, self.sec.my_cert, 1)
             cbxs = CryptoBackendXmlSec1(self.config.xmlsec_binary)
             _, cert_file = make_temp("%s" % encrypt_cert, decode=False)
-            return cbxs.encrypt_assertion(response, cert_file, pre_encryption_part())#template(response.assertion.id))
-            #response = response_from_string(response_str)
+            response = cbxs.encrypt_assertion(response, cert_file, pre_encryption_part())#template(response.assertion.id))
+            if sign:
+                return signed_instance_factory(response, self.sec, sign_class)
+            else:
+                return response
 
         if sign:
             return self.sign(response, to_sign=to_sign)
@@ -811,16 +817,18 @@ class Entity(HTTPBase):
                 raise
 
             xmlstr = self.unravel(xmlstr, binding, response_cls.msgtype)
+            origxml = xmlstr
             if outstanding_certs is not None:
                 _response = samlp.any_response_from_string(xmlstr)
-                _, cert_file = make_temp("%s" % outstanding_certs[_response.in_response_to]["key"], decode=False)
-                cbxs = CryptoBackendXmlSec1(self.config.xmlsec_binary)
-                xmlstr = cbxs.decrypt(xmlstr, cert_file)
+                if len(_response.encrypted_assertion) > 0:
+                    _, cert_file = make_temp("%s" % outstanding_certs[_response.in_response_to]["key"], decode=False)
+                    cbxs = CryptoBackendXmlSec1(self.config.xmlsec_binary)
+                    xmlstr = cbxs.decrypt(xmlstr, cert_file)
             if not xmlstr:  # Not a valid reponse
                 return None
 
             try:
-                response = response.loads(xmlstr, False)
+                response = response.loads(xmlstr, False, origxml=origxml)
             except SigverError, err:
                 logger.error("Signature Error: %s" % err)
                 return None
@@ -830,6 +838,13 @@ class Entity(HTTPBase):
                     return None
 
             logger.debug("XMLSTR: %s" % xmlstr)
+
+            for encrypted_assertion in response.response.encrypted_assertion:
+                if encrypted_assertion.extension_elements is not None:
+                    assertion_list = extension_elements_to_elements(encrypted_assertion.extension_elements, [saml])
+                    for assertion in assertion_list:
+                        _assertion = saml.assertion_from_string(str(assertion))
+                        response.response.assertion.append(_assertion)
 
             if response:
                 response = response.verify()

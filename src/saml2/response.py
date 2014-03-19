@@ -268,6 +268,7 @@ class StatusResponse(object):
         self.in_response_to = None
         self.signature_check = self.sec.correctly_signed_response
         self.require_signature = False
+        self.require_response_signature = False
         self.not_signed = False
         self.asynchop = asynchop
     
@@ -318,7 +319,9 @@ class StatusResponse(object):
         logger.debug("xmlstr: %s" % (self.xmlstr,))
 
         try:
-            self.response = self.signature_check(xmldata, origdoc=origxml, must=self.require_signature)
+            self.response = self.signature_check(xmldata, origdoc=origxml, must=self.require_signature,
+                                                 require_response_signature=self.require_response_signature)
+
         except TypeError:
             raise
         except SignatureError:
@@ -452,7 +455,7 @@ class AuthnResponse(StatusResponse):
                  return_addrs=None, outstanding_queries=None,
                  timeslack=0, asynchop=True, allow_unsolicited=False,
                  test=False, allow_unknown_attributes=False,
-                 want_assertions_signed=False, **kwargs):
+                 want_assertions_signed=False, want_response_signed=False, **kwargs):
 
         StatusResponse.__init__(self, sec_context, return_addrs, timeslack,
                                 asynchop=asynchop)
@@ -469,6 +472,7 @@ class AuthnResponse(StatusResponse):
         self.session_not_on_or_after = 0
         self.allow_unsolicited = allow_unsolicited
         self.require_signature = want_assertions_signed
+        self.require_response_signature = want_response_signed
         self.test = test
         self.allow_unknown_attributes = allow_unknown_attributes
         #

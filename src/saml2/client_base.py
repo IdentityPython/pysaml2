@@ -122,8 +122,9 @@ class Base(Entity):
         self.allow_unsolicited = False
         self.authn_requests_signed = False
         self.want_assertions_signed = False
+        self.want_response_signed = False
         for foo in ["allow_unsolicited", "authn_requests_signed",
-                    "logout_requests_signed", "want_assertions_signed"]:
+                    "logout_requests_signed", "want_assertions_signed", "want_response_signed"]:
             v = self.config.getattr(foo, "sp")
             if v is True or v == 'true':
                 setattr(self, foo, True)
@@ -530,6 +531,7 @@ class Base(Entity):
                 "outstanding_certs": outstanding_certs,
                 "allow_unsolicited": self.allow_unsolicited,
                 "want_assertions_signed": self.want_assertions_signed,
+                "want_response_signed": self.want_response_signed,
                 "return_addrs": self.service_urls(),
                 "entity_id": self.config.entityid,
                 "attribute_converters": self.config.attribute_converters,
