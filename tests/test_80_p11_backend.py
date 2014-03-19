@@ -59,6 +59,10 @@ class FakeConfig():
         self.debug = False
         self.cert_handler_extra_class = None
         self.generate_cert_info = False
+        self.generate_cert_info = False
+        self.tmp_cert_file = None
+        self.tmp_key_file = None
+        self.validate_certificate = False
 
 
 class TestPKCS11():
