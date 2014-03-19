@@ -382,7 +382,7 @@ class Entity(HTTPBase):
             req.destination = destination
 
         if consent:
-            req.consent = consent
+            req.consent = "true"
 
         if extensions:
             req.extensions = extensions
