@@ -276,8 +276,8 @@ class Client(object):
         #self.idp_config.metadata = metadata
 
         if self.args.testsuite:
-            self.testsuite = import_module("sp_test.testsuites.%s" %
-                                       self.args.testsuite)
+            self.testsuite = import_module("sp_test.test_suites.%s" %
+                                           self.args.testsuite)
 
         try:
             self.entity_id = _jc["entity_id"]
