@@ -81,7 +81,8 @@ class Saml2Client(Base):
 
         req = self.create_authn_request(destination, vorg, scoping,
                                         response_binding, nameid_format,
-                                        consent, extensions, sign, **kwargs)
+                                        consent=consent, extensions=extensions,
+                                        sign=sign, **kwargs)
         _req_str = "%s" % req
 
         logger.info("AuthNReq: %s" % _req_str)
