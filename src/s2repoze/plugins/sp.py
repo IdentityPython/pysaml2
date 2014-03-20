@@ -23,7 +23,6 @@ import logging
 import sys
 import platform
 import shelve
-import threading
 import traceback
 import saml2
 from urlparse import parse_qs, urlparse
@@ -129,7 +128,8 @@ class SAML2Plugin(object):
     implements(IChallenger, IIdentifier, IAuthenticator, IMetadataProvider)
     
     def __init__(self, rememberer_name, config, saml_client, wayf, cache,
-                 sid_store=None, discovery="", idp_query_param="", sid_store_cert=None,):
+                 sid_store=None, discovery="", idp_query_param="",
+                 sid_store_cert=None,):
         self.rememberer_name = rememberer_name
         self.wayf = wayf
         self.saml_client = saml_client
@@ -137,7 +137,8 @@ class SAML2Plugin(object):
         self.cache = cache
         self.discosrv = discovery
         self.idp_query_param = idp_query_param
-        self.logout_endpoints = [urlparse(ep)[2] for ep in config.endpoint("single_logout_service")]
+        self.logout_endpoints = [urlparse(ep)[2] for ep in config.endpoint(
+            "single_logout_service")]
         try:
             self.metadata = self.conf.metadata
         except KeyError:
@@ -153,23 +154,19 @@ class SAML2Plugin(object):
 
         self.iam = platform.node()
 
-
     def _get_rememberer(self, environ):
         rememberer = environ['repoze.who.plugins'][self.rememberer_name]
         return rememberer
-
 
     #### IIdentifier ####
     def remember(self, environ, identity):
         rememberer = self._get_rememberer(environ)
         return rememberer.remember(environ, identity)
 
-
     #### IIdentifier ####
     def forget(self, environ, identity):
         rememberer = self._get_rememberer(environ)
         return rememberer.forget(environ, identity)
-
 
     def _get_post(self, environ):
         """
@@ -293,8 +290,8 @@ class SAML2Plugin(object):
                         self.outstanding_queries[sid_] = came_from
                         logger.debug("Redirect to Discovery Service function")
                         eid = _cli.config.entityid
-                        ret = _cli.config.getattr("endpoints",
-                                                  "sp")["discovery_response"][0][0]
+                        ret = _cli.config.getattr(
+                            "endpoints", "sp")["discovery_response"][0][0]
                         ret += "?sid=%s" % sid_
                         loc = _cli.create_discovery_service_request(
                             self.discosrv, eid, **{"return": ret})
@@ -379,22 +376,28 @@ class SAML2Plugin(object):
                         "cert": cert_str,
                         "key": req_key_str
                     }
-                    spcertenc = SPCertEnc(x509_data=ds.X509Data(x509_certificate=ds.X509Certificate(text=cert_str)))
-                    extensions = Extensions(extension_elements=[element_to_extension_element(spcertenc)])
+                    spcertenc = SPCertEnc(x509_data=ds.X509Data(
+                        x509_certificate=ds.X509Certificate(text=cert_str)))
+                    extensions = Extensions(extension_elements=[
+                        element_to_extension_element(spcertenc)])
 
                 if _cli.authn_requests_signed:
                     _sid = saml2.s_utils.sid(_cli.seed)
-                    msg_str = _cli.create_authn_request(dest, vorg=vorg_name, sign=_cli.authn_requests_signed,
-                                                        message_id=_sid, extensions=extensions)
+                    msg_id = msg_str = _cli.create_authn_request(
+                        dest, vorg=vorg_name, sign=_cli.authn_requests_signed,
+                        message_id=_sid, extensions=extensions)
                 else:
-                    req = _cli.create_authn_request(dest, vorg=vorg_name, sign=False, extensions=extensions)
+                    req_id, req = _cli.create_authn_request(
+                        dest, vorg=vorg_name, sign=False, extensions=extensions)
                     msg_str = "%s" % req
-                    _sid = req.id
+                    _sid = req_id
 
                 if cert is not None:
                     self.outstanding_certs[_sid] = cert
 
-                ht_args = _cli.apply_binding(_binding, msg_str, destination=dest, relay_state=came_from)
+                ht_args = _cli.apply_binding(_binding, msg_str,
+                                             destination=dest,
+                                             relay_state=came_from)
 
                 logger.debug("ht_args: %s" % ht_args)
             except Exception, exc:
@@ -402,10 +405,11 @@ class SAML2Plugin(object):
                 raise Exception(
                     "Failed to construct the AuthnRequest: %s" % exc)
 
-
             try:
-                ret = _cli.config.getattr("endpoints","sp")["discovery_response"][0][0]
-                if (environ["PATH_INFO"]) in ret and ret.split(environ["PATH_INFO"])[1] == "":
+                ret = _cli.config.getattr(
+                    "endpoints","sp")["discovery_response"][0][0]
+                if (environ["PATH_INFO"]) in ret and ret.split(
+                        environ["PATH_INFO"])[1] == "":
                     query = parse_qs(environ["QUERY_STRING"])
                     sid = query["sid"][0]
                     came_from = self.outstanding_queries[sid]
@@ -440,7 +444,8 @@ class SAML2Plugin(object):
             # Evaluate the response, returns a AuthnResponse instance
             try:
                 authresp = self.saml_client.parse_authn_request_response(
-                    post["SAMLResponse"], binding, self.outstanding_queries, self.outstanding_certs)
+                    post["SAMLResponse"], binding, self.outstanding_queries,
+                    self.outstanding_certs)
 
             except Exception, excp:
                 logger.exception("Exception: %s" % (excp,))
@@ -476,12 +481,13 @@ class SAML2Plugin(object):
     #### IIdentifier ####
     def identify(self, environ):
         """
-        Tries do the identification 
+        Tries to do the identification
         """
         #logger = environ.get('repoze.who.logger', '')
 
         query = parse_dict_querystring(environ)
-        if ("CONTENT_LENGTH" not in environ or not environ["CONTENT_LENGTH"]) and "SAMLResponse" not in query and "SAMLRequest" not in query:
+        if ("CONTENT_LENGTH" not in environ or not environ["CONTENT_LENGTH"]) and \
+                        "SAMLResponse" not in query and "SAMLRequest" not in query:
             logger.debug('[identify] get or empty post')
             return {}
         
@@ -517,7 +523,9 @@ class SAML2Plugin(object):
             if logout and "SAMLRequest" in post:
                 print("logout request received")
                 try:
-                    response = self.saml_client.handle_logout_request(post["SAMLRequest"], self.saml_client.users.subjects()[0], binding)
+                    response = self.saml_client.handle_logout_request(
+                        post["SAMLRequest"],
+                        self.saml_client.users.subjects()[0], binding)
                     environ['samlsp.pending'] = self._handle_logout(response)
                     return {}
                 except:
@@ -537,15 +545,18 @@ class SAML2Plugin(object):
                 #if self.debug:
                 try:
                     if logout:
-                        response = self.saml_client.parse_logout_request_response(post["SAMLResponse"], binding)
+                        response = self.saml_client.parse_logout_request_response(
+                            post["SAMLResponse"], binding)
                         if response:
-                            action = self.saml_client.handle_logout_response(response)
-                            request = None
+                            action = self.saml_client.handle_logout_response(
+                                response)
+
                             if type(action) == dict:
                                 request = self._handle_logout(action)
                             else:
                                 #logout complete
-                                request = HTTPSeeOther(headers=[('Location', "/")])
+                                request = HTTPSeeOther(headers=[
+                                    ('Location', "/")])
                             if request:
                                 environ['samlsp.pending'] = request
                             return {}
@@ -621,9 +632,9 @@ class SAML2Plugin(object):
             # remove cookie and demand re-authentication
             pass
         
-# @return
-# used 2 times : one to get the ticket, the other to validate it
-    def _service_url(self, environ, qstr=None):
+    # used 2 times : one to get the ticket, the other to validate it
+    @staticmethod
+    def _service_url(environ, qstr=None):
         if qstr is not None:
             url = construct_url(environ, querystring=qstr)
         else:
@@ -641,7 +652,8 @@ class SAML2Plugin(object):
         else:
             return None
 
-    def _handle_logout(self, responses):
+    @staticmethod
+    def _handle_logout(responses):
         if 'data' in responses:
             ht_args = responses
         else:
@@ -651,6 +663,7 @@ class SAML2Plugin(object):
             return HTTPSeeOther(headers=ht_args["headers"])
         else:
             return ht_args["data"]
+
 
 def make_plugin(remember_name=None,  # plugin for remember
                 cache="",  # cache

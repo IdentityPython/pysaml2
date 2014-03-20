@@ -529,7 +529,7 @@ class SSO(object):
                 entity_id=entity_id)
             logger.debug("binding: %s, destination: %s" % (_binding,
                                                            destination))
-            req = _cli.create_authn_request(destination, vorg=vorg_name)
+            req_id, req = _cli.create_authn_request(destination, vorg=vorg_name)
             _rstate = rndstr()
             self.cache.relay_state[_rstate] = came_from
             ht_args = _cli.apply_binding(_binding, "%s" % req, destination,
