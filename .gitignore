@@ -161,3 +161,11 @@ example/sp-repoze/my_sp.xml
 example/sp-repoze/pki/localhost.ca.crt
 
 example/sp-repoze/pki/localhost.ca.key
+
+example/sp-repoze/sp.xml
+
+example/sp-repoze/sp.xml
+
+example/sp-repoze/sp_conf.py
+
+example/sp-repoze/sp_conf.py
