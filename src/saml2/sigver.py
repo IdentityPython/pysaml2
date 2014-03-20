@@ -1076,7 +1076,7 @@ class CertHandler(object):
             self._verify_cert = verify_cert is True
             self._security_context = security_context
             self._osw = OpenSSLWrapper()
-            if key_file is not None:
+            if key_file is not None and os.path.isfile(key_file):
                 self._key_str = self._osw.read_str_from_file(key_file, key_type)
             else:
                 self._key_str = ""
@@ -1382,99 +1382,114 @@ class SecurityContext(object):
                                      only_valid_cert=only_valid_cert)
 
     def correctly_signed_authn_request(self, decoded_xml, must=False,
-                                       origdoc=None, only_valid_cert=False):
+                                       origdoc=None, only_valid_cert=False,
+                                       **kwargs):
         return self.correctly_signed_message(decoded_xml, "authn_request",
                                              must, origdoc,
                                              only_valid_cert=only_valid_cert)
 
     def correctly_signed_authn_query(self, decoded_xml, must=False,
-                                     origdoc=None, only_valid_cert=False):
+                                     origdoc=None, only_valid_cert=False,
+                                     **kwargs):
         return self.correctly_signed_message(decoded_xml, "authn_query",
                                              must, origdoc, only_valid_cert)
 
     def correctly_signed_logout_request(self, decoded_xml, must=False,
-                                        origdoc=None, only_valid_cert=False):
+                                        origdoc=None, only_valid_cert=False,
+                                        **kwargs):
         return self.correctly_signed_message(decoded_xml, "logout_request",
                                              must, origdoc, only_valid_cert)
 
     def correctly_signed_logout_response(self, decoded_xml, must=False,
-                                         origdoc=None, only_valid_cert=False):
+                                         origdoc=None, only_valid_cert=False,
+                                         **kwargs):
         return self.correctly_signed_message(decoded_xml, "logout_response",
                                              must, origdoc, only_valid_cert)
 
     def correctly_signed_attribute_query(self, decoded_xml, must=False,
-                                         origdoc=None, only_valid_cert=False):
+                                         origdoc=None, only_valid_cert=False,
+                                         **kwargs):
         return self.correctly_signed_message(decoded_xml, "attribute_query",
                                              must, origdoc, only_valid_cert)
 
     def correctly_signed_authz_decision_query(self, decoded_xml, must=False,
                                               origdoc=None,
-                                              only_valid_cert=False):
+                                              only_valid_cert=False,
+                                              **kwargs):
         return self.correctly_signed_message(decoded_xml,
                                              "authz_decision_query", must,
                                              origdoc, only_valid_cert)
 
     def correctly_signed_authz_decision_response(self, decoded_xml, must=False,
                                                  origdoc=None,
-                                                 only_valid_cert=False):
+                                                 only_valid_cert=False,
+                                                 **kwargs):
         return self.correctly_signed_message(decoded_xml,
                                              "authz_decision_response", must,
                                              origdoc, only_valid_cert)
 
     def correctly_signed_name_id_mapping_request(self, decoded_xml, must=False,
                                                  origdoc=None,
-                                                 only_valid_cert=False):
+                                                 only_valid_cert=False,
+                                                 **kwargs):
         return self.correctly_signed_message(decoded_xml,
                                              "name_id_mapping_request",
                                              must, origdoc, only_valid_cert)
 
     def correctly_signed_name_id_mapping_response(self, decoded_xml, must=False,
                                                   origdoc=None,
-                                                  only_valid_cert=False):
+                                                  only_valid_cert=False,
+                                                  **kwargs):
         return self.correctly_signed_message(decoded_xml,
                                              "name_id_mapping_response",
                                              must, origdoc, only_valid_cert)
 
     def correctly_signed_artifact_request(self, decoded_xml, must=False,
-                                          origdoc=None, only_valid_cert=False):
+                                          origdoc=None, only_valid_cert=False,
+                                          **kwargs):
         return self.correctly_signed_message(decoded_xml,
                                              "artifact_request",
                                              must, origdoc, only_valid_cert)
 
     def correctly_signed_artifact_response(self, decoded_xml, must=False,
-                                           origdoc=None, only_valid_cert=False):
+                                           origdoc=None, only_valid_cert=False,
+                                           **kwargs):
         return self.correctly_signed_message(decoded_xml,
                                              "artifact_response",
                                              must, origdoc, only_valid_cert)
 
     def correctly_signed_manage_name_id_request(self, decoded_xml, must=False,
                                                 origdoc=None,
-                                                only_valid_cert=False):
+                                                only_valid_cert=False,
+                                                **kwargs):
         return self.correctly_signed_message(decoded_xml,
                                              "manage_name_id_request",
                                              must, origdoc, only_valid_cert)
 
     def correctly_signed_manage_name_id_response(self, decoded_xml, must=False,
                                                  origdoc=None,
-                                                 only_valid_cert=False):
+                                                 only_valid_cert=False,
+                                                 **kwargs):
         return self.correctly_signed_message(decoded_xml,
                                              "manage_name_id_response", must,
                                              origdoc, only_valid_cert)
 
     def correctly_signed_assertion_id_request(self, decoded_xml, must=False,
                                               origdoc=None,
-                                              only_valid_cert=False):
+                                              only_valid_cert=False,
+                                              **kwargs):
         return self.correctly_signed_message(decoded_xml,
                                              "assertion_id_request", must,
                                              origdoc, only_valid_cert)
 
     def correctly_signed_assertion_id_response(self, decoded_xml, must=False,
                                                origdoc=None,
-                                               only_valid_cert=False):
+                                               only_valid_cert=False, **kwargs):
         return self.correctly_signed_message(decoded_xml, "assertion", must,
                                              origdoc, only_valid_cert)
 
-    def correctly_signed_response(self, decoded_xml, must=False, origdoc=None, require_response_signature=False):
+    def correctly_signed_response(self, decoded_xml, must=False, origdoc=None,only_valid_cert=False,
+                                  require_response_signature=False, **kwargs):
         """ Check if a instance is correctly signed, if we have metadata for
         the IdP that sent the info use that, if not use the key that are in
         the message if any.
