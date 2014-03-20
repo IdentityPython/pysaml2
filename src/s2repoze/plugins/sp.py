@@ -27,6 +27,8 @@ import threading
 import traceback
 import saml2
 from urlparse import parse_qs, urlparse
+from saml2.md import Extensions
+import xmldsig as ds
 
 from StringIO import StringIO
 
@@ -35,6 +37,7 @@ from paste.httpexceptions import HTTPNotImplemented
 from paste.httpexceptions import HTTPInternalServerError
 from paste.request import parse_dict_querystring
 from paste.request import construct_url
+from saml2.extension.pefim import SPCertEnc
 from saml2.httputil import SeeOther
 from saml2.client_base import ECP_SERVICE
 from zope.interface import implements
@@ -42,7 +45,7 @@ from zope.interface import implements
 from repoze.who.interfaces import IChallenger, IIdentifier, IAuthenticator
 from repoze.who.interfaces import IMetadataProvider
 
-from saml2 import ecp, BINDING_HTTP_REDIRECT
+from saml2 import ecp, BINDING_HTTP_REDIRECT, element_to_extension_element
 from saml2 import BINDING_HTTP_POST
 
 from saml2.client import Saml2Client
@@ -126,7 +129,7 @@ class SAML2Plugin(object):
     implements(IChallenger, IIdentifier, IAuthenticator, IMetadataProvider)
     
     def __init__(self, rememberer_name, config, saml_client, wayf, cache,
-                 sid_store=None, discovery="", idp_query_param=""):
+                 sid_store=None, discovery="", idp_query_param="", sid_store_cert=None,):
         self.rememberer_name = rememberer_name
         self.wayf = wayf
         self.saml_client = saml_client
@@ -143,6 +146,11 @@ class SAML2Plugin(object):
             self.outstanding_queries = shelve.open(sid_store, writeback=True)
         else:
             self.outstanding_queries = {}
+        if sid_store_cert:
+            self.outstanding_certs = shelve.open(sid_store_cert, writeback=True)
+        else:
+            self.outstanding_certs = {}
+
         self.iam = platform.node()
 
 
@@ -362,14 +370,29 @@ class SAML2Plugin(object):
                 dest = srvs[0]["location"]
                 logger.debug("destination: %s" % dest)
 
+                extensions = None
+                cert = None
+
+                if _cli.config.generate_cert_func is not None:
+                    cert_str, req_key_str = _cli.config.generate_cert_func()
+                    cert = {
+                        "cert": cert_str,
+                        "key": req_key_str
+                    }
+                    spcertenc = SPCertEnc(x509_data=ds.X509Data(x509_certificate=ds.X509Certificate(text=cert_str)))
+                    extensions = Extensions(extension_elements=[element_to_extension_element(spcertenc)])
+
                 if _cli.authn_requests_signed:
                     _sid = saml2.s_utils.sid(_cli.seed)
                     msg_str = _cli.create_authn_request(dest, vorg=vorg_name, sign=_cli.authn_requests_signed,
-                                                        message_id=_sid)
+                                                        message_id=_sid, extensions=extensions)
                 else:
-                    req = _cli.create_authn_request(dest, vorg=vorg_name, sign=False)
+                    req = _cli.create_authn_request(dest, vorg=vorg_name, sign=False, extensions=extensions)
                     msg_str = "%s" % req
                     _sid = req.id
+
+                if cert is not None:
+                    self.outstanding_certs[_sid] = cert
 
                 ht_args = _cli.apply_binding(_binding, msg_str, destination=dest, relay_state=came_from)
 
@@ -417,7 +440,8 @@ class SAML2Plugin(object):
             # Evaluate the response, returns a AuthnResponse instance
             try:
                 authresp = self.saml_client.parse_authn_request_response(
-                    post["SAMLResponse"], binding, self.outstanding_queries)
+                    post["SAMLResponse"], binding, self.outstanding_queries, self.outstanding_certs)
+
             except Exception, excp:
                 logger.exception("Exception: %s" % (excp,))
                 raise

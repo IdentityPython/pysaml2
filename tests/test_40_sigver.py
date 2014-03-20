@@ -96,6 +96,7 @@ class FakeConfig():
     key_file = PRIV_KEY
     debug = False
     cert_handler_extra_class = None
+    generate_cert_func = None
     generate_cert_info = False
     tmp_cert_file = None
     tmp_key_file = None

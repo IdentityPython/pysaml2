@@ -25,6 +25,7 @@ import shelve
 import threading
 
 from saml2.eptid import EptidShelve, Eptid
+from saml2.saml import EncryptedAssertion
 from saml2.sdb import SessionStorage
 from saml2.schema import soapenv
 
@@ -44,7 +45,7 @@ from saml2.request import AuthnQuery
 
 from saml2.s_utils import MissingValue, Unknown, rndstr
 
-from saml2.sigver import pre_signature_part, signed_instance_factory
+from saml2.sigver import pre_signature_part, signed_instance_factory, CertificateError, CryptoBackendXmlSec1
 
 from saml2.assertion import Assertion
 from saml2.assertion import Policy
@@ -282,7 +283,7 @@ class Server(Entity):
                         sp_entity_id, identity=None, name_id=None,
                         status=None, authn=None, issuer=None, policy=None,
                         sign_assertion=False, sign_response=False,
-                        best_effort=False):
+                        best_effort=False, encrypt_assertion=False, encrypt_cert=None):
         """ Create a response. A layer of indirection.
         
         :param in_response_to: The session identifier of the request
@@ -352,7 +353,8 @@ class Server(Entity):
             self.session_db.store_assertion(assertion, to_sign)
 
         return self._response(in_response_to, consumer_url, status, issuer,
-                              sign_response, to_sign, **args)
+                              sign_response, to_sign, encrypt_assertion=encrypt_assertion,
+                              encrypt_cert=encrypt_cert, **args)
 
     # ------------------------------------------------------------------------
 
@@ -425,7 +427,7 @@ class Server(Entity):
     def create_authn_response(self, identity, in_response_to, destination,
                               sp_entity_id, name_id_policy=None, userid=None,
                               name_id=None, authn=None, issuer=None,
-                              sign_response=False, sign_assertion=False,
+                              sign_response=None, sign_assertion=None, encrypt_cert=None, encrypt_assertion=None,
                               **kwargs):
         """ Constructs an AuthenticationResponse
 
@@ -453,6 +455,32 @@ class Server(Entity):
             best_effort = kwargs["best_effort"]
         except KeyError:
             best_effort = False
+
+        if sign_assertion is None:
+            sign_assertion = self.config.getattr("sign_assertion", "idp")
+        if sign_assertion is None:
+            sign_assertion = False
+
+        if sign_response is None:
+            sign_response = self.config.getattr("sign_response", "idp")
+        if sign_response is None:
+            sign_response = False
+
+        if encrypt_assertion is None:
+            encrypt_assertion = self.config.getattr("encrypt_assertion", "idp")
+        if encrypt_assertion is None:
+            encrypt_assertion = False
+
+        if encrypt_assertion:
+            if encrypt_cert is not None:
+                verify_encrypt_cert = self.config.getattr("verify_encrypt_cert", "idp")
+                if verify_encrypt_cert is not None:
+                    if not verify_encrypt_cert(encrypt_cert):
+                        raise CertificateError("Invalid certificate for encryption!")
+            else:
+                raise CertificateError("No certificate for encryption!")
+        else:
+            encrypt_assertion = False
 
         if not name_id:
             try:
@@ -493,8 +521,7 @@ class Server(Entity):
 
         try:
             _authn = authn
-
-
+            response = None
             if (sign_assertion or sign_response) and self.sec.cert_handler.generate_cert():
                 with self.lock:
                     self.sec.cert_handler.update_cert(True)
@@ -508,8 +535,8 @@ class Server(Entity):
                                                 policy=policy,
                                                 sign_assertion=sign_assertion,
                                                 sign_response=sign_response,
-                                                best_effort=best_effort)
-
+                                                best_effort=best_effort,
+                                                encrypt_assertion=encrypt_assertion, encrypt_cert=encrypt_cert)
             return self._authn_response(in_response_to,  # in_response_to
                                         destination,  # consumer_url
                                         sp_entity_id,  # sp_entity_id
@@ -520,7 +547,8 @@ class Server(Entity):
                                         policy=policy,
                                         sign_assertion=sign_assertion,
                                         sign_response=sign_response,
-                                        best_effort=best_effort)
+                                        best_effort=best_effort,
+                                        encrypt_assertion=encrypt_assertion, encrypt_cert=encrypt_cert)
 
         except MissingValue, exc:
             return self.create_error_response(in_response_to, destination,

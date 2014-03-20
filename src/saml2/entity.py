@@ -1,5 +1,6 @@
 import base64
 from binascii import hexlify
+import copy
 import logging
 from hashlib import sha1
 from saml2.metadata import ENDPOINTS
@@ -19,10 +20,10 @@ from saml2 import soap
 from saml2 import element_to_extension_element
 from saml2 import extension_elements_to_elements
 
-from saml2.saml import NameID
+from saml2.saml import NameID, EncryptedAssertion
 from saml2.saml import Issuer
 from saml2.saml import NAMEID_FORMAT_ENTITY
-from saml2.response import LogoutResponse
+from saml2.response import LogoutResponse, AuthnResponse
 from saml2.time_util import instant
 from saml2.s_utils import sid
 from saml2.s_utils import UnravelError
@@ -31,7 +32,7 @@ from saml2.s_utils import rndstr
 from saml2.s_utils import success_status_factory
 from saml2.s_utils import decode_base64_and_inflate
 from saml2.s_utils import UnsupportedBinding
-from saml2.samlp import AuthnRequest, AuthzDecisionQuery, AuthnQuery
+from saml2.samlp import AuthnRequest, AuthzDecisionQuery, AuthnQuery, response_from_string
 from saml2.samlp import AssertionIDRequest
 from saml2.samlp import ManageNameIDRequest
 from saml2.samlp import NameIDMappingRequest
@@ -49,7 +50,8 @@ from saml2 import VERSION
 from saml2 import class_name
 from saml2.config import config_factory
 from saml2.httpbase import HTTPBase
-from saml2.sigver import security_context, response_factory, SigverError
+from saml2.sigver import security_context, response_factory, SigverError, CryptoBackendXmlSec1, make_temp, \
+    pre_encryption_part
 from saml2.sigver import pre_signature_part
 from saml2.sigver import signed_instance_factory
 from saml2.virtual_org import VirtualOrg
@@ -427,7 +429,7 @@ class Entity(HTTPBase):
                 msg.extension_elements = extensions
 
     def _response(self, in_response_to, consumer_url=None, status=None,
-                  issuer=None, sign=False, to_sign=None, **kwargs):
+                  issuer=None, sign=False, to_sign=None, encrypt_assertion=False, encrypt_cert=None, **kwargs):
         """ Create a Response.
 
         :param in_response_to: The session identifier of the request
@@ -454,10 +456,23 @@ class Entity(HTTPBase):
 
         self._add_info(response, **kwargs)
 
+        if not sign and to_sign and not encrypt_assertion:
+            return signed_instance_factory(response, self.sec, to_sign)
+
+        if encrypt_assertion:
+            sign_class = [(class_name(response), response.id)]
+            if sign:
+                response.signature = pre_signature_part(response.id, self.sec.my_cert, 1)
+            cbxs = CryptoBackendXmlSec1(self.config.xmlsec_binary)
+            _, cert_file = make_temp("%s" % encrypt_cert, decode=False)
+            response = cbxs.encrypt_assertion(response, cert_file, pre_encryption_part())#template(response.assertion.id))
+            if sign:
+                return signed_instance_factory(response, self.sec, sign_class)
+            else:
+                return response
+
         if sign:
             return self.sign(response, to_sign=to_sign)
-        elif to_sign:
-            return signed_instance_factory(response, self.sec, to_sign)
         else:
             return response
 
@@ -762,7 +777,7 @@ class Entity(HTTPBase):
 
     # ------------------------------------------------------------------------
 
-    def _parse_response(self, xmlstr, response_cls, service, binding, **kwargs):
+    def _parse_response(self, xmlstr, response_cls, service, binding, outstanding_certs=None, **kwargs):
         """ Deal with a Response
 
         :param xmlstr: The response as a xml string
@@ -802,11 +817,18 @@ class Entity(HTTPBase):
                 raise
 
             xmlstr = self.unravel(xmlstr, binding, response_cls.msgtype)
+            origxml = xmlstr
+            if outstanding_certs is not None:
+                _response = samlp.any_response_from_string(xmlstr)
+                if len(_response.encrypted_assertion) > 0:
+                    _, cert_file = make_temp("%s" % outstanding_certs[_response.in_response_to]["key"], decode=False)
+                    cbxs = CryptoBackendXmlSec1(self.config.xmlsec_binary)
+                    xmlstr = cbxs.decrypt(xmlstr, cert_file)
             if not xmlstr:  # Not a valid reponse
                 return None
 
             try:
-                response = response.loads(xmlstr, False)
+                response = response.loads(xmlstr, False, origxml=origxml)
             except SigverError, err:
                 logger.error("Signature Error: %s" % err)
                 return None
@@ -816,6 +838,14 @@ class Entity(HTTPBase):
                     return None
 
             logger.debug("XMLSTR: %s" % xmlstr)
+
+            if hasattr(response.response, 'encrypted_assertion'):
+                for encrypted_assertion in response.response.encrypted_assertion:
+                    if encrypted_assertion.extension_elements is not None:
+                        assertion_list = extension_elements_to_elements(encrypted_assertion.extension_elements, [saml])
+                        for assertion in assertion_list:
+                            _assertion = saml.assertion_from_string(str(assertion))
+                            response.response.assertion.append(_assertion)
 
             if response:
                 response = response.verify()

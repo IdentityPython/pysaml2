@@ -558,6 +558,8 @@ class SamlBase(ExtensionContainer):
                 except AttributeError:
                     # Backwards compatibility with ET < 1.3
                     ElementTree._namespace_map[uri] = prefix
+                except ValueError:
+                    pass
         
         return ElementTree.tostring(self._to_element_tree(), encoding="UTF-8")
 
