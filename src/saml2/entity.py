@@ -1,6 +1,5 @@
 import base64
 from binascii import hexlify
-import copy
 import logging
 from hashlib import sha1
 from saml2.metadata import ENDPOINTS
@@ -20,10 +19,10 @@ from saml2 import soap
 from saml2 import element_to_extension_element
 from saml2 import extension_elements_to_elements
 
-from saml2.saml import NameID, EncryptedAssertion
+from saml2.saml import NameID
 from saml2.saml import Issuer
 from saml2.saml import NAMEID_FORMAT_ENTITY
-from saml2.response import LogoutResponse, AuthnResponse
+from saml2.response import LogoutResponse
 from saml2.time_util import instant
 from saml2.s_utils import sid
 from saml2.s_utils import UnravelError
@@ -32,7 +31,9 @@ from saml2.s_utils import rndstr
 from saml2.s_utils import success_status_factory
 from saml2.s_utils import decode_base64_and_inflate
 from saml2.s_utils import UnsupportedBinding
-from saml2.samlp import AuthnRequest, AuthzDecisionQuery, AuthnQuery, response_from_string
+from saml2.samlp import AuthnRequest
+from saml2.samlp import AuthzDecisionQuery
+from saml2.samlp import AuthnQuery
 from saml2.samlp import AssertionIDRequest
 from saml2.samlp import ManageNameIDRequest
 from saml2.samlp import NameIDMappingRequest
@@ -50,8 +51,12 @@ from saml2 import VERSION
 from saml2 import class_name
 from saml2.config import config_factory
 from saml2.httpbase import HTTPBase
-from saml2.sigver import security_context, response_factory, SigverError, CryptoBackendXmlSec1, make_temp, \
-    pre_encryption_part
+from saml2.sigver import security_context
+from saml2.sigver import response_factory
+from saml2.sigver import SigverError
+from saml2.sigver import CryptoBackendXmlSec1
+from saml2.sigver import make_temp
+from saml2.sigver import pre_encryption_part
 from saml2.sigver import pre_signature_part
 from saml2.sigver import signed_instance_factory
 from saml2.virtual_org import VirtualOrg
@@ -367,7 +372,8 @@ class Entity(HTTPBase):
         :param sign: Whether the request should be signed or not.
         :param sign_prepare: Whether the signature should be prepared or not.
         :param kwargs: Key word arguments specific to one request type
-        :return: An instance of the request_cls
+        :return: A tuple containing the request ID and an instance of the
+            request_cls
         """
         if not message_id:
             message_id = sid(self.seed)
@@ -377,6 +383,7 @@ class Entity(HTTPBase):
                 kwargs[key] = val
 
         req = request_cls(**kwargs)
+        reqid = req.id
 
         if destination:
             req.destination = destination
@@ -388,12 +395,13 @@ class Entity(HTTPBase):
             req.extensions = extensions
 
         if sign:
-            return self.sign(req, sign_prepare=sign_prepare)
+            return reqid, self.sign(req, sign_prepare=sign_prepare)
         else:
             logger.info("REQUEST: %s" % req)
-            return req
+            return reqid, req
 
-    def _filter_args(self, instance, extensions=None, **kwargs):
+    @staticmethod
+    def _filter_args(instance, extensions=None, **kwargs):
         args = {}
         if extensions is None:
             extensions = []
@@ -933,7 +941,7 @@ class Entity(HTTPBase):
             raise SAMLError("Missing endpoint location")
 
         _sid = sid()
-        msg = self.create_artifact_resolve(artifact, destination, _sid)
+        mid, msg = self.create_artifact_resolve(artifact, destination, _sid)
         return self.send_using_soap(msg, destination)
 
     def parse_artifact_resolve(self, txt, **kwargs):

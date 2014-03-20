@@ -24,7 +24,7 @@ def test():
                                               BINDING_HTTP_REDIRECT)
 
     destination = srvs[0]["location"]
-    req = sp.create_authn_request(destination, id="id1")
+    req_id, req = sp.create_authn_request(destination, id="id1")
 
     try:
         key = sp.sec.key

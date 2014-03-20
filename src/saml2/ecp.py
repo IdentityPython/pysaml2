@@ -115,9 +115,8 @@ def ecp_auth_request(cls, entityid=None, relay_state="", sign=False):
     logger.info("entityid: %s, binding: %s" % (entityid, BINDING_SOAP))
         
     location = cls._sso_location(entityid, binding=BINDING_SOAP)
-    authn_req = cls.create_authn_request(location,
-                                         binding=BINDING_PAOS,
-                                         service_url_binding=BINDING_PAOS)
+    req_id, authn_req = cls.create_authn_request(
+        location, binding=BINDING_PAOS, service_url_binding=BINDING_PAOS)
 
     body = soapenv.Body()
     body.extension_elements = [element_to_extension_element(authn_req)]
@@ -128,7 +127,7 @@ def ecp_auth_request(cls, entityid=None, relay_state="", sign=False):
 
     soap_envelope = soapenv.Envelope(header=header, body=body)
 
-    return authn_req.id, "%s" % soap_envelope
+    return req_id, "%s" % soap_envelope
 
 
 def handle_ecp_authn_response(cls, soap_message, outstanding=None):

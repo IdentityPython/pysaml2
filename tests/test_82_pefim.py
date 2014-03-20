@@ -26,7 +26,7 @@ spcertenc = SPCertEnc(
 extensions = Extensions(
     extension_elements=[element_to_extension_element(spcertenc)])
 
-req = client.create_authn_request(
+req_id, req = client.create_authn_request(
     "http://www.example.com/sso",
     "urn:mace:example.com:it:tek",
     nameid_format=saml.NAMEID_FORMAT_PERSISTENT,

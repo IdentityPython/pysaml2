@@ -17,11 +17,11 @@ def test_basic():
     nameid = NameID(format=NAMEID_FORMAT_TRANSIENT, text="foobar")
     newid = NewID(text="Barfoo")
 
-    mid = sp.create_manage_name_id_request(destination, name_id=nameid,
+    mid, mreq = sp.create_manage_name_id_request(destination, name_id=nameid,
                                            new_id=newid)
 
-    print mid
-    rargs = sp.apply_binding(binding, "%s" % mid, destination, "")
+    print mreq
+    rargs = sp.apply_binding(binding, "%s" % mreq, destination, "")
 
     # --------- @IDP --------------
 
@@ -29,7 +29,7 @@ def test_basic():
 
     print _req.message
 
-    assert mid.id == _req.message.id
+    assert mid == _req.message.id
 
 def test_flow():
     sp = Saml2Client(config_file="servera_conf")
@@ -41,11 +41,11 @@ def test_flow():
     nameid = NameID(format=NAMEID_FORMAT_TRANSIENT, text="foobar")
     newid = NewID(text="Barfoo")
 
-    mid = sp.create_manage_name_id_request(destination, name_id=nameid,
+    mid, midq = sp.create_manage_name_id_request(destination, name_id=nameid,
                                            new_id=newid)
 
-    print mid
-    rargs = sp.apply_binding(binding, "%s" % mid, destination, "")
+    print midq
+    rargs = sp.apply_binding(binding, "%s" % midq, destination, "")
 
     # --------- @IDP --------------
 

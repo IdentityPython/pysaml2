@@ -79,7 +79,7 @@ class Saml2Client(Base):
 
         destination = self._sso_location(entityid, binding)
 
-        req = self.create_authn_request(destination, vorg, scoping,
+        reqid, req = self.create_authn_request(destination, vorg, scoping,
                                         response_binding, nameid_format,
                                         consent=consent, extensions=extensions,
                                         sign=sign, **kwargs)
@@ -89,7 +89,7 @@ class Saml2Client(Base):
 
         info = self.apply_binding(binding, _req_str, destination, relay_state)
 
-        return req.id, info
+        return reqid, info
 
     def global_logout(self, name_id, reason="", expire=None, sign=None):
         """ More or less a layer of indirection :-/
@@ -161,10 +161,9 @@ class Saml2Client(Base):
 
                 destination = destinations(srvs)[0]
                 logger.info("destination to provider: %s" % destination)
-                request = self.create_logout_request(destination, entity_id,
-                                                     name_id=name_id,
-                                                     reason=reason,
-                                                     expire=expire)
+                req_id, request = self.create_logout_request(
+                    destination, entity_id, name_id=name_id, reason=reason,
+                    expire=expire)
                 
                 #to_sign = []
                 if binding.startswith("http://"):
@@ -178,7 +177,7 @@ class Saml2Client(Base):
                 else:
                     srequest = "%s" % request
 
-                relay_state = self._relay_state(request.id)
+                relay_state = self._relay_state(req_id)
 
                 http_info = self.apply_binding(binding, srequest, destination,
                                                relay_state)
@@ -196,7 +195,7 @@ class Saml2Client(Base):
                         logger.info("NOT OK response from %s" % destination)
 
                 else:
-                    self.state[request.id] = {"entity_id": entity_id,
+                    self.state[req_id] = {"entity_id": entity_id,
                                               "operation": "SLO",
                                               "entity_ids": entity_ids,
                                               "name_id": name_id,
@@ -264,7 +263,7 @@ class Saml2Client(Base):
         except KeyError:
             response_args = None
 
-        query = _create_func(destination, **kwargs)
+        qid, query = _create_func(destination, **kwargs)
 
         response = self.send_using_soap(query, destination)
 

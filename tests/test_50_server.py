@@ -124,7 +124,7 @@ class TestServer1():
         assert status.status_code.value == samlp.STATUS_SUCCESS
 
     def test_parse_faulty_request(self):
-        authn_request = self.client.create_authn_request(
+        req_id, authn_request = self.client.create_authn_request(
             destination="http://www.example.com", id="id1")
 
         # should raise an error because faulty spentityid
@@ -137,7 +137,7 @@ class TestServer1():
                _dict["SAMLRequest"][0], binding)
 
     def test_parse_faulty_request_to_err_status(self):
-        authn_request = self.client.create_authn_request(
+        req_id, authn_request = self.client.create_authn_request(
             destination="http://www.example.com")
 
         binding = BINDING_HTTP_REDIRECT
@@ -163,7 +163,7 @@ class TestServer1():
         assert status_code.status_code.value == samlp.STATUS_UNKNOWN_PRINCIPAL
 
     def test_parse_ok_request(self):
-        authn_request = self.client.create_authn_request(
+        req_id, authn_request = self.client.create_authn_request(
             message_id="id1", destination="http://localhost:8088/sso")
 
         print authn_request
@@ -378,7 +378,7 @@ class TestServer1():
         }
         self.client.users.add_information_about_person(sinfo)
 
-        logout_request = self.client.create_logout_request(
+        req_id, logout_request = self.client.create_logout_request(
             destination="http://localhost:8088/slop", name_id=nid,
             issuer_entity_id="urn:mace:example.com:saml:roland:idp",
             reason="I'm tired of this")
@@ -404,7 +404,7 @@ class TestServer1():
         sp = client.Saml2Client(config_file="server_conf")
         sp.users.add_information_about_person(sinfo)
 
-        logout_request = sp.create_logout_request(
+        req_id, logout_request = sp.create_logout_request(
             name_id=nid, destination="http://localhost:8088/slo",
             issuer_entity_id="urn:mace:example.com:saml:roland:idp",
             reason="I'm tired of this")
@@ -483,7 +483,7 @@ class TestServerLogout():
 
     def test_1(self):
         server = Server("idp_slo_redirect_conf")
-        request = _logout_request("sp_slo_redirect_conf")
+        req_id, request = _logout_request("sp_slo_redirect_conf")
         print request
         bindings = [BINDING_HTTP_REDIRECT]
         response = server.create_logout_response(request, bindings)

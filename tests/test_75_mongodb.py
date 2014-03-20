@@ -26,7 +26,7 @@ def test_flow():
     idp1.ident.mdb.db.drop()
 
     # -- dummy request ---
-    orig_req = sp.create_authn_request(idp1.config.entityid)
+    req_id, orig_req = sp.create_authn_request(idp1.config.entityid)
 
     # == Create an AuthnRequest response
 

@@ -230,7 +230,7 @@ class Base(Entity):
             of fulfilling the request, to create a new identifier to represent
             the principal.
         :param kwargs: Extra key word arguments
-        :return: <samlp:AuthnRequest> instance
+        :return: tuple of request ID and <samlp:AuthnRequest> instance
         """
         client_crt = None
         if "client_crt" in kwargs:
@@ -304,13 +304,14 @@ class Base(Entity):
         except KeyError:
             pass
 
+        rid = ""
         if (sign and self.sec.cert_handler.generate_cert()) or client_crt is not None:
             with self.lock:
                 self.sec.cert_handler.update_cert(True, client_crt)
                 if client_crt is not None:
                     sign_prepare = True
-                return self._message(AuthnRequest, destination, message_id, consent,
-                                     extensions, sign, sign_prepare,
+                return self._message(AuthnRequest, destination, message_id,
+                                     consent, extensions, sign, sign_prepare,
                                      protocol_binding=binding,
                                      scoping=scoping, **args)
         return self._message(AuthnRequest, destination, message_id, consent,
@@ -343,7 +344,7 @@ class Base(Entity):
         :param extensions: Possible extensions
         :param sign: Whether the query should be signed or not.
         :param sign_prepare: Whether the Signature element should be added.
-        :return: An AttributeQuery instance
+        :return: Tuple of request ID and an AttributeQuery instance
         """
 
         if name_id is None:
@@ -666,7 +667,7 @@ class Base(Entity):
             # SingleSignOnService
             _, location = self.pick_binding("single_sign_on_service",
                                             [_binding], entity_id=entityid)
-            authn_req = self.create_authn_request(
+            req_id, authn_req = self.create_authn_request(
                 location, service_url_binding=BINDING_PAOS, **kwargs)
 
         # ----------------------------------------
@@ -677,7 +678,7 @@ class Base(Entity):
                                                         [paos_request,
                                                          relay_state])
 
-        return authn_req.id, "%s" % soap_envelope
+        return req_id, "%s" % soap_envelope
 
     def parse_ecp_authn_response(self, txt, outstanding=None):
         rdict = soap.class_instances_from_soap_enveloped_saml_thingies(txt,
@@ -757,7 +758,8 @@ class Base(Entity):
         params = urlencode(args)
         return "%s?%s" % (url, params)
 
-    def parse_discovery_service_response(self, url="", query="",
+    @staticmethod
+    def parse_discovery_service_response(url="", query="",
                                          returnIDParam="entityID"):
         """
         Deal with the response url from a Discovery Service

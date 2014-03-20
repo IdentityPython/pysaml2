@@ -21,7 +21,7 @@ def test_base_request():
 
     nameid = NameID(format=NAMEID_FORMAT_TRANSIENT, text="foobar")
 
-    nmr = sp.create_name_id_mapping_request(policy, nameid, destination)
+    mid, nmr = sp.create_name_id_mapping_request(policy, nameid, destination)
 
     print nmr
 
@@ -41,7 +41,7 @@ def test_request_response():
 
     nameid = NameID(format=NAMEID_FORMAT_TRANSIENT, text="foobar")
 
-    nmr = sp.create_name_id_mapping_request(policy, nameid, destination)
+    mid, nmr = sp.create_name_id_mapping_request(policy, nameid, destination)
 
     print nmr
 

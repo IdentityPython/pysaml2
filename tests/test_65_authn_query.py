@@ -53,7 +53,7 @@ def test_basic():
     subject = Subject(text="abc",
                       name_id=NameID(format=NAMEID_FORMAT_TRANSIENT))
 
-    aq = sp.create_authn_query(subject, destination, authn_context)
+    _id, aq = sp.create_authn_query(subject, destination, authn_context)
 
     print aq
 
@@ -102,7 +102,7 @@ def test_flow():
 
     subject = aresp.assertion.subject
 
-    aq = sp.create_authn_query(subject, destination, authn_context)
+    aq_id, aq = sp.create_authn_query(subject, destination, authn_context)
 
     print aq
 
