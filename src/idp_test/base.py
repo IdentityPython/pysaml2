@@ -105,7 +105,7 @@ class Conversation(tool.Conversation):
         try:
             req = self.oper.args["message"]
         except KeyError:
-            req = self.qfunc(**self.qargs)
+            req_id, req = self.qfunc(**self.qargs)
 
         self.request = self.oper.pre_processing(req, self.args)
         str_req = "%s" % self.request
