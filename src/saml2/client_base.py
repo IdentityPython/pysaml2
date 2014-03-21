@@ -37,11 +37,7 @@ import saml2
 import time
 from saml2.soap import make_soap_enveloped_saml_thingy
 
-try:
-    from urlparse import parse_qs
-except ImportError:
-    # Compatibility with Python <= 2.5
-    from cgi import parse_qs
+from urlparse import parse_qs
 
 from saml2.s_utils import signature, UnravelError
 from saml2.s_utils import do_attributes
@@ -124,7 +120,8 @@ class Base(Entity):
         self.want_assertions_signed = False
         self.want_response_signed = False
         for foo in ["allow_unsolicited", "authn_requests_signed",
-                    "logout_requests_signed", "want_assertions_signed", "want_response_signed"]:
+                    "logout_requests_signed", "want_assertions_signed",
+                    "want_response_signed"]:
             v = self.config.getattr(foo, "sp")
             if v is True or v == 'true':
                 setattr(self, foo, True)
@@ -304,8 +301,8 @@ class Base(Entity):
         except KeyError:
             pass
 
-        rid = ""
-        if (sign and self.sec.cert_handler.generate_cert()) or client_crt is not None:
+        if (sign and self.sec.cert_handler.generate_cert()) or \
+                client_crt is not None:
             with self.lock:
                 self.sec.cert_handler.update_cert(True, client_crt)
                 if client_crt is not None:
@@ -442,15 +439,11 @@ class Base(Entity):
         :param assertion_id_refs:
         :return: One ID ref
         """
-#        id_refs = [AssertionIDRef(text=s) for s in assertion_id_refs]
-#
-#        return self._message(AssertionIDRequest, destination, id, consent,
-#                             extensions, sign, assertion_id_ref=id_refs )
 
         if isinstance(assertion_id_refs, basestring):
-            return assertion_id_refs
+            return 0, assertion_id_refs
         else:
-            return assertion_id_refs[0]
+            return 0, assertion_id_refs[0]
 
     def create_authn_query(self, subject, destination=None, authn_context=None,
                            session_index="", message_id=0, consent=None,
@@ -509,7 +502,8 @@ class Base(Entity):
 
     # ======== response handling ===========
 
-    def parse_authn_request_response(self, xmlstr, binding, outstanding=None, outstanding_certs=None):
+    def parse_authn_request_response(self, xmlstr, binding, outstanding=None,
+                                     outstanding_certs=None):
         """ Deal with an AuthnResponse
 
         :param xmlstr: The reply as a xml string
@@ -536,7 +530,8 @@ class Base(Entity):
                 "return_addrs": self.service_urls(),
                 "entity_id": self.config.entityid,
                 "attribute_converters": self.config.attribute_converters,
-                "allow_unknown_attributes": self.config.allow_unknown_attributes,
+                "allow_unknown_attributes":
+                    self.config.allow_unknown_attributes,
             }
             try:
                 resp = self._parse_response(xmlstr, AuthnResponse,
@@ -654,6 +649,10 @@ class Base(Entity):
 
         try:
             authn_req = kwargs["authn_req"]
+            try:
+                req_id = authn_req.id
+            except AttributeError:
+                req_id = 0  # Unknown but since it's SOAP it doesn't matter
         except KeyError:
             try:
                 _binding = kwargs["binding"]
@@ -697,7 +696,8 @@ class Base(Entity):
 
         return response, _relay_state
 
-    def can_handle_ecp_response(self, response):
+    @staticmethod
+    def can_handle_ecp_response(response):
         try:
             accept = response.headers["accept"]
         except KeyError:
@@ -715,7 +715,8 @@ class Base(Entity):
     # IDP discovery
     # ----------------------------------------------------------------------
 
-    def create_discovery_service_request(self, url, entity_id, **kwargs):
+    @staticmethod
+    def create_discovery_service_request(url, entity_id, **kwargs):
         """
         Created the HTTP redirect URL needed to send the user to the
         discovery service.
