@@ -386,7 +386,7 @@ class SAML2Plugin(object):
                     req_id, msg_str = _cli.create_authn_request(
                         dest, vorg=vorg_name, sign=_cli.authn_requests_signed,
                         message_id=_sid, extensions=extensions)
-                    req_id = _sid
+                    _sid = req_id 
                 else:
                     req_id, req = _cli.create_authn_request(
                         dest, vorg=vorg_name, sign=False, extensions=extensions)
