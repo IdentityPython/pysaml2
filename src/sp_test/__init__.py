@@ -186,6 +186,9 @@ class Client(object):
             root_logger.addHandler(memoryhandler)
             root_logger.setLevel(logging.DEBUG)
 
+        self.testsuite = import_module("sp_test.test_suites.%s" %
+                                       self.args.testsuite)
+
         if self.args.metadata:
             return self.make_meta()
         elif self.args.list:
@@ -274,10 +277,6 @@ class Client(object):
         metadata[0] = md
         self.idp.metadata = metadata
         #self.idp_config.metadata = metadata
-
-        if self.args.testsuite:
-            self.testsuite = import_module("sp_test.test_suites.%s" %
-                                           self.args.testsuite)
 
         try:
             self.entity_id = _jc["entity_id"]
