@@ -69,9 +69,18 @@ def _since_epoch(cdate):
 
     cdate = cdate[5:]
     try:
-        t = time.strptime(cdate, "%d-%b-%Y %H:%M:%S %Z")
+        t = time.strptime(cdate, "%d-%b-%Y %H:%M:%S %Z")   # e.g. 18-Apr-2014 12:30:51 GMT
     except ValueError:
-        t = time.strptime(cdate, "%d-%b-%y %H:%M:%S %Z")
+        try:
+            t = time.strptime(cdate, "%d-%b-%y %H:%M:%S %Z")   # e.g. 18-Apr-14 12:30:51 GMT
+        except ValueError:
+            try:
+                t = time.strptime(cdate, "%d %b %Y %H:%M:%S %Z")   # e.g. 18 Apr 2014 12:30:51 GMT
+            except ValueError:
+                raise Exception, 'ValueError: Date "{0}" does not match any of '.format(cdate) + \
+                                 '"%d-%b-%Y %H:%M:%S %Z", ' + \
+                                 '"%d-%b-%y %H:%M:%S %Z", ' + \
+                                 '"%d %b %Y %H:%M:%S %Z".'
     #return int(time.mktime(t))
     return calendar.timegm(t)
 
