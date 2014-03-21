@@ -67,7 +67,7 @@ def _since_epoch(cdate):
         if len(cdate) < 5:
             return utc_now()
 
-    cdate = cdate[5:]
+    cdate = cdate[5:] # assume short weekday, i.e. do not support obsolete RFC 1036 date format
     try:
         t = time.strptime(cdate, "%d-%b-%Y %H:%M:%S %Z")   # e.g. 18-Apr-2014 12:30:51 GMT
     except ValueError:
