@@ -33,7 +33,7 @@ setup(
         "Development Status :: 4 - Beta",
         "License :: OSI Approved :: Apache Software License",
         "Topic :: Software Development :: Libraries :: Python Modules"],
-    install_requires = ["pysaml2",
+    install_requires = ["pysaml2 >= 2",
                         "mechanize",
                         "argparse",
                         "beautifulsoup4",

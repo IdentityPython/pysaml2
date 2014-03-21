@@ -157,7 +157,7 @@ class AuthnResponse_NameIDformat_foo(AuthnResponse):
 
 class AuthnResponse_without_SubjectConfirmationData_1(AuthnResponse):
     def pre_processing(self, message, **kwargs):
-        _confirmation = message.assertion.subject.subject_confirmation
+        _confirmation = message.assertion.subject.subject_confirmation[0]
         _confirmation.subject_confirmation_data = None
         _confirmation.method = SCM_SENDER_VOUCHES
         return message
@@ -177,9 +177,11 @@ class AuthnResponse_rnd_Response_inresponseto(AuthnResponse):
         return message
 
 
-class AuthnResponse_rnd_Response_assertion_inresponseto(AuthnResponse):
+class AuthnResponse_rnd_SubjectConfirmationData_inresponseto(AuthnResponse):
     def pre_processing(self, message, **kwargs):
-        message.assertion.in_response_to = rndstr(16)
+        _scs = message.assertion.subject.subject_confirmation
+        for _sc in _scs:
+            _sc.subject_confirmation_data.in_response_to = rndstr(16)
         return message
 
 
@@ -415,7 +417,7 @@ StatusCode is not success""",
         "name": ("SP should not accept an assertion InResponseTo ",
                  "which is chosen randomly"),
         "sequence": [(Login, AuthnRequest,
-                      AuthnResponse_rnd_Response_assertion_inresponseto,
+                      AuthnResponse_rnd_SubjectConfirmationData_inresponseto,
                       check.ErrorResponse)],
         "tests": {"pre": [], "post": []}
     },
