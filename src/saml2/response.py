@@ -873,7 +873,9 @@ class AuthnResponse(StatusResponse):
 
         correct = 0
         for subject_conf in self.assertion.subject.subject_confirmation:
-            if subject_conf.subject_confirmation_data.address:
+            if subject_conf.subject_confirmation_data is None:
+                correct += 1  # In reality undefined
+            elif subject_conf.subject_confirmation_data.address:
                 if subject_conf.subject_confirmation_data.address == address:
                     correct += 1
             else:
