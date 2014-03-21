@@ -82,10 +82,12 @@ class Client(object):
                                   help="Print debug information")
         self._parser.add_argument("-H",
                                   dest="pretty",
-                                  action='store_true')
+                                  action='store_true',
+                                  help="Human readable status output")
         self._parser.add_argument("-i",
                                   dest="insecure",
-                                  action='store_true')
+                                  action='store_true',
+                                  help="do not verify TLS certificates")
         self._parser.add_argument('-J',
                                   dest="json_config_file",
                                   help="Script configuration")
