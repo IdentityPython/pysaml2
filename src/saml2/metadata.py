@@ -456,13 +456,13 @@ def do_spsso_descriptor(conf, cert=None):
                                                  ENDPOINTS["sp"]).items():
             setattr(spsso, endpoint, instlist)
 
-    # ext = do_endpoints(endps, ENDPOINT_EXT["sp"])
-    # if ext:
-    #     if spsso.extensions is None:
-    #         spsso.extensions = md.Extensions()
-    #     for vals in ext.values():
-    #         for val in vals:
-    #             spsso.extensions.add_extension_element(val)
+    ext = do_endpoints(endps, ENDPOINT_EXT["sp"])
+    if ext:
+        if spsso.extensions is None:
+            spsso.extensions = md.Extensions()
+        for vals in ext.values():
+            for val in vals:
+                spsso.extensions.add_extension_element(val)
 
     if cert:
         encryption_type = conf.encryption_type
