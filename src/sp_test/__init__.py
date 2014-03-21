@@ -82,10 +82,12 @@ class Client(object):
                                   help="Print debug information")
         self._parser.add_argument("-H",
                                   dest="pretty",
-                                  action='store_true')
+                                  action='store_true',
+                                  help="Human readable status output")
         self._parser.add_argument("-i",
                                   dest="insecure",
-                                  action='store_true')
+                                  action='store_true',
+                                  help="do not verify TLS certificates")
         self._parser.add_argument('-J',
                                   dest="json_config_file",
                                   help="Script configuration")
@@ -281,7 +283,7 @@ class Client(object):
         try:
             self.entity_id = _jc["entity_id"]
             # Verify its the correct metadata
-            assert self.entity_id in md.entity.keys()
+            assert self.entity_id in md.entity.keys(), "Entityid {0} not found in {1}".format(self.entity_id, ', '.join(md.entity.keys()))
         except KeyError:
             if len(md.entity.keys()) == 1:
                 self.entity_id = md.entity.keys()[0]
