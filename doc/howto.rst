@@ -255,6 +255,7 @@ Synopsis::
       -c TD_CONFIG, --config Test driver configuration module at the current directory or the path specified
                             with the -P option. Do not use relative paths or filename extension
       -d, --debug           Print debug information to stderr
+      -H, --prettyprint     Human readable status output
       -h, --help            show this help message and exit
       -i, --insecure        do not check TLS certificate (overriding -C option)
       -J TT_CONFIG_FILE     Test target configuration in JSON format
