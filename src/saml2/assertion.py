@@ -541,7 +541,8 @@ class Assertion(dict):
     def __init__(self, dic=None):
         dict.__init__(self, dic)
     
-    def _authn_context_decl(self, decl, authn_auth=None):
+    @staticmethod
+    def _authn_context_decl(decl, authn_auth=None):
         """
         Construct the authn context with a authn context declaration
         :param decl: The authn context declaration

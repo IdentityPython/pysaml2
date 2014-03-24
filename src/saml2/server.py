@@ -521,7 +521,6 @@ class Server(Entity):
 
         try:
             _authn = authn
-            response = None
             if (sign_assertion or sign_response) and self.sec.cert_handler.generate_cert():
                 with self.lock:
                     self.sec.cert_handler.update_cert(True)
@@ -536,7 +535,8 @@ class Server(Entity):
                                                 sign_assertion=sign_assertion,
                                                 sign_response=sign_response,
                                                 best_effort=best_effort,
-                                                encrypt_assertion=encrypt_assertion, encrypt_cert=encrypt_cert)
+                                                encrypt_assertion=encrypt_assertion,
+                                                encrypt_cert=encrypt_cert)
             return self._authn_response(in_response_to,  # in_response_to
                                         destination,  # consumer_url
                                         sp_entity_id,  # sp_entity_id
@@ -548,7 +548,8 @@ class Server(Entity):
                                         sign_assertion=sign_assertion,
                                         sign_response=sign_response,
                                         best_effort=best_effort,
-                                        encrypt_assertion=encrypt_assertion, encrypt_cert=encrypt_cert)
+                                        encrypt_assertion=encrypt_assertion,
+                                        encrypt_cert=encrypt_cert)
 
         except MissingValue, exc:
             return self.create_error_response(in_response_to, destination,
