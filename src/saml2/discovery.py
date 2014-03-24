@@ -62,7 +62,8 @@ class DiscoveryServer(Entity):
 
     # -------------------------------------------------------------------------
 
-    def create_discovery_service_response(self, return_url=None,
+    @staticmethod
+    def create_discovery_service_response(return_url=None,
                                           returnIDParam="entityID",
                                           entity_id=None, **kwargs):
         if return_url is None:
@@ -86,4 +87,14 @@ class DiscoveryServer(Entity):
             if endp:
                 return True
 
+        return False
+
+    def verify_return(self, entity_id, return_url):
+        for endp in self.metadata.discovery_response(entity_id):
+            try:
+                assert return_url.startswith(endp["location"])
+            except AssertionError:
+                pass
+            else:
+                return True
         return False
