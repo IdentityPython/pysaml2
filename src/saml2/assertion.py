@@ -24,7 +24,7 @@ import xmlenc
 from saml2 import saml
 
 from saml2.time_util import instant, in_a_while
-from saml2.attribute_converter import from_local
+from saml2.attribute_converter import from_local, get_local_name
 from saml2.s_utils import sid, MissingValue
 from saml2.s_utils import factory
 from saml2.s_utils import assertion_factory
@@ -78,7 +78,7 @@ def _match(attr, ava):
     return None
 
 
-def filter_on_attributes(ava, required=None, optional=None):
+def filter_on_attributes(ava, required=None, optional=None, acs=None):
     """ Filter
     
     :param ava: An attribute value assertion as a dictionary
@@ -98,18 +98,23 @@ def filter_on_attributes(ava, required=None, optional=None):
         nform = ""
         for nform in ["friendly_name", "name"]:
             try:
-                _fn = _match(attr[nform], ava)
+                _name = attr[nform]
             except KeyError:
-                pass
-            else:
-                if _fn:
-                    try:
-                        values = [av["text"] for av in attr["attribute_value"]]
-                    except KeyError:
-                        values = []
-                    res[_fn] = _filter_values(ava[_fn], values, True)
-                    found = True
-                    break
+                if nform == "friendly_name":
+                    _name = get_local_name(acs, attr["name"],
+                                           attr["name_format"])
+                else:
+                    continue
+
+            _fn = _match(_name, ava)
+            if _fn:
+                try:
+                    values = [av["text"] for av in attr["attribute_value"]]
+                except KeyError:
+                    values = []
+                res[_fn] = _filter_values(ava[_fn], values, True)
+                found = True
+                break
 
         if not found:
             raise MissingValue("Required attribute missing: '%s'" % (
@@ -278,7 +283,8 @@ class Policy(object):
             self.compile(restrictions)
         else:
             self._restrictions = None
-    
+        self.acs = []
+
     def compile(self, restrictions):
         """ This is only for IdPs or AAs, and it's about limiting what
         is returned to the SP.
@@ -508,7 +514,8 @@ class Policy(object):
         ava = filter_attribute_value_assertions(ava, _rest)
         
         if required or optional:
-            ava = filter_on_attributes(ava, required, optional)
+            logger.debug("required: %s, optional: %s" % (required, optional))
+            ava = filter_on_attributes(ava, required, optional, self.acs)
         
         return ava
     
@@ -553,8 +560,10 @@ class Assertion(dict):
     
     def __init__(self, dic=None):
         dict.__init__(self, dic)
-    
-    def _authn_context_decl(self, decl, authn_auth=None):
+        self.acs = []
+
+    @staticmethod
+    def _authn_context_decl(decl, authn_auth=None):
         """
         Construct the authn context with a authn context declaration
         :param decl: The authn context declaration
@@ -739,6 +748,8 @@ class Assertion(dict):
         :param metadata: Metadata to use
         :return: The resulting AVA after the policy is applied
         """
+
+        policy.acs = self.acs
         ava = policy.restrict(self, sp_entity_id, metadata)
         self.update(ava)
         return ava
