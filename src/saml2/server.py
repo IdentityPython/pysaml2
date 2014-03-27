@@ -308,6 +308,7 @@ class Server(Entity):
         #if identity:
         _issuer = self._issuer(issuer)
         ast = Assertion(identity)
+        ast.acs = self.config.getattr("attribute_converters", "idp")
         if policy is None:
             policy = Policy()
         try:
