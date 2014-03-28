@@ -93,32 +93,33 @@ def filter_on_attributes(ava, required=None, optional=None, acs=None):
     if required is None:
         required = []
 
+    nform = "friendly_name"
     for attr in required:
-        found = False
-        nform = ""
-        for nform in ["friendly_name", "name"]:
+        try:
+            _name = attr[nform]
+        except KeyError:
+            if nform == "friendly_name":
+                _name = get_local_name(acs, attr["name"],
+                                       attr["name_format"])
+            else:
+                continue
+
+        _fn = _match(_name, ava)
+        if not _fn:  # In the unlikely case that someone has provided us
+                     # with URIs as attribute names
+            _fn = _match(attr["name"], ava)
+
+        if _fn:
             try:
-                _name = attr[nform]
+                values = [av["text"] for av in attr["attribute_value"]]
             except KeyError:
-                if nform == "friendly_name":
-                    _name = get_local_name(acs, attr["name"],
-                                           attr["name_format"])
-                else:
-                    continue
-
-            _fn = _match(_name, ava)
-            if _fn:
-                try:
-                    values = [av["text"] for av in attr["attribute_value"]]
-                except KeyError:
-                    values = []
-                res[_fn] = _filter_values(ava[_fn], values, True)
-                found = True
-                break
-
-        if not found:
-            raise MissingValue("Required attribute missing: '%s'" % (
-                attr[nform],))
+                values = []
+            res[_fn] = _filter_values(ava[_fn], values, True)
+            continue
+        else:
+            desc = "Required attribute missing: '%s' (%s)" % (attr["name"],
+                                                              _name)
+            raise MissingValue(desc)
 
     if optional is None:
         optional = []
