@@ -35,7 +35,5 @@ CONFIG = {
     "cert_file": "pki/mycert.pem",
     "xmlsec_binary": xmlsec_path,
     "metadata": {"local": ["../idp2/idp.xml"]},
-    #"metadata": {"mdfile": ["./swamid2.md"]},
-    #"metadata": {"local": ["./swamid-2.0.xml"]},
     "name_form": NAME_FORMAT_URI,
 }
