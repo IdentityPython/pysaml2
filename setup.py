@@ -46,7 +46,8 @@ install_requires = [
     'pycrypto',  # 'Crypto'
     'pytz',
     'pyOpenSSL',
-    'python-dateutil'
+    'python-dateutil',
+    'argparse'
 ]
 
 tests_require = [
