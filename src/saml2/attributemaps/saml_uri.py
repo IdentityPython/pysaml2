@@ -177,6 +177,7 @@ MAP = {
         'edupersonaffiliation': EDUPERSON_OID+'1',
         'eduPersonPrincipalName': EDUPERSON_OID+'6',
         'edupersonprincipalname': EDUPERSON_OID+'6',
+        'eppn': EDUPERSON_OID+'6',
         'localityName': X500ATTR_OID+'7',
         'owner': X500ATTR_OID+'32',
         'norEduOrgUnitUniqueNumber': NOREDUPERSON_OID+'2',

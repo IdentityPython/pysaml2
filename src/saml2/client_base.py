@@ -243,7 +243,7 @@ class Base(Entity):
             try:
                 args["assertion_consumer_service_url"] = kwargs[
                     "assertion_consumer_service_url"]
-                del kwargs["assertion_consumer_service_urls"]
+                del kwargs["assertion_consumer_service_url"]
             except KeyError:
                 try:
                     args["attribute_consuming_service_index"] = str(kwargs[
@@ -300,6 +300,9 @@ class Base(Entity):
             del args["id"]
         except KeyError:
             pass
+
+        if sign is None:
+            sign = self.authn_requests_signed
 
         if (sign and self.sec.cert_handler.generate_cert()) or \
                 client_crt is not None:

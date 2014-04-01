@@ -23,6 +23,7 @@ from saml2.saml import NameID
 from saml2.saml import Issuer
 from saml2.saml import NAMEID_FORMAT_ENTITY
 from saml2.response import LogoutResponse
+from saml2.response import UnsolicitedResponse
 from saml2.time_util import instant
 from saml2.s_utils import sid
 from saml2.s_utils import UnravelError
@@ -839,11 +840,14 @@ class Entity(HTTPBase):
                 response = response.loads(xmlstr, False, origxml=origxml)
             except SigverError, err:
                 logger.error("Signature Error: %s" % err)
-                return None
+                raise
+            except UnsolicitedResponse:
+                logger.error("Unsolicited response")
+                raise
             except Exception, err:
                 if "not well-formed" in "%s" % err:
                     logger.error("Not well-formed XML")
-                    return None
+                    raise
 
             logger.debug("XMLSTR: %s" % xmlstr)
 

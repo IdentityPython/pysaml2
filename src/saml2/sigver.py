@@ -1011,6 +1011,7 @@ def security_context(conf, debug=None):
         tmp_key_file=conf.tmp_key_file,
         validate_certificate=conf.validate_certificate)
 
+
 def encrypt_cert_from_item(item):
     _encrypt_cert = None
     try:
@@ -1030,6 +1031,7 @@ def encrypt_cert_from_item(item):
     except Exception:
         return None
     return _encrypt_cert
+
 
 class CertHandlerExtra(object):
     def __init__(self):
@@ -1488,7 +1490,8 @@ class SecurityContext(object):
         return self.correctly_signed_message(decoded_xml, "assertion", must,
                                              origdoc, only_valid_cert)
 
-    def correctly_signed_response(self, decoded_xml, must=False, origdoc=None,only_valid_cert=False,
+    def correctly_signed_response(self, decoded_xml, must=False, origdoc=None,
+                                  only_valid_cert=False,
                                   require_response_signature=False, **kwargs):
         """ Check if a instance is correctly signed, if we have metadata for
         the IdP that sent the info use that, if not use the key that are in
