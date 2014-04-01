@@ -18,6 +18,7 @@ Contents:
 
    howto
    install
+   saml2test
 
 Indices and tables
 ==================
