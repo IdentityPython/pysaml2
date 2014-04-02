@@ -93,7 +93,7 @@ def dict_to_table(ava, lev=0, width=1):
 def handle_static(environ, start_response, path):
     """
     Creates a response for a static file. There might be a longer path
-    then just /static/... if so strip the path leading up to static.
+    then just /static/... - if so strip the path leading up to static.
 
     :param environ: wsgi enviroment
     :param start_response: wsgi start response
@@ -645,7 +645,7 @@ def application(environ, start_response):
     The main WSGI application. Dispatch the current request to
     the functions from above.
 
-    If nothing matches call the `not_found` function.
+    If nothing matches, call the `not_found` function.
     
     :param environ: The HTTP application environment
     :param start_response: The application to run when the handling of the 
@@ -689,7 +689,7 @@ PORT = service_conf.PORT
 SERVER_CERT = service_conf.SERVER_CERT
 SERVER_KEY = service_conf.SERVER_KEY
 # This is of course the certificate chain for the CA that signed
-# you cert and all the way up to the top
+# your cert and all the way up to the top
 CERT_CHAIN = service_conf.CERT_CHAIN
 
 if __name__ == '__main__':

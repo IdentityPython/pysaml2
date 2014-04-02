@@ -103,5 +103,4 @@ def test_valid_anytype():
     assert valid_anytype("-1234")
     assert valid_anytype("P1Y2M3DT10H30M")
     assert valid_anytype("urn:oasis:names:tc:SAML:2.0:attrname-format:uri")
-    
-    
+

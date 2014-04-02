@@ -12,10 +12,10 @@ If you have not done it yet, read the :ref:`install`
 Well, now you have it installed and you want to do something.
 
 And I'm sorry to tell you this; but there isn't really a lot you can do with 
-this code on it's own.
+this code on its own.
 
 Sure you can send a AuthenticationRequest to an IdentityProvider or a 
-AttributeQuery to an AttributeAuthority but in order to get what they
+AttributeQuery to an AttributeAuthority, but in order to get what they
 return you have to sit behind a Web server. Well that is not really true since
 the AttributeQuery would be over SOAP and you would get the result over the
 connection you have to the AttributeAuthority.
@@ -29,7 +29,7 @@ But it can be used in a non-WSGI environment too.
 
 So you will find descriptions of both cases here.
 
-The configuration is the same disregarding whether you are using PySAML2 in a 
+The configuration is the same regardless of whether you are using PySAML2 in a 
 WSGI or non-WSGI environment.
 
 .. toctree::

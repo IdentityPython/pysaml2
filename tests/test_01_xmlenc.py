@@ -206,4 +206,4 @@ def test_6():
     assert tr.algorithm == "http://www.w3.org/TR/1999/REC-xpath-19991116"
     assert len(tr.x_path) == 1
     assert tr.x_path[0].text.strip() == """self::xenc:EncryptedData[@Id="example1"]"""
-    
+

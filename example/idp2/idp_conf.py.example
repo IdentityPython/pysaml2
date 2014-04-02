@@ -116,7 +116,7 @@ CONFIG = {
             "email_address": "support@example.com"
         },
     ],
-    # This database holds the map between a subjects local identifier and
+    # This database holds the map between a subject's local identifier and
     # the identifier returned to a SP
     "xmlsec_binary": xmlsec_path,
     #"attribute_map_dir": "../attributemaps",
