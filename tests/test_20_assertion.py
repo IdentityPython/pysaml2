@@ -1,3 +1,4 @@
+# coding=utf-8
 from saml2.authn_context import pword
 from saml2.mdie import to_dict
 from saml2 import md, assertion
@@ -74,7 +75,6 @@ def test_filter_on_attributes_1():
     ava = filter_on_attributes(ava, required)
     assert ava.keys() == ["serialNumber"]
     assert ava["serialNumber"] == ["12345"]
-
 
 # ----------------------------------------------------------------------
 
@@ -255,6 +255,7 @@ def test_filter_attribute_value_assertions_2(AVA):
     assert _eq(ava.keys(), ["givenName"])
     assert ava["givenName"] == ["Roland"]
 
+
 # ----------------------------------------------------------------------------
 
 
@@ -290,7 +291,9 @@ def test_assertion_1(AVA):
 
 def test_assertion_2():
     AVA = {'mail': u'roland.hedberg@adm.umu.se',
-           'eduPersonTargetedID': 'http://lingon.ladok.umu.se:8090/idp!http://lingon.ladok.umu.se:8088/sp!95e9ae91dbe62d35198fbbd5e1fb0976',
+           'eduPersonTargetedID': 'http://lingon.ladok.umu'
+                                  '.se:8090/idp!http://lingon.ladok.umu'
+                                  '.se:8088/sp!95e9ae91dbe62d35198fbbd5e1fb0976',
            'displayName': u'Roland Hedberg',
            'uid': 'http://roland.hedberg.myopenid.com/'}
 
@@ -453,6 +456,7 @@ def test_filter_values_req_opt_2():
 
     raises(MissingValue, "filter_on_attributes(ava, r, o)")
 
+
 # ---------------------------------------------------------------------------
 
 
@@ -484,6 +488,7 @@ def test_filter_values_req_opt_4():
     print ava
     assert _eq(ava.keys(), ['givenName', 'sn'])
     assert ava == {'givenName': ['Roland'], 'sn': ['Hedberg']}
+
 
 # ---------------------------------------------------------------------------
 
@@ -706,7 +711,7 @@ ACD = pword.AuthenticationContextDeclaration(authn_method=authn_method)
 
 
 def test_assertion_with_noop_attribute_conv():
-    ava = {"urn:oid:2.5.4.4": "Roland", "urn:oid:2.5.4.42": "Hedberg" }
+    ava = {"urn:oid:2.5.4.4": "Roland", "urn:oid:2.5.4.42": "Hedberg"}
     ast = Assertion(ava)
     policy = Policy({
         "default": {
@@ -719,7 +724,7 @@ def test_assertion_with_noop_attribute_conv():
     issuer = Issuer(text="entityid", format=NAMEID_FORMAT_ENTITY)
     msg = ast.construct("sp_entity_id", "in_response_to", "consumer_url",
                         name_id, [AttributeConverterNOOP(NAME_FORMAT_URI)],
-                        policy, issuer=issuer, authn_decl=ACD ,
+                        policy, issuer=issuer, authn_decl=ACD,
                         authn_auth="authn_authn")
 
     print msg
@@ -767,7 +772,7 @@ def test_assertion_with_zero_attributes():
     issuer = Issuer(text="entityid", format=NAMEID_FORMAT_ENTITY)
     msg = ast.construct("sp_entity_id", "in_response_to", "consumer_url",
                         name_id, [AttributeConverterNOOP(NAME_FORMAT_URI)],
-                        policy, issuer=issuer, authn_decl=ACD ,
+                        policy, issuer=issuer, authn_decl=ACD,
                         authn_auth="authn_authn")
 
     print msg
