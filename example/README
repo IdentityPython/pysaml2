@@ -23,8 +23,8 @@ To run the setup do
 
 ./all.sh start
 
-and then use your favourit webbrowser to look at "http://localhost:8087/whoami"
+and then use your favourite webbrowser to look at "http://localhost:8087/whoami"
 
-./all stop
+./all.sh stop
 
 will of course stop your IdP and SP.

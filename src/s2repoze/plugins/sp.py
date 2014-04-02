@@ -508,6 +508,8 @@ class SAML2Plugin(object):
             binding = BINDING_HTTP_REDIRECT
         else:
             post = self._get_post(environ)
+            if post.list is None:
+                post.list = []
             binding = BINDING_HTTP_POST
 
         try:

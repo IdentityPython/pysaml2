@@ -96,7 +96,7 @@ def whoami(environ, start_response, user):
     if not nameid:
         return not_authn(environ, start_response)
     if ava:
-        response = ["<h2>Your identity are supposed to be</h2>"]
+        response = ["<h2>Your identity is supposed to be</h2>"]
         response.extend(dict_to_table(ava))
     else:
         response = [
@@ -222,10 +222,10 @@ def application(environ, start_response):
     """
     The main WSGI application. Dispatch the current request to
     the functions from above and store the regular expression
-    captures in the WSGI environment as  `myapp.url_args` so that
+    captures in the WSGI environment as `myapp.url_args` so that
     the functions from above can access the url placeholders.
 
-    If nothing matches call the `not_found` function.
+    If nothing matches, call the `not_found` function.
     
     :param environ: The HTTP application environment
     :param start_response: The application to run when the handling of the 

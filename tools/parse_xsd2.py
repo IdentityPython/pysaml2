@@ -87,7 +87,7 @@ def base_init(imports):
             line.append("%s%s=%s," % (indent4, _name, _name))
         line.append("%s)" % indent4)
     else:
-        # TODO have to keep apart which properties comes from which superior
+        # TODO have to keep apart which properties come from which superior
         for sup, elems in imports.items():
             line.append("%s%s.__init__(self, " % (INDENT+INDENT, sup))
             lattr = elems[:]
@@ -2187,5 +2187,3 @@ def main(argv):
 
 if __name__ == "__main__":    
     main(sys.argv[1:])
-    
-    

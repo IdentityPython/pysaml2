@@ -14,10 +14,3 @@ Contents:
    sp
    idp
    
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
