@@ -25,6 +25,10 @@ To run the setup do
 
 and then use your favourite webbrowser to look at "http://localhost:8087/whoami"
 
+Note, the listeners are all configured to bind to localhost (127.0.0.1) only.
+If you want to be able to connect to them externally, grep "HOST = '127.0.0.1'"
+example/*/*.py and replace 127.0.0.1 with 0.0.0.0 or a specific IP.
+
 ./all.sh stop
 
 will of course stop your IdP and SP.

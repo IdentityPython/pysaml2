@@ -268,6 +268,7 @@ app_with_auth = make_middleware_with_config(application, {"here": "."},
                                             log_file="repoze_who.log")
 
 # ----------------------------------------------------------------------------
+HOST = '127.0.0.1'
 PORT = 8087
 
 # allow uwsgi or gunicorn mount
@@ -291,6 +292,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     from wsgiref.simple_server import make_server
-    srv = make_server('', PORT, app_with_auth)
-    print "SP listening on port: %s" % PORT
+    srv = make_server(HOST, PORT, app_with_auth)
+    print "SP listening on %s:%s" % (HOST, PORT)
     srv.serve_forever()

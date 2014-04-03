@@ -683,6 +683,7 @@ def application(environ, start_response):
 
 # ----------------------------------------------------------------------------
 
+HOST = service_conf.HOST
 PORT = service_conf.PORT
 # ------- HTTPS -------
 # These should point to relevant files
@@ -727,13 +728,13 @@ if __name__ == '__main__':
 
     add_urls()
 
-    SRV = wsgiserver.CherryPyWSGIServer(('0.0.0.0', PORT), application)
+    SRV = wsgiserver.CherryPyWSGIServer((HOST, PORT), application)
 
     if service_conf.HTTPS:
         SRV.ssl_adapter = ssl_pyopenssl.pyOpenSSLAdapter(SERVER_CERT,
                                                          SERVER_KEY, CERT_CHAIN)
     logger.info("Server starting")
-    print "SP listening on port: %s" % PORT
+    print "SP listening on %s:%s" % (HOST, PORT)
     try:
         SRV.start()
     except KeyboardInterrupt:

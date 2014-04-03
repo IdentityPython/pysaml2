@@ -977,10 +977,11 @@ if __name__ == '__main__':
                             module_directory=_rot + 'modules',
                             input_encoding='utf-8', output_encoding='utf-8')
 
+    HOST = '127.0.0.1'
     PORT = 8088
 
-    SRV = make_server('', PORT, application)
-    print "IdP listening on port: %s" % PORT
+    SRV = make_server(HOST, PORT, application)
+    print "IdP listening on %s:%s" % (HOST, PORT)
     SRV.serve_forever()
 else:
     _rot = args.mako_root

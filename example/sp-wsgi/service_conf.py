@@ -1,5 +1,6 @@
 from saml2.assertion import Policy
 
+HOST = '127.0.0.1'
 PORT = 8087
 HTTPS = False
 
