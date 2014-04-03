@@ -237,6 +237,9 @@ If your computer and another computer that you are communicating with are not
 in synch regarding the computer clock, then here you can state how big a
 difference you are prepared to accept.
 
+The difference is in both directions: meaning that you accept messages generated
+between now - 'accepted_time_diff' and now + 'accepted_time_diff'.
+
 .. note:: This will indiscriminately effect all time comparisons.
     Hence your server my accept a statement that in fact is to old.
 
