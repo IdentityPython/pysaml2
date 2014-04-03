@@ -9,7 +9,7 @@ startme() {
 
     cd ../idp2
     if [ ! -f idp_conf.py ] ; then
-        cp idp_conf.py.example conf.py
+        cp idp_conf.py.example idp_conf.py
     fi
     ../../tools/make_metadata.py idp_conf > idp.xml
 
