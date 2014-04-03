@@ -2,10 +2,10 @@
 
 startme() {
     cd sp-wsgi
-    if [ ! -f conf.py ] ; then
-        cp conf.py.example conf.py
+    if [ ! -f sp_conf.py ] ; then
+        cp sp_conf.py.example sp_conf.py
     fi
-    ../../tools/make_metadata.py conf > sp.xml
+    ../../tools/make_metadata.py sp_conf > sp.xml
 
     cd ../idp2
     if [ ! -f idp_conf.py ] ; then
@@ -14,7 +14,7 @@ startme() {
     ../../tools/make_metadata.py idp_conf > idp.xml
 
     cd ../sp-wsgi
-    ./sp.py conf &
+    ./sp.py sp_conf &
 
     cd ../idp2
     ./idp.py idp_conf &
