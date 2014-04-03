@@ -1,19 +1,22 @@
 This is a very simple setup just to check that all your gear are in order.
 
-The setup consists of one IdP and one SP.
-The IdP authenticates users by using a htpasswd plugin and gets the identity information
-from the ini-plugin.
+The setup consists of one IdP and one SP, in idp2/ and sp-wsgi/ respectively.
 
-All this is in the idp/who.ini configuration file, the file used for authentication
-is idp/passwd and the ini file is idp/idp_user.ini.
+(There are alternate IdP and SP configs in idp2_repoze/ and sp-repoze/ that
+are still in flux; do not use them unless you know what you are doing.)
 
-The passwords in passwd in clear text:
+The IdP authenticates users using a dictionary built in to idp2/idp.py;
+look for the dictionary called PASSWD inside that file.
 
-roland:friend
-ozzie:two
-derek:three
-ryan:four
-ischiro:five
+Other metadata about the accounts (names, email addresses, etc) are
+stored in idp2/idp_user.py.
+
+The username:password pairs in PASSWD:
+
+haho0032:qwerty
+roland:dianakra
+babs:howes
+upper:crust
 
 The SP doesn't do anything but show you the information that the IdP sent.
 
