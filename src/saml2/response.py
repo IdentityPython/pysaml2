@@ -360,9 +360,9 @@ class StatusResponse(object):
 
     def issue_instant_ok(self):
         """ Check that the response was issued at a reasonable time """
-        upper = time_util.shift_time(time_util.time_in_a_while(days=1),
+        upper = time_util.shift_time(time_util.now(),
                                      self.timeslack).timetuple()
-        lower = time_util.shift_time(time_util.time_a_while_ago(days=1),
+        lower = time_util.shift_time(time_util.now(),
                                      -self.timeslack).timetuple()
         # print "issue_instant: %s" % self.response.issue_instant
         # print "%s < x < %s" % (lower, upper)
@@ -392,7 +392,10 @@ class StatusResponse(object):
                                                self.return_addrs))
                 return None
 
-        assert self.issue_instant_ok()
+	try:
+          assert self.issue_instant_ok()
+	except AssertionError:
+          raise VerificationError("Time constraint on response could not be met. Clock skew?")
         assert self.status_ok()
         return self
 

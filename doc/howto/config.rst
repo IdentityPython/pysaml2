@@ -230,8 +230,8 @@ There are two options common to all services: 'name' and 'endpoints'.
 The remaining options are specific to one or the other of the service types.
 Which one is specified along side the name of the option.
 
-timeslack
-^^^^^^^^^
+accepted_time_diff
+^^^^^^^^^^^^^^^^^^
 
 If your computer and another computer that you are communicating with are not
 in synch regarding the computer clock, then here you can state how big a
