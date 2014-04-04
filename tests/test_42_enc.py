@@ -4,6 +4,7 @@ from saml2.sigver import pre_encryption_part, ASSERT_XPATH, EncryptError
 from saml2.sigver import CryptoBackendXmlSec1
 from saml2.sigver import pre_encrypt_assertion
 from pathutils import xmlsec_path
+from pathutils import full_path
 
 __author__ = 'roland'
 
@@ -65,7 +66,7 @@ def test_enc1():
     # data_file.close()
 
     key_type = "des-192"
-    com_list = [xmlsec_path, "encrypt", "--pubkey-cert-pem", "pubkey.pem",
+    com_list = [xmlsec_path, "encrypt", "--pubkey-cert-pem", full_path("pubkey.pem"),
                 "--session-key", key_type, "--xml-data", data,
                 "--node-xpath", ASSERT_XPATH]
 
@@ -89,7 +90,7 @@ def test_enc2():
         IDENTITY, "id12", "http://lingon.catalogix.se:8087/",
         "urn:mace:example.com:saml:roland:sp", name_id=name_id)
 
-    enc_resp = crypto.encrypt_assertion(resp_, "pubkey.pem",
+    enc_resp = crypto.encrypt_assertion(resp_, full_path("pubkey.pem"),
                                         pre_encryption_part())
 
     print enc_resp
