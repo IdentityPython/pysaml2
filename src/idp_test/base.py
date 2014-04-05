@@ -5,16 +5,14 @@ import urllib
 import cookielib
 
 from saml2 import BINDING_HTTP_REDIRECT, BINDING_URI
-from saml2 import BINDING_HTTP_POST, BINDING_SOAP
-from saml2 import httpbase
+from saml2 import BINDING_HTTP_POST
+from saml2 import BINDING_SOAP
 
 from saml2.mdstore import REQ2SRV
-from saml2.pack import http_redirect_message
-from saml2.pack import http_form_post_message
+from saml2.pack import http_redirect_message, http_form_post_message
 from saml2.s_utils import rndstr
 
 from saml2test import tool
-from saml2test import OperationError
 from saml2test import FatalError
 
 __author__ = 'rohe0002'
@@ -82,14 +80,7 @@ class Conversation(tool.Conversation):
 
         response = None
         for srv in srvs:
-            try:
-                response = self._send(srv)
-            except httpbase.ConnectionError, err:
-                logger.debug("IO error: %s" % err)
-                raise OperationError("IO error: %s" % err)
-            except Exception, err:
-                raise
-
+            response = self._send(srv)
             if response is not None:
                 break
 
@@ -105,7 +96,7 @@ class Conversation(tool.Conversation):
         try:
             req = self.oper.args["message"]
         except KeyError:
-            req_id, req = self.qfunc(**self.qargs)
+            req = self.qfunc(**self.qargs)
 
         self.request = self.oper.pre_processing(req, self.args)
         str_req = "%s" % self.request
@@ -193,9 +184,9 @@ class Conversation(tool.Conversation):
             # remove args the create function can't handle
             fargs = inspect.getargspec(self.qfunc).args
             if _oper._class:
-                fargs.extend([p for p, _c, _r in
+                fargs.extend([p for p, c, r in
                               _oper._class.c_attributes.values()])
-                fargs.extend([p for p, _c in _oper._class.c_children.values()])
+                fargs.extend([p for p, c in _oper._class.c_children.values()])
             for arg in qargs.keys():
                 if arg not in fargs:
                     del qargs[arg]
@@ -203,7 +194,7 @@ class Conversation(tool.Conversation):
         self.qargs = qargs
 
     def my_endpoints(self):
-        return [e for e, _b in self.client.config.getattr("endpoints", "sp")[
+        return [e for e, b in self.client.config.getattr("endpoints", "sp")[
             "assertion_consumer_service"]]
 
     def handle_result(self):

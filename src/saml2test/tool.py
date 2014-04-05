@@ -7,7 +7,7 @@ from urlparse import parse_qs
 from saml2test.opfunc import Operation
 from saml2test import FatalError
 from saml2test.check import ExpectedError, ERROR
-from saml2test.status import INTERACTION
+from saml2test.check import INTERACTION
 from saml2test.interaction import Interaction
 from saml2test.interaction import Action
 from saml2test.interaction import InteractionNeeded
@@ -61,7 +61,7 @@ class Conversation(object):
             except KeyError:
                 pass
 
-            raise OperationError
+            raise FatalError
 
     def do_check(self, test, **kwargs):
         if isinstance(test, basestring):
@@ -128,7 +128,7 @@ class Conversation(object):
                         self.client.cookiejar = self.cjar["rp"]
                         for_me = True
                         try:
-                            _base, query = url.split("?")
+                            base, query = url.split("?")
                         except ValueError:
                             pass
                         else:
@@ -300,8 +300,8 @@ class Conversation(object):
                 break
             except (FatalError, OperationError):
                 raise
-            except Exception, _err:
-                #self.err_check("exception", _err)
+            except Exception, err:
+                #self.err_check("exception", err)
                 raise
 
         try:

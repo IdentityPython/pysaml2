@@ -1,21 +1,16 @@
-# -*- coding: utf-8 -*-
 import copy
-from saml2 import samlp
+from saml2 import samlp, SamlBase
 from saml2 import NAMEID_FORMAT_EMAILADDRESS
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2.s_utils import rndstr
 
-from saml2.saml import SCM_BEARER
-from saml2.saml import Condition
-from saml2.saml import XSI_TYPE
-from saml2.saml import Audience
+from saml2.saml import SCM_BEARER, Condition, XSI_TYPE, Audience
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.saml import SCM_SENDER_VOUCHES
 from saml2.saml import ConditionAbstractType_
 from saml2.samlp import STATUS_AUTHN_FAILED
-from saml2.time_util import in_a_while
-from saml2.time_util import a_while_ago
+from saml2.time_util import in_a_while, a_while_ago
 from sp_test.check import VerifyContent
 from sp_test import check
 from saml2test import ip_addresses
@@ -40,10 +35,10 @@ class TimeRestriction(ConditionAbstractType_):
 
     c_tag = 'TimeRestriction'
     c_namespace = "urn:mace:umu.se:sso"
-    c_children = copy.copy(ConditionAbstractType_.c_children)
-    c_attributes = copy.copy(ConditionAbstractType_.c_attributes)
+    c_children = ConditionAbstractType_.c_children.copy()
+    c_attributes = ConditionAbstractType_.c_attributes.copy()
     c_child_order = ConditionAbstractType_.c_child_order[:]
-    c_cardinality = copy.copy(ConditionAbstractType_.c_cardinality)
+    c_cardinality = ConditionAbstractType_.c_cardinality.copy()
     c_attributes['StartTime'] = ('start_time', 'time', False)
     c_attributes['EndTime'] = ('end_time', 'time', False)
 
@@ -116,7 +111,6 @@ class ErrorResponse(Response):
         "info": (STATUS_AUTHN_FAILED, "Unknown user")
     }
     _binding = BINDING_HTTP_POST
-    _send_error = True
 
 
 class LogoutResponse(Response):
@@ -157,7 +151,7 @@ class AuthnResponse_NameIDformat_foo(AuthnResponse):
 
 class AuthnResponse_without_SubjectConfirmationData_1(AuthnResponse):
     def pre_processing(self, message, **kwargs):
-        _confirmation = message.assertion.subject.subject_confirmation[0]
+        _confirmation = message.assertion.subject.subject_confirmation
         _confirmation.subject_confirmation_data = None
         _confirmation.method = SCM_SENDER_VOUCHES
         return message
@@ -177,11 +171,9 @@ class AuthnResponse_rnd_Response_inresponseto(AuthnResponse):
         return message
 
 
-class AuthnResponse_rnd_SubjectConfirmationData_inresponseto(AuthnResponse):
+class AuthnResponse_rnd_Response_assertion_inresponseto(AuthnResponse):
     def pre_processing(self, message, **kwargs):
-        _scs = message.assertion.subject.subject_confirmation
-        for _sc in _scs:
-            _sc.subject_confirmation_data.in_response_to = rndstr(16)
+        message.assertion.in_response_to = rndstr(16)
         return message
 
 
@@ -196,6 +188,13 @@ class AuthnResponse_wrong_Recipient(AuthnResponse):
     def pre_processing(self, message, **kwargs):
         _confirmation = message.assertion.subject.subject_confirmation
         _confirmation[0].subject_confirmation_data.recipient = rndstr(16)
+        return message
+
+
+class AuthnResponse_missing_Recipient(AuthnResponse):
+    def pre_processing(self, message, **kwargs):
+        _confirmation = message.assertion.subject.subject_confirmation
+        _confirmation[0].subject_confirmation_data.recipient = None
         return message
 
 
@@ -359,7 +358,12 @@ class AuthnResponse_AudienceRestriction_appended_audience(AuthnResponse):
         conditions.audience_restriction[0].audience.append(extra)
         return message
 
-testcases = {
+
+PHASES = {
+    "login_redirect": (Login, AuthnRequest, AuthnResponse_redirect),
+}
+
+OPERATIONS = {
     'sp-00': {
         "name": 'Basic Login test',
         "descr": 'Basic Login test',
@@ -375,8 +379,7 @@ testcases = {
     'FL03': {
         "name": """SP should not accept a Response as valid, when the
 StatusCode is not success""",
-        "sequence": [(Login, AuthnRequest, ErrorResponse,
-                      check.ErrorResponse)],
+        "sequence": [(Login, AuthnRequest, ErrorResponse, check.ErrorResponse)],
         "tests": {"pre": [], "post": []}
     },
     'FL04': {
@@ -417,7 +420,7 @@ StatusCode is not success""",
         "name": ("SP should not accept an assertion InResponseTo ",
                  "which is chosen randomly"),
         "sequence": [(Login, AuthnRequest,
-                      AuthnResponse_rnd_SubjectConfirmationData_inresponseto,
+                      AuthnResponse_rnd_Response_assertion_inresponseto,
                       check.ErrorResponse)],
         "tests": {"pre": [], "post": []}
     },
@@ -516,8 +519,8 @@ StatusCode is not success""",
         "tests": {"pre": [], "post": []}
     },
     'FL29': {
-        "name": "Reject a Response with a "
-                "SubjectConfirmationData@NotOnOrAfter in the past",
+        "name": "Reject a Response with a SubjectConfirmationData@NotOnOrAfter "
+                "in the past",
         "sequence": [(Login, AuthnRequest,
                       AuthnResponse_past_SubjectConfirmationData_NotOnOrAfter,
                       check.ErrorResponse)],

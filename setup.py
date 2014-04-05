@@ -21,19 +21,18 @@ __author__ = 'rohe0002'
 
 setup(
     name="saml2test",
-    version="0.5.0beta",
+    version="0.4.3",
     description="SAML2 test tool",
     author = "Roland Hedberg",
     author_email = "roland.hedberg@adm.umu.se",
     license="Apache 2.0",
-    packages=["idp_test", "idp_test/package", "saml2test", "sp_test",
-              "sp_test/test_suites"],
+    packages=["idp_test", "idp_test/package", "saml2test", "sp_test"],
     package_dir = {"": "src"},
     classifiers = [
         "Development Status :: 4 - Beta",
         "License :: OSI Approved :: Apache Software License",
         "Topic :: Software Development :: Libraries :: Python Modules"],
-    install_requires = ["pysaml2 >= 2",
+    install_requires = ["pysaml2",
                         "mechanize",
                         "argparse",
                         "beautifulsoup4",

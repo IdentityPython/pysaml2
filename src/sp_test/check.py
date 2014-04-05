@@ -1,8 +1,8 @@
 import inspect
 import sys
-# Import the status codes used indicate the test results
-from saml2test.status import CRITICAL
+
 from saml2test.check import Check
+from saml2test.check import CRITICAL
 from saml2test import check
 from saml2test.interaction import Interaction
 
@@ -45,6 +45,8 @@ class ErrorResponse(Check):
             self._status = CRITICAL
         return {}
 
+# =============================================================================
+
 
 CLASS_CACHE = {}
 
@@ -52,7 +54,7 @@ CLASS_CACHE = {}
 def factory(cid, classes=CLASS_CACHE):
     if len(classes) == 0:
         check.factory(cid, classes)
-        for _name, obj in inspect.getmembers(sys.modules[__name__]):
+        for name, obj in inspect.getmembers(sys.modules[__name__]):
             if inspect.isclass(obj):
                 try:
                     classes[obj.cid] = obj

@@ -12,8 +12,6 @@ logger = logging.getLogger(__name__)
 
 __author__ = 'rolandh'
 
-JSON_DUMPS_ARGS = {"indent": 4, "sort_keys": True}
-
 
 class FatalError(Exception):
     pass
@@ -23,7 +21,7 @@ class CheckError(Exception):
     pass
 
 
-class HttpError(Exception):
+class HTTP_ERROR(Exception):
     pass
 
 
@@ -40,15 +38,11 @@ class ContextFilter(logging.Filter):
     This is a filter which injects time laps information into the log.
     """
 
-    def __init__(self, name=""):
-        logging.Filter.__init__(self, name)
-        self._start = 0
-
     def start(self):
-        self._start = time.time()
+        self.start = time.time()
 
     def filter(self, record):
-        record.delta = time.time() - self._start
+        record.delta = time.time() - self.start
         return True
 
 
@@ -64,7 +58,7 @@ def stop_script_by_name(name):
     import os
 
     p = subprocess.Popen(['ps', '-A'], stdout=subprocess.PIPE)
-    out, _err = p.communicate()
+    out, err = p.communicate()
 
     for line in out.splitlines():
         if name in line:
@@ -84,7 +78,7 @@ def get_page(url):
     if resp.status_code == 200:
         return resp.text
     else:
-        raise HttpError(resp.status)
+        raise HTTP_ERROR(resp.status)
 
 
 def exception_trace(tag, exc, log=None):

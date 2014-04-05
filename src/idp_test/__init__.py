@@ -19,10 +19,9 @@ from saml2.mdstore import MetaData
 from saml2test import FatalError, OperationError
 from saml2test import exception_trace
 from saml2test import ContextFilter
-from saml2test import JSON_DUMPS_ARGS
 
-from base import Conversation
-from check import CheckSaml2IntMetaData
+from idp_test.base import Conversation
+from idp_test.check import CheckSaml2IntMetaData
 
 # Schemas supported
 from saml2 import md
@@ -40,12 +39,10 @@ SCHEMA = [dri, idpdisc, md, mdattr, mdui, saml, ui, xmldsig, xmlenc]
 
 __author__ = 'rolandh'
 
-#logger = logging.getLogger("")
-#logger.setLevel(logging.DEBUG)
-#formatter = logging.Formatter("%(asctime)s %(name)s:%(levelname)s "
-#"%(message)s")
-formatter_2 = logging.Formatter("%(delta).6f - %(levelname)s - [%(name)s] "
-                                "%(message)s")
+logger = logging.getLogger("")
+logger.setLevel(logging.DEBUG)
+#formatter = logging.Formatter("%(asctime)s %(name)s:%(levelname)s %(message)s")
+formatter_2 = logging.Formatter("%(delta).6f - %(levelname)s - [%(name)s] %(message)s")
 
 cf = ContextFilter()
 cf.start()
@@ -53,20 +50,12 @@ cf.start()
 streamhandler = logging.StreamHandler(sys.stderr)
 streamhandler.setFormatter(formatter_2)
 
-memoryhandler = logging.handlers.MemoryHandler(1024 * 10, logging.DEBUG)
+memoryhandler = logging.handlers.MemoryHandler(1024*10, logging.DEBUG)
 memoryhandler.addFilter(cf)
 
-#saml2testlog = logging.getLogger("saml2test")
-#saml2testlog.addHandler(memoryhandler)
-#saml2testlog.setLevel(logging.DEBUG)
-logger = logging.getLogger("saml2test")
-logger.setLevel(logging.DEBUG)
-logger.addHandler(memoryhandler)
-# The streamhandler variable should be added to the logger if
-# you want to see the log messages as they are printed instead
-# of afterwards (mostly useful during debugging
-#logger.addHandler(streamhandler)
-logger.setLevel(logging.DEBUG)
+saml2testlog = logging.getLogger("saml2test")
+saml2testlog.addHandler(memoryhandler)
+saml2testlog.setLevel(logging.DEBUG)
 
 
 def recursive_find_module(name, path=None):
@@ -116,9 +105,9 @@ class SAML2client(object):
         self._parser.add_argument('-L', dest='log', action='store_true',
                                   help="Print log information")
         self._parser.add_argument(
-            '-C', dest="ca_certs",
-            help=("CA certs to use to verify HTTPS server certificates, "
-                  "if HTTPS is used and no server CA certs are defined then "
+            '-C', dest="§",
+            help=("CA certs to use to verify HTTPS server certificates, ",
+                  "if HTTPS is used and no server CA certs are defined then ",
                   "no cert verification will be done"))
         self._parser.add_argument('-J', dest="json_config_file",
                                   help="Script configuration")
@@ -151,7 +140,6 @@ class SAML2client(object):
         self.constraints = {}
         self.operations = None
         self.args = None
-        self.client = None
 
     def json_config_file(self):
         if self.args.json_config_file == "-":
@@ -219,7 +207,7 @@ class SAML2client(object):
         try:
             self.entity_id = _jc["entity_id"]
             # Verify its the correct metadata
-            assert self.entity_id in md.entity.keys(), "Entityid {0} not found in {1}".format(self.entity_id, ', '.join(md.entity.keys()))
+            assert self.entity_id in md.entity.keys()
         except KeyError:
             if len(md.entity.keys()) == 1:
                 self.entity_id = md.entity.keys()[0]
@@ -296,33 +284,14 @@ class SAML2client(object):
             self.setup()
         except (AttributeError, ToOld), err:
             print >> sys.stdout, "Configuration Error: %s" % err
-            return
+
+        self.client = Saml2Client(self.sp_config)
+        conv = None
 
         if self.args.pretty:
             pp = pprint.PrettyPrinter(indent=4)
         else:
             pp = None
-
-        conv = None
-
-        try:
-            self.client = Saml2Client(self.sp_config)
-        except Exception, err:
-            if conv:
-                self.test_log = conv.test_output
-                self.test_log.append(exception_trace("RUN", err))
-            else:
-                self.test_log = exception_trace("RUN", err)
-            tsum = self.test_summation(self.args.oper)
-
-            if pp:
-                pp.pprint(tsum)
-            else:
-                print >> sys.stdout, json.dumps(tsum, **JSON_DUMPS_ARGS)
-
-            if tsum["status"] > 1 or self.args.debug or err:
-                self.output_log(memoryhandler, streamhandler)
-            return
 
         try:
             try:
@@ -369,7 +338,7 @@ class SAML2client(object):
         if pp:
             pp.pprint(tsum)
         else:
-            print >> sys.stdout, json.dumps(tsum, **JSON_DUMPS_ARGS)
+            print >> sys.stdout, json.dumps(tsum)
 
         if tsum["status"] > 1 or self.args.debug or err:
             self.output_log(memoryhandler, streamhandler)
@@ -416,7 +385,7 @@ class SAML2client(object):
 
                 lista.append(item)
 
-        print json.dumps(lista, **JSON_DUMPS_ARGS)
+        print json.dumps(lista)
 
     def _get_operation(self, operation):
         return self.operations.OPERATIONS[operation]
@@ -430,7 +399,7 @@ class SAML2client(object):
         mod = import_module("config")
         _res = dict([(key, cnf["description"]) for key, cnf in
                     mod.CONFIG.items()])
-        print json.dumps(_res, **JSON_DUMPS_ARGS)
+        print json.dumps(_res)
 
     def verify_metadata(self):
         self.json_config = self.json_config_file()

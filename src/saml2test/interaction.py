@@ -1,5 +1,3 @@
-from saml2test import JSON_DUMPS_ARGS
-
 __author__ = 'rohe0002'
 
 import json
@@ -25,7 +23,7 @@ class FlowException(Exception):
         self.url = url
 
     def __str__(self):
-        return json.dumps(self.__dict__, **JSON_DUMPS_ARGS)
+        return json.dumps(self.__dict__)
 
 
 class InteractionNeeded(Exception):
@@ -389,8 +387,7 @@ class Action(object):
         except (KeyError, AttributeError):
             _args = {}
 
-        _args.update({"location": location, "features": features,
-                      "conv": conv})
+        _args.update({"location": location, "features": features, "conv": conv})
 
         logger.info("<-- FUNCTION: %s" % function.__name__)
         logger.info("<-- ARGS: %s" % _args)

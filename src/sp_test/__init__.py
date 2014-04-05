@@ -13,18 +13,16 @@ from saml2.server import Server
 from saml2.config import IdPConfig
 from saml2.config import logging
 
-from base import Conversation
+from sp_test.base import Conversation
 
 from saml2test import FatalError
 from saml2test import CheckError
 from saml2test import ContextFilter
 from saml2test import exception_trace
-from saml2test import JSON_DUMPS_ARGS
 
 __author__ = 'rolandh'
 
-#formatter =
-#    logging.Formatter("%(asctime)s %(name)s:%(levelname)s %(message)s")
+#formatter = logging.Formatter("%(asctime)s %(name)s:%(levelname)s %(message)s")
 formatter_2 = logging.Formatter(
     "%(delta).6f - %(levelname)s - [%(name)s] %(message)s")
 
@@ -40,87 +38,44 @@ memoryhandler.addFilter(cf)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(memoryhandler)
-
-# The streamhandler variable should be added to the logger if
-# you want to see the log messages as they are printed instead
-# of afterwards (mostly useful during debugging
-#logger.addHandler(streamhandler)
 logger.setLevel(logging.DEBUG)
 
 
 class Client(object):
-    """
-    This is the SP testing client for saml2test. It contains the methods that
-    are required to set up and run the tests you request.
-    """
-    def __init__(self, check_factory):
-        """
-        Creates a new SP testing client.
-
-        @param self: this SP testing client
-        @param check_factory: the factory containing the checks that are needed
-                              during the SP test
-        """
-
-        self.testsuite = None
+    def __init__(self, operations, check_factory):
+        self.operations = operations
+        self.tests = None
         self.check_factory = check_factory
 
         self._parser = argparse.ArgumentParser()
-        self._parser.add_argument("-c",
-                                  dest="config",
-                                  default="config",
+        self._parser.add_argument("-c", dest="config", default="config",
                                   help="Configuration file for the IdP")
-        self._parser.add_argument('-C',
-                                  dest="ca_certs",
-                                  help="CA certs to use to verify HTTPS "
-                                  "server certificates, if HTTPS is used and "
-                                  "no server CA certs are defined then no "
-                                  "cert verification will be done")
-        self._parser.add_argument('-d',
-                                  dest='debug',
-                                  action='store_true',
+        self._parser.add_argument(
+            '-C', dest="ca_certs",
+            help=("CA certs to use to verify HTTPS server certificates, ",
+                  "if HTTPS is used and no server CA certs are defined then ",
+                  "no cert verification will be done"))
+        self._parser.add_argument('-d', dest='debug', action='store_true',
                                   help="Print debug information")
-        self._parser.add_argument("-H",
-                                  dest="pretty",
-                                  action='store_true',
-                                  help="Human readable status output")
-        self._parser.add_argument("-i",
-                                  dest="insecure",
-                                  action='store_true',
-                                  help="do not verify TLS certificates")
-        self._parser.add_argument('-J',
-                                  dest="json_config_file",
+        self._parser.add_argument("-H", dest="pretty", action='store_true')
+        self._parser.add_argument("-i", dest="insecure", action='store_true')
+        self._parser.add_argument('-J', dest="json_config_file",
                                   help="Script configuration")
-        self._parser.add_argument("-l",
-                                  dest="list",
-                                  action="store_true",
-                                  help="List all the test flows as a JSON "
-                                  "object")
-        self._parser.add_argument('-m',
-                                  dest="metadata",
-                                  action='store_true',
+        self._parser.add_argument(
+            "-l", dest="list", action="store_true",
+            help="List all the test flows as a JSON object")
+        self._parser.add_argument('-m', dest="metadata", action='store_true',
                                   help="Return the IdP metadata")
-        self._parser.add_argument("-P",
-                                  dest="configpath",
-                                  default=".",
-                                  help="Path to the configuration file for "
-                                  "the IdP")
-        self._parser.add_argument("-t",
-                                  dest="testsuite",
-                                  default="basicTests",
-                                  help="Specifies the test suite from which "
-                                  "you wish to run tests")
-        self._parser.add_argument('-v',
-                                  dest='verbose',
-                                  action='store_true',
+        self._parser.add_argument(
+            "-P", dest="configpath", default=".",
+            help="Path to the configuration file for the IdP")
+        self._parser.add_argument("-t", dest="testpackage",
+                                  help="Module describing tests")
+        self._parser.add_argument('-v', dest='verbose', action='store_true',
                                   help="Print runtime information")
-        self._parser.add_argument("-Y",
-                                  dest="pysamllog",
-                                  action='store_true',
+        self._parser.add_argument("-Y", dest="pysamllog", action='store_true',
                                   help="Print PySAML2 logs")
-        self._parser.add_argument("oper",
-                                  nargs="?",
-                                  help="Which test to run")
+        self._parser.add_argument("oper", nargs="?", help="Which test to run")
 
         self.interactions = None
         self.entity_id = None
@@ -188,9 +143,6 @@ class Client(object):
             root_logger.addHandler(memoryhandler)
             root_logger.setLevel(logging.DEBUG)
 
-        self.testsuite = import_module("sp_test.test_suites.%s" %
-                                       self.args.testsuite)
-
         if self.args.metadata:
             return self.make_meta()
         elif self.args.list:
@@ -205,15 +157,18 @@ class Client(object):
 
         self.setup()
 
-        if self.testsuite:
-            try:
-                oper = self.testsuite.testcases[self.args.oper]
-            except ValueError:
+        try:
+            oper = self.operations.OPERATIONS[self.args.oper]
+        except KeyError:
+            if self.tests:
+                try:
+                    oper = self.tests.OPERATIONS[self.args.oper]
+                except ValueError:
+                    print >> sys.stderr, "Undefined testcase"
+                    return
+            else:
                 print >> sys.stderr, "Undefined testcase"
                 return
-        else:
-            print >> sys.stderr, "Undefined testcase"
-            return
 
         opers = oper["sequence"]
 
@@ -254,7 +209,7 @@ class Client(object):
         if pp:
             pp.pprint(tsum)
         else:
-            print >> sys.stdout, json.dumps(tsum, **JSON_DUMPS_ARGS)
+            print >> sys.stdout, json.dumps(tsum)
 
         if tsum["status"] > 1 or self.args.debug or err:
             self.output_log(memoryhandler, streamhandler)
@@ -280,10 +235,14 @@ class Client(object):
         self.idp.metadata = metadata
         #self.idp_config.metadata = metadata
 
+        if self.args.testpackage:
+            self.tests = import_module("sp_test.package.%s" %
+                                       self.args.testpackage)
+
         try:
             self.entity_id = _jc["entity_id"]
             # Verify its the correct metadata
-            assert self.entity_id in md.entity.keys(), "Entityid {0} not found in {1}".format(self.entity_id, ', '.join(md.entity.keys()))
+            assert self.entity_id in md.entity.keys()
         except KeyError:
             if len(md.entity.keys()) == 1:
                 self.entity_id = md.entity.keys()[0]
@@ -300,10 +259,10 @@ class Client(object):
 
     def list_operations(self):
         res = []
-        for key, val in self.testsuite.testcases.items():
+        for key, val in self.operations.OPERATIONS.items():
             res.append({"id": key, "name": val["name"]})
 
-        print json.dumps(res, **JSON_DUMPS_ARGS)
+        print json.dumps(res)
 
     def verify_metadata(self):
         pass

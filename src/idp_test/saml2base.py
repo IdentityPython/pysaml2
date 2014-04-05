@@ -1,9 +1,14 @@
 from saml2 import samlp
-from saml2 import BINDING_HTTP_ARTIFACT, BINDING_HTTP_POST
-from saml2 import BINDING_HTTP_REDIRECT, BINDING_PAOS, BINDING_SOAP
+from saml2 import BINDING_HTTP_ARTIFACT
+from saml2 import BINDING_HTTP_POST
+from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_PAOS
+from saml2 import BINDING_SOAP
 from saml2 import BINDING_URI
-from saml2.saml import NAMEID_FORMAT_PERSISTENT, NAMEID_FORMAT_UNSPECIFIED
-from saml2.saml import NAMEID_FORMAT_TRANSIENT, NAMEID_FORMAT_EMAILADDRESS
+from saml2.saml import NAMEID_FORMAT_PERSISTENT
+from saml2.saml import NAMEID_FORMAT_UNSPECIFIED
+from saml2.saml import NAMEID_FORMAT_TRANSIENT
+from saml2.saml import NAMEID_FORMAT_EMAILADDRESS
 
 from idp_test.check import CheckLogoutSupport
 from idp_test.check import CheckSaml2IntAttributes
@@ -366,7 +371,7 @@ OPERATIONS = {
         "sequence": [AuthnRequest],
         "tests": {"pre": [CheckSaml2IntMetaData],
                   "post": []},
-        "depend": ["verify"]
+        "depend":["verify"]
     },
     'authn-nid_transient': {
         "tc_id": "S2c-10",
@@ -375,7 +380,7 @@ OPERATIONS = {
         "sequence": [AuthnRequestNID_Transient],
         "tests": {"pre": [CheckSaml2IntMetaData],
                   "post": []},
-        "depend": ["authn"]
+        "depend":["authn"]
     },
     'authn-nid_email': {
         "tc_id": "S2c-20",
@@ -384,7 +389,7 @@ OPERATIONS = {
         "sequence": [AuthnRequestNID_Email],
         "tests": {"pre": [CheckSaml2IntMetaData],
                   "post": []},
-        "depend": ["authn"]
+        "depend":["authn"]
     },
     'authn-nid_no': {
         "tc_id": "S2c-21",
@@ -393,7 +398,7 @@ OPERATIONS = {
         "sequence": [AuthnRequestNID_no],
         "tests": {"pre": [CheckSaml2IntMetaData],
                   "post": []},
-        "depend": ["authn"]
+        "depend":["authn"]
     },
     'authn-nid_unspecified': {
         "tc_id": "S2c-21",
@@ -402,7 +407,7 @@ OPERATIONS = {
         "sequence": [AuthnRequestNID_Unspecified],
         "tests": {"pre": [CheckSaml2IntMetaData],
                   "post": []},
-        "depend": ["authn"]
+        "depend":["authn"]
     },
     'authn-post': {
         "tc_id": "S2c-08",
@@ -411,7 +416,7 @@ OPERATIONS = {
         "sequence": [AuthnRequestPost],
         "tests": {"pre": [CheckSaml2IntMetaData],
                   "post": []},
-        "depend": ["authn"]
+        "depend":["authn"]
     },
     'authn-post-transient': {
         "tc_id": "S2c-09",
@@ -420,48 +425,48 @@ OPERATIONS = {
         "sequence": [AuthnRequestPostNID_Transient],
         "tests": {"pre": [CheckSaml2IntMetaData],
                   "post": []},
-        "depend": ["authn-post"]
+        "depend":["authn-post"]
     },
-    'attribute-query': {
+    'attribute-query':{
         "tc_id": "S2c-01",
         "name": "",
-        "sequence": [AuthnRequest, AttributeQuery],
-        "depend": ["authn"]
+        "sequence":[AuthnRequest, AttributeQuery],
+        "depend":["authn"]
     },
-    'attribute-query-transient': {
+    'attribute-query-transient':{
         "tc_id": "S2c-20",
         "name": "",
-        "sequence": [AuthnRequestNID_Transient, AttributeQuery],
-        "depend": ["authn"]
+        "sequence":[AuthnRequestNID_Transient, AttributeQuery],
+        "depend":["authn"]
     },
     'authn_endpoint_index': {
         "tc_id": "S2c-03",
         "name": '',
         "descr": '',
         "sequence": [AuthnRequestEndpointIndex],
-        "depend": ["authn"]
+        "depend":["authn"]
     },
     'authn_endpoint_index-transient': {
         "tc_id": "S2c-03",
         "name": '',
         "descr": '',
         "sequence": [AuthnRequestEndpointIndexNIDTransient],
-        "depend": ["authn"]
+        "depend":["authn"]
     },
     'authn_specified_endpoint': {
         "tc_id": "S2c-04",
         "name": '',
         "descr": '',
         "sequence": [AuthnRequestSpecEndpoint],
-        "depend": ["authn"]
+        "depend":["authn"]
     },
-    'authn-artifact': {
+    'authn-artifact':{
        'tc_id': "S2c-05",
        "name": "SAML2 AuthnRequest using an artifact",
        "descr": ('AuthnRequest using HTTP-redirect and artifact'),
        "sequence": [AuthnRequest_using_Artifact]
     },
-    'authn-artifact_nid-transient': {
+    'authn-artifact_nid-transient':{
        'tc_id': "S2c-05",
        "name": "SAML2 AuthnRequest expecting artifact response",
        "descr": ('AuthnRequest using HTTP-redirect and artifact'),
@@ -473,7 +478,7 @@ OPERATIONS = {
         "descr": 'AuthnRequest followed by an AssertionIDRequest',
         "sequence": [AuthnRequest, AssertionIDRequest],
         "tests": {"pre": [CheckSaml2IntMetaData],  "post": []},
-        "depend": ["authn"]
+        "depend":["authn"]
     },
     'authn-nid_transient-assertion_id_request': {
         "tc_id": "S2c-26",
@@ -481,7 +486,7 @@ OPERATIONS = {
         "descr": 'AuthnRequest followed by an AssertionIDRequest',
         "sequence": [AuthnRequestNID_Transient, AssertionIDRequest],
         "tests": {"pre": [CheckSaml2IntMetaData],  "post": []},
-        "depend": ["authn"]
+        "depend":["authn"]
     },
     'authn-with-name_id_policy': {
         "tc_id": "S2c-11",
@@ -489,7 +494,7 @@ OPERATIONS = {
         "descr": 'AuthnRequest with specific NameIDPolicy',
         "sequence": [AuthnRequest_NameIDPolicy1],
         "tests": {"pre": [CheckSaml2IntMetaData],  "post": []},
-        "depend": ["authn"]
+        "depend":["authn"]
     },
     'authn-with-name_id_policy_nid-transient': {
         "tc_id": "S2c-31",
@@ -497,13 +502,13 @@ OPERATIONS = {
         "descr": 'AuthnRequest with specific NameIDPolicy',
         "sequence": [AuthnRequest_NameIDPolicy1Transient],
         "tests": {"pre": [CheckSaml2IntMetaData],  "post": []},
-        "depend": ["authn"]
+        "depend":["authn"]
     },
     'ecp_authn': {
         'tc_id': "S2c-12",
         "name": "SAML2 AuthnRequest using ECP and PAOS",
         "descr": "SAML2 AuthnRequest using ECP and PAOS",
-        "sequence": [ECP_AuthnRequest]
+        "sequence":[ECP_AuthnRequest]
     },
     'log-in-out': {
         "tc_id": "S2c-13",
@@ -511,31 +516,31 @@ OPERATIONS = {
         "descr": 'AuthnRequest using HTTP-redirect followed by a logout',
         "sequence": [AuthnRequest, LogOutRequest],
         "tests": {"pre": [CheckSaml2IntMetaData],  "post": []},
-        "depend": ["authn"]
+        "depend":["authn"]
     },
-    'manage_nameid': {
+    'manage_nameid':{
         "tc_id": "S2c-14",
         "name": "Setting the SP provided ID by using ManageNameID",
-        "sequence": [AuthnRequest, ManageNameIDRequest],
-        "depend": ["authn"]
+        "sequence":[AuthnRequest, ManageNameIDRequest],
+        "depend":["authn"]
     },
-    'manage_nameid_nid-transient': {
+    'manage_nameid_nid-transient':{
         "tc_id": "S2c-14",
         "name": "Setting the SP provided ID by using ManageNameID",
-        "sequence": [AuthnRequestNID_Transient, ManageNameIDRequest],
-        "depend": ["authn"]
+        "sequence":[AuthnRequestNID_Transient, ManageNameIDRequest],
+        "depend":["authn"]
     },
-    'nameid-mapping': {
+    'nameid-mapping':{
         "tc_id": "S2c-15",
         "name": "Simple NameIDMapping request",
-        "sequence": [AuthnRequest, NameIDMappingRequest],
-        "depend": ["authn"]
+        "sequence":[AuthnRequest, NameIDMappingRequest],
+        "depend":["authn"]
     },
     'authn-authn_query': {
         "name": 'AuthnRequest and then an AuthnQuery',
         "descr": 'AuthnRequest followed by an AuthnQuery',
         "sequence": [AuthnRequest, AuthnQuery],
         "tests": {"pre": [CheckSaml2IntMetaData],  "post": []},
-        "depend": ["authn"]
+        "depend":["authn"]
     },
 }

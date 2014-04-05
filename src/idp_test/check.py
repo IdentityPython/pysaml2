@@ -19,12 +19,19 @@ from saml2.samlp import Response
 from saml2.sigver import cert_from_key_info_dict
 from saml2.sigver import key_from_key_value_dict
 
-# Import the status codes used indicate the test results
-from saml2test.status import OK, CRITICAL, WARNING
-
 from saml2.time_util import str_to_time
 
 __author__ = 'rolandh'
+
+INFORMATION = 0
+OK = 1
+WARNING = 2
+ERROR = 3
+CRITICAL = 4
+INTERACTION = 5
+
+STATUSCODE = ["INFORMATION", "OK", "WARNING", "ERROR", "CRITICAL",
+              "INTERACTION"]
 
 PREFIX = "-----BEGIN CERTIFICATE-----"
 POSTFIX = "-----END CERTIFICATE-----"
@@ -56,8 +63,7 @@ class CheckSaml2IntMetaData(Check):
 
         # contact person
         if "contact_person" not in idpsso and "contact_person" not in ed:
-            self._message = "Metadata should contain contact person "
-            "information"
+            self._message = "Metadata should contain contact person information"
             self._status = WARNING
             return res
         else:
@@ -251,15 +257,14 @@ class CheckSubjectNameIDFormat(Check):
     """
     The <NameIDPolicy> element tailors the name identifier in the subjects of
     assertions resulting from an <AuthnRequest>.
-    When this element is used, if the content is not understood by or
-    acceptable to the identity provider, then a <Response> message element MUST
-    be returned with an error <Status>, and MAY contain a second-level
+    When this element is used, if the content is not understood by or acceptable
+    to the identity provider, then a <Response> message element MUST be
+    returned with an error <Status>, and MAY contain a second-level
     <StatusCode> of urn:oasis:names:tc:SAML:2.0:status:InvalidNameIDPolicy.
-    If the Format value is omitted or set to
-    urn:oasis:names:tc:SAML:2.0:nameid-format:unspecified, then the identity
-    provider is free to return any kind of identifier, subject to any
-    additional constraints due to the content of this element or the policies
-    of the identity provider or principal.
+    If the Format value is omitted or set to urn:oasis:names:tc:SAML:2.0:nameid-
+    format:unspecified, then the identity provider is free to return any kind
+    of identifier, subject to any additional constraints due to the content of
+    this element or the policies of the identity provider or principal.
     """
     cid = "check-saml2int-nameid-format"
     msg = "Attribute error"
@@ -460,7 +465,7 @@ class VerifyFunctionality(Check):
         md = conv.client.metadata
         entity = md[conv.entity_id]
         for desc in ["idpsso_descriptor", "attribute_authority_descriptor",
-                     "authn_authority_descriptor"]:
+                     "auth_authority_descriptor"]:
             try:
                 srvgrps = entity[desc]
             except KeyError:
@@ -497,8 +502,8 @@ class VerifyFunctionality(Check):
         if self._status != OK:
             return res
 
-        res = self._binding_support(conv, oper.request,
-                                    args["request_binding"], "idpsso")
+        res = self._binding_support(conv, oper.request, args["request_binding"],
+                                    "idpsso")
         if self._status != OK:
             return res
 
@@ -513,9 +518,7 @@ class VerifyFunctionality(Check):
                 pass
             else:
                 res = self._nameid_format_support(conv,
-                                                  args[
-                                                       "name_id_policy"
-                                                       ].format)
+                                                  args["name_id_policy"].format)
 
         return res
 
@@ -634,7 +637,7 @@ CLASS_CACHE = {}
 def factory(cid, classes=CLASS_CACHE):
     if len(classes) == 0:
         check.factory(cid, classes)
-        for _name, obj in inspect.getmembers(sys.modules[__name__]):
+        for name, obj in inspect.getmembers(sys.modules[__name__]):
             if inspect.isclass(obj):
                 try:
                     classes[obj.cid] = obj
