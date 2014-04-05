@@ -27,8 +27,6 @@ tmp*
 *egg-info*
 .coverage
 *.tmpl
-.ssh/
-private/
 
 example/idp3/htdocs/login.mako
 
