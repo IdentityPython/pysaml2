@@ -12,6 +12,6 @@ POLICY = Policy(
 )
 
 # HTTPS cert information
-SERVER_CERT = "pki/ssl.crt"
-SERVER_KEY = "pki/ssl.pem"
+SERVER_CERT = "pki/mycert.pem"
+SERVER_KEY = "pki/mykey.pem"
 CERT_CHAIN = ""
