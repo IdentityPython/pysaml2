@@ -534,7 +534,7 @@ class SSO(object):
             self.cache.relay_state[_rstate] = came_from
             ht_args = _cli.apply_binding(_binding, "%s" % req, destination,
                                          relay_state=_rstate)
-            _sid = req_id 
+            _sid = req_id
             logger.debug("ht_args: %s" % ht_args)
         except Exception, exc:
             logger.exception(exc)
