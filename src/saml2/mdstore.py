@@ -815,14 +815,18 @@ class MetadataStore(object):
         :type entity_id: string
         :rtype: dict
         """
-        ext = self.__getitem__(entity_id)["extensions"]
         res = {}
+        try:
+            ext = self.__getitem__(entity_id)["extensions"]
+        except KeyError:
+            return res
         for elem in ext["extension_elements"]:
             if elem["__class__"] == ENTITYATTRIBUTES:
                 for attr in elem["attribute"]:
                     if attr["name"] not in res:
                         res[attr["name"]] = []
-                    res[attr["name"]] += [v["text"] for v in attr["attribute_value"]]
+                    res[attr["name"]] += [v["text"] for v in attr[
+                        "attribute_value"]]
         return res
 
     def bindings(self, entity_id, typ, service):
