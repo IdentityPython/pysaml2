@@ -6,6 +6,7 @@ from saml2.server import Server
 
 __author__ = 'rolandh'
 
+
 def test_basic():
     sp = Saml2Client(config_file="servera_conf")
     idp = Server(config_file="idp_all_conf")
@@ -18,7 +19,7 @@ def test_basic():
     newid = NewID(text="Barfoo")
 
     mid, mreq = sp.create_manage_name_id_request(destination, name_id=nameid,
-                                           new_id=newid)
+                                                 new_id=newid)
 
     print mreq
     rargs = sp.apply_binding(binding, "%s" % mreq, destination, "")
@@ -31,6 +32,7 @@ def test_basic():
 
     assert mid == _req.message.id
 
+
 def test_flow():
     sp = Saml2Client(config_file="servera_conf")
     idp = Server(config_file="idp_all_conf")
@@ -42,7 +44,7 @@ def test_flow():
     newid = NewID(text="Barfoo")
 
     mid, midq = sp.create_manage_name_id_request(destination, name_id=nameid,
-                                           new_id=newid)
+                                                 new_id=newid)
 
     print midq
     rargs = sp.apply_binding(binding, "%s" % midq, destination, "")
@@ -67,8 +69,13 @@ def test_flow():
 
     # ---------- @SP ---------------
 
-    _response = sp.parse_manage_name_id_request_response(respargs["data"], binding)
+    _response = sp.parse_manage_name_id_request_response(respargs["data"],
+                                                         binding)
 
     print _response.response
 
     assert _response.response.id == mnir.id
+
+
+if __name__ == "__main__":
+    test_flow()

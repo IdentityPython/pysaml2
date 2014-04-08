@@ -66,6 +66,33 @@ def test_parse_duration2():
     assert d['tm_min'] == 30
 
 
+PATTERNS = {
+    "P3Y6M4DT12H30M5S": {'tm_sec': 5, 'tm_hour': 12, 'tm_mday': 4,
+                         'tm_year': 3, 'tm_mon': 6, 'tm_min': 30},
+    "P23DT23H": {'tm_sec': 0, 'tm_hour': 23, 'tm_mday': 23, 'tm_year': 0,
+                 'tm_mon': 0, 'tm_min': 0},
+    "P4Y": {'tm_sec': 0, 'tm_hour': 0, 'tm_mday': 0, 'tm_year': 4,
+            'tm_mon': 0, 'tm_min': 0},
+    "P1M": {'tm_sec': 0, 'tm_hour': 0, 'tm_mday': 0, 'tm_year': 0,
+            'tm_mon': 1, 'tm_min': 0},
+    "PT1M": {'tm_sec': 0, 'tm_hour': 0, 'tm_mday': 0, 'tm_year': 0,
+             'tm_mon': 0, 'tm_min': 1},
+    "P0.5Y": {'tm_sec': 0, 'tm_hour': 0, 'tm_mday': 0, 'tm_year': 0.5,
+              'tm_mon': 0, 'tm_min': 0},
+    "P0,5Y": {'tm_sec': 0, 'tm_hour': 0, 'tm_mday': 0, 'tm_year': 0.5,
+              'tm_mon': 0, 'tm_min': 0},
+    "PT36H": {'tm_sec': 0, 'tm_hour': 36, 'tm_mday': 0, 'tm_year': 0,
+              'tm_mon': 0, 'tm_min': 0},
+    "P1DT12H": {'tm_sec': 0, 'tm_hour': 12, 'tm_mday': 1, 'tm_year': 0,
+                'tm_mon': 0, 'tm_min': 0}
+}
+
+
+def test_parse_duration_n():
+    for dur, _val in PATTERNS.items():
+        (sign, d) = parse_duration(dur)
+        assert d == _val
+
 def test_add_duration_1():
     #2000-01-12T12:13:14Z	P1Y3M5DT7H10M3S	2001-04-17T19:23:17Z    
     t = add_duration(str_to_time("2000-01-12T12:13:14Z"), "P1Y3M5DT7H10M3S")
@@ -145,5 +172,6 @@ def test_not_on_or_after():
     assert not_on_or_after("%d-01-01T00:00:00Z" % (current_year + 1)) == True
     assert not_on_or_after("%d-01-01T00:00:00Z" % (current_year - 1)) == False
 
+
 if __name__ == "__main__":
-    test_parse_duration2()
+    test_parse_duration_n()
