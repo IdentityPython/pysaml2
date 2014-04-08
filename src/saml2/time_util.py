@@ -94,6 +94,8 @@ def parse_duration(duration):
                     raise Exception("Not allowed to end with 'T'")
             else:
                 raise Exception("Missing T")
+        elif duration[index] == "T":
+            continue
         else:
             try:
                 mod = duration[index:].index(code)
