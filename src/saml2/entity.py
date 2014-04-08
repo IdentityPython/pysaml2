@@ -803,7 +803,8 @@ class Entity(HTTPBase):
     def parse_manage_name_id_request_response(self, string, 
                                               binding=BINDING_SOAP):
         return self._parse_response(string, saml_response.ManageNameIDResponse,
-                                    "manage_name_id_service", binding)
+                                    "manage_name_id_service", binding,
+                                    asynchop=False)
 
     # ------------------------------------------------------------------------
 
