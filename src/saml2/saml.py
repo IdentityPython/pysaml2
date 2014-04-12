@@ -246,6 +246,8 @@ class AttributeValueBase(SamlBase):
             # clear type
             #self.clear_type()
             self.set_text(tree.text)
+            if XSI_NIL in self.extension_attributes:
+                del self.extension_attributes[XSI_NIL]
             try:
                 typ = self.extension_attributes[XSI_TYPE]
                 _verify_value_type(typ, getattr(self, "text"))
