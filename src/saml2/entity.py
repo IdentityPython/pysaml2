@@ -852,14 +852,6 @@ class Entity(HTTPBase):
 
             xmlstr = self.unravel(xmlstr, binding, response_cls.msgtype)
             origxml = xmlstr
-            if outstanding_certs is not None:
-                _response = samlp.any_response_from_string(xmlstr)
-                if len(_response.encrypted_assertion) > 0:
-                    _, cert_file = make_temp(
-                        "%s" % outstanding_certs[
-                            _response.in_response_to]["key"], decode=False)
-                    cbxs = CryptoBackendXmlSec1(self.config.xmlsec_binary)
-                    xmlstr = cbxs.decrypt(xmlstr, cert_file)
             if not xmlstr:  # Not a valid reponse
                 return None
 
@@ -878,18 +870,14 @@ class Entity(HTTPBase):
 
             logger.debug("XMLSTR: %s" % xmlstr)
 
-            if hasattr(response.response, 'encrypted_assertion'):
-                for encrypted_assertion in response.response.encrypted_assertion:
-                    if encrypted_assertion.extension_elements is not None:
-                        assertion_list = extension_elements_to_elements(
-                            encrypted_assertion.extension_elements, [saml])
-                        for assertion in assertion_list:
-                            _assertion = saml.assertion_from_string(
-                                str(assertion))
-                            response.response.assertion.append(_assertion)
-
             if response:
-                response = response.verify()
+                if outstanding_certs is not None:
+                    _, key_file = make_temp(
+                        "%s" % outstanding_certs[
+                            response.in_response_to]["key"], decode=False)
+                else:
+                    key_file = ""
+                response = response.verify(key_file)
 
             if not response:
                 return None

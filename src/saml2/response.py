@@ -42,8 +42,8 @@ import xmldsig as ds
 import xmlenc as xenc
 
 from saml2 import samlp
+from saml2 import class_name
 from saml2 import saml
-from saml2 import extension_element_to_element
 from saml2 import extension_elements_to_elements
 from saml2 import SAMLError
 from saml2 import time_util
@@ -387,7 +387,7 @@ class StatusResponse(object):
 
         if self.asynchop:
             if self.response.destination and \
-                            self.response.destination not in self.return_addrs:
+                    self.response.destination not in self.return_addrs:
                 logger.error("%s not in %s" % (self.response.destination,
                                                self.return_addrs))
                 return None
@@ -399,7 +399,7 @@ class StatusResponse(object):
     def loads(self, xmldata, decode=True, origxml=None):
         return self._loads(xmldata, decode, origxml)
 
-    def verify(self):
+    def verify(self, key_file=""):
         try:
             return self._verify()
         except AssertionError:
@@ -473,6 +473,7 @@ class AuthnResponse(StatusResponse):
         self.came_from = ""
         self.ava = None
         self.assertion = None
+        self.assertions = []
         self.session_not_on_or_after = 0
         self.allow_unsolicited = allow_unsolicited
         self.require_signature = want_assertions_signed
@@ -739,8 +740,13 @@ class AuthnResponse(StatusResponse):
         return self.name_id
 
     def _assertion(self, assertion):
-        self.assertion = assertion
+        """
+        Check the assertion
+        :param assertion:
+        :return: True/False depending on if the assertion is sane or not
+        """
 
+        self.assertion = assertion
         logger.debug("assertion context: %s" % (self.context,))
         logger.debug("assertion keys: %s" % (assertion.keyswv()))
         logger.debug("outstanding_queries: %s" % (self.outstanding_queries,))
@@ -773,54 +779,61 @@ class AuthnResponse(StatusResponse):
             logger.exception("get subject")
             raise
 
-    def _encrypted_assertion(self, xmlstr):
-        if xmlstr.encrypted_data:
-            assertion_str = self.sec.decrypt(xmlstr.encrypted_data.to_string())
-            if not assertion_str:
-                raise DecryptionFailed()
-            assertion = saml.assertion_from_string(assertion_str)
-        else:
-            decrypt_xml = self.sec.decrypt(xmlstr)
+    def decrypt_assertions(self, encrypted_assertions, key_file=""):
+        res = []
+        for encrypted_assertion in encrypted_assertions:
+            if encrypted_assertion.extension_elements:
+                assertions = extension_elements_to_elements(
+                    encrypted_assertion.extension_elements, [saml, samlp])
+                for assertion in assertions:
+                    if assertion.signature:
+                        if not self.sec.verify_signature(
+                                "%s" % assertion, key_file,
+                                node_name=class_name(assertion)):
+                            logger.error(
+                                "Failed to verify signature on '%s'" % assertion)
+                            raise SignatureError()
+                    res.append(assertion)
+        return res
 
-            logger.debug("Decryption successfull")
-
-            self.response = samlp.response_from_string(decrypt_xml)
-            logger.debug("Parsed decrypted assertion successfull")
-
-            enc = self.response.encrypted_assertion[0].extension_elements[0]
-            assertion = extension_element_to_element(
-                enc, saml.ELEMENT_FROM_STRING, namespace=saml.NAMESPACE)
-
-        logger.debug("Decrypted Assertion: %s" % assertion)
-        return self._assertion(assertion)
-
-    def parse_assertion(self):
+    def parse_assertion(self, key_file=""):
         if self.context == "AuthnQuery":
             # can contain one or more assertions
             pass
         else:  # This is a saml2int limitation
             try:
                 assert len(self.response.assertion) == 1 or \
-                       len(self.response.encrypted_assertion) == 1
+                    len(self.response.encrypted_assertion) == 1
             except AssertionError:
                 raise Exception("No assertion part")
 
+        if self.response.encrypted_assertion:
+            logger.debug("***Encrypted assertion/-s***")
+            decr_text = self.sec.decrypt(self.xmlstr)
+            resp = samlp.response_from_string(decr_text)
+            res = self.decrypt_assertions(resp.encrypted_assertion, key_file)
+            if self.response.assertion:
+                self.response.assertion.extend(res)
+            else:
+                self.response.assertion = res
+            self.response.encrypted_assertion = []
+
         if self.response.assertion:
-            logger.debug("***Unencrypted response***")
+            logger.debug("***Unencrypted assertion***")
             for assertion in self.response.assertion:
                 if not self._assertion(assertion):
                     return False
-            return True
-        else:
-            logger.debug("***Encrypted response***")
-            for assertion in self.response.encrypted_assertion:
-                if not self._encrypted_assertion(assertion):
-                    return False
-            return True
+                else:
+                    self.assertions.append(assertion)
+            self.assertion = self.assertions[0]
 
-    def verify(self):
+        return True
+
+    def verify(self, key_file):
         """ Verify that the assertion is syntactically correct and
-        the signature is correct if present."""
+        the signature is correct if present.
+        :param key_file: If not the default key file should be used this is it.
+        """
 
         try:
             self._verify()
@@ -830,7 +843,7 @@ class AuthnResponse(StatusResponse):
         if not isinstance(self.response, samlp.Response):
             return self
 
-        if self.parse_assertion():
+        if self.parse_assertion(key_file):
             return self
         else:
             logger.error("Could not parse the assertion")
@@ -1056,7 +1069,7 @@ class AssertionIDResponse(object):
 
         return self._postamble()
 
-    def verify(self):
+    def verify(self, key_file=""):
         try:
             valid_instance(self.response)
         except NotValid, exc:

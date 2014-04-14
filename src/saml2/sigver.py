@@ -35,12 +35,13 @@ from Crypto.PublicKey import RSA
 from saml2.cert import OpenSSLWrapper
 from saml2.extension import pefim
 from saml2.saml import EncryptedAssertion
-from saml2.samlp import Response, response_from_string
+from saml2.samlp import Response
 
 import xmldsig as ds
-import xmlenc as enc
 
-from saml2 import samlp, SAMLError, extension_elements_to_elements
+from saml2 import samlp
+from saml2 import SAMLError
+from saml2 import extension_elements_to_elements
 from saml2 import class_name
 from saml2 import saml
 from saml2 import ExtensionElement
@@ -74,7 +75,8 @@ RSA_SHA1 = "http://www.w3.org/2000/09/xmldsig#rsa-sha1"
 RSA_1_5 = "http://www.w3.org/2001/04/xmlenc#rsa-1_5"
 TRIPLE_DES_CBC = "http://www.w3.org/2001/04/xmlenc#tripledes-cbc"
 XMLTAG = "<?xml version='1.0'?>"
-PREFIX = "<?xml version='1.0' encoding='UTF-8'?>"
+PREFIX1 = "<?xml version='1.0' encoding='UTF-8'?>"
+PREFIX2 = '<?xml version="1.0" encoding="UTF-8"?>'
 
 
 class SigverError(SAMLError):
@@ -125,8 +127,12 @@ def rm_xmltag(statement):
         statement = statement[len(XMLTAG):]
         if statement[0] == '\n':
             statement = statement[1:]
-    elif statement.startswith(PREFIX):
-        statement = statement[len(PREFIX):]
+    elif statement.startswith(PREFIX1):
+        statement = statement[len(PREFIX1):]
+        if statement[0] == '\n':
+            statement = statement[1:]
+    elif statement.startswith(PREFIX2):
+        statement = statement[len(PREFIX2):]
         if statement[0] == '\n':
             statement = statement[1:]
 
@@ -693,7 +699,7 @@ class CryptoBackend():
     def encrypt(self, text, recv_key, template, key_type):
         raise NotImplementedError()
 
-    def encrypt_assertion(self, statement, recv_key, key_type):
+    def encrypt_assertion(self, statement, recv_key, key_type, xpath=""):
         raise NotImplementedError()
 
     def decrypt(self, enctext, key_file):
@@ -733,12 +739,25 @@ class CryptoBackendXmlSec1(CryptoBackend):
         except IndexError:
             return ""
 
-    def encrypt(self, text, recv_key, template, key_type):
+    def encrypt(self, text, recv_key, template, session_key_type, xpath=""):
+        """
+
+        :param text: The text to be compiled
+        :param recv_key: Filename of a file where the key resides
+        :param template: Filename of a file with the pre-encryption part
+        :param session_key_type: Type and size of a new session key
+            "des-192" generates a new 192 bits DES key for DES3 encryption
+        :param xpath: What should be encrypted
+        :return:
+        """
         logger.debug("Encryption input len: %d" % len(text))
         _, fil = make_temp("%s" % text, decode=False)
 
         com_list = [self.xmlsec, "--encrypt", "--pubkey-cert-pem", recv_key,
-                    "--session-key", key_type, "--xml-data", fil]
+                    "--session-key", session_key_type, "--xml-data", fil]
+
+        if xpath:
+            com_list.extend(['--node-xpath', xpath])
 
         (_stdout, _stderr, output) = self._run_xmlsec(com_list, [template],
                                                       exception=DecryptError,
@@ -767,7 +786,8 @@ class CryptoBackendXmlSec1(CryptoBackend):
                     "--session-key", key_type, "--xml-data", fil,
                     "--node-xpath", ASSERT_XPATH]
 
-        (_stdout, _stderr, output) = self._run_xmlsec(com_list, [tmpl], exception=EncryptError, validate_output=False)
+        (_stdout, _stderr, output) = self._run_xmlsec(
+            com_list, [tmpl], exception=EncryptError, validate_output=False)
 
         os.unlink(fil)
         if not output:
@@ -1206,7 +1226,7 @@ class SecurityContext(object):
 
         :param text: Text to encrypt
         :param recv_key: A file containing the receivers public key
-        :param template: A file containing the XML document template
+        :param template: A file containing the XMLSEC template
         :param key_type: The type of session key to use
         :result: An encrypted XML text
         """
@@ -1262,8 +1282,7 @@ class SecurityContext(object):
         return self.crypto.validate_signature(signedtext, cert_file=cert_file,
                                               cert_type=cert_type,
                                               node_name=node_name,
-                                              node_id=node_id, id_attr=id_attr,
-        )
+                                              node_id=node_id, id_attr=id_attr)
 
     def _check_signature(self, decoded_xml, item, node_name=NODE_NAME,
                          origdoc=None, id_attr="", must=False,
@@ -1735,7 +1754,10 @@ def pre_encrypt_assertion(response):
     assertion = response.assertion
     response.assertion = None
     response.encrypted_assertion = EncryptedAssertion()
-    response.encrypted_assertion.add_extension_element(assertion)
+    if isinstance(assertion, list):
+        response.encrypted_assertion.add_extension_elements(assertion)
+    else:
+        response.encrypted_assertion.add_extension_element(assertion)
     # txt = "%s" % response
     # _ass = "%s" % assertion
     # _ass = rm_xmltag(_ass)
