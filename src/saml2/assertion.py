@@ -78,7 +78,8 @@ def _match(attr, ava):
     return None
 
 
-def filter_on_attributes(ava, required=None, optional=None, acs=None):
+def filter_on_attributes(ava, required=None, optional=None, acs=None,
+                         fail_on_unfulfilled_requirements=True):
     """ Filter
     
     :param ava: An attribute value assertion as a dictionary
@@ -86,6 +87,8 @@ def filter_on_attributes(ava, required=None, optional=None, acs=None):
         required
     :param optional: list of RequestedAttribute instances defined to be
         optional
+    :param fail_on_unfulfilled_requirements: If required attributes
+        are missing fail or fail not depending on this parameter.
     :return: The modified attribute value assertion
     """
     res = {}
@@ -116,7 +119,7 @@ def filter_on_attributes(ava, required=None, optional=None, acs=None):
                 values = []
             res[_fn] = _filter_values(ava[_fn], values, True)
             continue
-        else:
+        elif fail_on_unfulfilled_requirements:
             desc = "Required attribute missing: '%s' (%s)" % (attr["name"],
                                                               _name)
             raise MissingValue(desc)
@@ -416,6 +419,16 @@ class Policy(object):
         
         return restrictions
 
+    def get_fail_on_missing_requested(self, sp_entity_id):
+        """ Return the whether the IdP should should fail if the SPs
+        requested attributes could not be found.
+
+        :param sp_entity_id: The SP entity ID
+        :return: The restrictions
+        """
+
+        return self.get("fail_on_missing_requested", sp_entity_id, True)
+
     def entity_category_attributes(self, ec):
         if not self._restrictions:
             return None
@@ -516,7 +529,9 @@ class Policy(object):
         
         if required or optional:
             logger.debug("required: %s, optional: %s" % (required, optional))
-            ava = filter_on_attributes(ava, required, optional, self.acs)
+            ava = filter_on_attributes(
+                ava, required, optional, self.acs,
+                self.get_fail_on_missing_requested(sp_entity_id))
         
         return ava
     
