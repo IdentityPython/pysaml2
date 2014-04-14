@@ -92,16 +92,6 @@ class TestResponse:
         assert isinstance(resp, AuthnResponse)
 
 
-def test_only_use_keys_in_metadata(self):
-    conf = config.SPConfig()
-    conf.load_file("sp_2_conf")
-
-    sc = security_context(conf)
-    # should fail
-    raises(MissingKey,
-           'sc.correctly_signed_response("%s" % self._sign_resp_)')
-
-
 if __name__ == "__main__":
     t = TestResponse()
     t.setup_class()

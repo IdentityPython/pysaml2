@@ -829,7 +829,7 @@ class AuthnResponse(StatusResponse):
 
         return True
 
-    def verify(self, key_file):
+    def verify(self, key_file=""):
         """ Verify that the assertion is syntactically correct and
         the signature is correct if present.
         :param key_file: If not the default key file should be used this is it.

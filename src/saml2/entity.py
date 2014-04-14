@@ -871,7 +871,7 @@ class Entity(HTTPBase):
             logger.debug("XMLSTR: %s" % xmlstr)
 
             if response:
-                if outstanding_certs is not None:
+                if outstanding_certs:
                     _, key_file = make_temp(
                         "%s" % outstanding_certs[
                             response.in_response_to]["key"], decode=False)
