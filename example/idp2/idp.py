@@ -41,7 +41,8 @@ from saml2.s_utils import UnsupportedBinding
 from saml2.s_utils import PolicyError
 from saml2.sigver import verify_redirect_signature, cert_from_instance, encrypt_cert_from_item
 
-logger = logging.getLogger("saml2.idp")
+logger = logging.getLogger("saml2")
+logger.setLevel(logging.WARNING)
 
 
 class Cache(object):
