@@ -190,6 +190,7 @@ def test_ava_filter_dont_fail():
         "default": {
             "lifetime": {"minutes": 15},
             "attribute_restrictions": None,  # means all I have
+            "fail_on_missing_requested": False
         },
         "urn:mace:umu.se:saml:roland:sp": {
             "lifetime": {"minutes": 5},

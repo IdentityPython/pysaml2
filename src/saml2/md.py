@@ -1039,10 +1039,8 @@ class IDPSSODescriptorType_(SSODescriptorType_):
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Attribute'] = (
         'attribute', [saml.Attribute])
     c_cardinality['attribute'] = {"min": 0}
-    c_attributes['WantAuthnRequestsSigned'] = ('want_authn_requests_signed',
-                                               'boolean', False)
-    c_attributes['WantAuthnRequestsOnlyWithValidCert'] = ('want_authn_requests_only_with_valid_cert',
-                                               'boolean', False)
+    c_attributes['WantAuthnRequestsSigned'] = (
+        'want_authn_requests_signed', 'boolean', False)
     c_child_order.extend(['single_sign_on_service', 'name_id_mapping_service',
                           'assertion_id_request_service', 'attribute_profile',
                           'attribute'])
