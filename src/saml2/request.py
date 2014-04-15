@@ -48,7 +48,7 @@ class Request(object):
             logger.info("EXCEPTION: %s", excp)
     
         if not self.message:
-            logger.error("Response was not correctly signed")
+            logger.error("Request was not correctly signed")
             logger.info(xmldata)
             raise IncorrectlySigned()
 
