@@ -1,5 +1,6 @@
 from saml2.assertion import Policy
 
+HOST = '127.0.0.1'
 PORT = 8087
 HTTPS = False
 
@@ -11,6 +12,6 @@ POLICY = Policy(
 )
 
 # HTTPS cert information
-SERVER_CERT = "pki/ssl.crt"
-SERVER_KEY = "pki/ssl.pem"
+SERVER_CERT = "pki/mycert.pem"
+SERVER_KEY = "pki/mykey.pem"
 CERT_CHAIN = ""

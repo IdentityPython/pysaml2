@@ -871,7 +871,7 @@ def application(environ, start_response):
     captures in the WSGI environment as  `myapp.url_args` so that
     the functions from above can access the url placeholders.
 
-    If nothing matches call the `not_found` function.
+    If nothing matches, call the `not_found` function.
     
     :param environ: The HTTP application environment
     :param start_response: The application to run when the handling of the 
@@ -976,10 +976,11 @@ if __name__ == '__main__':
                             module_directory=_rot + 'modules',
                             input_encoding='utf-8', output_encoding='utf-8')
 
+    HOST = '127.0.0.1'
     PORT = 8088
 
-    SRV = make_server('', PORT, application)
-    print "IdP listening on port: %s" % PORT
+    SRV = make_server(HOST, PORT, application)
+    print "IdP listening on %s:%s" % (HOST, PORT)
     SRV.serve_forever()
 else:
     _rot = args.mako_root

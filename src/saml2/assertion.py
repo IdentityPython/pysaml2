@@ -78,7 +78,8 @@ def _match(attr, ava):
     return None
 
 
-def filter_on_attributes(ava, required=None, optional=None, acs=None):
+def filter_on_attributes(ava, required=None, optional=None, acs=None,
+                         fail_on_unfulfilled_requirements=True):
     """ Filter
     
     :param ava: An attribute value assertion as a dictionary
@@ -86,6 +87,8 @@ def filter_on_attributes(ava, required=None, optional=None, acs=None):
         required
     :param optional: list of RequestedAttribute instances defined to be
         optional
+    :param fail_on_unfulfilled_requirements: If required attributes
+        are missing fail or fail not depending on this parameter.
     :return: The modified attribute value assertion
     """
     res = {}
@@ -116,7 +119,7 @@ def filter_on_attributes(ava, required=None, optional=None, acs=None):
                 values = []
             res[_fn] = _filter_values(ava[_fn], values, True)
             continue
-        else:
+        elif fail_on_unfulfilled_requirements:
             desc = "Required attribute missing: '%s' (%s)" % (attr["name"],
                                                               _name)
             raise MissingValue(desc)
@@ -434,6 +437,16 @@ class Policy(object):
 
         return self.get("attribute_restrictions", sp_entity_id)
 
+    def get_fail_on_missing_requested(self, sp_entity_id):
+        """ Return the whether the IdP should should fail if the SPs
+        requested attributes could not be found.
+
+        :param sp_entity_id: The SP entity ID
+        :return: The restrictions
+        """
+
+        return self.get("fail_on_missing_requested", sp_entity_id, True)
+
     def entity_category_attributes(self, ec):
         if not self._restrictions:
             return None
@@ -492,7 +505,9 @@ class Policy(object):
         
         if required or optional:
             logger.debug("required: %s, optional: %s" % (required, optional))
-            ava = filter_on_attributes(ava, required, optional, self.acs)
+            ava = filter_on_attributes(
+                ava, required, optional, self.acs,
+                self.get_fail_on_missing_requested(sp_entity_id))
         
         return ava
     
@@ -543,107 +558,109 @@ class EntityCategories(object):
     pass
 
 
+def _authn_context_class_ref(authn_class, authn_auth=None):
+    """
+    Construct the authn context with a authn context class reference
+    :param authn_class: The authn context class reference
+    :param authn_auth: Authenticating Authority
+    :return: An AuthnContext instance
+    """
+    cntx_class = factory(saml.AuthnContextClassRef, text=authn_class)
+    if authn_auth:
+        return factory(saml.AuthnContext,
+                       authn_context_class_ref=cntx_class,
+                       authenticating_authority=factory(
+                           saml.AuthenticatingAuthority, text=authn_auth))
+    else:
+        return factory(saml.AuthnContext,
+                       authn_context_class_ref=cntx_class)
+
+
+def _authn_context_decl(decl, authn_auth=None):
+    """
+    Construct the authn context with a authn context declaration
+    :param decl: The authn context declaration
+    :param authn_auth: Authenticating Authority
+    :return: An AuthnContext instance
+    """
+    return factory(saml.AuthnContext,
+                   authn_context_decl=decl,
+                   authenticating_authority=factory(
+                       saml.AuthenticatingAuthority, text=authn_auth))
+
+
+def _authn_context_decl_ref(decl_ref, authn_auth=None):
+    """
+    Construct the authn context with a authn context declaration reference
+    :param decl_ref: The authn context declaration reference
+    :param authn_auth: Authenticating Authority
+    :return: An AuthnContext instance
+    """
+    return factory(saml.AuthnContext,
+                   authn_context_decl_ref=decl_ref,
+                   authenticating_authority=factory(
+                       saml.AuthenticatingAuthority, text=authn_auth))
+
+
+def authn_statement(authn_class=None, authn_auth=None,
+                    authn_decl=None, authn_decl_ref=None, authn_instant="",
+                    subject_locality=""):
+    """
+    Construct the AuthnStatement
+    :param authn_class: Authentication Context Class reference
+    :param authn_auth: Authenticating Authority
+    :param authn_decl: Authentication Context Declaration
+    :param authn_decl_ref: Authentication Context Declaration reference
+    :param authn_instant: When the Authentication was performed.
+        Assumed to be seconds since the Epoch.
+    :param subject_locality: Specifies the DNS domain name and IP address
+        for the system from which the assertion subject was apparently
+        authenticated.
+    :return: An AuthnContext instance
+    """
+    if authn_instant:
+        _instant = instant(time_stamp=authn_instant)
+    else:
+        _instant = instant()
+
+    if authn_class:
+        res = factory(
+            saml.AuthnStatement,
+            authn_instant=_instant,
+            session_index=sid(),
+            authn_context=_authn_context_class_ref(
+                authn_class, authn_auth))
+    elif authn_decl:
+        res = factory(
+            saml.AuthnStatement,
+            authn_instant=_instant,
+            session_index=sid(),
+            authn_context=_authn_context_decl(authn_decl, authn_auth))
+    elif authn_decl_ref:
+        res = factory(
+            saml.AuthnStatement,
+            authn_instant=_instant,
+            session_index=sid(),
+            authn_context=_authn_context_decl_ref(authn_decl_ref,
+                                                       authn_auth))
+    else:
+        res = factory(
+            saml.AuthnStatement,
+            authn_instant=_instant,
+            session_index=sid())
+
+    if subject_locality:
+        res.subject_locality = saml.SubjectLocality(text=subject_locality)
+
+    return res
+
+
 class Assertion(dict):
     """ Handles assertions about subjects """
     
     def __init__(self, dic=None):
         dict.__init__(self, dic)
         self.acs = []
-
-    @staticmethod
-    def _authn_context_decl(decl, authn_auth=None):
-        """
-        Construct the authn context with a authn context declaration
-        :param decl: The authn context declaration
-        :param authn_auth: Authenticating Authority
-        :return: An AuthnContext instance
-        """
-        return factory(saml.AuthnContext,
-                       authn_context_decl=decl,
-                       authenticating_authority=factory(
-                           saml.AuthenticatingAuthority, text=authn_auth))
-
-    def _authn_context_decl_ref(self, decl_ref, authn_auth=None):
-        """
-        Construct the authn context with a authn context declaration reference
-        :param decl_ref: The authn context declaration reference
-        :param authn_auth: Authenticating Authority
-        :return: An AuthnContext instance
-        """
-        return factory(saml.AuthnContext,
-                       authn_context_decl_ref=decl_ref,
-                       authenticating_authority=factory(
-                           saml.AuthenticatingAuthority, text=authn_auth))
-
-    @staticmethod
-    def _authn_context_class_ref(authn_class, authn_auth=None):
-        """
-        Construct the authn context with a authn context class reference
-        :param authn_class: The authn context class reference
-        :param authn_auth: Authenticating Authority
-        :return: An AuthnContext instance
-        """
-        cntx_class = factory(saml.AuthnContextClassRef, text=authn_class)
-        if authn_auth:
-            return factory(saml.AuthnContext, 
-                           authn_context_class_ref=cntx_class,
-                           authenticating_authority=factory(
-                               saml.AuthenticatingAuthority, text=authn_auth))
-        else:
-            return factory(saml.AuthnContext,
-                           authn_context_class_ref=cntx_class)
-        
-    def _authn_statement(self, authn_class=None, authn_auth=None,
-                         authn_decl=None, authn_decl_ref=None, authn_instant="",
-                         subject_locality=""):
-        """
-        Construct the AuthnStatement
-        :param authn_class: Authentication Context Class reference
-        :param authn_auth: Authenticating Authority
-        :param authn_decl: Authentication Context Declaration
-        :param authn_decl_ref: Authentication Context Declaration reference
-        :param authn_instant: When the Authentication was performed.
-            Assumed to be seconds since the Epoch.
-        :param subject_locality: Specifies the DNS domain name and IP address
-            for the system from which the assertion subject was apparently
-            authenticated.
-        :return: An AuthnContext instance
-        """
-        if authn_instant:
-            _instant = instant(time_stamp=authn_instant)
-        else:
-            _instant = instant()
-
-        if authn_class:
-            res = factory(
-                saml.AuthnStatement,
-                authn_instant=_instant,
-                session_index=sid(),
-                authn_context=self._authn_context_class_ref(
-                    authn_class, authn_auth))
-        elif authn_decl:
-            res = factory(
-                saml.AuthnStatement,
-                authn_instant=_instant,
-                session_index=sid(),
-                authn_context=self._authn_context_decl(authn_decl, authn_auth))
-        elif authn_decl_ref:
-            res = factory(
-                saml.AuthnStatement,
-                authn_instant=_instant,
-                session_index=sid(),
-                authn_context=self._authn_context_decl_ref(authn_decl_ref,
-                                                           authn_auth))
-        else:
-            res = factory(
-                saml.AuthnStatement,
-                authn_instant=_instant,
-                session_index=sid())
-
-        if subject_locality:
-            res.subject_locality = saml.SubjectLocality(text=subject_locality)
-
-        return res
 
     def construct(self, sp_entity_id, in_response_to, consumer_url,
                   name_id, attrconvs, policy, issuer, authn_class=None,
@@ -695,10 +712,10 @@ class Assertion(dict):
         conds = policy.conditions(sp_entity_id)
 
         if authn_auth or authn_class or authn_decl or authn_decl_ref:
-            _authn_statement = self._authn_statement(authn_class, authn_auth,
-                                                     authn_decl, authn_decl_ref,
-                                                     authn_instant,
-                                                     subject_locality)
+            _authn_statement = authn_statement(authn_class, authn_auth,
+                                               authn_decl, authn_decl_ref,
+                                               authn_instant,
+                                               subject_locality)
         else:
             _authn_statement = None
 

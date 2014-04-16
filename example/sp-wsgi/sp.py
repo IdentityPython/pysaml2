@@ -93,7 +93,7 @@ def dict_to_table(ava, lev=0, width=1):
 def handle_static(environ, start_response, path):
     """
     Creates a response for a static file. There might be a longer path
-    then just /static/... if so strip the path leading up to static.
+    then just /static/... - if so strip the path leading up to static.
 
     :param environ: wsgi enviroment
     :param start_response: wsgi start response
@@ -534,7 +534,7 @@ class SSO(object):
             self.cache.relay_state[_rstate] = came_from
             ht_args = _cli.apply_binding(_binding, "%s" % req, destination,
                                          relay_state=_rstate)
-            _sid = req.id
+            _sid = req_id
             logger.debug("ht_args: %s" % ht_args)
         except Exception, exc:
             logger.exception(exc)
@@ -645,7 +645,7 @@ def application(environ, start_response):
     The main WSGI application. Dispatch the current request to
     the functions from above.
 
-    If nothing matches call the `not_found` function.
+    If nothing matches, call the `not_found` function.
     
     :param environ: The HTTP application environment
     :param start_response: The application to run when the handling of the 
@@ -683,13 +683,14 @@ def application(environ, start_response):
 
 # ----------------------------------------------------------------------------
 
+HOST = service_conf.HOST
 PORT = service_conf.PORT
 # ------- HTTPS -------
 # These should point to relevant files
 SERVER_CERT = service_conf.SERVER_CERT
 SERVER_KEY = service_conf.SERVER_KEY
 # This is of course the certificate chain for the CA that signed
-# you cert and all the way up to the top
+# your cert and all the way up to the top
 CERT_CHAIN = service_conf.CERT_CHAIN
 
 if __name__ == '__main__':
@@ -727,13 +728,13 @@ if __name__ == '__main__':
 
     add_urls()
 
-    SRV = wsgiserver.CherryPyWSGIServer(('0.0.0.0', PORT), application)
+    SRV = wsgiserver.CherryPyWSGIServer((HOST, PORT), application)
 
     if service_conf.HTTPS:
         SRV.ssl_adapter = ssl_pyopenssl.pyOpenSSLAdapter(SERVER_CERT,
                                                          SERVER_KEY, CERT_CHAIN)
     logger.info("Server starting")
-    print "SP listening on port: %s" % PORT
+    print "SP listening on %s:%s" % (HOST, PORT)
     try:
         SRV.start()
     except KeyboardInterrupt:

@@ -121,5 +121,4 @@ class TestClass:
         (ava, inactive) = self.cache.get_identity(nid[2])
         assert inactive == ["bcde"]
         assert ava == {}
-    
-    
+

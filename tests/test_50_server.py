@@ -2,18 +2,25 @@
 # -*- coding: utf-8 -*-
 import base64
 from urlparse import parse_qs
+from saml2.sigver import pre_encryption_part
 from saml2.assertion import Policy
 from saml2.authn_context import INTERNETPROTOCOLPASSWORD
 from saml2.saml import NameID, NAMEID_FORMAT_TRANSIENT
 from saml2.samlp import response_from_string
 
 from saml2.server import Server
-from saml2 import samlp, saml, client, config
+from saml2 import samlp
+from saml2 import saml
+from saml2 import client
+from saml2 import config
+from saml2 import class_name
+from saml2 import extension_elements_to_elements
 from saml2 import s_utils
 from saml2 import sigver
 from saml2 import time_util
 from saml2.s_utils import OtherError
-from saml2.s_utils import do_attribute_statement, factory
+from saml2.s_utils import do_attribute_statement
+from saml2.s_utils import factory
 from saml2.soap import make_soap_enveloped_saml_thingy
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT
@@ -182,7 +189,8 @@ class TestServer1():
         name_id_policy = resp_args["name_id_policy"]
         assert _eq(name_id_policy.keyswv(), ["format", "allow_create"])
         assert name_id_policy.format == saml.NAMEID_FORMAT_TRANSIENT
-        assert resp_args["sp_entity_id"] == "urn:mace:example.com:saml:roland:sp"
+        assert resp_args[
+                   "sp_entity_id"] == "urn:mace:example.com:saml:roland:sp"
 
     def test_sso_response_with_identity(self):
         name_id = self.server.ident.transient_nameid(
@@ -195,8 +203,8 @@ class TestServer1():
                 "mail": "derek.jeter@nyy.mlb.com",
                 "title": "The man"
             },
-            "id12",                         # in_response_to
-            "http://localhost:8087/",       # destination
+            "id12",  # in_response_to
+            "http://localhost:8087/",  # destination
             "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
             name_id=name_id,
             authn=AUTHN
@@ -227,7 +235,8 @@ class TestServer1():
                 break
         assert len(attr.attribute_value) == 1
         assert attr.name == "urn:oid:1.3.6.1.4.1.5923.1.1.1.7"
-        assert attr.name_format == "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
+        assert attr.name_format == "urn:oasis:names:tc:SAML:2" \
+                                   ".0:attrname-format:uri"
         value = attr.attribute_value[0]
         assert value.text.strip() == "Short stop"
         assert value.get_type() == "xs:string"
@@ -242,13 +251,13 @@ class TestServer1():
     def test_sso_response_without_identity(self):
         resp = self.server.create_authn_response(
             {},
-            "id12",                                 # in_response_to
-            "http://localhost:8087/",               # consumer_url
-            "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
-            userid="USER1",
-            authn=AUTHN,
-            release_policy=Policy(),
-            best_effort=True
+              "id12",  # in_response_to
+              "http://localhost:8087/",  # consumer_url
+              "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
+              userid="USER1",
+              authn=AUTHN,
+              release_policy=Policy(),
+              best_effort=True
         )
 
         print resp.keyswv()
@@ -268,12 +277,12 @@ class TestServer1():
 
         resp = self.server.create_authn_response(
             {},
-            "id12",                             # in_response_to
-            "http://localhost:8087/",           # consumer_url
-            "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
-            userid="USER1",
-            authn=_authn,
-            best_effort=True
+              "id12",  # in_response_to
+              "http://localhost:8087/",  # consumer_url
+              "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
+              userid="USER1",
+              authn=_authn,
+              best_effort=True
         )
 
         print resp.keyswv()
@@ -297,11 +306,11 @@ class TestServer1():
         print resp.status
         assert resp.status.status_code.value == samlp.STATUS_RESPONDER
         assert resp.status.status_code.status_code.value == \
-            samlp.STATUS_REQUEST_UNSUPPORTED
+               samlp.STATUS_REQUEST_UNSUPPORTED
         assert resp.status.status_message.text == \
-            "eduPersonAffiliation missing"
+               "eduPersonAffiliation missing"
         assert resp.issuer.text == "urn:mace:example.com:saml:roland:idp"
-        assert not resp.assertion 
+        assert not resp.assertion
 
     def test_authn_response_0(self):
         self.server = Server("idp_conf")
@@ -346,8 +355,8 @@ class TestServer1():
 
         signed_resp = self.server.create_authn_response(
             ava,
-            "id12",                                 # in_response_to
-            "http://lingon.catalogix.se:8087/",     # consumer_url
+            "id12",  # in_response_to
+            "http://lingon.catalogix.se:8087/",  # consumer_url
             "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
             name_id=name_id,
             sign_assertion=True
@@ -480,7 +489,6 @@ def _logout_request(conf_file):
 
 
 class TestServerLogout():
-
     def test_1(self):
         server = Server("idp_slo_redirect_conf")
         req_id, request = _logout_request("sp_slo_redirect_conf")
@@ -502,4 +510,3 @@ class TestServerLogout():
 if __name__ == "__main__":
     ts = TestServer1()
     ts.setup_class()
-    ts.test_sso_response_specific_instant()

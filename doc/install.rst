@@ -53,5 +53,5 @@ The tests are based on the pypy test environment, so::
     py.test 
 
 is what you should use. If you don't have py.test, get it it's part of pypy! 
-It's really good !
+It's really good!
 

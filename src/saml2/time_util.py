@@ -81,8 +81,9 @@ def parse_duration(duration):
     assert duration[index] == "P"
     index += 1
     
-    dic = dict([(typ, 0) for (code, typ) in D_FORMAT])
-    
+    dic = dict([(typ, 0) for (code, typ) in D_FORMAT if typ])
+    dlen = len(duration)
+
     for code, typ in D_FORMAT:
         #print duration[index:], code
         if duration[index] == '-':
@@ -94,25 +95,36 @@ def parse_duration(duration):
                     raise Exception("Not allowed to end with 'T'")
             else:
                 raise Exception("Missing T")
+        elif duration[index] == "T":
+            continue
         else:
             try:
                 mod = duration[index:].index(code)
+                _val = duration[index:index + mod]
                 try:
-                    dic[typ] = int(duration[index:index + mod])
+                    dic[typ] = int(_val)
                 except ValueError:
-                    if code == "S":
+                    # smallest value used may also have a decimal fraction
+                    if mod + index + 1 == dlen:
                         try:
-                            dic[typ] = float(duration[index:index + mod])
+                            dic[typ] = float(_val)
                         except ValueError:
-                            raise Exception("Not a float")
+                            if "," in _val:
+                                _val = _val.replace(",", ".")
+                                try:
+                                    dic[typ] = float(_val)
+                                except ValueError:
+                                    raise Exception("Not a float")
+                            else:
+                                raise Exception("Not a float")
                     else:
-                        raise Exception(
-                            "Fractions not allow on anything byt seconds")
+                        raise ValueError(
+                            "Fraction not allowed on other than smallest value")
                 index = mod + index + 1
             except ValueError:
                 dic[typ] = 0
 
-        if index == len(duration):
+        if index == dlen:
             break
         
     return sign, dic

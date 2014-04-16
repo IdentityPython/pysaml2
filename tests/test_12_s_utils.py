@@ -151,7 +151,7 @@ def test_audience():
     assert aud_restr.audience.text == "urn:foo:bar"
     
 def test_conditions():
-    conditions = utils.factory( saml.Conditions,
+    conditions = utils.factory(saml.Conditions,
                     not_before="2009-10-30T07:58:10.852Z",
                     not_on_or_after="2009-10-30T08:03:10.852Z", 
                     audience_restriction=[utils.factory(saml.AudienceRestriction,

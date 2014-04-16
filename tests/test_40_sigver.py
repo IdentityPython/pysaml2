@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
 import base64
+from saml2.sigver import pre_encryption_part, make_temp
 from saml2.mdstore import MetadataStore
-from saml2.saml import assertion_from_string
+from saml2.saml import assertion_from_string, EncryptedAssertion
 from saml2.samlp import response_from_string
 
-from saml2 import sigver
+from saml2 import sigver, extension_elements_to_elements
 from saml2 import class_name
 from saml2 import time_util
 from saml2 import saml, samlp
@@ -25,8 +26,9 @@ PUB_KEY = full_path("test.pem")
 PRIV_KEY = full_path("test.key")
 
 
-def _eq(l1,l2):
+def _eq(l1, l2):
     return set(l1) == set(l2)
+
 
 CERT1 = """MIICsDCCAhmgAwIBAgIJAJrzqSSwmDY9MA0GCSqGSIb3DQEBBQUAMEUxCzAJBgNV
 BAYTAkFVMRMwEQYDVQQIEwpTb21lLVN0YXRlMSEwHwYDVQQKExhJbnRlcm5ldCBX
@@ -60,7 +62,7 @@ wKe3ACFXBvqGQN0IbcH49hu0FKhYFM/GPDJcIHFBsiyMBXChpye9vBaTNEBCtU3K
 jjyG0hRT2mAQ9h+bkPmOvlEo/aH0xR68Z9hw4PF13w=="""
 
 from pyasn1.codec.der import decoder
- 
+
 
 def test_cert_from_instance_1():
     xml_response = open(SIGNED).read()
@@ -104,7 +106,6 @@ class FakeConfig():
 
 
 class TestSecurity():
-
     def setup_class(self):
         # This would be one way to initialize the security context :
         #
@@ -126,8 +127,8 @@ class TestSecurity():
             issue_instant="2009-10-30T13:20:28Z",
             signature=sigver.pre_signature_part("11111", self.sec.my_cert, 1),
             attribute_statement=do_attribute_statement({
-                    ("", "", "surName"): ("Foo", ""),
-                    ("", "", "givenName"): ("Bar", ""),
+                ("", "", "surName"): ("Foo", ""),
+                ("", "", "givenName"): ("Bar", ""),
             })
         )
 
@@ -144,7 +145,7 @@ class TestSecurity():
 
     def test_non_verify_2(self):
         xml_response = open(FALSE_SIGNED).read()
-        raises(sigver.SignatureError,self.sec.correctly_signed_response,
+        raises(sigver.SignatureError, self.sec.correctly_signed_response,
                xml_response)
 
     def test_sign_assertion(self):
@@ -154,8 +155,8 @@ class TestSecurity():
         #print sign_ass
         sass = saml.assertion_from_string(sign_ass)
         #print sass
-        assert _eq(sass.keyswv(), ['attribute_statement', 'issue_instant', 
-                                'version', 'signature', 'id'])
+        assert _eq(sass.keyswv(), ['attribute_statement', 'issue_instant',
+                                   'version', 'signature', 'id'])
         assert sass.version == "2.0"
         assert sass.id == "11111"
         assert time_util.str_to_time(sass.issue_instant)
@@ -227,19 +228,21 @@ class TestSecurity():
 
     def test_sign_response(self):
         response = factory(samlp.Response,
-                assertion=self._assertion,
-                id="22222",
-                signature=sigver.pre_signature_part("22222", self.sec.my_cert))
+                           assertion=self._assertion,
+                           id="22222",
+                           signature=sigver.pre_signature_part("22222",
+                                                               self.sec
+                                                               .my_cert))
 
         to_sign = [(class_name(self._assertion), self._assertion.id),
-                    (class_name(response), response.id)]
+                   (class_name(response), response.id)]
         s_response = sigver.signed_instance_factory(response, self.sec, to_sign)
-            
+
         assert s_response is not None
         print s_response
         response = response_from_string(s_response)
         sass = response.assertion[0]
-        
+
         print sass
         assert _eq(sass.keyswv(), ['attribute_statement', 'issue_instant',
                                    'version', 'signature', 'id'])
@@ -252,23 +255,27 @@ class TestSecurity():
         assert item.id == "22222"
 
     def test_sign_response_2(self):
-        assertion2 = factory( saml.Assertion,
-            version= "2.0",
-            id= "11122",
-            issue_instant= "2009-10-30T13:20:28Z",
-            signature= sigver.pre_signature_part("11122", self.sec.my_cert),
-            attribute_statement=do_attribute_statement({
-                    ("","","surName"): ("Fox",""),
-                    ("","","givenName") :("Bear",""),
-                })
-            )
+        assertion2 = factory(saml.Assertion,
+                             version="2.0",
+                             id="11122",
+                             issue_instant="2009-10-30T13:20:28Z",
+                             signature=sigver.pre_signature_part("11122",
+                                                                 self.sec
+                                                                 .my_cert),
+                             attribute_statement=do_attribute_statement({
+                                 ("", "", "surName"): ("Fox", ""),
+                                 ("", "", "givenName"): ("Bear", ""),
+                             })
+        )
         response = factory(samlp.Response,
-                assertion=assertion2,
-                id="22233",
-                signature=sigver.pre_signature_part("22233", self.sec.my_cert))
+                           assertion=assertion2,
+                           id="22233",
+                           signature=sigver.pre_signature_part("22233",
+                                                               self.sec
+                                                               .my_cert))
 
         to_sign = [(class_name(assertion2), assertion2.id),
-                    (class_name(response), response.id)]
+                   (class_name(response), response.id)]
 
         s_response = sigver.signed_instance_factory(response, self.sec, to_sign)
 
@@ -277,7 +284,7 @@ class TestSecurity():
 
         sass = response2.assertion[0]
         assert _eq(sass.keyswv(), ['attribute_statement', 'issue_instant',
-                                'version', 'signature', 'id'])
+                                   'version', 'signature', 'id'])
         assert sass.version == "2.0"
         assert sass.id == "11122"
 
@@ -285,105 +292,115 @@ class TestSecurity():
                                         s_response)
 
         assert isinstance(item, samlp.Response)
-        
-    def test_sign_verify(self):        
+
+    def test_sign_verify(self):
         response = factory(samlp.Response,
-                assertion=self._assertion,
-                id="22233",
-                signature=sigver.pre_signature_part("22233", self.sec.my_cert))
+                           assertion=self._assertion,
+                           id="22233",
+                           signature=sigver.pre_signature_part("22233",
+                                                               self.sec
+                                                               .my_cert))
 
         to_sign = [(class_name(self._assertion), self._assertion.id),
-                    (class_name(response), response.id)]
+                   (class_name(response), response.id)]
 
         s_response = sigver.signed_instance_factory(response, self.sec, to_sign)
 
         print s_response
-        res = self.sec.verify_signature("%s" % s_response, 
-                                    node_name=class_name(samlp.Response()))
+        res = self.sec.verify_signature("%s" % s_response,
+                                        node_name=class_name(samlp.Response()))
 
-        print res        
+        print res
         assert res
 
     def test_sign_verify_with_cert_from_instance(self):
         response = factory(samlp.Response,
-                assertion=self._assertion,
-                id="22222",
-                signature=sigver.pre_signature_part("22222", self.sec.my_cert))
+                           assertion=self._assertion,
+                           id="22222",
+                           signature=sigver.pre_signature_part("22222",
+                                                               self.sec
+                                                               .my_cert))
 
         to_sign = [(class_name(self._assertion), self._assertion.id),
-                    (class_name(response), response.id)]
+                   (class_name(response), response.id)]
 
         s_response = sigver.signed_instance_factory(response, self.sec, to_sign)
 
         response2 = response_from_string(s_response)
 
         ci = "".join(sigver.cert_from_instance(response2)[0].split())
-        
 
         assert ci == self.sec.my_cert
-        
-        res = self.sec.verify_signature("%s" % s_response, 
-                                    node_name=class_name(samlp.Response()))
+
+        res = self.sec.verify_signature("%s" % s_response,
+                                        node_name=class_name(samlp.Response()))
 
         assert res
 
         res = self.sec._check_signature(s_response, response2,
                                         class_name(response2), s_response)
         assert res == response2
-                
+
     def test_sign_verify_assertion_with_cert_from_instance(self):
-        assertion = factory( saml.Assertion,
-            version= "2.0",
-            id= "11100",
-            issue_instant= "2009-10-30T13:20:28Z",
-            signature= sigver.pre_signature_part("11100", self.sec.my_cert),
-            attribute_statement=do_attribute_statement({
-                    ("","","surName"): ("Fox",""),
-                    ("","","givenName") :("Bear",""),
-                })
-            )
+        assertion = factory(saml.Assertion,
+                            version="2.0",
+                            id="11100",
+                            issue_instant="2009-10-30T13:20:28Z",
+                            signature=sigver.pre_signature_part("11100",
+                                                                self.sec
+                                                                .my_cert),
+                            attribute_statement=do_attribute_statement({
+                                ("", "", "surName"): ("Fox", ""),
+                                ("", "", "givenName"): ("Bear", ""),
+                            })
+        )
 
         to_sign = [(class_name(assertion), assertion.id)]
-        s_assertion = sigver.signed_instance_factory(assertion, self.sec, to_sign)
+        s_assertion = sigver.signed_instance_factory(assertion, self.sec,
+                                                     to_sign)
         print s_assertion
         ass = assertion_from_string(s_assertion)
         ci = "".join(sigver.cert_from_instance(ass)[0].split())
         assert ci == self.sec.my_cert
-        
+
         res = self.sec.verify_signature("%s" % s_assertion,
                                         node_name=class_name(ass))
-        assert res 
-        
+        assert res
+
         res = self.sec._check_signature(s_assertion, ass, class_name(ass))
-        
+
         assert res
 
     def test_exception_sign_verify_with_cert_from_instance(self):
-        assertion = factory( saml.Assertion,
-            version= "2.0",
-            id= "11100",
-            issue_instant= "2009-10-30T13:20:28Z",
-            #signature= sigver.pre_signature_part("11100", self.sec.my_cert),
-            attribute_statement=do_attribute_statement({
-                    ("","","surName"): ("Foo",""),
-                    ("","","givenName") :("Bar",""),
-                })
-            )
+        assertion = factory(saml.Assertion,
+                            version="2.0",
+                            id="11100",
+                            issue_instant="2009-10-30T13:20:28Z",
+                            #signature= sigver.pre_signature_part("11100",
+                            # self.sec.my_cert),
+                            attribute_statement=do_attribute_statement({
+                                ("", "", "surName"): ("Foo", ""),
+                                ("", "", "givenName"): ("Bar", ""),
+                            })
+        )
 
         response = factory(samlp.Response,
-                assertion=assertion,
-                id="22222",
-                signature=sigver.pre_signature_part("22222", self.sec.my_cert))
+                           assertion=assertion,
+                           id="22222",
+                           signature=sigver.pre_signature_part("22222",
+                                                               self.sec
+                                                               .my_cert))
 
         to_sign = [(class_name(response), response.id)]
-                    
+
         s_response = sigver.signed_instance_factory(response, self.sec, to_sign)
 
         response2 = response_from_string(s_response)
         # Change something that should make everything fail
         response2.id = "23456"
         raises(sigver.SignatureError, self.sec._check_signature,
-                s_response, response2, class_name(response2))
+               s_response, response2, class_name(response2))
+
 
 
 class TestSecurityMetadata():
@@ -397,36 +414,71 @@ class TestSecurityMetadata():
         conf.only_use_keys_in_metadata = False
         self.sec = sigver.security_context(conf)
 
-        self._assertion = factory( saml.Assertion,
-                                   version="2.0",
-                                   id="11111",
-                                   issue_instant="2009-10-30T13:20:28Z",
-                                   signature=sigver.pre_signature_part("11111", self.sec.my_cert, 1),
-                                   attribute_statement=do_attribute_statement({
-                                       ("","","surName"): ("Foo",""),
-                                       ("","","givenName") :("Bar",""),
-                                       })
+        assertion = factory(
+            saml.Assertion, version="2.0", id="11111",
+            issue_instant="2009-10-30T13:20:28Z",
+            signature=sigver.pre_signature_part("11111", self.sec.my_cert, 1),
+            attribute_statement=do_attribute_statement(
+                {("", "", "surName"): ("Foo", ""),
+                 ("", "", "givenName"): ("Bar", ""), })
         )
 
-    def test_sign_assertion(self):
-        ass = self._assertion
-        print ass
-        sign_ass = self.sec.sign_assertion("%s" % ass, node_id=ass.id)
-        #print sign_ass
-        sass = saml.assertion_from_string(sign_ass)
-        #print sass
-        assert _eq(sass.keyswv(), ['attribute_statement', 'issue_instant',
-                                   'version', 'signature', 'id'])
-        assert sass.version == "2.0"
-        assert sass.id == "11111"
-        assert time_util.str_to_time(sass.issue_instant)
 
-        print "Crypto version : %s" % (self.sec.crypto.version())
+def test_xbox():
+    conf = config.SPConfig()
+    conf.load_file("server_conf")
+    md = MetadataStore([saml, samlp], None, conf)
+    md.load("local", full_path("idp_example.xml"))
 
-        item = self.sec.check_signature(sass, class_name(sass), sign_ass)
+    conf.metadata = md
+    conf.only_use_keys_in_metadata = False
+    sec = sigver.security_context(conf)
 
-        assert isinstance(item, saml.Assertion)
+    assertion = factory(
+        saml.Assertion, version="2.0", id="11111",
+        issue_instant="2009-10-30T13:20:28Z",
+        signature=sigver.pre_signature_part("11111", sec.my_cert, 1),
+        attribute_statement=do_attribute_statement(
+            {("", "", "surName"): ("Foo", ""),
+             ("", "", "givenName"): ("Bar", ""), })
+    )
+
+    sigass = sec.sign_statement(assertion, class_name(assertion),
+                                key_file="pki/mykey.pem", node_id=assertion.id)
+
+    _ass0 = saml.assertion_from_string(sigass)
+
+    encrypted_assertion = EncryptedAssertion()
+    encrypted_assertion.add_extension_element(_ass0)
+
+    _, pre = make_temp("%s" % pre_encryption_part(), decode=False)
+    enctext = sec.crypto.encrypt(
+        "%s" % encrypted_assertion, conf.cert_file, pre, "des-192",
+        '/*[local-name()="EncryptedAssertion"]/*[local-name()="Assertion"]')
+
+
+    decr_text = sec.decrypt(enctext)
+    _seass = saml.encrypted_assertion_from_string(decr_text)
+    assertions = []
+    assers = extension_elements_to_elements(_seass.extension_elements,
+                                            [saml, samlp])
+
+    sign_cert_file = "pki/mycert.pem"
+
+    for ass in assers:
+        _ass = "%s" % ass
+        #_ass = _ass.replace('xsi:nil="true" ', '')
+        #assert sigass == _ass
+        _txt = sec.verify_signature(_ass, sign_cert_file,
+                                    node_name=class_name(assertion))
+        if _txt:
+            assertions.append(ass)
+
+    print assertions
+
 
 if __name__ == "__main__":
-    t = TestSecurity()
-    t.setup_class()
+    #t = TestSecurity()
+    #t.setup_class()
+    #t.test_sign_then_encrypt_assertion()
+    test_xbox()

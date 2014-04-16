@@ -13,7 +13,7 @@ pysaml2
 
 PySAML2 is a pure python implementation of SAML2. It contains all necessary pieces for building a SAML2 service
 provider or an identity provider. The distribution contains examples of both. Originally written to work in a WSGI
-environment there are extensions that allow you to use it with other frameworks.
+environment, there are extensions that allow you to use it with other frameworks.
 
 Contents:
 

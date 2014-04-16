@@ -775,37 +775,58 @@ class MetadataStore(object):
         return [m["text"] for m in ad["affiliate_member"]]
 
     def entity_categories(self, entity_id):
-        ent = self.__getitem__(entity_id)
-        res = []
-        try:
-            ext = ent["extensions"]
-        except KeyError:
-            pass
-        else:
-            for elem in ext["extension_elements"]:
-                if elem["__class__"] == ENTITYATTRIBUTES:
-                    for attr in elem["attribute"]:
-                        if attr["name"] == ENTITY_CATEGORY:
-                            res.extend([v["text"] for v in
-                                        attr["attribute_value"]])
+        """
+        Get a list of entity categories for an entity id.
 
-        return res
+        :param entity_id: Entity id
+        :return: Entity categories
+
+        :type entity_id: string
+        :rtype: [string]
+        """
+        attributes = self.entity_attributes(entity_id)
+        return attributes.get(ENTITY_CATEGORY, [])
 
     def supported_entity_categories(self, entity_id):
-        ent = self.__getitem__(entity_id)
-        res = []
-        try:
-            ext = ent["extensions"]
-        except KeyError:
-            pass
-        else:
-            for elem in ext["extension_elements"]:
-                if elem["__class__"] == ENTITYATTRIBUTES:
-                    for attr in elem["attribute"]:
-                        if attr["name"] == ENTITY_CATEGORY_SUPPORT:
-                            res.extend([v["text"] for v in
-                                        attr["attribute_value"]])
+        """
+        Get a list of entity category support for an entity id.
 
+        :param entity_id: Entity id
+        :return: Entity category support
+
+        :type entity_id: string
+        :rtype: [string]
+        """
+        attributes = self.entity_attributes(entity_id)
+        return attributes.get(ENTITY_CATEGORY_SUPPORT, [])
+
+    def entity_attributes(self, entity_id):
+        """
+        Get all entity attributes for an entry in the metadata.
+
+        Example return data:
+
+        {'http://macedir.org/entity-category': ['something', 'something2'],
+         'http://example.org/saml-foo': ['bar']}
+
+        :param entity_id: Entity id
+        :return: dict with keys and value-lists from metadata
+
+        :type entity_id: string
+        :rtype: dict
+        """
+        res = {}
+        try:
+            ext = self.__getitem__(entity_id)["extensions"]
+        except KeyError:
+            return res
+        for elem in ext["extension_elements"]:
+            if elem["__class__"] == ENTITYATTRIBUTES:
+                for attr in elem["attribute"]:
+                    if attr["name"] not in res:
+                        res[attr["name"]] = []
+                    res[attr["name"]] += [v["text"] for v in attr[
+                        "attribute_value"]]
         return res
 
     def bindings(self, entity_id, typ, service):

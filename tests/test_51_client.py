@@ -4,21 +4,32 @@
 import base64
 import urllib
 import urlparse
-from saml2.authn_context import INTERNETPROTOCOLPASSWORD
-from saml2.response import LogoutResponse
+from saml2 import BINDING_HTTP_POST
+from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import config
+from saml2 import class_name
+from saml2 import extension_elements_to_elements
+from saml2 import saml
+from saml2 import samlp
+from saml2 import sigver
+from saml2 import s_utils
+from saml2.assertion import Assertion
 
+from saml2.authn_context import INTERNETPROTOCOLPASSWORD
 from saml2.client import Saml2Client
-from saml2 import samlp, BINDING_HTTP_POST, BINDING_HTTP_REDIRECT
-from saml2 import saml, config, class_name
 from saml2.config import SPConfig
+from saml2.response import LogoutResponse
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.saml import NameID
 from saml2.server import Server
+from saml2.sigver import pre_encryption_part
+from saml2.s_utils import do_attribute_statement
+from saml2.s_utils import factory
 from saml2.time_util import in_a_while
 
-from py.test import raises
-from fakeIDP import FakeIDP, unpack_form
+from fakeIDP import FakeIDP
+from fakeIDP import unpack_form
 
 
 AUTHN = {
@@ -341,8 +352,123 @@ class TestClient:
         print my_name
         assert my_name == "urn:mace:example.com:saml:roland:sp"
 
-# Below can only be done with dummy Server
+    def test_sign_then_encrypt_assertion(self):
+        # Begin with the IdPs side
+        _sec = self.server.sec
 
+        assertion = s_utils.assertion_factory(
+            subject=factory(saml.Subject, text="_aaa",
+                            name_id=factory(
+                                saml.NameID,
+                                format=saml.NAMEID_FORMAT_TRANSIENT)),
+            attribute_statement=do_attribute_statement(
+                {
+                    ("", "", "surName"): ("Jeter", ""),
+                    ("", "", "givenName"): ("Derek", ""),
+                }
+            ),
+            issuer=self.server._issuer(),
+        )
+
+        assertion.signature = sigver.pre_signature_part(
+            assertion.id, _sec.my_cert, 1)
+
+        sigass = _sec.sign_statement(assertion, class_name(assertion),
+                                     key_file="pki/mykey.pem",
+                                     node_id=assertion.id)
+        # Create an Assertion instance from the signed assertion
+        _ass = saml.assertion_from_string(sigass)
+
+        response = sigver.response_factory(
+            in_response_to="_012345",
+            destination="https:#www.example.com",
+            status=s_utils.success_status_factory(),
+            issuer=self.server._issuer(),
+            assertion=_ass
+        )
+
+        enctext = _sec.crypto.encrypt_assertion(response, _sec.cert_file,
+                                                pre_encryption_part())
+
+        seresp = samlp.response_from_string(enctext)
+
+        # Now over to the client side
+        _csec = self.client.sec
+        if seresp.encrypted_assertion:
+            decr_text = _csec.decrypt(enctext)
+            seresp = samlp.response_from_string(decr_text)
+            resp_ass = []
+
+            sign_cert_file = "pki/mycert.pem"
+            for enc_ass in seresp.encrypted_assertion:
+                assers = extension_elements_to_elements(
+                    enc_ass.extension_elements, [saml, samlp])
+                for ass in assers:
+                    if ass.signature:
+                        if not _csec.verify_signature("%s" % ass,
+                                                      sign_cert_file,
+                                                      node_name=class_name(ass)):
+                            continue
+                    resp_ass.append(ass)
+
+            seresp.assertion = resp_ass
+            seresp.encrypted_assertion = None
+            #print _sresp
+
+        assert seresp.assertion
+
+    def test_sign_then_encrypt_assertion2(self):
+        # Begin with the IdPs side
+        _sec = self.server.sec
+
+        nameid_policy = samlp.NameIDPolicy(allow_create="false",
+                                           format=saml.NAMEID_FORMAT_PERSISTENT)
+
+        asser = Assertion({"givenName": "Derek", "surName": "Jeter"})
+        assertion = asser.construct(
+            self.client.config.entityid, "_012345",
+            "http://lingon.catalogix.se:8087/",
+            factory(saml.NameID, format=saml.NAMEID_FORMAT_TRANSIENT),
+            policy=self.server.config.getattr("policy", "idp"),
+            issuer=self.server._issuer(),
+            attrconvs=self.server.config.attribute_converters,
+            authn_class=INTERNETPROTOCOLPASSWORD,
+            authn_auth="http://www.example.com/login")
+
+        assertion.signature = sigver.pre_signature_part(
+            assertion.id, _sec.my_cert, 1)
+
+        sigass = _sec.sign_statement(assertion, class_name(assertion),
+                                     #key_file="pki/mykey.pem",
+                                     key_file="test.key",
+                                     node_id=assertion.id)
+        # Create an Assertion instance from the signed assertion
+        _ass = saml.assertion_from_string(sigass)
+
+        response = sigver.response_factory(
+            in_response_to="_012345",
+            destination="https://www.example.com",
+            status=s_utils.success_status_factory(),
+            issuer=self.server._issuer(),
+            assertion=_ass
+        )
+
+        enctext = _sec.crypto.encrypt_assertion(response, _sec.cert_file,
+                                                pre_encryption_part())
+
+        #seresp = samlp.response_from_string(enctext)
+
+        resp_str = base64.encodestring(enctext)
+        # Now over to the client side
+        resp = self.client.parse_authn_request_response(
+            resp_str, BINDING_HTTP_POST,
+            {"_012345": "http://foo.example.com/service"})
+
+        #assert resp.encrypted_assertion == []
+        assert resp.assertion
+        assert resp.ava == {'givenName': ['Derek'], 'sn': ['Jeter']}
+
+# Below can only be done with dummy Server
 IDP = "urn:mace:example.com:saml:roland:idp"
 
 
@@ -448,4 +574,4 @@ class TestClientWithDummy():
 if __name__ == "__main__":
     tc = TestClient()
     tc.setup_class()
-    tc.test_sign_auth_request_0()
+    tc.test_sign_then_encrypt_assertion2()
