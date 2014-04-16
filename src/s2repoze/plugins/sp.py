@@ -490,7 +490,7 @@ class SAML2Plugin(object):
         if ("CONTENT_LENGTH" not in environ or not environ["CONTENT_LENGTH"]) and \
                         "SAMLResponse" not in query and "SAMLRequest" not in query:
             logger.debug('[identify] get or empty post')
-            return {}
+            return None
         
         # if logger:
         #     logger.info("ENVIRON: %s" % environ)
@@ -652,6 +652,8 @@ class SAML2Plugin(object):
     #noinspection PyUnusedLocal
     def authenticate(self, environ, identity=None):
         if identity:
+            if identity.get('user') and environ.get('s2repoze.sessioninfo') and identity.get('user') == environ.get('s2repoze.sessioninfo').get('ava'):
+                return identity.get('login')
             tktuser = identity.get('repoze.who.plugins.auth_tkt.userid', None)
             if tktuser and self.saml_client.is_logged_in(decode(tktuser)):
                 return tktuser
