@@ -40,6 +40,7 @@ SCHEMA = [dri, idpdisc, md, mdattr, mdui, saml, ui, xmldsig, xmlenc]
 __author__ = 'rolandh'
 
 logger = logging.getLogger("")
+logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.DEBUG)
 #formatter = logging.Formatter("%(asctime)s %(name)s:%(levelname)s %(message)s")
 formatter_2 = logging.Formatter("%(delta).6f - %(levelname)s - [%(name)s] %(message)s")
