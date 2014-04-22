@@ -39,8 +39,12 @@ def code(item):
 def decode(txt):
     _nid = NameID()
     for part in txt.split(","):
-        i, val = part.split("=")
-        setattr(_nid, ATTR[int(i)], unquote(val))
+        if part.find("=") != -1:
+            i, val = part.split("=")
+            try:
+                setattr(_nid, ATTR[int(i)], unquote(val))
+            except:
+                pass
     return _nid
 
 
