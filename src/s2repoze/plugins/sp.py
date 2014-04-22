@@ -490,7 +490,7 @@ class SAML2Plugin(object):
         if ("CONTENT_LENGTH" not in environ or not environ["CONTENT_LENGTH"]) and \
                         "SAMLResponse" not in query and "SAMLRequest" not in query:
             logger.debug('[identify] get or empty post')
-            return {}
+            return None
         
         # if logger:
         #     logger.info("ENVIRON: %s" % environ)
@@ -597,7 +597,11 @@ class SAML2Plugin(object):
         """ Add information to the knowledge I have about the user """
         name_id = identity['repoze.who.userid']
         if isinstance(name_id, basestring):
-            name_id = decode(name_id)
+            try:
+                # Make sure that userids authenticated by another plugin don't cause problems here.
+                name_id = decode(name_id)
+            except:
+                pass
 
         _cli = self.saml_client
         logger.debug("[add_metadata] for %s" % name_id)
@@ -648,10 +652,12 @@ class SAML2Plugin(object):
     #noinspection PyUnusedLocal
     def authenticate(self, environ, identity=None):
         if identity:
+            if identity.get('user') and environ.get('s2repoze.sessioninfo') and identity.get('user') == environ.get('s2repoze.sessioninfo').get('ava'):
+                return identity.get('login')
             tktuser = identity.get('repoze.who.plugins.auth_tkt.userid', None)
             if tktuser and self.saml_client.is_logged_in(decode(tktuser)):
                 return tktuser
-            return identity.get('login', None)
+            return None
         else:
             return None
 
