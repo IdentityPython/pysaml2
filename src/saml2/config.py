@@ -247,7 +247,8 @@ class Config(object):
                 acs = ac_factory()
 
             if not acs:
-                raise ConfigurationError("No attribute converters, something is wrong!!")
+                raise ConfigurationError(
+                    "No attribute converters, something is wrong!!")
 
             _acs = self.getattr("attribute_converters", typ)
             if _acs:
