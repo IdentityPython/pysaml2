@@ -339,7 +339,38 @@ class Policy(object):
         logger.debug("policy restrictions: %s" % self._restrictions)
 
         return self._restrictions
-    
+
+    def get(self, attribute, sp_entity_id, default=None, post_func=None,
+            **kwargs):
+        """
+
+        :param attribute:
+        :param sp_entity_id:
+        :param default:
+        :param post_func:
+        :return:
+        """
+        if not self._restrictions:
+            return default
+
+        try:
+            try:
+                val = self._restrictions[sp_entity_id][attribute]
+            except KeyError:
+                try:
+                    val = self._restrictions["default"][attribute]
+                except KeyError:
+                    val = None
+        except KeyError:
+            val = None
+
+        if val is None:
+            return default
+        elif post_func:
+            return post_func(val, sp_entity_id = sp_entity_id, **kwargs)
+        else:
+            return val
+
     def get_nameid_format(self, sp_entity_id):
         """ Get the NameIDFormat to used for the entity id 
         :param: The SP entity ID
