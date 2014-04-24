@@ -172,6 +172,8 @@ def test_ava_filter_2():
            "surName": "Jeter",
            "mail": "derek@example.com"}
 
+    # mail removed because it doesn't match the regular expression
+    # So this should fail.
     raises(MissingValue, policy.filter, ava, 'urn:mace:umu.se:saml:roland:sp',
            None, [mail], [gn, sn])
 
@@ -182,6 +184,44 @@ def test_ava_filter_2():
     raises(Exception, policy.filter, ava, 'urn:mace:umu.se:saml:roland:sp',
            None, [gn, sn, mail])
 
+
+def test_ava_filter_dont_fail():
+    conf = {
+        "default": {
+            "lifetime": {"minutes": 15},
+            "attribute_restrictions": None,  # means all I have
+        },
+        "urn:mace:umu.se:saml:roland:sp": {
+            "lifetime": {"minutes": 5},
+            "attribute_restrictions": {
+                "givenName": None,
+                "surName": None,
+                "mail": [".*@.*\.umu\.se"],
+            },
+            "fail_on_missing_requested": False
+        }}
+
+    policy = Policy(conf)
+
+    ava = {"givenName": "Derek",
+           "surName": "Jeter",
+           "mail": "derek@example.com"}
+
+    # mail removed because it doesn't match the regular expression
+    # So it should fail if the 'fail_on_ ...' flag wasn't set
+    _ava = policy.filter(ava,'urn:mace:umu.se:saml:roland:sp', None,
+                         [mail], [gn, sn])
+
+    assert _ava
+
+    ava = {"givenName": "Derek",
+           "surName": "Jeter"}
+
+    # it wasn't there to begin with
+    _ava = policy.filter(ava, 'urn:mace:umu.se:saml:roland:sp',
+                         None, [gn, sn, mail])
+
+    assert _ava
 
 def test_filter_attribute_value_assertions_0(AVA):
     p = Policy({
@@ -797,4 +837,4 @@ def test_assertion_with_authn_instant():
 
 
 if __name__ == "__main__":
-    test_assertion_with_authn_instant()
+    test_ava_filter_dont_fail()
