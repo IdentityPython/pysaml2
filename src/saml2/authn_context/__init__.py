@@ -186,6 +186,10 @@ class AuthnBroker(object):
     def __getitem__(self, ref):
         return self.db["info"][ref]
 
+    def get_authn_by_accr(self, accr):
+        _ids = self.db["key"][accr]
+        return self[_ids[0]]
+
 
 def authn_context_factory(text):
     # brute force
