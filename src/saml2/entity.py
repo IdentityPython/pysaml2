@@ -159,7 +159,7 @@ class Entity(HTTPBase):
                           format=NAMEID_FORMAT_ENTITY)
 
     def apply_binding(self, binding, msg_str, destination="", relay_state="",
-                      response=False, sign=False):
+                      response=False, sign=False, **kwargs):
         """
         Construct the necessary HTTP arguments dependent on Binding
 
@@ -169,6 +169,7 @@ class Entity(HTTPBase):
         :param destination: Where to send the message
         :param relay_state: Relay_state if provided
         :param response: Which type of message this is
+        :param kwargs: response type specific arguments
         :return: A dictionary
         """
         # unless if BINDING_HTTP_ARTIFACT
@@ -189,7 +190,7 @@ class Entity(HTTPBase):
             info["url"] = str(destination)
             info["method"] = "GET"
         elif binding == BINDING_SOAP or binding == BINDING_PAOS:
-            info = self.use_soap(msg_str, destination, sign=sign)
+            info = self.use_soap(msg_str, destination, sign=sign, **kwargs)
         elif binding == BINDING_URI:
             info = self.use_http_uri(msg_str, typ, destination)
         elif binding == BINDING_HTTP_ARTIFACT:
