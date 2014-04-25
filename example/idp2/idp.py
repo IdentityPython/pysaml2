@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import argparse
 import base64
-import xmldsig as ds
 import re
 import logging
 import time
@@ -10,6 +9,7 @@ from hashlib import sha1
 from urlparse import parse_qs
 from Cookie import SimpleCookie
 import os
+from saml2.profile import ecp
 
 from saml2 import server
 from saml2 import BINDING_HTTP_ARTIFACT
@@ -24,7 +24,6 @@ from saml2.authn_context import AuthnBroker
 from saml2.authn_context import PASSWORD
 from saml2.authn_context import UNSPECIFIED
 from saml2.authn_context import authn_context_class_ref
-from saml2.extension import pefim
 from saml2.httputil import Response
 from saml2.httputil import NotFound
 from saml2.httputil import geturl
@@ -35,11 +34,13 @@ from saml2.httputil import BadRequest
 from saml2.httputil import ServiceError
 from saml2.ident import Unknown
 from saml2.metadata import create_metadata_string
-from saml2.s_utils import rndstr, exception_trace
+from saml2.s_utils import rndstr
+from saml2.s_utils import exception_trace
 from saml2.s_utils import UnknownPrincipal
 from saml2.s_utils import UnsupportedBinding
 from saml2.s_utils import PolicyError
-from saml2.sigver import verify_redirect_signature, cert_from_instance, encrypt_cert_from_item
+from saml2.sigver import verify_redirect_signature
+from saml2.sigver import encrypt_cert_from_item
 
 logger = logging.getLogger("saml2.idp")
 
@@ -239,6 +240,7 @@ class SSO(Service):
         self.binding_out = None
         self.destination = None
         self.req_info = None
+        self.op_type = ""
 
     def verify_request(self, query, binding):
         """
@@ -258,10 +260,14 @@ class SSO(Service):
         _authn_req = self.req_info.message
         logger.debug("%s" % _authn_req)
 
-        self.binding_out, self.destination = IDP.pick_binding(
-            "assertion_consumer_service",
-            bindings=self.response_bindings,
-            entity_id=_authn_req.issuer.text)
+        try:
+            self.binding_out, self.destination = IDP.pick_binding(
+                "assertion_consumer_service",
+                bindings=self.response_bindings,
+                entity_id=_authn_req.issuer.text)
+        except Exception as err:
+            logger.error("Couldn't find receiver endpoint: %s" % err)
+            raise
 
         logger.debug("Binding: %s, destination: %s" % (self.binding_out,
                                                        self.destination))
@@ -270,23 +276,31 @@ class SSO(Service):
         try:
             resp_args = IDP.response_args(_authn_req)
             _resp = None
-        except UnknownPrincipal, excp:
+        except UnknownPrincipal as excp:
             _resp = IDP.create_error_response(_authn_req.id,
                                               self.destination, excp)
-        except UnsupportedBinding, excp:
+        except UnsupportedBinding as excp:
             _resp = IDP.create_error_response(_authn_req.id,
                                               self.destination, excp)
 
         return resp_args, _resp
 
     def do(self, query, binding_in, relay_state="", encrypt_cert=None):
+        """
+
+        :param query: The request
+        :param binding_in: Which binding was used when receiving the query
+        :param relay_state: The relay state provided by the SP
+        :param encrypt_cert: Cert to use for encryption
+        :return: A response
+        """
         try:
             resp_args, _resp = self.verify_request(query, binding_in)
-        except UnknownPrincipal, excp:
+        except UnknownPrincipal as excp:
             logger.error("UnknownPrincipal: %s" % (excp,))
             resp = ServiceError("UnknownPrincipal: %s" % (excp,))
             return resp(self.environ, self.start_response)
-        except UnsupportedBinding, excp:
+        except UnsupportedBinding as excp:
             logger.error("UnsupportedBinding: %s" % (excp,))
             resp = ServiceError("UnsupportedBinding: %s" % (excp,))
             return resp(self.environ, self.start_response)
@@ -299,19 +313,34 @@ class SSO(Service):
             if REPOZE_ID_EQUIVALENT:
                 identity[REPOZE_ID_EQUIVALENT] = self.user
             try:
+                try:
+                    metod = self.environ["idp.authn_ref"]
+                except KeyError:
+                    pass
+                else:
+                    resp_args["authn"] = metod
+
                 _resp = IDP.create_authn_response(
                     identity, userid=self.user,
-                    authn=AUTHN_BROKER[self.environ["idp.authn_ref"]], encrypt_cert=encrypt_cert,
+                    encrypt_cert=encrypt_cert,
                     **resp_args)
-            except Exception, excp:
+            except Exception as excp:
                 logging.error(exception_trace(excp))
                 resp = ServiceError("Exception: %s" % (excp,))
                 return resp(self.environ, self.start_response)
 
         logger.info("AuthNResponse: %s" % _resp)
+        if self.op_type == "ecp":
+            kwargs = {"soap_headers": [
+                ecp.Response(
+                    assertion_consumer_service_url=self.destination)]}
+        else:
+            kwargs = {}
+
         http_args = IDP.apply_binding(self.binding_out,
                                       "%s" % _resp, self.destination,
-                                      relay_state, response=True)
+                                      relay_state, response=True, **kwargs)
+
         logger.debug("HTTPargs: %s" % http_args)
         return self.response(self.binding_out, http_args)
 
@@ -412,6 +441,9 @@ class SSO(Service):
                     if PASSWD[user] != passwd:
                         resp = Unauthorized()
                     self.user = user
+                    self.environ[
+                        "idp.authn_ref"] = AUTHN_BROKER.get_authn_by_accr(
+                            PASSWORD)
                 except ValueError:
                     resp = Unauthorized()
             else:
@@ -425,6 +457,7 @@ class SSO(Service):
         _dict = self.unpack_soap()
         self.response_bindings = [BINDING_PAOS]
         # Basic auth ?!
+        self.op_type = "ecp"
         return self.operation(_dict, BINDING_SOAP)
 
 # -----------------------------------------------------------------------------
@@ -542,7 +575,7 @@ class SLO(Service):
             _, body = request.split("\n")
             logger.debug("req: '%s'" % body)
             req_info = IDP.parse_logout_request(body, binding)
-        except Exception, exc:
+        except Exception as exc:
             logger.error("Bad request: %s" % exc)
             resp = BadRequest("%s" % exc)
             return resp(self.environ, self.start_response)
@@ -559,7 +592,7 @@ class SLO(Service):
             # remove the authentication
             try:
                 IDP.session_db.remove_authn_statements(msg.name_id)
-            except KeyError, exc:
+            except KeyError as exc:
                 logger.error("ServiceError: %s" % exc)
                 resp = ServiceError("%s" % exc)
                 return resp(self.environ, self.start_response)
@@ -568,7 +601,7 @@ class SLO(Service):
     
         try:
             hinfo = IDP.apply_binding(binding, "%s" % resp, "", relay_state)
-        except Exception, exc:
+        except Exception as exc:
             logger.error("ServiceError: %s" % exc)
             resp = ServiceError("%s" % exc)
             return resp(self.environ, self.start_response)
