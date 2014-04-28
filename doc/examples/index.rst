@@ -1,10 +1,12 @@
 .. _example_index:
 
-These are examples of the usage of pySAML2!
-===========================================
+Quick pysaml2 example
+=====================
 
 :Release: |version|
 :Date: |today|
+
+In order to confirm that pysaml2 has been installed correctly and are ready to use you could run this basic example
 
 Contents:
 
