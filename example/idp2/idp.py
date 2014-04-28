@@ -314,7 +314,7 @@ class SSO(Service):
                 identity[REPOZE_ID_EQUIVALENT] = self.user
             try:
                 try:
-                    metod = self.environ["idp.authn_ref"]
+                    metod = self.environ["idp.authn"]
                 except KeyError:
                     pass
                 else:
@@ -442,7 +442,7 @@ class SSO(Service):
                         resp = Unauthorized()
                     self.user = user
                     self.environ[
-                        "idp.authn_ref"] = AUTHN_BROKER.get_authn_by_accr(
+                        "idp.authn"] = AUTHN_BROKER.get_authn_by_accr(
                             PASSWORD)
                 except ValueError:
                     resp = Unauthorized()
@@ -923,7 +923,8 @@ def application(environ, start_response):
     if kaka:
         logger.info("= KAKA =")
         user, authn_ref = info_from_cookie(kaka)
-        environ["idp.authn_ref"] = authn_ref
+        if authn_ref:
+            environ["idp.authn"] = AUTHN_BROKER[authn_ref]
     else:
         try:
             query = parse_qs(environ["QUERY_STRING"])
@@ -931,6 +932,7 @@ def application(environ, start_response):
             user = IDP.cache.uid2user[query["id"][0]]
         except KeyError:
             user = None
+
 
     url_patterns = AUTHN_URLS
     if not user:
