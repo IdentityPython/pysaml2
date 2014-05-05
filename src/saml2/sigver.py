@@ -1250,12 +1250,14 @@ class SecurityContext(object):
         :return:
         """
 
-    def decrypt(self, enctext):
+    def decrypt(self, enctext, key_file=None):
         """ Decrypting an encrypted text by the use of a private key.
 
         :param enctext: The encrypted text as a string
         :return: The decrypted text
         """
+        if key_file is not None and len(key_file.strip()) > 0:
+            return self.crypto.decrypt(enctext, key_file)
         return self.crypto.decrypt(enctext, self.key_file)
 
     def verify_signature(self, signedtext, cert_file=None, cert_type="pem",

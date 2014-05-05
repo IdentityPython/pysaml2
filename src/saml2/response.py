@@ -809,7 +809,7 @@ class AuthnResponse(StatusResponse):
 
         if self.response.encrypted_assertion:
             logger.debug("***Encrypted assertion/-s***")
-            decr_text = self.sec.decrypt(self.xmlstr)
+            decr_text = self.sec.decrypt(self.xmlstr, key_file)
             resp = samlp.response_from_string(decr_text)
             res = self.decrypt_assertions(resp.encrypted_assertion, key_file)
             if self.response.assertion:
