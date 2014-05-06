@@ -8,6 +8,9 @@ UCL_DIR_PILOT = 'urn:oid:0.9.2342.19200300.100.1.'
 PKCS_9 = "urn:oid:1.2.840.113549.1.9.1."
 UMICH = "urn:oid:1.3.6.1.4.1.250.1.57."
 SCHAC = "urn:oid:1.3.6.1.4.1.25178.1.2."
+LDAPGVAT_OID = 'urn:oid:1.2.40.0.10.2.1.1.'  # ldap.gv.at definitions as specified in http://www.ref.gv.at/AG-IZ-PVP2-Version-2-1-0-2.2754.0.html
+LDAPGVAT_UCL_DIR_PILOT = UCL_DIR_PILOT
+LDAPGVAT_X500ATTR_OID = X500ATTR_OID
 
 #urn:oid:1.3.6.1.4.1.1466.115.121.1.26
 
@@ -119,6 +122,25 @@ MAP = {
         SCHAC+'19': 'schacUserStatus',
         SCHAC+'20': 'schacProjectMembership',
         SCHAC+'21': 'schacProjectSpecificRole',
+        LDAPGVAT_UCL_DIR_PILOT+'1': 'PVP-USERID',
+        LDAPGVAT_UCL_DIR_PILOT+'3': 'PVP-MAIL',
+        LDAPGVAT_OID+'1': 'PVP-GID',
+        LDAPGVAT_OID+'149': 'PVP-BPK',
+        LDAPGVAT_OID+'153': 'PVP-OU-OKZ',
+        LDAPGVAT_OID+'261.10': 'PVP-VERSION',
+        LDAPGVAT_OID+'261.20': 'PVP-PRINCIPAL-NAME',
+        LDAPGVAT_OID+'261.24': 'PVP-PARTICIPANT-OKZ',
+        LDAPGVAT_OID+'261.30': 'PVP-ROLES',
+        LDAPGVAT_OID+'261.40': 'PVP-INVOICE-RECPT-ID',
+        LDAPGVAT_OID+'261.50': 'PVP-COST-CENTER-ID',
+        LDAPGVAT_OID+'261.60': 'PVP-CHARGE-CODE',
+        LDAPGVAT_OID+'3': 'PVP-OU-GV-OU-ID',
+        LDAPGVAT_OID+'33': 'PVP-FUNCTION',
+        LDAPGVAT_OID+'55': 'PVP-BIRTHDATE',
+        LDAPGVAT_OID+'71': 'PVP-PARTICIPANT-ID',
+        LDAPGVAT_X500ATTR_OID+'11': 'PVP-OU',
+        LDAPGVAT_X500ATTR_OID+'20': 'PVP-TEL',
+        LDAPGVAT_X500ATTR_OID+'42': 'PVP-GIVENNAME',
         },
     "to": {
         'cn': X500ATTR_OID+'3',
@@ -245,5 +267,24 @@ MAP = {
         'schacUserStatus': SCHAC+'19',
         'schacProjectMembership': SCHAC+'20',
         'schacProjectSpecificRole': SCHAC+'21',
+        'PVP-USERID': LDAPGVAT_UCL_DIR_PILOT+'1',
+        'PVP-MAIL': LDAPGVAT_UCL_DIR_PILOT+'3',
+        'PVP-GID': LDAPGVAT_OID+'1',
+        'PVP-BPK': LDAPGVAT_OID+'149',
+        'PVP-OU-OKZ': LDAPGVAT_OID+'153',
+        'PVP-VERSION': LDAPGVAT_OID+'261.10',
+        'PVP-PRINCIPAL-NAME': LDAPGVAT_OID+'261.20',
+        'PVP-PARTICIPANT-OKZ': LDAPGVAT_OID+'261.24',
+        'PVP-ROLES': LDAPGVAT_OID+'261.30',
+        'PVP-INVOICE-RECPT-ID': LDAPGVAT_OID+'261.40',
+        'PVP-COST-CENTER-ID': LDAPGVAT_OID+'261.50',
+        'PVP-CHARGE-CODE': LDAPGVAT_OID+'261.60',
+        'PVP-OU-GV-OU-ID': LDAPGVAT_OID+'3',
+        'PVP-FUNCTION': LDAPGVAT_OID+'33',
+        'PVP-BIRTHDATE': LDAPGVAT_OID+'55',
+        'PVP-PARTICIPANT-ID': LDAPGVAT_OID+'71',
+        'PVP-OU': LDAPGVAT_X500ATTR_OID+'11',
+        'PVP-TEL': LDAPGVAT_X500ATTR_OID+'20',
+        'PVP-GIVENNAME': LDAPGVAT_X500ATTR_OID+'42',
         }
 }  
