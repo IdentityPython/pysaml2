@@ -484,7 +484,9 @@ def do_authentication(environ, start_response, authn_context, key,
 
 # -----------------------------------------------------------------------------
 
-PASSWD = {"haho0032": "qwerty",
+PASSWD = {
+          "daev0001": "qwerty",
+          "haho0032": "qwerty",
           "roland": "dianakra",
           "babs": "howes",
           "upper": "crust"}
