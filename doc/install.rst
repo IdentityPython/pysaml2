@@ -88,3 +88,9 @@ install Sphinx
 cd pysaml2/doc
 make html
 cd _build
+
+List implemented signature algorithms
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For a list of xmldsig algorithtms implemented for signature validation, run this program from the command line:
+saml2/sigver.py -s

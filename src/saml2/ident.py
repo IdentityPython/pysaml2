@@ -134,6 +134,7 @@ class IdentDB(object):
         try:
             _vals = self.db[userid]
         except KeyError:
+            logger.debug("failed to find userid %s in IdentDB" % userid)
             return res
 
         for val in _vals.split(" "):

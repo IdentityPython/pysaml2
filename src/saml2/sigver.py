@@ -71,6 +71,10 @@ logger = logging.getLogger(__name__)
 SIG = "{%s#}%s" % (ds.NAMESPACE, "Signature")
 
 RSA_SHA1 = "http://www.w3.org/2000/09/xmldsig#rsa-sha1"
+RSA_SHA256 = "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"
+RSA_SHA384 = "http://www.w3.org/2001/04/xmldsig-more#rsa-sha384"
+RSA_SHA512 = "http://www.w3.org/2001/04/xmldsig-more#rsa-sha512"
+
 RSA_1_5 = "http://www.w3.org/2001/04/xmlenc#rsa-1_5"
 TRIPLE_DES_CBC = "http://www.w3.org/2001/04/xmlenc#tripledes-cbc"
 XMLTAG = "<?xml version='1.0'?>"
@@ -595,9 +599,9 @@ class RSASigner(Signer):
 
 SIGNER_ALGS = {
     RSA_SHA1: RSASigner(SHA),
-    "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256": RSASigner(SHA256),
-    "http://www.w3.org/2001/04/xmldsig-more#rsa-sha384": RSASigner(SHA384),
-    "http://www.w3.org/2001/04/xmldsig-more#rsa-sha512": RSASigner(SHA512),
+    RSA_SHA256: RSASigner(SHA256),
+    RSA_SHA384: RSASigner(SHA384),
+    RSA_SHA512: RSASigner(SHA512),
 }
 
 REQ_ORDER = ["SAMLRequest", "RelayState", "SigAlg"]
@@ -614,11 +618,11 @@ def verify_redirect_signature(info, cert):
     """
 
     try:
-        signer = SIGNER_ALGS[info["SigAlg"][0]]
+        signer = SIGNER_ALGS[info["SigAlg"]]
     except KeyError:
         raise Unsupported("Signature algorithm: %s" % info["SigAlg"])
     else:
-        if info["SigAlg"][0] == RSA_SHA1:
+        if info["SigAlg"] in SIGNER_ALGS:
             if "SAMLRequest" in info:
                 _order = REQ_ORDER
             elif "SAMLResponse" in info:
@@ -632,7 +636,7 @@ def verify_redirect_signature(info, cert):
             string = "&".join(
                 [urllib.urlencode({k: args[k][0]}) for k in _order])
             _key = extract_rsa_key_from_x509_cert(pem_format(cert))
-            _sign = base64.b64decode(info["Signature"][0])
+            _sign = base64.b64decode(info["Signature"])
             try:
                 signer.verify(string, _sign, _key)
                 return True
@@ -1756,3 +1760,15 @@ def response_factory(sign=False, encrypt=False, **kwargs):
         setattr(response, key, val)
 
     return response
+
+# ----------------------------------------------------------------------------
+
+if __name__ == '__main__':
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-s', '--list-sigalgs', dest='listsigalgs', action='store_true', help='List implemented signature algorithms')
+    args = parser.parse_args()
+
+    if args.listsigalgs:
+        print '\n'.join([key for key, value in SIGNER_ALGS.items()])
