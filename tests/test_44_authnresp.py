@@ -125,3 +125,7 @@ class TestAuthnResponse:
         session_info = self.ar.session_info()
         assert session_info["authn_info"] == authn_info
 
+if __name__ == "__main__":
+    t = TestAuthnResponse()
+    t.setup_class()
+    t.test_verify_1()

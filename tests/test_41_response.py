@@ -8,13 +8,12 @@ from saml2.server import Server
 from saml2.response import response_factory
 from saml2.response import StatusResponse
 from saml2.response import AuthnResponse
-from saml2.sigver import security_context
+from saml2.sigver import security_context, SignatureError
 from saml2.sigver import MissingKey
 
 from pytest import raises
 
-XML_RESPONSE_FILE = "saml_signed.xml"
-XML_RESPONSE_FILE2 = "saml2_response.xml"
+FALSE_ASSERT_SIGNED = "saml_false_signed.xml"
 
 
 def _eq(l1, l2):
@@ -91,8 +90,26 @@ class TestResponse:
         assert isinstance(resp, StatusResponse)
         assert isinstance(resp, AuthnResponse)
 
+    def test_false_sign(self):
+        xml_response = open(FALSE_ASSERT_SIGNED).read()
+        resp = response_factory(
+            xml_response, self.conf,
+            return_addrs=["http://lingon.catalogix.se:8087/"],
+            outstanding_queries={
+                "bahigehogffohiphlfmplepdpcohkhhmheppcdie":
+                    "http://localhost:8088/sso"},
+            timeslack=10000, decode=False)
+
+        assert isinstance(resp, StatusResponse)
+        assert isinstance(resp, AuthnResponse)
+        try:
+            resp.verify()
+        except SignatureError:
+            pass
+        else:
+            assert False
 
 if __name__ == "__main__":
     t = TestResponse()
     t.setup_class()
-    t.test_1()
+    t.test_false_sign()

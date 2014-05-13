@@ -19,7 +19,6 @@ from pathutils import full_path
 
 SIGNED = full_path("saml_signed.xml")
 UNSIGNED = full_path("saml_unsigned.xml")
-FALSE_SIGNED = full_path("saml_false_signed.xml")
 SIMPLE_SAML_PHP_RESPONSE = full_path("simplesamlphp_authnresponse.xml")
 
 PUB_KEY = full_path("test.pem")
@@ -142,11 +141,6 @@ class TestSecurity():
         xml_response = open(UNSIGNED).read()
         response = self.sec.correctly_signed_response(xml_response)
         assert response
-
-    def test_non_verify_2(self):
-        xml_response = open(FALSE_SIGNED).read()
-        raises(sigver.SignatureError, self.sec.correctly_signed_response,
-               xml_response)
 
     def test_sign_assertion(self):
         ass = self._assertion
@@ -478,7 +472,6 @@ def test_xbox():
 
 
 if __name__ == "__main__":
-    #t = TestSecurity()
-    #t.setup_class()
-    #t.test_sign_then_encrypt_assertion()
-    test_xbox()
+    t = TestSecurity()
+    t.setup_class()
+    t.test_non_verify_2()
