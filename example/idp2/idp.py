@@ -121,30 +121,32 @@ class Service(object):
         logger.debug("_dict: %s" % _dict)
         return _dict
 
-    def operation(self, _dict, binding):
-        logger.debug("_operation: %s" % _dict)
-        if not _dict or not 'SAMLRequest' in _dict:
+    def operation(self, saml_msg, binding):
+        logger.debug("_operation: %s" % saml_msg)
+        if not saml_msg or not 'SAMLRequest' in saml_msg:
             resp = BadRequest('Error parsing request or no request')
             return resp(self.environ, self.start_response)
         else:
             try:
-                _encrypt_cert = encrypt_cert_from_item(_dict["req_info"].message)
-                return self.do(_dict["SAMLRequest"], binding,
-                               _dict["RelayState"], encrypt_cert=_encrypt_cert)
+                _encrypt_cert = encrypt_cert_from_item(
+                    saml_msg["req_info"].message)
+                return self.do(saml_msg["SAMLRequest"], binding,
+                               saml_msg["RelayState"],
+                               encrypt_cert=_encrypt_cert)
             except KeyError:
                 # Can live with no relay state
-                return self.do(_dict["SAMLRequest"], binding)
+                return self.do(saml_msg["SAMLRequest"], binding)
 
-    def artifact_operation(self, _dict):
-        if not _dict:
+    def artifact_operation(self, saml_msg):
+        if not saml_msg:
             resp = BadRequest("Missing query")
             return resp(self.environ, self.start_response)
         else:
             # exchange artifact for request
-            request = IDP.artifact2message(_dict["SAMLart"], "spsso")
+            request = IDP.artifact2message(saml_msg["SAMLart"], "spsso")
             try:
                 return self.do(request, BINDING_HTTP_ARTIFACT,
-                               _dict["RelayState"])
+                               saml_msg["RelayState"])
             except KeyError:
                 return self.do(request, BINDING_HTTP_ARTIFACT)
 
@@ -187,24 +189,6 @@ class Service(object):
     def uri(self):
         _dict = self.unpack_either()
         return self.operation(_dict, BINDING_SOAP)
-
-    # def not_authn(self, key):
-    #     """
-    #
-    #
-    #     :return:
-    #     """
-    #     loc = "http://%s/login" % (self.environ["HTTP_HOST"])
-    #     loc += "?%s" % urllib.urlencode({"came_from": self.environ[
-    #         "PATH_INFO"], "key": key})
-    #     headers = [('Content-Type', 'text/plain')]
-    #
-    #     logger.debug("location: %s" % loc)
-    #     logger.debug("headers: %s" % headers)
-    #
-    #     resp = Redirect(loc, headers=headers)
-    #
-    #     return resp(self.environ, self.start_response)
 
     def not_authn(self, key, requested_authn_context):
         ruri = geturl(self.environ, query=False)
@@ -345,27 +329,27 @@ class SSO(Service):
         logger.debug("HTTPargs: %s" % http_args)
         return self.response(self.binding_out, http_args)
 
-    def _store_request(self, _dict):
-        logger.debug("_store_request: %s" % _dict)
-        key = sha1(_dict["SAMLRequest"]).hexdigest()
+    def _store_request(self, saml_msg):
+        logger.debug("_store_request: %s" % saml_msg)
+        key = sha1(saml_msg["SAMLRequest"]).hexdigest()
         # store the AuthnRequest
-        IDP.ticket[key] = _dict
+        IDP.ticket[key] = saml_msg
         return key
 
     def redirect(self):
         """ This is the HTTP-redirect endpoint """
 
         logger.info("--- In SSO Redirect ---")
-        _info = self.unpack_redirect()
+        saml_msg = self.unpack_redirect()
 
         try:
-            _key = _info["key"]
-            _info = IDP.ticket[_key]
-            self.req_info = _info["req_info"]
+            _key = saml_msg["key"]
+            saml_msg = IDP.ticket[_key]
+            self.req_info = saml_msg["req_info"]
             del IDP.ticket[_key]
         except KeyError:
             try:
-                self.req_info = IDP.parse_authn_request(_info["SAMLRequest"],
+                self.req_info = IDP.parse_authn_request(saml_msg["SAMLRequest"],
                                                         BINDING_HTTP_REDIRECT)
             except KeyError:
                 resp = BadRequest("Message signature verification failure")
@@ -373,12 +357,12 @@ class SSO(Service):
 
             _req = self.req_info.message
 
-            if "SigAlg" in _info and "Signature" in _info:  # Signed request
+            if "SigAlg" in saml_msg and "Signature" in saml_msg:  # Signed request
                 issuer = _req.issuer.text
                 _certs = IDP.metadata.certs(issuer, "any", "signing")
                 verified_ok = False
                 for cert in _certs:
-                    if verify_redirect_signature(_info, cert):
+                    if verify_redirect_signature(saml_msg, cert):
                         verified_ok = True
                         break
                 if not verified_ok:
@@ -387,37 +371,37 @@ class SSO(Service):
 
             if self.user:
                 if _req.force_authn:
-                    _info["req_info"] = self.req_info
-                    key = self._store_request(_info)
+                    saml_msg["req_info"] = self.req_info
+                    key = self._store_request(saml_msg)
                     return self.not_authn(key, _req.requested_authn_context)
                 else:
-                    return self.operation(_info, BINDING_HTTP_REDIRECT)
+                    return self.operation(saml_msg, BINDING_HTTP_REDIRECT)
             else:
-                _info["req_info"] = self.req_info
-                key = self._store_request(_info)
+                saml_msg["req_info"] = self.req_info
+                key = self._store_request(saml_msg)
                 return self.not_authn(key, _req.requested_authn_context)
         else:
-            return self.operation(_info, BINDING_HTTP_REDIRECT)
+            return self.operation(saml_msg, BINDING_HTTP_REDIRECT)
 
     def post(self):
         """
         The HTTP-Post endpoint
         """
         logger.info("--- In SSO POST ---")
-        _info = self.unpack_either()
+        saml_msg = self.unpack_either()
         self.req_info = IDP.parse_authn_request(
-            _info["SAMLRequest"], BINDING_HTTP_POST)
+            saml_msg["SAMLRequest"], BINDING_HTTP_POST)
         _req = self.req_info.message
         if self.user:
             if _req.force_authn:
-                _info["req_info"] = self.req_info
-                key = self._store_request(_info)
+                saml_msg["req_info"] = self.req_info
+                key = self._store_request(saml_msg)
                 return self.not_authn(key, _req.requested_authn_context)
             else:
-                return self.operation(_info, BINDING_HTTP_POST)
+                return self.operation(saml_msg, BINDING_HTTP_POST)
         else:
-            _info["req_info"] = self.req_info
-            key = self._store_request(_info)
+            saml_msg["req_info"] = self.req_info
+            key = self._store_request(saml_msg)
             return self.not_authn(key, _req.requested_authn_context)
 
     # def artifact(self):

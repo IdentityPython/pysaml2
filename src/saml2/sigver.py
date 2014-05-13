@@ -610,35 +610,35 @@ REQ_ORDER = ["SAMLRequest", "RelayState", "SigAlg"]
 RESP_ORDER = ["SAMLResponse", "RelayState", "SigAlg"]
 
 
-def verify_redirect_signature(info, cert):
+def verify_redirect_signature(saml_msg, cert):
     """
 
-    :param info: A dictionary as produced by parse_qs, means all values are
+    :param saml_msg: A dictionary as produced by parse_qs, means all values are
         lists.
     :param cert: A certificate to use when verifying the signature
     :return: True, if signature verified
     """
 
     try:
-        signer = SIGNER_ALGS[info["SigAlg"][0]]
+        signer = SIGNER_ALGS[saml_msg["SigAlg"][0]]
     except KeyError:
-        raise Unsupported("Signature algorithm: %s" % info["SigAlg"])
+        raise Unsupported("Signature algorithm: %s" % saml_msg["SigAlg"])
     else:
-        if info["SigAlg"][0] == RSA_SHA1:
-            if "SAMLRequest" in info:
+        if saml_msg["SigAlg"][0] == RSA_SHA1:
+            if "SAMLRequest" in saml_msg:
                 _order = REQ_ORDER
-            elif "SAMLResponse" in info:
+            elif "SAMLResponse" in saml_msg:
                 _order = RESP_ORDER
             else:
                 raise Unsupported(
                     "Verifying signature on something that should not be "
                     "signed")
-            args = info.copy()
+            args = saml_msg.copy()
             del args["Signature"]  # everything but the signature
             string = "&".join(
                 [urllib.urlencode({k: args[k][0]}) for k in _order])
             _key = extract_rsa_key_from_x509_cert(pem_format(cert))
-            _sign = base64.b64decode(info["Signature"][0])
+            _sign = base64.b64decode(saml_msg["Signature"][0])
             try:
                 signer.verify(string, _sign, _key)
                 return True
@@ -1082,13 +1082,19 @@ class CertHandler(object):
         Initiates the class for handling certificates. Enables the certificates
         to either be a single certificate as base functionality or makes it
         possible to generate a new certificate for each call to the function.
-        :param key_file:
-        :param key_type:
+
+        :param security_context:
         :param cert_file:
         :param cert_type:
-        :param generate_cert:
+        :param key_file:
+        :param key_type:
+        :param generate_cert_info:
         :param cert_handler_extra_class:
+        :param tmp_cert_file:
+        :param tmp_key_file:
+        :param verify_cert:
         """
+
         self._verify_cert = False
         self._generate_cert = False
         #This cert do not have to be valid, it is just the last cert to be
