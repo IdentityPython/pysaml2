@@ -1369,6 +1369,15 @@ class SecurityContext(object):
 
     def check_signature(self, item, node_name=NODE_NAME, origdoc=None,
                         id_attr="", must=False):
+        """
+
+        :param item: Parsed entity
+        :param node_name:
+        :param origdoc: The original XML string
+        :param id_attr:
+        :param must:
+        :return:
+        """
         return self._check_signature(origdoc, item, node_name, origdoc,
                                      id_attr=id_attr, must=must)
 
@@ -1521,6 +1530,8 @@ class SecurityContext(object):
         :param decoded_xml: The SAML message as a XML string
         :param must: Whether there must be a signature
         :param origdoc:
+        :param only_valid_cert:
+        :param require_response_signature:
         :return: None if the signature can not be verified otherwise an instance
         """
 
@@ -1534,25 +1545,23 @@ class SecurityContext(object):
         elif require_response_signature:
             raise SignatureError("Signature missing for response")
 
-        if isinstance(response, Response) and (response.assertion or
-                                                   response.encrypted_assertion):
-            # Try to find the signing cert in the assertion
-            for assertion in (
-                response.assertion or response.encrypted_assertion):
-                if not hasattr(assertion, 'signature') or not assertion.signature:
-                    logger.debug("unsigned")
-                    if must:
-                        raise SignatureError("Signature missing for assertion")
-                    continue
-                else:
-                    logger.debug("signed")
-
-                try:
-                    self._check_signature(decoded_xml, assertion,
-                                          class_name(assertion), origdoc)
-                except Exception, exc:
-                    logger.error("correctly_signed_response: %s" % exc)
-                    raise
+        # if isinstance(response, Response) and response.assertion:
+        #     # Try to find the signing cert in the assertion
+        #     for assertion in response.assertion:
+        #         if not hasattr(assertion, 'signature') or not assertion.signature:
+        #             logger.debug("unsigned")
+        #             if must:
+        #                 raise SignatureError("Signature missing for assertion")
+        #             continue
+        #         else:
+        #             logger.debug("signed")
+        #
+        #         try:
+        #             self._check_signature(decoded_xml, assertion,
+        #                                   class_name(assertion), origdoc)
+        #         except Exception, exc:
+        #             logger.error("correctly_signed_response: %s" % exc)
+        #             raise
 
         return response
 
