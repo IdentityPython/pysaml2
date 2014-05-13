@@ -1,8 +1,10 @@
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2.saml import NAME_FORMAT_URI
 
-BASE= "http://localhost:8087"
-#BASE= "http://lingon.catalogix.se:8087"
+HOST = 'localhost'
+PORT = 8087
+
+BASE = "http://%s:%s" % (HOST, PORT)
 
 CONFIG = {
     "entityid": "%s/sp.xml" % BASE,

@@ -34,14 +34,14 @@
 #Uncomment to use a LDAP directory instead.
 #USERS = LDAPDict(**ldap_settings)
 
-USERS_ = {
+USERS = {
     "haho0032": {
         "sn": "Hoerberg",
         "givenName": "Hasse",
         "eduPersonAffiliation": "student",
         "eduPersonScopedAffiliation": "student@example.com",
         "eduPersonPrincipalName": "haho@example.com",
-        "uid": "haho",
+        "uid": "haho0032",
         "eduPersonTargetedID": "one!for!all",
         "c": "SE",
         "o": "Example Co.",

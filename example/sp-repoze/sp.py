@@ -2,7 +2,7 @@
 from Cookie import SimpleCookie
 import logging
 import os
-
+import sp_conf
 from sp_conf import CONFIG
 import re
 import subprocess
@@ -268,8 +268,8 @@ app_with_auth = make_middleware_with_config(application, {"here": "."},
                                             log_file="repoze_who.log")
 
 # ----------------------------------------------------------------------------
-HOST = '127.0.0.1'
-PORT = 8087
+HOST = sp_conf.HOST
+PORT = sp_conf.PORT
 
 # allow uwsgi or gunicorn mount
 # by moving some initialization out of __name__ == '__main__' section.
