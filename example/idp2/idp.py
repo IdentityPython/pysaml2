@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import importlib
 import argparse
 import base64
 import re
@@ -484,7 +485,9 @@ def do_authentication(environ, start_response, authn_context, key,
 
 # -----------------------------------------------------------------------------
 
-PASSWD = {"haho0032": "qwerty",
+PASSWD = {
+          "daev0001": "qwerty",
+          "haho0032": "qwerty",
           "roland": "dianakra",
           "babs": "howes",
           "upper": "crust"}
@@ -981,7 +984,7 @@ AUTHN_BROKER.add(authn_context_class_ref(PASSWORD),
                  "http://%s" % socket.gethostname())
 AUTHN_BROKER.add(authn_context_class_ref(UNSPECIFIED),
                  "", 0, "http://%s" % socket.gethostname())
-
+CONFIG = importlib.import_module(args.config)
 IDP = server.Server(args.config, cache=Cache())
 IDP.ticket = {}
 
@@ -1011,8 +1014,8 @@ if __name__ == '__main__':
                             module_directory=_rot + 'modules',
                             input_encoding='utf-8', output_encoding='utf-8')
 
-    HOST = '127.0.0.1'
-    PORT = 8088
+    HOST = CONFIG.HOST
+    PORT = CONFIG.PORT
 
     SRV = make_server(HOST, PORT, application)
     print "IdP listening on %s:%s" % (HOST, PORT)

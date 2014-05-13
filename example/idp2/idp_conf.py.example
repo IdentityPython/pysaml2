@@ -25,9 +25,10 @@ BASEDIR = os.path.abspath(os.path.dirname(__file__))
 def full_path(local_file):
     return os.path.join(BASEDIR, local_file)
 
-#BASE = "http://lingon.ladok.umu.se:8088"
-#BASE = "http://lingon.catalogix.se:8088"
-BASE = "http://localhost:8088"
+HOST = 'localhost'
+PORT = 8088
+
+BASE = "http://%s:%s" % (HOST, PORT)
 
 CONFIG = {
     "entityid": "%s/idp.xml" % BASE,

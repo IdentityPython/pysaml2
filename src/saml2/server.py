@@ -479,7 +479,8 @@ class Server(Entity):
                     if not verify_encrypt_cert(encrypt_cert):
                         raise CertificateError("Invalid certificate for encryption!")
             else:
-                raise CertificateError("No certificate for encryption!")
+                raise CertificateError("No SPCertEncType certificate for encryption contained in authentication "
+                                       "request.")
         else:
             encrypt_assertion = False
 
