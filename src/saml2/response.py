@@ -759,8 +759,9 @@ class AuthnResponse(StatusResponse):
             logger.debug("signed")
 
         try:
-            self.sec.check_signature(assertion, class_name(assertion),
-                                     self.xmlstr)
+            if self.require_signature:
+                self.sec.check_signature(assertion, class_name(assertion),
+                                         self.xmlstr)
         except Exception as exc:
             logger.error("correctly_signed_response: %s" % exc)
             raise
