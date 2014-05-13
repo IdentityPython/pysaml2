@@ -263,6 +263,7 @@ class StatusResponse(object):
         self.request_id = request_id
 
         self.xmlstr = ""
+        self.origxml = ""
         self.name_id = None
         self.response = None
         self.not_on_or_after = 0
@@ -290,7 +291,7 @@ class StatusResponse(object):
 
         try:
             valid_instance(self.response)
-        except NotValid, exc:
+        except NotValid as exc:
             logger.error("Not valid response: %s" % exc.args[0])
             self._clear()
             return self
@@ -318,18 +319,22 @@ class StatusResponse(object):
         # own copy
         self.xmlstr = xmldata[:]
         logger.debug("xmlstr: %s" % (self.xmlstr,))
+        if origxml:
+            self.origxml = origxml
+        else:
+            self.origxml = self.xmlstr
 
         try:
-            self.response = self.signature_check(xmldata, origdoc=origxml,
-                                                 must=self.require_signature,
-                                                 require_response_signature=self.require_response_signature)
+            self.response = self.signature_check(
+                xmldata, origdoc=origxml, must=self.require_signature,
+                require_response_signature=self.require_response_signature)
 
         except TypeError:
             raise
         except SignatureError:
             raise
-        except Exception, excp:
-            #logger.exception("EXCEPTION: %s", excp)
+        except Exception as excp:
+            logger.exception("EXCEPTION: %s", excp)
             raise
 
         #print "<", self.response
@@ -577,7 +582,7 @@ class AuthnResponse(StatusResponse):
                     conditions.not_on_or_after, self.timeslack)
             if conditions.not_before:
                 validate_before(conditions.not_before, self.timeslack)
-        except Exception, excp:
+        except Exception as excp:
             logger.error("Exception on conditions: %s" % (excp,))
             if not lax:
                 raise
@@ -746,6 +751,19 @@ class AuthnResponse(StatusResponse):
         :return: True/False depending on if the assertion is sane or not
         """
 
+        if not hasattr(assertion, 'signature') or not assertion.signature:
+            logger.debug("unsigned")
+            if self.require_signature:
+                raise SignatureError("Signature missing for assertion")
+        else:
+            logger.debug("signed")
+
+        try:
+            self.sec.check_signature(assertion, class_name(assertion),
+                                     self.xmlstr)
+        except Exception as exc:
+            logger.error("correctly_signed_response: %s" % exc)
+            raise
         self.assertion = assertion
         logger.debug("assertion context: %s" % (self.context,))
         logger.debug("assertion keys: %s" % (assertion.keyswv()))
@@ -1041,6 +1059,7 @@ class AssertionIDResponse(object):
         self.sec = sec_context
         self.timeslack = timeslack
         self.xmlstr = ""
+        self.origxml = ""
         self.name_id = ""
         self.response = None
         self.not_signed = False
@@ -1053,6 +1072,7 @@ class AssertionIDResponse(object):
         # own copy
         self.xmlstr = xmldata[:]
         logger.debug("xmlstr: %s" % (self.xmlstr,))
+        self.origxml = origxml
 
         try:
             self.response = self.signature_check(xmldata, origdoc=origxml)
@@ -1061,7 +1081,7 @@ class AssertionIDResponse(object):
             raise
         except SignatureError:
             raise
-        except Exception, excp:
+        except Exception as excp:
             logger.exception("EXCEPTION: %s", excp)
             raise
 
@@ -1072,7 +1092,7 @@ class AssertionIDResponse(object):
     def verify(self, key_file=""):
         try:
             valid_instance(self.response)
-        except NotValid, exc:
+        except NotValid as exc:
             logger.error("Not valid response: %s" % exc.args[0])
             raise
         return self
