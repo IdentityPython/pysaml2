@@ -66,14 +66,7 @@ def _expiration(timeout, tformat="%a, %d-%b-%Y %H:%M:%S GMT"):
         # validity time should match lifetime of assertions
         return time_util.in_a_while(minutes=timeout, format=tformat)
 
-
-def get_eptid(idp, req_info, session):
-    return idp.eptid.get(idp.config.entityid,
-                         req_info.sender(), session["permanent_id"],
-                         session["authn_auth"])
-
 # -----------------------------------------------------------------------------
-
 
 def dict2list_of_tuples(d):
     return [(k, v) for k, v in d.items()]
@@ -120,19 +113,19 @@ class Service(object):
         logger.debug("_dict: %s" % _dict)
         return _dict
 
-    def operation(self, _dict, binding):
-        logger.debug("_operation: %s" % _dict)
-        if not _dict or not 'SAMLRequest' in _dict:
+    def operation(self, _saml_pmsg, binding):
+        logger.debug("_operation: %s" % _saml_pmsg)
+        if not _saml_pmsg or not 'SAMLRequest' in _saml_pmsg:
             resp = BadRequest('Error parsing request or no request')
             return resp(self.environ, self.start_response)
         else:
             try:
-                _encrypt_cert = encrypt_cert_from_item(_dict["req_info"].message)
-                return self.do(_dict["SAMLRequest"], binding,
-                               _dict["RelayState"], encrypt_cert=_encrypt_cert)
+                _encrypt_cert = encrypt_cert_from_item(_saml_pmsg["req_info"].message)
+                return self.do(_saml_pmsg["SAMLRequest"], binding,
+                               _saml_pmsg["RelayState"], encrypt_cert=_encrypt_cert)
             except KeyError:
                 # Can live with no relay state
-                return self.do(_dict["SAMLRequest"], binding)
+                return self.do(_saml_pmsg["SAMLRequest"], binding)
 
     def artifact_operation(self, _dict):
         if not _dict:
@@ -632,13 +625,13 @@ class AIDR(Service):
         resp = Response(hinfo["data"], headers=hinfo["headers"])
         return resp(self.environ, self.start_response)
 
-    def operation(self, _dict, binding, **kwargs):
-        logger.debug("_operation: %s" % _dict)
-        if not _dict or "ID" not in _dict:
+    def operation(self, _saml_pmsg, binding, **kwargs):
+        logger.debug("_operation: %s" % _saml_pmsg)
+        if not _saml_pmsg or "ID" not in _saml_pmsg:
             resp = BadRequest('Error parsing request or no request')
             return resp(self.environ, self.start_response)
 
-        return self.do(_dict["ID"], binding, **kwargs)
+        return self.do(_saml_pmsg["ID"], binding, **kwargs)
 
 
 # ----------------------------------------------------------------------------
