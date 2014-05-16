@@ -124,7 +124,7 @@ if __name__ == "__main__":
     if os.path.isfile(_name):
         directory, fname = os.path.split(_name)
         amap = AMap(directory, fname, 4 * " ")
-        f = open(_name)
+        f = open(_name, "w")
         f.write("%s" % amap)
         f.close()
     elif os.path.isdir(_name):
