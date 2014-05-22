@@ -23,10 +23,7 @@ Contents:
    install
    howto/index
    examples/index
-   code/s2repoze
-   code/saml2
-   code/xmldsig
-   code/xmlenc
+   contents
 
 Indices and tables
 ==================
