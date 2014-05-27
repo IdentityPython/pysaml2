@@ -540,13 +540,13 @@ class Base(Entity):
                 resp = self._parse_response(xmlstr, AuthnResponse,
                                             "assertion_consumer_service",
                                             binding, **kwargs)
-            except StatusError, err:
+            except StatusError as err:
                 logger.error("SAML status error: %s" % err)
                 raise
             except UnravelError:
                 return None
-            except Exception, exc:
-                logger.error("%s" % exc)
+            except Exception:
+                logger.error("XML parse error")
                 raise
 
             #logger.debug(">> %s", resp)
