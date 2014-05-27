@@ -499,12 +499,13 @@ def do_spsso_descriptor(conf, cert=None):
             for acs in spsso.attribute_consuming_service:
                 if not acs.requested_attribute:
                     acs.requested_attribute = requested_attributes
+        else:
+            spsso.attribute_consuming_service = [md.AttributeConsumingService(
+                requested_attribute=requested_attributes,
+                service_name=[md.ServiceName(lang="en", text=conf.name)],
+                index="1",
+            )]
 
-#        spsso.attribute_consuming_service = [md.AttributeConsumingService(
-#            requested_attribute=requested_attributes,
-#            service_name= [md.ServiceName(lang="en",text=conf.name)],
-#            index="1",
-#            )]
 #        try:
 #            if conf.description:
 #                try:
