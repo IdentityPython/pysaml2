@@ -501,15 +501,16 @@ class Policy(object):
         if _rest is None:
             _rest = self.get_entity_categories(sp_entity_id, mdstore)
         logger.debug("filter based on: %s" % _rest)
-        ava = filter_attribute_value_assertions(ava, _rest)
+        _ava = filter_attribute_value_assertions(ava.copy(), _rest)
         
         if required or optional:
             logger.debug("required: %s, optional: %s" % (required, optional))
-            ava = filter_on_attributes(
-                ava, required, optional, self.acs,
+            ava1 = filter_on_attributes(
+                ava.copy(), required, optional, self.acs,
                 self.get_fail_on_missing_requested(sp_entity_id))
-        
-        return ava
+            _ava.update(ava1)
+
+        return _ava
     
     def restrict(self, ava, sp_entity_id, metadata=None):
         """ Identity attribute names are expected to be expressed in
