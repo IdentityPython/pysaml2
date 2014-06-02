@@ -127,7 +127,8 @@ class Entity(HTTPBase):
             if _val.startswith("http"):
                 r = requests.request("GET", _val)
                 if r.status_code == 200:
-                    setattr(self.config, item, r.text)
+                    _, filename = make_temp(r.text, ".pem", False)
+                    setattr(self.config, item, filename)
                 else:
                     raise Exception(
                         "Could not fetch certificate from %s" % _val)

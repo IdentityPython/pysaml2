@@ -35,7 +35,6 @@ from Crypto.PublicKey import RSA
 from saml2.cert import OpenSSLWrapper
 from saml2.extension import pefim
 from saml2.saml import EncryptedAssertion
-from saml2.samlp import Response
 
 import xmldsig as ds
 
