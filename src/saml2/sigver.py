@@ -1377,7 +1377,7 @@ class SecurityContext(object):
         """
 
         :param item: Parsed entity
-        :param node_name:
+        :param node_name: The name of the class that is signed
         :param origdoc: The original XML string
         :param id_attr:
         :param must:

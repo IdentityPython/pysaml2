@@ -841,7 +841,7 @@ class Entity(HTTPBase):
         response = None
 
         if self.config.accepted_time_diff:
-            timeslack = self.config.accepted_time_diff
+            kwargs["timeslack"] = self.config.accepted_time_diff
 
         if "asynchop" not in kwargs:
             if binding in [BINDING_SOAP, BINDING_PAOS]:

@@ -8,13 +8,11 @@ from saml2.server import Server
 from saml2.response import response_factory
 from saml2.response import StatusResponse
 from saml2.response import AuthnResponse
-from saml2.sigver import security_context, SignatureError
-from saml2.sigver import MissingKey
-
-from pytest import raises
+from saml2.sigver import SignatureError
 
 FALSE_ASSERT_SIGNED = "saml_false_signed.xml"
 
+TIMESLACK = 2592000  # Roughly 3 month
 
 def _eq(l1, l2):
     return set(l1) == set(l2)
@@ -73,7 +71,7 @@ class TestResponse:
                                     "http://lingon.catalogix.se:8087/"],
                                 outstanding_queries={
                                     "id12": "http://localhost:8088/sso"},
-                                timeslack=10000, decode=False)
+                                timeslack=TIMESLACK, decode=False)
 
         assert isinstance(resp, StatusResponse)
         assert isinstance(resp, AuthnResponse)
@@ -85,7 +83,7 @@ class TestResponse:
                                     "http://lingon.catalogix.se:8087/"],
                                 outstanding_queries={
                                     "id12": "http://localhost:8088/sso"},
-                                timeslack=10000, decode=False)
+                                timeslack=TIMESLACK, decode=False)
 
         assert isinstance(resp, StatusResponse)
         assert isinstance(resp, AuthnResponse)
@@ -98,7 +96,7 @@ class TestResponse:
             outstanding_queries={
                 "bahigehogffohiphlfmplepdpcohkhhmheppcdie":
                     "http://localhost:8088/sso"},
-            timeslack=1000000, decode=False)
+            timeslack=TIMESLACK, decode=False)
 
         assert isinstance(resp, StatusResponse)
         assert isinstance(resp, AuthnResponse)
