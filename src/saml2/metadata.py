@@ -435,6 +435,58 @@ DEFAULT = {
 }
 
 
+def do_attribute_consuming_service(conf, spsso):
+
+    service_description = service_name = None
+    requested_attributes = []
+    acs = conf.attribute_converters
+    req = conf.getattr("required_attributes", "sp")
+    if req:
+        requested_attributes.extend(do_requested_attribute(req, acs,
+                                                           is_required="true"))
+
+    opt = conf.getattr("optional_attributes", "sp")
+
+    if opt:
+        requested_attributes.extend(do_requested_attribute(opt, acs))
+
+    try:
+        if conf.description:
+            try:
+                (text, lang) = conf.description
+            except ValueError:
+                text = conf.description
+                lang = "en"
+            service_description = [md.ServiceDescription(text=text, lang=lang)]
+    except KeyError:
+        pass
+
+    try:
+        if conf.name:
+            try:
+                (text, lang) = conf.name
+            except ValueError:
+                text = conf.name
+                lang = "en"
+            service_name = [md.ServiceName(text=text, lang=lang)]
+    except KeyError:
+        pass
+
+    # Must be both requested attributes and service name
+    if requested_attributes:
+        if not service_name:
+            service_name = [md.ServiceName(text="", lang="en")]
+
+        ac_serv = md.AttributeConsumingService(
+            index="1", service_name=service_name,
+            requested_attribute=requested_attributes)
+
+        if service_description:
+            ac_serv.service_description = service_description
+
+        spsso.attribute_consuming_service = [ac_serv]
+
+
 def do_spsso_descriptor(conf, cert=None):
     spsso = md.SPSSODescriptor()
     spsso.protocol_support_enumeration = samlp.NAMESPACE
@@ -479,45 +531,8 @@ def do_spsso_descriptor(conf, cert=None):
         except KeyError:
             setattr(spsso, key, DEFAULTS[key])
 
-    requested_attributes = []
-    acs = conf.attribute_converters
-    req = conf.getattr("required_attributes", "sp")
-    if req:
-        requested_attributes.extend(do_requested_attribute(req, acs,
-                                                           is_required="true"))
-
+    do_attribute_consuming_service(conf, spsso)
     _do_nameid_format(spsso, conf, "sp")
-
-    opt = conf.getattr("optional_attributes", "sp")
-
-    if opt:
-        requested_attributes.extend(do_requested_attribute(opt, acs))
-
-    if requested_attributes:
-        # endpoints that might publish requested attributes
-        if spsso.attribute_consuming_service:
-            for acs in spsso.attribute_consuming_service:
-                if not acs.requested_attribute:
-                    acs.requested_attribute = requested_attributes
-
-#        spsso.attribute_consuming_service = [md.AttributeConsumingService(
-#            requested_attribute=requested_attributes,
-#            service_name= [md.ServiceName(lang="en",text=conf.name)],
-#            index="1",
-#            )]
-#        try:
-#            if conf.description:
-#                try:
-#                    (text, lang) = conf.description
-#                except ValueError:
-#                    text = conf.description
-#                    lang = "en"
-#                spsso.attribute_consuming_service[0].service_description = [
-#                    md.ServiceDescription(text=text,
-#                                          lang=lang)]
-#        except KeyError:
-#            pass
-
     return spsso
 
 

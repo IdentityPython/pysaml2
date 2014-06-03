@@ -315,6 +315,9 @@ An example might be::
     what values on these attributes that can be returned.
 *name_form*
     Which name-form that should be used when sending assertions.
+    Using this information the attribute name in the data source will be mapped to
+    the friendly name, and the saml attribute name will be taken from the uri/oid
+    defined in the attribute map.
 
 If restrictions on values are deemed necessary those are represented by 
 regular expressions.::
@@ -612,3 +615,10 @@ A slightly more complex configuration::
     
 Uses metadata files, both local and remote, and will talk to whatever 
 IdP that appears in any of the metadata files. 
+
+Other considerations
+::::::::::::::::::::
+
+Entity Categories
+-----------------
+Entity categories and their attributes are defined in src/saml2/entity_category/<registrar of entcat>.py

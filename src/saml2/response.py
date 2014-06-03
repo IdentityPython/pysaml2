@@ -765,6 +765,7 @@ class AuthnResponse(StatusResponse):
         except Exception as exc:
             logger.error("correctly_signed_response: %s" % exc)
             raise
+
         self.assertion = assertion
         logger.debug("assertion context: %s" % (self.context,))
         logger.debug("assertion keys: %s" % (assertion.keyswv()))

@@ -2,6 +2,7 @@ import base64
 from binascii import hexlify
 import logging
 from hashlib import sha1
+import requests
 from saml2.metadata import ENDPOINTS
 from saml2.profile import paos, ecp
 from saml2.soap import parse_soap_enveloped_saml_artifact_resolve
@@ -117,6 +118,19 @@ class Entity(HTTPBase):
             self.config = config_factory(entity_type, config_file)
         else:
             raise SAMLError("Missing configuration")
+
+        for item in ["cert_file", "key_file", "ca_certs"]:
+            _val = getattr(self.config, item, None)
+            if not _val:
+                continue
+
+            if _val.startswith("http"):
+                r = requests.request("GET", _val)
+                if r.status_code == 200:
+                    setattr(self.config, item, r.text)
+                else:
+                    raise Exception(
+                        "Could not fetch certificate from %s" % _val)
 
         HTTPBase.__init__(self, self.config.verify_ssl_cert,
                           self.config.ca_certs, self.config.key_file,
