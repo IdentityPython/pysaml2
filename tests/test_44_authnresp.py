@@ -71,7 +71,7 @@ class TestAuthnResponse:
         print self.ar.__dict__
         assert self.ar.came_from == 'http://localhost:8088/sso'
         assert self.ar.session_id() == "id12"
-        assert self.ar.ava["eduPersonAffiliation"] == IDENTITY["eduPersonAffiliation"]
+        assert self.ar.ava["givenName"] == IDENTITY["givenName"]
         assert self.ar.name_id
         assert self.ar.issuer() == 'urn:mace:example.com:saml:roland:idp'
     

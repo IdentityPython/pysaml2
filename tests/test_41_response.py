@@ -98,7 +98,7 @@ class TestResponse:
             outstanding_queries={
                 "bahigehogffohiphlfmplepdpcohkhhmheppcdie":
                     "http://localhost:8088/sso"},
-            timeslack=10000, decode=False)
+            timeslack=1000000, decode=False)
 
         assert isinstance(resp, StatusResponse)
         assert isinstance(resp, AuthnResponse)

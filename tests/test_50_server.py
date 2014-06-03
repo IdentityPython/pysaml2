@@ -227,18 +227,17 @@ class TestServer1():
         assert assertion.attribute_statement
         attribute_statement = assertion.attribute_statement
         print attribute_statement
-        assert len(attribute_statement[0].attribute) == 5
+        assert len(attribute_statement[0].attribute) == 4
         # Pick out one attribute
         attr = None
         for attr in attribute_statement[0].attribute:
-            if attr.friendly_name == "edupersonentitlement":
+            if attr.friendly_name == "givenname":
                 break
         assert len(attr.attribute_value) == 1
-        assert attr.name == "urn:oid:1.3.6.1.4.1.5923.1.1.1.7"
-        assert attr.name_format == "urn:oasis:names:tc:SAML:2" \
-                                   ".0:attrname-format:uri"
+        assert attr.name == "urn:oid:2.5.4.42"
+        assert attr.name_format == "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
         value = attr.attribute_value[0]
-        assert value.text.strip() == "Short stop"
+        assert value.text.strip() == "Derek"
         assert value.get_type() == "xs:string"
         assert assertion.subject
         assert assertion.subject.name_id
