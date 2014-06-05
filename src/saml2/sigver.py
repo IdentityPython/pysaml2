@@ -38,7 +38,7 @@ from saml2.saml import EncryptedAssertion
 
 import xmldsig as ds
 
-from saml2 import samlp
+from saml2 import samlp, SamlBase
 from saml2 import SAMLError
 from saml2 import extension_elements_to_elements
 from saml2 import class_name
@@ -780,7 +780,9 @@ class CryptoBackendXmlSec1(CryptoBackend):
         :return: The encrypted text
         """
 
-        statement = pre_encrypt_assertion(statement)
+        if isinstance(statement, SamlBase):
+            statement = pre_encrypt_assertion(statement)
+
         _, fil = make_temp("%s" % statement, decode=False, delete=False)
         _, tmpl = make_temp("%s" % template, decode=False)
 
