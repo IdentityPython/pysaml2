@@ -69,7 +69,9 @@ mds = MetadataStore(ONTS.values(), None, None)
 
 for line in open(args.conf).readlines():
     line = line.strip()
-    if line[0] == "#":
+    if len(line) == 0:
+        continue
+    elif line[0] == "#":
         continue
     spec = line.split(" ")
 
