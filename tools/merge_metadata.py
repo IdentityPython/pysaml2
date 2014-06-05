@@ -55,8 +55,16 @@ metad = None
 output = EntitiesDescriptor()
 
 # config file format
+#
 # local <local file name>
-# external <url> <local file name for certificate use to verify signature>
+# remote <url> <local file name for certificate use to verify signature>
+#
+# for instance
+#
+#local metadata_sp_1.xml
+#local InCommon-metadata.xml
+#remote https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2 kalmar2.pem
+#
 
 for line in open(args.conf).readlines():
     line = line.strip()
