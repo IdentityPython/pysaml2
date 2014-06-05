@@ -6,6 +6,7 @@ from hashlib import sha1
 from saml2.httpbase import HTTPBase
 from saml2.extension.idpdisc import BINDING_DISCO
 from saml2.extension.idpdisc import DiscoveryResponse
+from saml2.md import EntitiesDescriptor
 
 from saml2.mdie import to_dict
 
@@ -871,3 +872,16 @@ class MetadataStore(object):
 
     def attribute_authorities(self):
         return self._providers("attribute_authority")
+
+    def dumps(self, format="local"):
+        res = EntitiesDescriptor()
+        for _md in self.metadata.values():
+            try:
+                res.entity_descriptor.extend(_md.entities_descr.entity_descriptor)
+            except AttributeError:
+                res.entity_descriptor.append(_md.entity_descr)
+
+        if format == "local":
+            return "%s" % res
+        elif format == "md":
+            pass
