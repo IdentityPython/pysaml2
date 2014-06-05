@@ -71,6 +71,10 @@ logger = logging.getLogger(__name__)
 SIG = "{%s#}%s" % (ds.NAMESPACE, "Signature")
 
 RSA_SHA1 = "http://www.w3.org/2000/09/xmldsig#rsa-sha1"
+RSA_SHA256 = "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"
+RSA_SHA384 = "http://www.w3.org/2001/04/xmldsig-more#rsa-sha384"
+RSA_SHA512 = "http://www.w3.org/2001/04/xmldsig-more#rsa-sha512"
+
 RSA_1_5 = "http://www.w3.org/2001/04/xmlenc#rsa-1_5"
 TRIPLE_DES_CBC = "http://www.w3.org/2001/04/xmlenc#tripledes-cbc"
 XMLTAG = "<?xml version='1.0'?>"
@@ -313,7 +317,7 @@ def signed_instance_factory(instance, seccont, elements_to_sign=None):
         signed_xml = "%s" % instance
         for (node_name, nodeid) in elements_to_sign:
             signed_xml = seccont.sign_statement(
-                signed_xml, class_name=node_name, node_id=nodeid)
+                signed_xml, node_name=node_name, node_id=nodeid)
 
         #print "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         #print "%s" % signed_xml
@@ -600,9 +604,9 @@ class RSASigner(Signer):
 
 SIGNER_ALGS = {
     RSA_SHA1: RSASigner(SHA),
-    "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256": RSASigner(SHA256),
-    "http://www.w3.org/2001/04/xmldsig-more#rsa-sha384": RSASigner(SHA384),
-    "http://www.w3.org/2001/04/xmldsig-more#rsa-sha512": RSASigner(SHA512),
+    RSA_SHA256: RSASigner(SHA256),
+    RSA_SHA384: RSASigner(SHA384),
+    RSA_SHA512: RSASigner(SHA512),
 }
 
 REQ_ORDER = ["SAMLRequest", "RelayState", "SigAlg"]
@@ -698,13 +702,14 @@ class CryptoBackend():
     def encrypt(self, text, recv_key, template, key_type):
         raise NotImplementedError()
 
-    def encrypt_assertion(self, statement, recv_key, key_type, xpath=""):
+    def encrypt_assertion(self, statement, enc_key, template, key_type,
+                          node_xpath):
         raise NotImplementedError()
 
     def decrypt(self, enctext, key_file):
         raise NotImplementedError()
 
-    def sign_statement(self, statement, class_name, key_file, node_id,
+    def sign_statement(self, statement, node_name, key_file, node_id,
                        id_attr):
         raise NotImplementedError()
 
@@ -764,26 +769,27 @@ class CryptoBackendXmlSec1(CryptoBackend):
         return output
 
     def encrypt_assertion(self, statement, enc_key, template,
-                          key_type="des-192"):
+                          key_type="des-192", node_xpath=None):
         """
-        --pubkey-cert-pem ../../example/idp2/pki/mycert.pem \
-    --session-key des-192 --xml-data pre_saml2_assertion.xml \
-    --node-xpath '/*[local-name()="Response"]/*[local-name(
-    )="EncryptedAssertion"]/*[local-name()="Assertion"]' \
-    enc-element-3des-kt-rsa1_5.tmpl > enc_3des_rsa_assertion.xml
+        Will encrypt an assertion
 
-        :param statement:
-        :param cert_file:
-        :param cert_type:
-        :return:
+        :param statement: A XML document that contains the assertion to encrypt
+        :param enc_key: File name of a file containing the encryption key
+        :param template: A template for the encryption part to be added.
+        :param key_type: The type of session key to use.
+        :return: The encrypted text
         """
+
         statement = pre_encrypt_assertion(statement)
         _, fil = make_temp("%s" % statement, decode=False, delete=False)
         _, tmpl = make_temp("%s" % template, decode=False)
 
+        if not node_xpath:
+            node_xpath = ASSERT_XPATH
+
         com_list = [self.xmlsec, "encrypt", "--pubkey-cert-pem", enc_key,
                     "--session-key", key_type, "--xml-data", fil,
-                    "--node-xpath", ASSERT_XPATH]
+                    "--node-xpath", node_xpath]
 
         (_stdout, _stderr, output) = self._run_xmlsec(
             com_list, [tmpl], exception=EncryptError, validate_output=False)
@@ -795,6 +801,13 @@ class CryptoBackendXmlSec1(CryptoBackend):
         return output
 
     def decrypt(self, enctext, key_file):
+        """
+
+        :param enctext: XML document containing an encrypted part
+        :param key_file: The key to use for the decryption
+        :return: The decrypted document
+        """
+
         logger.debug("Decrypt input len: %d" % len(enctext))
         _, fil = make_temp("%s" % enctext, decode=False)
 
@@ -806,13 +819,13 @@ class CryptoBackendXmlSec1(CryptoBackend):
                                                       validate_output=False)
         return output
 
-    def sign_statement(self, statement, class_name, key_file, node_id,
+    def sign_statement(self, statement, node_name, key_file, node_id,
                        id_attr):
         """
         Sign an XML statement.
 
         :param statement: The statement to be signed
-        :param class_name: string like 'urn:oasis:names:...:Assertion'
+        :param node_name: string like 'urn:oasis:names:...:Assertion'
         :param key_file: The file where the key can be found
         :param node_id:
         :param id_attr: The attribute name for the identifier, normally one of
@@ -824,7 +837,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
 
         com_list = [self.xmlsec, "--sign",
                     "--privkey-pem", key_file,
-                    "--id-attr:%s" % id_attr, class_name]
+                    "--id-attr:%s" % id_attr, node_name]
         if node_id:
             com_list.extend(["--node-id", node_id])
 
@@ -937,7 +950,7 @@ class CryptoBackendXMLSecurity(CryptoBackend):
         # better than static 0.0 here.
         return "XMLSecurity 0.0"
 
-    def sign_statement(self, statement, _class_name, key_file, node_id,
+    def sign_statement(self, statement, node_name, key_file, node_id,
                        _id_attr):
         """
         Sign an XML statement.
@@ -946,6 +959,7 @@ class CryptoBackendXMLSecurity(CryptoBackend):
         implementation are :
 
         :param statement: XML as string
+        :param node_name: Name of the node to sign
         :param key_file: xmlsec key_spec string(), filename,
             "pkcs11://" URI or PEM data
         :returns: Signed XML as string
@@ -1242,18 +1256,18 @@ class SecurityContext(object):
 
         return self.crypto.encrypt(text, recv_key, template, key_type)
 
-    def encrypt_assertion(self, statement, cert_file, cert_type="pem"):
+    def encrypt_assertion(self, statement, enc_key, template,
+                          key_type="des-192", node_xpath=None):
         """
-        --pubkey-cert-pem ../../example/idp2/pki/mycert.pem \
-    --session-key des-192 --xml-data pre_saml2_assertion.xml \
-    --node-xpath '/*[local-name()="Response"]/*[local-name(
-    )="EncryptedAssertion"]/*[local-name()="Assertion"]' \
-    enc-element-3des-kt-rsa1_5.tmpl > enc_3des_rsa_assertion.xml
-        :param statement:
-        :param cert_file:
-        :param cert_type:
-        :return:
+        Will encrypt an assertion
+
+        :param statement: A XML document that contains the assertion to encrypt
+        :param enc_key: File name of a file containing the encryption key
+        :param template: A template for the encryption part to be added.
+        :param key_type: The type of session key to use.
+        :return: The encrypted text
         """
+        raise NotImplemented()
 
     def decrypt(self, enctext, key_file=None):
         """ Decrypting an encrypted text by the use of a private key.
@@ -1377,7 +1391,7 @@ class SecurityContext(object):
         """
 
         :param item: Parsed entity
-        :param node_name: The name of the class that is signed
+        :param node_name: The name of the node/class/element that is signed
         :param origdoc: The original XML string
         :param id_attr:
         :param must:
@@ -1577,12 +1591,12 @@ class SecurityContext(object):
         """ Deprecated function. See sign_statement(). """
         return self.sign_statement(statement, **kwargs)
 
-    def sign_statement(self, statement, class_name, key=None,
+    def sign_statement(self, statement, node_name, key=None,
                        key_file=None, node_id=None, id_attr=""):
         """Sign a SAML statement.
 
         :param statement: The statement to be signed
-        :param class_name: string like 'urn:oasis:names:...:Assertion'
+        :param node_name: string like 'urn:oasis:names:...:Assertion'
         :param key: The key to be used for the signing, either this or
         :param key_file: The file where the key can be found
         :param node_id:
@@ -1599,7 +1613,7 @@ class SecurityContext(object):
         if not key and not key_file:
             key_file = self.key_file
 
-        return self.crypto.sign_statement(statement, class_name, key_file,
+        return self.crypto.sign_statement(statement, node_name, key_file,
                                           node_id, id_attr)
 
     def sign_assertion_using_xmlsec(self, statement, **kwargs):
@@ -1797,3 +1811,16 @@ def response_factory(sign=False, encrypt=False, **kwargs):
         setattr(response, key, val)
 
     return response
+
+# ----------------------------------------------------------------------------
+if __name__ == '__main__':
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-s', '--list-sigalgs', dest='listsigalgs',
+                        action='store_true',
+                        help='List implemented signature algorithms')
+    args = parser.parse_args()
+
+    if args.listsigalgs:
+        print '\n'.join([key for key, value in SIGNER_ALGS.items()])
