@@ -1,24 +1,24 @@
 #!/usr/bin/env python
+import importlib
 import argparse
 import base64
-import importlib
-import logging
-import os
 import re
-import socket
+import logging
 import time
-
-from Cookie import SimpleCookie
 from hashlib import sha1
-from urlparse import parse_qs
 
+from urlparse import parse_qs
+from Cookie import SimpleCookie
+import os
+from saml2.profile import ecp
+
+from saml2 import server
 from saml2 import BINDING_HTTP_ARTIFACT
 from saml2 import BINDING_URI
 from saml2 import BINDING_PAOS
 from saml2 import BINDING_SOAP
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
-from saml2 import server
 from saml2 import time_util
 
 from saml2.authn_context import AuthnBroker
@@ -35,7 +35,6 @@ from saml2.httputil import BadRequest
 from saml2.httputil import ServiceError
 from saml2.ident import Unknown
 from saml2.metadata import create_metadata_string
-from saml2.profile import ecp
 from saml2.s_utils import rndstr
 from saml2.s_utils import exception_trace
 from saml2.s_utils import UnknownPrincipal
@@ -43,10 +42,6 @@ from saml2.s_utils import UnsupportedBinding
 from saml2.s_utils import PolicyError
 from saml2.sigver import verify_redirect_signature
 from saml2.sigver import encrypt_cert_from_item
-
-from idp_user import USERS
-from idp_user import EXTRA
-from mako.lookup import TemplateLookup
 
 logger = logging.getLogger("saml2.idp")
 
@@ -953,6 +948,32 @@ def application(environ, start_response):
 
 # ----------------------------------------------------------------------------
 
+# allow uwsgi or gunicorn mount
+# by moving some initialization out of __name__ == '__main__' section.
+# uwsgi -s 0.0.0.0:8088 --protocol http --callable application --module idp
+
+args = type('Config', (object,), { })
+args.config = 'idp_conf'
+args.mako_root = './'
+args.path = None
+
+import socket
+from idp_user import USERS
+from idp_user import EXTRA
+from mako.lookup import TemplateLookup
+
+AUTHN_BROKER = AuthnBroker()
+AUTHN_BROKER.add(authn_context_class_ref(PASSWORD),
+                 username_password_authn, 10,
+                 "http://%s" % socket.gethostname())
+AUTHN_BROKER.add(authn_context_class_ref(UNSPECIFIED),
+                 "", 0, "http://%s" % socket.gethostname())
+CONFIG = importlib.import_module(args.config)
+IDP = server.Server(args.config, cache=Cache())
+IDP.ticket = {}
+
+# ----------------------------------------------------------------------------
+
 if __name__ == '__main__':
     from wsgiref.simple_server import make_server
 
@@ -972,16 +993,6 @@ if __name__ == '__main__':
     parser.add_argument(dest="config")
     args = parser.parse_args()
 
-    AUTHN_BROKER = AuthnBroker()
-    AUTHN_BROKER.add(authn_context_class_ref(PASSWORD),
-                     username_password_authn, 10,
-                     "http://%s" % socket.gethostname())
-    AUTHN_BROKER.add(authn_context_class_ref(UNSPECIFIED),
-                     "", 0, "http://%s" % socket.gethostname())
-    CONFIG = importlib.import_module(args.config)
-    IDP = server.Server(args.config, cache=Cache())
-    IDP.ticket = {}
-
     _rot = args.mako_root
     LOOKUP = TemplateLookup(directories=[_rot + 'templates', _rot + 'htdocs'],
                             module_directory=_rot + 'modules',
@@ -993,3 +1004,8 @@ if __name__ == '__main__':
     SRV = make_server(HOST, PORT, application)
     print "IdP listening on %s:%s" % (HOST, PORT)
     SRV.serve_forever()
+else:
+    _rot = args.mako_root
+    LOOKUP = TemplateLookup(directories=[_rot + 'templates', _rot + 'htdocs'],
+                            module_directory=_rot + 'modules',
+                            input_encoding='utf-8', output_encoding='utf-8')
