@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from saml2.md import EntitiesDescriptor
 from saml2.sigver import _get_xmlsec_cryptobackend, SecurityContext
 from saml2.httpbase import HTTPBase
 
@@ -18,7 +17,7 @@ import xmlenc
 
 import argparse
 
-from saml2.mdstore import MetaDataFile, MetaDataExtern
+from saml2.mdstore import MetaDataFile, MetaDataExtern, MetadataStore
 
 __author__ = 'rolandh'
 
@@ -52,8 +51,6 @@ args = parser.parse_args()
 
 metad = None
 
-output = EntitiesDescriptor()
-
 # config file format
 #
 # local <local file name>
@@ -65,6 +62,10 @@ output = EntitiesDescriptor()
 #local InCommon-metadata.xml
 #remote https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2 kalmar2.pem
 #
+
+ATTRCONV = ac_factory(args.attrsmap)
+
+mds = MetadataStore(ONTS.values(), None, None)
 
 for line in open(args.conf).readlines():
     line = line.strip()
@@ -93,9 +94,8 @@ for line in open(args.conf).readlines():
         except:
             raise
 
-    output.entity_descriptor.extend(metad.entities_descr.entity_descriptor)
+    mds.metadata[spec[1]] = metad
 
-print output
-
+print mds.dumps(args.output)
 
 

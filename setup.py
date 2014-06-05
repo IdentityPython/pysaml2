@@ -87,7 +87,7 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules"],
 
     scripts=["tools/parse_xsd2.py", "tools/make_metadata.py",
-             "tools/mdexport.py"],
+             "tools/mdexport.py", "tools/merge_metadata.py"],
 
     tests_require=tests_require,
     extras_require={
