@@ -274,6 +274,12 @@ def instant(format=TIME_FORMAT, time_stamp=0):
 def utc_now():
     return calendar.timegm(time.gmtime())
 
+def now():
+    """
+    :return: UTC time for NOW
+    """
+    return datetime.utcnow()
+
 # ---------------------------------------------------------------------------
 
 

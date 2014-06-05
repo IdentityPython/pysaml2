@@ -795,7 +795,13 @@ class CryptoBackendXmlSec1(CryptoBackend):
         return output
 
     def decrypt(self, enctext, key_file):
-        logger.debug("Decrypt input len: %d" % len(enctext))
+        if isinstance(enctext, EncryptedData):
+          # When attribute encryption is used, enctext is of type xmlenc.EncryptedData.
+          logger.debug("Decrypt input len: %d" % len(enctext.to_string()))
+        else:
+          # When assertion encryption is used, enctext is of type str.
+          logger.debug("Decrypt input len: %d" % len(enctext))
+
         _, fil = make_temp("%s" % enctext, decode=False)
 
         com_list = [self.xmlsec, "--decrypt", "--privkey-pem",
