@@ -545,8 +545,8 @@ class Base(Entity):
                 raise
             except UnravelError:
                 return None
-            except Exception:
-                logger.error("XML parse error")
+            except Exception as err:
+                logger.error("XML parse error: %s" % err)
                 raise
 
             #logger.debug(">> %s", resp)

@@ -173,16 +173,20 @@ def test_ava_filter_2():
            "mail": "derek@example.com"}
 
     # mail removed because it doesn't match the regular expression
-    # So this should fail.
-    raises(MissingValue, policy.filter, ava, 'urn:mace:umu.se:saml:roland:sp',
-           None, [mail], [gn, sn])
+    _ava =policy.filter(ava, 'urn:mace:umu.se:saml:roland:sp', None, [mail],
+                        [gn, sn])
+
+    assert _eq(_ava.keys(), ["givenName", "surName"])
 
     ava = {"givenName": "Derek",
            "surName": "Jeter"}
 
     # it wasn't there to begin with
-    raises(Exception, policy.filter, ava, 'urn:mace:umu.se:saml:roland:sp',
-           None, [gn, sn, mail])
+    try:
+        policy.filter(ava, 'urn:mace:umu.se:saml:roland:sp', None,
+                      [gn, sn, mail])
+    except MissingValue:
+        pass
 
 
 def test_ava_filter_dont_fail():
@@ -843,4 +847,4 @@ def test_assertion_with_authn_instant():
 
 
 if __name__ == "__main__":
-    test_ava_filter_dont_fail()
+    test_assertion_2()

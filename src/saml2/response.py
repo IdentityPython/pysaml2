@@ -475,7 +475,7 @@ class AuthnResponse(StatusResponse):
         else:
             self.outstanding_queries = {}
         self.context = "AuthnReq"
-        self.came_from = ""
+        self.came_from = None
         self.ava = None
         self.assertion = None
         self.assertions = []
@@ -507,7 +507,7 @@ class AuthnResponse(StatusResponse):
         if self.asynchop:
             if self.in_response_to in self.outstanding_queries:
                 self.came_from = self.outstanding_queries[self.in_response_to]
-                del self.outstanding_queries[self.in_response_to]
+                #del self.outstanding_queries[self.in_response_to]
                 try:
                     if not self.check_subject_confirmation_in_response_to(
                             self.in_response_to):
@@ -529,7 +529,7 @@ class AuthnResponse(StatusResponse):
 
     def clear(self):
         self._clear()
-        self.came_from = ""
+        self.came_from = None
         self.ava = None
         self.assertion = None
 
@@ -667,12 +667,12 @@ class AuthnResponse(StatusResponse):
         if not later_than(data.not_on_or_after, data.not_before):
             return False
 
-        if self.asynchop and not self.came_from:
+        if self.asynchop and self.came_from is None:
             if data.in_response_to:
                 if data.in_response_to in self.outstanding_queries:
                     self.came_from = self.outstanding_queries[
                         data.in_response_to]
-                    del self.outstanding_queries[data.in_response_to]
+                    #del self.outstanding_queries[data.in_response_to]
                 elif self.allow_unsolicited:
                     pass
                 else:
@@ -744,7 +744,7 @@ class AuthnResponse(StatusResponse):
         logger.info("Subject NameID: %s" % self.name_id)
         return self.name_id
 
-    def _assertion(self, assertion):
+    def _assertion(self, assertion, verified=False):
         """
         Check the assertion
         :param assertion:
@@ -757,13 +757,14 @@ class AuthnResponse(StatusResponse):
                 raise SignatureError("Signature missing for assertion")
         else:
             logger.debug("signed")
-            try:
-                if self.require_signature:
-                    self.sec.check_signature(assertion, class_name(assertion),
-                                             self.xmlstr)
-            except Exception as exc:
-                logger.error("correctly_signed_response: %s" % exc)
-                raise
+            if not verified:
+                try:
+                    if self.require_signature:
+                        self.sec.check_signature(assertion, class_name(assertion),
+                                                 self.xmlstr)
+                except Exception as exc:
+                    logger.error("correctly_signed_response: %s" % exc)
+                    raise
 
         self.assertion = assertion
         logger.debug("assertion context: %s" % (self.context,))
@@ -791,14 +792,14 @@ class AuthnResponse(StatusResponse):
             if self.asynchop:
                 if self.allow_unsolicited:
                     pass
-                elif not self.came_from:
+                elif self.came_from is None:
                     raise VerificationError("Came from")
             return True
         except Exception:
             logger.exception("get subject")
             raise
 
-    def decrypt_assertions(self, encrypted_assertions, key_file=""):
+    def decrypt_assertions(self, encrypted_assertions, decr_txt):
         res = []
         for encrypted_assertion in encrypted_assertions:
             if encrypted_assertion.extension_elements:
@@ -806,8 +807,8 @@ class AuthnResponse(StatusResponse):
                     encrypted_assertion.extension_elements, [saml, samlp])
                 for assertion in assertions:
                     if assertion.signature:
-                        if not self.sec.verify_signature(
-                                "%s" % assertion, key_file,
+                        if not self.sec.check_signature(
+                                assertion, origdoc=decr_txt,
                                 node_name=class_name(assertion)):
                             logger.error(
                                 "Failed to verify signature on '%s'" % assertion)
@@ -826,21 +827,23 @@ class AuthnResponse(StatusResponse):
             except AssertionError:
                 raise Exception("No assertion part")
 
+        res = []
         if self.response.encrypted_assertion:
             logger.debug("***Encrypted assertion/-s***")
             decr_text = self.sec.decrypt(self.xmlstr, key_file)
             resp = samlp.response_from_string(decr_text)
-            res = self.decrypt_assertions(resp.encrypted_assertion, key_file)
+            res = self.decrypt_assertions(resp.encrypted_assertion, decr_text)
             if self.response.assertion:
                 self.response.assertion.extend(res)
             else:
                 self.response.assertion = res
             self.response.encrypted_assertion = []
+            self.xmlstr = decr_text
 
         if self.response.assertion:
             logger.debug("***Unencrypted assertion***")
             for assertion in self.response.assertion:
-                if not self._assertion(assertion):
+                if not self._assertion(assertion, assertion in res):
                     return False
                 else:
                     self.assertions.append(assertion)

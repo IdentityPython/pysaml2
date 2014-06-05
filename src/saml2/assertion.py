@@ -497,20 +497,33 @@ class Policy(object):
         :return: A possibly modified AVA
         """
 
-        _rest = self.get_attribute_restrictions(sp_entity_id)
-        if _rest is None:
-            _rest = self.get_entity_categories(sp_entity_id, mdstore)
-        logger.debug("filter based on: %s" % _rest)
-        _ava = filter_attribute_value_assertions(ava.copy(), _rest)
-        
+        _ava = None
         if required or optional:
             logger.debug("required: %s, optional: %s" % (required, optional))
-            ava1 = filter_on_attributes(
+            _ava = filter_on_attributes(
                 ava.copy(), required, optional, self.acs,
                 self.get_fail_on_missing_requested(sp_entity_id))
-            _ava.update(ava1)
 
-        return _ava
+        _rest = self.get_entity_categories(sp_entity_id, mdstore)
+        if _rest:
+            ava_ec = filter_attribute_value_assertions(ava.copy(), _rest)
+            if _ava is None:
+                _ava = ava_ec
+            else:
+                _ava.update(ava_ec)
+
+        _rest = self.get_attribute_restrictions(sp_entity_id)
+        if _rest:
+            if _ava is None:
+                _ava = ava.copy()
+            _ava = filter_attribute_value_assertions(_ava, _rest)
+        elif _ava is None:
+            _ava = ava.copy()
+
+        if _ava is None:
+            return {}
+        else:
+            return _ava
     
     def restrict(self, ava, sp_entity_id, metadata=None):
         """ Identity attribute names are expected to be expressed in
@@ -523,8 +536,8 @@ class Policy(object):
         if metadata:
             spec = metadata.attribute_requirement(sp_entity_id)
             if spec:
-                ava = self.filter(ava, sp_entity_id, metadata,
-                                  spec["required"], spec["optional"])
+                return self.filter(ava, sp_entity_id, metadata,
+                                   spec["required"], spec["optional"])
 
         return self.filter(ava, sp_entity_id, metadata, [], [])
 
@@ -757,5 +770,11 @@ class Assertion(dict):
 
         policy.acs = self.acs
         ava = policy.restrict(self, sp_entity_id, metadata)
-        self.update(ava)
+
+        for key, val in self.items():
+            if key in ava:
+                self[key] = ava[key]
+            else:
+                del self[key]
+
         return ava

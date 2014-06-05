@@ -35,7 +35,6 @@ from Crypto.PublicKey import RSA
 from saml2.cert import OpenSSLWrapper
 from saml2.extension import pefim
 from saml2.saml import EncryptedAssertion
-from saml2.samlp import Response
 
 import xmldsig as ds
 
@@ -1378,7 +1377,7 @@ class SecurityContext(object):
         """
 
         :param item: Parsed entity
-        :param node_name:
+        :param node_name: The name of the class that is signed
         :param origdoc: The original XML string
         :param id_attr:
         :param must:

@@ -64,7 +64,7 @@ def test_filter_ava2():
         "default": {
             "lifetime": {"minutes": 15},
             #"attribute_restrictions": None  # means all I have
-            "entity_categories": ["edugain"]
+            "entity_categories": ["refeds", "edugain"]
         }
     })
 
@@ -158,7 +158,7 @@ def test_idp_policy_filter():
            "norEduPersonNIN": "19800101134"}
 
     policy = idp.config.getattr("policy", "idp")
-    policy.filter(ava, "urn:mace:example.com:saml:roland:sp", idp.metadata)
+    ava = policy.filter(ava, "urn:mace:example.com:saml:roland:sp", idp.metadata)
 
     print ava
     assert ava.keys() == ["eduPersonTargetedID"]  # because no entity category
