@@ -177,3 +177,17 @@ example/sp-repoze/idp_test.xml
 example/sp-repoze/sp_conf_example.py
 
 example/idp2/idp_conf_example.py
+
+example/idp2/lidp.xml
+
+example/idp2/old_idp.xml
+
+example/sp-repoze/old_sp.xml
+
+example/sp-repoze/sp_conf_2.Pygmalion
+
+.gitignore.swp
+
+example/sp-repoze/sp_conf_2.py
+
+sp.xml
