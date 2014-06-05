@@ -874,14 +874,22 @@ class MetadataStore(object):
         return self._providers("attribute_authority")
 
     def dumps(self, format="local"):
-        res = EntitiesDescriptor()
-        for _md in self.metadata.values():
-            try:
-                res.entity_descriptor.extend(_md.entities_descr.entity_descriptor)
-            except AttributeError:
-                res.entity_descriptor.append(_md.entity_descr)
+        """
+        Dumps the content in standard metadata format or the pysaml2 metadata
+        format
 
+        :param format: Which format to dump in
+        :return: a string
+        """
         if format == "local":
+            res = EntitiesDescriptor()
+            for _md in self.metadata.values():
+                try:
+                    res.entity_descriptor.extend(_md.entities_descr.entity_descriptor)
+                except AttributeError:
+                    res.entity_descriptor.append(_md.entity_descr)
+
             return "%s" % res
         elif format == "md":
-            pass
+            return json.dumps(self.items(), indent=2)
+

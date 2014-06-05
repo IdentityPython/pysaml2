@@ -96,6 +96,6 @@ for line in open(args.conf).readlines():
 
     mds.metadata[spec[1]] = metad
 
-print mds.dumps()
+print mds.dumps("md")
 
 
