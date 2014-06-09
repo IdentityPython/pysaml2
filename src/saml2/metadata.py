@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from saml2.md import AttributeProfile, entity_descriptor_from_string
 from saml2.sigver import security_context
 from saml2.config import Config
 from saml2.validate import valid_instance
@@ -52,11 +53,13 @@ ORG_ATTR_TRANSL = {
     "organization_url": ("url", md.OrganizationURL)
 }
 
+MDNS = '"urn:oasis:names:tc:SAML:2.0:metadata"'
+XMLNSXS = " xmlns:xs=\"http://www.w3.org/2001/XMLSchema\""
 
-def metadata_tostring_fix(desc, nspair):
-    MDNS = '"urn:oasis:names:tc:SAML:2.0:metadata"'
-    XMLNSXS = " xmlns:xs=\"http://www.w3.org/2001/XMLSchema\""
-    xmlstring = desc.to_string(nspair)
+
+def metadata_tostring_fix(desc, nspair, xmlstring=""):
+    if not xmlstring:
+        xmlstring = desc.to_string(nspair)
     if "\"xs:string\"" in xmlstring and XMLNSXS not in xmlstring:
         xmlstring = xmlstring.replace(MDNS, MDNS+XMLNSXS)
     return xmlstring
@@ -94,13 +97,15 @@ def create_metadata_string(configfile, config, valid, cert, keyfile, mid, name,
 
         return metadata_tostring_fix(desc, nspair)
     else:
-        for eid in eds:
-            if sign:
-                desc = sign_entity_descriptor(eid, mid, secc)
-            else:
-                desc = eid
-            valid_instance(desc)
-            return metadata_tostring_fix(desc, nspair)
+        eid = eds[0]
+        if sign:
+            eid, xmldoc = sign_entity_descriptor(eid, mid, secc)
+        else:
+            xmldoc = None
+
+        valid_instance(eid)
+        xmldoc = metadata_tostring_fix(eid, nspair, xmldoc)
+        return xmldoc
 
 
 def _localized_name(val, klass):
@@ -598,6 +603,16 @@ def do_aa_descriptor(conf, cert):
     if cert:
         aad.key_descriptor = do_key_descriptor(cert)
 
+    attributes = conf.getattr("attribute", "aa")
+    if attributes:
+        for attribute in attributes:
+            aad.attribute.append(Attribute(text=attribute))
+
+    attribute_profiles = conf.getattr("attribute_profile", "aa")
+    if attribute_profiles:
+        for attribute_profile in attribute_profiles:
+            aad.attribute.append(AttributeProfile(text=attribute_profile))
+
     return aad
 
 
@@ -712,14 +727,26 @@ def entities_descriptor(eds, valid_for, name, ident, sign, secc):
         entities.id = ident
         xmldoc = secc.sign_statement("%s" % entities, class_name(entities))
         entities = md.entities_descriptor_from_string(xmldoc)
-    return entities
+    else:
+        xmldoc = None
+
+    return entities, xmldoc
 
 
 def sign_entity_descriptor(edesc, ident, secc):
+    """
+
+    :param edesc: EntityDescriptor instance
+    :param ident: EntityDescriptor identifier
+    :param secc: Security context
+    :return: Tuple with EntityDescriptor instance and Signed XML document
+    """
+
     if not ident:
         ident = sid()
 
     edesc.signature = pre_signature_part(ident, secc.my_cert, 1)
     edesc.id = ident
     xmldoc = secc.sign_statement("%s" % edesc, class_name(edesc))
-    return md.entity_descriptor_from_string(xmldoc)
+    edesc = md.entity_descriptor_from_string(xmldoc)
+    return edesc, xmldoc

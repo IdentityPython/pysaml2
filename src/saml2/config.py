@@ -116,14 +116,17 @@ PDP_ARGS = ["endpoints", "name_form", "name_id_format"]
 
 AQ_ARGS = ["endpoints"]
 
+AA_ARGS = ["attribute", "attribute_profile"]
+
 COMPLEX_ARGS = ["attribute_converters", "metadata", "policy"]
-ALL = set(COMMON_ARGS + SP_ARGS + AA_IDP_ARGS + PDP_ARGS + COMPLEX_ARGS)
+ALL = set(COMMON_ARGS + SP_ARGS + AA_IDP_ARGS + PDP_ARGS + COMPLEX_ARGS +
+          AA_ARGS)
 
 SPEC = {
     "": COMMON_ARGS + COMPLEX_ARGS,
     "sp": COMMON_ARGS + COMPLEX_ARGS + SP_ARGS,
     "idp": COMMON_ARGS + COMPLEX_ARGS + AA_IDP_ARGS,
-    "aa": COMMON_ARGS + COMPLEX_ARGS + AA_IDP_ARGS,
+    "aa": COMMON_ARGS + COMPLEX_ARGS + AA_IDP_ARGS + AA_ARGS,
     "pdp": COMMON_ARGS + COMPLEX_ARGS + PDP_ARGS,
     "aq": COMMON_ARGS + COMPLEX_ARGS + AQ_ARGS,
 }
@@ -222,6 +225,8 @@ class Config(object):
         self.tmp_key_file = None
         self.validate_certificate = None
         self.extensions = {}
+        self.attribute = []
+        self.attribute_profile = []
 
     def setattr(self, context, attr, val):
         if context == "":
