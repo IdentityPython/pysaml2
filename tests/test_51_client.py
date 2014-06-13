@@ -19,11 +19,11 @@ from saml2.authn_context import INTERNETPROTOCOLPASSWORD
 from saml2.client import Saml2Client
 from saml2.config import SPConfig
 from saml2.response import LogoutResponse
-from saml2.saml import NAMEID_FORMAT_PERSISTENT
+from saml2.saml import NAMEID_FORMAT_PERSISTENT, EncryptedAssertion
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.saml import NameID
 from saml2.server import Server
-from saml2.sigver import pre_encryption_part
+from saml2.sigver import pre_encryption_part, rm_xmltag
 from saml2.s_utils import do_attribute_statement
 from saml2.s_utils import factory
 from saml2.time_util import in_a_while
@@ -37,6 +37,23 @@ AUTHN = {
     "authn_auth": "http://www.example.com/login"
 }
 
+
+def add_subelement(xmldoc, node_name, subelem):
+    s = xmldoc.find(node_name)
+    if s > 0:
+        x = xmldoc.rindex("<", 0, s)
+        tag = xmldoc[x+1:s-1]
+        c = s+len(node_name)
+        spaces = ""
+        while xmldoc[c] == " ":
+            spaces += " "
+            c += 1
+        xmldoc = xmldoc.replace(
+            "<%s:%s%s/>" % (tag, node_name, spaces),
+            "<%s:%s%s>%s</%s:%s>" % (tag, node_name, spaces, subelem, tag,
+                                     node_name))
+
+    return xmldoc
 
 def for_me(condition, me):
     for restriction in condition.audience_restriction:
@@ -439,21 +456,25 @@ class TestClient:
             assertion.id, _sec.my_cert, 1)
 
         sigass = _sec.sign_statement(assertion, class_name(assertion),
-                                     #key_file="pki/mykey.pem",
-                                     key_file="test.key",
+                                     key_file=self.client.sec.key_file,
                                      node_id=assertion.id)
-        # Create an Assertion instance from the signed assertion
-        _ass = saml.assertion_from_string(sigass)
+
+        sigass = rm_xmltag(sigass)
 
         response = sigver.response_factory(
             in_response_to="_012345",
             destination="https://www.example.com",
             status=s_utils.success_status_factory(),
             issuer=self.server._issuer(),
-            assertion=_ass
+            encrypted_assertion=EncryptedAssertion()
         )
 
-        enctext = _sec.crypto.encrypt_assertion(response, _sec.cert_file,
+        xmldoc = "%s" % response
+        # strangely enough I get different tags if I run this test separately
+        # or as part of a bunch of tests.
+        xmldoc = add_subelement(xmldoc, "EncryptedAssertion", sigass)
+
+        enctext = _sec.crypto.encrypt_assertion(xmldoc, _sec.cert_file,
                                                 pre_encryption_part())
 
         #seresp = samlp.response_from_string(enctext)
