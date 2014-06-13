@@ -721,7 +721,7 @@ class ATTR(Service):
         name_id = _query.subject.name_id
         uid = name_id.text
         logger.debug("Local uid: %s" % uid)
-        identity = EXTRA[self.user]
+        identity = EXTRA[uid]
 
         # Comes in over SOAP so only need to construct the response
         args = IDP.response_args(_query, [BINDING_SOAP])
