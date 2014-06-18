@@ -228,7 +228,10 @@ class Entity(HTTPBase):
         sfunc = getattr(self.metadata, service)
 
         if bindings is None:
-            bindings = self.config.preferred_binding[service]
+            if request and request.protocol_binding:
+                bindings = [request.protocol_binding]
+            else:
+                bindings = self.config.preferred_binding[service]
 
         if not descr_type:
             if self.entity_type == "sp":
@@ -236,11 +239,31 @@ class Entity(HTTPBase):
             else:
                 descr_type = "spsso"
 
+        _url = _index = None
+        if request:
+            try:
+                _url = getattr(request, "%s_url" % service)
+            except AttributeError:
+                _url = None
+                try:
+                    _index = getattr(request, "%s_index" % service)
+                except AttributeError:
+                    pass
+
         for binding in bindings:
             try:
                 srvs = sfunc(entity_id, binding, descr_type)
                 if srvs:
-                    return binding, destinations(srvs)[0]
+                    if _url:
+                        for srv in srvs:
+                            if srv["location"] == _url:
+                                return binding, _url
+                    elif _index:
+                        for srv in srvs:
+                            if srv["index"] == _index:
+                                return binding, srv["location"]
+                    else:
+                        return binding, destinations(srvs)[0]
             except UnsupportedBinding:
                 pass
 

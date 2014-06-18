@@ -530,7 +530,7 @@ class Base(Entity):
                 "allow_unsolicited": self.allow_unsolicited,
                 "want_assertions_signed": self.want_assertions_signed,
                 "want_response_signed": self.want_response_signed,
-                "return_addrs": self.service_urls(),
+                "return_addrs": self.service_urls(binding=binding),
                 "entity_id": self.config.entityid,
                 "attribute_converters": self.config.attribute_converters,
                 "allow_unknown_attributes":

@@ -156,10 +156,19 @@ class Service(object):
                 return self.do(request, BINDING_HTTP_ARTIFACT)
 
     def response(self, binding, http_args):
+        resp = None
         if binding == BINDING_HTTP_ARTIFACT:
             resp = Redirect()
-        else:
+        elif http_args["data"]:
             resp = Response(http_args["data"], headers=http_args["headers"])
+        else:
+            for header in http_args["headers"]:
+                if header[0] == "Location":
+                    resp = Redirect(header[1])
+
+        if not resp:
+            resp = ServiceError("Don't know how to return response")
+
         return resp(self.environ, self.start_response)
 
     def do(self, query, binding, relay_state="", encrypt_cert=None):
@@ -254,7 +263,7 @@ class SSO(Service):
             self.binding_out, self.destination = IDP.pick_binding(
                 "assertion_consumer_service",
                 bindings=self.response_bindings,
-                entity_id=_authn_req.issuer.text)
+                entity_id=_authn_req.issuer.text, request=_authn_req)
         except Exception as err:
             logger.error("Couldn't find receiver endpoint: %s" % err)
             raise

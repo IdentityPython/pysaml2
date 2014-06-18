@@ -522,14 +522,22 @@ class SSO(object):
         logger.info("Chosen IdP: '%s'" % idp_entity_id)
         return 0, idp_entity_id
 
-    def redirect_to_auth(self, _cli, entity_id, came_from, vorg_name=""):
+    def redirect_to_auth(self, _cli, entity_id, came_from):
         try:
+            # Picks a binding to use for sending the Request to the IDP
             _binding, destination = _cli.pick_binding(
                 "single_sign_on_service", self.bindings, "idpsso",
                 entity_id=entity_id)
             logger.debug("binding: %s, destination: %s" % (_binding,
                                                            destination))
-            req_id, req = _cli.create_authn_request(destination, vorg=vorg_name)
+            # Binding here is the response binding that is which binding the
+            # IDP should use to return the response.
+            acs = _cli.config.getattr("endpoints", "sp")[
+                "assertion_consumer_service"]
+            # just pick one
+            endp, return_binding = acs[0]
+            req_id, req = _cli.create_authn_request(destination,
+                                                    binding=return_binding)
             _rstate = rndstr()
             self.cache.relay_state[_rstate] = came_from
             ht_args = _cli.apply_binding(_binding, "%s" % req, destination,
@@ -553,14 +561,6 @@ class SSO(object):
         came_from = geturl(self.environ)
         logger.debug("[sp.challenge] RelayState >> '%s'" % came_from)
 
-        # Am I part of a virtual organization or more than one ?
-        try:
-            vorg_name = _cli.vorg._name
-        except AttributeError:
-            vorg_name = ""
-
-        logger.debug("[sp.challenge] VO: %s" % vorg_name)
-
         # If more than one idp and if none is selected, I have to do wayf
         (done, response) = self._pick_idp(came_from)
         # Three cases: -1 something went wrong or Discovery service used
@@ -575,7 +575,7 @@ class SSO(object):
         else:
             entity_id = response
             # Do the AuthnRequest
-            resp = self.redirect_to_auth(_cli, entity_id, came_from, vorg_name)
+            resp = self.redirect_to_auth(_cli, entity_id, came_from)
             return resp(self.environ, self.start_response)
 
 
@@ -594,12 +594,6 @@ def not_found(environ, start_response):
 
 #noinspection PyUnusedLocal
 def main(environ, start_response, _sp):
-    _sso = SSO(_sp, environ, start_response, cache=CACHE, **ARGS)
-    return _sso.do()
-
-
-#noinspection PyUnusedLocal
-def verify_login_cookie(environ, start_response, _sp):
     _sso = SSO(_sp, environ, start_response, cache=CACHE, **ARGS)
     return _sso.do()
 
@@ -624,7 +618,6 @@ urls = [
     # Hmm, place holder, NOT used
     ('place', ("holder", None)),
     (r'^$', main),
-    (r'^login', verify_login_cookie),
     (r'^disco', disco)
 ]
 
@@ -654,6 +647,7 @@ def application(environ, start_response):
     """
     path = environ.get('PATH_INFO', '').lstrip('/')
     logger.debug("<application> PATH: '%s'" % path)
+
 
     logger.debug("Finding callback to run")
     try:
