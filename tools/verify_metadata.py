@@ -61,7 +61,13 @@ else:
     kwargs = {}
 
 if args.type == "local":
-    metad = MetaDataFile(ONTS.values(), args.item, args.item, **kwargs)
+    if args.cert and args.xmlsec:
+        crypto = _get_xmlsec_cryptobackend(args.xmlsec)
+        sc = SecurityContext(crypto)
+        metad = MetaDataFile(ONTS.values(), args.item, args.item,
+                             cert=args.cert, security=sc, **kwargs)
+    else:
+        metad = MetaDataFile(ONTS.values(), args.item, args.item, **kwargs)
 elif args.type == "external":
     ATTRCONV = ac_factory(args.attrsmap)
     httpc = HTTPBase()

@@ -107,12 +107,12 @@ def repack_cert(cert):
 
 class MetaData(object):
     def __init__(self, onts, attrc, metadata="", node_name=None,
-                 check_validity=True, **kwargs):
+                 check_validity=True, security=None, **kwargs):
         self.onts = onts
         self.attrc = attrc
         self.entity = {}
         self.metadata = metadata
-        self.security = None
+        self.security = security
         self.node_name = node_name
         self.entities_descr = None
         self.entity_descr = None
@@ -412,11 +412,13 @@ class MetaDataLoader(MetaDataFile):
     Handles Metadata file loaded by a passed in function.
     The format of the file is the SAML Metadata format.
     """
-    def __init__(self, onts, attrc, loader_callable, cert=None, **kwargs):
+    def __init__(self, onts, attrc, loader_callable, cert=None,
+                 security=None, **kwargs):
         MetaData.__init__(self, onts, attrc, **kwargs)
         self.metadata_provider_callable = self.get_metadata_loader(
             loader_callable)
         self.cert = cert
+        self.security = security
 
     @staticmethod
     def get_metadata_loader(func):

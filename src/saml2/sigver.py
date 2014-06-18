@@ -1119,11 +1119,11 @@ class CertHandler(object):
             self._verify_cert = verify_cert is True
             self._security_context = security_context
             self._osw = OpenSSLWrapper()
-            if key_file is not None and os.path.isfile(key_file):
+            if key_file and os.path.isfile(key_file):
                 self._key_str = self._osw.read_str_from_file(key_file, key_type)
             else:
                 self._key_str = ""
-            if cert_file is not None:
+            if cert_file and os.path.isfile(key_file):
                 self._cert_str = self._osw.read_str_from_file(cert_file,
                                                               cert_type)
             else:
