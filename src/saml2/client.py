@@ -275,9 +275,9 @@ class Saml2Client(Base):
 
             logger.info("Verifying response")
             if response_args:
-                response = _response_func(response.text, **response_args)
+                response = _response_func(response.content, **response_args)
             else:
-                response = _response_func(response.text)
+                response = _response_func(response.content)
         else:
             raise HTTPError("%d:%s" % (response.status_code, response.error))
 
