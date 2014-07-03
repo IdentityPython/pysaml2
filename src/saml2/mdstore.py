@@ -197,7 +197,7 @@ class MetaData(object):
                 try:
                     if not valid(self.entities_descr.valid_until):
                         raise ToOld(
-                            "Metadata not valid anymore, it's after %s" % (
+                            "Metadata not valid anymore, it's only valid until %s" % (
                                 self.entities_descr.valid_until,))
                 except AttributeError:
                     pass
