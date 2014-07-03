@@ -49,7 +49,7 @@ from idp_user import EXTRA
 from mako.lookup import TemplateLookup
 
 logger = logging.getLogger("saml2.idp")
-
+logger.setLevel(logging.WARNING)
 
 class Cache(object):
     def __init__(self):
@@ -72,11 +72,6 @@ def _expiration(timeout, tformat="%a, %d-%b-%Y %H:%M:%S GMT"):
         # validity time should match lifetime of assertions
         return time_util.in_a_while(minutes=timeout, format=tformat)
 
-
-def get_eptid(idp, req_info, session):
-    return idp.eptid.get(idp.config.entityid,
-                         req_info.sender(), session["permanent_id"],
-                         session["authn_auth"])
 
 # -----------------------------------------------------------------------------
 
