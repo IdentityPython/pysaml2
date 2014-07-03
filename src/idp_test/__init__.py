@@ -208,7 +208,7 @@ class SAML2client(object):
         try:
             self.entity_id = _jc["entity_id"]
             # Verify its the correct metadata
-            assert self.entity_id in md.entity.keys()
+            assert self.entity_id in md.entity.keys(), "metadata does not contain entityId %s" % self.entity_id
         except KeyError:
             if len(md.entity.keys()) == 1:
                 self.entity_id = md.entity.keys()[0]
