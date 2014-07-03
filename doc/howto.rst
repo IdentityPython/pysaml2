@@ -7,7 +7,7 @@ How to use SAML2test
 :Date: |today|
 
 Before you can use SAML2test, you must get it installed.
-If you have not done so yet, read :ref:`install`.
+If you have not done so yet, read install_.
 
 When you want to test a SAML2 entity with this tool you need following things:
 
