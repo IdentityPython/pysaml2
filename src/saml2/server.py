@@ -21,6 +21,7 @@ or attribute authority (AA) may use to conclude its tasks.
 import logging
 import os
 
+import importlib
 import shelve
 import threading
 
@@ -144,7 +145,12 @@ class Server(Entity):
 
                 self.ident = IdentMDB(database=addr, collection="ident")
 
-        if typ == "mongodb":
+            elif typ == "identdb":
+                mod, clas = addr.rsplit('.', 1)
+                mod = importlib.import_module(mod)
+                self.ident = getattr(mod, clas)()
+
+        if typ == "mongodb" or typ == "identdb":
             pass
         elif idb is not None:
             self.ident = IdentDB(idb)
