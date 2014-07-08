@@ -604,7 +604,7 @@ StatusCode is not success""",
     },
 }
 
-#￼
+#
 # SP should not accept a broken Recipient attribute in assertion
 # SubjectConfirmationData/@Recipient
 # SP should not accept a broken DestinationURL attribute in response
