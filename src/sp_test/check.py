@@ -1,4 +1,5 @@
 import inspect
+import re
 import sys
 
 from saml2test.check import Check
@@ -23,6 +24,12 @@ class VerifyContent(Check):
         return {}
 
 
+class VerifyAuthnRequest(VerifyContent):
+    """ Basic AuthnRequest verification as provided by pysaml2
+    """
+    cid = "verify-authnrequest"
+
+
 class MatchResult(Check):
     cid = "match-result"
 
@@ -44,6 +51,43 @@ class ErrorResponse(Check):
             self._message = self.msg
             self._status = CRITICAL
         return {}
+
+
+class VerifyEchopageContents(Check):
+    """ Verify that the last success response (HTTP code 200) from the SP
+        contains static text and SAML response values
+    """
+    cid = "verify-echopage-contents"
+    msg = "Cannot match expected contents on SP echo page"
+
+    def _func(self, conv):
+        if conv.last_response.status_code < 300:
+            try:
+                pattern = conv.json_config["echopageIdPattern"]
+                m = re.search(pattern, conv.last_response.content)
+                try:
+                    assert m is not None
+                except AssertionError:
+                    self._message = "Cannot match expected static contents " \
+                                    "in SP echo page"
+                    self._status = CRITICAL
+                for pattern in conv.json_config["echopageContentPattern"]:
+                    m = re.search(pattern, conv.last_response.content)
+                    try:
+                        assert m is not None
+                    except AssertionError:
+                        self._message = 'Cannot match expected response value' \
+                                        ', pattern="' + pattern + '"'
+                        self._status = CRITICAL
+            except KeyError:
+                self._message = 'Configuration error: missing key ' \
+                                '"echopageIdString" in test target config'
+                self._status = CRITICAL
+        return {}
+
+    def call_on_redirect(self):
+        return False
+
 
 # =============================================================================
 
