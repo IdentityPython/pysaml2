@@ -37,7 +37,16 @@ info = {
     },
     # This is the value of the NameID that is return in the Subject in the
     # Assertion
-    "userid": "roland"
+    "userid": "roland",
+    # regex pattern that must be contained in the resulting echo page to validate
+    # that the SP returned the right page after Login.
+    "echopageIdPattern": r"<title>SAML Echo Service</title>",
+    # list of regex patterns that must be contained in the resulting echo page to validate
+    # that the SP's echo page returns expected SAMLe response values (e.g. attribute values)
+    "echopageContentPattern": [r"Given Name\s*</td>\s*<td>Roland</td>",
+                               r"Userid\s*</td>\s*<td>roalnd</td>",
+                               r"Surname\s*</td>\s*<td>Hedberg</td>",
+                              ]
 }
 
 print json.dumps(info)
