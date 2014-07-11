@@ -64,6 +64,9 @@ class Check(object):
 
         return res
 
+    def call_on_redirect(self):
+        return True
+
 
 class ExpectedError(Check):
     pass
