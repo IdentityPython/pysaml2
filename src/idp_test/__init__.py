@@ -111,7 +111,7 @@ class SAML2client(object):
                   "if HTTPS is used and no server CA certs are defined then ",
                   "no cert verification will be done"))
         self._parser.add_argument('-J', dest="json_config_file",
-                                  help="Script configuration")
+                                  help="Test target configuration")
         self._parser.add_argument('-m', dest="metadata", action='store_true',
                                   help="Return the SP metadata")
         self._parser.add_argument(
