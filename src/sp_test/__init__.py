@@ -164,13 +164,11 @@ class Client(object):
                 try:
                     oper = self.tests.OPERATIONS[self.args.oper]
                 except ValueError:
-                    print >> sys.stderr, "Undefined testcase"
+                    print >> sys.stderr, "Undefined testcase " + self.args.oper
                     return
             else:
-                print >> sys.stderr, "Undefined testcase"
+                print >> sys.stderr, "Undefined testcase " + self.args.oper
                 return
-
-        opers = oper["sequence"]
 
         if self.args.pretty:
             pp = pprint.PrettyPrinter(indent=4)
@@ -184,7 +182,7 @@ class Client(object):
                             entity_id=self.entity_id,
                             constraints=self.constraints)
         try:
-            conv.do_sequence(opers, oper["tests"])
+            conv.do_sequence_and_tests(oper["sequence"], oper["tests"])
             self.test_log = conv.test_output
             tsum = self.test_summation(self.args.oper)
             err = None
