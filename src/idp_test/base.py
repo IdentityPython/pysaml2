@@ -99,7 +99,11 @@ class Conversation(tool.Conversation):
             req = self.qfunc(**self.qargs)
 
         self.request = self.oper.pre_processing(req, self.args)
-        str_req = "%s" % self.request
+        try:
+            str_req = "%s" % self.request
+        except TypeError:
+            print >> sys.stderr, "self.request is of type " + type(self.request).__name__ + ", value: " + str(self.request)
+            raise
 
         if use_artifact:
             saml_art = _client.use_artifact(str_req, self.args["entity_id"])
