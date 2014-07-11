@@ -11,7 +11,7 @@ from saml2.saml import SCM_SENDER_VOUCHES
 from saml2.saml import ConditionAbstractType_
 from saml2.samlp import STATUS_AUTHN_FAILED
 from saml2.time_util import in_a_while, a_while_ago
-from sp_test.check import VerifyContent
+from sp_test.check import VerifyAuthnRequest
 from sp_test import check
 from saml2test import ip_addresses
 
@@ -81,7 +81,7 @@ class Response(object):
 class Request(object):
     response = ""
     _class = None
-    tests = {"post": [VerifyContent], "pre": []}
+    tests = {"post": [VerifyAuthnRequest], "pre": []}
 
     def __init__(self):
         pass
@@ -366,8 +366,15 @@ PHASES = {
 OPERATIONS = {
     'sp-00': {
         "name": 'Basic Login test',
-        "descr": 'Basic Login test',
+        "descr": 'GET startpage from SP, verify authentication request, verify ' \
+                 'HTTP-Response after sending the SAML response',
         "sequence": [(Login, AuthnRequest, AuthnResponse, None)],
+        "tests": {"pre": [], "post": []}
+    },
+    'sp-01': {
+        "name": 'Login & echo page verification test',
+        "descr": 'Same as SP-00, then check if result page is displayed',
+        "sequence": [(Login, AuthnRequest, AuthnResponse, check.VerifyEchopageContents)],
         "tests": {"pre": [], "post": []}
     },
     'FL02': {
