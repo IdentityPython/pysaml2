@@ -20,6 +20,8 @@ from saml2test.interaction import Action
 from saml2test.interaction import Interaction
 from saml2test.interaction import InteractionNeeded
 
+import xmldsig as ds
+
 from sp_test.tests import ErrorResponse
 from sp_test.check import VerifyEchopageContents
 
@@ -276,27 +278,39 @@ class Conversation():
             _op = camel2underscore.sub(r'_\1', req._class.c_tag).lower()
             func = getattr(self.instance, "create_%s_response" % _op)
 
+        # get from config which parts shall be signed
         sign = []
         for styp in ["sign_assertion", "sign_response"]:
             if styp in args:
+                if args[styp].lower() == "always":
+                    sign.append(styp)
                 del args[styp]
-                sign.append(styp)
 
         response = func(**args)
         response = resp(self).pre_processing(response)
         # and now for signing
         if sign:
             to_sign = []
+            try:
+                _digest_alg=args["sign_digest_alg"]
+            except KeyError:
+                _digest_alg=None
+            try:
+                _sign_alg=args["sign_signature_alg"]
+            except KeyError:
+                _sign_alg=None
             # Order is important, first assertion and then response if both
             if "sign_assertion" in sign:
                 to_sign = [(class_name(response.assertion),
                             response.assertion.id)]
                 response.assertion.signature = pre_signature_part(
-                    response.assertion.id, self.instance.sec.my_cert, 1)
+                    response.assertion.id, self.instance.sec.my_cert, 1,
+                    digest_alg=_digest_alg, sign_alg=_sign_alg)
             if "sign_response" in sign:
                 to_sign = [(class_name(response), response.id)]
                 response.signature = pre_signature_part(
-                    response.id, self.instance.sec.my_cert, 1)
+                    response.id, self.instance.sec.my_cert, 1,
+                    digest_alg=_digest_alg, sign_alg=_sign_alg)
 
             response = signed_instance_factory(response, self.instance.sec,
                                                to_sign)
