@@ -1,4 +1,5 @@
 import inspect
+import logging
 import sys
 from time import mktime
 from saml2.response import AttributeResponse
@@ -38,6 +39,7 @@ POSTFIX = "-----END CERTIFICATE-----"
 
 M2_TIME_FORMAT = "%b %d %H:%M:%S %Y"
 
+logger = logging.getLogger(__name__)
 
 def to_time(_time):
     assert _time.endswith(" GMT")
@@ -556,6 +558,47 @@ class VerifyAttributeNameFormat(Check):
         return {}
 
 
+class VerifyDigestAlgorithm(Check):
+    """
+    verify that the used digest algorithm was one from the approved set.
+    """
+
+    def _digest_algo(self, signature, allowed):
+        try:
+            assert signature.signed_info.reference[0].digest_method.algorithm in allowed
+        except AssertionError:
+            self._message = "signature digest algorithm not allowed: '%s'" % \
+                            signature.signed_info.reference[0].digest_method.algorithm
+            self._status = CRITICAL
+            return False
+        return True
+
+    def _func(self, conv):
+        if "digest_algorithm" not in conv.idp_constraints:
+            logger.info("Not verifying digest_algorithm (not configured)")
+            return {}
+        else:
+            try:
+                assert len(conv.idp_constraints["digest_algorithm"]) > 0
+            except AssertionError:
+                self._message = "List of allowed digest algorithm must not be empty"
+                self._status = CRITICAL
+                return {}
+            _algs = conv.idp_constraints["digest_algorithm"]
+
+        response = conv.saml_response[-1].response
+
+        if response.signature:
+            if not self._digest_algo(response.signature, _algs):
+                return {}
+
+        for assertion in response.assertion:
+            if not self._digest_algo(assertion.signature, _algs):
+                return {}
+
+        return {}
+
+
 class VerifySignatureAlgorithm(Check):
     """
     verify that the used signature algorithm was one from an approved set.
@@ -574,8 +617,15 @@ class VerifySignatureAlgorithm(Check):
 
     def _func(self, conv):
         if "signature_algorithm" not in conv.idp_constraints:
+            logger.info("Not verifying signature_algorithm (not configured)")
             return {}
         else:
+            try:
+                assert len(conv.idp_constraints["signature_algorithm"]) > 0
+            except AssertionError:
+                self._message = "List of allowed signature algorithm must not be empty"
+                self._status = CRITICAL
+                return {}
             _algs = conv.idp_constraints["signature_algorithm"]
 
         response = conv.saml_response[-1].response
