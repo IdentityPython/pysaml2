@@ -33,7 +33,7 @@ SIG_RSA_SHA224 = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha224'
 SIG_RSA_SHA256 = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'
 SIG_RSA_SHA384 = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha384'
 SIG_RSA_SHA512 = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha512'
-SIG_RSA_RIPMED160 = 'http://www.w3.org/2001/04/xmldsig-more#rsa-ripemd160'
+#SIG_RSA_RIPEMD160 = 'http://www.w3.org/2001/04/xmldsig-more#rsa-ripemd160'
 sig_default = SIG_RSA_SHA1
 
 MAC_SHA1 = 'http://www.w3.org/2000/09/xmldsig#hmac-sha1'
