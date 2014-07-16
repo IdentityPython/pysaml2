@@ -366,7 +366,7 @@ PHASES = {
 OPERATIONS = {
     'sp-00': {
         "name": 'Basic Login test',
-        "descr": 'GET startpage from SP, verify authentication request, verify ' \
+        "descr": 'GET startpage from SP, verify authentication request, verify '
                  'HTTP-Response after sending the SAML response',
         "sequence": [(Login, AuthnRequest, AuthnResponse, None)],
         "tests": {"pre": [], "post": []}
@@ -377,6 +377,15 @@ OPERATIONS = {
         "sequence": [(Login, AuthnRequest, AuthnResponse, check.VerifyEchopageContents)],
         "tests": {"pre": [], "post": []}
     },
+    'sp-08': {
+        "name": "SP should accept a Response without a "
+                 "SubjectConfirmationData element. If confirmation method"
+                 "is SCM_SENDER_VOUCHES",
+        "sequence": [(Login, AuthnRequest,
+                      AuthnResponse_without_SubjectConfirmationData_2,
+                      check.ErrorResponse)],
+        "tests": {"pre": [], "post": []}
+    },
     'FL02': {
         "name": 'Verify various aspects of the generated AuthnRequest message',
         "descr": 'Basic Login test',
@@ -384,8 +393,8 @@ OPERATIONS = {
         "tests": {"pre": [], "post": []}
     },
     'FL03': {
-        "name": """SP should not accept a Response as valid, when the
-StatusCode is not success""",
+        "name": "SP should not accept a Response as valid, when the StatusCode"
+                " is not success",
         "sequence": [(Login, AuthnRequest, ErrorResponse, check.ErrorResponse)],
         "tests": {"pre": [], "post": []}
     },
@@ -408,41 +417,32 @@ StatusCode is not success""",
         "tests": {"pre": [], "post": []}
     },
     'FL07': {
-        "name": ("SP should accept a Response without a ",
-                 "SubjectConfirmationData element. If confirmation method",
-                 "is SCM_SENDER_VOUCHES"),
+        "name": "SP should accept a Response without a "
+                 "SubjectConfirmationData element. If confirmation method "
+                 "is SCM_SENDER_VOUCHES",
         "sequence": [(Login, AuthnRequest,
                       AuthnResponse_without_SubjectConfirmationData_1, None)],
         "tests": {"pre": [], "post": []}
     },
     'FL09': {
-        "name": ("SP should not accept a response InResponseTo ",
-                 "which is chosen randomly"),
+        "name": "SP should not accept a response InResponseTo "
+                "which is chosen randomly",
         "sequence": [(Login, AuthnRequest,
                       AuthnResponse_rnd_Response_inresponseto,
                       check.ErrorResponse)],
         "tests": {"pre": [], "post": []}
     },
     'FL10': {
-        "name": ("SP should not accept an assertion InResponseTo ",
-                 "which is chosen randomly"),
+        "name": "SP should not accept an assertion InResponseTo "
+                 "which is chosen randomly",
         "sequence": [(Login, AuthnRequest,
                       AuthnResponse_rnd_Response_assertion_inresponseto,
                       check.ErrorResponse)],
         "tests": {"pre": [], "post": []}
     },
-    'sp-08': {
-        "name": ("SP should accept a Response without a ",
-                 "SubjectConfirmationData element. If confirmation method",
-                 "is SCM_SENDER_VOUCHES"),
-        "sequence": [(Login, AuthnRequest,
-                      AuthnResponse_without_SubjectConfirmationData_2,
-                      check.ErrorResponse)],
-        "tests": {"pre": [], "post": []}
-    },
     'FL12': {
-        "name": ("Do the SP allow the InResponseTo attribute to be missing",
-                 "from the SubjectConfirmationData element?"),
+        "name": "Do the SP allow the InResponseTo attribute to be missing"
+                "from the SubjectConfirmationData element?",
         "sequence": [(Login, AuthnRequest,
                       AuthnResponse_SubjectConfirmationData_no_inresponse,
                       check.ErrorResponse)],
