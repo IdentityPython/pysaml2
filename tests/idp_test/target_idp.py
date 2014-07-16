@@ -72,6 +72,23 @@ info = {
     ],
     "metadata": metadata,
     "name_format": NAME_FORMAT_URI
+    "constraints": {
+        "signature_algorithm": [  # allowed for assertion & response signature
+            ds.SIG_RSA_SHA1,
+            ds.SIG_RSA_SHA224,
+            ds.SIG_RSA_SHA256,
+            ds.SIG_RSA_SHA384,
+            ds.SIG_RSA_SHA512,
+        ],
+        "digest_algorithm": [
+            ds.DIGEST_SHA1,
+            ds.DIGEST_SHA224,
+            ds.DIGEST_SHA256,
+            ds.DIGEST_SHA384,
+            ds.DIGEST_SHA512,
+            ds.DIGEST_RIPEMD160,
+        ],
+    }
 }
 
 print json.dumps(info)
