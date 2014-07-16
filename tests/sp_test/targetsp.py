@@ -25,7 +25,8 @@ info = {
     "args":
         {
             "AuthnResponse": {
-                "sign_assertion": True,
+                "sign_assertion": "always", # always, never
+                "sign_response": "never", # always, never
                 "authn": AUTHN
             }
         },
