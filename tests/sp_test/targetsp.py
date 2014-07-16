@@ -27,6 +27,8 @@ info = {
             "AuthnResponse": {
                 "sign_assertion": "always", # always, never
                 "sign_response": "never", # always, never
+                "sign_digest_alg": ds.DIGEST_SHA256,
+                "sign_signature_alg": ds.SIG_RSA_SHA256,
                 "authn": AUTHN
             }
         },
