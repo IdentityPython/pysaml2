@@ -1058,13 +1058,19 @@ def encrypt_cert_from_item(item):
             certs = cert_from_instance(item)
             if len(certs) > 0:
                 _encrypt_cert = certs[0]
-        if _encrypt_cert is not None:
-            if _encrypt_cert.find("-----BEGIN CERTIFICATE-----\n") == -1:
-                _encrypt_cert = "-----BEGIN CERTIFICATE-----\n" + _encrypt_cert
-            if _encrypt_cert.find("-----END CERTIFICATE-----\n") == -1:
-                _encrypt_cert = _encrypt_cert + "-----END CERTIFICATE-----\n"
     except Exception:
-        return None
+        pass
+
+    if _encrypt_cert is None:
+        certs = cert_from_instance(item)
+        if len(certs) > 0:
+            _encrypt_cert = certs[0]
+
+    if _encrypt_cert is not None:
+        if _encrypt_cert.find("-----BEGIN CERTIFICATE-----\n") == -1:
+            _encrypt_cert = "-----BEGIN CERTIFICATE-----\n" + _encrypt_cert
+        if _encrypt_cert.find("\n-----END CERTIFICATE-----") == -1:
+            _encrypt_cert = _encrypt_cert + "\n-----END CERTIFICATE-----"
     return _encrypt_cert
 
 
