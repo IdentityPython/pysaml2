@@ -532,7 +532,7 @@ class VerifyAttributeNameFormat(Check):
     cid = "verify-attribute-name-format"
 
     def _func(self, conv):
-        if "name_format" not in conv.idp_constraints:
+        if "name_format" not in conv.msg_constraints:
             return {}
 
         # Should be a AuthnResponse or Response instance
@@ -546,15 +546,22 @@ class VerifyAttributeNameFormat(Check):
                 atrstat = assertion.attribute_statement[0]
                 for attr in atrstat.attribute:
                     try:
-                        assert attr.name_format == conv.idp_constraints[
+                        assert attr.name_format == conv.msg_constraints[
                             "name_format"]
+                        logger.debug("Attribute name format valid: " +
+                                     attr.name_format)
                     except AssertionError:
-                        if NAME_FORMAT_UNSPECIFIED != conv.idp_constraints[
+                        if NAME_FORMAT_UNSPECIFIED != conv.msg_constraints[
                                 "name_format"]:
                             self._message = \
-                                "Wrong name format: '%s'" % attr.name_format
+                                "Wrong name format: '%s', should be %s" % \
+                                (attr.name_format, \
+                                conv.msg_constraints["name_format"])
                             self._status = CRITICAL
                             break
+                        else:
+                            logger.debug("Accepting any attribute name format")
+
         return {}
 
 
@@ -574,17 +581,17 @@ class VerifyDigestAlgorithm(Check):
         return True
 
     def _func(self, conv):
-        if "digest_algorithm" not in conv.idp_constraints:
+        if "digest_algorithm" not in conv.msg_constraints:
             logger.info("Not verifying digest_algorithm (not configured)")
             return {}
         else:
             try:
-                assert len(conv.idp_constraints["digest_algorithm"]) > 0
+                assert len(conv.msg_constraints["digest_algorithm"]) > 0
             except AssertionError:
                 self._message = "List of allowed digest algorithm must not be empty"
                 self._status = CRITICAL
                 return {}
-            _algs = conv.idp_constraints["digest_algorithm"]
+            _algs = conv.msg_constraints["digest_algorithm"]
 
         response = conv.saml_response[-1].response
 
@@ -616,17 +623,17 @@ class VerifySignatureAlgorithm(Check):
         return True
 
     def _func(self, conv):
-        if "signature_algorithm" not in conv.idp_constraints:
+        if "signature_algorithm" not in conv.msg_constraints:
             logger.info("Not verifying signature_algorithm (not configured)")
             return {}
         else:
             try:
-                assert len(conv.idp_constraints["signature_algorithm"]) > 0
+                assert len(conv.msg_constraints["signature_algorithm"]) > 0
             except AssertionError:
                 self._message = "List of allowed signature algorithm must not be empty"
                 self._status = CRITICAL
                 return {}
-            _algs = conv.idp_constraints["signature_algorithm"]
+            _algs = conv.msg_constraints["signature_algorithm"]
 
         response = conv.saml_response[-1].response
 
@@ -648,11 +655,11 @@ class VerifySignedPart(Check):
 
     def _func(self, conv):
 
-        if "signed_part" not in conv.idp_constraints:
+        if "signed_part" not in conv.msg_constraints:
             return {}
 
         response = conv.saml_response[-1].response
-        if "response" in conv.idp_constraints["signed_part"]:
+        if "response" in conv.msg_constraints["signed_part"]:
             if response.signature:
                 pass
             else:
@@ -660,7 +667,7 @@ class VerifySignedPart(Check):
                 self._status = CRITICAL
 
         if self._status == OK:
-            if "assertion" in conv.idp_constraints["signed_part"]:
+            if "assertion" in conv.msg_constraints["signed_part"]:
                 for assertion in response.assertion:
                     if assertion.signature:
                         pass
