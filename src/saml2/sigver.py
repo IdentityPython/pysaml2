@@ -639,14 +639,11 @@ def verify_redirect_signature(saml_msg, cert):
             args = saml_msg.copy()
             del args["Signature"]  # everything but the signature
             string = "&".join(
-                [urllib.urlencode({k: args[k][0]}) for k in _order])
+                [urllib.urlencode({k: args[k][0]}) for k in _order if k in args])
             _key = extract_rsa_key_from_x509_cert(pem_format(cert))
             _sign = base64.b64decode(saml_msg["Signature"][0])
-            try:
-                signer.verify(string, _sign, _key)
-                return True
-            except BadSignature:
-                return False
+
+            return bool(signer.verify(string, _sign, _key))
 
 
 LOG_LINE = 60 * "=" + "\n%s\n" + 60 * "-" + "\n%s" + 60 * "="
