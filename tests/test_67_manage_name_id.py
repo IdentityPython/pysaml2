@@ -55,7 +55,7 @@ def test_flow():
 
     print _req.message
 
-    mnir = idp.create_manage_name_id_response(_req.message, None)
+    mnir = idp.create_manage_name_id_response(_req.message, [binding])
 
     if binding != BINDING_SOAP:
         binding, destination = idp.pick_binding("manage_name_id_service",

@@ -47,6 +47,7 @@ class DummyResponse(object):
         self.status_code = code
         self.text = data
         self.headers = headers or []
+        self.content = data
 
 
 class FakeIDP(Server):
@@ -142,12 +143,9 @@ class FakeIDP(Server):
         #userid = "Pavill"
 
         name_id = aquery.subject.name_id
-        attr_resp = self.create_attribute_response(extra, aquery.id,
-                                                   None,
-                                                   sp_entity_id=aquery.issuer
-                                                   .text,
-                                                   name_id=name_id,
-                                                   attributes=aquery.attribute)
+        attr_resp = self.create_attribute_response(
+            extra, aquery.id, None, sp_entity_id=aquery.issuer.text,
+            name_id=name_id, attributes=aquery.attribute)
 
         if binding == BINDING_SOAP:
             # SOAP packing
