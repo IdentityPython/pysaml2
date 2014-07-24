@@ -37,7 +37,7 @@
                 </ns0:ServiceName>
                 <ns0:ServiceDescription xml:lang="en">My own SP
                 </ns0:ServiceDescription>
-                <ns0:RequestedAttribute FriendlyName="surName"
+                <ns0:RequestedAttribute FriendlyName="sn"
                                         Name="urn:oid:2.5.4.4"
                                         NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
                                         isRequired="true"/>

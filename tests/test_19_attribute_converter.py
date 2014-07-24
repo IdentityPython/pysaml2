@@ -10,7 +10,7 @@ from saml2.attribute_converter import to_local
 from saml2.saml import attribute_from_string
 
 
-def _eq(l1,l2):
+def _eq(l1, l2):
     return set(l1) == set(l2)
 
 BASIC_NF = 'urn:oasis:names:tc:SAML:2.0:attrname-format:basic'
@@ -26,11 +26,11 @@ def test_default():
 class TestAC():
     def setup_class(self):
         self.acs = attribute_converter.ac_factory(full_path("attributemaps"))
-        
+
     def test_setup(self):
         print self.acs
         assert len(self.acs) == 3
-        assert _eq([a.name_format for a in self.acs],[BASIC_NF, URI_NF, SAML1] )
+        assert _eq([a.name_format for a in self.acs], [BASIC_NF, URI_NF, SAML1])
 
     def test_ava_fro_1(self):
         ats = saml.attribute_statement_from_string(STATEMENT1)
@@ -66,10 +66,10 @@ class TestAC():
                                 'uid', 'mail', 'givenName', 'sn'])
 
     def test_to_attrstat_1(self):
-        ava = { "givenName": "Roland", "sn": "Hedberg" }
-        
+        ava = {"givenName": "Roland", "sn": "Hedberg"}
+
         statement = attribute_converter.from_local(self.acs, ava, BASIC_NF)
-        
+
         assert statement is not None
         assert len(statement) == 2
         a0 = statement[0]
@@ -80,7 +80,7 @@ class TestAC():
             assert a1.friendly_name == "givenName"
             assert a1.name == 'urn:mace:dir:attribute-def:givenName'
             assert a1.name_format == BASIC_NF
-        elif a0.friendly_name == 'givenname':
+        elif a0.friendly_name == 'givenName':
             assert a0.name == 'urn:mace:dir:attribute-def:givenName'
             assert a0.name_format == BASIC_NF
             assert a1.friendly_name == "sn"
@@ -88,32 +88,32 @@ class TestAC():
             assert a1.name_format == BASIC_NF
         else:
             assert False
-        
+
     def test_to_attrstat_2(self):
-        ava = { "givenName": "Roland", "surname": "Hedberg" }
-        
+        ava = {"givenName": "Roland", "sn": "Hedberg"}
+
         statement = attribute_converter.from_local(self.acs, ava, URI_NF)
-                
+
         assert len(statement) == 2
         a0 = statement[0]
         a1 = statement[1]
-        if a0.friendly_name == 'surname':
+        if a0.friendly_name == 'sn':
             assert a0.name == 'urn:oid:2.5.4.4'
             assert a0.name_format == URI_NF
             assert a1.friendly_name == "givenName"
             assert a1.name == 'urn:oid:2.5.4.42'
             assert a1.name_format == URI_NF
-        elif a0.friendly_name == 'givenname':
+        elif a0.friendly_name == 'givenName':
             assert a0.name == 'urn:oid:2.5.4.42'
             assert a0.name_format == URI_NF
-            assert a1.friendly_name == "surname"
+            assert a1.friendly_name == "sn"
             assert a1.name == 'urn:oid:2.5.4.4'
             assert a1.name_format == URI_NF
         else:
             assert False
-                
+
     def test_to_local_name(self):
-    
+
         attr = [
             saml.Attribute(
                 friendly_name="surName",
@@ -127,9 +127,9 @@ class TestAC():
                 friendly_name="titel",
                 name="urn:oid:2.5.4.12",
                 name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri")]
-                
+
         lan = [attribute_converter.to_local_name(self.acs, a) for a in attr]
-        
+
         assert _eq(lan, ['sn', 'givenName', 'title'])
 
     # def test_ava_fro_1(self):
@@ -158,7 +158,7 @@ class TestAC():
         assert _eq(lan, ['eduPersonPrimaryOrgUnitDN'])
 
     def test_to_and_for(self):
-        ava = { "givenName": "Roland", "surname": "Hedberg" }
+        ava = {"givenName": "Roland", "surname": "Hedberg"}
 
         basic_ac = [a for a in self.acs if a.name_format == BASIC_NF][0]
 
@@ -190,7 +190,7 @@ class TestAC():
 
 
 def test_noop_attribute_conversion():
-    ava = {"urn:oid:2.5.4.4": "Roland", "urn:oid:2.5.4.42": "Hedberg" }
+    ava = {"urn:oid:2.5.4.4": "Roland", "urn:oid:2.5.4.42": "Hedberg"}
     aconv = AttributeConverterNOOP(URI_NF)
     res = aconv.to_(ava)
 
@@ -206,8 +206,11 @@ def test_noop_attribute_conversion():
             assert attr.attribute_value[0].text == "Roland"
 
 
-ava = """<?xml version='1.0' encoding='UTF-8'?>
-<ns0:Attribute xmlns:ns0="urn:oasis:names:tc:SAML:2.0:assertion" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" FriendlyName="schacHomeOrganization" Name="urn:oid:1.3.6.1.4.1.25178.1.2.9" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"><ns0:AttributeValue xsi:nil="true" xsi:type="xs:string">uu.se</ns0:AttributeValue></ns0:Attribute>"""
+ava = ("<?xml version='1.0' encoding='UTF-8'?>"
+       '<ns0:Attribute xmlns:ns0="urn:oasis:names:tc:SAML:2.0:assertion" '
+       'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" FriendlyName="schacHomeOrganization" '
+       'Name="urn:oid:1.3.6.1.4.1.25178.1.2.9" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">'
+       '<ns0:AttributeValue xsi:nil="true" xsi:type="xs:string">uu.se</ns0:AttributeValue></ns0:Attribute>')
 
 
 def test_schac():

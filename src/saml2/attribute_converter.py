@@ -283,10 +283,10 @@ class AttributeConverter(object):
 
         if self._fro is None and self._to is not None:
             self._fro = dict(
-                [(value.lower(), key) for key, value in self._to.items()])
+                [(value, key) for key, value in self._to.items()])
         if self._to is None and self.fro is not None:
             self._to = dict(
-                [(value.lower, key) for key, value in self._fro.items()])
+                [(value, key) for key, value in self._fro.items()])
 
     def from_dict(self, mapdict):
         """ Import the attribute map from  a dictionary
@@ -297,11 +297,11 @@ class AttributeConverter(object):
         self.name_format = mapdict["identifier"]
         try:
             self._fro = dict(
-                [(k.lower(), v) for k, v in mapdict["fro"].items()])
+                [(k, v) for k, v in mapdict["fro"].items()])
         except KeyError:
             pass
         try:
-            self._to = dict([(k.lower(), v) for k, v in mapdict["to"].items()])
+            self._to = dict([(k, v) for k, v in mapdict["to"].items()])
         except KeyError:
             pass
 
@@ -359,15 +359,15 @@ class AttributeConverter(object):
 
     def ava_from(self, attribute, allow_unknown=False):
         try:
-            attr = self._fro[attribute.name.strip().lower()]
+            attr = self._fro[attribute.name.strip()]
         except AttributeError:
-            attr = attribute.friendly_name.strip().lower()
+            attr = attribute.friendly_name.strip()
         except KeyError:
             if allow_unknown:
                 try:
-                    attr = attribute.name.strip().lower()
+                    attr = attribute.name.strip()
                 except AttributeError:
-                    attr = attribute.friendly_name.strip().lower()
+                    attr = attribute.friendly_name.strip()
             else:
                 raise
 
@@ -441,12 +441,12 @@ class AttributeConverter(object):
         if attr.name_format:
             if self.name_format == attr.name_format:
                 try:
-                    return self._fro[attr.name.lower()]
+                    return self._fro[attr.name]
                 except KeyError:
                     pass
         else:  # don't know the name format so try all I have
             try:
-                return self._fro[attr.name.lower()]
+                return self._fro[attr.name]
             except KeyError:
                 pass
 
@@ -461,12 +461,12 @@ class AttributeConverter(object):
         if attr["name_format"]:
             if self.name_format == attr["name_format"]:
                 try:
-                    return self._fro[attr["name"].lower()]
+                    return self._fro[attr["name"]]
                 except KeyError:
                     pass
         else:  # don't know the name format so try all I have
             try:
-                return self._fro[attr["name"].lower()]
+                return self._fro[attr["name"]]
             except KeyError:
                 pass
 
@@ -480,7 +480,6 @@ class AttributeConverter(object):
         """
         attributes = []
         for key, value in attrvals.items():
-            key = key.lower()
             try:
                 attributes.append(factory(saml.Attribute,
                                           name=self._to[key],
@@ -509,7 +508,6 @@ class AttributeConverterNOOP(AttributeConverter):
         """
         attributes = []
         for key, value in attrvals.items():
-            key = key.lower()
             attributes.append(factory(saml.Attribute,
                                       name=key,
                                       name_format=self.name_format,
