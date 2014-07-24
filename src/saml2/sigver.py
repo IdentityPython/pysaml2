@@ -668,7 +668,7 @@ def read_cert_from_file(cert_file, cert_type):
         return ""
 
     if cert_type == "pem":
-        line = open(cert_file).read().split("\n")
+        line = open(cert_file).read().replace("\r\n", "\n").split("\n")
         if line[0] == "-----BEGIN CERTIFICATE-----":
             line = line[1:]
         elif line[0] == "-----BEGIN PUBLIC KEY-----":
