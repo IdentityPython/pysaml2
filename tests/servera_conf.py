@@ -39,7 +39,7 @@ CONFIG = {
                     ("%s/disco" % BASE, BINDING_DISCO)
                 ]
             },
-            "required_attributes": ["surName", "givenName", "mail"],
+            "required_attributes": ["sn", "givenName", "mail"],
             "optional_attributes": ["title", "eduPersonAffiliation"],
             "idp": ["urn:mace:example.com:saml:roland:idp"],
             "name_id_format": [NAMEID_FORMAT_TRANSIENT,

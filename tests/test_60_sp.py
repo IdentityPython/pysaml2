@@ -53,7 +53,7 @@ class TestSP():
     def test_identify(self):
 
         # Create a SAMLResponse
-        ava = { "givenName": ["Derek"], "surName": ["Jeter"],
+        ava = { "givenName": ["Derek"], "sn": ["Jeter"],
                 "mail": ["derek@nyy.mlb.com"], "title":["The man"]}
 
         resp_str = "%s" % self.server.create_authn_response(
