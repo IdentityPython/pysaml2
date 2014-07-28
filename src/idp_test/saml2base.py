@@ -19,6 +19,7 @@ from idp_test.check import VerifyContent
 from idp_test.check import VerifyNameIDMapping
 from idp_test.check import VerifyNameIDPolicyUsage
 from idp_test.check import VerifySuccessStatus
+from idp_test.check import VerifyDigestAlgorithm
 from idp_test.check import VerifySignatureAlgorithm
 from idp_test.check import VerifySignedPart
 from idp_test.check import VerifyEndpoint
@@ -64,6 +65,7 @@ class AuthnRequest(Request):
              "post": [CheckSaml2IntAttributes,
                       VerifyAttributeNameFormat,
                       VerifySignedPart,
+                      VerifyDigestAlgorithm,
                       VerifySignatureAlgorithm]}
 
 
@@ -524,19 +526,20 @@ OPERATIONS = {
         "sequence":[AuthnRequest, ManageNameIDRequest],
         "depend":["authn"]
     },
-    'manage_nameid_nid-transient':{
-        "tc_id": "S2c-14",
-        "name": "Setting the SP provided ID by using ManageNameID",
-        "sequence":[AuthnRequestNID_Transient, ManageNameIDRequest],
-        "depend":["authn"]
-    },
     'nameid-mapping':{
         "tc_id": "S2c-15",
         "name": "Simple NameIDMapping request",
         "sequence":[AuthnRequest, NameIDMappingRequest],
         "depend":["authn"]
     },
+    'manage_nameid_nid-transient':{
+        "tc_id": "S2c-16",
+        "name": "Setting the SP provided ID by using ManageNameID",
+        "sequence":[AuthnRequestNID_Transient, ManageNameIDRequest],
+        "depend":["authn"]
+    },
     'authn-authn_query': {
+        "tc_id": "S2c-17",
         "name": 'AuthnRequest and then an AuthnQuery',
         "descr": 'AuthnRequest followed by an AuthnQuery',
         "sequence": [AuthnRequest, AuthnQuery],
