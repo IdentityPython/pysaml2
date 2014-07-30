@@ -360,7 +360,7 @@ class AttributeQuery(Request):
 OPERATIONS = {
     'verify': {
         'tc_id': "S2c-16",
-        "name": 'Verify connectivity',
+        "name": 'Verify SAML connectivity',
         "descr": 'Uses AuthnRequest to check connectivity',
         "sequence": [DynAuthnRequest],
         "tests": {"pre": [CheckSaml2IntMetaData],
@@ -368,8 +368,8 @@ OPERATIONS = {
     },
     'authn': {
         "tc_id": "S2c-02",
-        "name": 'Absolute basic SAML2 AuthnRequest',
-        "descr": 'AuthnRequest using HTTP-redirect',
+        "name": 'Absolute basic AuthnRequest',
+        "descr": 'AuthnRequest using HTTP-Redirect',
         "sequence": [AuthnRequest],
         "tests": {"pre": [CheckSaml2IntMetaData],
                   "post": []},
@@ -377,8 +377,9 @@ OPERATIONS = {
     },
     'authn-nid_transient': {
         "tc_id": "S2c-10",
-        "name": 'Basic SAML2 AuthnRequest, transient name ID',
-        "descr": 'AuthnRequest using HTTP-redirect',
+        "name": 'AuthnRequest, NameID-trans',
+        "descr": 'Basic SAML2 AuthnRequest, HTTP-Redirect, '
+                 'transient name ID',
         "sequence": [AuthnRequestNID_Transient],
         "tests": {"pre": [CheckSaml2IntMetaData],
                   "post": []},
@@ -386,8 +387,9 @@ OPERATIONS = {
     },
     'authn-nid_email': {
         "tc_id": "S2c-20",
-        "name": 'Basic SAML2 AuthnRequest, email name ID',
-        "descr": 'AuthnRequest using HTTP-redirect',
+        "name": 'AuthnRequest email nameID',
+        "descr": 'Basic SAML2 AuthnRequest, HTTP-Redirect, NameID-email'
+                 'specified',
         "sequence": [AuthnRequestNID_Email],
         "tests": {"pre": [CheckSaml2IntMetaData],
                   "post": []},
@@ -395,8 +397,9 @@ OPERATIONS = {
     },
     'authn-nid_no': {
         "tc_id": "S2c-21",
-        "name": 'Basic SAML2 AuthnRequest, no name ID format specified',
-        "descr": 'AuthnRequest using HTTP-redirect',
+        "name": 'AuthnRequest no NameID format',
+        "descr": 'Basic SAML2 AuthnRequest, HTTP-Redirect, no NameID format '
+                 'specified',
         "sequence": [AuthnRequestNID_no],
         "tests": {"pre": [CheckSaml2IntMetaData],
                   "post": []},
@@ -404,8 +407,8 @@ OPERATIONS = {
     },
     'authn-nid_unspecified': {
         "tc_id": "S2c-21",
-        "name": 'Basic SAML2 AuthnRequest, unspecified name ID format',
-        "descr": 'AuthnRequest using HTTP-redirect',
+        "name": 'AuthnRequest using unspecified NameID format',
+        "descr": 'Basic SAML2 AuthnRequest, HTTP-Redirect, NameID-unspec',
         "sequence": [AuthnRequestNID_Unspecified],
         "tests": {"pre": [CheckSaml2IntMetaData],
                   "post": []},
@@ -422,8 +425,8 @@ OPERATIONS = {
     },
     'authn-post-transient': {
         "tc_id": "S2c-09",
-        "name": 'AuthnRequest using HTTP POST expecting transient NameID',
-        "descr": 'AuthnRequest using HTTP-POST',
+        "name": 'AuthnRequest HTTP-POST, transient NameID fmt',
+        "descr": 'AuthnRequest using HTTP-POST expecting transient NameID',
         "sequence": [AuthnRequestPostNID_Transient],
         "tests": {"pre": [CheckSaml2IntMetaData],
                   "post": []},
@@ -431,33 +434,33 @@ OPERATIONS = {
     },
     'attribute-query':{
         "tc_id": "S2c-01",
-        "name": "",
+        "name": "Attribute query",
         "sequence":[AuthnRequest, AttributeQuery],
         "depend":["authn"]
     },
     'attribute-query-transient':{
         "tc_id": "S2c-20",
-        "name": "",
+        "name": "Attribute query, NameID transient",
         "sequence":[AuthnRequestNID_Transient, AttributeQuery],
         "depend":["authn"]
     },
     'authn_endpoint_index': {
         "tc_id": "S2c-03",
-        "name": '',
+        "name": 'AuthnRequest, endpoint index',
         "descr": '',
         "sequence": [AuthnRequestEndpointIndex],
         "depend":["authn"]
     },
     'authn_endpoint_index-transient': {
         "tc_id": "S2c-03",
-        "name": '',
+        "name": 'AuthnRequest, endpoint index, NameID-trans',
         "descr": '',
         "sequence": [AuthnRequestEndpointIndexNIDTransient],
         "depend":["authn"]
     },
     'authn_specified_endpoint': {
         "tc_id": "S2c-04",
-        "name": '',
+        "name": 'AuthnRequest, specified endpoint',
         "descr": '',
         "sequence": [AuthnRequestSpecEndpoint],
         "depend":["authn"]
@@ -465,18 +468,18 @@ OPERATIONS = {
     'authn-artifact':{
        'tc_id': "S2c-05",
        "name": "SAML2 AuthnRequest using an artifact",
-       "descr": ('AuthnRequest using HTTP-redirect and artifact'),
+       "descr": ('AuthnRequest using HTTP-Redirect and artifact'),
        "sequence": [AuthnRequest_using_Artifact]
     },
     'authn-artifact_nid-transient':{
        'tc_id': "S2c-05",
        "name": "SAML2 AuthnRequest expecting artifact response",
-       "descr": ('AuthnRequest using HTTP-redirect and artifact'),
+       "descr": ('AuthnRequest using HTTP-Redirect and artifact'),
        "sequence": [AuthnRequest_using_ArtifactNID_Transient]
     },
     'authn-assertion_id_request': {
         "tc_id": "S2c-06",
-        "name": 'AuthnRequest and then an AssertionIDRequest',
+        "name": 'AuthnRequest then AssertionIDRequest',
         "descr": 'AuthnRequest followed by an AssertionIDRequest',
         "sequence": [AuthnRequest, AssertionIDRequest],
         "tests": {"pre": [CheckSaml2IntMetaData],  "post": []},
@@ -484,7 +487,7 @@ OPERATIONS = {
     },
     'authn-nid_transient-assertion_id_request': {
         "tc_id": "S2c-26",
-        "name": 'AuthnRequest and then an AssertionIDRequest',
+        "name": 'AuthnRequest then AssertionIDRequest, NameID-trans',
         "descr": 'AuthnRequest followed by an AssertionIDRequest',
         "sequence": [AuthnRequestNID_Transient, AssertionIDRequest],
         "tests": {"pre": [CheckSaml2IntMetaData],  "post": []},
@@ -500,7 +503,7 @@ OPERATIONS = {
     },
     'authn-with-name_id_policy_nid-transient': {
         "tc_id": "S2c-31",
-        "name": 'SAML2 AuthnRequest with specific NameIDPolicy',
+        "name": 'AuthnRequest NameIDPolicy transient',
         "descr": 'AuthnRequest with specific NameIDPolicy',
         "sequence": [AuthnRequest_NameIDPolicy1Transient],
         "tests": {"pre": [CheckSaml2IntMetaData],  "post": []},
@@ -508,21 +511,22 @@ OPERATIONS = {
     },
     'ecp_authn': {
         'tc_id': "S2c-12",
-        "name": "SAML2 AuthnRequest using ECP and PAOS",
+        "name": "AuthnRequest using ECP and PAOS",
         "descr": "SAML2 AuthnRequest using ECP and PAOS",
         "sequence":[ECP_AuthnRequest]
     },
     'log-in-out': {
         "tc_id": "S2c-13",
-        "name": 'Absolute basic SAML2 log in and out',
-        "descr": 'AuthnRequest using HTTP-redirect followed by a logout',
+        "name": 'Basic SAML2 log in and out',
+        "descr": 'AuthnRequest using HTTP-Redirect followed by a logout',
         "sequence": [AuthnRequest, LogOutRequest],
         "tests": {"pre": [CheckSaml2IntMetaData],  "post": []},
         "depend":["authn"]
     },
     'manage_nameid':{
         "tc_id": "S2c-14",
-        "name": "Setting the SP provided ID by using ManageNameID",
+        "name":  "ManageNameID; set NameID",
+        "descr": "Setting the SP provided ID by using ManageNameID",
         "sequence":[AuthnRequest, ManageNameIDRequest],
         "depend":["authn"]
     },
@@ -534,13 +538,14 @@ OPERATIONS = {
     },
     'manage_nameid_nid-transient':{
         "tc_id": "S2c-16",
-        "name": "Setting the SP provided ID by using ManageNameID",
+        "name": "ManageNameID; set NameID; AuthRequ/NameID-trans",
+        "descr": "Setting the SP provided ID by using ManageNameID",
         "sequence":[AuthnRequestNID_Transient, ManageNameIDRequest],
         "depend":["authn"]
     },
     'authn-authn_query': {
         "tc_id": "S2c-17",
-        "name": 'AuthnRequest and then an AuthnQuery',
+        "name": 'AuthnRequest then AuthnQuery',
         "descr": 'AuthnRequest followed by an AuthnQuery',
         "sequence": [AuthnRequest, AuthnQuery],
         "tests": {"pre": [CheckSaml2IntMetaData],  "post": []},
