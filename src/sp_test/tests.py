@@ -11,7 +11,8 @@ from saml2.saml import SCM_SENDER_VOUCHES
 from saml2.saml import ConditionAbstractType_
 from saml2.samlp import STATUS_AUTHN_FAILED
 from saml2.time_util import in_a_while, a_while_ago
-from sp_test.check import VerifyAuthnRequest
+from sp_test.check import VerifyAuthnRequest, VerifyDigestAlgorithm, \
+    VerifySignatureAlgorithm, VerifyIfRequestIsSigned
 from sp_test import check
 from saml2test import ip_addresses
 
@@ -62,7 +63,7 @@ class Response(object):
     _args = {}
     _class = samlp.Response
     _sign = False
-    tests = {"post": [], "pre": []}
+    tests = {"pre": [], "post": []}
 
     def __init__(self, conv):
         self.args = self._args.copy()
@@ -81,7 +82,10 @@ class Response(object):
 class Request(object):
     response = ""
     _class = None
-    tests = {"post": [VerifyAuthnRequest], "pre": []}
+    tests = {"pre": [],
+             "post": [VerifyAuthnRequest,
+                      VerifyDigestAlgorithm,
+                      VerifySignatureAlgorithm,]}
 
     def __init__(self):
         pass
@@ -376,6 +380,12 @@ OPERATIONS = {
         "descr": 'Same as SP-00, then check if result page is displayed',
         "sequence": [(Login, AuthnRequest, AuthnResponse, check.VerifyEchopageContents)],
         "tests": {"pre": [], "post": []}
+    },
+    'sp-02': {
+        "name": 'Require AuthnRequest to be signed',
+        "descr": 'Same as SP-00, and check if a request signature can be found',
+        "sequence": [(Login, AuthnRequest, AuthnResponse, None)],
+        "tests": {"pre": [], "post": [VerifyIfRequestIsSigned]}
     },
     'sp-08': {
         "name": "SP should accept a Response without a "
