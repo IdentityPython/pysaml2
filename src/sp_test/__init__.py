@@ -57,8 +57,11 @@ class Client(object):
                   "no cert verification will be done"))
         self._parser.add_argument('-d', dest='debug', action='store_true',
                                   help="Print debug information")
-        self._parser.add_argument("-H", dest="pretty", action='store_true')
-        self._parser.add_argument("-i", dest="insecure", action='store_true')
+        self._parser.add_argument("-H", dest="pretty", action='store_true',
+                                  help="Output summary on stdout as pretty "
+                                       "printed python dict instead of JSON")
+        self._parser.add_argument("-i", dest="insecure", action='store_true',
+                                  help="Do not verify SSL certificate")
         self._parser.add_argument('-J', dest="json_config_file",
                                   help="Script configuration")
         self._parser.add_argument(

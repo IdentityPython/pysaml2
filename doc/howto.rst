@@ -221,7 +221,7 @@ Synopsis::
       -c TD_CONFIG, --config Test driver configuration module at the current directory or the path specified
                              with the -P option. Do not use relative paths or the .py filename extension
       -d, --debug            Print debug information to stderr
-      -H, --prettyprint      Human readable status output
+      -H, --prettyprint      Status output as human readable python dictionary
       -h, --help             show this help message and exit
       -J TT_CONFIG_FILE      Test target configuration in JSON format
       -L, --log              Print HTTP log information # TODO: update documentation
@@ -232,7 +232,11 @@ Synopsis::
       -t, --testpackage      Module describing tests (e.g. idp_samlbase.py generated from repository)
       -Y, --pysamllog        Print pySAML2 logs to stderr
 
-Remember to generate the
+    Output on stdout is a JSON dicitionary containing the test summary (overwrite with -H).
+    Output to stderr is the log file
+
+
+Remember to generate the test target's config file in json format from python.
 
 
 Running the script testing an SP
@@ -241,7 +245,7 @@ Running the script testing an SP
 Synopsis::
 
     $ sp_testdrv.py --help
-    usage: sp_testdrv.py [-h] [-d] [-C CA_CERTS] [-J TT_CONFIG_FILE] [-m] [-l] [-c TD_CONFIG] [oper]
+    usage: sp_testdrv.py [-h] [-H] [-d] [-C CA_CERTS] [-J TT_CONFIG_FILE] [-m] [-l] [-c TD_CONFIG] [oper]
 
     positional arguments:
       oper                 Which test to run (mandatory except for options -h, -l and -m)
@@ -255,6 +259,7 @@ Synopsis::
                             with the -P option. Do not use relative paths or filename extension
       -d, --debug           Print debug information to stderr
       -h, --help            show this help message and exit
+      -H, --prettyprint      Status output as human readable python dictionary
       -J TT_CONFIG_FILE     Test target configuration in JSON format
       -L, --log             Print HTTP log information # TODO: update documentation
       -l, --list            List all the test flows as a JSON object
@@ -264,6 +269,8 @@ Synopsis::
       -t, --testpackage     Module describing tests (e.g. sp_testbase.py generated from repository)
       -Y, --pysamllog       Print pySAML2 logs to stderr
 
+    Output on stdout is a JSON dicitionary containing the test summary (overwrite with -H).
+    Output to stderr is the log file
 
 Examples
 ::::::::

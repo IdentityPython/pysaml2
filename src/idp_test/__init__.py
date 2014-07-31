@@ -131,8 +131,11 @@ class SAML2client(object):
                                   help="Tests")
         self._parser.add_argument("-Y", dest="pysamllog", action='store_true',
                                   help="Print PySAML2 logs")
-        self._parser.add_argument("-H", dest="pretty", action='store_true')
-        self._parser.add_argument("-i", dest="insecure", action='store_true')
+        self._parser.add_argument("-H", dest="pretty", action='store_true',
+                                  help="Output summary on stdout as pretty "
+                                       "printed python dict instead of JSON")
+        self._parser.add_argument("-i", dest="insecure", action='store_true',
+                                  help="Do not verify SSL certificate")
         self._parser.add_argument("oper", nargs="?", help="Which test to run")
 
         self.interactions = None
