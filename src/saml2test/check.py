@@ -9,8 +9,8 @@ import sys
 INFORMATION = 0
 OK = 1
 WARNING = 2
-ERROR = 3
-CRITICAL = 4
+ERROR = 3   # an error condition in the test target
+CRITICAL = 4 # an error condition in the test driver
 INTERACTION = 5
 
 STATUSCODE = ["INFORMATION", "OK", "WARNING", "ERROR", "CRITICAL",
@@ -124,8 +124,8 @@ class CheckErrorResponse(ExpectedError):
 
 class VerifyBadRequestResponse(ExpectedError):
     """
-    Verifies that the OP returned a 400 Bad Request response containing a
-    Error message.
+    Verifies that the test target returned a 400 Bad Request response
+    containing a an error message.
     """
     cid = "verify-bad-request-response"
     msg = "OP error"
@@ -138,7 +138,7 @@ class VerifyBadRequestResponse(ExpectedError):
             pass
         else:
             self._message = "Expected a 400 error message"
-            self._status = CRITICAL
+            self._status = ERROR
 
         return res
 
@@ -191,22 +191,22 @@ class Other(CriticalError):
     msg = "Other error"
 
 
-class CheckHTTPResponse(CriticalError):
+class CheckSpHttpResponseOK(Error):
     """
-    Checks that the HTTP response status is within the 200 or 300 range
+    Checks that the SP's HTTP response status is within the 200 or 300 range
     """
-    cid = "check-http-response"
-    msg = "OP error"
+    cid = "check-sp-http-response-ok"
+    msg = "SP error OK"
 
     def _func(self, conv):
         _response = conv.last_response
-        _content = conv.last_content
+        _content = conv.last_response.content
 
         res = {}
         if _response.status_code >= 400:
             self._status = self.status
             self._message = self.msg
-            res["content"] = _content
+            #res["content"] = _content   #too big + charset converstion needed
             res["url"] = conv.position
             res["http_status"] = _response.status_code
 

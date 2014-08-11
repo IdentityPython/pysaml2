@@ -74,8 +74,8 @@ class Client(object):
             help="Path to the configuration file for the IdP")
         self._parser.add_argument("-t", dest="testpackage",
                                   help="Module describing tests")
-        self._parser.add_argument('-v', dest='verbose', action='store_true',
-                                  help="Print runtime information")
+        #self._parser.add_argument('-v', dest='verbose', action='store_true',
+        #                          help="Print runtime information") # unsused
         self._parser.add_argument("-Y", dest="pysamllog", action='store_true',
                                   help="Print PySAML2 logs")
         self._parser.add_argument("oper", nargs="?", help="Which test to run")

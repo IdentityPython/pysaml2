@@ -49,7 +49,27 @@ info = {
     "echopageContentPattern": [r"Given Name\s*</td>\s*<td>Roland</td>",
                                r"Userid\s*</td>\s*<td>roalnd</td>",
                                r"Surname\s*</td>\s*<td>Hedberg</td>",
-                              ]
+                              ],
+    "constraints": {
+        "authnRequest_signature_required": True,
+        # allowed for assertion & response signature:
+        "signature_algorithm": [
+            #ds.SIG_RSA_SHA1,  # you may need this for legacy deployments
+            ds.SIG_RSA_SHA224,
+            ds.SIG_RSA_SHA256,
+            ds.SIG_RSA_SHA384,
+            ds.SIG_RSA_SHA512,
+        ],
+        "digest_algorithm": [
+            #ds.DIGEST_SHA1,   # you may need this for legacy deployments
+            ds.DIGEST_SHA1,
+            ds.DIGEST_SHA224,
+            ds.DIGEST_SHA256,
+            ds.DIGEST_SHA384,
+            ds.DIGEST_SHA512,
+            ds.DIGEST_RIPEMD160,
+        ],
+    },
 }
 
 print json.dumps(info)

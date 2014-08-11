@@ -4,6 +4,8 @@ from saml2.saml import NAME_FORMAT_URI
 __author__ = 'rolandh'
 
 import json
+import xmldsig as ds
+from saml2.saml import NAME_FORMAT_UNSPECIFIED, NAME_FORMAT_URI, NAME_FORMAT_BASIC
 
 BASE = "http://localhost:8088"
 
@@ -70,18 +72,24 @@ info = {
             }
         }
     ],
+    # metadata source for the test target's EntityDescriptor:
     "metadata": metadata,
-    "name_format": NAME_FORMAT_URI
     "constraints": {
-        "signature_algorithm": [  # allowed for assertion & response signature
-            ds.SIG_RSA_SHA1,
+        # test if attribute name format matches the given value. Absence of this
+        # option or the value NAME_FORMAT_UNSPECIFIED will match any format
+        #"name_format": NAME_FORMAT_BASIC,
+        #"name_format": NAME_FORMAT_UNSPECIFIED,
+        "name_format": NAME_FORMAT_URI,
+        # allowed for assertion & response:
+        "signature_algorithm": [
+            #ds.SIG_RSA_SHA1,  # you may need this for legacy deployments
             ds.SIG_RSA_SHA224,
             ds.SIG_RSA_SHA256,
             ds.SIG_RSA_SHA384,
             ds.SIG_RSA_SHA512,
         ],
         "digest_algorithm": [
-            ds.DIGEST_SHA1,
+            #ds.DIGEST_SHA1,   # you may need this for legacy deployments
             ds.DIGEST_SHA224,
             ds.DIGEST_SHA256,
             ds.DIGEST_SHA384,

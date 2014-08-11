@@ -37,13 +37,13 @@ camel2underscore = re.compile('((?<=[a-z0-9])[A-Z]|(?!^)[A-Z](?=[a-z]))')
 class Conversation():
     def __init__(self, instance, config, interaction, json_config,
                  check_factory, entity_id, msg_factory=None,
-                 features=None, verbose=False, constraints=None,
-                 expect_exception=None):
+                 features=None, constraints=None,  # verbose=False,
+                 expect_exception=None, commandlineargs=None):
         self.instance = instance
         self._config = config
         self.test_output = []
         self.features = features
-        self.verbose = verbose
+        #self.verbose = verbose  # removed (not used)
         self.check_factory = check_factory
         self.msg_factory = msg_factory
         self.expect_exception = expect_exception
@@ -70,7 +70,7 @@ class Conversation():
         self.position = ""
         self.response = None
         self.oper = None
-        self.idp_constraints = constraints
+        self.msg_constraints = constraints
         self.json_config = json_config
         self.start_page = json_config["start_page"]
 
@@ -122,7 +122,7 @@ class Conversation():
                 kwargs = {}
             self.do_check(test, **kwargs)
             if test == ExpectedError:
-                return False
+                return False  # TODO: return value is unused
         return True
 
     def my_endpoints(self):
@@ -167,11 +167,6 @@ class Conversation():
             elif isinstance(response(), Check):
                 self.do_check(response)
             else:
-                # rhoerbe: I guess that this branch is never used, therefore
-                # I am proposing this exception:
-                #raise FatalError("can't use " + response.__class__.__name__ +
-                #                 ", because it is not a subclass of 'Check'")
-                #
                 # A HTTP redirect or HTTP Post
                 if 300 < self.last_response.status_code <= 303:
                     self._redirect(self.last_response)
@@ -241,11 +236,11 @@ class Conversation():
                     break
         return url
 
-    def send_idp_response(self, req, resp):
+    def send_idp_response(self, req_flow, resp_flow):
         """
-        :param req: The expected request
-        :param resp: The response type to be used
-        :return: A response
+        :param req_flow: The flow to check the request
+        :param resp_flow: The flow to prepare the response
+        :return: The SP's HTTP response on receiving the SAML response
         """
         # make sure I got the request I expected
         assert isinstance(self.saml_request.message, req._class)
@@ -257,8 +252,8 @@ class Conversation():
 
         # Pick information from the request that should be in the response
         args = self.instance.response_args(self.saml_request.message,
-                                           [resp._binding])
-        _mods = list(resp.__mro__[:])
+                                           [resp_flow._binding])
+        _mods = list(resp_flow.__mro__[:])
         _mods.reverse()
         for m in _mods:
             try:
@@ -266,28 +261,32 @@ class Conversation():
             except KeyError:
                 pass
 
-        args.update(resp._response_args)
+        args.update(resp_flow._response_args)
 
         for param in ["identity", "userid"]:
             if param in self.json_config:
                 args[param] = self.json_config[param]
 
-        if resp == ErrorResponse:
+        if resp_flow == ErrorResponse:
             func = getattr(self.instance, "create_error_response")
         else:
-            _op = camel2underscore.sub(r'_\1', req._class.c_tag).lower()
+            _op = camel2underscore.sub(r'_\1', req_flow._class.c_tag).lower()
             func = getattr(self.instance, "create_%s_response" % _op)
 
         # get from config which parts shall be signed
         sign = []
         for styp in ["sign_assertion", "sign_response"]:
             if styp in args:
-                if args[styp].lower() == "always":
-                    sign.append(styp)
-                del args[styp]
+                try:
+                    if args[styp].lower() == "always":
+                        sign.append(styp)
+                    del args[styp]
+                except (AttributeError, TypeError):
+                    raise AssertionError('config parameters "sign_assertion", '
+                                         '"sign_response" must be of type string')
 
         response = func(**args)
-        response = resp(self).pre_processing(response)
+        response = resp_flow(self).pre_processing(response)
         # and now for signing
         if sign:
             to_sign = []
@@ -315,21 +314,21 @@ class Conversation():
             response = signed_instance_factory(response, self.instance.sec,
                                                to_sign)
 
-        info = self.instance.apply_binding(resp._binding, response,
+        info = self.instance.apply_binding(resp_flow._binding, response,
                                            args["destination"],
                                            self.relay_state,
-                                           "SAMLResponse", resp._sign)
+                                           "SAMLResponse", resp_flow._sign)
 
-        if resp._binding == BINDING_HTTP_REDIRECT:
+        if resp_flow._binding == BINDING_HTTP_REDIRECT:
             url = None
             for param, value in info["headers"]:
                 if param == "Location":
                     url = value
                     break
             self.last_response = self.instance.send(url)
-        elif resp._binding == BINDING_HTTP_POST:
-            resp = base64.b64encode("%s" % response)
-            info["data"] = urllib.urlencode({"SAMLResponse": resp,
+        elif resp_flow._binding == BINDING_HTTP_POST:
+            resp_flow = base64.b64encode("%s" % response)
+            info["data"] = urllib.urlencode({"SAMLResponse": resp_flow,
                                              "RelayState": self.relay_state})
             info["method"] = "POST"
             info["headers"] = {
@@ -343,7 +342,7 @@ class Conversation():
         Solicited or 'un-solicited' flows.
 
         Solicited always starts with the Web client accessing a page.
-        Un-solicited starts with the IDP sending something.
+        Un-solicited starts with the IDP sending a SAMl Response.
         """
         if len(flow) >= 3:
             self.wb_send_GET_startpage()
@@ -373,7 +372,7 @@ class Conversation():
                 break
             except FatalError:
                 raise
-            except Exception:
+            except Exception as err:
                 #self.err_check("exception", err)
                 raise
 

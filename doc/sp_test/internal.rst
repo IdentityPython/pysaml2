@@ -24,7 +24,7 @@ These files should be stored outside the saml2test package to have a clean separ
 Client (sp_test/__init__.py)
 .........................
 Its life cycle is responsible for following activites:
- - read config files and command line argumants
+ - read config files and command line argumants (the test driver's config is "json_config")
  - initialize the test driver IDP
  - initialize a Conversation
  - start the Conversion with .do_sequence_and_tests()
@@ -33,35 +33,37 @@ Its life cycle is responsible for following activites:
 Conversation (sp_test/base.py)
 ..............................
 
-operation (oper)
+Operation (oper)
 ................
-  - comprises an id, name, sequence and tests
-  - names oper in
+  - Comprises an id, name, sequence and tests
   - Example: 'sp-00': {"name": 'Basic Login test', "sequence": [(Login, AuthnRequest, AuthnResponse, None)], "tests": {"pre": [], "post": []}
-  - Names a use case in STHREP
 
 OPERATIONS
 ..........
   - set of operations provided in sp_test
   - can be listed with the -l command line option
 
-sequence
+Sequence
 ........
   - A list of flows
-  - Example: see "sequence" item in operation dictionary
+  - Example: see "sequence" item in operation dict
 
-test (in the context of an operation)
+Test (in the context of an operation)
 ....
-  - class to be executed as part of an operation, either before ("pre") or after ("post") the sequence
+  - class to be executed as part of an operation, either before ("pre") or after ("post") the sequence or inbetween a SAML request and response ("mid").
+    There are standard tests with the Request class (VerifyAuthnRequest) and operation-specific tests.
+  - Example for an operation-specific "mid" test: VerifyIfRequestIsSigned
+  - A test may be specified together with an argument as a tupel
 
-flow
+Flow
 ....
-  - A tupel of classes that together implement an SAML request-response pair between IDP and SP (and possible a discovery service). A class can be derived from Request, Response or (other), Check or Operation.
-  - A flow for a solicited authentication consists of 4 classes:
-    flow[0]: Operation (Handling a login flow such as discovery or WAYF - not implemented yet)
-    flow[1]: Request (process the authentication request)
-    flow[2]: Response (send the authentication response)
-    flow[3]: Check (optional - can be None. E.g. check the response if a correct error status was raised when sending a broken response)
+  * A tupel of classes that together implement an SAML request-response pair between IDP and SP (and possible other actors, such as a discovery service or IDP-proxy). A class can be derived from Request, Response (or other), Check or Operation.
+  * A flow for a solicited authentication consists of 4 classes:
+
+    * flow[0]: Operation (Handling a login flow such as discovery or WAYF - not implemented yet)
+    * flow[1]: Request (process the authentication request)
+    * flow[2]: Response (send the authentication response)
+    * flow[3]: Check (optional - can be None. E.g. check the response if a correct error status was raised when sending a broken response)
 
 Check (and subclasses)
 .....
@@ -69,18 +71,17 @@ Check (and subclasses)
   - writes a structured test report to conv.test_output
   - It can check for expected errors, which do not cause an exception but in contrary are reported as success
 
-interaction
+Interaction
 ...........
   - An interaction automates a human interaction. It searches a response from a test target for some constants, and if
     there is a match, it will create a response suitable response.
 
-(2) Simplefied Flow
+(2) Simplyfied Flow
 :::::::::::::::::::
 
-The following pseudocdoe is an extract showing an overview of what is executed
-for test sp-00:
+The following pseudocode is an extract showing an overview of what is executed
+for test sp-00::
 
-::
     do_sequence_and_test(self, oper, test):
         self.test_sequence(tests["pre"])  # currently no tests defined for sp_test
         for flow in oper:
@@ -97,8 +98,8 @@ for test sp-00:
         else:
             self.handle_result()
 
-    send_idp_response(req, resp):
-        self.test_sequence(req.tests["post"])   # execute "post"-tests (request has "VerifyContent"-test built in; others from config)
+    send_idp_response(req_flow, resp_flow):
+        self.test_sequence(req_flow.tests["mid"])   # execute "mid"-tests (request has "VerifyContent"-test built in; others from config)
         # this line stands for a part that is a bit more involved .. see source
 
         args.update(resp._response_args)    # set userid, identity
@@ -129,3 +130,20 @@ for test sp-00:
             _txt = self.last_response.content
             if self.last_response.status_code >= 400:
                 raise FatalError("Did not expected error")
+
+(3) Status Reporting
+::::::::::::::::::::
+The proper reporting of results is at the core of saml2test. Several conditions
+must be considered:
+
+#. An operation that was successful because the test target reports OK (e.g. HTTP 200)
+#. An operation that was successful because the test target reports NOK as expected, e.g. because of an invalid signature - HTTP 500 could be the correct response
+#. An errror in SAML2Test
+#. An errror in configuration of SAML2Test
+
+Status values are defined in saml2test.check like this:
+INFORMATION = 0, OK = 1, WARNING = 2, ERROR = 3, CRITICAL = 4, INTERACTION = 5
+
+
+There are 2 targets to write output to:
+* Test_ouput is written to conv.test_ouput during the execution of the flows.

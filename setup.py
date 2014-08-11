@@ -26,7 +26,7 @@ setup(
     author = "Roland Hedberg",
     author_email = "roland.hedberg@adm.umu.se",
     license="Apache 2.0",
-    packages=["idp_test", "idp_test/package", "saml2test", "sp_test"],
+    packages=["idp_test", "idp_test/package", "saml2test", "sp_test", "utility"],
     package_dir = {"": "src"},
     classifiers = [
         "Development Status :: 4 - Beta",
