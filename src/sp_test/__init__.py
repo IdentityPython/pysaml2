@@ -116,6 +116,15 @@ class Client(object):
                 self.idp_config.ca_certs = self.args.ca_certs
             else:
                 self.idp_config.ca_certs = "../keys/cacert.pem"
+        # hack to change idp cert without config change. TODO: find interface to
+        # change IDP cert after __init__
+        if self.args.oper == 'sp-04':
+            self.idp_config.cert_file = os.path.join(self.args.keysdir, "non_md_cert.pem")
+            self.idp_config.key_file = os.path.join(self.args.keysdir, "non_md_key.pem")
+            for f in [self.idp_config.cert_file, self.idp_config.key_file]:
+                if not os.path.isfile(f):
+                    print "File not found: %s" % os.path.abspath(f)
+                    raise
 
         self.idp = Server(config=self.idp_config)
 
