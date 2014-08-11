@@ -1,6 +1,7 @@
 import base64
 import cookielib
 import re
+import os
 import traceback
 import urllib
 import sys
@@ -10,6 +11,7 @@ from saml2 import BINDING_HTTP_REDIRECT, class_name
 from saml2 import BINDING_HTTP_POST
 from saml2.request import SERVICE2REQUEST
 from saml2.sigver import signed_instance_factory, pre_signature_part
+from saml2.samlp import HttpParameters
 
 from saml2test import CheckError, FatalError
 from saml2test.check import Check
@@ -31,6 +33,9 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+FILE_EXT = {"text/html": "html", "test/plain": "txt", "application/json": "json",
+            "text/xml": "xml", "application/xml": "xml", }
+
 camel2underscore = re.compile('((?<=[a-z0-9])[A-Z]|(?!^)[A-Z](?=[a-z]))')
 
 
@@ -47,6 +52,7 @@ class Conversation():
         self.check_factory = check_factory
         self.msg_factory = msg_factory
         self.expect_exception = expect_exception
+        self.commandlineargs = commandlineargs
 
         self.cjar = {"browser": cookielib.CookieJar(),
                      "rp": cookielib.CookieJar(),
@@ -144,8 +150,46 @@ class Conversation():
         return None
 
     def _log_response(self, response):
+        """Depending on -k argument write content to either logger or extra file
+
+        Create the <operation> directory; delete all possibly existing files
+        Write response content into response_x.<ext> (with x incrementing from 0)
+        """
         logger.info("<-- Status: %s" % response.status_code)
-        logger.info("<-- Content: %s" % response.content)
+        if response.status_code in [302, 301, 303]:
+            logger.info("<-- location: %s" %
+                        response.headers._store['location'][1])
+        else:
+            if self.commandlineargs.content_log:
+                self._content_log_fileno = getattr(self, '_content_log_fileno', 0) + 1
+                if not getattr(self, 'logcontentpath', None):
+                    try:
+                        content_type_hdr = response.headers._store['content-type'][1]
+                        l = content_type_hdr.split(';') + ['charset=ISO-8859-1',]
+                        content_type = l[0]
+                        encoding = l[1].split("=")
+                        ext = "." + FILE_EXT[content_type]
+                    except Exception as e:
+                        ext = ""
+                    self._logcontentpath = os.path.join(
+                        self.commandlineargs.logpath, "log",
+                        self.commandlineargs.oper)
+                    if not os.path.exists(self._logcontentpath):
+                        os.makedirs(self._logcontentpath)
+                    for fn in os.listdir(self._logcontentpath):
+                        old_file = os.path.join(self._logcontentpath, fn)
+                        if os.path.isfile(old_file):
+                            os.unlink(old_file)
+                fn = os.path.join(self._logcontentpath, "response_%d%s"
+                                  % (self._content_log_fileno, ext ))
+                f = open(fn, "w")
+                f.write(response.content)
+                f.close()
+                logger.info("<-- Response content (encoding=%s) in file %s" %
+                            (encoding, fn))
+                pass
+            else:
+                logger.info("<-- Content: %s" % response.content)
 
     def wb_send_GET_startpage(self):
         """
@@ -193,6 +237,8 @@ class Conversation():
         self.saml_request = self.instance._parse_request(
             _str, SERVICE2REQUEST[self._endpoint], self._endpoint,
             self._binding)
+        if self._binding == BINDING_HTTP_REDIRECT:
+            self.http_parameters = HttpParameters(_dict)
 
     def _redirect(self, _response):
         rdseq = []
@@ -363,7 +409,7 @@ class Conversation():
                 self.do_flow(flow)
             except InteractionNeeded:
                 self.test_output.append({"status": INTERACTION,
-                                         "message": self.last_content,
+                                         "message": "see detail log for response content",
                                          "id": "exception",
                                          "name": "interaction needed",
                                          "url": self.position})

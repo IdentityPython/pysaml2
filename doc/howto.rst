@@ -261,7 +261,8 @@ Synopsis::
       -h, --help            show this help message and exit
       -H, --prettyprint      Status output as human readable python dictionary
       -J TT_CONFIG_FILE     Test target configuration in JSON format
-      -L, --log             Print HTTP log information # TODO: update documentation
+      -k                    Print HTTP response contents into separate files
+      -L, --log             Path to the logfile directory
       -l, --list            List all the test flows as a JSON object
       -m, --metadata        Return the SP metadata
       -O, --operations      Operations module (generated from Repository as idp_saml2base.py)

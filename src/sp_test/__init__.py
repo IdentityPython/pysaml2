@@ -1,7 +1,9 @@
 import json
 import pprint
 import argparse
+import os.path
 import sys
+import traceback
 from importlib import import_module
 
 from idp_test import SCHEMA
@@ -63,11 +65,19 @@ class Client(object):
                                        "printed python dict instead of JSON")
         self._parser.add_argument("-i", dest="insecure", action='store_true',
                                   help="Do not verify SSL certificate")
+        self._parser.add_argument("-I", dest="keysdir", default="keys",
+                                  help="Directory for invalid IDP keys")
         self._parser.add_argument('-J', dest="json_config_file",
-                                  help="Script configuration")
+                                  help="Test target configuration")
+        self._parser.add_argument(
+            '-k', dest='content_log', action='store_true',
+            help="Log HTTP content in spearate files in directory "
+                 "<operation>/, which defaults to the path in -L")
         self._parser.add_argument(
             "-l", dest="list", action="store_true",
             help="List all the test flows as a JSON object")
+        self._parser.add_argument("-L", dest="logpath", default=".",
+                                  help="Path to the logfile directory")
         self._parser.add_argument('-m', dest="metadata", action='store_true',
                                   help="Return the IdP metadata")
         self._parser.add_argument(
@@ -184,7 +194,8 @@ class Client(object):
                             self.interactions, self.json_config,
                             check_factory=self.check_factory,
                             entity_id=self.entity_id,
-                            constraints=self.constraints)
+                            constraints=self.constraints,
+                            commandlineargs = self.args)
         try:
             conv.do_sequence_and_tests(oper["sequence"], oper["tests"])
             self.test_log = conv.test_output
