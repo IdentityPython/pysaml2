@@ -71,7 +71,8 @@ COMMON_ARGS = [
     "tmp_cert_file",
     "tmp_key_file",
     "validate_certificate",
-    "extensions"
+    "extensions",
+    "allow_unknown_attributes"
 ]
 
 SP_ARGS = [
@@ -90,7 +91,6 @@ SP_ARGS = [
     "allow_unsolicited",
     "ecp",
     "name_id_format",
-    "allow_unknown_attributes"
 ]
 
 AA_IDP_ARGS = [
