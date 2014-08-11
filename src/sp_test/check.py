@@ -3,7 +3,7 @@ import logging
 import re
 import sys
 
-from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_HTTP_POST, BINDING_HTTP_REDIRECT
 from saml2test.check import Check
 from saml2test.check import ERROR, INFORMATION, WARNING
 from saml2test import check
@@ -86,6 +86,15 @@ class VerifyDigestAlgorithm(Check):
         if request.signature:
             if not self._digest_algo(request.signature, _algs):
                 return {}
+        elif conv._binding == BINDING_HTTP_REDIRECT:
+            self._message = "no digest with redirect binding"
+            self._status = INFORMATION
+            return {}
+        elif conv._binding == BINDING_HTTP_POST:
+            self._message = "cannot verify digest algorithm: request not signed"
+            self._status = WARNING
+            return {}
+
 
         return {}
 
@@ -202,6 +211,29 @@ class VerifyEchopageContents(Check):
 
     def call_on_redirect(self):
         return False
+
+
+class SetResponseAndAssertionSignaturesFalse(Check):
+    """ Prepare config to suppress signatures of both response and assertion"""
+    cid = "set-response-and-assertion-signature-false"
+    msg = "Prepare config to suppress signatures of both response and assertion"
+
+    def _func(self, conv):
+        conv.json_config['args']['AuthnResponse']['sign_assertion'] = 'never'
+        conv.json_config['args']['AuthnResponse']['sign_response'] = 'never'
+        self._status = INFORMATION
+        return {}
+
+
+#class SetInvalidIdpKey(Check):
+#    """ Prepare config to set IDP signing key to some useless key"""
+#    cid = "set-idp-key-invalid"
+#    msg = "Prepare config to set IDP signing key invalid"
+#
+#    def _func(self, conv):
+#        conv.instance.sec.cert_file = conv.instance.config.invalid_idp_cert_file
+#        conv.instance.sec.key_file = conv.instance.config.invalid_idp_key_file
+#        return {}
 
 
 # =============================================================================

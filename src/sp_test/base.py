@@ -282,13 +282,6 @@ class Conversation():
         :param resp_flow: The flow to prepare the response
         :return: The SP's HTTP response on receiving the SAML response
         """
-        # make sure I got the request I expected
-        assert isinstance(self.saml_request.message, req._class)
-
-        try:
-            self.test_sequence(req.tests["post"])
-        except KeyError:
-            pass
 
         # Pick information from the request that should be in the response
         args = self.instance.response_args(self.saml_request.message,
@@ -381,7 +374,7 @@ class Conversation():
 
         self._log_response(self.last_response)
 
-    def do_flow(self, flow):
+    def do_flow(self, flow, mid_tests):
         """
         Solicited or 'un-solicited' flows.
 
@@ -392,6 +385,12 @@ class Conversation():
             self.wb_send_GET_startpage()
             self.intermit(flow[0]._interaction)
             self.parse_saml_message()
+        # make sure I got the request I expected
+        assert isinstance(self.saml_request.message, flow[1]._class)
+        try:
+            self.test_sequence(mid_tests)
+        except KeyError:
+            pass
         self.send_idp_response(flow[1], flow[2])
         if len(flow) == 4:
             self.handle_result(flow[3])
@@ -399,6 +398,7 @@ class Conversation():
             self.handle_result()
 
     def do_sequence_and_tests(self, oper, tests=None):
+        self.current_oper = oper
         try:
             self.test_sequence(tests["pre"])
         except KeyError:
@@ -406,7 +406,7 @@ class Conversation():
 
         for flow in oper:
             try:
-                self.do_flow(flow)
+                self.do_flow(flow, tests["mid"])
             except InteractionNeeded:
                 self.test_output.append({"status": INTERACTION,
                                          "message": "see detail log for response content",
