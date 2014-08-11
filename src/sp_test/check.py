@@ -5,7 +5,7 @@ import sys
 
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2test.check import Check
-from saml2test.check import CRITICAL
+from saml2test.check import ERROR, INFORMATION, WARNING
 from saml2test import check
 from saml2test.interaction import Interaction
 

@@ -75,7 +75,7 @@ class Conversation():
         self.start_page = json_config["start_page"]
 
     def check_severity(self, stat):
-        if stat["status"] >= 4:
+        if stat["status"] >= 3:
             logger.error("WHERE: %s" % stat["id"])
             logger.error("STATUS:%s" % STATUSCODE[stat["status"]])
             try:
@@ -154,18 +154,12 @@ class Conversation():
         self.last_response = self.instance.send(self.start_page)
         self._log_response(self.last_response)
 
-    def handle_result(self, response=None):
-        #self.do_check(CheckHTTPResponse)
-        if response:
-            if isinstance(response(), VerifyEchopageContents):
+    def handle_result(self, check_response=None):
+        if check_response:
+            if isinstance(check_response(), Check):
                 if 300 < self.last_response.status_code <= 303:
                     self._redirect(self.last_response)
-                    if self.last_response.status_code >= 400:
-                        raise FatalError("Did not expected SP redirecting to "
-                                         "an error page")
-                self.do_check(response)
-            elif isinstance(response(), Check):
-                self.do_check(response)
+                self.do_check(check_response)
             else:
                 # A HTTP redirect or HTTP Post
                 if 300 < self.last_response.status_code <= 303:
@@ -334,6 +328,10 @@ class Conversation():
             info["headers"] = {
                 'Content-type': 'application/x-www-form-urlencoded'}
             self.last_response = self.instance.send(**info)
+            try:
+                self.last_content = self.last_response.content
+            except AttributeError:
+                self.last_content = None
 
         self._log_response(self.last_response)
 

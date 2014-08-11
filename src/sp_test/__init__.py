@@ -19,6 +19,7 @@ from saml2test import FatalError
 from saml2test import CheckError
 from saml2test import ContextFilter
 from saml2test import exception_trace
+from saml2test.check import CRITICAL
 
 __author__ = 'rolandh'
 
@@ -201,11 +202,17 @@ class Client(object):
             tsum = self.test_summation(self.args.oper)
         except Exception, err:
             if conv:
+                conv.test_output.append({"status": CRITICAL,
+                         "name": "test driver error",
+                         "id": "critial exception"})
                 self.test_log = conv.test_output
                 self.test_log.append(exception_trace("RUN", err))
             else:
                 self.test_log = exception_trace("RUN", err)
             tsum = self.test_summation(self.args.oper)
+            logger.error("Unexpected exception in test driver %s" %
+                         traceback.format_exception(*sys.exc_info()))
+
 
         if pp:
             pp.pprint(tsum)
