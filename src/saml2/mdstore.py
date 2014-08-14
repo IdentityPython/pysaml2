@@ -16,7 +16,7 @@ from saml2 import SAMLError
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_SOAP
-from saml2.s_utils import UnsupportedBinding, UnknownPrincipal
+from saml2.s_utils import UnsupportedBinding, UnknownSystemEntity
 from saml2.sigver import split_len
 from saml2.validate import valid_instance
 from saml2.time_util import valid
@@ -564,7 +564,7 @@ class MetadataStore(object):
                     self.load(key, val)
 
     def service(self, entity_id, typ, service, binding=None):
-        known_principal = False
+        known_entity = False
         for key, _md in self.metadata.items():
             srvs = _md.service(entity_id, typ, service, binding)
             if srvs:
@@ -572,17 +572,17 @@ class MetadataStore(object):
             elif srvs is None:
                 pass
             else:
-                known_principal = True
+                known_entity = True
 
-        if known_principal:
+        if known_entity:
             logger.error("Unsupported binding: %s (%s)" % (binding, entity_id))
             raise UnsupportedBinding(binding)
         else:
-            logger.error("Unknown principal: %s" % entity_id)
-            raise UnknownPrincipal(entity_id)
+            logger.error("Unknown system entity: %s" % entity_id)
+            raise UnknownSystemEntity(entity_id)
 
     def ext_service(self, entity_id, typ, service, binding=None):
-        known_principal = False
+        known_entity = False
         for key, _md in self.metadata.items():
             srvs = _md.ext_service(entity_id, typ, service, binding)
             if srvs:
@@ -590,12 +590,12 @@ class MetadataStore(object):
             elif srvs is None:
                 pass
             else:
-                known_principal = True
+                known_entity = True
 
-        if known_principal:
+        if known_entity:
             raise UnsupportedBinding(binding)
         else:
-            raise UnknownPrincipal(entity_id)
+            raise UnknownSystemEntity(entity_id)
 
     def single_sign_on_service(self, entity_id, binding=None, typ="idpsso"):
         # IDP
