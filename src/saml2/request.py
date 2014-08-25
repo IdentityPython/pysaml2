@@ -75,7 +75,7 @@ class Request(object):
 
     def _verify(self):            
         assert self.message.version == "2.0"
-        if self.message.destination and \
+        if self.message.destination and self.receiver_addrs and \
                 self.message.destination not in self.receiver_addrs:
             logger.error("%s not in %s" % (self.message.destination,
                                                 self.receiver_addrs))
