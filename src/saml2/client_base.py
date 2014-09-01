@@ -191,7 +191,8 @@ class Base(Entity):
         return ava
 
     #noinspection PyUnusedLocal
-    def is_session_valid(self, _session_id):
+    @staticmethod
+    def is_session_valid(_session_id):
         """ Place holder. Supposed to check if the session is still valid.
         """
         return True
@@ -399,7 +400,7 @@ class Base(Entity):
         return self._message(AuthzDecisionQuery, destination, message_id,
                              consent, extensions, sign, action=action,
                              evidence=evidence, resource=resource,
-                             subject=subject)
+                             subject=subject, **kwargs)
 
     def create_authz_decision_query_using_assertion(self, destination,
                                                     assertion, action=None,
@@ -436,7 +437,8 @@ class Base(Entity):
             resource, subject, message_id=message_id, consent=consent,
             extensions=extensions, sign=sign)
 
-    def create_assertion_id_request(self, assertion_id_refs, **kwargs):
+    @staticmethod
+    def create_assertion_id_request(assertion_id_refs, **kwargs):
         """
 
         :param assertion_id_refs:
@@ -534,7 +536,7 @@ class Base(Entity):
                 "entity_id": self.config.entityid,
                 "attribute_converters": self.config.attribute_converters,
                 "allow_unknown_attributes":
-                    self.config.allow_unknown_attributes,
+                self.config.allow_unknown_attributes,
             }
             try:
                 resp = self._parse_response(xmlstr, AuthnResponse,
