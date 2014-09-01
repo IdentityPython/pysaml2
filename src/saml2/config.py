@@ -401,9 +401,9 @@ class Config(object):
 
     def endpoint(self, service, binding=None, context=None):
         """ Goes through the list of endpoint specifications for the
-        given type of service and returnes the first endpoint that matches
-        the given binding. If no binding is given any endpoint for that
-        service will be returned.
+        given type of service and returns a list of endpoint that matches
+        the given binding. If no binding is given all endpoints available for
+        that service will be returned.
 
         :param service: The service the endpoint should support
         :param binding: The expected binding
