@@ -423,9 +423,18 @@ def do_endpoints(conf, endpoints):
                         args = {"location": args[0], "binding": args[1],
                                 "index": args[2]}
 
-                if indexed and "index" not in args:
-                    args["index"] = "%d" % i
-                    i += 1
+                if indexed:
+                    if "index" not in args:
+                        args["index"] = "%d" % i
+                        i += 1
+                    else:
+                        try:
+                            int(args["index"])
+                        except ValueError:
+                            raise
+                        else:
+                            args["index"] = str(args["index"])
+
                 servs.append(factory(eclass, **args))
                 service[endpoint] = servs
         except KeyError:
