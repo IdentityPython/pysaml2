@@ -80,9 +80,10 @@ class Saml2Client(Base):
         destination = self._sso_location(entityid, binding)
 
         reqid, req = self.create_authn_request(destination, vorg, scoping,
-                                        response_binding, nameid_format,
-                                        consent=consent, extensions=extensions,
-                                        sign=sign, **kwargs)
+                                               response_binding, nameid_format,
+                                               consent=consent,
+                                               extensions=extensions, sign=sign,
+                                               **kwargs)
         _req_str = "%s" % req
 
         logger.info("AuthNReq: %s" % _req_str)
