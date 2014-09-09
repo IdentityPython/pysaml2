@@ -1,19 +1,6 @@
-#!/usr/bin/env python
+# !/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2009-2011 Umeå University
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#            http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
 """Contains classes and functions that a SAML2.0 Service Provider (SP) may use
 to conclude its tasks.
@@ -26,7 +13,7 @@ from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_SOAP
 
-from saml2.ident import decode
+from saml2.ident import decode, code
 from saml2.httpbase import HTTPError
 from saml2.s_utils import sid
 from saml2.s_utils import status_message_factory
@@ -48,6 +35,7 @@ except ImportError:
     from cgi import parse_qs
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -118,7 +106,7 @@ class Saml2Client(Base):
         # find out which IdPs/AAs I should notify
         entity_ids = self.users.issuers_of_info(name_id)
         return self.do_logout(name_id, entity_ids, reason, expire, sign)
-        
+
     def do_logout(self, name_id, entity_ids, reason, expire, sign=None,
                   expected_binding=None):
         """
@@ -138,7 +126,7 @@ class Saml2Client(Base):
             # Do the local logout anyway
             self.local_logout(name_id)
             return 0, "504 Gateway Timeout", [], []
-            
+
         not_done = entity_ids[:]
         responses = {}
 
@@ -165,7 +153,7 @@ class Saml2Client(Base):
                 req_id, request = self.create_logout_request(
                     destination, entity_id, name_id=name_id, reason=reason,
                     expire=expire)
-                
+
                 #to_sign = []
                 if binding.startswith("http://"):
                     sign = True
@@ -197,12 +185,12 @@ class Saml2Client(Base):
 
                 else:
                     self.state[req_id] = {"entity_id": entity_id,
-                                              "operation": "SLO",
-                                              "entity_ids": entity_ids,
-                                              "name_id": name_id,
-                                              "reason": reason,
-                                              "not_on_of_after": expire,
-                                              "sign": sign}
+                                          "operation": "SLO",
+                                          "entity_ids": entity_ids,
+                                          "name_id": code(name_id),
+                                          "reason": reason,
+                                          "not_on_of_after": expire,
+                                          "sign": sign}
 
                     responses[entity_id] = (binding, http_info)
                     not_done.remove(entity_id)
@@ -213,7 +201,7 @@ class Saml2Client(Base):
         if not_done:
             # upstream should try later
             raise LogoutError("%s" % (entity_ids,))
-        
+
         return responses
 
     def local_logout(self, name_id):
@@ -231,7 +219,7 @@ class Saml2Client(Base):
         """
         identity = self.users.get_identity(name_id)[0]
         return bool(identity)
-        
+
     def handle_logout_response(self, response):
         """ handles a Logout response 
         
@@ -247,11 +235,12 @@ class Saml2Client(Base):
         logger.info("issuer: %s" % issuer)
         del self.state[response.in_response_to]
         if status["entity_ids"] == [issuer]:  # done
-            self.local_logout(status["name_id"])
+            self.local_logout(decode(status["name_id"]))
             return 0, "200 Ok", [("Content-type", "text/html")], []
         else:
             status["entity_ids"].remove(issuer)
-            return self.do_logout(status["name_id"], status["entity_ids"],
+            return self.do_logout(decode(status["name_id"]),
+                                  status["entity_ids"],
                                   status["reason"], status["not_on_or_after"],
                                   status["sign"])
 
