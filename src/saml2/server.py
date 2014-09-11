@@ -174,6 +174,8 @@ class Server(Entity):
 
         :param sp_entity_id: The entity id of the SP
         :param index: which of the attribute consumer services its all about
+            if index == None then all attribute consumer services are clumped
+            together.
         :return: 2-tuple, list of required and list of optional attributes
         """
         return self.metadata.attribute_requirement(sp_entity_id, index)
