@@ -15,16 +15,16 @@ from py.test import raises
 
 from pathutils import full_path
 
-SUCCESS_STATUS = """<?xml version=\'1.0\' encoding=\'UTF-8\'?>
-<ns0:Status xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns0:StatusCode
-Value="urn:oasis:names:tc:SAML:2.0:status:Success" /></ns0:Status>"""
+SUCCESS_STATUS = ('<?xml version=\'1.0\' encoding=\'UTF-8\'?>\n'
+'<ns0:Status xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns0:StatusCode '
+'Value="urn:oasis:names:tc:SAML:2.0:status:Success" /></ns0:Status>')
 
-ERROR_STATUS = """<?xml version='1.0' encoding='UTF-8'?>
-<ns0:Status xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns0:StatusCode
-Value="urn:oasis:names:tc:SAML:2.0:status:Responder"><ns0:StatusCode
-Value="urn:oasis:names:tc:SAML:2.0:status:UnknownPrincipal"
-/></ns0:StatusCode><ns0:StatusMessage>Error resolving
-principal</ns0:StatusMessage></ns0:Status>"""
+ERROR_STATUS = ('<?xml version=\'1.0\' encoding=\'UTF-8\'?>\n'
+'<ns0:Status xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns0:StatusCode '
+'Value="urn:oasis:names:tc:SAML:2.0:status:Responder"><ns0:StatusCode '
+'Value="urn:oasis:names:tc:SAML:2.0:status:UnknownPrincipal" '
+'/></ns0:StatusCode><ns0:StatusMessage>Error resolving '
+'principal</ns0:StatusMessage></ns0:Status>')
 
 
 def _eq(l1, l2):
