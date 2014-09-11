@@ -67,9 +67,12 @@ def destinations(srvs):
     return [s["location"] for s in srvs]
 
 
-def attribute_requirement(entity):
+def attribute_requirement(entity, index=None):
     res = {"required": [], "optional": []}
     for acs in entity["attribute_consuming_service"]:
+        if index is not None and acs["index"] != index:
+            continue
+
         for attr in acs["requested_attribute"]:
             if "is_required" in attr and attr["is_required"] == "true":
                 res["required"].append(attr)
@@ -132,6 +135,9 @@ class MetaData(object):
 
     def __getitem__(self, item):
         return self.entity[item]
+
+    def __setitem__(self, key, value):
+        self.entity[key] = value
 
     def do_entity_descriptor(self, entity_descr):
         if self.check_validity:
@@ -221,7 +227,7 @@ class MetaData(object):
         """
 
         logger.debug("service(%s, %s, %s, %s)" % (entity_id, typ, service,
-                                                   binding))
+                                                  binding))
         try:
             srvs = []
             for t in self[entity_id][typ]:
@@ -297,12 +303,14 @@ class MetaData(object):
 
         return self.service(entity_id, typ, service)
 
-    def attribute_requirement(self, entity_id, index=0):
+    def attribute_requirement(self, entity_id, index=None):
         """ Returns what attributes the SP requires and which are optional
         if any such demands are registered in the Metadata.
 
         :param entity_id: The entity id of the SP
         :param index: which of the attribute consumer services its all about
+            if index=None then return all attributes expected by all
+            attribute_consuming_services.
         :return: 2-tuple, list of required and list of optional attributes
         """
 
@@ -310,7 +318,7 @@ class MetaData(object):
 
         try:
             for sp in self[entity_id]["spsso_descriptor"]:
-                _res = attribute_requirement(sp)
+                _res = attribute_requirement(sp, index)
                 res["required"].extend(_res["required"])
                 res["optional"].extend(_res["optional"])
         except KeyError:
@@ -513,6 +521,7 @@ class MetaDataMD(MetaData):
 
 class MetadataStore(object):
     def __init__(self, onts, attrc, config, ca_certs=None,
+                 check_validity=True,
                  disable_ssl_certificate_validation=False):
         """
         :params onts:
@@ -523,11 +532,16 @@ class MetadataStore(object):
         """
         self.onts = onts
         self.attrc = attrc
-        self.http = HTTPBase(verify=disable_ssl_certificate_validation,
-                             ca_bundle=ca_certs)
+
+        if disable_ssl_certificate_validation:
+            self.http = HTTPBase(verify=False, ca_bundle=ca_certs)
+        else:
+            self.http = HTTPBase(verify=True, ca_bundle=ca_certs)
+
         self.security = security_context(config)
         self.ii = 0
         self.metadata = {}
+        self.check_validity = check_validity
 
     def load(self, typ, *args, **kwargs):
         if typ == "local":
@@ -539,10 +553,16 @@ class MetadataStore(object):
             _md = MetaData(self.onts, self.attrc, args[0], **kwargs)
         elif typ == "remote":
             key = kwargs["url"]
+            _args = {}
+            for _key in ["node_name", "check_validity"]:
+                try:
+                    _args[_key] = kwargs[_key]
+                except KeyError:
+                    pass
+
             _md = MetaDataExtern(self.onts, self.attrc,
                                  kwargs["url"], self.security,
-                                 kwargs["cert"], self.http,
-                                 node_name=kwargs.get('node_name'))
+                                 kwargs["cert"], self.http, **_args)
         elif typ == "mdfile":
             key = args[0]
             _md = MetaDataMD(self.onts, self.attrc, args[0])
@@ -559,6 +579,8 @@ class MetadataStore(object):
         for key, vals in spec.items():
             for val in vals:
                 if isinstance(val, dict):
+                    if not self.check_validity:
+                        val["check_validity"] = False
                     self.load(key, **val)
                 else:
                     self.load(key, val)
@@ -633,7 +655,7 @@ class MetadataStore(object):
         if binding is None:
             binding = BINDING_SOAP
         return self.service(entity_id, "pdp_descriptor",
-                             "authz_service", binding)
+                            "authz_service", binding)
 
     def assertion_id_request_service(self, entity_id, binding=None, typ=None):
         # AuthnAuthority + IDP + PDP + AttributeAuthority
@@ -642,7 +664,7 @@ class MetadataStore(object):
         if binding is None:
             binding = BINDING_SOAP
         return self.service(entity_id, "%s_descriptor" % typ,
-                             "assertion_id_request_service", binding)
+                            "assertion_id_request_service", binding)
 
     def single_logout_service(self, entity_id, binding=None, typ=None):
         # IDP + SP
@@ -651,35 +673,35 @@ class MetadataStore(object):
         if binding is None:
             binding = BINDING_HTTP_REDIRECT
         return self.service(entity_id, "%s_descriptor" % typ,
-                             "single_logout_service", binding)
+                            "single_logout_service", binding)
 
     def manage_name_id_service(self, entity_id, binding=None, typ=None):
         # IDP + SP
         if binding is None:
             binding = BINDING_HTTP_REDIRECT
         return self.service(entity_id, "%s_descriptor" % typ,
-                             "manage_name_id_service", binding)
+                            "manage_name_id_service", binding)
 
     def artifact_resolution_service(self, entity_id, binding=None, typ=None):
         # IDP + SP
         if binding is None:
             binding = BINDING_HTTP_REDIRECT
         return self.service(entity_id, "%s_descriptor" % typ,
-                             "artifact_resolution_service", binding)
+                            "artifact_resolution_service", binding)
 
     def assertion_consumer_service(self, entity_id, binding=None, _="spsso"):
         # SP
         if binding is None:
             binding = BINDING_HTTP_POST
         return self.service(entity_id, "spsso_descriptor",
-                             "assertion_consumer_service", binding)
+                            "assertion_consumer_service", binding)
 
     def attribute_consuming_service(self, entity_id, binding=None, _="spsso"):
         # SP
         if binding is None:
             binding = BINDING_HTTP_REDIRECT
         return self.service(entity_id, "spsso_descriptor",
-                             "attribute_consuming_service", binding)
+                            "attribute_consuming_service", binding)
 
     def discovery_response(self, entity_id, binding=None, _="spsso"):
         if binding is None:
@@ -863,7 +885,11 @@ class MetadataStore(object):
         for _md in self.metadata.values():
             for ent_id, ent_desc in _md.items():
                 if descriptor in ent_desc:
-                    res.append(ent_id)
+                    if ent_id in res:
+                        #print "duplicated entity_id: %s" % res
+                        pass
+                    else:
+                        res.append(ent_id)
         return res
 
     def service_providers(self):
