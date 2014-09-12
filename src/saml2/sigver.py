@@ -106,6 +106,11 @@ class CertificateError(SigverError):
     pass
 
 
+def read_file(*args, **kwargs):
+    with open(*args, **kwargs) as handler:
+        return handler.read()
+
+
 def rm_xmltag(statement):
     try:
         _t = statement.startswith(XMLTAG)
@@ -540,7 +545,7 @@ def pem_format(key):
 
 
 def import_rsa_key_from_file(filename):
-    return RSA.importKey(open(filename, 'r').read())
+    return RSA.importKey(read_file(filename, 'r'))
 
 
 def parse_xmlsec_output(output):
@@ -648,11 +653,13 @@ def read_cert_from_file(cert_file, cert_type):
     :param cert_type: The certificate type
     :return: A base64 encoded certificate as a string or the empty string
     """
+
+
     if not cert_file:
         return ""
 
     if cert_type == "pem":
-        line = open(cert_file).read().split("\n")
+        line = read_file(cert_file).split("\n")
         if line[0] == "-----BEGIN CERTIFICATE-----":
             line = line[1:]
         elif line[0] == "-----BEGIN PUBLIC KEY-----":
@@ -672,7 +679,7 @@ def read_cert_from_file(cert_file, cert_type):
         return "".join(line)
 
     if cert_type in ["der", "cer", "crt"]:
-        data = open(cert_file).read()
+        data = read_file(cert_file)
         return base64.b64encode(str(data))
 
 
