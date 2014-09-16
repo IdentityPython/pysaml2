@@ -130,14 +130,20 @@ class MetaData(object):
     def values(self):
         return self.entity.values()
 
+    def __len__(self):
+        return len(self.entity)
+
     def __contains__(self, item):
-        return item in self.entity
+        return item in self.entity.keys()
 
     def __getitem__(self, item):
         return self.entity[item]
 
     def __setitem__(self, key, value):
         self.entity[key] = value
+
+    def __delitem__(self, key):
+        del self.entity[key]
 
     def do_entity_descriptor(self, entity_descr):
         if self.check_validity:
@@ -913,7 +919,8 @@ class MetadataStore(object):
             res = EntitiesDescriptor()
             for _md in self.metadata.values():
                 try:
-                    res.entity_descriptor.extend(_md.entities_descr.entity_descriptor)
+                    res.entity_descriptor.extend(
+                        _md.entities_descr.entity_descriptor)
                 except AttributeError:
                     res.entity_descriptor.append(_md.entity_descr)
 

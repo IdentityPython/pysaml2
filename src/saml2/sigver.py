@@ -999,9 +999,15 @@ def security_context(conf, debug=None):
         return None
 
     if debug is None:
-        debug = conf.debug
+        try:
+            debug = conf.debug
+        except AttributeError:
+            pass
 
-    metadata = conf.metadata
+    try:
+        metadata = conf.metadata
+    except AttributeError:
+        metadata = None
 
     _only_md = conf.only_use_keys_in_metadata
     if _only_md is None:
