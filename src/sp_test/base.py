@@ -172,7 +172,7 @@ class Conversation():
                     except Exception as e:
                         ext = ""
                     self._logcontentpath = os.path.join(
-                        self.commandlineargs.logpath, "log",
+                        self.commandlineargs.logpath,
                         self.commandlineargs.oper)
                     if not os.path.exists(self._logcontentpath):
                         os.makedirs(self._logcontentpath)
