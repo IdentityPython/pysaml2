@@ -620,14 +620,14 @@ OPERATIONS = {
     'FL32': {
         "name": "Reject an IssueInstant far (24 hours) into the future",
         "sequence": [(Login, AuthnRequest,
-                      AuthnResponse_missing_AuthnStatement,
+                      AuthnResponse_future_24h_IssueInstant,
                       check.ErrorResponse)],
         "tests": {"pre": [], "mid": [], "post": []}
     },
     'FL33': {
         "name": "Reject an IssueInstant far (24 hours) into the past",
         "sequence": [(Login, AuthnRequest,
-                      AuthnResponse_missing_AuthnStatement,
+                      AuthnResponse_past_24h_IssueInstant,
                       check.ErrorResponse)],
         "tests": {"pre": [], "mid": [], "post": []}
     },
