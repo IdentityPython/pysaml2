@@ -1,7 +1,7 @@
 from saml2.pack import http_redirect_message
 from saml2.sigver import verify_redirect_signature
 from saml2.sigver import import_rsa_key_from_file
-from saml2.sigver import RSA_SHA1
+from saml2.sigver import SIG_RSA_SHA1
 from saml2.server import Server
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2.client import Saml2Client
@@ -32,7 +32,8 @@ def test():
         key = import_rsa_key_from_file(sp.sec.key_file)
 
     info = http_redirect_message(req, destination, relay_state="RS",
-                                 typ="SAMLRequest", sigalg=RSA_SHA1, key=key)
+                                 typ="SAMLRequest", sigalg=SIG_RSA_SHA1,
+                                 key=key)
 
     verified_ok = False
 

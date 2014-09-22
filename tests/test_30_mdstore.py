@@ -224,4 +224,4 @@ def test_metadata_file():
     assert len(mds.keys()) == 560
 
 if __name__ == "__main__":
-    test_metadata_file()
+    test_swami_1()

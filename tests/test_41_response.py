@@ -12,7 +12,7 @@ from saml2.sigver import SignatureError
 
 FALSE_ASSERT_SIGNED = "saml_false_signed.xml"
 
-TIMESLACK = 10000000  # Roughly +- 6 month
+TIMESLACK = 20000000  # Roughly +- 12 month
 
 
 def _eq(l1, l2):

@@ -24,7 +24,6 @@ def test_construct_0():
     assert url == "http://example.com/saml/disco?entityID=https%3A%2F%2Fexample.com%2Fsaml%2Fsp.xml"
 
 
-
 def test_construct_1():
     sp = Saml2Client(config_file=dotname("servera_conf"))
     url = sp.create_discovery_service_request("http://example.com/saml/disco",
@@ -38,7 +37,7 @@ def test_construct_deconstruct_request():
     url = sp.create_discovery_service_request(
         "http://example.com/saml/disco",
         "https://example.com/saml/sp.xml",
-        is_passive=True,
+        isPassive=True,
         returnIDParam="foo",
         return_url="https://example.com/saml/sp/disc")
 
@@ -55,7 +54,7 @@ def test_construct_deconstruct_response():
     sp = Saml2Client(config_file=dotname("servera_conf"))
     url = sp.create_discovery_service_request("http://example.com/saml/disco",
                                               "https://example.com/saml/sp.xml",
-                                              is_passive=True,
+                                              isPassive=True,
                                               returnIDParam="foo",
                                               return_url="https://example.com/saml/sp/disc")
     ds = DiscoveryServer(config_file=dotname("disco_conf"))
@@ -70,4 +69,4 @@ def test_construct_deconstruct_response():
 
 
 if __name__ == "__main__":
-    test_construct_deconstruct_response()
+    test_construct_deconstruct_request()
