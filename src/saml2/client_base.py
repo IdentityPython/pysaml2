@@ -727,6 +727,7 @@ class Base(Entity):
             the user agent.
         :return: A URL
         """
+
         args = {"entityID": entity_id}
         for key in ["policy", "returnIDParam"]:
             try:
