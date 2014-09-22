@@ -717,7 +717,7 @@ class MetadataStore(object):
                                            DiscoveryResponse.c_tag),
                                 binding)
 
-    def attribute_requirement(self, entity_id, index=0):
+    def attribute_requirement(self, entity_id, index=None):
         for _md in self.metadata.values():
             if entity_id in _md:
                 return _md.attribute_requirement(entity_id, index)
