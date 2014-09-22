@@ -1317,18 +1317,6 @@ def authn_request_from_string(xml_string):
     return saml2.create_class_from_xml_string(AuthnRequest, xml_string)
 
 
-class HttpParameters():
-    """GET or POST parameters for Redirecto or POST-SimpleSign bindings"""
-    signature = None
-    sigalg = None
-    # Relaystate and SAML message are stored elsewhere
-    def __init__(self, dict):
-        try:
-            self.signature = dict["Signature"][0]
-            self.sigalg = dict["SigAlg"][0]
-        except KeyError:
-            pass
-
 class StatusType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:protocol:StatusType element """
 
