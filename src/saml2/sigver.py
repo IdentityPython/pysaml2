@@ -1,19 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2009-2011 Umeå University
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#            http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
 """ Functions connected to signing and verifying.
 Based on the use of xmlsec1 binaries and not the python xmlsec module.
@@ -121,6 +108,11 @@ class BadSignature(SigverError):
 
 class CertificateError(SigverError):
     pass
+
+
+def read_file(*args, **kwargs):
+    with open(*args, **kwargs) as handler:
+        return handler.read()
 
 
 def rm_xmltag(statement):
@@ -557,7 +549,7 @@ def pem_format(key):
 
 
 def import_rsa_key_from_file(filename):
-    return RSA.importKey(open(filename, 'r').read())
+    return RSA.importKey(read_file(filename, 'r'))
 
 
 def parse_xmlsec_output(output):
@@ -644,14 +636,11 @@ def verify_redirect_signature(saml_msg, cert):
             args = saml_msg.copy()
             del args["Signature"]  # everything but the signature
             string = "&".join(
-                [urllib.urlencode({k: args[k][0]}) for k in _order])
+                [urllib.urlencode({k: args[k][0]}) for k in _order if k in args])
             _key = extract_rsa_key_from_x509_cert(pem_format(cert))
             _sign = base64.b64decode(saml_msg["Signature"][0])
-            try:
-                signer.verify(string, _sign, _key)
-                return True
-            except BadSignature:
-                return False
+
+            return bool(signer.verify(string, _sign, _key))
 
 
 LOG_LINE = 60 * "=" + "\n%s\n" + 60 * "-" + "\n%s" + 60 * "="
@@ -669,11 +658,13 @@ def read_cert_from_file(cert_file, cert_type):
     :param cert_type: The certificate type
     :return: A base64 encoded certificate as a string or the empty string
     """
+
+
     if not cert_file:
         return ""
 
     if cert_type == "pem":
-        line = open(cert_file).read().split("\n")
+        line = read_file(cert_file).split("\n")
         if line[0] == "-----BEGIN CERTIFICATE-----":
             line = line[1:]
         elif line[0] == "-----BEGIN PUBLIC KEY-----":
@@ -693,7 +684,7 @@ def read_cert_from_file(cert_file, cert_type):
         return "".join(line)
 
     if cert_type in ["der", "cer", "crt"]:
-        data = open(cert_file).read()
+        data = read_file(cert_file)
         return base64.b64encode(str(data))
 
 
@@ -1013,9 +1004,15 @@ def security_context(conf, debug=None):
         return None
 
     if debug is None:
-        debug = conf.debug
+        try:
+            debug = conf.debug
+        except AttributeError:
+            pass
 
-    metadata = conf.metadata
+    try:
+        metadata = conf.metadata
+    except AttributeError:
+        metadata = None
 
     _only_md = conf.only_use_keys_in_metadata
     if _only_md is None:
@@ -1063,13 +1060,19 @@ def encrypt_cert_from_item(item):
             certs = cert_from_instance(item)
             if len(certs) > 0:
                 _encrypt_cert = certs[0]
-        if _encrypt_cert is not None:
-            if _encrypt_cert.find("-----BEGIN CERTIFICATE-----\n") == -1:
-                _encrypt_cert = "-----BEGIN CERTIFICATE-----\n" + _encrypt_cert
-            if _encrypt_cert.find("-----END CERTIFICATE-----\n") == -1:
-                _encrypt_cert = _encrypt_cert + "-----END CERTIFICATE-----\n"
     except Exception:
-        return None
+        pass
+
+    if _encrypt_cert is None:
+        certs = cert_from_instance(item)
+        if len(certs) > 0:
+            _encrypt_cert = certs[0]
+
+    if _encrypt_cert is not None:
+        if _encrypt_cert.find("-----BEGIN CERTIFICATE-----\n") == -1:
+            _encrypt_cert = "-----BEGIN CERTIFICATE-----\n" + _encrypt_cert
+        if _encrypt_cert.find("\n-----END CERTIFICATE-----") == -1:
+            _encrypt_cert = _encrypt_cert + "\n-----END CERTIFICATE-----"
     return _encrypt_cert
 
 

@@ -1,19 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2009-2011 Umeå University
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#            http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
 """Contains classes and functions that a SAML2.0 Service Provider (SP) may use
 to conclude its tasks.
@@ -191,7 +178,8 @@ class Base(Entity):
         return ava
 
     #noinspection PyUnusedLocal
-    def is_session_valid(self, _session_id):
+    @staticmethod
+    def is_session_valid(_session_id):
         """ Place holder. Supposed to check if the session is still valid.
         """
         return True
@@ -399,7 +387,7 @@ class Base(Entity):
         return self._message(AuthzDecisionQuery, destination, message_id,
                              consent, extensions, sign, action=action,
                              evidence=evidence, resource=resource,
-                             subject=subject)
+                             subject=subject, **kwargs)
 
     def create_authz_decision_query_using_assertion(self, destination,
                                                     assertion, action=None,
@@ -436,7 +424,8 @@ class Base(Entity):
             resource, subject, message_id=message_id, consent=consent,
             extensions=extensions, sign=sign)
 
-    def create_assertion_id_request(self, assertion_id_refs, **kwargs):
+    @staticmethod
+    def create_assertion_id_request(assertion_id_refs, **kwargs):
         """
 
         :param assertion_id_refs:
@@ -534,7 +523,7 @@ class Base(Entity):
                 "entity_id": self.config.entityid,
                 "attribute_converters": self.config.attribute_converters,
                 "allow_unknown_attributes":
-                    self.config.allow_unknown_attributes,
+                self.config.allow_unknown_attributes,
             }
             try:
                 resp = self._parse_response(xmlstr, AuthnResponse,

@@ -47,6 +47,10 @@ class UnknownPrincipal(SamlException):
     pass
 
 
+class UnknownSystemEntity(SamlException):
+    pass
+
+
 class Unsupported(SamlException):
     pass
 

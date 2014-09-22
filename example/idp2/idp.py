@@ -51,6 +51,7 @@ from mako.lookup import TemplateLookup
 logger = logging.getLogger("saml2.idp")
 logger.setLevel(logging.WARNING)
 
+
 class Cache(object):
     def __init__(self):
         self.user2uid = {}
@@ -879,6 +880,7 @@ def metadata(environ, start_response):
         logger.error("An error occured while creating metadata:" + ex.message)
         return not_found(environ, start_response)
 
+
 def staticfile(environ, start_response):
     try:
         path = args.path
@@ -892,6 +894,7 @@ def staticfile(environ, start_response):
     except Exception as ex:
         logger.error("An error occured while creating metadata:" + ex.message)
         return not_found(environ, start_response)
+
 
 def application(environ, start_response):
     """

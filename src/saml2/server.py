@@ -1,19 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2009-2011 Umeå University
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#            http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
 """Contains classes and functions that a SAML2.0 Identity provider (IdP) 
 or attribute authority (AA) may use to conclude its tasks.
@@ -187,6 +174,8 @@ class Server(Entity):
 
         :param sp_entity_id: The entity id of the SP
         :param index: which of the attribute consumer services its all about
+            if index == None then all attribute consumer services are clumped
+            together.
         :return: 2-tuple, list of required and list of optional attributes
         """
         return self.metadata.attribute_requirement(sp_entity_id, index)

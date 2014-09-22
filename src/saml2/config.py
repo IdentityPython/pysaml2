@@ -71,7 +71,8 @@ COMMON_ARGS = [
     "tmp_cert_file",
     "tmp_key_file",
     "validate_certificate",
-    "extensions"
+    "extensions",
+    "allow_unknown_attributes"
 ]
 
 SP_ARGS = [
@@ -90,7 +91,6 @@ SP_ARGS = [
     "allow_unsolicited",
     "ecp",
     "name_id_format",
-    "allow_unknown_attributes"
 ]
 
 AA_IDP_ARGS = [
@@ -216,6 +216,7 @@ class Config(object):
         self.crypto_backend = 'xmlsec1'
         self.scope = ""
         self.allow_unknown_attributes = False
+        self.allow_unsolicited = False
         self.extension_schema = {}
         self.cert_handler_extra_class = None
         self.verify_encrypt_cert = None
@@ -400,9 +401,9 @@ class Config(object):
 
     def endpoint(self, service, binding=None, context=None):
         """ Goes through the list of endpoint specifications for the
-        given type of service and returnes the first endpoint that matches
-        the given binding. If no binding is given any endpoint for that
-        service will be returned.
+        given type of service and returns a list of endpoint that matches
+        the given binding. If no binding is given all endpoints available for
+        that service will be returned.
 
         :param service: The service the endpoint should support
         :param binding: The expected binding

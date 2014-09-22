@@ -26,6 +26,15 @@ class Unknown(SAMLError):
 
 
 def code(item):
+    """
+    Turn a NameID class instance into a quoted string of comma separated
+    attribute,value pairs. The attribute name is replaced with a digits.
+    Depends on knowledge on the specific order of the attributes for that
+    class that is used.
+
+    :param item: The class instance
+    :return: A quoted string
+    """
     _res = []
     i = 0
     for attr in ATTR:
@@ -37,6 +46,10 @@ def code(item):
 
 
 def decode(txt):
+    """Turns a coded string by code() into a NameID class instance.
+
+    :param txt: The coded string
+    """
     _nid = NameID()
     for part in txt.split(","):
         if part.find("=") != -1:

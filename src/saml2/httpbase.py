@@ -177,7 +177,7 @@ class HTTPBase(object):
                             std_attr[attr] = morsel[attr]
                 elif attr == "max-age":
                     if morsel["max-age"]:
-                        std_attr["expires"] = _since_epoch(morsel["max-age"])
+                        std_attr["expires"] = time.time() + int(morsel["max-age"])
 
             for att, item in PAIRS.items():
                 if std_attr[att]:

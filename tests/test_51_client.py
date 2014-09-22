@@ -593,6 +593,6 @@ class TestClientWithDummy():
 #     tc.test_response()
 
 if __name__ == "__main__":
-    tc = TestClient()
+    tc = TestClientWithDummy()
     tc.setup_class()
-    tc.test_sign_then_encrypt_assertion2()
+    tc.test_do_attribute_query()
