@@ -11,7 +11,7 @@ from saml2 import BINDING_HTTP_REDIRECT, class_name
 from saml2 import BINDING_HTTP_POST
 from saml2.request import SERVICE2REQUEST
 from saml2.sigver import signed_instance_factory, pre_signature_part
-from saml2.samlp import HttpParameters
+from saml2.httputil import HttpParameters
 
 from saml2test import CheckError, FatalError
 from saml2test.check import Check
