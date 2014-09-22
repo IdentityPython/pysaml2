@@ -1,6 +1,6 @@
 EDUCOURSE_OID = 'urn:oid:1.3.6.1.4.1.5923.1.6.1.'
 EDUPERSON_OID = 'urn:oid:1.3.6.1.4.1.5923.1.1.1.'
-LDAPGVAT_OID = 'urn:oid:1.2.40.0.10.2.1.1.'  # ldap.gv.at definitions as specified in http://www.ref.gv.at/AG-IZ-PVP2-Version-2-1-0-2.2754.0.html
+LDAPGVAT_OID = 'urn:oid:1.2.40.0.10.2.1.1.' # ldap.gv.at definitions as specified in http://www.ref.gv.at/AG-IZ-PVP2-Version-2-1-0-2.2754.0.html
 UCL_DIR_PILOT = 'urn:oid:0.9.2342.19200300.100.1.'
 X500ATTR_OID = 'urn:oid:2.5.4.'
 LDAPGVAT_UCL_DIR_PILOT = UCL_DIR_PILOT

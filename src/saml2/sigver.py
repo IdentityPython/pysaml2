@@ -42,25 +42,29 @@ from saml2.time_util import str_to_time
 
 from tempfile import NamedTemporaryFile
 from subprocess import Popen, PIPE
+
+from xmldsig import digest_default
+from xmldsig import sig_default
+from xmldsig import SIG_RSA_SHA1
+from xmldsig import SIG_RSA_SHA224
+from xmldsig import SIG_RSA_SHA256
+from xmldsig import SIG_RSA_SHA384
+from xmldsig import SIG_RSA_SHA512
 from xmlenc import EncryptionMethod
 from xmlenc import EncryptedKey
 from xmlenc import CipherData
 from xmlenc import CipherValue
 from xmlenc import EncryptedData
 
+from Crypto.Hash import SHA
+from Crypto.Hash import SHA224
 from Crypto.Hash import SHA256
 from Crypto.Hash import SHA384
 from Crypto.Hash import SHA512
-from Crypto.Hash import SHA
 
 logger = logging.getLogger(__name__)
 
 SIG = "{%s#}%s" % (ds.NAMESPACE, "Signature")
-
-RSA_SHA1 = "http://www.w3.org/2000/09/xmldsig#rsa-sha1"
-RSA_SHA256 = "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"
-RSA_SHA384 = "http://www.w3.org/2001/04/xmldsig-more#rsa-sha384"
-RSA_SHA512 = "http://www.w3.org/2001/04/xmldsig-more#rsa-sha512"
 
 RSA_1_5 = "http://www.w3.org/2001/04/xmlenc#rsa-1_5"
 TRIPLE_DES_CBC = "http://www.w3.org/2001/04/xmlenc#tripledes-cbc"
@@ -595,10 +599,11 @@ class RSASigner(Signer):
 
 
 SIGNER_ALGS = {
-    RSA_SHA1: RSASigner(SHA),
-    RSA_SHA256: RSASigner(SHA256),
-    RSA_SHA384: RSASigner(SHA384),
-    RSA_SHA512: RSASigner(SHA512),
+    SIG_RSA_SHA1: RSASigner(SHA),
+    SIG_RSA_SHA224: RSASigner(SHA224),
+    SIG_RSA_SHA256: RSASigner(SHA256),
+    SIG_RSA_SHA384: RSASigner(SHA384),
+    SIG_RSA_SHA512: RSASigner(SHA512),
 }
 
 REQ_ORDER = ["SAMLRequest", "RelayState", "SigAlg"]
@@ -619,7 +624,7 @@ def verify_redirect_signature(saml_msg, cert):
     except KeyError:
         raise Unsupported("Signature algorithm: %s" % saml_msg["SigAlg"])
     else:
-        if saml_msg["SigAlg"][0] == RSA_SHA1:
+        if saml_msg["SigAlg"][0] == SIG_RSA_SHA1:
             if "SAMLRequest" in saml_msg:
                 _order = REQ_ORDER
             elif "SAMLResponse" in saml_msg:
@@ -1682,7 +1687,8 @@ class SecurityContext(object):
 # ===========================================================================
 
 
-def pre_signature_part(ident, public_key=None, identifier=None):
+def pre_signature_part(ident, public_key=None, identifier=None,
+                       digest_alg=None, sign_alg=None):
     """
     If an assertion is to be signed the signature part has to be preset
     with which algorithms to be used, this function returns such a
@@ -1695,13 +1701,17 @@ def pre_signature_part(ident, public_key=None, identifier=None):
     :return: A preset signature part
     """
 
-    signature_method = ds.SignatureMethod(algorithm=ds.SIG_RSA_SHA1)
+    if not digest_alg:
+        digest_alg=ds.digest_default
+    if not sign_alg:
+        sign_alg=ds.sig_default
+    signature_method = ds.SignatureMethod(algorithm=sign_alg)
     canonicalization_method = ds.CanonicalizationMethod(
         algorithm=ds.ALG_EXC_C14N)
     trans0 = ds.Transform(algorithm=ds.TRANSFORM_ENVELOPED)
     trans1 = ds.Transform(algorithm=ds.ALG_EXC_C14N)
     transforms = ds.Transforms(transform=[trans0, trans1])
-    digest_method = ds.DigestMethod(algorithm=ds.DIGEST_SHA1)
+    digest_method = ds.DigestMethod(algorithm=digest_alg)
 
     reference = ds.Reference(uri="#%s" % ident, digest_value=ds.DigestValue(),
                              transforms=transforms, digest_method=digest_method)
