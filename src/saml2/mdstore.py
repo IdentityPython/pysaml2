@@ -391,6 +391,45 @@ class MetaData(object):
 
         return True
 
+    def certs(self, entity_id, descriptor, use="signing"):
+        ent = self.__getitem__(entity_id)
+        if descriptor == "any":
+            res = []
+            for descr in ["spsso", "idpsso", "role", "authn_authority",
+                          "attribute_authority", "pdp"]:
+                try:
+                    srvs = ent["%s_descriptor" % descr]
+                except KeyError:
+                    continue
+
+                for srv in srvs:
+                    for key in srv["key_descriptor"]:
+                        if "use" in key and key["use"] == use:
+                            for dat in key["key_info"]["x509_data"]:
+                                cert = repack_cert(
+                                    dat["x509_certificate"]["text"])
+                                if cert not in res:
+                                    res.append(cert)
+                        elif not "use" in key:
+                            for dat in key["key_info"]["x509_data"]:
+                                cert = repack_cert(
+                                    dat["x509_certificate"]["text"])
+                                if cert not in res:
+                                    res.append(cert)
+        else:
+            srvs = ent["%s_descriptor" % descriptor]
+
+            res = []
+            for srv in srvs:
+                for key in srv["key_descriptor"]:
+                    if "use" in key and key["use"] == use:
+                        for dat in key["key_info"]["x509_data"]:
+                            res.append(dat["x509_certificate"]["text"])
+                    elif not "use" in key:
+                        for dat in key["key_info"]["x509_data"]:
+                            res.append(dat["x509_certificate"]["text"])
+        return res
+
 
 class MetaDataFile(MetaData):
     """
@@ -557,6 +596,7 @@ class MetaDataMDX(MetaData):
                                   md.EntitiesDescriptor.c_tag)
 
                 _txt = response.text.encode("utf-8")
+
                 if self.cert:
                     if self.security.verify_signature(_txt,
                                                       node_name=node_name,
@@ -569,6 +609,7 @@ class MetaDataMDX(MetaData):
             else:
                 logger.info("Response status: %s" % response.status_code)
             raise KeyError
+
 
 
 class MetadataStore(object):
