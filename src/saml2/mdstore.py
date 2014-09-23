@@ -3,6 +3,7 @@ import sys
 import json
 
 from hashlib import sha1
+from urllib import urlencode, quote_plus
 from saml2.httpbase import HTTPBase
 from saml2.extension.idpdisc import BINDING_DISCO
 from saml2.extension.idpdisc import DiscoveryResponse
@@ -523,6 +524,51 @@ class MetaDataMD(MetaData):
     def load(self):
         for key, item in json.loads(open(self.filename).read()):
             self.entity[key] = item
+
+
+class MetaDataMDX(MetaData):
+    def __init__(self, onts, attrc, url, security, cert, http, **kwargs):
+        """
+        :params onts:
+        :params attrc:
+        :params url:
+        :params security: SecurityContext()
+        :params cert:
+        :params http:
+        """
+        MetaData.__init__(self, onts, attrc, **kwargs)
+        self.url = url
+        self.security = security
+        self.cert = cert
+        self.http = http
+
+    def load(self):
+        pass
+
+    def __getitem__(self, item):
+        try:
+            return self.entity[item]
+        except KeyError:
+            mdx_url = "%s/entities/%s" % (self.url, quote_plus(item))
+            response = self.http.send(mdx_url)
+            if response.status_code == 200:
+                node_name = self.node_name \
+                    or "%s:%s" % (md.EntitiesDescriptor.c_namespace,
+                                  md.EntitiesDescriptor.c_tag)
+
+                _txt = response.text.encode("utf-8")
+                if self.cert:
+                    if self.security.verify_signature(_txt,
+                                                      node_name=node_name,
+                                                      cert_file=self.cert):
+                        self.parse(_txt)
+                        return self.entity[item]
+                else:
+                    self.parse(_txt)
+                    return self.entity[item]
+            else:
+                logger.info("Response status: %s" % response.status_code)
+            raise KeyError
 
 
 class MetadataStore(object):
