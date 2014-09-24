@@ -113,12 +113,211 @@ def repack_cert(cert):
 
 
 class MetaData(object):
-    def __init__(self, onts, attrc, metadata="", node_name=None,
-                 check_validity=True, security=None, **kwargs):
+    def __init__(self, onts, attrc, metadata='', node_name=None, check_validity=True,
+                 security=None, **kwargs):
         self.onts = onts
         self.attrc = attrc
-        self.entity = {}
         self.metadata = metadata
+
+    def items(self):
+        '''
+        Returns list of items contained in the storage
+        '''
+        raise NotImplementedError
+
+    def keys(self):
+        '''
+        Returns keys (identifiers) of items in storage
+        '''
+        raise NotImplementedError
+
+    def values(self):
+        '''
+        Returns values of items in storage
+        '''
+        raise NotImplementedError
+
+    def __len__(self):
+        '''
+        Returns number of stored items
+        '''
+        raise NotImplementedError
+
+    def __contains__(self, item):
+        '''
+        Returns True if the storage contains item
+        '''
+        raise NotImplementedError
+
+    def __getitem__(self, item):
+        '''
+        Returns the item specified by the key
+        '''
+        raise NotImplementedError
+
+    def __setitem__(self, key, value):
+        '''
+        Sets a key to a value
+        '''
+        raise NotImplementedError
+
+    def __delitem__(self, key):
+        '''
+        Removes key from storage
+        '''
+        raise NotImplementedError
+
+    def do_entity_descriptor(self, entity_descr):
+        '''
+        #FIXME - Add description
+        '''
+        raise NotImplementedError
+
+    def parse(self, xmlstr):
+        '''
+        #FIXME - Add description
+        '''
+        raise NotImplementedError
+
+    def load(self):
+        '''
+        Loads the metadata
+        '''
+        self.parse(self.metadata)
+
+    def service(self, entity_id, typ, service, binding=None):
+        """ Get me all services with a specified
+        entity ID and type, that supports the specified version of binding.
+
+        :param entity_id: The EntityId
+        :param typ: Type of service (idp, attribute_authority, ...)
+        :param service: which service that is sought for
+        :param binding: A binding identifier
+        :return: list of service descriptions.
+            Or if no binding was specified a list of 2-tuples (binding, srv)
+        """
+        raise NotImplementedError
+
+    def ext_service(self, entity_id, typ, service, binding):
+        try:
+            srvs = self[entity_id][typ]
+        except KeyError:
+            return None
+
+        if not srvs:
+            return srvs
+
+        res = []
+        for srv in srvs:
+            if "extensions" in srv:
+                for elem in srv["extensions"]["extension_elements"]:
+                    if elem["__class__"] == service:
+                        if elem["binding"] == binding:
+                            res.append(elem)
+
+        return res
+
+    def any(self, typ, service, binding=None):
+        """
+        Return any entity that matches the specification
+
+        :param typ:
+        :param service:
+        :param binding:
+        :return:
+        """
+        res = {}
+        for ent in self.keys():
+            bind = self.service(ent, typ, service, binding)
+            if bind:
+                res[ent] = bind
+
+        return res
+
+    def bindings(self, entity_id, typ, service):
+        """
+        Get me all the bindings that are registered for a service entity
+
+        :param entity_id:
+        :param service:
+        :return:
+        """
+        return self.service(entity_id, typ, service)
+
+    def attribute_requirement(self, entity_id, index=None):
+        """ Returns what attributes the SP requires and which are optional
+        if any such demands are registered in the Metadata.
+
+        :param entity_id: The entity id of the SP
+        :param index: which of the attribute consumer services its all about
+            if index=None then return all attributes expected by all
+            attribute_consuming_services.
+        :return: 2-tuple, list of required and list of optional attributes
+        """
+        raise NotImplementedError
+
+    def dumps(self):
+        return json.dumps(self.items(), indent=2)
+
+    def with_descriptor(self, descriptor):
+        '''
+        Returns any entities with the specified descriptor
+        '''
+        res = {}
+        desc = "%s_descriptor" % descriptor
+        for eid, ent in self.items():
+            if desc in ent:
+                res[eid] = ent
+        return res
+
+    def __str__(self):
+        return "%s" % self.items()
+
+    def construct_source_id(self):
+        raise NotImplementedError
+
+    def entity_categories(self, entity_id):
+        res = []
+        if "extensions" in self[entity_id]:
+            for elem in self[entity_id]["extensions"]["extension_elements"]:
+                if elem["__class__"] == ENTITYATTRIBUTES:
+                    for attr in elem["attribute"]:
+                        res.append(attr["text"])
+
+        return res
+
+    def __eq__(self, other):
+        try:
+            assert isinstance(other, MetaData)
+        except AssertionError:
+            return False
+
+        if len(self.entity) != len(other.entity):
+            return False
+
+        if set(self.entity.keys()) != set(other.entity.keys()):
+            return False
+
+        for key, item in self.entity.items():
+            try:
+                assert item == other[key]
+            except AssertionError:
+                return False
+
+        return True
+
+    def certs(self, entity_id, descriptor, use="signing"):
+        '''
+        Returns certificates for the given Entity
+        '''
+        raise NotImplementedError
+
+
+class InMemoryMetaData(MetaData):
+    def __init__(self, onts, attrc, metadata="", node_name=None,
+                 check_validity=True, security=None, **kwargs):
+        super(InMemoryMetaData, self).__init__(onts, attrc, metadata=metadata)
+        self.entity = {}
         self.security = security
         self.node_name = node_name
         self.entities_descr = None
@@ -221,9 +420,6 @@ class MetaData(object):
             for entity_descr in self.entities_descr.entity_descriptor:
                 self.do_entity_descriptor(entity_descr)
 
-    def load(self):
-        self.parse(self.metadata)
-
     def service(self, entity_id, typ, service, binding=None):
         """ Get me all services with a specified
         entity ID and type, that supports the specified version of binding.
@@ -235,7 +431,6 @@ class MetaData(object):
         :return: list of service descriptions.
             Or if no binding was specified a list of 2-tuples (binding, srv)
         """
-
         logger.debug("service(%s, %s, %s, %s)" % (entity_id, typ, service,
                                                   binding))
         try:
@@ -266,53 +461,6 @@ class MetaData(object):
         logger.debug("service => %s" % res)
         return res
 
-    def ext_service(self, entity_id, typ, service, binding):
-        try:
-            srvs = self[entity_id][typ]
-        except KeyError:
-            return None
-
-        if not srvs:
-            return srvs
-
-        res = []
-        for srv in srvs:
-            if "extensions" in srv:
-                for elem in srv["extensions"]["extension_elements"]:
-                    if elem["__class__"] == service:
-                        if elem["binding"] == binding:
-                            res.append(elem)
-
-        return res
-
-    def any(self, typ, service, binding=None):
-        """
-        Return any entity that matches the specification
-
-        :param typ:
-        :param service:
-        :param binding:
-        :return:
-        """
-        res = {}
-        for ent in self.keys():
-            bind = self.service(ent, typ, service, binding)
-            if bind:
-                res[ent] = bind
-
-        return res
-
-    def bindings(self, entity_id, typ, service):
-        """
-        Get me all the bindings that are registered for a service entity
-
-        :param entity_id:
-        :param service:
-        :return:
-        """
-
-        return self.service(entity_id, typ, service)
-
     def attribute_requirement(self, entity_id, index=None):
         """ Returns what attributes the SP requires and which are optional
         if any such demands are registered in the Metadata.
@@ -323,7 +471,6 @@ class MetaData(object):
             attribute_consuming_services.
         :return: 2-tuple, list of required and list of optional attributes
         """
-
         res = {"required": [], "optional": []}
 
         try:
@@ -335,20 +482,6 @@ class MetaData(object):
             return None
 
         return res
-
-    def dumps(self):
-        return json.dumps(self.items(), indent=2)
-
-    def with_descriptor(self, descriptor):
-        res = {}
-        desc = "%s_descriptor" % descriptor
-        for eid, ent in self.items():
-            if desc in ent:
-                res[eid] = ent
-        return res
-
-    def __str__(self):
-        return "%s" % self.items()
 
     def construct_source_id(self):
         res = {}
@@ -363,36 +496,6 @@ class MetaData(object):
                     pass
 
         return res
-
-    def entity_categories(self, entity_id):
-        res = []
-        if "extensions" in self[entity_id]:
-            for elem in self[entity_id]["extensions"]["extension_elements"]:
-                if elem["__class__"] == ENTITYATTRIBUTES:
-                    for attr in elem["attribute"]:
-                        res.append(attr["text"])
-
-        return res
-
-    def __eq__(self, other):
-        try:
-            assert isinstance(other, MetaData)
-        except AssertionError:
-            return False
-
-        if len(self.entity) != len(other.entity):
-            return False
-
-        if set(self.entity.keys()) != set(other.entity.keys()):
-            return False
-
-        for key, item in self.entity.items():
-            try:
-                assert item == other[key]
-            except AssertionError:
-                return False
-
-        return True
 
     def certs(self, entity_id, descriptor, use="signing"):
         ent = self.__getitem__(entity_id)
@@ -434,13 +537,15 @@ class MetaData(object):
         return res
 
 
-class MetaDataFile(MetaData):
+class MetaDataFile(InMemoryMetaData):
     """
     Handles Metadata file on the same machine. The format of the file is
     the SAML Metadata format.
     """
-    def __init__(self, onts, attrc, filename, cert=None, **kwargs):
-        MetaData.__init__(self, onts, attrc, **kwargs)
+    def __init__(self, onts, attrc, filename=None, cert=None, **kwargs):
+        super(MetaDataFile, self).__init__(onts, attrc, **kwargs)
+        if not file:
+            raise SAMLError('No file specified.')
         self.filename = filename
         self.cert = cert
 
@@ -471,7 +576,7 @@ class MetaDataLoader(MetaDataFile):
     """
     def __init__(self, onts, attrc, loader_callable, cert=None,
                  security=None, **kwargs):
-        MetaData.__init__(self, onts, attrc, **kwargs)
+        super(MetaDataLoader, self).__init__(onts, attrc, **kwargs)
         self.metadata_provider_callable = self.get_metadata_loader(
             loader_callable)
         self.cert = cert
@@ -507,25 +612,32 @@ class MetaDataLoader(MetaDataFile):
         return self.metadata_provider_callable()
 
 
-class MetaDataExtern(MetaData):
+class MetaDataExtern(InMemoryMetaData):
     """
     Class that handles metadata store somewhere on the net.
     Accessible but HTTP GET.
     """
 
-    def __init__(self, onts, attrc, url, security, cert, http, **kwargs):
+    def __init__(self, onts, attrc, url=None, security=None, cert=None, http=None, **kwargs):
         """
         :params onts:
         :params attrc:
-        :params url:
+        :params url: Location of the metadata
         :params security: SecurityContext()
-        :params cert:
+        :params cert: CertificMDloaderate used to sign the metadata
         :params http:
         """
-        MetaData.__init__(self, onts, attrc, **kwargs)
-        self.url = url
+        super(MetaDataExtern, self).__init__(onts, attrc, **kwargs)
+        if not url:
+            raise SAMLError('URL not specified.')
+        else:
+            self.url = url
+        if not cert:
+            raise SAMLError('No certificate specified.')
+        else:
+            self.cert = cert
+
         self.security = security
-        self.cert = cert
         self.http = http
 
     def load(self):
@@ -554,13 +666,13 @@ class MetaDataExtern(MetaData):
         return False
 
 
-class MetaDataMD(MetaData):
+class MetaDataMD(InMemoryMetaData):
     """
     Handles locally stored metadata, the file format is the text representation
     of the Python representation of the metadata.
     """
     def __init__(self, onts, attrc, filename, **kwargs):
-        MetaData.__init__(self, onts, attrc, **kwargs)
+        super(MetaDataMD, self).__init__(onts, attrc, **kwargs)
         self.filename = filename
 
     def load(self):
@@ -571,7 +683,7 @@ class MetaDataMD(MetaData):
 SAML_METADATA_CONTENT_TYPE = 'application/samlmetadata+xml'
 
 
-class MetaDataMDX(MetaData):
+class MetaDataMDX(InMemoryMetaData):
     """ Uses the md protocol to fetch entity information
     """
     def __init__(self, entity_transform, onts, attrc, url, security, cert,
@@ -587,7 +699,7 @@ class MetaDataMDX(MetaData):
         :params cert:
         :params http:
         """
-        MetaData.__init__(self, onts, attrc, **kwargs)
+        super(MetaDataMDX, self).__init__(onts, attrc, **kwargs)
         self.url = url
         self.security = security
         self.cert = cert
@@ -676,7 +788,6 @@ class MetadataStore(object):
                     _args[_key] = kwargs[_key]
                 except KeyError:
                     pass
-
             _md = MetaDataExtern(self.onts, self.attrc,
                                  kwargs["url"], self.security,
                                  kwargs["cert"], self.http, **_args)
@@ -688,19 +799,40 @@ class MetadataStore(object):
             _md = MetaDataLoader(self.onts, self.attrc, args[0])
         else:
             raise SAMLError("Unknown metadata type '%s'" % typ)
-
         _md.load()
         self.metadata[key] = _md
 
     def imp(self, spec):
-        for key, vals in spec.items():
-            for val in vals:
-                if isinstance(val, dict):
-                    if not self.check_validity:
-                        val["check_validity"] = False
-                    self.load(key, **val)
-                else:
-                    self.load(key, val)
+        for item in spec:
+            try:
+                key = item['class']
+            except (KeyError, AttributeError):
+                raise SAMLError("Misconfiguration in metadata %s" % item)
+            mod, clas = key.rsplit('.', 1)
+            try:
+                mod = import_module(mod)
+                MDloader = getattr(mod, clas)
+            except (ImportError, AttributeError):
+                raise SAMLError("Unknown metadata loader %s" % key)
+
+            # Separately handle MDExtern
+            if MDloader == MetaDataExtern:
+                item['http'] = self.http
+                item['security'] = self.security
+
+            for key in item['metadata']:
+                # Separately handle MetaDataFile and directory
+                if MDloader == MetaDataFile and os.path.isdir(key[0]):
+                    files = [f for f in listdir(key[0]) if isfile(join(key[0], f))]
+                    for fil in files:
+                        _fil = join(key[0], fil)
+                        _md = MetaDataFile(self.onts, self.attrc, _fil)
+                        _md.load()
+                        self.metadata[_fil] = _md
+                    return
+                _md = MDloader(self.onts, self.attrc, *key)
+                _md.load()
+                self.metadata[key[0]] = _md
 
     def service(self, entity_id, typ, service, binding=None):
         known_entity = False
