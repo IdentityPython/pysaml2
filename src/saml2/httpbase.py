@@ -106,11 +106,11 @@ class HTTPBase(object):
                 self.request_args["verify"] = ca_bundle
             if key_file:
                 self.request_args["cert"] = (cert_file, key_file)
-        
+
         self.sec = None
         self.user = None
         self.passwd = None
-        
+
     def cookies(self, url):
         """
         Return cookies that are matching the path and are still valid

@@ -6,7 +6,7 @@ from paste.httpheaders import REQUEST_METHOD
 from paste.httpheaders import CONTENT_TYPE
 from paste.httpheaders import USER_AGENT
 
-import re 
+import re
 
 _DAV_METHODS = (
     'OPTIONS',
@@ -74,9 +74,9 @@ class MyChallengeDecider:
                     environ['samlsp.logout'] = True
                     return True
 
-            # If the user is already authent, whatever happens(except logout), 
+            # If the user is already authent, whatever happens(except logout),
             #   don't make a challenge
-            if environ.has_key('repoze.who.identity'): 
+            if environ.has_key('repoze.who.identity'):
                 return False
 
             # require a challenge for login

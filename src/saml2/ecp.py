@@ -100,7 +100,7 @@ def ecp_auth_request(cls, entityid=None, relay_state="", sign=False):
     # ----------------------------------------
 
     logger.info("entityid: %s, binding: %s" % (entityid, BINDING_SOAP))
-        
+
     location = cls._sso_location(entityid, binding=BINDING_SOAP)
     req_id, authn_req = cls.create_authn_request(
         location, binding=BINDING_PAOS, service_url_binding=BINDING_PAOS)
@@ -134,7 +134,7 @@ def handle_ecp_authn_response(cls, soap_message, outstanding=None):
     cls.users.add_information_about_person(response.session_info())
 
     return response, _relay_state
-        
+
 
 def ecp_response(target_url, response):
 
@@ -168,7 +168,7 @@ class ECPServer(Server):
 
     def parse_ecp_authn_query(self):
         pass
-    
+
     def ecp_response(self):
 
         # ----------------------------------------

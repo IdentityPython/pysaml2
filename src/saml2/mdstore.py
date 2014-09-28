@@ -121,7 +121,7 @@ class MetaData(object):
         self.entities_descr = None
         self.entity_descr = None
         self.check_validity = check_validity
-        
+
     def items(self):
         return self.entity.items()
 
