@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 
-"""Contains classes and functions that a SAML2.0 Identity provider (IdP) 
+"""Contains classes and functions that a SAML2.0 Identity provider (IdP)
 or attribute authority (AA) may use to conclude its tasks.
 """
 import logging
@@ -100,8 +100,8 @@ class Server(Entity):
         raise NotImplementedError("No such storage type implemented")
 
     def init_config(self, stype="idp"):
-        """ Remaining init of the server configuration 
-        
+        """ Remaining init of the server configuration
+
         :param stype: The type of Server ("idp"/"aa")
         """
         if stype == "aa":
@@ -201,7 +201,7 @@ class Server(Entity):
     # -------------------------------------------------------------------------
     def parse_authn_request(self, enc_request, binding=BINDING_HTTP_REDIRECT):
         """Parse a Authentication Request
-        
+
         :param enc_request: The request in its transport format
         :param binding: Which binding that was used to transport the message
             to this entity.
@@ -217,7 +217,7 @@ class Server(Entity):
 
     def parse_attribute_query(self, xml_string, binding):
         """ Parse an attribute query
-        
+
         :param xml_string: The Attribute Query as an XML string
         :param binding: Which binding that was used for the request
         :return: A query instance
@@ -280,7 +280,7 @@ class Server(Entity):
                         sign_assertion=False, sign_response=False,
                         best_effort=False, encrypt_assertion=False, encrypt_cert=None):
         """ Create a response. A layer of indirection.
-        
+
         :param in_response_to: The session identifier of the request
         :param consumer_url: The URL which should receive the response
         :param sp_entity_id: The entity identifier of the SP
@@ -361,7 +361,7 @@ class Server(Entity):
                                   sign_assertion=False, sign_response=False,
                                   attributes=None, **kwargs):
         """ Create an attribute assertion response.
-        
+
         :param identity: A dictionary with attributes and values that are
             expected to be the bases for the assertion in the response.
         :param in_response_to: The session identifier of the request

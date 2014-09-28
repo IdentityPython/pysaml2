@@ -71,7 +71,7 @@ def valid_url(url):
         _ = urlparse.urlparse(url)
     except Exception:
         raise NotValid("URL")
-        
+
     # if part[1] == "localhost" or part[1] == "127.0.0.1":
     #     raise NotValid("URL")
     return True
@@ -103,7 +103,7 @@ def valid_address(address):
     if not (valid_ipv4(address) or valid_ipv6(address)):
         raise NotValid("address")
     return True
-    
+
 
 def valid_ipv4(address):
     parts = address.split(".")
@@ -116,8 +116,8 @@ def valid_ipv4(address):
         except ValueError:
             return False
     return True
-    
-# 
+
+#
 IPV6_PATTERN = re.compile(r"""
     ^
     \s*                         # Leading whitespace
@@ -135,7 +135,7 @@ IPV6_PATTERN = re.compile(r"""
          |  (?<!:)              #
          |  (?<=:) (?<!::) :    #
          )                      # OR
-     |                          #   A v4 address with NO leading zeros 
+     |                          #   A v4 address with NO leading zeros
         (?:25[0-4]|2[0-4]\d|1\d\d|[1-9]?\d)
         (?: \.
             (?:25[0-4]|2[0-4]\d|1\d\d|[1-9]?\d)
@@ -144,7 +144,7 @@ IPV6_PATTERN = re.compile(r"""
     \s*                         # Trailing whitespace
     $
 """, re.VERBOSE | re.IGNORECASE | re.DOTALL)
-    
+
 
 def valid_ipv6(address):
     """Validates IPv6 addresses. """
@@ -157,7 +157,7 @@ def valid_boolean(val):
         return True
     else:
         raise NotValid("boolean")
-        
+
 
 def valid_duration(val):
     try:
@@ -168,8 +168,8 @@ def valid_duration(val):
 
 
 def valid_string(val):
-    """ Expects unicode 
-    Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | 
+    """ Expects unicode
+    Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] |
                     [#x10000-#x10FFFF]
     """
     for char in val:
@@ -188,7 +188,7 @@ def valid_string(val):
         else:
             raise NotValid("string")
     return True
-    
+
 
 def valid_unsigned_short(val):
     try:
@@ -197,9 +197,9 @@ def valid_unsigned_short(val):
         raise NotValid("unsigned short")
     except ValueError:
         raise NotValid("unsigned short")
-        
+
     return True
-    
+
 
 def valid_positive_integer(val):
     try:
@@ -218,7 +218,7 @@ def valid_non_negative_integer(val):
         integer = int(val)
     except ValueError:
         raise NotValid("non negative integer")
-        
+
     if integer < 0:
         raise NotValid("non negative integer")
     return True
@@ -230,7 +230,7 @@ def valid_integer(val):
     except ValueError:
         raise NotValid("integer")
     return True
-    
+
 
 def valid_base64(val):
     try:
@@ -241,11 +241,11 @@ def valid_base64(val):
 
 
 def valid_qname(val):
-    """ A qname is either 
-        NCName or 
+    """ A qname is either
+        NCName or
         NCName ':' NCName
     """
-    
+
     try:
         (prefix, localpart) = val.split(":")
         return valid_ncname(prefix) and valid_ncname(localpart)
@@ -254,8 +254,8 @@ def valid_qname(val):
 
 
 def valid_anytype(val):
-    """ Goes through all known type validators 
-    
+    """ Goes through all known type validators
+
     :param val: The value to validate
     :return: True is value is valid otherwise an exception is raised
     """
@@ -267,12 +267,12 @@ def valid_anytype(val):
                 return True
         except NotValid:
             pass
-    
+
     if isinstance(val, type):
         return True
-        
+
     raise NotValid("AnyType")
-    
+
 # -----------------------------------------------------------------------------
 
 VALIDATOR = {
@@ -306,7 +306,7 @@ def validate_value_type(value, spec):
     """
     if "maxlen" in spec:
         return len(value) <= spec["maxlen"]
-        
+
     if spec["base"] == "string":
         if "enumeration" in spec:
             if value not in spec["enumeration"]:
@@ -318,7 +318,7 @@ def validate_value_type(value, spec):
             valid(spec["member"], val)
     else:
         return valid(spec["base"], value)
-        
+
     return True
 
 
@@ -370,7 +370,7 @@ def valid_instance(instance):
         if required and not value:
             txt = "Required value on property '%s' missing" % name
             raise MustValueError("Class '%s' instance: %s" % (class_name, txt))
-        
+
         if value:
             try:
                 if isinstance(typ, type):
@@ -378,14 +378,14 @@ def valid_instance(instance):
                         spec = typ.c_value_type
                     else:
                         spec = {"base": "string"}  # do I need a default
-              
+
                     validate_value_type(value, spec)
                 else:
                     valid(typ, value)
             except (NotValid, ValueError), exc:
                 txt = ERROR_TEXT % (value, name, exc.args[0])
                 raise NotValid("Class '%s' instance: %s" % (class_name, txt))
-        
+
     for (name, _spec) in instclass.c_children.values():
         value = getattr(instance, name, '')
 
@@ -422,7 +422,7 @@ def valid_instance(instance):
                         "Class '%s' instance cardinality error: %s" % (
                             class_name, "more then max (%s>%s)" % (vlen,
                                                                    _cmax)))
-            
+
             if _list:
                 for val in value:
                     # That it is the right class is handled elsewhere

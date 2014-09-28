@@ -465,7 +465,7 @@ class Config(object):
 
         handler.setFormatter(formatter)
         return handler
-    
+
     def setup_logger(self):
         if root_logger.level != logging.NOTSET:  # Someone got there before me
             return root_logger
@@ -528,7 +528,7 @@ class SPConfig(Config):
 
 class IdPConfig(Config):
     def_context = "idp"
-    
+
     def __init__(self):
         Config.__init__(self)
 

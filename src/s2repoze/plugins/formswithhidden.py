@@ -40,7 +40,7 @@ HIDDEN_PRE_LINE = """<input type=hidden name="%s" value="%s">"""
 class FormHiddenPlugin(FormPlugin):
 
     implements(IChallenger, IIdentifier)
-    
+
     # IIdentifier
     def identify(self, environ):
         logger = environ.get('repoze.who.logger','')
@@ -49,7 +49,7 @@ class FormHiddenPlugin(FormPlugin):
         query = parse_dict_querystring(environ)
         # If the extractor finds a special query string on any request,
         # it will attempt to find the values in the input body.
-        if query.get(self.login_form_qs): 
+        if query.get(self.login_form_qs):
             form = parse_formvars(environ)
             from StringIO import StringIO
             # we need to replace wsgi.input because we've read it
@@ -89,7 +89,7 @@ class FormHiddenPlugin(FormPlugin):
             if location:
                 headers = list(app_headers) + list(forget_headers)
                 return HTTPFound(headers = headers)
-                
+
         query = parse_dict_querystring(environ)
         hidden = []
         for key, val in query.items():
@@ -98,7 +98,7 @@ class FormHiddenPlugin(FormPlugin):
         logger.info("hidden: %s" % (hidden,))
         form = self.formbody or _DEFAULT_FORM
         form = form % "\n".join(hidden)
-            
+
         if self.formcallable is not None:
             form = self.formcallable(environ)
         def auth_form(environ, start_response):

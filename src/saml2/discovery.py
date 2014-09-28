@@ -69,7 +69,7 @@ class DiscoveryServer(Entity):
                                           entity_id=None, **kwargs):
         if return_url is None:
             return_url = kwargs["return"]
-            
+
         if entity_id:
             qp = urlencode({returnIDParam: entity_id})
 
