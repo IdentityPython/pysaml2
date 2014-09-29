@@ -58,21 +58,6 @@ def construct_came_from(environ):
         came_from += '?' + qstr
     return came_from
 
-
-def cgi_field_storage_to_dict(field_storage):
-    """Get a plain dictionary, rather than the '.value' system used by the
-    cgi module."""
-
-    params = {}
-    for key in field_storage.keys():
-        try:
-            params[key] = field_storage[key].value
-        except AttributeError:
-            if isinstance(field_storage[key], basestring):
-                params[key] = field_storage[key]
-
-    return params
-
 def exception_trace(tag, exc, log):
     message = traceback.format_exception(*sys.exc_info())
     log.error("[%s] ExcList: %s" % (tag, "".join(message),))
@@ -530,7 +515,7 @@ class SAML2Plugin(object):
                             return {}
                     else:
                         session_info = self._eval_authn_response(
-                            environ, cgi_field_storage_to_dict(post),
+                            environ, post,
                             binding=binding)
                 except Exception, err:
                     environ["s2repoze.saml_error"] = err
