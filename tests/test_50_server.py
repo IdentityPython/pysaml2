@@ -318,7 +318,7 @@ class TestServer1():
         conf.load_file("server_conf")
         self.client = client.Saml2Client(conf)
 
-        ava = {"givenName": ["Derek"], "surName": ["Jeter"],
+        ava = {"givenName": ["Derek"], "sn": ["Jeter"],
                "mail": ["derek@nyy.mlb.com"], "title": "The man"}
 
         npolicy = samlp.NameIDPolicy(format=saml.NAMEID_FORMAT_TRANSIENT,
@@ -349,7 +349,7 @@ class TestServer1():
     def test_signed_response(self):
         name_id = self.server.ident.transient_nameid(
             "urn:mace:example.com:saml:roland:sp", "id12")
-        ava = {"givenName": ["Derek"], "surName": ["Jeter"],
+        ava = {"givenName": ["Derek"], "sn": ["Jeter"],
                "mail": ["derek@nyy.mlb.com"], "title": "The man"}
 
         signed_resp = self.server.create_authn_response(
@@ -429,7 +429,7 @@ class TestServer1():
 #------------------------------------------------------------------------
 
 IDENTITY = {"eduPersonAffiliation": ["staff", "member"],
-            "surName": ["Jeter"], "givenName": ["Derek"],
+            "sn": ["Jeter"], "givenName": ["Derek"],
             "mail": ["foo@gmail.com"], "title": "The man"}
 
 
@@ -475,7 +475,7 @@ def _logout_request(conf_file):
         "not_on_or_after": soon,
         "user": {
             "givenName": "Leo",
-            "surName": "Laport",
+            "sn": "Laport",
         }
     }
     sp.users.add_information_about_person(sinfo)
