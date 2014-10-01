@@ -32,10 +32,11 @@ sp1 = {
     },
     "key_file": full_path("test.key"),
     "cert_file": full_path("test.pem"),
-    "metadata": {
-        "local": [full_path("metadata.xml"),
-                  full_path("urn-mace-swami.se-swamid-test-1.0-metadata.xml")],
-    },
+    "metadata": [{
+        "class": "saml2.mdstore.MetaDataFile",
+        "metadata": [(full_path("metadata.xml"), ),
+                  (full_path("urn-mace-swami.se-swamid-test-1.0-metadata.xml"), )],
+    }],
     "virtual_organization": {
         "coip": {
             "nameid_format": "urn:oasis:names:tc:SAML:2.0:nameid-format:transient",
