@@ -673,7 +673,7 @@ class Entity(HTTPBase):
 
     def create_logout_request(self, destination, issuer_entity_id,
                               subject_id=None, name_id=None,
-                              reason=None, expire=None, message_id=0, 
+                              reason=None, expire=None, message_id=0,
                               consent=None, extensions=None, sign=False):
         """ Constructs a LogoutRequest
 
@@ -771,7 +771,7 @@ class Entity(HTTPBase):
 
         return response
 
-    def create_manage_name_id_request(self, destination, message_id=0, 
+    def create_manage_name_id_request(self, destination, message_id=0,
                                       consent=None, extensions=None, sign=False,
                                       name_id=None, new_id=None,
                                       encrypted_id=None, new_encrypted_id=None,
@@ -839,7 +839,7 @@ class Entity(HTTPBase):
 
         return response
 
-    def parse_manage_name_id_request_response(self, string, 
+    def parse_manage_name_id_request_response(self, string,
                                               binding=BINDING_SOAP):
         return self._parse_response(string, saml_response.ManageNameIDResponse,
                                     "manage_name_id_service", binding,

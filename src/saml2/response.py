@@ -891,7 +891,7 @@ class AuthnResponse(StatusResponse):
         return res
 
     def session_info(self):
-        """ Returns a predefined set of information gleened from the 
+        """ Returns a predefined set of information gleened from the
         response.
         :returns: Dictionary with information
         """

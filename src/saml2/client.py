@@ -84,7 +84,7 @@ class Saml2Client(Base):
         """ More or less a layer of indirection :-/
         Bootstrapping the whole thing by finding all the IdPs that should
         be notified.
-        
+
         :param name_id: The identifier of the subject that wants to be
             logged out.
         :param reason: Why the subject wants to log out
@@ -95,7 +95,7 @@ class Saml2Client(Base):
         :return: Depends on which binding is used:
             If the HTTP redirect binding then a HTTP redirect,
             if SOAP binding has been used the just the result of that
-            conversation. 
+            conversation.
         """
 
         if isinstance(name_id, basestring):
@@ -205,8 +205,8 @@ class Saml2Client(Base):
         return responses
 
     def local_logout(self, name_id):
-        """ Remove the user from the cache, equals local logout 
-        
+        """ Remove the user from the cache, equals local logout
+
         :param name_id: The identifier of the subject
         """
         self.users.remove_person(name_id)
@@ -214,15 +214,15 @@ class Saml2Client(Base):
 
     def is_logged_in(self, name_id):
         """ Check if user is in the cache
-        
+
         :param name_id: The identifier of the subject
         """
         identity = self.users.get_identity(name_id)[0]
         return bool(identity)
 
     def handle_logout_response(self, response):
-        """ handles a Logout response 
-        
+        """ handles a Logout response
+
         :param response: A response.Response instance
         :return: 4-tuple of (session_id of the last sent logout request,
             response message, response headers and message)

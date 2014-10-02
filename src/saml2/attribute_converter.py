@@ -434,7 +434,7 @@ class AttributeConverter(object):
 
     def from_format(self, attr):
         """ Find out the local name of an attribute
-         
+
         :param attr: An saml.Attribute instance
         :return: The local attribute name or "" if no mapping could be made
         """

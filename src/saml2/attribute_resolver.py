@@ -23,7 +23,7 @@ class AttributeResolver(object):
         self.metadata = saml2client.config.metadata
 
     def extend(self, name_id, issuer, vo_members):
-        """ 
+        """
         :param name_id: The identifier by which the subject is know
             among all the participents of the VO
         :param issuer: Who am I the poses the query
@@ -33,7 +33,7 @@ class AttributeResolver(object):
             subject
         """
         result = []
-        for member in vo_members:            
+        for member in vo_members:
             for ass in self.metadata.attribute_consuming_service(member):
                 for attr_serv in ass.attribute_service:
                     logger.info(

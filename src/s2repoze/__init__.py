@@ -1,2 +1,2 @@
 # -*- coding: utf-8 -*-
-#  Created by Roland Hedberg 
+#  Created by Roland Hedberg

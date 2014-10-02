@@ -198,7 +198,7 @@ class Base(Entity):
                              consent=None, extensions=None, sign=None,
                              allow_create=False, sign_prepare=False, **kwargs):
         """ Creates an authentication request.
-        
+
         :param destination: Where the request should be sent.
         :param vorg: The virtual organization the service belongs to.
         :param scoping: The scope of the request
@@ -312,7 +312,7 @@ class Base(Entity):
                                extensions=None, sign=False, sign_prepare=False,
                                **kwargs):
         """ Constructs an AttributeQuery
-        
+
         :param destination: To whom the query should be sent
         :param name_id: The identifier of the subject
         :param attribute: A dictionary of attributes and values that is
