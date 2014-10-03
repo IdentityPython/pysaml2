@@ -65,7 +65,7 @@ elif args.type == "external":
     metad = MetaDataExtern(ONTS.values(), ATTRCONV, args.url,
                            sc, cert=args.cert, http=httpc)
 
-if metad:
+if metad is not None:
     metad.load()
     txt = metad.dumps()
     if args.output:
