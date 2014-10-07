@@ -62,7 +62,7 @@ Hints
 RHEL/CentOS installation issues
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A number of packages may not install from pypi. Instead, you may want to use packages supplies with the OS:
+A number of packages may not install from pypi. Instead, you may want to use packages supplied with the OS:
 
     yum -y install swig openssl-devel m2crypto xmlsec1 pyOpenSSL libffi-devel
 
