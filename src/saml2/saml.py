@@ -1040,7 +1040,7 @@ class AttributeType_(SamlBase):
     def __init__(self,
                  attribute_value=None,
                  name=None,
-                 name_format=None,
+                 name_format=NAME_FORMAT_URI,
                  friendly_name=None,
                  text=None,
                  extension_elements=None,
