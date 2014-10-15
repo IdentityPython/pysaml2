@@ -284,7 +284,7 @@ class TestClient:
     def test_response(self):
         IDP = "urn:mace:example.com:saml:roland:idp"
 
-        ava = {"givenName": ["Derek"], "surName": ["Jeter"],
+        ava = {"givenName": ["Derek"], "sn": ["Jeter"],
                "mail": ["derek@nyy.mlb.com"], "title": ["The man"]}
 
         nameid_policy = samlp.NameIDPolicy(allow_create="false",
@@ -331,7 +331,7 @@ class TestClient:
 
         # --- authenticate another person
 
-        ava = {"givenName": ["Alfonson"], "surName": ["Soriano"],
+        ava = {"givenName": ["Alfonson"], "sn": ["Soriano"],
                "mail": ["alfonson@chc.mlb.com"], "title": ["outfielder"]}
 
         resp_str = "%s" % self.server.create_authn_response(
@@ -441,7 +441,7 @@ class TestClient:
         nameid_policy = samlp.NameIDPolicy(allow_create="false",
                                            format=saml.NAMEID_FORMAT_PERSISTENT)
 
-        asser = Assertion({"givenName": "Derek", "surName": "Jeter"})
+        asser = Assertion({"givenName": "Derek", "sn": "Jeter"})
         assertion = asser.construct(
             self.client.config.entityid, "_012345",
             "http://lingon.catalogix.se:8087/",

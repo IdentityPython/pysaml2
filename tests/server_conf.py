@@ -11,7 +11,7 @@ CONFIG = {
                 "assertion_consumer_service": [
                     "http://lingon.catalogix.se:8087/"],
             },
-            "required_attributes": ["surName", "givenName", "mail"],
+            "required_attributes": ["sn", "givenName", "mail"],
             "optional_attributes": ["title"],
             "idp": ["urn:mace:example.com:saml:roland:idp"],
         }

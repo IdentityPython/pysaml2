@@ -161,7 +161,6 @@ MAP = {
         'x121Address': X500ATTR+'24',
         'destinationIndicator': X500ATTR+'27',
         'eduPersonPrimaryAffiliation': EDUPERSON_OID+'5',
-        'surname': X500ATTR+'4',
         'jpegPhoto': UCL_DIR_PILOT+'60',
         'eduPersonScopedAffiliation': EDUPERSON_OID+'9',
         'protocolInformation': X500ATTR+'48',
