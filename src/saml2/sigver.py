@@ -721,7 +721,7 @@ ASSERT_XPATH = ''.join(["/*[local-name()=\"%s\"]" % v for v in [
 
 class CryptoBackendXmlSec1(CryptoBackend):
     """
-    CryptoBackend implementation using external binary xmlsec1 to sign
+    CryptoBackend implementation using external binary 1 to sign
     and verify XML documents.
     """
 
@@ -731,6 +731,10 @@ class CryptoBackendXmlSec1(CryptoBackend):
         CryptoBackend.__init__(self, **kwargs)
         assert (isinstance(xmlsec_binary, basestring))
         self.xmlsec = xmlsec_binary
+        if os.environ.get('PYSAML2_KEEP_XMLSEC_TMP', None):
+            self._xmlsec_delete_tmpfiles = False
+        else:
+            self._xmlsec_delete_tmpfiles = True
 
     def version(self):
         com_list = [self.xmlsec, "--version"]
@@ -832,7 +836,8 @@ class CryptoBackendXmlSec1(CryptoBackend):
         :return: The signed statement
         """
 
-        _, fil = make_temp("%s" % statement, decode=False)
+        _, fil = make_temp("%s" % statement, suffix=".xml", decode=False, 
+                           delete=self._xmlsec_delete_tmpfiles)
 
         com_list = [self.xmlsec, "--sign",
                     "--privkey-pem", key_file,
@@ -867,7 +872,8 @@ class CryptoBackendXmlSec1(CryptoBackend):
         :param id_attr: Should normally be one of "id", "Id" or "ID"
         :return: Boolean True if the signature was correct otherwise False.
         """
-        _, fil = make_temp(signedtext, decode=False)
+        _, fil = make_temp(signedtext, suffix=".xml",
+                           decode=False, delete=self._xmlsec_delete_tmpfiles)
 
         com_list = [self.xmlsec, "--verify",
                     "--pubkey-cert-%s" % cert_type, cert_file,
@@ -906,7 +912,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         :param exception: The exception class to raise on errors
         :result: Whatever xmlsec wrote to an --output temporary file
         """
-        ntf = NamedTemporaryFile()
+        ntf = NamedTemporaryFile(suffix=".xml", delete=self._xmlsec_delete_tmpfiles)
         com_list.extend(["--output", ntf.name])
         com_list += extra_args
 
@@ -1243,6 +1249,11 @@ class SecurityContext(object):
             self.template = template
 
         self.encrypt_key_type = encrypt_key_type
+        # keep certificate files to debug xmlsec invocations
+        if os.environ.get('PYSAML2_KEEP_XMLSEC_TMP', None):
+            self._xmlsec_delete_tmpfiles = False
+        else:
+            self._xmlsec_delete_tmpfiles = True
 
     def correctly_signed(self, xml, must=False):
         logger.debug("verify correct signature")
@@ -1334,7 +1345,9 @@ class SecurityContext(object):
             certs = []
             for cert in _certs:
                 if isinstance(cert, basestring):
-                    certs.append(make_temp(pem_format(cert), ".pem", False))
+                    certs.append(make_temp(pem_format(cert), suffix=".pem",
+                                           decode=False,
+                                           delete=self._xmlsec_delete_tmpfiles))
                 else:
                     certs.append(cert)
         else:
@@ -1342,8 +1355,9 @@ class SecurityContext(object):
 
         if not certs and not self.only_use_keys_in_metadata:
             logger.debug("==== Certs from instance ====")
-            certs = [make_temp(pem_format(cert), ".pem",
-                               False) for cert in cert_from_instance(item)]
+            certs = [make_temp(pem_format(cert), suffix=".pem",
+                               decode=False, delete=self._xmlsec_delete_tmpfiles)
+                    for cert in cert_from_instance(item)]
         else:
             logger.debug("==== Certs from metadata ==== %s: %s ====" % (issuer,
                                                                         certs))
@@ -1417,8 +1431,8 @@ class SecurityContext(object):
         the entity that sent the info use that, if not use the key that are in
         the message if any.
 
-        :param decoded_xml: The SAML message as a XML string
-        :param msgtype:
+        :param decoded_xml: The SAML message as an XML infoset (a string)
+        :param msgtype: SAML protocol message type
         :param must: Whether there must be a signature
         :param origdoc:
         :return:
@@ -1435,7 +1449,7 @@ class SecurityContext(object):
 
         if not msg.signature:
             if must:
-                raise SignatureError("Missing must signature")
+                raise SignatureError("Required signature missing on %s" % msgtype)
             else:
                 return msg
 
