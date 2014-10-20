@@ -24,8 +24,8 @@ XSI_NIL = '{%s}nil' % XSI_NAMESPACE
 
 NAMEID_FORMAT_EMAILADDRESS = (
     "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress")
-#NAMEID_FORMAT_UNSPECIFIED1 = (
-#    "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified")
+NAMEID_FORMAT_UNSPECIFIED1 = (
+    "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified")
 NAMEID_FORMAT_UNSPECIFIED = (
     "urn:oasis:names:tc:SAML:2.0:nameid-format:unspecified")
 NAMEID_FORMAT_ENCRYPTED = (
