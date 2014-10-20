@@ -26,7 +26,7 @@ def test_default():
 class TestAC():
     def setup_class(self):
         self.acs = attribute_converter.ac_factory(full_path("attributemaps"))
-        
+
     def test_setup(self):
         print self.acs
         assert len(self.acs) == 3
@@ -67,9 +67,9 @@ class TestAC():
 
     def test_to_attrstat_1(self):
         ava = { "givenName": "Roland", "sn": "Hedberg" }
-        
+
         statement = attribute_converter.from_local(self.acs, ava, BASIC_NF)
-        
+
         assert statement is not None
         assert len(statement) == 2
         a0 = statement[0]
@@ -88,12 +88,12 @@ class TestAC():
             assert a1.name_format == BASIC_NF
         else:
             assert False
-        
+
     def test_to_attrstat_2(self):
         ava = { "givenName": "Roland", "surname": "Hedberg" }
-        
+
         statement = attribute_converter.from_local(self.acs, ava, URI_NF)
-                
+
         assert len(statement) == 2
         a0 = statement[0]
         a1 = statement[1]
@@ -111,9 +111,9 @@ class TestAC():
             assert a1.name_format == URI_NF
         else:
             assert False
-                
+
     def test_to_local_name(self):
-    
+
         attr = [
             saml.Attribute(
                 friendly_name="surName",
@@ -127,9 +127,9 @@ class TestAC():
                 friendly_name="titel",
                 name="urn:oid:2.5.4.12",
                 name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri")]
-                
+
         lan = [attribute_converter.to_local_name(self.acs, a) for a in attr]
-        
+
         assert _eq(lan, ['sn', 'givenName', 'title'])
 
     # def test_ava_fro_1(self):
@@ -150,8 +150,11 @@ class TestAC():
     #     assert result == {'givenName': [], 'sn': [], 'title': []}
 
     def test_to_local_name_from_basic(self):
-        attr = [saml.Attribute(
-                name="urn:mace:dir:attribute-def:eduPersonPrimaryOrgUnitDN")]
+        attr = [
+            saml.Attribute(
+                name="urn:mace:dir:attribute-def:eduPersonPrimaryOrgUnitDN",
+                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:basic")
+        ]
 
         lan = [attribute_converter.to_local_name(self.acs, a) for a in attr]
 
@@ -222,7 +225,7 @@ def test_schac():
 
 
 if __name__ == "__main__":
-    # t = TestAC()
-    # t.setup_class()
-    # t.test_mixed_attributes_1()
-    test_schac()
+    t = TestAC()
+    t.setup_class()
+    t.test_to_local_name_from_basic()
+    #test_schac()
