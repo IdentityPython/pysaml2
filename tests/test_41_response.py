@@ -10,7 +10,9 @@ from saml2.response import StatusResponse
 from saml2.response import AuthnResponse
 from saml2.sigver import SignatureError
 
-FALSE_ASSERT_SIGNED = "saml_false_signed.xml"
+from pathutils import full_path
+
+FALSE_ASSERT_SIGNED = full_path("saml_false_signed.xml")
 
 TIMESLACK = 20000000  # Roughly +- 12 month
 
