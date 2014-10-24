@@ -55,12 +55,12 @@ def test_enc1():
 
     statement = pre_encrypt_assertion(resp_)
 
-    tmpl = "enc_tmpl.xml"
+    tmpl = full_path("enc_tmpl.xml")
     # tmpl_file = open(tmpl, "w")
     # tmpl_file.write("%s" % pre_encryption_part())
     # tmpl_file.close()
 
-    data = "pre_enc.xml"
+    data = full_path("pre_enc.xml")
     # data_file = open(data, "w")
     # data_file.write("%s" % statement)
     # data_file.close()
