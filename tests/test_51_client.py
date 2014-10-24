@@ -120,6 +120,9 @@ class TestClient:
         conf.load_file("server_conf")
         self.client = Saml2Client(conf)
 
+    def teardown_class(self):
+        self.server.close()
+
     def test_create_attribute_query1(self):
         req_id, req = self.client.create_attribute_query(
             "https://idp.example.com/idp/",

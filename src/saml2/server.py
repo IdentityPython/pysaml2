@@ -145,28 +145,32 @@ class Server(Entity):
             raise Exception("Couldn't open identity database: %s" %
                             (dbspec,))
 
-        _domain = self.config.getattr("domain", "idp")
-        if _domain:
-            self.ident.domain = _domain
+        try:
+            _domain = self.config.getattr("domain", "idp")
+            if _domain:
+                self.ident.domain = _domain
 
-        self.ident.name_qualifier = self.config.entityid
+            self.ident.name_qualifier = self.config.entityid
 
-        dbspec = self.config.getattr("edu_person_targeted_id", "idp")
-        if not dbspec:
-            pass
-        else:
-            typ = dbspec[0]
-            addr = dbspec[1]
-            secret = dbspec[2]
-            if typ == "shelve":
-                self.eptid = EptidShelve(secret, addr)
-            elif typ == "mongodb":
-                from saml2.mongo_store import EptidMDB
-
-                self.eptid = EptidMDB(secret, database=addr,
-                                      collection="eptid")
+            dbspec = self.config.getattr("edu_person_targeted_id", "idp")
+            if not dbspec:
+                pass
             else:
-                self.eptid = Eptid(secret)
+                typ = dbspec[0]
+                addr = dbspec[1]
+                secret = dbspec[2]
+                if typ == "shelve":
+                    self.eptid = EptidShelve(secret, addr)
+                elif typ == "mongodb":
+                    from saml2.mongo_store import EptidMDB
+
+                    self.eptid = EptidMDB(secret, database=addr,
+                                          collection="eptid")
+                else:
+                    self.eptid = Eptid(secret)
+        except Exception:
+            self.ident.close()
+            raise
 
     def wants(self, sp_entity_id, index=None):
         """ Returns what attributes the SP requires and which are optional
@@ -681,3 +685,6 @@ class Server(Entity):
         soap_envelope = soapenv.Envelope(header=header, body=body)
 
         return "%s" % soap_envelope
+
+    def close(self):
+        self.ident.close()

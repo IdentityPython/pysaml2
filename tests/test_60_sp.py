@@ -48,6 +48,9 @@ class TestSP():
         self.sp = make_plugin("rem", saml_conf="server_conf")
         self.server = Server(config_file="idp_conf")
 
+    def teardown_class(self):
+        self.server.close()
+
     def test_setup(self):
         assert self.sp
 

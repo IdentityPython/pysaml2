@@ -1,3 +1,4 @@
+from contextlib import closing
 from urlparse import parse_qs
 from urlparse import urlparse
 from saml2.authn_context import INTERNETPROTOCOLPASSWORD
@@ -46,66 +47,65 @@ def get_msg(hinfo, binding, response=False):
 
 def test_basic_flow():
     sp = Saml2Client(config_file="servera_conf")
-    idp = Server(config_file="idp_all_conf")
+    with closing(Server(config_file="idp_all_conf")) as idp:
+        # -------- @IDP -------------
 
-    # -------- @IDP -------------
+        relay_state = "FOO"
+        # -- dummy request ---
+        orig_req = AuthnRequest(
+            issuer=sp._issuer(), name_id_policy=NameIDPolicy(
+                allow_create="true", format=NAMEID_FORMAT_TRANSIENT))
 
-    relay_state = "FOO"
-    # -- dummy request ---
-    orig_req = AuthnRequest(
-        issuer=sp._issuer(), name_id_policy=NameIDPolicy(
-            allow_create="true", format=NAMEID_FORMAT_TRANSIENT))
+        # == Create an AuthnRequest response
 
-    # == Create an AuthnRequest response
+        name_id = idp.ident.transient_nameid("id12", sp.config.entityid)
 
-    name_id = idp.ident.transient_nameid("id12", sp.config.entityid)
+        binding, destination = idp.pick_binding("assertion_consumer_service",
+                                                entity_id=sp.config.entityid)
+        resp = idp.create_authn_response({"eduPersonEntitlement": "Short stop",
+                                          "surName": "Jeter",
+                                          "givenName": "Derek",
+                                          "mail": "derek.jeter@nyy.mlb.com",
+                                          "title": "The man"},
+                                         "id-123456789",
+                                         destination,
+                                         sp.config.entityid,
+                                         name_id=name_id,
+                                         authn=AUTHN)
 
-    binding, destination = idp.pick_binding("assertion_consumer_service",
-                                            entity_id=sp.config.entityid)
-    resp = idp.create_authn_response({"eduPersonEntitlement": "Short stop",
-                                      "surName": "Jeter",
-                                      "givenName": "Derek",
-                                      "mail": "derek.jeter@nyy.mlb.com",
-                                      "title": "The man"},
-                                     "id-123456789",
-                                     destination,
-                                     sp.config.entityid,
-                                     name_id=name_id,
-                                     authn=AUTHN)
+        hinfo = idp.apply_binding(binding, "%s" % resp, destination, relay_state)
 
-    hinfo = idp.apply_binding(binding, "%s" % resp, destination, relay_state)
+        # --------- @SP -------------
 
-    # --------- @SP -------------
+        xmlstr = get_msg(hinfo, binding)
 
-    xmlstr = get_msg(hinfo, binding)
+        aresp = sp.parse_authn_request_response(xmlstr, binding,
+                                                {resp.in_response_to: "/"})
 
-    aresp = sp.parse_authn_request_response(xmlstr, binding,
-                                            {resp.in_response_to: "/"})
+        # == Look for assertion X
 
-    # == Look for assertion X
+        asid = aresp.assertion.id
 
-    asid = aresp.assertion.id
+        binding, destination = sp.pick_binding("assertion_id_request_service",
+                                               entity_id=idp.config.entityid)
 
-    binding, destination = sp.pick_binding("assertion_id_request_service",
-                                           entity_id=idp.config.entityid)
+        hinfo = sp.apply_binding(binding, asid, destination)
 
-    hinfo = sp.apply_binding(binding, asid, destination)
+        # ---------- @IDP ------------
 
-    # ---------- @IDP ------------
+        aid = get_msg(hinfo, binding, response=False)
 
-    aid = get_msg(hinfo, binding, response=False)
+        # == construct response
 
-    # == construct response
+        resp = idp.create_assertion_id_request_response(aid)
 
-    resp = idp.create_assertion_id_request_response(aid)
+        hinfo = idp.apply_binding(binding, "%s" % resp, None, "", response=True)
 
-    hinfo = idp.apply_binding(binding, "%s" % resp, None, "", response=True)
+        # ----------- @SP -------------
 
-    # ----------- @SP -------------
+        xmlstr = get_msg(hinfo, binding, response=True)
 
-    xmlstr = get_msg(hinfo, binding, response=True)
+        final = sp.parse_assertion_id_request_response(xmlstr, binding)
 
-    final = sp.parse_assertion_id_request_response(xmlstr, binding)
-
-    print final.response
-    assert isinstance(final.response, Assertion)
+        print final.response
+        assert isinstance(final.response, Assertion)
