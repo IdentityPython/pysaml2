@@ -867,16 +867,16 @@ class Entity(HTTPBase):
 
         if "asynchop" not in kwargs:
             if binding in [BINDING_SOAP, BINDING_PAOS]:
-                asynchop = False
+                kwargs["asynchop"] = False
             else:
-                asynchop = True
+                kwargs["asynchop"] = True
 
         if xmlstr:
             if "return_addrs" not in kwargs:
                 if binding in [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST]:
                     try:
                         # expected return address
-                        return_addrs = self.config.endpoint(
+                        kwargs["return_addrs"] = self.config.endpoint(
                             service, binding=binding)
                     except Exception:
                         logger.info("Not supposed to handle this!")
