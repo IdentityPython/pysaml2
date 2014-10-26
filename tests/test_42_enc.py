@@ -1,3 +1,4 @@
+from contextlib import closing
 from saml2.authn_context import INTERNETPROTOCOLPASSWORD
 from saml2.server import Server
 from saml2.sigver import pre_encryption_part, ASSERT_XPATH, EncryptError
@@ -30,13 +31,13 @@ def test_pre_enc():
 
 
 def test_reshuffle_response():
-    server = Server("idp_conf")
-    name_id = server.ident.transient_nameid(
-        "urn:mace:example.com:saml:roland:sp", "id12")
+    with closing(Server("idp_conf")) as server:
+        name_id = server.ident.transient_nameid(
+            "urn:mace:example.com:saml:roland:sp", "id12")
 
-    resp_ = server.create_authn_response(
-        IDENTITY, "id12", "http://lingon.catalogix.se:8087/",
-        "urn:mace:example.com:saml:roland:sp", name_id=name_id)
+        resp_ = server.create_authn_response(
+            IDENTITY, "id12", "http://lingon.catalogix.se:8087/",
+            "urn:mace:example.com:saml:roland:sp", name_id=name_id)
 
     resp2 = pre_encrypt_assertion(resp_)
 
@@ -45,22 +46,22 @@ def test_reshuffle_response():
 
 
 def test_enc1():
-    server = Server("idp_conf")
-    name_id = server.ident.transient_nameid(
-        "urn:mace:example.com:saml:roland:sp", "id12")
+    with closing(Server("idp_conf")) as server:
+        name_id = server.ident.transient_nameid(
+            "urn:mace:example.com:saml:roland:sp", "id12")
 
-    resp_ = server.create_authn_response(
-        IDENTITY, "id12", "http://lingon.catalogix.se:8087/",
-        "urn:mace:example.com:saml:roland:sp", name_id=name_id)
+        resp_ = server.create_authn_response(
+            IDENTITY, "id12", "http://lingon.catalogix.se:8087/",
+            "urn:mace:example.com:saml:roland:sp", name_id=name_id)
 
     statement = pre_encrypt_assertion(resp_)
 
-    tmpl = "enc_tmpl.xml"
+    tmpl = full_path("enc_tmpl.xml")
     # tmpl_file = open(tmpl, "w")
     # tmpl_file.write("%s" % pre_encryption_part())
     # tmpl_file.close()
 
-    data = "pre_enc.xml"
+    data = full_path("pre_enc.xml")
     # data_file = open(data, "w")
     # data_file.write("%s" % statement)
     # data_file.close()
@@ -82,13 +83,13 @@ def test_enc1():
 def test_enc2():
     crypto = CryptoBackendXmlSec1(xmlsec_path)
 
-    server = Server("idp_conf")
-    name_id = server.ident.transient_nameid(
-        "urn:mace:example.com:saml:roland:sp", "id12")
+    with closing(Server("idp_conf")) as server:
+        name_id = server.ident.transient_nameid(
+            "urn:mace:example.com:saml:roland:sp", "id12")
 
-    resp_ = server.create_authn_response(
-        IDENTITY, "id12", "http://lingon.catalogix.se:8087/",
-        "urn:mace:example.com:saml:roland:sp", name_id=name_id)
+        resp_ = server.create_authn_response(
+            IDENTITY, "id12", "http://lingon.catalogix.se:8087/",
+            "urn:mace:example.com:saml:roland:sp", name_id=name_id)
 
     enc_resp = crypto.encrypt_assertion(resp_, full_path("pubkey.pem"),
                                         pre_encryption_part())
