@@ -850,7 +850,7 @@ class MetadataStore(object):
 
     def name(self, entity_id, langpref="en"):
         for _md in self.metadata.values():
-            if entity_id in _md.items():
+            if entity_id in _md:
                 return name(_md[entity_id], langpref)
         return None
 
