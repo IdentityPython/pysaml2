@@ -28,6 +28,10 @@ CONFIG = {
                     ("%s/acs/redirect" % BASE, BINDING_HTTP_REDIRECT),
                     ("%s/acs/post" % BASE, BINDING_HTTP_POST)
                 ],
+                "single_logout_service": [
+                    ("%s/slo/redirect" % BASE, BINDING_HTTP_REDIRECT),
+                    ("%s/slo/post" % BASE, BINDING_HTTP_POST),
+                ],
             }
         },
     },
