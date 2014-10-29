@@ -178,7 +178,7 @@ class Saml2Client(Base):
                         not_done.remove(entity_id)
                         response = response.text
                         logger.info("Response: %s" % response)
-                        res = self.parse_logout_request_response(response)
+                        res = self.parse_logout_request_response(response, binding)
                         responses[entity_id] = res
                     else:
                         logger.info("NOT OK response from %s" % destination)
