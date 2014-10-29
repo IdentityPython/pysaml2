@@ -127,6 +127,10 @@ class LogoutRequest(Request):
                          attribute_converters, timeslack)
         self.signature_check = self.sec.correctly_signed_logout_request
 
+    @property
+    def issuer(self):
+        return self.message.issuer
+
 
 class AttributeQuery(Request):
     msgtype = "attribute_query"
