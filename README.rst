@@ -1,11 +1,12 @@
-***********************************************************
-SAML2test - A tool for testing SAML2 and profile compliance
-***********************************************************
+*************************
+PySAML2 - SAML2 in Python
+*************************
 
 :Author: Roland Hedberg
-:Version: 0.3.0
+:Version: 1.0.0
 
-SAML2test is a tests tool that will allow an independent validation
-of a specific instance of a SAML2 entity. It will test not only if the
-instance works according to the SAML2 standard but also if it complies
-with a specific profile of SAML2.
+PySAML2 is a pure python implementation of SAML2. It contains all
+necessary pieces for building a SAML2 service provider or an identity provider.
+The distribution contains examples of both.
+Originally written to work in a WSGI environment there are extensions that
+allow you to use it with other frameworks.
