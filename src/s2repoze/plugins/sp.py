@@ -496,7 +496,9 @@ class SAML2Plugin(object):
                 # find it
                 environ["post.fieldstorage"] = post
                 # restore wsgi.input incase that is needed
-                environ['wsgi.input'] = StringIO(environ['s2repoze.body'])
+                # only of s2repoze.body is present
+                if 's2repoze.body' in environ:
+                    environ['wsgi.input'] = StringIO(environ['s2repoze.body'])
                 return {}
             else:
                 logger.info("[sp.identify] --- SAMLResponse ---")
