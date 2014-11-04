@@ -27,7 +27,6 @@ CONFIG = {
             "logout_requests_signed": True,
             "endpoints": {
                 "assertion_consumer_service": [
-                    ("%s/acs/redirect" % BASE, BINDING_HTTP_REDIRECT),
                     ("%s/acs/post" % BASE, BINDING_HTTP_POST)
                 ],
                 "single_logout_service": [
