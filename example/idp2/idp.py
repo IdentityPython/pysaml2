@@ -576,7 +576,7 @@ class SLO(Service):
             logger.error("Bad request: %s" % exc)
             resp = BadRequest("%s" % exc)
             return resp(self.environ, self.start_response)
-    
+
         msg = req_info.message
         if msg.name_id:
             lid = IDP.ident.find_local_id(msg.name_id)
@@ -593,7 +593,7 @@ class SLO(Service):
                 logger.error("ServiceError: %s" % exc)
                 resp = ServiceError("%s" % exc)
                 return resp(self.environ, self.start_response)
-    
+
         resp = IDP.create_logout_response(msg, [binding])
 
         if binding == BINDING_SOAP:
@@ -604,7 +604,7 @@ class SLO(Service):
                                                     [binding], "spsso",
                                                     req_info)
             response = True
-    
+
         try:
             hinfo = IDP.apply_binding(binding, "%s" % resp, destination, relay_state,
                     response=response)
