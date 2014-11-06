@@ -193,7 +193,7 @@ class Base(Entity):
 
     def create_authn_request(self, destination, vorg="", scoping=None,
                              binding=saml2.BINDING_HTTP_POST,
-                             nameid_format=NAMEID_FORMAT_TRANSIENT,
+                             nameid_format=None,
                              service_url_binding=None, message_id=0,
                              consent=None, extensions=None, sign=None,
                              allow_create=False, sign_prepare=False, **kwargs):
@@ -261,13 +261,19 @@ class Base(Entity):
             else:
                 allow_create = "false"
 
-            # Profile stuff, should be configurable
-            if nameid_format is None:
-                name_id_policy = samlp.NameIDPolicy(
-                    allow_create=allow_create, format=NAMEID_FORMAT_TRANSIENT)
-            elif nameid_format == "":
+            if nameid_format == "":
                 name_id_policy = None
             else:
+                if nameid_format is None:
+                    nameid_format = self.config.getattr("name_id_format", "sp")
+
+                    if nameid_format is None:
+                        nameid_format = NAMEID_FORMAT_TRANSIENT
+                    elif isinstance(nameid_format, list):
+                        # NameIDPolicy can only have one format specified
+                        nameid_format = nameid_format[0]
+
+
                 name_id_policy = samlp.NameIDPolicy(allow_create=allow_create,
                                                     format=nameid_format)
 
