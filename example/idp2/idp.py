@@ -399,20 +399,29 @@ class SSO(Service):
         """
         logger.info("--- In SSO POST ---")
         saml_msg = self.unpack_either()
-        self.req_info = IDP.parse_authn_request(
-            saml_msg["SAMLRequest"], BINDING_HTTP_POST)
-        _req = self.req_info.message
-        if self.user:
-            if _req.force_authn:
+
+        try:
+            _key = saml_msg["key"]
+            saml_msg = IDP.ticket[_key]
+            self.req_info = saml_msg["req_info"]
+            del IDP.ticket[_key]
+        except KeyError:
+            self.req_info = IDP.parse_authn_request(
+                saml_msg["SAMLRequest"], BINDING_HTTP_POST)
+            _req = self.req_info.message
+            if self.user:
+                if _req.force_authn:
+                    saml_msg["req_info"] = self.req_info
+                    key = self._store_request(saml_msg)
+                    return self.not_authn(key, _req.requested_authn_context)
+                else:
+                    return self.operation(saml_msg, BINDING_HTTP_POST)
+            else:
                 saml_msg["req_info"] = self.req_info
                 key = self._store_request(saml_msg)
                 return self.not_authn(key, _req.requested_authn_context)
-            else:
-                return self.operation(saml_msg, BINDING_HTTP_POST)
         else:
-            saml_msg["req_info"] = self.req_info
-            key = self._store_request(saml_msg)
-            return self.not_authn(key, _req.requested_authn_context)
+            return self.operation(saml_msg, BINDING_HTTP_POST)
 
     # def artifact(self):
     #     # Can be either by HTTP_Redirect or HTTP_POST
