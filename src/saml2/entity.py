@@ -588,10 +588,10 @@ class Entity(HTTPBase):
                 else:
                     return typ
 
-    def _parse_request(self, xmlstr, request_cls, service, binding):
+    def _parse_request(self, enc_request, request_cls, service, binding):
         """Parse a Request
 
-        :param xmlstr: The request in its transport format
+        :param enc_request: The request in its transport format
         :param request_cls: The type of requests I expect
         :param service:
         :param binding: Which binding that was used to transport the message
@@ -625,8 +625,7 @@ class Entity(HTTPBase):
                                self.config.attribute_converters,
                                timeslack=timeslack)
 
-        origdoc = xmlstr
-        xmlstr = self.unravel(xmlstr, binding, request_cls.msgtype)
+        xmlstr = self.unravel(enc_request, binding, request_cls.msgtype)
         must = self.config.getattr("want_authn_requests_signed", "idp")
         only_valid_cert = self.config.getattr(
             "want_authn_requests_only_with_valid_cert", "idp")
@@ -634,7 +633,7 @@ class Entity(HTTPBase):
             only_valid_cert = False
         if only_valid_cert:
             must = True
-        _request = _request.loads(xmlstr, binding, origdoc=origdoc, must=must,
+        _request = _request.loads(xmlstr, binding, origdoc=enc_request, must=must,
                                   only_valid_cert=only_valid_cert)
 
         _log_debug("Loaded request")
@@ -673,7 +672,7 @@ class Entity(HTTPBase):
 
     def create_logout_request(self, destination, issuer_entity_id,
                               subject_id=None, name_id=None,
-                              reason=None, expire=None, message_id=0, 
+                              reason=None, expire=None, message_id=0,
                               consent=None, extensions=None, sign=False):
         """ Constructs a LogoutRequest
 
@@ -771,7 +770,7 @@ class Entity(HTTPBase):
 
         return response
 
-    def create_manage_name_id_request(self, destination, message_id=0, 
+    def create_manage_name_id_request(self, destination, message_id=0,
                                       consent=None, extensions=None, sign=False,
                                       name_id=None, new_id=None,
                                       encrypted_id=None, new_encrypted_id=None,
@@ -839,7 +838,7 @@ class Entity(HTTPBase):
 
         return response
 
-    def parse_manage_name_id_request_response(self, string, 
+    def parse_manage_name_id_request_response(self, string,
                                               binding=BINDING_SOAP):
         return self._parse_response(string, saml_response.ManageNameIDResponse,
                                     "manage_name_id_service", binding,
@@ -868,16 +867,16 @@ class Entity(HTTPBase):
 
         if "asynchop" not in kwargs:
             if binding in [BINDING_SOAP, BINDING_PAOS]:
-                asynchop = False
+                kwargs["asynchop"] = False
             else:
-                asynchop = True
+                kwargs["asynchop"] = True
 
         if xmlstr:
             if "return_addrs" not in kwargs:
                 if binding in [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST]:
                     try:
                         # expected return address
-                        return_addrs = self.config.endpoint(
+                        kwargs["return_addrs"] = self.config.endpoint(
                             service, binding=binding)
                     except Exception:
                         logger.info("Not supposed to handle this!")

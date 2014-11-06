@@ -147,7 +147,7 @@ class Client(Entity):
             _ = self.send(rc_url, "POST", data=soap.soap_fault(error))
             # Raise an exception so the user knows something went wrong
             raise SAMLError(error)
-        
+
         return idp_response
 
     @staticmethod
@@ -221,7 +221,7 @@ class Client(Entity):
 
         self.done_ecp = True
         logger.debug("Done ECP")
-            
+
         return None
 
     def add_paos_headers(self, headers=None):

@@ -215,7 +215,7 @@ class TestSAMLBase:
 
         attr = Attribute()
         saml2.make_vals(ava, AttributeValue, attr, prop="attribute_value")
-        assert attr.keyswv() == ["attribute_value"]
+        assert attr.keyswv() == ["name_format", "attribute_value"]
         assert len(attr.attribute_value) == 4
 
     def test_to_string_nspair(self):
@@ -1211,3 +1211,7 @@ class TestAssertion:
         """Test assertion_from_string() using test data"""
         # TODO
         pass
+
+if __name__ == "__main__":
+    t = TestSAMLBase()
+    t.test_make_vals_multi_dict()

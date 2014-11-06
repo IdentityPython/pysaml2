@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import base64
+from contextlib import closing
 from urlparse import parse_qs
 from saml2.sigver import pre_encryption_part
 from saml2.assertion import Policy
@@ -49,7 +50,7 @@ class TestServer1():
         self.client = client.Saml2Client(conf)
 
     def teardown_class(self):
-        self.server.ident.close()
+        self.server.close()
 
     def test_issuer(self):
         issuer = self.server._issuer()
@@ -312,8 +313,6 @@ class TestServer1():
         assert not resp.assertion
 
     def test_authn_response_0(self):
-        self.server = Server("idp_conf")
-
         conf = config.SPConfig()
         conf.load_file("server_conf")
         self.client = client.Saml2Client(conf)
@@ -421,10 +420,11 @@ class TestServer1():
 
         saml_soap = make_soap_enveloped_saml_thingy(logout_request)
         self.server.ident.close()
-        idp = Server("idp_soap_conf")
-        request = idp.parse_logout_request(saml_soap)
-        idp.ident.close()
-        assert request
+
+        with closing(Server("idp_soap_conf")) as idp:
+            request = idp.parse_logout_request(saml_soap)
+            idp.ident.close()
+            assert request
 
 #------------------------------------------------------------------------
 
@@ -438,7 +438,7 @@ class TestServer2():
         self.server = Server("restrictive_idp_conf")
 
     def teardown_class(self):
-        self.server.ident.close()
+        self.server.close()
 
     def test_do_attribute_reponse(self):
         aa_policy = self.server.config.getattr("policy", "idp")
@@ -489,21 +489,21 @@ def _logout_request(conf_file):
 
 class TestServerLogout():
     def test_1(self):
-        server = Server("idp_slo_redirect_conf")
-        req_id, request = _logout_request("sp_slo_redirect_conf")
-        print request
-        bindings = [BINDING_HTTP_REDIRECT]
-        response = server.create_logout_response(request, bindings)
-        binding, destination = server.pick_binding("single_logout_service",
-                                                   bindings, "spsso",
-                                                   request)
+        with closing(Server("idp_slo_redirect_conf")) as server:
+            req_id, request = _logout_request("sp_slo_redirect_conf")
+            print request
+            bindings = [BINDING_HTTP_REDIRECT]
+            response = server.create_logout_response(request, bindings)
+            binding, destination = server.pick_binding("single_logout_service",
+                                                       bindings, "spsso",
+                                                       request)
 
-        http_args = server.apply_binding(binding, "%s" % response, destination,
-                                         "relay_state", response=True)
+            http_args = server.apply_binding(binding, "%s" % response, destination,
+                                             "relay_state", response=True)
 
-        assert len(http_args) == 4
-        assert http_args["headers"][0][0] == "Location"
-        assert http_args["data"] == []
+            assert len(http_args) == 4
+            assert http_args["headers"][0][0] == "Location"
+            assert http_args["data"] == []
 
 
 if __name__ == "__main__":

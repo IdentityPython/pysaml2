@@ -1,6 +1,6 @@
 #
-""" 
-A plugin that allows you to use SAML2 SSO as authentication 
+"""
+A plugin that allows you to use SAML2 SSO as authentication
 and SAML2 attribute aggregations as metadata collector in your
 WSGI application.
 
@@ -40,7 +40,7 @@ from saml2.s_utils import sid
 from saml2.config import config_factory
 from saml2.profile import paos
 
-#from saml2.population import Population
+# from saml2.population import Population
 #from saml2.attribute_resolver import AttributeResolver
 
 logger = logging.getLogger(__name__)
@@ -49,45 +49,14 @@ PAOS_HEADER_INFO = 'ver="%s";"%s"' % (paos.NAMESPACE, ECP_SERVICE)
 
 
 def construct_came_from(environ):
-    """ The URL that the user used when the process where interupted 
+    """ The URL that the user used when the process where interupted
     for single-sign-on processing. """
-    
-    came_from = environ.get("PATH_INFO") 
+
+    came_from = environ.get("PATH_INFO")
     qstr = environ.get("QUERY_STRING", "")
     if qstr:
         came_from += '?' + qstr
     return came_from
-    
-
-def cgi_field_storage_to_dict(field_storage):
-    """Get a plain dictionary, rather than the '.value' system used by the
-    cgi module."""
-    
-    params = {}
-    for key in field_storage.keys():
-        try:
-            params[key] = field_storage[key].value
-        except AttributeError:
-            if isinstance(field_storage[key], basestring):
-                params[key] = field_storage[key]
-                
-    return params
-
-
-def get_body(environ):
-    length = int(environ["CONTENT_LENGTH"])
-    try:
-        body = environ["wsgi.input"].read(length)
-    except Exception, excp:
-        logger.exception("Exception while reading post: %s" % (excp,))
-        raise
-
-    # restore what I might have upset
-    from StringIO import StringIO
-    environ['wsgi.input'] = StringIO(body)
-    environ['s2repoze.body'] = body
-
-    return body
 
 
 def exception_trace(tag, exc, log):
@@ -111,12 +80,11 @@ class ECP_response(object):
 
 
 class SAML2Plugin(object):
-
     implements(IChallenger, IIdentifier, IAuthenticator, IMetadataProvider)
-    
+
     def __init__(self, rememberer_name, config, saml_client, wayf, cache,
                  sid_store=None, discovery="", idp_query_param="",
-                 sid_store_cert=None,):
+                 sid_store_cert=None, ):
         self.rememberer_name = rememberer_name
         self.wayf = wayf
         self.saml_client = saml_client
@@ -158,27 +126,27 @@ class SAML2Plugin(object):
     def _get_post(self, environ):
         """
         Get the posted information
-    
+
         :param environ: A dictionary with environment variables
         """
-    
-        post_env = environ.copy()
-        post_env['QUERY_STRING'] = ''
-    
-        _ = get_body(environ)
-        
+
+        body = ''
         try:
-            post = cgi.FieldStorage(
-                fp=environ['wsgi.input'],
-                environ=post_env,
-                keep_blank_values=True
-            )
-        except Exception, excp:
-            logger.debug("Exception (II): %s" % (excp,))
-            raise
-    
+            length = int(environ.get('CONTENT_LENGTH', '0'))
+        except ValueError:
+            length = 0
+        if length != 0:
+            body = environ['wsgi.input'].read(length)  # get the POST variables
+            environ[
+                's2repoze.body'] = body  # store the request body for later
+                # use by pysaml2
+            environ['wsgi.input'] = StringIO(body)  # restore the request body
+                # as a stream so that everything seems untouched
+
+        post = parse_qs(body)  # parse the POST fields into a dict
+
         logger.debug('identify post: %s' % (post,))
-    
+
         return post
 
     def _wayf_redirect(self, came_from):
@@ -190,16 +158,17 @@ class SAML2Plugin(object):
 
     #noinspection PyUnusedLocal
     def _pick_idp(self, environ, came_from):
-        """ 
-        If more than one idp and if none is selected, I have to do wayf or 
+        """
+        If more than one idp and if none is selected, I have to do wayf or
         disco
         """
 
         # check headers to see if it's an ECP request
-#        headers = {
-#                    'Accept' : 'text/html; application/vnd.paos+xml',
-#                    'PAOS'   : 'ver="%s";"%s"' % (paos.NAMESPACE, SERVICE)
-#                    }
+        #        headers = {
+        #                    'Accept' : 'text/html; application/vnd.paos+xml',
+        #                    'PAOS'   : 'ver="%s";"%s"' % (paos.NAMESPACE,
+        # SERVICE)
+        #                    }
 
         _cli = self.saml_client
 
@@ -230,7 +199,7 @@ class SAML2Plugin(object):
                     detail='unknown ECP version')
 
         idps = self.metadata.with_descriptor("idpsso")
-        
+
         logger.info("IdP URL: %s" % idps)
 
         idp_entity_id = query = None
@@ -290,13 +259,12 @@ class SAML2Plugin(object):
 
         logger.info("Chosen IdP: '%s'" % idp_entity_id)
         return 0, idp_entity_id
-        
+
     #### IChallenger ####
     #noinspection PyUnusedLocal
     def challenge(self, environ, _status, _app_headers, _forget_headers):
 
         _cli = self.saml_client
-
 
         if 'REMOTE_USER' in environ:
             name_id = decode(environ["REMOTE_USER"])
@@ -320,7 +288,7 @@ class SAML2Plugin(object):
         came_from = construct_came_from(environ)
         environ["myapp.came_from"] = came_from
         logger.debug("[sp.challenge] RelayState >> '%s'" % came_from)
-        
+
         # Am I part of a virtual organization or more than one ?
         try:
             vorg_name = environ["myapp.vo"]
@@ -329,7 +297,7 @@ class SAML2Plugin(object):
                 vorg_name = _cli.vorg._name
             except AttributeError:
                 vorg_name = ""
-            
+
         logger.info("[sp.challenge] VO: %s" % vorg_name)
 
         # If more than one idp and if none is selected, I have to do wayf
@@ -373,7 +341,7 @@ class SAML2Plugin(object):
                     req_id, msg_str = _cli.create_authn_request(
                         dest, vorg=vorg_name, sign=_cli.authn_requests_signed,
                         message_id=_sid, extensions=extensions)
-                    _sid = req_id 
+                    _sid = req_id
                 else:
                     req_id, req = _cli.create_authn_request(
                         dest, vorg=vorg_name, sign=False, extensions=extensions)
@@ -395,7 +363,7 @@ class SAML2Plugin(object):
 
             try:
                 ret = _cli.config.getattr(
-                    "endpoints","sp")["discovery_response"][0][0]
+                    "endpoints", "sp")["discovery_response"][0][0]
                 if (environ["PATH_INFO"]) in ret and ret.split(
                         environ["PATH_INFO"])[1] == "":
                     query = parse_qs(environ["QUERY_STRING"])
@@ -423,7 +391,7 @@ class SAML2Plugin(object):
         logger.debug("Identity: %s" % identity)
 
         return identity
-        
+
     def _eval_authn_response(self, environ, post, binding=BINDING_HTTP_POST):
         logger.info("Got AuthN response, checking..")
         logger.info("Outstanding: %s" % (self.outstanding_queries,))
@@ -432,18 +400,18 @@ class SAML2Plugin(object):
             # Evaluate the response, returns a AuthnResponse instance
             try:
                 authresp = self.saml_client.parse_authn_request_response(
-                    post["SAMLResponse"], binding, self.outstanding_queries,
+                    post["SAMLResponse"][0], binding, self.outstanding_queries,
                     self.outstanding_certs)
 
             except Exception, excp:
                 logger.exception("Exception: %s" % (excp,))
                 raise
-                
+
             session_info = authresp.session_info()
         except TypeError, excp:
             logger.exception("Exception: %s" % (excp,))
             return None
-                                        
+
         if session_info["came_from"]:
             logger.debug("came_from << %s" % session_info["came_from"])
             try:
@@ -474,17 +442,19 @@ class SAML2Plugin(object):
         #logger = environ.get('repoze.who.logger', '')
 
         query = parse_dict_querystring(environ)
-        if ("CONTENT_LENGTH" not in environ or not environ["CONTENT_LENGTH"]) and \
-                        "SAMLResponse" not in query and "SAMLRequest" not in query:
+        if ("CONTENT_LENGTH" not in environ or not environ[
+            "CONTENT_LENGTH"]) and \
+                        "SAMLResponse" not in query and "SAMLRequest" not in \
+                query:
             logger.debug('[identify] get or empty post')
             return None
-        
+
         # if logger:
         #     logger.info("ENVIRON: %s" % environ)
         #     logger.info("self: %s" % (self.__dict__,))
-        
+
         uri = environ.get('REQUEST_URI', construct_url(environ))
-        
+
         logger.debug('[sp.identify] uri: %s' % (uri,))
 
         query = parse_dict_querystring(environ)
@@ -495,15 +465,13 @@ class SAML2Plugin(object):
             binding = BINDING_HTTP_REDIRECT
         else:
             post = self._get_post(environ)
-            if post.list is None:
-                post.list = []
             binding = BINDING_HTTP_POST
 
         try:
             logger.debug('[sp.identify] post keys: %s' % (post.keys(),))
         except (TypeError, IndexError):
             pass
-            
+
         try:
             path_info = environ['PATH_INFO']
             logout = False
@@ -514,12 +482,13 @@ class SAML2Plugin(object):
                 print("logout request received")
                 try:
                     response = self.saml_client.handle_logout_request(
-                        post["SAMLRequest"],
+                        post["SAMLRequest"][0],
                         self.saml_client.users.subjects()[0], binding)
                     environ['samlsp.pending'] = self._handle_logout(response)
                     return {}
                 except:
                     import traceback
+
                     traceback.print_exc()
             elif "SAMLResponse" not in post:
                 logger.info("[sp.identify] --- NOT SAMLResponse ---")
@@ -527,7 +496,9 @@ class SAML2Plugin(object):
                 # find it
                 environ["post.fieldstorage"] = post
                 # restore wsgi.input incase that is needed
-                environ['wsgi.input'] = StringIO(environ['s2repoze.body'])
+                # only of s2repoze.body is present
+                if 's2repoze.body' in environ:
+                    environ['wsgi.input'] = StringIO(environ['s2repoze.body'])
                 return {}
             else:
                 logger.info("[sp.identify] --- SAMLResponse ---")
@@ -535,8 +506,9 @@ class SAML2Plugin(object):
                 #if self.debug:
                 try:
                     if logout:
-                        response = self.saml_client.parse_logout_request_response(
-                            post["SAMLResponse"], binding)
+                        response = \
+                            self.saml_client.parse_logout_request_response(
+                            post["SAMLResponse"][0], binding)
                         if response:
                             action = self.saml_client.handle_logout_response(
                                 response)
@@ -552,7 +524,7 @@ class SAML2Plugin(object):
                             return {}
                     else:
                         session_info = self._eval_authn_response(
-                            environ, cgi_field_storage_to_dict(post),
+                            environ, post,
                             binding=binding)
                 except Exception, err:
                     environ["s2repoze.saml_error"] = err
@@ -572,8 +544,8 @@ class SAML2Plugin(object):
                 exception_trace("sp.identity", exc, logger)
                 environ["post.fieldstorage"] = post
                 return {}
-            
-        if session_info:        
+
+        if session_info:
             environ["s2repoze.sessioninfo"] = session_info
             return self._construct_identity(session_info)
         else:
@@ -585,7 +557,8 @@ class SAML2Plugin(object):
         name_id = identity['repoze.who.userid']
         if isinstance(name_id, basestring):
             try:
-                # Make sure that userids authenticated by another plugin don't cause problems here.
+                # Make sure that userids authenticated by another plugin
+                # don't cause problems here.
                 name_id = decode(name_id)
             except:
                 pass
@@ -596,12 +569,12 @@ class SAML2Plugin(object):
             logger.debug("Issuers: %s" % _cli.users.sources(name_id))
         except KeyError:
             pass
-            
+
         if "user" not in identity:
             identity["user"] = {}
         try:
             (ava, _) = _cli.users.get_identity(name_id)
-            #now = time.gmtime()        
+            #now = time.gmtime()
             logger.debug("[add_metadata] adds: %s" % ava)
             identity["user"].update(ava)
         except KeyError:
@@ -625,7 +598,7 @@ class SAML2Plugin(object):
         if not identity["user"]:
             # remove cookie and demand re-authentication
             pass
-        
+
     # used 2 times : one to get the ticket, the other to validate it
     @staticmethod
     def _service_url(environ, qstr=None):
@@ -635,11 +608,13 @@ class SAML2Plugin(object):
             url = construct_url(environ)
         return url
 
-    #### IAuthenticatorPlugin #### 
+    #### IAuthenticatorPlugin ####
     #noinspection PyUnusedLocal
     def authenticate(self, environ, identity=None):
         if identity:
-            if identity.get('user') and environ.get('s2repoze.sessioninfo') and identity.get('user') == environ.get('s2repoze.sessioninfo').get('ava'):
+            if identity.get('user') and environ.get(
+                    's2repoze.sessioninfo') and identity.get(
+                    'user') == environ.get('s2repoze.sessioninfo').get('ava'):
                 return identity.get('login')
             tktuser = identity.get('repoze.who.plugins.auth_tkt.userid', None)
             if tktuser and self.saml_client.is_logged_in(decode(tktuser)):
@@ -671,8 +646,7 @@ def make_plugin(remember_name=None,  # plugin for remember
                 identity_cache="",
                 discovery="",
                 idp_query_param=""
-                ):
-    
+):
     if saml_conf is "":
         raise ValueError(
             'must include saml_conf in configuration')

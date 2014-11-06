@@ -30,7 +30,7 @@ from saml2.time_util import in_a_while
 
 from fakeIDP import FakeIDP
 from fakeIDP import unpack_form
-
+from pathutils import full_path
 
 AUTHN = {
     "class_ref": INTERNETPROTOCOLPASSWORD,
@@ -119,6 +119,9 @@ class TestClient:
         conf = config.SPConfig()
         conf.load_file("server_conf")
         self.client = Saml2Client(conf)
+
+    def teardown_class(self):
+        self.server.close()
 
     def test_create_attribute_query1(self):
         req_id, req = self.client.create_attribute_query(
@@ -391,7 +394,7 @@ class TestClient:
             assertion.id, _sec.my_cert, 1)
 
         sigass = _sec.sign_statement(assertion, class_name(assertion),
-                                     key_file="pki/mykey.pem",
+                                     key_file=full_path("test.key"),
                                      node_id=assertion.id)
         # Create an Assertion instance from the signed assertion
         _ass = saml.assertion_from_string(sigass)
@@ -416,7 +419,7 @@ class TestClient:
             seresp = samlp.response_from_string(decr_text)
             resp_ass = []
 
-            sign_cert_file = "pki/mycert.pem"
+            sign_cert_file = full_path("test.pem")
             for enc_ass in seresp.encrypted_assertion:
                 assers = extension_elements_to_elements(
                     enc_ass.extension_elements, [saml, samlp])

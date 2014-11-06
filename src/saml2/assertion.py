@@ -21,25 +21,25 @@ logger = logging.getLogger(__name__)
 
 def _filter_values(vals, vlist=None, must=False):
     """ Removes values from *vals* that does not appear in vlist
-    
+
     :param vals: The values that are to be filtered
     :param vlist: required or optional value
     :param must: Whether the allowed values must appear
     :return: The set of values after filtering
     """
-    
+
     if not vlist:  # No value specified equals any value
         return vals
-    
+
     if isinstance(vlist, basestring):
         vlist = [vlist]
-        
+
     res = []
-    
+
     for val in vlist:
         if val in vals:
             res.append(val)
-    
+
     if must:
         if res:
             return res
@@ -67,9 +67,9 @@ def _match(attr, ava):
 def filter_on_attributes(ava, required=None, optional=None, acs=None,
                          fail_on_unfulfilled_requirements=True):
     """ Filter
-    
+
     :param ava: An attribute value assertion as a dictionary
-    :param required: list of RequestedAttribute instances defined to be 
+    :param required: list of RequestedAttribute instances defined to be
         required
     :param optional: list of RequestedAttribute instances defined to be
         optional
@@ -78,7 +78,7 @@ def filter_on_attributes(ava, required=None, optional=None, acs=None,
     :return: The modified attribute value assertion
     """
     res = {}
-    
+
     if required is None:
         required = []
 
@@ -126,20 +126,20 @@ def filter_on_attributes(ava, required=None, optional=None, acs=None,
                         res[_fn].extend(_filter_values(ava[_fn], values))
                     except KeyError:
                         res[_fn] = _filter_values(ava[_fn], values)
-    
+
     return res
 
 
 def filter_on_demands(ava, required=None, optional=None):
     """ Never return more than is needed. Filters out everything
     the server is prepared to return but the receiver doesn't ask for
-    
+
     :param ava: Attribute value assertion as a dictionary
     :param required: Required attributes
     :param optional: Optional attributes
     :return: The possibly reduced assertion
     """
-    
+
     # Is all what's required there:
     if required is None:
         required = {}
@@ -169,7 +169,7 @@ def filter_on_demands(ava, required=None, optional=None):
     for attr in lava.keys():
         if attr not in oka:
             del ava[lava[attr]]
-    
+
     return ava
 
 
@@ -219,7 +219,7 @@ def filter_attribute_value_assertions(ava, attribute_restrictions=None):
     rules defined in the attribute restrictions. If filtering results in
     an attribute without values, then the attribute is removed from the
     assertion.
-    
+
     :param ava: The incoming attribute value assertion (dictionary)
     :param attribute_restrictions: The rules that govern which attributes
         and values that are allowed. (dictionary)
@@ -227,7 +227,7 @@ def filter_attribute_value_assertions(ava, attribute_restrictions=None):
     """
     if not attribute_restrictions:
         return ava
-    
+
     for attr, vals in ava.items():
         _attr = attr.lower()
         try:
@@ -300,7 +300,7 @@ def post_entity_categories(maps, **kwargs):
 
 class Policy(object):
     """ handles restrictions on assertions """
-    
+
     def __init__(self, restrictions=None):
         if restrictions:
             self.compile(restrictions)
@@ -314,14 +314,14 @@ class Policy(object):
         In the configuration file, restrictions on which values that
         can be returned are specified with the help of regular expressions.
         This function goes through and pre-compiles the regular expressions.
-        
+
         :param restrictions:
         :return: The assertion with the string specification replaced with
             a compiled regular expression.
         """
-        
+
         self._restrictions = restrictions.copy()
-        
+
         for who, spec in self._restrictions.items():
             if spec is None:
                 continue
@@ -391,7 +391,7 @@ class Policy(object):
             return val
 
     def get_nameid_format(self, sp_entity_id):
-        """ Get the NameIDFormat to used for the entity id 
+        """ Get the NameIDFormat to used for the entity id
         :param: The SP entity ID
         :retur: The format
         """
@@ -399,7 +399,7 @@ class Policy(object):
                         saml.NAMEID_FORMAT_TRANSIENT)
 
     def get_name_form(self, sp_entity_id):
-        """ Get the NameFormat to used for the entity id 
+        """ Get the NameFormat to used for the entity id
         :param: The SP entity ID
         :retur: The format
         """
@@ -407,16 +407,16 @@ class Policy(object):
         return self.get("name_format", sp_entity_id, NAME_FORMAT_URI)
 
     def get_lifetime(self, sp_entity_id):
-        """ The lifetime of the assertion 
+        """ The lifetime of the assertion
         :param sp_entity_id: The SP entity ID
-        :param: lifetime as a dictionary 
+        :param: lifetime as a dictionary
         """
         # default is a hour
         return self.get("lifetime", sp_entity_id, {"hours": 1})
 
     def get_attribute_restrictions(self, sp_entity_id):
         """ Return the attribute restriction for SP that want the information
-        
+
         :param sp_entity_id: The SP entity ID
         :return: The restrictions
         """
@@ -461,20 +461,20 @@ class Policy(object):
     def not_on_or_after(self, sp_entity_id):
         """ When the assertion stops being valid, should not be
         used after this time.
-        
+
         :param sp_entity_id: The SP entity ID
         :return: String representation of the time
         """
-        
+
         return in_a_while(**self.get_lifetime(sp_entity_id))
-    
+
     def filter(self, ava, sp_entity_id, mdstore, required=None, optional=None):
         """ What attribute and attribute values returns depends on what
         the SP has said it wants in the request or in the metadata file and
         what the IdP/AA wants to release. An assumption is that what the SP
         asks for overrides whatever is in the metadata. But of course the
         IdP never releases anything it doesn't want to.
-        
+
         :param ava: The information about the subject as a dictionary
         :param sp_entity_id: The entity ID of the SP
         :param mdstore: A Metadata store
@@ -510,11 +510,11 @@ class Policy(object):
             return {}
         else:
             return _ava
-    
+
     def restrict(self, ava, sp_entity_id, metadata=None):
         """ Identity attribute names are expected to be expressed in
         the local lingo (== friendlyName)
-        
+
         :return: A filtered ava according to the IdPs/AAs rules and
             the list of required/optional attributes according to the SP.
             If the requirements can't be met an exception is raised.
@@ -529,7 +529,7 @@ class Policy(object):
 
     def conditions(self, sp_entity_id):
         """ Return a saml.Condition instance
-        
+
         :param sp_entity_id: The SP entity ID
         :return: A saml.Condition instance
         """
@@ -657,7 +657,7 @@ def authn_statement(authn_class=None, authn_auth=None,
 
 class Assertion(dict):
     """ Handles assertions about subjects """
-    
+
     def __init__(self, dic=None):
         dict.__init__(self, dic)
         self.acs = []
@@ -667,10 +667,10 @@ class Assertion(dict):
                   authn_auth=None, authn_decl=None, encrypt=None,
                   sec_context=None, authn_decl_ref=None, authn_instant="",
                   subject_locality=""):
-        """ Construct the Assertion 
-        
+        """ Construct the Assertion
+
         :param sp_entity_id: The entityid of the SP
-        :param in_response_to: An identifier of the message, this message is 
+        :param in_response_to: An identifier of the message, this message is
             a response to
         :param consumer_url: The intended consumer of the assertion
         :param name_id: An NameID instance
@@ -744,10 +744,10 @@ class Assertion(dict):
             _ass.attribute_statement=[attr_statement]
 
         return _ass
-    
+
     def apply_policy(self, sp_entity_id, policy, metadata=None):
-        """ Apply policy to the assertion I'm representing 
-        
+        """ Apply policy to the assertion I'm representing
+
         :param sp_entity_id: The SP entity ID
         :param policy: The policy
         :param metadata: Metadata to use

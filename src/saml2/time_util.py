@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 """
-Implements some usefull functions when dealing with validity of 
+Implements some usefull functions when dealing with validity of
 different types of information.
 """
 
@@ -21,7 +21,7 @@ TIME_FORMAT_WITH_FRAGMENT = re.compile(
 # ---------------------------------------------------------------------------
 # I'm sure this is implemented somewhere else can't find it now though, so I
 # made an attempt.
-#Implemented according to 
+#Implemented according to
 #http://www.w3.org/TR/2001/REC-xmlschema-2-20010502/
 #adding-durations-to-dateTimes
 
@@ -67,7 +67,7 @@ def parse_duration(duration):
         sign = '+'
     assert duration[index] == "P"
     index += 1
-    
+
     dic = dict([(typ, 0) for (code, typ) in D_FORMAT if typ])
     dlen = len(duration)
 
@@ -113,14 +113,14 @@ def parse_duration(duration):
 
         if index == dlen:
             break
-        
+
     return sign, dic
-    
+
 
 def add_duration(tid, duration):
-    
+
     (sign, dur) = parse_duration(duration)
-    
+
     if sign == '+':
         #Months
         temp = tid.tm_mon + dur["tm_mon"]
@@ -159,7 +159,7 @@ def add_duration(tid, duration):
             temp = month + carry
             month = modulo(temp, 1, 13)
             year += f_quotient(temp, 1, 13)
-    
+
         return time.localtime(time.mktime((year, month, days, hour, minutes,
                                            secs, 0, 0, -1)))
     else:
@@ -202,7 +202,7 @@ def in_a_while(days=0, seconds=0, microseconds=0, milliseconds=0,
     """
     if format is None:
         format = TIME_FORMAT
-        
+
     return time_in_a_while(days, seconds, microseconds, milliseconds,
                            minutes, hours, weeks).strftime(format)
 

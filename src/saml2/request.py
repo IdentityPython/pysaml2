@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 def _dummy(_arg):
     return None
-    
+
 
 class Request(object):
     def __init__(self, sec_context, receiver_addrs, attribute_converters=None,
@@ -29,7 +29,7 @@ class Request(object):
         self.binding = None
         self.relay_state = ""
         self.signature_check = _dummy  # has to be set !!!
-    
+
     def _clear(self):
         self.xmlstr = ""
         self.name_id = ""
@@ -46,7 +46,7 @@ class Request(object):
             raise
         except Exception, excp:
             logger.info("EXCEPTION: %s", excp)
-    
+
         if not self.message:
             logger.error("Response was not correctly signed")
             logger.info(xmldata)
@@ -59,9 +59,9 @@ class Request(object):
         except NotValid, exc:
             logger.error("Not valid request: %s" % exc.args[0])
             raise
-        
+
         return self
-    
+
     def issue_instant_ok(self):
         """ Check that the request was issued at a reasonable time """
         upper = time_util.shift_time(time_util.time_in_a_while(days=1),
@@ -73,14 +73,14 @@ class Request(object):
         issued_at = time_util.str_to_time(self.message.issue_instant)
         return issued_at > lower and issued_at < upper
 
-    def _verify(self):            
+    def _verify(self):
         assert self.message.version == "2.0"
         if self.message.destination and self.receiver_addrs and \
                 self.message.destination not in self.receiver_addrs:
             logger.error("%s not in %s" % (self.message.destination,
                                                 self.receiver_addrs))
             raise OtherError("Not destined for me!")
-            
+
         assert self.issue_instant_ok()
         return self
 
@@ -92,9 +92,9 @@ class Request(object):
             return self._verify()
         except AssertionError:
             return None
-            
+
     def subject_id(self):
-        """ The name of the subject can be in either of 
+        """ The name of the subject can be in either of
         BaseID, NameID or EncryptedID
 
         :return: The identifier if there is one
@@ -113,10 +113,10 @@ class Request(object):
                 return self.message.name_id
             else:  # EncryptedID
                 pass
-            
+
     def sender(self):
         return self.message.issuer.text
-        
+
 
 class LogoutRequest(Request):
     msgtype = "logout_request"
@@ -126,8 +126,8 @@ class LogoutRequest(Request):
         Request.__init__(self, sec_context, receiver_addrs,
                          attribute_converters, timeslack)
         self.signature_check = self.sec.correctly_signed_logout_request
-        
-            
+
+
 class AttributeQuery(Request):
     msgtype = "attribute_query"
 
@@ -136,7 +136,7 @@ class AttributeQuery(Request):
         Request.__init__(self, sec_context, receiver_addrs,
                          attribute_converters, timeslack)
         self.signature_check = self.sec.correctly_signed_attribute_query
-    
+
     def attribute(self):
         """ Which attributes that are sought for """
         return []

@@ -24,8 +24,8 @@ XSI_NIL = '{%s}nil' % XSI_NAMESPACE
 
 NAMEID_FORMAT_EMAILADDRESS = (
     "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress")
-#NAMEID_FORMAT_UNSPECIFIED1 = (
-#    "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified")
+NAMEID_FORMAT_UNSPECIFIED1 = (
+    "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified")
 NAMEID_FORMAT_UNSPECIFIED = (
     "urn:oasis:names:tc:SAML:2.0:nameid-format:unspecified")
 NAMEID_FORMAT_ENCRYPTED = (
@@ -1040,7 +1040,7 @@ class AttributeType_(SamlBase):
     def __init__(self,
                  attribute_value=None,
                  name=None,
-                 name_format=None,
+                 name_format=NAME_FORMAT_URI,
                  friendly_name=None,
                  text=None,
                  extension_elements=None,

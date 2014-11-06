@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 
-"""Contains classes and functions that a SAML2.0 Identity provider (IdP) 
+"""Contains classes and functions that a SAML2.0 Identity provider (IdP)
 or attribute authority (AA) may use to conclude its tasks.
 """
 import logging
@@ -100,8 +100,8 @@ class Server(Entity):
         raise NotImplementedError("No such storage type implemented")
 
     def init_config(self, stype="idp"):
-        """ Remaining init of the server configuration 
-        
+        """ Remaining init of the server configuration
+
         :param stype: The type of Server ("idp"/"aa")
         """
         if stype == "aa":
@@ -145,28 +145,32 @@ class Server(Entity):
             raise Exception("Couldn't open identity database: %s" %
                             (dbspec,))
 
-        _domain = self.config.getattr("domain", "idp")
-        if _domain:
-            self.ident.domain = _domain
+        try:
+            _domain = self.config.getattr("domain", "idp")
+            if _domain:
+                self.ident.domain = _domain
 
-        self.ident.name_qualifier = self.config.entityid
+            self.ident.name_qualifier = self.config.entityid
 
-        dbspec = self.config.getattr("edu_person_targeted_id", "idp")
-        if not dbspec:
-            pass
-        else:
-            typ = dbspec[0]
-            addr = dbspec[1]
-            secret = dbspec[2]
-            if typ == "shelve":
-                self.eptid = EptidShelve(secret, addr)
-            elif typ == "mongodb":
-                from saml2.mongo_store import EptidMDB
-
-                self.eptid = EptidMDB(secret, database=addr,
-                                      collection="eptid")
+            dbspec = self.config.getattr("edu_person_targeted_id", "idp")
+            if not dbspec:
+                pass
             else:
-                self.eptid = Eptid(secret)
+                typ = dbspec[0]
+                addr = dbspec[1]
+                secret = dbspec[2]
+                if typ == "shelve":
+                    self.eptid = EptidShelve(secret, addr)
+                elif typ == "mongodb":
+                    from saml2.mongo_store import EptidMDB
+
+                    self.eptid = EptidMDB(secret, database=addr,
+                                          collection="eptid")
+                else:
+                    self.eptid = Eptid(secret)
+        except Exception:
+            self.ident.close()
+            raise
 
     def wants(self, sp_entity_id, index=None):
         """ Returns what attributes the SP requires and which are optional
@@ -201,7 +205,7 @@ class Server(Entity):
     # -------------------------------------------------------------------------
     def parse_authn_request(self, enc_request, binding=BINDING_HTTP_REDIRECT):
         """Parse a Authentication Request
-        
+
         :param enc_request: The request in its transport format
         :param binding: Which binding that was used to transport the message
             to this entity.
@@ -217,7 +221,7 @@ class Server(Entity):
 
     def parse_attribute_query(self, xml_string, binding):
         """ Parse an attribute query
-        
+
         :param xml_string: The Attribute Query as an XML string
         :param binding: Which binding that was used for the request
         :return: A query instance
@@ -280,7 +284,7 @@ class Server(Entity):
                         sign_assertion=False, sign_response=False,
                         best_effort=False, encrypt_assertion=False, encrypt_cert=None):
         """ Create a response. A layer of indirection.
-        
+
         :param in_response_to: The session identifier of the request
         :param consumer_url: The URL which should receive the response
         :param sp_entity_id: The entity identifier of the SP
@@ -361,7 +365,7 @@ class Server(Entity):
                                   sign_assertion=False, sign_response=False,
                                   attributes=None, **kwargs):
         """ Create an attribute assertion response.
-        
+
         :param identity: A dictionary with attributes and values that are
             expected to be the bases for the assertion in the response.
         :param in_response_to: The session identifier of the request
@@ -681,3 +685,6 @@ class Server(Entity):
         soap_envelope = soapenv.Envelope(header=header, body=body)
 
         return "%s" % soap_envelope
+
+    def close(self):
+        self.ident.close()

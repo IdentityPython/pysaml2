@@ -24,6 +24,7 @@ from saml2.samlp import STATUS_TOO_MANY_RESPONSES
 from saml2.samlp import STATUS_UNKNOWN_ATTR_PROFILE
 from saml2.samlp import STATUS_UNKNOWN_PRINCIPAL
 from saml2.samlp import STATUS_UNSUPPORTED_BINDING
+from saml2.samlp import STATUS_RESPONDER
 
 import xmldsig as ds
 import xmlenc as xenc
@@ -158,6 +159,8 @@ class StatusUnknownPrincipal(StatusError):
 class StatusUnsupportedBinding(StatusError):
     pass
 
+class StatusResponder(StatusError):
+    pass
 
 STATUSCODE2EXCEPTION = {
     STATUS_VERSION_MISMATCH: StatusVersionMismatch,
@@ -180,6 +183,7 @@ STATUSCODE2EXCEPTION = {
     STATUS_UNKNOWN_ATTR_PROFILE: StatusUnknownAttrProfile,
     STATUS_UNKNOWN_PRINCIPAL: StatusUnknownPrincipal,
     STATUS_UNSUPPORTED_BINDING: StatusUnsupportedBinding,
+    STATUS_RESPONDER: StatusResponder,
 }
 # ---------------------------------------------------------------------------
 
@@ -891,7 +895,7 @@ class AuthnResponse(StatusResponse):
         return res
 
     def session_info(self):
-        """ Returns a predefined set of information gleened from the 
+        """ Returns a predefined set of information gleened from the
         response.
         :returns: Dictionary with information
         """

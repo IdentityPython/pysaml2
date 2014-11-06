@@ -137,10 +137,10 @@ def test_attribute_statement():
     assert statement.keyswv() == ["attribute"]
     assert len(statement.attribute) == 2
     attr0 = statement.attribute[0]
-    assert _eq(attr0.keyswv(), ["name", "attribute_value"])
+    assert _eq(attr0.keyswv(), ["name", "attribute_value", "name_format"])
     assert len(attr0.attribute_value) == 1
     attr1 = statement.attribute[1]
-    assert _eq(attr1.keyswv(), ["name", "attribute_value"])
+    assert _eq(attr1.keyswv(), ["name", "attribute_value", "name_format"])
     assert len(attr1.attribute_value) == 1
     if attr0.name == "givenName":
         assert attr0.attribute_value[0].text == "Derek"
@@ -222,7 +222,8 @@ def test_value_4():
                                   saml.AttributeValue, text="Derek")],
                               friendly_name="givenName")
 
-    assert _eq(attribute.keyswv(), ["friendly_name", "attribute_value"])
+    assert _eq(attribute.keyswv(), ["friendly_name", "attribute_value",
+                                    "name_format"])
     assert attribute.friendly_name == "givenName"
     assert len(attribute.attribute_value) == 1
     assert attribute.attribute_value[0].text == "Derek"
@@ -234,7 +235,7 @@ def test_do_attribute_statement_0():
     assert statement.keyswv() == ["attribute"]
     assert len(statement.attribute) == 1
     attr0 = statement.attribute[0]
-    assert _eq(attr0.keyswv(), ["name", "attribute_value"])
+    assert _eq(attr0.keyswv(), ["name", "attribute_value", "name_format"])
     assert attr0.name == "vo_attr"
     assert len(attr0.attribute_value) == 1
     assert attr0.attribute_value[0].text == "foobar"
@@ -248,9 +249,9 @@ def test_do_attribute_statement():
     assert statement.keyswv() == ["attribute"]
     assert len(statement.attribute) == 2
     attr0 = statement.attribute[0]
-    assert _eq(attr0.keyswv(), ["name", "attribute_value"])
+    assert _eq(attr0.keyswv(), ["name", "attribute_value", "name_format"])
     attr1 = statement.attribute[1]
-    assert _eq(attr1.keyswv(), ["name", "attribute_value"])
+    assert _eq(attr1.keyswv(), ["name", "attribute_value", "name_format"])
     if attr0.name == "givenName":
         assert len(attr0.attribute_value) == 2
         assert _eq([av.text for av in attr0.attribute_value],

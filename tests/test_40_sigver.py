@@ -438,7 +438,7 @@ def test_xbox():
     )
 
     sigass = sec.sign_statement(assertion, class_name(assertion),
-                                key_file="pki/mykey.pem", node_id=assertion.id)
+                                key_file=full_path("test.key"), node_id=assertion.id)
 
     _ass0 = saml.assertion_from_string(sigass)
 
@@ -457,7 +457,7 @@ def test_xbox():
     assers = extension_elements_to_elements(_seass.extension_elements,
                                             [saml, samlp])
 
-    sign_cert_file = "pki/mycert.pem"
+    sign_cert_file = full_path("test.pem")
 
     for ass in assers:
         _ass = "%s" % ass

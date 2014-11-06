@@ -1,3 +1,4 @@
+from contextlib import closing
 from saml2 import saml, sigver
 from saml2 import md
 from saml2 import config
@@ -150,18 +151,17 @@ def test_filter_ava5():
 
 
 def test_idp_policy_filter():
-    idp = Server("idp_conf_ec")
+    with closing(Server("idp_conf_ec")) as idp:
+        ava = {"givenName": ["Derek"], "sn": ["Jeter"],
+               "mail": ["derek@nyy.mlb.com"], "c": ["USA"],
+               "eduPersonTargetedID": "foo!bar!xyz",
+               "norEduPersonNIN": "19800101134"}
 
-    ava = {"givenName": ["Derek"], "sn": ["Jeter"],
-           "mail": ["derek@nyy.mlb.com"], "c": ["USA"],
-           "eduPersonTargetedID": "foo!bar!xyz",
-           "norEduPersonNIN": "19800101134"}
+        policy = idp.config.getattr("policy", "idp")
+        ava = policy.filter(ava, "urn:mace:example.com:saml:roland:sp", idp.metadata)
 
-    policy = idp.config.getattr("policy", "idp")
-    ava = policy.filter(ava, "urn:mace:example.com:saml:roland:sp", idp.metadata)
-
-    print ava
-    assert ava.keys() == ["eduPersonTargetedID"]  # because no entity category
+        print ava
+        assert ava.keys() == ["eduPersonTargetedID"]  # because no entity category
 
 if __name__ == "__main__":
     test_idp_policy_filter()

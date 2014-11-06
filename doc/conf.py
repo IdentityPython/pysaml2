@@ -12,7 +12,6 @@
 # serve to show the default.
 
 import sys, os
-import alabaster
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -23,7 +22,7 @@ import alabaster
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.coverage', 'sphinx.ext.viewcode',]
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.coverage']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -39,7 +38,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'pysaml2'
-copyright = u'2014, Roland Hedberg'
+copyright = u'2010-2011, Roland Hedberg'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -92,26 +91,7 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  Major themes that come with
 # Sphinx are currently 'default' and 'sphinxdoc'.
-#html_theme = 'default'
-html_theme_path = [alabaster.get_path()]
-html_theme = 'alabaster'
-html_sidebars = {
-   '**': [
-       'about.html',
-       'navigation.html',
-       'searchbox.html',
-       'donate.html',
-   ]
-}
-
-html_theme_options = {
-   'description': 'SAML2 implementation',
-   'github_button': False,
-   'github_user': 'rohe',
-   'github_repo': 'pysaml2',
-   'github_banner': False,
-
-}
+html_theme = 'default'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the

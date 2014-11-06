@@ -135,8 +135,8 @@ class Service(object):
                                saml_msg["RelayState"],
                                encrypt_cert=_encrypt_cert)
             except KeyError:
-                # Can live with no relay state # TODO or can we, for inacademia?
-                return self.do(saml_msg["SAMLRequest"], binding, saml_msg["RelayState"])
+                # Can live with no relay state
+                return self.do(saml_msg["SAMLRequest"], binding)
 
     def artifact_operation(self, saml_msg):
         if not saml_msg:
@@ -380,7 +380,7 @@ class SSO(Service):
                     return resp(self.environ, self.start_response)
 
             if self.user:
-                if _req.force_authn.lower() == 'true':
+                if _req.force_authn:
                     saml_msg["req_info"] = self.req_info
                     key = self._store_request(saml_msg)
                     return self.not_authn(key, _req.requested_authn_context)

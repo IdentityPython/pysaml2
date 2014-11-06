@@ -1,0 +1,10 @@
+language: python
+
+services:
+  - mongodb
+
+install:
+  - sudo apt-get install xmlsec1
+
+script:
+  - ./setup.py test

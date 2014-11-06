@@ -334,4 +334,5 @@ class IdentDB(object):
         return name_id
 
     def close(self):
-        self.db.close()
+        if hasattr(self.db, 'close'):
+            self.db.close()

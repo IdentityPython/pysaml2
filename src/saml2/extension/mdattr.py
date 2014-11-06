@@ -33,7 +33,7 @@ class EntityAttributesType_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
