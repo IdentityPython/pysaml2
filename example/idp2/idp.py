@@ -380,7 +380,8 @@ class SSO(Service):
                     return resp(self.environ, self.start_response)
 
             if self.user:
-                if _req.force_authn:
+                if _req.force_authn is not None and \
+                        _req.force_authn.lower() == 'true':
                     saml_msg["req_info"] = self.req_info
                     key = self._store_request(saml_msg)
                     return self.not_authn(key, _req.requested_authn_context)
