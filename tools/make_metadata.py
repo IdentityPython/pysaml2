@@ -55,6 +55,8 @@ for filespec in args.config:
     if fil.endswith(".py"):
         fil = fil[:-3]
     cnf = Config().load_file(fil, metadata_construction=True)
+    if valid_for:
+        cnf.valid_for = valid_for
     eds.append(entity_descriptor(cnf))
 
 conf = Config()
