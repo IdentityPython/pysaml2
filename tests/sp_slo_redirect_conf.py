@@ -1,4 +1,4 @@
-from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.saml import NAME_FORMAT_URI
 
@@ -13,7 +13,7 @@ CONFIG = {
         "sp": {
             "endpoints": {
                 "assertion_consumer_service": [
-                    (HOME, BINDING_HTTP_REDIRECT)],
+                    (HOME, BINDING_HTTP_POST)],
                 "single_logout_service": [
                     (HOME + "slo", BINDING_HTTP_REDIRECT)],
             },
