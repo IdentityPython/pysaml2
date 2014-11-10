@@ -22,7 +22,6 @@ from saml2.samlp import STATUS_REQUEST_DENIED
 from saml2.samlp import STATUS_UNKNOWN_PRINCIPAL
 from saml2.time_util import not_on_or_after
 from saml2.saml import AssertionIDRef
-from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.client_base import Base
 from saml2.client_base import LogoutError
 from saml2.client_base import NoServiceDefined
@@ -44,7 +43,7 @@ class Saml2Client(Base):
 
     def prepare_for_authenticate(self, entityid=None, relay_state="",
                                  binding=saml2.BINDING_HTTP_REDIRECT, vorg="",
-                                 nameid_format=NAMEID_FORMAT_PERSISTENT,
+                                 nameid_format=None,
                                  scoping=None, consent=None, extensions=None,
                                  sign=None,
                                  response_binding=saml2.BINDING_HTTP_POST,
@@ -178,7 +177,7 @@ class Saml2Client(Base):
                         not_done.remove(entity_id)
                         response = response.text
                         logger.info("Response: %s" % response)
-                        res = self.parse_logout_request_response(response)
+                        res = self.parse_logout_request_response(response, binding)
                         responses[entity_id] = res
                     else:
                         logger.info("NOT OK response from %s" % destination)

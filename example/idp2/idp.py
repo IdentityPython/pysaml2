@@ -570,14 +570,13 @@ class SLO(Service):
     def do(self, request, binding, relay_state="", encrypt_cert=None):
         logger.info("--- Single Log Out Service ---")
         try:
-            _, body = request.split("\n")
-            logger.debug("req: '%s'" % body)
-            req_info = IDP.parse_logout_request(body, binding)
+            logger.debug("req: '%s'" % request)
+            req_info = IDP.parse_logout_request(request, binding)
         except Exception as exc:
             logger.error("Bad request: %s" % exc)
             resp = BadRequest("%s" % exc)
             return resp(self.environ, self.start_response)
-    
+
         msg = req_info.message
         if msg.name_id:
             lid = IDP.ident.find_local_id(msg.name_id)
@@ -591,14 +590,24 @@ class SLO(Service):
             try:
                 IDP.session_db.remove_authn_statements(msg.name_id)
             except KeyError as exc:
-                logger.error("ServiceError: %s" % exc)
-                resp = ServiceError("%s" % exc)
+                logger.error("Unknown session: %s" % exc)
+                resp = ServiceError("Unknown session: %s" % exc)
                 return resp(self.environ, self.start_response)
-    
+
         resp = IDP.create_logout_response(msg, [binding])
-    
+
+        if binding == BINDING_SOAP:
+            destination = ""
+            response = False
+        else:
+            binding, destination = IDP.pick_binding("single_logout_service",
+                                                    [binding], "spsso",
+                                                    req_info)
+            response = True
+
         try:
-            hinfo = IDP.apply_binding(binding, "%s" % resp, "", relay_state)
+            hinfo = IDP.apply_binding(binding, "%s" % resp, destination, relay_state,
+                    response=response)
         except Exception as exc:
             logger.error("ServiceError: %s" % exc)
             resp = ServiceError("%s" % exc)
@@ -609,8 +618,18 @@ class SLO(Service):
         if delco:
             hinfo["headers"].append(delco)
         logger.info("Header: %s" % (hinfo["headers"],))
-        resp = Response(hinfo["data"], headers=hinfo["headers"])
-        return resp(self.environ, self.start_response)
+
+        if binding == BINDING_HTTP_REDIRECT:
+            for key, value in hinfo['headers']:
+                if key.lower() == 'location':
+                    resp = Redirect(value, headers=hinfo["headers"])
+                    return resp(self.environ, self.start_response)
+
+            resp = ServiceError('missing Location header')
+            return resp(self.environ, self.start_response)
+        else:
+            resp = Response(hinfo["data"], headers=hinfo["headers"])
+            return resp(self.environ, self.start_response)
     
 # ----------------------------------------------------------------------------
 # Manage Name ID service
