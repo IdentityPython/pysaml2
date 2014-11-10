@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from saml2.md import AttributeProfile, entity_descriptor_from_string
+from saml2.md import AttributeProfile
 from saml2.sigver import security_context
 from saml2.config import Config
 from saml2.validate import valid_instance

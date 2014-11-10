@@ -25,7 +25,6 @@ CONFIG = {
         "sp": {
             "endpoints": {
                 "assertion_consumer_service": [
-                    ("%s/acs/redirect" % BASE, BINDING_HTTP_REDIRECT),
                     ("%s/acs/post" % BASE, BINDING_HTTP_POST)
                 ],
             }
