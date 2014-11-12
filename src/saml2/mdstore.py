@@ -803,36 +803,48 @@ class MetadataStore(object):
         self.metadata[key] = _md
 
     def imp(self, spec):
-        for item in spec:
-            try:
-                key = item['class']
-            except (KeyError, AttributeError):
-                raise SAMLError("Misconfiguration in metadata %s" % item)
-            mod, clas = key.rsplit('.', 1)
-            try:
-                mod = import_module(mod)
-                MDloader = getattr(mod, clas)
-            except (ImportError, AttributeError):
-                raise SAMLError("Unknown metadata loader %s" % key)
+        # This serves as a backwards compatibility
+        if type(spec) is dict:
+            # Old style...
+            for key, vals in spec.items():
+                for val in vals:
+                    if isinstance(val, dict):
+                        if not self.check_validity:
+                            val["check_validity"] = False
+                        self.load(key, **val)
+                    else:
+                        self.load(key, val)
+        else:
+            for item in spec:
+                try:
+                    key = item['class']
+                except (KeyError, AttributeError):
+                    raise SAMLError("Misconfiguration in metadata %s" % item)
+                mod, clas = key.rsplit('.', 1)
+                try:
+                    mod = import_module(mod)
+                    MDloader = getattr(mod, clas)
+                except (ImportError, AttributeError):
+                    raise SAMLError("Unknown metadata loader %s" % key)
 
-            # Separately handle MDExtern
-            if MDloader == MetaDataExtern:
-                item['http'] = self.http
-                item['security'] = self.security
+                # Separately handle MDExtern
+                if MDloader == MetaDataExtern:
+                    item['http'] = self.http
+                    item['security'] = self.security
 
-            for key in item['metadata']:
-                # Separately handle MetaDataFile and directory
-                if MDloader == MetaDataFile and os.path.isdir(key[0]):
-                    files = [f for f in listdir(key[0]) if isfile(join(key[0], f))]
-                    for fil in files:
-                        _fil = join(key[0], fil)
-                        _md = MetaDataFile(self.onts, self.attrc, _fil)
-                        _md.load()
-                        self.metadata[_fil] = _md
-                    return
-                _md = MDloader(self.onts, self.attrc, *key)
-                _md.load()
-                self.metadata[key[0]] = _md
+                for key in item['metadata']:
+                    # Separately handle MetaDataFile and directory
+                    if MDloader == MetaDataFile and os.path.isdir(key[0]):
+                        files = [f for f in listdir(key[0]) if isfile(join(key[0], f))]
+                        for fil in files:
+                            _fil = join(key[0], fil)
+                            _md = MetaDataFile(self.onts, self.attrc, _fil)
+                            _md.load()
+                            self.metadata[_fil] = _md
+                        return
+                    _md = MDloader(self.onts, self.attrc, *key)
+                    _md.load()
+                    self.metadata[key[0]] = _md
 
     def service(self, entity_id, typ, service, binding=None):
         known_entity = False
