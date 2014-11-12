@@ -121,7 +121,7 @@ class MetaData(object):
         self.entities_descr = None
         self.entity_descr = None
         self.check_validity = check_validity
-
+        
     def items(self):
         return self.entity.items()
 
@@ -569,9 +569,14 @@ SAML_METADATA_CONTENT_TYPE = 'application/samlmetadata+xml'
 
 
 class MetaDataMDX(MetaData):
-
-    def __init__(self, onts, attrc, url, security, cert, http, **kwargs):
+    """ Uses the md protocol to fetch entity information
+    """
+    def __init__(self, entity_transform, onts, attrc, url, security, cert,
+                 http, **kwargs):
         """
+        :params entity_transform: function transforming (e.g. base64 or sha1
+        hash) the entity id. It is applied to the entity id before it is
+        concatenated with the request URL sent to the MDX server.
         :params onts:
         :params attrc:
         :params url:
@@ -584,6 +589,7 @@ class MetaDataMDX(MetaData):
         self.security = security
         self.cert = cert
         self.http = http
+        self.entity_transform = entity_transform
 
     def load(self):
         pass
@@ -592,7 +598,7 @@ class MetaDataMDX(MetaData):
         try:
             return self.entity[item]
         except KeyError:
-            mdx_url = "%s/entities/%s" % (self.url, quote_plus(item))
+            mdx_url = "%s/entities/%s" % (self.url, self.entity_transform(item))
             response = self.http.send(
                 mdx_url, headers={'Accept': SAML_METADATA_CONTENT_TYPE})
             if response.status_code == 200:
@@ -614,7 +620,6 @@ class MetaDataMDX(MetaData):
             else:
                 logger.info("Response status: %s" % response.status_code)
             raise KeyError
-
 
 
 class MetadataStore(object):

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import datetime
 import re
+from urllib import quote_plus
 from saml2.httpbase import HTTPBase
 
 from saml2.mdstore import MetadataStore, MetaDataMDX
@@ -230,7 +231,8 @@ def test_mdx_service():
     sec_config.xmlsec_binary = sigver.get_xmlsec_binary(["/opt/local/bin"])
     http = HTTPBase(verify=False, ca_bundle=None)
 
-    mdx = MetaDataMDX(ONTS.values(), ATTRCONV, "http://pyff-test.nordu.net",
+    mdx = MetaDataMDX(quote_plus, ONTS.values(), ATTRCONV,
+                      "http://pyff-test.nordu.net",
                       sec_config, None, http)
     foo = mdx.service("https://idp.umu.se/saml2/idp/metadata.php",
                       "idpsso_descriptor", "single_sign_on_service")
@@ -243,7 +245,8 @@ def test_mdx_certs():
     sec_config.xmlsec_binary = sigver.get_xmlsec_binary(["/opt/local/bin"])
     http = HTTPBase(verify=False, ca_bundle=None)
 
-    mdx = MetaDataMDX(ONTS.values(), ATTRCONV, "http://pyff-test.nordu.net",
+    mdx = MetaDataMDX(quote_plus, ONTS.values(), ATTRCONV,
+                      "http://pyff-test.nordu.net",
                       sec_config, None, http)
     foo = mdx.certs("https://idp.umu.se/saml2/idp/metadata.php", "idpsso")
 
