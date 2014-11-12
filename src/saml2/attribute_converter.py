@@ -286,7 +286,7 @@ class AttributeConverter(object):
                 [(value.lower(), key) for key, value in self._to.items()])
         if self._to is None and self.fro is not None:
             self._to = dict(
-                [(value.lower, key) for key, value in self._fro.items()])
+                [(value.lower(), key) for key, value in self._fro.items()])
 
     def from_dict(self, mapdict):
         """ Import the attribute map from  a dictionary
