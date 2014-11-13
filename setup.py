@@ -27,7 +27,7 @@ install_requires = [
     'paste',
     'zope.interface',
     'repoze.who',
-    'pycrypto',  # 'Crypto'
+    'pycrypto >= 2.2',  # 'Crypto'
     'pytz',
     'pyOpenSSL',
     'python-dateutil',
