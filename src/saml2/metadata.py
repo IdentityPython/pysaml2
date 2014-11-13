@@ -312,7 +312,7 @@ def do_uiinfo(_uiinfo):
                     except KeyError:
                         pass
                 else:
-                    raise SAMLError("Configuration error: ui_info logo")
+                    raise SAMLError("Configuration error: ui_info keywords")
                 inst.append(keyw)
         elif isinstance(val, dict):
             keyw = mdui.Keywords()
@@ -323,7 +323,7 @@ def do_uiinfo(_uiinfo):
                 pass
             inst.append(keyw)
         else:
-            raise SAMLError("Configuration Error: ui_info logo")
+            raise SAMLError("Configuration Error: ui_info keywords")
     except KeyError:
         pass
 
@@ -416,7 +416,7 @@ def do_endpoints(conf, endpoints):
                 if isinstance(args, basestring):  # Assume it's the location
                     args = {"location": args,
                             "binding": DEFAULT_BINDING[endpoint]}
-                elif isinstance(args, tuple):
+                elif isinstance(args, tuple) or isinstance(args, list):
                     if len(args) == 2:  # (location, binding)
                         args = {"location": args[0], "binding": args[1]}
                     elif len(args) == 3:  # (location, binding, index)
@@ -529,6 +529,12 @@ def do_spsso_descriptor(conf, cert=None):
         for vals in ext.values():
             for val in vals:
                 spsso.extensions.add_extension_element(val)
+
+    ui_info = conf.getattr("ui_info", "sp")
+    if ui_info:
+        if spsso.extensions is None:
+            spsso.extensions = md.Extensions()
+        spsso.extensions.add_extension_element(do_uiinfo(ui_info))
 
     if cert:
         encryption_type = conf.encryption_type
