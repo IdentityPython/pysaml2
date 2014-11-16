@@ -73,6 +73,9 @@ METADATACONF = {
     },
     "8": {
         "mdfile": [full_path("swamid.md")]
+    },
+    "9": {
+        "local": [full_path("metadata")]
     }
 }
 
@@ -252,5 +255,16 @@ def test_mdx_certs():
 
     assert len(foo) == 1
 
+
+def test_load_local_dir():
+    sec_config.xmlsec_binary = sigver.get_xmlsec_binary(["/opt/local/bin"])
+    mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
+                        disable_ssl_certificate_validation=True)
+
+    mds.imp(METADATACONF["9"])
+    print mds
+    assert len(mds) == 3  # Three sources
+    assert len(mds.keys()) == 4  # number of idps
+
 if __name__ == "__main__":
-    test_mdx_certs()
+    test_load_local_dir()

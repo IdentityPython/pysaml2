@@ -1,9 +1,12 @@
+from dircache import listdir
 import logging
+import os
 import sys
 import json
 
 from hashlib import sha1
 from urllib import urlencode, quote_plus
+from os.path import isfile, join
 from saml2.httpbase import HTTPBase
 from saml2.extension.idpdisc import BINDING_DISCO
 from saml2.extension.idpdisc import DiscoveryResponse
@@ -649,7 +652,18 @@ class MetadataStore(object):
     def load(self, typ, *args, **kwargs):
         if typ == "local":
             key = args[0]
-            _md = MetaDataFile(self.onts, self.attrc, args[0])
+            # if library read every file in the library
+            if os.path.isdir(key):
+                files = [f for f in listdir(key) if isfile(join(key, f))]
+                for fil in files:
+                    _md = MetaDataFile(self.onts, self.attrc, fil)
+                    _md.load()
+                    _key = join(key, fil)
+                    self.metadata[_key] = _md
+                return
+            else:
+                # else it's just a plain old file so read it
+                _md = MetaDataFile(self.onts, self.attrc, key)
         elif typ == "inline":
             self.ii += 1
             key = self.ii
