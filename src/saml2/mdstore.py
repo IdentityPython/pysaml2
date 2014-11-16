@@ -656,10 +656,10 @@ class MetadataStore(object):
             if os.path.isdir(key):
                 files = [f for f in listdir(key) if isfile(join(key, f))]
                 for fil in files:
-                    _md = MetaDataFile(self.onts, self.attrc, fil)
+                    _fil = join(key, fil)
+                    _md = MetaDataFile(self.onts, self.attrc, _fil)
                     _md.load()
-                    _key = join(key, fil)
-                    self.metadata[_key] = _md
+                    self.metadata[_fil] = _md
                 return
             else:
                 # else it's just a plain old file so read it
