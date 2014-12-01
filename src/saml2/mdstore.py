@@ -153,7 +153,7 @@ class MetaData(object):
         if self.check_validity:
             try:
                 if not valid(entity_descr.valid_until):
-                    logger.info("Entity descriptor (entity id:%s) to old" % (
+                    logger.error("Entity descriptor (entity id:%s) to old" % (
                         entity_descr.entity_id,))
                     return
             except AttributeError:
