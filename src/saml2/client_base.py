@@ -14,7 +14,7 @@ from saml2.entity import Entity
 from saml2.mdstore import destinations
 from saml2.profile import paos, ecp
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
-from saml2.samlp import AuthnQuery
+from saml2.samlp import AuthnQuery, RequestedAuthnContext
 from saml2.samlp import NameIDMappingRequest
 from saml2.samlp import AttributeQuery
 from saml2.samlp import AuthzDecisionQuery
@@ -251,6 +251,26 @@ class Base(Entity):
                 pass
             else:
                 args["provider_name"] = self._my_name()
+
+        # Allow argument values either as class instances or as dictionaries
+        _msg = AuthnRequest()
+        for param in ["scoping", "requested_authn_context", "conditions",
+                      "subject", "scoping"]:
+            try:
+                _item = kwargs[param]
+            except KeyError:
+                pass
+            else:
+                del kwargs[param]
+                # either class instance or argument dictionary
+                if isinstance(_item, _msg.child_class(param)):
+                    args[param] = _item
+                elif isinstance(_item, dict):
+                    args[param] = RequestedAuthnContext(**_item)
+                else:
+                    raise ValueError("%s or wrong type expected %s" % (_item,
+                                                                       param))
+
 
         try:
             args["name_id_policy"] = kwargs["name_id_policy"]
