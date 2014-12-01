@@ -666,7 +666,7 @@ class Assertion(dict):
                   name_id, attrconvs, policy, issuer, authn_class=None,
                   authn_auth=None, authn_decl=None, encrypt=None,
                   sec_context=None, authn_decl_ref=None, authn_instant="",
-                  subject_locality=""):
+                  subject_locality="", authn_statem=None):
         """ Construct the Assertion
 
         :param sp_entity_id: The entityid of the SP
@@ -687,6 +687,7 @@ class Assertion(dict):
         :param subject_locality: Specifies the DNS domain name and IP address
             for the system from which the assertion subject was apparently
             authenticated.
+        :param authn_statem: A AuthnStatement instance
         :return: An Assertion instance
         """
 
@@ -711,14 +712,15 @@ class Assertion(dict):
         # start using now and for some time
         conds = policy.conditions(sp_entity_id)
 
-        if authn_auth or authn_class or authn_decl or authn_decl_ref:
+        if authn_statem:
+            _authn_statement = authn_statem
+        elif authn_auth or authn_class or authn_decl or authn_decl_ref:
             _authn_statement = authn_statement(authn_class, authn_auth,
                                                authn_decl, authn_decl_ref,
                                                authn_instant,
                                                subject_locality)
         else:
             _authn_statement = None
-
 
         _ass = assertion_factory(
             issuer=issuer,

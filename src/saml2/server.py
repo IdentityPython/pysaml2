@@ -282,7 +282,8 @@ class Server(Entity):
                         sp_entity_id, identity=None, name_id=None,
                         status=None, authn=None, issuer=None, policy=None,
                         sign_assertion=False, sign_response=False,
-                        best_effort=False, encrypt_assertion=False, encrypt_cert=None):
+                        best_effort=False, encrypt_assertion=False,
+                        encrypt_cert=None, authn_statement=None):
         """ Create a response. A layer of indirection.
 
         :param in_response_to: The session identifier of the request
@@ -328,6 +329,12 @@ class Server(Entity):
                                       self.config.attribute_converters,
                                       policy, issuer=_issuer,
                                       **authn_args)
+        elif authn_statement:  # Got a complete AuthnStatement
+            assertion = ast.construct(sp_entity_id, in_response_to,
+                                      consumer_url, name_id,
+                                      self.config.attribute_converters,
+                                      policy, issuer=_issuer,
+                                      authn_statem=authn_statement)
         else:
             assertion = ast.construct(sp_entity_id, in_response_to,
                                       consumer_url, name_id,
@@ -427,7 +434,8 @@ class Server(Entity):
     def create_authn_response(self, identity, in_response_to, destination,
                               sp_entity_id, name_id_policy=None, userid=None,
                               name_id=None, authn=None, issuer=None,
-                              sign_response=None, sign_assertion=None, encrypt_cert=None, encrypt_assertion=None,
+                              sign_response=None, sign_assertion=None,
+                              encrypt_cert=None, encrypt_assertion=None,
                               **kwargs):
         """ Constructs an AuthenticationResponse
 
