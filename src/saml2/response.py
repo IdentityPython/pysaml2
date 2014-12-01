@@ -532,6 +532,7 @@ class AuthnResponse(StatusResponse):
             if optional:
                 return True
             else:
+                logger.error("No AuthnStatement")
                 raise
 
         authn_statement = self.assertion.authn_statement[0]
