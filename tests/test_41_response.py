@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from contextlib import closing
+from saml2.attribute_converter import to_local
+from saml2.samlp import response_from_string
 
 from saml2 import config
 from saml2.authn_context import INTERNETPROTOCOLPASSWORD
@@ -112,7 +114,25 @@ class TestResponse:
         else:
             assert False
 
+    def test_other_response(self):
+        xml_response = open("attribute_response.xml").read()
+        resp = response_factory(
+            xml_response, self.conf,
+            return_addrs=['https://myreviewroom.com/saml2/acs/'],
+            outstanding_queries={'id-f4d370f3d03650f3ec0da694e2348bfe':
+                                 "http://localhost:8088/sso"},
+            timeslack=TIMESLACK, decode=False)
+
+        assert isinstance(resp, StatusResponse)
+        assert isinstance(resp, AuthnResponse)
+        resp.sec.only_use_keys_in_metadata=False
+        resp.parse_assertion()
+        si = resp.session_info()
+        assert si
+        print si["ava"]
+
+
 if __name__ == "__main__":
     t = TestResponse()
     t.setup_class()
-    t.test_false_sign()
+    t.test_other_response()
