@@ -2,7 +2,6 @@
 import argparse
 import os
 import sys
-from saml2.s_utils import rndstr
 from saml2.metadata import entity_descriptor, metadata_tostring_fix
 from saml2.metadata import entities_descriptor
 from saml2.metadata import sign_entity_descriptor

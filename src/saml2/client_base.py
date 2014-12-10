@@ -253,6 +253,7 @@ class Base(Entity):
                 args["provider_name"] = self._my_name()
 
         # Allow argument values either as class instances or as dictionaries
+        # all of these have cardinality 0..1
         _msg = AuthnRequest()
         for param in ["scoping", "requested_authn_context", "conditions",
                       "subject", "scoping"]:

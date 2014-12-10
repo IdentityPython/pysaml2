@@ -35,7 +35,7 @@ from saml2.s_utils import rndstr
 from saml2.s_utils import success_status_factory
 from saml2.s_utils import decode_base64_and_inflate
 from saml2.s_utils import UnsupportedBinding
-from saml2.samlp import AuthnRequest
+from saml2.samlp import AuthnRequest, SessionIndex
 from saml2.samlp import AuthzDecisionQuery
 from saml2.samlp import AuthnQuery
 from saml2.samlp import AssertionIDRequest
@@ -673,7 +673,8 @@ class Entity(HTTPBase):
     def create_logout_request(self, destination, issuer_entity_id,
                               subject_id=None, name_id=None,
                               reason=None, expire=None, message_id=0,
-                              consent=None, extensions=None, sign=False):
+                              consent=None, extensions=None, sign=False,
+                              session_indexes=None):
         """ Constructs a LogoutRequest
 
         :param destination: Destination of the request
@@ -689,6 +690,7 @@ class Entity(HTTPBase):
         :param consent: Whether the principal have given her consent
         :param extensions: Possible extensions
         :param sign: Whether the query should be signed or not.
+        :param session_indexes: SessionIndex instances or just values
         :return: A LogoutRequest instance
         """
 
@@ -703,10 +705,20 @@ class Entity(HTTPBase):
         if not name_id:
             raise SAMLError("Missing subject identification")
 
+        args = {}
+        if session_indexes:
+            sis = []
+            for si in session_indexes:
+                if isinstance(si, SessionIndex):
+                    sis.append(si)
+                else:
+                    sis.append(SessionIndex(text=si))
+            args["session_index"] = sis
+
         return self._message(LogoutRequest, destination, message_id,
                              consent, extensions, sign, name_id=name_id,
                              reason=reason, not_on_or_after=expire,
-                             issuer=self._issuer())
+                             issuer=self._issuer(), **args)
 
     def create_logout_response(self, request, bindings=None, status=None,
                                sign=False, issuer=None):
