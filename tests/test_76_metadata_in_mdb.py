@@ -53,7 +53,7 @@ def test_metadata():
                         disable_ssl_certificate_validation=True)
 
     # Import metadata from local file.
-    mds.imp({"local": [full_path("swamid-2.0.xml")]})
+    mds.imp([{"class": "saml2.mdstore.MetaDataFile", "metadata": [(full_path("swamid-2.0.xml"), )]}])
     assert len(mds) == 1  # One source
 
     try:

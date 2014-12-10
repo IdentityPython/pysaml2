@@ -33,9 +33,10 @@ CONFIG = {
     "key_file" : full_path("test.key"),
     "cert_file" : full_path("test.pem"),
     "xmlsec_binary" : None,
-    "metadata": {
-        "local": [full_path("sp_slo_redirect.xml")],
-    },
+    "metadata": [{
+        "class": "saml2.mdstore.MetaDataFile",
+        "metadata": [(full_path("sp_slo_redirect.xml"), )],
+    }],
     "attribute_map_dir" : full_path("attributemaps"),
     "organization": {
         "name": "Exempel AB",

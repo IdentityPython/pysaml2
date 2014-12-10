@@ -19,7 +19,8 @@ CONFIG = {
     },
     "debug": 1,
     "xmlsec_binary": xmlsec_path,
-    "metadata": {
-        "local": [full_path("servera.xml")],
-    },
+    "metadata": [{
+        "class": "saml2.mdstore.MetaDataFile",
+        "metadata": [(full_path("servera.xml"), )],
+    }],
 }

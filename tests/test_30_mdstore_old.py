@@ -49,44 +49,34 @@ ONTS = {
 ATTRCONV = ac_factory(full_path("attributemaps"))
 
 METADATACONF = {
-    "1": [{
-        "class": "saml2.mdstore.MetaDataFile",
-        "metadata": [(full_path("swamid-1.0.xml"), )],
-    }],
-    "2": [{
-        "class": "saml2.mdstore.MetaDataFile",
-        "metadata": [(full_path("InCommon-metadata.xml"), )],
-    }],
-    "3": [{
-        "class": "saml2.mdstore.MetaDataFile",
-        "metadata": [(full_path("extended.xml"), )],
-    }],
-    "7": [{
-        "class": "saml2.mdstore.MetaDataFile",
-        "metadata": [(full_path("metadata_sp_1.xml"), ),
-                     (full_path("InCommon-metadata.xml"), )], },
-          {
-        "class": "saml2.mdstore.MetaDataExtern",
-        "metadata": [
-            ("https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2",
-             full_path("kalmar2.pem")), ],
-    }],
-    "4": [{
-        "class": "saml2.mdstore.MetaDataFile",
-        "metadata": [(full_path("metadata_example.xml"), )],
-    }],
-    "5": [{
-        "class": "saml2.mdstore.MetaDataFile",
-        "metadata": [(full_path("metadata.aaitest.xml"), )],
-    }],
-    "8": [{
-        "class": "saml2.mdstore.MetaDataMD",
-        "metadata": [(full_path("swamid.md"), )],
-    }],
-    "9": [{
-        "class": "saml2.mdstore.MetaDataFile",
-        "metadata": [(full_path("metadata"), )]
-    }]
+    "1": {
+        "local": [full_path("swamid-1.0.xml")]
+    },
+    "2": {
+        "local": [full_path("InCommon-metadata.xml")]
+    },
+    "3": {
+        "local": [full_path("extended.xml")]
+    },
+    "7": {
+        "local": [full_path("metadata_sp_1.xml"),
+                  full_path("InCommon-metadata.xml")],
+        "remote": [
+            {"url": "https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2",
+             "cert": full_path("kalmar2.pem")}]
+    },
+    "4": {
+        "local": [full_path("metadata_example.xml")]
+    },
+    "5": {
+        "local": [full_path("metadata.aaitest.xml")]
+    },
+    "8": {
+        "mdfile": [full_path("swamid.md")]
+    },
+    "9": {
+        "local": [full_path("metadata")]
+    }
 }
 
 
@@ -277,4 +267,4 @@ def test_load_local_dir():
     assert len(mds.keys()) == 4  # number of idps
 
 if __name__ == "__main__":
-    test_load_local_dir()
+    test_mdx_certs()

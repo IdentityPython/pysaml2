@@ -35,7 +35,7 @@ __author__ = 'rolandh'
 
 MDS = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
                     disable_ssl_certificate_validation=True)
-MDS.imp({"mdfile": [full_path("swamid.md")]})
+MDS.imp([{"class": "saml2.mdstore.MetaDataMD", "metadata": [(full_path("swamid.md"), )]}])
 
 
 def _eq(l1, l2):
@@ -91,7 +91,7 @@ def test_filter_ava3():
 
     mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
                         disable_ssl_certificate_validation=True)
-    mds.imp({"local": [full_path("entity_cat_sfs_hei.xml")]})
+    mds.imp([{"class": "saml2.mdstore.MetaDataFile", "metadata": [(full_path("entity_cat_sfs_hei.xml"), )]}])
 
     ava = {"givenName": ["Derek"], "sn": ["Jeter"],
            "mail": ["derek@nyy.mlb.com"], "c": ["USA"],
@@ -114,7 +114,7 @@ def test_filter_ava4():
 
     mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
                         disable_ssl_certificate_validation=True)
-    mds.imp({"local": [full_path("entity_cat_re_nren.xml")]})
+    mds.imp([{"class": "saml2.mdstore.MetaDataFile", "metadata": [(full_path("entity_cat_re_nren.xml"), )]}])
 
     ava = {"givenName": ["Derek"], "sn": ["Jeter"],
            "mail": ["derek@nyy.mlb.com"], "c": ["USA"],
@@ -138,7 +138,7 @@ def test_filter_ava5():
 
     mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
                         disable_ssl_certificate_validation=True)
-    mds.imp({"local": [full_path("entity_cat_re.xml")]})
+    mds.imp([{"class": "saml2.mdstore.MetaDataFile", "metadata": [(full_path("entity_cat_re.xml"), )]}])
 
     ava = {"givenName": ["Derek"], "sn": ["Jeter"],
            "mail": ["derek@nyy.mlb.com"], "c": ["USA"],

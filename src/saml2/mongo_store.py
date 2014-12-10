@@ -6,7 +6,7 @@ from pymongo.mongo_replica_set_client import MongoReplicaSetClient
 import pymongo.uri_parser
 import pymongo.errors
 from saml2.eptid import Eptid
-from saml2.mdstore import MetaData
+from saml2.mdstore import InMemoryMetaData
 from saml2.s_utils import PolicyError
 
 from saml2.ident import code, IdentDB, Unknown
@@ -377,9 +377,9 @@ def export_mdstore_to_mongo_db(mds, database, collection, sub_collection=""):
         mdb.store(key, **kwargs)
 
 
-class MetadataMDB(MetaData):
+class MetadataMDB(InMemoryMetaData):
     def __init__(self, onts, attrc, database="", collection=""):
-        MetaData.__init__(self, onts, attrc)
+        super(MetadataMDB, self).__init__(onts, attrc)
         self.mdb = MDB(database, collection)
         self.mdb.primary_key = "entity_id"
 

@@ -51,9 +51,10 @@ CONFIG = {
     "cert_file": full_path("test.pem"),
     "ca_certs": full_path("cacerts.txt"),
     "xmlsec_binary": xmlsec_path,
-    "metadata": {
-        "local": [full_path("idp_all.xml"), full_path("vo_metadata.xml")],
-    },
+    "metadata": [{
+        "class": "saml2.mdstore.MetaDataFile",
+        "metadata": [(full_path("idp_all.xml"), ), (full_path("vo_metadata.xml"), )],
+    }],
     "virtual_organization": {
         "urn:mace:example.com:it:tek": {
             "nameid_format": "urn:oid:1.3.6.1.4.1.1466.115.121.1.15-NameID",
