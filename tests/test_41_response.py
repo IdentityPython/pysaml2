@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 
 from contextlib import closing
-from saml2.attribute_converter import to_local
-from saml2.samlp import response_from_string
 
 from saml2 import config
 from saml2.authn_context import INTERNETPROTOCOLPASSWORD
@@ -115,7 +113,7 @@ class TestResponse:
             assert False
 
     def test_other_response(self):
-        xml_response = open("attribute_response.xml").read()
+        xml_response = open(full_path("attribute_response.xml")).read()
         resp = response_factory(
             xml_response, self.conf,
             return_addrs=['https://myreviewroom.com/saml2/acs/'],
