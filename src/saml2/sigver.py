@@ -1138,7 +1138,7 @@ class CertHandler(object):
                 self._key_str = self._osw.read_str_from_file(key_file, key_type)
             else:
                 self._key_str = ""
-            if cert_file and os.path.isfile(key_file):
+            if cert_file and os.path.isfile(cert_file):
                 self._cert_str = self._osw.read_str_from_file(cert_file,
                                                               cert_type)
             else:
