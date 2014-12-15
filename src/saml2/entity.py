@@ -531,7 +531,6 @@ class Entity(HTTPBase):
             return signed_instance_factory(response, self.sec, to_sign)
 
         if encrypt_assertion:
-            sign_class = [(class_name(response), response.id)]
             if sign:
                 response.signature = pre_signature_part(response.id,
                                                         self.sec.my_cert, 1)
@@ -541,7 +540,12 @@ class Entity(HTTPBase):
                                               pre_encryption_part())
                                               # template(response.assertion.id))
             if sign:
-                return signed_instance_factory(response, self.sec, sign_class)
+                if to_sign:
+                    signed_instance_factory(response, self.sec, to_sign)
+                else:
+                    sign_class = [(class_name(response), response.id)]
+                    return signed_instance_factory(response, self.sec,
+                                                   sign_class)
             else:
                 return response
 
