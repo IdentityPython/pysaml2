@@ -12,17 +12,17 @@ import importlib
 import shelve
 import threading
 
-from saml2.eptid import EptidShelve, Eptid
-from saml2.saml import EncryptedAssertion
-from saml2.sdb import SessionStorage
-from saml2.schema import soapenv
-
-from saml2.samlp import NameIDMappingResponse
-from saml2.entity import Entity
-
-from saml2 import saml, element_to_extension_element
+from saml2 import saml
+from saml2 import element_to_extension_element
 from saml2 import class_name
 from saml2 import BINDING_HTTP_REDIRECT
+
+from saml2.entity import Entity
+from saml2.eptid import Eptid
+from saml2.eptid import EptidShelve
+from saml2.samlp import NameIDMappingResponse
+from saml2.sdb import SessionStorage
+from saml2.schema import soapenv
 
 from saml2.request import AuthnRequest
 from saml2.request import AssertionIDRequest
@@ -33,7 +33,9 @@ from saml2.request import AuthnQuery
 
 from saml2.s_utils import MissingValue, Unknown, rndstr
 
-from saml2.sigver import pre_signature_part, signed_instance_factory, CertificateError, CryptoBackendXmlSec1
+from saml2.sigver import pre_signature_part
+from saml2.sigver import signed_instance_factory
+from saml2.sigver import CertificateError
 
 from saml2.assertion import Assertion
 from saml2.assertion import Policy

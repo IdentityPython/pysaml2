@@ -641,8 +641,8 @@ class Entity(HTTPBase):
             only_valid_cert = False
         if only_valid_cert:
             must = True
-        _request = _request.loads(xmlstr, binding, origdoc=enc_request, must=must,
-                                  only_valid_cert=only_valid_cert)
+        _request = _request.loads(xmlstr, binding, origdoc=enc_request,
+                                  must=must, only_valid_cert=only_valid_cert)
 
         _log_debug("Loaded request")
 

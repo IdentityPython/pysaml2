@@ -4,7 +4,6 @@
 import base64
 import urllib
 import urlparse
-from Crypto.PublicKey import RSA
 from xmldsig import SIG_RSA_SHA256
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT
@@ -25,7 +24,8 @@ from saml2.saml import NAMEID_FORMAT_PERSISTENT, EncryptedAssertion
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.saml import NameID
 from saml2.server import Server
-from saml2.sigver import pre_encryption_part, rm_xmltag
+from saml2.sigver import pre_encryption_part, rm_xmltag, \
+    verify_redirect_signature
 from saml2.s_utils import do_attribute_statement
 from saml2.s_utils import factory
 from saml2.time_util import in_a_while
@@ -497,7 +497,7 @@ class TestClient:
     def test_signed_redirect(self):
 
         msg_str = "%s" % self.client.create_authn_request(
-            "http://www.example.com/sso", message_id="id1")[1]
+            "http://localhost:8088/sso", message_id="id1")[1]
 
         key = self.client.signkey
 
@@ -508,7 +508,13 @@ class TestClient:
         loc = info["headers"][0][1]
         qs = urlparse.parse_qs(loc[1:])
         assert _leq(qs.keys(),
-                   ['SigAlg', 'SAMLRequest', 'RelayState', 'Signature'])
+                    ['SigAlg', 'SAMLRequest', 'RelayState', 'Signature'])
+
+        assert verify_redirect_signature(qs, sigkey=key)
+
+        res = self.server.parse_authn_request(qs["SAMLRequest"][0],
+                                              BINDING_HTTP_REDIRECT)
+        print res
 
 # Below can only be done with dummy Server
 IDP = "urn:mace:example.com:saml:roland:idp"

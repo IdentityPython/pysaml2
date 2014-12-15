@@ -608,7 +608,7 @@ REQ_ORDER = ["SAMLRequest", "RelayState", "SigAlg"]
 RESP_ORDER = ["SAMLResponse", "RelayState", "SigAlg"]
 
 
-def verify_redirect_signature(saml_msg, cert):
+def verify_redirect_signature(saml_msg, cert=None, sigkey=None):
     """
 
     :param saml_msg: A dictionary as produced by parse_qs, means all values are
@@ -622,7 +622,7 @@ def verify_redirect_signature(saml_msg, cert):
     except KeyError:
         raise Unsupported("Signature algorithm: %s" % saml_msg["SigAlg"])
     else:
-        if saml_msg["SigAlg"][0] == SIG_RSA_SHA1:
+        if saml_msg["SigAlg"][0] in SIGNER_ALGS:
             if "SAMLRequest" in saml_msg:
                 _order = REQ_ORDER
             elif "SAMLResponse" in saml_msg:
@@ -635,7 +635,10 @@ def verify_redirect_signature(saml_msg, cert):
             del args["Signature"]  # everything but the signature
             string = "&".join(
                 [urllib.urlencode({k: args[k][0]}) for k in _order if k in args])
-            _key = extract_rsa_key_from_x509_cert(pem_format(cert))
+            if cert:
+                _key = extract_rsa_key_from_x509_cert(pem_format(cert))
+            else:
+                _key = sigkey
             _sign = base64.b64decode(saml_msg["Signature"][0])
 
             return bool(signer.verify(string, _sign, _key))
