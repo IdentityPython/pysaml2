@@ -856,7 +856,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
             logger.error(
                 "Signing operation failed :\nstdout : %s\nstderr : %s" % (
                     stdout, stderr))
-            raise SigverError("Signing failed")
+            raise SigverError(stderr)
         except DecryptError:
             raise SigverError("Signing failed")
 

@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 import base64
-from saml2.sigver import pre_encryption_part, make_temp, XmlsecError
+from saml2.sigver import pre_encryption_part, make_temp, XmlsecError, \
+    SigverError
 from saml2.mdstore import MetadataStore
 from saml2.saml import assertion_from_string, EncryptedAssertion
 from saml2.samlp import response_from_string
@@ -495,7 +496,7 @@ def test_xmlsec_err():
         sec.sign_statement(assertion, class_name(assertion),
                            key_file=full_path("tes.key"),
                            node_id=assertion.id)
-    except XmlsecError as err:  # should throw an exception
+    except (XmlsecError, SigverError) as err:  # should throw an exception
         pass
     else:
         assert False
@@ -506,4 +507,4 @@ if __name__ == "__main__":
     # t.setup_class()
     # t.test_non_verify_2()
 
-    test_xbox()
+    test_xmlsec_err()
