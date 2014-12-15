@@ -543,6 +543,7 @@ class Entity(HTTPBase):
                 if to_sign:
                     signed_instance_factory(response, self.sec, to_sign)
                 else:
+                    # default is to sign the whole response if anything
                     sign_class = [(class_name(response), response.id)]
                     return signed_instance_factory(response, self.sec,
                                                    sign_class)

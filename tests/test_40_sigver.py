@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import base64
-from saml2.sigver import pre_encryption_part, make_temp
+from saml2.sigver import pre_encryption_part, make_temp, XmlsecError
 from saml2.mdstore import MetadataStore
 from saml2.saml import assertion_from_string, EncryptedAssertion
 from saml2.samlp import response_from_string
@@ -438,7 +438,8 @@ def test_xbox():
     )
 
     sigass = sec.sign_statement(assertion, class_name(assertion),
-                                key_file=full_path("test.key"), node_id=assertion.id)
+                                key_file=full_path("test.key"),
+                                node_id=assertion.id)
 
     _ass0 = saml.assertion_from_string(sigass)
 
@@ -471,7 +472,38 @@ def test_xbox():
     print assertions
 
 
+def test_xmlsec_err():
+    conf = config.SPConfig()
+    conf.load_file("server_conf")
+    md = MetadataStore([saml, samlp], None, conf)
+    md.load("local", full_path("idp_example.xml"))
+
+    conf.metadata = md
+    conf.only_use_keys_in_metadata = False
+    sec = sigver.security_context(conf)
+
+    assertion = factory(
+        saml.Assertion, version="2.0", id="11111",
+        issue_instant="2009-10-30T13:20:28Z",
+        signature=sigver.pre_signature_part("11111", sec.my_cert, 1),
+        attribute_statement=do_attribute_statement(
+            {("", "", "surName"): ("Foo", ""),
+             ("", "", "givenName"): ("Bar", ""), })
+    )
+
+    try:
+        sec.sign_statement(assertion, class_name(assertion),
+                           key_file=full_path("tes.key"),
+                           node_id=assertion.id)
+    except XmlsecError as err:  # should throw an exception
+        pass
+    else:
+        assert False
+
+
 if __name__ == "__main__":
-    t = TestSecurity()
-    t.setup_class()
-    t.test_non_verify_2()
+    # t = TestSecurity()
+    # t.setup_class()
+    # t.test_non_verify_2()
+
+    test_xbox()

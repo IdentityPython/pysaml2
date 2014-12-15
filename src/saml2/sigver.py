@@ -847,8 +847,8 @@ class CryptoBackendXmlSec1(CryptoBackend):
             com_list.extend(["--node-id", node_id])
 
         try:
-            (stdout, stderr, signed_statement) = \
-                self._run_xmlsec(com_list, [fil], validate_output=False)
+            (stdout, stderr, signed_statement) = self._run_xmlsec(
+                com_list, [fil], validate_output=False)
             # this doesn't work if --store-signatures are used
             if stdout == "":
                 if signed_statement:
@@ -924,12 +924,17 @@ class CryptoBackendXmlSec1(CryptoBackend):
 
         p_out = pof.stdout.read()
         p_err = pof.stderr.read()
+
+        if pof.returncode is not None and pof.returncode < 0:
+            logger.error(LOG_LINE % (p_out, p_err))
+            raise XmlsecError("%d:%s" % (pof.returncode, p_err))
+
         try:
             if validate_output:
                 parse_xmlsec_output(p_err)
         except XmlsecError, exc:
             logger.error(LOG_LINE_2 % (p_out, p_err, exc))
-            raise exception("%s" % (exc,))
+            raise
 
         ntf.seek(0)
         return p_out, p_err, ntf.read()
