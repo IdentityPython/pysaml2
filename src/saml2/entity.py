@@ -137,7 +137,7 @@ class Entity(HTTPBase):
         try:
             self.signkey = RSA.importKey(
                 open(self.config.getattr("key_file", ""), 'r').read())
-        except KeyError:
+        except (KeyError, TypeError):
             self.signkey = None
 
         HTTPBase.__init__(self, self.config.verify_ssl_cert,
