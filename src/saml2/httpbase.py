@@ -247,7 +247,8 @@ class HTTPBase(object):
 
         return r
 
-    def use_http_form_post(self, message, destination, relay_state,
+    @staticmethod
+    def use_http_form_post(message, destination, relay_state,
                            typ="SAMLRequest"):
         """
         Return a form that will automagically execute and POST the message
@@ -264,24 +265,8 @@ class HTTPBase(object):
 
         return http_form_post_message(message, destination, relay_state, typ)
 
-    def use_http_get(self, message, destination, relay_state,
-                     typ="SAMLRequest"):
-        """
-        Send a message using GET, this is the HTTP-Redirect case so
-        no direct response is expected to this request.
-
-        :param message:
-        :param destination:
-        :param relay_state:
-        :param typ: Whether a Request, Response or Artifact
-        :return: dictionary
-        """
-        if not isinstance(message, basestring):
-            message = "%s" % (message,)
-
-        return http_redirect_message(message, destination, relay_state, typ)
-
-    def use_http_artifact(self, message, destination="", relay_state=""):
+    @staticmethod
+    def use_http_artifact(message, destination="", relay_state=""):
         if relay_state:
             query = urllib.urlencode({"SAMLart": message,
                                       "RelayState": relay_state})
@@ -293,7 +278,8 @@ class HTTPBase(object):
         }
         return info
 
-    def use_http_uri(self, message, typ, destination="", relay_state=""):
+    @staticmethod
+    def use_http_uri(message, typ, destination="", relay_state=""):
         if typ == "SAMLResponse":
             info = {
                 "data": message.split("\n")[1],
@@ -355,7 +341,7 @@ class HTTPBase(object):
         :return:
         """
 
-        #_response = self.server.post(soap_message, headers, path=path)
+        # _response = self.server.post(soap_message, headers, path=path)
         try:
             args = self.use_soap(request, destination, headers, sign)
             args["headers"] = dict(args["headers"])
@@ -373,3 +359,24 @@ class HTTPBase(object):
     def add_credentials(self, user, passwd):
         self.user = user
         self.passwd = passwd
+
+    @staticmethod
+    def use_http_get(message, destination, relay_state,
+                     typ="SAMLRequest", sigalg="", key=None, **kwargs):
+        """
+        Send a message using GET, this is the HTTP-Redirect case so
+        no direct response is expected to this request.
+
+        :param message:
+        :param destination:
+        :param relay_state:
+        :param typ: Whether a Request, Response or Artifact
+        :param sigalg: The signature algorithm to use.
+        :param key: Key to use for signing
+        :return: dictionary
+        """
+        if not isinstance(message, basestring):
+            message = "%s" % (message,)
+
+        return http_redirect_message(message, destination, relay_state, typ,
+                                     sigalg, key)

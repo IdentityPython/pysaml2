@@ -43,8 +43,6 @@ from saml2.time_util import str_to_time
 from tempfile import NamedTemporaryFile
 from subprocess import Popen, PIPE
 
-from xmldsig import digest_default
-from xmldsig import sig_default
 from xmldsig import SIG_RSA_SHA1
 from xmldsig import SIG_RSA_SHA224
 from xmldsig import SIG_RSA_SHA256
@@ -81,10 +79,6 @@ class CertificateTooOld(SigverError):
     pass
 
 
-class SignatureError(SigverError):
-    pass
-
-
 class XmlsecError(SigverError):
     pass
 
@@ -98,6 +92,10 @@ class DecryptError(XmlsecError):
 
 
 class EncryptError(XmlsecError):
+    pass
+
+
+class SignatureError(XmlsecError):
     pass
 
 
@@ -912,7 +910,8 @@ class CryptoBackendXmlSec1(CryptoBackend):
         :param exception: The exception class to raise on errors
         :result: Whatever xmlsec wrote to an --output temporary file
         """
-        ntf = NamedTemporaryFile(suffix=".xml", delete=self._xmlsec_delete_tmpfiles)
+        ntf = NamedTemporaryFile(suffix=".xml",
+                                 delete=self._xmlsec_delete_tmpfiles)
         com_list.extend(["--output", ntf.name])
         com_list += extra_args
 
@@ -1152,7 +1151,7 @@ class CertHandler(object):
             self._cert_info = None
             self._generate_cert_func_active = False
             if generate_cert_info is not None and len(self._cert_str) > 0 and \
-                            len(self._key_str) > 0 and tmp_key_file is not \
+                    len(self._key_str) > 0 and tmp_key_file is not \
                     None and tmp_cert_file is not None:
                 self._generate_cert = True
                 self._cert_info = generate_cert_info

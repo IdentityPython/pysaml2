@@ -2,6 +2,7 @@ import base64
 from binascii import hexlify
 import logging
 from hashlib import sha1
+from Crypto.PublicKey import RSA
 import requests
 from saml2.metadata import ENDPOINTS
 from saml2.profile import paos, ecp
@@ -133,6 +134,12 @@ class Entity(HTTPBase):
                     raise Exception(
                         "Could not fetch certificate from %s" % _val)
 
+        try:
+            self.signkey = RSA.importKey(
+                open(self.config.getattr("key_file", ""), 'r').read())
+        except KeyError:
+            self.signkey = None
+
         HTTPBase.__init__(self, self.config.verify_ssl_cert,
                           self.config.ca_certs, self.config.key_file,
                           self.config.cert_file)
@@ -201,7 +208,8 @@ class Entity(HTTPBase):
             info["method"] = "GET"
         elif binding == BINDING_HTTP_REDIRECT:
             logger.info("HTTP REDIRECT")
-            info = self.use_http_get(msg_str, destination, relay_state, typ)
+            info = self.use_http_get(msg_str, destination, relay_state, typ,
+                                     **kwargs)
             info["url"] = str(destination)
             info["method"] = "GET"
         elif binding == BINDING_SOAP or binding == BINDING_PAOS:

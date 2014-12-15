@@ -5,7 +5,6 @@ import sys
 import json
 
 from hashlib import sha1
-from urllib import urlencode, quote_plus
 from os.path import isfile, join
 from saml2.httpbase import HTTPBase
 from saml2.extension.idpdisc import BINDING_DISCO
@@ -20,7 +19,8 @@ from saml2 import SAMLError
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_SOAP
-from saml2.s_utils import UnsupportedBinding, UnknownSystemEntity
+from saml2.s_utils import UnsupportedBinding
+from saml2.s_utils import UnknownSystemEntity
 from saml2.sigver import split_len
 from saml2.validate import valid_instance
 from saml2.time_util import valid

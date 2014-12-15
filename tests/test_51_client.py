@@ -4,6 +4,8 @@
 import base64
 import urllib
 import urlparse
+from Crypto.PublicKey import RSA
+from xmldsig import SIG_RSA_SHA256
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import config
@@ -492,6 +494,22 @@ class TestClient:
         assert resp.assertion
         assert resp.ava == {'givenName': ['Derek'], 'sn': ['Jeter']}
 
+    def test_signed_redirect(self):
+
+        msg_str = "%s" % self.client.create_authn_request(
+            "http://www.example.com/sso", message_id="id1")[1]
+
+        key = self.client.signkey
+
+        info = self.client.apply_binding(
+            BINDING_HTTP_REDIRECT, msg_str, destination="",
+            relay_state="relay2", sigalg=SIG_RSA_SHA256, key=key)
+
+        loc = info["headers"][0][1]
+        qs = urlparse.parse_qs(loc[1:])
+        assert _leq(qs.keys(),
+                   ['SigAlg', 'SAMLRequest', 'RelayState', 'Signature'])
+
 # Below can only be done with dummy Server
 IDP = "urn:mace:example.com:saml:roland:idp"
 
@@ -596,6 +614,6 @@ class TestClientWithDummy():
 #     tc.test_response()
 
 if __name__ == "__main__":
-    tc = TestClientWithDummy()
+    tc = TestClient()
     tc.setup_class()
-    tc.test_do_attribute_query()
+    tc.test_signed_redirect()

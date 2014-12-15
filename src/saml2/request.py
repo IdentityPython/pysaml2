@@ -11,8 +11,8 @@ from saml2.response import IncorrectlySigned
 logger = logging.getLogger(__name__)
 
 
-def _dummy(_arg):
-    return None
+def _dummy(data, **_arg):
+    return ""
 
 
 class Request(object):
@@ -36,12 +36,15 @@ class Request(object):
         self.message = None
         self.not_on_or_after = 0
 
-    def _loads(self, xmldata, binding=None, origdoc=None, must=None, only_valid_cert=False):
+    def _loads(self, xmldata, binding=None, origdoc=None, must=None,
+               only_valid_cert=False):
         # own copy
         self.xmlstr = xmldata[:]
         logger.info("xmlstr: %s" % (self.xmlstr,))
         try:
-            self.message = self.signature_check(xmldata, origdoc=origdoc, must=must, only_valid_cert=only_valid_cert)
+            self.message = self.signature_check(xmldata, origdoc=origdoc,
+                                                must=must,
+                                                only_valid_cert=only_valid_cert)
         except TypeError:
             raise
         except Exception, excp:

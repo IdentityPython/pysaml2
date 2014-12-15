@@ -113,9 +113,7 @@ def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
         args["RelayState"] = relay_state
 
     if sigalg:
-        # sigalgs
-        # http://www.w3.org/2000/09/xmldsig#dsa-sha1
-        # http://www.w3.org/2000/09/xmldsig#rsa-sha1
+        # sigalgs, one of the ones defined in xmldsig
 
         args["SigAlg"] = sigalg
 
@@ -124,7 +122,8 @@ def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
         except:
             raise Unsupported("Signing algorithm")
         else:
-            string = "&".join([urllib.urlencode({k: args[k]}) for k in _order if k in args])
+            string = "&".join([urllib.urlencode({k: args[k]})
+                               for k in _order if k in args])
             args["Signature"] = base64.b64encode(signer.sign(string, key))
             string = urllib.urlencode(args)
     else:
