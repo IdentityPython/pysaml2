@@ -215,6 +215,8 @@ def authn_context_class_ref(ref):
 
 
 def requested_authn_context(class_ref, comparison="minimum"):
+    if not isinstance(class_ref, list):
+        class_ref = [class_ref]
     return RequestedAuthnContext(
-        authn_context_class_ref=[AuthnContextClassRef(text=class_ref)],
+        authn_context_class_ref=[AuthnContextClassRef(text=i) for i in class_ref],
         comparison=comparison)
