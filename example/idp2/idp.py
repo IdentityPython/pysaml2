@@ -129,16 +129,22 @@ class Service(object):
             resp = BadRequest('Error parsing request or no request')
             return resp(self.environ, self.start_response)
         else:
+            # saml_msg may also contain Signature and SigAlg
+            if "Signature" in saml_msg:
+                args = {"signature": saml_msg["signature"],
+                        "sigalg": saml_msg["SigAlg"]}
+            else:
+                args = {}
             try:
                 _encrypt_cert = encrypt_cert_from_item(
                     saml_msg["req_info"].message)
                 return self.do(saml_msg["SAMLRequest"], binding,
                                saml_msg["RelayState"],
-                               encrypt_cert=_encrypt_cert)
+                               encrypt_cert=_encrypt_cert, **args)
             except KeyError:
                 # Can live with no relay state # TODO or can we, for inacademia?
                 return self.do(saml_msg["SAMLRequest"], binding,
-                               saml_msg["RelayState"])
+                               saml_msg["RelayState"], **args)
 
     def artifact_operation(self, saml_msg):
         if not saml_msg:
@@ -341,7 +347,8 @@ class SSO(Service):
         logger.debug("HTTPargs: %s" % http_args)
         return self.response(self.binding_out, http_args)
 
-    def _store_request(self, saml_msg):
+    @staticmethod
+    def _store_request(saml_msg):
         logger.debug("_store_request: %s" % saml_msg)
         key = sha1(saml_msg["SAMLRequest"]).hexdigest()
         # store the AuthnRequest
@@ -369,8 +376,8 @@ class SSO(Service):
 
             _req = self.req_info.message
 
-            if "SigAlg" in saml_msg and "Signature" in saml_msg:  # Signed
-            # request
+            if "SigAlg" in saml_msg and "Signature" in saml_msg:
+                # Signed request
                 issuer = _req.issuer.text
                 _certs = IDP.metadata.certs(issuer, "any", "signing")
                 verified_ok = False
@@ -384,7 +391,7 @@ class SSO(Service):
 
             if self.user:
                 if _req.force_authn is not None and \
-                                _req.force_authn.lower() == 'true':
+                        _req.force_authn.lower() == 'true':
                     saml_msg["req_info"] = self.req_info
                     key = self._store_request(saml_msg)
                     return self.not_authn(key, _req.requested_authn_context)
@@ -581,6 +588,7 @@ def not_found(environ, start_response):
 
 class SLO(Service):
     def do(self, request, binding, relay_state="", encrypt_cert=None):
+
         logger.info("--- Single Log Out Service ---")
         try:
             logger.debug("req: '%s'" % request)
