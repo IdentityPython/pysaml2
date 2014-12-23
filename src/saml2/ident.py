@@ -89,9 +89,15 @@ class IdentDB(object):
         return _id
 
     def store(self, ident, name_id):
+        """
+
+        :param ident: user identifier
+        :param name_id: NameID instance
+        """
         if isinstance(ident, unicode):
             ident = ident.encode("utf-8")
 
+        # One user may have more than one NameID defined
         try:
             val = self.db[ident].split(" ")
         except KeyError:
@@ -100,11 +106,16 @@ class IdentDB(object):
         _cn = code(name_id)
         val.append(_cn)
         self.db[ident] = " ".join(val)
-        self.db[_cn] = ident
+        self.db[name_id.text] = ident
 
     def remove_remote(self, name_id):
+        """
+        Remove a NameID to userID mapping
+
+        :param name_id: NameID instance
+        """
         _cn = code(name_id)
-        _id = self.db[_cn]
+        _id = self.db[name_id.text]
         try:
             vals = self.db[_id].split(" ")
             vals.remove(_cn)
@@ -112,7 +123,7 @@ class IdentDB(object):
         except KeyError:
             pass
 
-        del self.db[_cn]
+        del self.db[name_id.text]
 
     def remove_local(self, sid):
         if isinstance(sid, unicode):
@@ -121,7 +132,8 @@ class IdentDB(object):
         try:
             for val in self.db[sid].split(" "):
                 try:
-                    del self.db[val]
+                    nid = decode(val)
+                    del self.db[nid.text]
                 except KeyError:
                     pass
             del self.db[sid]
@@ -147,6 +159,13 @@ class IdentDB(object):
         return nameid
 
     def find_nameid(self, userid, **kwargs):
+        """
+        Find a set of NameID's that matches the search criteria.
+
+        :param userid: User id
+        :param kwargs: The search filter a set of attribute/value pairs
+        :return: a list of NameID instances
+        """
         res = []
         try:
             _vals = self.db[userid]
@@ -157,8 +176,8 @@ class IdentDB(object):
         for val in _vals.split(" "):
             nid = decode(val)
             if kwargs:
-                for key, val in kwargs.items():
-                    if getattr(nid, key, None) != val:
+                for key, _val in kwargs.items():
+                    if getattr(nid, key, None) != _val:
                         break
                 else:
                     res.append(nid)
@@ -245,10 +264,10 @@ class IdentDB(object):
         """
 
         try:
-            return self.db[code(name_id)]
+            return self.db[name_id.text]
         except KeyError:
-            logger.debug("name: %s" % code(name_id))
-            logger.debug("id keys: %s" % self.db.keys())
+            logger.debug("name: %s" % name_id.text)
+            #logger.debug("id sub keys: %s" % self.subkeys())
             return None
 
     def match_local_id(self, userid, sp_name_qualifier, name_qualifier):
@@ -336,3 +355,7 @@ class IdentDB(object):
     def close(self):
         if hasattr(self.db, 'close'):
             self.db.close()
+
+    def sync(self):
+        if hasattr(self.db, 'sync'):
+            self.db.sync()

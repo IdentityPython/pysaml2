@@ -523,6 +523,8 @@ class Server(Entity):
                     name_id = self.ident.construct_nameid(userid, policy,
                                                           sp_entity_id,
                                                           name_id_policy)
+                    logger.debug("construct_nameid: %s => %s" % (userid,
+                                                                 name_id))
             except IOError, exc:
                 response = self.create_error_response(in_response_to,
                                                       destination,
