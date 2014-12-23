@@ -142,6 +142,24 @@ def test_authn_3():
     method, ref = info[0]
     assert REF2METHOD[AL1] == method
 
+    rac = requested_authn_context([AL1, AL2], "exact")
+
+    info = authn.pick(rac)
+    assert len(info) == 2
+    method, ref = info[0]
+    assert REF2METHOD[AL1] == method
+    method, ref = info[1]
+    assert REF2METHOD[AL2] == method
+
+    rac = requested_authn_context([AL3, AL2], "exact")
+
+    info = authn.pick(rac)
+    assert len(info) == 2
+    method, ref = info[0]
+    assert REF2METHOD[AL3] == method
+    method, ref = info[1]
+    assert REF2METHOD[AL2] == method
+
     rac = requested_authn_context(AL1, "better")
 
     info = authn.pick(rac)
