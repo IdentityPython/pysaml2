@@ -172,6 +172,6 @@ class TestIdentifier():
         assert nameid.text.strip() != nameid2.text.strip()
 
     def teardown_class(self):
-        if os.path.exists("foobar.db"):
-            os.unlink("foobar.db")
+        if os.path.exists("subject.db"):
+            os.unlink("subject.db")
 
