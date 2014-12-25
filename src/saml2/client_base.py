@@ -71,6 +71,10 @@ class VerifyError(SAMLError):
     pass
 
 
+class SignonError(SAMLError):
+    pass
+
+
 class LogoutError(SAMLError):
     pass
 

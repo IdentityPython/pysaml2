@@ -42,7 +42,7 @@ class Saml2Client(Base):
     """ The basic pySAML2 service provider class """
 
     def prepare_for_authenticate(self, entityid=None, relay_state="",
-                                 binding=saml2.BINDING_HTTP_REDIRECT, vorg="",
+                                 binding=None, vorg="",
                                  nameid_format=None,
                                  scoping=None, consent=None, extensions=None,
                                  sign=None,
@@ -64,20 +64,31 @@ class Saml2Client(Base):
         :return: session id and AuthnRequest info
         """
 
-        destination = self._sso_location(entityid, binding)
+        expected_binding = binding
 
-        reqid, req = self.create_authn_request(destination, vorg, scoping,
-                                               response_binding, nameid_format,
-                                               consent=consent,
-                                               extensions=extensions, sign=sign,
-                                               **kwargs)
-        _req_str = "%s" % req
+        for binding in [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST]:
+            if expected_binding and binding != expected_binding:
+                continue
 
-        logger.info("AuthNReq: %s" % _req_str)
+            destination = self._sso_location(entityid, binding)
+            logger.info("destination to provider: %s" % destination)
 
-        info = self.apply_binding(binding, _req_str, destination, relay_state)
+            reqid, request = self.create_authn_request(
+                destination, vorg, scoping, response_binding, nameid_format,
+                consent=consent,
+                extensions=extensions, sign=sign,
+                **kwargs)
 
-        return reqid, info
+            _req_str = str(request)
+
+            logger.info("AuthNReq: %s" % _req_str)
+
+            http_info = self.apply_binding(binding, _req_str, destination,
+                                           relay_state)
+
+            return reqid, binding, http_info
+        else:
+            raise SignonError("No binding available for singon")
 
     def global_logout(self, name_id, reason="", expire=None, sign=None):
         """ More or less a layer of indirection :-/

@@ -619,10 +619,11 @@ class TestClientWithDummy():
     def test_do_authn(self):
         binding = BINDING_HTTP_REDIRECT
         response_binding = BINDING_HTTP_POST
-        sid, http_args = self.client.prepare_for_authenticate(
+        sid, auth_binding, http_args = self.client.prepare_for_authenticate(
             IDP, "http://www.example.com/relay_state",
             binding=binding, response_binding=response_binding)
 
+        assert binding == auth_binding
         assert isinstance(sid, basestring)
         assert len(http_args) == 4
         assert http_args["headers"][0][0] == "Location"
@@ -669,10 +670,12 @@ class TestClientWithDummy():
     def test_post_sso(self):
         binding = BINDING_HTTP_POST
         response_binding = BINDING_HTTP_POST
-        sid, http_args = self.client.prepare_for_authenticate(
+        sid, auth_binding, http_args = self.client.prepare_for_authenticate(
             "urn:mace:example.com:saml:roland:idp", relay_state="really",
             binding=binding, response_binding=response_binding)
         _dic = unpack_form(http_args["data"][3])
+
+        assert binding == auth_binding
 
         req = self.server.parse_authn_request(_dic["SAMLRequest"], binding)
         resp_args = self.server.response_args(req.message, [response_binding])
