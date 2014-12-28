@@ -42,7 +42,7 @@ from saml2.assertion import Policy
 from saml2.assertion import restriction_from_attribute_spec
 from saml2.assertion import filter_attribute_value_assertions
 
-from saml2.ident import IdentDB
+from saml2.ident import IdentDB, decode
 from saml2.profile import ecp
 
 logger = logging.getLogger(__name__)
@@ -700,3 +700,27 @@ class Server(Entity):
 
     def close(self):
         self.ident.close()
+
+    def clean_out_user(self, name_id):
+        """
+        Remove all authentication statements that belongs to a user identified
+        by a NameID instance
+
+        :param name_id: NameID instance
+        :return: The local identifier for the user
+        """
+
+        lid = self.ident.find_local_id(name_id)
+        logger.info("Clean out %s" % lid)
+
+        # remove the authentications
+        try:
+            for _nid in [decode(x) for x in self.ident.db[lid].split(" ")]:
+                try:
+                    self.session_db.remove_authn_statements(_nid)
+                except KeyError:
+                    pass
+        except KeyError:
+            pass
+
+        return lid
