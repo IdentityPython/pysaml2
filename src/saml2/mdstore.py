@@ -431,8 +431,6 @@ class InMemoryMetaData(MetaData):
         :return: list of service descriptions.
             Or if no binding was specified a list of 2-tuples (binding, srv)
         """
-        logger.debug("service(%s, %s, %s, %s)" % (entity_id, typ, service,
-                                                  binding))
         try:
             srvs = []
             for t in self[entity_id][typ]:
@@ -848,6 +846,8 @@ class MetadataStore(object):
 
     def service(self, entity_id, typ, service, binding=None):
         known_entity = False
+        logger.debug("service(%s, %s, %s, %s)" % (entity_id, typ, service,
+                                                  binding))
         for key, _md in self.metadata.items():
             srvs = _md.service(entity_id, typ, service, binding)
             if srvs:

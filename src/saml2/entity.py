@@ -624,8 +624,8 @@ class Entity(HTTPBase):
                 if receiver_addresses:
                     break
 
-        _log_info("receiver addresses: %s" % receiver_addresses)
-        _log_info("Binding: %s" % binding)
+        _log_debug("receiver addresses: %s" % receiver_addresses)
+        _log_debug("Binding: %s" % binding)
 
         try:
             timeslack = self.config.accepted_time_diff

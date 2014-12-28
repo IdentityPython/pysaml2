@@ -43,7 +43,7 @@ class Request(object):
 
         # own copy
         self.xmlstr = xmldata[:]
-        logger.info("xmlstr: %s" % (self.xmlstr,))
+        logger.debug("xmlstr: %s" % (self.xmlstr,))
         try:
             self.message = self.signature_check(xmldata, origdoc=origdoc,
                                                 must=must,
