@@ -13,6 +13,11 @@ from pathutils import dotname
 
 __author__ = 'rolandh'
 
+
+def list_values2simpletons(_dict):
+    return dict([(k, v[0]) for k, v in _dict.items()])
+
+
 def test():
     with closing(Server(config_file=dotname("idp_all_conf"))) as idp:
         conf = SPConfig()
@@ -41,7 +46,12 @@ def test():
                 _dict = parse_qs(val.split("?")[1])
                 _certs = idp.metadata.certs(sp.config.entityid, "any", "signing")
                 for cert in _certs:
-                    if verify_redirect_signature(_dict, cert):
+                    if verify_redirect_signature(
+                            list_values2simpletons(_dict), cert):
                         verified_ok = True
 
         assert verified_ok
+
+
+if __name__ == "__main__":
+    test()

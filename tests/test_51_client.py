@@ -24,8 +24,9 @@ from saml2.saml import NAMEID_FORMAT_PERSISTENT, EncryptedAssertion
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.saml import NameID
 from saml2.server import Server
-from saml2.sigver import pre_encryption_part, rm_xmltag, \
-    verify_redirect_signature
+from saml2.sigver import pre_encryption_part
+from saml2.sigver import rm_xmltag
+from saml2.sigver import verify_redirect_signature
 from saml2.s_utils import do_attribute_statement
 from saml2.s_utils import factory
 from saml2.time_util import in_a_while
@@ -112,6 +113,10 @@ Format="urn:oasis:names:tc:SAML:2
 
 nid = NameID(name_qualifier="foo", format=NAMEID_FORMAT_TRANSIENT,
              text="123456")
+
+
+def list_values2simpletons(_dict):
+    return dict([(k, v[0]) for k, v in _dict.items()])
 
 
 class TestClient:
@@ -510,7 +515,8 @@ class TestClient:
         assert _leq(qs.keys(),
                     ['SigAlg', 'SAMLRequest', 'RelayState', 'Signature'])
 
-        assert verify_redirect_signature(qs, sigkey=key)
+        assert verify_redirect_signature(list_values2simpletons(qs),
+                                         sigkey=key)
 
         res = self.server.parse_authn_request(qs["SAMLRequest"][0],
                                               BINDING_HTTP_REDIRECT)
