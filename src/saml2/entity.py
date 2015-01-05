@@ -872,9 +872,13 @@ class Entity(HTTPBase):
 
             if response:
                 if outstanding_certs:
-                    _, key_file = make_temp(
-                        "%s" % outstanding_certs[
-                            response.in_response_to]["key"], decode=False)
+                    cert = outstanding_certs[
+                        response.in_response_to]
+                    if cert:
+                        _, key_file = make_temp(
+                            "%s" % cert["key"], decode=False)
+                    else:
+                        key_file = ""
                 else:
                     key_file = ""
                 response = response.verify(key_file)
