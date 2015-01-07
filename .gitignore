@@ -2,6 +2,7 @@
 *.~
 \#*
 .*~
+*~
 *.egg-info
 example/*/*.log
 example/*.db
