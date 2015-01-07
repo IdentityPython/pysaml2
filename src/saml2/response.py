@@ -630,16 +630,17 @@ class AuthnResponse(StatusResponse):
             logger.error("Missing Attribute Statement")
             ava = {}
         else:
-            assert len(self.assertion.attribute_statement) == 1
-            _attr_statem = self.assertion.attribute_statement[0]
+            if len(self.assertion.attribute_statement) > 1:
+                logger.info( "Multiple attribute statements: %s" % len(self.assertion.attribute_statement))
 
-            logger.debug("Attribute Statement: %s" % (_attr_statem,))
-            for aconv in self.attribute_converters:
-                logger.debug("Converts name format: %s" % (aconv.name_format,))
+            ava = {}
+            for _attr_statem in self.assertion.attribute_statement:
+                logger.debug("Attribute Statement: %s" % _attr_statem)
+                for aconv in self.attribute_converters:
+                    logger.debug("Converts name format: %s" % aconv.name_format)
 
-            self.decrypt_attributes(_attr_statem)
-            ava = to_local(self.attribute_converters, _attr_statem,
-                           self.allow_unknown_attributes)
+                self.decrypt_attributes(_attr_statem)
+                ava.update(to_local(self.attribute_converters, _attr_statem, self.allow_unknown_attributes))
         return ava
 
     def _bearer_confirmed(self, data):
