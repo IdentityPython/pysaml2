@@ -85,6 +85,7 @@ class SAML2Plugin(object):
     def __init__(self, rememberer_name, config, saml_client, wayf, cache,
                  sid_store=None, discovery="", idp_query_param="",
                  sid_store_cert=None, ):
+        logger.info("s2repoze, SAML2Plugin: INIT")
         self.rememberer_name = rememberer_name
         self.wayf = wayf
         self.saml_client = saml_client
@@ -110,16 +111,19 @@ class SAML2Plugin(object):
         self.iam = platform.node()
 
     def _get_rememberer(self, environ):
+        logger.info("s2repoze, SAML2Plugin: _get_rememberer")
         rememberer = environ['repoze.who.plugins'][self.rememberer_name]
         return rememberer
 
     #### IIdentifier ####
     def remember(self, environ, identity):
+        logger.info("s2repoze, SAML2Plugin: remember")
         rememberer = self._get_rememberer(environ)
         return rememberer.remember(environ, identity)
 
     #### IIdentifier ####
     def forget(self, environ, identity):
+        logger.info("s2repoze, SAML2Plugin: forget")
         rememberer = self._get_rememberer(environ)
         return rememberer.forget(environ, identity)
 
@@ -130,6 +134,7 @@ class SAML2Plugin(object):
         :param environ: A dictionary with environment variables
         """
 
+        logger.info("s2repoze, SAML2Plugin: _get_post")
         body = ''
         try:
             length = int(environ.get('CONTENT_LENGTH', '0'))
@@ -150,6 +155,7 @@ class SAML2Plugin(object):
         return post
 
     def _wayf_redirect(self, came_from):
+        logger.info("s2repoze, SAML2Plugin: _wayf_redirect")
         sid_ = sid()
         self.outstanding_queries[sid_] = came_from
         logger.info("Redirect to WAYF function: %s" % self.wayf)
@@ -162,6 +168,7 @@ class SAML2Plugin(object):
         If more than one idp and if none is selected, I have to do wayf or
         disco
         """
+        logger.info("s2repoze, SAML2Plugin: _pick_idp")
 
         # check headers to see if it's an ECP request
         #        headers = {
@@ -264,6 +271,7 @@ class SAML2Plugin(object):
     #noinspection PyUnusedLocal
     def challenge(self, environ, _status, _app_headers, _forget_headers):
 
+        logger.info("s2repoze, SAML2Plugin: challenge")
         _cli = self.saml_client
 
         if 'REMOTE_USER' in environ:
@@ -381,6 +389,7 @@ class SAML2Plugin(object):
                 return ht_args["data"]
 
     def _construct_identity(self, session_info):
+        logger.info("s2repoze, SAML2Plugin: _construct_identity")
         cni = code(session_info["name_id"])
         identity = {
             "login": cni,
@@ -393,6 +402,7 @@ class SAML2Plugin(object):
         return identity
 
     def _eval_authn_response(self, environ, post, binding=BINDING_HTTP_POST):
+        logger.info("s2repoze, SAML2Plugin: _eval_authn_response")
         logger.info("Got AuthN response, checking..")
         logger.info("Outstanding: %s" % (self.outstanding_queries,))
 
@@ -425,6 +435,7 @@ class SAML2Plugin(object):
         return session_info
 
     def do_ecp_response(self, body, environ):
+        logger.info("s2repoze, SAML2Plugin: do_ecp_response")
         response, _relay_state = ecp.handle_ecp_authn_response(self.saml_client,
                                                                body)
 
@@ -439,6 +450,7 @@ class SAML2Plugin(object):
         """
         Tries to do the identification
         """
+        logger.info("s2repoze, SAML2Plugin: identity")
         #logger = environ.get('repoze.who.logger', '')
 
         query = parse_dict_querystring(environ)
@@ -554,6 +566,7 @@ class SAML2Plugin(object):
     # IMetadataProvider
     def add_metadata(self, environ, identity):
         """ Add information to the knowledge I have about the user """
+        logger.info("s2repoze, SAML2Plugin: add_metadata")
         name_id = identity['repoze.who.userid']
         if isinstance(name_id, basestring):
             try:
@@ -611,6 +624,7 @@ class SAML2Plugin(object):
     #### IAuthenticatorPlugin ####
     #noinspection PyUnusedLocal
     def authenticate(self, environ, identity=None):
+        logger.info("s2repoze, SAML2Plugin: authenticate")
         if identity:
             if identity.get('user') and environ.get(
                     's2repoze.sessioninfo') and identity.get(
@@ -625,6 +639,7 @@ class SAML2Plugin(object):
 
     @staticmethod
     def _handle_logout(responses):
+        logger.info("s2repoze, SAML2Plugin: _handle_logout")
         if 'data' in responses:
             ht_args = responses
         else:
@@ -647,6 +662,7 @@ def make_plugin(remember_name=None,  # plugin for remember
                 discovery="",
                 idp_query_param=""
 ):
+    logger.info("s2repoze: make_plugin")
     if saml_conf is "":
         raise ValueError(
             'must include saml_conf in configuration')
