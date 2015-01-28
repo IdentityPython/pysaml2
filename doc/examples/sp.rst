@@ -1,6 +1,6 @@
 .. _example_sp:
 
-An extremly simple example of a SAML2 service provider.
+An extremely simple example of a SAML2 service provider.
 =======================================================
 
 How it works
