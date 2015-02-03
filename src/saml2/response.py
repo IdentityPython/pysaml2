@@ -850,9 +850,13 @@ class AuthnResponse(StatusResponse):
         """
 
         try:
-            self._verify()
-        except AssertionError:
+            res = self._verify()
+        except AssertionError as err:
+            logger.error("Verification error on the response: %s" % err)
             raise
+        else:
+            if res is None:
+                return None
 
         if not isinstance(self.response, samlp.Response):
             return self
