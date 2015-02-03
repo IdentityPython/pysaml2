@@ -541,6 +541,23 @@ class SamlBase(ExtensionContainer):
         self._add_members_to_element_tree(new_tree)
         return new_tree
 
+    def register_prefix(self, nspair):
+        """
+        Register with ElementTree a set of namespaces
+
+        :param nspair: A dictionary of prefixes and uris to use when
+            constructing the text representation.
+        :return:
+        """
+        for prefix, uri in nspair.items():
+            try:
+                ElementTree.register_namespace(prefix, uri)
+            except AttributeError:
+                # Backwards compatibility with ET < 1.3
+                ElementTree._namespace_map[uri] = prefix
+            except ValueError:
+                pass
+
     def to_string(self, nspair=None):
         """Converts the Saml object to a string containing XML.
 
@@ -552,14 +569,7 @@ class SamlBase(ExtensionContainer):
             nspair = self.c_ns_prefix
 
         if nspair:
-            for prefix, uri in nspair.items():
-                try:
-                    ElementTree.register_namespace(prefix, uri)
-                except AttributeError:
-                    # Backwards compatibility with ET < 1.3
-                    ElementTree._namespace_map[uri] = prefix
-                except ValueError:
-                    pass
+            self.register_prefix(nspair)
 
         return ElementTree.tostring(self._to_element_tree(), encoding="UTF-8")
 

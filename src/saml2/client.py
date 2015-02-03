@@ -342,7 +342,7 @@ class Saml2Client(Base):
                            attribute=None, sp_name_qualifier=None,
                            name_qualifier=None, nameid_format=None,
                            real_id=None, consent=None, extensions=None,
-                           sign=False, binding=BINDING_SOAP):
+                           sign=False, binding=BINDING_SOAP, nsprefix=None):
         """ Does a attribute request to an attribute authority, this is
         by default done over SOAP.
 
@@ -359,6 +359,8 @@ class Saml2Client(Base):
         :param real_id: The identifier which is the key to this entity in the
             identity database
         :param binding: Which binding to use
+        :param nsprefix: Namespace prefixes preferred before those automatically
+            produced.
         :return: The attributes returned if BINDING_SOAP was used.
             HTTP args if BINDING_HTT_POST was used.
         """
@@ -393,7 +395,7 @@ class Saml2Client(Base):
             mid = sid()
             query = self.create_attribute_query(destination, subject_id,
                                                 attribute, mid, consent,
-                                                extensions, sign)
+                                                extensions, sign, nsprefix)
             self.state[query.id] = {"entity_id": entityid,
                                     "operation": "AttributeQuery",
                                     "subject_id": subject_id,

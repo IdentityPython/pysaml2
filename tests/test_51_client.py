@@ -473,7 +473,7 @@ class TestClient:
 
         response = sigver.response_factory(
             in_response_to="_012345",
-            destination="https://www.example.com",
+            destination="http://lingon.catalogix.se:8087/",
             status=s_utils.success_status_factory(),
             issuer=self.server._issuer(),
             encrypted_assertion=EncryptedAssertion()
@@ -616,7 +616,7 @@ class TestClientWithDummy():
                                                         {sid: "/"})
         ac = resp.assertion.authn_statement[0].authn_context
         assert ac.authenticating_authority[0].text == \
-               'http://www.example.com/login'
+            'http://www.example.com/login'
         assert ac.authn_context_class_ref.text == INTERNETPROTOCOLPASSWORD
 
 
@@ -628,4 +628,4 @@ class TestClientWithDummy():
 if __name__ == "__main__":
     tc = TestClient()
     tc.setup_class()
-    tc.test_signed_redirect()
+    tc.test_sign_then_encrypt_assertion2()

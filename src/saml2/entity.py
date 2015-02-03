@@ -421,7 +421,7 @@ class Entity(HTTPBase):
 
     def _message(self, request_cls, destination=None, message_id=0,
                  consent=None, extensions=None, sign=False, sign_prepare=False,
-                 **kwargs):
+                 nsprefix=None, **kwargs):
         """
         Some parameters appear in all requests so simplify by doing
         it in one place
@@ -455,6 +455,9 @@ class Entity(HTTPBase):
 
         if extensions:
             req.extensions = extensions
+
+        if nsprefix:
+            req.register_prefix(nsprefix)
 
         if sign:
             return reqid, self.sign(req, sign_prepare=sign_prepare)
