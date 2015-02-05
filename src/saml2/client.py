@@ -42,13 +42,54 @@ class Saml2Client(Base):
     """ The basic pySAML2 service provider class """
 
     def prepare_for_authenticate(self, entityid=None, relay_state="",
-                                 binding=None, vorg="",
+                                 binding=saml2.BINDING_HTTP_REDIRECT, vorg="",
                                  nameid_format=None,
                                  scoping=None, consent=None, extensions=None,
                                  sign=None,
                                  response_binding=saml2.BINDING_HTTP_POST,
                                  **kwargs):
         """ Makes all necessary preparations for an authentication request.
+
+        :param entityid: The entity ID of the IdP to send the request to
+        :param relay_state: To where the user should be returned after
+            successfull log in.
+        :param binding: Which binding to use for sending the request
+        :param vorg: The entity_id of the virtual organization I'm a member of
+        :param scoping: For which IdPs this query are aimed.
+        :param consent: Whether the principal have given her consent
+        :param extensions: Possible extensions
+        :param sign: Whether the request should be signed or not.
+        :param response_binding: Which binding to use for receiving the response
+        :param kwargs: Extra key word arguments
+        :return: session id and AuthnRequest info
+        """
+
+        reqid, negotiated_binding, info = self.prepare_for_negotiated_authenticate(
+            entityid=entityid,
+            relay_state=relay_state,
+            binding=binding,
+            vorg=vorg,
+            nameid_format=nameid_format,
+            scoping=scoping,
+            consent=consent,
+            extensions=extensions,
+            sign=sign,
+            response_binding=response_binding,
+            **kwargs)
+
+        assert negotiated_binding == binding
+
+        return reqid, info
+
+    def prepare_for_negotiated_authenticate(self, entityid=None, relay_state="",
+                                            binding=None, vorg="",
+                                            nameid_format=None,
+                                            scoping=None, consent=None, extensions=None,
+                                            sign=None,
+                                            response_binding=saml2.BINDING_HTTP_POST,
+                                            **kwargs):
+        """ Makes all necessary preparations for an authentication request that negotiates
+        which binding to use for authentication.
 
         :param entityid: The entity ID of the IdP to send the request to
         :param relay_state: To where the user should be returned after
@@ -88,7 +129,7 @@ class Saml2Client(Base):
 
             return reqid, binding, http_info
         else:
-            raise SignonError("No binding available for singon")
+            raise SignOnError("No supported bindings available for authentication")
 
     def global_logout(self, name_id, reason="", expire=None, sign=None):
         """ More or less a layer of indirection :-/

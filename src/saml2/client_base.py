@@ -71,7 +71,7 @@ class VerifyError(SAMLError):
     pass
 
 
-class SignonError(SAMLError):
+class SignOnError(SAMLError):
     pass
 
 
