@@ -657,7 +657,7 @@ class CryptoBackend():
         raise NotImplementedError()
 
     def validate_signature(self, enctext, cert_file, cert_type, node_name,
-                           node_id, id_attr):
+                           node_id, node_xpath, id_attr):
         raise NotImplementedError()
 
 
@@ -743,7 +743,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
             raise SigverError("Signing failed")
 
     def validate_signature(self, signedtext, cert_file, cert_type, node_name,
-                           node_id, id_attr):
+                           node_id, node_xpath, id_attr):
         """
         Validate signature on XML document.
 
@@ -764,7 +764,10 @@ class CryptoBackendXmlSec1(CryptoBackend):
         if self.debug:
             com_list.append("--store-signatures")
 
-        if node_id:
+        if node_xpath:
+            com_list.extend(["--node-xpath", node_xpath])
+
+        elif node_id:
             com_list.extend(["--node-id", node_id])
 
         if self.__DEBUG:
@@ -858,7 +861,7 @@ class CryptoBackendXMLSecurity(CryptoBackend):
         return lxml.etree.tostring(signed, xml_declaration=True)
 
     def validate_signature(self, signedtext, cert_file, cert_type, node_name,
-                           node_id, id_attr):
+                           node_id, node_xpath, id_attr):
         """
         Validate signature on XML document.
 
@@ -1100,7 +1103,8 @@ class SecurityContext(object):
         return self.crypto.decrypt(enctext, self.key_file)
 
     def verify_signature(self, signedtext, cert_file=None, cert_type="pem",
-                         node_name=NODE_NAME, node_id=None, id_attr=""):
+                         node_name=NODE_NAME, node_id=None, id_attr="",
+                         node_xpath=None):
         """ Verifies the signature of a XML document.
 
         :param signedtext: The XML document as a string
@@ -1120,14 +1124,17 @@ class SecurityContext(object):
         if not id_attr:
             id_attr = ID_ATTR
 
-        return self.crypto.validate_signature(signedtext, cert_file=cert_file,
+        return self.crypto.validate_signature(signedtext,
+                                              cert_file=cert_file,
                                               cert_type=cert_type,
                                               node_name=node_name,
-                                              node_id=node_id, id_attr=id_attr,
-        )
+                                              node_id=node_id,
+                                              node_xpath=node_xpath,
+                                              id_attr=id_attr)
 
     def _check_signature(self, decoded_xml, item, node_name=NODE_NAME,
-                         origdoc=None, id_attr="", must=False):
+                         origdoc=None, id_attr="", must=False,
+                         node_xpath=None):
         #print item
         try:
             issuer = item.issuer.text.strip()
@@ -1171,19 +1178,25 @@ class SecurityContext(object):
                     try:
                         if self.verify_signature(origdoc, pem_file,
                                                  node_name=node_name,
-                                                 node_id=item.id, id_attr=id_attr):
+                                                 node_id=item.id,
+                                                 node_xpath=node_xpath,
+                                                 id_attr=id_attr):
                             verified = True
                             break
                     except Exception:
                         if self.verify_signature(decoded_xml, pem_file,
                                                  node_name=node_name,
-                                                 node_id=item.id, id_attr=id_attr):
+                                                 node_id=item.id,
+                                                 node_xpath=node_xpath,
+                                                 id_attr=id_attr):
                             verified = True
                             break
                 else:
                     if self.verify_signature(decoded_xml, pem_file,
                                              node_name=node_name,
-                                             node_id=item.id, id_attr=id_attr):
+                                             node_id=item.id,
+                                             node_xpath=node_xpath,
+                                             id_attr=id_attr):
                         verified = True
                         break
             except XmlsecError, exc:
@@ -1202,13 +1215,14 @@ class SecurityContext(object):
             if not self.cert_handler.verify_cert(last_pem_file):
                 raise CertificateError("Invalid certificate!")
 
-
         return item
 
     def check_signature(self, item, node_name=NODE_NAME, origdoc=None,
-                        id_attr="", must=False):
-        return self._check_signature(origdoc, item, node_name, origdoc,
-                                     id_attr=id_attr, must=must)
+                        id_attr="", must=False, node_xpath=None):
+        return self._check_signature(origdoc, item, node_name=node_name,
+                                     origdoc=origdoc,
+                                     id_attr=id_attr, must=must,
+                                     node_xpath=node_xpath)
 
     def correctly_signed_message(self, decoded_xml, msgtype, must=False,
                                  origdoc=None):
@@ -1238,8 +1252,9 @@ class SecurityContext(object):
             else:
                 return msg
 
-        return self._check_signature(decoded_xml, msg, class_name(msg),
-                                     origdoc, must=must)
+        return self._check_signature(decoded_xml, msg,
+                                     node_name=class_name(msg),
+                                     origdoc=origdoc, must=must)
 
     def correctly_signed_authn_request(self, decoded_xml, must=False,
                                        origdoc=None):
@@ -1325,7 +1340,8 @@ class SecurityContext(object):
         return self.correctly_signed_message(decoded_xml, "assertion", must,
                                              origdoc)
 
-    def correctly_signed_response(self, decoded_xml, must=False, origdoc=None):
+    def correctly_signed_response(self, decoded_xml, must=False, origdoc=None,
+                                  node_xpath=None):
         """ Check if a instance is correctly signed, if we have metadata for
         the IdP that sent the info use that, if not use the key that are in
         the message if any.
@@ -1341,8 +1357,10 @@ class SecurityContext(object):
             raise TypeError("Not a Response")
 
         if response.signature:
-            self._check_signature(decoded_xml, response, class_name(response),
-                                  origdoc)
+            self._check_signature(decoded_xml, response,
+                                  node_name=class_name(response),
+                                  origdoc=origdoc,
+                                  node_xpath=node_xpath)
 
         if isinstance(response, Response) and (response.assertion or
                                                    response.encrypted_assertion):
@@ -1362,7 +1380,8 @@ class SecurityContext(object):
 
                 try:
                     self._check_signature(decoded_xml, assertion,
-                                          class_name(assertion), origdoc)
+                                          node_name=class_name(assertion),
+                                          origdoc=origdoc)
                 except Exception, exc:
                     logger.error("correctly_signed_response: %s" % exc)
                     raise

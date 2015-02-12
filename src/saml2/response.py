@@ -311,14 +311,16 @@ class StatusResponse(object):
             
         return self._postamble()
         
-    def _loads(self, xmldata, decode=True, origxml=None):
+    def _loads(self, xmldata, decode=True, origxml=None, node_xpath=None):
 
         # own copy
         self.xmlstr = xmldata[:]
         logger.debug("xmlstr: %s" % (self.xmlstr,))
 
         try:
-            self.response = self.signature_check(xmldata, origdoc=origxml, must=self.require_signature)
+            self.response = self.signature_check(xmldata, origdoc=origxml,
+                                                 must=self.require_signature,
+                                                 node_xpath=node_xpath)
         except TypeError:
             raise
         except SignatureError:
@@ -391,8 +393,8 @@ class StatusResponse(object):
         assert self.status_ok()
         return self
 
-    def loads(self, xmldata, decode=True, origxml=None):
-        return self._loads(xmldata, decode, origxml)
+    def loads(self, xmldata, decode=True, origxml=None, node_xpath=None):
+        return self._loads(xmldata, decode, origxml, node_xpath=node_xpath)
 
     def verify(self):
         try:
@@ -477,8 +479,8 @@ class AuthnResponse(StatusResponse):
         except KeyError:
             self.extension_schema = {}
 
-    def loads(self, xmldata, decode=True, origxml=None):
-        self._loads(xmldata, decode, origxml)
+    def loads(self, xmldata, decode=True, origxml=None, node_xpath=None):
+        self._loads(xmldata, decode, origxml, node_xpath=node_xpath)
         
         if self.asynchop:
             if self.in_response_to in self.outstanding_queries:
@@ -1002,7 +1004,7 @@ class AssertionIDResponse(object):
         self.context = "AssertionIdResponse"
         self.signature_check = self.sec.correctly_signed_assertion_id_response
 
-    def loads(self, xmldata, decode=True, origxml=None):
+    def loads(self, xmldata, decode=True, origxml=None, node_xpath=None):
         # own copy
         self.xmlstr = xmldata[:]
         logger.debug("xmlstr: %s" % (self.xmlstr,))

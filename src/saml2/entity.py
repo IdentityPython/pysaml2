@@ -801,7 +801,8 @@ class Entity(HTTPBase):
                 return None
 
             try:
-                response = response.loads(xmlstr, False)
+                response = response.loads(xmlstr, False,
+                                          node_xpath=kwargs.get('node_xpath'))
             except SigverError, err:
                 logger.error("Signature Error: %s" % err)
                 return None

@@ -502,7 +502,8 @@ class Base(Entity):
 
     # ======== response handling ===========
 
-    def parse_authn_request_response(self, xmlstr, binding, outstanding=None):
+    def parse_authn_request_response(self, xmlstr, binding, outstanding=None,
+                                     node_xpath=None):
         """ Deal with an AuthnResponse
 
         :param xmlstr: The reply as a xml string
@@ -528,6 +529,7 @@ class Base(Entity):
                 "entity_id": self.config.entityid,
                 "attribute_converters": self.config.attribute_converters,
                 "allow_unknown_attributes": self.config.allow_unknown_attributes,
+                "node_xpath": node_xpath,
             }
             try:
                 resp = self._parse_response(xmlstr, AuthnResponse,
