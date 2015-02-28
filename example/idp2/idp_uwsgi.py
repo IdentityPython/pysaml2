@@ -419,18 +419,22 @@ class SSO(Service):
         try:
             authz_info = self.environ["HTTP_AUTHORIZATION"]
             if authz_info.startswith("Basic "):
-                _info = base64.b64decode(authz_info[6:])
-                logger.debug("Authz_info: %s" % _info)
                 try:
-                    (user, passwd) = _info.split(":")
-                    if PASSWD[user] != passwd:
-                        resp = Unauthorized()
-                    self.user = user
-                    self.environ[
-                        "idp.authn"] = AUTHN_BROKER.get_authn_by_accr(
-                            PASSWORD)
-                except ValueError:
+                    _info = base64.b64decode(authz_info[6:])
+                except TypeError:
                     resp = Unauthorized()
+                else:
+                    logger.debug("Authz_info: %s" % _info)
+                    try:
+                        (user, passwd) = _info.split(":")
+                        if PASSWD[user] != passwd:
+                            resp = Unauthorized()
+                        self.user = user
+                        self.environ[
+                            "idp.authn"] = AUTHN_BROKER.get_authn_by_accr(
+                            PASSWORD)
+                    except ValueError:
+                        resp = Unauthorized()
             else:
                 resp = Unauthorized()
         except KeyError:
