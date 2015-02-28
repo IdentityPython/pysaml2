@@ -51,8 +51,8 @@ if sys.version_info < (2, 7):
 
 setup(
     name='pysaml2',
-    version='2.3.0',
-    description='Python implementation of SAML Version 2 to be used in a WSGI environment',
+    version='2.4.0beta',
+    description='Python implementation of SAML Version 2',
     # long_description = read("README"),
     author='Roland Hedberg',
     author_email='roland.hedberg@adm.umu.se',

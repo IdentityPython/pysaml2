@@ -33,7 +33,7 @@ from saml2 import saml
 from saml2 import ExtensionElement
 from saml2 import VERSION
 
-from saml2.s_utils import sid
+from saml2.s_utils import sid, rndstr
 from saml2.s_utils import Unsupported
 
 from saml2.time_util import instant
@@ -322,18 +322,13 @@ def signed_instance_factory(instance, seccont, elements_to_sign=None):
 
 
 # --------------------------------------------------------------------------
-
-
-def create_id():
-    """ Create a string of 40 random characters from the set [a-p],
-    can be used as a unique identifier of objects.
-
-    :return: The string of random characters
-    """
-    ret = ""
-    for _ in range(40):
-        ret += chr(random.randint(0, 15) + ord('a'))
-    return ret
+# def create_id():
+#     """ Create a string of 40 random characters from the set [a-p],
+#     can be used as a unique identifier of objects.
+#
+#     :return: The string of random characters
+#     """
+#     return rndstr(40, "abcdefghijklmonp")
 
 
 def make_temp(string, suffix="", decode=True, delete=True):
