@@ -831,7 +831,7 @@ def info_from_cookie(kaka):
             try:
                 key, ref = base64.b64decode(morsel.value).split(":")
                 return IDP.cache.uid2user[key], ref
-            except KeyError:
+            except (KeyError, TypeError):
                 return None, None
         else:
             logger.debug("No idpauthn cookie")
