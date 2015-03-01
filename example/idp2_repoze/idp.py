@@ -19,6 +19,7 @@ from saml2 import BINDING_SOAP
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import time_util
+from saml2.authn import is_equal
 
 from saml2.authn_context import AuthnBroker
 from saml2.authn_context import PASSWORD
@@ -414,7 +415,7 @@ class SSO(Service):
                     logger.debug("Authz_info: %s" % _info)
                     try:
                         (user, passwd) = _info.split(":")
-                        if PASSWD[user] != passwd:
+                        if is_equal(PASSWD[user], passwd):
                             resp = Unauthorized()
                         self.user = user
                     except (ValueError, TypeError):

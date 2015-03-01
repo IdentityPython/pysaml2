@@ -20,6 +20,7 @@ from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import server
 from saml2 import time_util
+from saml2.authn import is_equal
 
 from saml2.authn_context import AuthnBroker
 from saml2.authn_context import PASSWORD
@@ -131,20 +132,20 @@ class Service(object):
         else:
             # saml_msg may also contain Signature and SigAlg
             if "Signature" in saml_msg:
-                args = {"signature": saml_msg["signature"],
+                kwargs = {"signature": saml_msg["signature"],
                         "sigalg": saml_msg["SigAlg"]}
             else:
-                args = {}
+                kwargs = {}
             try:
                 _encrypt_cert = encrypt_cert_from_item(
                     saml_msg["req_info"].message)
                 return self.do(saml_msg["SAMLRequest"], binding,
                                saml_msg["RelayState"],
-                               encrypt_cert=_encrypt_cert, **args)
+                               encrypt_cert=_encrypt_cert, **kwargs)
             except KeyError:
                 # Can live with no relay state # TODO or can we, for inacademia?
                 return self.do(saml_msg["SAMLRequest"], binding,
-                               saml_msg["RelayState"], **args)
+                               saml_msg["RelayState"], **kwargs)
 
     def artifact_operation(self, saml_msg):
         if not saml_msg:
@@ -454,10 +455,9 @@ class SSO(Service):
                 except TypeError:
                     resp = Unauthorized()
                 else:
-                    logger.debug("Authz_info: %s" % _info)
                     try:
                         (user, passwd) = _info.split(":")
-                        if PASSWD[user] != passwd:
+                        if is_equal(PASSWD[user], passwd):
                             resp = Unauthorized()
                         self.user = user
                         self.environ[
@@ -931,12 +931,16 @@ def metadata(environ, start_response):
 
 def staticfile(environ, start_response):
     try:
-        path = args.path
+        path = args.path[:]
         if path is None or len(path) == 0:
             path = os.path.dirname(os.path.abspath(__file__))
         if path[-1] != "/":
             path += "/"
         path += environ.get('PATH_INFO', '').lstrip('/')
+        path = os.path.realpath(path)
+        if not path.startswith(args.path):
+            resp = Unauthorized()
+            return resp(environ, start_response)
         start_response('200 OK', [('Content-Type', "text/xml")])
         return open(path, 'r').read()
     except Exception as ex:
