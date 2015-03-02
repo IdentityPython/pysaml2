@@ -78,7 +78,7 @@ class Cache(object):
                         res[key] = vals
 
         return res, oldees
-                
+
     def _get_info(self, item, check_not_on_or_after=True):
         """ Get session information about a subject gotten from a
         specified IdP/AA.

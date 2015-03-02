@@ -1,5 +1,5 @@
 #!/bin/sh
-rm -f ./code/*
-sphinx-apidoc -F -o ../doc/code ../src
+rm -f saml2*
+sphinx-apidoc -F -o ../doc/ ../src/saml2
 make clean
 make html

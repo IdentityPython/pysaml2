@@ -10,18 +10,57 @@ from saml2 import SamlBase
 NAMESPACE = 'http://www.w3.org/2000/09/xmldsig#'
 
 ENCODING_BASE64 = 'http://www.w3.org/2000/09/xmldsig#base64'
+
+# digest and signature algorithms (not implemented = commented out)
+DIGEST_MD5 = 'http://www.w3.org/2001/04/xmldsig-more#md5' # test framework only!
 DIGEST_SHA1 = 'http://www.w3.org/2000/09/xmldsig#sha1'
-ALG_EXC_C14N = 'http://www.w3.org/2001/10/xml-exc-c14n#'
-SIG_DSA_SHA1 = 'http://www.w3.org/2000/09/xmldsig#dsa-sha1'
+DIGEST_SHA224 = 'http://www.w3.org/2001/04/xmldsig-more#sha224'
+DIGEST_SHA256 = 'http://www.w3.org/2001/04/xmlenc#sha256'
+DIGEST_SHA384 = 'http://www.w3.org/2001/04/xmldsig-more#sha384'
+DIGEST_SHA512 = 'http://www.w3.org/2001/04/xmlenc#sha512'
+DIGEST_RIPEMD160 = 'http://www.w3.org/2001/04/xmlenc#ripemd160'
+digest_default = DIGEST_SHA1
+DIGEST_ALLOWED_ALG = (('DIGEST_SHA1', DIGEST_SHA1),
+                      ('DIGEST_SHA224', DIGEST_SHA224),
+                      ('DIGEST_SHA256', DIGEST_SHA256),
+                      ('DIGEST_SHA384', DIGEST_SHA384),
+                      ('DIGEST_SHA512', DIGEST_SHA512),
+                      ('DIGEST_RIPEMD160', DIGEST_RIPEMD160))
+DIGEST_AVAIL_ALG = DIGEST_ALLOWED_ALG + (('DIGEST_MD5', DIGEST_MD5), )
+
+#SIG_DSA_SHA1 = 'http,//www.w3.org/2000/09/xmldsig#dsa-sha1'
+#SIG_DSA_SHA256 = 'http://www.w3.org/2009/xmldsig11#dsa-sha256'
+#SIG_ECDSA_SHA1 = 'http://www.w3.org/2001/04/xmldsig-more#ECDSA_sha1'
+#SIG_ECDSA_SHA224 = 'http://www.w3.org/2001/04/xmldsig-more#ECDSA_sha224'
+#SIG_ECDSA_SHA256 = 'http://www.w3.org/2001/04/xmldsig-more#ECDSA_sha256'
+#SIG_ECDSA_SHA384 = 'http://www.w3.org/2001/04/xmldsig-more#ECDSA_sha384'
+#SIG_ECDSA_SHA512 = 'http://www.w3.org/2001/04/xmldsig-more#ECDSA_sha512'
+SIG_RSA_MD5 = 'http://www.w3.org/2001/04/xmldsig-more#rsa-md5' # test framework
 SIG_RSA_SHA1 = 'http://www.w3.org/2000/09/xmldsig#rsa-sha1'
+SIG_RSA_SHA224 = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha224'
+SIG_RSA_SHA256 = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'
+SIG_RSA_SHA384 = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha384'
+SIG_RSA_SHA512 = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha512'
+#SIG_RSA_RIPEMD160 = 'http://www.w3.org/2001/04/xmldsig-more#rsa-ripemd160'
+sig_default = SIG_RSA_SHA1
+SIG_ALLOWED_ALG = (('SIG_RSA_SHA1', SIG_RSA_SHA1),
+                   ('SIG_RSA_SHA224', SIG_RSA_SHA224),
+                   ('SIG_RSA_SHA256', SIG_RSA_SHA256),
+                   ('SIG_RSA_SHA384', SIG_RSA_SHA384),
+                   ('SIG_RSA_SHA512', SIG_RSA_SHA512))
+SIG_AVAIL_ALG = SIG_ALLOWED_ALG + (('SIG_RSA_MD5', SIG_RSA_MD5), )
+
 MAC_SHA1 = 'http://www.w3.org/2000/09/xmldsig#hmac-sha1'
 
 C14N = 'http://www.w3.org/TR/2001/REC-xml-c14n-20010315'
 C14N_WITH_C = 'http://www.w3.org/TR/2001/REC-xml-c14n-20010315#WithComments'
+ALG_EXC_C14N = 'http://www.w3.org/2001/10/xml-exc-c14n#'
 
 TRANSFORM_XSLT = 'http://www.w3.org/TR/1999/REC-xslt-19991116'
 TRANSFORM_XPATH = 'http://www.w3.org/TR/1999/REC-xpath-19991116'
 TRANSFORM_ENVELOPED = 'http://www.w3.org/2000/09/xmldsig#enveloped-signature'
+
+
 
 
 class CryptoBinary_(SamlBase):
@@ -57,7 +96,7 @@ class SignatureValueType_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -85,7 +124,7 @@ class CanonicalizationMethodType_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -133,7 +172,7 @@ class TransformType_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -162,7 +201,7 @@ class DigestMethodType_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -266,7 +305,7 @@ class X509IssuerSerialType_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -327,7 +366,7 @@ class PGPDataType_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -373,7 +412,7 @@ class SPKIDataType_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -405,7 +444,7 @@ class ObjectType_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -437,7 +476,7 @@ class SignaturePropertyType_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -592,7 +631,7 @@ class DSAKeyValueType_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -657,7 +696,7 @@ class RSAKeyValueType_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -732,7 +771,7 @@ class SignatureMethodType_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -892,7 +931,7 @@ class X509DataType_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -1025,7 +1064,7 @@ class TransformsType_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -1060,7 +1099,7 @@ class KeyValueType_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -1107,7 +1146,7 @@ class SignaturePropertiesType_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -1171,7 +1210,7 @@ class RetrievalMethodType_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -1232,7 +1271,7 @@ class ReferenceType_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -1374,7 +1413,7 @@ class ManifestType_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -1414,7 +1453,7 @@ class SignedInfoType_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -1502,7 +1541,7 @@ class SignatureType_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,

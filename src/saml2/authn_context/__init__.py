@@ -166,14 +166,20 @@ class AuthnBroker(object):
             if req_authn_context.comparison:
                 _cmp = req_authn_context.comparison
             else:
-                _cmp = "minimum"
-            return self._pick_by_class_ref(
-                req_authn_context.authn_context_class_ref[0].text, _cmp)
+                _cmp = "exact"
+            if _cmp == 'exact':
+                res = []
+                for cls_ref in req_authn_context.authn_context_class_ref:
+                    res += (self._pick_by_class_ref(cls_ref.text, _cmp))
+                return res
+            else:
+                return self._pick_by_class_ref(
+                    req_authn_context.authn_context_class_ref[0].text, _cmp)
         elif req_authn_context.authn_context_decl_ref:
             if req_authn_context.comparison:
                 _cmp = req_authn_context.comparison
             else:
-                _cmp = "minimum"
+                _cmp = "exact"
             return self._pick_by_class_ref(
                 req_authn_context.authn_context_decl_ref, _cmp)
 
@@ -215,6 +221,8 @@ def authn_context_class_ref(ref):
 
 
 def requested_authn_context(class_ref, comparison="minimum"):
+    if not isinstance(class_ref, list):
+        class_ref = [class_ref]
     return RequestedAuthnContext(
-        authn_context_class_ref=[AuthnContextClassRef(text=class_ref)],
+        authn_context_class_ref=[AuthnContextClassRef(text=i) for i in class_ref],
         comparison=comparison)

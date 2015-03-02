@@ -13,7 +13,7 @@
     classes to interact with.
 
     Conversions to and from XML should only be necessary when the SAML classes
-    "touch the wire" and are sent over HTTP. For this reason this module 
+    "touch the wire" and are sent over HTTP. For this reason this module
     provides methods and functions to convert SAML classes to and from strings.
 """
 
@@ -70,7 +70,7 @@ def class_name(instance):
 
 def create_class_from_xml_string(target_class, xml_string):
     """Creates an instance of the target class from a string.
-    
+
     :param target_class: The class which will be instantiated and populated
         with the contents of the XML. This class must have a c_tag and a
         c_namespace class variable.
@@ -79,7 +79,7 @@ def create_class_from_xml_string(target_class, xml_string):
         class.
 
     :return: An instance of the target class with members assigned according to
-        the contents of the XML - or None if the root XML tag and namespace did 
+        the contents of the XML - or None if the root XML tag and namespace did
         not match those of the target class.
     """
     tree = ElementTree.fromstring(xml_string)
@@ -98,10 +98,10 @@ def create_class_from_element_tree(target_class, tree, namespace=None,
     :param tree: An element tree whose contents will be converted into
         members of the new target_class instance.
     :param namespace: The namespace which the XML tree's root node must
-        match. If omitted, the namespace defaults to the c_namespace of the 
+        match. If omitted, the namespace defaults to the c_namespace of the
         target class.
     :param tag: The tag which the XML tree's root node must match. If
-        omitted, the tag defaults to the c_tag class member of the target 
+        omitted, the tag defaults to the c_tag class member of the target
         class.
 
     :return: An instance of the target class - or None if the tag and namespace
@@ -136,16 +136,16 @@ class ExtensionElement(object):
     capture the information in the XML. Child nodes in an XML
     extension are turned into ExtensionElements as well.
     """
-    
+
     def __init__(self, tag, namespace=None, attributes=None,
                  children=None, text=None):
         """Constructor for ExtensionElement
 
         :param namespace: The XML namespace for this element.
         :param tag: The tag (without the namespace qualifier) for
-            this element. To reconstruct the full qualified name of the 
+            this element. To reconstruct the full qualified name of the
             element, combine this tag with the namespace.
-        :param attributes: The attribute value string pairs for the XML 
+        :param attributes: The attribute value string pairs for the XML
             attributes of this element.
         :param children: list (optional) A list of ExtensionElements which
             represent the XML child nodes of this element.
@@ -156,41 +156,41 @@ class ExtensionElement(object):
         self.attributes = attributes or {}
         self.children = children or []
         self.text = text
-        
+
     def to_string(self):
         """ Serialize the object into a XML string """
         element_tree = self.transfer_to_element_tree()
         return ElementTree.tostring(element_tree, encoding="UTF-8")
-        
+
     def transfer_to_element_tree(self):
         if self.tag is None:
             return None
-            
+
         element_tree = ElementTree.Element('')
 
         if self.namespace is not None:
             element_tree.tag = '{%s}%s' % (self.namespace, self.tag)
         else:
             element_tree.tag = self.tag
-            
+
         for key, value in self.attributes.iteritems():
             element_tree.attrib[key] = value
-            
+
         for child in self.children:
             child.become_child_element_of(element_tree)
-            
+
         element_tree.text = self.text
-            
+
         return element_tree
 
     def become_child_element_of(self, element_tree):
-        """Converts this object into an etree element and adds it as a child 
+        """Converts this object into an etree element and adds it as a child
         node in an etree element.
 
-        Adds self to the ElementTree. This method is required to avoid verbose 
+        Adds self to the ElementTree. This method is required to avoid verbose
         XML which constantly redefines the namespace.
 
-        :param element_tree: ElementTree._Element The element to which this 
+        :param element_tree: ElementTree._Element The element to which this
             object's XML will be added.
         """
         new_element = self.transfer_to_element_tree()
@@ -231,37 +231,37 @@ class ExtensionElement(object):
                 results.append(element)
 
         return results
- 
+
     def loadd(self, ava):
         """ expects a special set of keys """
-        
+
         if "attributes" in ava:
             for key, val in ava["attributes"].items():
                 self.attributes[key] = val
-        
+
         try:
             self.tag = ava["tag"]
         except KeyError:
             if not self.tag:
                 raise KeyError("ExtensionElement must have a tag")
-        
+
         try:
             self.namespace = ava["namespace"]
         except KeyError:
             if not self.namespace:
                 raise KeyError("ExtensionElement must belong to a namespace")
-        
+
         try:
             self.text = ava["text"]
         except KeyError:
             pass
-            
+
         if "children" in ava:
             for item in ava["children"]:
                 self.children.append(ExtensionElement(item["tag"]).loadd(item))
-                
+
         return self
-        
+
 
 def extension_element_from_string(xml_string):
     element_tree = ElementTree.fromstring(xml_string)
@@ -273,7 +273,7 @@ def _extension_element_from_element_tree(element_tree):
     if '}' in elementc_tag:
         namespace = elementc_tag[1:elementc_tag.index('}')]
         tag = elementc_tag[elementc_tag.index('}') + 1:]
-    else: 
+    else:
         namespace = None
         tag = elementc_tag
     extension = ExtensionElement(namespace=namespace, tag=tag)
@@ -286,17 +286,17 @@ def _extension_element_from_element_tree(element_tree):
 
 
 class ExtensionContainer(object):
-    
+
     c_tag = ""
     c_namespace = ""
-    
+
     def __init__(self, text=None, extension_elements=None,
                  extension_attributes=None):
 
         self.text = text
         self.extension_elements = extension_elements or []
         self.extension_attributes = extension_attributes or {}
- 
+
     # Three methods to create an object from an ElementTree
     def harvest_element_tree(self, tree):
         # Fill in the instance members from the contents of the XML tree.
@@ -305,7 +305,7 @@ class ExtensionContainer(object):
         for attribute, value in tree.attrib.iteritems():
             self._convert_element_attribute_to_member(attribute, value)
         self.text = tree.text
-        
+
     def _convert_element_tree_to_member(self, child_tree):
         self.extension_elements.append(_extension_element_from_element_tree(
             child_tree))
@@ -333,7 +333,7 @@ class ExtensionContainer(object):
         :param tag: str (optional) The desired tag
         :param namespace: str (optional) The desired namespace
 
-        :Return: A list of elements whose tag and/or namespace match the 
+        :Return: A list of elements whose tag and/or namespace match the
             parameters values
         """
 
@@ -381,16 +381,16 @@ class ExtensionContainer(object):
     def add_extension_attribute(self, name, value):
         self.extension_attributes[name] = value
 
-        
+
 def make_vals(val, klass, klass_inst=None, prop=None, part=False,
               base64encode=False):
     """
     Creates a class instance with a specified value, the specified
     class instance may be a value on a property in a defined class instance.
-    
+
     :param val: The value
     :param klass: The value class
-    :param klass_inst: The class instance which has a property on which 
+    :param klass_inst: The class instance which has a property on which
         what this function returns is a value.
     :param prop: The property which the value should be assigned to.
     :param part: If the value is one of a possible list of values it should be
@@ -400,7 +400,7 @@ def make_vals(val, klass, klass_inst=None, prop=None, part=False,
     cinst = None
 
     #print "make_vals(%s, %s)" % (val, klass)
-    
+
     if isinstance(val, dict):
         cinst = klass().loadd(val, base64encode=base64encode)
     else:
@@ -413,19 +413,19 @@ def make_vals(val, klass, klass_inst=None, prop=None, part=False,
                 setattr(klass_inst, prop, cis)
             else:
                 raise
-            
+
     if part:
         return cinst
-    else:        
-        if cinst:            
+    else:
+        if cinst:
             cis = [cinst]
             setattr(klass_inst, prop, cis)
-    
+
 
 def make_instance(klass, spec, base64encode=False):
     """
     Constructs a class instance containing the specified information
-    
+
     :param klass: The class
     :param spec: Information to be placed in the instance (a dictionary)
     :return: The instance
@@ -435,12 +435,12 @@ def make_instance(klass, spec, base64encode=False):
 
 
 class SamlBase(ExtensionContainer):
-    """A foundation class on which SAML classes are built. It 
+    """A foundation class on which SAML classes are built. It
     handles the parsing of attributes and children which are common to all
-    SAML classes. By default, the SamlBase class translates all XML child 
+    SAML classes. By default, the SamlBase class translates all XML child
     nodes into ExtensionElements.
     """
-    
+
     c_children = {}
     c_attributes = {}
     c_attribute_type = {}
@@ -450,7 +450,7 @@ class SamlBase(ExtensionContainer):
     c_any_attribute = None
     c_value_type = None
     c_ns_prefix = None
-    
+
     def _get_all_c_children_with_order(self):
         if len(self.c_child_order) > 0:
             for child in self.c_child_order:
@@ -458,7 +458,7 @@ class SamlBase(ExtensionContainer):
         else:
             for _, values in self.__class__.c_children.iteritems():
                 yield values[0]
-        
+
     def _convert_element_tree_to_member(self, child_tree):
         # Find the element's tag in this class's list of child members
         if child_tree.tag in self.__class__.c_children:
@@ -480,10 +480,10 @@ class SamlBase(ExtensionContainer):
             ExtensionContainer._convert_element_tree_to_member(self, child_tree)
 
     def _convert_element_attribute_to_member(self, attribute, value):
-        # Find the attribute in this class's list of attributes. 
+        # Find the attribute in this class's list of attributes.
         if attribute in self.__class__.c_attributes:
-            # Find the member of this class which corresponds to the XML 
-            # attribute(lookup in current_class.c_attributes) and set this 
+            # Find the member of this class which corresponds to the XML
+            # attribute(lookup in current_class.c_attributes) and set this
             # member to the desired value (using self.__dict__).
             setattr(self, self.__class__.c_attributes[attribute][0], value)
         else:
@@ -493,7 +493,7 @@ class SamlBase(ExtensionContainer):
 
     # Three methods to create an ElementTree from an object
     def _add_members_to_element_tree(self, tree):
-        # Convert the members of this class which are XML child nodes. 
+        # Convert the members of this class which are XML child nodes.
         # This uses the class's c_children dictionary to find the members which
         # should become XML child nodes.
         for member_name in self._get_all_c_children_with_order():
@@ -519,10 +519,10 @@ class SamlBase(ExtensionContainer):
 
     def become_child_element_of(self, node):
         """
-        Note: Only for use with classes that have a c_tag and c_namespace class 
+        Note: Only for use with classes that have a c_tag and c_namespace class
         member. It is in SamlBase so that it can be inherited but it should
         not be called on instances of SamlBase.
-        
+
         :param node: The node to which this instance should be a child
         """
         new_child = self._to_element_tree()
@@ -531,8 +531,8 @@ class SamlBase(ExtensionContainer):
     def _to_element_tree(self):
         """
 
-        Note, this method is designed to be used only with classes that have a 
-        c_tag and c_namespace. It is placed in SamlBase for inheritance but 
+        Note, this method is designed to be used only with classes that have a
+        c_tag and c_namespace. It is placed in SamlBase for inheritance but
         should not be called on in this class.
 
         """
@@ -540,6 +540,23 @@ class SamlBase(ExtensionContainer):
                                                    self.__class__.c_tag))
         self._add_members_to_element_tree(new_tree)
         return new_tree
+
+    def register_prefix(self, nspair):
+        """
+        Register with ElementTree a set of namespaces
+
+        :param nspair: A dictionary of prefixes and uris to use when
+            constructing the text representation.
+        :return:
+        """
+        for prefix, uri in nspair.items():
+            try:
+                ElementTree.register_namespace(prefix, uri)
+            except AttributeError:
+                # Backwards compatibility with ET < 1.3
+                ElementTree._namespace_map[uri] = prefix
+            except ValueError:
+                pass
 
     def to_string(self, nspair=None):
         """Converts the Saml object to a string containing XML.
@@ -552,15 +569,8 @@ class SamlBase(ExtensionContainer):
             nspair = self.c_ns_prefix
 
         if nspair:
-            for prefix, uri in nspair.items():
-                try:
-                    ElementTree.register_namespace(prefix, uri)
-                except AttributeError:
-                    # Backwards compatibility with ET < 1.3
-                    ElementTree._namespace_map[uri] = prefix
-                except ValueError:
-                    pass
-        
+            self.register_prefix(nspair)
+
         return ElementTree.tostring(self._to_element_tree(), encoding="UTF-8")
 
     def __str__(self):
@@ -568,25 +578,25 @@ class SamlBase(ExtensionContainer):
 
     def keyswv(self):
         """ Return the keys of attributes or children that has values
-        
+
         :return: list of keys
         """
         return [key for key, val in self.__dict__.items() if val]
 
     def keys(self):
-        """ Return all the keys that represent possible attributes and 
+        """ Return all the keys that represent possible attributes and
         children.
-        
+
         :return: list of keys
         """
         keys = ['text']
         keys.extend([n for (n, t, r) in self.c_attributes.values()])
         keys.extend([v[0] for v in self.c_children.values()])
         return keys
-        
+
     def children_with_values(self):
         """ Returns all children that has values
-        
+
         :return: Possibly empty list of children.
         """
         childs = []
@@ -604,12 +614,12 @@ class SamlBase(ExtensionContainer):
     #noinspection PyUnusedLocal
     def set_text(self, val, base64encode=False):
         """ Sets the text property of this instance.
-        
+
         :param val: The value of the text property
         :param base64encode: Whether the value should be base64encoded
         :return: The instance
         """
-        
+
         #print "set_text: %s" % (val,)
         if isinstance(val, bool):
             if val:
@@ -624,23 +634,23 @@ class SamlBase(ExtensionContainer):
             pass
         else:
             raise ValueError("Type shouldn't be '%s'" % (val,))
-        
+
         return self
-        
+
     def loadd(self, ava, base64encode=False):
-        """ 
-        Sets attributes, children, extension elements and extension 
-        attributes of this element instance depending on what is in 
+        """
+        Sets attributes, children, extension elements and extension
+        attributes of this element instance depending on what is in
         the given dictionary. If there are already values on properties
         those will be overwritten. If the keys in the dictionary does
         not correspond to known attributes/children/.. they are ignored.
-        
+
         :param ava: The dictionary
         :param base64encode: Whether the values on attributes or texts on
             children shoule be base64encoded.
         :return: The instance
         """
-        
+
         for prop, _typ, _req in self.c_attributes.values():
             #print "# %s" % (prop)
             if prop in ava:
@@ -653,13 +663,13 @@ class SamlBase(ExtensionContainer):
 
         if "text" in ava:
             self.set_text(ava["text"], base64encode)
-            
+
         for prop, klassdef in self.c_children.values():
             #print "## %s, %s" % (prop, klassdef)
             if prop in ava:
                 #print "### %s" % ava[prop]
                 # means there can be a list of values
-                if isinstance(klassdef, list): 
+                if isinstance(klassdef, list):
                     make_vals(ava[prop], klassdef[0], self, prop,
                               base64encode=base64encode)
                 else:
@@ -671,13 +681,13 @@ class SamlBase(ExtensionContainer):
             for item in ava["extension_elements"]:
                 self.extension_elements.append(ExtensionElement(
                     item["tag"]).loadd(item))
-            
+
         if "extension_attributes" in ava:
             for key, val in ava["extension_attributes"].items():
                 self.extension_attributes[key] = val
-            
+
         return self
-    
+
     def clear_text(self):
         if self.text:
             _text = self.text.strip()
@@ -781,42 +791,42 @@ class SamlBase(ExtensionContainer):
 def element_to_extension_element(element):
     """
     Convert an element into a extension element
-    
+
     :param element: The element instance
     :return: An extension element instance
     """
-    
-    exel = ExtensionElement(element.c_tag, element.c_namespace, 
+
+    exel = ExtensionElement(element.c_tag, element.c_namespace,
                             text=element.text)
 
     exel.attributes.update(element.extension_attributes)
     exel.children.extend(element.extension_elements)
-    
+
     for xml_attribute, (member_name, typ, req) in \
             element.c_attributes.iteritems():
         member_value = getattr(element, member_name)
         if member_value is not None:
             exel.attributes[xml_attribute] = member_value
-                
+
     exel.children.extend([element_to_extension_element(c) for c in
                           element.children_with_values()])
-    
+
     return exel
-    
+
 
 def extension_element_to_element(extension_element, translation_functions,
                                  namespace=None):
     """ Convert an extension element to a normal element.
-    In order to do this you need to have an idea of what type of 
+    In order to do this you need to have an idea of what type of
     element it is. Or rather which module it belongs to.
-    
+
     :param extension_element: The extension element
     :param translation_functions: A dictionary with class identifiers
         as keys and string-to-element translations functions as values
     :param namespace: The namespace of the translation functions.
     :return: An element instance or None
     """
-    
+
     try:
         element_namespace = extension_element.namespace
     except AttributeError:
@@ -830,9 +840,9 @@ def extension_element_to_element(extension_element, translation_functions,
             return ets(extension_element.to_string())
         except KeyError:
             pass
-            
+
     return None
-        
+
 
 def extension_elements_to_elements(extension_elements, schemas):
     """ Create a list of elements each one matching one of the

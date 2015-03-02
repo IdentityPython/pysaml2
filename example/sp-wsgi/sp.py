@@ -156,10 +156,12 @@ class Cache(object):
         self.user = {}
         self.result = {}
 
-    def kaka2user(self, kaka):
-        logger.debug("KAKA: %s" % kaka)
-        if kaka:
-            cookie_obj = SimpleCookie(kaka)
+    def get_user(self, environ):
+        cookie = environ.get("HTTP_COOKIE", '')
+
+        logger.debug("Cookie: %s" % cookie)
+        if cookie:
+            cookie_obj = SimpleCookie(cookie)
             morsel = cookie_obj.get(self.cookie_name, None)
             if morsel:
                 try:
@@ -167,26 +169,26 @@ class Cache(object):
                 except KeyError:
                     return None
             else:
-                logger.debug("No spauthn cookie")
+                logger.debug("No %s cookie", self.cookie_name)
+
         return None
 
-    def delete_cookie(self, environ=None, kaka=None):
-        if not kaka:
-            kaka = environ.get("HTTP_COOKIE", '')
-        logger.debug("delete KAKA: %s" % kaka)
-        if kaka:
+    def delete_cookie(self, environ):
+        cookie = environ.get("HTTP_COOKIE", '')
+        logger.debug("delete cookie: %s" % cookie)
+        if cookie:
             _name = self.cookie_name
-            cookie_obj = SimpleCookie(kaka)
+            cookie_obj = SimpleCookie(cookie)
             morsel = cookie_obj.get(_name, None)
             cookie = SimpleCookie()
             cookie[_name] = ""
             cookie[_name]['path'] = "/"
             logger.debug("Expire: %s" % morsel)
-            cookie[_name]["expires"] = _expiration("dawn")
-            return tuple(cookie.output().split(": ", 1))
+            cookie[_name]["expires"] = _expiration("now")
+            return cookie.output().split(": ", 1)
         return None
 
-    def user2kaka(self, user):
+    def set_cookie(self, user):
         uid = rndstr(32)
         self.uid2user[uid] = user
         cookie = SimpleCookie()
@@ -194,7 +196,7 @@ class Cache(object):
         cookie[self.cookie_name]['path'] = "/"
         cookie[self.cookie_name]["expires"] = _expiration(480)
         logger.debug("Cookie expires: %s" % cookie[self.cookie_name]["expires"])
-        return tuple(cookie.output().split(": ", 1))
+        return cookie.output().split(": ", 1)
 
 
 # -----------------------------------------------------------------------------
@@ -318,6 +320,12 @@ class Service(object):
 # -----------------------------------------------------------------------------
 
 
+class User(object):
+    def __init__(self, name_id, data):
+        self.name_id = name_id
+        self.data = data
+
+
 class ACS(Service):
     def __init__(self, sp, environ, start_response, cache=None, **kwargs):
         Service.__init__(self, environ, start_response)
@@ -357,7 +365,14 @@ class ACS(Service):
             return resp(self.environ, self.start_response)
 
         logger.info("AVA: %s" % self.response.ava)
-        resp = Response(dict_to_table(self.response.ava))
+
+        user = User(self.response.name_id, self.response.ava)
+        cookie = self.cache.set_cookie(user)
+
+        resp = Redirect("/", headers=[
+            ("Location", "/"),
+            cookie,
+        ])
         return resp(self.environ, self.start_response)
 
     def verify_attributes(self, ava):
@@ -522,20 +537,27 @@ class SSO(object):
         logger.info("Chosen IdP: '%s'" % idp_entity_id)
         return 0, idp_entity_id
 
-    def redirect_to_auth(self, _cli, entity_id, came_from, vorg_name=""):
+    def redirect_to_auth(self, _cli, entity_id, came_from):
         try:
+            # Picks a binding to use for sending the Request to the IDP
             _binding, destination = _cli.pick_binding(
                 "single_sign_on_service", self.bindings, "idpsso",
                 entity_id=entity_id)
             logger.debug("binding: %s, destination: %s" % (_binding,
                                                            destination))
-            req_id, req = _cli.create_authn_request(destination, vorg=vorg_name)
+            # Binding here is the response binding that is which binding the
+            # IDP should use to return the response.
+            acs = _cli.config.getattr("endpoints", "sp")[
+                "assertion_consumer_service"]
+            # just pick one
+            endp, return_binding = acs[0]
+            req_id, req = _cli.create_authn_request(destination,
+                                                    binding=return_binding)
             _rstate = rndstr()
             self.cache.relay_state[_rstate] = came_from
             ht_args = _cli.apply_binding(_binding, "%s" % req, destination,
                                          relay_state=_rstate)
             _sid = req_id
-            logger.debug("ht_args: %s" % ht_args)
         except Exception, exc:
             logger.exception(exc)
             resp = ServiceError(
@@ -553,14 +575,6 @@ class SSO(object):
         came_from = geturl(self.environ)
         logger.debug("[sp.challenge] RelayState >> '%s'" % came_from)
 
-        # Am I part of a virtual organization or more than one ?
-        try:
-            vorg_name = _cli.vorg._name
-        except AttributeError:
-            vorg_name = ""
-
-        logger.debug("[sp.challenge] VO: %s" % vorg_name)
-
         # If more than one idp and if none is selected, I have to do wayf
         (done, response) = self._pick_idp(came_from)
         # Three cases: -1 something went wrong or Discovery service used
@@ -575,9 +589,22 @@ class SSO(object):
         else:
             entity_id = response
             # Do the AuthnRequest
-            resp = self.redirect_to_auth(_cli, entity_id, came_from, vorg_name)
+            resp = self.redirect_to_auth(_cli, entity_id, came_from)
             return resp(self.environ, self.start_response)
 
+
+# ----------------------------------------------------------------------------
+
+
+class SLO(Service):
+    def __init__(self, sp, environ, start_response, cache=None):
+        Service.__init__(self, environ, start_response)
+        self.sp = sp
+        self.cache = cache
+
+    def do(self, response, binding, relay_state="", mtype="response"):
+        req_info = self.sp.parse_logout_request_response(response, binding)
+        return finish_logout(self.environ, self.start_response)
 
 # ----------------------------------------------------------------------------
 
@@ -593,15 +620,18 @@ def not_found(environ, start_response):
 
 
 #noinspection PyUnusedLocal
-def main(environ, start_response, _sp):
-    _sso = SSO(_sp, environ, start_response, cache=CACHE, **ARGS)
-    return _sso.do()
+def main(environ, start_response, sp):
+    user = CACHE.get_user(environ)
 
+    if user is None:
+        sso = SSO(sp, environ, start_response, cache=CACHE, **ARGS)
+        return sso.do()
 
-#noinspection PyUnusedLocal
-def verify_login_cookie(environ, start_response, _sp):
-    _sso = SSO(_sp, environ, start_response, cache=CACHE, **ARGS)
-    return _sso.do()
+    body = dict_to_table(user.data)
+    body += '<br><a href="/logout">logout</a>'
+
+    resp = Response(body)
+    return resp(environ, start_response)
 
 
 def disco(environ, start_response, _sp):
@@ -619,13 +649,67 @@ def disco(environ, start_response, _sp):
 
 # ----------------------------------------------------------------------------
 
+
+#noinspection PyUnusedLocal
+def logout(environ, start_response, sp):
+    user = CACHE.get_user(environ)
+
+    if user is None:
+        sso = SSO(sp, environ, start_response, cache=CACHE, **ARGS)
+        return sso.do()
+
+    logger.info("[logout] subject_id: '%s'" % (user.name_id,))
+
+    # What if more than one
+    data = sp.global_logout(user.name_id)
+    logger.info("[logout] global_logout > %s" % data)
+
+    for entity_id, logout_info in data.items():
+        if isinstance(logout_info, tuple):
+            binding, http_info = logout_info
+
+            if binding == BINDING_HTTP_POST:
+                body = ''.join(http_info['data'])
+                resp = Response(body)
+                return resp(environ, start_response)
+            elif binding == BINDING_HTTP_REDIRECT:
+                for key, value in http_info['headers']:
+                    if key.lower() == 'location':
+                        resp = Redirect(value)
+                        return resp(environ, start_response)
+
+                resp = ServiceError('missing Location header')
+                return resp(environ, start_response)
+            else:
+                resp = ServiceError('unknown logout binding: %s', binding)
+                return resp(environ, start_response)
+        else:  # result from logout, should be OK
+            pass
+
+    return finish_logout(environ, start_response)
+
+
+def finish_logout(environ, start_response):
+    logger.info("[logout done] environ: %s" % environ)
+    logger.info("[logout done] remaining subjects: %s" % CACHE.uid2user.values())
+
+    # remove cookie and stored info
+    cookie = CACHE.delete_cookie(environ)
+
+    resp = Response('You are now logged out of this service', headers=[
+      cookie,
+    ])
+    return resp(environ, start_response)
+
+# ----------------------------------------------------------------------------
+
 # map urls to functions
 urls = [
     # Hmm, place holder, NOT used
     ('place', ("holder", None)),
     (r'^$', main),
-    (r'^login', verify_login_cookie),
-    (r'^disco', disco)
+    (r'^disco', disco),
+    (r'^logout$', logout),
 ]
 
 
@@ -636,6 +720,13 @@ def add_urls():
     urls.append(("%s/post/(.*)$" % base, (ACS, "post", SP)))
     urls.append(("%s/redirect$" % base, (ACS, "redirect", SP)))
     urls.append(("%s/redirect/(.*)$" % base, (ACS, "redirect", SP)))
+
+    base = "slo"
+
+    urls.append(("%s/post$" % base, (SLO, "post", SP)))
+    urls.append(("%s/post/(.*)$" % base, (SLO, "post", SP)))
+    urls.append(("%s/redirect$" % base, (SLO, "redirect", SP)))
+    urls.append(("%s/redirect/(.*)$" % base, (SLO, "redirect", SP)))
 
 # ----------------------------------------------------------------------------
 
@@ -654,6 +745,7 @@ def application(environ, start_response):
     """
     path = environ.get('PATH_INFO', '').lstrip('/')
     logger.debug("<application> PATH: '%s'" % path)
+
 
     logger.debug("Finding callback to run")
     try:
@@ -730,11 +822,13 @@ if __name__ == '__main__':
 
     SRV = wsgiserver.CherryPyWSGIServer((HOST, PORT), application)
 
+    _https = ""
     if service_conf.HTTPS:
         SRV.ssl_adapter = ssl_pyopenssl.pyOpenSSLAdapter(SERVER_CERT,
                                                          SERVER_KEY, CERT_CHAIN)
+        _https = " using SSL/TLS"
     logger.info("Server starting")
-    print "SP listening on %s:%s" % (HOST, PORT)
+    print "SP listening on %s:%s%s" % (HOST, PORT, _https)
     try:
         SRV.start()
     except KeyboardInterrupt:

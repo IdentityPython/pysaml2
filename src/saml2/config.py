@@ -71,7 +71,8 @@ COMMON_ARGS = [
     "tmp_cert_file",
     "tmp_key_file",
     "validate_certificate",
-    "extensions"
+    "extensions",
+    "allow_unknown_attributes"
 ]
 
 SP_ARGS = [
@@ -90,7 +91,6 @@ SP_ARGS = [
     "allow_unsolicited",
     "ecp",
     "name_id_format",
-    "allow_unknown_attributes"
 ]
 
 AA_IDP_ARGS = [
@@ -116,14 +116,17 @@ PDP_ARGS = ["endpoints", "name_form", "name_id_format"]
 
 AQ_ARGS = ["endpoints"]
 
+AA_ARGS = ["attribute", "attribute_profile"]
+
 COMPLEX_ARGS = ["attribute_converters", "metadata", "policy"]
-ALL = set(COMMON_ARGS + SP_ARGS + AA_IDP_ARGS + PDP_ARGS + COMPLEX_ARGS)
+ALL = set(COMMON_ARGS + SP_ARGS + AA_IDP_ARGS + PDP_ARGS + COMPLEX_ARGS +
+          AA_ARGS)
 
 SPEC = {
     "": COMMON_ARGS + COMPLEX_ARGS,
     "sp": COMMON_ARGS + COMPLEX_ARGS + SP_ARGS,
     "idp": COMMON_ARGS + COMPLEX_ARGS + AA_IDP_ARGS,
-    "aa": COMMON_ARGS + COMPLEX_ARGS + AA_IDP_ARGS,
+    "aa": COMMON_ARGS + COMPLEX_ARGS + AA_IDP_ARGS + AA_ARGS,
     "pdp": COMMON_ARGS + COMPLEX_ARGS + PDP_ARGS,
     "aq": COMMON_ARGS + COMPLEX_ARGS + AQ_ARGS,
 }
@@ -213,6 +216,7 @@ class Config(object):
         self.crypto_backend = 'xmlsec1'
         self.scope = ""
         self.allow_unknown_attributes = False
+        self.allow_unsolicited = False
         self.extension_schema = {}
         self.cert_handler_extra_class = None
         self.verify_encrypt_cert = None
@@ -222,6 +226,8 @@ class Config(object):
         self.tmp_key_file = None
         self.validate_certificate = None
         self.extensions = {}
+        self.attribute = []
+        self.attribute_profile = []
 
     def setattr(self, context, attr, val):
         if context == "":
@@ -395,9 +401,9 @@ class Config(object):
 
     def endpoint(self, service, binding=None, context=None):
         """ Goes through the list of endpoint specifications for the
-        given type of service and returnes the first endpoint that matches
-        the given binding. If no binding is given any endpoint for that
-        service will be returned.
+        given type of service and returns a list of endpoint that matches
+        the given binding. If no binding is given all endpoints available for
+        that service will be returned.
 
         :param service: The service the endpoint should support
         :param binding: The expected binding
@@ -459,7 +465,7 @@ class Config(object):
 
         handler.setFormatter(formatter)
         return handler
-    
+
     def setup_logger(self):
         if root_logger.level != logging.NOTSET:  # Someone got there before me
             return root_logger
@@ -522,7 +528,7 @@ class SPConfig(Config):
 
 class IdPConfig(Config):
     def_context = "idp"
-    
+
     def __init__(self):
         Config.__init__(self)
 

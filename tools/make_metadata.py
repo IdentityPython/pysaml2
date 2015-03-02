@@ -2,7 +2,7 @@
 import argparse
 import os
 import sys
-from saml2.metadata import entity_descriptor
+from saml2.metadata import entity_descriptor, metadata_tostring_fix
 from saml2.metadata import entities_descriptor
 from saml2.metadata import sign_entity_descriptor
 
@@ -54,6 +54,8 @@ for filespec in args.config:
     if fil.endswith(".py"):
         fil = fil[:-3]
     cnf = Config().load_file(fil, metadata_construction=True)
+    if valid_for:
+        cnf.valid_for = valid_for
     eds.append(entity_descriptor(cnf))
 
 conf = Config()
@@ -71,9 +73,12 @@ if args.id:
 else:
     for eid in eds:
         if args.sign:
-            desc = sign_entity_descriptor(eid, id, secc)
+            assert conf.key_file
+            assert conf.cert_file
+            eid, xmldoc = sign_entity_descriptor(eid, args.id, secc)
         else:
-            desc = eid
-        valid_instance(desc)
-        print desc.to_string(nspair)
+            xmldoc = None
 
+        valid_instance(eid)
+        xmldoc = metadata_tostring_fix(eid, nspair, xmldoc)
+        print xmldoc

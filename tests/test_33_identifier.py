@@ -56,7 +56,7 @@ NAME_ID_POLICY_2 = """<?xml version="1.0" encoding="utf-8"?>
 class TestIdentifier():
     def setup_class(self):
         self.id = IdentDB("subject.db", "example.com", "example")
-        
+
     def test_persistent_1(self):
         policy = Policy({
             "default": {
@@ -67,17 +67,17 @@ class TestIdentifier():
                 }
             }
         })
-        
+
         nameid = self.id.construct_nameid("foobar", policy,
                                           "urn:mace:example.com:sp:1")
-        
+
         assert _eq(nameid.keyswv(), ['format', 'text', 'sp_name_qualifier',
                                      'name_qualifier'])
         assert nameid.sp_name_qualifier == "urn:mace:example.com:sp:1"
         assert nameid.format == NAMEID_FORMAT_PERSISTENT
-        
+
         id = self.id.find_local_id(nameid)
-        
+
         assert id == "foobar"
 
     def test_transient_1(self):
@@ -92,12 +92,12 @@ class TestIdentifier():
         })
         nameid = self.id.construct_nameid("foobar", policy,
                                           "urn:mace:example.com:sp:1")
-        
+
         assert _eq(nameid.keyswv(), ['text', 'format', 'sp_name_qualifier',
                                      'name_qualifier'])
         assert nameid.format == NAMEID_FORMAT_TRANSIENT
         assert nameid.text != "foobar"
-        
+
     def test_vo_1(self):
         policy = Policy({
             "default": {
@@ -108,7 +108,7 @@ class TestIdentifier():
                 }
             }
         })
-        
+
         name_id_policy = samlp.name_id_policy_from_string(NAME_ID_POLICY_1)
         print name_id_policy
         nameid = self.id.construct_nameid("foobar", policy,
@@ -133,13 +133,13 @@ class TestIdentifier():
                 }
             }
         })
-        
+
         name_id_policy = samlp.name_id_policy_from_string(NAME_ID_POLICY_2)
-        
+
         nameid = self.id.construct_nameid("foobar", policy,
                                           'http://vo.example.org/design',
                                           name_id_policy)
-        
+
         assert _eq(nameid.keyswv(), ['text', 'sp_name_qualifier', 'format',
                                      'name_qualifier'])
         assert nameid.sp_name_qualifier == 'http://vo.example.org/design'
@@ -172,6 +172,6 @@ class TestIdentifier():
         assert nameid.text.strip() != nameid2.text.strip()
 
     def teardown_class(self):
-        if os.path.exists("foobar.db"):
-            os.unlink("foobar.db")
+        if os.path.exists("subject.db"):
+            os.unlink("subject.db")
 

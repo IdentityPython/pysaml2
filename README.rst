@@ -1,4 +1,3 @@
-
 *************************
 PySAML2 - SAML2 in Python
 *************************
@@ -11,6 +10,3 @@ necessary pieces for building a SAML2 service provider or an identity provider.
 The distribution contains examples of both.
 Originally written to work in a WSGI environment there are extensions that
 allow you to use it with other frameworks.
-
-
-

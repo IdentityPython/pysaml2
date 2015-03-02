@@ -1,7 +1,7 @@
 # An eduPersonTargetedID comprises
-# the entity name of the identity provider, the entity name of the service 
+# the entity name of the identity provider, the entity name of the service
 # provider, and a opaque string value.
-# These strings are separated by "!" symbols. This form is advocated by 
+# These strings are separated by "!" symbols. This form is advocated by
 # Internet2 and may overtake the other form in due course.
 
 import hashlib
@@ -15,8 +15,8 @@ logger = logging.getLogger(__name__)
 class Eptid(object):
     def __init__(self, secret):
         self._db = {}
-        self.secret = secret 
-        
+        self.secret = secret
+
     def make(self, idp, sp, args):
         md5 = hashlib.md5()
         for arg in args:

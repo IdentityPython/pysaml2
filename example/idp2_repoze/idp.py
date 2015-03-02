@@ -19,6 +19,7 @@ from saml2 import BINDING_SOAP
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import time_util
+from saml2.authn import is_equal
 
 from saml2.authn_context import AuthnBroker
 from saml2.authn_context import PASSWORD
@@ -406,15 +407,19 @@ class SSO(Service):
         try:
             authz_info = self.environ["HTTP_AUTHORIZATION"]
             if authz_info.startswith("Basic "):
-                _info = base64.b64decode(authz_info[6:])
-                logger.debug("Authz_info: %s" % _info)
                 try:
-                    (user, passwd) = _info.split(":")
-                    if PASSWD[user] != passwd:
-                        resp = Unauthorized()
-                    self.user = user
-                except ValueError:
+                    _info = base64.b64decode(authz_info[6:])
+                except TypeError:
                     resp = Unauthorized()
+                else:
+                    logger.debug("Authz_info: %s" % _info)
+                    try:
+                        (user, passwd) = _info.split(":")
+                        if is_equal(PASSWD[user], passwd):
+                            resp = Unauthorized()
+                        self.user = user
+                    except (ValueError, TypeError):
+                        resp = Unauthorized()
             else:
                 resp = Unauthorized()
         except KeyError:
@@ -758,7 +763,7 @@ def info_from_cookie(kaka):
             try:
                 key, ref = base64.b64decode(morsel.value).split(":")
                 return IDP.cache.uid2user[key], ref
-            except KeyError:
+            except (KeyError, TypeError):
                 return None, None
         else:
             logger.debug("No idpauthn cookie")

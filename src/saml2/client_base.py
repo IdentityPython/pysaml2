@@ -1,19 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2009-2011 Umeå University
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#            http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
 """Contains classes and functions that a SAML2.0 Service Provider (SP) may use
 to conclude its tasks.
@@ -27,7 +14,7 @@ from saml2.entity import Entity
 from saml2.mdstore import destinations
 from saml2.profile import paos, ecp
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
-from saml2.samlp import AuthnQuery
+from saml2.samlp import AuthnQuery, RequestedAuthnContext
 from saml2.samlp import NameIDMappingRequest
 from saml2.samlp import AttributeQuery
 from saml2.samlp import AuthzDecisionQuery
@@ -191,7 +178,8 @@ class Base(Entity):
         return ava
 
     #noinspection PyUnusedLocal
-    def is_session_valid(self, _session_id):
+    @staticmethod
+    def is_session_valid(_session_id):
         """ Place holder. Supposed to check if the session is still valid.
         """
         return True
@@ -205,12 +193,12 @@ class Base(Entity):
 
     def create_authn_request(self, destination, vorg="", scoping=None,
                              binding=saml2.BINDING_HTTP_POST,
-                             nameid_format=NAMEID_FORMAT_TRANSIENT,
+                             nameid_format=None,
                              service_url_binding=None, message_id=0,
                              consent=None, extensions=None, sign=None,
                              allow_create=False, sign_prepare=False, **kwargs):
         """ Creates an authentication request.
-        
+
         :param destination: Where the request should be sent.
         :param vorg: The virtual organization the service belongs to.
         :param scoping: The scope of the request
@@ -264,6 +252,27 @@ class Base(Entity):
             else:
                 args["provider_name"] = self._my_name()
 
+        # Allow argument values either as class instances or as dictionaries
+        # all of these have cardinality 0..1
+        _msg = AuthnRequest()
+        for param in ["scoping", "requested_authn_context", "conditions",
+                      "subject", "scoping"]:
+            try:
+                _item = kwargs[param]
+            except KeyError:
+                pass
+            else:
+                del kwargs[param]
+                # either class instance or argument dictionary
+                if isinstance(_item, _msg.child_class(param)):
+                    args[param] = _item
+                elif isinstance(_item, dict):
+                    args[param] = RequestedAuthnContext(**_item)
+                else:
+                    raise ValueError("%s or wrong type expected %s" % (_item,
+                                                                       param))
+
+
         try:
             args["name_id_policy"] = kwargs["name_id_policy"]
             del kwargs["name_id_policy"]
@@ -273,13 +282,19 @@ class Base(Entity):
             else:
                 allow_create = "false"
 
-            # Profile stuff, should be configurable
-            if nameid_format is None:
-                name_id_policy = samlp.NameIDPolicy(
-                    allow_create=allow_create, format=NAMEID_FORMAT_TRANSIENT)
-            elif nameid_format == "":
+            if nameid_format == "":
                 name_id_policy = None
             else:
+                if nameid_format is None:
+                    nameid_format = self.config.getattr("name_id_format", "sp")
+
+                    if nameid_format is None:
+                        nameid_format = NAMEID_FORMAT_TRANSIENT
+                    elif isinstance(nameid_format, list):
+                        # NameIDPolicy can only have one format specified
+                        nameid_format = nameid_format[0]
+
+
                 name_id_policy = samlp.NameIDPolicy(allow_create=allow_create,
                                                     format=nameid_format)
 
@@ -290,6 +305,11 @@ class Base(Entity):
                 except KeyError:
                     pass
             args["name_id_policy"] = name_id_policy
+
+        try:
+            nsprefix = kwargs["nsprefix"]
+        except KeyError:
+            nsprefix = None
 
         if kwargs:
             _args, extensions = self._filter_args(AuthnRequest(), extensions,
@@ -313,18 +333,18 @@ class Base(Entity):
                 return self._message(AuthnRequest, destination, message_id,
                                      consent, extensions, sign, sign_prepare,
                                      protocol_binding=binding,
-                                     scoping=scoping, **args)
+                                     scoping=scoping, nsprefix=nsprefix, **args)
         return self._message(AuthnRequest, destination, message_id, consent,
                              extensions, sign, sign_prepare,
                              protocol_binding=binding,
-                             scoping=scoping, **args)
+                             scoping=scoping, nsprefix=nsprefix, **args)
 
     def create_attribute_query(self, destination, name_id=None,
                                attribute=None, message_id=0, consent=None,
                                extensions=None, sign=False, sign_prepare=False,
                                **kwargs):
         """ Constructs an AttributeQuery
-        
+
         :param destination: To whom the query should be sent
         :param name_id: The identifier of the subject
         :param attribute: A dictionary of attributes and values that is
@@ -371,9 +391,14 @@ class Base(Entity):
         if attribute:
             attribute = do_attributes(attribute)
 
+        try:
+            nsprefix = kwargs["nsprefix"]
+        except KeyError:
+            nsprefix = None
+
         return self._message(AttributeQuery, destination, message_id, consent,
                              extensions, sign, sign_prepare, subject=subject,
-                             attribute=attribute)
+                             attribute=attribute, nsprefix=nsprefix)
 
     # MUST use SOAP for
     # AssertionIDRequest, SubjectQuery,
@@ -399,7 +424,7 @@ class Base(Entity):
         return self._message(AuthzDecisionQuery, destination, message_id,
                              consent, extensions, sign, action=action,
                              evidence=evidence, resource=resource,
-                             subject=subject)
+                             subject=subject, **kwargs)
 
     def create_authz_decision_query_using_assertion(self, destination,
                                                     assertion, action=None,
@@ -407,7 +432,7 @@ class Base(Entity):
                                                     subject=None, message_id=0,
                                                     consent=None,
                                                     extensions=None,
-                                                    sign=False):
+                                                    sign=False, nsprefix=None):
         """ Makes an authz decision query based on a previously received
         Assertion.
 
@@ -434,9 +459,10 @@ class Base(Entity):
         return self.create_authz_decision_query(
             destination, _action, saml.Evidence(assertion=assertion),
             resource, subject, message_id=message_id, consent=consent,
-            extensions=extensions, sign=sign)
+            extensions=extensions, sign=sign, nsprefix=nsprefix)
 
-    def create_assertion_id_request(self, assertion_id_refs, **kwargs):
+    @staticmethod
+    def create_assertion_id_request(assertion_id_refs, **kwargs):
         """
 
         :param assertion_id_refs:
@@ -450,7 +476,7 @@ class Base(Entity):
 
     def create_authn_query(self, subject, destination=None, authn_context=None,
                            session_index="", message_id=0, consent=None,
-                           extensions=None, sign=False):
+                           extensions=None, sign=False, nsprefix=None):
         """
 
         :param subject: The subject its all about as a <Subject> instance
@@ -463,15 +489,18 @@ class Base(Entity):
         :param sign: Whether the request should be signed or not.
         :return:
         """
-        return self._message(AuthnQuery, destination, message_id, consent, extensions,
-                             sign, subject=subject, session_index=session_index,
-                             requested_authn_context=authn_context)
+        return self._message(AuthnQuery, destination, message_id, consent,
+                             extensions, sign, subject=subject,
+                             session_index=session_index,
+                             requested_authn_context=authn_context,
+                             nsprefix=nsprefix)
 
     def create_name_id_mapping_request(self, name_id_policy,
                                        name_id=None, base_id=None,
                                        encrypted_id=None, destination=None,
-                                       message_id=0, consent=None, extensions=None,
-                                       sign=False):
+                                       message_id=0, consent=None,
+                                       extensions=None, sign=False,
+                                       nsprefix=None):
         """
 
         :param name_id_policy:
@@ -492,16 +521,18 @@ class Base(Entity):
         if name_id:
             return self._message(NameIDMappingRequest, destination, message_id,
                                  consent, extensions, sign,
-                                 name_id_policy=name_id_policy, name_id=name_id)
+                                 name_id_policy=name_id_policy, name_id=name_id,
+                                 nsprefix=nsprefix)
         elif base_id:
             return self._message(NameIDMappingRequest, destination, message_id,
                                  consent, extensions, sign,
-                                 name_id_policy=name_id_policy, base_id=base_id)
+                                 name_id_policy=name_id_policy, base_id=base_id,
+                                 nsprefix=nsprefix)
         else:
             return self._message(NameIDMappingRequest, destination, message_id,
                                  consent, extensions, sign,
                                  name_id_policy=name_id_policy,
-                                 encrypted_id=encrypted_id)
+                                 encrypted_id=encrypted_id, nsprefix=nsprefix)
 
     # ======== response handling ===========
 
@@ -530,11 +561,11 @@ class Base(Entity):
                 "allow_unsolicited": self.allow_unsolicited,
                 "want_assertions_signed": self.want_assertions_signed,
                 "want_response_signed": self.want_response_signed,
-                "return_addrs": self.service_urls(),
+                "return_addrs": self.service_urls(binding=binding),
                 "entity_id": self.config.entityid,
                 "attribute_converters": self.config.attribute_converters,
                 "allow_unknown_attributes":
-                    self.config.allow_unknown_attributes,
+                self.config.allow_unknown_attributes,
             }
             try:
                 resp = self._parse_response(xmlstr, AuthnResponse,
@@ -738,6 +769,7 @@ class Base(Entity):
             the user agent.
         :return: A URL
         """
+
         args = {"entityID": entity_id}
         for key in ["policy", "returnIDParam"]:
             try:

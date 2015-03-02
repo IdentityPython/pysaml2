@@ -1,19 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2009-2011 Umeå University
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#            http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
 """
 Suppport for the client part of the SAML2.0 SOAP binding.
@@ -46,7 +33,7 @@ class WrongMessageType(Exception):
 
 
 def parse_soap_enveloped_saml_response(text):
-    tags = ['{%s}Response' % SAMLP_NAMESPACE, 
+    tags = ['{%s}Response' % SAMLP_NAMESPACE,
             '{%s}LogoutResponse' % SAMLP_NAMESPACE]
     return parse_soap_enveloped_saml_thingy(text, tags)
 
@@ -141,7 +128,7 @@ def parse_soap_enveloped_saml_authn_response(text):
 def parse_soap_enveloped_saml_thingy(text, expected_tags):
     """Parses a SOAP enveloped SAML thing and returns the thing as
     a string.
-    
+
     :param text: The SOAP object as XML string
     :param expected_tags: What the tag of the SAML thingy is expected to be.
     :return: SAML thingy as a string
@@ -150,7 +137,7 @@ def parse_soap_enveloped_saml_thingy(text, expected_tags):
 
     # Make sure it's a SOAP message
     assert envelope.tag == '{%s}Envelope' % soapenv.NAMESPACE
-    
+
     assert len(envelope) >= 1
     body = None
     for part in envelope:
@@ -161,7 +148,7 @@ def parse_soap_enveloped_saml_thingy(text, expected_tags):
 
     if body is None:
         return ""
-    
+
     saml_part = body[0]
     if saml_part.tag in expected_tags:
         return ElementTree.tostring(saml_part, encoding="UTF-8")
@@ -203,7 +190,7 @@ def class_instances_from_soap_enveloped_saml_thingies(text, modules):
     assert envelope.tag == '{%s}Envelope' % soapenv.NAMESPACE
     assert len(envelope) >= 1
     env = {"header": [], "body": None}
-    
+
     for part in envelope:
         if part.tag == '{%s}Body' % soapenv.NAMESPACE:
             assert len(part) == 1
@@ -245,7 +232,7 @@ def open_soap_envelope(text):
 def make_soap_enveloped_saml_thingy(thingy, headers=None):
     """ Returns a soap envelope containing a SAML request
     as a text string.
-    
+
     :param thingy: The SAML thingy
     :return: The SOAP envelope as a string
     """

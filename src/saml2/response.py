@@ -1,19 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2010-2011 Umeå University
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#            http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
 import calendar
 import logging
@@ -37,6 +24,7 @@ from saml2.samlp import STATUS_TOO_MANY_RESPONSES
 from saml2.samlp import STATUS_UNKNOWN_ATTR_PROFILE
 from saml2.samlp import STATUS_UNKNOWN_PRINCIPAL
 from saml2.samlp import STATUS_UNSUPPORTED_BINDING
+from saml2.samlp import STATUS_RESPONDER
 
 import xmldsig as ds
 import xmlenc as xenc
@@ -171,6 +159,8 @@ class StatusUnknownPrincipal(StatusError):
 class StatusUnsupportedBinding(StatusError):
     pass
 
+class StatusResponder(StatusError):
+    pass
 
 STATUSCODE2EXCEPTION = {
     STATUS_VERSION_MISMATCH: StatusVersionMismatch,
@@ -193,6 +183,7 @@ STATUSCODE2EXCEPTION = {
     STATUS_UNKNOWN_ATTR_PROFILE: StatusUnknownAttrProfile,
     STATUS_UNKNOWN_PRINCIPAL: StatusUnknownPrincipal,
     STATUS_UNSUPPORTED_BINDING: StatusUnsupportedBinding,
+    STATUS_RESPONDER: StatusResponder,
 }
 # ---------------------------------------------------------------------------
 
@@ -541,6 +532,7 @@ class AuthnResponse(StatusResponse):
             if optional:
                 return True
             else:
+                logger.error("No AuthnStatement")
                 raise
 
         authn_statement = self.assertion.authn_statement[0]
@@ -858,9 +850,13 @@ class AuthnResponse(StatusResponse):
         """
 
         try:
-            self._verify()
-        except AssertionError:
+            res = self._verify()
+        except AssertionError as err:
+            logger.error("Verification error on the response: %s" % err)
             raise
+        else:
+            if res is None:
+                return None
 
         if not isinstance(self.response, samlp.Response):
             return self
@@ -904,7 +900,7 @@ class AuthnResponse(StatusResponse):
         return res
 
     def session_info(self):
-        """ Returns a predefined set of information gleened from the 
+        """ Returns a predefined set of information gleened from the
         response.
         :returns: Dictionary with information
         """

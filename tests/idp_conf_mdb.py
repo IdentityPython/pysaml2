@@ -88,10 +88,11 @@ CONFIG = {
     "cert_file": full_path("test.pem"),
     #"xmlsec_binary": None,
     "xmlsec_path": ["/opt/local/bin", "usr/local/bin"],
-    "metadata": {
-        "local": [full_path("servera.xml"),
-                  full_path("vo_metadata.xml")],
-    },
+    "metadata": [{
+        "class": "saml2.mdstore.MetaDataFile",
+        "metadata": [(full_path("servera.xml"), ),
+                  (full_path("vo_metadata.xml"), )],
+    }],
     "attribute_map_dir": full_path("attributemaps"),
     "organization": {
         "name": "Exempel AB",

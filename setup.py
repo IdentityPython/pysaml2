@@ -1,21 +1,5 @@
 #!/usr/bin/env python
-#
-# Copyright (C) 2007 SIOS Technology, Inc.
-# Copyright (C) 2011 Umea Universitet, Sweden
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-#
+
 import sys
 
 from setuptools import setup
@@ -43,7 +27,7 @@ install_requires = [
     'paste',
     'zope.interface',
     'repoze.who',
-    'pycrypto',  # 'Crypto'
+    'pycrypto >= 2.2',  # 'Crypto'
     'pytz',
     'pyOpenSSL',
     'python-dateutil',
@@ -67,8 +51,8 @@ if sys.version_info < (2, 7):
 
 setup(
     name='pysaml2',
-    version='2.0.1beta',
-    description='Python implementation of SAML Version 2 to be used in a WSGI environment',
+    version='2.4.0beta',
+    description='Python implementation of SAML Version 2',
     # long_description = read("README"),
     author='Roland Hedberg',
     author_email='roland.hedberg@adm.umu.se',
@@ -84,7 +68,9 @@ setup(
     package_data={'': ['xml/*.xml']},
     classifiers=["Development Status :: 4 - Beta",
         "License :: OSI Approved :: Apache Software License",
-        "Topic :: Software Development :: Libraries :: Python Modules"],
+        "Topic :: Software Development :: Libraries :: Python Modules",
+        "Programming Language :: Python :: 2.6",
+        "Programming Language :: Python :: 2.7"],
 
     scripts=["tools/parse_xsd2.py", "tools/make_metadata.py",
              "tools/mdexport.py", "tools/merge_metadata.py"],

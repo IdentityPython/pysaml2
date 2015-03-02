@@ -1,5 +1,6 @@
 from urllib import urlencode
-from urlparse import urlparse, parse_qs
+from urlparse import parse_qs
+from urlparse import urlparse
 from saml2.entity import Entity
 from saml2.response import VerificationError
 
@@ -68,7 +69,7 @@ class DiscoveryServer(Entity):
                                           entity_id=None, **kwargs):
         if return_url is None:
             return_url = kwargs["return"]
-            
+
         if entity_id:
             qp = urlencode({returnIDParam: entity_id})
 

@@ -45,10 +45,11 @@ CONFIG = {
     "key_file": full_path("test.key"),
     "cert_file": full_path("test.pem"),
     "xmlsec_binary": xmlsec_path,
-    "metadata": {
-        "local": [full_path("metadata_sp_1.xml"),
-                  full_path("vo_metadata.xml")],
-    },
+    "metadata": [{
+        "class": "saml2.mdstore.MetaDataFile",
+        "metadata": [(full_path("metadata_sp_1.xml"), ),
+                     (full_path("vo_metadata.xml"), )],
+    }],
     "attribute_map_dir": full_path("attributemaps"),
     "organization": {
         "name": "Exempel AB",

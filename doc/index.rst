@@ -1,39 +1,40 @@
-.. _index:
+.. _howto:
 
-.. pysaml2 documentation master file, created by
-   sphinx-quickstart on Mon Aug 24 08:13:41 2009.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-pysaml2
-========================================
+How to use PySAML2
+===================
 
 :Release: |release|
 :Date: |today|
 
-PySAML2 is a pure python implementation of SAML2. It contains all necessary pieces for building a SAML2 service
-provider or an identity provider. The distribution contains examples of both. Originally written to work in a WSGI
-environment, there are extensions that allow you to use it with other frameworks.
+Before you can use Pysaml2, you'll need to get it installed. 
+If you have not done it yet, read the :ref:`install`
 
-Contents:
+Well, now you have it installed and you want to do something.
+
+And I'm sorry to tell you this; but there isn't really a lot you can do with 
+this code on it's own.
+
+Sure you can send a AuthenticationRequest to an IdentityProvider or a 
+AttributeQuery to an AttributeAuthority but in order to get what they
+return you have to sit behind a Web server. Well that is not really true since
+the AttributeQuery would be over SOAP and you would get the result over the
+connection you have to the AttributeAuthority.
+
+But anyway, you may get my point. This is middleware stuff !
+
+PySAML2 is built to fit into a 
+`WSGI  <http://www.python.org/dev/peps/pep-0333/>`_ application
+
+But it can be used in a non-WSGI environment too. 
+
+So you will find descriptions of both cases here.
+
+The configuration is the same disregarding whether you are using PySAML2 in a 
+WSGI or non-WSGI environment.
 
 .. toctree::
    :maxdepth: 1
 
-   install
-   howto/index
-   examples/index
-   contents
+   config
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
-.. raw:: html
-
-    <a href="https://github.com/rohe/pysaml2" class="github" target="_blank">
-        <img style="position: absolute; top: 0; right: 0; border: 0;" src="_static/ViewmeonGitHub.png" alt="View me on GitHub"  class="github"/>
-    </a>
+   

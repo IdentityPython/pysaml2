@@ -1,19 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2010-2011 Umeå University
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#            http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
 """
 Contains classes used in the SAML ECP profile
@@ -113,7 +100,7 @@ def ecp_auth_request(cls, entityid=None, relay_state="", sign=False):
     # ----------------------------------------
 
     logger.info("entityid: %s, binding: %s" % (entityid, BINDING_SOAP))
-        
+
     location = cls._sso_location(entityid, binding=BINDING_SOAP)
     req_id, authn_req = cls.create_authn_request(
         location, binding=BINDING_PAOS, service_url_binding=BINDING_PAOS)
@@ -147,7 +134,7 @@ def handle_ecp_authn_response(cls, soap_message, outstanding=None):
     cls.users.add_information_about_person(response.session_info())
 
     return response, _relay_state
-        
+
 
 def ecp_response(target_url, response):
 
@@ -181,7 +168,7 @@ class ECPServer(Server):
 
     def parse_ecp_authn_query(self):
         pass
-    
+
     def ecp_response(self):
 
         # ----------------------------------------

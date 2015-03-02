@@ -1,19 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2010-2011 Umeå University
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#            http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
 """
 Contains a class that can do SAML ECP Authentication for other python
@@ -160,7 +147,7 @@ class Client(Entity):
             _ = self.send(rc_url, "POST", data=soap.soap_fault(error))
             # Raise an exception so the user knows something went wrong
             raise SAMLError(error)
-        
+
         return idp_response
 
     @staticmethod
@@ -234,7 +221,7 @@ class Client(Entity):
 
         self.done_ecp = True
         logger.debug("Done ECP")
-            
+
         return None
 
     def add_paos_headers(self, headers=None):

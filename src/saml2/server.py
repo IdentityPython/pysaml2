@@ -1,40 +1,28 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2009-2011 Umeå University
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#            http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
-"""Contains classes and functions that a SAML2.0 Identity provider (IdP) 
+"""Contains classes and functions that a SAML2.0 Identity provider (IdP)
 or attribute authority (AA) may use to conclude its tasks.
 """
 import logging
 import os
 
+import importlib
 import shelve
 import threading
 
-from saml2.eptid import EptidShelve, Eptid
-from saml2.saml import EncryptedAssertion
-from saml2.sdb import SessionStorage
-from saml2.schema import soapenv
-
-from saml2.samlp import NameIDMappingResponse
-from saml2.entity import Entity
-
-from saml2 import saml, element_to_extension_element
+from saml2 import saml
+from saml2 import element_to_extension_element
 from saml2 import class_name
 from saml2 import BINDING_HTTP_REDIRECT
+
+from saml2.entity import Entity
+from saml2.eptid import Eptid
+from saml2.eptid import EptidShelve
+from saml2.samlp import NameIDMappingResponse
+from saml2.sdb import SessionStorage
+from saml2.schema import soapenv
 
 from saml2.request import AuthnRequest
 from saml2.request import AssertionIDRequest
@@ -45,14 +33,16 @@ from saml2.request import AuthnQuery
 
 from saml2.s_utils import MissingValue, Unknown, rndstr
 
-from saml2.sigver import pre_signature_part, signed_instance_factory, CertificateError, CryptoBackendXmlSec1
+from saml2.sigver import pre_signature_part
+from saml2.sigver import signed_instance_factory
+from saml2.sigver import CertificateError
 
 from saml2.assertion import Assertion
 from saml2.assertion import Policy
 from saml2.assertion import restriction_from_attribute_spec
 from saml2.assertion import filter_attribute_value_assertions
 
-from saml2.ident import IdentDB
+from saml2.ident import IdentDB, decode
 from saml2.profile import ecp
 
 logger = logging.getLogger(__name__)
@@ -112,8 +102,8 @@ class Server(Entity):
         raise NotImplementedError("No such storage type implemented")
 
     def init_config(self, stype="idp"):
-        """ Remaining init of the server configuration 
-        
+        """ Remaining init of the server configuration
+
         :param stype: The type of Server ("idp"/"aa")
         """
         if stype == "aa":
@@ -144,7 +134,12 @@ class Server(Entity):
 
                 self.ident = IdentMDB(database=addr, collection="ident")
 
-        if typ == "mongodb":
+            elif typ == "identdb":
+                mod, clas = addr.rsplit('.', 1)
+                mod = importlib.import_module(mod)
+                self.ident = getattr(mod, clas)()
+
+        if typ == "mongodb" or typ == "identdb":
             pass
         elif idb is not None:
             self.ident = IdentDB(idb)
@@ -152,28 +147,32 @@ class Server(Entity):
             raise Exception("Couldn't open identity database: %s" %
                             (dbspec,))
 
-        _domain = self.config.getattr("domain", "idp")
-        if _domain:
-            self.ident.domain = _domain
+        try:
+            _domain = self.config.getattr("domain", "idp")
+            if _domain:
+                self.ident.domain = _domain
 
-        self.ident.name_qualifier = self.config.entityid
+            self.ident.name_qualifier = self.config.entityid
 
-        dbspec = self.config.getattr("edu_person_targeted_id", "idp")
-        if not dbspec:
-            pass
-        else:
-            typ = dbspec[0]
-            addr = dbspec[1]
-            secret = dbspec[2]
-            if typ == "shelve":
-                self.eptid = EptidShelve(secret, addr)
-            elif typ == "mongodb":
-                from saml2.mongo_store import EptidMDB
-
-                self.eptid = EptidMDB(secret, database=addr,
-                                      collection="eptid")
+            dbspec = self.config.getattr("edu_person_targeted_id", "idp")
+            if not dbspec:
+                pass
             else:
-                self.eptid = Eptid(secret)
+                typ = dbspec[0]
+                addr = dbspec[1]
+                secret = dbspec[2]
+                if typ == "shelve":
+                    self.eptid = EptidShelve(secret, addr)
+                elif typ == "mongodb":
+                    from saml2.mongo_store import EptidMDB
+
+                    self.eptid = EptidMDB(secret, database=addr,
+                                          collection="eptid")
+                else:
+                    self.eptid = Eptid(secret)
+        except Exception:
+            self.ident.close()
+            raise
 
     def wants(self, sp_entity_id, index=None):
         """ Returns what attributes the SP requires and which are optional
@@ -181,6 +180,8 @@ class Server(Entity):
 
         :param sp_entity_id: The entity id of the SP
         :param index: which of the attribute consumer services its all about
+            if index == None then all attribute consumer services are clumped
+            together.
         :return: 2-tuple, list of required and list of optional attributes
         """
         return self.metadata.attribute_requirement(sp_entity_id, index)
@@ -206,7 +207,7 @@ class Server(Entity):
     # -------------------------------------------------------------------------
     def parse_authn_request(self, enc_request, binding=BINDING_HTTP_REDIRECT):
         """Parse a Authentication Request
-        
+
         :param enc_request: The request in its transport format
         :param binding: Which binding that was used to transport the message
             to this entity.
@@ -222,7 +223,7 @@ class Server(Entity):
 
     def parse_attribute_query(self, xml_string, binding):
         """ Parse an attribute query
-        
+
         :param xml_string: The Attribute Query as an XML string
         :param binding: Which binding that was used for the request
         :return: A query instance
@@ -283,9 +284,10 @@ class Server(Entity):
                         sp_entity_id, identity=None, name_id=None,
                         status=None, authn=None, issuer=None, policy=None,
                         sign_assertion=False, sign_response=False,
-                        best_effort=False, encrypt_assertion=False, encrypt_cert=None):
+                        best_effort=False, encrypt_assertion=False,
+                        encrypt_cert=None, authn_statement=None):
         """ Create a response. A layer of indirection.
-        
+
         :param in_response_to: The session identifier of the request
         :param consumer_url: The URL which should receive the response
         :param sp_entity_id: The entity identifier of the SP
@@ -329,6 +331,12 @@ class Server(Entity):
                                       self.config.attribute_converters,
                                       policy, issuer=_issuer,
                                       **authn_args)
+        elif authn_statement:  # Got a complete AuthnStatement
+            assertion = ast.construct(sp_entity_id, in_response_to,
+                                      consumer_url, name_id,
+                                      self.config.attribute_converters,
+                                      policy, issuer=_issuer,
+                                      authn_statem=authn_statement)
         else:
             assertion = ast.construct(sp_entity_id, in_response_to,
                                       consumer_url, name_id,
@@ -366,7 +374,7 @@ class Server(Entity):
                                   sign_assertion=False, sign_response=False,
                                   attributes=None, **kwargs):
         """ Create an attribute assertion response.
-        
+
         :param identity: A dictionary with attributes and values that are
             expected to be the bases for the assertion in the response.
         :param in_response_to: The session identifier of the request
@@ -428,7 +436,8 @@ class Server(Entity):
     def create_authn_response(self, identity, in_response_to, destination,
                               sp_entity_id, name_id_policy=None, userid=None,
                               name_id=None, authn=None, issuer=None,
-                              sign_response=None, sign_assertion=None, encrypt_cert=None, encrypt_assertion=None,
+                              sign_response=None, sign_assertion=None,
+                              encrypt_cert=None, encrypt_assertion=None,
                               **kwargs):
         """ Constructs an AuthenticationResponse
 
@@ -514,6 +523,8 @@ class Server(Entity):
                     name_id = self.ident.construct_nameid(userid, policy,
                                                           sp_entity_id,
                                                           name_id_policy)
+                    logger.debug("construct_nameid: %s => %s" % (userid,
+                                                                 name_id))
             except IOError, exc:
                 response = self.create_error_response(in_response_to,
                                                       destination,
@@ -686,3 +697,30 @@ class Server(Entity):
         soap_envelope = soapenv.Envelope(header=header, body=body)
 
         return "%s" % soap_envelope
+
+    def close(self):
+        self.ident.close()
+
+    def clean_out_user(self, name_id):
+        """
+        Remove all authentication statements that belongs to a user identified
+        by a NameID instance
+
+        :param name_id: NameID instance
+        :return: The local identifier for the user
+        """
+
+        lid = self.ident.find_local_id(name_id)
+        logger.info("Clean out %s" % lid)
+
+        # remove the authentications
+        try:
+            for _nid in [decode(x) for x in self.ident.db[lid].split(" ")]:
+                try:
+                    self.session_db.remove_authn_statements(_nid)
+                except KeyError:
+                    pass
+        except KeyError:
+            pass
+
+        return lid

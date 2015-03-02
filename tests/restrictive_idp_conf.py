@@ -37,8 +37,9 @@ CONFIG = {
     "key_file" : full_path("test.key"),
     "cert_file" : full_path("test.pem"),
     "xmlsec_binary" : None,
-    "metadata": {
-        "local": [full_path("sp_0.metadata")],
-    },
+    "metadata": [{
+        "class": "saml2.mdstore.MetaDataFile",
+        "metadata": [(full_path("sp_0.metadata"), )],
+    }],
     "attribute_map_dir" : full_path("attributemaps"),
 }

@@ -1,19 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2010 Umeå University.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#            http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
 """Tests for saml2.saml"""
 
@@ -228,7 +215,7 @@ class TestSAMLBase:
 
         attr = Attribute()
         saml2.make_vals(ava, AttributeValue, attr, prop="attribute_value")
-        assert attr.keyswv() == ["attribute_value"]
+        assert attr.keyswv() == ["name_format", "attribute_value"]
         assert len(attr.attribute_value) == 4
 
     def test_to_string_nspair(self):
@@ -1224,3 +1211,7 @@ class TestAssertion:
         """Test assertion_from_string() using test data"""
         # TODO
         pass
+
+if __name__ == "__main__":
+    t = TestSAMLBase()
+    t.test_make_vals_multi_dict()

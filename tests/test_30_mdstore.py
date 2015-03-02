@@ -1,8 +1,11 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import datetime
 import re
+from urllib import quote_plus
+from saml2.httpbase import HTTPBase
 
-from saml2.mdstore import MetadataStore
+from saml2.mdstore import MetadataStore, MetaDataMDX
 from saml2.mdstore import destinations
 from saml2.mdstore import name
 
@@ -46,31 +49,44 @@ ONTS = {
 ATTRCONV = ac_factory(full_path("attributemaps"))
 
 METADATACONF = {
-    "1": {
-        "local": [full_path("swamid-1.0.xml")]
-    },
-    "2": {
-        "local": [full_path("InCommon-metadata.xml")]
-    },
-    "3": {
-        "local": [full_path("extended.xml")]
-    },
-    "7": {
-        "local": [full_path("metadata_sp_1.xml"),
-                  full_path("InCommon-metadata.xml")],
-        "remote": [
-            {"url": "https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2",
-             "cert": full_path("kalmar2.pem")}]
-    },
-    "4": {
-        "local": [full_path("metadata_example.xml")]
-    },
-    "5": {
-        "local": [full_path("metadata.aaitest.xml")]
-    },
-    "8": {
-        "mdfile": [full_path("swamid.md")]
-    }
+    "1": [{
+        "class": "saml2.mdstore.MetaDataFile",
+        "metadata": [(full_path("swamid-1.0.xml"), )],
+    }],
+    "2": [{
+        "class": "saml2.mdstore.MetaDataFile",
+        "metadata": [(full_path("InCommon-metadata.xml"), )],
+    }],
+    "3": [{
+        "class": "saml2.mdstore.MetaDataFile",
+        "metadata": [(full_path("extended.xml"), )],
+    }],
+    "7": [{
+        "class": "saml2.mdstore.MetaDataFile",
+        "metadata": [(full_path("metadata_sp_1.xml"), ),
+                     (full_path("InCommon-metadata.xml"), )], },
+          {
+        "class": "saml2.mdstore.MetaDataExtern",
+        "metadata": [
+            ("https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2",
+             full_path("kalmar2.pem")), ],
+    }],
+    "4": [{
+        "class": "saml2.mdstore.MetaDataFile",
+        "metadata": [(full_path("metadata_example.xml"), )],
+    }],
+    "5": [{
+        "class": "saml2.mdstore.MetaDataFile",
+        "metadata": [(full_path("metadata.aaitest.xml"), )],
+    }],
+    "8": [{
+        "class": "saml2.mdstore.MetaDataMD",
+        "metadata": [(full_path("swamid.md"), )],
+    }],
+    "9": [{
+        "class": "saml2.mdstore.MetaDataFile",
+        "metadata": [(full_path("metadata"), )]
+    }]
 }
 
 
@@ -111,13 +127,13 @@ def test_swami_1():
     lnamn = [d_to_local_name(mds.attrc, attr) for attr in wants["optional"]]
     assert _eq(lnamn, ['eduPersonPrincipalName', 'mail', 'givenName', 'sn',
                        'eduPersonScopedAffiliation'])
-                
+
     wants = mds.attribute_requirement('https://beta.lobber.se/shibboleth')
     assert wants["required"] == []
     lnamn = [d_to_local_name(mds.attrc, attr) for attr in wants["optional"]]
     assert _eq(lnamn, ['eduPersonPrincipalName', 'mail', 'givenName', 'sn',
                        'eduPersonScopedAffiliation', 'eduPersonEntitlement'])
-                
+
 
 def test_incommon_1():
     mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
@@ -223,5 +239,43 @@ def test_metadata_file():
     print len(mds.keys())
     assert len(mds.keys()) == 560
 
+
+# pyff-test not available
+# def test_mdx_service():
+#     sec_config.xmlsec_binary = sigver.get_xmlsec_binary(["/opt/local/bin"])
+#     http = HTTPBase(verify=False, ca_bundle=None)
+#
+#     mdx = MetaDataMDX(quote_plus, ONTS.values(), ATTRCONV,
+#                       "http://pyff-test.nordu.net",
+#                       sec_config, None, http)
+#     foo = mdx.service("https://idp.umu.se/saml2/idp/metadata.php",
+#                       "idpsso_descriptor", "single_sign_on_service")
+#
+#     assert len(foo) == 1
+#     assert foo.keys()[0] == BINDING_HTTP_REDIRECT
+#
+#
+# def test_mdx_certs():
+#     sec_config.xmlsec_binary = sigver.get_xmlsec_binary(["/opt/local/bin"])
+#     http = HTTPBase(verify=False, ca_bundle=None)
+#
+#     mdx = MetaDataMDX(quote_plus, ONTS.values(), ATTRCONV,
+#                       "http://pyff-test.nordu.net",
+#                       sec_config, None, http)
+#     foo = mdx.certs("https://idp.umu.se/saml2/idp/metadata.php", "idpsso")
+#
+#     assert len(foo) == 1
+
+
+def test_load_local_dir():
+    sec_config.xmlsec_binary = sigver.get_xmlsec_binary(["/opt/local/bin"])
+    mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
+                        disable_ssl_certificate_validation=True)
+
+    mds.imp(METADATACONF["9"])
+    print mds
+    assert len(mds) == 3  # Three sources
+    assert len(mds.keys()) == 4  # number of idps
+
 if __name__ == "__main__":
-    test_metadata_file()
+    test_load_local_dir()

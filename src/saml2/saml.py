@@ -24,8 +24,8 @@ XSI_NIL = '{%s}nil' % XSI_NAMESPACE
 
 NAMEID_FORMAT_EMAILADDRESS = (
     "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress")
-#NAMEID_FORMAT_UNSPECIFIED1 = (
-#    "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified")
+NAMEID_FORMAT_UNSPECIFIED1 = (
+    "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified")
 NAMEID_FORMAT_UNSPECIFIED = (
     "urn:oasis:names:tc:SAML:2.0:nameid-format:unspecified")
 NAMEID_FORMAT_ENCRYPTED = (
@@ -36,7 +36,14 @@ NAMEID_FORMAT_TRANSIENT = (
     "urn:oasis:names:tc:SAML:2.0:nameid-format:transient")
 NAMEID_FORMAT_ENTITY = (
     "urn:oasis:names:tc:SAML:2.0:nameid-format:entity")
-
+NAMEID_FORMATS_SAML2 = (
+    ('NAMEID_FORMAT_EMAILADDRESS', NAMEID_FORMAT_EMAILADDRESS),
+    ('NAMEID_FORMAT_ENCRYPTED', NAMEID_FORMAT_ENCRYPTED),
+    ('NAMEID_FORMAT_ENTITY', NAMEID_FORMAT_ENTITY),
+    ('NAMEID_FORMAT_PERSISTENT', NAMEID_FORMAT_PERSISTENT),
+    ('NAMEID_FORMAT_TRANSIENT', NAMEID_FORMAT_TRANSIENT),
+    ('NAMEID_FORMAT_UNSPECIFIED', NAMEID_FORMAT_UNSPECIFIED),
+)
 PROFILE_ATTRIBUTE_BASIC = (
     "urn:oasis:names:tc:SAML:2.0:profiles:attribute:basic")
 
@@ -48,7 +55,11 @@ NAME_FORMAT_UNSPECIFIED = (
     "urn:oasis:names:tc:SAML:2.0:attrname-format:unspecified")
 NAME_FORMAT_URI = "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
 NAME_FORMAT_BASIC = "urn:oasis:names:tc:SAML:2.0:attrname-format:basic"
-
+NAME_FORMATS_SAML2 = (
+    ('NAME_FORMAT_BASIC', NAME_FORMAT_BASIC),
+    ('NAME_FORMAT_URI', NAME_FORMAT_URI),
+    ('NAME_FORMAT_UNSPECIFIED', NAME_FORMAT_UNSPECIFIED),
+)
 DECISION_TYPE_PERMIT = "Permit"
 DECISION_TYPE_DENY = "Deny"
 DECISION_TYPE_INDETERMINATE = "Indeterminate"
@@ -1029,7 +1040,7 @@ class AttributeType_(SamlBase):
     def __init__(self,
                  attribute_value=None,
                  name=None,
-                 name_format=None,
+                 name_format=NAME_FORMAT_URI,
                  friendly_name=None,
                  text=None,
                  extension_elements=None,

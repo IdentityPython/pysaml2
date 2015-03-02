@@ -6,15 +6,15 @@ from zope.interface import implements
 from repoze.who.interfaces import IMetadataProvider
 
 class INIMetadataProvider(object):
-    
+
     implements(IMetadataProvider)
-    
+
     def __init__(self, ini_file, key_attribute):
 
         self.users = ConfigParser.ConfigParser()
         self.users.readfp(open(ini_file))
         self.key_attribute = key_attribute
-        
+
     def add_metadata(self, _environ, identity):
         #logger = environ.get('repoze.who.logger','')
 
@@ -30,6 +30,6 @@ class INIMetadataProvider(object):
                 identity["user"] = dict(self.users.items(key))
         except ValueError:
             pass
-        
+
 def make_plugin(ini_file, key_attribute=""):
     return INIMetadataProvider(ini_file, key_attribute)

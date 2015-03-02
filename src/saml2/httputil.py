@@ -142,6 +142,20 @@ class BadGateway(Response):
     _status = "502 Bad Gateway"
 
 
+class HttpParameters():
+    """GET or POST signature parameters for Redirect or POST-SimpleSign bindings
+    because they are not contained in XML unlike the POST binding
+    """
+    signature = None
+    sigalg = None
+    # Relaystate and SAML message are stored elsewhere
+    def __init__(self, dict):
+        try:
+            self.signature = dict["Signature"][0]
+            self.sigalg = dict["SigAlg"][0]
+        except KeyError:
+            pass
+
 def extract(environ, empty=False, err=False):
     """Extracts strings in form data and returns a dict.
 

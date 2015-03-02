@@ -1,25 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2010-2011 Umeå University
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#            http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
-"""Contains classes and functions that are necessary to implement 
+"""Contains classes and functions that are necessary to implement
 different bindings.
 
 Bindings normally consists of three parts:
-- rules about what to send 
+- rules about what to send
 - how to package the information
 - which protocol to use
 """
@@ -59,10 +46,10 @@ FORM_SPEC = """<form method="post" action="%s">
 
 def http_form_post_message(message, location, relay_state="",
                            typ="SAMLRequest"):
-    """The HTTP POST binding defines a mechanism by which SAML protocol 
+    """The HTTP POST binding defines a mechanism by which SAML protocol
     messages may be transmitted within the base64-encoded content of a
     HTML form control.
-    
+
     :param message: The message
     :param location: Where the form should be posted to
     :param relay_state: for preserving and conveying state information
@@ -79,25 +66,25 @@ def http_form_post_message(message, location, relay_state="",
         _msg = message
 
     response.append(FORM_SPEC % (location, typ, _msg, relay_state))
-                                
+
     response.append("""<script type="text/javascript">""")
     response.append("     window.onload = function ()")
     response.append(" { document.forms[0].submit(); }")
     response.append("""</script>""")
     response.append("</body>")
-    
+
     return {"headers": [("Content-type", "text/html")], "data": response}
 
 
 def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
                           sigalg=None, key=None):
-    """The HTTP Redirect binding defines a mechanism by which SAML protocol 
+    """The HTTP Redirect binding defines a mechanism by which SAML protocol
     messages can be transmitted within URL parameters.
-    Messages are encoded for use with this binding using a URL encoding 
-    technique, and transmitted using the HTTP GET method. 
-    
+    Messages are encoded for use with this binding using a URL encoding
+    technique, and transmitted using the HTTP GET method.
+
     The DEFLATE Encoding is used in this function.
-    
+
     :param message: The message
     :param location: Where the message should be posted to
     :param relay_state: for preserving and conveying state information
@@ -106,7 +93,7 @@ def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
     :param key: Key to use for signing
     :return: A tuple containing header information and a HTML message.
     """
-    
+
     if not isinstance(message, basestring):
         message = "%s" % (message,)
 
@@ -126,9 +113,7 @@ def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
         args["RelayState"] = relay_state
 
     if sigalg:
-        # sigalgs
-        # http://www.w3.org/2000/09/xmldsig#dsa-sha1
-        # http://www.w3.org/2000/09/xmldsig#rsa-sha1
+        # sigalgs, one of the ones defined in xmldsig
 
         args["SigAlg"] = sigalg
 
@@ -137,7 +122,8 @@ def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
         except:
             raise Unsupported("Signing algorithm")
         else:
-            string = "&".join([urllib.urlencode({k: args[k]}) for k in _order if k in args])
+            string = "&".join([urllib.urlencode({k: args[k]})
+                               for k in _order if k in args])
             args["Signature"] = base64.b64encode(signer.sign(string, key))
             string = urllib.urlencode(args)
     else:
@@ -147,7 +133,7 @@ def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
     login_url = glue_char.join([location, string])
     headers = [('Location', str(login_url))]
     body = []
-    
+
     return {"headers": headers, "data": body}
 
 
@@ -206,17 +192,17 @@ def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
 def http_soap_message(message):
     return {"headers": [("Content-type", "application/soap+xml")],
             "data": make_soap_enveloped_saml_thingy(message)}
-    
+
 
 def http_paos(message, extra=None):
     return {"headers": [("Content-type", "application/soap+xml")],
             "data": make_soap_enveloped_saml_thingy(message, extra)}
-    
+
 
 def parse_soap_enveloped_saml(text, body_class, header_class=None):
     """Parses a SOAP enveloped SAML thing and returns header parts and body
 
-    :param text: The SOAP object as XML 
+    :param text: The SOAP object as XML
     :return: header parts and body as saml.samlbase instances
     """
     envelope = ElementTree.fromstring(text)
@@ -246,7 +232,7 @@ def parse_soap_enveloped_saml(text, body_class, header_class=None):
                         header[sub.tag] = \
                             saml2.create_class_from_element_tree(klass, sub)
                         break
-                        
+
     return body, header
 
 # -----------------------------------------------------------------------------
@@ -255,7 +241,7 @@ PACKING = {
     saml2.BINDING_HTTP_REDIRECT: http_redirect_message,
     saml2.BINDING_HTTP_POST: http_form_post_message,
 }
-    
+
 
 def packager(identifier):
     try:

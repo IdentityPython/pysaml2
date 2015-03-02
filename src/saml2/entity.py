@@ -2,6 +2,7 @@ import base64
 from binascii import hexlify
 import logging
 from hashlib import sha1
+from Crypto.PublicKey import RSA
 import requests
 from saml2.metadata import ENDPOINTS
 from saml2.profile import paos, ecp
@@ -35,7 +36,7 @@ from saml2.s_utils import rndstr
 from saml2.s_utils import success_status_factory
 from saml2.s_utils import decode_base64_and_inflate
 from saml2.s_utils import UnsupportedBinding
-from saml2.samlp import AuthnRequest
+from saml2.samlp import AuthnRequest, SessionIndex
 from saml2.samlp import AuthzDecisionQuery
 from saml2.samlp import AuthnQuery
 from saml2.samlp import AssertionIDRequest
@@ -133,6 +134,12 @@ class Entity(HTTPBase):
                     raise Exception(
                         "Could not fetch certificate from %s" % _val)
 
+        try:
+            self.signkey = RSA.importKey(
+                open(self.config.getattr("key_file", ""), 'r').read())
+        except (KeyError, TypeError):
+            self.signkey = None
+
         HTTPBase.__init__(self, self.config.verify_ssl_cert,
                           self.config.ca_certs, self.config.key_file,
                           self.config.cert_file)
@@ -201,7 +208,8 @@ class Entity(HTTPBase):
             info["method"] = "GET"
         elif binding == BINDING_HTTP_REDIRECT:
             logger.info("HTTP REDIRECT")
-            info = self.use_http_get(msg_str, destination, relay_state, typ)
+            info = self.use_http_get(msg_str, destination, relay_state, typ,
+                                     **kwargs)
             info["url"] = str(destination)
             info["method"] = "GET"
         elif binding == BINDING_SOAP or binding == BINDING_PAOS:
@@ -228,7 +236,10 @@ class Entity(HTTPBase):
         sfunc = getattr(self.metadata, service)
 
         if bindings is None:
-            bindings = self.config.preferred_binding[service]
+            if request and request.protocol_binding:
+                bindings = [request.protocol_binding]
+            else:
+                bindings = self.config.preferred_binding[service]
 
         if not descr_type:
             if self.entity_type == "sp":
@@ -236,11 +247,31 @@ class Entity(HTTPBase):
             else:
                 descr_type = "spsso"
 
+        _url = _index = None
+        if request:
+            try:
+                _url = getattr(request, "%s_url" % service)
+            except AttributeError:
+                _url = None
+                try:
+                    _index = getattr(request, "%s_index" % service)
+                except AttributeError:
+                    pass
+
         for binding in bindings:
             try:
                 srvs = sfunc(entity_id, binding, descr_type)
                 if srvs:
-                    return binding, destinations(srvs)[0]
+                    if _url:
+                        for srv in srvs:
+                            if srv["location"] == _url:
+                                return binding, _url
+                    elif _index:
+                        for srv in srvs:
+                            if srv["index"] == _index:
+                                return binding, srv["location"]
+                    else:
+                        return binding, destinations(srvs)[0]
             except UnsupportedBinding:
                 pass
 
@@ -390,7 +421,7 @@ class Entity(HTTPBase):
 
     def _message(self, request_cls, destination=None, message_id=0,
                  consent=None, extensions=None, sign=False, sign_prepare=False,
-                 **kwargs):
+                 nsprefix=None, **kwargs):
         """
         Some parameters appear in all requests so simplify by doing
         it in one place
@@ -424,6 +455,9 @@ class Entity(HTTPBase):
 
         if extensions:
             req.extensions = extensions
+
+        if nsprefix:
+            req.register_prefix(nsprefix)
 
         if sign:
             return reqid, self.sign(req, sign_prepare=sign_prepare)
@@ -500,7 +534,6 @@ class Entity(HTTPBase):
             return signed_instance_factory(response, self.sec, to_sign)
 
         if encrypt_assertion:
-            sign_class = [(class_name(response), response.id)]
             if sign:
                 response.signature = pre_signature_part(response.id,
                                                         self.sec.my_cert, 1)
@@ -510,7 +543,13 @@ class Entity(HTTPBase):
                                               pre_encryption_part())
                                               # template(response.assertion.id))
             if sign:
-                return signed_instance_factory(response, self.sec, sign_class)
+                if to_sign:
+                    signed_instance_factory(response, self.sec, to_sign)
+                else:
+                    # default is to sign the whole response if anything
+                    sign_class = [(class_name(response), response.id)]
+                    return signed_instance_factory(response, self.sec,
+                                                   sign_class)
             else:
                 return response
 
@@ -565,10 +604,10 @@ class Entity(HTTPBase):
                 else:
                     return typ
 
-    def _parse_request(self, xmlstr, request_cls, service, binding):
+    def _parse_request(self, enc_request, request_cls, service, binding):
         """Parse a Request
 
-        :param xmlstr: The request in its transport format
+        :param enc_request: The request in its transport format
         :param request_cls: The type of requests I expect
         :param service:
         :param binding: Which binding that was used to transport the message
@@ -588,8 +627,8 @@ class Entity(HTTPBase):
                 if receiver_addresses:
                     break
 
-        _log_info("receiver addresses: %s" % receiver_addresses)
-        _log_info("Binding: %s" % binding)
+        _log_debug("receiver addresses: %s" % receiver_addresses)
+        _log_debug("Binding: %s" % binding)
 
         try:
             timeslack = self.config.accepted_time_diff
@@ -602,8 +641,7 @@ class Entity(HTTPBase):
                                self.config.attribute_converters,
                                timeslack=timeslack)
 
-        origdoc = xmlstr
-        xmlstr = self.unravel(xmlstr, binding, request_cls.msgtype)
+        xmlstr = self.unravel(enc_request, binding, request_cls.msgtype)
         must = self.config.getattr("want_authn_requests_signed", "idp")
         only_valid_cert = self.config.getattr(
             "want_authn_requests_only_with_valid_cert", "idp")
@@ -611,8 +649,8 @@ class Entity(HTTPBase):
             only_valid_cert = False
         if only_valid_cert:
             must = True
-        _request = _request.loads(xmlstr, binding, origdoc=origdoc, must=must,
-                                  only_valid_cert=only_valid_cert)
+        _request = _request.loads(xmlstr, binding, origdoc=enc_request,
+                                  must=must, only_valid_cert=only_valid_cert)
 
         _log_debug("Loaded request")
 
@@ -650,8 +688,9 @@ class Entity(HTTPBase):
 
     def create_logout_request(self, destination, issuer_entity_id,
                               subject_id=None, name_id=None,
-                              reason=None, expire=None, message_id=0, 
-                              consent=None, extensions=None, sign=False):
+                              reason=None, expire=None, message_id=0,
+                              consent=None, extensions=None, sign=False,
+                              session_indexes=None):
         """ Constructs a LogoutRequest
 
         :param destination: Destination of the request
@@ -667,6 +706,7 @@ class Entity(HTTPBase):
         :param consent: Whether the principal have given her consent
         :param extensions: Possible extensions
         :param sign: Whether the query should be signed or not.
+        :param session_indexes: SessionIndex instances or just values
         :return: A LogoutRequest instance
         """
 
@@ -681,10 +721,20 @@ class Entity(HTTPBase):
         if not name_id:
             raise SAMLError("Missing subject identification")
 
+        args = {}
+        if session_indexes:
+            sis = []
+            for si in session_indexes:
+                if isinstance(si, SessionIndex):
+                    sis.append(si)
+                else:
+                    sis.append(SessionIndex(text=si))
+            args["session_index"] = sis
+
         return self._message(LogoutRequest, destination, message_id,
                              consent, extensions, sign, name_id=name_id,
                              reason=reason, not_on_or_after=expire,
-                             issuer=self._issuer())
+                             issuer=self._issuer(), **args)
 
     def create_logout_response(self, request, bindings=None, status=None,
                                sign=False, issuer=None):
@@ -748,7 +798,7 @@ class Entity(HTTPBase):
 
         return response
 
-    def create_manage_name_id_request(self, destination, message_id=0, 
+    def create_manage_name_id_request(self, destination, message_id=0,
                                       consent=None, extensions=None, sign=False,
                                       name_id=None, new_id=None,
                                       encrypted_id=None, new_encrypted_id=None,
@@ -816,7 +866,7 @@ class Entity(HTTPBase):
 
         return response
 
-    def parse_manage_name_id_request_response(self, string, 
+    def parse_manage_name_id_request_response(self, string,
                                               binding=BINDING_SOAP):
         return self._parse_response(string, saml_response.ManageNameIDResponse,
                                     "manage_name_id_service", binding,
@@ -845,16 +895,16 @@ class Entity(HTTPBase):
 
         if "asynchop" not in kwargs:
             if binding in [BINDING_SOAP, BINDING_PAOS]:
-                asynchop = False
+                kwargs["asynchop"] = False
             else:
-                asynchop = True
+                kwargs["asynchop"] = True
 
         if xmlstr:
             if "return_addrs" not in kwargs:
                 if binding in [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST]:
                     try:
                         # expected return address
-                        return_addrs = self.config.endpoint(
+                        kwargs["return_addrs"] = self.config.endpoint(
                             service, binding=binding)
                     except Exception:
                         logger.info("Not supposed to handle this!")

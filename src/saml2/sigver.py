@@ -1,19 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2009-2011 Umeå University
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#            http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
 """ Functions connected to signing and verifying.
 Based on the use of xmlsec1 binaries and not the python xmlsec module.
@@ -46,7 +33,7 @@ from saml2 import saml
 from saml2 import ExtensionElement
 from saml2 import VERSION
 
-from saml2.s_utils import sid
+from saml2.s_utils import sid, rndstr
 from saml2.s_utils import Unsupported
 
 from saml2.time_util import instant
@@ -55,25 +42,27 @@ from saml2.time_util import str_to_time
 
 from tempfile import NamedTemporaryFile
 from subprocess import Popen, PIPE
+
+from xmldsig import SIG_RSA_SHA1
+from xmldsig import SIG_RSA_SHA224
+from xmldsig import SIG_RSA_SHA256
+from xmldsig import SIG_RSA_SHA384
+from xmldsig import SIG_RSA_SHA512
 from xmlenc import EncryptionMethod
 from xmlenc import EncryptedKey
 from xmlenc import CipherData
 from xmlenc import CipherValue
 from xmlenc import EncryptedData
 
+from Crypto.Hash import SHA
+from Crypto.Hash import SHA224
 from Crypto.Hash import SHA256
 from Crypto.Hash import SHA384
 from Crypto.Hash import SHA512
-from Crypto.Hash import SHA
 
 logger = logging.getLogger(__name__)
 
 SIG = "{%s#}%s" % (ds.NAMESPACE, "Signature")
-
-RSA_SHA1 = "http://www.w3.org/2000/09/xmldsig#rsa-sha1"
-RSA_SHA256 = "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"
-RSA_SHA384 = "http://www.w3.org/2001/04/xmldsig-more#rsa-sha384"
-RSA_SHA512 = "http://www.w3.org/2001/04/xmldsig-more#rsa-sha512"
 
 RSA_1_5 = "http://www.w3.org/2001/04/xmlenc#rsa-1_5"
 TRIPLE_DES_CBC = "http://www.w3.org/2001/04/xmlenc#tripledes-cbc"
@@ -87,10 +76,6 @@ class SigverError(SAMLError):
 
 
 class CertificateTooOld(SigverError):
-    pass
-
-
-class SignatureError(SigverError):
     pass
 
 
@@ -110,6 +95,10 @@ class EncryptError(XmlsecError):
     pass
 
 
+class SignatureError(XmlsecError):
+    pass
+
+
 class BadSignature(SigverError):
     """The signature is invalid."""
     pass
@@ -117,6 +106,11 @@ class BadSignature(SigverError):
 
 class CertificateError(SigverError):
     pass
+
+
+def read_file(*args, **kwargs):
+    with open(*args, **kwargs) as handler:
+        return handler.read()
 
 
 def rm_xmltag(statement):
@@ -328,18 +322,13 @@ def signed_instance_factory(instance, seccont, elements_to_sign=None):
 
 
 # --------------------------------------------------------------------------
-
-
-def create_id():
-    """ Create a string of 40 random characters from the set [a-p],
-    can be used as a unique identifier of objects.
-
-    :return: The string of random characters
-    """
-    ret = ""
-    for _ in range(40):
-        ret += chr(random.randint(0, 15) + ord('a'))
-    return ret
+# def create_id():
+#     """ Create a string of 40 random characters from the set [a-p],
+#     can be used as a unique identifier of objects.
+#
+#     :return: The string of random characters
+#     """
+#     return rndstr(40, "abcdefghijklmonp")
 
 
 def make_temp(string, suffix="", decode=True, delete=True):
@@ -553,7 +542,7 @@ def pem_format(key):
 
 
 def import_rsa_key_from_file(filename):
-    return RSA.importKey(open(filename, 'r').read())
+    return RSA.importKey(read_file(filename, 'r'))
 
 
 def parse_xmlsec_output(output):
@@ -603,31 +592,32 @@ class RSASigner(Signer):
 
 
 SIGNER_ALGS = {
-    RSA_SHA1: RSASigner(SHA),
-    RSA_SHA256: RSASigner(SHA256),
-    RSA_SHA384: RSASigner(SHA384),
-    RSA_SHA512: RSASigner(SHA512),
+    SIG_RSA_SHA1: RSASigner(SHA),
+    SIG_RSA_SHA224: RSASigner(SHA224),
+    SIG_RSA_SHA256: RSASigner(SHA256),
+    SIG_RSA_SHA384: RSASigner(SHA384),
+    SIG_RSA_SHA512: RSASigner(SHA512),
 }
 
 REQ_ORDER = ["SAMLRequest", "RelayState", "SigAlg"]
 RESP_ORDER = ["SAMLResponse", "RelayState", "SigAlg"]
 
 
-def verify_redirect_signature(saml_msg, cert):
+def verify_redirect_signature(saml_msg, cert=None, sigkey=None):
     """
 
-    :param saml_msg: A dictionary as produced by parse_qs, means all values are
-        lists.
+    :param saml_msg: A dictionary with strings as values, *NOT* lists as
+    produced by parse_qs.
     :param cert: A certificate to use when verifying the signature
     :return: True, if signature verified
     """
 
     try:
-        signer = SIGNER_ALGS[saml_msg["SigAlg"][0]]
+        signer = SIGNER_ALGS[saml_msg["SigAlg"]]
     except KeyError:
         raise Unsupported("Signature algorithm: %s" % saml_msg["SigAlg"])
     else:
-        if saml_msg["SigAlg"][0] == RSA_SHA1:
+        if saml_msg["SigAlg"] in SIGNER_ALGS:
             if "SAMLRequest" in saml_msg:
                 _order = REQ_ORDER
             elif "SAMLResponse" in saml_msg:
@@ -636,17 +626,17 @@ def verify_redirect_signature(saml_msg, cert):
                 raise Unsupported(
                     "Verifying signature on something that should not be "
                     "signed")
-            args = saml_msg.copy()
-            del args["Signature"]  # everything but the signature
+            _args = saml_msg.copy()
+            del _args["Signature"]  # everything but the signature
             string = "&".join(
-                [urllib.urlencode({k: args[k][0]}) for k in _order])
-            _key = extract_rsa_key_from_x509_cert(pem_format(cert))
-            _sign = base64.b64decode(saml_msg["Signature"][0])
-            try:
-                signer.verify(string, _sign, _key)
-                return True
-            except BadSignature:
-                return False
+                [urllib.urlencode({k: _args[k]}) for k in _order if k in _args])
+            if cert:
+                _key = extract_rsa_key_from_x509_cert(pem_format(cert))
+            else:
+                _key = sigkey
+            _sign = base64.b64decode(saml_msg["Signature"])
+
+            return bool(signer.verify(string, _sign, _key))
 
 
 LOG_LINE = 60 * "=" + "\n%s\n" + 60 * "-" + "\n%s" + 60 * "="
@@ -664,11 +654,14 @@ def read_cert_from_file(cert_file, cert_type):
     :param cert_type: The certificate type
     :return: A base64 encoded certificate as a string or the empty string
     """
+
+
     if not cert_file:
         return ""
 
     if cert_type == "pem":
-        line = open(cert_file).read().split("\n")
+        line = open(cert_file).read().replace("\r\n", "\n").split("\n")
+
         if line[0] == "-----BEGIN CERTIFICATE-----":
             line = line[1:]
         elif line[0] == "-----BEGIN PUBLIC KEY-----":
@@ -688,7 +681,7 @@ def read_cert_from_file(cert_file, cert_type):
         return "".join(line)
 
     if cert_type in ["der", "cer", "crt"]:
-        data = open(cert_file).read()
+        data = read_file(cert_file)
         return base64.b64encode(str(data))
 
 
@@ -724,7 +717,7 @@ ASSERT_XPATH = ''.join(["/*[local-name()=\"%s\"]" % v for v in [
 
 class CryptoBackendXmlSec1(CryptoBackend):
     """
-    CryptoBackend implementation using external binary xmlsec1 to sign
+    CryptoBackend implementation using external binary 1 to sign
     and verify XML documents.
     """
 
@@ -734,6 +727,10 @@ class CryptoBackendXmlSec1(CryptoBackend):
         CryptoBackend.__init__(self, **kwargs)
         assert (isinstance(xmlsec_binary, basestring))
         self.xmlsec = xmlsec_binary
+        if os.environ.get('PYSAML2_KEEP_XMLSEC_TMP', None):
+            self._xmlsec_delete_tmpfiles = False
+        else:
+            self._xmlsec_delete_tmpfiles = True
 
     def version(self):
         com_list = [self.xmlsec, "--version"]
@@ -835,7 +832,8 @@ class CryptoBackendXmlSec1(CryptoBackend):
         :return: The signed statement
         """
 
-        _, fil = make_temp("%s" % statement, decode=False)
+        _, fil = make_temp("%s" % statement, suffix=".xml", decode=False, 
+                           delete=self._xmlsec_delete_tmpfiles)
 
         com_list = [self.xmlsec, "--sign",
                     "--privkey-pem", key_file,
@@ -844,8 +842,8 @@ class CryptoBackendXmlSec1(CryptoBackend):
             com_list.extend(["--node-id", node_id])
 
         try:
-            (stdout, stderr, signed_statement) = \
-                self._run_xmlsec(com_list, [fil], validate_output=False)
+            (stdout, stderr, signed_statement) = self._run_xmlsec(
+                com_list, [fil], validate_output=False)
             # this doesn't work if --store-signatures are used
             if stdout == "":
                 if signed_statement:
@@ -853,7 +851,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
             logger.error(
                 "Signing operation failed :\nstdout : %s\nstderr : %s" % (
                     stdout, stderr))
-            raise SigverError("Signing failed")
+            raise SigverError(stderr)
         except DecryptError:
             raise SigverError("Signing failed")
 
@@ -870,7 +868,8 @@ class CryptoBackendXmlSec1(CryptoBackend):
         :param id_attr: Should normally be one of "id", "Id" or "ID"
         :return: Boolean True if the signature was correct otherwise False.
         """
-        _, fil = make_temp(signedtext, decode=False)
+        _, fil = make_temp(signedtext, suffix=".xml",
+                           decode=False, delete=self._xmlsec_delete_tmpfiles)
 
         com_list = [self.xmlsec, "--verify",
                     "--pubkey-cert-%s" % cert_type, cert_file,
@@ -909,7 +908,8 @@ class CryptoBackendXmlSec1(CryptoBackend):
         :param exception: The exception class to raise on errors
         :result: Whatever xmlsec wrote to an --output temporary file
         """
-        ntf = NamedTemporaryFile()
+        ntf = NamedTemporaryFile(suffix=".xml",
+                                 delete=self._xmlsec_delete_tmpfiles)
         com_list.extend(["--output", ntf.name])
         com_list += extra_args
 
@@ -919,12 +919,17 @@ class CryptoBackendXmlSec1(CryptoBackend):
 
         p_out = pof.stdout.read()
         p_err = pof.stderr.read()
+
+        if pof.returncode is not None and pof.returncode < 0:
+            logger.error(LOG_LINE % (p_out, p_err))
+            raise XmlsecError("%d:%s" % (pof.returncode, p_err))
+
         try:
             if validate_output:
                 parse_xmlsec_output(p_err)
         except XmlsecError, exc:
             logger.error(LOG_LINE_2 % (p_out, p_err, exc))
-            raise exception("%s" % (exc,))
+            raise
 
         ntf.seek(0)
         return p_out, p_err, ntf.read()
@@ -1008,9 +1013,15 @@ def security_context(conf, debug=None):
         return None
 
     if debug is None:
-        debug = conf.debug
+        try:
+            debug = conf.debug
+        except AttributeError:
+            pass
 
-    metadata = conf.metadata
+    try:
+        metadata = conf.metadata
+    except AttributeError:
+        metadata = None
 
     _only_md = conf.only_use_keys_in_metadata
     if _only_md is None:
@@ -1058,13 +1069,19 @@ def encrypt_cert_from_item(item):
             certs = cert_from_instance(item)
             if len(certs) > 0:
                 _encrypt_cert = certs[0]
-        if _encrypt_cert is not None:
-            if _encrypt_cert.find("-----BEGIN CERTIFICATE-----\n") == -1:
-                _encrypt_cert = "-----BEGIN CERTIFICATE-----\n" + _encrypt_cert
-            if _encrypt_cert.find("-----END CERTIFICATE-----\n") == -1:
-                _encrypt_cert = _encrypt_cert + "-----END CERTIFICATE-----\n"
     except Exception:
-        return None
+        pass
+
+    if _encrypt_cert is None:
+        certs = cert_from_instance(item)
+        if len(certs) > 0:
+            _encrypt_cert = certs[0]
+
+    if _encrypt_cert is not None:
+        if _encrypt_cert.find("-----BEGIN CERTIFICATE-----\n") == -1:
+            _encrypt_cert = "-----BEGIN CERTIFICATE-----\n" + _encrypt_cert
+        if _encrypt_cert.find("\n-----END CERTIFICATE-----") == -1:
+            _encrypt_cert = _encrypt_cert + "\n-----END CERTIFICATE-----"
     return _encrypt_cert
 
 
@@ -1119,11 +1136,11 @@ class CertHandler(object):
             self._verify_cert = verify_cert is True
             self._security_context = security_context
             self._osw = OpenSSLWrapper()
-            if key_file is not None and os.path.isfile(key_file):
+            if key_file and os.path.isfile(key_file):
                 self._key_str = self._osw.read_str_from_file(key_file, key_type)
             else:
                 self._key_str = ""
-            if cert_file is not None:
+            if cert_file and os.path.isfile(cert_file):
                 self._cert_str = self._osw.read_str_from_file(cert_file,
                                                               cert_type)
             else:
@@ -1137,7 +1154,7 @@ class CertHandler(object):
             self._cert_info = None
             self._generate_cert_func_active = False
             if generate_cert_info is not None and len(self._cert_str) > 0 and \
-                            len(self._key_str) > 0 and tmp_key_file is not \
+                    len(self._key_str) > 0 and tmp_key_file is not \
                     None and tmp_cert_file is not None:
                 self._generate_cert = True
                 self._cert_info = generate_cert_info
@@ -1234,6 +1251,11 @@ class SecurityContext(object):
             self.template = template
 
         self.encrypt_key_type = encrypt_key_type
+        # keep certificate files to debug xmlsec invocations
+        if os.environ.get('PYSAML2_KEEP_XMLSEC_TMP', None):
+            self._xmlsec_delete_tmpfiles = False
+        else:
+            self._xmlsec_delete_tmpfiles = True
 
     def correctly_signed(self, xml, must=False):
         logger.debug("verify correct signature")
@@ -1325,7 +1347,9 @@ class SecurityContext(object):
             certs = []
             for cert in _certs:
                 if isinstance(cert, basestring):
-                    certs.append(make_temp(pem_format(cert), ".pem", False))
+                    certs.append(make_temp(pem_format(cert), suffix=".pem",
+                                           decode=False,
+                                           delete=self._xmlsec_delete_tmpfiles))
                 else:
                     certs.append(cert)
         else:
@@ -1333,8 +1357,9 @@ class SecurityContext(object):
 
         if not certs and not self.only_use_keys_in_metadata:
             logger.debug("==== Certs from instance ====")
-            certs = [make_temp(pem_format(cert), ".pem",
-                               False) for cert in cert_from_instance(item)]
+            certs = [make_temp(pem_format(cert), suffix=".pem",
+                               decode=False, delete=self._xmlsec_delete_tmpfiles)
+                    for cert in cert_from_instance(item)]
         else:
             logger.debug("==== Certs from metadata ==== %s: %s ====" % (issuer,
                                                                         certs))
@@ -1408,8 +1433,8 @@ class SecurityContext(object):
         the entity that sent the info use that, if not use the key that are in
         the message if any.
 
-        :param decoded_xml: The SAML message as a XML string
-        :param msgtype:
+        :param decoded_xml: The SAML message as an XML infoset (a string)
+        :param msgtype: SAML protocol message type
         :param must: Whether there must be a signature
         :param origdoc:
         :return:
@@ -1426,7 +1451,7 @@ class SecurityContext(object):
 
         if not msg.signature:
             if must:
-                raise SignatureError("Missing must signature")
+                raise SignatureError("Required signature missing on %s" % msgtype)
             else:
                 return msg
 
@@ -1679,7 +1704,8 @@ class SecurityContext(object):
 # ===========================================================================
 
 
-def pre_signature_part(ident, public_key=None, identifier=None):
+def pre_signature_part(ident, public_key=None, identifier=None,
+                       digest_alg=None, sign_alg=None):
     """
     If an assertion is to be signed the signature part has to be preset
     with which algorithms to be used, this function returns such a
@@ -1692,13 +1718,17 @@ def pre_signature_part(ident, public_key=None, identifier=None):
     :return: A preset signature part
     """
 
-    signature_method = ds.SignatureMethod(algorithm=ds.SIG_RSA_SHA1)
+    if not digest_alg:
+        digest_alg=ds.digest_default
+    if not sign_alg:
+        sign_alg=ds.sig_default
+    signature_method = ds.SignatureMethod(algorithm=sign_alg)
     canonicalization_method = ds.CanonicalizationMethod(
         algorithm=ds.ALG_EXC_C14N)
     trans0 = ds.Transform(algorithm=ds.TRANSFORM_ENVELOPED)
     trans1 = ds.Transform(algorithm=ds.ALG_EXC_C14N)
     transforms = ds.Transforms(transform=[trans0, trans1])
-    digest_method = ds.DigestMethod(algorithm=ds.DIGEST_SHA1)
+    digest_method = ds.DigestMethod(algorithm=digest_alg)
 
     reference = ds.Reference(uri="#%s" % ident, digest_value=ds.DigestValue(),
                              transforms=transforms, digest_method=digest_method)

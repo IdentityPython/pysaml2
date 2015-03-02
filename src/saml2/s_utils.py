@@ -7,6 +7,7 @@ import time
 import base64
 import sys
 import hmac
+import string
 
 # from python 2.5
 import imp
@@ -44,6 +45,10 @@ class RequestVersionTooHigh(SamlException):
 
 
 class UnknownPrincipal(SamlException):
+    pass
+
+
+class UnknownSystemEntity(SamlException):
     pass
 
 
@@ -95,8 +100,8 @@ EXCEPTION2STATUS = {
     Exception: samlp.STATUS_AUTHN_FAILED,
 }
 
-GENERIC_DOMAINS = ["aero", "asia", "biz", "cat", "com", "coop", "edu", 
-                   "gov", "info", "int", "jobs", "mil", "mobi", "museum", 
+GENERIC_DOMAINS = ["aero", "asia", "biz", "cat", "com", "coop", "edu",
+                   "gov", "info", "int", "jobs", "mil", "mobi", "museum",
                    "name", "net", "org", "pro", "tel", "travel"]
 
 
@@ -128,11 +133,11 @@ def valid_email(emailaddress, domains=GENERIC_DOMAINS):
         return True  # Email address is fine.
     else:
         return False  # Email address has funny characters.
-            
+
 
 def decode_base64_and_inflate(string):
-    """ base64 decodes and then inflates according to RFC1951 
-    
+    """ base64 decodes and then inflates according to RFC1951
+
     :param string: a deflated and encoded string
     :return: the string after decoding and inflating
     """
@@ -143,38 +148,35 @@ def decode_base64_and_inflate(string):
 def deflate_and_base64_encode(string_val):
     """
     Deflates and the base64 encodes a string
-    
+
     :param string_val: The string to deflate and encode
     :return: The deflated and encoded string
     """
     return base64.b64encode(zlib.compress(string_val)[2:-4])
 
 
-def rndstr(size=16):
+def rndstr(size=16, alphabet=""):
     """
     Returns a string of random ascii characters or digits
 
     :param size: The length of the string
     :return: string
     """
-    _basech = string.ascii_letters + string.digits
-    return "".join([random.choice(_basech) for _ in range(size)])
+    rng = random.SystemRandom()
+    if not alphabet:
+        alphabet = string.letters[0:52] + string.digits
+    return str().join(rng.choice(alphabet) for _ in range(size))
 
 
-def sid(seed=""):
-    """The hash of the server time + seed makes an unique SID for each session.
-    128-bits long so it fulfills the SAML2 requirements which states
+def sid():
+    """creates an unique SID for each session.
+    160-bits long so it fulfills the SAML2 requirements which states
     128-160 bits
 
-    :param seed: A seed string
-    :return: The hex version of the digest, prefixed by 'id-' to make it 
+    :return: A random string prefix with 'id-' to make it
         compliant with the NCName specification
     """
-    ident = md5()
-    ident.update(repr(time.time()))
-    if seed:
-        ident.update(seed)
-    return "id-" + ident.hexdigest()
+    return "id-" + rndstr(17)
 
 
 def parse_attribute_map(filenames):
@@ -182,9 +184,9 @@ def parse_attribute_map(filenames):
     Expects a file with each line being composed of the oid for the attribute
     exactly one space, a user friendly name of the attribute and then
     the type specification of the name.
-    
+
     :param filenames: List of filenames on mapfiles.
-    :return: A 2-tuple, one dictionary with the oid as keys and the friendly 
+    :return: A 2-tuple, one dictionary with the oid as keys and the friendly
         names as values, the other one the other way around.
     """
     forward = {}
@@ -194,9 +196,9 @@ def parse_attribute_map(filenames):
             (name, friendly_name, name_format) = line.strip().split()
             forward[(name, name_format)] = friendly_name
             backward[friendly_name] = (name, name_format)
-        
+
     return forward, backward
-    
+
 
 def identity_attribute(form, attribute, forward_map=None):
     if form == "friendly":
@@ -208,10 +210,10 @@ def identity_attribute(form, attribute, forward_map=None):
             except KeyError:
                 return attribute.name
     # default is name
-    return attribute.name        
+    return attribute.name
 
 #----------------------------------------------------------------------------
-    
+
 
 def error_status_factory(info):
     if isinstance(info, Exception):
@@ -236,21 +238,21 @@ def error_status_factory(info):
             status_code=samlp.StatusCode(
                 value=samlp.STATUS_RESPONDER,
                 status_code=samlp.StatusCode(value=errcode)))
-        
+
     return status
-        
+
 
 def success_status_factory():
     return samlp.Status(status_code=samlp.StatusCode(
         value=samlp.STATUS_SUCCESS))
-                                
+
 
 def status_message_factory(message, code, fro=samlp.STATUS_RESPONDER):
     return samlp.Status(
         status_message=samlp.StatusMessage(text=message),
         status_code=samlp.StatusCode(value=fro,
                                      status_code=samlp.StatusCode(value=code)))
-    
+
 
 def assertion_factory(**kwargs):
     assertion = saml.Assertion(version=VERSION, id=sid(),
@@ -271,7 +273,7 @@ def _attrval(val, typ=""):
     if typ:
         for ava in attrval:
             ava.set_type(typ)
-            
+
     return attrval
 
 # --- attribute profiles -----
@@ -289,7 +291,7 @@ def do_ava(val, typ=""):
         attrval = [do_ava(v)[0] for v in val]
     elif val or val is False:
         ava = saml.AttributeValue()
-        ava.set_text(val)        
+        ava.set_text(val)
         attrval = [ava]
     elif val is None:
         attrval = None
@@ -301,7 +303,7 @@ def do_ava(val, typ=""):
             ava.set_type(typ)
 
     return attrval
-    
+
 
 def do_attribute(val, typ, key):
     attr = saml.Attribute()
@@ -324,7 +326,7 @@ def do_attribute(val, typ, key):
         if friendly:
             attr.friendly_name = friendly
     return attr
-    
+
 
 def do_attributes(identity):
     attrs = []
@@ -336,14 +338,14 @@ def do_attributes(identity):
         except ValueError:
             val = spec
             typ = ""
-        except TypeError: 
+        except TypeError:
             val = ""
             typ = ""
-            
+
         attr = do_attribute(val, typ, key)
         attrs.append(attr)
     return attrs
-    
+
 
 def do_attribute_statement(identity):
     """
