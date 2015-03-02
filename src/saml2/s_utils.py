@@ -467,7 +467,7 @@ def rec_factory(cls, **kwargs):
             except Exception:
                 continue
             else:
-                setattr(_inst, key, val)
+                setattr(_inst, _inst.c_attributes[key][0], val)
         elif key in _inst.c_child_order:
             for tag, _cls in _inst.c_children.values():
                 if tag == key:
