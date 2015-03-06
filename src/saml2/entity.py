@@ -151,7 +151,6 @@ class Entity(HTTPBase):
         self.metadata = self.config.metadata
         self.config.setup_logger()
         self.debug = self.config.debug
-        self.seed = rndstr(32)
 
         self.sec = security_context(self.config)
 
@@ -285,7 +284,7 @@ class Entity(HTTPBase):
 
     def message_args(self, message_id=0):
         if not message_id:
-            message_id = sid(self.seed)
+            message_id = sid()
 
         return {"id": message_id, "version": VERSION,
                 "issue_instant": instant(), "issuer": self._issuer()}
@@ -438,7 +437,7 @@ class Entity(HTTPBase):
             request_cls
         """
         if not message_id:
-            message_id = sid(self.seed)
+            message_id = sid()
 
         for key, val in self.message_args(message_id).items():
             if key not in kwargs:
