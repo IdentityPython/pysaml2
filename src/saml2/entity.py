@@ -1,5 +1,5 @@
 import base64
-from binascii import hexlify
+#from binascii import hexlify
 import logging
 from hashlib import sha1
 from Crypto.PublicKey import RSA
@@ -937,13 +937,13 @@ class Entity(HTTPBase):
 
             if response:
                 if outstanding_certs:
-                    cert = outstanding_certs[
-                        response.in_response_to]
-                    if cert:
-                        _, key_file = make_temp(
-                            "%s" % cert["key"], decode=False)
-                    else:
+                    try:
+                        cert = outstanding_certs[response.in_response_to]
+                    except KeyError:
                         key_file = ""
+                    else:
+                        _, key_file = make_temp("%s" % cert["key"],
+                                                decode=False)
                 else:
                     key_file = ""
                 response = response.verify(key_file)
