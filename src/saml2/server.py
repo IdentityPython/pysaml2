@@ -280,35 +280,8 @@ class Server(Entity):
 
     # ------------------------------------------------------------------------
 
-    def _authn_response(self, in_response_to, consumer_url,
-                        sp_entity_id, identity=None, name_id=None,
-                        status=None, authn=None, issuer=None, policy=None,
-                        sign_assertion=False, sign_response=False,
-                        best_effort=False, encrypt_assertion=False,
-                        encrypt_cert=None, authn_statement=None):
-        """ Create a response. A layer of indirection.
-
-        :param in_response_to: The session identifier of the request
-        :param consumer_url: The URL which should receive the response
-        :param sp_entity_id: The entity identifier of the SP
-        :param identity: A dictionary with attributes and values that are
-            expected to be the bases for the assertion in the response.
-        :param name_id: The identifier of the subject
-        :param status: The status of the response
-        :param authn: A dictionary containing information about the
-            authn context.
-        :param issuer: The issuer of the response
-        :param sign_assertion: Whether the assertion should be signed or not
-        :param sign_response: Whether the response should be signed or not
-        :param best_effort: Even if not the SPs demands can be met send a
-            response.
-        :return: A response instance
-        """
-
-        to_sign = []
-        args = {}
-        #if identity:
-        _issuer = self._issuer(issuer)
+    def setup_assertion(self, authn, sp_entity_id, in_response_to, consumer_url, name_id, policy, _issuer,
+                        authn_statement, identity, best_effort, sign_response):
         ast = Assertion(identity)
         ast.acs = self.config.getattr("attribute_converters", "idp")
         if policy is None:
@@ -342,6 +315,56 @@ class Server(Entity):
                                       consumer_url, name_id,
                                       self.config.attribute_converters,
                                       policy, issuer=_issuer)
+        return assertion
+
+    def _authn_response(self, in_response_to, consumer_url,
+                        sp_entity_id, identity=None, name_id=None,
+                        status=None, authn=None, issuer=None, policy=None,
+                        sign_assertion=False, sign_response=False,
+                        best_effort=False, encrypt_assertion=False,
+                        encrypt_cert=None, authn_statement=None,
+                        encrypt_assertion_self_contained=False, show_nameid=False):
+        """ Create a response. A layer of indirection.
+
+        :param in_response_to: The session identifier of the request
+        :param consumer_url: The URL which should receive the response
+        :param sp_entity_id: The entity identifier of the SP
+        :param identity: A dictionary with attributes and values that are
+            expected to be the bases for the assertion in the response.
+        :param name_id: The identifier of the subject
+        :param status: The status of the response
+        :param authn: A dictionary containing information about the
+            authn context.
+        :param issuer: The issuer of the response
+        :param sign_assertion: Whether the assertion should be signed or not
+        :param sign_response: Whether the response should be signed or not
+        :param best_effort: Even if not the SPs demands can be met send a
+            response.
+        :return: A response instance
+        """
+
+        to_sign = []
+        args = {}
+        #if identity:
+        _issuer = self._issuer(issuer)
+
+        if encrypt_assertion and show_nameid:
+            tmp_name_id = name_id
+            name_id = None
+            name_id = None
+            tmp_authn = authn
+            authn = None
+            tmp_authn_statement = authn_statement
+            authn_statement = None
+
+        assertion = self.setup_assertion(authn, sp_entity_id, in_response_to, consumer_url, name_id, policy,
+                                         _issuer, authn_statement, identity, best_effort, sign_response)
+        assertion_only_nameid = None
+
+        if encrypt_assertion and show_nameid:
+            assertion_only_nameid = self.setup_assertion(tmp_authn, sp_entity_id, in_response_to, consumer_url,
+                                                         tmp_name_id, policy, _issuer, tmp_authn_statement, [], True,
+                                                         sign_response)
 
         if sign_assertion is not None and sign_assertion:
             assertion.signature = pre_signature_part(assertion.id,
@@ -358,12 +381,16 @@ class Server(Entity):
 
         args["assertion"] = assertion
 
-        if self.support_AssertionIDRequest() or self.support_AuthnQuery():
+        if assertion_only_nameid is not None:
+            args["assertion_only_nameid"] = assertion_only_nameid
+
+        if (self.support_AssertionIDRequest() or self.support_AuthnQuery()) and assertion_only_nameid is None:
             self.session_db.store_assertion(assertion, to_sign)
 
         return self._response(in_response_to, consumer_url, status, issuer,
                               sign_response, to_sign, encrypt_assertion=encrypt_assertion,
-                              encrypt_cert=encrypt_cert, **args)
+                              encrypt_cert=encrypt_cert,
+                              encrypt_assertion_self_contained=encrypt_assertion_self_contained, **args)
 
     # ------------------------------------------------------------------------
 
@@ -438,6 +465,8 @@ class Server(Entity):
                               name_id=None, authn=None, issuer=None,
                               sign_response=None, sign_assertion=None,
                               encrypt_cert=None, encrypt_assertion=None,
+                              encrypt_assertion_self_contained=False,
+                              show_nameid=False,
                               **kwargs):
         """ Constructs an AuthenticationResponse
 
@@ -549,6 +578,8 @@ class Server(Entity):
                                                 sign_response=sign_response,
                                                 best_effort=best_effort,
                                                 encrypt_assertion=encrypt_assertion,
+                                                encrypt_assertion_self_contained=encrypt_assertion_self_contained,
+                                                show_nameid=show_nameid,
                                                 encrypt_cert=encrypt_cert)
             return self._authn_response(in_response_to,  # in_response_to
                                         destination,  # consumer_url
@@ -562,6 +593,8 @@ class Server(Entity):
                                         sign_response=sign_response,
                                         best_effort=best_effort,
                                         encrypt_assertion=encrypt_assertion,
+                                        encrypt_assertion_self_contained=encrypt_assertion_self_contained,
+                                        show_nameid=show_nameid,
                                         encrypt_cert=encrypt_cert)
 
         except MissingValue, exc:

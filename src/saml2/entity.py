@@ -63,6 +63,7 @@ from saml2.sigver import CryptoBackendXmlSec1
 from saml2.sigver import make_temp
 from saml2.sigver import pre_encryption_part
 from saml2.sigver import pre_signature_part
+from saml2.sigver import pre_encrypt_assertion
 from saml2.sigver import signed_instance_factory
 from saml2.virtual_org import VirtualOrg
 
@@ -438,7 +439,7 @@ class Entity(HTTPBase):
             request_cls
         """
         if not message_id:
-            message_id = sid(self.seed)
+            message_id = sid()
 
         for key, val in self.message_args(message_id).items():
             if key not in kwargs:
@@ -503,7 +504,7 @@ class Entity(HTTPBase):
 
     def _response(self, in_response_to, consumer_url=None, status=None,
                   issuer=None, sign=False, to_sign=None,
-                  encrypt_assertion=False, encrypt_cert=None, **kwargs):
+                  encrypt_assertion=False, encrypt_assertion_self_contained=False, encrypt_cert=None, **kwargs):
         """ Create a Response.
 
         :param in_response_to: The session identifier of the request
@@ -537,7 +538,13 @@ class Entity(HTTPBase):
             if sign:
                 response.signature = pre_signature_part(response.id,
                                                         self.sec.my_cert, 1)
+                sign_class = [(class_name(response), response.id)]
             cbxs = CryptoBackendXmlSec1(self.config.xmlsec_binary)
+            if encrypt_assertion_self_contained:
+                assertion_tag = response.assertion._to_element_tree().tag
+                response = pre_encrypt_assertion(response)
+                response = response.get_xml_string_with_self_contained__assertion_within_encrypted_assertion(
+                    assertion_tag)
             _, cert_file = make_temp("%s" % encrypt_cert, decode=False)
             response = cbxs.encrypt_assertion(response, cert_file,
                                               pre_encryption_part())
@@ -547,7 +554,6 @@ class Entity(HTTPBase):
                     signed_instance_factory(response, self.sec, to_sign)
                 else:
                     # default is to sign the whole response if anything
-                    sign_class = [(class_name(response), response.id)]
                     return signed_instance_factory(response, self.sec,
                                                    sign_class)
             else:

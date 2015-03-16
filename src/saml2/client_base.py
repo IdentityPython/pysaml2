@@ -26,7 +26,7 @@ from saml2.soap import make_soap_enveloped_saml_thingy
 
 from urlparse import parse_qs
 
-from saml2.s_utils import signature, UnravelError
+from saml2.s_utils import signature, UnravelError, exception_trace
 from saml2.s_utils import do_attributes
 
 from saml2 import samlp, BINDING_SOAP, SAMLError
@@ -580,13 +580,12 @@ class Base(Entity):
                 logger.error("XML parse error: %s" % err)
                 raise
 
-            #logger.debug(">> %s", resp)
-
             if resp is None:
                 return None
             elif isinstance(resp, AuthnResponse):
-                self.users.add_information_about_person(resp.session_info())
-                logger.info("--- ADDED person info ----")
+                if resp.assertion is not None and len(resp.response.encrypted_assertion) == 0:
+                    self.users.add_information_about_person(resp.session_info())
+                    logger.info("--- ADDED person info ----")
                 pass
             else:
                 logger.error("Response type not supported: %s" % (

@@ -820,7 +820,7 @@ class AuthnResponse(StatusResponse):
                 raise Exception("No assertion part")
 
         res = []
-        if self.response.encrypted_assertion:
+        if self.response.encrypted_assertion and key_file is not None and len(key_file) > 0:
             logger.debug("***Encrypted assertion/-s***")
             decr_text = self.sec.decrypt(self.xmlstr, key_file)
             resp = samlp.response_from_string(decr_text)
