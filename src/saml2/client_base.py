@@ -545,6 +545,8 @@ class Base(Entity):
         :param outstanding: A dictionary with session IDs as keys and
             the original web request from the user before redirection
             as values.
+        :param only_identity_in_encrypted_assertion: Must exist an assertion that is not encrypted that contains all
+                                                    other information like subject and authentication statement.
         :return: An response.AuthnResponse or None
         """
 
@@ -565,7 +567,7 @@ class Base(Entity):
                 "entity_id": self.config.entityid,
                 "attribute_converters": self.config.attribute_converters,
                 "allow_unknown_attributes":
-                self.config.allow_unknown_attributes,
+                self.config.allow_unknown_attributes
             }
             try:
                 resp = self._parse_response(xmlstr, AuthnResponse,

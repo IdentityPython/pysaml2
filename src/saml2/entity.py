@@ -23,7 +23,7 @@ from saml2 import soap
 from saml2 import element_to_extension_element
 from saml2 import extension_elements_to_elements
 
-from saml2.saml import NameID
+from saml2.saml import NameID, EncryptedAssertion
 from saml2.saml import Issuer
 from saml2.saml import NAMEID_FORMAT_ENTITY
 from saml2.response import LogoutResponse
@@ -504,7 +504,8 @@ class Entity(HTTPBase):
 
     def _response(self, in_response_to, consumer_url=None, status=None,
                   issuer=None, sign=False, to_sign=None,
-                  encrypt_assertion=False, encrypt_assertion_self_contained=False, encrypt_cert=None, **kwargs):
+                  encrypt_assertion=False, encrypt_assertion_self_contained=False, encrypted_advice_attributes=False,
+                  encrypt_cert=None, **kwargs):
         """ Create a Response.
 
         :param in_response_to: The session identifier of the request
@@ -540,14 +541,31 @@ class Entity(HTTPBase):
                                                         self.sec.my_cert, 1)
                 sign_class = [(class_name(response), response.id)]
             cbxs = CryptoBackendXmlSec1(self.config.xmlsec_binary)
-            if encrypt_assertion_self_contained:
+            xnode_path = None
+            if encrypted_advice_attributes and encrypt_assertion_self_contained and \
+                            response.assertion.advice is not None and len(response.assertion.advice.assertion) == 1:
+                tmp_assertion = response.assertion.advice.assertion[0]
+                advice_tag = response.assertion.advice._to_element_tree().tag
+                assertion_tag = tmp_assertion._to_element_tree().tag
+                response.assertion.advice.encrypted_assertion = []
+                response.assertion.advice.encrypted_assertion.append(EncryptedAssertion())
+                if isinstance(tmp_assertion, list):
+                    response.assertion.advice.encrypted_assertion[0].add_extension_elements(tmp_assertion)
+                else:
+                    response.assertion.advice.encrypted_assertion[0].add_extension_element(tmp_assertion)
+                response.assertion.advice.assertion = []
+                response = response.get_xml_string_with_self_contained_assertion_within_advice_encrypted_assertion(
+                    assertion_tag, advice_tag)
+                node_xpath = ''.join(["/*[local-name()=\"%s\"]" % v for v in
+                                        ["Response", "Assertion", "Advice", "EncryptedAssertion", "Assertion"]])
+            elif encrypt_assertion_self_contained:
                 assertion_tag = response.assertion._to_element_tree().tag
                 response = pre_encrypt_assertion(response)
-                response = response.get_xml_string_with_self_contained__assertion_within_encrypted_assertion(
+                response = response.get_xml_string_with_self_contained_assertion_within_encrypted_assertion(
                     assertion_tag)
             _, cert_file = make_temp("%s" % encrypt_cert, decode=False)
             response = cbxs.encrypt_assertion(response, cert_file,
-                                              pre_encryption_part())
+                                              pre_encryption_part(), node_xpath=node_xpath)
                                               # template(response.assertion.id))
             if sign:
                 if to_sign:
@@ -949,6 +967,9 @@ class Entity(HTTPBase):
                             response.in_response_to]["key"], decode=False)
                 else:
                     key_file = ""
+                only_identity_in_encrypted_assertion = False
+                if "only_identity_in_encrypted_assertion" in kwargs:
+                    only_identity_in_encrypted_assertion = kwargs["only_identity_in_encrypted_assertion"]
                 response = response.verify(key_file)
 
             if not response:

@@ -587,7 +587,19 @@ class SamlBase(ExtensionContainer):
             prefix_map["encas%d" % len(prefix_map)] = uri
         return prefix_map
 
-    def get_xml_string_with_self_contained__assertion_within_encrypted_assertion(self, assertion_tag):
+    def get_xml_string_with_self_contained_assertion_within_advice_encrypted_assertion(self, assertion_tag, advice_tag):
+        for tmp_encrypted_assertion in self.assertion.advice.encrypted_assertion:
+            prefix_map = self.get_prefix_map([tmp_encrypted_assertion._to_element_tree().
+                                                  find(assertion_tag)])
+
+            tree = self._to_element_tree()
+
+            self.set_prefixes(tree.find(assertion_tag).find(advice_tag).find(tmp_encrypted_assertion._to_element_tree()
+                                                                             .tag).find(assertion_tag), prefix_map)
+
+        return ElementTree.tostring(tree, encoding="UTF-8")
+
+    def get_xml_string_with_self_contained_assertion_within_encrypted_assertion(self, assertion_tag):
         prefix_map = self.get_prefix_map([self.encrypted_assertion._to_element_tree().find(assertion_tag)])
 
         tree = self._to_element_tree()

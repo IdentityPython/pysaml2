@@ -281,7 +281,7 @@ class Server(Entity):
     # ------------------------------------------------------------------------
 
     def setup_assertion(self, authn, sp_entity_id, in_response_to, consumer_url, name_id, policy, _issuer,
-                        authn_statement, identity, best_effort, sign_response):
+                        authn_statement, identity, best_effort, sign_response, add_subject=True):
         ast = Assertion(identity)
         ast.acs = self.config.getattr("attribute_converters", "idp")
         if policy is None:
@@ -302,19 +302,19 @@ class Server(Entity):
             assertion = ast.construct(sp_entity_id, in_response_to,
                                       consumer_url, name_id,
                                       self.config.attribute_converters,
-                                      policy, issuer=_issuer,
+                                      policy, issuer=_issuer, add_subject=add_subject,
                                       **authn_args)
         elif authn_statement:  # Got a complete AuthnStatement
             assertion = ast.construct(sp_entity_id, in_response_to,
                                       consumer_url, name_id,
                                       self.config.attribute_converters,
                                       policy, issuer=_issuer,
-                                      authn_statem=authn_statement)
+                                      authn_statem=authn_statement, add_subject=add_subject)
         else:
             assertion = ast.construct(sp_entity_id, in_response_to,
                                       consumer_url, name_id,
                                       self.config.attribute_converters,
-                                      policy, issuer=_issuer)
+                                      policy, issuer=_issuer, add_subject=add_subject)
         return assertion
 
     def _authn_response(self, in_response_to, consumer_url,
@@ -323,7 +323,7 @@ class Server(Entity):
                         sign_assertion=False, sign_response=False,
                         best_effort=False, encrypt_assertion=False,
                         encrypt_cert=None, authn_statement=None,
-                        encrypt_assertion_self_contained=False, show_nameid=False):
+                        encrypt_assertion_self_contained=False, encrypted_advice_attributes=False):
         """ Create a response. A layer of indirection.
 
         :param in_response_to: The session identifier of the request
@@ -348,22 +348,29 @@ class Server(Entity):
         #if identity:
         _issuer = self._issuer(issuer)
 
-        if encrypt_assertion and show_nameid:
-            tmp_name_id = name_id
-            name_id = None
-            name_id = None
-            tmp_authn = authn
-            authn = None
-            tmp_authn_statement = authn_statement
-            authn_statement = None
+        #if encrypt_assertion and show_nameid:
+        #    tmp_name_id = name_id
+        #    name_id = None
+        #    name_id = None
+        #    tmp_authn = authn
+        #    authn = None
+        #    tmp_authn_statement = authn_statement
+        #    authn_statement = None
 
-        assertion = self.setup_assertion(authn, sp_entity_id, in_response_to, consumer_url, name_id, policy,
-                                         _issuer, authn_statement, identity, best_effort, sign_response)
-        assertion_only_nameid = None
+        if encrypt_assertion and encrypted_advice_attributes:
+            assertion_attributes = self.setup_assertion(None, None, None, None, None, policy,
+                                             None, None, identity, best_effort, sign_response, False)
+            assertion = self.setup_assertion(authn, sp_entity_id, in_response_to, consumer_url,
+                                                         name_id, policy, _issuer, authn_statement, [], True,
+                                                         sign_response)
+            assertion.advice = saml.Advice()
 
-        if encrypt_assertion and show_nameid:
-            assertion_only_nameid = self.setup_assertion(tmp_authn, sp_entity_id, in_response_to, consumer_url,
-                                                         tmp_name_id, policy, _issuer, tmp_authn_statement, [], True,
+            #assertion.advice.assertion_id_ref.append(saml.AssertionIDRef())
+            #assertion.advice.assertion_uri_ref.append(saml.AssertionURIRef())
+            assertion.advice.assertion.append(assertion_attributes)
+        else:
+            assertion = self.setup_assertion(authn, sp_entity_id, in_response_to, consumer_url,
+                                                         name_id, policy, _issuer, authn_statement, identity, True,
                                                          sign_response)
 
         if sign_assertion is not None and sign_assertion:
@@ -381,16 +388,14 @@ class Server(Entity):
 
         args["assertion"] = assertion
 
-        if assertion_only_nameid is not None:
-            args["assertion_only_nameid"] = assertion_only_nameid
-
-        if (self.support_AssertionIDRequest() or self.support_AuthnQuery()) and assertion_only_nameid is None:
+        if (self.support_AssertionIDRequest() or self.support_AuthnQuery()):
             self.session_db.store_assertion(assertion, to_sign)
 
         return self._response(in_response_to, consumer_url, status, issuer,
                               sign_response, to_sign, encrypt_assertion=encrypt_assertion,
                               encrypt_cert=encrypt_cert,
-                              encrypt_assertion_self_contained=encrypt_assertion_self_contained, **args)
+                              encrypt_assertion_self_contained=encrypt_assertion_self_contained,
+                              encrypted_advice_attributes=encrypted_advice_attributes, **args)
 
     # ------------------------------------------------------------------------
 
@@ -466,7 +471,7 @@ class Server(Entity):
                               sign_response=None, sign_assertion=None,
                               encrypt_cert=None, encrypt_assertion=None,
                               encrypt_assertion_self_contained=False,
-                              show_nameid=False,
+                              encrypted_advice_attributes=False,
                               **kwargs):
         """ Constructs an AuthenticationResponse
 
@@ -579,7 +584,7 @@ class Server(Entity):
                                                 best_effort=best_effort,
                                                 encrypt_assertion=encrypt_assertion,
                                                 encrypt_assertion_self_contained=encrypt_assertion_self_contained,
-                                                show_nameid=show_nameid,
+                                                encrypted_advice_attributes=encrypted_advice_attributes,
                                                 encrypt_cert=encrypt_cert)
             return self._authn_response(in_response_to,  # in_response_to
                                         destination,  # consumer_url
@@ -594,7 +599,7 @@ class Server(Entity):
                                         best_effort=best_effort,
                                         encrypt_assertion=encrypt_assertion,
                                         encrypt_assertion_self_contained=encrypt_assertion_self_contained,
-                                        show_nameid=show_nameid,
+                                        encrypted_advice_attributes=encrypted_advice_attributes,
                                         encrypt_cert=encrypt_cert)
 
         except MissingValue, exc:

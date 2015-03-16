@@ -622,24 +622,32 @@ class AuthnResponse(StatusResponse):
                 attrlist = enc_attr.extensions_as_elements("Attribute", saml)
                 attribute_statement.attribute.extend(attrlist)
 
+    def read_attribute_statement(self, attr_statem):
+        logger.debug("Attribute Statement: %s" % (attr_statem,))
+        for aconv in self.attribute_converters:
+            logger.debug("Converts name format: %s" % (aconv.name_format,))
+
+        self.decrypt_attributes(attr_statem)
+        return to_local(self.attribute_converters, attr_statem,
+                       self.allow_unknown_attributes)
+
     def get_identity(self):
         """ The assertion can contain zero or one attributeStatements
 
         """
-        if not self.assertion.attribute_statement:
-            logger.error("Missing Attribute Statement")
-            ava = {}
-        else:
+        ava = {}
+        if self.assertion.advice:
+            if self.assertion.advice.assertion:
+                for tmp_assertion in self.assertion.advice.assertion:
+                    if tmp_assertion.attribute_statement:
+                        assert len(tmp_assertion.attribute_statement) == 1
+                        ava.update(self.read_attribute_statement(tmp_assertion.attribute_statement[0]))
+        if self.assertion.attribute_statement:
             assert len(self.assertion.attribute_statement) == 1
             _attr_statem = self.assertion.attribute_statement[0]
-
-            logger.debug("Attribute Statement: %s" % (_attr_statem,))
-            for aconv in self.attribute_converters:
-                logger.debug("Converts name format: %s" % (aconv.name_format,))
-
-            self.decrypt_attributes(_attr_statem)
-            ava = to_local(self.attribute_converters, _attr_statem,
-                           self.allow_unknown_attributes)
+            ava.update(self.read_attribute_statement(_attr_statem))
+        if not ava == 1:
+            logger.error("Missing Attribute Statement")
         return ava
 
     def _bearer_confirmed(self, data):
@@ -820,17 +828,35 @@ class AuthnResponse(StatusResponse):
                 raise Exception("No assertion part")
 
         res = []
-        if self.response.encrypted_assertion and key_file is not None and len(key_file) > 0:
+        has_encrypted_assertions = self.response.encrypted_assertion
+        if not has_encrypted_assertions and self.response.assertion:
+            for tmp_assertion in self.response.assertion:
+                if tmp_assertion.advice:
+                    if  tmp_assertion.advice.encrypted_assertion:
+                        has_encrypted_assertions = True
+                        break
+
+        if has_encrypted_assertions and key_file is not None and len(key_file) > 0:
             logger.debug("***Encrypted assertion/-s***")
             decr_text = self.sec.decrypt(self.xmlstr, key_file)
             resp = samlp.response_from_string(decr_text)
             res = self.decrypt_assertions(resp.encrypted_assertion, decr_text)
+            if resp.assertion:
+                for tmp_ass in resp.assertion:
+                    if tmp_ass.advice and tmp_ass.advice.encrypted_assertion:
+                        advice_res = self.decrypt_assertions(tmp_ass.advice.encrypted_assertion, decr_text)
+                        if tmp_ass.advice.assertion:
+                            tmp_ass.advice.assertion.extend(advice_res)
+                        else:
+                            tmp_ass.advice.assertion = advice_res
+                        tmp_ass.advice.encrypted_assertion = []
+                self.response.assertion = resp.assertion
             if self.response.assertion:
                 self.response.assertion.extend(res)
             else:
                 self.response.assertion = res
-            self.response.encrypted_assertion = []
             self.xmlstr = decr_text
+            self.response.encrypted_assertion = []
 
         if self.response.assertion:
             logger.debug("***Unencrypted assertion***")
@@ -840,7 +866,6 @@ class AuthnResponse(StatusResponse):
                 else:
                     self.assertions.append(assertion)
             self.assertion = self.assertions[0]
-
         return True
 
     def verify(self, key_file=""):
