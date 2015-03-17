@@ -55,6 +55,10 @@ NAME_ID_POLICY_2 = """<?xml version="1.0" encoding="utf-8"?>
 
 class TestIdentifier():
     def setup_class(self):
+        try:
+            os.remove("subject.db.db")
+        except:
+            pass
         self.id = IdentDB("subject.db", "example.com", "example")
 
     def test_persistent_1(self):

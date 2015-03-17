@@ -395,7 +395,7 @@ class StatusResponse(object):
     def loads(self, xmldata, decode=True, origxml=None):
         return self._loads(xmldata, decode, origxml)
 
-    def verify(self, key_file=""):
+    def verify(self, key_file="", decrypt=True):
         try:
             return self._verify()
         except AssertionError:
@@ -759,9 +759,7 @@ class AuthnResponse(StatusResponse):
             logger.debug("signed")
             if not verified:
                 try:
-                    if self.require_signature:
-                        self.sec.check_signature(assertion, class_name(assertion),
-                                                 self.xmlstr)
+                    self.sec.check_signature(assertion, class_name(assertion),self.xmlstr)
                 except Exception as exc:
                     logger.error("correctly_signed_response: %s" % exc)
                     raise
@@ -816,7 +814,7 @@ class AuthnResponse(StatusResponse):
                     res.append(assertion)
         return res
 
-    def parse_assertion(self, key_file=""):
+    def parse_assertion(self, key_file="", decrypt=True):
         if self.context == "AuthnQuery":
             # can contain one or more assertions
             pass
@@ -836,7 +834,7 @@ class AuthnResponse(StatusResponse):
                         has_encrypted_assertions = True
                         break
 
-        if has_encrypted_assertions and key_file is not None and len(key_file) > 0:
+        if has_encrypted_assertions and decrypt:
             logger.debug("***Encrypted assertion/-s***")
             decr_text = self.sec.decrypt(self.xmlstr, key_file)
             resp = samlp.response_from_string(decr_text)
@@ -868,7 +866,7 @@ class AuthnResponse(StatusResponse):
             self.assertion = self.assertions[0]
         return True
 
-    def verify(self, key_file=""):
+    def verify(self, key_file="", decrypt=True):
         """ Verify that the assertion is syntactically correct and
         the signature is correct if present.
         :param key_file: If not the default key file should be used this is it.
@@ -886,7 +884,7 @@ class AuthnResponse(StatusResponse):
         if not isinstance(self.response, samlp.Response):
             return self
 
-        if self.parse_assertion(key_file):
+        if self.parse_assertion(key_file, decrypt=decrypt):
             return self
         else:
             logger.error("Could not parse the assertion")
@@ -1114,7 +1112,7 @@ class AssertionIDResponse(object):
 
         return self._postamble()
 
-    def verify(self, key_file=""):
+    def verify(self, key_file="", decrypt=True):
         try:
             valid_instance(self.response)
         except NotValid as exc:

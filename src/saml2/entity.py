@@ -973,7 +973,10 @@ class Entity(HTTPBase):
                 only_identity_in_encrypted_assertion = False
                 if "only_identity_in_encrypted_assertion" in kwargs:
                     only_identity_in_encrypted_assertion = kwargs["only_identity_in_encrypted_assertion"]
-                response = response.verify(key_file)
+                decrypt = True
+                if "decrypt" in kwargs:
+                    decrypt = kwargs["decrypt"]
+                response = response.verify(key_file, decrypt=decrypt)
 
             if not response:
                 return None
