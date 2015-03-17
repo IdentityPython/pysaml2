@@ -143,7 +143,7 @@ class Service(object):
                                saml_msg["RelayState"],
                                encrypt_cert=_encrypt_cert, **kwargs)
             except KeyError:
-                # Can live with no relay state # TODO or can we, for inacademia?
+                # Can live with no relay state
                 return self.do(saml_msg["SAMLRequest"], binding,
                                saml_msg["RelayState"], **kwargs)
 
@@ -211,10 +211,13 @@ class Service(object):
 
     def not_authn(self, key, requested_authn_context):
         ruri = geturl(self.environ, query=False)
-        return do_authentication(self.environ, self.start_response,
-                                 authn_context=requested_authn_context,
-                                 key=key, redirect_uri=ruri)
 
+        kwargs = dict(authn_context=requested_authn_context, key=key, redirect_uri=ruri)
+        # Clear cookie, if it already exists
+        kaka = delete_cookie(self.environ, "idpauthn")
+        if kaka:
+            kwargs["headers"] = [kaka]
+        return do_authentication(self.environ, self.start_response, **kwargs)
 
 # -----------------------------------------------------------------------------
 
@@ -422,7 +425,8 @@ class SSO(Service):
                 saml_msg["SAMLRequest"], BINDING_HTTP_POST)
             _req = self.req_info.message
             if self.user:
-                if _req.force_authn:
+                if _req.force_authn is not None and \
+                        _req.force_authn.lower() == 'true':
                     saml_msg["req_info"] = self.req_info
                     key = self._store_request(saml_msg)
                     return self.not_authn(key, _req.requested_authn_context)
@@ -486,7 +490,7 @@ class SSO(Service):
 
 
 def do_authentication(environ, start_response, authn_context, key,
-                      redirect_uri):
+                      redirect_uri, headers=None):
     """
     Display the login form
     """
@@ -496,7 +500,7 @@ def do_authentication(environ, start_response, authn_context, key,
     if len(auth_info):
         method, reference = auth_info[0]
         logger.debug("Authn chosen: %s (ref=%s)" % (method, reference))
-        return method(environ, start_response, reference, key, redirect_uri)
+        return method(environ, start_response, reference, key, redirect_uri, headers)
     else:
         resp = Unauthorized("No usable authentication method")
         return resp(environ, start_response)
@@ -513,15 +517,17 @@ PASSWD = {
 
 
 def username_password_authn(environ, start_response, reference, key,
-                            redirect_uri):
+                            redirect_uri, headers=None):
     """
     Display the login form
     """
     logger.info("The login page")
-    headers = []
 
-    resp = Response(mako_template="login.mako", template_lookup=LOOKUP,
-                    headers=headers)
+    kwargs = dict(mako_template="login.mako", template_lookup=LOOKUP)
+    if headers:
+        kwargs["headers"] = headers
+
+    resp = Response(**kwargs)
 
     argv = {
         "action": "/verify",

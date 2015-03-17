@@ -51,7 +51,7 @@ if sys.version_info < (2, 7):
 
 setup(
     name='pysaml2',
-    version='2.4.0beta',
+    version='2.4.0',
     description='Python implementation of SAML Version 2',
     # long_description = read("README"),
     author='Roland Hedberg',

@@ -1,5 +1,5 @@
 import base64
-from binascii import hexlify
+#from binascii import hexlify
 import logging
 from hashlib import sha1
 from Crypto.PublicKey import RSA
@@ -152,7 +152,6 @@ class Entity(HTTPBase):
         self.metadata = self.config.metadata
         self.config.setup_logger()
         self.debug = self.config.debug
-        self.seed = rndstr(32)
 
         self.sec = security_context(self.config)
 
@@ -286,7 +285,7 @@ class Entity(HTTPBase):
 
     def message_args(self, message_id=0):
         if not message_id:
-            message_id = sid(self.seed)
+            message_id = sid()
 
         return {"id": message_id, "version": VERSION,
                 "issue_instant": instant(), "issuer": self._issuer()}
@@ -962,9 +961,13 @@ class Entity(HTTPBase):
 
             if response:
                 if outstanding_certs:
-                    _, key_file = make_temp(
-                        "%s" % outstanding_certs[
-                            response.in_response_to]["key"], decode=False)
+                    try:
+                        cert = outstanding_certs[response.in_response_to]
+                    except KeyError:
+                        key_file = ""
+                    else:
+                        _, key_file = make_temp("%s" % cert["key"],
+                                                decode=False)
                 else:
                     key_file = ""
                 only_identity_in_encrypted_assertion = False

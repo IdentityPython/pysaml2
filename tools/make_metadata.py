@@ -66,7 +66,7 @@ conf.xmlsec_binary = args.xmlsec
 secc = security_context(conf)
 
 if args.id:
-    desc = entities_descriptor(eds, valid_for, args.name, args.id,
+    desc, xmldoc = entities_descriptor(eds, valid_for, args.name, args.id,
                                args.sign, secc)
     valid_instance(desc)
     print desc.to_string(nspair)

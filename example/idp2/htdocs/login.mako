@@ -14,7 +14,7 @@
         <label for="login">Username</label>
     </div>
     <div>
-        <input type="text" name="login" value="${login}"/><br/>
+        <input type="text" name="login" value="${login}" autofocus><br/>
     </div>
 
     <div class="label">
