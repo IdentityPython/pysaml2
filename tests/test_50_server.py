@@ -435,8 +435,6 @@ class TestServer1():
 
         sresponse = response_from_string(signed_resp)
 
-        #'urn:oasis:names:tc:SAML:2.0:protocol:AuthnRequest'
-
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
@@ -450,7 +448,6 @@ class TestServer1():
 
         resp = samlp.response_from_string(decr_text)
 
-        #Do not work since the response is changed after the signature is created.
         valid = self.server.sec.verify_signature(decr_text,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
@@ -469,9 +466,6 @@ class TestServer1():
 
         assert ava ==\
                {'mail': ['derek@nyy.mlb.com'], 'givenname': ['Derek'], 'surname': ['Jeter'], 'title': ['The man']}
-
-        #Should work, but I suspect that xmlsec manipulates the xml to much while encrypting that the signature
-        #is no longer working. :(
 
         assert 'EncryptedAssertion><encas2:Assertion xmlns:encas0="http://www.w3.org/2000/09/xmldsig#" ' \
                'xmlns:encas1="http://www.w3.org/2001/XMLSchema-instance" ' \
@@ -506,8 +500,6 @@ class TestServer1():
         )
 
         sresponse = response_from_string(signed_resp)
-
-        #'urn:oasis:names:tc:SAML:2.0:protocol:AuthnRequest'
 
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
@@ -566,8 +558,6 @@ class TestServer1():
 
         sresponse = response_from_string(signed_resp)
 
-        #'urn:oasis:names:tc:SAML:2.0:protocol:AuthnRequest'
-
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
@@ -624,8 +614,6 @@ class TestServer1():
 
         sresponse = response_from_string(signed_resp)
 
-        #'urn:oasis:names:tc:SAML:2.0:protocol:AuthnRequest'
-
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
@@ -639,7 +627,6 @@ class TestServer1():
 
         resp = samlp.response_from_string(decr_text)
 
-        #Do not work since the response is changed after the signature is created.
         valid = self.server.sec.verify_signature(decr_text,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
@@ -695,8 +682,6 @@ class TestServer1():
 
         sresponse = response_from_string(signed_resp)
 
-        #'urn:oasis:names:tc:SAML:2.0:protocol:AuthnRequest'
-
         assert sresponse.signature is None
 
         _, key_file = make_temp("%s" % cert_key_str, decode=False)
@@ -747,8 +732,6 @@ class TestServer1():
         )
 
         sresponse = response_from_string(signed_resp)
-
-        #'urn:oasis:names:tc:SAML:2.0:protocol:AuthnRequest'
 
         assert sresponse.signature is None
 
