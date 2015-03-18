@@ -373,11 +373,17 @@ class Server(Entity):
                                                          name_id, policy, _issuer, authn_statement, identity, True,
                                                          sign_response)
 
+        to_sign = []
         if sign_assertion is not None and sign_assertion:
+            if assertion.advice and assertion.advice.assertion:
+                for tmp_assertion in assertion.advice.assertion:
+                    tmp_assertion.signature = pre_signature_part(tmp_assertion.id, self.sec.my_cert, 1)
+                    to_sign.append((class_name(tmp_assertion), tmp_assertion.id))
             assertion.signature = pre_signature_part(assertion.id,
                                                      self.sec.my_cert, 1)
             # Just the assertion or the response and the assertion ?
-            to_sign = [(class_name(assertion), assertion.id)]
+            to_sign.append((class_name(assertion), assertion.id))
+
 
         # Store which assertion that has been sent to which SP about which
         # subject.

@@ -646,7 +646,7 @@ class AuthnResponse(StatusResponse):
             assert len(self.assertion.attribute_statement) == 1
             _attr_statem = self.assertion.attribute_statement[0]
             ava.update(self.read_attribute_statement(_attr_statem))
-        if not ava == 1:
+        if not ava:
             logger.error("Missing Attribute Statement")
         return ava
 
