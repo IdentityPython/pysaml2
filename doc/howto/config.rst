@@ -357,7 +357,7 @@ Example::
 
     "service": {
         "sp": {
-            "authn_assertions_signed": "true",
+            "authn_requests_signed": "true",
         }
     }
 
