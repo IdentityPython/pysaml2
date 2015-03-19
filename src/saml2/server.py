@@ -358,7 +358,7 @@ class Server(Entity):
         #    authn_statement = None
 
         if encrypt_assertion and encrypted_advice_attributes:
-            assertion_attributes = self.setup_assertion(None, None, None, None, None, policy,
+            assertion_attributes = self.setup_assertion(None, sp_entity_id, None, None, None, policy,
                                              None, None, identity, best_effort, sign_response, False)
             assertion = self.setup_assertion(authn, sp_entity_id, in_response_to, consumer_url,
                                                          name_id, policy, _issuer, authn_statement, [], True,
