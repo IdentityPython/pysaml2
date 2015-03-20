@@ -123,6 +123,9 @@ def test_str_to_time():
     #TODO: add something to show how this time was arrived at
     # do this as an external method in the 
     assert t == 947635200
+    # some IdPs omit the trailing Z, and SAML spec is unclear if it is actually required
+    t = calendar.timegm(str_to_time("2000-01-12T00:00:00"))
+    assert t == 947635200
 
 
 def test_instant():
