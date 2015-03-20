@@ -42,7 +42,7 @@ NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:assertion'
 #XSI_NAMESPACE = 'http://www.w3.org/2001/XMLSchema-instance'
 
 NAMEID_FORMAT_EMAILADDRESS = (
-    "urn:oasis:names:tc:SAML:2.0:nameid-format:emailAddress")
+    "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress")
 
 # These are defined in saml2.saml
 #NAME_FORMAT_UNSPECIFIED = (
