@@ -558,6 +558,106 @@ class SamlBase(ExtensionContainer):
             except ValueError:
                 pass
 
+    def get_ns_map_attribute(self, attributes, uri_set):
+        for attribute in attributes:
+            if attribute[0] == "{":
+                uri, tag = attribute[1:].split("}")
+                uri_set.add(uri)
+        return uri_set
+
+    def tag_get_uri(self, elem):
+        if elem.tag[0] == "{":
+                uri, tag = elem.tag[1:].split("}")
+                return uri
+        return None
+    def get_ns_map(self, elements, uri_set):
+
+        for elem in elements:
+            uri_set = self.get_ns_map_attribute(elem.attrib, uri_set)
+            uri_set = self.get_ns_map(elem._children, uri_set)
+            uri = self.tag_get_uri(elem)
+            if uri is not None:
+                uri_set.add(uri)
+        return uri_set
+
+    def get_prefix_map(self, elements):
+        uri_set = self.get_ns_map(elements, set())
+        prefix_map = {}
+        for uri in sorted(uri_set):
+            prefix_map["encas%d" % len(prefix_map)] = uri
+        return prefix_map
+
+    def get_xml_string_with_self_contained_assertion_within_advice_encrypted_assertion(self, assertion_tag, advice_tag):
+        for tmp_encrypted_assertion in self.assertion.advice.encrypted_assertion:
+            prefix_map = self.get_prefix_map([tmp_encrypted_assertion._to_element_tree().
+                                                  find(assertion_tag)])
+
+            tree = self._to_element_tree()
+
+            self.set_prefixes(tree.find(assertion_tag).find(advice_tag).find(tmp_encrypted_assertion._to_element_tree()
+                                                                             .tag).find(assertion_tag), prefix_map)
+
+        return ElementTree.tostring(tree, encoding="UTF-8")
+
+    def get_xml_string_with_self_contained_assertion_within_encrypted_assertion(self, assertion_tag):
+        prefix_map = self.get_prefix_map([self.encrypted_assertion._to_element_tree().find(assertion_tag)])
+
+        tree = self._to_element_tree()
+
+        self.set_prefixes(tree.find(self.encrypted_assertion._to_element_tree().tag).find(assertion_tag), prefix_map)
+
+        return ElementTree.tostring(tree, encoding="UTF-8")
+
+
+    def set_prefixes(self, elem, prefix_map):
+
+        # check if this is a tree wrapper
+        if not ElementTree.iselement(elem):
+            elem = elem.getroot()
+
+        # build uri map and add to root element
+        uri_map = {}
+        for prefix, uri in prefix_map.items():
+            uri_map[uri] = prefix
+            elem.set("xmlns:" + prefix, uri)
+
+        # fixup all elements in the tree
+        memo = {}
+        for elem in elem.getiterator():
+            self.fixup_element_prefixes(elem, uri_map, memo)
+
+
+    def fixup_element_prefixes(self, elem, uri_map, memo):
+        def fixup(name):
+            try:
+                return memo[name]
+            except KeyError:
+                if name[0] != "{":
+                    return
+                uri, tag = name[1:].split("}")
+                if uri in uri_map:
+                    new_name = uri_map[uri] + ":" + tag
+                    memo[name] = new_name
+                    return new_name
+        # fix element name
+        name = fixup(elem.tag)
+        if name:
+            elem.tag = name
+        # fix attribute names
+        for key, value in elem.items():
+            name = fixup(key)
+            if name:
+                elem.set(name, value)
+                del elem.attrib[key]
+
+    def to_string_force_namespace(self, nspair):
+
+        elem = self._to_element_tree()
+
+        self.set_prefixes(elem, nspair)
+
+        return ElementTree.tostring(elem, encoding="UTF-8")
+
     def to_string(self, nspair=None):
         """Converts the Saml object to a string containing XML.
 

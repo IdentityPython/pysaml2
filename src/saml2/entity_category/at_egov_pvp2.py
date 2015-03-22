@@ -3,7 +3,7 @@ __author__ = 'rhoerbe'  #2013-09-05
 
 
 EGOVTOKEN = ["PVP-VERSION",
-             "PVP-PRINCIPALNAME",
+             "PVP-PRINCIPAL-NAME",
              "PVP-GIVENNAME",
              "PVP-BIRTHDATE",
              "PVP-USERID",

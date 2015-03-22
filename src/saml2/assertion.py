@@ -666,7 +666,7 @@ class Assertion(dict):
                   name_id, attrconvs, policy, issuer, authn_class=None,
                   authn_auth=None, authn_decl=None, encrypt=None,
                   sec_context=None, authn_decl_ref=None, authn_instant="",
-                  subject_locality="", authn_statem=None):
+                  subject_locality="", authn_statem=None, add_subject=True):
         """ Construct the Assertion
 
         :param sp_entity_id: The entityid of the SP
@@ -722,22 +722,29 @@ class Assertion(dict):
         else:
             _authn_statement = None
 
-        _ass = assertion_factory(
-            issuer=issuer,
-            conditions=conds,
-            subject=factory(
-                saml.Subject,
-                name_id=name_id,
-                subject_confirmation=[factory(
-                    saml.SubjectConfirmation,
-                    method=saml.SCM_BEARER,
-                    subject_confirmation_data=factory(
-                        saml.SubjectConfirmationData,
-                        in_response_to=in_response_to,
-                        recipient=consumer_url,
-                        not_on_or_after=policy.not_on_or_after(sp_entity_id)))]
-            ),
-        )
+        if not add_subject:
+            _ass = assertion_factory(
+                issuer=issuer,
+                conditions=conds,
+                subject=None
+            )
+        else:
+            _ass = assertion_factory(
+                issuer=issuer,
+                conditions=conds,
+                subject=factory(
+                    saml.Subject,
+                    name_id=name_id,
+                    subject_confirmation=[factory(
+                        saml.SubjectConfirmation,
+                        method=saml.SCM_BEARER,
+                        subject_confirmation_data=factory(
+                            saml.SubjectConfirmationData,
+                            in_response_to=in_response_to,
+                            recipient=consumer_url,
+                            not_on_or_after=policy.not_on_or_after(sp_entity_id)))]
+                ),
+            )
 
         if _authn_statement:
             _ass.authn_statement = [_authn_statement]

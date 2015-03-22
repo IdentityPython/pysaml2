@@ -20,7 +20,7 @@ from saml2.authn_context import INTERNETPROTOCOLPASSWORD
 from saml2.client import Saml2Client
 from saml2.config import SPConfig
 from saml2.response import LogoutResponse
-from saml2.saml import NAMEID_FORMAT_PERSISTENT, EncryptedAssertion
+from saml2.saml import NAMEID_FORMAT_PERSISTENT, EncryptedAssertion, Advice
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.saml import NameID
 from saml2.server import Server
@@ -499,6 +499,86 @@ class TestClient:
         assert resp.assertion
         assert resp.ava == {'givenName': ['Derek'], 'sn': ['Jeter']}
 
+    def test_sign_then_encrypt_assertion_advice(self):
+        # Begin with the IdPs side
+        _sec = self.server.sec
+
+        nameid_policy = samlp.NameIDPolicy(allow_create="false",
+                                           format=saml.NAMEID_FORMAT_PERSISTENT)
+
+        asser = Assertion({"givenName": "Derek", "surName": "Jeter"})
+        assertion = asser.construct(
+            self.client.config.entityid, "_012345",
+            "http://lingon.catalogix.se:8087/",
+            factory(saml.NameID, format=saml.NAMEID_FORMAT_TRANSIENT),
+            policy=self.server.config.getattr("policy", "idp"),
+            issuer=self.server._issuer(),
+            attrconvs=self.server.config.attribute_converters,
+            authn_class=INTERNETPROTOCOLPASSWORD,
+            authn_auth="http://www.example.com/login")
+
+        a_asser = Assertion({"uid": "test01", "email": "test.testsson@test.se"})
+        a_assertion = a_asser.construct(
+            self.client.config.entityid, "_012345",
+            "http://lingon.catalogix.se:8087/",
+            factory(saml.NameID, format=saml.NAMEID_FORMAT_TRANSIENT),
+            policy=self.server.config.getattr("policy", "idp"),
+            issuer=self.server._issuer(),
+            attrconvs=self.server.config.attribute_converters,
+            authn_class=INTERNETPROTOCOLPASSWORD,
+            authn_auth="http://www.example.com/login")
+
+        a_assertion.signature = sigver.pre_signature_part(
+            a_assertion.id, _sec.my_cert, 1)
+
+        assertion.advice = Advice()
+
+        assertion.advice.encrypted_assertion = []
+        assertion.advice.encrypted_assertion.append(EncryptedAssertion())
+
+        assertion.advice.encrypted_assertion[0].add_extension_element(a_assertion)
+
+        response = sigver.response_factory(
+            in_response_to="_012345",
+            destination="http://lingon.catalogix.se:8087/",
+            status=s_utils.success_status_factory(),
+            issuer=self.server._issuer()
+        )
+
+        response.assertion.append(assertion)
+
+        response = _sec.sign_statement("%s" % response, class_name(a_assertion),
+                                     key_file=self.client.sec.key_file,
+                                     node_id=a_assertion.id)
+
+        #xmldoc = "%s" % response
+        # strangely enough I get different tags if I run this test separately
+        # or as part of a bunch of tests.
+        #xmldoc = add_subelement(xmldoc, "EncryptedAssertion", sigass)
+
+        node_xpath = ''.join(["/*[local-name()=\"%s\"]" % v for v in
+                                ["Response", "Assertion", "Advice", "EncryptedAssertion", "Assertion"]])
+
+        enctext = _sec.crypto.encrypt_assertion(response, _sec.cert_file,
+                                                pre_encryption_part(), node_xpath=node_xpath)
+
+        #seresp = samlp.response_from_string(enctext)
+
+        resp_str = base64.encodestring(enctext)
+        # Now over to the client side
+        resp = self.client.parse_authn_request_response(
+            resp_str, BINDING_HTTP_POST,
+            {"_012345": "http://foo.example.com/service"})
+
+        #assert resp.encrypted_assertion == []
+        assert resp.assertion
+        assert resp.assertion.advice
+        assert resp.assertion.advice.assertion
+        assert resp.ava == \
+               {'sn': ['Jeter'], 'givenName': ['Derek'], 'uid': ['test01'], 'email': ['test.testsson@test.se']}
+
+
+
     def test_signed_redirect(self):
 
         msg_str = "%s" % self.client.create_authn_request(
@@ -628,4 +708,4 @@ class TestClientWithDummy():
 if __name__ == "__main__":
     tc = TestClient()
     tc.setup_class()
-    tc.test_sign_then_encrypt_assertion2()
+    tc.test_sign_then_encrypt_assertion_advice()

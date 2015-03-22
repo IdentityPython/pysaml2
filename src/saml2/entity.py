@@ -23,7 +23,7 @@ from saml2 import soap
 from saml2 import element_to_extension_element
 from saml2 import extension_elements_to_elements
 
-from saml2.saml import NameID
+from saml2.saml import NameID, EncryptedAssertion
 from saml2.saml import Issuer
 from saml2.saml import NAMEID_FORMAT_ENTITY
 from saml2.response import LogoutResponse
@@ -63,6 +63,7 @@ from saml2.sigver import CryptoBackendXmlSec1
 from saml2.sigver import make_temp
 from saml2.sigver import pre_encryption_part
 from saml2.sigver import pre_signature_part
+from saml2.sigver import pre_encrypt_assertion
 from saml2.sigver import signed_instance_factory
 from saml2.virtual_org import VirtualOrg
 
@@ -502,8 +503,16 @@ class Entity(HTTPBase):
 
     def _response(self, in_response_to, consumer_url=None, status=None,
                   issuer=None, sign=False, to_sign=None,
-                  encrypt_assertion=False, encrypt_cert=None, **kwargs):
+                  encrypt_assertion=False, encrypt_assertion_self_contained=False, encrypted_advice_attributes=False,
+                  encrypt_cert=None, **kwargs):
         """ Create a Response.
+            Encryption:
+                encrypt_assertion must be true for encryption to be performed. If encrypted_advice_attributes also is
+                true, then will the function try to encrypt the assertion in the the advice element of the main
+                assertion. Only one assertion element is allowed in the advice element, if multiple assertions exists
+                in the advice element the main assertion will be encrypted instead, since it's no point to encrypt
+                If encrypted_advice_attributes is
+                false the main assertion will be encrypted. Since the same key
 
         :param in_response_to: The session identifier of the request
         :param consumer_url: The URL which should receive the response
@@ -533,22 +542,44 @@ class Entity(HTTPBase):
             return signed_instance_factory(response, self.sec, to_sign)
 
         if encrypt_assertion:
+            node_xpath = None
             if sign:
                 response.signature = pre_signature_part(response.id,
                                                         self.sec.my_cert, 1)
+                sign_class = [(class_name(response), response.id)]
             cbxs = CryptoBackendXmlSec1(self.config.xmlsec_binary)
+            if encrypted_advice_attributes and response.assertion.advice is not None \
+                    and len(response.assertion.advice.assertion) == 1:
+                tmp_assertion = response.assertion.advice.assertion[0]
+                response.assertion.advice.encrypted_assertion = []
+                response.assertion.advice.encrypted_assertion.append(EncryptedAssertion())
+                if isinstance(tmp_assertion, list):
+                    response.assertion.advice.encrypted_assertion[0].add_extension_elements(tmp_assertion)
+                else:
+                    response.assertion.advice.encrypted_assertion[0].add_extension_element(tmp_assertion)
+                response.assertion.advice.assertion = []
+                if encrypt_assertion_self_contained:
+                    advice_tag = response.assertion.advice._to_element_tree().tag
+                    assertion_tag = tmp_assertion._to_element_tree().tag
+                    response = response.get_xml_string_with_self_contained_assertion_within_advice_encrypted_assertion(
+                        assertion_tag, advice_tag)
+                node_xpath = ''.join(["/*[local-name()=\"%s\"]" % v for v in
+                                      ["Response", "Assertion", "Advice", "EncryptedAssertion", "Assertion"]])
+            elif encrypt_assertion_self_contained:
+                assertion_tag = response.assertion._to_element_tree().tag
+                response = pre_encrypt_assertion(response)
+                response = response.get_xml_string_with_self_contained_assertion_within_encrypted_assertion(
+                    assertion_tag)
+            else:
+                response = pre_encrypt_assertion(response)
+            if to_sign:
+                response = signed_instance_factory(response, self.sec, to_sign)
             _, cert_file = make_temp("%s" % encrypt_cert, decode=False)
             response = cbxs.encrypt_assertion(response, cert_file,
-                                              pre_encryption_part())
+                                              pre_encryption_part(), node_xpath=node_xpath)
                                               # template(response.assertion.id))
             if sign:
-                if to_sign:
-                    signed_instance_factory(response, self.sec, to_sign)
-                else:
-                    # default is to sign the whole response if anything
-                    sign_class = [(class_name(response), response.id)]
-                    return signed_instance_factory(response, self.sec,
-                                                   sign_class)
+                return signed_instance_factory(response, self.sec, sign_class)
             else:
                 return response
 
@@ -946,7 +977,13 @@ class Entity(HTTPBase):
                                                 decode=False)
                 else:
                     key_file = ""
-                response = response.verify(key_file)
+                only_identity_in_encrypted_assertion = False
+                if "only_identity_in_encrypted_assertion" in kwargs:
+                    only_identity_in_encrypted_assertion = kwargs["only_identity_in_encrypted_assertion"]
+                decrypt = True
+                if "decrypt" in kwargs:
+                    decrypt = kwargs["decrypt"]
+                response = response.verify(key_file, decrypt=decrypt)
 
             if not response:
                 return None

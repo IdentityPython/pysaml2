@@ -26,7 +26,7 @@ from saml2.soap import make_soap_enveloped_saml_thingy
 
 from urlparse import parse_qs
 
-from saml2.s_utils import signature, UnravelError
+from saml2.s_utils import signature, UnravelError, exception_trace
 from saml2.s_utils import do_attributes
 
 from saml2 import samlp, BINDING_SOAP, SAMLError
@@ -537,7 +537,7 @@ class Base(Entity):
     # ======== response handling ===========
 
     def parse_authn_request_response(self, xmlstr, binding, outstanding=None,
-                                     outstanding_certs=None):
+                                     outstanding_certs=None, decrypt=True):
         """ Deal with an AuthnResponse
 
         :param xmlstr: The reply as a xml string
@@ -545,6 +545,8 @@ class Base(Entity):
         :param outstanding: A dictionary with session IDs as keys and
             the original web request from the user before redirection
             as values.
+        :param only_identity_in_encrypted_assertion: Must exist an assertion that is not encrypted that contains all
+                                                    other information like subject and authentication statement.
         :return: An response.AuthnResponse or None
         """
 
@@ -566,6 +568,7 @@ class Base(Entity):
                 "attribute_converters": self.config.attribute_converters,
                 "allow_unknown_attributes":
                 self.config.allow_unknown_attributes,
+                "decrypt": decrypt
             }
             try:
                 resp = self._parse_response(xmlstr, AuthnResponse,
@@ -580,13 +583,12 @@ class Base(Entity):
                 logger.error("XML parse error: %s" % err)
                 raise
 
-            #logger.debug(">> %s", resp)
-
             if resp is None:
                 return None
             elif isinstance(resp, AuthnResponse):
-                self.users.add_information_about_person(resp.session_info())
-                logger.info("--- ADDED person info ----")
+                if resp.assertion is not None and len(resp.response.encrypted_assertion) == 0:
+                    self.users.add_information_about_person(resp.session_info())
+                    logger.info("--- ADDED person info ----")
                 pass
             else:
                 logger.error("Response type not supported: %s" % (

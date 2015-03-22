@@ -395,7 +395,7 @@ class StatusResponse(object):
     def loads(self, xmldata, decode=True, origxml=None):
         return self._loads(xmldata, decode, origxml)
 
-    def verify(self, key_file=""):
+    def verify(self, key_file="", decrypt=True):
         try:
             return self._verify()
         except AssertionError:
@@ -622,24 +622,32 @@ class AuthnResponse(StatusResponse):
                 attrlist = enc_attr.extensions_as_elements("Attribute", saml)
                 attribute_statement.attribute.extend(attrlist)
 
+    def read_attribute_statement(self, attr_statem):
+        logger.debug("Attribute Statement: %s" % (attr_statem,))
+        for aconv in self.attribute_converters:
+            logger.debug("Converts name format: %s" % (aconv.name_format,))
+
+        self.decrypt_attributes(attr_statem)
+        return to_local(self.attribute_converters, attr_statem,
+                       self.allow_unknown_attributes)
+
     def get_identity(self):
         """ The assertion can contain zero or one attributeStatements
 
         """
-        if not self.assertion.attribute_statement:
-            logger.error("Missing Attribute Statement")
-            ava = {}
-        else:
+        ava = {}
+        if self.assertion.advice:
+            if self.assertion.advice.assertion:
+                for tmp_assertion in self.assertion.advice.assertion:
+                    if tmp_assertion.attribute_statement:
+                        assert len(tmp_assertion.attribute_statement) == 1
+                        ava.update(self.read_attribute_statement(tmp_assertion.attribute_statement[0]))
+        if self.assertion.attribute_statement:
             assert len(self.assertion.attribute_statement) == 1
             _attr_statem = self.assertion.attribute_statement[0]
-
-            logger.debug("Attribute Statement: %s" % (_attr_statem,))
-            for aconv in self.attribute_converters:
-                logger.debug("Converts name format: %s" % (aconv.name_format,))
-
-            self.decrypt_attributes(_attr_statem)
-            ava = to_local(self.attribute_converters, _attr_statem,
-                           self.allow_unknown_attributes)
+            ava.update(self.read_attribute_statement(_attr_statem))
+        if not ava:
+            logger.error("Missing Attribute Statement")
         return ava
 
     def _bearer_confirmed(self, data):
@@ -749,11 +757,9 @@ class AuthnResponse(StatusResponse):
                 raise SignatureError("Signature missing for assertion")
         else:
             logger.debug("signed")
-
             if not verified:
                 try:
-                    self.sec.check_signature(assertion, class_name(assertion),
-                                             self.xmlstr)
+                    self.sec.check_signature(assertion, class_name(assertion),self.xmlstr)
                 except Exception as exc:
                     logger.error("correctly_signed_response: %s" % exc)
                     raise
@@ -808,7 +814,7 @@ class AuthnResponse(StatusResponse):
                     res.append(assertion)
         return res
 
-    def parse_assertion(self, key_file=""):
+    def parse_assertion(self, key_file="", decrypt=True):
         if self.context == "AuthnQuery":
             # can contain one or more assertions
             pass
@@ -820,17 +826,35 @@ class AuthnResponse(StatusResponse):
                 raise Exception("No assertion part")
 
         res = []
-        if self.response.encrypted_assertion:
+        has_encrypted_assertions = self.response.encrypted_assertion
+        if not has_encrypted_assertions and self.response.assertion:
+            for tmp_assertion in self.response.assertion:
+                if tmp_assertion.advice:
+                    if  tmp_assertion.advice.encrypted_assertion:
+                        has_encrypted_assertions = True
+                        break
+
+        if has_encrypted_assertions and decrypt:
             logger.debug("***Encrypted assertion/-s***")
             decr_text = self.sec.decrypt(self.xmlstr, key_file)
             resp = samlp.response_from_string(decr_text)
             res = self.decrypt_assertions(resp.encrypted_assertion, decr_text)
+            if resp.assertion:
+                for tmp_ass in resp.assertion:
+                    if tmp_ass.advice and tmp_ass.advice.encrypted_assertion:
+                        advice_res = self.decrypt_assertions(tmp_ass.advice.encrypted_assertion, decr_text)
+                        if tmp_ass.advice.assertion:
+                            tmp_ass.advice.assertion.extend(advice_res)
+                        else:
+                            tmp_ass.advice.assertion = advice_res
+                        tmp_ass.advice.encrypted_assertion = []
+                self.response.assertion = resp.assertion
             if self.response.assertion:
                 self.response.assertion.extend(res)
             else:
                 self.response.assertion = res
-            self.response.encrypted_assertion = []
             self.xmlstr = decr_text
+            self.response.encrypted_assertion = []
 
         if self.response.assertion:
             logger.debug("***Unencrypted assertion***")
@@ -840,10 +864,9 @@ class AuthnResponse(StatusResponse):
                 else:
                     self.assertions.append(assertion)
             self.assertion = self.assertions[0]
-
         return True
 
-    def verify(self, key_file=""):
+    def verify(self, key_file="", decrypt=True):
         """ Verify that the assertion is syntactically correct and
         the signature is correct if present.
         :param key_file: If not the default key file should be used this is it.
@@ -861,7 +884,7 @@ class AuthnResponse(StatusResponse):
         if not isinstance(self.response, samlp.Response):
             return self
 
-        if self.parse_assertion(key_file):
+        if self.parse_assertion(key_file, decrypt=decrypt):
             return self
         else:
             logger.error("Could not parse the assertion")
@@ -1089,7 +1112,7 @@ class AssertionIDResponse(object):
 
         return self._postamble()
 
-    def verify(self, key_file=""):
+    def verify(self, key_file="", decrypt=True):
         try:
             valid_instance(self.response)
         except NotValid as exc:

@@ -337,7 +337,7 @@ class SAML2Plugin(object):
                         element_to_extension_element(spcertenc)])
 
                 if _cli.authn_requests_signed:
-                    _sid = saml2.s_utils.sid(_cli.seed)
+                    _sid = saml2.s_utils.sid()
                     req_id, msg_str = _cli.create_authn_request(
                         dest, vorg=vorg_name, sign=_cli.authn_requests_signed,
                         message_id=_sid, extensions=extensions)
