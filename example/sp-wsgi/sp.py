@@ -562,7 +562,7 @@ class SSO(object):
             logger.exception(exc)
             resp = ServiceError(
                 "Failed to construct the AuthnRequest: %s" % exc)
-            return resp(self.environ, self.start_response)
+            return resp
 
         # remember the request
         self.cache.outstanding_queries[_sid] = came_from
