@@ -73,8 +73,8 @@ def generate_cert():
         "organization_unit": "DIRG"
     }
     osw = OpenSSLWrapper()
-    ca_cert_str = osw.read_str_from_file("/Users/haho0032/Develop/root_cert/localhost.ca.crt")
-    ca_key_str = osw.read_str_from_file("/Users/haho0032/Develop/root_cert/localhost.ca.key")
+    ca_cert_str = osw.read_str_from_file("root_cert/localhost.ca.crt")
+    ca_key_str = osw.read_str_from_file("root_cert/localhost.ca.key")
     req_cert_str, req_key_str = osw.create_certificate(cert_info, request=True, sn=sn, key_length=2048)
     cert_str = osw.create_cert_signed_certificate(ca_cert_str, ca_key_str, req_cert_str)
     return cert_str, req_key_str

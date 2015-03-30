@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import logging
 import random
-import string
 
 import time
 import base64

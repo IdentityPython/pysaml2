@@ -140,7 +140,7 @@ def test_valid():
     assert valid("%d-01-12T00:00:00Z" % (current_year + 1)) == True
     this_instance = instant()
     time.sleep(1)
-    assert valid(this_instance) == False  # unless on a very fast machine :-)
+    assert valid(this_instance) is False  # unless on a very fast machine :-)
     soon = in_a_while(seconds=10)
     assert valid(soon) == True
 
@@ -176,4 +176,4 @@ def test_not_on_or_after():
 
 
 if __name__ == "__main__":
-    test_parse_duration_n()
+    test_str_to_time()
