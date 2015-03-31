@@ -39,7 +39,9 @@ Table of contents
    :maxdepth: 1
 
    install
+   examples/index
    howto/config
+
 
 
 * :ref:`genindex`
