@@ -39,7 +39,6 @@ Table of contents
    :maxdepth: 2
 
    install
-   metadata
    examples/index
    howto/index
    sp_test/internal
