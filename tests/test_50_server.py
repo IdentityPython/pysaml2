@@ -7,7 +7,7 @@ from urlparse import parse_qs
 import uuid
 
 from saml2.cert import OpenSSLWrapper
-from saml2.sigver import pre_encryption_part, make_temp
+from saml2.sigver import make_temp
 from saml2.assertion import Policy
 from saml2.authn_context import INTERNETPROTOCOLPASSWORD
 from saml2.saml import NameID, NAMEID_FORMAT_TRANSIENT
@@ -18,7 +18,6 @@ from saml2 import samlp
 from saml2 import saml
 from saml2 import client
 from saml2 import config
-from saml2 import class_name
 from saml2 import extension_elements_to_elements
 from saml2 import s_utils
 from saml2 import sigver
@@ -31,6 +30,7 @@ from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT
 
 from py.test import raises
+from pathutils import full_path
 
 nid = NameID(name_qualifier="foo", format=NAMEID_FORMAT_TRANSIENT,
              text="123456")
@@ -73,10 +73,14 @@ def generate_cert():
         "organization_unit": "DIRG"
     }
     osw = OpenSSLWrapper()
-    ca_cert_str = osw.read_str_from_file("root_cert/localhost.ca.crt")
-    ca_key_str = osw.read_str_from_file("root_cert/localhost.ca.key")
-    req_cert_str, req_key_str = osw.create_certificate(cert_info, request=True, sn=sn, key_length=2048)
-    cert_str = osw.create_cert_signed_certificate(ca_cert_str, ca_key_str, req_cert_str)
+    ca_cert_str = osw.read_str_from_file(
+        full_path("root_cert/localhost.ca.crt"))
+    ca_key_str = osw.read_str_from_file(
+        full_path("root_cert/localhost.ca.key"))
+    req_cert_str, req_key_str = osw.create_certificate(cert_info, request=True,
+                                                       sn=sn, key_length=2048)
+    cert_str = osw.create_cert_signed_certificate(ca_cert_str, ca_key_str,
+                                                  req_cert_str)
     return cert_str, req_key_str
 
 class TestServer1():
