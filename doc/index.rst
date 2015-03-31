@@ -1,10 +1,23 @@
-.. _howto:
+:Release: |release|
+:Date: |today|
+
+About SAML 2.0
+==============
+
+SAML 2.0 or Security Assertion Markup Language 2.0 is a version of the SAML standard for exchanging authentication and authorization data between security domains.
+
+About PySAML2
+=============
+
+PySAML2 is a pure python implementation of SAML2. It contains all
+necessary pieces for building a SAML2 service provider or an identity provider.
+The distribution contains examples of both.
+Originally written to work in a WSGI environment there are extensions that
+allow you to use it with other frameworks.
+
 
 How to use PySAML2
 ===================
-
-:Release: |release|
-:Date: |today|
 
 Before you can use Pysaml2, you'll need to get it installed.
 If you have not done it yet, read the :ref:`install`
