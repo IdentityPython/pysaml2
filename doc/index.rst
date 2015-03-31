@@ -36,11 +36,13 @@ Table of contents
 ==================
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    install
+   metadata
    examples/index
-   howto/config
+   howto/index
+   sp_test/internal
 
 
 
