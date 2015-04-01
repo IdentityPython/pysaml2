@@ -132,7 +132,7 @@ class Service(object):
         else:
             # saml_msg may also contain Signature and SigAlg
             if "Signature" in saml_msg:
-                kwargs = {"signature": saml_msg["signature"],
+                kwargs = {"signature": saml_msg["Signature"],
                         "sigalg": saml_msg["SigAlg"]}
             else:
                 kwargs = {}
