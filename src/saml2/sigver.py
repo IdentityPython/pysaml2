@@ -1591,7 +1591,7 @@ class SecurityContext(object):
 
         if response.signature:
             self._check_signature(decoded_xml, response, class_name(response),
-                                  origdoc)
+                                  origdoc, only_valid_cert=only_valid_cert)
         elif require_response_signature:
             raise SignatureError("Signature missing for response")
 
