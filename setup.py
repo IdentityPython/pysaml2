@@ -37,7 +37,7 @@ install_requires = [
 tests_require = [
     'mongodict',
     'pyasn1',
-    'pymongo',
+    'pymongo==3.0.1',
     'python-memcached == 1.51',
     'pytest',
     'mako',
