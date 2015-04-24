@@ -2,13 +2,14 @@
 import logging
 import re
 import argparse
+from saml2.extension.pefim import SPCertEnc
 import service_conf
 
 from Cookie import SimpleCookie
 from urlparse import parse_qs
 import sys
 
-from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_HTTP_REDIRECT, element_to_extension_element
 from saml2 import BINDING_SOAP
 from saml2 import time_util
 from saml2 import ecp
@@ -33,6 +34,8 @@ from saml2.s_utils import UnsupportedBinding
 from saml2.s_utils import sid
 from saml2.s_utils import rndstr
 #from srtest import exception_trace
+from saml2.md import Extensions
+import xmldsig as ds
 
 logger = logging.getLogger("")
 hdlr = logging.FileHandler('spx.log')
@@ -152,6 +155,7 @@ class Cache(object):
         self.uid2user = {}
         self.cookie_name = "spauthn"
         self.outstanding_queries = {}
+        self.outstanding_certs = {}
         self.relay_state = {}
         self.user = {}
         self.result = {}
@@ -348,7 +352,7 @@ class ACS(Service):
 
         try:
             self.response = self.sp.parse_authn_request_response(
-                response, binding, self.outstanding_queries)
+                response, binding, self.outstanding_queries, self.cache.outstanding_certs)
         except UnknownPrincipal, excp:
             logger.error("UnknownPrincipal: %s" % (excp,))
             resp = ServiceError("UnknownPrincipal: %s" % (excp,))
@@ -551,13 +555,31 @@ class SSO(object):
                 "assertion_consumer_service"]
             # just pick one
             endp, return_binding = acs[0]
+
+            extensions = None
+            cert = None
+            if _cli.config.generate_cert_func is not None:
+                    cert_str, req_key_str = _cli.config.generate_cert_func()
+                    cert = {
+                        "cert": cert_str,
+                        "key": req_key_str
+                    }
+                    spcertenc = SPCertEnc(x509_data=ds.X509Data(
+                        x509_certificate=ds.X509Certificate(text=cert_str)))
+                    extensions = Extensions(extension_elements=[
+                        element_to_extension_element(spcertenc)])
+
             req_id, req = _cli.create_authn_request(destination,
-                                                    binding=return_binding)
+                                                    binding=return_binding, extensions=extensions)
             _rstate = rndstr()
             self.cache.relay_state[_rstate] = came_from
             ht_args = _cli.apply_binding(_binding, "%s" % req, destination,
                                          relay_state=_rstate)
             _sid = req_id
+
+            if cert is not None:
+                self.cache.outstanding_certs[_sid] = cert
+
         except Exception, exc:
             logger.exception(exc)
             resp = ServiceError(
