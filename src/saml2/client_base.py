@@ -572,6 +572,8 @@ class Base(Entity):
             elif isinstance(resp, AuthnResponse):
                 self.users.add_information_about_person(resp.session_info())
                 logger.info("--- ADDED person info ----")
+                logger.debug("---- PERSON INFO OBJ ----: %s" % resp.session_info())
+                logger.debug("---- PERSON INFO ----: %s" % resp.session_info()["name_id"])
                 pass
             else:
                 logger.error("Response type not supported: %s" % (
