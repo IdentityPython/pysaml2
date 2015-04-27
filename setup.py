@@ -22,7 +22,6 @@ class PyTest(TestCommand):
 
 install_requires = [
     # core dependencies
-    'decorator',
     'requests >= 1.0.0',
     'paste',
     'zope.interface',
