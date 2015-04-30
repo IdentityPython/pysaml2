@@ -336,6 +336,8 @@ class SSO(Service):
                 _resp = IDP.create_authn_response(
                     identity, userid=self.user,
                     encrypt_cert=encrypt_cert,
+                    encrypt_assertion_self_contained=True,
+                    encrypted_advice_attributes=True,
                     **resp_args)
             except Exception as excp:
                 logging.error(exception_trace(excp))
@@ -400,9 +402,9 @@ class SSO(Service):
                     return resp(self.environ, self.start_response)
 
             if self.user:
+                saml_msg["req_info"] = self.req_info
                 if _req.force_authn is not None and \
                         _req.force_authn.lower() == 'true':
-                    saml_msg["req_info"] = self.req_info
                     key = self._store_request(saml_msg)
                     return self.not_authn(key, _req.requested_authn_context)
                 else:
@@ -1014,6 +1016,7 @@ def application(environ, start_response):
             if isinstance(callback, tuple):
                 cls = callback[0](environ, start_response, user)
                 func = getattr(cls, callback[1])
+
                 return func()
             return callback(environ, start_response, user)
 

@@ -1820,10 +1820,11 @@ def pre_encrypt_assertion(response):
     assertion = response.assertion
     response.assertion = None
     response.encrypted_assertion = EncryptedAssertion()
-    if isinstance(assertion, list):
-        response.encrypted_assertion.add_extension_elements(assertion)
-    else:
-        response.encrypted_assertion.add_extension_element(assertion)
+    if assertion is not None:
+        if isinstance(assertion, list):
+            response.encrypted_assertion.add_extension_elements(assertion)
+        else:
+            response.encrypted_assertion.add_extension_element(assertion)
     # txt = "%s" % response
     # _ass = "%s" % assertion
     # _ass = rm_xmltag(_ass)
