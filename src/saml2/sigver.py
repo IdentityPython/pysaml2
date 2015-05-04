@@ -21,6 +21,7 @@ from Crypto.Util.asn1 import DerSequence
 from Crypto.PublicKey import RSA
 from saml2.cert import OpenSSLWrapper
 from saml2.extension import pefim
+from saml2.extension.pefim import SPCertEnc
 from saml2.saml import EncryptedAssertion
 
 import xmldsig as ds
@@ -1063,19 +1064,24 @@ def encrypt_cert_from_item(item):
     try:
         _elem = extension_elements_to_elements(item.extension_elements[0].children,
                                                [pefim, ds])
-        if len(_elem) == 1:
-            _encrypt_cert = _elem[0].x509_data[0].x509_certificate.text
-        else:
-            certs = cert_from_instance(item)
-            if len(certs) > 0:
-                _encrypt_cert = certs[0]
-    except Exception:
+        for _tmp_elem in _elem:
+            if isinstance(_tmp_elem, SPCertEnc):
+                for _tmp_key_info in _tmp_elem.key_info:
+                    if _tmp_key_info.x509_data is not None and len(_tmp_key_info.x509_data) > 0:
+                        _encrypt_cert = _tmp_key_info.x509_data[0].x509_certificate.text
+                        break
+            #_encrypt_cert = _elem[0].x509_data[0].x509_certificate.text
+#        else:
+#            certs = cert_from_instance(item)
+#            if len(certs) > 0:
+#                _encrypt_cert = certs[0]
+    except Exception as _exception:
         pass
 
-    if _encrypt_cert is None:
-        certs = cert_from_instance(item)
-        if len(certs) > 0:
-            _encrypt_cert = certs[0]
+#    if _encrypt_cert is None:
+#        certs = cert_from_instance(item)
+#        if len(certs) > 0:
+#            _encrypt_cert = certs[0]
 
     if _encrypt_cert is not None:
         if _encrypt_cert.find("-----BEGIN CERTIFICATE-----\n") == -1:
