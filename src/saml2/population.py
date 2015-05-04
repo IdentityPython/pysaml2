@@ -22,6 +22,7 @@ class Population(object):
         logger.debug("--- NAME ID ::: %s --- " % session_info["name_id"])
         logger.debug("--- ISSUER ::: %s --- " % session_info["issuer"])
         name_id = session_info["name_id"]
+        name_id = 'pcrownov'
         issuer = session_info["issuer"]
         del session_info["issuer"]
         self.cache.set(name_id, issuer, session_info,
