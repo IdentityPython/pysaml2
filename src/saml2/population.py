@@ -17,7 +17,9 @@ class Population(object):
     def add_information_about_person(self, session_info):
         """If there already are information from this source in the cache
         this function will overwrite that information"""
-
+        logger.debug("--- ADD INFORMATION ABOUT PERSON ---")
+        logger.debug("--- NAME ID ::: %s --- " % session_info["name_id"])
+        logger.debug("--- ISSUER ::: %s --- " % session_info["issuer"])
         name_id = session_info["name_id"]
         issuer = session_info["issuer"]
         del session_info["issuer"]
