@@ -18,11 +18,9 @@ class Population(object):
         """If there already are information from this source in the cache
         this function will overwrite that information"""
         logger.debug("--- ADD INFORMATION ABOUT PERSON ---")
-        logger.debug("--- SESSION INFO ::: %s --- " % session_info)
         logger.debug("--- NAME ID ::: %s --- " % session_info["name_id"])
-        logger.debug("--- ISSUER ::: %s --- " % session_info["issuer"])
+        logger.debug("--- ISSUER ::: %s --- " % session_info["name_id"])
         name_id = session_info["name_id"]
-        name_id = 'pcrownov'
         issuer = session_info["issuer"]
         del session_info["issuer"]
         self.cache.set(name_id, issuer, session_info,
