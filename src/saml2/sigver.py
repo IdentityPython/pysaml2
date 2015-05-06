@@ -1062,8 +1062,12 @@ def security_context(conf, debug=None):
 def encrypt_cert_from_item(item):
     _encrypt_cert = None
     try:
-        _elem = extension_elements_to_elements(item.extension_elements[0].children,
-                                               [pefim, ds])
+        try:
+            _elem = extension_elements_to_elements(item.extensions.extension_elements,[pefim, ds])
+        except:
+            _elem = extension_elements_to_elements(item.extension_elements[0].children,
+                                                   [pefim, ds])
+
         for _tmp_elem in _elem:
             if isinstance(_tmp_elem, SPCertEnc):
                 for _tmp_key_info in _tmp_elem.key_info:
