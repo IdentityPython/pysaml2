@@ -635,6 +635,26 @@ class TestClientWithDummy():
         resp_args = self.server.response_args(req.message, [response_binding])
         assert resp_args["binding"] == response_binding
 
+    def test_do_negotiated_authn(self):
+        binding = BINDING_HTTP_REDIRECT
+        response_binding = BINDING_HTTP_POST
+        sid, auth_binding, http_args = self.client.prepare_for_negotiated_authenticate(
+            IDP, "http://www.example.com/relay_state",
+            binding=binding, response_binding=response_binding)
+
+        assert binding == auth_binding
+        assert isinstance(sid, basestring)
+        assert len(http_args) == 4
+        assert http_args["headers"][0][0] == "Location"
+        assert http_args["data"] == []
+        redirect_url = http_args["headers"][0][1]
+        _, _, _, _, qs, _ = urlparse.urlparse(redirect_url)
+        qs_dict = urlparse.parse_qs(qs)
+        req = self.server.parse_authn_request(qs_dict["SAMLRequest"][0],
+                                              binding)
+        resp_args = self.server.response_args(req.message, [response_binding])
+        assert resp_args["binding"] == response_binding
+
     def test_do_attribute_query(self):
         response = self.client.do_attribute_query(
             IDP, "_e7b68a04488f715cda642fbdd90099f5",
@@ -673,6 +693,41 @@ class TestClientWithDummy():
             "urn:mace:example.com:saml:roland:idp", relay_state="really",
             binding=binding, response_binding=response_binding)
         _dic = unpack_form(http_args["data"][3])
+
+        req = self.server.parse_authn_request(_dic["SAMLRequest"], binding)
+        resp_args = self.server.response_args(req.message, [response_binding])
+        assert resp_args["binding"] == response_binding
+
+        # Normally a response would now be sent back to the users web client
+        # Here I fake what the client will do
+        # create the form post
+
+        http_args["data"] = urllib.urlencode(_dic)
+        http_args["method"] = "POST"
+        http_args["dummy"] = _dic["SAMLRequest"]
+        http_args["headers"] = [('Content-type',
+                                 'application/x-www-form-urlencoded')]
+
+        response = self.client.send(**http_args)
+        print response.text
+        _dic = unpack_form(response.text[3], "SAMLResponse")
+        resp = self.client.parse_authn_request_response(_dic["SAMLResponse"],
+                                                        BINDING_HTTP_POST,
+                                                        {sid: "/"})
+        ac = resp.assertion.authn_statement[0].authn_context
+        assert ac.authenticating_authority[0].text == \
+            'http://www.example.com/login'
+        assert ac.authn_context_class_ref.text == INTERNETPROTOCOLPASSWORD
+
+    def test_negotiated_post_sso(self):
+        binding = BINDING_HTTP_POST
+        response_binding = BINDING_HTTP_POST
+        sid, auth_binding, http_args = self.client.prepare_for_negotiated_authenticate(
+            "urn:mace:example.com:saml:roland:idp", relay_state="really",
+            binding=binding, response_binding=response_binding)
+        _dic = unpack_form(http_args["data"][3])
+
+        assert binding == auth_binding
 
         req = self.server.parse_authn_request(_dic["SAMLRequest"], binding)
         resp_args = self.server.response_args(req.message, [response_binding])

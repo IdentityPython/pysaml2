@@ -27,7 +27,7 @@ install_requires = [
     'paste',
     'zope.interface',
     'repoze.who',
-    'pycrypto >= 2.2',  # 'Crypto'
+    'pycrypto >= 2.5',  # 'Crypto'
     'pytz',
     'pyOpenSSL',
     'python-dateutil',
@@ -37,7 +37,7 @@ install_requires = [
 tests_require = [
     'mongodict',
     'pyasn1',
-    'pymongo',
+    'pymongo==3.0.1',
     'python-memcached == 1.51',
     'pytest',
     'mako',
