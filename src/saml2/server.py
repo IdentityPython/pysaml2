@@ -357,7 +357,7 @@ class Server(Entity):
         #    tmp_authn_statement = authn_statement
         #    authn_statement = None
 
-        if encrypt_assertion and encrypted_advice_attributes:
+        if encrypted_advice_attributes:
             assertion_attributes = self.setup_assertion(None, sp_entity_id, None, None, None, policy,
                                              None, None, identity, best_effort, sign_response, False)
             assertion = self.setup_assertion(authn, sp_entity_id, in_response_to, consumer_url,
@@ -374,15 +374,15 @@ class Server(Entity):
                                                          sign_response)
 
         to_sign = []
-        if sign_assertion is not None and sign_assertion:
-            if assertion.advice and assertion.advice.assertion:
-                for tmp_assertion in assertion.advice.assertion:
-                    tmp_assertion.signature = pre_signature_part(tmp_assertion.id, self.sec.my_cert, 1)
-                    to_sign.append((class_name(tmp_assertion), tmp_assertion.id))
-            assertion.signature = pre_signature_part(assertion.id,
-                                                     self.sec.my_cert, 1)
+        #if sign_assertion is not None and sign_assertion:
+        #    if assertion.advice and assertion.advice.assertion:
+        #        for tmp_assertion in assertion.advice.assertion:
+        #            tmp_assertion.signature = pre_signature_part(tmp_assertion.id, self.sec.my_cert, 1)
+        #            to_sign.append((class_name(tmp_assertion), tmp_assertion.id))
+        #    assertion.signature = pre_signature_part(assertion.id,
+        #                                             self.sec.my_cert, 1)
             # Just the assertion or the response and the assertion ?
-            to_sign.append((class_name(assertion), assertion.id))
+        #    to_sign.append((class_name(assertion), assertion.id))
 
 
         # Store which assertion that has been sent to which SP about which
@@ -401,7 +401,8 @@ class Server(Entity):
                               sign_response, to_sign, encrypt_assertion=encrypt_assertion,
                               encrypt_cert=encrypt_cert,
                               encrypt_assertion_self_contained=encrypt_assertion_self_contained,
-                              encrypted_advice_attributes=encrypted_advice_attributes, **args)
+                              encrypted_advice_attributes=encrypted_advice_attributes,sign_assertion=sign_assertion,
+                              **args)
 
     # ------------------------------------------------------------------------
 
