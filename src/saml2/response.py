@@ -497,9 +497,9 @@ class AuthnResponse(StatusResponse):
         self._loads(xmldata, decode, origxml)
 
         if self.asynchop:
+            logger.debug('SAML IN RESPONSE TO: %s' % self.in_response_to)
+            logger.debug('SAML OUTSTANDING: %s' % self.outstanding_queries)
             if self.in_response_to in self.outstanding_queries:
-                logger.debug('SAML CAME FROM: %s' % self.in_response_to)
-                logger.debug('SAML OUTSTANDING: %s' % self.outstanding_queries)
                 self.came_from = self.outstanding_queries[self.in_response_to]
                 #del self.outstanding_queries[self.in_response_to]
                 try:

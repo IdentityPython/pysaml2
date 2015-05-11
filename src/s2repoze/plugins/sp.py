@@ -116,6 +116,7 @@ class SAML2Plugin(object):
         rememberer = None
         if repoze_plugins:
             rememberer = repoze_plugins.get(self.rememberer_name, None)
+        logger.debug('s2repoze, SAML2Plugin, _get_rememberer: REMEMBERER %s' % rememberer)
         return rememberer
 
     #### IIdentifier ####
@@ -382,6 +383,7 @@ class SAML2Plugin(object):
                     came_from = self.outstanding_queries[sid]
             except:
                 pass
+            logger.debug('s2repoze, SAML2Plugin, challenge: REMBER REQUEST : %s ' % came_from)
             # remember the request
             self.outstanding_queries[_sid] = came_from
 
@@ -473,7 +475,7 @@ class SAML2Plugin(object):
         logger.debug('[sp.identify] uri: %s' % (uri,))
 
         query = parse_dict_querystring(environ)
-        logger.debug('[sp.identify] query: %s' % (query,))
+        logger.debug('[sp.n] query: %s' % (query,))
 
         if "SAMLResponse" in query or "SAMLRequest" in query:
             post = query
@@ -628,13 +630,19 @@ class SAML2Plugin(object):
     #noinspection PyUnusedLocal
     def authenticate(self, environ, identity=None):
         logger.info("s2repoze, SAML2Plugin: authenticate")
+        logger.debug('s2repoze, SAML2Plugin, authenticate: IDENTITY: %s ' % identity)
         if identity:
             if identity.get('user') and environ.get(
                     's2repoze.sessioninfo') and identity.get(
                     'user') == environ.get('s2repoze.sessioninfo').get('ava'):
+                logger.debug('s2repoze, SAML2Plugin, authenticate: LOGIN: %s ' % identity.get('login'))
                 return identity.get('login')
             tktuser = identity.get('repoze.who.plugins.auth_tkt.userid', None)
+            logger.debug('s2repoze, SAML2Plugin, authenticate: TKTUSER: %s ' % tktuser)
+            if tktuser
+                logger.debug('s2repoze, SAML2Plugin, authenticate: LOGGED IN USER: %s ' % self.saml_client.is_logged_in(decode(tktuser))
             if tktuser and self.saml_client.is_logged_in(decode(tktuser)):
+                logger.debug('s2repoze, SAML2Plugin, authenticate: IS LOGGED IN: TRUE")
                 return tktuser
             return None
         else:
