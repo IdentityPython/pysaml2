@@ -777,7 +777,7 @@ class MetadataStore(object):
         elif typ == "inline":
             self.ii += 1
             key = self.ii
-            _md = MetaData(self.onts, self.attrc, args[0], **kwargs)
+            _md = InMemoryMetaData(self.onts, self.attrc, args[0])
         elif typ == "remote":
             key = kwargs["url"]
             _args = {}
