@@ -640,7 +640,7 @@ class SAML2Plugin(object):
             tktuser = identity.get('repoze.who.plugins.auth_tkt.userid', None)
             logger.debug('s2repoze, SAML2Plugin, authenticate: TKTUSER: %s ' % tktuser)
             if tktuser:
-                logger.debug('s2repoze, SAML2Plugin, authenticate: LOGGED IN USER: %s ' % self.saml_client.is_logged_in(decode(tktuser))
+                logger.debug('s2repoze, SAML2Plugin, authenticate: LOGGED IN USER: %s ' % self.saml_client.is_logged_in(decode(tktuser)))
             if tktuser and self.saml_client.is_logged_in(decode(tktuser)):
                 logger.debug('s2repoze, SAML2Plugin, authenticate: IS LOGGED IN: TRUE")
                 return tktuser
