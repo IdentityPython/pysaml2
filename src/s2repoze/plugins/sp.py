@@ -642,7 +642,7 @@ class SAML2Plugin(object):
             if tktuser:
                 logger.debug('s2repoze, SAML2Plugin, authenticate: LOGGED IN USER: %s ' % self.saml_client.is_logged_in(decode(tktuser)))
             if tktuser and self.saml_client.is_logged_in(decode(tktuser)):
-                logger.debug('s2repoze, SAML2Plugin, authenticate: IS LOGGED IN: TRUE")
+                logger.debug('s2repoze, SAML2Plugin, authenticate: IS LOGGED IN: TRUE')
                 return tktuser
             return None
         else:
