@@ -123,12 +123,14 @@ class SAML2Plugin(object):
     def remember(self, environ, identity):
         logger.info("s2repoze, SAML2Plugin: remember")
         rememberer = self._get_rememberer(environ)
+        logger.info("s2repoze, SAML2Plugin, remember: REMEMBERER %s" % rememberer)
         return rememberer.remember(environ, identity)
 
     #### IIdentifier ####
     def forget(self, environ, identity):
         logger.info("s2repoze, SAML2Plugin: forget")
         rememberer = self._get_rememberer(environ)
+        logger.info("s2repoze, SAML2Plugin, forget: REMEMBERER %s" % rememberer)
         return rememberer.forget(environ, identity)
 
     def _get_post(self, environ):
