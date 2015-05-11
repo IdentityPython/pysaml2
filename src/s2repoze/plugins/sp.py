@@ -112,7 +112,10 @@ class SAML2Plugin(object):
 
     def _get_rememberer(self, environ):
         logger.info("s2repoze, SAML2Plugin: _get_rememberer")
-        rememberer = environ['repoze.who.plugins'][self.rememberer_name]
+        repoze_plugins = environ.get('repoze.who.plugins', None)
+        rememberer = None
+        if repoze_plugins:
+            rememberer = repoze_plugins.get(self.rememberer_name, None)
         return rememberer
 
     #### IIdentifier ####
@@ -662,6 +665,7 @@ def make_plugin(remember_name=None,  # plugin for remember
                 discovery="",
                 idp_query_param=""
 ):
+    console.log("TESTING")
     logger.info("s2repoze: make_plugin")
     if saml_conf is "":
         raise ValueError(

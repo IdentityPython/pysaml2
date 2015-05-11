@@ -941,6 +941,7 @@ class Entity(HTTPBase):
                 else:
                     key_file = ""
                 response = response.verify(key_file)
+                logger.debug('PCROWNOV-RESPONSE: %s' % response)
 
             if not response:
                 return None

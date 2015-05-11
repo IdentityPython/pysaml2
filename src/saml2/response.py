@@ -214,6 +214,7 @@ def for_me(conditions, myself):
 def authn_response(conf, return_addrs, outstanding_queries=None, timeslack=0,
                    asynchop=True, allow_unsolicited=False,
                    want_assertions_signed=False):
+    logger.debug('AUTHN_RESPONSE: START')
     sec = security_context(conf)
     if not timeslack:
         try:
