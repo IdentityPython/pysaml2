@@ -675,7 +675,6 @@ def make_plugin(remember_name=None,  # plugin for remember
                 discovery="",
                 idp_query_param=""
 ):
-    print "TESTING"
     logger.info("s2repoze: make_plugin")
     if saml_conf is "":
         raise ValueError(
