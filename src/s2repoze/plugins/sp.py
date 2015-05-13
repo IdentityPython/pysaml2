@@ -121,9 +121,9 @@ class SAML2Plugin(object):
 
     #### IIdentifier ####
     def remember(self, environ, identity):
-        logger.debug("s2repoze, SAML2Plugin: remember")
+        logger.debug("remember : Start")
         rememberer = self._get_rememberer(environ)
-        logger.debug("s2repoze, SAML2Plugin, remember: REMEMBERER %s" % rememberer)
+        logger.debug("PCROWNOV - REMEMBERER %s" % rememberer)
         return rememberer.remember(environ, identity)
 
     #### IIdentifier ####
