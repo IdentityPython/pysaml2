@@ -1,7 +1,7 @@
 import calendar
 from six.moves.urllib.parse import urlparse
 import re
-import time_util
+from saml2 import time_util
 import struct
 import base64
 
