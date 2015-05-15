@@ -1,5 +1,5 @@
 import calendar
-import urlparse
+from six.moves.urllib.parse import urlparse
 import re
 import time_util
 import struct
@@ -46,7 +46,7 @@ def valid_id(oid):
 def valid_any_uri(item):
     """very simplistic, ..."""
     try:
-        part = urlparse.urlparse(item)
+        part = urlparse(item)
     except Exception:
         raise NotValid("AnyURI")
 

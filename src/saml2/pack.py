@@ -10,7 +10,7 @@ Bindings normally consists of three parts:
 - how to package the information
 - which protocol to use
 """
-import urlparse
+from six.moves.urllib.parse import urlparse
 import saml2
 import base64
 import urllib
@@ -129,7 +129,7 @@ def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
     else:
         string = urllib.urlencode(args)
 
-    glue_char = "&" if urlparse.urlparse(location).query else "?"
+    glue_char = "&" if urlparse(location).query else "?"
     login_url = glue_char.join([location, string])
     headers = [('Location', str(login_url))]
     body = []

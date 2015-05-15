@@ -1,12 +1,12 @@
 import calendar
-import cookielib
+from six.moves import http_cookiejar
 import copy
 import re
 import urllib
-import urlparse
+from six.moves.urllib.parse import urlparse
 import requests
 import time
-from Cookie import SimpleCookie
+from six.moves.http_cookies import SimpleCookie
 from saml2.time_util import utc_now
 from saml2 import class_name, SAMLError
 from saml2.pack import http_form_post_message
@@ -98,7 +98,7 @@ class HTTPBase(object):
                  cert_file=None):
         self.request_args = {"allow_redirects": False}
         #self.cookies = {}
-        self.cookiejar = cookielib.CookieJar()
+        self.cookiejar = http_cookiejar.CookieJar()
 
         self.request_args["verify"] = verify
         if verify:
@@ -118,7 +118,7 @@ class HTTPBase(object):
         :param url:
         :return:
         """
-        part = urlparse.urlparse(url)
+        part = urlparse(url)
 
         #if part.port:
         #    _domain = "%s:%s" % (part.hostname, part.port)
@@ -143,12 +143,12 @@ class HTTPBase(object):
         return cookie_dict
 
     def set_cookie(self, kaka, request):
-        """Returns a cookielib.Cookie based on a set-cookie header line"""
+        """Returns a http_cookiejar.Cookie based on a set-cookie header line"""
 
         if not kaka:
             return
 
-        part = urlparse.urlparse(request.url)
+        part = urlparse(request.url)
         _domain = part.hostname
         logger.debug("%s: '%s'" % (_domain, kaka))
 
@@ -205,7 +205,7 @@ class HTTPBase(object):
                 except ValueError:
                     pass
             else:
-                new_cookie = cookielib.Cookie(**std_attr)
+                new_cookie = http_cookiejar.Cookie(**std_attr)
                 self.cookiejar.set_cookie(new_cookie)
 
     def send(self, url, method="GET", **kwargs):

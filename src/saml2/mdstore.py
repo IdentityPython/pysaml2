@@ -1,5 +1,4 @@
 from __future__ import print_function
-from dircache import listdir
 import logging
 import os
 import sys
@@ -765,7 +764,7 @@ class MetadataStore(object):
             key = args[0]
             # if library read every file in the library
             if os.path.isdir(key):
-                files = [f for f in listdir(key) if isfile(join(key, f))]
+                files = [f for f in os.listdir(key) if isfile(join(key, f))]
                 for fil in files:
                     _fil = join(key, fil)
                     _md = MetaDataFile(self.onts, self.attrc, _fil)
@@ -838,7 +837,7 @@ class MetadataStore(object):
                 for key in item['metadata']:
                     # Separately handle MetaDataFile and directory
                     if MDloader == MetaDataFile and os.path.isdir(key[0]):
-                        files = [f for f in listdir(key[0]) if isfile(join(key[0], f))]
+                        files = [f for f in os.listdir(key[0]) if isfile(join(key[0], f))]
                         for fil in files:
                             _fil = join(key[0], fil)
                             _md = MetaDataFile(self.onts, self.attrc, _fil)
