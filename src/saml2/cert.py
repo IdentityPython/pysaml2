@@ -165,10 +165,10 @@ class OpenSSLWrapper(object):
                 fk = open(k_f, "wt")
 
                 if request:
-                    fc.write(tmp_cert)
+                    fc.write(tmp_cert.decode('utf-8'))
                 else:
-                    fc.write(tmp_cert)
-                fk.write(tmp_key)
+                    fc.write(tmp_cert.decode('utf-8'))
+                fk.write(tmp_key.decode('utf-8'))
                 filesCreated = True
                 try:
                     fc.close()
