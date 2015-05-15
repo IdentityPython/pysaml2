@@ -8,15 +8,17 @@ import sys
 
 import logging
 import imp
-import xmldsig
-import xmlenc
+from saml2 import xmldsig
+from saml2 import xmlenc
 
 from saml2.client import Saml2Client
 from saml2.config import SPConfig
-from saml2.mdstore import MetadataStore, ToOld
+from saml2.mdstore import MetadataStore
 from saml2.mdstore import MetaData
+from saml2.mdstore import ToOld
 
-from saml2test import CheckError, FatalError
+from saml2test import CheckError
+from saml2test import FatalError
 from saml2test import exception_trace
 from saml2test import ContextFilter
 

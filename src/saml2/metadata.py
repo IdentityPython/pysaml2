@@ -19,7 +19,7 @@ from saml2 import BINDING_SOAP
 from saml2 import samlp
 from saml2 import class_name
 
-import xmldsig as ds
+from saml2 import xmldsig as ds
 
 from saml2.sigver import pre_signature_part
 

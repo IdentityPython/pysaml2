@@ -58,13 +58,13 @@ METADATACONF = {
     "3": {
         "local": [full_path("extended.xml")]
     },
-    "7": {
-        "local": [full_path("metadata_sp_1.xml"),
-                  full_path("InCommon-metadata.xml")],
-        "remote": [
-            {"url": "https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2",
-             "cert": full_path("kalmar2.pem")}]
-    },
+    # "7": {
+    #     "local": [full_path("metadata_sp_1.xml"),
+    #               full_path("InCommon-metadata.xml")],
+    #     "remote": [
+    #         {"url": "https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2",
+    #          "cert": full_path("kalmar2.pem")}]
+    # },
     "4": {
         "local": [full_path("metadata_example.xml")]
     },
@@ -76,6 +76,11 @@ METADATACONF = {
     },
     "9": {
         "local": [full_path("metadata")]
+    },
+    "10": {
+        "remote": [
+            {"url": "http://md.incommon.org/InCommon/InCommon-metadata-export.xml",
+             "cert": full_path("inc-md-cert.pem")}]
     }
 }
 
@@ -266,5 +271,16 @@ def test_load_local_dir():
     assert len(mds) == 3  # Three sources
     assert len(mds.keys()) == 4  # number of idps
 
+
+def test_load_external():
+    sec_config.xmlsec_binary = sigver.get_xmlsec_binary(["/opt/local/bin"])
+    mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
+                        disable_ssl_certificate_validation=True)
+
+    mds.imp(METADATACONF["10"])
+    print mds
+    assert len(mds) == 1  # One source
+    assert len(mds.keys()) > 1  # number of idps
+
 if __name__ == "__main__":
-    test_mdx_certs()
+    test_load_external()

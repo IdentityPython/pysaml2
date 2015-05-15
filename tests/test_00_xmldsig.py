@@ -11,7 +11,7 @@ try:
 except ImportError:
   from elementtree import ElementTree
 import ds_data
-import xmldsig as ds
+import saml2.xmldsig as ds
 
 class TestObject:
 

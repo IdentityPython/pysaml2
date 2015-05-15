@@ -7,25 +7,31 @@ Based on the use of xmlsec1 binaries and not the python xmlsec module.
 """
 
 import base64
-from binascii import hexlify
 import hashlib
 import logging
-import random
 import os
 import ssl
-from time import mktime
 import urllib
+
+from time import mktime
+from binascii import hexlify
+
 from Crypto.PublicKey.RSA import importKey
 from Crypto.Signature import PKCS1_v1_5
 from Crypto.Util.asn1 import DerSequence
 from Crypto.PublicKey import RSA
-from saml2.cert import OpenSSLWrapper
-from saml2.extension import pefim
-from saml2.saml import EncryptedAssertion
+from Crypto.Hash import SHA
+from Crypto.Hash import SHA224
+from Crypto.Hash import SHA256
+from Crypto.Hash import SHA384
+from Crypto.Hash import SHA512
 
-import xmldsig as ds
+from tempfile import NamedTemporaryFile
+from subprocess import Popen
+from subprocess import PIPE
 
-from saml2 import samlp, SamlBase
+from saml2 import samlp
+from saml2 import SamlBase
 from saml2 import SAMLError
 from saml2 import extension_elements_to_elements
 from saml2 import class_name
@@ -33,32 +39,29 @@ from saml2 import saml
 from saml2 import ExtensionElement
 from saml2 import VERSION
 
-from saml2.s_utils import sid, rndstr
+from saml2.cert import OpenSSLWrapper
+from saml2.extension import pefim
+from saml2.saml import EncryptedAssertion
+
+import saml2.xmldsig as ds
+
+from saml2.s_utils import sid
 from saml2.s_utils import Unsupported
 
 from saml2.time_util import instant
 from saml2.time_util import utc_now
 from saml2.time_util import str_to_time
 
-from tempfile import NamedTemporaryFile
-from subprocess import Popen, PIPE
-
-from xmldsig import SIG_RSA_SHA1
-from xmldsig import SIG_RSA_SHA224
-from xmldsig import SIG_RSA_SHA256
-from xmldsig import SIG_RSA_SHA384
-from xmldsig import SIG_RSA_SHA512
-from xmlenc import EncryptionMethod
-from xmlenc import EncryptedKey
-from xmlenc import CipherData
-from xmlenc import CipherValue
-from xmlenc import EncryptedData
-
-from Crypto.Hash import SHA
-from Crypto.Hash import SHA224
-from Crypto.Hash import SHA256
-from Crypto.Hash import SHA384
-from Crypto.Hash import SHA512
+from saml2.xmldsig import SIG_RSA_SHA1
+from saml2.xmldsig import SIG_RSA_SHA224
+from saml2.xmldsig import SIG_RSA_SHA256
+from saml2.xmldsig import SIG_RSA_SHA384
+from saml2.xmldsig import SIG_RSA_SHA512
+from saml2.xmlenc import EncryptionMethod
+from saml2.xmlenc import EncryptedKey
+from saml2.xmlenc import CipherData
+from saml2.xmlenc import CipherValue
+from saml2.xmlenc import EncryptedData
 
 logger = logging.getLogger(__name__)
 

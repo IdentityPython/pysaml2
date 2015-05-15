@@ -12,8 +12,8 @@ from saml2.extension import mdrpi
 from saml2.extension import mdui
 from saml2.extension import shibmd
 from saml2.extension import ui
-import xmldsig
-import xmlenc
+from saml2 import xmldsig
+from saml2 import xmlenc
 
 import argparse
 

@@ -13,8 +13,7 @@ except ImportError:
   from elementtree import ElementTree
 
 import saml2
-import xmldsig as ds
-
+from saml2 import xmldsig as ds
 from saml2 import saml
 from saml2 import samlp
 from saml2 import md 

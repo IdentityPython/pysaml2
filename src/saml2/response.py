@@ -26,8 +26,8 @@ from saml2.samlp import STATUS_UNKNOWN_PRINCIPAL
 from saml2.samlp import STATUS_UNSUPPORTED_BINDING
 from saml2.samlp import STATUS_RESPONDER
 
-import xmldsig as ds
-import xmlenc as xenc
+from saml2 import xmldsig as ds
+from saml2 import xmlenc as xenc
 
 from saml2 import samlp
 from saml2 import class_name

@@ -1,6 +1,6 @@
 import saml2
-import xmlenc as xenc
-import xmldsig
+import saml2.xmlenc as xenc
+from saml2 import xmldsig
 
 data1 = """<?xml version='1.0' encoding='UTF-8'?>
 <ns0:EncryptedData MimeType="text/xml" xmlns:ns0="http://www.w3.org/2001/04/xmlenc#">

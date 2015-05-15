@@ -11,8 +11,8 @@ from saml2.validate import valid_domain_name
 import saml2
 from saml2 import SamlBase
 
-import xmldsig as ds
-import xmlenc as xenc
+from saml2 import xmldsig as ds
+from saml2 import xmlenc as xenc
 
 NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:assertion'
 

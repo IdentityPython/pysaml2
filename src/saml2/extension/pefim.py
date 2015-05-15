@@ -2,7 +2,7 @@
 
 import saml2
 from saml2 import SamlBase
-from xmldsig import X509Data
+from saml2.xmldsig import X509Data
 
 NAMESPACE = 'urn:net:eustix:names:tc:PEFIM:0.0:assertion'
 

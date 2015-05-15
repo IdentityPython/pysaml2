@@ -6,18 +6,17 @@
 
 __author__ = 'roland.hedberg@adm.umu.se (Roland Hedberg)'
 
-import unittest
 try:
   from xml.etree import ElementTree
 except ImportError:
   from elementtree import ElementTree
 import saml2
 
-import saml2_data, ds_data, samlp_data
+import samlp_data
 
 from saml2 import saml
 from saml2 import samlp
-import xmldsig as ds
+from saml2 import xmldsig as ds
 
 
 # class TestRequestAbstractType:

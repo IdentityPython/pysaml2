@@ -113,8 +113,8 @@ def repack_cert(cert):
 
 
 class MetaData(object):
-    def __init__(self, onts, attrc, metadata='', node_name=None, check_validity=True,
-                 security=None, **kwargs):
+    def __init__(self, onts, attrc, metadata='', node_name=None,
+                 check_validity=True, security=None, **kwargs):
         self.onts = onts
         self.attrc = attrc
         self.metadata = metadata
@@ -616,7 +616,8 @@ class MetaDataExtern(InMemoryMetaData):
     Accessible but HTTP GET.
     """
 
-    def __init__(self, onts, attrc, url=None, security=None, cert=None, http=None, **kwargs):
+    def __init__(self, onts, attrc, url=None, security=None, cert=None,
+                 http=None, **kwargs):
         """
         :params onts:
         :params attrc:
@@ -827,8 +828,12 @@ class MetadataStore(object):
 
                 # Separately handle MDExtern
                 if MDloader == MetaDataExtern:
-                    item['http'] = self.http
-                    item['security'] = self.security
+                    kwargs = {
+                        'http': self.http,
+                        'security': self.security
+                    }
+                else:
+                    kwargs = {}
 
                 for key in item['metadata']:
                     # Separately handle MetaDataFile and directory
@@ -840,7 +845,11 @@ class MetadataStore(object):
                             _md.load()
                             self.metadata[_fil] = _md
                         return
-                    _md = MDloader(self.onts, self.attrc, *key)
+
+                    if len(key) == 2:
+                        kwargs["cert"] = key[1]
+
+                    _md = MDloader(self.onts, self.attrc, key[0], **kwargs)
                     _md.load()
                     self.metadata[key[0]] = _md
 

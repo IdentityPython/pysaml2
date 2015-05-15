@@ -22,10 +22,7 @@ from saml2test.interaction import Action
 from saml2test.interaction import Interaction
 from saml2test.interaction import InteractionNeeded
 
-import xmldsig as ds
-
 from sp_test.tests import ErrorResponse
-from sp_test.check import VerifyEchopageContents
 
 __author__ = 'rolandh'
 
