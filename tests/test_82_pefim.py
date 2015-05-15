@@ -1,4 +1,4 @@
-import xmldsig as ds
+from saml2 import xmldsig as ds
 from saml2 import config
 from saml2 import extension_elements_to_elements
 from saml2 import element_to_extension_element

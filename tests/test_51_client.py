@@ -4,7 +4,7 @@
 import base64
 import urllib
 import urlparse
-from xmldsig import SIG_RSA_SHA256
+from saml2.xmldsig import SIG_RSA_SHA256
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import config

@@ -2,11 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import saml2
-import xmldsig as ds
 
 from saml2 import saml
 from saml2 import samlp
-from saml2 import md
 from saml2.validate import valid_duration, MustValueError
 from saml2.validate import valid_unsigned_short
 from saml2.validate import valid_non_negative_integer

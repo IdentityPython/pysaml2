@@ -12,8 +12,8 @@ from saml2.extension import ui
 from pathutils import full_path
 from saml2.mdstore import MetadataStore
 from saml2.server import Server
-import xmldsig
-import xmlenc
+from saml2 import xmldsig
+from saml2 import xmlenc
 
 ONTS = {
     saml.NAMESPACE: saml,

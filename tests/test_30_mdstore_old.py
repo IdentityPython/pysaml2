@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 import datetime
 import re
-from urllib import quote_plus
-from saml2.httpbase import HTTPBase
 
 from saml2.mdstore import MetadataStore, MetaDataMDX
 from saml2.mdstore import destinations
@@ -26,8 +24,8 @@ from saml2.extension import dri
 from saml2.extension import mdattr
 from saml2.extension import ui
 from saml2.s_utils import UnknownPrincipal
-import xmldsig
-import xmlenc
+from saml2 import xmldsig
+from saml2 import xmlenc
 
 from pathutils import full_path
 
