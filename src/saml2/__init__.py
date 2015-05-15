@@ -570,6 +570,7 @@ class SamlBase(ExtensionContainer):
                 uri, tag = elem.tag[1:].split("}")
                 return uri
         return None
+
     def get_ns_map(self, elements, uri_set):
 
         for elem in elements:
@@ -608,7 +609,6 @@ class SamlBase(ExtensionContainer):
 
         return ElementTree.tostring(tree, encoding="UTF-8")
 
-
     def set_prefixes(self, elem, prefix_map):
 
         # check if this is a tree wrapper
@@ -625,7 +625,6 @@ class SamlBase(ExtensionContainer):
         memo = {}
         for elem in elem.getiterator():
             self.fixup_element_prefixes(elem, uri_map, memo)
-
 
     def fixup_element_prefixes(self, elem, uri_map, memo):
         def fixup(name):

@@ -48,5 +48,5 @@ _elem = extension_elements_to_elements(parsed.extensions.extension_elements,
 
 assert len(_elem) == 1
 _spcertenc = _elem[0]
-_cert = _spcertenc.key_info[0].x509_data[0].x509_certificate.text
+_cert = _spcertenc.x509_data[0].x509_certificate.text
 assert cert == _cert
