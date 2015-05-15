@@ -194,3 +194,4 @@ example/sp-repoze/sp_conf_2.Pygmalion
 example/sp-repoze/sp_conf_2.py
 
 sp.xml
+tests/pki/qwerty.*
