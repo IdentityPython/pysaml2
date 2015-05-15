@@ -165,7 +165,7 @@ def extract(environ, empty=False, err=False):
     """
     formdata = cgi.parse(environ['wsgi.input'], environ, empty, err)
     # Remove single entries from lists
-    for key, value in formdata.iteritems():
+    for key, value in iter(formdata.items()):
         if len(value) == 1:
             formdata[key] = value[0]
     return formdata

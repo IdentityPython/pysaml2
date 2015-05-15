@@ -250,7 +250,7 @@ class AttributeValueBase(SamlBase):
         # Fill in the instance members from the contents of the XML tree.
         for child in tree:
             self._convert_element_tree_to_member(child)
-        for attribute, value in tree.attrib.iteritems():
+        for attribute, value in iter(tree.attrib.items()):
             self._convert_element_attribute_to_member(attribute, value)
         if tree.text:
             #print("set_text:", tree.text)

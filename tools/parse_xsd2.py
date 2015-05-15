@@ -865,7 +865,7 @@ class Simple(object):
         self.scoped = False
         self.itemType = None
         
-        for attribute, value in elem.attrib.iteritems():            
+        for attribute, value in iter(elem.attrib.items()):
             self.__setattr__(attribute, value)
 
     def collect(self, top, sup, argv=None, parent=""):
@@ -1046,7 +1046,7 @@ class Complex(object):
         self.scoped = False
         self.abstract = False
         
-        for attribute, value in elem.attrib.iteritems():
+        for attribute, value in iter(elem.attrib.items()):
             self.__setattr__(attribute, value)
 
         try:
