@@ -38,7 +38,7 @@ tests_require = [
     'mongodict',
     'pyasn1',
     'pymongo==3.0.1',
-    'python-memcached == 1.51',
+    'python-memcached >= 1.51',
     'pytest',
     'mako',
     #'pytest-coverage',
