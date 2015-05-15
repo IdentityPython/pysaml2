@@ -70,7 +70,7 @@ def test_cert_from_instance_1():
     assertion = response.assertion[0]
     certs = sigver.cert_from_instance(assertion)
     assert len(certs) == 1
-    print certs[0]
+    print(certs[0])
     assert certs[0] == CERT1
 
 
@@ -82,7 +82,7 @@ def test_cert_from_instance_ssp():
     assert len(certs) == 1
     assert certs[0] == CERT_SSP
     der = base64.b64decode(certs[0])
-    print str(decoder.decode(der)).replace('.', "\n.")
+    print(str(decoder.decode(der)).replace('.', "\n."))
     assert decoder.decode(der)
 
 
@@ -145,18 +145,18 @@ class TestSecurity():
 
     def test_sign_assertion(self):
         ass = self._assertion
-        print ass
+        print(ass)
         sign_ass = self.sec.sign_assertion("%s" % ass, node_id=ass.id)
-        #print sign_ass
+        #print(sign_ass)
         sass = saml.assertion_from_string(sign_ass)
-        #print sass
+        #print(sass)
         assert _eq(sass.keyswv(), ['attribute_statement', 'issue_instant',
                                    'version', 'signature', 'id'])
         assert sass.version == "2.0"
         assert sass.id == "11111"
         assert time_util.str_to_time(sass.issue_instant)
 
-        print "Crypto version : %s" % (self.sec.crypto.version())
+        print("Crypto version : %s" % (self.sec.crypto.version()))
 
         item = self.sec.check_signature(sass, class_name(sass), sign_ass)
 
@@ -176,7 +176,7 @@ class TestSecurity():
         assert sass.id == "11111"
         assert time_util.str_to_time(sass.issue_instant)
 
-        print "Crypto version : %s" % (self.sec.crypto.version())
+        print("Crypto version : %s" % (self.sec.crypto.version()))
 
         item = self.sec.check_signature(sass, class_name(sass),
                                         sign_ass, must=True)
@@ -234,11 +234,11 @@ class TestSecurity():
         s_response = sigver.signed_instance_factory(response, self.sec, to_sign)
 
         assert s_response is not None
-        print s_response
+        print(s_response)
         response = response_from_string(s_response)
         sass = response.assertion[0]
 
-        print sass
+        print(sass)
         assert _eq(sass.keyswv(), ['attribute_statement', 'issue_instant',
                                    'version', 'signature', 'id'])
         assert sass.version == "2.0"
@@ -301,11 +301,11 @@ class TestSecurity():
 
         s_response = sigver.signed_instance_factory(response, self.sec, to_sign)
 
-        print s_response
+        print(s_response)
         res = self.sec.verify_signature("%s" % s_response,
                                         node_name=class_name(samlp.Response()))
 
-        print res
+        print(res)
         assert res
 
     def test_sign_verify_with_cert_from_instance(self):
@@ -353,7 +353,7 @@ class TestSecurity():
         to_sign = [(class_name(assertion), assertion.id)]
         s_assertion = sigver.signed_instance_factory(assertion, self.sec,
                                                      to_sign)
-        print s_assertion
+        print(s_assertion)
         ass = assertion_from_string(s_assertion)
         ci = "".join(sigver.cert_from_instance(ass)[0].split())
         assert ci == self.sec.my_cert
@@ -470,7 +470,7 @@ def test_xbox():
         if _txt:
             assertions.append(ass)
 
-    print assertions
+    print(assertions)
 
 
 def test_xmlsec_err():

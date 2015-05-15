@@ -122,7 +122,7 @@ def test_complete_flow():
         ht_args = client.use_soap(idp_response, cargs["rc_url"],
                                   [cargs["relay_state"]])
 
-        print ht_args
+        print(ht_args)
 
         # ------------ @SP -----------------------------
 
@@ -139,7 +139,7 @@ def test_complete_flow():
 
         resp = sp.parse_authn_request_response(respdict["body"], None, {sid: "/"})
 
-        print resp.response
+        print(resp.response)
 
         assert resp.response.destination == "http://lingon.catalogix.se:8087/paos"
         assert resp.response.status.status_code.value == STATUS_SUCCESS

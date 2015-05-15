@@ -1,3 +1,4 @@
+from __future__ import print_function
 from dircache import listdir
 import logging
 import os
@@ -360,9 +361,8 @@ class InMemoryMetaData(MetaData):
 
         # have I seen this entity_id before ? If so if log: ignore it
         if entity_descr.entity_id in self.entity:
-            print >> sys.stderr, \
-                "Duplicated Entity descriptor (entity id: '%s')" % \
-                entity_descr.entity_id
+            print("Duplicated Entity descriptor (entity id: '%s')" % 
+                  entity_descr.entity_id, file=sys.stderr)
             return
 
         _ent = to_dict(entity_descr, self.onts)
@@ -404,7 +404,7 @@ class InMemoryMetaData(MetaData):
         else:
             try:
                 valid_instance(self.entities_descr)
-            except NotValid, exc:
+            except NotValid as exc:
                 logger.error(exc.args[0])
                 return
 
@@ -589,7 +589,7 @@ class MetaDataLoader(MetaDataFile):
         module, attr = func[:i], func[i + 1:]
         try:
             mod = import_module(module)
-        except Exception, e:
+        except Exception as e:
             raise RuntimeError(
                 'Cannot find metadata provider function %s: "%s"' % (func, e))
 
@@ -1156,7 +1156,7 @@ class MetadataStore(object):
             for ent_id, ent_desc in _md.items():
                 if descriptor in ent_desc:
                     if ent_id in res:
-                        #print "duplicated entity_id: %s" % res
+                        #print("duplicated entity_id: %s" % res)
                         pass
                     else:
                         res.append(ent_id)

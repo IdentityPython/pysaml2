@@ -150,10 +150,10 @@ class TestPKCS11():
                                            })
                                       )
             self.configured = True
-        except Exception, ex:
-            print "-" * 64
+        except Exception as ex:
+            print("-" * 64)
             traceback.print_exc()
-            print "-" * 64
+            print("-" * 64)
             logging.warning("PKCS11 tests disabled: unable to initialize test token: %s" % ex)
             raise
 
@@ -176,7 +176,7 @@ class TestPKCS11():
         env = {}
         if self.softhsm_conf is not None:
             env['SOFTHSM_CONF'] = self.softhsm_conf
-            #print "env SOFTHSM_CONF=%s " % softhsm_conf +" ".join(args)
+            #print("env SOFTHSM_CONF=%s " % softhsm_conf +" ".join(args))
         logging.debug("Environment {!r}".format(env))
         logging.debug("Executing {!r}".format(args))
         args = ['ls']
@@ -197,24 +197,24 @@ class TestPKCS11():
         os.environ['SOFTHSM_CONF'] = self.softhsm_conf
 
         ass = self._assertion
-        print ass
+        print(ass)
         sign_ass = self.sec.sign_assertion("%s" % ass, node_id=ass.id)
-        #print sign_ass
+        #print(sign_ass)
         sass = saml.assertion_from_string(sign_ass)
-        #print sass
+        #print(sass)
         assert _eq(sass.keyswv(), ['attribute_statement', 'issue_instant',
                                    'version', 'signature', 'id'])
         assert sass.version == "2.0"
         assert sass.id == "11111"
         assert time_util.str_to_time(sass.issue_instant)
 
-        print "Crypto version : %s" % (self.sec.crypto.version())
+        print("Crypto version : %s" % (self.sec.crypto.version()))
 
         item = self.sec.check_signature(sass, class_name(sass), sign_ass)
 
         assert isinstance(item, saml.Assertion)
 
-        print "Test PASSED"
+        print("Test PASSED")
 
 
 def test_xmlsec_cryptobackend():

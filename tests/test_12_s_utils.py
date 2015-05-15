@@ -33,13 +33,13 @@ def _eq(l1, l2):
 
 def _oeq(l1, l2):
     if len(l1) != len(l2):
-        print "Different number of items"
+        print("Different number of items")
         return False
     for item in l1:
         if item not in l2:
-            print "%s not in l2" % (item,)
+            print("%s not in l2" % (item,))
             for ite in l2:
-                print "\t%s" % (ite,)
+                print("\t%s" % (ite,))
             return False
     return True
 
@@ -67,7 +67,7 @@ def test_error_status():
                                           samlp.STATUS_RESPONDER)
 
     status_text = "%s" % status
-    print status_text
+    print(status_text)
     assert status_text == ERROR_STATUS
 
 
@@ -75,14 +75,14 @@ def test_status_from_exception():
     e = utils.UnknownPrincipal("Error resolving principal")
     stat = utils.error_status_factory(e)
     status_text = "%s" % stat
-    print status_text
+    print(status_text)
     assert status_text == ERROR_STATUS
 
 
 def test_attribute_sn():
     attr = utils.do_attributes({"surName": ("Jeter", "")})
     assert len(attr) == 1
-    print attr
+    print(attr)
     inst = attr[0]
     assert inst.name == "surName"
     assert len(inst.attribute_value) == 1
@@ -95,7 +95,7 @@ def test_attribute_age():
 
     assert len(attr) == 1
     inst = attr[0]
-    print inst
+    print(inst)
     assert inst.name == "age"
     assert len(inst.attribute_value) == 1
     av = inst.attribute_value[0]
@@ -108,7 +108,7 @@ def test_attribute_onoff():
 
     assert len(attr) == 1
     inst = attr[0]
-    print inst
+    print(inst)
     assert inst.name == "onoff"
     assert len(inst.attribute_value) == 1
     av = inst.attribute_value[0]
@@ -122,7 +122,7 @@ def test_attribute_base64():
 
     assert len(attr) == 1
     inst = attr[0]
-    print inst
+    print(inst)
     assert inst.name == "name"
     assert len(inst.attribute_value) == 1
     av = inst.attribute_value[0]
@@ -133,7 +133,7 @@ def test_attribute_base64():
 def test_attribute_statement():
     statement = do_attribute_statement({"surName": ("Jeter", ""),
                                         "givenName": ("Derek", "")})
-    print statement
+    print(statement)
     assert statement.keyswv() == ["attribute"]
     assert len(statement.attribute) == 2
     attr0 = statement.attribute[0]
@@ -304,7 +304,7 @@ def test_parse_attribute_map():
 
     assert _eq(forward.keys(), backward.values())
     assert _eq(forward.values(), backward.keys())
-    print forward.keys()
+    print(forward.keys())
     assert _oeq(forward.keys(), [
         ('urn:oid:1.3.6.1.4.1.5923.1.1.1.7', NAME_FORMAT_URI),
         ('urn:oid:0.9.2342.19200300.100.1.1', NAME_FORMAT_URI),

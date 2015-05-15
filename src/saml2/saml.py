@@ -100,7 +100,7 @@ def _decode_attribute_value(typ, text):
 
 
 def _verify_value_type(typ, val):
-    #print "verify value type: %s, %s" % (typ, val)
+    #print("verify value type: %s, %s" % (typ, val))
     if typ == XSD + "string":
         try:
             return str(val)
@@ -253,7 +253,7 @@ class AttributeValueBase(SamlBase):
         for attribute, value in tree.attrib.iteritems():
             self._convert_element_attribute_to_member(attribute, value)
         if tree.text:
-            #print "set_text:", tree.text
+            #print("set_text:", tree.text)
             # clear type
             #self.clear_type()
             self.set_text(tree.text)

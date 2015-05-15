@@ -399,7 +399,7 @@ def make_vals(val, klass, klass_inst=None, prop=None, part=False,
     """
     cinst = None
 
-    #print "make_vals(%s, %s)" % (val, klass)
+    #print("make_vals(%s, %s)" % (val, klass))
 
     if isinstance(val, dict):
         cinst = klass().loadd(val, base64encode=base64encode)
@@ -719,7 +719,7 @@ class SamlBase(ExtensionContainer):
         :return: The instance
         """
 
-        #print "set_text: %s" % (val,)
+        #print("set_text: %s" % (val,))
         if isinstance(val, bool):
             if val:
                 setattr(self, "text", "true")
@@ -751,7 +751,7 @@ class SamlBase(ExtensionContainer):
         """
 
         for prop, _typ, _req in self.c_attributes.values():
-            #print "# %s" % (prop)
+            #print("# %s" % (prop))
             if prop in ava:
                 if isinstance(ava[prop], bool):
                     setattr(self, prop, "%s" % ava[prop])
@@ -764,9 +764,9 @@ class SamlBase(ExtensionContainer):
             self.set_text(ava["text"], base64encode)
 
         for prop, klassdef in self.c_children.values():
-            #print "## %s, %s" % (prop, klassdef)
+            #print("## %s, %s" % (prop, klassdef))
             if prop in ava:
-                #print "### %s" % ava[prop]
+                #print("### %s" % ava[prop])
                 # means there can be a list of values
                 if isinstance(klassdef, list):
                     make_vals(ava[prop], klassdef[0], self, prop,

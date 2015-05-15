@@ -73,4 +73,4 @@ if metad is not None:
         f.write(txt)
         f.close()
     else:
-        print txt
+        print(txt)

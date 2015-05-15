@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import logging
 import re
 import argparse
@@ -353,18 +354,18 @@ class ACS(Service):
         try:
             self.response = self.sp.parse_authn_request_response(
                 response, binding, self.outstanding_queries, self.cache.outstanding_certs)
-        except UnknownPrincipal, excp:
+        except UnknownPrincipal as excp:
             logger.error("UnknownPrincipal: %s" % (excp,))
             resp = ServiceError("UnknownPrincipal: %s" % (excp,))
             return resp(self.environ, self.start_response)
-        except UnsupportedBinding, excp:
+        except UnsupportedBinding as excp:
             logger.error("UnsupportedBinding: %s" % (excp,))
             resp = ServiceError("UnsupportedBinding: %s" % (excp,))
             return resp(self.environ, self.start_response)
-        except VerificationError, err:
+        except VerificationError as err:
             resp = ServiceError("Verification error: %s" % (err,))
             return resp(self.environ, self.start_response)
-        except Exception, err:
+        except Exception as err:
             resp = ServiceError("Other error: %s" % (err,))
             return resp(self.environ, self.start_response)
 
@@ -580,7 +581,7 @@ class SSO(object):
             if cert is not None:
                 self.cache.outstanding_certs[_sid] = cert
 
-        except Exception, exc:
+        except Exception as exc:
             logger.exception(exc)
             resp = ServiceError(
                 "Failed to construct the AuthnRequest: %s" % exc)
@@ -784,14 +785,14 @@ def application(environ, start_response):
         if re.match(".*static/.*", path):
             return handle_static(environ, start_response, path)
         return not_found(environ, start_response)
-    except StatusError, err:
+    except StatusError as err:
         logging.error("StatusError: %s" % err)
         resp = BadRequest("%s" % err)
         return resp(environ, start_response)
-    except Exception, err:
+    except Exception as err:
         #_err = exception_trace("RUN", err)
         #logging.error(exception_trace("RUN", _err))
-        print >> sys.stderr, err
+        print(err, file=sys.stderr)
         resp = ServiceError("%s" % err)
         return resp(environ, start_response)
 
@@ -850,7 +851,7 @@ if __name__ == '__main__':
                                                          SERVER_KEY, CERT_CHAIN)
         _https = " using SSL/TLS"
     logger.info("Server starting")
-    print "SP listening on %s:%s%s" % (HOST, PORT, _https)
+    print("SP listening on %s:%s%s" % (HOST, PORT, _https))
     try:
         SRV.start()
     except KeyboardInterrupt:

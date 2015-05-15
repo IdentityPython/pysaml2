@@ -241,7 +241,7 @@ class Conversation(tool.Conversation):
             except KeyError:
                 pass
             logger.info("SAML Response: %s" % _resp)
-        except FatalError, ferr:
+        except FatalError as ferr:
             if _resp:
                 logger.info("Faulty response: %s" % _resp)
             logger.error("Exception %s" % ferr)
@@ -250,7 +250,7 @@ class Conversation(tool.Conversation):
             return False
         except CheckError:
             raise
-        except Exception, err:
+        except Exception as err:
             if _resp:
                 logger.info("Faulty response: %s" % _resp)
             logger.error("Exception %s" % err)

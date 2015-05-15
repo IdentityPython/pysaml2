@@ -1019,7 +1019,7 @@ if __name__ == '__main__':
     PORT = CONFIG.PORT
 
     SRV = make_server(HOST, PORT, application)
-    print "IdP listening on %s:%s" % (HOST, PORT)
+    print("IdP listening on %s:%s" % (HOST, PORT))
     SRV.serve_forever()
 else:
     _rot = args.mako_root

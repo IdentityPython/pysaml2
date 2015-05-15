@@ -82,7 +82,7 @@ class TestStatusCode:
         self.status_code.value = samlp.STATUS_RESPONDER
         self.status_code.status_code = samlp.StatusCode(
             value=samlp.STATUS_REQUEST_DENIED)
-        print self.status_code.__dict__
+        print(self.status_code.__dict__)
         new_status_code = samlp.status_code_from_string(self.status_code.to_string())
         assert new_status_code.value == samlp.STATUS_RESPONDER
         assert new_status_code.status_code.value == \

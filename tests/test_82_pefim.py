@@ -35,7 +35,7 @@ req_id, req = client.create_authn_request(
     extensions=extensions)
 
 
-print req
+print(req)
 
 # Get a certificate from an authn request
 

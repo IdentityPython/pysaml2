@@ -352,7 +352,7 @@ class OpenSSLWrapper(object):
                 crypto.verify(ca_cert, signature, cert_certificate,
                               cert_algorithm)
                 return True, "Signed certificate is valid and correctly signed by CA certificate."
-            except crypto.Error, e:
+            except crypto.Error as e:
                 return False, "Certificate is incorrectly signed."
-        except Exception, e:
+        except Exception as e:
             return False, "Certificate is not valid for an unknown reason."

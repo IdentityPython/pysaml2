@@ -5,6 +5,7 @@
 Implements some usefull functions when dealing with validity of
 different types of information.
 """
+from __future__ import print_function
 
 import calendar
 import re
@@ -72,7 +73,7 @@ def parse_duration(duration):
     dlen = len(duration)
 
     for code, typ in D_FORMAT:
-        #print duration[index:], code
+        #print(duration[index:], code)
         if duration[index] == '-':
             raise Exception("Negation not allowed on individual items")
         if code == "T":
@@ -241,8 +242,8 @@ def str_to_time(timestr, format=TIME_FORMAT):
     except ValueError:  # assume it's a format problem
         try:
             elem = TIME_FORMAT_WITH_FRAGMENT.match(timestr)
-        except Exception, exc:
-            print >> sys.stderr, "Exception: %s on %s" % (exc, timestr)
+        except Exception as exc:
+            print("Exception: %s on %s" % (exc, timestr), file=sys.stderr)
             raise
         then = time.strptime(elem.groups()[0] + "Z", TIME_FORMAT)
 

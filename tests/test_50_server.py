@@ -160,7 +160,7 @@ class TestServer1():
             issuer=self.server._issuer(),
         )
 
-        print response.keyswv()
+        print(response.keyswv())
         assert _eq(response.keyswv(), ['destination', 'assertion', 'status',
                                        'in_response_to', 'issue_instant',
                                        'version', 'issuer', 'id'])
@@ -170,7 +170,7 @@ class TestServer1():
         assert response.in_response_to == "_012345"
         #
         status = response.status
-        print status
+        print(status)
         assert status.status_code.value == samlp.STATUS_SUCCESS
 
     def test_parse_faulty_request(self):
@@ -182,7 +182,7 @@ class TestServer1():
         htargs = self.client.apply_binding(
             binding, "%s" % authn_request, "http://www.example.com", "abcd")
         _dict = parse_qs(htargs["headers"][0][1].split('?')[1])
-        print _dict
+        print(_dict)
         raises(OtherError, self.server.parse_authn_request,
                _dict["SAMLRequest"][0], binding)
 
@@ -194,17 +194,17 @@ class TestServer1():
         htargs = self.client.apply_binding(binding, "%s" % authn_request,
                                            "http://www.example.com", "abcd")
         _dict = parse_qs(htargs["headers"][0][1].split('?')[1])
-        print _dict
+        print(_dict)
 
         try:
             self.server.parse_authn_request(_dict["SAMLRequest"][0], binding)
             status = None
-        except OtherError, oe:
-            print oe.args
+        except OtherError as oe:
+            print(oe.args)
             status = s_utils.error_status_factory(oe)
 
         assert status
-        print status
+        print(status)
         assert _eq(status.keyswv(), ["status_code", "status_message"])
         assert status.status_message.text == 'Not destined for me!'
         status_code = status.status_code
@@ -216,16 +216,16 @@ class TestServer1():
         req_id, authn_request = self.client.create_authn_request(
             message_id="id1", destination="http://localhost:8088/sso")
 
-        print authn_request
+        print(authn_request)
         binding = BINDING_HTTP_REDIRECT
         htargs = self.client.apply_binding(binding, "%s" % authn_request,
                                            "http://www.example.com", "abcd")
         _dict = parse_qs(htargs["headers"][0][1].split('?')[1])
-        print _dict
+        print(_dict)
 
         req = self.server.parse_authn_request(_dict["SAMLRequest"][0], binding)
         # returns a dictionary
-        print req
+        print(req)
         resp_args = self.server.response_args(req.message, [BINDING_HTTP_POST])
         assert resp_args["destination"] == "http://lingon.catalogix.se:8087/"
         assert resp_args["in_response_to"] == "id1"
@@ -253,7 +253,7 @@ class TestServer1():
             authn=AUTHN
         )
 
-        print resp.keyswv()
+        print(resp.keyswv())
         assert _eq(resp.keyswv(), ['status', 'destination', 'assertion',
                                    'in_response_to', 'issue_instant',
                                    'version', 'id', 'issuer'])
@@ -264,12 +264,12 @@ class TestServer1():
         assert resp.assertion
         assert resp.assertion
         assertion = resp.assertion
-        print assertion
+        print(assertion)
         assert assertion.authn_statement
         assert assertion.conditions
         assert assertion.attribute_statement
         attribute_statement = assertion.attribute_statement
-        print attribute_statement
+        print(attribute_statement)
         assert len(attribute_statement[0].attribute) == 4
         # Pick out one attribute
         attr = None
@@ -286,8 +286,8 @@ class TestServer1():
         assert assertion.subject.name_id
         assert assertion.subject.subject_confirmation
         confirmation = assertion.subject.subject_confirmation[0]
-        print confirmation.keyswv()
-        print confirmation.subject_confirmation_data
+        print(confirmation.keyswv())
+        print(confirmation.subject_confirmation_data)
         assert confirmation.subject_confirmation_data.in_response_to == "id12"
 
     def test_sso_response_without_identity(self):
@@ -302,7 +302,7 @@ class TestServer1():
               best_effort=True
         )
 
-        print resp.keyswv()
+        print(resp.keyswv())
         assert _eq(resp.keyswv(), ['status', 'destination', 'in_response_to',
                                    'issue_instant', 'version', 'id', 'issuer',
                                    'assertion'])
@@ -327,7 +327,7 @@ class TestServer1():
               best_effort=True
         )
 
-        print resp.keyswv()
+        print(resp.keyswv())
         assert _eq(resp.keyswv(), ['status', 'destination', 'in_response_to',
                                    'issue_instant', 'version', 'id', 'issuer',
                                    'assertion'])
@@ -339,13 +339,13 @@ class TestServer1():
         resp = self.server.create_error_response(
             "id12", "http://localhost:8087/", exc)
 
-        print resp.keyswv()
+        print(resp.keyswv())
         assert _eq(resp.keyswv(), ['status', 'destination', 'in_response_to',
                                    'issue_instant', 'version', 'id', 'issuer'])
         assert resp.destination == "http://localhost:8087/"
         assert resp.in_response_to == "id12"
         assert resp.status
-        print resp.status
+        print(resp.status)
         assert resp.status.status_code.value == samlp.STATUS_RESPONDER
         assert resp.status.status_code.status_code.value == \
                samlp.STATUS_REQUEST_UNSUPPORTED
@@ -370,11 +370,11 @@ class TestServer1():
             "foba0001@example.com", authn=AUTHN)
 
         response = samlp.response_from_string(resp_str)
-        print response.keyswv()
+        print(response.keyswv())
         assert _eq(response.keyswv(), ['status', 'destination', 'assertion',
                                        'in_response_to', 'issue_instant',
                                        'version', 'issuer', 'id'])
-        print response.assertion[0].keyswv()
+        print(response.assertion[0].keyswv())
         assert len(response.assertion) == 1
         assert _eq(response.assertion[0].keyswv(), ['attribute_statement',
                                                     'issue_instant', 'version',
@@ -384,7 +384,7 @@ class TestServer1():
         assertion = response.assertion[0]
         assert len(assertion.attribute_statement) == 1
         astate = assertion.attribute_statement[0]
-        print astate
+        print(astate)
         assert len(astate.attribute) == 4
 
     def test_signed_response(self):
@@ -402,7 +402,7 @@ class TestServer1():
             sign_assertion=True
         )
 
-        print signed_resp
+        print(signed_resp)
         assert signed_resp
 
         sresponse = response_from_string(signed_resp)
@@ -832,7 +832,7 @@ class TestServer2():
 
     def test_do_attribute_reponse(self):
         aa_policy = self.server.config.getattr("policy", "idp")
-        print aa_policy.__dict__
+        print(aa_policy.__dict__)
         response = self.server.create_attribute_response(
             IDENTITY.copy(), "aaa", "http://example.com/sp/",
             "urn:mace:example.com:sp:1")
@@ -881,7 +881,7 @@ class TestServerLogout():
     def test_1(self):
         with closing(Server("idp_slo_redirect_conf")) as server:
             req_id, request = _logout_request("sp_slo_redirect_conf")
-            print request
+            print(request)
             bindings = [BINDING_HTTP_REDIRECT]
             response = server.create_logout_response(request, bindings)
             binding, destination = server.pick_binding("single_logout_service",

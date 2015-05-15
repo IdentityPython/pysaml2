@@ -269,10 +269,10 @@ class SSO(Service):
         try:
             resp_args = IDP.response_args(_authn_req)
             _resp = None
-        except UnknownPrincipal, excp:
+        except UnknownPrincipal as excp:
             _resp = IDP.create_error_response(_authn_req.id,
                                               self.destination, excp)
-        except UnsupportedBinding, excp:
+        except UnsupportedBinding as excp:
             _resp = IDP.create_error_response(_authn_req.id,
                                               self.destination, excp)
 
@@ -281,11 +281,11 @@ class SSO(Service):
     def do(self, query, binding_in, relay_state=""):
         try:
             resp_args, _resp = self.verify_request(query, binding_in)
-        except UnknownPrincipal, excp:
+        except UnknownPrincipal as excp:
             logger.error("UnknownPrincipal: %s" % (excp,))
             resp = ServiceError("UnknownPrincipal: %s" % (excp,))
             return resp(self.environ, self.start_response)
-        except UnsupportedBinding, excp:
+        except UnsupportedBinding as excp:
             logger.error("UnsupportedBinding: %s" % (excp,))
             resp = ServiceError("UnsupportedBinding: %s" % (excp,))
             return resp(self.environ, self.start_response)
@@ -305,7 +305,7 @@ class SSO(Service):
                     identity, userid=self.user,
                     authn=AUTHN_BROKER[self.environ["idp.authn_ref"]], sign_assertion=sign_assertion,
                     sign_response=False, **resp_args)
-            except Exception, excp:
+            except Exception as excp:
                 logging.error(exception_trace(excp))
                 resp = ServiceError("Exception: %s" % (excp,))
                 return resp(self.environ, self.start_response)
@@ -548,7 +548,7 @@ class SLO(Service):
             _, body = request.split("\n")
             logger.debug("req: '%s'" % body)
             req_info = IDP.parse_logout_request(body, binding)
-        except Exception, exc:
+        except Exception as exc:
             logger.error("Bad request: %s" % exc)
             resp = BadRequest("%s" % exc)
             return resp(self.environ, self.start_response)
@@ -565,7 +565,7 @@ class SLO(Service):
             # remove the authentication
             try:
                 IDP.session_db.remove_authn_statements(msg.name_id)
-            except KeyError, exc:
+            except KeyError as exc:
                 logger.error("ServiceError: %s" % exc)
                 resp = ServiceError("%s" % exc)
                 return resp(self.environ, self.start_response)
@@ -574,7 +574,7 @@ class SLO(Service):
     
         try:
             hinfo = IDP.apply_binding(binding, "%s" % resp, "", relay_state)
-        except Exception, exc:
+        except Exception as exc:
             logger.error("ServiceError: %s" % exc)
             resp = ServiceError("%s" % exc)
             return resp(self.environ, self.start_response)
@@ -986,7 +986,7 @@ if __name__ == '__main__':
     PORT = 8088
 
     SRV = make_server(HOST, PORT, application)
-    print "IdP listening on %s:%s" % (HOST, PORT)
+    print("IdP listening on %s:%s" % (HOST, PORT))
     SRV.serve_forever()
 else:
     _rot = args.mako_root

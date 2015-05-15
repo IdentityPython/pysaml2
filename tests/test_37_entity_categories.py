@@ -160,7 +160,7 @@ def test_idp_policy_filter():
         policy = idp.config.getattr("policy", "idp")
         ava = policy.filter(ava, "urn:mace:example.com:saml:roland:sp", idp.metadata)
 
-        print ava
+        print(ava)
         assert ava.keys() == ["eduPersonTargetedID"]  # because no entity category
 
 if __name__ == "__main__":

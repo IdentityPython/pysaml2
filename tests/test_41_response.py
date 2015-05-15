@@ -127,7 +127,7 @@ class TestResponse:
         resp.parse_assertion()
         si = resp.session_info()
         assert si
-        print si["ava"]
+        print(si["ava"])
 
 
 if __name__ == "__main__":

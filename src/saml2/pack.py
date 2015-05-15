@@ -208,11 +208,11 @@ def parse_soap_enveloped_saml(text, body_class, header_class=None):
     envelope = ElementTree.fromstring(text)
     assert envelope.tag == '{%s}Envelope' % NAMESPACE
 
-    #print len(envelope)
+    #print(len(envelope))
     body = None
     header = {}
     for part in envelope:
-        #print ">",part.tag
+        #print(">",part.tag)
         if part.tag == '{%s}Body' % NAMESPACE:
             for sub in part:
                 try:
@@ -223,11 +223,11 @@ def parse_soap_enveloped_saml(text, body_class, header_class=None):
         elif part.tag == '{%s}Header' % NAMESPACE:
             if not header_class:
                 raise Exception("Header where I didn't expect one")
-            #print "--- HEADER ---"
+            #print("--- HEADER ---")
             for sub in part:
-                #print ">>",sub.tag
+                #print(">>",sub.tag)
                 for klass in header_class:
-                    #print "?{%s}%s" % (klass.c_namespace,klass.c_tag)
+                    #print("?{%s}%s" % (klass.c_namespace,klass.c_tag))
                     if sub.tag == "{%s}%s" % (klass.c_namespace, klass.c_tag):
                         header[sub.tag] = \
                             saml2.create_class_from_element_tree(klass, sub)

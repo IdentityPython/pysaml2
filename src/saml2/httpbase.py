@@ -77,10 +77,10 @@ def _since_epoch(cdate):
             try:
                 t = time.strptime(cdate, "%d %b %Y %H:%M:%S %Z")   # e.g. 18 Apr 2014 12:30:51 GMT
             except ValueError:
-                raise Exception, 'ValueError: Date "{0}" does not match any of '.format(cdate) + \
-                                 '"%d-%b-%Y %H:%M:%S %Z", ' + \
-                                 '"%d-%b-%y %H:%M:%S %Z", ' + \
-                                 '"%d %b %Y %H:%M:%S %Z".'
+                raise (Exception, 'ValueError: Date "{0}" does not match any of '.format(cdate) + \
+                                  '"%d-%b-%Y %H:%M:%S %Z", ' + \
+                                  '"%d-%b-%y %H:%M:%S %Z", ' + \
+                                  '"%d %b %Y %H:%M:%S %Z".')
     #return int(time.mktime(t))
     return calendar.timegm(t)
 
@@ -130,7 +130,7 @@ class HTTPBase(object):
         for _, a in list(self.cookiejar._cookies.items()):
             for _, b in a.items():
                 for cookie in list(b.values()):
-                    # print cookie
+                    # print(cookie)
                     if cookie.expires and cookie.expires <= now:
                         continue
                     if not re.search("%s$" % cookie.domain, _domain):
@@ -235,7 +235,7 @@ class HTTPBase(object):
                     pass
             r = requests.request(method, url, **_kwargs)
             logger.debug("Response status: %s" % r.status_code)
-        except requests.ConnectionError, exc:
+        except requests.ConnectionError as exc:
             raise ConnectionError("%s" % exc)
 
         try:
@@ -346,7 +346,7 @@ class HTTPBase(object):
             args = self.use_soap(request, destination, headers, sign)
             args["headers"] = dict(args["headers"])
             response = self.send(**args)
-        except Exception, exc:
+        except Exception as exc:
             logger.info("HTTPClient exception: %s" % (exc,))
             raise
 
