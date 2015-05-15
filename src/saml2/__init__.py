@@ -19,6 +19,7 @@
 
 
 import logging
+import six
 from saml2.validate import valid_instance
 
 try:
@@ -727,7 +728,7 @@ class SamlBase(ExtensionContainer):
                 setattr(self, "text", "false")
         elif isinstance(val, int):
             setattr(self, "text", "%d" % val)
-        elif isinstance(val, basestring):
+        elif isinstance(val, six.string_types):
             setattr(self, "text", val)
         elif val is None:
             pass
@@ -809,7 +810,7 @@ class SamlBase(ExtensionContainer):
                 continue
             svals = self.__dict__[key]
             ovals = other.__dict__[key]
-            if isinstance(svals, basestring):
+            if isinstance(svals, six.string_types):
                 if svals != ovals:
                     return False
             elif isinstance(svals, list):

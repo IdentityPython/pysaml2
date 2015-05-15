@@ -8,6 +8,7 @@ to conclude its tasks.
 import threading
 from urllib import urlencode
 from urlparse import urlparse
+import six
 
 from saml2.entity import Entity
 
@@ -382,7 +383,7 @@ class Base(Entity):
                         pass
             else:
                 raise AttributeError("Missing required parameter")
-        elif isinstance(name_id, basestring):
+        elif isinstance(name_id, six.string_types):
             name_id = saml.NameID(text=name_id)
             for key in ["sp_name_qualifier", "name_qualifier", "format"]:
                 try:
@@ -453,7 +454,7 @@ class Base(Entity):
         """
 
         if action:
-            if isinstance(action, basestring):
+            if isinstance(action, six.string_types):
                 _action = [saml.Action(text=action)]
             else:
                 _action = [saml.Action(text=a) for a in action]
@@ -473,7 +474,7 @@ class Base(Entity):
         :return: One ID ref
         """
 
-        if isinstance(assertion_id_refs, basestring):
+        if isinstance(assertion_id_refs, six.string_types):
             return 0, assertion_id_refs
         else:
             return 0, assertion_id_refs[0]

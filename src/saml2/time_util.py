@@ -14,6 +14,7 @@ import sys
 
 from datetime import timedelta
 from datetime import datetime
+import six
 
 TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 TIME_FORMAT_WITH_FRAGMENT = re.compile(
@@ -274,7 +275,7 @@ def before(point):
     if not point:
         return True
 
-    if isinstance(point, basestring):
+    if isinstance(point, six.string_types):
         point = str_to_time(point)
     elif isinstance(point, int):
         point = time.gmtime(point)
@@ -302,12 +303,12 @@ valid = before
 
 def later_than(after, before):
     """ True if then is later or equal to that """
-    if isinstance(after, basestring):
+    if isinstance(after, six.string_types):
         after = str_to_time(after)
     elif isinstance(after, int):
         after = time.gmtime(after)
 
-    if isinstance(before, basestring):
+    if isinstance(before, six.string_types):
         before = str_to_time(before)
     elif isinstance(before, int):
         before = time.gmtime(before)

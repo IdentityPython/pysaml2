@@ -3,6 +3,7 @@ import hmac
 import logging
 import time
 import cgi
+import six
 
 from urllib import quote
 from urlparse import parse_qs
@@ -61,7 +62,7 @@ class Response(object):
             mte = self.mako_lookup.get_template(self.mako_template)
             return [mte.render(**argv)]
         else:
-            if isinstance(message, basestring):
+            if isinstance(message, six.string_types):
                 return [message]
             else:
                 return message

@@ -1,5 +1,6 @@
 import logging
 from saml2.cache import Cache
+import six
 
 logger = logging.getLogger(__name__)
 
@@ -7,7 +8,7 @@ logger = logging.getLogger(__name__)
 class Population(object):
     def __init__(self, cache=None):
         if cache:
-            if isinstance(cache, basestring):
+            if isinstance(cache, six.string_types):
                 self.cache = Cache(cache)
             else:
                 self.cache = cache

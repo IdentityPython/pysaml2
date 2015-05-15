@@ -20,6 +20,7 @@ from saml2 import samlp
 from saml2 import class_name
 
 from saml2 import xmldsig as ds
+import six
 
 from saml2.sigver import pre_signature_part
 
@@ -137,7 +138,7 @@ def do_organization_info(ava):
     for dkey, (ckey, klass) in ORG_ATTR_TRANSL.items():
         if ckey not in ava:
             continue
-        if isinstance(ava[ckey], basestring):
+        if isinstance(ava[ckey], six.string_types):
             setattr(org, dkey, [_localized_name(ava[ckey], klass)])
         elif isinstance(ava[ckey], list):
             setattr(org, dkey,
@@ -163,7 +164,7 @@ def do_contact_person_info(lava):
                 data = []
                 if isinstance(classpec, list):
                     # What if value is not a list ?
-                    if isinstance(value, basestring):
+                    if isinstance(value, six.string_types):
                         data = [classpec[0](text=value)]
                     else:
                         for val in value:
@@ -253,7 +254,7 @@ def do_uiinfo(_uiinfo):
 
         aclass = uii.child_class(attr)
         inst = getattr(uii, attr)
-        if isinstance(val, basestring):
+        if isinstance(val, six.string_types):
             ainst = aclass(text=val)
             inst.append(ainst)
         elif isinstance(val, dict):
@@ -263,7 +264,7 @@ def do_uiinfo(_uiinfo):
             inst.append(ainst)
         else:
             for value in val:
-                if isinstance(value, basestring):
+                if isinstance(value, six.string_types):
                     ainst = aclass(text=value)
                     inst.append(ainst)
                 elif isinstance(value, dict):
@@ -299,11 +300,11 @@ def do_uiinfo(_uiinfo):
         _attr = "keywords"
         val = _uiinfo[_attr]
         inst = getattr(uii, _attr)
-        # list of basestrings, dictionary or list of dictionaries
+        # list of six.string_types, dictionary or list of dictionaries
         if isinstance(val, list):
             for value in val:
                 keyw = mdui.Keywords()
-                if isinstance(value, basestring):
+                if isinstance(value, six.string_types):
                     keyw.text = value
                 elif isinstance(value, dict):
                     keyw.text = " ".join(value["text"])
@@ -398,7 +399,7 @@ def do_extensions(mname, item):
 def _do_nameid_format(cls, conf, typ):
     namef = conf.getattr("name_id_format", typ)
     if namef:
-        if isinstance(namef, basestring):
+        if isinstance(namef, six.string_types):
             ids = [md.NameIDFormat(namef)]
         else:
             ids = [md.NameIDFormat(text=form) for form in namef]
@@ -413,7 +414,7 @@ def do_endpoints(conf, endpoints):
             servs = []
             i = 1
             for args in conf[endpoint]:
-                if isinstance(args, basestring):  # Assume it's the location
+                if isinstance(args, six.string_types):  # Assume it's the location
                     args = {"location": args,
                             "binding": DEFAULT_BINDING[endpoint]}
                 elif isinstance(args, tuple) or isinstance(args, list):

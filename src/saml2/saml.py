@@ -11,6 +11,7 @@ from saml2.validate import valid_domain_name
 import saml2
 from saml2 import SamlBase
 
+import six
 from saml2 import xmldsig as ds
 from saml2 import xmlenc as xenc
 
@@ -192,7 +193,7 @@ class AttributeValueBase(SamlBase):
             val = base64.encodestring(val)
             self.set_type("xs:base64Binary")
         else:
-            if isinstance(val, basestring):
+            if isinstance(val, six.string_types):
                 if not typ:
                     self.set_type("xs:string")
                 else:

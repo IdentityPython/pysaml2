@@ -355,7 +355,7 @@ class PyObj(object):
         line.append("%sc_namespace = NAMESPACE" % (INDENT,))
         try:
             if self.value_type:
-                if isinstance(self.value_type, basestring):
+                if isinstance(self.value_type, six.string_types):
                     line.append("%sc_value_type = '%s'" % (INDENT, 
                                                             self.value_type))
                 else:
@@ -593,7 +593,7 @@ def _do(obj, target_namespace, cdict, prep):
     else:
         obj.done = True
         if req:
-            if isinstance(req, basestring):
+            if isinstance(req, six.string_types):
                 prep.append(req)
             else:
                 prep.extend(req)
@@ -1643,7 +1643,7 @@ def output(elem, target_namespace, eldict, ignore=None):
     for prep in preps:
         if prep:
             done = 1
-            if isinstance(prep, basestring):
+            if isinstance(prep, six.string_types):
                 print(prep)
             else:
                 for item in prep:

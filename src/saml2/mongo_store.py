@@ -21,6 +21,7 @@ from saml2.extension import mdattr
 from saml2.extension import ui
 from saml2 import xmldsig
 from saml2 import xmlenc
+import six
 
 
 ONTS = {
@@ -324,14 +325,14 @@ def protect(dic):
     res = {}
     for key, val in dic.items():
         key = key.replace(".", "__")
-        if isinstance(val, basestring):
+        if isinstance(val, six.string_types):
             pass
         elif isinstance(val, dict):
             val = protect(val)
         elif isinstance(val, list):
             li = []
             for va in val:
-                if isinstance(va, basestring):
+                if isinstance(va, six.string_types):
                     pass
                 elif isinstance(va, dict):
                     va = protect(va)
@@ -349,14 +350,14 @@ def unprotect(dic):
             pass
         else:
             key = key.replace("__", ".")
-        if isinstance(val, basestring):
+        if isinstance(val, six.string_types):
             pass
         elif isinstance(val, dict):
             val = unprotect(val)
         elif isinstance(val, list):
             li = []
             for va in val:
-                if isinstance(va, basestring):
+                if isinstance(va, six.string_types):
                     pass
                 elif isinstance(val, dict):
                     va = unprotect(va)

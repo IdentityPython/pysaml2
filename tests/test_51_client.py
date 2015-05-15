@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import base64
+import six
 import urllib
 import urlparse
 from saml2.xmldsig import SIG_RSA_SHA256
@@ -623,7 +624,7 @@ class TestClientWithDummy():
             IDP, "http://www.example.com/relay_state",
             binding=binding, response_binding=response_binding)
 
-        assert isinstance(sid, basestring)
+        assert isinstance(sid, six.string_types)
         assert len(http_args) == 4
         assert http_args["headers"][0][0] == "Location"
         assert http_args["data"] == []
@@ -643,7 +644,7 @@ class TestClientWithDummy():
             binding=binding, response_binding=response_binding)
 
         assert binding == auth_binding
-        assert isinstance(sid, basestring)
+        assert isinstance(sid, six.string_types)
         assert len(http_args) == 4
         assert http_args["headers"][0][0] == "Location"
         assert http_args["data"] == []

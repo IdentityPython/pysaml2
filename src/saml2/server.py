@@ -10,6 +10,7 @@ import os
 
 import importlib
 import shelve
+import six
 import threading
 
 from saml2 import saml
@@ -89,7 +90,7 @@ class Server(Entity):
         _spec = self.config.getattr("session_storage", "idp")
         if not _spec:
             return SessionStorage()
-        elif isinstance(_spec, basestring):
+        elif isinstance(_spec, six.string_types):
             if _spec.lower() == "memory":
                 return SessionStorage()
         else:  # Should be tuple
@@ -116,7 +117,7 @@ class Server(Entity):
         typ = ""
         if not dbspec:
             idb = {}
-        elif isinstance(dbspec, basestring):
+        elif isinstance(dbspec, six.string_types):
             idb = shelve.open(dbspec, writeback=True)
         else:  # database spec is a a 2-tuple (type, address)
             #print(>> sys.stderr, "DBSPEC: %s" % (dbspec,))
