@@ -164,8 +164,8 @@ def rndstr(size=16, alphabet=""):
     """
     rng = random.SystemRandom()
     if not alphabet:
-        alphabet = string.letters[0:52] + string.digits
-    return str().join(rng.choice(alphabet) for _ in range(size))
+        alphabet = string.ascii_letters[0:52] + string.digits
+    return type(alphabet)().join(rng.choice(alphabet) for _ in range(size))
 
 
 def sid():
