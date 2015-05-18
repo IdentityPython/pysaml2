@@ -4,6 +4,7 @@ import random
 
 import time
 import base64
+import six
 import sys
 import hmac
 import string
@@ -282,7 +283,7 @@ def _attrval(val, typ=""):
 
 
 def do_ava(val, typ=""):
-    if isinstance(val, basestring):
+    if isinstance(val, six.string_types):
         ava = saml.AttributeValue()
         ava.set_text(val)
         attrval = [ava]
@@ -310,7 +311,7 @@ def do_attribute(val, typ, key):
     if attrval:
         attr.attribute_value = attrval
 
-    if isinstance(key, basestring):
+    if isinstance(key, six.string_types):
         attr.name = key
     elif isinstance(key, tuple):  # 3-tuple or 2-tuple
         try:
@@ -424,7 +425,7 @@ def dynamic_importer(name, class_name=None):
     try:
         fp, pathname, description = imp.find_module(name)
     except ImportError:
-        print "unable to locate module: " + name
+        print("unable to locate module: " + name)
         return None, None
 
     try:

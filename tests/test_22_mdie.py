@@ -43,7 +43,7 @@ def test_construct_contact():
                           "__class__": _class(md.EmailAddress)}],
     }, ONTS)
 
-    print c
+    print(c)
     assert c.given_name.text == "Roland"
     assert c.sur_name.text == "Hedberg"
     assert c.email_address[0].text == "roland@catalogix.se"

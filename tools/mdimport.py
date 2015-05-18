@@ -35,7 +35,7 @@ for i in range(1, 10):
 
     _ = mdmd.keys()
 
-print time.time() - start
+print(time.time() - start)
 
 start = time.time()
 for i in range(1, 10):
@@ -44,4 +44,4 @@ for i in range(1, 10):
     mdf.load()
     _ = mdf.keys()
 
-print time.time() - start
+print(time.time() - start)

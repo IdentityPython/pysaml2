@@ -56,7 +56,11 @@ def test_valid_non_negative_integer():
 def test_valid_string():
     assert valid_string(u'example')
 
-    raises(NotValid, 'valid_string("02656c6c6f".decode("hex"))')
+    import codecs
+
+    raises(NotValid,
+           'valid_string(codecs.getdecoder("hex_codec")'
+           '(b"02656c6c6f")[0].decode("utf-8"))')
 
 
 def test_valid_anyuri():

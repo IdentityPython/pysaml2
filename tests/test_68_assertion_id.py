@@ -107,5 +107,5 @@ def test_basic_flow():
 
         final = sp.parse_assertion_id_request_response(xmlstr, binding)
 
-        print final.response
+        print(final.response)
         assert isinstance(final.response, Assertion)

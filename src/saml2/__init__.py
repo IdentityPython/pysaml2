@@ -19,6 +19,7 @@
 
 
 import logging
+import six
 from saml2.validate import valid_instance
 
 try:
@@ -173,7 +174,7 @@ class ExtensionElement(object):
         else:
             element_tree.tag = self.tag
 
-        for key, value in self.attributes.iteritems():
+        for key, value in iter(self.attributes.items()):
             element_tree.attrib[key] = value
 
         for child in self.children:
@@ -277,7 +278,7 @@ def _extension_element_from_element_tree(element_tree):
         namespace = None
         tag = elementc_tag
     extension = ExtensionElement(namespace=namespace, tag=tag)
-    for key, value in element_tree.attrib.iteritems():
+    for key, value in iter(element_tree.attrib.items()):
         extension.attributes[key] = value
     for child in element_tree:
         extension.children.append(_extension_element_from_element_tree(child))
@@ -302,7 +303,7 @@ class ExtensionContainer(object):
         # Fill in the instance members from the contents of the XML tree.
         for child in tree:
             self._convert_element_tree_to_member(child)
-        for attribute, value in tree.attrib.iteritems():
+        for attribute, value in iter(tree.attrib.items()):
             self._convert_element_attribute_to_member(attribute, value)
         self.text = tree.text
 
@@ -317,7 +318,7 @@ class ExtensionContainer(object):
     def _add_members_to_element_tree(self, tree):
         for child in self.extension_elements:
             child.become_child_element_of(tree)
-        for attribute, value in self.extension_attributes.iteritems():
+        for attribute, value in iter(self.extension_attributes.items()):
             tree.attrib[attribute] = value
         tree.text = self.text
 
@@ -399,7 +400,7 @@ def make_vals(val, klass, klass_inst=None, prop=None, part=False,
     """
     cinst = None
 
-    #print "make_vals(%s, %s)" % (val, klass)
+    #print("make_vals(%s, %s)" % (val, klass))
 
     if isinstance(val, dict):
         cinst = klass().loadd(val, base64encode=base64encode)
@@ -456,7 +457,7 @@ class SamlBase(ExtensionContainer):
             for child in self.c_child_order:
                 yield child
         else:
-            for _, values in self.__class__.c_children.iteritems():
+            for _, values in iter(self.__class__.c_children.items()):
                 yield values[0]
 
     def _convert_element_tree_to_member(self, child_tree):
@@ -507,7 +508,7 @@ class SamlBase(ExtensionContainer):
                 member.become_child_element_of(tree)
         # Convert the members of this class which are XML attributes.
         for xml_attribute, attribute_info in \
-                self.__class__.c_attributes.iteritems():
+                iter(self.__class__.c_attributes.items()):
             (member_name, member_type, required) = attribute_info
             member = getattr(self, member_name)
             if member is not None:
@@ -719,7 +720,7 @@ class SamlBase(ExtensionContainer):
         :return: The instance
         """
 
-        #print "set_text: %s" % (val,)
+        #print("set_text: %s" % (val,))
         if isinstance(val, bool):
             if val:
                 setattr(self, "text", "true")
@@ -727,7 +728,7 @@ class SamlBase(ExtensionContainer):
                 setattr(self, "text", "false")
         elif isinstance(val, int):
             setattr(self, "text", "%d" % val)
-        elif isinstance(val, basestring):
+        elif isinstance(val, six.string_types):
             setattr(self, "text", val)
         elif val is None:
             pass
@@ -751,7 +752,7 @@ class SamlBase(ExtensionContainer):
         """
 
         for prop, _typ, _req in self.c_attributes.values():
-            #print "# %s" % (prop)
+            #print("# %s" % (prop))
             if prop in ava:
                 if isinstance(ava[prop], bool):
                     setattr(self, prop, "%s" % ava[prop])
@@ -764,9 +765,9 @@ class SamlBase(ExtensionContainer):
             self.set_text(ava["text"], base64encode)
 
         for prop, klassdef in self.c_children.values():
-            #print "## %s, %s" % (prop, klassdef)
+            #print("## %s, %s" % (prop, klassdef))
             if prop in ava:
-                #print "### %s" % ava[prop]
+                #print("### %s" % ava[prop])
                 # means there can be a list of values
                 if isinstance(klassdef, list):
                     make_vals(ava[prop], klassdef[0], self, prop,
@@ -809,7 +810,7 @@ class SamlBase(ExtensionContainer):
                 continue
             svals = self.__dict__[key]
             ovals = other.__dict__[key]
-            if isinstance(svals, basestring):
+            if isinstance(svals, six.string_types):
                 if svals != ovals:
                     return False
             elif isinstance(svals, list):
@@ -902,7 +903,7 @@ def element_to_extension_element(element):
     exel.children.extend(element.extension_elements)
 
     for xml_attribute, (member_name, typ, req) in \
-            element.c_attributes.iteritems():
+            iter(element.c_attributes.items()):
         member_value = getattr(element, member_name)
         if member_value is not None:
             exel.attributes[xml_attribute] = member_value

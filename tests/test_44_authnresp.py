@@ -63,13 +63,13 @@ class TestAuthnResponse:
     
     def test_verify_1(self):
         xml_response = "%s" % (self._resp_,)
-        print xml_response
+        print(xml_response)
         self.ar.outstanding_queries = {"id12": "http://localhost:8088/sso"}
         self.ar.timeslack = 10000
         self.ar.loads(xml_response, decode=False)
         self.ar.verify()
         
-        print self.ar.__dict__
+        print(self.ar.__dict__)
         assert self.ar.came_from == 'http://localhost:8088/sso'
         assert self.ar.session_id() == "id12"
         assert self.ar.ava["givenName"] == IDENTITY["givenName"]
@@ -78,14 +78,14 @@ class TestAuthnResponse:
     
     def test_verify_signed_1(self):
         xml_response = self._sign_resp_
-        print xml_response
+        print(xml_response)
         
         self.ar.outstanding_queries = {"id12": "http://localhost:8088/sso"}
         self.ar.timeslack = 10000
         self.ar.loads(xml_response, decode=False)
         self.ar.verify()
         
-        print self.ar.__dict__
+        print(self.ar.__dict__)
         assert self.ar.came_from == 'http://localhost:8088/sso'
         assert self.ar.session_id() == "id12"
         assert self.ar.ava["sn"] == IDENTITY["surName"]
@@ -103,7 +103,7 @@ class TestAuthnResponse:
         self.ar.loads(xml_response, decode=False)
         self.ar.verify()
         
-        print self.ar.__dict__
+        print(self.ar.__dict__)
         assert self.ar.came_from == 'http://localhost:8088/foo'
         assert self.ar.session_id() == ID
         assert self.ar.name_id
@@ -117,7 +117,7 @@ class TestAuthnResponse:
         self.ar.loads(xml_response, decode=False)
         self.ar.verify()
 
-        print self.ar.assertion
+        print(self.ar.assertion)
         assert len(self.ar.assertion.authn_statement) == 1
         authn_info = self.ar.authn_info()
         assert len(authn_info) == 1

@@ -31,7 +31,8 @@ install_requires = [
     'pytz',
     'pyOpenSSL',
     'python-dateutil',
-    'argparse'
+    'argparse',
+    'six'
 ]
 
 tests_require = [

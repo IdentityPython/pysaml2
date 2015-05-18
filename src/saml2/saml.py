@@ -11,6 +11,7 @@ from saml2.validate import valid_domain_name
 import saml2
 from saml2 import SamlBase
 
+import six
 from saml2 import xmldsig as ds
 from saml2 import xmlenc as xenc
 
@@ -100,7 +101,7 @@ def _decode_attribute_value(typ, text):
 
 
 def _verify_value_type(typ, val):
-    #print "verify value type: %s, %s" % (typ, val)
+    #print("verify value type: %s, %s" % (typ, val))
     if typ == XSD + "string":
         try:
             return str(val)
@@ -192,7 +193,7 @@ class AttributeValueBase(SamlBase):
             val = base64.encodestring(val)
             self.set_type("xs:base64Binary")
         else:
-            if isinstance(val, basestring):
+            if isinstance(val, six.string_types):
                 if not typ:
                     self.set_type("xs:string")
                 else:
@@ -250,10 +251,10 @@ class AttributeValueBase(SamlBase):
         # Fill in the instance members from the contents of the XML tree.
         for child in tree:
             self._convert_element_tree_to_member(child)
-        for attribute, value in tree.attrib.iteritems():
+        for attribute, value in iter(tree.attrib.items()):
             self._convert_element_attribute_to_member(attribute, value)
         if tree.text:
-            #print "set_text:", tree.text
+            #print("set_text:", tree.text)
             # clear type
             #self.clear_type()
             self.set_text(tree.text)

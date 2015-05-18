@@ -240,7 +240,7 @@ def test_filter_attribute_value_assertions_0(AVA):
     ava = filter_attribute_value_assertions(AVA[3].copy(),
                                             p.get_attribute_restrictions(""))
 
-    print ava
+    print(ava)
     assert ava.keys() == ["surName"]
     assert ava["surName"] == ["Hedberg"]
 
@@ -258,7 +258,7 @@ def test_filter_attribute_value_assertions_1(AVA):
     ava = filter_attribute_value_assertions(AVA[0].copy(),
                                             p.get_attribute_restrictions(""))
 
-    print ava
+    print(ava)
     assert _eq(ava.keys(), ["givenName", "surName"])
     assert ava["surName"] == ["Jeter"]
     assert ava["givenName"] == ["Derek"]
@@ -266,7 +266,7 @@ def test_filter_attribute_value_assertions_1(AVA):
     ava = filter_attribute_value_assertions(AVA[1].copy(),
                                             p.get_attribute_restrictions(""))
 
-    print ava
+    print(ava)
     assert _eq(ava.keys(), ["surName"])
     assert ava["surName"] == ["Howard"]
 
@@ -283,20 +283,20 @@ def test_filter_attribute_value_assertions_2(AVA):
     ava = filter_attribute_value_assertions(AVA[0].copy(),
                                             p.get_attribute_restrictions(""))
 
-    print ava
+    print(ava)
     assert _eq(ava.keys(), [])
 
     ava = filter_attribute_value_assertions(AVA[1].copy(),
                                             p.get_attribute_restrictions(""))
 
-    print ava
+    print(ava)
     assert _eq(ava.keys(), ["givenName"])
     assert ava["givenName"] == ["Ryan"]
 
     ava = filter_attribute_value_assertions(AVA[3].copy(),
                                             p.get_attribute_restrictions(""))
 
-    print ava
+    print(ava)
     assert _eq(ava.keys(), ["givenName"])
     assert ava["givenName"] == ["Roland"]
 
@@ -307,8 +307,8 @@ def test_filter_attribute_value_assertions_2(AVA):
 def test_assertion_1(AVA):
     ava = Assertion(AVA[0])
 
-    print ava
-    print ava.__dict__
+    print(ava)
+    print(ava.__dict__)
 
     policy = Policy({
         "default": {
@@ -320,7 +320,7 @@ def test_assertion_1(AVA):
 
     ava = ava.apply_policy("", policy)
 
-    print ava
+    print(ava)
     assert _eq(ava.keys(), [])
 
     ava = Assertion(AVA[1].copy())
@@ -530,7 +530,7 @@ def test_filter_values_req_opt_4():
            "eduPersonAffiliation": ["staff"], "uid": ["rohe0002"]}
 
     ava = assertion.filter_on_demands(ava, rava, oava)
-    print ava
+    print(ava)
     assert _eq(ava.keys(), ['givenName', 'sn'])
     assert ava == {'givenName': ['Roland'], 'sn': ['Hedberg']}
 
@@ -772,7 +772,7 @@ def test_assertion_with_noop_attribute_conv():
                         policy, issuer=issuer, authn_decl=ACD,
                         authn_auth="authn_authn")
 
-    print msg
+    print(msg)
     for attr in msg.attribute_statement[0].attribute:
         assert attr.name_format == NAME_FORMAT_URI
         assert len(attr.attribute_value) == 1
@@ -820,7 +820,7 @@ def test_assertion_with_zero_attributes():
                         policy, issuer=issuer, authn_decl=ACD,
                         authn_auth="authn_authn")
 
-    print msg
+    print(msg)
     assert msg.attribute_statement == []
 
 
@@ -842,7 +842,7 @@ def test_assertion_with_authn_instant():
                         authn_auth="authn_authn",
                         authn_instant=1234567890)
 
-    print msg
+    print(msg)
     assert msg.authn_statement[0].authn_instant == "2009-02-13T23:31:30Z"
 
 

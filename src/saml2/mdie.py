@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+import six
+
 from saml2 import element_to_extension_element
 from saml2 import extension_elements_to_elements
 from saml2 import SamlBase
@@ -22,7 +24,7 @@ def _eval(val, onts, mdb_safe):
     :param onts: Schemas to be used in the conversion
     :return: The basic dictionary
     """
-    if isinstance(val, basestring):
+    if isinstance(val, six.string_types):
         val = val.strip()
         if not val:
             return None
@@ -140,7 +142,7 @@ def from_dict(val, onts, mdb_safe=False):
                     key = key.replace("__", ".")
                 res[key] = from_dict(v, onts)
             return res
-    elif isinstance(val, basestring):
+    elif isinstance(val, six.string_types):
         return val
     elif isinstance(val, list):
         return [from_dict(v, onts) for v in val]

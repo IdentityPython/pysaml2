@@ -144,7 +144,7 @@ class Conversation(object):
                     try:
                         logger.info("GET %s" % url)
                         _response = self.client.send(url, "GET")
-                    except Exception, err:
+                    except Exception as err:
                         raise FatalError("%s" % err)
 
                     content = _response.text
@@ -224,7 +224,7 @@ class Conversation(object):
                     raise OperationError()
             except (FatalError, InteractionNeeded, OperationError):
                 raise
-            except Exception, err:
+            except Exception as err:
                 self.err_check("exception", err, False)
 
         self.last_response = _response
@@ -300,7 +300,7 @@ class Conversation(object):
                 break
             except (FatalError, OperationError):
                 raise
-            except Exception, err:
+            except Exception as err:
                 #self.err_check("exception", err)
                 raise
 

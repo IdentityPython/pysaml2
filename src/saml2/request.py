@@ -50,7 +50,7 @@ class Request(object):
                                                 only_valid_cert=only_valid_cert)
         except TypeError:
             raise
-        except Exception, excp:
+        except Exception as excp:
             logger.info("EXCEPTION: %s", excp)
 
         if not self.message:
@@ -62,7 +62,7 @@ class Request(object):
 
         try:
             valid_instance(self.message)
-        except NotValid, exc:
+        except NotValid as exc:
             logger.error("Not valid request: %s" % exc.args[0])
             raise
 
@@ -74,8 +74,8 @@ class Request(object):
                                      self.timeslack).timetuple()
         lower = time_util.shift_time(time_util.time_a_while_ago(days=1),
                                      - self.timeslack).timetuple()
-        # print "issue_instant: %s" % self.message.issue_instant
-        # print "%s < x < %s" % (lower, upper)
+        # print("issue_instant: %s" % self.message.issue_instant)
+        # print("%s < x < %s" % (lower, upper))
         issued_at = time_util.str_to_time(self.message.issue_instant)
         return issued_at > lower and issued_at < upper
 

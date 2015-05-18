@@ -72,4 +72,4 @@ info = {
     },
 }
 
-print json.dumps(info)
+print(json.dumps(info))

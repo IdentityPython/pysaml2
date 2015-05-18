@@ -2,6 +2,7 @@ import logging
 from urllib import urlencode
 from urlparse import parse_qs
 from urlparse import urlsplit
+import six
 import time
 import ldap
 from saml2 import SAMLError
@@ -77,7 +78,7 @@ def create_return_url(base, query, **kwargs):
 
     for key, values in parse_qs(query).items():
         if key in kwargs:
-            if isinstance(kwargs[key], basestring):
+            if isinstance(kwargs[key], six.string_types):
                 kwargs[key] = [kwargs[key]]
             kwargs[key].extend(values)
         else:
@@ -86,7 +87,7 @@ def create_return_url(base, query, **kwargs):
     if part.query:
         for key, values in parse_qs(part.query).items():
             if key in kwargs:
-                if isinstance(kwargs[key], basestring):
+                if isinstance(kwargs[key], six.string_types):
                     kwargs[key] = [kwargs[key]]
                 kwargs[key].extend(values)
             else:
@@ -160,7 +161,7 @@ class UsernamePasswordMako(UserAuthnMethod):
         """
 
         #logger.debug("verify(%s)" % request)
-        if isinstance(request, basestring):
+        if isinstance(request, six.string_types):
             _dict = parse_qs(request)
         elif isinstance(request, dict):
             _dict = request

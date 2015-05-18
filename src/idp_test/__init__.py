@@ -1,3 +1,4 @@
+from __future__ import print_function
 from importlib import import_module
 import json
 import os
@@ -250,7 +251,7 @@ class SAML2client(object):
         """
         """
 
-        print >> sys.stderr, 80 * ":"
+        print(80 * ":", file=sys.stderr)
         hndlr2.setFormatter(formatter_2)
         memhndlr.setTarget(hndlr2)
         memhndlr.flush()
@@ -288,8 +289,8 @@ class SAML2client(object):
 
         try:
             self.setup()
-        except (AttributeError, ToOld), err:
-            print >> sys.stdout, "Configuration Error: %s" % err
+        except (AttributeError, ToOld) as err:
+            print("Configuration Error: %s" % err, file=sys.stderr)
 
         self.client = Saml2Client(self.sp_config)
         conv = None
@@ -323,17 +324,17 @@ class SAML2client(object):
             self.test_log = conv.test_output
             tsum = self.test_summation(self.args.oper)
             err = None
-        except CheckError, err:
+        except CheckError as err:
             self.test_log = conv.test_output
             tsum = self.test_summation(self.args.oper)
-        except FatalError, err:
+        except FatalError as err:
             if conv:
                 self.test_log = conv.test_output
                 self.test_log.append(exception_trace("RUN", err))
             else:
                 self.test_log = exception_trace("RUN", err)
             tsum = self.test_summation(self.args.oper)
-        except Exception, err:
+        except Exception as err:
             if conv:
                 self.test_log = conv.test_output
                 self.test_log.append(exception_trace("RUN", err))
@@ -344,7 +345,7 @@ class SAML2client(object):
         if pp:
             pp.pprint(tsum)
         else:
-            print >> sys.stdout, json.dumps(tsum)
+            print(json.dumps(tsum), file=sys.stdout)
 
         if tsum["status"] > 1 or self.args.debug or err:
             self.output_log(memoryhandler, streamhandler)
@@ -391,21 +392,21 @@ class SAML2client(object):
 
                 lista.append(item)
 
-        print json.dumps(lista)
+        print(json.dumps(lista))
 
     def _get_operation(self, operation):
         return self.operations.OPERATIONS[operation]
 
     def make_meta(self):
         self.sp_configure(True)
-        print entity_descriptor(self.sp_config)
+        print(entity_descriptor(self.sp_config))
 
     def list_conf_id(self):
         sys.path.insert(0, ".")
         mod = import_module("config")
         _res = dict([(key, cnf["description"]) for key, cnf in
                     mod.CONFIG.items()])
-        print json.dumps(_res)
+        print(json.dumps(_res))
 
     def verify_metadata(self):
         self.json_config = self.json_config_file()
@@ -421,4 +422,4 @@ class SAML2client(object):
         chk = CheckSaml2IntMetaData()
         output = []
         res = chk(env, output)
-        print >> sys.stdout, res
+        print(res, file=sys.stdout)

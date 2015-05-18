@@ -69,7 +69,7 @@ if args.id:
     desc, xmldoc = entities_descriptor(eds, valid_for, args.name, args.id,
                                args.sign, secc)
     valid_instance(desc)
-    print desc.to_string(nspair)
+    print(desc.to_string(nspair))
 else:
     for eid in eds:
         if args.sign:
@@ -81,4 +81,4 @@ else:
 
         valid_instance(eid)
         xmldoc = metadata_tostring_fix(eid, nspair, xmldoc)
-        print xmldoc
+        print(xmldoc)

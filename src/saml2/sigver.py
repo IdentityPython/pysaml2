@@ -232,7 +232,7 @@ def _make_vals(val, klass, seccont, klass_inst=None, prop=None, part=False,
     """
     cinst = None
 
-    #print "make_vals(%s, %s)" % (val, klass)
+    #print("make_vals(%s, %s)" % (val, klass))
 
     if isinstance(val, dict):
         cinst = _instance(klass, val, seccont, base64encode=base64encode,
@@ -261,7 +261,7 @@ def _instance(klass, ava, seccont, base64encode=False, elements_to_sign=None):
     instance = klass()
 
     for prop in instance.c_attributes.values():
-        #print "# %s" % (prop)
+        #print("# %s" % (prop))
         if prop in ava:
             if isinstance(ava[prop], bool):
                 setattr(instance, prop, "%s" % ava[prop])
@@ -274,9 +274,9 @@ def _instance(klass, ava, seccont, base64encode=False, elements_to_sign=None):
         instance.set_text(ava["text"], base64encode)
 
     for prop, klassdef in instance.c_children.values():
-        #print "## %s, %s" % (prop, klassdef)
+        #print("## %s, %s" % (prop, klassdef))
         if prop in ava:
-            #print "### %s" % ava[prop]
+            #print("### %s" % ava[prop])
             if isinstance(klassdef, list):
                 # means there can be a list of values
                 _make_vals(ava[prop], klassdef[0], seccont, instance, prop,
@@ -316,9 +316,9 @@ def signed_instance_factory(instance, seccont, elements_to_sign=None):
             signed_xml = seccont.sign_statement(
                 signed_xml, node_name=node_name, node_id=nodeid)
 
-        #print "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-        #print "%s" % signed_xml
-        #print "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        #print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+        #print("%s" % signed_xml)
+        #print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
         return signed_xml
     else:
         return instance
@@ -406,7 +406,7 @@ def cert_from_key_info(key_info, ignore_age=False):
     """
     res = []
     for x509_data in key_info.x509_data:
-        #print "X509Data",x509_data
+        #print("X509Data",x509_data)
         x509_certificate = x509_data.x509_certificate
         cert = x509_certificate.text.strip()
         cert = "\n".join(split_len("".join([s.strip() for s in
@@ -886,15 +886,15 @@ class CryptoBackendXmlSec1(CryptoBackend):
 
         if self.__DEBUG:
             try:
-                print " ".join(com_list)
+                print( " ".join(com_list))
             except TypeError:
-                print "cert_type", cert_type
-                print "cert_file", cert_file
-                print "node_name", node_name
-                print "fil", fil
+                print("cert_type", cert_type)
+                print("cert_file", cert_file)
+                print("node_name", node_name)
+                print("fil", fil)
                 raise
-            print "%s: %s" % (cert_file, os.access(cert_file, os.F_OK))
-            print "%s: %s" % (fil, os.access(fil, os.F_OK))
+            print("%s: %s" % (cert_file, os.access(cert_file, os.F_OK)))
+            print("%s: %s" % (fil, os.access(fil, os.F_OK)))
 
         (_stdout, stderr, _output) = self._run_xmlsec(com_list, [fil],
                                                       exception=SignatureError)
@@ -930,7 +930,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         try:
             if validate_output:
                 parse_xmlsec_output(p_err)
-        except XmlsecError, exc:
+        except XmlsecError as exc:
             logger.error(LOG_LINE_2 % (p_out, p_err, exc))
             raise
 
@@ -1339,7 +1339,7 @@ class SecurityContext(object):
     def _check_signature(self, decoded_xml, item, node_name=NODE_NAME,
                          origdoc=None, id_attr="", must=False,
                          only_valid_cert=False):
-        #print item
+        #print(item)
         try:
             issuer = item.issuer.text.strip()
         except AttributeError:
@@ -1374,7 +1374,7 @@ class SecurityContext(object):
         if not certs:
             raise MissingKey("%s" % issuer)
 
-        #print certs
+        #print(certs)
 
         verified = False
         last_pem_file = None
@@ -1402,13 +1402,13 @@ class SecurityContext(object):
                                              node_id=item.id, id_attr=id_attr):
                         verified = True
                         break
-            except XmlsecError, exc:
+            except XmlsecError as exc:
                 logger.error("check_sig: %s" % exc)
                 pass
-            except SignatureError, exc:
+            except SignatureError as exc:
                 logger.error("check_sig: %s" % exc)
                 pass
-            except Exception, exc:
+            except Exception as exc:
                 logger.error("check_sig: %s" % exc)
                 raise
 
@@ -1612,7 +1612,7 @@ class SecurityContext(object):
         #         try:
         #             self._check_signature(decoded_xml, assertion,
         #                                   class_name(assertion), origdoc)
-        #         except Exception, exc:
+        #         except Exception as exc:
         #             logger.error("correctly_signed_response: %s" % exc)
         #             raise
 
@@ -1863,4 +1863,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.listsigalgs:
-        print '\n'.join([key for key, value in SIGNER_ALGS.items()])
+        print('\n'.join([key for key, value in SIGNER_ALGS.items()]))

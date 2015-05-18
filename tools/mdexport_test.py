@@ -65,7 +65,7 @@ def main():
 
     if metad:
         metad.load()
-        print metad.dumps()
+        print(metad.dumps())
 
 
 if __name__ == '__main__':

@@ -85,7 +85,7 @@ def test_create_artifact_resolve():
 
         msg_id, msg = idp.create_artifact_resolve(b64art, destination, sid())
 
-        print msg
+        print(msg)
 
         args = idp.use_soap(msg, destination, None, False)
 
@@ -93,7 +93,7 @@ def test_create_artifact_resolve():
 
         ar = sp.parse_artifact_resolve(args["data"])
 
-        print ar
+        print(ar)
 
         assert ar.artifact.text == b64art
 
@@ -177,7 +177,7 @@ def test_artifact_flow():
                                              authn=AUTHN,
                                              **resp_args)
 
-        print response
+        print(response)
 
         # with the response in hand create an artifact
 
@@ -201,7 +201,7 @@ def test_artifact_flow():
         # Got an artifact want to replace it with the real message
         msg_id, msg = sp.create_artifact_resolve(artifact3, destination, sid())
 
-        print msg
+        print(msg)
 
         hinfo = sp.use_soap(msg, destination, None, False)
 
@@ -211,7 +211,7 @@ def test_artifact_flow():
 
         ar = idp.parse_artifact_resolve(msg)
 
-        print ar
+        print(ar)
 
         assert ar.artifact.text == artifact3
 

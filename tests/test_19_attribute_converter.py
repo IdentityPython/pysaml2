@@ -28,13 +28,13 @@ class TestAC():
         self.acs = attribute_converter.ac_factory(full_path("attributemaps"))
 
     def test_setup(self):
-        print self.acs
+        print(self.acs)
         assert len(self.acs) == 3
         assert _eq([a.name_format for a in self.acs],[BASIC_NF, URI_NF, SAML1] )
 
     def test_ava_fro_1(self):
         ats = saml.attribute_statement_from_string(STATEMENT1)
-        #print ats
+        #print(ats)
         ava = None
 
         for ac in self.acs:
@@ -45,7 +45,7 @@ class TestAC():
             # break if we have something
             if ava:
                 break
-        print ava.keys()
+        print(ava.keys())
         assert _eq(ava.keys(), ['givenName', 'displayName', 'uid',
                                 'eduPersonNickname', 'street',
                                 'eduPersonScopedAffiliation',
@@ -56,12 +56,12 @@ class TestAC():
 
     def test_ava_fro_2(self):
         ats = saml.attribute_statement_from_string(STATEMENT2)
-        #print ats
+        #print(ats)
         ava = {}
         for ac in self.acs:
             ava.update(ac.fro(ats))
 
-        print ava.keys()
+        print(ava.keys())
         assert _eq(ava.keys(), ['eduPersonEntitlement', 'eduPersonAffiliation',
                                 'uid', 'mail', 'givenName', 'sn'])
 
@@ -146,7 +146,7 @@ class TestAC():
     #
     #     result = attribute_converter.ava_fro(self.acs, attr)
     #
-    #     print result
+    #     print(result)
     #     assert result == {'givenName': [], 'sn': [], 'title': []}
 
     def test_to_local_name_from_basic(self):
@@ -197,7 +197,7 @@ def test_noop_attribute_conversion():
     aconv = AttributeConverterNOOP(URI_NF)
     res = aconv.to_(ava)
 
-    print res
+    print(res)
     assert len(res) == 2
     for attr in res:
         assert len(attr.attribute_value) == 1
