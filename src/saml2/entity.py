@@ -501,6 +501,12 @@ class Entity(HTTPBase):
             else:
                 msg.extension_elements = extensions
 
+    def fix_cert_str(self, tmp_cert_str):
+        tmp_cert_str = "%s" % self.sec.my_cert
+        tmp_cert_str = tmp_cert_str.replace("-----BEGIN CERTIFICATE-----\n", "")
+        tmp_cert_str = tmp_cert_str.replace("\n-----END CERTIFICATE-----\n", "")
+        return tmp_cert_str
+
     def _response(self, in_response_to, consumer_url=None, status=None,
                   issuer=None, sign=False, to_sign=None,
                   encrypt_assertion=False, encrypt_assertion_self_contained=False, encrypted_advice_attributes=False,
@@ -576,6 +582,7 @@ class Entity(HTTPBase):
 
                 if to_sign_advice:
                     response = signed_instance_factory(response, self.sec, to_sign_advice)
+                tmp_cert_str = self.fix_cert_str("%s" % encrypt_cert)
                 _, cert_file = make_temp("%s" % encrypt_cert, decode=False)
                 response = cbxs.encrypt_assertion(response, cert_file,
                                                   pre_encryption_part(), node_xpath=node_xpath)
@@ -603,12 +610,9 @@ class Entity(HTTPBase):
                 if encrypt_cert is not None and not encrypt_advice:
                     _, cert_file = make_temp("%s" % encrypt_cert, decode=False)
                 else:
-                    tmp_cert_str = "%s" % self.sec.my_cert
-                    if "-----BEGIN CERTIFICATE-----" not in tmp_cert_str:
-                        tmp_cert_str = "-----BEGIN CERTIFICATE-----\n" + tmp_cert_str
-                    if "-----END CERTIFICATE-----" not in tmp_cert_str:
-                        tmp_cert_str =  tmp_cert_str + "\n-----END CERTIFICATE-----\n"
+                    tmp_cert_str = self.fix_cert_str("%s" % self.sec.my_cert)
                     _, cert_file = make_temp(tmp_cert_str, decode=False)
+
                 response = cbxs.encrypt_assertion(response, cert_file,
                                                   pre_encryption_part())
                                                   # template(response.assertion.id))
