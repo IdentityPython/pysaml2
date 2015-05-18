@@ -380,12 +380,12 @@ class Server(Entity):
                 assertion.signature = pre_signature_part(assertion.id, self.sec.my_cert, 1)
                 to_sign.append((class_name(assertion), assertion.id))
 
-        if not encrypted_advice_attributes:
-            if sign_assertion:
-                if assertion.advice and assertion.advice.assertion:
-                    for tmp_assertion in assertion.advice.assertion:
-                        tmp_assertion.signature = pre_signature_part(tmp_assertion.id, self.sec.my_cert, 1)
-                        to_sign.append((class_name(tmp_assertion), tmp_assertion.id))
+        #if not encrypted_advice_attributes:
+        #    if sign_assertion:
+        #        if assertion.advice and assertion.advice.assertion:
+        #            for tmp_assertion in assertion.advice.assertion:
+        #                tmp_assertion.signature = pre_signature_part(tmp_assertion.id, self.sec.my_cert, 1)
+        #                to_sign.append((class_name(tmp_assertion), tmp_assertion.id))
 
         # Store which assertion that has been sent to which SP about which
         # subject.

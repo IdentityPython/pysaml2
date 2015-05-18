@@ -579,6 +579,12 @@ class Entity(HTTPBase):
             encrypt_advice = False
             if encrypted_advice_attributes and response.assertion.advice is not None \
                     and len(response.assertion.advice.assertion) == 1:
+                to_sign_advice = []
+                if sign_assertion is not None and sign_assertion:
+                    if response.assertion.advice and response.assertion.advice.assertion:
+                        for tmp_assertion in response.assertion.advice.assertion:
+                            tmp_assertion.signature = pre_signature_part(tmp_assertion.id, self.sec.my_cert, 1)
+                            to_sign_advice.append((class_name(tmp_assertion), tmp_assertion.id))
                 tmp_assertion = response.assertion.advice.assertion[0]
                 response.assertion.advice.encrypted_assertion = []
                 response.assertion.advice.encrypted_assertion.append(EncryptedAssertion())
@@ -587,12 +593,6 @@ class Entity(HTTPBase):
                 else:
                     response.assertion.advice.encrypted_assertion[0].add_extension_element(tmp_assertion)
                 response.assertion.advice.assertion = []
-                to_sign_advice = []
-                if sign_assertion is not None and sign_assertion:
-                    if response.assertion.advice and response.assertion.advice.assertion:
-                        for tmp_assertion in response.assertion.advice.assertion:
-                            tmp_assertion.signature = pre_signature_part(tmp_assertion.id, self.sec.my_cert, 1)
-                            to_sign_advice.append((class_name(tmp_assertion), tmp_assertion.id))
                 if encrypt_assertion_self_contained:
                     advice_tag = response.assertion.advice._to_element_tree().tag
                     assertion_tag = tmp_assertion._to_element_tree().tag
@@ -608,6 +608,14 @@ class Entity(HTTPBase):
                 if encrypt_assertion:
                     response = response_from_string(response)
             if encrypt_assertion:
+                to_sign_assertion = []
+                if sign_assertion is not None and sign_assertion:
+                    _assertions = response.assertion
+                    if not isinstance(response.assertion, list):
+                        _assertions = [response.assertion]
+                    for _assertion in _assertions:
+                        _assertion.signature = pre_signature_part(_assertion.id, self.sec.my_cert, 1)
+                        to_sign_assertion.append((class_name(_assertion), _assertion.id))
                 if encrypt_assertion_self_contained:
                     try:
                         assertion_tag = response.assertion._to_element_tree().tag
@@ -618,13 +626,12 @@ class Entity(HTTPBase):
                         assertion_tag)
                 else:
                     response = pre_encrypt_assertion(response)
-                to_sign_assertion = []
-                if sign_assertion is not None and sign_assertion:
-                    response.assertion.signature = pre_signature_part(response.assertion.id, self.sec.my_cert, 1)
-                    to_sign_assertion.append((class_name(response.assertion), response.assertion.id))
                 if to_sign_assertion:
                     response = signed_instance_factory(response, self.sec, to_sign_assertion)
                 response = self._encrypt_assertion(encrypt_cert_assertion, sp_entity_id, response)
+            else:
+                if to_sign:
+                    response = signed_instance_factory(response, self.sec, to_sign)
             if sign:
                 return signed_instance_factory(response, self.sec, sign_class)
             else:
