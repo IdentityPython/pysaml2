@@ -399,7 +399,7 @@ class Server(Entity):
             self.session_db.store_assertion(assertion, to_sign)
 
         return self._response(in_response_to, consumer_url, status, issuer,
-                              sign_response, to_sign, encrypt_assertion=encrypt_assertion,
+                              sign_response, to_sign,sp_entity_id=sp_entity_id, encrypt_assertion=encrypt_assertion,
                               encrypt_cert=encrypt_cert,
                               encrypt_assertion_self_contained=encrypt_assertion_self_contained,
                               encrypted_advice_attributes=encrypted_advice_attributes,sign_assertion=sign_assertion,

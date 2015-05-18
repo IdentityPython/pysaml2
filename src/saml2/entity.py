@@ -501,16 +501,31 @@ class Entity(HTTPBase):
             else:
                 msg.extension_elements = extensions
 
-    def fix_cert_str(self, tmp_cert_str):
-        tmp_cert_str = "%s" % self.sec.my_cert
-        tmp_cert_str = tmp_cert_str.replace("-----BEGIN CERTIFICATE-----\n", "")
-        tmp_cert_str = tmp_cert_str.replace("\n-----END CERTIFICATE-----\n", "")
-        return tmp_cert_str
+    def _encrypt_assertion(self, encrypt_cert, sp_entity_id, response, node_xpath=None):
+        _certs = []
+        cbxs = CryptoBackendXmlSec1(self.config.xmlsec_binary)
+        if encrypt_cert:
+            _certs = []
+            _certs.append(encrypt_cert)
+        elif sp_entity_id is not None:
+            _certs = self.metadata.certs(sp_entity_id, "any", "encrypt")
+        exception = None
+        for _cert in _certs:
+            try:
+                _, cert_file = make_temp(_cert, decode=False)
+                response = cbxs.encrypt_assertion(response, self.sec.cert_file,
+                                                  pre_encryption_part(), node_xpath=node_xpath)
+                return response
+            except Exception as ex:
+                exception = ex
+                pass
+        if exception:
+            raise exception
 
     def _response(self, in_response_to, consumer_url=None, status=None,
-                  issuer=None, sign=False, to_sign=None,
+                  issuer=None, sign=False, to_sign=None, sp_entity_id=None,
                   encrypt_assertion=False, encrypt_assertion_self_contained=False, encrypted_advice_attributes=False,
-                  encrypt_cert=None,sign_assertion=None, **kwargs):
+                  encrypt_cert=None, encrypt_cert_assertion=None,sign_assertion=None, **kwargs):
         """ Create a Response.
             Encryption:
                 encrypt_assertion must be true for encryption to be performed. If encrypted_advice_attributes also is
@@ -529,6 +544,7 @@ class Entity(HTTPBase):
         :param kwargs: Extra key word arguments
         :return: A Response instance
         """
+
 
         if not status:
             status = success_status_factory()
@@ -582,16 +598,11 @@ class Entity(HTTPBase):
 
                 if to_sign_advice:
                     response = signed_instance_factory(response, self.sec, to_sign_advice)
-                tmp_cert_str = self.fix_cert_str("%s" % encrypt_cert)
-                _, cert_file = make_temp("%s" % encrypt_cert, decode=False)
-                response = cbxs.encrypt_assertion(response, cert_file,
-                                                  pre_encryption_part(), node_xpath=node_xpath)
-                encrypt_advice = True
+                response = self._encrypt_assertion(encrypt_cert, sp_entity_id, response, node_xpath=node_xpath)
                 if encrypt_assertion:
                     response = response_from_string(response)
             if encrypt_assertion:
                 if encrypt_assertion_self_contained:
-                    assertion_tag = None
                     try:
                         assertion_tag = response.assertion._to_element_tree().tag
                     except:
@@ -607,15 +618,7 @@ class Entity(HTTPBase):
                     to_sign_assertion.append((class_name(response.assertion), response.assertion.id))
                 if to_sign_assertion:
                     response = signed_instance_factory(response, self.sec, to_sign_assertion)
-                if encrypt_cert is not None and not encrypt_advice:
-                    _, cert_file = make_temp("%s" % encrypt_cert, decode=False)
-                else:
-                    tmp_cert_str = self.fix_cert_str("%s" % self.sec.my_cert)
-                    _, cert_file = make_temp(tmp_cert_str, decode=False)
-
-                response = cbxs.encrypt_assertion(response, cert_file,
-                                                  pre_encryption_part())
-                                                  # template(response.assertion.id))
+                response = self._encrypt_assertion(encrypt_cert_assertion, sp_entity_id, response)
             if sign:
                 return signed_instance_factory(response, self.sec, sign_class)
             else:

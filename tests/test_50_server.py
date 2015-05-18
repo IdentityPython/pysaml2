@@ -678,7 +678,7 @@ class TestServer1():
             name_id=name_id,
             sign_response=False,
             sign_assertion=False,
-            encrypt_assertion=True,
+            encrypt_assertion=False,
             encrypt_assertion_self_contained=True,
             encrypted_advice_attributes=True,
             encrypt_cert=cert_str,
