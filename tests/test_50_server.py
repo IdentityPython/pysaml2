@@ -90,9 +90,40 @@ class TestServer1():
         conf = config.SPConfig()
         conf.load_file("server_conf")
         self.client = client.Saml2Client(conf)
+        self.name_id = self.server.ident.transient_nameid(
+            "urn:mace:example.com:saml:roland:sp", "id12")
+        self.ava = {"givenName": ["Derek"], "surName": ["Jeter"],
+               "mail": ["derek@nyy.mlb.com"], "title": "The man"}
 
     def teardown_class(self):
         self.server.close()
+
+    def verify_assertion(self, assertion):
+        assert assertion
+        assert assertion[0].attribute_statement
+
+        ava = ava = get_ava(assertion[0])
+
+        assert ava ==\
+               {'mail': ['derek@nyy.mlb.com'], 'givenname': ['Derek'], 'surname': ['Jeter'], 'title': ['The man']}
+
+
+    def verify_encrypted_assertion(self, assertion, decr_text):
+        self.verify_assertion(assertion)
+        assert assertion[0].signature is None
+
+        assert 'EncryptedAssertion><encas1:Assertion xmlns:encas0="http://www.w3.org/2001/XMLSchema-instance" ' \
+               'xmlns:encas1="urn:oasis:names:tc:SAML:2.0:assertion"' in decr_text
+
+    def verify_advice_assertion(self, resp, decr_text):
+        assert resp.assertion[0].signature is None
+
+        assert resp.assertion[0].advice.encrypted_assertion[0].extension_elements
+
+        assertion = extension_elements_to_elements(resp.assertion[0].advice.encrypted_assertion[0].extension_elements,
+                                       [saml, samlp])
+        self.verify_encrypted_assertion(assertion, decr_text)
+
 
     def test_issuer(self):
         issuer = self.server._issuer()
@@ -414,21 +445,71 @@ class TestServer1():
         # value. Just that there should be one
         assert assertion.signature.signature_value.text != ""
 
+    def test_signed_response_1(self):
+
+
+        signed_resp = self.server.create_authn_response(
+            self.ava,
+            "id12",  # in_response_to
+            "http://lingon.catalogix.se:8087/",  # consumer_url
+            "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
+            name_id=self.name_id,
+            sign_response=True,
+            sign_assertion=True,
+        )
+
+        sresponse = response_from_string(signed_resp)
+
+        valid = self.server.sec.verify_signature(signed_resp,
+                                                 self.server.config.cert_file,
+                                                 node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
+                                                 node_id=sresponse.id,
+                                                 id_attr="")
+        assert valid
+
+        valid = self.server.sec.verify_signature(signed_resp,
+                                                 self.server.config.cert_file,
+                                                 node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
+                                                 node_id=sresponse.assertion[0].id,
+                                                 id_attr="")
+        assert valid
+
+        self.verify_assertion(sresponse.assertion)
+
+    def test_signed_response_2(self):
+        signed_resp = self.server.create_authn_response(
+            self.ava,
+            "id12",  # in_response_to
+            "http://lingon.catalogix.se:8087/",  # consumer_url
+            "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
+            name_id=self.name_id,
+            sign_response=True,
+            sign_assertion=False,
+        )
+
+        sresponse = response_from_string(signed_resp)
+
+        valid = self.server.sec.verify_signature(signed_resp,
+                                                 self.server.config.cert_file,
+                                                 node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
+                                                 node_id=sresponse.id,
+                                                 id_attr="")
+        assert valid
+
+        assert sresponse.assertion[0].signature == None
+
+
 
     def test_encrypted_signed_response_1(self):
-        name_id = self.server.ident.transient_nameid(
-            "urn:mace:example.com:saml:roland:sp", "id12")
-        ava = {"givenName": ["Derek"], "surName": ["Jeter"],
-               "mail": ["derek@nyy.mlb.com"], "title": "The man"}
 
         cert_str, cert_key_str = generate_cert()
 
         signed_resp = self.server.create_authn_response(
-            ava,
+            self.ava,
             "id12",  # in_response_to
             "http://lingon.catalogix.se:8087/",  # consumer_url
             "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
-            name_id=name_id,
+            name_id=self.name_id,
             sign_response=True,
             sign_assertion=True,
             encrypt_assertion=True,
@@ -483,19 +564,14 @@ class TestServer1():
         assert valid
 
     def test_encrypted_signed_response_2(self):
-        name_id = self.server.ident.transient_nameid(
-            "urn:mace:example.com:saml:roland:sp", "id12")
-        ava = {"givenName": ["Derek"], "surName": ["Jeter"],
-               "mail": ["derek@nyy.mlb.com"], "title": "The man"}
-
         cert_str, cert_key_str = generate_cert()
 
         signed_resp = self.server.create_authn_response(
-            ava,
+            self.ava,
             "id12",  # in_response_to
             "http://lingon.catalogix.se:8087/",  # consumer_url
             "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
-            name_id=name_id,
+            name_id=self.name_id,
             sign_response=True,
             sign_assertion=True,
             encrypt_assertion=True,
@@ -541,19 +617,14 @@ class TestServer1():
         assert valid
 
     def test_encrypted_signed_response_3(self):
-        name_id = self.server.ident.transient_nameid(
-            "urn:mace:example.com:saml:roland:sp", "id12")
-        ava = {"givenName": ["Derek"], "surName": ["Jeter"],
-               "mail": ["derek@nyy.mlb.com"], "title": "The man"}
-
         cert_str, cert_key_str = generate_cert()
 
         signed_resp = self.server.create_authn_response(
-            ava,
+            self.ava,
             "id12",  # in_response_to
             "http://lingon.catalogix.se:8087/",  # consumer_url
             "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
-            name_id=name_id,
+            name_id=self.name_id,
             sign_response=True,
             sign_assertion=True,
             encrypt_assertion=True,
@@ -596,19 +667,14 @@ class TestServer1():
         assert valid
 
     def test_encrypted_signed_response_4(self):
-        name_id = self.server.ident.transient_nameid(
-            "urn:mace:example.com:saml:roland:sp", "id12")
-        ava = {"givenName": ["Derek"], "surName": ["Jeter"],
-               "mail": ["derek@nyy.mlb.com"], "title": "The man"}
-
         cert_str, cert_key_str = generate_cert()
 
         signed_resp = self.server.create_authn_response(
-            ava,
+            self.ava,
             "id12",  # in_response_to
             "http://lingon.catalogix.se:8087/",  # consumer_url
             "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
-            name_id=name_id,
+            name_id=self.name_id,
             sign_response=True,
             sign_assertion=True,
             encrypt_assertion=True,
@@ -663,104 +729,218 @@ class TestServer1():
         assert valid
 
     def test_encrypted_response_1(self):
-        name_id = self.server.ident.transient_nameid(
-            "urn:mace:example.com:saml:roland:sp", "id12")
-        ava = {"givenName": ["Derek"], "surName": ["Jeter"],
-               "mail": ["derek@nyy.mlb.com"], "title": "The man"}
+        cert_str_advice, cert_key_str_advice = generate_cert()
 
-        cert_str, cert_key_str = generate_cert()
-
-        signed_resp = self.server.create_authn_response(
-            ava,
+        _resp = self.server.create_authn_response(
+            self.ava,
             "id12",  # in_response_to
             "http://lingon.catalogix.se:8087/",  # consumer_url
             "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
-            name_id=name_id,
+            name_id=self.name_id,
             sign_response=False,
             sign_assertion=False,
             encrypt_assertion=False,
             encrypt_assertion_self_contained=True,
             encrypted_advice_attributes=True,
-            encrypt_cert=cert_str,
+            encrypt_cert_advice=cert_str_advice,
         )
 
-        sresponse = response_from_string(signed_resp)
+        sresponse = response_from_string(_resp)
 
         assert sresponse.signature is None
 
-        _, key_file = make_temp("%s" % cert_key_str, decode=False)
+        _, key_file = make_temp("%s" % cert_key_str_advice, decode=False)
 
-        decr_text = self.server.sec.decrypt(signed_resp, key_file)
+        decr_text = self.server.sec.decrypt(_resp, key_file)
 
         resp = samlp.response_from_string(decr_text)
 
-        assert resp.assertion[0].signature is None
-
-        assert resp.assertion[0].advice.encrypted_assertion[0].extension_elements
-
-        assertion = extension_elements_to_elements(resp.assertion[0].advice.encrypted_assertion[0].extension_elements,
-                                       [saml, samlp])
-        assert assertion
-        assert assertion[0].attribute_statement
-
-        ava = ava = get_ava(assertion[0])
-
-        assert ava ==\
-               {'mail': ['derek@nyy.mlb.com'], 'givenname': ['Derek'], 'surname': ['Jeter'], 'title': ['The man']}
-
-        assert 'EncryptedAssertion><encas1:Assertion xmlns:encas0="http://www.w3.org/2001/XMLSchema-instance" ' \
-               'xmlns:encas1="urn:oasis:names:tc:SAML:2.0:assertion"' in decr_text
-
-        assert assertion[0].signature is None
+        self.verify_advice_assertion(resp, decr_text)
 
     def test_encrypted_response_2(self):
-        name_id = self.server.ident.transient_nameid(
-            "urn:mace:example.com:saml:roland:sp", "id12")
-        ava = {"givenName": ["Derek"], "surName": ["Jeter"],
-               "mail": ["derek@nyy.mlb.com"], "title": "The man"}
 
-        cert_str, cert_key_str = generate_cert()
+        cert_str_advice, cert_key_str_advice = generate_cert()
 
-        signed_resp = self.server.create_authn_response(
-            ava,
+        _resp = self.server.create_authn_response(
+            self.ava,
             "id12",  # in_response_to
             "http://lingon.catalogix.se:8087/",  # consumer_url
             "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
-            name_id=name_id,
+            name_id=self.name_id,
+            sign_response=False,
+            sign_assertion=False,
+            encrypt_assertion=True,
+            encrypt_assertion_self_contained=True,
+            encrypted_advice_attributes=True,
+            encrypt_cert_advice=cert_str_advice,
+        )
+
+        sresponse = response_from_string(_resp)
+
+        assert sresponse.signature is None
+
+        decr_text_1 = self.server.sec.decrypt(_resp, self.client.config.key_file)
+
+        _, key_file = make_temp("%s" % cert_key_str_advice, decode=False)
+
+        decr_text_2 = self.server.sec.decrypt(decr_text_1, key_file)
+
+        resp = samlp.response_from_string(decr_text_2)
+
+        resp.assertion = extension_elements_to_elements(resp.encrypted_assertion[0].extension_elements, [saml, samlp])
+
+        self.verify_advice_assertion(resp, decr_text_2)
+
+    def test_encrypted_response_3(self):
+        cert_str_assertion, cert_key_str_assertion = generate_cert()
+
+        _resp = self.server.create_authn_response(
+            self.ava,
+            "id12",  # in_response_to
+            "http://lingon.catalogix.se:8087/",  # consumer_url
+            "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
+            name_id=self.name_id,
             sign_response=False,
             sign_assertion=False,
             encrypt_assertion=True,
             encrypt_assertion_self_contained=True,
             encrypted_advice_attributes=False,
-            encrypt_cert=cert_str,
+            encrypt_cert_assertion=cert_str_assertion
         )
 
-        sresponse = response_from_string(signed_resp)
+        sresponse = response_from_string(_resp)
 
         assert sresponse.signature is None
 
-        _, key_file = make_temp("%s" % cert_key_str, decode=False)
+        _, key_file = make_temp("%s" % cert_key_str_assertion, decode=False)
 
-        decr_text = self.server.sec.decrypt(signed_resp, key_file)
+        decr_text = self.server.sec.decrypt(_resp, key_file)
 
         resp = samlp.response_from_string(decr_text)
 
         assert resp.encrypted_assertion[0].extension_elements
 
         assertion = extension_elements_to_elements(resp.encrypted_assertion[0].extension_elements, [saml, samlp])
-        assert assertion
-        assert assertion[0].attribute_statement
 
-        ava = ava = get_ava(assertion[0])
+        self.verify_encrypted_assertion(assertion, decr_text)
 
-        assert ava ==\
-               {'mail': ['derek@nyy.mlb.com'], 'givenname': ['Derek'], 'surname': ['Jeter'], 'title': ['The man']}
+    def test_encrypted_response_4(self):
+        _resp = self.server.create_authn_response(
+            self.ava,
+            "id12",  # in_response_to
+            "http://lingon.catalogix.se:8087/",  # consumer_url
+            "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
+            name_id=self.name_id,
+            sign_response=False,
+            sign_assertion=False,
+            encrypt_assertion=True,
+            encrypt_assertion_self_contained=True,
+            encrypted_advice_attributes=False,
+        )
 
-        assert 'EncryptedAssertion><encas1:Assertion xmlns:encas0="http://www.w3.org/2001/XMLSchema-instance" ' \
-               'xmlns:encas1="urn:oasis:names:tc:SAML:2.0:assertion"' in decr_text
+        sresponse = response_from_string(_resp)
 
-        assert assertion[0].signature is None
+        assert sresponse.signature is None
 
+        decr_text = self.server.sec.decrypt(_resp, self.client.config.key_file)
+
+        resp = samlp.response_from_string(decr_text)
+
+        assert resp.encrypted_assertion[0].extension_elements
+
+        assertion = extension_elements_to_elements(resp.encrypted_assertion[0].extension_elements, [saml, samlp])
+
+        self.verify_encrypted_assertion(assertion, decr_text)
+
+    def test_encrypted_response_5(self):
+        _resp = self.server.create_authn_response(
+            self.ava,
+            "id12",  # in_response_to
+            "http://lingon.catalogix.se:8087/",  # consumer_url
+            "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
+            name_id=self.name_id,
+            sign_response=False,
+            sign_assertion=False,
+            encrypt_assertion=False,
+            encrypt_assertion_self_contained=True,
+            encrypted_advice_attributes=True,
+        )
+
+        sresponse = response_from_string(_resp)
+
+        assert sresponse.signature is None
+
+        decr_text = self.server.sec.decrypt(_resp, self.client.config.key_file)
+
+        resp = samlp.response_from_string(decr_text)
+
+        self.verify_advice_assertion(resp, decr_text)
+
+    def test_encrypted_response_6(self):
+        cert_str_advice, cert_key_str_advice = generate_cert()
+
+        cert_str_assertion, cert_key_str_assertion = generate_cert()
+
+        _resp = self.server.create_authn_response(
+            self.ava,
+            "id12",  # in_response_to
+            "http://lingon.catalogix.se:8087/",  # consumer_url
+            "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
+            name_id=self.name_id,
+            sign_response=False,
+            sign_assertion=False,
+            encrypt_assertion=True,
+            encrypt_assertion_self_contained=True,
+            encrypted_advice_attributes=True,
+            encrypt_cert_advice=cert_str_advice,
+            encrypt_cert_assertion=cert_str_assertion
+        )
+
+        sresponse = response_from_string(_resp)
+
+        assert sresponse.signature is None
+
+        _, key_file = make_temp("%s" % cert_key_str_assertion, decode=False)
+
+        decr_text_1 = self.server.sec.decrypt(_resp, key_file)
+
+        _, key_file = make_temp("%s" % cert_key_str_advice, decode=False)
+
+        decr_text_2 = self.server.sec.decrypt(decr_text_1, key_file)
+
+        resp = samlp.response_from_string(decr_text_2)
+
+        resp.assertion = extension_elements_to_elements(resp.encrypted_assertion[0].extension_elements, [saml, samlp])
+
+        self.verify_advice_assertion(resp, decr_text_2)
+
+    def test_encrypted_response_7(self):
+        _resp = self.server.create_authn_response(
+            self.ava,
+            "id12",  # in_response_to
+            "http://lingon.catalogix.se:8087/",  # consumer_url
+            "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
+            name_id=self.name_id,
+            sign_response=False,
+            sign_assertion=False,
+            encrypt_assertion=True,
+            encrypt_assertion_self_contained=True,
+            encrypted_advice_attributes=True,
+        )
+
+        sresponse = response_from_string(_resp)
+
+        assert sresponse.signature is None
+
+        decr_text_1 = self.server.sec.decrypt(_resp, self.client.config.key_file)
+
+        decr_text_2 = self.server.sec.decrypt(decr_text_1, self.client.config.key_file)
+
+        resp = samlp.response_from_string(decr_text_2)
+
+        resp.assertion = extension_elements_to_elements(resp.encrypted_assertion[0].extension_elements, [saml, samlp])
+
+        self.verify_advice_assertion(resp, decr_text_2)
 
     def test_slo_http_post(self):
         soon = time_util.in_a_while(days=1)
@@ -899,4 +1079,4 @@ class TestServerLogout():
 if __name__ == "__main__":
     ts = TestServer1()
     ts.setup_class()
-    ts.test_encrypted_response_1()
+    ts.test_signed_response_1()

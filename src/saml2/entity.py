@@ -512,8 +512,14 @@ class Entity(HTTPBase):
         exception = None
         for _cert in _certs:
             try:
+                begin_cert = "-----BEGIN CERTIFICATE-----\n"
+                end_cert = "\n-----END CERTIFICATE-----\n"
+                if begin_cert not in _cert:
+                    _cert = "%s%s" % (begin_cert, _cert)
+                if end_cert not in _cert:
+                    _cert = "%s%s" % (_cert, end_cert)
                 _, cert_file = make_temp(_cert, decode=False)
-                response = cbxs.encrypt_assertion(response, self.sec.cert_file,
+                response = cbxs.encrypt_assertion(response, cert_file,
                                                   pre_encryption_part(), node_xpath=node_xpath)
                 return response
             except Exception as ex:
@@ -525,7 +531,7 @@ class Entity(HTTPBase):
     def _response(self, in_response_to, consumer_url=None, status=None,
                   issuer=None, sign=False, to_sign=None, sp_entity_id=None,
                   encrypt_assertion=False, encrypt_assertion_self_contained=False, encrypted_advice_attributes=False,
-                  encrypt_cert=None, encrypt_cert_assertion=None,sign_assertion=None, **kwargs):
+                  encrypt_cert_advice=None, encrypt_cert_assertion=None,sign_assertion=None, **kwargs):
         """ Create a Response.
             Encryption:
                 encrypt_assertion must be true for encryption to be performed. If encrypted_advice_attributes also is
@@ -598,7 +604,7 @@ class Entity(HTTPBase):
 
                 if to_sign_advice:
                     response = signed_instance_factory(response, self.sec, to_sign_advice)
-                response = self._encrypt_assertion(encrypt_cert, sp_entity_id, response, node_xpath=node_xpath)
+                response = self._encrypt_assertion(encrypt_cert_advice, sp_entity_id, response, node_xpath=node_xpath)
                 if encrypt_assertion:
                     response = response_from_string(response)
             if encrypt_assertion:
