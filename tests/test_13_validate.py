@@ -2,11 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import saml2
-import xmldsig as ds
 
 from saml2 import saml
 from saml2 import samlp
-from saml2 import md
 from saml2.validate import valid_duration, MustValueError
 from saml2.validate import valid_unsigned_short
 from saml2.validate import valid_non_negative_integer
@@ -58,7 +56,11 @@ def test_valid_non_negative_integer():
 def test_valid_string():
     assert valid_string(u'example')
 
-    raises(NotValid, 'valid_string("02656c6c6f".decode("hex"))')
+    import codecs
+
+    raises(NotValid,
+           'valid_string(codecs.getdecoder("hex_codec")'
+           '(b"02656c6c6f")[0].decode("utf-8"))')
 
 
 def test_valid_anyuri():

@@ -64,4 +64,4 @@ info = {
     "name_format": NAME_FORMAT_URI
 }
 
-print json.dumps(info)
+print(json.dumps(info))

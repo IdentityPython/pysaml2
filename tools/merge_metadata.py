@@ -12,8 +12,8 @@ from saml2.extension import mdrpi
 from saml2.extension import mdui
 from saml2.extension import shibmd
 from saml2.extension import ui
-import xmldsig
-import xmlenc
+from saml2 import xmldsig
+from saml2 import xmlenc
 
 import argparse
 
@@ -98,6 +98,6 @@ for line in open(args.conf).readlines():
 
     mds.metadata[spec[1]] = metad
 
-print mds.dumps(args.output)
+print(mds.dumps(args.output))
 
 

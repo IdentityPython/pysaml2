@@ -297,7 +297,8 @@ class SSO(Service):
 
         return resp_args, _resp
 
-    def do(self, query, binding_in, relay_state="", encrypt_cert=None):
+    def do(self, query, binding_in, relay_state="", encrypt_cert=None,
+           **kwargs):
         """
 
         :param query: The request
@@ -604,7 +605,7 @@ def not_found(environ, start_response):
 #    return subject, sp_entity_id
 
 class SLO(Service):
-    def do(self, request, binding, relay_state="", encrypt_cert=None):
+    def do(self, request, binding, relay_state="", encrypt_cert=None, **kwargs):
 
         logger.info("--- Single Log Out Service ---")
         try:
@@ -1064,5 +1065,5 @@ if __name__ == '__main__':
     PORT = CONFIG.PORT
 
     SRV = make_server(HOST, PORT, application)
-    print "IdP listening on %s:%s" % (HOST, PORT)
+    print("IdP listening on %s:%s" % (HOST, PORT))
     SRV.serve_forever()

@@ -26,8 +26,8 @@ from saml2.samlp import STATUS_UNKNOWN_PRINCIPAL
 from saml2.samlp import STATUS_UNSUPPORTED_BINDING
 from saml2.samlp import STATUS_RESPONDER
 
-import xmldsig as ds
-import xmlenc as xenc
+from saml2 import xmldsig as ds
+from saml2 import xmlenc as xenc
 
 from saml2 import samlp
 from saml2 import class_name
@@ -205,7 +205,7 @@ def for_me(conditions, myself):
             if audience.text.strip() == myself:
                 return True
             else:
-                #print "Not for me: %s != %s" % (audience.text.strip(), myself)
+                #print("Not for me: %s != %s" % (audience.text.strip(), myself))
                 pass
 
     return False
@@ -328,7 +328,7 @@ class StatusResponse(object):
             logger.exception("EXCEPTION: %s", excp)
             raise
 
-        #print "<", self.response
+        #print("<", self.response)
 
         return self._postamble()
 
@@ -360,8 +360,8 @@ class StatusResponse(object):
                                      self.timeslack).timetuple()
         lower = time_util.shift_time(time_util.time_a_while_ago(days=1),
                                      -self.timeslack).timetuple()
-        # print "issue_instant: %s" % self.response.issue_instant
-        # print "%s < x < %s" % (lower, upper)
+        # print("issue_instant: %s" % self.response.issue_instant)
+        # print("%s < x < %s" % (lower, upper))
         issued_at = str_to_time(self.response.issue_instant)
         return lower < issued_at < upper
 
@@ -1108,7 +1108,7 @@ class AssertionIDResponse(object):
             logger.exception("EXCEPTION: %s", excp)
             raise
 
-        #print "<", self.response
+        #print("<", self.response)
 
         return self._postamble()
 

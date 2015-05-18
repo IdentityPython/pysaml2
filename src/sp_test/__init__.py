@@ -1,3 +1,4 @@
+from __future__ import print_function
 import json
 import pprint
 import argparse
@@ -123,7 +124,7 @@ class Client(object):
             self.idp_config.key_file = os.path.join(self.args.keysdir, "non_md_key.pem")
             for f in [self.idp_config.cert_file, self.idp_config.key_file]:
                 if not os.path.isfile(f):
-                    print "File not found: %s" % os.path.abspath(f)
+                    print("File not found: %s" % os.path.abspath(f))
                     raise
 
         self.idp = Server(config=self.idp_config)
@@ -153,7 +154,7 @@ class Client(object):
         """
         """
 
-        print >> sys.stderr, 80 * ":"
+        print(80 * ":", file=sys.stderr)
         hndlr2.setFormatter(formatter_2)
         memhndlr.setTarget(hndlr2)
         memhndlr.flush()
@@ -187,10 +188,11 @@ class Client(object):
                 try:
                     oper = self.tests.OPERATIONS[self.args.oper]
                 except ValueError:
-                    print >> sys.stderr, "Undefined testcase " + self.args.oper
+                    print("Undefined testcase " + self.args.oper,
+                          file=sys.stderr)
                     return
             else:
-                print >> sys.stderr, "Undefined testcase " + self.args.oper
+                print("Undefined testcase " + self.args.oper, file=sys.stderr)
                 return
 
         if self.args.pretty:
@@ -210,17 +212,17 @@ class Client(object):
             self.test_log = conv.test_output
             tsum = self.test_summation(self.args.oper)
             err = None
-        except CheckError, err:
+        except CheckError as err:
             self.test_log = conv.test_output
             tsum = self.test_summation(self.args.oper)
-        except FatalError, err:
+        except FatalError as err:
             if conv:
                 self.test_log = conv.test_output
                 self.test_log.append(exception_trace("RUN", err))
             else:
                 self.test_log = exception_trace("RUN", err)
             tsum = self.test_summation(self.args.oper)
-        except Exception, err:
+        except Exception as err:
             if conv:
                 conv.test_output.append({"status": CRITICAL,
                          "name": "test driver error",
@@ -237,7 +239,7 @@ class Client(object):
         if pp:
             pp.pprint(tsum)
         else:
-            print >> sys.stdout, json.dumps(tsum)
+            print(json.dumps(tsum), file=sys.stdout)
 
         if tsum["status"] > 1 or self.args.debug or err:
             self.output_log(memoryhandler, streamhandler)
@@ -290,7 +292,7 @@ class Client(object):
         for key, val in self.operations.OPERATIONS.items():
             res.append({"id": key, "name": val["name"]})
 
-        print json.dumps(res)
+        print(json.dumps(res))
 
     def verify_metadata(self):
         pass

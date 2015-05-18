@@ -14,7 +14,7 @@ import traceback
 import saml2
 from urlparse import parse_qs, urlparse
 from saml2.md import Extensions
-import xmldsig as ds
+from saml2 import xmldsig as ds
 
 from StringIO import StringIO
 
@@ -356,7 +356,7 @@ class SAML2Plugin(object):
                                              relay_state=came_from)
 
                 logger.debug("ht_args: %s" % ht_args)
-            except Exception, exc:
+            except Exception as exc:
                 logger.exception(exc)
                 raise Exception(
                     "Failed to construct the AuthnRequest: %s" % exc)
@@ -403,12 +403,12 @@ class SAML2Plugin(object):
                     post["SAMLResponse"][0], binding, self.outstanding_queries,
                     self.outstanding_certs)
 
-            except Exception, excp:
+            except Exception as excp:
                 logger.exception("Exception: %s" % (excp,))
                 raise
 
             session_info = authresp.session_info()
-        except TypeError, excp:
+        except TypeError as excp:
             logger.exception("Exception: %s" % (excp,))
             return None
 
@@ -526,17 +526,17 @@ class SAML2Plugin(object):
                         session_info = self._eval_authn_response(
                             environ, post,
                             binding=binding)
-                except Exception, err:
+                except Exception as err:
                     environ["s2repoze.saml_error"] = err
                     return {}
-        except TypeError, exc:
+        except TypeError as exc:
             # might be a ECP (=SOAP) response
             body = environ.get('s2repoze.body', None)
             if body:
                 # might be a ECP response
                 try:
                     session_info = self.do_ecp_response(body, environ)
-                except Exception, err:
+                except Exception as err:
                     environ["post.fieldstorage"] = post
                     environ["s2repoze.saml_error"] = err
                     return {}

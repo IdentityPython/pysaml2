@@ -12,8 +12,8 @@ from saml2.extension import ui
 from pathutils import full_path
 from saml2.mdstore import MetadataStore
 from saml2.server import Server
-import xmldsig
-import xmlenc
+from saml2 import xmldsig
+from saml2 import xmlenc
 
 ONTS = {
     saml.NAMESPACE: saml,
@@ -160,7 +160,7 @@ def test_idp_policy_filter():
         policy = idp.config.getattr("policy", "idp")
         ava = policy.filter(ava, "urn:mace:example.com:saml:roland:sp", idp.metadata)
 
-        print ava
+        print(ava)
         assert ava.keys() == ["eduPersonTargetedID"]  # because no entity category
 
 if __name__ == "__main__":

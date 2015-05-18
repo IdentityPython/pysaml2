@@ -1,4 +1,4 @@
-from dircache import listdir
+from __future__ import print_function
 import logging
 import os
 import sys
@@ -113,8 +113,8 @@ def repack_cert(cert):
 
 
 class MetaData(object):
-    def __init__(self, onts, attrc, metadata='', node_name=None, check_validity=True,
-                 security=None, **kwargs):
+    def __init__(self, onts, attrc, metadata='', node_name=None,
+                 check_validity=True, security=None, **kwargs):
         self.onts = onts
         self.attrc = attrc
         self.metadata = metadata
@@ -360,9 +360,8 @@ class InMemoryMetaData(MetaData):
 
         # have I seen this entity_id before ? If so if log: ignore it
         if entity_descr.entity_id in self.entity:
-            print >> sys.stderr, \
-                "Duplicated Entity descriptor (entity id: '%s')" % \
-                entity_descr.entity_id
+            print("Duplicated Entity descriptor (entity id: '%s')" % 
+                  entity_descr.entity_id, file=sys.stderr)
             return
 
         _ent = to_dict(entity_descr, self.onts)
@@ -404,7 +403,7 @@ class InMemoryMetaData(MetaData):
         else:
             try:
                 valid_instance(self.entities_descr)
-            except NotValid, exc:
+            except NotValid as exc:
                 logger.error(exc.args[0])
                 return
 
@@ -589,7 +588,7 @@ class MetaDataLoader(MetaDataFile):
         module, attr = func[:i], func[i + 1:]
         try:
             mod = import_module(module)
-        except Exception, e:
+        except Exception as e:
             raise RuntimeError(
                 'Cannot find metadata provider function %s: "%s"' % (func, e))
 
@@ -616,7 +615,8 @@ class MetaDataExtern(InMemoryMetaData):
     Accessible but HTTP GET.
     """
 
-    def __init__(self, onts, attrc, url=None, security=None, cert=None, http=None, **kwargs):
+    def __init__(self, onts, attrc, url=None, security=None, cert=None,
+                 http=None, **kwargs):
         """
         :params onts:
         :params attrc:
@@ -764,7 +764,7 @@ class MetadataStore(object):
             key = args[0]
             # if library read every file in the library
             if os.path.isdir(key):
-                files = [f for f in listdir(key) if isfile(join(key, f))]
+                files = [f for f in os.listdir(key) if isfile(join(key, f))]
                 for fil in files:
                     _fil = join(key, fil)
                     _md = MetaDataFile(self.onts, self.attrc, _fil)
@@ -827,20 +827,28 @@ class MetadataStore(object):
 
                 # Separately handle MDExtern
                 if MDloader == MetaDataExtern:
-                    item['http'] = self.http
-                    item['security'] = self.security
+                    kwargs = {
+                        'http': self.http,
+                        'security': self.security
+                    }
+                else:
+                    kwargs = {}
 
                 for key in item['metadata']:
                     # Separately handle MetaDataFile and directory
                     if MDloader == MetaDataFile and os.path.isdir(key[0]):
-                        files = [f for f in listdir(key[0]) if isfile(join(key[0], f))]
+                        files = [f for f in os.listdir(key[0]) if isfile(join(key[0], f))]
                         for fil in files:
                             _fil = join(key[0], fil)
                             _md = MetaDataFile(self.onts, self.attrc, _fil)
                             _md.load()
                             self.metadata[_fil] = _md
                         return
-                    _md = MDloader(self.onts, self.attrc, *key)
+
+                    if len(key) == 2:
+                        kwargs["cert"] = key[1]
+
+                    _md = MDloader(self.onts, self.attrc, key[0], **kwargs)
                     _md.load()
                     self.metadata[key[0]] = _md
 
@@ -1147,7 +1155,7 @@ class MetadataStore(object):
             for ent_id, ent_desc in _md.items():
                 if descriptor in ent_desc:
                     if ent_id in res:
-                        #print "duplicated entity_id: %s" % res
+                        #print("duplicated entity_id: %s" % res)
                         pass
                     else:
                         res.append(ent_id)

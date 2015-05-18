@@ -24,7 +24,7 @@ def test_base_request():
 
         mid, nmr = sp.create_name_id_mapping_request(policy, nameid, destination)
 
-        print nmr
+        print(nmr)
 
         assert isinstance(nmr, NameIDMappingRequest)
 
@@ -44,7 +44,7 @@ def test_request_response():
 
         mid, nmr = sp.create_name_id_mapping_request(policy, nameid, destination)
 
-        print nmr
+        print(nmr)
 
         args = sp.use_soap(nmr, destination)
 
@@ -58,7 +58,7 @@ def test_request_response():
         idp_response = idp.create_name_id_mapping_response(
             name_id, in_response_to=in_response_to)
 
-        print idp_response
+        print(idp_response)
 
         ht_args = sp.use_soap(idp_response)
 
@@ -66,7 +66,7 @@ def test_request_response():
 
         _resp = sp.parse_name_id_mapping_request_response(ht_args["data"], binding)
 
-        print _resp.response
+        print(_resp.response)
 
         r_name_id = _resp.response.name_id
 

@@ -7,4 +7,4 @@ __author__ = 'rhoerbe'
 import json, sys
 jdata = json.load(sys.stdin)
 for k in jdata:
-    print k["id"]
+    print(k["id"])

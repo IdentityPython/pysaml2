@@ -6,18 +6,17 @@
 
 __author__ = 'roland.hedberg@adm.umu.se (Roland Hedberg)'
 
-import unittest
 try:
   from xml.etree import ElementTree
 except ImportError:
   from elementtree import ElementTree
 import saml2
 
-import saml2_data, ds_data, samlp_data
+import samlp_data
 
 from saml2 import saml
 from saml2 import samlp
-import xmldsig as ds
+from saml2 import xmldsig as ds
 
 
 # class TestRequestAbstractType:
@@ -83,7 +82,7 @@ class TestStatusCode:
         self.status_code.value = samlp.STATUS_RESPONDER
         self.status_code.status_code = samlp.StatusCode(
             value=samlp.STATUS_REQUEST_DENIED)
-        print self.status_code.__dict__
+        print(self.status_code.__dict__)
         new_status_code = samlp.status_code_from_string(self.status_code.to_string())
         assert new_status_code.value == samlp.STATUS_RESPONDER
         assert new_status_code.status_code.value == \
