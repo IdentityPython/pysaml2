@@ -3,6 +3,7 @@ import hmac
 import logging
 import time
 import cgi
+import six
 
 from urllib import quote
 from urlparse import parse_qs
@@ -61,7 +62,7 @@ class Response(object):
             mte = self.mako_lookup.get_template(self.mako_template)
             return [mte.render(**argv)]
         else:
-            if isinstance(message, basestring):
+            if isinstance(message, six.string_types):
                 return [message]
             else:
                 return message
@@ -165,7 +166,7 @@ def extract(environ, empty=False, err=False):
     """
     formdata = cgi.parse(environ['wsgi.input'], environ, empty, err)
     # Remove single entries from lists
-    for key, value in formdata.iteritems():
+    for key, value in iter(formdata.items()):
         if len(value) == 1:
             formdata[key] = value[0]
     return formdata

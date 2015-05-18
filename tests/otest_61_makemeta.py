@@ -84,9 +84,9 @@ def test_org_1():
         "url": [("http://example.com","en")],
     }
     org = metadata.do_organization_info(desc)
-    print org
+    print(org)
     assert isinstance(org, md.Organization)
-    print org.keyswv()
+    print(org.keyswv())
     assert _eq(org.keyswv(), ['organization_name',
                 'organization_display_name','organization_url'])
     assert len(org.organization_name) == 3
@@ -100,7 +100,7 @@ def test_org_2():
         "url": ("http://example.com","en"),
     }
     org = metadata.do_organization_info(desc)
-    print org
+    print(org)
     assert _eq(org.keyswv(), ['organization_name',
                 'organization_display_name','organization_url'])
     assert len(org.organization_name) == 3
@@ -129,7 +129,7 @@ def test_contact_0():
     assert _eq(contact_person[0].keyswv(), ['given_name', 'sur_name', 
                                             'contact_type', 'telephone_number',
                                             "email_address"])
-    print contact_person[0]
+    print(contact_person[0])
     person = contact_person[0]
     assert person.contact_type == "technical"
     assert isinstance(person.given_name, md.GivenName)
@@ -145,7 +145,7 @@ def test_contact_0():
 def test_do_endpoints():
     eps = metadata.do_endpoints(SP["service"]["sp"]["endpoints"],
                                     metadata.ENDPOINTS["sp"])
-    print eps
+    print(eps)
     assert _eq(eps.keys(), ["assertion_consumer_service", 
                             "single_logout_service"])
                             
@@ -168,7 +168,7 @@ def test_required_attributes():
                                 SP["service"]["sp"]["required_attributes"],
                                 attrconverters, is_required="true")
     assert len(ras) == len(SP["service"]["sp"]["required_attributes"])
-    print ras[0]
+    print(ras[0])
     assert ras[0].name == 'urn:oid:2.5.4.4'
     assert ras[0].name_format == NAME_FORMAT_URI
     assert ras[0].is_required == "true"
@@ -179,7 +179,7 @@ def test_optional_attributes():
                                 SP["service"]["sp"]["optional_attributes"],
                                 attrconverters)
     assert len(ras) == len(SP["service"]["sp"]["optional_attributes"])
-    print ras[0]
+    print(ras[0])
     assert ras[0].name == 'urn:oid:2.5.4.12'
     assert ras[0].name_format == NAME_FORMAT_URI
     assert ras[0].is_required == "false"
@@ -200,7 +200,7 @@ def test_do_sp_sso_descriptor():
     assert spsso.want_assertions_signed == "true"
     assert len (spsso.attribute_consuming_service) == 1
     acs = spsso.attribute_consuming_service[0]
-    print acs.keyswv()
+    print(acs.keyswv())
     assert _eq(acs.keyswv(), ['requested_attribute', 'service_name',
                                  'service_description', 'index'])
     assert acs.service_name[0].text == SP["name"]
@@ -218,7 +218,7 @@ def test_do_sp_sso_descriptor_2():
     spsso = metadata.do_spsso_descriptor(conf)
 
     assert isinstance(spsso, md.SPSSODescriptor)
-    print spsso.keyswv()
+    print(spsso.keyswv())
     assert _eq(spsso.keyswv(), ['authn_requests_signed',
                                 'attribute_consuming_service',
                                 'single_logout_service',
@@ -229,11 +229,11 @@ def test_do_sp_sso_descriptor_2():
 
     exts = spsso.extensions.extension_elements
     assert len(exts) == 1
-    print exts
+    print(exts)
     idpd = saml2.extension_element_to_element(exts[0],
                                               idpdisc.ELEMENT_FROM_STRING,
                                               namespace=idpdisc.NAMESPACE)
-    print idpd
+    print(idpd)
     assert idpd.location == "http://example.com/sp/ds"
     assert idpd.index == "0"
     assert idpd.binding == "urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol"
@@ -241,13 +241,13 @@ def test_do_sp_sso_descriptor_2():
 def test_entity_description():
     #confd = eval(open("../tests/server.config").read())
     confd = SPConfig().load_file("server_conf")
-    print confd.attribute_converters
+    print(confd.attribute_converters)
     entd = metadata.entity_descriptor(confd)
     assert entd is not None
-    print entd.keyswv()
+    print(entd.keyswv())
     assert _eq(entd.keyswv(), ['valid_until', 'entity_id', 'contact_person',
                                 'spsso_descriptor', 'organization'])
-    print entd
+    print(entd)
     assert entd.entity_id == "urn:mace:example.com:saml:roland:sp"
 
 def test_do_idp_sso_descriptor():
@@ -261,7 +261,7 @@ def test_do_idp_sso_descriptor():
                                 "extensions"])
     exts = idpsso.extensions.extension_elements
     assert len(exts) == 2
-    print exts
+    print(exts)
     inst = saml2.extension_element_to_element(exts[0],
                                               shibmd.ELEMENT_FROM_STRING,
                                               namespace=shibmd.NAMESPACE)

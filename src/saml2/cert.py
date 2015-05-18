@@ -165,10 +165,10 @@ class OpenSSLWrapper(object):
                 fk = open(k_f, "wt")
 
                 if request:
-                    fc.write(tmp_cert)
+                    fc.write(tmp_cert.decode('utf-8'))
                 else:
-                    fc.write(tmp_cert)
-                fk.write(tmp_key)
+                    fc.write(tmp_cert.decode('utf-8'))
+                fk.write(tmp_key.decode('utf-8'))
                 filesCreated = True
                 try:
                     fc.close()
@@ -352,7 +352,7 @@ class OpenSSLWrapper(object):
                 crypto.verify(ca_cert, signature, cert_certificate,
                               cert_algorithm)
                 return True, "Signed certificate is valid and correctly signed by CA certificate."
-            except crypto.Error, e:
+            except crypto.Error as e:
                 return False, "Certificate is incorrectly signed."
-        except Exception, e:
+        except Exception as e:
             return False, "Certificate is not valid for an unknown reason."

@@ -942,7 +942,7 @@ class Entity(HTTPBase):
 
             try:
                 response = response_cls(self.sec, **kwargs)
-            except Exception, exc:
+            except Exception as exc:
                 logger.info("%s" % exc)
                 raise
 
@@ -953,13 +953,13 @@ class Entity(HTTPBase):
 
             try:
                 response = response.loads(xmlstr, False, origxml=origxml)
-            except SigverError, err:
+            except SigverError as err:
                 logger.error("Signature Error: %s" % err)
                 raise
             except UnsolicitedResponse:
                 logger.error("Unsolicited response")
                 raise
-            except Exception, err:
+            except Exception as err:
                 if "not well-formed" in "%s" % err:
                     logger.error("Not well-formed XML")
                     raise

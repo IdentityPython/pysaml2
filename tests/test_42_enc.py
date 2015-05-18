@@ -26,7 +26,7 @@ AUTHN = {
 
 def test_pre_enc():
     tmpl = pre_encryption_part()
-    print tmpl
+    print(tmpl)
     assert "%s" % tmpl == TMPL
 
 
@@ -41,7 +41,7 @@ def test_reshuffle_response():
 
     resp2 = pre_encrypt_assertion(resp_)
 
-    print resp2
+    print(resp2)
     assert resp2.encrypted_assertion.extension_elements
 
 
@@ -75,7 +75,7 @@ def test_enc1():
     (_stdout, _stderr, output) = crypto._run_xmlsec(
         com_list, [tmpl], exception=EncryptError, validate_output=False)
 
-    print output
+    print(output)
     assert _stderr == ""
     assert _stdout == ""
 
@@ -94,7 +94,7 @@ def test_enc2():
     enc_resp = crypto.encrypt_assertion(resp_, full_path("pubkey.pem"),
                                         pre_encryption_part())
 
-    print enc_resp
+    print(enc_resp)
     assert enc_resp
 
 if __name__ == "__main__":

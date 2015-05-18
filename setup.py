@@ -31,14 +31,15 @@ install_requires = [
     'pytz',
     'pyOpenSSL',
     'python-dateutil',
-    'argparse'
+    'argparse',
+    'six'
 ]
 
 tests_require = [
     'mongodict',
     'pyasn1',
     'pymongo==3.0.1',
-    'python-memcached == 1.51',
+    'python-memcached >= 1.51',
     'pytest',
     'mako',
     #'pytest-coverage',
@@ -51,7 +52,7 @@ if sys.version_info < (2, 7):
 
 setup(
     name='pysaml2',
-    version='2.4.0',
+    version='2.5.0',
     description='Python implementation of SAML Version 2',
     # long_description = read("README"),
     author='Roland Hedberg',
@@ -59,14 +60,15 @@ setup(
     license='Apache 2.0',
     url='https://github.com/rohe/pysaml2',
 
-    packages=['saml2', 'xmldsig', 'xmlenc', 's2repoze', 's2repoze.plugins',
-              "saml2/profile", "saml2/schema", "saml2/extension",
-              "saml2/attributemaps", "saml2/authn_context",
+    packages=['saml2', 'saml2/xmldsig', 'saml2/xmlenc', 'saml2/s2repoze',
+              'saml2/s2repoze.plugins', "saml2/profile", "saml2/schema",
+              "saml2/extension", "saml2/attributemaps", "saml2/authn_context",
               "saml2/entity_category", "saml2/userinfo"],
 
     package_dir={'': 'src'},
     package_data={'': ['xml/*.xml']},
-    classifiers=["Development Status :: 4 - Beta",
+    classifiers=[
+        "Development Status :: 4 - Beta",
         "License :: OSI Approved :: Apache Software License",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Programming Language :: Python :: 2.6",

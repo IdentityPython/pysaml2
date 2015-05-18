@@ -26,8 +26,8 @@ from saml2.extension import dri
 from saml2.extension import mdattr
 from saml2.extension import ui
 from saml2.s_utils import UnknownPrincipal
-import xmldsig
-import xmlenc
+from saml2 import xmldsig
+from saml2 import xmlenc
 
 from pathutils import full_path
 
@@ -61,16 +61,16 @@ METADATACONF = {
         "class": "saml2.mdstore.MetaDataFile",
         "metadata": [(full_path("extended.xml"), )],
     }],
-    "7": [{
-        "class": "saml2.mdstore.MetaDataFile",
-        "metadata": [(full_path("metadata_sp_1.xml"), ),
-                     (full_path("InCommon-metadata.xml"), )], },
-          {
-        "class": "saml2.mdstore.MetaDataExtern",
-        "metadata": [
-            ("https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2",
-             full_path("kalmar2.pem")), ],
-    }],
+    # "7": [{
+    #     "class": "saml2.mdstore.MetaDataFile",
+    #     "metadata": [(full_path("metadata_sp_1.xml"), ),
+    #                  (full_path("InCommon-metadata.xml"), )], },
+    #       {
+    #     "class": "saml2.mdstore.MetaDataExtern",
+    #     "metadata": [
+    #         ("https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2",
+    #          full_path("kalmar2.pem")), ],
+    # }],
     "4": [{
         "class": "saml2.mdstore.MetaDataFile",
         "metadata": [(full_path("metadata_example.xml"), )],
@@ -86,7 +86,14 @@ METADATACONF = {
     "9": [{
         "class": "saml2.mdstore.MetaDataFile",
         "metadata": [(full_path("metadata"), )]
-    }]
+    }],
+    "10": [{
+        "class": "saml2.mdstore.MetaDataExtern",
+        "metadata": [
+            ("http://md.incommon.org/InCommon/InCommon-metadata-export.xml",
+             full_path("inc-md-cert.pem"))]
+        }
+    ]
 }
 
 
@@ -141,10 +148,10 @@ def test_incommon_1():
 
     mds.imp(METADATACONF["2"])
 
-    print mds.entities()
+    print(mds.entities())
     assert mds.entities() > 1700
     idps = mds.with_descriptor("idpsso")
-    print idps.keys()
+    print(idps.keys())
     assert len(idps) > 300  # ~ 18%
     try:
         _ = mds.single_sign_on_service('urn:mace:incommon:uiuc.edu')
@@ -153,7 +160,7 @@ def test_incommon_1():
 
     idpsso = mds.single_sign_on_service('urn:mace:incommon:alaska.edu')
     assert len(idpsso) == 1
-    print idpsso
+    print(idpsso)
     assert destinations(idpsso) == [
         'https://idp.alaska.edu/idp/profile/SAML2/Redirect/SSO']
 
@@ -169,7 +176,7 @@ def test_incommon_1():
     # Look for attribute authorities
     aas = mds.with_descriptor("attribute_authority")
 
-    print aas.keys()
+    print(aas.keys())
     assert len(aas) == 180
 
 
@@ -209,24 +216,24 @@ def test_switch_1():
     mds.imp(METADATACONF["5"])
     assert len(mds.keys()) > 160
     idps = mds.with_descriptor("idpsso")
-    print idps.keys()
+    print(idps.keys())
     idpsso = mds.single_sign_on_service(
         'https://aai-demo-idp.switch.ch/idp/shibboleth')
     assert len(idpsso) == 1
-    print idpsso
+    print(idpsso)
     assert destinations(idpsso) == [
         'https://aai-demo-idp.switch.ch/idp/profile/SAML2/Redirect/SSO']
     assert len(idps) > 30
     aas = mds.with_descriptor("attribute_authority")
-    print aas.keys()
+    print(aas.keys())
     aad = aas['https://aai-demo-idp.switch.ch/idp/shibboleth']
-    print aad.keys()
+    print(aad.keys())
     assert len(aad["attribute_authority_descriptor"]) == 1
     assert len(aad["idpsso_descriptor"]) == 1
 
     sps = mds.with_descriptor("spsso")
     dual = [eid for eid, ent in idps.items() if eid in sps]
-    print len(dual)
+    print(len(dual))
     assert len(dual) == 0
 
 
@@ -236,7 +243,7 @@ def test_metadata_file():
                         disable_ssl_certificate_validation=True)
 
     mds.imp(METADATACONF["8"])
-    print len(mds.keys())
+    print(len(mds.keys()))
     assert len(mds.keys()) == 560
 
 
@@ -273,9 +280,20 @@ def test_load_local_dir():
                         disable_ssl_certificate_validation=True)
 
     mds.imp(METADATACONF["9"])
-    print mds
+    print(mds)
     assert len(mds) == 3  # Three sources
     assert len(mds.keys()) == 4  # number of idps
 
+
+def test_load_extern_incommon():
+    sec_config.xmlsec_binary = sigver.get_xmlsec_binary(["/opt/local/bin"])
+    mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
+                        disable_ssl_certificate_validation=True)
+
+    mds.imp(METADATACONF["10"])
+    print(mds)
+    assert mds
+    assert len(mds.keys())
+
 if __name__ == "__main__":
-    test_load_local_dir()
+    test_load_extern_incommon()

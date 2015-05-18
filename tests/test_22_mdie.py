@@ -10,8 +10,8 @@ from saml2.extension import idpdisc
 from saml2.extension import dri
 from saml2.extension import mdattr
 from saml2.extension import ui
-import xmldsig
-import xmlenc
+from saml2 import xmldsig
+from saml2 import xmlenc
 
 ONTS = {
     saml.NAMESPACE: saml,
@@ -43,7 +43,7 @@ def test_construct_contact():
                           "__class__": _class(md.EmailAddress)}],
     }, ONTS)
 
-    print c
+    print(c)
     assert c.given_name.text == "Roland"
     assert c.sur_name.text == "Hedberg"
     assert c.email_address[0].text == "roland@catalogix.se"

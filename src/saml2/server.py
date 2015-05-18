@@ -10,6 +10,7 @@ import os
 
 import importlib
 import shelve
+import six
 import threading
 
 from saml2 import saml
@@ -89,7 +90,7 @@ class Server(Entity):
         _spec = self.config.getattr("session_storage", "idp")
         if not _spec:
             return SessionStorage()
-        elif isinstance(_spec, basestring):
+        elif isinstance(_spec, six.string_types):
             if _spec.lower() == "memory":
                 return SessionStorage()
         else:  # Should be tuple
@@ -116,10 +117,10 @@ class Server(Entity):
         typ = ""
         if not dbspec:
             idb = {}
-        elif isinstance(dbspec, basestring):
+        elif isinstance(dbspec, six.string_types):
             idb = shelve.open(dbspec, writeback=True)
         else:  # database spec is a a 2-tuple (type, address)
-            #print >> sys.stderr, "DBSPEC: %s" % (dbspec,)
+            #print(>> sys.stderr, "DBSPEC: %s" % (dbspec,))
             (typ, addr) = dbspec
             if typ == "shelve":
                 idb = shelve.open(addr, writeback=True)
@@ -288,7 +289,7 @@ class Server(Entity):
             policy = Policy()
         try:
             ast.apply_policy(sp_entity_id, policy, self.metadata)
-        except MissingValue, exc:
+        except MissingValue as exc:
             if not best_effort:
                 return self.create_error_response(in_response_to, consumer_url,
                                                   exc, sign_response)
@@ -565,7 +566,7 @@ class Server(Entity):
                                                           name_id_policy)
                     logger.debug("construct_nameid: %s => %s" % (userid,
                                                                  name_id))
-            except IOError, exc:
+            except IOError as exc:
                 response = self.create_error_response(in_response_to,
                                                       destination,
                                                       sp_entity_id,
@@ -608,7 +609,7 @@ class Server(Entity):
                                         encrypted_advice_attributes=encrypted_advice_attributes,
                                         encrypt_cert=encrypt_cert)
 
-        except MissingValue, exc:
+        except MissingValue as exc:
             return self.create_error_response(in_response_to, destination,
                                               sp_entity_id, exc, name_id)
 

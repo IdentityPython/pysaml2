@@ -5,10 +5,9 @@
 #
 
 import saml2
-from saml2 import SamlBase
-
-import xmldsig as ds
 from saml2 import saml
+from saml2 import SamlBase
+from saml2 import xmldsig as ds
 
 NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:protocol'
 

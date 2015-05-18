@@ -114,12 +114,12 @@ class TestIdentifier():
         })
 
         name_id_policy = samlp.name_id_policy_from_string(NAME_ID_POLICY_1)
-        print name_id_policy
+        print(name_id_policy)
         nameid = self.id.construct_nameid("foobar", policy,
                                           'http://vo.example.org/biomed',
                                           name_id_policy)
 
-        print nameid
+        print(nameid)
         assert _eq(nameid.keyswv(), ['text', 'sp_name_qualifier', 'format',
                                      'name_qualifier'])
         assert nameid.sp_name_qualifier == 'http://vo.example.org/biomed'
@@ -155,7 +155,7 @@ class TestIdentifier():
         sp_id = "urn:mace:umu.se:sp"
         nameid = self.id.persistent_nameid("abcd0001", sp_id)
         remote_id = nameid.text.strip()
-        print remote_id
+        print(remote_id)
         local = self.id.find_local_id(nameid)
         assert local == "abcd0001"
 
@@ -167,7 +167,7 @@ class TestIdentifier():
         sp_id = "urn:mace:umu.se:sp"
         nameid = self.id.transient_nameid("abcd0001", sp_id)
         remote_id = nameid.text.strip()
-        print remote_id
+        print(remote_id)
         local = self.id.find_local_id(nameid)
         assert local == "abcd0001"
 

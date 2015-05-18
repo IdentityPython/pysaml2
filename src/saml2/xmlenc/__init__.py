@@ -6,8 +6,7 @@
 
 import saml2
 from saml2 import SamlBase
-
-import xmldsig as ds
+from saml2 import xmldsig as ds
 
 NAMESPACE = 'http://www.w3.org/2001/04/xmlenc#'
 

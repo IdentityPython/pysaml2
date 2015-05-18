@@ -213,7 +213,7 @@ class Client(Entity):
             # url I started off with.
             pass
         else:
-            print response.error
+            print(response.error)
             raise SAMLError(
                 "Error POSTing package to SP: %s" % response.error)
 
@@ -290,7 +290,7 @@ class Client(Entity):
         except (soap.XmlParseError, AssertionError, KeyError):
             pass
 
-        #print "RESP",response, self.http.response
+        #print("RESP",response, self.http.response)
 
         if  response.status_code != 404:
             raise SAMLError("Error performing operation: %s" % (

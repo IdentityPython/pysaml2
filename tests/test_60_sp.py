@@ -5,7 +5,7 @@ import base64
 from saml2.authn_context import INTERNETPROTOCOLPASSWORD
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.samlp import NameIDPolicy
-from s2repoze.plugins.sp import make_plugin
+from saml2.s2repoze.plugins.sp import make_plugin
 from saml2.server import Server
 
 ENV1 = {'SERVER_SOFTWARE': 'CherryPy/3.1.2 WSGI Server',

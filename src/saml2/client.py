@@ -1,6 +1,7 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
+import six
 
 """Contains classes and functions that a SAML2.0 Service Provider (SP) may use
 to conclude its tasks.
@@ -149,7 +150,7 @@ class Saml2Client(Base):
             conversation.
         """
 
-        if isinstance(name_id, basestring):
+        if isinstance(name_id, six.string_types):
             name_id = decode(name_id)
 
         logger.info("logout request for: %s" % name_id)
@@ -363,7 +364,7 @@ class Saml2Client(Base):
             raise NoServiceDefined("%s: %s" % (entity_id,
                                                "assertion_id_request_service"))
 
-        if isinstance(assertion_ids, basestring):
+        if isinstance(assertion_ids, six.string_types):
             assertion_ids = [assertion_ids]
 
         _id_refs = [AssertionIDRef(_id) for _id in assertion_ids]

@@ -7,26 +7,31 @@ Based on the use of xmlsec1 binaries and not the python xmlsec module.
 """
 
 import base64
-from binascii import hexlify
 import hashlib
 import logging
-import random
 import os
 import ssl
-from time import mktime
 import urllib
+
+from time import mktime
+from binascii import hexlify
+
 from Crypto.PublicKey.RSA import importKey
 from Crypto.Signature import PKCS1_v1_5
 from Crypto.Util.asn1 import DerSequence
 from Crypto.PublicKey import RSA
-from saml2.cert import OpenSSLWrapper
-from saml2.extension import pefim
-from saml2.extension.pefim import SPCertEnc
-from saml2.saml import EncryptedAssertion
+from Crypto.Hash import SHA
+from Crypto.Hash import SHA224
+from Crypto.Hash import SHA256
+from Crypto.Hash import SHA384
+from Crypto.Hash import SHA512
 
-import xmldsig as ds
+from tempfile import NamedTemporaryFile
+from subprocess import Popen
+from subprocess import PIPE
 
-from saml2 import samlp, SamlBase
+from saml2 import samlp
+from saml2 import SamlBase
 from saml2 import SAMLError
 from saml2 import extension_elements_to_elements
 from saml2 import class_name
@@ -34,32 +39,29 @@ from saml2 import saml
 from saml2 import ExtensionElement
 from saml2 import VERSION
 
-from saml2.s_utils import sid, rndstr
+from saml2.cert import OpenSSLWrapper
+from saml2.extension import pefim
+from saml2.saml import EncryptedAssertion
+
+import saml2.xmldsig as ds
+
+from saml2.s_utils import sid
 from saml2.s_utils import Unsupported
 
 from saml2.time_util import instant
 from saml2.time_util import utc_now
 from saml2.time_util import str_to_time
 
-from tempfile import NamedTemporaryFile
-from subprocess import Popen, PIPE
-
-from xmldsig import SIG_RSA_SHA1
-from xmldsig import SIG_RSA_SHA224
-from xmldsig import SIG_RSA_SHA256
-from xmldsig import SIG_RSA_SHA384
-from xmldsig import SIG_RSA_SHA512
-from xmlenc import EncryptionMethod
-from xmlenc import EncryptedKey
-from xmlenc import CipherData
-from xmlenc import CipherValue
-from xmlenc import EncryptedData
-
-from Crypto.Hash import SHA
-from Crypto.Hash import SHA224
-from Crypto.Hash import SHA256
-from Crypto.Hash import SHA384
-from Crypto.Hash import SHA512
+from saml2.xmldsig import SIG_RSA_SHA1
+from saml2.xmldsig import SIG_RSA_SHA224
+from saml2.xmldsig import SIG_RSA_SHA256
+from saml2.xmldsig import SIG_RSA_SHA384
+from saml2.xmldsig import SIG_RSA_SHA512
+from saml2.xmlenc import EncryptionMethod
+from saml2.xmlenc import EncryptedKey
+from saml2.xmlenc import CipherData
+from saml2.xmlenc import CipherValue
+from saml2.xmlenc import EncryptedData
 
 logger = logging.getLogger(__name__)
 
@@ -230,7 +232,7 @@ def _make_vals(val, klass, seccont, klass_inst=None, prop=None, part=False,
     """
     cinst = None
 
-    #print "make_vals(%s, %s)" % (val, klass)
+    #print("make_vals(%s, %s)" % (val, klass))
 
     if isinstance(val, dict):
         cinst = _instance(klass, val, seccont, base64encode=base64encode,
@@ -259,7 +261,7 @@ def _instance(klass, ava, seccont, base64encode=False, elements_to_sign=None):
     instance = klass()
 
     for prop in instance.c_attributes.values():
-        #print "# %s" % (prop)
+        #print("# %s" % (prop))
         if prop in ava:
             if isinstance(ava[prop], bool):
                 setattr(instance, prop, "%s" % ava[prop])
@@ -272,9 +274,9 @@ def _instance(klass, ava, seccont, base64encode=False, elements_to_sign=None):
         instance.set_text(ava["text"], base64encode)
 
     for prop, klassdef in instance.c_children.values():
-        #print "## %s, %s" % (prop, klassdef)
+        #print("## %s, %s" % (prop, klassdef))
         if prop in ava:
-            #print "### %s" % ava[prop]
+            #print("### %s" % ava[prop])
             if isinstance(klassdef, list):
                 # means there can be a list of values
                 _make_vals(ava[prop], klassdef[0], seccont, instance, prop,
@@ -314,9 +316,9 @@ def signed_instance_factory(instance, seccont, elements_to_sign=None):
             signed_xml = seccont.sign_statement(
                 signed_xml, node_name=node_name, node_id=nodeid)
 
-        #print "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-        #print "%s" % signed_xml
-        #print "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        #print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+        #print("%s" % signed_xml)
+        #print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
         return signed_xml
     else:
         return instance
@@ -404,7 +406,7 @@ def cert_from_key_info(key_info, ignore_age=False):
     """
     res = []
     for x509_data in key_info.x509_data:
-        #print "X509Data",x509_data
+        #print("X509Data",x509_data)
         x509_certificate = x509_data.x509_certificate
         cert = x509_certificate.text.strip()
         cert = "\n".join(split_len("".join([s.strip() for s in
@@ -884,15 +886,15 @@ class CryptoBackendXmlSec1(CryptoBackend):
 
         if self.__DEBUG:
             try:
-                print " ".join(com_list)
+                print( " ".join(com_list))
             except TypeError:
-                print "cert_type", cert_type
-                print "cert_file", cert_file
-                print "node_name", node_name
-                print "fil", fil
+                print("cert_type", cert_type)
+                print("cert_file", cert_file)
+                print("node_name", node_name)
+                print("fil", fil)
                 raise
-            print "%s: %s" % (cert_file, os.access(cert_file, os.F_OK))
-            print "%s: %s" % (fil, os.access(fil, os.F_OK))
+            print("%s: %s" % (cert_file, os.access(cert_file, os.F_OK)))
+            print("%s: %s" % (fil, os.access(fil, os.F_OK)))
 
         (_stdout, stderr, _output) = self._run_xmlsec(com_list, [fil],
                                                       exception=SignatureError)
@@ -928,7 +930,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         try:
             if validate_output:
                 parse_xmlsec_output(p_err)
-        except XmlsecError, exc:
+        except XmlsecError as exc:
             logger.error(LOG_LINE_2 % (p_out, p_err, exc))
             raise
 
@@ -1062,30 +1064,21 @@ def security_context(conf, debug=None):
 def encrypt_cert_from_item(item):
     _encrypt_cert = None
     try:
-        try:
-            _elem = extension_elements_to_elements(item.extensions.extension_elements,[pefim, ds])
-        except:
-            _elem = extension_elements_to_elements(item.extension_elements[0].children,
-                                                   [pefim, ds])
-
-        for _tmp_elem in _elem:
-            if isinstance(_tmp_elem, SPCertEnc):
-                for _tmp_key_info in _tmp_elem.key_info:
-                    if _tmp_key_info.x509_data is not None and len(_tmp_key_info.x509_data) > 0:
-                        _encrypt_cert = _tmp_key_info.x509_data[0].x509_certificate.text
-                        break
-            #_encrypt_cert = _elem[0].x509_data[0].x509_certificate.text
-#        else:
-#            certs = cert_from_instance(item)
-#            if len(certs) > 0:
-#                _encrypt_cert = certs[0]
-    except Exception as _exception:
+        _elem = extension_elements_to_elements(item.extension_elements[0].children,
+                                               [pefim, ds])
+        if len(_elem) == 1:
+            _encrypt_cert = _elem[0].x509_data[0].x509_certificate.text
+        else:
+            certs = cert_from_instance(item)
+            if len(certs) > 0:
+                _encrypt_cert = certs[0]
+    except Exception:
         pass
 
-#    if _encrypt_cert is None:
-#        certs = cert_from_instance(item)
-#        if len(certs) > 0:
-#            _encrypt_cert = certs[0]
+    if _encrypt_cert is None:
+        certs = cert_from_instance(item)
+        if len(certs) > 0:
+            _encrypt_cert = certs[0]
 
     if _encrypt_cert is not None:
         if _encrypt_cert.find("-----BEGIN CERTIFICATE-----\n") == -1:
@@ -1346,7 +1339,7 @@ class SecurityContext(object):
     def _check_signature(self, decoded_xml, item, node_name=NODE_NAME,
                          origdoc=None, id_attr="", must=False,
                          only_valid_cert=False):
-        #print item
+        #print(item)
         try:
             issuer = item.issuer.text.strip()
         except AttributeError:
@@ -1381,7 +1374,7 @@ class SecurityContext(object):
         if not certs:
             raise MissingKey("%s" % issuer)
 
-        #print certs
+        #print(certs)
 
         verified = False
         last_pem_file = None
@@ -1409,13 +1402,13 @@ class SecurityContext(object):
                                              node_id=item.id, id_attr=id_attr):
                         verified = True
                         break
-            except XmlsecError, exc:
+            except XmlsecError as exc:
                 logger.error("check_sig: %s" % exc)
                 pass
-            except SignatureError, exc:
+            except SignatureError as exc:
                 logger.error("check_sig: %s" % exc)
                 pass
-            except Exception, exc:
+            except Exception as exc:
                 logger.error("check_sig: %s" % exc)
                 raise
 
@@ -1619,7 +1612,7 @@ class SecurityContext(object):
         #         try:
         #             self._check_signature(decoded_xml, assertion,
         #                                   class_name(assertion), origdoc)
-        #         except Exception, exc:
+        #         except Exception as exc:
         #             logger.error("correctly_signed_response: %s" % exc)
         #             raise
 
@@ -1870,4 +1863,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.listsigalgs:
-        print '\n'.join([key for key, value in SIGNER_ALGS.items()])
+        print('\n'.join([key for key, value in SIGNER_ALGS.items()]))

@@ -205,9 +205,9 @@ def list_to_local(acs, attrlist, allow_unknown_attributes=False):
 
 def from_local(acs, ava, name_format):
     for aconv in acs:
-        #print ac.format, name_format
+        #print(ac.format, name_format)
         if aconv.name_format == name_format:
-            #print "Found a name_form converter"
+            #print("Found a name_form converter")
             return aconv.to_(ava)
 
     return None
@@ -221,9 +221,9 @@ def from_local_name(acs, attr, name_format):
     :return: An Attribute instance
     """
     for aconv in acs:
-        #print ac.format, name_format
+        #print(ac.format, name_format)
         if aconv.name_format == name_format:
-            #print "Found a name_form converter"
+            #print("Found a name_form converter")
             return aconv.to_format(attr)
     return attr
 
@@ -244,7 +244,7 @@ def to_local_name(acs, attr):
 
 def get_local_name(acs, attr, name_format):
     for aconv in acs:
-        #print ac.format, name_format
+        #print(ac.format, name_format)
         if aconv.name_format == name_format:
             return aconv._fro[attr]
 

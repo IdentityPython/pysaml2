@@ -6,8 +6,8 @@ from saml2.mdstore import MetaDataMD, MetaDataFile
 
 __author__ = 'rolandh'
 
-import xmldsig
-import xmlenc
+from saml2 import xmldsig
+from saml2 import xmlenc
 from saml2 import md
 from saml2 import saml
 from saml2.extension import dri
@@ -35,13 +35,13 @@ for i in range(1, 10):
 
     _ = mdmd.keys()
 
-print time.time() - start
+print(time.time() - start)
 
 start = time.time()
 for i in range(1, 10):
     mdf = MetaDataFile(ONTS.values(), ac_factory("../tests/attributemaps"),
-                      "../tests/swamid-2.0.xml")
+                       "../tests/swamid-2.0.xml")
     mdf.load()
     _ = mdf.keys()
 
-print time.time() - start
+print(time.time() - start)

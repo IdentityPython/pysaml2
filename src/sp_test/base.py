@@ -22,10 +22,7 @@ from saml2test.interaction import Action
 from saml2test.interaction import Interaction
 from saml2test.interaction import InteractionNeeded
 
-import xmldsig as ds
-
 from sp_test.tests import ErrorResponse
-from sp_test.check import VerifyEchopageContents
 
 __author__ = 'rolandh'
 
@@ -267,7 +264,7 @@ class Conversation():
             else:
                 try:
                     _response = self.instance.send(url, "GET")
-                except Exception, err:
+                except Exception as err:
                     raise FatalError("%s" % err)
 
                 self._log_response(_response)
@@ -471,7 +468,7 @@ class Conversation():
                 else:
                     try:
                         _response = self.instance.send(url, "GET")
-                    except Exception, err:
+                    except Exception as err:
                         raise FatalError("%s" % err)
 
                     self._log_response(_response)
@@ -530,7 +527,7 @@ class Conversation():
                     break
             except (FatalError, InteractionNeeded):
                 raise
-            except Exception, err:
+            except Exception as err:
                 self.err_check("exception", err, False)
 
         self.last_response = _response

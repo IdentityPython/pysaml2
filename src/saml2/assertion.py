@@ -5,6 +5,7 @@ import logging
 
 import re
 from saml2.saml import NAME_FORMAT_URI
+import six
 import xmlenc
 
 from saml2 import saml
@@ -31,7 +32,7 @@ def _filter_values(vals, vlist=None, must=False):
     if not vlist:  # No value specified equals any value
         return vals
 
-    if isinstance(vlist, basestring):
+    if isinstance(vlist, six.string_types):
         vlist = [vlist]
 
     res = []
@@ -237,7 +238,7 @@ def filter_attribute_value_assertions(ava, attribute_restrictions=None):
         else:
             if _rests is None:
                 continue
-            if isinstance(vals, basestring):
+            if isinstance(vals, six.string_types):
                 vals = [vals]
             rvals = []
             for restr in _rests:

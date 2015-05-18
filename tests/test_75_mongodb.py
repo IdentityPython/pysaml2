@@ -71,7 +71,7 @@ def test_eptid_mongo_db():
     else:
         e1 = edb.get("idp_entity_id", "sp_entity_id", "user_id",
                      "some other data")
-        print e1
+        print(e1)
         assert e1.startswith("idp_entity_id!sp_entity_id!")
         e2 = edb.get("idp_entity_id", "sp_entity_id", "user_id",
                      "some other data")
@@ -79,7 +79,7 @@ def test_eptid_mongo_db():
 
         e3 = edb.get("idp_entity_id", "sp_entity_id", "user_2",
                      "some other data")
-        print e3
+        print(e3)
         assert e1 != e3
 
         e4 = edb.get("idp_entity_id", "sp_entity_id2", "user_id",

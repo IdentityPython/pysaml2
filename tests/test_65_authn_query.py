@@ -55,7 +55,7 @@ def test_basic():
 
         _id, aq = sp.create_authn_query(subject, destination, authn_context)
 
-        print aq
+        print(aq)
 
         assert isinstance(aq, AuthnQuery)
 
@@ -104,7 +104,7 @@ def test_flow():
 
         aq_id, aq = sp.create_authn_query(subject, destination, authn_context)
 
-        print aq
+        print(aq)
 
         assert isinstance(aq, AuthnQuery)
         binding = BINDING_SOAP
@@ -123,7 +123,7 @@ def test_flow():
         p_res = idp.create_authn_query_response(msg.subject, msg.session_index,
                                                 msg.requested_authn_context)
 
-        print p_res
+        print(p_res)
 
         hinfo = idp.apply_binding(binding, "%s" % p_res, "", "state2",
                                   response=True)
@@ -134,7 +134,7 @@ def test_flow():
 
         final = sp.parse_authn_query_response(xmlstr, binding)
 
-        print final
+        print(final)
 
         assert final.response.id == p_res.id
 

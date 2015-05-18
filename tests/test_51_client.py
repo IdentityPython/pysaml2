@@ -2,9 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import base64
+import six
 import urllib
 import urlparse
-from xmldsig import SIG_RSA_SHA256
+from saml2.xmldsig import SIG_RSA_SHA256
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import config
@@ -85,10 +86,10 @@ def _leq(l1, l2):
 #     client = Saml2Client({})
 #     (ava, name_id, real_uri) = \
 #             client.do_response(response, "xenosmilus.umdc.umu.se")
-#     print 40*"="
-#     print ava
-#     print 40*","
-#     print name_id
+#     print(40*"=")
+#     print(ava)
+#     print(40*",")
+#     print(name_id)
 #     assert False
 
 REQ1 = {"1.2.14": """<?xml version='1.0' encoding='UTF-8'?>
@@ -150,7 +151,7 @@ class TestClient:
 
         attrq = samlp.attribute_query_from_string(reqstr)
 
-        print attrq.keyswv()
+        print(attrq.keyswv())
         assert _leq(attrq.keyswv(), ['destination', 'subject', 'issue_instant',
                                      'version', 'id', 'issuer'])
 
@@ -179,7 +180,7 @@ class TestClient:
             format=saml.NAMEID_FORMAT_PERSISTENT,
             message_id="id1")
 
-        print req.to_string()
+        print(req.to_string())
         assert req.destination == "https://idp.example.com/idp/"
         assert req.id == "id1"
         assert req.version == "2.0"
@@ -229,7 +230,7 @@ class TestClient:
             "http://www.example.com/sso", message_id="id1")[1]
 
         ar = samlp.authn_request_from_string(ar_str)
-        print ar
+        print(ar)
         assert ar.assertion_consumer_service_url == ("http://lingon.catalogix"
                                                      ".se:8087/")
         assert ar.destination == "http://www.example.com/sso"
@@ -252,7 +253,7 @@ class TestClient:
             message_id="666")[1]
 
         ar = samlp.authn_request_from_string(ar_str)
-        print ar
+        print(ar)
         assert ar.id == "666"
         assert ar.assertion_consumer_service_url == "http://lingon.catalogix" \
                                                     ".se:8087/"
@@ -267,7 +268,7 @@ class TestClient:
         assert nid_policy.sp_name_qualifier == "urn:mace:example.com:it:tek"
 
     def test_sign_auth_request_0(self):
-        #print self.client.config
+        #print(self.client.config)
 
         req_id, areq = self.client.create_authn_request(
             "http://www.example.com/sso", sign=True, message_id="id1")
@@ -279,11 +280,11 @@ class TestClient:
         assert ar.signature
         assert ar.signature.signature_value
         signed_info = ar.signature.signed_info
-        #print signed_info
+        #print(signed_info)
         assert len(signed_info.reference) == 1
         assert signed_info.reference[0].uri == "#id1"
         assert signed_info.reference[0].digest_value
-        print "------------------------------------------------"
+        print("------------------------------------------------")
         try:
             assert self.client.sec.correctly_signed_authn_request(
                 ar_str, self.client.config.xmlsec_binary,
@@ -322,7 +323,7 @@ class TestClient:
         assert authn_response.response.assertion[0].issuer.text == IDP
         session_info = authn_response.session_info()
 
-        print session_info
+        print(session_info)
         assert session_info["ava"] == {'mail': ['derek@nyy.mlb.com'],
                                        'givenName': ['Derek'],
                                        'sn': ['Jeter'],
@@ -335,7 +336,7 @@ class TestClient:
         # One person in the cache
         assert len(self.client.users.subjects()) == 1
         subject_id = self.client.users.subjects()[0]
-        print "||||", self.client.users.get_info_from(subject_id, IDP)
+        print("||||", self.client.users.get_info_from(subject_id, IDP))
         # The information I have about the subject comes from one source
         assert self.client.users.issuers_of_info(subject_id) == [IDP]
 
@@ -364,19 +365,19 @@ class TestClient:
         issuers = [self.client.users.issuers_of_info(s) for s in
                    self.client.users.subjects()]
         # The information I have about the subjects comes from the same source
-        print issuers
+        print(issuers)
         assert issuers == [[IDP], [IDP]]
 
     def test_init_values(self):
         entityid = self.client.config.entityid
-        print entityid
+        print(entityid)
         assert entityid == "urn:mace:example.com:saml:roland:sp"
-        print self.client.metadata.with_descriptor("idpsso")
+        print(self.client.metadata.with_descriptor("idpsso"))
         location = self.client._sso_location()
-        print location
+        print(location)
         assert location == 'http://localhost:8088/sso'
         my_name = self.client._my_name()
-        print my_name
+        print(my_name)
         assert my_name == "urn:mace:example.com:saml:roland:sp"
 
     def test_sign_then_encrypt_assertion(self):
@@ -440,7 +441,7 @@ class TestClient:
 
             seresp.assertion = resp_ass
             seresp.encrypted_assertion = None
-            #print _sresp
+            #print(_sresp)
 
         assert seresp.assertion
 
@@ -600,7 +601,7 @@ class TestClient:
 
         res = self.server.parse_authn_request(qs["SAMLRequest"][0],
                                               BINDING_HTTP_REDIRECT)
-        print res
+        print(res)
 
 # Below can only be done with dummy Server
 IDP = "urn:mace:example.com:saml:roland:idp"
@@ -623,7 +624,7 @@ class TestClientWithDummy():
             IDP, "http://www.example.com/relay_state",
             binding=binding, response_binding=response_binding)
 
-        assert isinstance(sid, basestring)
+        assert isinstance(sid, six.string_types)
         assert len(http_args) == 4
         assert http_args["headers"][0][0] == "Location"
         assert http_args["data"] == []
@@ -643,7 +644,7 @@ class TestClientWithDummy():
             binding=binding, response_binding=response_binding)
 
         assert binding == auth_binding
-        assert isinstance(sid, basestring)
+        assert isinstance(sid, six.string_types)
         assert len(http_args) == 4
         assert http_args["headers"][0][0] == "Location"
         assert http_args["data"] == []
@@ -679,7 +680,7 @@ class TestClientWithDummy():
         entity_ids = self.client.users.issuers_of_info(nid)
         assert entity_ids == ["urn:mace:example.com:saml:roland:idp"]
         resp = self.client.global_logout(nid, "Tired", in_a_while(minutes=5))
-        print resp
+        print(resp)
         assert resp
         assert len(resp) == 1
         assert resp.keys() == entity_ids
@@ -709,7 +710,7 @@ class TestClientWithDummy():
                                  'application/x-www-form-urlencoded')]
 
         response = self.client.send(**http_args)
-        print response.text
+        print(response.text)
         _dic = unpack_form(response.text[3], "SAMLResponse")
         resp = self.client.parse_authn_request_response(_dic["SAMLResponse"],
                                                         BINDING_HTTP_POST,
@@ -744,7 +745,7 @@ class TestClientWithDummy():
                                  'application/x-www-form-urlencoded')]
 
         response = self.client.send(**http_args)
-        print response.text
+        print(response.text)
         _dic = unpack_form(response.text[3], "SAMLResponse")
         resp = self.client.parse_authn_request_response(_dic["SAMLResponse"],
                                                         BINDING_HTTP_POST,

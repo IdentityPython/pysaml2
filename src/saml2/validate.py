@@ -1,7 +1,7 @@
 import calendar
-import urlparse
+from six.moves.urllib.parse import urlparse
 import re
-import time_util
+from saml2 import time_util
 import struct
 import base64
 
@@ -46,7 +46,7 @@ def valid_id(oid):
 def valid_any_uri(item):
     """very simplistic, ..."""
     try:
-        part = urlparse.urlparse(item)
+        part = urlparse(item)
     except Exception:
         raise NotValid("AnyURI")
 
@@ -337,10 +337,10 @@ def valid(typ, value):
 def _valid_instance(instance, val):
     try:
         val.verify()
-    except NotValid, exc:
+    except NotValid as exc:
         raise NotValid("Class '%s' instance: %s" % (
             instance.__class__.__name__, exc.args[0]))
-    except OutsideCardinality, exc:
+    except OutsideCardinality as exc:
         raise NotValid(
             "Class '%s' instance cardinality error: %s" % (
                 instance.__class__.__name__, exc.args[0]))
@@ -361,7 +361,7 @@ def valid_instance(instance):
         try:
             validate_value_type(instance.text.strip(),
                                 instclass.c_value_type)
-        except NotValid, exc:
+        except NotValid as exc:
             raise NotValid("Class '%s' instance: %s" % (class_name,
                                                         exc.args[0]))
 
@@ -382,7 +382,7 @@ def valid_instance(instance):
                     validate_value_type(value, spec)
                 else:
                     valid(typ, value)
-            except (NotValid, ValueError), exc:
+            except (NotValid, ValueError) as exc:
                 txt = ERROR_TEXT % (value, name, exc.args[0])
                 raise NotValid("Class '%s' instance: %s" % (class_name, txt))
 

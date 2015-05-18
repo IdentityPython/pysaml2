@@ -39,18 +39,18 @@ class TestVirtualOrg():
 
     def test_mta(self):
         aas = self.vo.members_to_ask(nid)
-        print aas
+        print(aas)
         assert len(aas) == 1
         assert 'urn:mace:example.com:saml:aa' in aas
 
     def test_unknown_subject(self):
         aas = self.vo.members_to_ask(nid0)
-        print aas
+        print(aas)
         assert len(aas) == 2
 
     def test_id(self):
         cid = self.vo.get_common_identifier(nid)
-        print cid
+        print(cid)
         assert cid == "deje0001"
 
     def test_id_unknown(self):
@@ -68,18 +68,18 @@ class TestVirtualOrg_2():
 
     def test_mta(self):
         aas = self.sp.vorg.members_to_ask(nid)
-        print aas
+        print(aas)
         assert len(aas) == 1
         assert 'urn:mace:example.com:saml:aa' in aas
 
     def test_unknown_subject(self):
         aas = self.sp.vorg.members_to_ask(nid0)
-        print aas
+        print(aas)
         assert len(aas) == 2
 
     def test_id(self):
         cid = self.sp.vorg.get_common_identifier(nid)
-        print cid
+        print(cid)
         assert cid == "deje0001"
 
     def test_id_unknown(self):

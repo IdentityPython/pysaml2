@@ -58,7 +58,7 @@ class AMap(object):
             try:
                 assert self.mod.MAP["to"][val] == key
             except KeyError:  # missing value
-                print "# Added %s=%s" % (self.mod.MAP["to"][val], key)
+                print("# Added %s=%s" % (self.mod.MAP["to"][val], key))
                 self.mod.MAP["to"][val] = key
             except AssertionError:
                 raise Exception("Mismatch key:%s '%s' != '%s'" % (
@@ -66,7 +66,7 @@ class AMap(object):
 
         for val in self.mod.MAP["to"].values():
             if val not in self.mod.MAP["fro"]:
-                print "# Missing URN '%s'" % val
+                print("# Missing URN '%s'" % val)
 
     def do_fro(self):
         txt = ["%s'fro': {" % self.indent]
@@ -133,7 +133,7 @@ if __name__ == "__main__":
                 continue
             elif fname.endswith(".pyc"):
                 continue
-            print 10 * "=" + fname + 10 * "="
+            print(10 * "=" + fname + 10 * "=")
             amap = AMap(_name, fname, 4 * " ")
             f = open(fname, "w")
             f.write("%s" % amap)
