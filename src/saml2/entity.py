@@ -1,5 +1,6 @@
 import base64
 #from binascii import hexlify
+import copy
 import logging
 from hashlib import sha1
 from Crypto.PublicKey import RSA
@@ -578,41 +579,45 @@ class Entity(HTTPBase):
             cbxs = CryptoBackendXmlSec1(self.config.xmlsec_binary)
             encrypt_advice = False
             if encrypted_advice_attributes and response.assertion.advice is not None \
-                    and len(response.assertion.advice.assertion) == 1:
-                to_sign_advice = []
-                if sign_assertion is not None and sign_assertion:
-                    if response.assertion.advice and response.assertion.advice.assertion:
-                        for tmp_assertion in response.assertion.advice.assertion:
+                    and len(response.assertion.advice.assertion) > 0:
+                _assertions = response.assertion
+                if not isinstance(_assertions, list):
+                    _assertions = [_assertions]
+                for _assertion in _assertions:
+                    _assertion.advice.encrypted_assertion = []
+                    _assertion.advice.encrypted_assertion.append(EncryptedAssertion())
+                    _advice_assertions = copy.deepcopy(_assertion.advice.assertion)
+                    _assertion.advice.assertion = []
+                    if not isinstance(_advice_assertions, list):
+                        _advice_assertions = [_advice_assertions]
+                    for tmp_assertion in _advice_assertions:
+                        to_sign_advice = []
+                        if sign_assertion is not None and sign_assertion:
                             tmp_assertion.signature = pre_signature_part(tmp_assertion.id, self.sec.my_cert, 1)
                             to_sign_advice.append((class_name(tmp_assertion), tmp_assertion.id))
-                tmp_assertion = response.assertion.advice.assertion[0]
-                response.assertion.advice.encrypted_assertion = []
-                response.assertion.advice.encrypted_assertion.append(EncryptedAssertion())
-                if isinstance(tmp_assertion, list):
-                    response.assertion.advice.encrypted_assertion[0].add_extension_elements(tmp_assertion)
-                else:
-                    response.assertion.advice.encrypted_assertion[0].add_extension_element(tmp_assertion)
-                response.assertion.advice.assertion = []
-                if encrypt_assertion_self_contained:
-                    advice_tag = response.assertion.advice._to_element_tree().tag
-                    assertion_tag = tmp_assertion._to_element_tree().tag
-                    response = response.\
-                        get_xml_string_with_self_contained_assertion_within_advice_encrypted_assertion(assertion_tag,
-                                                                                                       advice_tag)
-                node_xpath = ''.join(["/*[local-name()=\"%s\"]" % v for v in
-                                      ["Response", "Assertion", "Advice", "EncryptedAssertion", "Assertion"]])
+                        #tmp_assertion = response.assertion.advice.assertion[0]
+                        _assertion.advice.encrypted_assertion[0].add_extension_element(tmp_assertion)
 
-                if to_sign_advice:
-                    response = signed_instance_factory(response, self.sec, to_sign_advice)
-                response = self._encrypt_assertion(encrypt_cert_advice, sp_entity_id, response, node_xpath=node_xpath)
-                if encrypt_assertion:
-                    response = response_from_string(response)
+                        if encrypt_assertion_self_contained:
+                            advice_tag = response.assertion.advice._to_element_tree().tag
+                            assertion_tag = tmp_assertion._to_element_tree().tag
+                            response = \
+                                response.get_xml_string_with_self_contained_assertion_within_advice_encrypted_assertion(
+                                    assertion_tag, advice_tag)
+                        node_xpath = ''.join(["/*[local-name()=\"%s\"]" % v for v in
+                                              ["Response", "Assertion", "Advice", "EncryptedAssertion", "Assertion"]])
+
+                        if to_sign_advice:
+                            response = signed_instance_factory(response, self.sec, to_sign_advice)
+                        response = self._encrypt_assertion(encrypt_cert_advice, sp_entity_id, response, node_xpath=node_xpath)
+                        response = response_from_string(response)
+
             if encrypt_assertion:
                 to_sign_assertion = []
                 if sign_assertion is not None and sign_assertion:
                     _assertions = response.assertion
-                    if not isinstance(response.assertion, list):
-                        _assertions = [response.assertion]
+                    if not isinstance(_assertions, list):
+                        _assertions = [_assertions]
                     for _assertion in _assertions:
                         _assertion.signature = pre_signature_part(_assertion.id, self.sec.my_cert, 1)
                         to_sign_assertion.append((class_name(_assertion), _assertion.id))

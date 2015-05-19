@@ -738,6 +738,8 @@ class TestServer1():
             encrypt_cert_advice=cert_str_advice,
         )
 
+        _resp = "%s" % _resp
+
         sresponse = response_from_string(_resp)
 
         assert sresponse.signature is None
@@ -858,6 +860,8 @@ class TestServer1():
             encrypt_assertion_self_contained=True,
             encrypted_advice_attributes=True,
         )
+
+        _resp = "%s" % _resp
 
         sresponse = response_from_string(_resp)
 
@@ -1072,4 +1076,4 @@ class TestServerLogout():
 if __name__ == "__main__":
     ts = TestServer1()
     ts.setup_class()
-    ts.test_encrypted_signed_response_4()
+    ts.test_encrypted_response_1()
