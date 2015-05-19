@@ -247,7 +247,7 @@ def packager(identifier):
     try:
         return PACKING[identifier]
     except KeyError:
-        raise Exception("Unkown binding type: %s" % identifier)
+        raise Exception("Unknown binding type: %s" % identifier)
 
 
 def factory(binding, message, location, relay_state="", typ="SAMLRequest"):
