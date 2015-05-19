@@ -502,6 +502,14 @@ class Entity(HTTPBase):
             else:
                 msg.extension_elements = extensions
 
+    def has_encrypt_cert_in_metadata(self, sp_entity_id):
+        if sp_entity_id is not None:
+            _certs = self.metadata.certs(sp_entity_id, "any", "encryption")
+            if len(_certs) > 0:
+                return True
+        return False
+
+
     def _encrypt_assertion(self, encrypt_cert, sp_entity_id, response, node_xpath=None):
         _certs = []
         cbxs = CryptoBackendXmlSec1(self.config.xmlsec_binary)
@@ -509,7 +517,7 @@ class Entity(HTTPBase):
             _certs = []
             _certs.append(encrypt_cert)
         elif sp_entity_id is not None:
-            _certs = self.metadata.certs(sp_entity_id, "any", "encrypt")
+            _certs = self.metadata.certs(sp_entity_id, "any", "encryption")
         exception = None
         for _cert in _certs:
             try:
@@ -528,6 +536,7 @@ class Entity(HTTPBase):
                 pass
         if exception:
             raise exception
+        return response
 
     def _response(self, in_response_to, consumer_url=None, status=None,
                   issuer=None, sign=False, to_sign=None, sp_entity_id=None,
@@ -552,7 +561,6 @@ class Entity(HTTPBase):
         :return: A Response instance
         """
 
-
         if not status:
             status = success_status_factory()
 
@@ -570,8 +578,13 @@ class Entity(HTTPBase):
         if not sign and to_sign and not encrypt_assertion:
             return signed_instance_factory(response, self.sec, to_sign)
 
-        if encrypt_assertion or (encrypted_advice_attributes and response.assertion.advice is not None and
-                                         len(response.assertion.advice.assertion) == 1):
+        has_encrypt_cert = self.has_encrypt_cert_in_metadata(sp_entity_id)
+        if not has_encrypt_cert and encrypt_cert_advice is None:
+            encrypted_advice_attributes = False
+        if not has_encrypt_cert and encrypt_cert_assertion is None:
+            encrypt_assertion = False
+
+        if encrypt_assertion or (encrypted_advice_attributes and response.assertion.advice is not None and len(response.assertion.advice.assertion) == 1):
             if sign:
                 response.signature = pre_signature_part(response.id,
                                                         self.sec.my_cert, 1)

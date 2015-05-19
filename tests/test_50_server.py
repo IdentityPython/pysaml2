@@ -7,7 +7,7 @@ from urlparse import parse_qs
 import uuid
 
 from saml2.cert import OpenSSLWrapper
-from saml2.sigver import make_temp
+from saml2.sigver import make_temp, EncryptError, CertificateError
 from saml2.assertion import Policy
 from saml2.authn_context import INTERNETPROTOCOLPASSWORD
 from saml2.saml import NameID, NAMEID_FORMAT_TRANSIENT
@@ -82,6 +82,7 @@ def generate_cert():
     cert_str = osw.create_cert_signed_certificate(ca_cert_str, ca_key_str,
                                                   req_cert_str)
     return cert_str, req_key_str
+
 
 class TestServer1():
     def setup_class(self):
@@ -874,11 +875,13 @@ class TestServer1():
         self.verify_advice_assertion(resp, decr_text)
 
     def test_encrypted_response_6(self):
+        _server = Server("idp_conf_verify_cert")
+
         cert_str_advice, cert_key_str_advice = generate_cert()
 
         cert_str_assertion, cert_key_str_assertion = generate_cert()
 
-        _resp = self.server.create_authn_response(
+        _resp = _server.create_authn_response(
             self.ava,
             "id12",  # in_response_to
             "http://lingon.catalogix.se:8087/",  # consumer_url
@@ -899,11 +902,11 @@ class TestServer1():
 
         _, key_file = make_temp("%s" % cert_key_str_assertion, decode=False)
 
-        decr_text_1 = self.server.sec.decrypt(_resp, key_file)
+        decr_text_1 = _server.sec.decrypt(_resp, key_file)
 
         _, key_file = make_temp("%s" % cert_key_str_advice, decode=False)
 
-        decr_text_2 = self.server.sec.decrypt(decr_text_1, key_file)
+        decr_text_2 = _server.sec.decrypt(decr_text_1, key_file)
 
         resp = samlp.response_from_string(decr_text_2)
 
@@ -938,6 +941,180 @@ class TestServer1():
         resp.assertion = extension_elements_to_elements(resp.encrypted_assertion[0].extension_elements, [saml, samlp])
 
         self.verify_advice_assertion(resp, decr_text_2)
+
+    def test_encrypted_response_8(self):
+        try:
+            _resp = self.server.create_authn_response(
+                self.ava,
+                "id12",  # in_response_to
+                "http://lingon.catalogix.se:8087/",  # consumer_url
+                "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
+                name_id=self.name_id,
+                sign_response=False,
+                sign_assertion=False,
+                encrypt_assertion=True,
+                encrypt_assertion_self_contained=True,
+                encrypted_advice_attributes=True,
+                encrypt_cert_advice="whatever",
+                encrypt_cert_assertion="whatever"
+            )
+            assert False, "Must throw an exception"
+        except EncryptError as ex:
+            pass
+        except Exception as ex:
+            assert False, "Wrong exception!"
+
+        try:
+            _resp = self.server.create_authn_response(
+                self.ava,
+                "id12",  # in_response_to
+                "http://lingon.catalogix.se:8087/",  # consumer_url
+                "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
+                name_id=self.name_id,
+                sign_response=False,
+                sign_assertion=False,
+                encrypt_assertion=False,
+                encrypt_assertion_self_contained=True,
+                encrypted_advice_attributes=True,
+                encrypt_cert_advice="whatever",
+            )
+            assert False, "Must throw an exception"
+        except EncryptError as ex:
+            pass
+        except Exception as ex:
+            assert False, "Wrong exception!"
+
+        try:
+            _resp = self.server.create_authn_response(
+                self.ava,
+                "id12",  # in_response_to
+                "http://lingon.catalogix.se:8087/",  # consumer_url
+                "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
+                name_id=self.name_id,
+                sign_response=False,
+                sign_assertion=False,
+                encrypt_assertion=True,
+                encrypt_assertion_self_contained=True,
+                encrypted_advice_attributes=False,
+                encrypt_cert_assertion="whatever"
+            )
+            assert False, "Must throw an exception"
+        except EncryptError as ex:
+            pass
+        except Exception as ex:
+            assert False, "Wrong exception!"
+
+        _server = Server("idp_conf_verify_cert")
+
+        try:
+            _resp = _server.create_authn_response(
+                self.ava,
+                "id12",  # in_response_to
+                "http://lingon.catalogix.se:8087/",  # consumer_url
+                "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
+                name_id=self.name_id,
+                sign_response=False,
+                sign_assertion=False,
+                encrypt_assertion=True,
+                encrypt_assertion_self_contained=True,
+                encrypted_advice_attributes=True,
+                encrypt_cert_advice="whatever",
+                encrypt_cert_assertion="whatever"
+            )
+            assert False, "Must throw an exception"
+        except CertificateError as ex:
+            pass
+        except Exception as ex:
+            assert False, "Wrong exception!"
+
+        try:
+            _resp = _server.create_authn_response(
+                self.ava,
+                "id12",  # in_response_to
+                "http://lingon.catalogix.se:8087/",  # consumer_url
+                "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
+                name_id=self.name_id,
+                sign_response=False,
+                sign_assertion=False,
+                encrypt_assertion=False,
+                encrypt_assertion_self_contained=True,
+                encrypted_advice_attributes=True,
+                encrypt_cert_advice="whatever",
+            )
+            assert False, "Must throw an exception"
+        except CertificateError as ex:
+            pass
+        except Exception as ex:
+            assert False, "Wrong exception!"
+
+        try:
+            _resp = _server.create_authn_response(
+                self.ava,
+                "id12",  # in_response_to
+                "http://lingon.catalogix.se:8087/",  # consumer_url
+                "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
+                name_id=self.name_id,
+                sign_response=False,
+                sign_assertion=False,
+                encrypt_assertion=True,
+                encrypt_assertion_self_contained=True,
+                encrypted_advice_attributes=False,
+                encrypt_cert_assertion="whatever"
+            )
+            assert False, "Must throw an exception"
+        except CertificateError as ex:
+            pass
+        except Exception as ex:
+            assert False, "Wrong exception!"
+
+    def test_encrypted_response_9(self):
+        _server = Server("idp_conf_sp_no_encrypt")
+
+        _resp = _server.create_authn_response(
+            self.ava,
+            "id12",  # in_response_to
+            "http://lingon.catalogix.se:8087/",  # consumer_url
+            "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
+            name_id=self.name_id,
+            sign_response=False,
+            sign_assertion=False,
+            encrypt_assertion=True,
+            encrypt_assertion_self_contained=True,
+            encrypted_advice_attributes=True,
+        )
+
+        self.verify_assertion(_resp.assertion.advice.assertion)
+
+        _resp = _server.create_authn_response(
+            self.ava,
+            "id12",  # in_response_to
+            "http://lingon.catalogix.se:8087/",  # consumer_url
+            "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
+            name_id=self.name_id,
+            sign_response=False,
+            sign_assertion=False,
+            encrypt_assertion=False,
+            encrypt_assertion_self_contained=True,
+            encrypted_advice_attributes=True,
+        )
+
+        self.verify_assertion(_resp.assertion.advice.assertion)
+
+        _resp = _server.create_authn_response(
+            self.ava,
+            "id12",  # in_response_to
+            "http://lingon.catalogix.se:8087/",  # consumer_url
+            "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
+            name_id=self.name_id,
+            sign_response=False,
+            sign_assertion=False,
+            encrypt_assertion=True,
+            encrypt_assertion_self_contained=True,
+            encrypted_advice_attributes=False,
+        )
+
+        self.verify_assertion([_resp.assertion])
+
 
     def test_slo_http_post(self):
         soon = time_util.in_a_while(days=1)
@@ -1076,4 +1253,4 @@ class TestServerLogout():
 if __name__ == "__main__":
     ts = TestServer1()
     ts.setup_class()
-    ts.test_encrypted_response_1()
+    ts.test_encrypted_response_9()

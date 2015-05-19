@@ -545,7 +545,6 @@ class Server(Entity):
                 if not verify_encrypt_cert(encrypt_cert_advice):
                     raise CertificateError("Invalid certificate for encryption!")
 
-
         if encrypt_assertion:
             verify_encrypt_cert = self.config.getattr("verify_encrypt_cert_assertion", "idp")
             if verify_encrypt_cert is not None:
