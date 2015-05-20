@@ -1338,17 +1338,22 @@ class SecurityContext(object):
 
     def _check_signature(self, decoded_xml, item, node_name=NODE_NAME,
                          origdoc=None, id_attr="", must=False,
-                         only_valid_cert=False):
+                         only_valid_cert=False, issuer=None):
         #print(item)
         try:
-            issuer = item.issuer.text.strip()
+            _issuer = item.issuer.text.strip()
         except AttributeError:
-            issuer = None
+            _issuer = None
 
+        if _issuer is None:
+            try:
+                _issuer = issuer.text.strip()
+            except AttributeError:
+                _issuer = None
         # More trust in certs from metadata then certs in the XML document
         if self.metadata:
             try:
-                _certs = self.metadata.certs(issuer, "any", "signing")
+                _certs = self.metadata.certs(_issuer, "any", "signing")
             except KeyError:
                 _certs = []
             certs = []
@@ -1421,7 +1426,7 @@ class SecurityContext(object):
         return item
 
     def check_signature(self, item, node_name=NODE_NAME, origdoc=None,
-                        id_attr="", must=False):
+                        id_attr="", must=False, issuer=None):
         """
 
         :param item: Parsed entity
@@ -1432,7 +1437,7 @@ class SecurityContext(object):
         :return:
         """
         return self._check_signature(origdoc, item, node_name, origdoc,
-                                     id_attr=id_attr, must=must)
+                                     id_attr=id_attr, must=must, issuer=issuer)
 
     def correctly_signed_message(self, decoded_xml, msgtype, must=False,
                                  origdoc=None, only_valid_cert=False):
