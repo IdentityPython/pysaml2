@@ -542,7 +542,7 @@ class Base(Entity):
     # ======== response handling ===========
 
     def parse_authn_request_response(self, xmlstr, binding, outstanding=None,
-                                     outstanding_certs=None, decrypt=True):
+                                     outstanding_certs=None, decrypt=True, pefim=False):
         """ Deal with an AuthnResponse
 
         :param xmlstr: The reply as a xml string
@@ -578,7 +578,7 @@ class Base(Entity):
             try:
                 resp = self._parse_response(xmlstr, AuthnResponse,
                                             "assertion_consumer_service",
-                                            binding, **kwargs)
+                                            binding, pefim=pefim, **kwargs)
             except StatusError as err:
                 logger.error("SAML status error: %s" % err)
                 raise

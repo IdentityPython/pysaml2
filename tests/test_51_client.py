@@ -2,9 +2,11 @@
 # -*- coding: utf-8 -*-
 
 import base64
+import uuid
 import six
 import urllib
 import urlparse
+from saml2.cert import OpenSSLWrapper
 from saml2.xmldsig import SIG_RSA_SHA256
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT
@@ -25,7 +27,7 @@ from saml2.saml import NAMEID_FORMAT_PERSISTENT, EncryptedAssertion, Advice
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.saml import NameID
 from saml2.server import Server
-from saml2.sigver import pre_encryption_part
+from saml2.sigver import pre_encryption_part, make_temp
 from saml2.sigver import rm_xmltag
 from saml2.sigver import verify_redirect_signature
 from saml2.s_utils import do_attribute_statement
@@ -40,6 +42,28 @@ AUTHN = {
     "class_ref": INTERNETPROTOCOLPASSWORD,
     "authn_auth": "http://www.example.com/login"
 }
+
+
+def generate_cert():
+    sn = uuid.uuid4().urn
+    cert_info = {
+        "cn": "localhost",
+        "country_code": "se",
+        "state": "ac",
+        "city": "Umea",
+        "organization": "ITS",
+        "organization_unit": "DIRG"
+    }
+    osw = OpenSSLWrapper()
+    ca_cert_str = osw.read_str_from_file(
+        full_path("root_cert/localhost.ca.crt"))
+    ca_key_str = osw.read_str_from_file(
+        full_path("root_cert/localhost.ca.key"))
+    req_cert_str, req_key_str = osw.create_certificate(cert_info, request=True,
+                                                       sn=sn, key_length=2048)
+    cert_str = osw.create_cert_signed_certificate(ca_cert_str, ca_key_str,
+                                                  req_cert_str)
+    return cert_str, req_key_str
 
 
 def add_subelement(xmldoc, node_name, subelem):
@@ -292,7 +316,7 @@ class TestClient:
         except Exception:  # missing certificate
             self.client.sec.verify_signature(ar_str, node_name=class_name(ar))
 
-    def test_response(self):
+    def test_response_1(self):
         IDP = "urn:mace:example.com:saml:roland:idp"
 
         ava = {"givenName": ["Derek"], "surName": ["Jeter"],
@@ -367,6 +391,116 @@ class TestClient:
         # The information I have about the subjects comes from the same source
         print(issuers)
         assert issuers == [[IDP], [IDP]]
+
+    def test_response_2(self):
+        conf = config.SPConfig()
+        conf.load_file("server_conf")
+        _client = Saml2Client(conf)
+
+        idp, ava, ava_verify, nameid_policy = self.setup_verify_authn_response()
+
+        cert_str, cert_key_str = generate_cert()
+
+        cert =\
+            {
+                "cert": cert_str,
+                "key": cert_key_str
+            }
+
+        self.name_id = self.server.ident.transient_nameid(
+            "urn:mace:example.com:saml:roland:sp", "id1")
+
+        resp = self.server.create_authn_response(
+            identity=ava,
+            in_response_to="id1",
+            destination="http://lingon.catalogix.se:8087/",
+            sp_entity_id="urn:mace:example.com:saml:roland:sp",
+            #name_id_policy=nameid_policy,
+            name_id=self.name_id,
+            userid="foba0001@example.com",
+            authn=AUTHN,
+            sign_response=True,
+            sign_assertion=True,
+            encrypt_assertion=False,
+            encrypt_assertion_self_contained=True,
+            #encrypted_advice_attributes=True,
+            pefim=True,
+            encrypt_cert_advice=cert_str
+        )
+
+        resp_str = "%s" % resp
+
+        resp_str = base64.encodestring(resp_str)
+
+        authn_response = _client.parse_authn_request_response(
+            resp_str, BINDING_HTTP_POST,
+            {"id1": "http://foo.example.com/service"}, {"id1": cert}, pefim=True)
+
+        self.verify_authn_response(idp, authn_response, _client, ava_verify)
+
+    def test_response_3(self):
+        conf = config.SPConfig()
+        conf.load_file("server_conf")
+        _client = Saml2Client(conf)
+
+        idp, ava, ava_verify, nameid_policy = self.setup_verify_authn_response()
+
+        self.name_id = self.server.ident.transient_nameid(
+            "urn:mace:example.com:saml:roland:sp", "id1")
+
+        resp = self.server.create_authn_response(
+            identity=ava,
+            in_response_to="id1",
+            destination="http://lingon.catalogix.se:8087/",
+            sp_entity_id="urn:mace:example.com:saml:roland:sp",
+            #name_id_policy=nameid_policy,
+            name_id=self.name_id,
+            userid="foba0001@example.com",
+            authn=AUTHN,
+            sign_response=True,
+            sign_assertion=True,
+            encrypt_assertion=False,
+            encrypt_assertion_self_contained=True,
+            #encrypted_advice_attributes=True,
+            pefim=True,
+        )
+
+        resp_str = "%s" % resp
+
+        resp_str = base64.encodestring(resp_str)
+
+        authn_response = _client.parse_authn_request_response(
+            resp_str, BINDING_HTTP_POST,
+            {"id1": "http://foo.example.com/service"}, pefim=True)
+
+        self.verify_authn_response(idp, authn_response, _client, ava_verify)
+
+    def setup_verify_authn_response(self):
+        idp = "urn:mace:example.com:saml:roland:idp"
+        ava = {"givenName": ["Derek"], "surName": ["Jeter"], "mail": ["derek@nyy.mlb.com"], "title": ["The man"]}
+        ava_verify = {'mail': ['derek@nyy.mlb.com'], 'givenName': ['Derek'], 'sn': ['Jeter'], 'title': ["The man"]}
+        nameid_policy = samlp.NameIDPolicy(allow_create="false", format=saml.NAMEID_FORMAT_PERSISTENT)
+        return idp, ava, ava_verify, nameid_policy
+
+
+    def verify_authn_response(self, idp, authn_response, _client, ava_verify):
+        assert authn_response is not None
+        assert authn_response.issuer() == idp
+        assert authn_response.response.assertion[0].issuer.text == idp
+        session_info = authn_response.session_info()
+
+        assert session_info["ava"] == ava_verify
+        assert session_info["issuer"] == idp
+        assert session_info["came_from"] == "http://foo.example.com/service"
+        response = samlp.response_from_string(authn_response.xmlstr)
+        assert response.destination == "http://lingon.catalogix.se:8087/"
+
+        # One person in the cache
+        assert len(_client.users.subjects()) == 1
+        subject_id = _client.users.subjects()[0]
+        # The information I have about the subject comes from one source
+        assert _client.users.issuers_of_info(subject_id) == [idp]
+
 
     def test_init_values(self):
         entityid = self.client.config.entityid
@@ -764,4 +898,4 @@ class TestClientWithDummy():
 if __name__ == "__main__":
     tc = TestClient()
     tc.setup_class()
-    tc.test_sign_then_encrypt_assertion_advice()
+    tc.test_response_3()

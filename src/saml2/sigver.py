@@ -1306,9 +1306,17 @@ class SecurityContext(object):
         :param enctext: The encrypted text as a string
         :return: The decrypted text
         """
+        _enctext = self.crypto.decrypt(enctext, self.key_file)
+        if _enctext is not None and len(_enctext) > 0:
+            return _enctext
         if key_file is not None and len(key_file.strip()) > 0:
-            return self.crypto.decrypt(enctext, key_file)
-        return self.crypto.decrypt(enctext, self.key_file)
+            _enctext = self.crypto.decrypt(enctext, key_file)
+            if _enctext is not None and len(_enctext) > 0:
+                return _enctext
+        _enctext = self.crypto.decrypt(enctext, self.key_file)
+        if _enctext is not None and len(_enctext) > 0:
+            return _enctext
+        return enctext
 
     def verify_signature(self, signedtext, cert_file=None, cert_type="pem",
                          node_name=NODE_NAME, node_id=None, id_attr=""):

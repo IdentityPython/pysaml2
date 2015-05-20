@@ -978,7 +978,7 @@ class Entity(HTTPBase):
     # ------------------------------------------------------------------------
 
     def _parse_response(self, xmlstr, response_cls, service, binding,
-                        outstanding_certs=None, **kwargs):
+                        outstanding_certs=None, pefim=False, **kwargs):
         """ Deal with a Response
 
         :param xmlstr: The response as a xml string
@@ -1056,7 +1056,7 @@ class Entity(HTTPBase):
                 decrypt = True
                 if "decrypt" in kwargs:
                     decrypt = kwargs["decrypt"]
-                response = response.verify(key_file, decrypt=decrypt)
+                response = response.verify(key_file, decrypt=decrypt, pefim=pefim)
 
             if not response:
                 return None
