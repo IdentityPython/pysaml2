@@ -281,7 +281,7 @@ class Entity(HTTPBase):
         #logger.error("Bindings: %s" % bindings)
         #logger.error("Entities: %s" % self.metadata)
 
-        raise SAMLError("Unkown entity or unsupported bindings")
+        raise SAMLError("Unknown entity or unsupported bindings")
 
     def message_args(self, message_id=0):
         if not message_id:

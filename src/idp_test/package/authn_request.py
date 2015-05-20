@@ -30,7 +30,7 @@ class AuthnRequest_UnknownExtension(AuthnRequest):
         return message
 
 OPERATIONS = {
-    'authn_unkown-issuer': {
+    'authn_unknown-issuer': {
         "name": 'AuthnRequest with unknown issuer',
         "descr": 'AuthnRequest with unknown issuer',
         "sequence": [AuthnRequest_UnknownIssuer],
@@ -38,7 +38,7 @@ OPERATIONS = {
         "tests": {"pre": [CheckSaml2IntMetaData],
                   "post": [CheckSaml2IntAttributes]}
     },
-    'authn_unkown-extension': {
+    'authn_unknown-extension': {
         "name": 'AuthnRequest with unknown extension',
         "descr": 'AuthnRequest with unknown extension',
         "sequence": [AuthnRequest_UnknownExtension],
