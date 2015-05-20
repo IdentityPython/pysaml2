@@ -797,7 +797,7 @@ class AuthnResponse(StatusResponse):
             logger.exception("get subject")
             raise
 
-    def decrypt_assertions(self, encrypted_assertions, decr_txt):
+    def decrypt_assertions(self, encrypted_assertions, decr_txt, issuer=None):
         res = []
         for encrypted_assertion in encrypted_assertions:
             if encrypted_assertion.extension_elements:
@@ -807,7 +807,7 @@ class AuthnResponse(StatusResponse):
                     if assertion.signature:
                         if not self.sec.check_signature(
                                 assertion, origdoc=decr_txt,
-                                node_name=class_name(assertion)):
+                                node_name=class_name(assertion), issuer=issuer):
                             logger.error(
                                 "Failed to verify signature on '%s'" % assertion)
                             raise SignatureError()
@@ -842,7 +842,9 @@ class AuthnResponse(StatusResponse):
             if resp.assertion:
                 for tmp_ass in resp.assertion:
                     if tmp_ass.advice and tmp_ass.advice.encrypted_assertion:
-                        advice_res = self.decrypt_assertions(tmp_ass.advice.encrypted_assertion, decr_text)
+                        advice_res = self.decrypt_assertions(tmp_ass.advice.encrypted_assertion,
+                                                             decr_text,
+                                                             tmp_ass.issuer)
                         if tmp_ass.advice.assertion:
                             tmp_ass.advice.assertion.extend(advice_res)
                         else:

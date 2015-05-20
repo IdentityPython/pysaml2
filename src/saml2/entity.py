@@ -541,7 +541,7 @@ class Entity(HTTPBase):
     def _response(self, in_response_to, consumer_url=None, status=None,
                   issuer=None, sign=False, to_sign=None, sp_entity_id=None,
                   encrypt_assertion=False, encrypt_assertion_self_contained=False, encrypted_advice_attributes=False,
-                  encrypt_cert_advice=None, encrypt_cert_assertion=None,sign_assertion=None, **kwargs):
+                  encrypt_cert_advice=None, encrypt_cert_assertion=None,sign_assertion=None, pefim=False, **kwargs):
         """ Create a Response.
             Encryption:
                 encrypt_assertion must be true for encryption to be performed. If encrypted_advice_attributes also is
@@ -584,7 +584,8 @@ class Entity(HTTPBase):
         if not has_encrypt_cert and encrypt_cert_assertion is None:
             encrypt_assertion = False
 
-        if encrypt_assertion or (encrypted_advice_attributes and response.assertion.advice is not None and len(response.assertion.advice.assertion) == 1):
+        if encrypt_assertion or (encrypted_advice_attributes and response.assertion.advice is not None and
+                                         len(response.assertion.advice.assertion) == 1):
             if sign:
                 response.signature = pre_signature_part(response.id,
                                                         self.sec.my_cert, 1)
@@ -605,7 +606,7 @@ class Entity(HTTPBase):
                         _advice_assertions = [_advice_assertions]
                     for tmp_assertion in _advice_assertions:
                         to_sign_advice = []
-                        if sign_assertion is not None and sign_assertion:
+                        if sign_assertion and not pefim:
                             tmp_assertion.signature = pre_signature_part(tmp_assertion.id, self.sec.my_cert, 1)
                             to_sign_advice.append((class_name(tmp_assertion), tmp_assertion.id))
                         #tmp_assertion = response.assertion.advice.assertion[0]

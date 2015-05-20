@@ -539,7 +539,8 @@ class TestServer1():
             sign_assertion=True,
             encrypt_assertion=False,
             encrypt_assertion_self_contained=True,
-            encrypted_advice_attributes=True,
+            pefim=True,
+            #encrypted_advice_attributes=True,
             encrypt_cert_advice=cert_str,
         )
 
@@ -573,11 +574,15 @@ class TestServer1():
 
         self.verify_assertion(assertion)
 
-        valid = self.server.sec.verify_signature(decr_text,
-                                                 self.server.config.cert_file,
-                                                 node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-                                                 node_id=assertion[0].id,
-                                                 id_attr="")
+
+
+        #PEFIM never signs assertions.
+        assert assertion[0].signature is None
+        #valid = self.server.sec.verify_signature(decr_text,
+        #                                         self.server.config.cert_file,
+        #                                         node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
+        #                                         node_id=assertion[0].id,
+        #                                         id_attr="")
         assert valid
 
     def test_encrypted_signed_response_2(self):
@@ -593,7 +598,6 @@ class TestServer1():
             sign_assertion=False,
             encrypt_assertion=True,
             encrypt_assertion_self_contained=True,
-            encrypt_cert=cert_str,
         )
 
         sresponse = response_from_string(signed_resp)
@@ -649,7 +653,6 @@ class TestServer1():
 
         resp.assertion = extension_elements_to_elements(resp.encrypted_assertion[0].extension_elements, [saml, samlp])
 
-
         valid = self.server.sec.verify_signature(decr_text,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
@@ -677,7 +680,8 @@ class TestServer1():
             sign_assertion=True,
             encrypt_assertion=True,
             encrypt_assertion_self_contained=True,
-            encrypted_advice_attributes=True,
+            #encrypted_advice_attributes=True,
+            pefim=True,
             encrypt_cert_advice=cert_str,
         )
 
@@ -715,11 +719,13 @@ class TestServer1():
              extension_elements_to_elements(assertion[0].advice.encrypted_assertion[0].extension_elements,[saml, samlp])
         self.verify_assertion(assertion)
 
-        valid = self.server.sec.verify_signature(decr_text,
-                                                 self.server.config.cert_file,
-                                                 node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-                                                 node_id=assertion[0].id,
-                                                 id_attr="")
+        #PEFIM never signs assertion in advice
+        assert assertion[0].signature is None
+        #valid = self.server.sec.verify_signature(decr_text,
+        #                                         self.server.config.cert_file,
+        #                                         node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
+        #                                         node_id=assertion[0].id,
+        #                                         id_attr="")
         assert valid
 
     def test_encrypted_response_1(self):
@@ -735,7 +741,8 @@ class TestServer1():
             sign_assertion=False,
             encrypt_assertion=False,
             encrypt_assertion_self_contained=True,
-            encrypted_advice_attributes=True,
+            #encrypted_advice_attributes=True,
+            pefim=True,
             encrypt_cert_advice=cert_str_advice,
         )
 
@@ -767,7 +774,8 @@ class TestServer1():
             sign_assertion=False,
             encrypt_assertion=True,
             encrypt_assertion_self_contained=True,
-            encrypted_advice_attributes=True,
+            #encrypted_advice_attributes=True,
+            pefim=True,
             encrypt_cert_advice=cert_str_advice,
         )
 
@@ -859,7 +867,8 @@ class TestServer1():
             sign_assertion=False,
             encrypt_assertion=False,
             encrypt_assertion_self_contained=True,
-            encrypted_advice_attributes=True,
+            #encrypted_advice_attributes=True,
+            pefim=True
         )
 
         _resp = "%s" % _resp
@@ -891,7 +900,8 @@ class TestServer1():
             sign_assertion=False,
             encrypt_assertion=True,
             encrypt_assertion_self_contained=True,
-            encrypted_advice_attributes=True,
+            #encrypted_advice_attributes=True,
+            pefim=True,
             encrypt_cert_advice=cert_str_advice,
             encrypt_cert_assertion=cert_str_assertion
         )
@@ -925,7 +935,8 @@ class TestServer1():
             sign_assertion=False,
             encrypt_assertion=True,
             encrypt_assertion_self_contained=True,
-            encrypted_advice_attributes=True,
+            #encrypted_advice_attributes=True,
+            pefim=True
         )
 
         sresponse = response_from_string(_resp)
@@ -954,7 +965,8 @@ class TestServer1():
                 sign_assertion=False,
                 encrypt_assertion=True,
                 encrypt_assertion_self_contained=True,
-                encrypted_advice_attributes=True,
+                #encrypted_advice_attributes=True,
+                pefim=True,
                 encrypt_cert_advice="whatever",
                 encrypt_cert_assertion="whatever"
             )
@@ -975,7 +987,8 @@ class TestServer1():
                 sign_assertion=False,
                 encrypt_assertion=False,
                 encrypt_assertion_self_contained=True,
-                encrypted_advice_attributes=True,
+                #encrypted_advice_attributes=True,
+                pefim=True,
                 encrypt_cert_advice="whatever",
             )
             assert False, "Must throw an exception"
@@ -1017,7 +1030,8 @@ class TestServer1():
                 sign_assertion=False,
                 encrypt_assertion=True,
                 encrypt_assertion_self_contained=True,
-                encrypted_advice_attributes=True,
+                #encrypted_advice_attributes=True,
+                pefim=True,
                 encrypt_cert_advice="whatever",
                 encrypt_cert_assertion="whatever"
             )
@@ -1038,7 +1052,8 @@ class TestServer1():
                 sign_assertion=False,
                 encrypt_assertion=False,
                 encrypt_assertion_self_contained=True,
-                encrypted_advice_attributes=True,
+                #encrypted_advice_attributes=True,
+                pefim=True,
                 encrypt_cert_advice="whatever",
             )
             assert False, "Must throw an exception"
@@ -1080,7 +1095,8 @@ class TestServer1():
             sign_assertion=False,
             encrypt_assertion=True,
             encrypt_assertion_self_contained=True,
-            encrypted_advice_attributes=True,
+            #encrypted_advice_attributes=True,
+            pefim=True,
         )
 
         self.verify_assertion(_resp.assertion.advice.assertion)
@@ -1095,7 +1111,8 @@ class TestServer1():
             sign_assertion=False,
             encrypt_assertion=False,
             encrypt_assertion_self_contained=True,
-            encrypted_advice_attributes=True,
+            #encrypted_advice_attributes=True,
+            pefim=True
         )
 
         self.verify_assertion(_resp.assertion.advice.assertion)
@@ -1253,4 +1270,4 @@ class TestServerLogout():
 if __name__ == "__main__":
     ts = TestServer1()
     ts.setup_class()
-    ts.test_encrypted_response_9()
+    ts.test_encrypted_signed_response_1()

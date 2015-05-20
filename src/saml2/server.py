@@ -324,7 +324,7 @@ class Server(Entity):
                         sign_assertion=False, sign_response=False,
                         best_effort=False, encrypt_assertion=False,
                         encrypt_cert_advice=None, encrypt_cert_assertion=None, authn_statement=None,
-                        encrypt_assertion_self_contained=False, encrypted_advice_attributes=False):
+                        encrypt_assertion_self_contained=False, encrypted_advice_attributes=False, pefim=False):
         """ Create a response. A layer of indirection.
 
         :param in_response_to: The session identifier of the request
@@ -358,12 +358,14 @@ class Server(Entity):
         #    tmp_authn_statement = authn_statement
         #    authn_statement = None
 
-        if encrypted_advice_attributes:
+        if pefim:
+            encrypted_advice_attributes = True
+            encrypt_assertion_self_contained = True
             assertion_attributes = self.setup_assertion(None, sp_entity_id, None, None, None, policy,
-                                             None, None, identity, best_effort, sign_response, False)
+                                                        None, None, identity, best_effort, sign_response, False)
             assertion = self.setup_assertion(authn, sp_entity_id, in_response_to, consumer_url,
-                                                         name_id, policy, _issuer, authn_statement, [], True,
-                                                         sign_response)
+                                             name_id, policy, _issuer, authn_statement, [], True,
+                                             sign_response)
             assertion.advice = saml.Advice()
 
             #assertion.advice.assertion_id_ref.append(saml.AssertionIDRef())
@@ -371,8 +373,8 @@ class Server(Entity):
             assertion.advice.assertion.append(assertion_attributes)
         else:
             assertion = self.setup_assertion(authn, sp_entity_id, in_response_to, consumer_url,
-                                                         name_id, policy, _issuer, authn_statement, identity, True,
-                                                         sign_response)
+                                             name_id, policy, _issuer, authn_statement, identity, True,
+                                             sign_response)
 
         to_sign = []
         if not encrypt_assertion:
@@ -405,6 +407,7 @@ class Server(Entity):
                               encrypt_cert_assertion=encrypt_cert_assertion,
                               encrypt_assertion_self_contained=encrypt_assertion_self_contained,
                               encrypted_advice_attributes=encrypted_advice_attributes,sign_assertion=sign_assertion,
+                              pefim=pefim,
                               **args)
 
     # ------------------------------------------------------------------------
@@ -481,7 +484,7 @@ class Server(Entity):
                               sign_response=None, sign_assertion=None,
                               encrypt_cert_advice=None, encrypt_cert_assertion=None, encrypt_assertion=None,
                               encrypt_assertion_self_contained=True,
-                              encrypted_advice_attributes=False,
+                              encrypted_advice_attributes=False, pefim=False,
                               **kwargs):
         """ Constructs an AuthenticationResponse
 
@@ -536,7 +539,7 @@ class Server(Entity):
         if encrypted_advice_attributes is None:
             encrypted_advice_attributes = False
 
-        if encrypted_advice_attributes:
+        if encrypted_advice_attributes or pefim:
             verify_encrypt_cert = self.config.getattr("verify_encrypt_cert_advice", "idp")
             if verify_encrypt_cert is not None:
                 if encrypt_cert_advice is None:
@@ -613,7 +616,8 @@ class Server(Entity):
                                                 encrypt_assertion_self_contained=encrypt_assertion_self_contained,
                                                 encrypted_advice_attributes=encrypted_advice_attributes,
                                                 encrypt_cert_advice=encrypt_cert_advice,
-                                                encrypt_cert_assertion=encrypt_cert_assertion)
+                                                encrypt_cert_assertion=encrypt_cert_assertion,
+                                                pefim=peifm)
             return self._authn_response(in_response_to,  # in_response_to
                                         destination,  # consumer_url
                                         sp_entity_id,  # sp_entity_id
@@ -629,7 +633,8 @@ class Server(Entity):
                                         encrypt_assertion_self_contained=encrypt_assertion_self_contained,
                                         encrypted_advice_attributes=encrypted_advice_attributes,
                                         encrypt_cert_advice=encrypt_cert_advice,
-                                        encrypt_cert_assertion=encrypt_cert_assertion)
+                                        encrypt_cert_assertion=encrypt_cert_assertion,
+                                        pefim=pefim)
 
         except MissingValue as exc:
             return self.create_error_response(in_response_to, destination,
