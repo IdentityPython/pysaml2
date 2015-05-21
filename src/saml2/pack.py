@@ -175,6 +175,8 @@ def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
         _child.tag = '{%s}FuddleMuddle' % DUMMY_NAMESPACE
         body.append(_child)
         _str = ElementTree.tostring(envelope, encoding="UTF-8")
+        if isinstance(_str, six.binary_type):
+            _str = _str.decode('utf-8')
         logger.debug("SOAP precursor: %s" % _str)
         # find an remove the namespace definition
         i = _str.find(DUMMY_NAMESPACE)
