@@ -544,7 +544,7 @@ class MetaDataFile(InMemoryMetaData):
     """
     def __init__(self, onts, attrc, filename=None, cert=None, **kwargs):
         super(MetaDataFile, self).__init__(onts, attrc, **kwargs)
-        if not file:
+        if not filename:
             raise SAMLError('No file specified.')
         self.filename = filename
         self.cert = cert
