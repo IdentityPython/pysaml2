@@ -167,6 +167,15 @@ def rndstr(size=16, alphabet=""):
         alphabet = string.ascii_letters[0:52] + string.digits
     return type(alphabet)().join(rng.choice(alphabet) for _ in range(size))
 
+def rndbytes(size=16, alphabet=""):
+    """
+    Returns rndstr always as a binary type
+    """
+    x = rndstr(size, alphabet)
+    if isinstance(x, six.string_types):
+        return x.encode('utf-8')
+    return x
+
 
 def sid():
     """creates an unique SID for each session.

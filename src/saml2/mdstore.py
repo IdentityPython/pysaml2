@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 import json
+import six
 
 from hashlib import sha1
 from os.path import isfile, join
@@ -487,6 +488,8 @@ class InMemoryMetaData(MetaData):
                 try:
                     for srv in ent[desc]:
                         if "artifact_resolution_service" in srv:
+                            if isinstance(eid, six.string_types):
+                                eid = eid.encode('utf-8')
                             s = sha1(eid)
                             res[s.digest()] = ent
                 except KeyError:
