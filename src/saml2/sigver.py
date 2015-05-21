@@ -769,7 +769,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         return output
 
     def encrypt_assertion(self, statement, enc_key, template,
-                          key_type="des-192", node_xpath=None):
+                          key_type="des-192", node_xpath=None, node_id=None):
         """
         Will encrypt an assertion
 
@@ -792,6 +792,8 @@ class CryptoBackendXmlSec1(CryptoBackend):
         com_list = [self.xmlsec, "encrypt", "--pubkey-cert-pem", enc_key,
                     "--session-key", key_type, "--xml-data", fil,
                     "--node-xpath", node_xpath]
+        if node_id:
+            com_list.extend(["--node-id", node_id])
 
         (_stdout, _stderr, output) = self._run_xmlsec(
             com_list, [tmpl], exception=EncryptError, validate_output=False)
@@ -1300,6 +1302,25 @@ class SecurityContext(object):
         """
         raise NotImplemented()
 
+    def decrypt_keys(self, enctext, keys=None):
+        """ Decrypting an encrypted text by the use of a private key.
+
+        :param enctext: The encrypted text as a string
+        :return: The decrypted text
+        """
+        if not isinstance(keys, list):
+            keys = [keys]
+        _enctext = self.crypto.decrypt(enctext, self.key_file)
+        if _enctext is not None and len(_enctext) > 0:
+            return _enctext
+        for _key in keys:
+            if _key is not None and len(_key.strip()) > 0:
+                _, key_file = make_temp("%s" % _key, decode=False)
+                _enctext = self.crypto.decrypt(enctext, key_file)
+                if _enctext is not None and len(_enctext) > 0:
+                    return _enctext
+        return enctext
+
     def decrypt(self, enctext, key_file=None):
         """ Decrypting an encrypted text by the use of a private key.
 
@@ -1310,12 +1331,9 @@ class SecurityContext(object):
         if _enctext is not None and len(_enctext) > 0:
             return _enctext
         if key_file is not None and len(key_file.strip()) > 0:
-            _enctext = self.crypto.decrypt(enctext, key_file)
-            if _enctext is not None and len(_enctext) > 0:
-                return _enctext
-        _enctext = self.crypto.decrypt(enctext, self.key_file)
-        if _enctext is not None and len(_enctext) > 0:
-            return _enctext
+                _enctext = self.crypto.decrypt(enctext, key_file)
+                if _enctext is not None and len(_enctext) > 0:
+                    return _enctext
         return enctext
 
     def verify_signature(self, signedtext, cert_file=None, cert_type="pem",

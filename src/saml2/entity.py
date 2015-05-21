@@ -978,7 +978,7 @@ class Entity(HTTPBase):
     # ------------------------------------------------------------------------
 
     def _parse_response(self, xmlstr, response_cls, service, binding,
-                        outstanding_certs=None, pefim=False, **kwargs):
+                        outstanding_certs=None, **kwargs):
         """ Deal with a Response
 
         :param xmlstr: The response as a xml string
@@ -1040,23 +1040,23 @@ class Entity(HTTPBase):
             logger.debug("XMLSTR: %s" % xmlstr)
 
             if response:
+                keys = None
                 if outstanding_certs:
                     try:
                         cert = outstanding_certs[response.in_response_to]
                     except KeyError:
-                        key_file = ""
+                        keys = None
                     else:
-                        _, key_file = make_temp("%s" % cert["key"],
-                                                decode=False)
-                else:
-                    key_file = ""
+                        if not isinstance(cert, list):
+                            cert = [cert]
+                        keys = []
+                        for _cert in cert:
+                            keys.append(_cert["key"])
                 only_identity_in_encrypted_assertion = False
                 if "only_identity_in_encrypted_assertion" in kwargs:
                     only_identity_in_encrypted_assertion = kwargs["only_identity_in_encrypted_assertion"]
-                decrypt = True
-                if "decrypt" in kwargs:
-                    decrypt = kwargs["decrypt"]
-                response = response.verify(key_file, decrypt=decrypt, pefim=pefim)
+
+                response = response.verify(keys)
 
             if not response:
                 return None
