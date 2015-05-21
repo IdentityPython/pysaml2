@@ -12,6 +12,7 @@ import platform
 import shelve
 import traceback
 import saml2
+import six
 from urlparse import parse_qs, urlparse
 from saml2.md import Extensions
 from saml2 import xmldsig as ds
@@ -555,7 +556,7 @@ class SAML2Plugin(object):
     def add_metadata(self, environ, identity):
         """ Add information to the knowledge I have about the user """
         name_id = identity['repoze.who.userid']
-        if isinstance(name_id, basestring):
+        if isinstance(name_id, six.string_types):
             try:
                 # Make sure that userids authenticated by another plugin
                 # don't cause problems here.

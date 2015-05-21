@@ -1,6 +1,6 @@
 import logging
 
-from attribute_converter import to_local
+from saml2.attribute_converter import to_local
 from saml2 import time_util, BINDING_HTTP_REDIRECT
 from saml2.s_utils import OtherError
 

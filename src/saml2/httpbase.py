@@ -1,4 +1,5 @@
 import calendar
+import six
 from six.moves import http_cookiejar
 import copy
 import re
@@ -260,7 +261,7 @@ class HTTPBase(object):
         :param typ: Whether a Request, Response or Artifact
         :return: dictionary
         """
-        if not isinstance(message, basestring):
+        if not isinstance(message, six.string_types):
             message = "%s" % (message,)
 
         return http_form_post_message(message, destination, relay_state, typ)
@@ -375,7 +376,7 @@ class HTTPBase(object):
         :param key: Key to use for signing
         :return: dictionary
         """
-        if not isinstance(message, basestring):
+        if not isinstance(message, six.string_types):
             message = "%s" % (message,)
 
         return http_redirect_message(message, destination, relay_state, typ,

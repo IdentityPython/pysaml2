@@ -20,6 +20,7 @@ import logging
 from saml2.sigver import REQ_ORDER
 from saml2.sigver import RESP_ORDER
 from saml2.sigver import SIGNER_ALGS
+import six
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +58,7 @@ def http_form_post_message(message, location, relay_state="",
     """
     response = ["<head>", """<title>SAML 2.0 POST</title>""", "</head><body>"]
 
-    if not isinstance(message, basestring):
+    if not isinstance(message, six.string_types):
         message = "%s" % (message,)
 
     if typ == "SAMLRequest" or typ == "SAMLResponse":
@@ -94,7 +95,7 @@ def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
     :return: A tuple containing header information and a HTML message.
     """
 
-    if not isinstance(message, basestring):
+    if not isinstance(message, six.string_types):
         message = "%s" % (message,)
 
     _order = None
@@ -163,7 +164,7 @@ def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
     body.tag = '{%s}Body' % NAMESPACE
     envelope.append(body)
 
-    if isinstance(thingy, basestring):
+    if isinstance(thingy, six.string_types):
         # remove the first XML version/encoding line
         logger.debug("thingy0: %s" % thingy)
         _part = thingy.split("\n")
@@ -174,6 +175,8 @@ def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
         _child.tag = '{%s}FuddleMuddle' % DUMMY_NAMESPACE
         body.append(_child)
         _str = ElementTree.tostring(envelope, encoding="UTF-8")
+        if isinstance(_str, six.binary_type):
+            _str = _str.decode('utf-8')
         logger.debug("SOAP precursor: %s" % _str)
         # find an remove the namespace definition
         i = _str.find(DUMMY_NAMESPACE)

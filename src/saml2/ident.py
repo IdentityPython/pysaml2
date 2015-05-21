@@ -1,12 +1,13 @@
 import copy
 import shelve
 import logging
+import six
 
 from hashlib import sha256
-from urllib import quote
-from urllib import unquote
+from six.moves.urllib.parse import quote
+from six.moves.urllib.parse import unquote
 from saml2 import SAMLError
-from saml2.s_utils import rndstr
+from saml2.s_utils import rndbytes
 from saml2.s_utils import PolicyError
 from saml2.saml import NameID
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
@@ -45,6 +46,16 @@ def code(item):
     return ",".join(_res)
 
 
+def code_binary(item):
+    """
+    Return a binary 'code' suitable for hashing.
+    """
+    code_str = code(item)
+    if isinstance(code_str, six.string_types):
+        return code_str.encode('utf-8')
+    return code_str
+
+
 def decode(txt):
     """Turns a coded string by code() into a NameID class instance.
 
@@ -66,7 +77,7 @@ class IdentDB(object):
      Keeps a list of all nameIDs returned per SP
     """
     def __init__(self, db, domain="", name_qualifier=""):
-        if isinstance(db, basestring):
+        if isinstance(db, six.string_types):
             self.db = shelve.open(db)
         else:
             self.db = db
@@ -74,11 +85,17 @@ class IdentDB(object):
         self.name_qualifier = name_qualifier
 
     def _create_id(self, nformat, name_qualifier="", sp_name_qualifier=""):
-        _id = sha256(rndstr(32))
+        _id = sha256(rndbytes(32))
+        if not isinstance(nformat, six.binary_type):
+            nformat = nformat.encode('utf-8')
         _id.update(nformat)
         if name_qualifier:
+            if not isinstance(name_qualifier, six.binary_type):
+                name_qualifier = name_qualifier.encode('utf-8')
             _id.update(name_qualifier)
         if sp_name_qualifier:
+            if not isinstance(sp_name_qualifier, six.binary_type):
+                sp_name_qualifier = sp_name_qualifier.encode('utf-8')
             _id.update(sp_name_qualifier)
         return _id.hexdigest()
 
@@ -94,7 +111,7 @@ class IdentDB(object):
         :param ident: user identifier
         :param name_id: NameID instance
         """
-        if isinstance(ident, unicode):
+        if isinstance(ident, six.string_types):
             ident = ident.encode("utf-8")
 
         # One user may have more than one NameID defined

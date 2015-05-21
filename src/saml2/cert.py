@@ -4,6 +4,7 @@ import base64
 import datetime
 import dateutil.parser
 import pytz
+import six
 from OpenSSL import crypto
 from os.path import join
 from os import remove
@@ -154,10 +155,13 @@ class OpenSSLWrapper(object):
                 tmp_cert = crypto.dump_certificate(crypto.FILETYPE_PEM, cert)
             tmp_key = None
             if cipher_passphrase is not None:
+                passphrase = cipher_passphrase["passphrase"]
+                if isinstance(cipher_passphrase["passphrase"],
+                              six.string_types):
+                    passphrase = passphrase.encode('utf-8')
                 tmp_key = crypto.dump_privatekey(crypto.FILETYPE_PEM, k,
                                                  cipher_passphrase["cipher"],
-                                                 cipher_passphrase[
-                                                     "passphrase"])
+                                                 passphrase)
             else:
                 tmp_key = crypto.dump_privatekey(crypto.FILETYPE_PEM, k)
             if write_to_file:
@@ -190,7 +194,7 @@ class OpenSSLWrapper(object):
         f.close()
 
     def read_str_from_file(self, file, type="pem"):
-        f = open(file)
+        f = open(file, 'rt')
         str_data = f.read()
         f.close()
 
@@ -257,7 +261,10 @@ class OpenSSLWrapper(object):
         cert.set_pubkey(req_cert.get_pubkey())
         cert.sign(ca_key, hash_alg)
 
-        return crypto.dump_certificate(crypto.FILETYPE_PEM, cert)
+        cert_dump = crypto.dump_certificate(crypto.FILETYPE_PEM, cert)
+        if isinstance(cert_dump, six.string_types):
+            return cert_dump
+        return cert_dump.decode('utf-8')
 
     def verify_chain(self, cert_chain_str_list, cert_str):
         """
@@ -327,6 +334,8 @@ class OpenSSLWrapper(object):
                                "signed certificate.")
 
             cert_algorithm = cert.get_signature_algorithm()
+            if six.PY3:
+                cert_algorithm = cert_algorithm.decode('ascii')
 
             cert_asn1 = crypto.dump_certificate(crypto.FILETYPE_ASN1, cert)
 
@@ -342,7 +351,9 @@ class OpenSSLWrapper(object):
 
             signature_payload = cert_signature_decoded.payload
 
-            if signature_payload[0] != '\x00':
+            sig_pay0 = signature_payload[0]
+            if ((isinstance(sig_pay0, int) and sig_pay0 != 0) or
+                (isinstance(sig_pay0, str) and sig_pay0 != '\x00')):
                 return (False,
                        "The certificate should not contain any unused bits.")
 
@@ -355,4 +366,4 @@ class OpenSSLWrapper(object):
             except crypto.Error as e:
                 return False, "Certificate is incorrectly signed."
         except Exception as e:
-            return False, "Certificate is not valid for an unknown reason."
+            return False, "Certificate is not valid for an unknown reason. %s" % str(e)

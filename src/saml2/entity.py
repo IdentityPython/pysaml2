@@ -4,6 +4,7 @@ import logging
 from hashlib import sha1
 from Crypto.PublicKey import RSA
 import requests
+import six
 from saml2.metadata import ENDPOINTS
 from saml2.profile import paos, ecp
 from saml2.soap import parse_soap_enveloped_saml_artifact_resolve
@@ -156,7 +157,7 @@ class Entity(HTTPBase):
         self.sec = security_context(self.config)
 
         if virtual_organization:
-            if isinstance(virtual_organization, basestring):
+            if isinstance(virtual_organization, six.string_types):
                 self.vorg = self.config.vorg[virtual_organization]
             elif isinstance(virtual_organization, VirtualOrg):
                 self.vorg = virtual_organization

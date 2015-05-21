@@ -9,7 +9,7 @@ from saml2.eptid import Eptid
 from saml2.mdstore import InMemoryMetaData
 from saml2.s_utils import PolicyError
 
-from saml2.ident import code, IdentDB, Unknown
+from saml2.ident import code_binary, IdentDB, Unknown
 from saml2.mdie import to_dict, from_dict
 
 from saml2 import md
@@ -59,7 +59,7 @@ class SessionStorageMDB(object):
 
     def store_assertion(self, assertion, to_sign):
         name_id = assertion.subject.name_id
-        nkey = sha1(code(name_id)).hexdigest()
+        nkey = sha1(code_binary(name_id)).hexdigest()
 
         doc = {
             "name_id_key": nkey,
@@ -94,7 +94,7 @@ class SessionStorageMDB(object):
         :return:
         """
         result = []
-        key = sha1(code(name_id)).hexdigest()
+        key = sha1(code_binary(name_id)).hexdigest()
         for item in self.assertion.find({"name_id_key": key}):
             assertion = from_dict(item["assertion"], ONTS, True)
             if session_index or requested_context:
@@ -114,7 +114,7 @@ class SessionStorageMDB(object):
 
     def remove_authn_statements(self, name_id):
         logger.debug("remove authn about: %s" % name_id)
-        key = sha1(code(name_id)).hexdigest()
+        key = sha1(code_binary(name_id)).hexdigest()
         for item in self.assertion.find({"name_id_key": key}):
             self.assertion.remove(item["_id"])
 

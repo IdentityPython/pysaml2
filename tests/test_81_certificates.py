@@ -174,7 +174,7 @@ class TestGenerateCertificates(unittest.TestCase):
                                                            request=True)
         cert_str = osw.create_cert_signed_certificate(ca_cert_str, ca_key_str,
                                                       req_cert_str,
-                                                      passphrase="qwerty")
+                                                      passphrase=b"qwerty")
 
         valid = False
         try:
