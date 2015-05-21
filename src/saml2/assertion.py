@@ -6,7 +6,7 @@ import logging
 import re
 from saml2.saml import NAME_FORMAT_URI
 import six
-import xmlenc
+from saml2 import xmlenc
 
 from saml2 import saml
 

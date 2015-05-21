@@ -4,8 +4,8 @@ import logging
 import six
 
 from hashlib import sha256
-from urllib import quote
-from urllib import unquote
+from six.moves.urllib.parse import quote
+from six.moves.urllib.parse import unquote
 from saml2 import SAMLError
 from saml2.s_utils import rndstr
 from saml2.s_utils import PolicyError

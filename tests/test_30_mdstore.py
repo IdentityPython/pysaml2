@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import datetime
 import re
-from urllib import quote_plus
+from six.moves.urllib.parse import quote_plus
 from saml2.httpbase import HTTPBase
 
 from saml2.mdstore import MetadataStore, MetaDataMDX
