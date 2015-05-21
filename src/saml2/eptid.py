@@ -58,4 +58,7 @@ class Eptid(object):
 class EptidShelve(Eptid):
     def __init__(self, secret, filename):
         Eptid.__init__(self, secret)
-        self._db = shelve.open(filename, writeback=True)
+        if six.PY3:
+            if filename.endswith('.db'):
+                filename = filename.rsplit('.db', 1)[0]
+        self._db = shelve.open(filename, writeback=True, protocol=2)
