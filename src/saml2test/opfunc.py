@@ -1,5 +1,6 @@
 import logging
 import json
+import six
 
 from urlparse import urlparse
 
@@ -163,7 +164,7 @@ def pick_form(response, content, url=None, **kwargs):
                         _default = _ava["value"]
                         try:
                             orig_val = form[prop]
-                            if isinstance(orig_val, basestring):
+                            if isinstance(orig_val, six.string_types):
                                 if orig_val == _default:
                                     _form = form
                             elif _default in orig_val:

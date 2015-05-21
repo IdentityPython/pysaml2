@@ -2,6 +2,7 @@ __author__ = 'rohe0002'
 
 import json
 import logging
+import six
 
 from urlparse import urlparse
 from bs4 import BeautifulSoup
@@ -34,7 +35,8 @@ def pick_interaction(interactions, _base="", content="", req=None):
                     _match += 1
                 else:
                     _c = _bs.title.contents
-                    if isinstance(_c, list) and not isinstance(_c, basestring):
+                    if isinstance(_c, list) and not isinstance(
+                      _c, six.string_types):
                         for _line in _c:
                             if val in _line:
                                 _match += 1
@@ -165,7 +167,7 @@ def pick_form(response, url=None, **kwargs):
                         _default = _ava["value"]
                         try:
                             orig_val = form[prop]
-                            if isinstance(orig_val, basestring):
+                            if isinstance(orig_val, six.string_types):
                                 if orig_val == _default:
                                     _form = form
                             elif _default in orig_val:

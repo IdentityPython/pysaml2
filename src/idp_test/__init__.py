@@ -6,6 +6,7 @@ import pprint
 import types
 import argparse
 import sys
+import six
 
 import logging
 import imp
@@ -356,7 +357,7 @@ class SAML2client(object):
             item = {"id": key, "name": val["name"]}
             try:
                 _desc = val["descr"]
-                if isinstance(_desc, basestring):
+                if isinstance(_desc, six.string_types):
                     item["descr"] = _desc
                 else:
                     item["descr"] = "\n".join(_desc)
@@ -377,7 +378,7 @@ class SAML2client(object):
                 item = {"id": key, "name": val["name"]}
                 try:
                     _desc = val["descr"]
-                    if isinstance(_desc, basestring):
+                    if isinstance(_desc, six.string_types):
                         item["descr"] = _desc
                     else:
                         item["descr"] = "\n".join(_desc)

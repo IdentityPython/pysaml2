@@ -1,5 +1,6 @@
 import inspect
 import json
+import six
 
 __author__ = 'rolandh'
 
@@ -91,7 +92,7 @@ class ResponseInfo(Information):
         self._status = self.status
         _msg = conv.last_content
 
-        if isinstance(_msg, basestring):
+        if isinstance(_msg, six.string_types):
             self._message = _msg
         else:
             self._message = _msg.to_dict()

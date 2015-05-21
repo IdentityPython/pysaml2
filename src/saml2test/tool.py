@@ -3,6 +3,7 @@ import sys
 import traceback
 import logging
 from urlparse import parse_qs
+import six
 
 from saml2test.opfunc import Operation
 from saml2test import CheckError, FatalError
@@ -64,7 +65,7 @@ class Conversation(object):
             raise CheckError
 
     def do_check(self, test, **kwargs):
-        if isinstance(test, basestring):
+        if isinstance(test, six.string_types):
             chk = self.check_factory(test)(**kwargs)
         else:
             chk = test(**kwargs)

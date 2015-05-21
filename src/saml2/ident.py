@@ -1,6 +1,7 @@
 import copy
 import shelve
 import logging
+import six
 
 from hashlib import sha256
 from urllib import quote
@@ -66,7 +67,7 @@ class IdentDB(object):
      Keeps a list of all nameIDs returned per SP
     """
     def __init__(self, db, domain="", name_qualifier=""):
-        if isinstance(db, basestring):
+        if isinstance(db, six.string_types):
             self.db = shelve.open(db)
         else:
             self.db = db
@@ -94,7 +95,7 @@ class IdentDB(object):
         :param ident: user identifier
         :param name_id: NameID instance
         """
-        if isinstance(ident, unicode):
+        if isinstance(ident, six.string_types):
             ident = ident.encode("utf-8")
 
         # One user may have more than one NameID defined
