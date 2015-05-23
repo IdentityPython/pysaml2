@@ -827,10 +827,14 @@ class SamlBase(ExtensionContainer):
                     return False
             elif isinstance(svals, list):
                 for sval in svals:
-                    for oval in ovals:
-                        if sval == oval:
-                            break
-                    else:
+                    try:
+                        for oval in ovals:
+                            if sval == oval:
+                                break
+                        else:
+                            return False
+                    except TypeError:
+                        # ovals isn't iterable
                         return False
             else:
                 if svals == ovals:  # Since I only support '=='
