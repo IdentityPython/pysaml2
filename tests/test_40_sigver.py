@@ -299,10 +299,11 @@ class TestSecurity():
         to_sign = [(class_name(self._assertion), self._assertion.id),
                    (class_name(response), response.id)]
 
-        s_response = sigver.signed_instance_factory(response, self.sec, to_sign)
+        s_response = sigver.signed_instance_factory(response, self.sec,
+                                                    to_sign)
 
         print(s_response)
-        res = self.sec.verify_signature("%s" % s_response,
+        res = self.sec.verify_signature(s_response,
                                         node_name=class_name(samlp.Response()))
 
         print(res)
@@ -327,7 +328,7 @@ class TestSecurity():
 
         assert ci == self.sec.my_cert
 
-        res = self.sec.verify_signature("%s" % s_response,
+        res = self.sec.verify_signature(s_response,
                                         node_name=class_name(samlp.Response()))
 
         assert res
@@ -358,7 +359,7 @@ class TestSecurity():
         ci = "".join(sigver.cert_from_instance(ass)[0].split())
         assert ci == self.sec.my_cert
 
-        res = self.sec.verify_signature("%s" % s_assertion,
+        res = self.sec.verify_signature(s_assertion,
                                         node_name=class_name(ass))
         assert res
 
@@ -447,9 +448,9 @@ def test_xbox():
     encrypted_assertion = EncryptedAssertion()
     encrypted_assertion.add_extension_element(_ass0)
 
-    _, pre = make_temp("%s" % pre_encryption_part(), decode=False)
+    _, pre = make_temp(str(pre_encryption_part()).encode('utf-8'), decode=False)
     enctext = sec.crypto.encrypt(
-        "%s" % encrypted_assertion, conf.cert_file, pre, "des-192",
+        str(encrypted_assertion), conf.cert_file, pre, "des-192",
         '/*[local-name()="EncryptedAssertion"]/*[local-name()="Assertion"]')
 
 

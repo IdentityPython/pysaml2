@@ -83,6 +83,8 @@ def create_class_from_xml_string(target_class, xml_string):
         the contents of the XML - or None if the root XML tag and namespace did
         not match those of the target class.
     """
+    if not isinstance(xml_string, six.binary_type):
+        xml_string = xml_string.encode('utf-8')
     tree = ElementTree.fromstring(xml_string)
     return create_class_from_element_tree(target_class, tree)
 

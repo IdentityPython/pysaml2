@@ -266,7 +266,7 @@ def _instance(klass, ava, seccont, base64encode=False, elements_to_sign=None):
         #print("# %s" % (prop))
         if prop in ava:
             if isinstance(ava[prop], bool):
-                setattr(instance, prop, "%s" % ava[prop])
+                setattr(instance, prop, str(ava[prop]).encode('utf-8'))
             elif isinstance(ava[prop], int):
                 setattr(instance, prop, "%d" % ava[prop])
             else:
@@ -313,7 +313,7 @@ def signed_instance_factory(instance, seccont, elements_to_sign=None):
     :return: A class instance if not signed otherwise a string
     """
     if elements_to_sign:
-        signed_xml = "%s" % instance
+        signed_xml = str(instance).encode('utf-8')
         for (node_name, nodeid) in elements_to_sign:
             signed_xml = seccont.sign_statement(
                 signed_xml, node_name=node_name, node_id=nodeid)
@@ -351,6 +351,7 @@ def make_temp(string, suffix="", decode=True, delete=True):
         xmlsec function).
     """
     ntf = NamedTemporaryFile(suffix=suffix, delete=delete)
+    assert isinstance(string, six.binary_type)
     if decode:
         ntf.write(base64.b64decode(string))
     else:
@@ -543,7 +544,7 @@ def extract_rsa_key_from_x509_cert(pem):
 
 def pem_format(key):
     return "\n".join(["-----BEGIN CERTIFICATE-----",
-                      key, "-----END CERTIFICATE-----"])
+                      key, "-----END CERTIFICATE-----"]).encode('ascii')
 
 
 def import_rsa_key_from_file(filename):
@@ -740,8 +741,9 @@ class CryptoBackendXmlSec1(CryptoBackend):
     def version(self):
         com_list = [self.xmlsec, "--version"]
         pof = Popen(com_list, stderr=PIPE, stdout=PIPE)
+        content = pof.stdout.read().decode('ascii')
         try:
-            return pof.stdout.read().split(" ")[1]
+            return content.split(" ")[1]
         except IndexError:
             return ""
 
@@ -757,7 +759,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         :return:
         """
         logger.debug("Encryption input len: %d" % len(text))
-        _, fil = make_temp("%s" % text, decode=False)
+        _, fil = make_temp(str(text).encode('utf-8'), decode=False)
 
         com_list = [self.xmlsec, "--encrypt", "--pubkey-cert-pem", recv_key,
                     "--session-key", session_key_type, "--xml-data", fil]
@@ -768,6 +770,8 @@ class CryptoBackendXmlSec1(CryptoBackend):
         (_stdout, _stderr, output) = self._run_xmlsec(com_list, [template],
                                                       exception=DecryptError,
                                                       validate_output=False)
+        if isinstance(output, six.binary_type):
+            output = output.decode('utf-8')
         return output
 
     def encrypt_assertion(self, statement, enc_key, template,
@@ -785,8 +789,8 @@ class CryptoBackendXmlSec1(CryptoBackend):
         if isinstance(statement, SamlBase):
             statement = pre_encrypt_assertion(statement)
 
-        _, fil = make_temp("%s" % statement, decode=False, delete=False)
-        _, tmpl = make_temp("%s" % template, decode=False)
+        _, fil = make_temp(str(statement).encode('utf-8'), decode=False, delete=False)
+        _, tmpl = make_temp(str(template).encode('utf-8'), decode=False)
 
         if not node_xpath:
             node_xpath = ASSERT_XPATH
@@ -815,7 +819,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         """
 
         logger.debug("Decrypt input len: %d" % len(enctext))
-        _, fil = make_temp("%s" % enctext, decode=False)
+        _, fil = make_temp(str(enctext).encode('utf-8'), decode=False)
 
         com_list = [self.xmlsec, "--decrypt", "--privkey-pem",
                     key_file, "--id-attr:%s" % ID_ATTR, ENC_KEY_CLASS]
@@ -838,9 +842,11 @@ class CryptoBackendXmlSec1(CryptoBackend):
             'id','Id' or 'ID'
         :return: The signed statement
         """
+        if not isinstance(statement, six.binary_type):
+            statement = str(statement).encode('utf-8')
 
-        _, fil = make_temp("%s" % statement, suffix=".xml", decode=False, 
-                           delete=self._xmlsec_delete_tmpfiles)
+        _, fil = make_temp(statement, suffix=".xml",
+                           decode=False, delete=self._xmlsec_delete_tmpfiles)
 
         com_list = [self.xmlsec, "--sign",
                     "--privkey-pem", key_file,
@@ -875,6 +881,8 @@ class CryptoBackendXmlSec1(CryptoBackend):
         :param id_attr: Should normally be one of "id", "Id" or "ID"
         :return: Boolean True if the signature was correct otherwise False.
         """
+        if not isinstance(signedtext, six.binary_type):
+            signedtext = signedtext.encode('utf-8')
         _, fil = make_temp(signedtext, suffix=".xml",
                            decode=False, delete=self._xmlsec_delete_tmpfiles)
 
@@ -924,8 +932,8 @@ class CryptoBackendXmlSec1(CryptoBackend):
 
         pof = Popen(com_list, stderr=PIPE, stdout=PIPE)
 
-        p_out = pof.stdout.read()
-        p_err = pof.stderr.read()
+        p_out = pof.stdout.read().decode('utf-8')
+        p_err = pof.stderr.read().decode('utf-8')
 
         if pof.returncode is not None and pof.returncode < 0:
             logger.error(LOG_LINE % (p_out, p_err))
@@ -1685,7 +1693,7 @@ class SecurityContext(object):
             id_attr = ID_ATTR
 
         if not key_file and key:
-            _, key_file = make_temp("%s" % key, ".pem")
+            _, key_file = make_temp(str(key).encode('utf-8'), ".pem")
 
         if not key and not key_file:
             key_file = self.key_file
