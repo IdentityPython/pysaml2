@@ -166,9 +166,10 @@ def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
 
     if isinstance(thingy, six.string_types):
         # remove the first XML version/encoding line
-        logger.debug("thingy0: %s" % thingy)
-        _part = thingy.split("\n")
-        thingy = "".join(_part[1:])
+        if thingy[0:5].lower() == '<?xml':
+            logger.debug("thingy0: %s" % thingy)
+            _part = thingy.split("\n")
+            thingy = "".join(_part[1:])
         thingy = thingy.replace(PREFIX, "")
         logger.debug("thingy: %s" % thingy)
         _child = ElementTree.Element('')
