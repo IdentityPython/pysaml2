@@ -35,7 +35,7 @@ class TestClass:
                         
         (ava, inactive) = self.cache.get_identity(nid[0])
         assert inactive == []
-        assert ava.keys() == ["givenName"]
+        assert list(ava.keys()) == ["givenName"]
         assert ava["givenName"] == ["Derek"]
         
     def test_add_ava_info(self):        
