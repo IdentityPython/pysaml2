@@ -111,9 +111,6 @@ class IdentDB(object):
         :param ident: user identifier
         :param name_id: NameID instance
         """
-        if isinstance(ident, six.string_types):
-            ident = ident.encode("utf-8")
-
         # One user may have more than one NameID defined
         try:
             val = self.db[ident].split(" ")
