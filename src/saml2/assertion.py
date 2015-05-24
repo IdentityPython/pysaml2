@@ -767,7 +767,7 @@ class Assertion(dict):
         policy.acs = self.acs
         ava = policy.restrict(self, sp_entity_id, metadata)
 
-        for key, val in self.items():
+        for key, val in list(self.items()):
             if key in ava:
                 self[key] = ava[key]
             else:
