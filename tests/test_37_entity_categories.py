@@ -56,7 +56,7 @@ def test_filter_ava():
 
     ava = policy.filter(ava, "https://connect.sunet.se/shibboleth", MDS)
 
-    assert _eq(ava.keys(), ['mail', 'givenName', 'sn', 'c'])
+    assert _eq(list(ava.keys()), ['mail', 'givenName', 'sn', 'c'])
     assert _eq(ava["mail"], ["derek@nyy.mlb.com", "dj@example.com"])
 
 
@@ -77,7 +77,7 @@ def test_filter_ava2():
 
     # Mismatch, policy deals with eduGAIN, metadata says SWAMID
     # So only minimum should come out
-    assert _eq(ava.keys(), ['eduPersonTargetedID'])
+    assert _eq(list(ava.keys()), ['eduPersonTargetedID'])
 
 
 def test_filter_ava3():
@@ -100,7 +100,7 @@ def test_filter_ava3():
 
     ava = policy.filter(ava, "urn:mace:example.com:saml:roland:sp", mds)
 
-    assert _eq(ava.keys(), ['eduPersonTargetedID', "norEduPersonNIN"])
+    assert _eq(list(ava.keys()), ['eduPersonTargetedID', "norEduPersonNIN"])
 
 
 def test_filter_ava4():
@@ -123,7 +123,7 @@ def test_filter_ava4():
 
     ava = policy.filter(ava, "urn:mace:example.com:saml:roland:sp", mds)
 
-    assert _eq(ava.keys(), ['eduPersonTargetedID', "givenName", "c", "mail",
+    assert _eq(list(ava.keys()), ['eduPersonTargetedID', "givenName", "c", "mail",
                             "sn"])
 
 
@@ -147,7 +147,7 @@ def test_filter_ava5():
 
     ava = policy.filter(ava, "urn:mace:example.com:saml:roland:sp", mds)
 
-    assert _eq(ava.keys(), ['eduPersonTargetedID'])
+    assert _eq(list(ava.keys()), ['eduPersonTargetedID'])
 
 
 def test_idp_policy_filter():
@@ -161,7 +161,7 @@ def test_idp_policy_filter():
         ava = policy.filter(ava, "urn:mace:example.com:saml:roland:sp", idp.metadata)
 
         print(ava)
-        assert ava.keys() == ["eduPersonTargetedID"]  # because no entity category
+        assert list(ava.keys()) == ["eduPersonTargetedID"]  # because no entity category
 
 if __name__ == "__main__":
     test_idp_policy_filter()

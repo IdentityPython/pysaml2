@@ -229,7 +229,7 @@ def filter_attribute_value_assertions(ava, attribute_restrictions=None):
     if not attribute_restrictions:
         return ava
 
-    for attr, vals in ava.items():
+    for attr, vals in list(ava.items()):
         _attr = attr.lower()
         try:
             _rests = attribute_restrictions[_attr]
