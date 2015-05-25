@@ -871,11 +871,16 @@ class AuthnResponse(StatusResponse):
             logger.debug("***Encrypted assertion/-s***")
             decr_text = "%s" % self.response
             resp = self.response
-            while self.find_encrypt_data(resp):
+            decr_text_old = None
+            while self.find_encrypt_data(resp) and decr_text_old != decr_text:
+                decr_text_old = decr_text
                 decr_text = self.sec.decrypt_keys(decr_text, keys)
                 resp = samlp.response_from_string(decr_text)
             _enc_assertions = self.decrypt_assertions(resp.encrypted_assertion, decr_text)
-            while self.find_encrypt_data(resp) or self.find_encrypt_data_assertion_list(_enc_assertions):
+            decr_text_old = None
+            while self.find_encrypt_data(resp) or self.find_encrypt_data_assertion_list(_enc_assertions) and \
+                            decr_text_old != decr_text:
+                decr_text_old = decr_text
                 decr_text = self.sec.decrypt_keys(decr_text, keys)
                 resp = samlp.response_from_string(decr_text)
                 _enc_assertions = self.decrypt_assertions(resp.encrypted_assertion, decr_text, verified=True)
@@ -893,7 +898,8 @@ class AuthnResponse(StatusResponse):
                             tmp_ass.advice.assertion.extend(advice_res)
                         else:
                             tmp_ass.advice.assertion = advice_res
-                        tmp_ass.advice.encrypted_assertion = []
+                        if len(advice_res) > 0:
+                            tmp_ass.advice.encrypted_assertion = []
             self.response.assertion = resp.assertion
             for assertion in _enc_assertions:
                 if not self._assertion(assertion, True):
@@ -902,7 +908,8 @@ class AuthnResponse(StatusResponse):
                     self.assertions.append(assertion)
 
             self.xmlstr = decr_text
-            self.response.encrypted_assertion = []
+            if len(_enc_assertions) > 0:
+                self.response.encrypted_assertion = []
 
         if self.response.assertion:
             for assertion in self.response.assertion:
