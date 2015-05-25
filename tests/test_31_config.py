@@ -180,11 +180,11 @@ def test_1():
     assert isinstance(md, MetadataStore)
 
     assert len(c._sp_idp) == 1
-    assert c._sp_idp.keys() == ["urn:mace:example.com:saml:roland:idp"]
-    assert c._sp_idp.values() == [{'single_sign_on_service':
-                                       {
-                                           'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect':
-                                               'http://localhost:8088/sso/'}}]
+    assert list(c._sp_idp.keys()) == ["urn:mace:example.com:saml:roland:idp"]
+    assert list(c._sp_idp.values()) == [{'single_sign_on_service':
+                                         {
+                                             'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect':
+                                             'http://localhost:8088/sso/'}}]
 
     assert c.only_use_keys_in_metadata
 
@@ -202,8 +202,8 @@ def test_2():
     assert c._sp_required_attributes
 
     assert len(c._sp_idp) == 1
-    assert c._sp_idp.keys() == [""]
-    assert c._sp_idp.values() == [
+    assert list(c._sp_idp.keys()) == [""]
+    assert list(c._sp_idp.values()) == [
         "https://example.com/saml2/idp/SSOService.php"]
     assert c.only_use_keys_in_metadata is True
 
@@ -263,7 +263,7 @@ def test_wayf():
     c.context = "sp"
 
     idps = c.metadata.with_descriptor("idpsso")
-    ent = idps.values()[0]
+    ent = list(idps.values())[0]
     assert name(ent) == 'Example Co.'
     assert name(ent, "se") == 'Exempel AB'
 
@@ -305,7 +305,8 @@ def test_conf_syslog():
     print(handler.__dict__)
     assert handler.facility == "local3"
     assert handler.address == ('localhost', 514)
-    if sys.version >= (2, 7):
+    if ((sys.version_info.major == 2 and sys.version_info.minor >= 7) or
+        sys.version_info.major > 2):
         assert handler.socktype == 2
     else:
         pass
