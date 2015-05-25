@@ -335,9 +335,7 @@ class SSO(Service):
 
                 _resp = IDP.create_authn_response(
                     identity, userid=self.user,
-                    encrypt_cert=encrypt_cert,
-                    encrypt_assertion_self_contained=True,
-                    encrypted_advice_attributes=True,
+                    encrypt_cert_assertion=encrypt_cert,
                     **resp_args)
             except Exception as excp:
                 logging.error(exception_trace(excp))
