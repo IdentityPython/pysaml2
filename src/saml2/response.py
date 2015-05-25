@@ -878,7 +878,7 @@ class AuthnResponse(StatusResponse):
                 resp = samlp.response_from_string(decr_text)
             _enc_assertions = self.decrypt_assertions(resp.encrypted_assertion, decr_text)
             decr_text_old = None
-            while self.find_encrypt_data(resp) or self.find_encrypt_data_assertion_list(_enc_assertions) and \
+            while (self.find_encrypt_data(resp) or self.find_encrypt_data_assertion_list(_enc_assertions)) and \
                             decr_text_old != decr_text:
                 decr_text_old = decr_text
                 decr_text = self.sec.decrypt_keys(decr_text, keys)
@@ -891,6 +891,7 @@ class AuthnResponse(StatusResponse):
             if len(all_assertions) > 0:
                 for tmp_ass in all_assertions:
                     if tmp_ass.advice and tmp_ass.advice.encrypted_assertion:
+
                         advice_res = self.decrypt_assertions(tmp_ass.advice.encrypted_assertion,
                                                              decr_text,
                                                              tmp_ass.issuer)
