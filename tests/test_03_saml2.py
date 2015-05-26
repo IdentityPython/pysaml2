@@ -548,5 +548,5 @@ def test_extensions_loadd():
     assert _eq(nid.attributes.keys(), ["Format"])
     assert nid.text.strip() == "http://federationX.org"
 
-    assert extension.extension_attributes.keys() == ["foo"]
+    assert list(extension.extension_attributes.keys()) == ["foo"]
     assert extension.extension_attributes["foo"] == "bar"
