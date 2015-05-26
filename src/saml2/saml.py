@@ -193,6 +193,8 @@ class AttributeValueBase(SamlBase):
             val = base64.encodestring(val)
             self.set_type("xs:base64Binary")
         else:
+            if isinstance(val, six.binary_type):
+                val = val.decode('utf-8')
             if isinstance(val, six.string_types):
                 if not typ:
                     self.set_type("xs:string")
