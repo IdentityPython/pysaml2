@@ -372,8 +372,16 @@ def factory(klass, **kwargs):
 
 
 def signature(secret, parts):
-    """Generates a signature.
+    """Generates a signature. All strings are assumed to be utf-8
     """
+    if not isinstance(secret, six.binary_type):
+        secret = secret.encode('utf-8')
+    newparts = []
+    for part in parts:
+        if not isinstance(part, six.binary_type):
+            part = part.encode('utf-8')
+        newparts.append(part)
+    parts = newparts
     if sys.version_info >= (2, 5):
         csum = hmac.new(secret, digestmod=hashlib.sha1)
     else:
