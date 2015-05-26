@@ -35,22 +35,22 @@
 #USERS = LDAPDict(**ldap_settings)
 
 USERS = {
-    "haho0032": {
-        "sn": "Hoerberg",
-        "givenName": "Hasse",
+    "testuser": {
+        "sn": "Testsson",
+        "givenName": "Test",
         "eduPersonAffiliation": "student",
         "eduPersonScopedAffiliation": "student@example.com",
-        "eduPersonPrincipalName": "haho@example.com",
-        "uid": "haho0032",
+        "eduPersonPrincipalName": "test@example.com",
+        "uid": "testuser",
         "eduPersonTargetedID": "one!for!all",
         "c": "SE",
         "o": "Example Co.",
         "ou": "IT",
         "initials": "P",
         "schacHomeOrganization": "example.com",
-        "email": "hans@example.com",
-        "displayName": "Hans Hoerberg",
-        "labeledURL": "http://www.example.com/haho My homepage",
+        "email": "test@example.com",
+        "displayName": "Test Testsson",
+        "labeledURL": "http://www.example.com/test My homepage",
         "norEduPersonNIN": "SE199012315555"
     },
     "roland": {

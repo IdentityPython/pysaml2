@@ -68,7 +68,8 @@ COMMON_ARGS = [
     "cert_handler_extra_class",
     "generate_cert_func",
     "generate_cert_info",
-    "verify_encrypt_cert",
+    "verify_encrypt_cert_advice",
+    "verify_encrypt_cert_assertion",
     "tmp_cert_file",
     "tmp_key_file",
     "validate_certificate",
@@ -98,6 +99,8 @@ AA_IDP_ARGS = [
     "sign_assertion",
     "sign_response",
     "encrypt_assertion",
+    "encrypted_advice_attributes",
+    "encrypt_assertion_self_contained",
     "want_authn_requests_signed",
     "want_authn_requests_only_with_valid_cert",
     "provided_attributes",
@@ -220,7 +223,8 @@ class Config(object):
         self.allow_unsolicited = False
         self.extension_schema = {}
         self.cert_handler_extra_class = None
-        self.verify_encrypt_cert = None
+        self.verify_encrypt_cert_advice = None
+        self.verify_encrypt_cert_assertion = None
         self.generate_cert_func = None
         self.generate_cert_info = None
         self.tmp_cert_file = None

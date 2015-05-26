@@ -14,7 +14,7 @@ import traceback
 import saml2
 import six
 from urlparse import parse_qs, urlparse
-from saml2.md import Extensions
+from saml2.samlp import Extensions
 from saml2 import xmldsig as ds
 
 from StringIO import StringIO

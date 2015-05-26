@@ -42,6 +42,7 @@ from saml2 import VERSION
 
 from saml2.cert import OpenSSLWrapper
 from saml2.extension import pefim
+from saml2.extension.pefim import SPCertEnc
 from saml2.saml import EncryptedAssertion
 
 import saml2.xmldsig as ds
@@ -770,7 +771,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         return output
 
     def encrypt_assertion(self, statement, enc_key, template,
-                          key_type="des-192", node_xpath=None):
+                          key_type="des-192", node_xpath=None, node_id=None):
         """
         Will encrypt an assertion
 
@@ -793,6 +794,8 @@ class CryptoBackendXmlSec1(CryptoBackend):
         com_list = [self.xmlsec, "encrypt", "--pubkey-cert-pem", enc_key,
                     "--session-key", key_type, "--xml-data", fil,
                     "--node-xpath", node_xpath]
+        if node_id:
+            com_list.extend(["--node-id", node_id])
 
         (_stdout, _stderr, output) = self._run_xmlsec(
             com_list, [tmpl], exception=EncryptError, validate_output=False)
@@ -1065,21 +1068,30 @@ def security_context(conf, debug=None):
 def encrypt_cert_from_item(item):
     _encrypt_cert = None
     try:
-        _elem = extension_elements_to_elements(item.extension_elements[0].children,
-                                               [pefim, ds])
-        if len(_elem) == 1:
-            _encrypt_cert = _elem[0].x509_data[0].x509_certificate.text
-        else:
-            certs = cert_from_instance(item)
-            if len(certs) > 0:
-                _encrypt_cert = certs[0]
-    except Exception:
+        try:
+            _elem = extension_elements_to_elements(item.extensions.extension_elements,[pefim, ds])
+        except:
+            _elem = extension_elements_to_elements(item.extension_elements[0].children,
+                                                   [pefim, ds])
+
+        for _tmp_elem in _elem:
+            if isinstance(_tmp_elem, SPCertEnc):
+                for _tmp_key_info in _tmp_elem.key_info:
+                    if _tmp_key_info.x509_data is not None and len(_tmp_key_info.x509_data) > 0:
+                        _encrypt_cert = _tmp_key_info.x509_data[0].x509_certificate.text
+                        break
+            #_encrypt_cert = _elem[0].x509_data[0].x509_certificate.text
+#        else:
+#            certs = cert_from_instance(item)
+#            if len(certs) > 0:
+#                _encrypt_cert = certs[0]
+    except Exception as _exception:
         pass
 
-    if _encrypt_cert is None:
-        certs = cert_from_instance(item)
-        if len(certs) > 0:
-            _encrypt_cert = certs[0]
+#    if _encrypt_cert is None:
+#        certs = cert_from_instance(item)
+#        if len(certs) > 0:
+#            _encrypt_cert = certs[0]
 
     if _encrypt_cert is not None:
         if _encrypt_cert.find("-----BEGIN CERTIFICATE-----\n") == -1:
@@ -1087,6 +1099,7 @@ def encrypt_cert_from_item(item):
         if _encrypt_cert.find("\n-----END CERTIFICATE-----") == -1:
             _encrypt_cert = _encrypt_cert + "\n-----END CERTIFICATE-----"
     return _encrypt_cert
+
 
 
 class CertHandlerExtra(object):
@@ -1301,15 +1314,39 @@ class SecurityContext(object):
         """
         raise NotImplemented()
 
+    def decrypt_keys(self, enctext, keys=None):
+        """ Decrypting an encrypted text by the use of a private key.
+
+        :param enctext: The encrypted text as a string
+        :return: The decrypted text
+        """
+        if not isinstance(keys, list):
+            keys = [keys]
+        _enctext = self.crypto.decrypt(enctext, self.key_file)
+        if _enctext is not None and len(_enctext) > 0:
+            return _enctext
+        for _key in keys:
+            if _key is not None and len(_key.strip()) > 0:
+                _, key_file = make_temp("%s" % _key, decode=False)
+                _enctext = self.crypto.decrypt(enctext, key_file)
+                if _enctext is not None and len(_enctext) > 0:
+                    return _enctext
+        return enctext
+
     def decrypt(self, enctext, key_file=None):
         """ Decrypting an encrypted text by the use of a private key.
 
         :param enctext: The encrypted text as a string
         :return: The decrypted text
         """
+        _enctext = self.crypto.decrypt(enctext, self.key_file)
+        if _enctext is not None and len(_enctext) > 0:
+            return _enctext
         if key_file is not None and len(key_file.strip()) > 0:
-            return self.crypto.decrypt(enctext, key_file)
-        return self.crypto.decrypt(enctext, self.key_file)
+                _enctext = self.crypto.decrypt(enctext, key_file)
+                if _enctext is not None and len(_enctext) > 0:
+                    return _enctext
+        return enctext
 
     def verify_signature(self, signedtext, cert_file=None, cert_type="pem",
                          node_name=NODE_NAME, node_id=None, id_attr=""):
@@ -1339,17 +1376,22 @@ class SecurityContext(object):
 
     def _check_signature(self, decoded_xml, item, node_name=NODE_NAME,
                          origdoc=None, id_attr="", must=False,
-                         only_valid_cert=False):
+                         only_valid_cert=False, issuer=None):
         #print(item)
         try:
-            issuer = item.issuer.text.strip()
+            _issuer = item.issuer.text.strip()
         except AttributeError:
-            issuer = None
+            _issuer = None
 
+        if _issuer is None:
+            try:
+                _issuer = issuer.text.strip()
+            except AttributeError:
+                _issuer = None
         # More trust in certs from metadata then certs in the XML document
         if self.metadata:
             try:
-                _certs = self.metadata.certs(issuer, "any", "signing")
+                _certs = self.metadata.certs(_issuer, "any", "signing")
             except KeyError:
                 _certs = []
             certs = []
@@ -1422,7 +1464,7 @@ class SecurityContext(object):
         return item
 
     def check_signature(self, item, node_name=NODE_NAME, origdoc=None,
-                        id_attr="", must=False):
+                        id_attr="", must=False, issuer=None):
         """
 
         :param item: Parsed entity
@@ -1433,7 +1475,7 @@ class SecurityContext(object):
         :return:
         """
         return self._check_signature(origdoc, item, node_name, origdoc,
-                                     id_attr=id_attr, must=must)
+                                     id_attr=id_attr, must=must, issuer=issuer)
 
     def correctly_signed_message(self, decoded_xml, msgtype, must=False,
                                  origdoc=None, only_valid_cert=False):

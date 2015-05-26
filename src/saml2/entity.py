@@ -1,5 +1,6 @@
 import base64
 #from binascii import hexlify
+import copy
 import logging
 from hashlib import sha1
 from Crypto.PublicKey import RSA
@@ -37,7 +38,7 @@ from saml2.s_utils import rndstr
 from saml2.s_utils import success_status_factory
 from saml2.s_utils import decode_base64_and_inflate
 from saml2.s_utils import UnsupportedBinding
-from saml2.samlp import AuthnRequest, SessionIndex
+from saml2.samlp import AuthnRequest, SessionIndex, response_from_string
 from saml2.samlp import AuthzDecisionQuery
 from saml2.samlp import AuthnQuery
 from saml2.samlp import AssertionIDRequest
@@ -502,10 +503,46 @@ class Entity(HTTPBase):
             else:
                 msg.extension_elements = extensions
 
+    def has_encrypt_cert_in_metadata(self, sp_entity_id):
+        if sp_entity_id is not None:
+            _certs = self.metadata.certs(sp_entity_id, "any", "encryption")
+            if len(_certs) > 0:
+                return True
+        return False
+
+
+    def _encrypt_assertion(self, encrypt_cert, sp_entity_id, response, node_xpath=None):
+        _certs = []
+        cbxs = CryptoBackendXmlSec1(self.config.xmlsec_binary)
+        if encrypt_cert:
+            _certs = []
+            _certs.append(encrypt_cert)
+        elif sp_entity_id is not None:
+            _certs = self.metadata.certs(sp_entity_id, "any", "encryption")
+        exception = None
+        for _cert in _certs:
+            try:
+                begin_cert = "-----BEGIN CERTIFICATE-----\n"
+                end_cert = "\n-----END CERTIFICATE-----\n"
+                if begin_cert not in _cert:
+                    _cert = "%s%s" % (begin_cert, _cert)
+                if end_cert not in _cert:
+                    _cert = "%s%s" % (_cert, end_cert)
+                _, cert_file = make_temp(_cert, decode=False)
+                response = cbxs.encrypt_assertion(response, cert_file,
+                                                  pre_encryption_part(), node_xpath=node_xpath)
+                return response
+            except Exception as ex:
+                exception = ex
+                pass
+        if exception:
+            raise exception
+        return response
+
     def _response(self, in_response_to, consumer_url=None, status=None,
-                  issuer=None, sign=False, to_sign=None,
+                  issuer=None, sign=False, to_sign=None, sp_entity_id=None,
                   encrypt_assertion=False, encrypt_assertion_self_contained=False, encrypted_advice_attributes=False,
-                  encrypt_cert=None, **kwargs):
+                  encrypt_cert_advice=None, encrypt_cert_assertion=None,sign_assertion=None, pefim=False, **kwargs):
         """ Create a Response.
             Encryption:
                 encrypt_assertion must be true for encryption to be performed. If encrypted_advice_attributes also is
@@ -542,43 +579,79 @@ class Entity(HTTPBase):
         if not sign and to_sign and not encrypt_assertion:
             return signed_instance_factory(response, self.sec, to_sign)
 
-        if encrypt_assertion:
-            node_xpath = None
+        has_encrypt_cert = self.has_encrypt_cert_in_metadata(sp_entity_id)
+        if not has_encrypt_cert and encrypt_cert_advice is None:
+            encrypted_advice_attributes = False
+        if not has_encrypt_cert and encrypt_cert_assertion is None:
+            encrypt_assertion = False
+
+        if encrypt_assertion or (encrypted_advice_attributes and response.assertion.advice is not None and
+                                         len(response.assertion.advice.assertion) == 1):
             if sign:
                 response.signature = pre_signature_part(response.id,
                                                         self.sec.my_cert, 1)
                 sign_class = [(class_name(response), response.id)]
             cbxs = CryptoBackendXmlSec1(self.config.xmlsec_binary)
+            encrypt_advice = False
             if encrypted_advice_attributes and response.assertion.advice is not None \
-                    and len(response.assertion.advice.assertion) == 1:
-                tmp_assertion = response.assertion.advice.assertion[0]
-                response.assertion.advice.encrypted_assertion = []
-                response.assertion.advice.encrypted_assertion.append(EncryptedAssertion())
-                if isinstance(tmp_assertion, list):
-                    response.assertion.advice.encrypted_assertion[0].add_extension_elements(tmp_assertion)
-                else:
-                    response.assertion.advice.encrypted_assertion[0].add_extension_element(tmp_assertion)
-                response.assertion.advice.assertion = []
+                    and len(response.assertion.advice.assertion) > 0:
+                _assertions = response.assertion
+                if not isinstance(_assertions, list):
+                    _assertions = [_assertions]
+                for _assertion in _assertions:
+                    _assertion.advice.encrypted_assertion = []
+                    _assertion.advice.encrypted_assertion.append(EncryptedAssertion())
+                    _advice_assertions = copy.deepcopy(_assertion.advice.assertion)
+                    _assertion.advice.assertion = []
+                    if not isinstance(_advice_assertions, list):
+                        _advice_assertions = [_advice_assertions]
+                    for tmp_assertion in _advice_assertions:
+                        to_sign_advice = []
+                        if sign_assertion and not pefim:
+                            tmp_assertion.signature = pre_signature_part(tmp_assertion.id, self.sec.my_cert, 1)
+                            to_sign_advice.append((class_name(tmp_assertion), tmp_assertion.id))
+                        #tmp_assertion = response.assertion.advice.assertion[0]
+                        _assertion.advice.encrypted_assertion[0].add_extension_element(tmp_assertion)
+
+                        if encrypt_assertion_self_contained:
+                            advice_tag = response.assertion.advice._to_element_tree().tag
+                            assertion_tag = tmp_assertion._to_element_tree().tag
+                            response = \
+                                response.get_xml_string_with_self_contained_assertion_within_advice_encrypted_assertion(
+                                    assertion_tag, advice_tag)
+                        node_xpath = ''.join(["/*[local-name()=\"%s\"]" % v for v in
+                                              ["Response", "Assertion", "Advice", "EncryptedAssertion", "Assertion"]])
+
+                        if to_sign_advice:
+                            response = signed_instance_factory(response, self.sec, to_sign_advice)
+                        response = self._encrypt_assertion(encrypt_cert_advice, sp_entity_id, response, node_xpath=node_xpath)
+                        response = response_from_string(response)
+
+            if encrypt_assertion:
+                to_sign_assertion = []
+                if sign_assertion is not None and sign_assertion:
+                    _assertions = response.assertion
+                    if not isinstance(_assertions, list):
+                        _assertions = [_assertions]
+                    for _assertion in _assertions:
+                        _assertion.signature = pre_signature_part(_assertion.id, self.sec.my_cert, 1)
+                        to_sign_assertion.append((class_name(_assertion), _assertion.id))
                 if encrypt_assertion_self_contained:
-                    advice_tag = response.assertion.advice._to_element_tree().tag
-                    assertion_tag = tmp_assertion._to_element_tree().tag
-                    response = response.get_xml_string_with_self_contained_assertion_within_advice_encrypted_assertion(
-                        assertion_tag, advice_tag)
-                node_xpath = ''.join(["/*[local-name()=\"%s\"]" % v for v in
-                                      ["Response", "Assertion", "Advice", "EncryptedAssertion", "Assertion"]])
-            elif encrypt_assertion_self_contained:
-                assertion_tag = response.assertion._to_element_tree().tag
-                response = pre_encrypt_assertion(response)
-                response = response.get_xml_string_with_self_contained_assertion_within_encrypted_assertion(
-                    assertion_tag)
+                    try:
+                        assertion_tag = response.assertion._to_element_tree().tag
+                    except:
+                        assertion_tag = response.assertion[0]._to_element_tree().tag
+                    response = pre_encrypt_assertion(response)
+                    response = response.get_xml_string_with_self_contained_assertion_within_encrypted_assertion(
+                        assertion_tag)
+                else:
+                    response = pre_encrypt_assertion(response)
+                if to_sign_assertion:
+                    response = signed_instance_factory(response, self.sec, to_sign_assertion)
+                response = self._encrypt_assertion(encrypt_cert_assertion, sp_entity_id, response)
             else:
-                response = pre_encrypt_assertion(response)
-            if to_sign:
-                response = signed_instance_factory(response, self.sec, to_sign)
-            _, cert_file = make_temp("%s" % encrypt_cert, decode=False)
-            response = cbxs.encrypt_assertion(response, cert_file,
-                                              pre_encryption_part(), node_xpath=node_xpath)
-                                              # template(response.assertion.id))
+                if to_sign:
+                    response = signed_instance_factory(response, self.sec, to_sign)
             if sign:
                 return signed_instance_factory(response, self.sec, sign_class)
             else:
@@ -968,23 +1041,23 @@ class Entity(HTTPBase):
             logger.debug("XMLSTR: %s" % xmlstr)
 
             if response:
+                keys = None
                 if outstanding_certs:
                     try:
                         cert = outstanding_certs[response.in_response_to]
                     except KeyError:
-                        key_file = ""
+                        keys = None
                     else:
-                        _, key_file = make_temp("%s" % cert["key"],
-                                                decode=False)
-                else:
-                    key_file = ""
+                        if not isinstance(cert, list):
+                            cert = [cert]
+                        keys = []
+                        for _cert in cert:
+                            keys.append(_cert["key"])
                 only_identity_in_encrypted_assertion = False
                 if "only_identity_in_encrypted_assertion" in kwargs:
                     only_identity_in_encrypted_assertion = kwargs["only_identity_in_encrypted_assertion"]
-                decrypt = True
-                if "decrypt" in kwargs:
-                    decrypt = kwargs["decrypt"]
-                response = response.verify(key_file, decrypt=decrypt)
+
+                response = response.verify(keys)
 
             if not response:
                 return None
