@@ -35,7 +35,7 @@ from saml2.s_utils import UnsupportedBinding
 from saml2.s_utils import sid
 from saml2.s_utils import rndstr
 #from srtest import exception_trace
-from saml2.md import Extensions
+from saml2.samlp import Extensions
 import xmldsig as ds
 
 logger = logging.getLogger("")
