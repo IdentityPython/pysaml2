@@ -305,7 +305,7 @@ def validate_value_type(value, spec):
         {'base': 'string'}
     """
     if "maxlen" in spec:
-        return len(value) <= spec["maxlen"]
+        return len(value) <= int(spec["maxlen"])
 
     if spec["base"] == "string":
         if "enumeration" in spec:

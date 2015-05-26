@@ -8,6 +8,7 @@ import os
 import re
 import logging
 import logging.handlers
+import six
 
 from importlib import import_module
 
@@ -300,7 +301,7 @@ class Config(object):
 
     def unicode_convert(self, item):
         try:
-            return unicode(item, "utf-8")
+            return six.text_type(item, "utf-8")
         except TypeError:
             _uc = self.unicode_convert
             if isinstance(item, dict):

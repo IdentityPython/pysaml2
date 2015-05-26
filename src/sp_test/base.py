@@ -5,6 +5,7 @@ import os
 import traceback
 import urllib
 import sys
+import six
 
 from urlparse import parse_qs
 from saml2 import BINDING_HTTP_REDIRECT, class_name
@@ -93,7 +94,7 @@ class Conversation():
             raise CheckError
 
     def do_check(self, test, **kwargs):
-        if isinstance(test, basestring):
+        if isinstance(test, six.string_types):
             chk = self.check_factory(test)(**kwargs)
         else:
             chk = test(**kwargs)

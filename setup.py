@@ -42,6 +42,7 @@ tests_require = [
     'python-memcached >= 1.51',
     'pytest',
     'mako',
+    'webob',
     #'pytest-coverage',
 ]
 

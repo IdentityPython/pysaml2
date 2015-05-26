@@ -15,6 +15,7 @@ import urllib
 
 from time import mktime
 from binascii import hexlify
+import six
 
 from Crypto.PublicKey.RSA import importKey
 from Crypto.Signature import PKCS1_v1_5
@@ -729,7 +730,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
 
     def __init__(self, xmlsec_binary, **kwargs):
         CryptoBackend.__init__(self, **kwargs)
-        assert (isinstance(xmlsec_binary, basestring))
+        assert (isinstance(xmlsec_binary, six.string_types))
         self.xmlsec = xmlsec_binary
         if os.environ.get('PYSAML2_KEEP_XMLSEC_TMP', None):
             self._xmlsec_delete_tmpfiles = False
@@ -1395,7 +1396,7 @@ class SecurityContext(object):
                 _certs = []
             certs = []
             for cert in _certs:
-                if isinstance(cert, basestring):
+                if isinstance(cert, six.string_types):
                     certs.append(make_temp(pem_format(cert), suffix=".pem",
                                            decode=False,
                                            delete=self._xmlsec_delete_tmpfiles))

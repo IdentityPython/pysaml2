@@ -170,6 +170,6 @@ class TestPopulationMemoryBased():
                             "eduPersonEntitlement": "Anka"}
 
         info = self.population.get_info_from(nid, IDP_OTHER)
-        assert info.keys() == ["not_on_or_after", "name_id", "ava"]
+        assert list(info.keys()) == ["not_on_or_after", "name_id", "ava"]
         assert info["name_id"] == nid
         assert info["ava"] == {"eduPersonEntitlement": "Anka"}

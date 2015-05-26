@@ -4,6 +4,7 @@
 
 import calendar
 import logging
+import six
 from saml2.samlp import STATUS_VERSION_MISMATCH
 from saml2.samlp import STATUS_AUTHN_FAILED
 from saml2.samlp import STATUS_INVALID_ATTR_NAME_OR_VALUE
@@ -1001,6 +1002,8 @@ class AuthnResponse(StatusResponse):
                     "not_on_or_after": nooa, "authn_info": self.authn_info()}
 
     def __str__(self):
+        if not isinstance(self.xmlstr, six.string_types):
+            return "%s" % self.xmlstr.decode("utf-8")
         return "%s" % self.xmlstr
 
     def verify_attesting_entity(self, address):

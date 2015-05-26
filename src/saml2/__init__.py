@@ -675,7 +675,11 @@ class SamlBase(ExtensionContainer):
         return ElementTree.tostring(self._to_element_tree(), encoding="UTF-8")
 
     def __str__(self):
-        return self.to_string()
+        # Yes this is confusing. http://bugs.python.org/issue10942
+        x = self.to_string()
+        if not isinstance(x, six.string_types):
+            x = x.decode('utf-8')
+        return x
 
     def keyswv(self):
         """ Return the keys of attributes or children that has values
