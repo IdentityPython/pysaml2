@@ -59,12 +59,15 @@ def http_form_post_message(message, location, relay_state="",
     response = ["<head>", """<title>SAML 2.0 POST</title>""", "</head><body>"]
 
     if not isinstance(message, six.string_types):
-        message = "%s" % (message,)
+        message = str(message)
+    if not isinstance(message, six.binary_type):
+        message = message.encode('utf-8')
 
     if typ == "SAMLRequest" or typ == "SAMLResponse":
         _msg = base64.b64encode(message)
     else:
         _msg = message
+    _msg = _msg.decode('ascii')
 
     response.append(FORM_SPEC % (location, typ, _msg, relay_state))
 
