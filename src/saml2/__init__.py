@@ -578,7 +578,7 @@ class SamlBase(ExtensionContainer):
 
         for elem in elements:
             uri_set = self.get_ns_map_attribute(elem.attrib, uri_set)
-            uri_set = self.get_ns_map(elem._children, uri_set)
+            uri_set = self.get_ns_map(elem.getchildren(), uri_set)
             uri = self.tag_get_uri(elem)
             if uri is not None:
                 uri_set.add(uri)
