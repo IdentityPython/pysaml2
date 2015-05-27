@@ -799,6 +799,14 @@ class AuthnResponse(StatusResponse):
             raise
 
     def decrypt_assertions(self, encrypted_assertions, decr_txt, issuer=None, verified=False):
+        """ Moves the decrypted assertion from the encrypted assertion to a list.
+
+        :param encrypted_assertions: A list of encrypted assertions.
+        :param decr_txt: The string representation containing the decrypted data. Used when verifying signatures.
+        :param issuer: The issuer of the response.
+        :param verified: If True do not verify signatures, otherwise verify the signature if it exists.
+        :return: A list of decrypted assertions.
+        """
         res = []
         for encrypted_assertion in encrypted_assertions:
             if encrypted_assertion.extension_elements:
@@ -815,11 +823,21 @@ class AuthnResponse(StatusResponse):
         return res
 
     def find_encrypt_data_assertion(self, enc_assertions):
+        """ Verifies if a list of encrypted assertions contains encrypted data.
+
+        :param enc_assertions: A list of encrypted assertions.
+        :return: True encrypted data exists otherwise false.
+        """
         for _assertion in enc_assertions:
                 if _assertion.encrypted_data is not None:
                     return True
 
     def find_encrypt_data_assertion_list(self, _assertions):
+        """ Verifies if a list of assertions contains encrypted data in the advice element.
+
+        :param _assertions: A list of assertions.
+        :return: True encrypted data exists otherwise false.
+        """
         for _assertion in _assertions:
             if _assertion.advice:
                 if _assertion.advice.encrypted_assertion:
@@ -828,6 +846,11 @@ class AuthnResponse(StatusResponse):
                         return True
 
     def find_encrypt_data(self, resp):
+        """ Verifies if a saml response contains encrypted assertions with encrypted data.
+
+        :param resp: A saml response.
+        :return: True encrypted data exists otherwise false.
+        """
         _has_encrypt_data = False
         if resp.encrypted_assertion:
             res = self.find_encrypt_data_assertion(resp.encrypted_assertion)
@@ -843,6 +866,11 @@ class AuthnResponse(StatusResponse):
         return False
 
     def parse_assertion(self, keys=None):
+        """ Parse the assertions for a saml response.
+
+        :param keys: A string representing a RSA key or a list of strings containing RSA keys.
+        :return: True if the assertions are parsed otherwise False.
+        """
         if self.context == "AuthnQuery":
             # can contain one or more assertions
             pass

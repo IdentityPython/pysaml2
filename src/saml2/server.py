@@ -337,10 +337,20 @@ class Server(Entity):
         :param authn: A dictionary containing information about the
             authn context.
         :param issuer: The issuer of the response
+        :param policy:
         :param sign_assertion: Whether the assertion should be signed or not
         :param sign_response: Whether the response should be signed or not
         :param best_effort: Even if not the SPs demands can be met send a
             response.
+        :param encrypt_assertion: True if assertions should be encrypted.
+        :param encrypt_assertion_self_contained: True if all encrypted assertions should have alla namespaces
+        selfcontained.
+        :param encrypted_advice_attributes: True if assertions in the advice element should be encrypted.
+        :param encrypt_cert_advice: Certificate to be used for encryption of assertions in the advice element.
+        :param encrypt_cert_assertion: Certificate to be used for encryption of assertions.
+        :param authn_statement: Authentication statement.
+        :param sign_assertion: True if assertions should be signed.
+        :param pefim: True if a response according to the PEFIM profile should be created.
         :return: A response instance
         """
 
@@ -495,11 +505,20 @@ class Server(Entity):
         :param sp_entity_id: The entity identifier of the Service Provider
         :param name_id_policy: How the NameID should be constructed
         :param userid: The subject identifier
+        :param name_id: The identifier of the subject.
         :param authn: Dictionary with information about the authentication
             context
         :param issuer: Issuer of the response
         :param sign_assertion: Whether the assertion should be signed or not.
         :param sign_response: Whether the response should be signed or not.
+        :param encrypt_assertion: True if assertions should be encrypted.
+        :param encrypt_assertion_self_contained: True if all encrypted assertions should have alla namespaces
+        selfcontained.
+        :param encrypted_advice_attributes: True if assertions in the advice element should be encrypted.
+        :param encrypt_cert_advice: Certificate to be used for encryption of assertions in the advice element.
+        :param encrypt_cert_assertion: Certificate to be used for encryption of assertions.
+        :param sign_assertion: True if assertions should be signed.
+        :param pefim: True if a response according to the PEFIM profile should be created.
         :return: A response instance
         """
 

@@ -504,14 +504,26 @@ class Entity(HTTPBase):
                 msg.extension_elements = extensions
 
     def has_encrypt_cert_in_metadata(self, sp_entity_id):
+        """ Verifies if the metadata contains encryption certificates.
+
+        :param sp_entity_id: Entity ID for the calling service provider.
+        :return: True if encrypt cert exists in metadata, otherwise False.
+        """
         if sp_entity_id is not None:
             _certs = self.metadata.certs(sp_entity_id, "any", "encryption")
             if len(_certs) > 0:
                 return True
         return False
 
-
     def _encrypt_assertion(self, encrypt_cert, sp_entity_id, response, node_xpath=None):
+        """ Encryption of assertions.
+
+        :param encrypt_cert: Certificate to be used for encryption.
+        :param sp_entity_id: Entity ID for the calling service provider.
+        :param response: A samlp.Response
+        :param node_xpath: Unquie path to the element to be encrypted.
+        :return: A new samlp.Resonse with the designated assertion encrypted.
+        """
         _certs = []
         cbxs = CryptoBackendXmlSec1(self.config.xmlsec_binary)
         if encrypt_cert:
@@ -558,6 +570,15 @@ class Entity(HTTPBase):
         :param issuer: The issuer of the response
         :param sign: Whether the response should be signed or not
         :param to_sign: If there are other parts to sign
+        :param sp_entity_id: Entity ID for the calling service provider.
+        :param encrypt_assertion: True if assertions should be encrypted.
+        :param encrypt_assertion_self_contained: True if all encrypted assertions should have alla namespaces
+        selfcontained.
+        :param encrypted_advice_attributes: True if assertions in the advice element should be encrypted.
+        :param encrypt_cert_advice: Certificate to be used for encryption of assertions in the advice element.
+        :param encrypt_cert_assertion: Certificate to be used for encryption of assertions.
+        :param sign_assertion: True if assertions should be signed.
+        :param pefim: True if a response according to the PEFIM profile should be created.
         :param kwargs: Extra key word arguments
         :return: A Response instance
         """

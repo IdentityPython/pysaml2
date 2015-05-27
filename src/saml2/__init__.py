@@ -603,6 +603,11 @@ class SamlBase(ExtensionContainer):
         return ElementTree.tostring(tree, encoding="UTF-8")
 
     def get_xml_string_with_self_contained_assertion_within_encrypted_assertion(self, assertion_tag):
+        """ Makes a encrypted assertion only containing self contained namespaces.
+
+        :param assertion_tag: Tag for the assertion to be transformed.
+        :return: A new samlp.Resonse in string representation.
+        """
         prefix_map = self.get_prefix_map([self.encrypted_assertion._to_element_tree().find(assertion_tag)])
 
         tree = self._to_element_tree()
