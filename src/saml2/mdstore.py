@@ -119,6 +119,8 @@ class MetaData(object):
         self.onts = onts
         self.attrc = attrc
         self.metadata = metadata
+        self.entity = None
+        self.cert = None
 
     def items(self):
         '''
@@ -324,6 +326,10 @@ class InMemoryMetaData(MetaData):
         self.entities_descr = None
         self.entity_descr = None
         self.check_validity = check_validity
+        try:
+            self.filter = kwargs["filter"]
+        except KeyError:
+            self.filter = None
         
     def items(self):
         return self.entity.items()
@@ -390,6 +396,11 @@ class InMemoryMetaData(MetaData):
                 del _ent["%s_descriptor" % descr]
             else:
                 flag += 1
+
+        if self.filter:
+            _ent = self.filter(_ent)
+            if not _ent:
+                flag = 0
 
         if flag:
             self.entity[entity_descr.entity_id] = _ent
@@ -536,6 +547,34 @@ class InMemoryMetaData(MetaData):
                             res.append(dat["x509_certificate"]["text"])
         return res
 
+    def signed(self):
+        if self.entities_descr and self.entities_descr.signature:
+            return True
+
+        if self.entity_descr and self.entity_descr.signature:
+            return True
+        else:
+            return False
+
+    def parse_and_check_signature(self, txt):
+        self.parse(txt)
+
+        if self.cert:
+            if not self.signed():
+                return True
+
+            node_name = self.node_name \
+                or "%s:%s" % (md.EntitiesDescriptor.c_namespace,
+                              md.EntitiesDescriptor.c_tag)
+
+            if self.security.verify_signature(
+                    txt, node_name=node_name, cert_file=self.cert):
+                return True
+            else:
+                return False
+        else:
+            return True
+
 
 class MetaDataFile(InMemoryMetaData):
     """
@@ -554,19 +593,7 @@ class MetaDataFile(InMemoryMetaData):
 
     def load(self):
         _txt = self.get_metadata_content()
-        if self.cert:
-            node_name = self.node_name \
-                or "%s:%s" % (md.EntitiesDescriptor.c_namespace,
-                              md.EntitiesDescriptor.c_tag)
-
-            if self.security.verify_signature(_txt,
-                                              node_name=node_name,
-                                              cert_file=self.cert):
-                self.parse(_txt)
-                return True
-        else:
-            self.parse(_txt)
-            return True
+        return self.parse_and_check_signature(_txt)
 
 
 class MetaDataLoader(MetaDataFile):
@@ -633,10 +660,9 @@ class MetaDataExtern(InMemoryMetaData):
             raise SAMLError('URL not specified.')
         else:
             self.url = url
-        if not cert:
-            raise SAMLError('No certificate specified.')
-        else:
-            self.cert = cert
+
+        # No cert is only an error if the metadata is unsigned
+        self.cert = cert
 
         self.security = security
         self.http = http
@@ -648,20 +674,8 @@ class MetaDataExtern(InMemoryMetaData):
         """
         response = self.http.send(self.url)
         if response.status_code == 200:
-            node_name = self.node_name \
-                or "%s:%s" % (md.EntitiesDescriptor.c_namespace,
-                              md.EntitiesDescriptor.c_tag)
-
             _txt = response.text.encode("utf-8")
-            if self.cert:
-                if self.security.verify_signature(_txt,
-                                                  node_name=node_name,
-                                                  cert_file=self.cert):
-                    self.parse(_txt)
-                    return True
-            else:
-                self.parse(_txt)
-                return True
+            return self.parse_and_check_signature(_txt)
         else:
             logger.info("Response status: %s" % response.status_code)
         return False
@@ -724,14 +738,7 @@ class MetaDataMDX(InMemoryMetaData):
 
                 _txt = response.text.encode("utf-8")
 
-                if self.cert:
-                    if self.security.verify_signature(_txt,
-                                                      node_name=node_name,
-                                                      cert_file=self.cert):
-                        self.parse(_txt)
-                        return self.entity[item]
-                else:
-                    self.parse(_txt)
+                if self.parse_and_check_signature(_txt):
                     return self.entity[item]
             else:
                 logger.info("Response status: %s" % response.status_code)
@@ -741,7 +748,8 @@ class MetaDataMDX(InMemoryMetaData):
 class MetadataStore(object):
     def __init__(self, onts, attrc, config, ca_certs=None,
                  check_validity=True,
-                 disable_ssl_certificate_validation=False):
+                 disable_ssl_certificate_validation=False,
+                 filter=None):
         """
         :params onts:
         :params attrc:
@@ -761,8 +769,14 @@ class MetadataStore(object):
         self.ii = 0
         self.metadata = {}
         self.check_validity = check_validity
+        self.filter = filter
 
     def load(self, typ, *args, **kwargs):
+        if self.filter:
+            _args = {"filter": self.filter}
+        else:
+            _args = {}
+
         if typ == "local":
             key = args[0]
             # if library read every file in the library
@@ -770,20 +784,20 @@ class MetadataStore(object):
                 files = [f for f in os.listdir(key) if isfile(join(key, f))]
                 for fil in files:
                     _fil = join(key, fil)
-                    _md = MetaDataFile(self.onts, self.attrc, _fil)
+                    _md = MetaDataFile(self.onts, self.attrc, _fil, **_args)
                     _md.load()
                     self.metadata[_fil] = _md
                 return
             else:
                 # else it's just a plain old file so read it
-                _md = MetaDataFile(self.onts, self.attrc, key)
+                _md = MetaDataFile(self.onts, self.attrc, key, **_args)
         elif typ == "inline":
             self.ii += 1
             key = self.ii
+            kwargs.update(_args)
             _md = MetaData(self.onts, self.attrc, args[0], **kwargs)
         elif typ == "remote":
             key = kwargs["url"]
-            _args = {}
             for _key in ["node_name", "check_validity"]:
                 try:
                     _args[_key] = kwargs[_key]
@@ -794,10 +808,10 @@ class MetadataStore(object):
                                  kwargs["cert"], self.http, **_args)
         elif typ == "mdfile":
             key = args[0]
-            _md = MetaDataMD(self.onts, self.attrc, args[0])
+            _md = MetaDataMD(self.onts, self.attrc, args[0], **_args)
         elif typ == "loader":
             key = args[0]
-            _md = MetaDataLoader(self.onts, self.attrc, args[0])
+            _md = MetaDataLoader(self.onts, self.attrc, args[0], **_args)
         else:
             raise SAMLError("Unknown metadata type '%s'" % typ)
         _md.load()
@@ -836,6 +850,9 @@ class MetadataStore(object):
                     }
                 else:
                     kwargs = {}
+
+                if self.filter:
+                    kwargs["filter"] = self.filter
 
                 for key in item['metadata']:
                     # Separately handle MetaDataFile and directory
