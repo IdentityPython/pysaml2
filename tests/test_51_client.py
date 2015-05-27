@@ -5,7 +5,8 @@ import base64
 import uuid
 import six
 import urllib
-import urlparse
+from six.moves.urllib.parse import parse_qs
+from six.moves.urllib.parse import urlparse
 from saml2.cert import OpenSSLWrapper
 from saml2.xmldsig import SIG_RSA_SHA256
 from saml2 import BINDING_HTTP_POST
@@ -415,7 +416,6 @@ class TestClient:
             in_response_to="id1",
             destination="http://lingon.catalogix.se:8087/",
             sp_entity_id="urn:mace:example.com:saml:roland:sp",
-            #name_id_policy=nameid_policy,
             name_id=self.name_id,
             userid="foba0001@example.com",
             authn=AUTHN,
@@ -423,7 +423,6 @@ class TestClient:
             sign_assertion=True,
             encrypt_assertion=False,
             encrypt_assertion_self_contained=True,
-            #encrypted_advice_attributes=True,
             pefim=True,
             encrypt_cert_advice=cert_str
         )
@@ -453,7 +452,6 @@ class TestClient:
             in_response_to="id1",
             destination="http://lingon.catalogix.se:8087/",
             sp_entity_id="urn:mace:example.com:saml:roland:sp",
-            #name_id_policy=nameid_policy,
             name_id=self.name_id,
             userid="foba0001@example.com",
             authn=AUTHN,
@@ -461,7 +459,6 @@ class TestClient:
             sign_assertion=True,
             encrypt_assertion=False,
             encrypt_assertion_self_contained=True,
-            #encrypted_advice_attributes=True,
             pefim=True,
         )
 
@@ -490,7 +487,6 @@ class TestClient:
             in_response_to="id1",
             destination="http://lingon.catalogix.se:8087/",
             sp_entity_id="urn:mace:example.com:saml:roland:sp",
-            #name_id_policy=nameid_policy,
             name_id=self.name_id,
             userid="foba0001@example.com",
             authn=AUTHN,
@@ -498,7 +494,6 @@ class TestClient:
             sign_assertion=True,
             encrypt_assertion=True,
             encrypt_assertion_self_contained=True,
-            #encrypted_advice_attributes=True,
             pefim=True,
         )
 
@@ -535,7 +530,6 @@ class TestClient:
             in_response_to="id1",
             destination="http://lingon.catalogix.se:8087/",
             sp_entity_id="urn:mace:example.com:saml:roland:sp",
-            #name_id_policy=nameid_policy,
             name_id=self.name_id,
             userid="foba0001@example.com",
             authn=AUTHN,
@@ -543,7 +537,6 @@ class TestClient:
             sign_assertion=True,
             encrypt_assertion=True,
             encrypt_assertion_self_contained=True,
-            #encrypted_advice_attributes=True,
             pefim=True,
             encrypt_cert_assertion=cert_str
         )
@@ -589,7 +582,6 @@ class TestClient:
             in_response_to="id1",
             destination="http://lingon.catalogix.se:8087/",
             sp_entity_id="urn:mace:example.com:saml:roland:sp",
-            #name_id_policy=nameid_policy,
             name_id=self.name_id,
             userid="foba0001@example.com",
             authn=AUTHN,
@@ -597,7 +589,6 @@ class TestClient:
             sign_assertion=True,
             encrypt_assertion=True,
             encrypt_assertion_self_contained=True,
-            #encrypted_advice_attributes=True,
             pefim=True,
             encrypt_cert_assertion=cert_assertion_str,
             encrypt_cert_advice=cert_advice_str
@@ -628,7 +619,6 @@ class TestClient:
             in_response_to="id1",
             destination="http://lingon.catalogix.se:8087/",
             sp_entity_id="urn:mace:example.com:saml:roland:sp",
-            #name_id_policy=nameid_policy,
             name_id=self.name_id,
             userid="foba0001@example.com",
             authn=AUTHN,
@@ -672,7 +662,6 @@ class TestClient:
             in_response_to="id1",
             destination="http://lingon.catalogix.se:8087/",
             sp_entity_id="urn:mace:example.com:saml:roland:sp",
-            #name_id_policy=nameid_policy,
             name_id=self.name_id,
             userid="foba0001@example.com",
             authn=AUTHN,
@@ -1177,7 +1166,7 @@ class TestClient:
             relay_state="relay2", sigalg=SIG_RSA_SHA256, key=key)
 
         loc = info["headers"][0][1]
-        qs = urlparse.parse_qs(loc[1:])
+        qs = parse_qs(loc[1:])
         assert _leq(qs.keys(),
                     ['SigAlg', 'SAMLRequest', 'RelayState', 'Signature'])
 
@@ -1214,8 +1203,8 @@ class TestClientWithDummy():
         assert http_args["headers"][0][0] == "Location"
         assert http_args["data"] == []
         redirect_url = http_args["headers"][0][1]
-        _, _, _, _, qs, _ = urlparse.urlparse(redirect_url)
-        qs_dict = urlparse.parse_qs(qs)
+        _, _, _, _, qs, _ = urlparse(redirect_url)
+        qs_dict = parse_qs(qs)
         req = self.server.parse_authn_request(qs_dict["SAMLRequest"][0],
                                               binding)
         resp_args = self.server.response_args(req.message, [response_binding])
@@ -1234,8 +1223,8 @@ class TestClientWithDummy():
         assert http_args["headers"][0][0] == "Location"
         assert http_args["data"] == []
         redirect_url = http_args["headers"][0][1]
-        _, _, _, _, qs, _ = urlparse.urlparse(redirect_url)
-        qs_dict = urlparse.parse_qs(qs)
+        _, _, _, _, qs, _ = urlparse(redirect_url)
+        qs_dict = parse_qs(qs)
         req = self.server.parse_authn_request(qs_dict["SAMLRequest"][0],
                                               binding)
         resp_args = self.server.response_args(req.message, [response_binding])

@@ -1,5 +1,5 @@
 from contextlib import closing
-from urlparse import urlparse, parse_qs
+from six.moves.urllib.parse import urlparse, parse_qs
 from saml2 import BINDING_SOAP, BINDING_HTTP_POST
 
 __author__ = 'rolandh'

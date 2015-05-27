@@ -10,10 +10,9 @@ Bindings normally consists of three parts:
 - how to package the information
 - which protocol to use
 """
-from six.moves.urllib.parse import urlparse
+from six.moves.urllib.parse import urlparse, urlencode
 import saml2
 import base64
-import urllib
 from saml2.s_utils import deflate_and_base64_encode
 from saml2.s_utils import Unsupported
 import logging
@@ -126,12 +125,12 @@ def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
         except:
             raise Unsupported("Signing algorithm")
         else:
-            string = "&".join([urllib.urlencode({k: args[k]})
+            string = "&".join([urlencode({k: args[k]})
                                for k in _order if k in args])
             args["Signature"] = base64.b64encode(signer.sign(string, key))
-            string = urllib.urlencode(args)
+            string = urlencode(args)
     else:
-        string = urllib.urlencode(args)
+        string = urlencode(args)
 
     glue_char = "&" if urlparse(location).query else "?"
     login_url = glue_char.join([location, string])

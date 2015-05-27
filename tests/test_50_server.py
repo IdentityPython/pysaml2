@@ -3,7 +3,7 @@
 import base64
 import os
 from contextlib import closing
-from urlparse import parse_qs
+from six.moves.urllib.parse import parse_qs
 import uuid
 
 from saml2.cert import OpenSSLWrapper
@@ -540,7 +540,6 @@ class TestServer1():
             encrypt_assertion=False,
             encrypt_assertion_self_contained=True,
             pefim=True,
-            #encrypted_advice_attributes=True,
             encrypt_cert_advice=cert_str,
         )
 
@@ -680,7 +679,6 @@ class TestServer1():
             sign_assertion=True,
             encrypt_assertion=True,
             encrypt_assertion_self_contained=True,
-            #encrypted_advice_attributes=True,
             pefim=True,
             encrypt_cert_advice=cert_str,
         )
@@ -741,7 +739,6 @@ class TestServer1():
             sign_assertion=False,
             encrypt_assertion=False,
             encrypt_assertion_self_contained=True,
-            #encrypted_advice_attributes=True,
             pefim=True,
             encrypt_cert_advice=cert_str_advice,
         )
@@ -774,7 +771,6 @@ class TestServer1():
             sign_assertion=False,
             encrypt_assertion=True,
             encrypt_assertion_self_contained=True,
-            #encrypted_advice_attributes=True,
             pefim=True,
             encrypt_cert_advice=cert_str_advice,
         )
@@ -867,7 +863,6 @@ class TestServer1():
             sign_assertion=False,
             encrypt_assertion=False,
             encrypt_assertion_self_contained=True,
-            #encrypted_advice_attributes=True,
             pefim=True
         )
 
@@ -900,7 +895,6 @@ class TestServer1():
             sign_assertion=False,
             encrypt_assertion=True,
             encrypt_assertion_self_contained=True,
-            #encrypted_advice_attributes=True,
             pefim=True,
             encrypt_cert_advice=cert_str_advice,
             encrypt_cert_assertion=cert_str_assertion
@@ -935,7 +929,6 @@ class TestServer1():
             sign_assertion=False,
             encrypt_assertion=True,
             encrypt_assertion_self_contained=True,
-            #encrypted_advice_attributes=True,
             pefim=True
         )
 
@@ -965,7 +958,6 @@ class TestServer1():
                 sign_assertion=False,
                 encrypt_assertion=True,
                 encrypt_assertion_self_contained=True,
-                #encrypted_advice_attributes=True,
                 pefim=True,
                 encrypt_cert_advice="whatever",
                 encrypt_cert_assertion="whatever"
@@ -987,7 +979,6 @@ class TestServer1():
                 sign_assertion=False,
                 encrypt_assertion=False,
                 encrypt_assertion_self_contained=True,
-                #encrypted_advice_attributes=True,
                 pefim=True,
                 encrypt_cert_advice="whatever",
             )
@@ -1030,7 +1021,6 @@ class TestServer1():
                 sign_assertion=False,
                 encrypt_assertion=True,
                 encrypt_assertion_self_contained=True,
-                #encrypted_advice_attributes=True,
                 pefim=True,
                 encrypt_cert_advice="whatever",
                 encrypt_cert_assertion="whatever"
@@ -1052,7 +1042,6 @@ class TestServer1():
                 sign_assertion=False,
                 encrypt_assertion=False,
                 encrypt_assertion_self_contained=True,
-                #encrypted_advice_attributes=True,
                 pefim=True,
                 encrypt_cert_advice="whatever",
             )
@@ -1095,7 +1084,6 @@ class TestServer1():
             sign_assertion=False,
             encrypt_assertion=True,
             encrypt_assertion_self_contained=True,
-            #encrypted_advice_attributes=True,
             pefim=True,
         )
 
@@ -1111,7 +1099,6 @@ class TestServer1():
             sign_assertion=False,
             encrypt_assertion=False,
             encrypt_assertion_self_contained=True,
-            #encrypted_advice_attributes=True,
             pefim=True
         )
 

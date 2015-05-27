@@ -1,8 +1,8 @@
 import base64
 from contextlib import closing
 from hashlib import sha1
-from urlparse import urlparse
-from urlparse import parse_qs
+from six.moves.urllib.parse import urlparse
+from six.moves.urllib.parse import parse_qs
 from saml2 import BINDING_HTTP_ARTIFACT
 from saml2 import BINDING_SOAP
 from saml2 import BINDING_HTTP_POST
