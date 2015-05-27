@@ -54,14 +54,14 @@ def get_msg(hinfo, binding, response=False):
 
 def test_create_artifact():
     b64art = create_artifact("http://sp.example.com/saml.xml",
-                             "aabbccddeeffgghhiijj")
+                             b"aabbccddeeffgghhiijj")
 
-    art = base64.b64decode(b64art)
+    art = base64.b64decode(b64art.encode('ascii'))
 
-    assert art[:2] == '\x00\x04'
+    assert art[:2] == ARTIFACT_TYPECODE
     assert int(art[2:4]) == 0
 
-    s = sha1("http://sp.example.com/saml.xml")
+    s = sha1(b"http://sp.example.com/saml.xml")
     assert art[4:24] == s.digest()
 
 SP = 'urn:mace:example.com:saml:roland:sp'
@@ -74,7 +74,7 @@ def test_create_artifact_resolve():
     #assert artifact[:2] == '\x00\x04'
     #assert int(artifact[2:4]) == 0
     #
-    s = sha1(SP)
+    s = sha1(SP.encode('ascii'))
     assert artifact[4:24] == s.digest()
 
     with closing(Server(config_file="idp_all_conf")) as idp:
@@ -116,7 +116,7 @@ def test_artifact_flow():
                                                [BINDING_HTTP_ARTIFACT],
                                                entity_id=idp.config.entityid)
 
-        hinfo = sp.apply_binding(binding, "%s" % artifact, destination, relay_state)
+        hinfo = sp.apply_binding(binding, artifact, destination, relay_state)
 
         # ========== @IDP ============
 
