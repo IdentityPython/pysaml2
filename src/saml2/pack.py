@@ -126,7 +126,7 @@ def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
             raise Unsupported("Signing algorithm")
         else:
             string = "&".join([urlencode({k: args[k]})
-                               for k in _order if k in args])
+                               for k in _order if k in args]).encode('ascii')
             args["Signature"] = base64.b64encode(signer.sign(string, key))
             string = urlencode(args)
     else:

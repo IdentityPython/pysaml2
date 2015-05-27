@@ -11,7 +11,7 @@ import hashlib
 import logging
 import os
 import ssl
-import urllib
+from six.moves.urllib.parse import urlencode
 
 from time import mktime
 from binascii import hexlify
@@ -528,7 +528,7 @@ def rsa_eq(key1, key2):
 
 def extract_rsa_key_from_x509_cert(pem):
     # Convert from PEM to DER
-    der = ssl.PEM_cert_to_DER_cert(pem)
+    der = ssl.PEM_cert_to_DER_cert(pem.decode('ascii'))
 
     # Extract subjectPublicKeyInfo field from X.509 certificate (see RFC3280)
     cert = DerSequence()
@@ -635,7 +635,8 @@ def verify_redirect_signature(saml_msg, cert=None, sigkey=None):
             _args = saml_msg.copy()
             del _args["Signature"]  # everything but the signature
             string = "&".join(
-                [urllib.urlencode({k: _args[k]}) for k in _order if k in _args])
+                [urlencode({k: _args[k]}) for k in _order if k in
+                 _args]).encode('ascii')
             if cert:
                 _key = extract_rsa_key_from_x509_cert(pem_format(cert))
             else:
