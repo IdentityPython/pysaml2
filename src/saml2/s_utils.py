@@ -152,6 +152,8 @@ def deflate_and_base64_encode(string_val):
     :param string_val: The string to deflate and encode
     :return: The deflated and encoded string
     """
+    if not isinstance(string_val, six.binary_type):
+        string_val = string_val.encode('utf-8')
     return base64.b64encode(zlib.compress(string_val)[2:-4])
 
 

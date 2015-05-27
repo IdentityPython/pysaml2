@@ -540,7 +540,7 @@ class Entity(HTTPBase):
                     _cert = "%s%s" % (begin_cert, _cert)
                 if end_cert not in _cert:
                     _cert = "%s%s" % (_cert, end_cert)
-                _, cert_file = make_temp(_cert, decode=False)
+                _, cert_file = make_temp(_cert.encode('ascii'), decode=False)
                 response = cbxs.encrypt_assertion(response, cert_file,
                                                   pre_encryption_part(), node_xpath=node_xpath)
                 return response

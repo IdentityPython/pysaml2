@@ -602,7 +602,7 @@ class SamlBase(ExtensionContainer):
                     if assertion is not None:
                         self.set_prefixes(assertion, prefix_map)
 
-        return ElementTree.tostring(tree, encoding="UTF-8")
+        return ElementTree.tostring(tree, encoding="UTF-8").decode('utf-8')
 
     def get_xml_string_with_self_contained_assertion_within_encrypted_assertion(self, assertion_tag):
         """ Makes a encrypted assertion only containing self contained namespaces.

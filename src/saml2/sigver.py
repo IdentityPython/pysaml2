@@ -321,7 +321,7 @@ def signed_instance_factory(instance, seccont, elements_to_sign=None):
         #print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
         #print("%s" % signed_xml)
         #print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-        return signed_xml
+        return signed_xml.decode('utf-8')
     else:
         return instance
 

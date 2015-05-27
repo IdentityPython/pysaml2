@@ -560,7 +560,7 @@ class TestServer1():
 
         assert valid
 
-        _, key_file = make_temp("%s" % cert_key_str, decode=False)
+        _, key_file = make_temp(str(cert_key_str).encode('ascii'), decode=False)
 
         decr_text = self.server.sec.decrypt(signed_resp, key_file)
 
@@ -644,7 +644,7 @@ class TestServer1():
                                                  id_attr="")
         assert valid
 
-        _, key_file = make_temp("%s" % cert_key_str, decode=False)
+        _, key_file = make_temp(str(cert_key_str).encode('ascii'), decode=False)
 
         decr_text = self.server.sec.decrypt(signed_resp, key_file)
 
@@ -1138,7 +1138,7 @@ class TestServer1():
             issuer_entity_id="urn:mace:example.com:saml:roland:idp",
             reason="I'm tired of this")
 
-        intermed = base64.b64encode("%s" % logout_request)
+        intermed = base64.b64encode(str(logout_request).encode('utf-8'))
 
         #saml_soap = make_soap_enveloped_saml_thingy(logout_request)
         request = self.server.parse_logout_request(intermed, BINDING_HTTP_POST)
