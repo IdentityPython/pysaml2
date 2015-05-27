@@ -5,11 +5,11 @@
 
 STATEMENT1 = """<?xml version="1.0" encoding="utf-8"?>
 <ns1:AttributeStatement xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion">
-    <ns1:Attribute Name="eduPersonPrincipalName" 
+    <ns1:Attribute Name="urn:mace:dir:attribute-def:eduPersonPrincipalName"
         NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic">
         <ns1:AttributeValue>rohe0002@umu.se</ns1:AttributeValue>
     </ns1:Attribute>
-    <ns1:Attribute Name="eduPersonTargetedID" 
+    <ns1:Attribute Name="urn:mace:dir:attribute-def:eduPersonTargetedID"
         NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic">
         <ns1:AttributeValue>a139b2116ad1dd7b91c129a32a242fcc5fd9e821</ns1:AttributeValue>
     </ns1:Attribute>
@@ -82,15 +82,7 @@ STATEMENT2 = """<?xml version="1.0" encoding="utf-8"?>
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
             xsi:type="xs:string">demouser</saml2:AttributeValue>
     </saml2:Attribute>
-    <saml2:Attribute FriendlyName="swissEduPersonHomeOrganizationType" 
-        Name="urn:oid:2.16.756.1.2.5.1.1.5" 
-        NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
-        <saml2:AttributeValue 
-            xmlns:xs="http://www.w3.org/2001/XMLSchema" 
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-            xsi:type="xs:string">others</saml2:AttributeValue>
-    </saml2:Attribute>
-    <saml2:Attribute FriendlyName="surname" 
+    <saml2:Attribute FriendlyName="surname"
         Name="urn:oid:2.5.4.4" 
         NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
         <saml2:AttributeValue 
@@ -134,24 +126,6 @@ STATEMENT2 = """<?xml version="1.0" encoding="utf-8"?>
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
             xsi:type="xs:string">demouser@example.org</saml2:AttributeValue>
     </saml2:Attribute>
-    <saml2:Attribute 
-        FriendlyName="swissEduPersonUniqueID" 
-        Name="urn:oid:2.16.756.1.2.5.1.1.1" 
-        NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
-        <saml2:AttributeValue 
-            xmlns:xs="http://www.w3.org/2001/XMLSchema" 
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-            xsi:type="xs:string">234567@example.org</saml2:AttributeValue>
-    </saml2:Attribute>
-    <saml2:Attribute 
-        FriendlyName="swissEduPersonHomeOrganization" 
-        Name="urn:oid:2.16.756.1.2.5.1.1.4" 
-        NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
-        <saml2:AttributeValue 
-            xmlns:xs="http://www.w3.org/2001/XMLSchema" 
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-            xsi:type="xs:string">example.org</saml2:AttributeValue>
-    </saml2:Attribute>
 </saml2:AttributeStatement>"""
 
 STATEMENT3 = """<?xml version='1.0' encoding='UTF-8'?>
@@ -173,3 +147,55 @@ STATEMENT3 = """<?xml version='1.0' encoding='UTF-8'?>
         <ns0:AttributeValue>Roland</ns0:AttributeValue>
     </ns0:Attribute>
 </ns0:AttributeStatement>"""
+
+STATEMENT4 = """<?xml version='1.0' encoding='UTF-8'?>
+<ns0:AttributeStatement xmlns:ns0="urn:oasis:names:tc:SAML:2.0:assertion" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <ns0:Attribute Name="user_id" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:unspecified">
+        <ns0:AttributeValue xsi:type="xs:string">bob</ns0:AttributeValue>
+    </ns0:Attribute>
+    <ns0:Attribute Name="NameID" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:unspecified">
+        <ns0:AttributeValue xsi:type="xs:string">bobsnameagain</ns0:AttributeValue>
+    </ns0:Attribute>
+</ns0:AttributeStatement>"""
+
+STATEMENT_MIXED = """<?xml version="1.0" encoding="utf-8"?>
+<saml2:AttributeStatement xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion">
+    <saml2:Attribute FriendlyName="uid" Name="urn:oid:0.9.2342.19200300.100.1.1"
+        NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
+        <saml2:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:type="xs:string">demouser</saml2:AttributeValue>
+    </saml2:Attribute>
+    <saml2:Attribute FriendlyName="swissEduPersonHomeOrganizationType"
+        Name="urn:oid:2.16.756.1.2.5.1.1.5"
+        NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
+        <saml2:AttributeValue
+            xmlns:xs="http://www.w3.org/2001/XMLSchema"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:type="xs:string">others</saml2:AttributeValue>
+    </saml2:Attribute>
+    <saml2:Attribute Name="urn:mace:dir:attribute-def:givenName"
+        NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic">
+        <saml2:AttributeValue>Roland</saml2:AttributeValue>
+    </saml2:Attribute>
+    <saml2:Attribute Name="urn:mace:dir:attribute-def:sn"
+        NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic">
+        <saml2:AttributeValue>Hedberg</saml2:AttributeValue>
+    </saml2:Attribute>
+    <saml2:Attribute FriendlyName="eduPersonAffiliation"
+        Name="urn:oid:1.3.6.1.4.1.5923.1.1.1.1"
+        NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
+        <saml2:AttributeValue
+            xmlns:xs="http://www.w3.org/2001/XMLSchema"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:type="xs:string">staff</saml2:AttributeValue>
+    </saml2:Attribute>
+    <saml2:Attribute Name="urn:example:com:foo"
+        NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:example">
+        <saml2:AttributeValue>Thing</saml2:AttributeValue>
+    </saml2:Attribute>
+    <saml2:Attribute Name="user_id"
+        NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:unspecified">
+        <saml2:AttributeValue>bob</saml2:AttributeValue>
+    </saml2:Attribute>
+</saml2:AttributeStatement>"""

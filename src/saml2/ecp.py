@@ -1,24 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2010-2011 Umeå University
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#            http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
 """
 Contains classes used in the SAML ECP profile
 """
 import logging
+from saml2.client_base import ACTOR
+from saml2.ecp_client import SERVICE
 
 from saml2 import element_to_extension_element
 from saml2 import samlp
@@ -37,7 +26,6 @@ from saml2.response import authn_response
 
 logger = logging.getLogger(__name__)
 
-SERVICE = "urn:oasis:names:tc:SAML:2.0:profiles:SSO:ecp"
 
 def ecp_capable(headers):
     if "application/vnd.paos+xml" in headers["Accept"]:
@@ -48,7 +36,6 @@ def ecp_capable(headers):
 
     return False
 
-ACTOR = "http://schemas.xmlsoap.org/soap/actor/next"
 
 #noinspection PyUnusedLocal
 def ecp_auth_request(cls, entityid=None, relay_state="", sign=False):
@@ -68,11 +55,11 @@ def ecp_auth_request(cls, entityid=None, relay_state="", sign=False):
     # ----------------------------------------
     my_url = cls.service_url(BINDING_PAOS)
 
-    # must_understan and actor according to the standard
+    # must_understand and actor according to the standard
     #
     paos_request = paos.Request(must_understand="1", actor=ACTOR,
                                 response_consumer_url=my_url,
-                                service = SERVICE)
+                                service=SERVICE)
 
     eelist.append(element_to_extension_element(paos_request))
 
@@ -88,10 +75,11 @@ def ecp_auth_request(cls, entityid=None, relay_state="", sign=False):
 #
 #        idp_list = samlp.IDPList(idp_entry= [idp])
 #
-#        ecp_request = ecp.Request(actor = ACTOR, must_understand = "1",
-#                        provider_name = "Example Service Provider",
-#                        issuer=saml.Issuer(text="https://sp.example.org/entity"),
-#                        idp_list = idp_list)
+#        ecp_request = ecp.Request(
+#            actor = ACTOR, must_understand = "1",
+#            provider_name = "Example Service Provider",
+#            issuer=saml.Issuer(text="https://sp.example.org/entity"),
+#            idp_list = idp_list)
 #
 #        eelist.append(element_to_extension_element(ecp_request))
 
@@ -112,11 +100,10 @@ def ecp_auth_request(cls, entityid=None, relay_state="", sign=False):
     # ----------------------------------------
 
     logger.info("entityid: %s, binding: %s" % (entityid, BINDING_SOAP))
-        
+
     location = cls._sso_location(entityid, binding=BINDING_SOAP)
-    authn_req = cls.create_authn_request(location,
-                                         binding=BINDING_PAOS,
-                                         service_url_binding=BINDING_PAOS)
+    req_id, authn_req = cls.create_authn_request(
+        location, binding=BINDING_PAOS, service_url_binding=BINDING_PAOS)
 
     body = soapenv.Body()
     body.extension_elements = [element_to_extension_element(authn_req)]
@@ -127,19 +114,16 @@ def ecp_auth_request(cls, entityid=None, relay_state="", sign=False):
 
     soap_envelope = soapenv.Envelope(header=header, body=body)
 
-    return authn_req.id, "%s" % soap_envelope
+    return req_id, "%s" % soap_envelope
 
 
 def handle_ecp_authn_response(cls, soap_message, outstanding=None):
     rdict = soap.class_instances_from_soap_enveloped_saml_thingies(
-                                                            soap_message,
-                                                            [paos, ecp,
-                                                             samlp])
+        soap_message, [paos, ecp, samlp])
 
     _relay_state = None
     for item in rdict["header"]:
-        if item.c_tag == "RelayState" and \
-           item.c_namespace == ecp.NAMESPACE:
+        if item.c_tag == "RelayState" and item.c_namespace == ecp.NAMESPACE:
             _relay_state = item
 
     response = authn_response(cls.config, cls.service_url(), outstanding,
@@ -150,7 +134,7 @@ def handle_ecp_authn_response(cls, soap_message, outstanding=None):
     cls.users.add_information_about_person(response.session_info())
 
     return response, _relay_state
-        
+
 
 def ecp_response(target_url, response):
 
@@ -173,17 +157,18 @@ def ecp_response(target_url, response):
 
     return "%s" % soap_envelope
 
+
 class ECPServer(Server):
     """ This deals with what the IdP has to do
 
     TODO: Still tentative
     """
-    def __init__(self, config_file="", config=None, _cache=""):
-        Server.__init__(self, config_file, config, _cache)
+    def __init__(self, config_file="", config=None, cache=None):
+        Server.__init__(self, config_file, config, cache)
 
     def parse_ecp_authn_query(self):
         pass
-    
+
     def ecp_response(self):
 
         # ----------------------------------------

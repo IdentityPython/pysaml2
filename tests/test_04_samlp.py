@@ -1,36 +1,22 @@
 #!/usr/bin/env pythony
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2009 Umeå University.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
 """Tests for saml2.samlp"""
 
 __author__ = 'roland.hedberg@adm.umu.se (Roland Hedberg)'
 
-import unittest
 try:
   from xml.etree import ElementTree
 except ImportError:
   from elementtree import ElementTree
 import saml2
 
-import saml2_data, ds_data, samlp_data
+import samlp_data
 
 from saml2 import saml
 from saml2 import samlp
-import xmldsig as ds
+from saml2 import xmldsig as ds
 
 
 # class TestRequestAbstractType:
@@ -96,7 +82,7 @@ class TestStatusCode:
         self.status_code.value = samlp.STATUS_RESPONDER
         self.status_code.status_code = samlp.StatusCode(
             value=samlp.STATUS_REQUEST_DENIED)
-        print self.status_code.__dict__
+        print(self.status_code.__dict__)
         new_status_code = samlp.status_code_from_string(self.status_code.to_string())
         assert new_status_code.value == samlp.STATUS_RESPONDER
         assert new_status_code.status_code.value == \

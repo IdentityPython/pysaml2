@@ -1,19 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2009 Umeå University.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
 """Tests for saml2.md"""
 
@@ -26,8 +13,7 @@ except ImportError:
   from elementtree import ElementTree
 
 import saml2
-import xmldsig as ds
-
+from saml2 import xmldsig as ds
 from saml2 import saml
 from saml2 import samlp
 from saml2 import md 
@@ -47,7 +33,7 @@ class TestEndpointType:
     self.endpoint.binding = saml2.BINDING_HTTP_POST
     self.endpoint.location = "http://www.example.com/endpoint"
     self.endpoint.response_location = "http://www.example.com/response"
-    print self.endpoint.__class__.c_attributes.items()
+    print(self.endpoint.__class__.c_attributes.items())
     new_endpoint = md.endpoint_type__from_string(self.endpoint.to_string())
     assert new_endpoint.binding == saml2.BINDING_HTTP_POST
     assert new_endpoint.location == "http://www.example.com/endpoint"
@@ -125,7 +111,7 @@ class TestOrganizationName:
     """Test for organization_name_from_string() using test data."""
     new_organization_name = md.organization_name_from_string(
       md_data.TEST_ORGANIZATION_NAME)
-    print new_organization_name.keyswv()
+    print(new_organization_name.keyswv())
     assert new_organization_name.lang == "se"
     assert new_organization_name.text.strip() == "Catalogix"
 
@@ -161,7 +147,7 @@ class TestOrganizationURL:
     """Test for OrganizationURL accessors"""
     self.organization_url.lang = "ja"
     self.organization_url.text = "http://www.example.com/"
-    print self.organization_url.to_string()
+    print(self.organization_url.to_string())
     new_organization_url = md.organization_url_from_string(
       self.organization_url.to_string())
     assert new_organization_url.lang == "ja"
@@ -967,10 +953,10 @@ class TestSPSSODescriptor:
     self.sp_sso_descriptor.attribute_consuming_service.append(
       md.AttributeConsumingService())
 
-    print self.sp_sso_descriptor
+    print(self.sp_sso_descriptor)
     new_sp_sso_descriptor = md.spsso_descriptor_from_string(
       self.sp_sso_descriptor.to_string())
-    print new_sp_sso_descriptor
+    print(new_sp_sso_descriptor)
     assert new_sp_sso_descriptor.id == "ID"
     assert new_sp_sso_descriptor.valid_until == "2008-09-14T01:05:02Z"
     assert new_sp_sso_descriptor.cache_duration == "10:00:00:00"
@@ -1013,13 +999,13 @@ class TestSPSSODescriptor:
     assert new_sp_sso_descriptor.error_url == "http://www.example.com/errorURL"
     assert isinstance(new_sp_sso_descriptor.signature, ds.Signature)
     assert isinstance(new_sp_sso_descriptor.extensions, md.Extensions)
-    print new_sp_sso_descriptor.extensions.__dict__
+    print(new_sp_sso_descriptor.extensions.__dict__)
     assert len(new_sp_sso_descriptor.extensions.extension_elements) == 2
     for eelem in new_sp_sso_descriptor.extensions.extension_elements:
-        print "EE",eelem.__dict__
+        print("EE",eelem.__dict__)
         dp = extension_element_to_element(eelem, idpdisc.ELEMENT_FROM_STRING,
                                             idpdisc.NAMESPACE)
-        print "DP",dp.c_tag, dp.c_namespace,dp.__dict__
+        print("DP",dp.c_tag, dp.c_namespace,dp.__dict__)
         assert isinstance(dp, idpdisc.DiscoveryResponse)
     assert isinstance(new_sp_sso_descriptor.key_descriptor[0],
                             md.KeyDescriptor)

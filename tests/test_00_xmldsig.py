@@ -1,18 +1,5 @@
 #!/usr/bin/env python
 #
-# Copyright (C) 2007 SIOS Technology, Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
 """Tests for xmldsig"""
 
@@ -24,7 +11,7 @@ try:
 except ImportError:
   from elementtree import ElementTree
 import ds_data
-import xmldsig as ds
+import saml2.xmldsig as ds
 
 class TestObject:
 
@@ -99,7 +86,7 @@ class TestSPKIData:
   def testUsingTestData(self):
     """Test for spki_data_from_string() using test data"""
     new_spki_data = ds.spki_data_from_string(ds_data.TEST_SPKI_DATA)
-    print new_spki_data
+    print(new_spki_data)
     assert new_spki_data.spki_sexp[0].text.strip() == "spki sexp"
     assert new_spki_data.spki_sexp[1].text.strip() == "spki sexp2"
 
@@ -161,7 +148,7 @@ class TestX509Data:
   def testAccessors(self):
     """Test for X509Data accessors"""
     st = ds.x509_issuer_serial_from_string(ds_data.TEST_X509_ISSUER_SERIAL)
-    print st
+    print(st)
     self.x509_data.x509_issuer_serial= st
     self.x509_data.x509_ski = ds.X509SKI(text="x509 ski")
     self.x509_data.x509_subject_name = ds.X509SubjectName(
@@ -171,8 +158,8 @@ class TestX509Data:
     self.x509_data.x509_crl = ds.X509CRL(text="x509 crl")
     
     new_x509_data = ds.x509_data_from_string(self.x509_data.to_string())
-    print new_x509_data.keyswv()
-    print new_x509_data.__dict__.keys()
+    print(new_x509_data.keyswv())
+    print(new_x509_data.__dict__.keys())
     assert new_x509_data.x509_issuer_serial
     assert isinstance(new_x509_data.x509_issuer_serial, ds.X509IssuerSerial)
     assert new_x509_data.x509_ski.text.strip() == "x509 ski"

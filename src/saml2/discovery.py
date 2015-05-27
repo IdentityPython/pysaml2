@@ -1,67 +1,101 @@
-import urllib
-from urlparse import urlparse, parse_qs
-from saml2.client_base import IDPDISC_POLICY
+from urllib import urlencode
+from urlparse import parse_qs
+from urlparse import urlparse
+from saml2.entity import Entity
+from saml2.response import VerificationError
 
 __author__ = 'rolandh'
 
-def discovery_service_request_url(entity_id, disc_url, return_url="",
-                                  policy="", returnIDParam="",
-                                  is_passive=False ):
-    """
-    Created the HTTP redirect URL needed to send the user to the
-    discovery service.
+IDPDISC_POLICY = "urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol:single"
 
-    :param disc_url: The URL of the discovery service
-    :param return_url: The discovery service MUST redirect the user agent
-        to this location in response to this request
-    :param policy: A parameter name used to indicate the desired behavior
-        controlling the processing of the discovery service
-    :param returnIDParam: A parameter name used to return the unique
-        identifier of the selected identity provider to the original
-        requester.
-    :param is_passive: A boolean value of "true" or "false" that controls
-        whether the discovery service is allowed to visibly interact with
-        the user agent.
-    :return: A URL
-    """
-    pdir = {"entityID": entity_id}
-    if return_url:
-        pdir["return"] = return_url
-    if policy and policy != IDPDISC_POLICY:
-        pdir["policy"] = policy
-    if returnIDParam:
-        pdir["returnIDParam"] = returnIDParam
-    if is_passive:
-        pdir["is_passive"] = "true"
 
-    params = urllib.urlencode(pdir)
-    return "%s?%s" % (disc_url, params)
+class DiscoveryServer(Entity):
+    def __init__(self, config=None, config_file=""):
+        Entity.__init__(self, "disco", config, config_file)
 
-def discovery_service_response(query="", url="", returnIDParam=""):
-    """
-    Deal with the response url from a Discovery Service
+    def parse_discovery_service_request(self, url="", query=""):
+        if url:
+            part = urlparse(url)
+            dsr = parse_qs(part[4])
+        elif query:
+            dsr = parse_qs(query)
+        else:
+            dsr = {}
 
-    :param url: the url the user was redirected back to
-    :param returnIDParam: This is where the identifier of the IdP is
-        place if it was specified in the query as not being 'entityID'
-    :return: The IdP identifier or "" if none was given
-    """
+        # verify
 
-    if url:
-        part = urlparse(url)
-        qsd = parse_qs(part[4])
-    elif query:
-        qsd = parse_qs(query)
-    else:
-        qsd = {}
+        for key in ["isPassive", "return", "returnIDParam", "policy"]:
+            try:
+                assert len(dsr[key]) == 1
+                dsr[key] = dsr[key][0]
+            except KeyError:
+                pass
 
-    if returnIDParam:
+        if "return" in dsr:
+            part = urlparse(dsr["return"])
+            if part.query:
+                qp = parse_qs(part.query)
+                if "returnIDParam" in dsr:
+                    assert dsr["returnIDParam"] not in qp.keys()
+                else:
+                    assert "entityID" not in qp.keys()
+        else:
+            # If metadata not used this is mandatory
+            raise VerificationError("Missing mandatory parameter 'return'")
+
+        if "policy" not in dsr:
+            dsr["policy"] = IDPDISC_POLICY
+
         try:
-            return qsd[returnIDParam][0]
+            assert dsr["isPassive"] in ["true", "false"]
         except KeyError:
-            return ""
-    else:
-        try:
-            return qsd["entityID"][0]
-        except KeyError:
-            return ""
+            pass
+
+        if "isPassive" in dsr and dsr["isPassive"] == "true":
+            dsr["isPassive"] = True
+        else:
+            dsr["isPassive"] = False
+
+        if not "returnIDParam" in dsr:
+            dsr["returnIDParam"] = "entityID"
+
+        return dsr
+
+    # -------------------------------------------------------------------------
+
+    @staticmethod
+    def create_discovery_service_response(return_url=None,
+                                          returnIDParam="entityID",
+                                          entity_id=None, **kwargs):
+        if return_url is None:
+            return_url = kwargs["return"]
+
+        if entity_id:
+            qp = urlencode({returnIDParam: entity_id})
+
+            part = urlparse(return_url)
+            if part.query:
+                # Iff there is a query part add the new info at the end
+                return_url = "%s&%s" % (return_url, qp)
+            else:
+                return_url = "%s?%s" % (return_url, qp)
+
+        return return_url
+
+    def verify_sp_in_metadata(self, entity_id):
+        if self.metadata:
+            endp = self.metadata.discovery_response(entity_id)
+            if endp:
+                return True
+
+        return False
+
+    def verify_return(self, entity_id, return_url):
+        for endp in self.metadata.discovery_response(entity_id):
+            try:
+                assert return_url.startswith(endp["location"])
+            except AssertionError:
+                pass
+            else:
+                return True
+        return False

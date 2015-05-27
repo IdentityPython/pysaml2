@@ -36,6 +36,7 @@ example = """<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
 </Envelope>
 """
 
+
 def test_parse_soap_envelope():
     envelope = ElementTree.fromstring(example)
     assert envelope.tag == '{%s}Envelope' % NAMESPACE
@@ -47,6 +48,7 @@ def test_parse_soap_envelope():
     saml_part = body[0]
     assert saml_part.tag == '{%s}Response' % SAMLP_NAMESPACE
     # {http://schemas.xmlsoap.org/soap/envelope/}Envelope
+
 
 def test_make_soap_envelope():
     envelope = ElementTree.Element('')

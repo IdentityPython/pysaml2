@@ -60,7 +60,7 @@ class TOperation_(wsdl.TExtensibilityElement_):
             extension_elements=None,
             extension_attributes=None,
         ):
-        wsdl.TExtensibilityElement_.__init__(self, 
+        wsdl.TExtensibilityElement_.__init__(self,
                 required=required,
                 text=text,
                 extension_elements=extension_elements,
@@ -113,7 +113,7 @@ class TFaultRes_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -147,7 +147,7 @@ class TFault_(TFaultRes_):
             extension_elements=None,
             extension_attributes=None,
         ):
-        TFaultRes_.__init__(self, 
+        TFaultRes_.__init__(self,
                 required=required,
                 parts=parts,
                 encoding_style=encoding_style,
@@ -188,7 +188,7 @@ class THeaderFault_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -221,7 +221,7 @@ class TAddress_(wsdl.TExtensibilityElement_):
             extension_elements=None,
             extension_attributes=None,
         ):
-        wsdl.TExtensibilityElement_.__init__(self, 
+        wsdl.TExtensibilityElement_.__init__(self,
                 required=required,
                 text=text,
                 extension_elements=extension_elements,
@@ -253,7 +253,7 @@ class TBinding_(wsdl.TExtensibilityElement_):
             extension_elements=None,
             extension_attributes=None,
         ):
-        wsdl.TExtensibilityElement_.__init__(self, 
+        wsdl.TExtensibilityElement_.__init__(self,
                 required=required,
                 text=text,
                 extension_elements=extension_elements,
@@ -304,7 +304,7 @@ class TBody_(wsdl.TExtensibilityElement_):
             extension_elements=None,
             extension_attributes=None,
         ):
-        wsdl.TExtensibilityElement_.__init__(self, 
+        wsdl.TExtensibilityElement_.__init__(self,
                 required=required,
                 text=text,
                 extension_elements=extension_elements,
@@ -419,7 +419,7 @@ class THeader_(wsdl.TExtensibilityElement_):
             extension_elements=None,
             extension_attributes=None,
         ):
-        wsdl.TExtensibilityElement_.__init__(self, 
+        wsdl.TExtensibilityElement_.__init__(self,
                 required=required,
                 text=text,
                 extension_elements=extension_elements,

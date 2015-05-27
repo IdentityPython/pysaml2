@@ -1,10 +1,10 @@
 .. _example_sp:
 
-An extremly simple example of a SAML2 service provider.
+An extremely simple example of a SAML2 service provider.
 =======================================================
 
 How it works
-------------
+************
 
 A SP works with authentication and possibly attribute aggregation.
 Both of these functions can be seen as parts of the normal Repoze.who
@@ -26,35 +26,52 @@ from the IdP/AA. If there exists both a name and a friendly name, for
 instance, the friendly name is used as the key.
 
 Setup
------
+*****
 
-I you look in the example/sp directory of the distribution you will see
-the necessary files:
+**sp-wsgi:**
 
-application.py 
-    which is the web application. In this case it will just print the
-    information provided by the IdP in a table.
-    
+* Go to the folder:
+[your path]/pysaml2/example/sp-wsgi
+
+* Take the file named sp_conf.py.example and rename it sp_conf.py
+
+sp_conf.py is configured to run on localhost on port 8087. If you want to you could make the necessary changes before proceeding to the next step.
+
+* In order to generate the metadata file open a terminal::
+
+    cd [your path]/pysaml2/example/sp-wsgi
+    make_metadata.py sp_conf.py > sp.xml
+
+
+**sp-repoze:**
+
+* Go to the folder:
+[your path]/pysaml2/example/sp-repoze
+
+* Take the file named sp_conf.py.example and rename it sp_conf.py
+
+sp_conf.py is configured to run on localhost on port 8087. If you want to you could make the necessary changes before proceeding to the next step.
+
+* In order to generate the metadata file open a terminal::
+
+    cd [your path]/pysaml2/example/sp-repoze
+    make_metadata.py sp_conf.py > sp.xml
+
+Important files:
+
 sp_conf.py
     The SPs configuration 
     
 who.ini
     The repoze.who configuration file
     
-And then there are two files with certificates, mykey.pem with the private
+Inside the folder named pki there are two files with certificates, mykey.pem with the private
 certificate and mycert.pem with the public part.
 
 I'll go through these step by step.
 
-The application
----------------
-
-Build to use the wsgiref's simple_server, which is fine for testing but
-not for production.
-
-
-SP configuration
-----------------
+sp_conf.py
+----------
 
 The configuration is written as described in :ref:`howto_config`. It means among other
 things that it's easily testable as to the correct syntax.
@@ -64,7 +81,7 @@ it line by line::
 
         "service": ["sp"],
 
-Tells the software what type of services the software are suppost to
+Tells the software what type of services the software is supposed to
 supply. It is used to check for the 
 completeness of the configuration and also when constructing metadata from
 the configuration. More about that later. Allowed values are: "sp" 
@@ -119,13 +136,13 @@ building metadata. ::
             #telephone_number
         }]
 
-Another piece of information that only is matters if you build and distribute
+Another piece of information that only matters if you build and distribute
 metadata.
 
 So, now to that part. In order to allow the IdP to talk to you you may have
 to provide the one running the IdP with a metadata file.
 If you have a SP configuration file similar to the one I've walked you
-through here, but with your information. You can make the metadata file
+through here, but with your information, you can make the metadata file
 by running the make_metadata script you can find in the tools directory. 
 
 Change directory to where you have the configuration file and do ::
@@ -134,11 +151,12 @@ Change directory to where you have the configuration file and do ::
     
 
 
-Repoze configuration
---------------------
+who.ini
+-------
+The file named who.ini is the repoze.who configuration file
 
 I'm not going through the INI file format here. You should read
-`Middleware Responsibilities <http://static.repoze.org/whodocs/narr.html>`_ 
+`Middleware Responsibilities <http://docs.repoze.org/who/2.0/middleware.html>`_ 
 to get a good introduction to the concept.
 
 The configuration of the pysaml2 part in the applications middleware are
@@ -175,19 +193,36 @@ After this, the plugin is referenced in a couple of places::
 
 Which means that the plugin is used in all phases.
 
+Run SP:
+*******
+
+Open a Terminal::
+
+    cd [your path]/pysaml2/example/sp-wsgi
+    python sp.py sp_conf
+
+Note that you should not have the .py extension on the sp_conf.py while running the program
+
+Now you should be able to open a web browser go to to service provider (if you didn't change sp_conf.py it should be: http://localhost:8087)
+
+You should be redirected to the IDP and presented with a login screen.
+
+You could enter Username:roland and Password:dianakra
+All users are specified in idp.py in a dictionary named PASSWD
+
 The application
 ---------------
 
-Is as said before extremly simple. The only thing that is connected to
-the PySaml2 configuration are at the bottom, namely where the server are.
+The app is, as said before, extremely simple. The only thing that is connected to
+the PySaml2 configuration is at the bottom, namely where the server is.
 You have to ascertain that this coincides with what is specified in the 
-PySaml2 configuration. Apart from that there really are no thing in 
+PySaml2 configuration. Apart from that there really is nothing in 
 application.py that demands that you use PySaml2 as middleware. If you 
 switched to using the LDAP or CAS plugins nothing would change in the 
 application. In the application configuration yes! But not in the application.
 And that is really how it should be done.
 
-There is one assumption and that is that the middleware plugin that gathers
-information about the user places the extra information in as value on the
+There is one assumption, and that is that the middleware plugin that gathers
+information about the user places the extra information in as a value on the
 "user" property in the dictionary found under the key "repoze.who.identity"
 in the environment.

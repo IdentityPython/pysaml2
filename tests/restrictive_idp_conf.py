@@ -3,10 +3,7 @@ from saml2.saml import NAME_FORMAT_URI
 
 BASE = "http://localhost:8089/"
 
-try:
-    from xmlsec_location import xmlsec_path
-except ImportError:
-    xmlsec_path = '/opt/local/bin/xmlsec1'
+from pathutils import full_path
 
 CONFIG = {
     "entityid" : "urn:mace:example.com:saml:roland:idpr",
@@ -34,14 +31,15 @@ CONFIG = {
                     }
                 }
             },
-            "subject_data": "subject_data.db",
+            "subject_data": full_path("subject_data.db"),
         }
     },
-    "key_file" : "test.key",
-    "cert_file" : "test.pem",
-    #"xmlsec_binary" : xmlsec_path,
-    "metadata": {
-        "local": ["sp_0.metadata"],
-    },
-    "attribute_map_dir" : "attributemaps",
+    "key_file" : full_path("test.key"),
+    "cert_file" : full_path("test.pem"),
+    "xmlsec_binary" : None,
+    "metadata": [{
+        "class": "saml2.mdstore.MetaDataFile",
+        "metadata": [(full_path("sp_0.metadata"), )],
+    }],
+    "attribute_map_dir" : full_path("attributemaps"),
 }
