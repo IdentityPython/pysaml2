@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 import logging
+from pymongo.mongo_client import MongoClient
 
 __author__ = 'rolandh'
 
-from pymongo import Connection
 #import cjson
 import time
 from datetime import datetime
@@ -14,12 +14,13 @@ from saml2.time_util import TIME_FORMAT
 
 logger = logging.getLogger(__name__)
 
+
 class Cache(object):
     def __init__(self, server=None, debug=0, db=None):
         if server:
-            connection = Connection(server)
+            connection = MongoClient(server)
         else:
-            connection = Connection()
+            connection = MongoClient()
 
         if db:
             self._db = connection[db]
@@ -63,7 +64,8 @@ class Cache(object):
         else:
             for entity_id in entities:
                 try:
-                    info = self.get(subject_id, entity_id, check_not_on_or_after)
+                    info = self.get(subject_id, entity_id,
+                                    check_not_on_or_after)
                 except ToOld:
                     oldees.append(entity_id)
                     continue
@@ -76,7 +78,7 @@ class Cache(object):
                         res[key] = vals
 
         return res, oldees
-                
+
     def _get_info(self, item, check_not_on_or_after=True):
         """ Get session information about a subject gotten from a
         specified IdP/AA.
@@ -124,7 +126,6 @@ class Cache(object):
 
         _ = self._cache.insert(doc)
 
-
     def reset(self, subject_id, entity_id):
         """ Scrap the assertions received from a IdP or an AA about a special
         subject.
@@ -133,9 +134,8 @@ class Cache(object):
         :param entity_id: The identifier of the entity_id of the assertion
         :return:
         """
-        self._cache.update({"subject_id":subject_id,
-                                   "entity_id":entity_id},
-                                  {"$set": {"info":{}, "timestamp": 0}})
+        self._cache.update({"subject_id": subject_id, "entity_id": entity_id},
+                           {"$set": {"info": {}, "timestamp": 0}})
 
     def entities(self, subject_id):
         """ Returns all the entities of assertions for a subject, disregarding
@@ -149,7 +149,6 @@ class Cache(object):
                     subject_id})]
         except ValueError:
             return []
-
 
     def receivers(self, subject_id):
         """ Another name for entities() just to make it more logic in the IdP
@@ -165,8 +164,8 @@ class Cache(object):
             valid or not.
         """
 
-        item = self._cache.find_one({"subject_id":subject_id,
-                                   "entity_id":entity_id})
+        item = self._cache.find_one({"subject_id": subject_id,
+                                     "entity_id": entity_id})
         try:
             return time_util.not_on_or_after(item["timestamp"])
         except ToOld:
@@ -184,20 +183,17 @@ class Cache(object):
 
     def update(self, subject_id, entity_id, ava):
         """ """
-        item = self._cache.find_one({"subject_id":subject_id,
-                                       "entity_id":entity_id})
+        item = self._cache.find_one({"subject_id": subject_id,
+                                     "entity_id": entity_id})
         info = item["info"]
         info["ava"].update(ava)
-        self._cache.update({"subject_id":subject_id,
-                            "entity_id":entity_id},
-                            {"$set": {"info":info}})
-
+        self._cache.update({"subject_id": subject_id, "entity_id": entity_id},
+                           {"$set": {"info": info}})
 
     def valid_to(self, subject_id, entity_id, newtime):
         """ """
-        self._cache.update({"subject_id":subject_id,
-                            "entity_id":entity_id},
-                            {"$set": {"timestamp": newtime}})
+        self._cache.update({"subject_id": subject_id, "entity_id": entity_id},
+                           {"$set": {"timestamp": newtime}})
 
     def clear(self):
         self._cache.remove()

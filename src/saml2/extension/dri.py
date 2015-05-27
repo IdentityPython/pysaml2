@@ -11,6 +11,7 @@ from saml2 import md
 
 NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:metadata:dri'
 
+
 class CreationInstant(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:metadata:dri:CreationInstant element """
 
@@ -21,6 +22,7 @@ class CreationInstant(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def creation_instant_from_string(xml_string):
     return saml2.create_class_from_xml_string(CreationInstant, xml_string)
@@ -37,6 +39,7 @@ class SerialNumber(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def serial_number_from_string(xml_string):
     return saml2.create_class_from_xml_string(SerialNumber, xml_string)
 
@@ -51,6 +54,7 @@ class UsagePolicy(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def usage_policy_from_string(xml_string):
     return saml2.create_class_from_xml_string(UsagePolicy, xml_string)
@@ -70,28 +74,30 @@ class PublisherType_(SamlBase):
     c_attributes['SerialNumber'] = ('serial_number', 'string', False)
 
     def __init__(self,
-            publisher_id=None,
-            creation_instant=None,
-            serial_number=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.publisher_id=publisher_id
-        self.creation_instant=creation_instant
-        self.serial_number=serial_number
+                 publisher_id=None,
+                 creation_instant=None,
+                 serial_number=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None,
+    ):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes,
+        )
+        self.publisher_id = publisher_id
+        self.creation_instant = creation_instant
+        self.serial_number = serial_number
+
 
 def publisher_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(PublisherType_, xml_string)
 
 
 class RegistrationAuthority(md.EntityIDType_):
-    """The urn:oasis:names:tc:SAML:2.0:metadata:dri:RegistrationAuthority element """
+    """The urn:oasis:names:tc:SAML:2.0:metadata:dri:RegistrationAuthority
+    element """
 
     c_tag = 'RegistrationAuthority'
     c_namespace = NAMESPACE
@@ -100,12 +106,14 @@ class RegistrationAuthority(md.EntityIDType_):
     c_child_order = md.EntityIDType_.c_child_order[:]
     c_cardinality = md.EntityIDType_.c_cardinality.copy()
 
+
 def registration_authority_from_string(xml_string):
     return saml2.create_class_from_xml_string(RegistrationAuthority, xml_string)
 
 
 class RegistrationInstant(SamlBase):
-    """The urn:oasis:names:tc:SAML:2.0:metadata:dri:RegistrationInstant element """
+    """The urn:oasis:names:tc:SAML:2.0:metadata:dri:RegistrationInstant
+    element """
 
     c_tag = 'RegistrationInstant'
     c_namespace = NAMESPACE
@@ -115,12 +123,14 @@ class RegistrationInstant(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def registration_instant_from_string(xml_string):
     return saml2.create_class_from_xml_string(RegistrationInstant, xml_string)
 
 
 class RegistrationPolicy(SamlBase):
-    """The urn:oasis:names:tc:SAML:2.0:metadata:dri:RegistrationPolicy element """
+    """The urn:oasis:names:tc:SAML:2.0:metadata:dri:RegistrationPolicy
+    element """
 
     c_tag = 'RegistrationPolicy'
     c_namespace = NAMESPACE
@@ -129,6 +139,7 @@ class RegistrationPolicy(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def registration_policy_from_string(xml_string):
     return saml2.create_class_from_xml_string(RegistrationPolicy, xml_string)
@@ -144,12 +155,14 @@ class Publisher(PublisherType_):
     c_child_order = PublisherType_.c_child_order[:]
     c_cardinality = PublisherType_.c_cardinality.copy()
 
+
 def publisher_from_string(xml_string):
     return saml2.create_class_from_xml_string(Publisher, xml_string)
 
 
 class RegistrationInfoType_(SamlBase):
-    """The urn:oasis:names:tc:SAML:2.0:metadata:dri:RegistrationInfoType element """
+    """The urn:oasis:names:tc:SAML:2.0:metadata:dri:RegistrationInfoType
+    element """
 
     c_tag = 'RegistrationInfoType'
     c_namespace = NAMESPACE
@@ -157,28 +170,36 @@ class RegistrationInfoType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata:dri}RegistrationAuthority'] = ('registration_authority', RegistrationAuthority)
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata:dri}RegistrationInstant'] = ('registration_instant', RegistrationInstant)
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata:dri}RegistrationPolicy'] = ('registration_policy', RegistrationPolicy)
-    c_cardinality['registration_policy'] = {"min":0, "max":1}
-    c_child_order.extend(['registration_authority', 'registration_instant', 'registration_policy'])
+    c_children[
+        '{urn:oasis:names:tc:SAML:2.0:metadata:dri}RegistrationAuthority'] = (
+    'registration_authority', RegistrationAuthority)
+    c_children[
+        '{urn:oasis:names:tc:SAML:2.0:metadata:dri}RegistrationInstant'] = (
+    'registration_instant', RegistrationInstant)
+    c_children[
+        '{urn:oasis:names:tc:SAML:2.0:metadata:dri}RegistrationPolicy'] = (
+    'registration_policy', RegistrationPolicy)
+    c_cardinality['registration_policy'] = {"min": 0, "max": 1}
+    c_child_order.extend(['registration_authority', 'registration_instant',
+                          'registration_policy'])
 
     def __init__(self,
-            registration_authority=None,
-            registration_instant=None,
-            registration_policy=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.registration_authority=registration_authority
-        self.registration_instant=registration_instant
-        self.registration_policy=registration_policy
+                 registration_authority=None,
+                 registration_instant=None,
+                 registration_policy=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None,
+    ):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes,
+        )
+        self.registration_authority = registration_authority
+        self.registration_instant = registration_instant
+        self.registration_policy = registration_policy
+
 
 def registration_info_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(RegistrationInfoType_, xml_string)
@@ -193,22 +214,24 @@ class PublishersType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata:dri}Publisher'] = ('publisher', [Publisher])
-    c_cardinality['publisher'] = {"min":0}
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata:dri}Publisher'] = (
+    'publisher', [Publisher])
+    c_cardinality['publisher'] = {"min": 0}
     c_child_order.extend(['publisher'])
 
     def __init__(self,
-            publisher=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.publisher=publisher or []
+                 publisher=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None,
+    ):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes,
+        )
+        self.publisher = publisher or []
+
 
 def publishers_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(PublishersType_, xml_string)
@@ -224,6 +247,7 @@ class RegistrationInfo(RegistrationInfoType_):
     c_child_order = RegistrationInfoType_.c_child_order[:]
     c_cardinality = RegistrationInfoType_.c_cardinality.copy()
 
+
 def registration_info_from_string(xml_string):
     return saml2.create_class_from_xml_string(RegistrationInfo, xml_string)
 
@@ -238,6 +262,7 @@ class Publishers(PublishersType_):
     c_child_order = PublishersType_.c_child_order[:]
     c_cardinality = PublishersType_.c_cardinality.copy()
 
+
 def publishers_from_string(xml_string):
     return saml2.create_class_from_xml_string(Publishers, xml_string)
 
@@ -251,34 +276,40 @@ class DocumentInfoType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata:dri}CreationInstant'] = ('creation_instant', CreationInstant)
-    c_cardinality['creation_instant'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata:dri}SerialNumber'] = ('serial_number', SerialNumber)
-    c_cardinality['serial_number'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata:dri}UsagePolicy'] = ('usage_policy', UsagePolicy)
-    c_cardinality['usage_policy'] = {"min":0, "max":1}
-    c_children['{urn:oasis:names:tc:SAML:2.0:metadata:dri}Publishers'] = ('publishers', Publishers)
-    c_cardinality['publishers'] = {"min":0, "max":1}
-    c_child_order.extend(['creation_instant', 'serial_number', 'usage_policy', 'publishers'])
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata:dri}CreationInstant'] = (
+    'creation_instant', CreationInstant)
+    c_cardinality['creation_instant'] = {"min": 0, "max": 1}
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata:dri}SerialNumber'] = (
+    'serial_number', SerialNumber)
+    c_cardinality['serial_number'] = {"min": 0, "max": 1}
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata:dri}UsagePolicy'] = (
+    'usage_policy', UsagePolicy)
+    c_cardinality['usage_policy'] = {"min": 0, "max": 1}
+    c_children['{urn:oasis:names:tc:SAML:2.0:metadata:dri}Publishers'] = (
+    'publishers', Publishers)
+    c_cardinality['publishers'] = {"min": 0, "max": 1}
+    c_child_order.extend(
+        ['creation_instant', 'serial_number', 'usage_policy', 'publishers'])
 
     def __init__(self,
-            creation_instant=None,
-            serial_number=None,
-            usage_policy=None,
-            publishers=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.creation_instant=creation_instant
-        self.serial_number=serial_number
-        self.usage_policy=usage_policy
-        self.publishers=publishers
+                 creation_instant=None,
+                 serial_number=None,
+                 usage_policy=None,
+                 publishers=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None,
+    ):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes,
+        )
+        self.creation_instant = creation_instant
+        self.serial_number = serial_number
+        self.usage_policy = usage_policy
+        self.publishers = publishers
+
 
 def document_info_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(DocumentInfoType_, xml_string)
@@ -293,6 +324,7 @@ class DocumentInfo(DocumentInfoType_):
     c_attributes = DocumentInfoType_.c_attributes.copy()
     c_child_order = DocumentInfoType_.c_child_order[:]
     c_cardinality = DocumentInfoType_.c_cardinality.copy()
+
 
 def document_info_from_string(xml_string):
     return saml2.create_class_from_xml_string(DocumentInfo, xml_string)

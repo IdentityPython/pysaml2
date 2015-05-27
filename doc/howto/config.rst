@@ -3,15 +3,15 @@
 Configuration of pySAML2 entities
 =================================
 
-Whether you plan to run a pySAML2 Service Provider, Identity provider or an
+Whether you plan to run a pySAML2 Service Provider, Identity Provider or an
 attribute authority you have to configure it. The format of the configuration
-file is the same disregarding which type of service you plan to run.
-What differs is some of the directives.
-Below you will find a list of all the used directives in alphabetic order.
+file is the same regardless of which type of service you plan to run.
+What differs are some of the directives.
+Below you will find a list of all the used directives in alphabetical order.
 The configuration is written as a python module which contains a named
 dictionary ("CONFIG") that contains the configuration directives.
 
-The basic structure of the configuration file is therefor like this::
+The basic structure of the configuration file is therefore like this::
 
     from saml2 import BINDING_HTTP_REDIRECT
 
@@ -90,9 +90,9 @@ The attribute map module contains a MAP dictionary with three items.  The
 The *to* and *fro* sub-dictionaries then contain the mapping between the names.
 
 As you see the format is again a python dictionary where the key is the
-name to convert from and the value is the name to convert to.
+name to convert from, and the value is the name to convert to.
     
-Since *to* in most cases are the inverse of the *fro* file, the 
+Since *to* in most cases is the inverse of the *fro* file, the 
 software allowes you to only specify one of them and it will 
 automatically create the other.
 
@@ -111,7 +111,7 @@ contact_person
 
 This is only used by *make_metadata.py* when it constructs the metadata for 
 the service described by the configuration file.
-This is where you described who can be contacted if questions arises
+This is where you describe who can be contacted if questions arise
 about the service or if support is needed. The possible types are according to
 the standard **technical**, **support**, **administrative**, **billing** 
 and **other**.::
@@ -148,7 +148,7 @@ Format::
 
 The globally unique identifier of the entity.
 
-.. note:: There is a recommendation that the entityid should point to a real
+.. note:: It is recommended that the entityid should point to a real
     webpage where the metadata for the entity can be found.
 
 key_file
@@ -160,13 +160,13 @@ Format::
 
 *key_file* is the name of a PEM formatted file that contains the private key
 of the service. This is presently used both to encrypt/sign assertions and as
-client key in a HTTPS session.
+the client key in an HTTPS session.
 
 metadata
 ^^^^^^^^
 
 Contains a list of places where metadata can be found. This can be either
-a file accessible on the server the service runs on or somewhere on the net.::
+a file accessible on the server the service runs on, or somewhere on the net.::
 
     "metadata" : {
         "local": [
@@ -180,8 +180,8 @@ a file accessible on the server the service runs on or somewhere on the net.::
     },
 
 The above configuration means that the service should read two local 
-metadata files and on top of that load one from the net. To verify the
-authenticity of the file downloaded from the net the local copy of the 
+metadata files, and on top of that load one from the net. To verify the
+authenticity of the file downloaded from the net, the local copy of the 
 public key should be used.
 This public key must be acquired by some out-of-band method.
 
@@ -205,7 +205,7 @@ Where you describe the organization responsible for the service.::
 service
 ^^^^^^^
 
-Which services the server will provide, those are combinations of "idp","sp" 
+Which services the server will provide; those are combinations of "idp", "sp" 
 and "aa".
 So if a server is a Service Provider (SP) then the configuration 
 could look something like this::
@@ -228,13 +228,13 @@ could look something like this::
     
 There are two options common to all services: 'name' and 'endpoints'.
 The remaining options are specific to one or the other of the service types.
-Which one is specified along side the name of the option
+Which one is specified along side the name of the option.
 
-timeslack
-^^^^^^^^^
+accepted_time_diff
+^^^^^^^^^^^^^^^^^^
 
 If your computer and another computer that you are communicating with are not
-in synch regarding the computer clock. Then you here can state how big a
+in synch regarding the computer clock, then here you can state how big a
 difference you are prepared to accept.
 
 .. note:: This will indiscriminately effect all time comparisons.
@@ -275,7 +275,7 @@ policy
 
 If the server is an IdP and/or an AA then there might be reasons to do things
 differently depending on who is asking; this is where that is specified.
-The keys are 'default' and SP entity identifiers, default is used whenever
+The keys are 'default' and SP entity identifiers.  Default is used whenever
 there is no entry for a specific SP. The reasoning is also that if there is
 no default and only SP entity identifiers as keys, then the server will only
 except connections from the specified SPs.
@@ -301,12 +301,12 @@ An example might be::
     }
     
 *lifetime* 
-    is the maximum amount of time before the information should be 
+    This is the maximum amount of time before the information should be 
     regarded as stale. In an Assertion this is represented in the NotOnOrAfter 
     attribute.    
 *attribute_restrictions*
     By default there is no restrictions as to which attributes should be
-    return. Instead all the attributes and values that is gathered by the 
+    return. Instead all the attributes and values that are gathered by the 
     database backends will be returned if nothing else is stated.
     In the example above the SP with the entity identifier
     "urn:mace:umu.se:saml:roland:sp" 
@@ -315,6 +315,9 @@ An example might be::
     what values on these attributes that can be returned.
 *name_form*
     Which name-form that should be used when sending assertions.
+    Using this information the attribute name in the data source will be mapped to
+    the friendly name, and the saml attribute name will be taken from the uri/oid
+    defined in the attribute map.
 
 If restrictions on values are deemed necessary those are represented by 
 regular expressions.::
@@ -332,7 +335,7 @@ regular expressions.::
         }
     }
 
-Here only mail addresses that ends with ".umu.se" will be returned.
+Here only mail addresses that end with ".umu.se" will be returned.
 
 sp
 ^^
@@ -345,7 +348,7 @@ authn_requests_signed
 Indicates if the Authentication Requests sent by this SP should be signed
 by default. This can be overriden by application code for a specific call.
 
-This set the AuthnRequestsSigned attribute of the SPSSODescriptor node.
+This sets the AuthnRequestsSigned attribute of the SPSSODescriptor node
 of the metadata so the IdP will know this SP preference.
 
 Valid values are "true" or "false". Default value is "false".
@@ -354,7 +357,7 @@ Example::
 
     "service": {
         "sp": {
-            "authn_assertions_signed": "true",
+            "authn_requests_signed": "true",
         }
     }
 
@@ -362,9 +365,9 @@ Example::
 idp
 """
 
-Defines the set of IdPs that this SP is allowed to use. If not all the IdPs in
-the metadata is allowed, then the value is expected to be a list with entity
-identifiers for the allowed IdPs.
+Defines the set of IdPs that this SP is allowed to use; if unset, all listed
+IdPs may be used.  If set, then the value is expected to be a list with entity
+identifiers for the allowed IdPs. 
 A typical configuration, when the allowed set of IdPs are limited, would look
 something like this::
 
@@ -375,8 +378,6 @@ something like this::
     }
 
 In this case the SP has only one IdP it can use.
-
-If all IdPs present in the metadata loaded this directive must be left out.
 
 optional_attributes
 """""""""""""""""""
@@ -415,7 +416,7 @@ want_assertions_signed
 """"""""""""""""""""""
 
 Indicates if this SP wants the IdP to send the assertions signed. This
-set the WantAssertionsSigned attribute of the SPSSODescriptor node.
+sets the WantAssertionsSigned attribute of the SPSSODescriptor node
 of the metadata so the IdP will know this SP preference.
 
 Valid values are "true" or "false". Default value is "true".
@@ -440,7 +441,7 @@ endpoints
 """""""""
 
 Where the endpoints for the services provided are.
-This directive has as value a dictionary with one of the following keys:
+This directive has as value a dictionary with one or more of the following keys:
 
 * artifact_resolution_service (aa, idp and sp)
 * assertion_consumer_service (sp)
@@ -474,7 +475,7 @@ Indicates if this entity will sign the Logout Requests originated from it.
 
 This can be overriden by application code for a specific call.
 
-Valid values are "true" or "false". Default value is "false"
+Valid values are "true" or "false". Default value is "false".
 
 Example::
 
@@ -491,7 +492,7 @@ The name of a database where the map between a local identifier and
 a distributed identifier is kept. By default this is a shelve database.
 So if you just specify name, then a shelve database with that name
 is created. On the other hand if you specify a tuple then the first
-element in the tuple specifise which type of database you want to use
+element in the tuple specifies which type of database you want to use
 and the second element is the address of the database.
 
 Example::
@@ -519,7 +520,7 @@ Gives information about common identifiers for virtual_organizations::
     },
 
 Keys in this dictionary are the identifiers for the virtual organizations.
-The arguments per organization is 'nameid_format' and 'common_identifier'. 
+The arguments per organization are 'nameid_format' and 'common_identifier'. 
 Useful if all the IdPs and AAs that are involved in a virtual organization 
 have common attribute values for users that are part of the VO.
 
@@ -562,8 +563,8 @@ We start with a simple but fairly complete Service provider configuration::
     }
 
 This is the typical setup for a SP.
-A metadata file to load is *always* needed, but it can of course be
-containing anything from 1 up to many entity descriptions.
+A metadata file to load is *always* needed, but it can of course
+contain anything from 1 up to many entity descriptions.
 
 ------
 
@@ -614,3 +615,10 @@ A slightly more complex configuration::
     
 Uses metadata files, both local and remote, and will talk to whatever 
 IdP that appears in any of the metadata files. 
+
+Other considerations
+::::::::::::::::::::
+
+Entity Categories
+-----------------
+Entity categories and their attributes are defined in src/saml2/entity_category/<registrar of entcat>.py

@@ -1,6 +1,6 @@
 import saml2
-import xmlenc as xenc
-import xmldsig
+import saml2.xmlenc as xenc
+from saml2 import xmldsig
 
 data1 = """<?xml version='1.0' encoding='UTF-8'?>
 <ns0:EncryptedData MimeType="text/xml" xmlns:ns0="http://www.w3.org/2001/04/xmlenc#">
@@ -45,7 +45,7 @@ data2 = """<?xml version='1.0' encoding='UTF-8'?>
 def test_2():
     ed = xenc.encrypted_data_from_string(data2)
     assert ed
-    print ed
+    print(ed)
     assert ed.type == "http://www.w3.org/2001/04/xmlenc#Element"
     assert ed.encryption_method is not None
     em = ed.encryption_method
@@ -76,7 +76,7 @@ data3 = """<?xml version='1.0' encoding='UTF-8'?>
 def test_3():
     ed = xenc.encrypted_data_from_string(data3)
     assert ed
-    print ed
+    print(ed)
     assert ed.encryption_method != None
     em = ed.encryption_method
     assert em.algorithm == 'http://www.w3.org/2001/04/xmlenc#aes128-cbc'
@@ -126,7 +126,7 @@ data4 = """<?xml version='1.0' encoding='UTF-8'?>
 def test_4():
     ek = xenc.encrypted_key_from_string(data4)
     assert ek
-    print ek
+    print(ek)
     assert ek.encryption_method != None
     em = ek.encryption_method
     assert em.algorithm == 'http://www.w3.org/2001/04/xmlenc#rsa-1_5'
@@ -159,8 +159,8 @@ data5 = """<CipherReference URI="http://www.example.com/CipherValues.xml"
 def test_5():
     cr = xenc.cipher_reference_from_string(data5)
     assert cr
-    print cr
-    print cr.keyswv()
+    print(cr)
+    print(cr.keyswv())
     trs = cr.transforms
     assert len(trs.transform) == 2
     tr = trs.transform[0]
@@ -189,7 +189,7 @@ data6 = """<ReferenceList xmlns="http://www.w3.org/2001/04/xmlenc#">
 def test_6():
     rl = xenc.reference_list_from_string(data6)
     assert rl
-    print rl
+    print(rl)
     assert len(rl.data_reference) == 1
     dr = rl.data_reference[0]
     assert dr.uri == "#invoice34"
@@ -206,4 +206,4 @@ def test_6():
     assert tr.algorithm == "http://www.w3.org/TR/1999/REC-xpath-19991116"
     assert len(tr.x_path) == 1
     assert tr.x_path[0].text.strip() == """self::xenc:EncryptedData[@Id="example1"]"""
-    
+

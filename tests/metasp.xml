@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ns0:EntitiesDescriptor xmlns:ns0="urn:oasis:names:tc:SAML:2.0:metadata" name="urn:mace:umu.se:saml:test" validUntil="2010-12-01T09:22:16Z">
-  <ns0:EntityDescriptor entityID="urn:mace:umu.se:saml:roland:sp" validUntil="2010-12-01T09:22:16Z">
+  <ns0:EntityDescriptor entityID="urn:mace:umu.se:saml:roland:sp">
     <ns0:SPSSODescriptor AuthnRequestsSigned="False" WantAssertionsSigned="True" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
       <ns0:KeyDescriptor>
         <ns1:KeyInfo xmlns:ns1="http://www.w3.org/2000/09/xmldsig#">

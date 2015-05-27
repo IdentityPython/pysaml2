@@ -8,9 +8,12 @@ import saml2
 from saml2 import md
 
 NAMESPACE = 'urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol'
+BINDING_DISCO = "urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol"
+
 
 class DiscoveryResponse(md.IndexedEndpointType_):
-    """The urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol:DiscoveryResponse element """
+    """The urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol:
+    DiscoveryResponse element """
 
     c_tag = 'DiscoveryResponse'
     c_namespace = NAMESPACE
@@ -18,6 +21,7 @@ class DiscoveryResponse(md.IndexedEndpointType_):
     c_attributes = md.IndexedEndpointType_.c_attributes.copy()
     c_child_order = md.IndexedEndpointType_.c_child_order[:]
     c_cardinality = md.IndexedEndpointType_.c_cardinality.copy()
+
 
 def discovery_response_from_string(xml_string):
     return saml2.create_class_from_xml_string(DiscoveryResponse, xml_string)
