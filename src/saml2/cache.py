@@ -139,7 +139,7 @@ class Cache(object):
         :return: A possibly empty list of entity identifiers
         """
         cni = code(name_id)
-        return self._db[cni].keys()
+        return list(self._db[cni].keys())
 
     def receivers(self, name_id):
         """ Another name for entities() just to make it more logic in the IdP

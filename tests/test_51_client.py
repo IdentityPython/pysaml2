@@ -268,7 +268,7 @@ class TestClient:
         assert nid_policy.format == saml.NAMEID_FORMAT_TRANSIENT
 
     def test_create_auth_request_vo(self):
-        assert self.client.config.vorg.keys() == [
+        assert list(self.client.config.vorg.keys()) == [
             "urn:mace:example.com:it:tek"]
 
         ar_str = "%s" % self.client.create_authn_request(
@@ -1257,7 +1257,7 @@ class TestClientWithDummy():
         print(resp)
         assert resp
         assert len(resp) == 1
-        assert resp.keys() == entity_ids
+        assert list(resp.keys()) == entity_ids
         response = resp[entity_ids[0]]
         assert isinstance(response, LogoutResponse)
 
