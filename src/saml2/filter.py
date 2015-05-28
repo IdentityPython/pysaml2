@@ -21,7 +21,7 @@ class AllowDescriptor(Filter):
     def __call__(self, entity_descriptor):
         # get descriptors
         _all = []
-        for desc in entity_descriptor.keys():
+        for desc in list(entity_descriptor.keys()):
             if desc.endswith("_descriptor"):
                 typ, _ = desc.rsplit("_", 1)
                 if typ in self.allow:
