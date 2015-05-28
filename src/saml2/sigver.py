@@ -828,7 +828,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         (_stdout, _stderr, output) = self._run_xmlsec(com_list, [fil],
                                                       exception=DecryptError,
                                                       validate_output=False)
-        return output
+        return output.decode('utf-8')
 
     def sign_statement(self, statement, node_name, key_file, node_id,
                        id_attr):

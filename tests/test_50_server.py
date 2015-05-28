@@ -706,7 +706,7 @@ class TestServer1():
 
         assert valid
 
-        _, key_file = make_temp("%s" % cert_key_str, decode=False)
+        _, key_file = make_temp(cert_key_str, decode=False)
 
         decr_text = self.server.sec.decrypt(decr_text, key_file)
 
@@ -749,7 +749,7 @@ class TestServer1():
 
         assert sresponse.signature is None
 
-        _, key_file = make_temp("%s" % cert_key_str_advice, decode=False)
+        _, key_file = make_temp(cert_key_str_advice, decode=False)
 
         decr_text = self.server.sec.decrypt(_resp, key_file)
 
@@ -781,7 +781,7 @@ class TestServer1():
 
         decr_text_1 = self.server.sec.decrypt(_resp, self.client.config.key_file)
 
-        _, key_file = make_temp("%s" % cert_key_str_advice, decode=False)
+        _, key_file = make_temp(cert_key_str_advice, decode=False)
 
         decr_text_2 = self.server.sec.decrypt(decr_text_1, key_file)
 
@@ -812,7 +812,7 @@ class TestServer1():
 
         assert sresponse.signature is None
 
-        _, key_file = make_temp("%s" % cert_key_str_assertion, decode=False)
+        _, key_file = make_temp(cert_key_str_assertion, decode=False)
 
         decr_text = self.server.sec.decrypt(_resp, key_file)
 
@@ -904,11 +904,11 @@ class TestServer1():
 
         assert sresponse.signature is None
 
-        _, key_file = make_temp("%s" % cert_key_str_assertion, decode=False)
+        _, key_file = make_temp(cert_key_str_assertion, decode=False)
 
         decr_text_1 = _server.sec.decrypt(_resp, key_file)
 
-        _, key_file = make_temp("%s" % cert_key_str_advice, decode=False)
+        _, key_file = make_temp(cert_key_str_advice, decode=False)
 
         decr_text_2 = _server.sec.decrypt(decr_text_1, key_file)
 

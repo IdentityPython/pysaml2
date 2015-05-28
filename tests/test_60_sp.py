@@ -64,7 +64,7 @@ class TestSP():
             "urn:mace:example.com:saml:roland:sp", trans_name_policy,
             "foba0001@example.com", authn=AUTHN)
 
-        resp_str = base64.encodestring(resp_str)
+        resp_str = base64.encodestring(resp_str.encode('utf-8'))
         self.sp.outstanding_queries = {"id1": "http://www.example.com/service"}
         session_info = self.sp._eval_authn_response(
             {}, {"SAMLResponse": [resp_str]})
