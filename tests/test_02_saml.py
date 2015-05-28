@@ -183,7 +183,7 @@ class TestExtensionContainer:
         ec = saml2.ExtensionContainer()
         ec.add_extension_attribute("foo", "bar")
         assert len(ec.extension_attributes) == 1
-        assert ec.extension_attributes.keys()[0] == "foo"
+        assert list(ec.extension_attributes.keys())[0] == "foo"
 
 
 class TestSAMLBase:
@@ -216,13 +216,14 @@ class TestSAMLBase:
 
         attr = Attribute()
         saml2.make_vals(ava, AttributeValue, attr, prop="attribute_value")
-        assert attr.keyswv() == ["name_format", "attribute_value"]
+        assert sorted(attr.keyswv()) == sorted(["name_format",
+                                                "attribute_value"])
         assert len(attr.attribute_value) == 4
 
     def test_to_string_nspair(self):
         foo = saml2.make_vals("lions", AttributeValue, part=True)
-        txt = foo.to_string()
-        nsstr = foo.to_string({"saml": saml.NAMESPACE})
+        txt = foo.to_string().decode('utf-8')
+        nsstr = foo.to_string({"saml": saml.NAMESPACE}).decode('utf-8')
         assert nsstr != txt
         print(txt)
         print(nsstr)

@@ -119,7 +119,7 @@ def _verify_value_type(typ, val):
     if typ == XSD + "base64Binary":
         import base64
 
-        return base64.decodestring(val)
+        return base64.decodestring(val.encode('utf-8'))
 
 
 class AttributeValueBase(SamlBase):
