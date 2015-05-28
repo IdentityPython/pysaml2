@@ -29,6 +29,7 @@ tmp*
 *egg-info*
 .coverage
 *.tmpl
+*.iml
 _build/
 
 example/idp3/htdocs/login.mako

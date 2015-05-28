@@ -212,11 +212,7 @@ class Server(Entity):
         :param enc_request: The request in its transport format
         :param binding: Which binding that was used to transport the message
             to this entity.
-        :return: A dictionary with keys:
-            consumer_url - as gotten from the SPs entity_id and the metadata
-            id - the id of the request
-            sp_entity_id - the entity id of the SP
-            request - The verified request
+        :return: A request instance
         """
 
         return self._parse_request(enc_request, AuthnRequest,
