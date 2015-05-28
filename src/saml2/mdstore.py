@@ -803,6 +803,10 @@ class MetadataStore(object):
                     _args[_key] = kwargs[_key]
                 except KeyError:
                     pass
+
+            if "cert" not in kwargs:
+                kwargs["cert"] = ""
+
             _md = MetaDataExtern(self.onts, self.attrc,
                                  kwargs["url"], self.security,
                                  kwargs["cert"], self.http, **_args)
