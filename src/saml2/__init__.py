@@ -616,7 +616,7 @@ class SamlBase(ExtensionContainer):
 
         self.set_prefixes(tree.find(self.encrypted_assertion._to_element_tree().tag).find(assertion_tag), prefix_map)
 
-        return ElementTree.tostring(tree, encoding="UTF-8")
+        return ElementTree.tostring(tree, encoding="UTF-8").decode('utf-8')
 
     def set_prefixes(self, elem, prefix_map):
 

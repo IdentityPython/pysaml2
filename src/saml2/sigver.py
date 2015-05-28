@@ -313,7 +313,7 @@ def signed_instance_factory(instance, seccont, elements_to_sign=None):
     :return: A class instance if not signed otherwise a string
     """
     if elements_to_sign:
-        signed_xml = str(instance).encode('utf-8')
+        signed_xml = str(instance)
         for (node_name, nodeid) in elements_to_sign:
             signed_xml = seccont.sign_statement(
                 signed_xml, node_name=node_name, node_id=nodeid)
@@ -321,7 +321,7 @@ def signed_instance_factory(instance, seccont, elements_to_sign=None):
         #print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
         #print("%s" % signed_xml)
         #print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-        return signed_xml.decode('utf-8')
+        return signed_xml
     else:
         return instance
 
@@ -809,7 +809,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         if not output:
             raise EncryptError(_stderr)
 
-        return output
+        return output.decode('utf-8')
 
     def decrypt(self, enctext, key_file):
         """
@@ -861,7 +861,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
             # this doesn't work if --store-signatures are used
             if stdout == "":
                 if signed_statement:
-                    return signed_statement
+                    return signed_statement.decode('utf-8')
             logger.error(
                 "Signing operation failed :\nstdout : %s\nstderr : %s" % (
                     stdout, stderr))
@@ -1336,7 +1336,9 @@ class SecurityContext(object):
             return _enctext
         for _key in keys:
             if _key is not None and len(_key.strip()) > 0:
-                _, key_file = make_temp("%s" % _key, decode=False)
+                if not isinstance(_key, six.binary_type):
+                    _key = str(_key).encode('ascii')
+                _, key_file = make_temp(_key, decode=False)
                 _enctext = self.crypto.decrypt(enctext, key_file)
                 if _enctext is not None and len(_enctext) > 0:
                     return _enctext

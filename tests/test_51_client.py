@@ -160,7 +160,7 @@ class TestClient:
             "E8042FB4-4D5B-48C3-8E14-8EDD852790DD",
             format=saml.NAMEID_FORMAT_PERSISTENT,
             message_id="id1")
-        reqstr = "%s" % req.to_string()
+        reqstr = "%s" % req.to_string().decode('utf-8')
 
         assert req.destination == "https://idp.example.com/idp/"
         assert req.id == "id1"
@@ -335,7 +335,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = base64.encodestring(resp_str)
+        resp_str = base64.encodestring(resp_str.encode('utf-8'))
 
         authn_response = self.client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -377,7 +377,7 @@ class TestClient:
             userid="also0001@example.com",
             authn=AUTHN)
 
-        resp_str = base64.encodestring(resp_str)
+        resp_str = base64.encodestring(resp_str.encode('utf-8'))
 
         self.client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -427,7 +427,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = base64.encodestring(resp_str)
+        resp_str = base64.encodestring(resp_str.encode('utf-8'))
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -462,7 +462,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = base64.encodestring(resp_str)
+        resp_str = base64.encodestring(resp_str.encode('utf-8'))
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -497,7 +497,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = base64.encodestring(resp_str)
+        resp_str = base64.encodestring(resp_str.encode('utf-8'))
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -541,7 +541,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = base64.encodestring(resp_str)
+        resp_str = base64.encodestring(resp_str.encode('utf-8'))
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -594,7 +594,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = base64.encodestring(resp_str)
+        resp_str = base64.encodestring(resp_str.encode('utf-8'))
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -629,7 +629,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = base64.encodestring(resp_str)
+        resp_str = base64.encodestring(resp_str.encode('utf-8'))
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -672,7 +672,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = base64.encodestring(resp_str)
+        resp_str = base64.encodestring(resp_str.encode('utf-8'))
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -904,7 +904,7 @@ class TestClient:
 
         #seresp = samlp.response_from_string(enctext)
 
-        resp_str = base64.encodestring(enctext)
+        resp_str = base64.encodestring(enctext.encode('utf-8'))
         # Now over to the client side
         resp = self.client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -1138,7 +1138,7 @@ class TestClient:
 
         #seresp = samlp.response_from_string(enctext)
 
-        resp_str = base64.encodestring("%s" % response)
+        resp_str = base64.encodestring(str(response).encode('utf-8'))
         # Now over to the client side
         resp = self.client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
