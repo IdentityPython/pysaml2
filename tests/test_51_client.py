@@ -4,9 +4,7 @@
 import base64
 import uuid
 import six
-import urllib
-from six.moves.urllib.parse import parse_qs
-from six.moves.urllib.parse import urlparse
+from six.moves.urllib.parse import parse_qs, urlencode, urlparse
 from saml2.cert import OpenSSLWrapper
 from saml2.xmldsig import SIG_RSA_SHA256
 from saml2 import BINDING_HTTP_POST
@@ -1277,7 +1275,7 @@ class TestClientWithDummy():
         # Here I fake what the client will do
         # create the form post
 
-        http_args["data"] = urllib.urlencode(_dic)
+        http_args["data"] = urlencode(_dic)
         http_args["method"] = "POST"
         http_args["dummy"] = _dic["SAMLRequest"]
         http_args["headers"] = [('Content-type',
@@ -1312,7 +1310,7 @@ class TestClientWithDummy():
         # Here I fake what the client will do
         # create the form post
 
-        http_args["data"] = urllib.urlencode(_dic)
+        http_args["data"] = urlencode(_dic)
         http_args["method"] = "POST"
         http_args["dummy"] = _dic["SAMLRequest"]
         http_args["headers"] = [('Content-type',
