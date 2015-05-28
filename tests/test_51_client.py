@@ -75,9 +75,13 @@ def add_subelement(xmldoc, node_name, subelem):
         while xmldoc[c] == " ":
             spaces += " "
             c += 1
+        # Sometimes we get an xml header, sometimes we don't.
+        subelem_str = str(subelem)
+        if subelem_str[0:5].lower() == '<?xml':
+            subelem_str = subelem_str.split("\n", 1)[1]
         xmldoc = xmldoc.replace(
             "<%s:%s%s/>" % (tag, node_name, spaces),
-            "<%s:%s%s>%s</%s:%s>" % (tag, node_name, spaces, subelem, tag,
+            "<%s:%s%s>%s</%s:%s>" % (tag, node_name, spaces, subelem_str, tag,
                                      node_name))
 
     return xmldoc
@@ -829,7 +833,7 @@ class TestClient:
 
         #seresp = samlp.response_from_string(enctext)
 
-        resp_str = base64.encodestring(enctext)
+        resp_str = base64.encodestring(enctext.encode('utf-8'))
         # Now over to the client side
         resp = self.client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
