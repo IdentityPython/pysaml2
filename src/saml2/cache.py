@@ -23,7 +23,7 @@ class CacheError(SAMLError):
 class Cache(object):
     def __init__(self, filename=None):
         if filename:
-            self._db = shelve.open(filename, writeback=True)
+            self._db = shelve.open(filename, writeback=True, protocol=2)
             self._sync = True
         else:
             self._db = {}

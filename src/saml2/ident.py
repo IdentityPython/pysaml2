@@ -78,7 +78,7 @@ class IdentDB(object):
     """
     def __init__(self, db, domain="", name_qualifier=""):
         if isinstance(db, six.string_types):
-            self.db = shelve.open(db)
+            self.db = shelve.open(db, protocol=2)
         else:
             self.db = db
         self.domain = domain

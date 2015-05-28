@@ -100,11 +100,13 @@ class SAML2Plugin(object):
         except KeyError:
             self.metadata = None
         if sid_store:
-            self.outstanding_queries = shelve.open(sid_store, writeback=True)
+            self.outstanding_queries = shelve.open(sid_store, writeback=True,
+                                                   protocol=2)
         else:
             self.outstanding_queries = {}
         if sid_store_cert:
-            self.outstanding_certs = shelve.open(sid_store_cert, writeback=True)
+            self.outstanding_certs = shelve.open(sid_store_cert, writeback=True,
+                                                 protocol=2)
         else:
             self.outstanding_certs = {}
 
