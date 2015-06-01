@@ -59,7 +59,7 @@ from saml2.xmldsig import SIG_RSA_SHA224
 from saml2.xmldsig import SIG_RSA_SHA256
 from saml2.xmldsig import SIG_RSA_SHA384
 from saml2.xmldsig import SIG_RSA_SHA512
-from saml2.xmlenc import EncryptionMethod
+from saml2.xmlenc import EncryptionMethod, ReferenceList, DataReference
 from saml2.xmlenc import EncryptedKey
 from saml2.xmlenc import CipherData
 from saml2.xmlenc import CipherValue
@@ -70,7 +70,10 @@ logger = logging.getLogger(__name__)
 SIG = "{%s#}%s" % (ds.NAMESPACE, "Signature")
 
 RSA_1_5 = "http://www.w3.org/2001/04/xmlenc#rsa-1_5"
+RSA_OEAP = "http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p"
 TRIPLE_DES_CBC = "http://www.w3.org/2001/04/xmlenc#tripledes-cbc"
+AES_256_CBC = "http://www.w3.org/2001/04/xmlenc#aes256-cbc"
+
 XMLTAG = "<?xml version='1.0'?>"
 PREFIX1 = "<?xml version='1.0' encoding='UTF-8'?>"
 PREFIX2 = '<?xml version="1.0" encoding="UTF-8"?>'
@@ -771,7 +774,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         return output
 
     def encrypt_assertion(self, statement, enc_key, template,
-                          key_type="des-192", node_xpath=None, node_id=None):
+                          key_type="aes-256", node_xpath=None, node_id=None):
         """
         Will encrypt an assertion
 
@@ -818,7 +821,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         _, fil = make_temp("%s" % enctext, decode=False)
 
         com_list = [self.xmlsec, "--decrypt", "--privkey-pem",
-                    key_file, "--id-attr:%s" % ID_ATTR, ENC_KEY_CLASS]
+                    key_file, "--id-attr:%s" % 'Id', ENC_KEY_CLASS]
 
         (_stdout, _stderr, output) = self._run_xmlsec(com_list, [fil],
                                                       exception=DecryptError,
@@ -1829,7 +1832,7 @@ def pre_signature_part(ident, public_key=None, identifier=None,
 #     </CipherData>
 # </EncryptedData>
 
-def pre_encryption_part(msg_enc=TRIPLE_DES_CBC, key_enc=RSA_1_5,
+def pre_encryption_part(msg_enc=AES_256_CBC, key_enc=RSA_OEAP,
                         key_name="my-rsa-key"):
     """
 
@@ -1838,17 +1841,20 @@ def pre_encryption_part(msg_enc=TRIPLE_DES_CBC, key_enc=RSA_1_5,
     :param key_name:
     :return:
     """
+    ed_id = sid()
     msg_encryption_method = EncryptionMethod(algorithm=msg_enc)
-    key_encryption_method = EncryptionMethod(algorithm=key_enc)
-    encrypted_key = EncryptedKey(id="EK",
+    key_encryption_method = EncryptionMethod(algorithm=key_enc,
+                                             extension_elements=[ds.DigestMethod(algorithm=ds.DIGEST_SHA1)])
+    encrypted_key = EncryptedKey(id=sid(),
                                  encryption_method=key_encryption_method,
                                  key_info=ds.KeyInfo(
-                                     key_name=ds.KeyName(text=key_name)),
+                                     key_value=ds.KeyValue()),
                                  cipher_data=CipherData(
-                                     cipher_value=CipherValue(text="")))
+                                     cipher_value=CipherValue(text="")),
+                                 reference_list=[ReferenceList(data_reference=DataReference(uri='#%s' % ed_id))])
     key_info = ds.KeyInfo(encrypted_key=encrypted_key)
     encrypted_data = EncryptedData(
-        id="ED",
+        id=ed_id,
         type="http://www.w3.org/2001/04/xmlenc#Element",
         encryption_method=msg_encryption_method,
         key_info=key_info,

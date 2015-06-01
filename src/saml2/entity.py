@@ -665,8 +665,7 @@ class Entity(HTTPBase):
                     response = pre_encrypt_assertion(response)
                     response = response.get_xml_string_with_self_contained_assertion_within_encrypted_assertion(
                         assertion_tag)
-                else:
-                    response = pre_encrypt_assertion(response)
+
                 if to_sign_assertion:
                     response = signed_instance_factory(response, self.sec, to_sign_assertion)
                 response = self._encrypt_assertion(encrypt_cert_assertion, sp_entity_id, response)

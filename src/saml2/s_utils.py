@@ -4,6 +4,7 @@ import random
 
 import time
 import base64
+import uuid
 import six
 import sys
 import hmac
@@ -185,7 +186,7 @@ def sid():
     :return: A random string prefix with 'id-' to make it
         compliant with the NCName specification
     """
-    return "id-" + rndstr(17)
+    return "_%s" % uuid.uuid4().hex
 
 
 def parse_attribute_map(filenames):

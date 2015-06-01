@@ -490,6 +490,7 @@ class AttributeConverter(object):
             except KeyError:
                 attributes.append(factory(saml.Attribute,
                                           name=key,
+                                          name_format=self.name_format,
                                           attribute_value=do_ava(value)))
 
         return attributes
