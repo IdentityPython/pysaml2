@@ -767,7 +767,7 @@ class TestClient:
             assertion=_ass
         )
 
-        enctext = _sec.crypto.encrypt_assertion(response, _sec.cert_file,
+        enctext = _sec.crypto.encrypt_assertion(response, self.client.sec.encryption_keypairs[0]["cert_file"],
                                                 pre_encryption_part())
 
         seresp = samlp.response_from_string(enctext)
@@ -837,7 +837,7 @@ class TestClient:
         # or as part of a bunch of tests.
         xmldoc = add_subelement(xmldoc, "EncryptedAssertion", sigass)
 
-        enctext = _sec.crypto.encrypt_assertion(xmldoc, _sec.cert_file,
+        enctext = _sec.crypto.encrypt_assertion(xmldoc, self.client.sec.encryption_keypairs[1]["cert_file"],
                                                 pre_encryption_part())
 
         #seresp = samlp.response_from_string(enctext)
@@ -912,7 +912,7 @@ class TestClient:
         node_xpath = ''.join(["/*[local-name()=\"%s\"]" % v for v in
                                 ["Response", "Assertion", "Advice", "EncryptedAssertion", "Assertion"]])
 
-        enctext = _sec.crypto.encrypt_assertion(response, _sec.cert_file,
+        enctext = _sec.crypto.encrypt_assertion(response, self.client.sec.encryption_keypairs[0]["cert_file"],
                                                 pre_encryption_part(), node_xpath=node_xpath)
 
         #seresp = samlp.response_from_string(enctext)
@@ -1048,7 +1048,7 @@ class TestClient:
         node_xpath = ''.join(["/*[local-name()=\"%s\"]" % v for v in
                                 ["Response", "Assertion", "Advice", "EncryptedAssertion", "Assertion"]])
 
-        enctext = _sec.crypto.encrypt_assertion(response, self.client.sec.cert_file,
+        enctext = _sec.crypto.encrypt_assertion(response, self.client.sec.encryption_keypairs[1]["cert_file"],
                                                 pre_encryption_part(), node_xpath=node_xpath)
 
         response = samlp.response_from_string(enctext)
@@ -1071,7 +1071,7 @@ class TestClient:
         node_xpath = ''.join(["/*[local-name()=\"%s\"]" % v for v in
                         ["Response", "Assertion", "Advice", "EncryptedAssertion", "Assertion"]])
 
-        enctext = _sec.crypto.encrypt_assertion(response, self.client.sec.cert_file,
+        enctext = _sec.crypto.encrypt_assertion(response, self.client.sec.encryption_keypairs[0]["cert_file"],
                                                 pre_encryption_part(), node_xpath=node_xpath)
 
         response = samlp.response_from_string(enctext)
@@ -1087,7 +1087,8 @@ class TestClient:
                                        key_file=self.server.sec.key_file,
                                        node_id=assertion_1.id)
 
-        enctext = _sec.crypto.encrypt_assertion(response, self.client.sec.cert_file, pre_encryption_part())
+        enctext = _sec.crypto.encrypt_assertion(response, self.client.sec.encryption_keypairs[1]["cert_file"],
+                                                pre_encryption_part())
 
         response = samlp.response_from_string(enctext)
 
@@ -1097,7 +1098,6 @@ class TestClient:
 
         response.assertion.advice.encrypted_assertion = []
         response.assertion.advice.encrypted_assertion.append(EncryptedAssertion())
-
 
         response.assertion.advice.encrypted_assertion[0].add_extension_element(a_assertion_3)
 
@@ -1114,7 +1114,7 @@ class TestClient:
         node_xpath = ''.join(["/*[local-name()=\"%s\"]" % v for v in
                                 ["Response", "Assertion", "Advice", "EncryptedAssertion", "Assertion"]])
 
-        enctext = _sec.crypto.encrypt_assertion(response, self.client.sec.cert_file,
+        enctext = _sec.crypto.encrypt_assertion(response, self.client.sec.encryption_keypairs[0]["cert_file"],
                                                 pre_encryption_part(), node_xpath=node_xpath)
 
         response = samlp.response_from_string(enctext)
@@ -1138,7 +1138,7 @@ class TestClient:
         node_xpath = ''.join(["/*[local-name()=\"%s\"]" % v for v in
                                 ["Response", "Assertion", "Advice", "EncryptedAssertion", "Assertion"]])
 
-        enctext = _sec.crypto.encrypt_assertion(response, self.client.sec.cert_file,
+        enctext = _sec.crypto.encrypt_assertion(response, self.client.sec.encryption_keypairs[1]["cert_file"],
                                                 pre_encryption_part(), node_xpath=node_xpath)
 
         response = samlp.response_from_string(enctext)
@@ -1349,4 +1349,4 @@ class TestClientWithDummy():
 if __name__ == "__main__":
     tc = TestClient()
     tc.setup_class()
-    tc.test_response_8()
+    tc.test_sign_then_encrypt_assertion()
