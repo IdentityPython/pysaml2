@@ -19,8 +19,8 @@ CONFIG = {
     "debug": 1,
     "key_file": full_path("test.key"),
     "cert_file": full_path("test.pem"),
-    "encryption_keypairs": [{"key_file": "pki/test_1.key", "cert_file": "pki/test_1.crt"},
-                            {"key_file": "pki/test_2.key", "cert_file": "pki/test_2.crt"}],
+    "encryption_keypairs": [{"key_file": "test_1.key", "cert_file": "test_1.crt"},
+                            {"key_file": "test_2.key", "cert_file": "test_2.crt"}],
     "ca_certs": full_path("cacerts.txt"),
     "xmlsec_binary": xmlsec_path,
     "metadata": [{
