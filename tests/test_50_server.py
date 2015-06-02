@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import base64
+import copy
 import os
 from contextlib import closing
 from urlparse import parse_qs
@@ -609,7 +610,15 @@ class TestServer1():
                                                  id_attr="")
         assert valid
 
-        decr_text = self.server.sec.decrypt(signed_resp, self.client.config.key_file)
+        decr_text_old = copy.deepcopy("%s" % signed_resp)
+
+        decr_text = self.server.sec.decrypt(signed_resp, self.client.config.encryption_keypairs[0]["key_file"])
+
+        assert decr_text == decr_text_old
+
+        decr_text = self.server.sec.decrypt(signed_resp, self.client.config.encryption_keypairs[1]["key_file"])
+
+        assert decr_text != decr_text_old
 
         resp = samlp.response_from_string(decr_text)
 
@@ -694,7 +703,7 @@ class TestServer1():
                                                  id_attr="")
         assert valid
 
-        decr_text = self.server.sec.decrypt(signed_resp, self.client.config.key_file)
+        decr_text = self.server.sec.decrypt(signed_resp, self.client.config.encryption_keypairs[1]["key_file"])
 
         resp = samlp.response_from_string(decr_text)
 
@@ -783,7 +792,7 @@ class TestServer1():
 
         assert sresponse.signature is None
 
-        decr_text_1 = self.server.sec.decrypt(_resp, self.client.config.key_file)
+        decr_text_1 = self.server.sec.decrypt(_resp, self.client.config.encryption_keypairs[1]["key_file"])
 
         _, key_file = make_temp("%s" % cert_key_str_advice, decode=False)
 
@@ -846,7 +855,7 @@ class TestServer1():
 
         assert sresponse.signature is None
 
-        decr_text = self.server.sec.decrypt(_resp, self.client.config.key_file)
+        decr_text = self.server.sec.decrypt(_resp, self.client.config.encryption_keypairs[1]["key_file"])
 
         resp = samlp.response_from_string(decr_text)
 
@@ -877,7 +886,7 @@ class TestServer1():
 
         assert sresponse.signature is None
 
-        decr_text = self.server.sec.decrypt(_resp, self.client.config.key_file)
+        decr_text = self.server.sec.decrypt(_resp, self.client.config.encryption_keypairs[1]["key_file"])
 
         resp = samlp.response_from_string(decr_text)
 
@@ -943,9 +952,9 @@ class TestServer1():
 
         assert sresponse.signature is None
 
-        decr_text_1 = self.server.sec.decrypt(_resp, self.client.config.key_file)
+        decr_text_1 = self.server.sec.decrypt(_resp, self.client.config.encryption_keypairs[1]["key_file"])
 
-        decr_text_2 = self.server.sec.decrypt(decr_text_1, self.client.config.key_file)
+        decr_text_2 = self.server.sec.decrypt(decr_text_1, self.client.config.encryption_keypairs[1]["key_file"])
 
         resp = samlp.response_from_string(decr_text_2)
 
@@ -1270,4 +1279,4 @@ class TestServerLogout():
 if __name__ == "__main__":
     ts = TestServer1()
     ts.setup_class()
-    ts.test_encrypted_signed_response_1()
+    ts.test_encrypted_signed_response_4()

@@ -25,6 +25,8 @@ SIMPLE_SAML_PHP_RESPONSE = full_path("simplesamlphp_authnresponse.xml")
 PUB_KEY = full_path("test.pem")
 PRIV_KEY = full_path("test.key")
 
+ENC_PUB_KEY = full_path("pki/test_1.crt")
+ENC_PRIV_KEY = full_path("pki/test.key")
 
 def _eq(l1, l2):
     return set(l1) == set(l2)
@@ -96,6 +98,8 @@ class FakeConfig():
     metadata = None
     cert_file = PUB_KEY
     key_file = PRIV_KEY
+    encryption_keypairs = [{"key_file": ENC_PRIV_KEY, "cert_file": ENC_PUB_KEY}]
+    enc_key_files = [ENC_PRIV_KEY]
     debug = False
     cert_handler_extra_class = None
     generate_cert_func = None
@@ -503,8 +507,8 @@ def test_xmlsec_err():
 
 
 if __name__ == "__main__":
-    # t = TestSecurity()
-    # t.setup_class()
-    # t.test_non_verify_2()
+    t = TestSecurity()
+    t.setup_class()
+    t.test_verify_1()
 
-    test_xmlsec_err()
+    #test_xmlsec_err()

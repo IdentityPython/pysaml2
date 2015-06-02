@@ -191,43 +191,45 @@ def do_contact_person_info(lava):
     return cps
 
 
-def do_key_descriptor(cert, use="both"):
-    if use == "both":
-        return [
-            md.KeyDescriptor(
-                key_info=ds.KeyInfo(
-                    x509_data=ds.X509Data(
-                        x509_certificate=ds.X509Certificate(text=cert)
-                    )
-                ),
-                use="encryption"
-            ),
-            md.KeyDescriptor(
-                key_info=ds.KeyInfo(
-                    x509_data=ds.X509Data(
-                        x509_certificate=ds.X509Certificate(text=cert)
-                    )
-                ),
-                use="signing"
+def do_key_descriptor(cert=None, enc_cert=None, use="both"):
+    kd_list = []
+    if use in ["signing", "both"] and cert is not None:
+        if not isinstance(cert, list):
+            cert = [cert]
+        for _cert in cert:
+            kd_list.append(
+                md.KeyDescriptor(
+                    key_info=ds.KeyInfo(
+                        x509_data=ds.X509Data(
+                            x509_certificate=ds.X509Certificate(text=_cert)
+                        )
+                    ),
+                    use="signing"
+                )
             )
-        ]
-    elif use in ["signing", "encryption"]:
+    if use in ["both", "encryption"] and enc_cert is not None:
+        if not isinstance(enc_cert, list):
+            enc_cert = [enc_cert]
+        for _enc_cert in enc_cert:
+            kd_list.append(
+                md.KeyDescriptor(
+                    key_info=ds.KeyInfo(
+                        x509_data=ds.X509Data(
+                            x509_certificate=ds.X509Certificate(text=_enc_cert)
+                        )
+                    ),
+                    use="encryption"
+                )
+            )
+    if len(kd_list) == 0 and cert is not None:
         return md.KeyDescriptor(
             key_info=ds.KeyInfo(
                 x509_data=ds.X509Data(
                     x509_certificate=ds.X509Certificate(text=cert)
                 )
-            ),
-            use=use
-        )
-    else:
-        return md.KeyDescriptor(
-            key_info=ds.KeyInfo(
-                x509_data=ds.X509Data(
-                    x509_certificate=ds.X509Certificate(text=cert)
-                )
             )
         )
+    return kd_list
 
 
 def do_requested_attribute(attributes, acs, is_required="false"):
@@ -502,7 +504,7 @@ def do_attribute_consuming_service(conf, spsso):
         spsso.attribute_consuming_service = [ac_serv]
 
 
-def do_spsso_descriptor(conf, cert=None):
+def do_spsso_descriptor(conf, cert=None, enc_cert=None):
     spsso = md.SPSSODescriptor()
     spsso.protocol_support_enumeration = samlp.NAMESPACE
 
@@ -537,9 +539,9 @@ def do_spsso_descriptor(conf, cert=None):
             spsso.extensions = md.Extensions()
         spsso.extensions.add_extension_element(do_uiinfo(ui_info))
 
-    if cert:
-        encryption_type = conf.encryption_type
-        spsso.key_descriptor = do_key_descriptor(cert, encryption_type)
+    if cert or enc_cert:
+        metadata_key_usage = conf.metadata_key_usage
+        spsso.key_descriptor = do_key_descriptor(cert=cert, enc_cert=enc_cert, use=metadata_key_usage)
 
     for key in ["want_assertions_signed", "authn_requests_signed"]:
         try:
@@ -557,7 +559,7 @@ def do_spsso_descriptor(conf, cert=None):
     return spsso
 
 
-def do_idpsso_descriptor(conf, cert=None):
+def do_idpsso_descriptor(conf, cert=None, enc_cert=None):
     idpsso = md.IDPSSODescriptor()
     idpsso.protocol_support_enumeration = samlp.NAMESPACE
 
@@ -586,8 +588,8 @@ def do_idpsso_descriptor(conf, cert=None):
             idpsso.extensions = md.Extensions()
         idpsso.extensions.add_extension_element(do_uiinfo(ui_info))
 
-    if cert:
-        idpsso.key_descriptor = do_key_descriptor(cert)
+    if cert or enc_cert:
+        idpsso.key_descriptor = do_key_descriptor(cert, enc_cert, use=conf.metadata_key_usage)
 
     for key in ["want_authn_requests_signed"]:
                 #"want_authn_requests_only_with_valid_cert"]:
@@ -603,7 +605,7 @@ def do_idpsso_descriptor(conf, cert=None):
     return idpsso
 
 
-def do_aa_descriptor(conf, cert):
+def do_aa_descriptor(conf, cert=None, enc_cert=None):
     aad = md.AttributeAuthorityDescriptor()
     aad.protocol_support_enumeration = samlp.NAMESPACE
 
@@ -616,8 +618,8 @@ def do_aa_descriptor(conf, cert):
 
     _do_nameid_format(aad, conf, "aa")
 
-    if cert:
-        aad.key_descriptor = do_key_descriptor(cert)
+    if cert or enc_cert:
+        aad.key_descriptor = do_key_descriptor(cert, enc_cert, use=conf.metadata_key_usage)
 
     attributes = conf.getattr("attribute", "aa")
     if attributes:
@@ -632,7 +634,7 @@ def do_aa_descriptor(conf, cert):
     return aad
 
 
-def do_aq_descriptor(conf, cert):
+def do_aq_descriptor(conf, cert=None, enc_cert=None):
     aqs = md.AuthnAuthorityDescriptor()
     aqs.protocol_support_enumeration = samlp.NAMESPACE
 
@@ -645,13 +647,13 @@ def do_aq_descriptor(conf, cert):
 
     _do_nameid_format(aqs, conf, "aq")
 
-    if cert:
-        aqs.key_descriptor = do_key_descriptor(cert)
+    if cert or enc_cert:
+        aqs.key_descriptor = do_key_descriptor(cert, enc_cert, use=conf.metadata_key_usage)
 
     return aqs
 
 
-def do_pdp_descriptor(conf, cert):
+def do_pdp_descriptor(conf, cert=None, enc_cert=None):
     """ Create a Policy Decision Point descriptor """
     pdp = md.PDPDescriptor()
 
@@ -667,13 +669,24 @@ def do_pdp_descriptor(conf, cert):
     _do_nameid_format(pdp, conf, "pdp")
 
     if cert:
-        pdp.key_descriptor = do_key_descriptor(cert)
+        pdp.key_descriptor = do_key_descriptor(cert, enc_cert, use=conf.metadata_key_usage)
 
     return pdp
 
 
 def entity_descriptor(confd):
-    mycert = "".join(open(confd.cert_file).readlines()[1:-1])
+    mycert = None
+    enc_cert = None
+    if confd.cert_file is not None:
+        mycert = []
+        mycert.append("".join(open(confd.cert_file).readlines()[1:-1]))
+        if confd.additional_cert_files is not None:
+            for _cert_file in confd.additional_cert_files:
+                mycert.append("".join(open(_cert_file).readlines()[1:-1]))
+    if confd.encryption_keypairs is not None:
+        enc_cert = []
+        for _encryption in confd.encryption_keypairs:
+            enc_cert.append("".join(open(_encryption["cert_file"]).readlines()[1:-1]))
 
     entd = md.EntityDescriptor()
     entd.entity_id = confd.entityid
@@ -701,19 +714,19 @@ def entity_descriptor(confd):
 
     if "sp" in serves:
         confd.context = "sp"
-        entd.spsso_descriptor = do_spsso_descriptor(confd, mycert)
+        entd.spsso_descriptor = do_spsso_descriptor(confd, mycert, enc_cert)
     if "idp" in serves:
         confd.context = "idp"
-        entd.idpsso_descriptor = do_idpsso_descriptor(confd, mycert)
+        entd.idpsso_descriptor = do_idpsso_descriptor(confd, mycert, enc_cert)
     if "aa" in serves:
         confd.context = "aa"
-        entd.attribute_authority_descriptor = do_aa_descriptor(confd, mycert)
+        entd.attribute_authority_descriptor = do_aa_descriptor(confd, mycert, enc_cert)
     if "pdp" in serves:
         confd.context = "pdp"
-        entd.pdp_descriptor = do_pdp_descriptor(confd, mycert)
+        entd.pdp_descriptor = do_pdp_descriptor(confd, mycert, enc_cert)
     if "aq" in serves:
         confd.context = "aq"
-        entd.authn_authority_descriptor = do_aq_descriptor(confd, mycert)
+        entd.authn_authority_descriptor = do_aq_descriptor(confd, mycert, enc_cert)
 
     return entd
 
