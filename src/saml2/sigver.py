@@ -1055,6 +1055,12 @@ def security_context(conf, debug=None):
         raise SigverError('Unknown crypto_backend %s' % (
             repr(conf.crypto_backend)))
 
+    enc_key_files = []
+    if conf.encryption_keypairs is not None:
+        for _encryption_keypair in conf.encryption_keypairs:
+            if "key_file" in _encryption_keypair:
+                enc_key_files.append(_encryption_keypair["key_file"])
+
     return SecurityContext(
         crypto, conf.key_file, cert_file=conf.cert_file, metadata=metadata,
         debug=debug, only_use_keys_in_metadata=_only_md,
@@ -1062,7 +1068,8 @@ def security_context(conf, debug=None):
         generate_cert_info=conf.generate_cert_info,
         tmp_cert_file=conf.tmp_cert_file,
         tmp_key_file=conf.tmp_key_file,
-        validate_certificate=conf.validate_certificate)
+        validate_certificate=conf.validate_certificate,
+        enc_key_files=enc_key_files, encryption_keypairs=conf.encryption_keypairs)
 
 
 def encrypt_cert_from_item(item):
@@ -1239,18 +1246,29 @@ class SecurityContext(object):
                  debug=False, template="", encrypt_key_type="des-192",
                  only_use_keys_in_metadata=False, cert_handler_extra_class=None,
                  generate_cert_info=None, tmp_cert_file=None,
-                 tmp_key_file=None, validate_certificate=None):
+                 tmp_key_file=None, validate_certificate=None, enc_key_files=None, enc_key_type="pem",
+                 encryption_keypairs=None, enc_cert_type="pem"):
 
         self.crypto = crypto
         assert (isinstance(self.crypto, CryptoBackend))
 
-        # Your private key
+        # Your private key for signing
         self.key_file = key_file
         self.key_type = key_type
 
-        # Your public key
+        # Your public key for signing
         self.cert_file = cert_file
         self.cert_type = cert_type
+
+        # Your private key for encryption
+        self.enc_key_files = enc_key_files
+        self.enc_key_type = enc_key_type
+
+        # Your public key for encryption
+        self.encryption_keypairs = encryption_keypairs
+        self.enc_cert_type = enc_cert_type
+
+
 
         self.my_cert = read_cert_from_file(cert_file, cert_type)
 
@@ -1320,11 +1338,14 @@ class SecurityContext(object):
         :param enctext: The encrypted text as a string
         :return: The decrypted text
         """
+        _enctext = None
         if not isinstance(keys, list):
             keys = [keys]
-        _enctext = self.crypto.decrypt(enctext, self.key_file)
-        if _enctext is not None and len(_enctext) > 0:
-            return _enctext
+        if self.enc_key_files is not None:
+            for _enc_key_file in self.enc_key_files:
+                _enctext = self.crypto.decrypt(enctext, _enc_key_file)
+                if _enctext is not None and len(_enctext) > 0:
+                    return _enctext
         for _key in keys:
             if _key is not None and len(_key.strip()) > 0:
                 _, key_file = make_temp("%s" % _key, decode=False)
@@ -1339,9 +1360,12 @@ class SecurityContext(object):
         :param enctext: The encrypted text as a string
         :return: The decrypted text
         """
-        _enctext = self.crypto.decrypt(enctext, self.key_file)
-        if _enctext is not None and len(_enctext) > 0:
-            return _enctext
+        _enctext = None
+        if self.enc_key_files is not None:
+            for _enc_key_file in self.enc_key_files:
+                _enctext = self.crypto.decrypt(enctext, _enc_key_file)
+                if _enctext is not None and len(_enctext) > 0:
+                    return _enctext
         if key_file is not None and len(key_file.strip()) > 0:
                 _enctext = self.crypto.decrypt(enctext, key_file)
                 if _enctext is not None and len(_enctext) > 0:
