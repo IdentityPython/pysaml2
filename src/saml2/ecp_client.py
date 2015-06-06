@@ -7,7 +7,7 @@ Contains a class that can do SAML ECP Authentication for other python
 programs.
 """
 
-import cookielib
+from six.moves import http_cookiejar as cookielib
 import logging
 
 from saml2 import soap

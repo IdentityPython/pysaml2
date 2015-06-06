@@ -10,10 +10,9 @@ Bindings normally consists of three parts:
 - how to package the information
 - which protocol to use
 """
-from six.moves.urllib.parse import urlparse
+from six.moves.urllib.parse import urlparse, urlencode
 import saml2
 import base64
-import urllib
 from saml2.s_utils import deflate_and_base64_encode
 from saml2.s_utils import Unsupported
 import logging
@@ -59,12 +58,15 @@ def http_form_post_message(message, location, relay_state="",
     response = ["<head>", """<title>SAML 2.0 POST</title>""", "</head><body>"]
 
     if not isinstance(message, six.string_types):
-        message = "%s" % (message,)
+        message = str(message)
+    if not isinstance(message, six.binary_type):
+        message = message.encode('utf-8')
 
     if typ == "SAMLRequest" or typ == "SAMLResponse":
         _msg = base64.b64encode(message)
     else:
         _msg = message
+    _msg = _msg.decode('ascii')
 
     response.append(FORM_SPEC % (location, typ, _msg, relay_state))
 
@@ -123,12 +125,12 @@ def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
         except:
             raise Unsupported("Signing algorithm")
         else:
-            string = "&".join([urllib.urlencode({k: args[k]})
-                               for k in _order if k in args])
+            string = "&".join([urlencode({k: args[k]})
+                               for k in _order if k in args]).encode('ascii')
             args["Signature"] = base64.b64encode(signer.sign(string, key))
-            string = urllib.urlencode(args)
+            string = urlencode(args)
     else:
-        string = urllib.urlencode(args)
+        string = urlencode(args)
 
     glue_char = "&" if urlparse(location).query else "?"
     login_url = glue_char.join([location, string])
@@ -166,9 +168,10 @@ def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
 
     if isinstance(thingy, six.string_types):
         # remove the first XML version/encoding line
-        logger.debug("thingy0: %s" % thingy)
-        _part = thingy.split("\n")
-        thingy = "".join(_part[1:])
+        if thingy[0:5].lower() == '<?xml':
+            logger.debug("thingy0: %s" % thingy)
+            _part = thingy.split("\n")
+            thingy = "".join(_part[1:])
         thingy = thingy.replace(PREFIX, "")
         logger.debug("thingy: %s" % thingy)
         _child = ElementTree.Element('')

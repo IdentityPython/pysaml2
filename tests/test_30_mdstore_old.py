@@ -176,7 +176,7 @@ def test_ext_2():
     ents = mds.with_descriptor("spsso")
     for binding in [BINDING_SOAP, BINDING_HTTP_POST, BINDING_HTTP_ARTIFACT,
                     BINDING_HTTP_REDIRECT]:
-        assert mds.single_logout_service(ents.keys()[0], binding, "spsso")
+        assert mds.single_logout_service(list(ents.keys())[0], binding, "spsso")
 
 
 def test_example():
@@ -187,7 +187,7 @@ def test_example():
     assert len(mds.keys()) == 1
     idps = mds.with_descriptor("idpsso")
 
-    assert idps.keys() == [
+    assert list(idps.keys()) == [
         'http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php']
     certs = mds.certs(
         'http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php',

@@ -4,8 +4,7 @@
 import base64
 import uuid
 import six
-import urllib
-import urlparse
+from six.moves.urllib.parse import parse_qs, urlencode, urlparse
 from saml2.cert import OpenSSLWrapper
 from saml2.xmldsig import SIG_RSA_SHA256
 from saml2 import BINDING_HTTP_POST
@@ -76,9 +75,13 @@ def add_subelement(xmldoc, node_name, subelem):
         while xmldoc[c] == " ":
             spaces += " "
             c += 1
+        # Sometimes we get an xml header, sometimes we don't.
+        subelem_str = str(subelem)
+        if subelem_str[0:5].lower() == '<?xml':
+            subelem_str = subelem_str.split("\n", 1)[1]
         xmldoc = xmldoc.replace(
             "<%s:%s%s/>" % (tag, node_name, spaces),
-            "<%s:%s%s>%s</%s:%s>" % (tag, node_name, spaces, subelem, tag,
+            "<%s:%s%s>%s</%s:%s>" % (tag, node_name, spaces, subelem_str, tag,
                                      node_name))
 
     return xmldoc
@@ -161,7 +164,7 @@ class TestClient:
             "E8042FB4-4D5B-48C3-8E14-8EDD852790DD",
             format=saml.NAMEID_FORMAT_PERSISTENT,
             message_id="id1")
-        reqstr = "%s" % req.to_string()
+        reqstr = "%s" % req.to_string().decode('utf-8')
 
         assert req.destination == "https://idp.example.com/idp/"
         assert req.id == "id1"
@@ -267,7 +270,7 @@ class TestClient:
         assert nid_policy.format == saml.NAMEID_FORMAT_TRANSIENT
 
     def test_create_auth_request_vo(self):
-        assert self.client.config.vorg.keys() == [
+        assert list(self.client.config.vorg.keys()) == [
             "urn:mace:example.com:it:tek"]
 
         ar_str = "%s" % self.client.create_authn_request(
@@ -336,7 +339,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = base64.encodestring(resp_str)
+        resp_str = base64.encodestring(resp_str.encode('utf-8'))
 
         authn_response = self.client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -378,7 +381,7 @@ class TestClient:
             userid="also0001@example.com",
             authn=AUTHN)
 
-        resp_str = base64.encodestring(resp_str)
+        resp_str = base64.encodestring(resp_str.encode('utf-8'))
 
         self.client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -415,7 +418,6 @@ class TestClient:
             in_response_to="id1",
             destination="http://lingon.catalogix.se:8087/",
             sp_entity_id="urn:mace:example.com:saml:roland:sp",
-            #name_id_policy=nameid_policy,
             name_id=self.name_id,
             userid="foba0001@example.com",
             authn=AUTHN,
@@ -423,14 +425,13 @@ class TestClient:
             sign_assertion=True,
             encrypt_assertion=False,
             encrypt_assertion_self_contained=True,
-            #encrypted_advice_attributes=True,
             pefim=True,
             encrypt_cert_advice=cert_str
         )
 
         resp_str = "%s" % resp
 
-        resp_str = base64.encodestring(resp_str)
+        resp_str = base64.encodestring(resp_str.encode('utf-8'))
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -453,7 +454,6 @@ class TestClient:
             in_response_to="id1",
             destination="http://lingon.catalogix.se:8087/",
             sp_entity_id="urn:mace:example.com:saml:roland:sp",
-            #name_id_policy=nameid_policy,
             name_id=self.name_id,
             userid="foba0001@example.com",
             authn=AUTHN,
@@ -461,13 +461,12 @@ class TestClient:
             sign_assertion=True,
             encrypt_assertion=False,
             encrypt_assertion_self_contained=True,
-            #encrypted_advice_attributes=True,
             pefim=True,
         )
 
         resp_str = "%s" % resp
 
-        resp_str = base64.encodestring(resp_str)
+        resp_str = base64.encodestring(resp_str.encode('utf-8'))
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -490,7 +489,6 @@ class TestClient:
             in_response_to="id1",
             destination="http://lingon.catalogix.se:8087/",
             sp_entity_id="urn:mace:example.com:saml:roland:sp",
-            #name_id_policy=nameid_policy,
             name_id=self.name_id,
             userid="foba0001@example.com",
             authn=AUTHN,
@@ -498,13 +496,12 @@ class TestClient:
             sign_assertion=True,
             encrypt_assertion=True,
             encrypt_assertion_self_contained=True,
-            #encrypted_advice_attributes=True,
             pefim=True,
         )
 
         resp_str = "%s" % resp
 
-        resp_str = base64.encodestring(resp_str)
+        resp_str = base64.encodestring(resp_str.encode('utf-8'))
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -535,7 +532,6 @@ class TestClient:
             in_response_to="id1",
             destination="http://lingon.catalogix.se:8087/",
             sp_entity_id="urn:mace:example.com:saml:roland:sp",
-            #name_id_policy=nameid_policy,
             name_id=self.name_id,
             userid="foba0001@example.com",
             authn=AUTHN,
@@ -543,14 +539,13 @@ class TestClient:
             sign_assertion=True,
             encrypt_assertion=True,
             encrypt_assertion_self_contained=True,
-            #encrypted_advice_attributes=True,
             pefim=True,
             encrypt_cert_assertion=cert_str
         )
 
         resp_str = "%s" % resp
 
-        resp_str = base64.encodestring(resp_str)
+        resp_str = base64.encodestring(resp_str.encode('utf-8'))
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -589,7 +584,6 @@ class TestClient:
             in_response_to="id1",
             destination="http://lingon.catalogix.se:8087/",
             sp_entity_id="urn:mace:example.com:saml:roland:sp",
-            #name_id_policy=nameid_policy,
             name_id=self.name_id,
             userid="foba0001@example.com",
             authn=AUTHN,
@@ -597,7 +591,6 @@ class TestClient:
             sign_assertion=True,
             encrypt_assertion=True,
             encrypt_assertion_self_contained=True,
-            #encrypted_advice_attributes=True,
             pefim=True,
             encrypt_cert_assertion=cert_assertion_str,
             encrypt_cert_advice=cert_advice_str
@@ -605,7 +598,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = base64.encodestring(resp_str)
+        resp_str = base64.encodestring(resp_str.encode('utf-8'))
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -628,7 +621,6 @@ class TestClient:
             in_response_to="id1",
             destination="http://lingon.catalogix.se:8087/",
             sp_entity_id="urn:mace:example.com:saml:roland:sp",
-            #name_id_policy=nameid_policy,
             name_id=self.name_id,
             userid="foba0001@example.com",
             authn=AUTHN,
@@ -641,7 +633,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = base64.encodestring(resp_str)
+        resp_str = base64.encodestring(resp_str.encode('utf-8'))
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -672,7 +664,6 @@ class TestClient:
             in_response_to="id1",
             destination="http://lingon.catalogix.se:8087/",
             sp_entity_id="urn:mace:example.com:saml:roland:sp",
-            #name_id_policy=nameid_policy,
             name_id=self.name_id,
             userid="foba0001@example.com",
             authn=AUTHN,
@@ -685,7 +676,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = base64.encodestring(resp_str)
+        resp_str = base64.encodestring(resp_str.encode('utf-8'))
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -842,7 +833,7 @@ class TestClient:
 
         #seresp = samlp.response_from_string(enctext)
 
-        resp_str = base64.encodestring(enctext)
+        resp_str = base64.encodestring(enctext.encode('utf-8'))
         # Now over to the client side
         resp = self.client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -917,7 +908,7 @@ class TestClient:
 
         #seresp = samlp.response_from_string(enctext)
 
-        resp_str = base64.encodestring(enctext)
+        resp_str = base64.encodestring(enctext.encode('utf-8'))
         # Now over to the client side
         resp = self.client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -1151,7 +1142,7 @@ class TestClient:
 
         #seresp = samlp.response_from_string(enctext)
 
-        resp_str = base64.encodestring("%s" % response)
+        resp_str = base64.encodestring(str(response).encode('utf-8'))
         # Now over to the client side
         resp = self.client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -1177,7 +1168,7 @@ class TestClient:
             relay_state="relay2", sigalg=SIG_RSA_SHA256, key=key)
 
         loc = info["headers"][0][1]
-        qs = urlparse.parse_qs(loc[1:])
+        qs = parse_qs(loc[1:])
         assert _leq(qs.keys(),
                     ['SigAlg', 'SAMLRequest', 'RelayState', 'Signature'])
 
@@ -1214,8 +1205,8 @@ class TestClientWithDummy():
         assert http_args["headers"][0][0] == "Location"
         assert http_args["data"] == []
         redirect_url = http_args["headers"][0][1]
-        _, _, _, _, qs, _ = urlparse.urlparse(redirect_url)
-        qs_dict = urlparse.parse_qs(qs)
+        _, _, _, _, qs, _ = urlparse(redirect_url)
+        qs_dict = parse_qs(qs)
         req = self.server.parse_authn_request(qs_dict["SAMLRequest"][0],
                                               binding)
         resp_args = self.server.response_args(req.message, [response_binding])
@@ -1234,8 +1225,8 @@ class TestClientWithDummy():
         assert http_args["headers"][0][0] == "Location"
         assert http_args["data"] == []
         redirect_url = http_args["headers"][0][1]
-        _, _, _, _, qs, _ = urlparse.urlparse(redirect_url)
-        qs_dict = urlparse.parse_qs(qs)
+        _, _, _, _, qs, _ = urlparse(redirect_url)
+        qs_dict = parse_qs(qs)
         req = self.server.parse_authn_request(qs_dict["SAMLRequest"][0],
                                               binding)
         resp_args = self.server.response_args(req.message, [response_binding])
@@ -1268,7 +1259,7 @@ class TestClientWithDummy():
         print(resp)
         assert resp
         assert len(resp) == 1
-        assert resp.keys() == entity_ids
+        assert list(resp.keys()) == entity_ids
         response = resp[entity_ids[0]]
         assert isinstance(response, LogoutResponse)
 
@@ -1288,7 +1279,7 @@ class TestClientWithDummy():
         # Here I fake what the client will do
         # create the form post
 
-        http_args["data"] = urllib.urlencode(_dic)
+        http_args["data"] = urlencode(_dic)
         http_args["method"] = "POST"
         http_args["dummy"] = _dic["SAMLRequest"]
         http_args["headers"] = [('Content-type',
@@ -1323,7 +1314,7 @@ class TestClientWithDummy():
         # Here I fake what the client will do
         # create the form post
 
-        http_args["data"] = urllib.urlencode(_dic)
+        http_args["data"] = urlencode(_dic)
         http_args["method"] = "POST"
         http_args["dummy"] = _dic["SAMLRequest"]
         http_args["headers"] = [('Content-type',

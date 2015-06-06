@@ -78,7 +78,7 @@ class IdentDB(object):
     """
     def __init__(self, db, domain="", name_qualifier=""):
         if isinstance(db, six.string_types):
-            self.db = shelve.open(db)
+            self.db = shelve.open(db, protocol=2)
         else:
             self.db = db
         self.domain = domain
@@ -111,9 +111,6 @@ class IdentDB(object):
         :param ident: user identifier
         :param name_id: NameID instance
         """
-        if isinstance(ident, six.string_types):
-            ident = ident.encode("utf-8")
-
         # One user may have more than one NameID defined
         try:
             val = self.db[ident].split(" ")

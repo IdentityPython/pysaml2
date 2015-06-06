@@ -5,9 +5,8 @@ import time
 import cgi
 import six
 
-from urllib import quote
-from urlparse import parse_qs
-from Cookie import SimpleCookie
+from six.moves.urllib.parse import quote, parse_qs
+from six.moves.http_cookies import SimpleCookie
 
 from saml2 import BINDING_HTTP_ARTIFACT, SAMLError
 from saml2 import BINDING_HTTP_REDIRECT
