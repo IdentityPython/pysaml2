@@ -5,8 +5,10 @@
 """ Functions connected to signing and verifying.
 Based on the use of xmlsec1 binaries and not the python xmlsec module.
 """
+from OpenSSL import crypto
 
 import base64
+from base64 import b64decode
 import hashlib
 import logging
 import os
@@ -381,19 +383,24 @@ def active_cert(key):
     :param key: The Key
     :return: True if the key is active else False
     """
-    cert_str = pem_format(key)
-    certificate = importKey(cert_str)
     try:
-        not_before = to_time(str(certificate.get_not_before()))
-        not_after = to_time(str(certificate.get_not_after()))
-        assert not_before < utc_now()
-        assert not_after > utc_now()
-        return True
+        cert_str = pem_format(key)
+        try:
+            certificate = importKey(cert_str)
+            not_before = to_time(str(certificate.get_not_before()))
+            not_after = to_time(str(certificate.get_not_after()))
+            assert not_before < utc_now()
+            assert not_after > utc_now()
+            return True
+        except:
+                cert = crypto.load_certificate(crypto.FILETYPE_PEM, cert_str)
+                assert cert.has_expired() == 0
+                assert not OpenSSLWrapper().certificate_not_valid_yet(cert)
+                return True
     except AssertionError:
         return False
     except AttributeError:
         return False
-
 
 def cert_from_key_info(key_info, ignore_age=False):
     """ Get all X509 certs from a KeyInfo instance. Care is taken to make sure
