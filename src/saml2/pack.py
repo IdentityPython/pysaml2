@@ -41,7 +41,9 @@ NAMESPACE = "http://schemas.xmlsoap.org/soap/envelope/"
 FORM_SPEC = """<form method="post" action="%s">
    <input type="hidden" name="%s" value="%s" />
    <input type="hidden" name="RelayState" value="%s" />
-   <input type="submit" value="Submit" />
+   <noscript>
+    <input type="submit" value="Submit" />
+   </noscript>
 </form>"""
 
 
