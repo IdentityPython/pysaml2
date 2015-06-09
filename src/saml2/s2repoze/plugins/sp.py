@@ -13,11 +13,11 @@ import shelve
 import traceback
 import saml2
 import six
-from urlparse import parse_qs, urlparse
+from six.moves.urllib.parse import parse_qs, urlparse
 from saml2.samlp import Extensions
 from saml2 import xmldsig as ds
 
-from StringIO import StringIO
+from six import StringIO
 
 from paste.httpexceptions import HTTPSeeOther, HTTPRedirection
 from paste.httpexceptions import HTTPNotImplemented
@@ -27,7 +27,7 @@ from paste.request import construct_url
 from saml2.extension.pefim import SPCertEnc
 from saml2.httputil import SeeOther
 from saml2.client_base import ECP_SERVICE
-from zope.interface import implements
+from zope.interface import implementer
 
 from repoze.who.interfaces import IChallenger, IIdentifier, IAuthenticator
 from repoze.who.interfaces import IMetadataProvider
@@ -80,8 +80,8 @@ class ECP_response(object):
         return [self.content]
 
 
+@implementer(IChallenger, IIdentifier, IAuthenticator, IMetadataProvider)
 class SAML2Plugin(object):
-    implements(IChallenger, IIdentifier, IAuthenticator, IMetadataProvider)
 
     def __init__(self, rememberer_name, config, saml_client, wayf, cache,
                  sid_store=None, discovery="", idp_query_param="",
@@ -100,11 +100,13 @@ class SAML2Plugin(object):
         except KeyError:
             self.metadata = None
         if sid_store:
-            self.outstanding_queries = shelve.open(sid_store, writeback=True)
+            self.outstanding_queries = shelve.open(sid_store, writeback=True,
+                                                   protocol=2)
         else:
             self.outstanding_queries = {}
         if sid_store_cert:
-            self.outstanding_certs = shelve.open(sid_store_cert, writeback=True)
+            self.outstanding_certs = shelve.open(sid_store_cert, writeback=True,
+                                                 protocol=2)
         else:
             self.outstanding_certs = {}
 

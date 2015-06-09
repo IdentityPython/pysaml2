@@ -25,6 +25,8 @@ SIMPLE_SAML_PHP_RESPONSE = full_path("simplesamlphp_authnresponse.xml")
 PUB_KEY = full_path("test.pem")
 PRIV_KEY = full_path("test.key")
 
+ENC_PUB_KEY = full_path("pki/test_1.crt")
+ENC_PRIV_KEY = full_path("pki/test.key")
 
 def _eq(l1, l2):
     return set(l1) == set(l2)
@@ -96,6 +98,8 @@ class FakeConfig():
     metadata = None
     cert_file = PUB_KEY
     key_file = PRIV_KEY
+    encryption_keypairs = [{"key_file": ENC_PRIV_KEY, "cert_file": ENC_PUB_KEY}]
+    enc_key_files = [ENC_PRIV_KEY]
     debug = False
     cert_handler_extra_class = None
     generate_cert_func = None
@@ -299,10 +303,11 @@ class TestSecurity():
         to_sign = [(class_name(self._assertion), self._assertion.id),
                    (class_name(response), response.id)]
 
-        s_response = sigver.signed_instance_factory(response, self.sec, to_sign)
+        s_response = sigver.signed_instance_factory(response, self.sec,
+                                                    to_sign)
 
         print(s_response)
-        res = self.sec.verify_signature("%s" % s_response,
+        res = self.sec.verify_signature(s_response,
                                         node_name=class_name(samlp.Response()))
 
         print(res)
@@ -327,7 +332,7 @@ class TestSecurity():
 
         assert ci == self.sec.my_cert
 
-        res = self.sec.verify_signature("%s" % s_response,
+        res = self.sec.verify_signature(s_response,
                                         node_name=class_name(samlp.Response()))
 
         assert res
@@ -358,7 +363,7 @@ class TestSecurity():
         ci = "".join(sigver.cert_from_instance(ass)[0].split())
         assert ci == self.sec.my_cert
 
-        res = self.sec.verify_signature("%s" % s_assertion,
+        res = self.sec.verify_signature(s_assertion,
                                         node_name=class_name(ass))
         assert res
 
@@ -447,9 +452,9 @@ def test_xbox():
     encrypted_assertion = EncryptedAssertion()
     encrypted_assertion.add_extension_element(_ass0)
 
-    _, pre = make_temp("%s" % pre_encryption_part(), decode=False)
+    _, pre = make_temp(str(pre_encryption_part()).encode('utf-8'), decode=False)
     enctext = sec.crypto.encrypt(
-        "%s" % encrypted_assertion, conf.cert_file, pre, "des-192",
+        str(encrypted_assertion), conf.cert_file, pre, "des-192",
         '/*[local-name()="EncryptedAssertion"]/*[local-name()="Assertion"]')
 
 
@@ -503,8 +508,8 @@ def test_xmlsec_err():
 
 
 if __name__ == "__main__":
-    # t = TestSecurity()
-    # t.setup_class()
-    # t.test_non_verify_2()
+    t = TestSecurity()
+    t.setup_class()
+    t.test_verify_1()
 
-    test_xmlsec_err()
+    #test_xmlsec_err()

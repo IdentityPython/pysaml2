@@ -3,7 +3,9 @@ from __future__ import print_function
 import logging
 import re
 import argparse
+import os
 from saml2.extension.pefim import SPCertEnc
+from saml2.metadata import create_metadata_string
 import service_conf
 
 from Cookie import SimpleCookie
@@ -753,6 +755,21 @@ def add_urls():
 
 # ----------------------------------------------------------------------------
 
+def metadata(environ, start_response):
+    try:
+        path = _args.path
+        if path is None or len(path) == 0:
+            path = os.path.dirname(os.path.abspath( __file__ ))
+        if path[-1] != "/":
+            path += "/"
+        metadata = create_metadata_string(path+"sp_conf.py", None,
+                                          _args.valid, _args.cert, _args.keyfile,
+                                          _args.id, _args.name, _args.sign)
+        start_response('200 OK', [('Content-Type', "text/xml")])
+        return metadata
+    except Exception as ex:
+        logger.error("An error occured while creating metadata:" + ex.message)
+        return not_found(environ, start_response)
 
 def application(environ, start_response):
     """
@@ -769,6 +786,8 @@ def application(environ, start_response):
     path = environ.get('PATH_INFO', '').lstrip('/')
     logger.debug("<application> PATH: '%s'" % path)
 
+    if path == "metadata":
+        return metadata(environ, start_response)
 
     logger.debug("Finding callback to run")
     try:
@@ -822,6 +841,18 @@ if __name__ == '__main__':
     _parser.add_argument('-W', dest='wayf', action='store_true',
                          help="Which WAYF url to use")
     _parser.add_argument("config", help="SAML client config")
+    _parser.add_argument('-p', dest='path', help='Path to configuration file.')
+    _parser.add_argument('-v', dest='valid', default="4",
+                         help="How long, in days, the metadata is valid from the time of creation")
+    _parser.add_argument('-c', dest='cert', help='certificate')
+    _parser.add_argument('-i', dest='id',
+                         help="The ID of the entities descriptor in the metadata")
+    _parser.add_argument('-k', dest='keyfile',
+                         help="A file with a key to sign the metadata with")
+    _parser.add_argument('-n', dest='name')
+    _parser.add_argument('-S', dest='sign', action='store_true',
+                         help="sign the metadata")
+
 
     ARGS = {}
     _args = _parser.parse_args()

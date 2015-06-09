@@ -83,6 +83,8 @@ def create_class_from_xml_string(target_class, xml_string):
         the contents of the XML - or None if the root XML tag and namespace did
         not match those of the target class.
     """
+    if not isinstance(xml_string, six.binary_type):
+        xml_string = xml_string.encode('utf-8')
     tree = ElementTree.fromstring(xml_string)
     return create_class_from_element_tree(target_class, tree)
 
@@ -576,7 +578,7 @@ class SamlBase(ExtensionContainer):
 
         for elem in elements:
             uri_set = self.get_ns_map_attribute(elem.attrib, uri_set)
-            uri_set = self.get_ns_map(elem._children, uri_set)
+            uri_set = self.get_ns_map(elem.getchildren(), uri_set)
             uri = self.tag_get_uri(elem)
             if uri is not None:
                 uri_set.add(uri)
@@ -600,7 +602,7 @@ class SamlBase(ExtensionContainer):
                     if assertion is not None:
                         self.set_prefixes(assertion, prefix_map)
 
-        return ElementTree.tostring(tree, encoding="UTF-8")
+        return ElementTree.tostring(tree, encoding="UTF-8").decode('utf-8')
 
     def get_xml_string_with_self_contained_assertion_within_encrypted_assertion(self, assertion_tag):
         """ Makes a encrypted assertion only containing self contained namespaces.
@@ -614,7 +616,7 @@ class SamlBase(ExtensionContainer):
 
         self.set_prefixes(tree.find(self.encrypted_assertion._to_element_tree().tag).find(assertion_tag), prefix_map)
 
-        return ElementTree.tostring(tree, encoding="UTF-8")
+        return ElementTree.tostring(tree, encoding="UTF-8").decode('utf-8')
 
     def set_prefixes(self, elem, prefix_map):
 
@@ -825,10 +827,14 @@ class SamlBase(ExtensionContainer):
                     return False
             elif isinstance(svals, list):
                 for sval in svals:
-                    for oval in ovals:
-                        if sval == oval:
-                            break
-                    else:
+                    try:
+                        for oval in ovals:
+                            if sval == oval:
+                                break
+                        else:
+                            return False
+                    except TypeError:
+                        # ovals isn't iterable
                         return False
             else:
                 if svals == ovals:  # Since I only support '=='

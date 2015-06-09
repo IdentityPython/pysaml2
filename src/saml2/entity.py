@@ -34,7 +34,7 @@ from saml2.time_util import instant
 from saml2.s_utils import sid
 from saml2.s_utils import UnravelError
 from saml2.s_utils import error_status_factory
-from saml2.s_utils import rndstr
+from saml2.s_utils import rndbytes
 from saml2.s_utils import success_status_factory
 from saml2.s_utils import decode_base64_and_inflate
 from saml2.s_utils import UnsupportedBinding
@@ -73,7 +73,7 @@ logger = logging.getLogger(__name__)
 
 __author__ = 'rolandh'
 
-ARTIFACT_TYPECODE = '\x00\x04'
+ARTIFACT_TYPECODE = b'\x00\x04'
 
 SERVICE2MESSAGE = {
     "single_sign_on_service": AuthnRequest,
@@ -103,11 +103,17 @@ def create_artifact(entity_id, message_handle, endpoint_index=0):
     :param endpoint_index:
     :return:
     """
+    if not isinstance(entity_id, six.binary_type):
+        entity_id = entity_id.encode('utf-8')
     sourceid = sha1(entity_id)
 
-    ter = "%s%.2x%s%s" % (ARTIFACT_TYPECODE, endpoint_index,
-                          sourceid.digest(), message_handle)
-    return base64.b64encode(ter)
+    if not isinstance(message_handle, six.binary_type):
+        message_handle = message_handle.encode('utf-8')
+    ter = b"".join((ARTIFACT_TYPECODE, 
+                    ("%.2x" % endpoint_index).encode('ascii'),
+                    sourceid.digest(),
+                    message_handle))
+    return base64.b64encode(ter).decode('ascii')
 
 
 class Entity(HTTPBase):
@@ -540,7 +546,7 @@ class Entity(HTTPBase):
                     _cert = "%s%s" % (begin_cert, _cert)
                 if end_cert not in _cert:
                     _cert = "%s%s" % (_cert, end_cert)
-                _, cert_file = make_temp(_cert, decode=False)
+                _, cert_file = make_temp(_cert.encode('ascii'), decode=False)
                 response = cbxs.encrypt_assertion(response, cert_file,
                                                   pre_encryption_part(), node_xpath=node_xpath)
                 return response
@@ -1115,8 +1121,8 @@ class Entity(HTTPBase):
         :param endpoint_index:
         :return:
         """
-        message_handle = sha1("%s" % message)
-        message_handle.update(rndstr())
+        message_handle = sha1(str(message).encode('utf-8'))
+        message_handle.update(rndbytes())
         mhd = message_handle.digest()
         saml_art = create_artifact(self.config.entityid, mhd, endpoint_index)
         self.artifact[saml_art] = message

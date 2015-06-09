@@ -23,7 +23,7 @@ class CacheError(SAMLError):
 class Cache(object):
     def __init__(self, filename=None):
         if filename:
-            self._db = shelve.open(filename, writeback=True)
+            self._db = shelve.open(filename, writeback=True, protocol=2)
             self._sync = True
         else:
             self._db = {}
@@ -96,7 +96,7 @@ class Cache(object):
         cni = code(name_id)
         (timestamp, info) = self._db[cni][entity_id]
         if check_not_on_or_after and time_util.after(timestamp):
-            raise ToOld("past %s" % timestamp)
+            raise ToOld("past %s" % str(timestamp))
 
         return info or None
 
@@ -139,7 +139,7 @@ class Cache(object):
         :return: A possibly empty list of entity identifiers
         """
         cni = code(name_id)
-        return self._db[cni].keys()
+        return list(self._db[cni].keys())
 
     def receivers(self, name_id):
         """ Another name for entities() just to make it more logic in the IdP

@@ -5,6 +5,7 @@ import copy
 import re
 import urllib
 from six.moves.urllib.parse import urlparse
+from six.moves.urllib.parse import urlencode
 import requests
 import time
 from six.moves.http_cookies import SimpleCookie
@@ -269,10 +270,10 @@ class HTTPBase(object):
     @staticmethod
     def use_http_artifact(message, destination="", relay_state=""):
         if relay_state:
-            query = urllib.urlencode({"SAMLart": message,
-                                      "RelayState": relay_state})
+            query = urlencode({"SAMLart": message,
+                               "RelayState": relay_state})
         else:
-            query = urllib.urlencode({"SAMLart": message})
+            query = urlencode({"SAMLart": message})
         info = {
             "data": "",
             "url": "%s?%s" % (destination, query)
@@ -281,9 +282,13 @@ class HTTPBase(object):
 
     @staticmethod
     def use_http_uri(message, typ, destination="", relay_state=""):
+        if "\n" in message:
+            data = message.split("\n")[1]
+        else:
+            data = message.strip()
         if typ == "SAMLResponse":
             info = {
-                "data": message.split("\n")[1],
+                "data": data,
                 "headers": [
                     ("Content-Type", "application/samlassertion+xml"),
                     ("Cache-Control", "no-cache, no-store"),
@@ -293,10 +298,10 @@ class HTTPBase(object):
         elif typ == "SAMLRequest":
             # msg should be an identifier
             if relay_state:
-                query = urllib.urlencode({"ID": message,
-                                          "RelayState": relay_state})
+                query = urlencode({"ID": message,
+                                   "RelayState": relay_state})
             else:
-                query = urllib.urlencode({"ID": message})
+                query = urlencode({"ID": message})
             info = {
                 "data": "",
                 "url": "%s?%s" % (destination, query)

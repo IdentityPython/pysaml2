@@ -229,7 +229,7 @@ def filter_attribute_value_assertions(ava, attribute_restrictions=None):
     if not attribute_restrictions:
         return ava
 
-    for attr, vals in ava.items():
+    for attr, vals in list(ava.items()):
         _attr = attr.lower()
         try:
             _rests = attribute_restrictions[_attr]
@@ -767,7 +767,7 @@ class Assertion(dict):
         policy.acs = self.acs
         ava = policy.restrict(self, sp_entity_id, metadata)
 
-        for key, val in self.items():
+        for key, val in list(self.items()):
             if key in ava:
                 self[key] = ava[key]
             else:
