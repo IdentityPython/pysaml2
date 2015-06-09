@@ -149,7 +149,7 @@ class Base(Entity):
             raise IdpUnspecified("Too many IdPs to choose from: %s" % eids)
 
         try:
-            srvs = self.metadata.single_sign_on_service(eids.keys()[0], binding)
+            srvs = self.metadata.single_sign_on_service(list(eids.keys())[0], binding)
             return destinations(srvs)[0]
         except IndexError:
             raise IdpUnspecified("No IdP to send to given the premises")

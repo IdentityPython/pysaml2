@@ -1,4 +1,4 @@
-from urlparse import parse_qs
+from six.moves.urllib.parse import parse_qs
 from saml2.authn_context import INTERNETPROTOCOLPASSWORD
 from saml2.samlp import attribute_query_from_string, logout_request_from_string
 from saml2 import BINDING_HTTP_REDIRECT, pack

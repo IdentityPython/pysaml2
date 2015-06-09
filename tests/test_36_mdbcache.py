@@ -31,7 +31,7 @@ class TestMongoDBCache():
             #{u'issuer': u'', u'came from': u'', u'ava': {u'givenName': [u'Derek']}, u'session_id': -1, u'not_on_or_after': 0}
             ava = info["ava"]
             print(ava)
-            assert ava.keys() == ["givenName"]
+            assert list(ava.keys()) == ["givenName"]
             assert ava["givenName"] == ["Derek"]
 
     def test_set_get_2(self):

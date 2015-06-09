@@ -42,6 +42,8 @@ class Eptid(object):
         return self._db[key]
 
     def __setitem__(self, key, value):
+        if six.PY3 and isinstance(key, six.binary_type):
+            key = key.decode('utf-8')
         self._db[key] = value
 
     def get(self, idp, sp, *args):
