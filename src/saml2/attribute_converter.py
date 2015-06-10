@@ -246,7 +246,10 @@ def get_local_name(acs, attr, name_format):
     for aconv in acs:
         #print(ac.format, name_format)
         if aconv.name_format == name_format:
-            return aconv._fro[attr]
+            try:
+                return aconv._fro[attr.lower()]
+            except KeyError:
+                return ""
 
 
 def d_to_local_name(acs, attr):
