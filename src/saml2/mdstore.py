@@ -1050,7 +1050,11 @@ class MetadataStore(object):
         return None
 
     def certs(self, entity_id, descriptor, use="signing"):
-        ent = self.__getitem__(entity_id)
+        try:
+            ent = self.__getitem__(entity_id)
+        except KeyError:
+            return []  # allow for unsolicated IDP without having metadata set in conf
+
         if descriptor == "any":
             res = []
             for descr in ["spsso", "idpsso", "role", "authn_authority",
