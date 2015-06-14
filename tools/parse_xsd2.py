@@ -7,6 +7,7 @@ import imp
 import sys
 import types
 import errno
+import six
 
 __version__ = 0.5
 
