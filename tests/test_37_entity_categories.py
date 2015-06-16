@@ -158,7 +158,8 @@ def test_idp_policy_filter():
                "norEduPersonNIN": "19800101134"}
 
         policy = idp.config.getattr("policy", "idp")
-        ava = policy.filter(ava, "urn:mace:example.com:saml:roland:sp", idp.metadata)
+        ava = policy.filter(ava, "urn:mace:example.com:saml:roland:sp",
+                            idp.metadata)
 
         print(ava)
         assert list(ava.keys()) == ["eduPersonTargetedID"]  # because no entity category

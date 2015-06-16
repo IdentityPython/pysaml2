@@ -53,7 +53,7 @@ if sys.version_info < (2, 7):
 
 setup(
     name='pysaml2',
-    version='2.5.0',
+    version='3.0.0',
     description='Python implementation of SAML Version 2',
     # long_description = read("README"),
     author='Roland Hedberg',
@@ -72,7 +72,6 @@ setup(
         "Development Status :: 4 - Beta",
         "License :: OSI Approved :: Apache Software License",
         "Topic :: Software Development :: Libraries :: Python Modules",
-        "Programming Language :: Python :: 2.6",
         "Programming Language :: Python :: 2.7"],
 
     scripts=["tools/parse_xsd2.py", "tools/make_metadata.py",
