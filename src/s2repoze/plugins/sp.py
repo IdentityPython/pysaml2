@@ -113,9 +113,10 @@ class SAML2Plugin(object):
     def _get_rememberer(self, environ):
         logger.debug("s2repoze, SAML2Plugin: _get_rememberer")
         repoze_plugins = environ.get('repoze.who.plugins', None)
-        rememberer = None
-        if repoze_plugins:
-            rememberer = repoze_plugins.get(self.rememberer_name, None)
+        if not repoze_plugins
+            logger.debug("s2repoze, SAML2Plugin: _get_rememberer: No Plugin stored in environment")
+            return None
+        rememberer = repoze_plugins.get(self.rememberer_name, None)
         logger.debug('s2repoze, SAML2Plugin, _get_rememberer: REMEMBERER %s' % rememberer)
         return rememberer
 
@@ -124,6 +125,8 @@ class SAML2Plugin(object):
         logger.debug("remember : Start")
         rememberer = self._get_rememberer(environ)
         logger.debug("PCROWNOV - REMEMBERER %s" % rememberer)
+        if not rememberer:
+            return []
         return rememberer.remember(environ, identity)
 
     #### IIdentifier ####
@@ -131,6 +134,8 @@ class SAML2Plugin(object):
         logger.debug("s2repoze, SAML2Plugin: forget")
         rememberer = self._get_rememberer(environ)
         logger.debug("s2repoze, SAML2Plugin, forget: REMEMBERER %s" % rememberer)
+        if not rememberer:
+            return []
         return rememberer.forget(environ, identity)
 
     def _get_post(self, environ):
