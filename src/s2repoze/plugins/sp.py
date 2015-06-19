@@ -85,7 +85,7 @@ class SAML2Plugin(object):
     def __init__(self, rememberer_name, config, saml_client, wayf, cache,
                  sid_store=None, discovery="", idp_query_param="",
                  sid_store_cert=None, ):
-        logger.info("s2repoze, SAML2Plugin: INIT")
+        logger.info("__init__: START")
         self.rememberer_name = rememberer_name
         self.wayf = wayf
         self.saml_client = saml_client
@@ -111,29 +111,30 @@ class SAML2Plugin(object):
         self.iam = platform.node()
 
     def _get_rememberer(self, environ):
-        logger.debug("s2repoze, SAML2Plugin: _get_rememberer")
+        logger.debug("_get_rememberer: START")
+        logger.debug("_get_rememberer -- ENVIRON : %s " % environ)
         repoze_plugins = environ.get('repoze.who.plugins', None)
         if not repoze_plugins:
-            logger.debug("s2repoze, SAML2Plugin: _get_rememberer: No Plugin stored in environment")
+            logger.debug("_get_rememberer: No Plugin stored in environment")
             return None
         rememberer = repoze_plugins.get(self.rememberer_name, None)
-        logger.debug('s2repoze, SAML2Plugin, _get_rememberer: REMEMBERER %s' % rememberer)
+        logger.debug('_get_rememberer: REMEMBERER %s' % rememberer)
         return rememberer
 
     #### IIdentifier ####
     def remember(self, environ, identity):
-        logger.debug("remember : Start")
+        logger.debug("remember : START")
         rememberer = self._get_rememberer(environ)
-        logger.debug("PCROWNOV - REMEMBERER %s" % rememberer)
+        logger.debug("remember -- REMEMBERER: %s" % rememberer)
         if not rememberer:
             return []
         return rememberer.remember(environ, identity)
 
     #### IIdentifier ####
     def forget(self, environ, identity):
-        logger.debug("s2repoze, SAML2Plugin: forget")
+        logger.debug("forget: START")
         rememberer = self._get_rememberer(environ)
-        logger.debug("s2repoze, SAML2Plugin, forget: REMEMBERER %s" % rememberer)
+        logger.debug("forget: REMEMBERER %s" % rememberer)
         if not rememberer:
             return []
         return rememberer.forget(environ, identity)
@@ -145,7 +146,7 @@ class SAML2Plugin(object):
         :param environ: A dictionary with environment variables
         """
 
-        logger.info("s2repoze, SAML2Plugin: _get_post")
+        logger.info("_get_post: START")
         body = ''
         try:
             length = int(environ.get('CONTENT_LENGTH', '0'))
@@ -161,15 +162,15 @@ class SAML2Plugin(object):
 
         post = parse_qs(body)  # parse the POST fields into a dict
 
-        logger.debug('identify post: %s' % (post,))
+        logger.debug('_get_post -- identify post: %s' % (post,))
 
         return post
 
     def _wayf_redirect(self, came_from):
-        logger.info("s2repoze, SAML2Plugin: _wayf_redirect")
+        logger.info("_wayf_redirect: START")
         sid_ = sid()
         self.outstanding_queries[sid_] = came_from
-        logger.info("Redirect to WAYF function: %s" % self.wayf)
+        logger.info("_wayf_redirect -- Redirect to WAYF function: %s" % self.wayf)
         return -1, HTTPSeeOther(headers=[('Location',
                                           "%s?%s" % (self.wayf, sid_))])
 
@@ -179,7 +180,7 @@ class SAML2Plugin(object):
         If more than one idp and if none is selected, I have to do wayf or
         disco
         """
-        logger.info("s2repoze, SAML2Plugin: _pick_idp")
+        logger.info("_pick_idp: START")
 
         # check headers to see if it's an ECP request
         #        headers = {
