@@ -113,7 +113,7 @@ class SAML2Plugin(object):
     def _get_rememberer(self, environ):
         logger.debug("s2repoze, SAML2Plugin: _get_rememberer")
         repoze_plugins = environ.get('repoze.who.plugins', None)
-        if not repoze_plugins
+        if not repoze_plugins:
             logger.debug("s2repoze, SAML2Plugin: _get_rememberer: No Plugin stored in environment")
             return None
         rememberer = repoze_plugins.get(self.rememberer_name, None)
