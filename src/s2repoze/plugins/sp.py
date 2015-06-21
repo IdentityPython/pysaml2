@@ -107,13 +107,14 @@ class SAML2Plugin(object):
             self.outstanding_certs = shelve.open(sid_store_cert, writeback=True)
         else:
             self.outstanding_certs = {}
+        logger.info("__init__ -- Outstanding Queries: %s" % self.outstanding_queries)
 
         self.iam = platform.node()
 
     def _get_rememberer(self, environ):
         logger.debug("_get_rememberer: START")
         logger.debug("_get_rememberer -- ENVIRON : %s " % environ)
-        repoze_plugins = environ.get('repoze.who.plugins', None)
+        repoze_plugins = environ.get('repoze.who.api', None)
         if not repoze_plugins:
             logger.debug("_get_rememberer: No Plugin stored in environment")
             return None
@@ -170,6 +171,7 @@ class SAML2Plugin(object):
         logger.info("_wayf_redirect: START")
         sid_ = sid()
         self.outstanding_queries[sid_] = came_from
+        logger.info("_wayf_redirect -- Outstanding Queries: %s" % self.outstanding_queries)
         logger.info("_wayf_redirect -- Redirect to WAYF function: %s" % self.wayf)
         return -1, HTTPSeeOther(headers=[('Location',
                                           "%s?%s" % (self.wayf, sid_))])
@@ -191,7 +193,7 @@ class SAML2Plugin(object):
 
         _cli = self.saml_client
 
-        logger.info("[_pick_idp] %s" % environ)
+        logger.info("_pick_idp -- [_pick_idp] Environment: %s" % environ)
         if "HTTP_PAOS" in environ:
             if environ["HTTP_PAOS"] == PAOS_HEADER_INFO:
                 if 'application/vnd.paos+xml' in environ["HTTP_ACCEPT"]:
@@ -199,7 +201,7 @@ class SAML2Plugin(object):
                     # entityid -> the IdP to use
                     # relay_state -> when back from authentication
 
-                    logger.info("- ECP client detected -")
+                    logger.info("_pick_idp -- - ECP client detected -")
 
                     _relay_state = construct_came_from(environ)
                     _entityid = _cli.config.ecp_endpoint(environ["REMOTE_ADDR"])
@@ -207,7 +209,7 @@ class SAML2Plugin(object):
                     if not _entityid:
                         return -1, HTTPInternalServerError(
                             detail="No IdP to talk to")
-                    logger.info("IdP to talk to: %s" % _entityid)
+                    logger.info("_pick_idp -- IdP to talk to: %s" % _entityid)
                     return ecp.ecp_auth_request(_cli, _entityid,
                                                 _relay_state)
                 else:
@@ -219,7 +221,7 @@ class SAML2Plugin(object):
 
         idps = self.metadata.with_descriptor("idpsso")
 
-        logger.info("IdP URL: %s" % idps)
+        logger.info("_pick_idp -- IdP Data: %s" % idps)
 
         idp_entity_id = query = None
 
@@ -233,7 +235,7 @@ class SAML2Plugin(object):
                         idp_entity_id = _idp_entity_id
                     break
                 except KeyError:
-                    logger.debug("No IdP entity ID in query: %s" % query)
+                    logger.debug("_pick_idp -- No IdP entity ID in query: %s" % query)
                     pass
 
         if idp_entity_id is None:
@@ -244,7 +246,7 @@ class SAML2Plugin(object):
                 return -1, HTTPInternalServerError(detail='Misconfiguration')
             else:
                 idp_entity_id = ""
-                logger.info("ENVIRON: %s" % environ)
+                logger.info("_pick_idp -- ENVIRON: %s" % environ)
 
                 if self.wayf:
                     if query:
@@ -263,7 +265,8 @@ class SAML2Plugin(object):
                     else:
                         sid_ = sid()
                         self.outstanding_queries[sid_] = came_from
-                        logger.debug("Redirect to Discovery Service function")
+                        logger.info("_pick_idp -- Outstanding Queries: %s" % self.outstanding_queries)
+                        logger.debug("_pick_idp -- Redirect to Discovery Service function")
                         eid = _cli.config.entityid
                         ret = _cli.config.getattr(
                             "endpoints", "sp")["discovery_response"][0][0]
@@ -276,14 +279,14 @@ class SAML2Plugin(object):
                     return -1, HTTPNotImplemented(
                         detail='No WAYF or DJ present!')
 
-        logger.info("Chosen IdP: '%s'" % idp_entity_id)
+        logger.info("_pick_idp -- Chosen IdP: '%s'" % idp_entity_id)
         return 0, idp_entity_id
 
     #### IChallenger ####
     #noinspection PyUnusedLocal
     def challenge(self, environ, _status, _app_headers, _forget_headers):
 
-        logger.info("s2repoze, SAML2Plugin: challenge")
+        logger.info("challenge: START")
         _cli = self.saml_client
 
         if 'REMOTE_USER' in environ:
@@ -307,7 +310,7 @@ class SAML2Plugin(object):
         # Which page was accessed to get here
         came_from = construct_came_from(environ)
         environ["myapp.came_from"] = came_from
-        logger.debug("[sp.challenge] RelayState >> '%s'" % came_from)
+        logger.debug("challenge -- [sp.challenge] RelayState >> '%s'" % came_from)
 
         # Am I part of a virtual organization or more than one ?
         try:
@@ -318,29 +321,30 @@ class SAML2Plugin(object):
             except AttributeError:
                 vorg_name = ""
 
-        logger.info("[sp.challenge] VO: %s" % vorg_name)
+        logger.info("challenge -- [sp.challenge] VO: %s" % vorg_name)
 
         # If more than one idp and if none is selected, I have to do wayf
         (done, response) = self._pick_idp(environ, came_from)
         # Three cases: -1 something went wrong or Discovery service used
         #               0 I've got an IdP to send a request to
         #               >0 ECP in progress
-        logger.debug("_idp_pick returned: %s" % done)
+        logger.debug("challenge -- _idp_pick returned: Status:%s, URL:%s" % (done, response))
         if done == -1:
             return response
         elif done > 0:
             self.outstanding_queries[done] = came_from
+            logger.info("challenge -- Outstanding Queries: %s" % self.outstanding_queries)
             return ECP_response(response)
         else:
             entity_id = response
-            logger.info("[sp.challenge] entity_id: %s" % entity_id)
+            logger.info("challenge -- [sp.challenge] entity_id: %s" % entity_id)
             # Do the AuthnRequest
             _binding = BINDING_HTTP_REDIRECT
             try:
                 srvs = _cli.metadata.single_sign_on_service(entity_id, _binding)
-                logger.debug("srvs: %s" % srvs)
+                logger.debug("challenge -- srvs: %s" % srvs)
                 dest = srvs[0]["location"]
-                logger.debug("destination: %s" % dest)
+                logger.debug("challenge -- destination: %s" % dest)
 
                 extensions = None
                 cert = None
@@ -375,7 +379,7 @@ class SAML2Plugin(object):
                                              destination=dest,
                                              relay_state=came_from)
 
-                logger.debug("ht_args: %s" % ht_args)
+                logger.debug("challenge -- ht_args: %s" % ht_args)
             except Exception, exc:
                 logger.exception(exc)
                 raise Exception(
@@ -389,20 +393,22 @@ class SAML2Plugin(object):
                     query = parse_qs(environ["QUERY_STRING"])
                     sid = query["sid"][0]
                     came_from = self.outstanding_queries[sid]
+                    logger.info("_challenge -- Outstanding Queries: %s" % self.outstanding_queries)
             except:
                 pass
-            logger.debug('s2repoze, SAML2Plugin, challenge: REMBER REQUEST : %s ' % came_from)
+            logger.debug('challenge -- REMEMBER REQUEST : %s ' % came_from)
             # remember the request
             self.outstanding_queries[_sid] = came_from
+            logger.info("challenge -- Outstanding Queries: %s" % self.outstanding_queries)
 
             if not ht_args["data"] and ht_args["headers"][0][0] == "Location":
-                logger.debug('redirect to: %s' % ht_args["headers"][0][1])
+                logger.debug('challenge -- redirect to: %s' % ht_args["headers"][0][1])
                 return HTTPSeeOther(headers=ht_args["headers"])
             else:
                 return ht_args["data"]
 
     def _construct_identity(self, session_info):
-        logger.info("s2repoze, SAML2Plugin: _construct_identity")
+        logger.info("_construct_identity: START")
         cni = code(session_info["name_id"])
         identity = {
             "login": cni,
@@ -410,14 +416,14 @@ class SAML2Plugin(object):
             'repoze.who.userid': cni,
             "user": session_info["ava"],
         }
-        logger.debug("Identity: %s" % identity)
+        logger.debug("_construct_identity -- Identity: %s" % identity)
 
         return identity
 
     def _eval_authn_response(self, environ, post, binding=BINDING_HTTP_POST):
-        logger.info("s2repoze, SAML2Plugin: _eval_authn_response")
-        logger.info("Got AuthN response, checking..")
-        logger.info("Outstanding: %s" % (self.outstanding_queries,))
+        logger.info("_eval_authn_response: START")
+        logger.info("_eval_authn_response -- Got AuthN response, checking..")
+        logger.info("_eval_authn_response -- Outstanding: %s" % (self.outstanding_queries))
 
         try:
             # Evaluate the response, returns a AuthnResponse instance
@@ -432,11 +438,11 @@ class SAML2Plugin(object):
 
             session_info = authresp.session_info()
         except TypeError, excp:
-            logger.exception("Exception: %s" % (excp,))
+            logger.exception("_eval_authn_response -- Exception: %s" % (excp,))
             return None
 
         if session_info["came_from"]:
-            logger.debug("came_from << %s" % session_info["came_from"])
+            logger.debug("_eval_authn_response --came_from << %s" % session_info["came_from"])
             try:
                 path, query = session_info["came_from"].split('?')
                 environ["PATH_INFO"] = path
@@ -444,17 +450,17 @@ class SAML2Plugin(object):
             except ValueError:
                 environ["PATH_INFO"] = session_info["came_from"]
 
-        logger.info("Session_info: %s" % session_info)
+        logger.info("_eval_authn_response --Session_info: %s" % session_info)
         return session_info
 
     def do_ecp_response(self, body, environ):
-        logger.info("s2repoze, SAML2Plugin: do_ecp_response")
+        logger.info("do_ecp_response: START")
         response, _relay_state = ecp.handle_ecp_authn_response(self.saml_client,
                                                                body)
 
         environ["s2repoze.relay_state"] = _relay_state.text
         session_info = response.session_info()
-        logger.info("Session_info: %s" % session_info)
+        logger.info("do_ecp_response -- Session_info: %s" % session_info)
 
         return session_info
 
@@ -463,7 +469,7 @@ class SAML2Plugin(object):
         """
         Tries to do the identification
         """
-        logger.info("s2repoze, SAML2Plugin: identity")
+        logger.info("identify: START")
         #logger = environ.get('repoze.who.logger', '')
 
         query = parse_dict_querystring(environ)
@@ -471,7 +477,7 @@ class SAML2Plugin(object):
             "CONTENT_LENGTH"]) and \
                         "SAMLResponse" not in query and "SAMLRequest" not in \
                 query:
-            logger.debug('[identify] get or empty post')
+            logger.debug('identify -- [identify] get or empty post')
             return None
 
         # if logger:
@@ -480,10 +486,10 @@ class SAML2Plugin(object):
 
         uri = environ.get('REQUEST_URI', construct_url(environ))
 
-        logger.debug('[sp.identify] uri: %s' % (uri,))
+        logger.debug('identify -- [sp.identify] uri: %s' % (uri,))
 
         query = parse_dict_querystring(environ)
-        logger.debug('[sp.n] query: %s' % (query,))
+        logger.debug('identify -- [sp.n] query: %s' % (query,))
 
         if "SAMLResponse" in query or "SAMLRequest" in query:
             post = query
@@ -493,7 +499,7 @@ class SAML2Plugin(object):
             binding = BINDING_HTTP_POST
 
         try:
-            logger.debug('[sp.identify] post keys: %s' % (post.keys(),))
+            logger.debug('identify -- [sp.identify] post keys: %s' % (post.keys(),))
         except (TypeError, IndexError):
             pass
 
@@ -516,7 +522,7 @@ class SAML2Plugin(object):
 
                     traceback.print_exc()
             elif "SAMLResponse" not in post:
-                logger.info("[sp.identify] --- NOT SAMLResponse ---")
+                logger.info("identify -- [sp.identify] --- NOT SAMLResponse ---")
                 # Not for me, put the post back where next in line can
                 # find it
                 environ["post.fieldstorage"] = post
@@ -526,7 +532,7 @@ class SAML2Plugin(object):
                     environ['wsgi.input'] = StringIO(environ['s2repoze.body'])
                 return {}
             else:
-                logger.info("[sp.identify] --- SAMLResponse ---")
+                logger.info("identify -- [sp.identify] --- SAMLResponse ---")
                 # check for SAML2 authN response
                 #if self.debug:
                 try:
@@ -579,7 +585,7 @@ class SAML2Plugin(object):
     # IMetadataProvider
     def add_metadata(self, environ, identity):
         """ Add information to the knowledge I have about the user """
-        logger.info("s2repoze, SAML2Plugin: add_metadata")
+        logger.info("add_metadata: START")
         name_id = identity['repoze.who.userid']
         if isinstance(name_id, basestring):
             try:
@@ -590,9 +596,9 @@ class SAML2Plugin(object):
                 pass
 
         _cli = self.saml_client
-        logger.debug("[add_metadata] for %s" % name_id)
+        logger.debug("add_metadata -- [add_metadata] for %s" % name_id)
         try:
-            logger.debug("Issuers: %s" % _cli.users.sources(name_id))
+            logger.debug("add_metadata -- Issuers: %s" % _cli.users.sources(name_id))
         except KeyError:
             pass
 
@@ -601,7 +607,7 @@ class SAML2Plugin(object):
         try:
             (ava, _) = _cli.users.get_identity(name_id)
             #now = time.gmtime()
-            logger.debug("[add_metadata] adds: %s" % ava)
+            logger.debug("add_metadata -- [add_metadata] adds: %s" % ava)
             identity["user"].update(ava)
         except KeyError:
             pass
@@ -617,9 +623,9 @@ class SAML2Plugin(object):
                         # expanded
                         identity["pysaml2_vo_expanded"] = 1
                 except KeyError:
-                    logger.exception("Failed to do attribute aggregation, "
+                    logger.exception("add_metadata -- Failed to do attribute aggregation, "
                                      "missing common attribute")
-        logger.debug("[add_metadata] returns: %s" % (dict(identity),))
+        logger.debug("add_metadata -- [add_metadata] returns: %s" % (dict(identity),))
 
         if not identity["user"]:
             # remove cookie and demand re-authentication
@@ -637,20 +643,20 @@ class SAML2Plugin(object):
     #### IAuthenticatorPlugin ####
     #noinspection PyUnusedLocal
     def authenticate(self, environ, identity=None):
-        logger.info("s2repoze, SAML2Plugin: authenticate")
-        logger.debug('s2repoze, SAML2Plugin, authenticate: IDENTITY: %s ' % identity)
+        logger.info("authenticate: START")
+        logger.debug('authenticate -- IDENTITY: %s ' % identity)
         if identity:
             if identity.get('user') and environ.get(
                     's2repoze.sessioninfo') and identity.get(
                     'user') == environ.get('s2repoze.sessioninfo').get('ava'):
-                logger.debug('s2repoze, SAML2Plugin, authenticate: LOGIN: %s ' % identity.get('login'))
+                logger.debug('authenticate -- LOGIN: %s ' % identity.get('login'))
                 return identity.get('login')
             tktuser = identity.get('repoze.who.plugins.auth_tkt.userid', None)
-            logger.debug('s2repoze, SAML2Plugin, authenticate: TKTUSER: %s ' % tktuser)
+            logger.debug('authenticate -- TKTUSER: %s ' % tktuser)
             if tktuser:
-                logger.debug('s2repoze, SAML2Plugin, authenticate: LOGGED IN USER: %s ' % self.saml_client.is_logged_in(decode(tktuser)))
+                logger.debug('authenticate -- LOGGED IN USER: %s ' % self.saml_client.is_logged_in(decode(tktuser)))
             if tktuser and self.saml_client.is_logged_in(decode(tktuser)):
-                logger.debug('s2repoze, SAML2Plugin, authenticate: IS LOGGED IN: TRUE')
+                logger.debug('authenticate -- IS LOGGED IN: TRUE')
                 return tktuser
             return None
         else:
@@ -658,13 +664,13 @@ class SAML2Plugin(object):
 
     @staticmethod
     def _handle_logout(responses):
-        logger.info("s2repoze, SAML2Plugin: _handle_logout")
+        logger.info("authenticate: START")
         if 'data' in responses:
             ht_args = responses
         else:
             ht_args = responses[responses.keys()[0]][1]
         if not ht_args["data"] and ht_args["headers"][0][0] == "Location":
-            logger.debug('redirect to: %s' % ht_args["headers"][0][1])
+            logger.debug('authenticate -- redirect to: %s' % ht_args["headers"][0][1])
             return HTTPSeeOther(headers=ht_args["headers"])
         else:
             return ht_args["data"]
@@ -681,7 +687,7 @@ def make_plugin(remember_name=None,  # plugin for remember
                 discovery="",
                 idp_query_param=""
 ):
-    logger.info("s2repoze: make_plugin")
+    logger.info("make_plugin: START")
     if saml_conf is "":
         raise ValueError(
             'must include saml_conf in configuration')
