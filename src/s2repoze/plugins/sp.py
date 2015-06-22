@@ -119,7 +119,11 @@ class SAML2Plugin(object):
 			logger.debug("_get_rememberer: No Plugin stored in environment")
 			return None
 		api_identifiers = api.identifiers
-		rememberer = api_identifiers.get(self.rememberer_name, None)
+		rememberer = None
+		for rememberer_set in api_identifiers:
+			if rememberer_set and rememberer_set[0] == self.rememberer_name:
+				rememberer = rememberer_set[1]
+
 		if not rememberer:
 			logger.debug("_get_rememberer -- No Remberer of name %s stored in API" % self.rememberer_name)
 
