@@ -1,6 +1,4 @@
-from urllib import urlencode
-from urlparse import parse_qs
-from urlparse import urlparse
+from six.moves.urllib.parse import urlencode, parse_qs, urlparse
 from saml2.entity import Entity
 from saml2.response import VerificationError
 

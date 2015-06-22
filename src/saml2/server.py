@@ -9,6 +9,7 @@ import logging
 import os
 
 import importlib
+import dbm
 import shelve
 import six
 import threading
@@ -55,6 +56,17 @@ AUTHN_DICT_MAP = {
     "authn_instant": "authn_instant",
     "subject_locality": "subject_locality"
 }
+
+def _shelve_compat(name, *args, **kwargs):
+    try:
+        return shelve.open(name, *args, **kwargs)
+    except dbm.error[0]:
+        # Python 3 whichdb needs to try .db to determine type
+        if name.endswith('.db'):
+            name = name.rsplit('.db', 1)[0]
+            return shelve.open(name, *args, **kwargs)
+        else:
+            raise
 
 
 class Server(Entity):
@@ -118,12 +130,12 @@ class Server(Entity):
         if not dbspec:
             idb = {}
         elif isinstance(dbspec, six.string_types):
-            idb = shelve.open(dbspec, writeback=True)
+            idb = _shelve_compat(dbspec, writeback=True, protocol=2)
         else:  # database spec is a a 2-tuple (type, address)
             #print(>> sys.stderr, "DBSPEC: %s" % (dbspec,))
             (typ, addr) = dbspec
             if typ == "shelve":
-                idb = shelve.open(addr, writeback=True)
+                idb = _shelve_compat(addr, writeback=True, protocol=2)
             elif typ == "memcached":
                 import memcache
 
@@ -212,11 +224,7 @@ class Server(Entity):
         :param enc_request: The request in its transport format
         :param binding: Which binding that was used to transport the message
             to this entity.
-        :return: A dictionary with keys:
-            consumer_url - as gotten from the SPs entity_id and the metadata
-            id - the id of the request
-            sp_entity_id - the entity id of the SP
-            request - The verified request
+        :return: A request instance
         """
 
         return self._parse_request(enc_request, AuthnRequest,

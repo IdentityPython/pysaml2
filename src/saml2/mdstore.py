@@ -795,7 +795,7 @@ class MetadataStore(object):
             self.ii += 1
             key = self.ii
             kwargs.update(_args)
-            _md = MetaData(self.onts, self.attrc, args[0], **kwargs)
+            _md = InMemoryMetaData(self.onts, self.attrc, args[0], **kwargs)
         elif typ == "remote":
             key = kwargs["url"]
             for _key in ["node_name", "check_validity"]:
@@ -803,6 +803,10 @@ class MetadataStore(object):
                     _args[_key] = kwargs[_key]
                 except KeyError:
                     pass
+
+            if "cert" not in kwargs:
+                kwargs["cert"] = ""
+
             _md = MetaDataExtern(self.onts, self.attrc,
                                  kwargs["url"], self.security,
                                  kwargs["cert"], self.http, **_args)
@@ -1046,7 +1050,11 @@ class MetadataStore(object):
         return None
 
     def certs(self, entity_id, descriptor, use="signing"):
-        ent = self.__getitem__(entity_id)
+        try:
+            ent = self.__getitem__(entity_id)
+        except KeyError:
+            return []  # allow for unsolicated IDP without having metadata set in conf
+
         if descriptor == "any":
             res = []
             for descr in ["spsso", "idpsso", "role", "authn_authority",

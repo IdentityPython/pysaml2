@@ -7,7 +7,7 @@ from saml2.server import Server
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2.client import Saml2Client
 from saml2.config import SPConfig
-from urlparse import parse_qs
+from six.moves.urllib.parse import parse_qs
 
 from pathutils import dotname
 

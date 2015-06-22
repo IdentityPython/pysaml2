@@ -3,6 +3,8 @@
 
 import base64
 
+import six
+
 from saml2 import s_utils as utils
 from saml2 import saml
 from saml2 import samlp
@@ -15,16 +17,20 @@ from py.test import raises
 
 from pathutils import full_path
 
-SUCCESS_STATUS = ('<?xml version=\'1.0\' encoding=\'UTF-8\'?>\n'
+XML_HEADER = '<?xml version=\'1.0\' encoding=\'UTF-8\'?>\n'
+
+SUCCESS_STATUS_NO_HEADER = (
 '<ns0:Status xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns0:StatusCode '
 'Value="urn:oasis:names:tc:SAML:2.0:status:Success" /></ns0:Status>')
+SUCCESS_STATUS = '%s%s' % (XML_HEADER, SUCCESS_STATUS_NO_HEADER)
 
-ERROR_STATUS = ('<?xml version=\'1.0\' encoding=\'UTF-8\'?>\n'
+ERROR_STATUS_NO_HEADER = (
 '<ns0:Status xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns0:StatusCode '
 'Value="urn:oasis:names:tc:SAML:2.0:status:Responder"><ns0:StatusCode '
 'Value="urn:oasis:names:tc:SAML:2.0:status:UnknownPrincipal" '
 '/></ns0:StatusCode><ns0:StatusMessage>Error resolving '
 'principal</ns0:StatusMessage></ns0:Status>')
+ERROR_STATUS = '%s%s' % (XML_HEADER, ERROR_STATUS_NO_HEADER)
 
 
 def _eq(l1, l2):
@@ -48,16 +54,20 @@ def test_inflate_then_deflate():
     txt = """Selma Lagerlöf (1858-1940) was born in Östra Emterwik, Värmland,
     Sweden. She was brought up on Mårbacka, the family estate, which she did 
     not leave until 1881, when she went to a teachers' college at Stockholm"""
+    if not isinstance(txt, six.binary_type):
+        txt = txt.encode('utf-8')
 
     interm = utils.deflate_and_base64_encode(txt)
     bis = utils.decode_base64_and_inflate(interm)
+    if not isinstance(bis, six.binary_type):
+        bis = bis.encode('utf-8')
     assert bis == txt
 
 
 def test_status_success():
     status = utils.success_status_factory()
     status_text = "%s" % status
-    assert status_text == SUCCESS_STATUS
+    assert status_text in (SUCCESS_STATUS_NO_HEADER, SUCCESS_STATUS)
     assert status.status_code.value == samlp.STATUS_SUCCESS
 
 
@@ -68,7 +78,7 @@ def test_error_status():
 
     status_text = "%s" % status
     print(status_text)
-    assert status_text == ERROR_STATUS
+    assert status_text in (ERROR_STATUS_NO_HEADER, ERROR_STATUS)
 
 
 def test_status_from_exception():
@@ -76,7 +86,7 @@ def test_status_from_exception():
     stat = utils.error_status_factory(e)
     status_text = "%s" % stat
     print(status_text)
-    assert status_text == ERROR_STATUS
+    assert status_text in (ERROR_STATUS_NO_HEADER, ERROR_STATUS)
 
 
 def test_attribute_sn():
@@ -117,7 +127,10 @@ def test_attribute_onoff():
 
 
 def test_attribute_base64():
-    b64sl = base64.b64encode("Selma Lagerlöf")
+    txt = "Selma Lagerlöf"
+    if not isinstance(txt, six.binary_type):
+        txt = txt.encode("utf-8")
+    b64sl = base64.b64encode(txt).decode('ascii')
     attr = utils.do_attributes({"name": (b64sl, "xs:base64Binary")})
 
     assert len(attr) == 1

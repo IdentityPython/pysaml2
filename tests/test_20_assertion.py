@@ -61,7 +61,7 @@ def test_filter_on_attributes_0():
     ava = {"serialNumber": ["12345"]}
 
     ava = filter_on_attributes(ava, required)
-    assert ava.keys() == ["serialNumber"]
+    assert list(ava.keys()) == ["serialNumber"]
     assert ava["serialNumber"] == ["12345"]
 
 
@@ -73,7 +73,7 @@ def test_filter_on_attributes_1():
     ava = {"serialNumber": ["12345"], "givenName": ["Lars"]}
 
     ava = filter_on_attributes(ava, required)
-    assert ava.keys() == ["serialNumber"]
+    assert list(ava.keys()) == ["serialNumber"]
     assert ava["serialNumber"] == ["12345"]
 
 # ----------------------------------------------------------------------
@@ -143,12 +143,12 @@ def test_ava_filter_1():
            "mail": "derek@example.com"}
 
     ava = r.filter(ava, "urn:mace:umu.se:saml:roland:sp", None, None)
-    assert _eq(ava.keys(), ["givenName", "surName"])
+    assert _eq(list(ava.keys()), ["givenName", "surName"])
 
     ava = {"givenName": "Derek",
            "mail": "derek@nyy.umu.se"}
 
-    assert _eq(ava.keys(), ["givenName", "mail"])
+    assert _eq(sorted(list(ava.keys())), ["givenName", "mail"])
 
 
 def test_ava_filter_2():
@@ -176,7 +176,7 @@ def test_ava_filter_2():
     _ava =policy.filter(ava, 'urn:mace:umu.se:saml:roland:sp', None, [mail],
                         [gn, sn])
 
-    assert _eq(_ava.keys(), ["givenName", "surName"])
+    assert _eq(sorted(list(_ava.keys())), ["givenName", "surName"])
 
     ava = {"givenName": "Derek",
            "surName": "Jeter"}
@@ -241,7 +241,7 @@ def test_filter_attribute_value_assertions_0(AVA):
                                             p.get_attribute_restrictions(""))
 
     print(ava)
-    assert ava.keys() == ["surName"]
+    assert list(ava.keys()) == ["surName"]
     assert ava["surName"] == ["Hedberg"]
 
 
@@ -267,7 +267,7 @@ def test_filter_attribute_value_assertions_1(AVA):
                                             p.get_attribute_restrictions(""))
 
     print(ava)
-    assert _eq(ava.keys(), ["surName"])
+    assert _eq(list(ava.keys()), ["surName"])
     assert ava["surName"] == ["Howard"]
 
 
@@ -290,14 +290,14 @@ def test_filter_attribute_value_assertions_2(AVA):
                                             p.get_attribute_restrictions(""))
 
     print(ava)
-    assert _eq(ava.keys(), ["givenName"])
+    assert _eq(list(ava.keys()), ["givenName"])
     assert ava["givenName"] == ["Ryan"]
 
     ava = filter_attribute_value_assertions(AVA[3].copy(),
                                             p.get_attribute_restrictions(""))
 
     print(ava)
-    assert _eq(ava.keys(), ["givenName"])
+    assert _eq(list(ava.keys()), ["givenName"])
     assert ava["givenName"] == ["Roland"]
 
 
@@ -321,16 +321,16 @@ def test_assertion_1(AVA):
     ava = ava.apply_policy("", policy)
 
     print(ava)
-    assert _eq(ava.keys(), [])
+    assert _eq(list(ava.keys()), [])
 
     ava = Assertion(AVA[1].copy())
     ava = ava.apply_policy("", policy)
-    assert _eq(ava.keys(), ["givenName"])
+    assert _eq(list(ava.keys()), ["givenName"])
     assert ava["givenName"] == ["Ryan"]
 
     ava = Assertion(AVA[3].copy())
     ava = ava.apply_policy("", policy)
-    assert _eq(ava.keys(), ["givenName"])
+    assert _eq(list(ava.keys()), ["givenName"])
     assert ava["givenName"] == ["Roland"]
 
 
@@ -358,10 +358,11 @@ def test_assertion_2():
 
     assert len(attribute) == 4
     names = [attr.name for attr in attribute]
-    assert _eq(names, ['urn:oid:0.9.2342.19200300.100.1.3',
-                       'urn:oid:1.3.6.1.4.1.5923.1.1.1.10',
-                       'urn:oid:2.16.840.1.113730.3.1.241',
-                       'urn:oid:0.9.2342.19200300.100.1.1'])
+    assert _eq(sorted(list(names)), [
+        'urn:oid:0.9.2342.19200300.100.1.1',
+        'urn:oid:0.9.2342.19200300.100.1.3',
+        'urn:oid:1.3.6.1.4.1.5923.1.1.1.10',
+        'urn:oid:2.16.840.1.113730.3.1.241'])
 
 
 # ----------------------------------------------------------------------------
@@ -389,7 +390,7 @@ def test_filter_values_req_3():
     ava = {"serialNumber": ["12345"]}
 
     ava = filter_on_attributes(ava, required)
-    assert ava.keys() == ["serialNumber"]
+    assert list(ava.keys()) == ["serialNumber"]
     assert ava["serialNumber"] == ["12345"]
 
 
@@ -415,7 +416,7 @@ def test_filter_values_req_5():
     ava = {"serialNumber": ["12345", "54321"]}
 
     ava = filter_on_attributes(ava, required)
-    assert ava.keys() == ["serialNumber"]
+    assert list(ava.keys()) == ["serialNumber"]
     assert ava["serialNumber"] == ["12345"]
 
 
@@ -429,7 +430,7 @@ def test_filter_values_req_6():
     ava = {"serialNumber": ["12345", "54321"]}
 
     ava = filter_on_attributes(ava, required)
-    assert ava.keys() == ["serialNumber"]
+    assert list(ava.keys()) == ["serialNumber"]
     assert ava["serialNumber"] == ["54321"]
 
 
@@ -446,7 +447,7 @@ def test_filter_values_req_opt_0():
     ava = {"serialNumber": ["12345", "54321"]}
 
     ava = filter_on_attributes(ava, [r], [o])
-    assert ava.keys() == ["serialNumber"]
+    assert list(ava.keys()) == ["serialNumber"]
     assert _eq(ava["serialNumber"], ["12345", "54321"])
 
 
@@ -464,7 +465,7 @@ def test_filter_values_req_opt_1():
     ava = {"serialNumber": ["12345", "54321"]}
 
     ava = filter_on_attributes(ava, [r], [o])
-    assert ava.keys() == ["serialNumber"]
+    assert list(ava.keys()) == ["serialNumber"]
     assert _eq(ava["serialNumber"], ["12345", "54321"])
 
 
@@ -531,7 +532,7 @@ def test_filter_values_req_opt_4():
 
     ava = assertion.filter_on_demands(ava, rava, oava)
     print(ava)
-    assert _eq(ava.keys(), ['givenName', 'sn'])
+    assert _eq(sorted(list(ava.keys())), ['givenName', 'sn'])
     assert ava == {'givenName': ['Roland'], 'sn': ['Hedberg']}
 
 
@@ -557,7 +558,7 @@ def test_filter_ava_0():
     # No restrictions apply
     ava = policy.filter(ava, "urn:mace:example.com:saml:roland:sp", [], [])
 
-    assert _eq(ava.keys(), ["givenName", "surName", "mail"])
+    assert _eq(sorted(list(ava.keys())), ["givenName", "mail", "surName"])
     assert ava["givenName"] == ["Derek"]
     assert ava["surName"] == ["Jeter"]
     assert ava["mail"] == ["derek@nyy.mlb.com"]
@@ -584,7 +585,7 @@ def test_filter_ava_1():
     # No restrictions apply
     ava = policy.filter(ava, "urn:mace:example.com:saml:roland:sp", [], [])
 
-    assert _eq(ava.keys(), ["givenName", "surName"])
+    assert _eq(sorted(list(ava.keys())), ["givenName", "surName"])
     assert ava["givenName"] == ["Derek"]
     assert ava["surName"] == ["Jeter"]
 
@@ -609,7 +610,7 @@ def test_filter_ava_2():
     # No restrictions apply
     ava = policy.filter(ava, "urn:mace:example.com:saml:roland:sp", [], [])
 
-    assert _eq(ava.keys(), ["mail"])
+    assert _eq(list(ava.keys()), ["mail"])
     assert ava["mail"] == ["derek@nyy.mlb.com"]
 
 
@@ -633,7 +634,7 @@ def test_filter_ava_3():
     # No restrictions apply
     ava = policy.filter(ava, "urn:mace:example.com:saml:roland:sp", [], [])
 
-    assert _eq(ava.keys(), ["mail"])
+    assert _eq(list(ava.keys()), ["mail"])
     assert ava["mail"] == ["dj@example.com"]
 
 
@@ -657,7 +658,7 @@ def test_filter_ava_4():
     # No restrictions apply
     ava = policy.filter(ava, "urn:mace:example.com:saml:curt:sp", [], [])
 
-    assert _eq(ava.keys(), ['mail', 'givenName', 'surName'])
+    assert _eq(sorted(list(ava.keys())), ['mail', 'givenName', 'surName'])
     assert _eq(ava["mail"], ["derek@nyy.mlb.com", "dj@example.com"])
 
 
@@ -720,7 +721,7 @@ def test_filter_on_wire_representation_1():
            "edupersonaffiliation": ["staff"], "uid": ["rohe0002"]}
 
     ava = assertion.filter_on_wire_representation(ava, acs, r, o)
-    assert _eq(ava.keys(), ["sn", "givenname"])
+    assert _eq(sorted(list(ava.keys())), ["givenname", "sn"])
 
 
 def test_filter_on_wire_representation_2():
@@ -745,7 +746,7 @@ def test_filter_on_wire_representation_2():
            "title": ["Master"], "uid": ["rohe0002"]}
 
     ava = assertion.filter_on_wire_representation(ava, acs, r, o)
-    assert _eq(ava.keys(), ["sn", "givenname", "title"])
+    assert _eq(sorted(list(ava.keys())), ["givenname", "sn", "title"])
 
 
 length = pword.Length(min="4")

@@ -4,6 +4,7 @@ import random
 
 import time
 import base64
+import uuid
 import six
 import sys
 import hmac
@@ -152,6 +153,8 @@ def deflate_and_base64_encode(string_val):
     :param string_val: The string to deflate and encode
     :return: The deflated and encoded string
     """
+    if not isinstance(string_val, six.binary_type):
+        string_val = string_val.encode('utf-8')
     return base64.b64encode(zlib.compress(string_val)[2:-4])
 
 
@@ -185,7 +188,7 @@ def sid():
     :return: A random string prefix with 'id-' to make it
         compliant with the NCName specification
     """
-    return "id-" + rndstr(17)
+    return "_%s" % uuid.uuid4().hex
 
 
 def parse_attribute_map(filenames):
@@ -372,8 +375,16 @@ def factory(klass, **kwargs):
 
 
 def signature(secret, parts):
-    """Generates a signature.
+    """Generates a signature. All strings are assumed to be utf-8
     """
+    if not isinstance(secret, six.binary_type):
+        secret = secret.encode('utf-8')
+    newparts = []
+    for part in parts:
+        if not isinstance(part, six.binary_type):
+            part = part.encode('utf-8')
+        newparts.append(part)
+    parts = newparts
     if sys.version_info >= (2, 5):
         csum = hmac.new(secret, digestmod=hashlib.sha1)
     else:

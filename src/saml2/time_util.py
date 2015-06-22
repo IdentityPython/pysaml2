@@ -313,4 +313,8 @@ def later_than(after, before):
     elif isinstance(before, int):
         before = time.gmtime(before)
 
+    if before is None:
+        return True
+    if after is None:
+        return False
     return after >= before
