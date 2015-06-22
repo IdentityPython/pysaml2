@@ -121,6 +121,7 @@ class SAML2Plugin(object):
 		#rememberer = repoze_plugins.get(self.rememberer_name, None)
 		logger.debug('_get_api: API %s' % api)
 		logger.debug('_get_api: API CLASSES %s' % (dir(api)))
+		logger.debug('_get_api: API IDENTIFIERS %s' % (api.identifiers))
 		return api
 
 	#### IIdentifier ####
