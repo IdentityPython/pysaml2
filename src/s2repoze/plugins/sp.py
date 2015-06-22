@@ -127,7 +127,7 @@ class SAML2Plugin(object):
 		return rememberer
 
 	#### IIdentifier ####
-	def remember(self, request, principal, **kw):
+	def remember(self, environ, identity, **kw):
 		logger.debug("remember : START")
 		rememberer = self._get_rememberer(environ)
 		logger.debug("remember -- REMEMBERER: %s" % rememberer)
@@ -137,7 +137,7 @@ class SAML2Plugin(object):
 
 
 	#### IIdentifier ####
-	def forget(self, request, identity):
+	def forget(self, environ, identity):
 		"""Get headers to forget the identify of the given request.
 
 		This method calls the repoze.who logout() method, which in turn calls
