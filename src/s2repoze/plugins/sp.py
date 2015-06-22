@@ -143,7 +143,7 @@ class SAML2Plugin(object):
 		return headers
 
 	#### IIdentifier ####
-	def forget(self, environ, identity):
+	def forget(self, request):
 		"""Get headers to forget the identify of the given request.
 
 		This method calls the repoze.who logout() method, which in turn calls
