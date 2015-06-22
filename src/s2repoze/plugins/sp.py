@@ -111,44 +111,30 @@ class SAML2Plugin(object):
 
 		self.iam = platform.node()
 
-	def _get_api(self, request):
-		logger.debug("_get_api: START")
-		logger.debug("_get_api -- REQUEST : %s " % request)
+	def _get_rememberer(self, request):
+		logger.debug("_get_rememberer: START")
+		logger.debug("_get_rememberer -- REQUEST : %s " % request)
 		api = request.get('repoze.who.api', None)
 		if not api:
-			logger.debug("_get_api: No Plugin stored in environment")
+			logger.debug("_get_rememberer: No Plugin stored in environment")
 			return None
-		#rememberer = repoze_plugins.get(self.rememberer_name, None)
-		logger.debug('_get_api: API %s' % api)
-		logger.debug('_get_api: API CLASSES %s' % (dir(api)))
-		logger.debug('_get_api: API IDENTIFIERS %s' % (api.identifiers))
-		return api
+		api_identifiers = api.identifiers
+		rememberer = api_identifiers.get(self.rememberer_name, None)
+		if not rememberer:
+			logger.debug("_get_rememberer -- No Remberer of name %s stored in API" % self.rememberer_name)
+
+		logger.debug('_get_rememberer -- REMEMBERER %s' % (rememberer))
+		return rememberer
 
 	#### IIdentifier ####
 	def remember(self, request, principal, **kw):
-		#logger.debug("remember : START")
-		#rememberer = self._get_rememberer(environ)
-		#logger.debug("remember -- REMEMBERER: %s" % rememberer)
-		#if not rememberer:
-		#	return []
-		#return rememberer.remember(environ, identity)
-		"""Get headers to remember the given principal.
+		logger.debug("remember : START")
+		rememberer = self._get_rememberer(environ)
+		logger.debug("remember -- REMEMBERER: %s" % rememberer)
+		if not rememberer:
+			return []
+		return rememberer.remember(environ, identity)
 
-		This method calls the remember() method on all configured repoze.who
-		plugins, and returns the combined list of headers.
-		"""
-		logger.debug('remember: START')
-		identity = {"repoze.who.userid": principal}
-		api = self._get_api(request)
-		#  Give all IIdentifiers a chance to remember the login.
-		#  This is the same logic as inside the api.login() method,
-		#  but without repeating the authentication step.
-		headers = []
-		for name, plugin in api.identifiers:
-			i_headers = plugin.remember(request.environ, identity)
-			if i_headers is not None:
-				headers.extend(i_headers)
-		return headers
 
 	#### IIdentifier ####
 	def forget(self, request, identity):
@@ -158,8 +144,8 @@ class SAML2Plugin(object):
 		the forget() method on all configured repoze.who plugins.
 		"""
 		logger.debug('forget: START')
-		api = self._get_api(request)
-		return api.logout() or []
+		rememberer = self._get_rememberer(environ)
+		return rememberer.forget(environ, identity)
 
 	def _get_post(self, environ):
 		"""
