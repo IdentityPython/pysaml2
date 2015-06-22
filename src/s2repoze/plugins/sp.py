@@ -61,8 +61,8 @@ def construct_came_from(environ):
 
 def exception_trace(tag, exc, log):
 	message = traceback.format_exception(*sys.exc_info())
-	log.error("[%s] ExcList: %s" % (tag, "".join(message),))
-	log.error("[%s] Exception: %s" % (tag, exc))
+	logger.error("[%s] ExcList: %s" % (tag, "".join(message),))
+	logger.error("[%s] Exception: %s" % (tag, exc))
 
 
 class ECP_response(object):
@@ -129,7 +129,7 @@ class SAML2Plugin(object):
 		This method calls the remember() method on all configured repoze.who
 		plugins, and returns the combined list of headers.
 		"""
-		log.debug('remember: START')
+		logger.debug('remember: START')
 		identity = {"repoze.who.userid": principal}
 		api = self._get_api(request)
 		#  Give all IIdentifiers a chance to remember the login.
@@ -149,7 +149,7 @@ class SAML2Plugin(object):
 		This method calls the repoze.who logout() method, which in turn calls
 		the forget() method on all configured repoze.who plugins.
 		"""
-		log.debug('forget: START')
+		logger.debug('forget: START')
 		api = self._get_api(request)
 		return api.logout() or []
 
