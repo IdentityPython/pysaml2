@@ -114,7 +114,7 @@ class SAML2Plugin(object):
 	def _get_api(self, request):
 		logger.debug("_get_api: START")
 		logger.debug("_get_api -- REQUEST : %s " % request)
-		api = environ.get('repoze.who.api', None)
+		api = request.get('repoze.who.api', None)
 		if not api:
 			logger.debug("_get_api: No Plugin stored in environment")
 			return None
