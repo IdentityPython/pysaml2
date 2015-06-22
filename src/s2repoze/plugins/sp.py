@@ -120,10 +120,17 @@ class SAML2Plugin(object):
 			return None
 		#rememberer = repoze_plugins.get(self.rememberer_name, None)
 		logger.debug('_get_api: API %s' % api)
+		logger.debug('_get_api: API CLASSES %s' % (dir(api)))
 		return api
 
 	#### IIdentifier ####
 	def remember(self, request, principal, **kw):
+		#logger.debug("remember : START")
+		#rememberer = self._get_rememberer(environ)
+		#logger.debug("remember -- REMEMBERER: %s" % rememberer)
+		#if not rememberer:
+		#	return []
+		#return rememberer.remember(environ, identity)
 		"""Get headers to remember the given principal.
 
 		This method calls the remember() method on all configured repoze.who
