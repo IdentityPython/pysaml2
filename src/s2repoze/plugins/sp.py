@@ -481,6 +481,7 @@ class SAML2Plugin(object):
 		Tries to do the identification
 		"""
 		logger.info("identify: START")
+		logger.debug('identify -- Outstanding Queries: %s' % self.outstanding_queries)
 		#logger = environ.get('repoze.who.logger', '')
 
 		query = parse_dict_querystring(environ)
