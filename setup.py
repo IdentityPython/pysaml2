@@ -31,7 +31,6 @@ install_requires = [
     'pytz',
     'pyOpenSSL',
     'python-dateutil',
-    'argparse',
     'six'
 ]
 
@@ -49,6 +48,7 @@ tests_require = [
 
 # only for Python 2.6
 if sys.version_info < (2, 7):
+    install_requires.append('argparse')
     install_requires.append('importlib')
 
 setup(
