@@ -45,12 +45,6 @@ tests_require = [
     #'pytest-coverage',
 ]
 
-
-# only for Python 2.6
-if sys.version_info < (2, 7):
-    install_requires.append('argparse')
-    install_requires.append('importlib')
-
 setup(
     name='pysaml2',
     version='3.0.0',

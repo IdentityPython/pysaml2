@@ -399,7 +399,7 @@ class Config(object):
             disable_validation = False
 
         mds = MetadataStore(
-            ONTS.values(), acs, self, ca_certs,
+            list(ONTS.values()), acs, self, ca_certs,
             disable_ssl_certificate_validation=disable_validation)
 
         mds.imp(metadata_conf)

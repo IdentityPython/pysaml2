@@ -199,7 +199,7 @@ class HTTPBase(object):
                                          name=std_attr["name"])
                 except ValueError:
                     pass
-            elif morsel["expires"] < utc_now():
+            elif morsel["expires"] and morsel["expires"] < utc_now():
                 try:
                     self.cookiejar.clear(domain=std_attr["domain"],
                                          path=std_attr["path"],

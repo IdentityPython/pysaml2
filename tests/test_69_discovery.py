@@ -69,4 +69,4 @@ def test_construct_deconstruct_response():
 
 
 if __name__ == "__main__":
-    test_construct_deconstruct_request()
+    test_verify()

@@ -80,7 +80,7 @@ class TestAC():
             assert a1.friendly_name == "givenName"
             assert a1.name == 'urn:mace:dir:attribute-def:givenName'
             assert a1.name_format == BASIC_NF
-        elif a0.friendly_name == 'givenname':
+        elif a0.friendly_name == 'givenName':
             assert a0.name == 'urn:mace:dir:attribute-def:givenName'
             assert a0.name_format == BASIC_NF
             assert a1.friendly_name == "sn"
@@ -103,13 +103,14 @@ class TestAC():
             assert a1.friendly_name == "givenName"
             assert a1.name == 'urn:oid:2.5.4.42'
             assert a1.name_format == URI_NF
-        elif a0.friendly_name == 'givenname':
+        elif a0.friendly_name == 'givenName':
             assert a0.name == 'urn:oid:2.5.4.42'
             assert a0.name_format == URI_NF
             assert a1.friendly_name == "surname"
             assert a1.name == 'urn:oid:2.5.4.4'
             assert a1.name_format == URI_NF
         else:
+            print(a0.friendly_name)
             assert False
 
     def test_to_local_name(self):
@@ -227,5 +228,5 @@ def test_schac():
 if __name__ == "__main__":
     t = TestAC()
     t.setup_class()
-    t.test_to_local_name_from_basic()
+    t.test_to_attrstat_1()
     #test_schac()

@@ -35,7 +35,8 @@ __author__ = 'rolandh'
 
 MDS = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
                     disable_ssl_certificate_validation=True)
-MDS.imp([{"class": "saml2.mdstore.MetaDataMD", "metadata": [(full_path("swamid.md"), )]}])
+MDS.imp([{"class": "saml2.mdstore.MetaDataMD",
+          "metadata": [(full_path("swamid.md"),)]}])
 
 
 def _eq(l1, l2):
@@ -46,7 +47,7 @@ def test_filter_ava():
     policy = Policy({
         "default": {
             "lifetime": {"minutes": 15},
-            #"attribute_restrictions": None  # means all I have
+            # "attribute_restrictions": None  # means all I have
             "entity_categories": ["swamid"]
         }
     })
@@ -64,7 +65,7 @@ def test_filter_ava2():
     policy = Policy({
         "default": {
             "lifetime": {"minutes": 15},
-            #"attribute_restrictions": None  # means all I have
+            # "attribute_restrictions": None  # means all I have
             "entity_categories": ["refeds", "edugain"]
         }
     })
@@ -84,14 +85,15 @@ def test_filter_ava3():
     policy = Policy({
         "default": {
             "lifetime": {"minutes": 15},
-            #"attribute_restrictions": None  # means all I have
+            # "attribute_restrictions": None  # means all I have
             "entity_categories": ["swamid"]
         }
     })
 
-    mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
+    mds = MetadataStore(list(ONTS.values()), ATTRCONV, sec_config,
                         disable_ssl_certificate_validation=True)
-    mds.imp([{"class": "saml2.mdstore.MetaDataFile", "metadata": [(full_path("entity_cat_sfs_hei.xml"), )]}])
+    mds.imp([{"class": "saml2.mdstore.MetaDataFile",
+              "metadata": [(full_path("entity_cat_sfs_hei.xml"),)]}])
 
     ava = {"givenName": ["Derek"], "sn": ["Jeter"],
            "mail": ["derek@nyy.mlb.com"], "c": ["USA"],
@@ -107,14 +109,15 @@ def test_filter_ava4():
     policy = Policy({
         "default": {
             "lifetime": {"minutes": 15},
-            #"attribute_restrictions": None  # means all I have
+            # "attribute_restrictions": None  # means all I have
             "entity_categories": ["swamid"]
         }
     })
 
-    mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
+    mds = MetadataStore(list(ONTS.values()), ATTRCONV, sec_config,
                         disable_ssl_certificate_validation=True)
-    mds.imp([{"class": "saml2.mdstore.MetaDataFile", "metadata": [(full_path("entity_cat_re_nren.xml"), )]}])
+    mds.imp([{"class": "saml2.mdstore.MetaDataFile",
+              "metadata": [(full_path("entity_cat_re_nren.xml"),)]}])
 
     ava = {"givenName": ["Derek"], "sn": ["Jeter"],
            "mail": ["derek@nyy.mlb.com"], "c": ["USA"],
@@ -123,22 +126,24 @@ def test_filter_ava4():
 
     ava = policy.filter(ava, "urn:mace:example.com:saml:roland:sp", mds)
 
-    assert _eq(list(ava.keys()), ['eduPersonTargetedID', "givenName", "c", "mail",
-                            "sn"])
+    assert _eq(list(ava.keys()),
+               ['eduPersonTargetedID', "givenName", "c", "mail",
+                "sn"])
 
 
 def test_filter_ava5():
     policy = Policy({
         "default": {
             "lifetime": {"minutes": 15},
-            #"attribute_restrictions": None  # means all I have
+            # "attribute_restrictions": None  # means all I have
             "entity_categories": ["swamid"]
         }
     })
 
-    mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
+    mds = MetadataStore(list(ONTS.values()), ATTRCONV, sec_config,
                         disable_ssl_certificate_validation=True)
-    mds.imp([{"class": "saml2.mdstore.MetaDataFile", "metadata": [(full_path("entity_cat_re.xml"), )]}])
+    mds.imp([{"class": "saml2.mdstore.MetaDataFile",
+              "metadata": [(full_path("entity_cat_re.xml"),)]}])
 
     ava = {"givenName": ["Derek"], "sn": ["Jeter"],
            "mail": ["derek@nyy.mlb.com"], "c": ["USA"],
@@ -162,7 +167,9 @@ def test_idp_policy_filter():
                             idp.metadata)
 
         print(ava)
-        assert list(ava.keys()) == ["eduPersonTargetedID"]  # because no entity category
+        assert list(ava.keys()) == [
+            "eduPersonTargetedID"]  # because no entity category
+
 
 if __name__ == "__main__":
-    test_idp_policy_filter()
+    test_filter_ava3()

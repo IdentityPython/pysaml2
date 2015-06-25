@@ -480,10 +480,10 @@ class AttributeConverter(object):
         """
         attributes = []
         for key, value in attrvals.items():
-            key = key.lower()
+            lkey = key.lower()
             try:
                 attributes.append(factory(saml.Attribute,
-                                          name=self._to[key],
+                                          name=self._to[lkey],
                                           name_format=self.name_format,
                                           friendly_name=key,
                                           attribute_value=do_ava(value)))
