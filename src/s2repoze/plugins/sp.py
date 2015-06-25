@@ -51,7 +51,8 @@ PAOS_HEADER_INFO = 'ver="%s";"%s"' % (paos.NAMESPACE, ECP_SERVICE)
 def construct_came_from(environ):
 	""" The URL that the user used when the process where interupted
 	for single-sign-on processing. """
-
+	logger.debug('construct_came_from: Start')
+	logger.debug('construct_came_from -- Environ: {0}'.format(environ))
 	came_from = environ.get("PATH_INFO")
 	qstr = environ.get("QUERY_STRING", "")
 	if qstr:
