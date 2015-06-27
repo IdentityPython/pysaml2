@@ -3,7 +3,6 @@ import six
 from six.moves import http_cookiejar
 import copy
 import re
-import urllib
 from six.moves.urllib.parse import urlparse
 from six.moves.urllib.parse import urlencode
 import requests
@@ -311,7 +310,8 @@ class HTTPBase(object):
 
         return info
 
-    def use_soap(self, request, destination="", soap_headers=None, sign=False):
+    def use_soap(self, request, destination="", soap_headers=None, sign=False,
+                 **kwargs):
         """
         Construct the necessary information for using SOAP+POST
 

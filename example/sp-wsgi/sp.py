@@ -544,7 +544,7 @@ class SSO(object):
         logger.info("Chosen IdP: '%s'" % idp_entity_id)
         return 0, idp_entity_id
 
-    def redirect_to_auth(self, _cli, entity_id, came_from):
+    def redirect_to_auth(self, _cli, entity_id, came_from, sigalg=""):
         try:
             # Picks a binding to use for sending the Request to the IDP
             _binding, destination = _cli.pick_binding(
@@ -573,11 +573,13 @@ class SSO(object):
                         element_to_extension_element(spcertenc)])
 
             req_id, req = _cli.create_authn_request(destination,
-                                                    binding=return_binding, extensions=extensions)
+                                                    binding=return_binding,
+                                                    extensions=extensions)
             _rstate = rndstr()
             self.cache.relay_state[_rstate] = came_from
             ht_args = _cli.apply_binding(_binding, "%s" % req, destination,
-                                         relay_state=_rstate)
+                                         relay_state=_rstate,
+                                         sigalg=sigalg)
             _sid = req_id
 
             if cert is not None:

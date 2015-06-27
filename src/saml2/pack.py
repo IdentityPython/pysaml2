@@ -45,7 +45,7 @@ FORM_SPEC = """<form method="post" action="%s">
 
 
 def http_form_post_message(message, location, relay_state="",
-                           typ="SAMLRequest"):
+                           typ="SAMLRequest", **kwargs):
     """The HTTP POST binding defines a mechanism by which SAML protocol
     messages may be transmitted within the base64-encoded content of a
     HTML form control.
@@ -80,7 +80,7 @@ def http_form_post_message(message, location, relay_state="",
 
 
 def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
-                          sigalg=None, key=None):
+                          sigalg=None, key=None, **kwargs):
     """The HTTP Redirect binding defines a mechanism by which SAML protocol
     messages can be transmitted within URL parameters.
     Messages are encoded for use with this binding using a URL encoding
@@ -256,5 +256,6 @@ def packager(identifier):
         raise Exception("Unknown binding type: %s" % identifier)
 
 
-def factory(binding, message, location, relay_state="", typ="SAMLRequest"):
-    return PACKING[binding](message, location, relay_state, typ)
+def factory(binding, message, location, relay_state="", typ="SAMLRequest",
+            **kwargs):
+    return PACKING[binding](message, location, relay_state, typ, **kwargs)

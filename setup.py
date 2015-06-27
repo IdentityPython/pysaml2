@@ -66,7 +66,9 @@ setup(
         "Development Status :: 4 - Beta",
         "License :: OSI Approved :: Apache Software License",
         "Topic :: Software Development :: Libraries :: Python Modules",
-        "Programming Language :: Python :: 2.7"],
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3.4"
+    ],
 
     scripts=["tools/parse_xsd2.py", "tools/make_metadata.py",
              "tools/mdexport.py", "tools/merge_metadata.py"],
