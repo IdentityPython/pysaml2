@@ -47,7 +47,7 @@ tests_require = [
 
 setup(
     name='pysaml2',
-    version='3.0.0',
+    version='3.0.1a',
     description='Python implementation of SAML Version 2',
     # long_description = read("README"),
     author='Roland Hedberg',

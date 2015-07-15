@@ -4,7 +4,7 @@ from saml2.saml import NAME_FORMAT_URI
 __author__ = 'rolandh'
 
 import json
-import xmldsig as ds
+from saml2 import xmldsig as ds
 from saml2.saml import NAME_FORMAT_UNSPECIFIED, NAME_FORMAT_URI, NAME_FORMAT_BASIC
 
 BASE = "http://localhost:8088"
