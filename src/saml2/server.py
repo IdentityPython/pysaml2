@@ -644,7 +644,7 @@ class Server(Entity):
                                                 encrypted_advice_attributes=encrypted_advice_attributes,
                                                 encrypt_cert_advice=encrypt_cert_advice,
                                                 encrypt_cert_assertion=encrypt_cert_assertion,
-                                                pefim=peifm)
+                                                pefim=pefim)
             return self._authn_response(in_response_to,  # in_response_to
                                         destination,  # consumer_url
                                         sp_entity_id,  # sp_entity_id
