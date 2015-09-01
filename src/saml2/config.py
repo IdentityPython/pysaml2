@@ -35,7 +35,6 @@ from saml2.extension import ui
 from saml2 import xmldsig
 from saml2 import xmlenc
 
-
 ONTS = {
     saml.NAMESPACE: saml,
     mdui.NAMESPACE: mdui,
@@ -49,7 +48,8 @@ ONTS = {
 }
 
 COMMON_ARGS = [
-    "entityid", "xmlsec_binary", "debug", "key_file", "cert_file", "encryption_keypairs", "additional_cert_files",
+    "entityid", "xmlsec_binary", "debug", "key_file", "cert_file",
+    "encryption_keypairs", "additional_cert_files",
     "metadata_key_usage", "secret", "accepted_time_diff", "name", "ca_certs",
     "description", "valid_for", "verify_ssl_cert",
     "organization",
@@ -58,7 +58,6 @@ COMMON_ARGS = [
     "virtual_organization",
     "logger",
     "only_use_keys_in_metadata",
-    "logout_requests_signed",
     "disable_ssl_certificate_validation",
     "referred_binding",
     "session_storage",
@@ -93,6 +92,7 @@ SP_ARGS = [
     "allow_unsolicited",
     "ecp",
     "name_id_format",
+    "logout_requests_signed",
 ]
 
 AA_IDP_ARGS = [
@@ -176,6 +176,7 @@ PREFERRED_BINDING = {
 class ConfigurationError(SAMLError):
     pass
 
+
 # -----------------------------------------------------------------
 
 
@@ -254,9 +255,15 @@ class Config(object):
     def load_special(self, cnf, typ, metadata_construction=False):
         for arg in SPEC[typ]:
             try:
-                self.setattr(typ, arg, cnf[arg])
+                _val = cnf[arg]
             except KeyError:
                 pass
+            else:
+                if _val == "true":
+                    _val = True
+                elif _val == "false":
+                    _val = False
+                self.setattr(typ, arg, _val)
 
         self.context = typ
         self.load_complex(cnf, typ, metadata_construction=metadata_construction)
@@ -377,7 +384,7 @@ class Config(object):
             config_file = config_file[:-3]
 
         mod = self._load(config_file)
-        #return self.load(eval(open(config_file).read()))
+        # return self.load(eval(open(config_file).read()))
         return self.load(copy.deepcopy(mod.CONFIG), metadata_construction)
 
     def load_metadata(self, metadata_conf):

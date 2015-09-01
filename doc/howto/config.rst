@@ -351,13 +351,13 @@ by default. This can be overriden by application code for a specific call.
 This sets the AuthnRequestsSigned attribute of the SPSSODescriptor node
 of the metadata so the IdP will know this SP preference.
 
-Valid values are "true" or "false". Default value is "false".
+Valid values are True or False. Default value is True.
 
 Example::
 
     "service": {
         "sp": {
-            "authn_requests_signed": "true",
+            "authn_requests_signed": True,
         }
     }
 
@@ -419,13 +419,13 @@ Indicates if this SP wants the IdP to send the assertions signed. This
 sets the WantAssertionsSigned attribute of the SPSSODescriptor node
 of the metadata so the IdP will know this SP preference.
 
-Valid values are "true" or "false". Default value is "true".
+Valid values are True or False. Default value is True.
 
 Example::
 
     "service": {
         "sp": {
-            "want_assertions_signed": "true",
+            "want_assertions_signed": True,
         }
     }
 
@@ -475,13 +475,13 @@ Indicates if this entity will sign the Logout Requests originated from it.
 
 This can be overriden by application code for a specific call.
 
-Valid values are "true" or "false". Default value is "false".
+Valid values are True or False. Default value is False.
 
 Example::
 
     "service": {
         "sp": {
-            "logout_requests_signed": "true",
+            "logout_requests_signed": False,
         }
     }
 

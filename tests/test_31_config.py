@@ -64,7 +64,9 @@ sp2 = {
             "optional_attributes": ["title"],
             "idp": {
                 "": "https://example.com/saml2/idp/SSOService.php",
-            }
+            },
+            "authn_requests_signed": True,
+            "logout_requests_signed": True,
         }
     },
     #"xmlsec_binary" : "/opt/local/bin/xmlsec1",
@@ -370,4 +372,4 @@ def test_assertion_consumer_service():
         "location"] == 'https://www.zimride.com/Shibboleth.sso/SAML2/POST'
 
 if __name__ == "__main__":
-    test_1()
+    test_2()
