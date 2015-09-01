@@ -55,14 +55,21 @@ ORG_ATTR_TRANSL = {
 }
 
 MDNS = '"urn:oasis:names:tc:SAML:2.0:metadata"'
+bMDNS = b'"urn:oasis:names:tc:SAML:2.0:metadata"'
 XMLNSXS = " xmlns:xs=\"http://www.w3.org/2001/XMLSchema\""
-
+bXMLNSXS = b" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\""
 
 def metadata_tostring_fix(desc, nspair, xmlstring=""):
     if not xmlstring:
         xmlstring = desc.to_string(nspair)
-    if "\"xs:string\"" in xmlstring and XMLNSXS not in xmlstring:
-        xmlstring = xmlstring.replace(MDNS, MDNS+XMLNSXS)
+
+    if six.PY2:
+        if "\"xs:string\"" in xmlstring and XMLNSXS not in xmlstring:
+            xmlstring = xmlstring.replace(MDNS, MDNS+XMLNSXS)
+    else:
+        if b"\"xs:string\"" in xmlstring and bXMLNSXS not in xmlstring:
+            xmlstring = xmlstring.replace(bMDNS, bMDNS+bXMLNSXS)
+
     return xmlstring
 
 
