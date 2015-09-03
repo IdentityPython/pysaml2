@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import re
 
 import sys
 
@@ -45,9 +46,14 @@ tests_require = [
     #'pytest-coverage',
 ]
 
+version = ''
+with open('src/saml2/__init__.py', 'r') as fd:
+    version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
+                        fd.read(), re.MULTILINE).group(1)
+
 setup(
     name='pysaml2',
-    version='3.0.1a',
+    version=version,
     description='Python implementation of SAML Version 2',
     # long_description = read("README"),
     author='Roland Hedberg',
