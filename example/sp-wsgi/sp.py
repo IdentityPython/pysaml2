@@ -4,12 +4,14 @@ import logging
 import re
 import argparse
 import os
+from future.backports.http.cookies import SimpleCookie
+import six
+
 from saml2.extension.pefim import SPCertEnc
 from saml2.metadata import create_metadata_string
 import service_conf
 
-from Cookie import SimpleCookie
-from urlparse import parse_qs
+from six.moves.urllib.parse import parse_qs
 import sys
 
 from saml2 import BINDING_HTTP_REDIRECT, element_to_extension_element
@@ -59,7 +61,7 @@ def dict_to_table(ava, lev=0, width=1):
     txt = ['<table border=%s bordercolor="black">\n' % width]
     for prop, valarr in ava.items():
         txt.append("<tr>\n")
-        if isinstance(valarr, basestring):
+        if isinstance(valarr, six.string_types):
             txt.append("<th>%s</th>\n" % str(prop))
             try:
                 txt.append("<td>%s</td>\n" % valarr.encode("utf8"))
