@@ -73,8 +73,8 @@ def metadata_tostring_fix(desc, nspair, xmlstring=""):
     return xmlstring
 
 
-def create_metadata_string(configfile, config, valid, cert, keyfile, mid, name,
-                           sign):
+def create_metadata_string(configfile, config=None, valid=None, cert=None,
+                           keyfile=None, mid=None, name=None, sign=None):
     valid_for = 0
     nspair = {"xs": "http://www.w3.org/2001/XMLSchema"}
     #paths = [".", "/opt/local/bin"]
@@ -83,17 +83,15 @@ def create_metadata_string(configfile, config, valid, cert, keyfile, mid, name,
         valid_for = int(valid)  # Hours
 
     eds = []
-    if config is not None:
-        eds.append(entity_descriptor(config))
-    else:
+    if config is None:
         if configfile.endswith(".py"):
             configfile = configfile[:-3]
         config = Config().load_file(configfile, metadata_construction=True)
-        eds.append(entity_descriptor(config))
+    eds.append(entity_descriptor(config))
 
     conf = Config()
-    conf.key_file = keyfile
-    conf.cert_file = cert
+    conf.key_file = config.key_file or keyfile
+    conf.cert_file = config.cert_file or cert
     conf.debug = 1
     conf.xmlsec_binary = config.xmlsec_binary
     secc = security_context(conf)
