@@ -360,7 +360,7 @@ def test_load_local():
     saml_config = Config()
 
     config_dict = {
-        "metadata": {"inline": idp_metadata}
+        "metadata": {"inline": [idp_metadata]}
     }
     cfg = saml_config.load(config_dict)
     assert cfg
@@ -385,4 +385,4 @@ def test_load_string():
 
 
 if __name__ == "__main__":
-    test_load_string()
+    test_load_local()

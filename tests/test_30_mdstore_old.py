@@ -346,7 +346,7 @@ def test_load_string():
     assert len(mds.keys()) == 1
     idps = mds.with_descriptor("idpsso")
 
-    assert idps.keys() == [
+    assert list(idps.keys()) == [
         'http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php']
     certs = mds.certs(
         'http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php',
