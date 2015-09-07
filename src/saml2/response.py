@@ -265,6 +265,7 @@ class StatusResponse(object):
         self.require_response_signature = False
         self.not_signed = False
         self.asynchop = asynchop
+        self.do_not_verify = False
 
     def _clear(self):
         self.xmlstr = ""
@@ -316,10 +317,16 @@ class StatusResponse(object):
         else:
             self.origxml = self.xmlstr
 
+        if self.do_not_verify:
+            args = {"do_not_verify": True}
+        else:
+            args = {}
+
         try:
             self.response = self.signature_check(
                 xmldata, origdoc=origxml, must=self.require_signature,
-                require_response_signature=self.require_response_signature)
+                require_response_signature=self.require_response_signature,
+                **args)
 
         except TypeError:
             raise
@@ -759,7 +766,7 @@ class AuthnResponse(StatusResponse):
                 raise SignatureError("Signature missing for assertion")
         else:
             logger.debug("signed")
-            if not verified:
+            if not verified and self.do_not_verify is False:
                 try:
                     self.sec.check_signature(assertion, class_name(assertion),self.xmlstr)
                 except Exception as exc:

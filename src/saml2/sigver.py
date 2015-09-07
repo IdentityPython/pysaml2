@@ -1678,28 +1678,13 @@ class SecurityContext(object):
             raise TypeError("Not a Response")
 
         if response.signature:
-            self._check_signature(decoded_xml, response, class_name(response),
-                                  origdoc)
+            if "do_not_verify" in kwargs:
+                pass
+            else:
+                self._check_signature(decoded_xml, response,
+                                      class_name(response), origdoc)
         elif require_response_signature:
             raise SignatureError("Signature missing for response")
-
-        # if isinstance(response, Response) and response.assertion:
-        #     # Try to find the signing cert in the assertion
-        #     for assertion in response.assertion:
-        #         if not hasattr(assertion, 'signature') or not assertion.signature:
-        #             logger.debug("unsigned")
-        #             if must:
-        #                 raise SignatureError("Signature missing for assertion")
-        #             continue
-        #         else:
-        #             logger.debug("signed")
-        #
-        #         try:
-        #             self._check_signature(decoded_xml, assertion,
-        #                                   class_name(assertion), origdoc)
-        #         except Exception as exc:
-        #             logger.error("correctly_signed_response: %s" % exc)
-        #             raise
 
         return response
 
