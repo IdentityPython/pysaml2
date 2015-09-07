@@ -1,14 +1,18 @@
 language: python
 
+sudo: false
+
 env:
   - TOX_ENV=py27
   - TOX_ENV=py34
 
+addons:
+  apt:
+    packages:
+    - xmlsec1
+
 services:
   - mongodb
-
-install:
-  - sudo apt-get install xmlsec1
 
 script:
   - ./setup.py test
