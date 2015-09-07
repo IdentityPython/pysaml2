@@ -355,7 +355,7 @@ def test_load_extern_incommon():
 
 def test_load_local():
     # string representation of XML idp definition
-    idp_metadata = open("metadata.xml").read()
+    idp_metadata = open(full_path("metadata.xml")).read()
 
     saml_config = Config()
 
