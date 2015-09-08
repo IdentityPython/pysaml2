@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from saml2.saml import NAME_FORMAT_URI
 
 __author__ = 'rolandh'
 
@@ -93,6 +94,7 @@ SP_ARGS = [
     "ecp",
     "name_id_format",
     "logout_requests_signed",
+    "requested_attribute_name_format"
 ]
 
 AA_IDP_ARGS = [
@@ -236,6 +238,7 @@ class Config(object):
         self.extensions = {}
         self.attribute = []
         self.attribute_profile = []
+        self.requested_attribute_name_format = NAME_FORMAT_URI
 
     def setattr(self, context, attr, val):
         if context == "":

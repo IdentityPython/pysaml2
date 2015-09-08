@@ -239,15 +239,19 @@ def do_key_descriptor(cert=None, enc_cert=None, use="both"):
     return kd_list
 
 
-def do_requested_attribute(attributes, acs, is_required="false"):
+def do_requested_attribute(attributes, acs, is_required="false",
+                           name_format=NAME_FORMAT_URI):
     lista = []
     for attr in attributes:
-        attr = from_local_name(acs, attr, NAME_FORMAT_URI)
+        attr = from_local_name(acs, attr, name_format)
         args = {}
-        for key in attr.keyswv():
-            args[key] = getattr(attr, key)
+        if isinstance(attr, six.string_types):
+            args["name"] = attr
+        else:
+            for key in attr.keyswv():
+                args[key] = getattr(attr, key)
         args["is_required"] = is_required
-        args["name_format"] = NAME_FORMAT_URI
+        args["name_format"] = name_format
         lista.append(md.RequestedAttribute(**args))
     return lista
 
@@ -465,14 +469,21 @@ def do_attribute_consuming_service(conf, spsso):
     requested_attributes = []
     acs = conf.attribute_converters
     req = conf.getattr("required_attributes", "sp")
+
+    req_attr_name_format = conf.getattr("requested_attribute_name_format", "sp")
+    if req_attr_name_format is None:
+        req_attr_name_format = conf.requested_attribute_name_format
+
     if req:
-        requested_attributes.extend(do_requested_attribute(req, acs,
-                                                           is_required="true"))
+        requested_attributes.extend(
+            do_requested_attribute(req, acs, is_required="true",
+                                   name_format=req_attr_name_format))
 
     opt = conf.getattr("optional_attributes", "sp")
 
     if opt:
-        requested_attributes.extend(do_requested_attribute(opt, acs))
+        requested_attributes.extend(
+            do_requested_attribute(opt, acs, name_format=req_attr_name_format))
 
     try:
         if conf.description:
