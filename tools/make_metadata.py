@@ -81,4 +81,4 @@ else:
 
         valid_instance(eid)
         xmldoc = metadata_tostring_fix(eid, nspair, xmldoc)
-        print(xmldoc)
+        print(xmldoc.decode("utf-8"))
