@@ -1,11 +1,11 @@
 import calendar
 from six.moves.urllib.parse import urlparse
 import re
-from saml2 import time_util, Error
 import struct
 import base64
 
-# Also defined in saml2.saml but can't import from there
+from saml2 import time_util
+
 XSI_NAMESPACE = 'http://www.w3.org/2001/XMLSchema-instance'
 XSI_NIL = '{%s}nil' % XSI_NAMESPACE
 # ---------------------------------------------------------
@@ -27,11 +27,11 @@ class ShouldValueError(ValueError):
     pass
 
 
-class ResponseLifetimeExceed(Error):
+class ResponseLifetimeExceed(Exception):
     pass
 
 
-class ToEarly(Error):
+class ToEarly(Exception):
     pass
 
 # --------------------- validators -------------------------------------
