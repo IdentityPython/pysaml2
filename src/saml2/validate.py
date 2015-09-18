@@ -1,7 +1,7 @@
 import calendar
 from six.moves.urllib.parse import urlparse
 import re
-from saml2 import time_util
+from saml2 import time_util, Error
 import struct
 import base64
 
@@ -24,6 +24,14 @@ class MustValueError(ValueError):
 
 
 class ShouldValueError(ValueError):
+    pass
+
+
+class ResponseLifetimeExceed(Error):
+    pass
+
+
+class ToEarly(Error):
     pass
 
 # --------------------- validators -------------------------------------
@@ -82,8 +90,8 @@ def validate_on_or_after(not_on_or_after, slack):
         now = time_util.utc_now()
         nooa = calendar.timegm(time_util.str_to_time(not_on_or_after))
         if now > nooa + slack:
-            raise Exception("Can't use it, it's too old %d > %d" %
-                            (nooa, now))
+            raise ResponseLifetimeExceed(
+                "Can't use it, it's too old %d > %d".format(nooa, now))
         return nooa
     else:
         return False
@@ -94,7 +102,8 @@ def validate_before(not_before, slack):
         now = time_util.utc_now()
         nbefore = calendar.timegm(time_util.str_to_time(not_before))
         if nbefore > now + slack:
-            raise Exception("Can't use it yet %d <= %d" % (nbefore, now))
+            raise ToEarly("Can't use it yet %d <= %d" % (nbefore,
+                                                                        now))
 
     return True
 
@@ -447,6 +456,6 @@ def valid_instance(instance):
 def valid_domain_name(dns_name):
     m = re.match(
         "^[a-z0-9]+([-.]{ 1 }[a-z0-9]+).[a-z]{2,5}(:[0-9]{1,5})?(\/.)?$",
-        dns_name, "ix")
+        dns_name, re.I)
     if not m:
         raise ValueError("Not a proper domain name")
