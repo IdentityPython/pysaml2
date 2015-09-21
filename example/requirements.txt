@@ -1,0 +1,3 @@
+python-ldap
+mako
+cherrypy
