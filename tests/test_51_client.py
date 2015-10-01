@@ -1179,6 +1179,48 @@ class TestClient:
                                               BINDING_HTTP_REDIRECT)
         print(res)
 
+    def test_do_logout_signed_redirect(self):
+        conf = config.SPConfig()
+        conf.load_file("sp_slo_redirect_conf")
+        client = Saml2Client(conf)
+        key = client.signkey
+
+        # information about the user from an IdP
+        session_info = {
+            "name_id": nid,
+            "issuer": "urn:mace:example.com:saml:roland:idp",
+            "not_on_or_after": in_a_while(minutes=15),
+            "ava": {
+                "givenName": "Anders",
+                "surName": "Andersson",
+                "mail": "anders.andersson@example.com"
+            }
+        }
+        client.users.add_information_about_person(session_info)
+        entity_ids = client.users.issuers_of_info(nid)
+        assert entity_ids == ["urn:mace:example.com:saml:roland:idp"]
+
+        resp = client.do_logout(nid, entity_ids, "Tired", in_a_while(minutes=5),
+                                sign=True, expected_binding=BINDING_HTTP_REDIRECT)
+
+        assert list(resp.keys()) == entity_ids
+        binding, info = resp[entity_ids[0]]
+        assert binding == BINDING_HTTP_REDIRECT
+
+        loc = info["headers"][0][1]
+        _, _, _, _, qs, _ = urlparse(loc)
+        qs = parse_qs(qs)
+        assert _leq(qs.keys(),
+                    ['SigAlg', 'SAMLRequest', 'RelayState', 'Signature'])
+
+        assert verify_redirect_signature(list_values2simpletons(qs),
+                                         sigkey=key)
+
+        res = self.server.parse_logout_request(qs["SAMLRequest"][0],
+                                              BINDING_HTTP_REDIRECT)
+        print(res)
+
+
 # Below can only be done with dummy Server
 IDP = "urn:mace:example.com:saml:roland:idp"
 
