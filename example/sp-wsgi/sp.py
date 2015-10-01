@@ -377,7 +377,6 @@ class ACS(Service):
         cookie = self.cache.set_cookie(user)
 
         resp = Redirect("/", headers=[
-            ("Location", "/"),
             cookie,
         ])
         return resp(self.environ, self.start_response)
