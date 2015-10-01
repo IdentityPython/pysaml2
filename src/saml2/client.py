@@ -14,6 +14,8 @@ from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_SOAP
 
+import saml2.xmldsig as ds
+
 from saml2.ident import decode, code
 from saml2.httpbase import HTTPError
 from saml2.s_utils import sid
@@ -161,7 +163,7 @@ class Saml2Client(Base):
         return self.do_logout(name_id, entity_ids, reason, expire, sign)
 
     def do_logout(self, name_id, entity_ids, reason, expire, sign=None,
-                  expected_binding=None):
+                  expected_binding=None, **kwargs):
         """
 
         :param name_id: Identifier of the Subject (a NameID instance)
@@ -172,6 +174,7 @@ class Saml2Client(Base):
         :param sign: Whether to sign the request or not
         :param expected_binding: Specify the expected binding then not try it
             all
+        :param kwargs: Extra key word arguments.
         :return:
         """
         # check time
@@ -214,15 +217,23 @@ class Saml2Client(Base):
                 if sign is None:
                     sign = self.logout_requests_signed
 
+                sigalg = None
+                key = None
                 if sign:
-                    srequest = self.sign(request)
+                    if binding == BINDING_HTTP_REDIRECT:
+                        sigalg = kwargs.get("sigalg", ds.sig_default)
+                        key = kwargs.get("key", self.signkey)
+                        srequest = str(request)
+                    else:
+                        srequest = self.sign(request)
                 else:
-                    srequest = "%s" % request
+                    srequest = str(request)
 
                 relay_state = self._relay_state(req_id)
 
                 http_info = self.apply_binding(binding, srequest, destination,
-                                               relay_state)
+                                               relay_state, sigalg=sigalg,
+                                               key=key)
 
                 if binding == BINDING_SOAP:
                     response = self.send(**http_info)
