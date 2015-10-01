@@ -674,29 +674,26 @@ def read_cert_from_file(cert_file, cert_type):
         return ""
 
     if cert_type == "pem":
-        line = open(cert_file).read().replace("\r\n", "\n").split("\n")
+        lines = read_file(cert_file, 'rb').replace("\r\n", "\n").split("\n")
 
-        if line[0] == "-----BEGIN CERTIFICATE-----":
-            line = line[1:]
-        elif line[0] == "-----BEGIN PUBLIC KEY-----":
-            line = line[1:]
+        for pattern in (b"-----BEGIN CERTIFICATE-----", b"-----BEGIN PUBLIC KEY-----"): 
+            if pattern in lines:
+                lines = lines[lines.index(pattern):]
+                break
         else:
             raise CertificateError("Strange beginning of PEM file")
 
-        while line[-1] == "":
-            line = line[:-1]
-
-        if line[-1] == "-----END CERTIFICATE-----":
-            line = line[:-1]
-        elif line[-1] == "-----END PUBLIC KEY-----":
-            line = line[:-1]
+        for pattern in (b"-----END CERTIFICATE-----", b"-----END PUBLIC KEY-----"):
+            if pattern in lines:
+                lines = lines[:lines.index(pattern)]
+                break
         else:
             raise CertificateError("Strange end of PEM file")
-        return "".join(line)
+        return b"".join(lines)
 
     if cert_type in ["der", "cer", "crt"]:
-        data = read_file(cert_file)
-        return base64.b64encode(str(data))
+        data = read_file(cert_file, 'rb')
+        return base64.b64encode(data)
 
 
 class CryptoBackend():
