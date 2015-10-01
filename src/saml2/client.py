@@ -203,9 +203,14 @@ class Saml2Client(Base):
 
                 destination = destinations(srvs)[0]
                 logger.info("destination to provider: %s" % destination)
+                try:
+                    session_info = self.users.get_info_from(name_id, entity_id)
+                    session_indexes = [session_info['session_index']]
+                except KeyError:
+                    session_indexes = None
                 req_id, request = self.create_logout_request(
                     destination, entity_id, name_id=name_id, reason=reason,
-                    expire=expire)
+                    expire=expire, session_indexes=session_indexes)
 
                 # to_sign = []
                 if binding.startswith("http://"):
