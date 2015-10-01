@@ -997,6 +997,10 @@ class AuthnResponse(StatusResponse):
         res = []
         for astat in self.assertion.authn_statement:
             context = astat.authn_context
+            try:
+                authn_instant = astat.authn_instant
+            except AttributeError:
+                authn_instant = ""
             if context:
                 try:
                     aclass = context.authn_context_class_ref.text
@@ -1007,7 +1011,7 @@ class AuthnResponse(StatusResponse):
                                   context.authenticating_authority]
                 except AttributeError:
                     authn_auth = []
-                res.append((aclass, authn_auth))
+                res.append((aclass, authn_auth, authn_instant))
         return res
 
     def authz_decision_info(self):
