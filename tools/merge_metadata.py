@@ -90,7 +90,7 @@ for line in open(args.conf).readlines():
         metad = MetaDataExtern(ONTS.values(), ATTRCONV, spec[1],
                                sc, cert=spec[2], http=httpc, **kwargs)
 
-    if metad:
+    if metad is not None:
         try:
             metad.load()
         except:
