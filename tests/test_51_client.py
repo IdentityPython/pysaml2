@@ -25,6 +25,7 @@ from saml2.response import LogoutResponse
 from saml2.saml import NAMEID_FORMAT_PERSISTENT, EncryptedAssertion, Advice
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.saml import NameID
+from saml2.samlp import SessionIndex
 from saml2.server import Server
 from saml2.sigver import pre_encryption_part, make_temp, pre_encrypt_assertion
 from saml2.sigver import rm_xmltag
@@ -319,6 +320,19 @@ class TestClient:
         except Exception:  # missing certificate
             self.client.sec.verify_signature(ar_str, node_name=class_name(ar))
 
+    def test_create_logout_request(self):
+        req_id, req = self.client.create_logout_request(
+            "http://localhost:8088/slo", "urn:mace:example.com:saml:roland:idp",
+            name_id=nid, reason="Tired", expire=in_a_while(minutes=15),
+            session_indexes=["_foo"])
+
+        assert req.destination == "http://localhost:8088/slo"
+        assert req.reason == "Tired"
+        assert req.version == "2.0"
+        assert req.name_id == nid
+        assert req.issuer.text == "urn:mace:example.com:saml:roland:sp"
+        assert req.session_index == [SessionIndex("_foo")]
+
     def test_response_1(self):
         IDP = "urn:mace:example.com:saml:roland:idp"
 
@@ -359,6 +373,7 @@ class TestClient:
         assert session_info["came_from"] == "http://foo.example.com/service"
         response = samlp.response_from_string(authn_response.xmlstr)
         assert response.destination == "http://lingon.catalogix.se:8087/"
+        assert "session_index" in session_info
 
         # One person in the cache
         assert len(self.client.users.subjects()) == 1
@@ -1219,6 +1234,36 @@ class TestClient:
         res = self.server.parse_logout_request(qs["SAMLRequest"][0],
                                               BINDING_HTTP_REDIRECT)
         print(res)
+
+    def test_do_logout_post(self):
+        # information about the user from an IdP
+        session_info = {
+            "name_id": nid,
+            "issuer": "urn:mace:example.com:saml:roland:idp",
+            "not_on_or_after": in_a_while(minutes=15),
+            "ava": {
+                "givenName": "Anders",
+                "surName": "Andersson",
+                "mail": "anders.andersson@example.com"
+            },
+            "session_index": SessionIndex("_foo")
+        }
+        self.client.users.add_information_about_person(session_info)
+        entity_ids = self.client.users.issuers_of_info(nid)
+        assert entity_ids == ["urn:mace:example.com:saml:roland:idp"]
+        resp = self.client.do_logout(nid, entity_ids, "Tired",
+                                     in_a_while(minutes=5), sign=True,
+                                     expected_binding=BINDING_HTTP_POST)
+        assert resp
+        assert len(resp) == 1
+        assert list(resp.keys()) == entity_ids
+        binding, info = resp[entity_ids[0]]
+        assert binding == BINDING_HTTP_POST
+
+        _dic = unpack_form(info["data"][3])
+        res = self.server.parse_logout_request(_dic["SAMLRequest"],
+                                               BINDING_HTTP_POST)
+        assert b'<ns0:SessionIndex>_foo</ns0:SessionIndex>' in res.xmlstr
 
 
 # Below can only be done with dummy Server

@@ -353,7 +353,10 @@ def make_temp(string, suffix="", decode=True, delete=True):
         xmlsec function).
     """
     ntf = NamedTemporaryFile(suffix=suffix, delete=delete)
-    assert isinstance(string, six.binary_type)
+    # Python3 tempfile requires byte-like object
+    if not isinstance(string, six.binary_type):
+        string = string.encode("utf8")
+
     if decode:
         ntf.write(base64.b64decode(string))
     else:
@@ -657,6 +660,12 @@ LOG_LINE = 60 * "=" + "\n%s\n" + 60 * "-" + "\n%s" + 60 * "="
 LOG_LINE_2 = 60 * "=" + "\n%s\n%s\n" + 60 * "-" + "\n%s" + 60 * "="
 
 
+def make_str(txt):
+    if isinstance(txt, six.string_types):
+        return txt
+    else:
+        return txt.decode("utf8")
+
 # ---------------------------------------------------------------------------
 
 
@@ -674,29 +683,32 @@ def read_cert_from_file(cert_file, cert_type):
         return ""
 
     if cert_type == "pem":
-        line = open(cert_file).read().replace("\r\n", "\n").split("\n")
+        _a = read_file(cert_file, 'rb').decode("utf8")
+        _b = _a.replace("\r\n", "\n")
+        lines = _b.split("\n")
 
-        if line[0] == "-----BEGIN CERTIFICATE-----":
-            line = line[1:]
-        elif line[0] == "-----BEGIN PUBLIC KEY-----":
-            line = line[1:]
+        for pattern in ("-----BEGIN CERTIFICATE-----",
+                        "-----BEGIN PUBLIC KEY-----"):
+            if pattern in lines:
+                lines = lines[lines.index(pattern)+1:]
+                break
         else:
             raise CertificateError("Strange beginning of PEM file")
 
-        while line[-1] == "":
-            line = line[:-1]
-
-        if line[-1] == "-----END CERTIFICATE-----":
-            line = line[:-1]
-        elif line[-1] == "-----END PUBLIC KEY-----":
-            line = line[:-1]
+        for pattern in ("-----END CERTIFICATE-----",
+                        "-----END PUBLIC KEY-----"):
+            if pattern in lines:
+                lines = lines[:lines.index(pattern)]
+                break
         else:
             raise CertificateError("Strange end of PEM file")
-        return "".join(line)
+        return make_str("".join(lines).encode("utf8"))
+
 
     if cert_type in ["der", "cer", "crt"]:
-        data = read_file(cert_file)
-        return base64.b64encode(str(data))
+        data = read_file(cert_file, 'rb')
+        _cert = base64.b64encode(data)
+        return make_str(_cert)
 
 
 class CryptoBackend():
@@ -850,8 +862,8 @@ class CryptoBackendXmlSec1(CryptoBackend):
             'id','Id' or 'ID'
         :return: The signed statement
         """
-        if not isinstance(statement, six.binary_type):
-            statement = str(statement).encode('utf-8')
+        if isinstance(statement, SamlBase):
+            statement = str(statement)
 
         _, fil = make_temp(statement, suffix=".xml",
                            decode=False, delete=self._xmlsec_delete_tmpfiles)
@@ -1283,8 +1295,6 @@ class SecurityContext(object):
         # Your public key for encryption
         self.encryption_keypairs = encryption_keypairs
         self.enc_cert_type = enc_cert_type
-
-
 
         self.my_cert = read_cert_from_file(cert_file, cert_type)
 
