@@ -33,12 +33,6 @@ CONFIG = {
                     ("%s/slo/redirect" % BASE, BINDING_HTTP_REDIRECT),
                     ("%s/slo/post" % BASE, BINDING_HTTP_POST),
                 ],
-                "discovery_response": [
-                    [
-                        "%s/disco" % BASE,
-                        "urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol"
-                    ]
-                ]
             }
         },
     },

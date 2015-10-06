@@ -15,9 +15,9 @@ except ImportError:
     get_xmlsec_binary = None
 
 if get_xmlsec_binary:
-    xmlsec_path = get_xmlsec_binary(["/opt/local/bin","/usr/local/bin"])
+    xmlsec_path = get_xmlsec_binary(["/opt/local/bin"])
 else:
-    xmlsec_path = '/usr/local/bin/xmlsec1'
+    xmlsec_path = '/usr/bin/xmlsec1'
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -25,7 +25,6 @@ BASEDIR = os.path.abspath(os.path.dirname(__file__))
 def full_path(local_file):
     return os.path.join(BASEDIR, local_file)
 
-#HOST = '130.239.200.190'
 HOST = 'localhost'
 PORT = 8088
 
@@ -44,7 +43,7 @@ CERT_CHAIN = ""
 CONFIG = {
     "entityid": "%s/idp.xml" % BASE,
     "description": "My IDP",
-    # "valid_for": 168,
+    "valid_for": 168,
     "service": {
         "aa": {
             "endpoints": {
@@ -92,29 +91,6 @@ CONFIG = {
                     ("%s/nim" % BASE, BINDING_SOAP),
                 ],
             },
-            "ui_info": {
-                "display_name": [
-                    {
-                        "text": "InAcademia.org - TEST",
-                        "lang": "en"
-                    }
-                ],
-                "description": [
-                    {
-                        "text": "The InAcademia Simple validation Sevice allows for the easy validation of affiliation (Student, Faculty, Staff) of a user in Academia. This is a TEST instance",
-                        "lang": "en"
-                    }
-                ],
-                "logo": [
-                    {
-                        "text": "https://inacademia.org/static/logo.png",
-                        "width": "120",
-                        "height": "60",
-                        "lang": "en"
-
-                    }
-                ],
-            },
             "policy": {
                 "default": {
                     "lifetime": {"minutes": 15},
@@ -132,23 +108,19 @@ CONFIG = {
     "key_file": full_path("pki/mykey.pem"),
     "cert_file": full_path("pki/mycert.pem"),
     "metadata": {
-        #"local": [full_path("../sp-wsgi/sp.xml")],
-        "local": ["/Users/mathiashedstrom/work/DIRG/VOpaas_proxy/example/saml2.xml"],
-        # "local": ["/Users/mathiashedstrom/work/DIRG/VOpaas_proxy/example/proxy.xml"],
-        # "local": ["/Users/mathiashedstrom/work/DIRG/s2sproxy/example/proxy.xml"],
+        "local": [full_path("../sp-wsgi/sp.xml")],
     },
     "organization": {
-        "display_name": [("Rolands Identiteter", "en")],
-        "name": [("Rolands Identiteter", "se"), ("Rolands Identities", "en")],
-        "url": [("http://www.example.com", "en"), ("http://www.example.se", "se")],
+        "display_name": "Rolands Identiteter",
+        "name": "Rolands Identiteter",
+        "url": "http://www.example.com",
     },
     "contact_person": [
         {
             "contact_type": "technical",
             "given_name": "Roland",
             "sur_name": "Hedberg",
-            "email_address": ["technical@example.com", "support@example.com"],
-
+            "email_address": "technical@example.com"
         }, {
             "contact_type": "support",
             "given_name": "Support",
