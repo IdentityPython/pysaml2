@@ -59,51 +59,47 @@ bMDNS = b'"urn:oasis:names:tc:SAML:2.0:metadata"'
 XMLNSXS = " xmlns:xs=\"http://www.w3.org/2001/XMLSchema\""
 bXMLNSXS = b" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\""
 
+
 def metadata_tostring_fix(desc, nspair, xmlstring=""):
     if not xmlstring:
         xmlstring = desc.to_string(nspair)
 
     if six.PY2:
         if "\"xs:string\"" in xmlstring and XMLNSXS not in xmlstring:
-            xmlstring = xmlstring.replace(MDNS, MDNS+XMLNSXS)
+            xmlstring = xmlstring.replace(MDNS, MDNS + XMLNSXS)
     else:
         if b"\"xs:string\"" in xmlstring and bXMLNSXS not in xmlstring:
-            xmlstring = xmlstring.replace(bMDNS, bMDNS+bXMLNSXS)
+            xmlstring = xmlstring.replace(bMDNS, bMDNS + bXMLNSXS)
 
     return xmlstring
 
 
-def create_metadata_string(configfile, config, valid, cert, keyfile, mid, name,
-                           sign):
+def create_metadata_string(configfile, config=None, valid=None, cert=None,
+                           keyfile=None, mid=None, name=None, sign=None):
     valid_for = 0
     nspair = {"xs": "http://www.w3.org/2001/XMLSchema"}
-    #paths = [".", "/opt/local/bin"]
+    # paths = [".", "/opt/local/bin"]
 
     if valid:
         valid_for = int(valid)  # Hours
 
     eds = []
-    if config is not None:
-        eds.append(entity_descriptor(config))
-    else:
+    if config is None:
         if configfile.endswith(".py"):
             configfile = configfile[:-3]
         config = Config().load_file(configfile, metadata_construction=True)
-        eds.append(entity_descriptor(config))
+    eds.append(entity_descriptor(config))
 
     conf = Config()
-    conf.key_file = keyfile
-    conf.cert_file = cert
+    conf.key_file = config.key_file or keyfile
+    conf.cert_file = config.cert_file or cert
     conf.debug = 1
     conf.xmlsec_binary = config.xmlsec_binary
     secc = security_context(conf)
 
     if mid:
-        desc = entities_descriptor(eds, valid_for, name, mid,
-                                   sign, secc)
-        valid_instance(desc)
-
-        return metadata_tostring_fix(desc, nspair)
+        eid, xmldoc = entities_descriptor(eds, valid_for, name, mid,
+                                          sign, secc)
     else:
         eid = eds[0]
         if sign:
@@ -111,9 +107,8 @@ def create_metadata_string(configfile, config, valid, cert, keyfile, mid, name,
         else:
             xmldoc = None
 
-        valid_instance(eid)
-        xmldoc = metadata_tostring_fix(eid, nspair, xmldoc)
-        return xmldoc
+    valid_instance(eid)
+    return metadata_tostring_fix(eid, nspair, xmldoc)
 
 
 def _localized_name(val, klass):
@@ -239,15 +234,19 @@ def do_key_descriptor(cert=None, enc_cert=None, use="both"):
     return kd_list
 
 
-def do_requested_attribute(attributes, acs, is_required="false"):
+def do_requested_attribute(attributes, acs, is_required="false",
+                           name_format=NAME_FORMAT_URI):
     lista = []
     for attr in attributes:
-        attr = from_local_name(acs, attr, NAME_FORMAT_URI)
+        attr = from_local_name(acs, attr, name_format)
         args = {}
-        for key in attr.keyswv():
-            args[key] = getattr(attr, key)
+        if isinstance(attr, six.string_types):
+            args["name"] = attr
+        else:
+            for key in attr.keyswv():
+                args[key] = getattr(attr, key)
         args["is_required"] = is_required
-        args["name_format"] = NAME_FORMAT_URI
+        args["name_format"] = name_format
         lista.append(md.RequestedAttribute(**args))
     return lista
 
@@ -344,6 +343,7 @@ def do_idpdisc(discovery_response):
     return idpdisc.DiscoveryResponse(index="0", location=discovery_response,
                                      binding=idpdisc.NAMESPACE)
 
+
 ENDPOINTS = {
     "sp": {
         "artifact_resolution_service": (md.ArtifactResolutionService, True),
@@ -423,7 +423,8 @@ def do_endpoints(conf, endpoints):
             servs = []
             i = 1
             for args in conf[endpoint]:
-                if isinstance(args, six.string_types):  # Assume it's the location
+                if isinstance(args,
+                              six.string_types):  # Assume it's the location
                     args = {"location": args,
                             "binding": DEFAULT_BINDING[endpoint]}
                 elif isinstance(args, tuple) or isinstance(args, list):
@@ -451,28 +452,35 @@ def do_endpoints(conf, endpoints):
             pass
     return service
 
+
 DEFAULT = {
     "want_assertions_signed": "true",
     "authn_requests_signed": "false",
     "want_authn_requests_signed": "false",
-    #"want_authn_requests_only_with_valid_cert": "false",
+    # "want_authn_requests_only_with_valid_cert": "false",
 }
 
 
 def do_attribute_consuming_service(conf, spsso):
-
     service_description = service_name = None
     requested_attributes = []
     acs = conf.attribute_converters
     req = conf.getattr("required_attributes", "sp")
+
+    req_attr_name_format = conf.getattr("requested_attribute_name_format", "sp")
+    if req_attr_name_format is None:
+        req_attr_name_format = conf.requested_attribute_name_format
+
     if req:
-        requested_attributes.extend(do_requested_attribute(req, acs,
-                                                           is_required="true"))
+        requested_attributes.extend(
+            do_requested_attribute(req, acs, is_required="true",
+                                   name_format=req_attr_name_format))
 
     opt = conf.getattr("optional_attributes", "sp")
 
     if opt:
-        requested_attributes.extend(do_requested_attribute(opt, acs))
+        requested_attributes.extend(
+            do_requested_attribute(opt, acs, name_format=req_attr_name_format))
 
     try:
         if conf.description:
@@ -548,7 +556,8 @@ def do_spsso_descriptor(conf, cert=None, enc_cert=None):
 
     if cert or enc_cert:
         metadata_key_usage = conf.metadata_key_usage
-        spsso.key_descriptor = do_key_descriptor(cert=cert, enc_cert=enc_cert, use=metadata_key_usage)
+        spsso.key_descriptor = do_key_descriptor(cert=cert, enc_cert=enc_cert,
+                                                 use=metadata_key_usage)
 
     for key in ["want_assertions_signed", "authn_requests_signed"]:
         try:
@@ -596,10 +605,11 @@ def do_idpsso_descriptor(conf, cert=None, enc_cert=None):
         idpsso.extensions.add_extension_element(do_uiinfo(ui_info))
 
     if cert or enc_cert:
-        idpsso.key_descriptor = do_key_descriptor(cert, enc_cert, use=conf.metadata_key_usage)
+        idpsso.key_descriptor = do_key_descriptor(cert, enc_cert,
+                                                  use=conf.metadata_key_usage)
 
     for key in ["want_authn_requests_signed"]:
-                #"want_authn_requests_only_with_valid_cert"]:
+        # "want_authn_requests_only_with_valid_cert"]:
         try:
             val = conf.getattr(key, "idp")
             if val is None:
@@ -626,7 +636,8 @@ def do_aa_descriptor(conf, cert=None, enc_cert=None):
     _do_nameid_format(aad, conf, "aa")
 
     if cert or enc_cert:
-        aad.key_descriptor = do_key_descriptor(cert, enc_cert, use=conf.metadata_key_usage)
+        aad.key_descriptor = do_key_descriptor(cert, enc_cert,
+                                               use=conf.metadata_key_usage)
 
     attributes = conf.getattr("attribute", "aa")
     if attributes:
@@ -655,7 +666,8 @@ def do_aq_descriptor(conf, cert=None, enc_cert=None):
     _do_nameid_format(aqs, conf, "aq")
 
     if cert or enc_cert:
-        aqs.key_descriptor = do_key_descriptor(cert, enc_cert, use=conf.metadata_key_usage)
+        aqs.key_descriptor = do_key_descriptor(cert, enc_cert,
+                                               use=conf.metadata_key_usage)
 
     return aqs
 
@@ -676,7 +688,8 @@ def do_pdp_descriptor(conf, cert=None, enc_cert=None):
     _do_nameid_format(pdp, conf, "pdp")
 
     if cert:
-        pdp.key_descriptor = do_key_descriptor(cert, enc_cert, use=conf.metadata_key_usage)
+        pdp.key_descriptor = do_key_descriptor(cert, enc_cert,
+                                               use=conf.metadata_key_usage)
 
     return pdp
 
@@ -693,7 +706,8 @@ def entity_descriptor(confd):
     if confd.encryption_keypairs is not None:
         enc_cert = []
         for _encryption in confd.encryption_keypairs:
-            enc_cert.append("".join(open(_encryption["cert_file"]).readlines()[1:-1]))
+            enc_cert.append(
+                "".join(open(_encryption["cert_file"]).readlines()[1:-1]))
 
     entd = md.EntityDescriptor()
     entd.entity_id = confd.entityid
@@ -727,13 +741,15 @@ def entity_descriptor(confd):
         entd.idpsso_descriptor = do_idpsso_descriptor(confd, mycert, enc_cert)
     if "aa" in serves:
         confd.context = "aa"
-        entd.attribute_authority_descriptor = do_aa_descriptor(confd, mycert, enc_cert)
+        entd.attribute_authority_descriptor = do_aa_descriptor(confd, mycert,
+                                                               enc_cert)
     if "pdp" in serves:
         confd.context = "pdp"
         entd.pdp_descriptor = do_pdp_descriptor(confd, mycert, enc_cert)
     if "aq" in serves:
         confd.context = "aq"
-        entd.authn_authority_descriptor = do_aq_descriptor(confd, mycert, enc_cert)
+        entd.authn_authority_descriptor = do_aq_descriptor(confd, mycert,
+                                                           enc_cert)
 
     return entd
 

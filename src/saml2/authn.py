@@ -1,7 +1,4 @@
 import logging
-from urllib import urlencode
-from urlparse import parse_qs
-from urlparse import urlsplit
 import six
 import time
 import ldap
@@ -12,6 +9,8 @@ from saml2.httputil import make_cookie
 from saml2.httputil import Redirect
 from saml2.httputil import Unauthorized
 from saml2.httputil import parse_cookie
+
+from six.moves.urllib.parse import urlencode, parse_qs, urlsplit
 
 __author__ = 'rolandh'
 

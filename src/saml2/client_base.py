@@ -6,8 +6,6 @@
 to conclude its tasks.
 """
 import threading
-from six.moves.urllib.parse import urlencode
-from six.moves.urllib.parse import urlparse
 import six
 
 from saml2.entity import Entity
@@ -26,8 +24,11 @@ import time
 from saml2.soap import make_soap_enveloped_saml_thingy
 
 from six.moves.urllib.parse import parse_qs
+from six.moves.urllib.parse import urlencode
+from six.moves.urllib.parse import urlparse
 
-from saml2.s_utils import signature, UnravelError, exception_trace
+from saml2.s_utils import signature
+from saml2.s_utils import UnravelError
 from saml2.s_utils import do_attributes
 
 from saml2 import samlp, BINDING_SOAP, SAMLError

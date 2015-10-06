@@ -265,6 +265,7 @@ class StatusResponse(object):
         self.require_response_signature = False
         self.not_signed = False
         self.asynchop = asynchop
+        self.do_not_verify = False
 
     def _clear(self):
         self.xmlstr = ""
@@ -316,10 +317,16 @@ class StatusResponse(object):
         else:
             self.origxml = self.xmlstr
 
+        if self.do_not_verify:
+            args = {"do_not_verify": True}
+        else:
+            args = {}
+
         try:
             self.response = self.signature_check(
                 xmldata, origdoc=origxml, must=self.require_signature,
-                require_response_signature=self.require_response_signature)
+                require_response_signature=self.require_response_signature,
+                **args)
 
         except TypeError:
             raise
@@ -759,7 +766,7 @@ class AuthnResponse(StatusResponse):
                 raise SignatureError("Signature missing for assertion")
         else:
             logger.debug("signed")
-            if not verified:
+            if not verified and self.do_not_verify is False:
                 try:
                     self.sec.check_signature(assertion, class_name(assertion),self.xmlstr)
                 except Exception as exc:
@@ -990,6 +997,10 @@ class AuthnResponse(StatusResponse):
         res = []
         for astat in self.assertion.authn_statement:
             context = astat.authn_context
+            try:
+                authn_instant = astat.authn_instant
+            except AttributeError:
+                authn_instant = ""
             if context:
                 try:
                     aclass = context.authn_context_class_ref.text
@@ -1000,7 +1011,7 @@ class AuthnResponse(StatusResponse):
                                   context.authenticating_authority]
                 except AttributeError:
                     authn_auth = []
-                res.append((aclass, authn_auth))
+                res.append((aclass, authn_auth, authn_instant))
         return res
 
     def authz_decision_info(self):
@@ -1025,9 +1036,11 @@ class AuthnResponse(StatusResponse):
                     "issuer": self.issuer(), "not_on_or_after": nooa,
                     "authz_decision_info": self.authz_decision_info()}
         else:
+            authn_statement = self.assertion.authn_statement[0]
             return {"ava": self.ava, "name_id": self.name_id,
                     "came_from": self.came_from, "issuer": self.issuer(),
-                    "not_on_or_after": nooa, "authn_info": self.authn_info()}
+                    "not_on_or_after": nooa, "authn_info": self.authn_info(),
+                    "session_index": authn_statement.session_index}
 
     def __str__(self):
         if not isinstance(self.xmlstr, six.string_types):

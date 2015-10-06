@@ -795,7 +795,7 @@ class MetadataStore(object):
             self.ii += 1
             key = self.ii
             kwargs.update(_args)
-            _md = MetaData(self.onts, self.attrc, args[0], **kwargs)
+            _md = InMemoryMetaData(self.onts, self.attrc, args[0])
         elif typ == "remote":
             key = kwargs["url"]
             for _key in ["node_name", "check_validity"]:
