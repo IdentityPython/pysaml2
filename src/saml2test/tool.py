@@ -51,14 +51,14 @@ class Conversation(object):
 
     def check_severity(self, stat):
         if stat["status"] >= 4:
-            logger.error("WHERE: %s" % stat["id"])
-            logger.error("STATUS:%s" % STATUSCODE[stat["status"]])
+            logger.error("WHERE: %s", stat["id"])
+            logger.error("STATUS:%s", STATUSCODE[stat["status"]])
             try:
-                logger.error("HTTP STATUS: %s" % stat["http_status"])
+                logger.error("HTTP STATUS: %s", stat["http_status"])
             except KeyError:
                 pass
             try:
-                logger.error("INFO: %s" % stat["message"])
+                logger.error("INFO: %s", stat["message"])
             except KeyError:
                 pass
 
@@ -119,8 +119,7 @@ class Conversation(object):
                         raise FatalError(
                             "Too long sequence of redirects: %s" % rdseq)
 
-                logger.info("HTTP %d Location: %s" % (_response.status_code,
-                                                      url))
+                logger.info("HTTP %d Location: %s", _response.status_code, url)
                 # If back to me
                 for_me = False
                 for redirect_uri in self.my_endpoints():
@@ -143,13 +142,13 @@ class Conversation(object):
                     break
                 else:
                     try:
-                        logger.info("GET %s" % url)
+                        logger.info("GET %s", url)
                         _response = self.client.send(url, "GET")
                     except Exception as err:
                         raise FatalError("%s" % err)
 
                     content = _response.text
-                    logger.info("<-- CONTENT: %s" % content)
+                    logger.info("<-- CONTENT: %s", content)
                     self.position = url
                     self.last_content = content
                     self.response = _response
@@ -169,15 +168,15 @@ class Conversation(object):
                 self.position = url
                 cnt = content.replace("\n", '').replace("\t", '').replace("\r",
                                                                           '')
-                logger.error("URL: %s" % url)
-                logger.error("Page Content: %s" % cnt)
+                logger.error("URL: %s", url)
+                logger.error("Page Content: %s", cnt)
                 raise
             except KeyError:
                 self.position = url
                 cnt = content.replace("\n", '').replace("\t", '').replace("\r",
                                                                           '')
-                logger.error("URL: %s" % url)
-                logger.error("Page Content: %s" % cnt)
+                logger.error("URL: %s", url)
+                logger.error("Page Content: %s", cnt)
                 self.err_check("interaction-needed")
 
             if _spec == _last_action:
@@ -194,7 +193,7 @@ class Conversation(object):
                 _last_action = _spec
 
             if len(_spec) > 2:
-                logger.info(">> %s <<" % _spec["page-type"])
+                logger.info(">> %s <<", _spec["page-type"])
                 if _spec["page-type"] == "login":
                     self.login_page = content
 
@@ -213,12 +212,11 @@ class Conversation(object):
                 self.response = _response
 
                 if _response.status_code >= 400:
-                    txt = "Got status code '%s', error: %s" % (
-                        _response.status_code, content)
-                    logger.error(txt)
+                    txt = "Got status code '%s', error: %s"
+                    logger.error(txt, _response.status_code, content)
                     self.test_output.append(
                         {"status": ERROR,
-                         "message": txt,
+                         "message": txt % (_response.status_code, content),
                          #"id": "exception",
                          #"name": "interaction needed",
                          "url": self.position})

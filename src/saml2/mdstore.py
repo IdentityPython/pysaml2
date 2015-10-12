@@ -330,7 +330,7 @@ class InMemoryMetaData(MetaData):
             self.filter = kwargs["filter"]
         except KeyError:
             self.filter = None
-        
+
     def items(self):
         return self.entity.items()
 
@@ -359,15 +359,15 @@ class InMemoryMetaData(MetaData):
         if self.check_validity:
             try:
                 if not valid(entity_descr.valid_until):
-                    logger.error("Entity descriptor (entity id:%s) to old" % (
-                        entity_descr.entity_id,))
+                    logger.error("Entity descriptor (entity id:%s) to old",
+                        entity_descr.entity_id)
                     return
             except AttributeError:
                 pass
 
         # have I seen this entity_id before ? If so if log: ignore it
         if entity_descr.entity_id in self.entity:
-            print("Duplicated Entity descriptor (entity id: '%s')" % 
+            print("Duplicated Entity descriptor (entity id: '%s')" %
                   entity_descr.entity_id, file=sys.stderr)
             return
 
@@ -416,7 +416,7 @@ class InMemoryMetaData(MetaData):
             try:
                 valid_instance(self.entities_descr)
             except NotValid as exc:
-                logger.error(exc.args[0])
+                logger.error("Invalid XML message: %s", exc.args[0])
                 return
 
             if self.check_validity:
@@ -467,7 +467,7 @@ class InMemoryMetaData(MetaData):
                     res[srv["binding"]].append(srv)
                 except KeyError:
                     res[srv["binding"]] = [srv]
-        logger.debug("service => %s" % res)
+        logger.debug("service => %s", res)
         return res
 
     def attribute_requirement(self, entity_id, index=None):
@@ -677,7 +677,7 @@ class MetaDataExtern(InMemoryMetaData):
             _txt = response.text.encode("utf-8")
             return self.parse_and_check_signature(_txt)
         else:
-            logger.info("Response status: %s" % response.status_code)
+            logger.info("Response status: %s", response.status_code)
         return False
 
 
@@ -741,7 +741,7 @@ class MetaDataMDX(InMemoryMetaData):
                 if self.parse_and_check_signature(_txt):
                     return self.entity[item]
             else:
-                logger.info("Response status: %s" % response.status_code)
+                logger.info("Response status: %s", response.status_code)
             raise KeyError
 
 
@@ -878,8 +878,8 @@ class MetadataStore(object):
 
     def service(self, entity_id, typ, service, binding=None):
         known_entity = False
-        logger.debug("service(%s, %s, %s, %s)" % (entity_id, typ, service,
-                                                  binding))
+        logger.debug("service(%s, %s, %s, %s)", entity_id, typ, service,
+                                                  binding)
         for key, _md in self.metadata.items():
             srvs = _md.service(entity_id, typ, service, binding)
             if srvs:
@@ -890,10 +890,10 @@ class MetadataStore(object):
                 known_entity = True
 
         if known_entity:
-            logger.error("Unsupported binding: %s (%s)" % (binding, entity_id))
+            logger.error("Unsupported binding: %s (%s)", binding, entity_id)
             raise UnsupportedBinding(binding)
         else:
-            logger.error("Unknown system entity: %s" % entity_id)
+            logger.error("Unknown system entity: %s", entity_id)
             raise UnknownSystemEntity(entity_id)
 
     def ext_service(self, entity_id, typ, service, binding=None):

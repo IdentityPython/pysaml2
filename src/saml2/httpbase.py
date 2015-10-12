@@ -151,7 +151,7 @@ class HTTPBase(object):
 
         part = urlparse(request.url)
         _domain = part.hostname
-        logger.debug("%s: '%s'" % (_domain, kaka))
+        logger.debug("%s: '%s'", _domain, kaka)
 
         for cookie_name, morsel in kaka.items():
             std_attr = ATTRS.copy()
@@ -228,14 +228,14 @@ class HTTPBase(object):
                 _kwargs["headers"] = dict(_kwargs["headers"])
 
         try:
-            logger.debug("%s to %s" % (method, url))
+            logger.debug("%s to %s", method, url)
             for arg in ["cookies", "data", "auth"]:
                 try:
-                    logger.debug("%s: %s" % (arg.upper(), _kwargs[arg]))
+                    logger.debug("%s: %s", arg.upper(), _kwargs[arg])
                 except KeyError:
                     pass
             r = requests.request(method, url, **_kwargs)
-            logger.debug("Response status: %s" % r.status_code)
+            logger.debug("Response status: %s", r.status_code)
         except requests.ConnectionError as exc:
             raise ConnectionError("%s" % exc)
 
@@ -325,7 +325,7 @@ class HTTPBase(object):
 
         soap_message = make_soap_enveloped_saml_thingy(request, soap_headers)
 
-        logger.debug("SOAP message: %s" % soap_message)
+        logger.debug("SOAP message: %s", soap_message)
 
         if sign and self.sec:
             _signed = self.sec.sign_statement(soap_message,
@@ -353,11 +353,11 @@ class HTTPBase(object):
             args["headers"] = dict(args["headers"])
             response = self.send(**args)
         except Exception as exc:
-            logger.info("HTTPClient exception: %s" % (exc,))
+            logger.info("HTTPClient exception: %s", exc)
             raise
 
         if response.status_code == 200:
-            logger.info("SOAP response: %s" % response.text)
+            logger.info("SOAP response: %s", response.text)
             return response
         else:
             raise HTTPError("%d:%s" % (response.status_code, response.content))

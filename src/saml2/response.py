@@ -277,15 +277,15 @@ class StatusResponse(object):
         if not self.response:
             logger.error("Response was not correctly signed")
             if self.xmlstr:
-                logger.info(self.xmlstr)
+                logger.info("Response: %s", self.xmlstr)
             raise IncorrectlySigned()
 
-        logger.debug("response: %s" % (self.response,))
+        logger.debug("response: %s", self.response)
 
         try:
             valid_instance(self.response)
         except NotValid as exc:
-            logger.error("Not valid response: %s" % exc.args[0])
+            logger.error("Not valid response: %s", exc.args[0])
             self._clear()
             return self
 
@@ -311,7 +311,7 @@ class StatusResponse(object):
 
         # own copy
         self.xmlstr = xmldata[:]
-        logger.debug("xmlstr: %s" % (self.xmlstr,))
+        logger.debug("xmlstr: %s", self.xmlstr)
         if origxml:
             self.origxml = origxml
         else:
@@ -343,9 +343,9 @@ class StatusResponse(object):
     def status_ok(self):
         if self.response.status:
             status = self.response.status
-            logger.info("status: %s" % (status,))
+            logger.info("status: %s", status)
             if status.status_code.value != samlp.STATUS_SUCCESS:
-                logger.info("Not successful operation: %s" % status)
+                logger.info("Not successful operation: %s", status)
                 if status.status_code.status_code:
                     excep = STATUSCODE2EXCEPTION[
                         status.status_code.status_code.value]
@@ -376,8 +376,8 @@ class StatusResponse(object):
     def _verify(self):
         if self.request_id and self.in_response_to and \
                         self.in_response_to != self.request_id:
-            logger.error("Not the id I expected: %s != %s" % (
-                self.in_response_to, self.request_id))
+            logger.error("Not the id I expected: %s != %s",
+                self.in_response_to, self.request_id)
             return None
 
         try:
@@ -392,8 +392,8 @@ class StatusResponse(object):
         if self.asynchop:
             if self.response.destination and \
                     self.response.destination not in self.return_addrs:
-                logger.error("%s not in %s" % (self.response.destination,
-                                               self.return_addrs))
+                logger.error("%s not in %s", self.response.destination,
+                                               self.return_addrs)
                 return None
 
         assert self.issue_instant_ok()
@@ -563,7 +563,7 @@ class AuthnResponse(StatusResponse):
         assert self.assertion.conditions
         conditions = self.assertion.conditions
 
-        logger.debug("conditions: %s" % conditions)
+        logger.debug("conditions: %s", conditions)
 
         # if no sub-elements or elements are supplied, then the
         # assertion is considered to be valid.
@@ -583,7 +583,7 @@ class AuthnResponse(StatusResponse):
             if conditions.not_before:
                 validate_before(conditions.not_before, self.timeslack)
         except Exception as excp:
-            logger.error("Exception on conditions: %s" % (excp,))
+            logger.error("Exception on conditions: %s", excp)
             if not lax:
                 raise
             else:
@@ -631,9 +631,9 @@ class AuthnResponse(StatusResponse):
                 attribute_statement.attribute.extend(attrlist)
 
     def read_attribute_statement(self, attr_statem):
-        logger.debug("Attribute Statement: %s" % (attr_statem,))
+        logger.debug("Attribute Statement: %s", attr_statem)
         for aconv in self.attribute_converters:
-            logger.debug("Converts name format: %s" % (aconv.name_format,))
+            logger.debug("Converts name format: %s", aconv.name_format)
 
         self.decrypt_attributes(attr_statem)
         return to_local(self.attribute_converters, attr_statem,
@@ -688,9 +688,9 @@ class AuthnResponse(StatusResponse):
                     # This is where I don't allow unsolicited reponses
                     # Either in_response_to == None or has a value I don't
                     # recognize
-                    logger.debug("in response to: '%s'" % data.in_response_to)
-                    logger.info("outstanding queries: %s" % (
-                        self.outstanding_queries.keys(),))
+                    logger.debug("in response to: '%s'", data.in_response_to)
+                    logger.info("outstanding queries: %s",
+                        self.outstanding_queries.keys())
                     raise Exception(
                         "Combination of session id and requestURI I don't "
                         "recall")
@@ -750,7 +750,7 @@ class AuthnResponse(StatusResponse):
             else:
                 raise VerificationError("Missing NameID")
 
-        logger.info("Subject NameID: %s" % self.name_id)
+        logger.info("Subject NameID: %s", self.name_id)
         return self.name_id
 
     def _assertion(self, assertion, verified=False):
@@ -770,13 +770,13 @@ class AuthnResponse(StatusResponse):
                 try:
                     self.sec.check_signature(assertion, class_name(assertion),self.xmlstr)
                 except Exception as exc:
-                    logger.error("correctly_signed_response: %s" % exc)
+                    logger.error("correctly_signed_response: %s", exc)
                     raise
 
         self.assertion = assertion
-        logger.debug("assertion context: %s" % (self.context,))
-        logger.debug("assertion keys: %s" % (assertion.keyswv()))
-        logger.debug("outstanding_queries: %s" % (self.outstanding_queries,))
+        logger.debug("assertion context: %s", self.context)
+        logger.debug("assertion keys: %s", assertion.keyswv())
+        logger.debug("outstanding_queries: %s", self.outstanding_queries)
 
         #if self.context == "AuthnReq" or self.context == "AttrQuery":
         if self.context == "AuthnReq":
@@ -791,7 +791,7 @@ class AuthnResponse(StatusResponse):
 
         #if self.context == "AuthnReq" or self.context == "AttrQuery":
         #    self.ava = self.get_identity()
-        #    logger.debug("--- AVA: %s" % (self.ava,))
+        #    logger.debug("--- AVA: %s", self.ava)
 
         try:
             self.get_subject()
@@ -824,7 +824,7 @@ class AuthnResponse(StatusResponse):
                         if not self.sec.check_signature(
                                 assertion, origdoc=decr_txt,
                                 node_name=class_name(assertion), issuer=issuer):
-                            logger.error("Failed to verify signature on '%s'" % assertion)
+                            logger.error("Failed to verify signature on '%s'", assertion)
                             raise SignatureError()
                     res.append(assertion)
         return res
@@ -957,7 +957,7 @@ class AuthnResponse(StatusResponse):
 
         if self.context == "AuthnReq" or self.context == "AttrQuery":
             self.ava = self.get_identity()
-            logger.debug("--- AVA: %s" % (self.ava,))
+            logger.debug("--- AVA: %s", self.ava)
 
         return True
 
@@ -970,7 +970,7 @@ class AuthnResponse(StatusResponse):
         try:
             res = self._verify()
         except AssertionError as err:
-            logger.error("Verification error on the response: %s" % err)
+            logger.error("Verification error on the response: %s", err)
             raise
         else:
             if res is None:
@@ -1197,7 +1197,7 @@ class AssertionIDResponse(object):
     def loads(self, xmldata, decode=True, origxml=None):
         # own copy
         self.xmlstr = xmldata[:]
-        logger.debug("xmlstr: %s" % (self.xmlstr,))
+        logger.debug("xmlstr: %s", self.xmlstr)
         self.origxml = origxml
 
         try:
@@ -1219,7 +1219,7 @@ class AssertionIDResponse(object):
         try:
             valid_instance(self.response)
         except NotValid as exc:
-            logger.error("Not valid response: %s" % exc.args[0])
+            logger.error("Not valid response: %s", exc.args[0])
             raise
         return self
 
@@ -1227,10 +1227,10 @@ class AssertionIDResponse(object):
         if not self.response:
             logger.error("Response was not correctly signed")
             if self.xmlstr:
-                logger.info(self.xmlstr)
+                logger.info("Response: %s", self.xmlstr)
             raise IncorrectlySigned()
 
-        logger.debug("response: %s" % (self.response,))
+        logger.debug("response: %s", self.response)
 
         return self
 

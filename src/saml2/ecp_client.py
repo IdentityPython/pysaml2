@@ -74,7 +74,7 @@ class Client(Entity):
         if metadata_file:
             self._metadata = MetadataStore([saml, samlp], None, config)
             self._metadata.load("local", metadata_file)
-            logger.debug("Loaded metadata from '%s'" % metadata_file)
+            logger.debug("Loaded metadata from '%s'", metadata_file)
         else:
             self._metadata = None
 
@@ -109,12 +109,12 @@ class Client(Entity):
         if headers:
             ht_args["headers"].extend(headers)
 
-        logger.debug("[P2] Sending request: %s" % ht_args["data"])
+        logger.debug("[P2] Sending request: %s", ht_args["data"])
 
         # POST the request to the IdP
         response = self.send(**ht_args)
 
-        logger.debug("[P2] Got IdP response: %s" % response)
+        logger.debug("[P2] Got IdP response: %s", response)
 
         if response.status_code != 200:
             raise SAMLError(
@@ -127,12 +127,12 @@ class Client(Entity):
         if respdict is None:
             raise SAMLError("Unexpected reply from the IdP")
 
-        logger.debug("[P2] IdP response dict: %s" % respdict)
+        logger.debug("[P2] IdP response dict: %s", respdict)
 
         idp_response = respdict["body"]
         assert idp_response.c_tag == "Response"
 
-        logger.debug("[P2] IdP AUTHN response: %s" % idp_response)
+        logger.debug("[P2] IdP AUTHN response: %s", idp_response)
 
         _ecp_response = None
         for item in respdict["header"]:
@@ -155,7 +155,7 @@ class Client(Entity):
         if respdict is None:
             raise SAMLError("Unexpected reply from the SP")
 
-        logger.debug("[P1] SP response dict: %s" % respdict)
+        logger.debug("[P1] SP response dict: %s", respdict)
 
         # AuthnRequest in the body or not
         authn_request = respdict["body"]
@@ -201,7 +201,7 @@ class Client(Entity):
         ht_args = self.use_soap(idp_response, args["rc_url"],
                                 [args["relay_state"]])
 
-        logger.debug("[P3] Post to SP: %s" % ht_args["data"])
+        logger.debug("[P3] Post to SP: %s", ht_args["data"])
 
         ht_args["headers"].append(('Content-Type', 'application/vnd.paos+xml'))
 
@@ -217,7 +217,7 @@ class Client(Entity):
             raise SAMLError(
                 "Error POSTing package to SP: %s" % response.error)
 
-        logger.debug("[P3] SP response: %s" % response.text)
+        logger.debug("[P3] SP response: %s", response.text)
 
         self.done_ecp = True
         logger.debug("Done ECP")
@@ -266,7 +266,7 @@ class Client(Entity):
         opargs["headers"] = self.add_paos_headers(opargs["headers"])
 
         response = self.send(url, op, **opargs)
-        logger.debug("[Op] SP response: %s" % response)
+        logger.debug("[Op] SP response: %s", response)
 
         if response.status_code != 200:
             raise SAMLError(

@@ -37,7 +37,7 @@ class AttributeResolver(object):
             for ass in self.metadata.attribute_consuming_service(member):
                 for attr_serv in ass.attribute_service:
                     logger.info(
-                        "Send attribute request to %s" % attr_serv.location)
+                        "Send attribute request to %s", attr_serv.location)
                     if attr_serv.binding != BINDING_SOAP:
                         continue
                     # attribute query assumes SOAP binding
