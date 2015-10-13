@@ -28,7 +28,17 @@ def full_path(local_file):
 HOST = 'localhost'
 PORT = 8088
 
-BASE = "http://%s:%s" % (HOST, PORT)
+HTTPS = True
+
+if HTTPS:
+    BASE = "https://%s:%s" % (HOST, PORT)
+else:
+    BASE = "http://%s:%s" % (HOST, PORT)
+
+# HTTPS cert information
+SERVER_CERT = "pki/mycert.pem"
+SERVER_KEY = "pki/mykey.pem"
+CERT_CHAIN = ""
 
 CONFIG = {
     "entityid": "%s/idp.xml" % BASE,

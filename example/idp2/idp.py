@@ -7,10 +7,13 @@ import os
 import re
 import socket
 import time
+import ssl
 
 from Cookie import SimpleCookie
 from hashlib import sha1
 from urlparse import parse_qs
+from cherrypy import wsgiserver
+from cherrypy.wsgiserver import ssl_pyopenssl
 
 from saml2 import BINDING_HTTP_ARTIFACT
 from saml2 import BINDING_URI
@@ -1044,13 +1047,15 @@ if __name__ == '__main__':
     parser.add_argument(dest="config")
     args = parser.parse_args()
 
+    CONFIG = importlib.import_module(args.config)
+
     AUTHN_BROKER = AuthnBroker()
     AUTHN_BROKER.add(authn_context_class_ref(PASSWORD),
                      username_password_authn, 10,
-                     "http://%s" % socket.gethostname())
+                     CONFIG.BASE)
     AUTHN_BROKER.add(authn_context_class_ref(UNSPECIFIED),
-                     "", 0, "http://%s" % socket.gethostname())
-    CONFIG = importlib.import_module(args.config)
+                     "", 0, CONFIG.BASE)
+
     IDP = server.Server(args.config, cache=Cache())
     IDP.ticket = {}
 
@@ -1062,6 +1067,17 @@ if __name__ == '__main__':
     HOST = CONFIG.HOST
     PORT = CONFIG.PORT
 
-    SRV = make_server(HOST, PORT, application)
-    print("IdP listening on %s:%s" % (HOST, PORT))
-    SRV.serve_forever()
+    SRV = wsgiserver.CherryPyWSGIServer((HOST, PORT), application)
+
+    _https = ""
+    if CONFIG.HTTPS:
+        SRV.ssl_adapter = ssl_pyopenssl.pyOpenSSLAdapter(CONFIG.SERVER_CERT,
+                                                         CONFIG.SERVER_KEY, CONFIG.CERT_CHAIN)
+        _https = " using SSL/TLS"
+    logger.info("Server starting")
+    print("IDP listening on %s:%s%s" % (HOST, PORT, _https))
+    try:
+        SRV.start()
+    except KeyboardInterrupt:
+        SRV.stop()
+

@@ -1,17 +1,20 @@
 #!/usr/bin/env python
 
 import base64
-from saml2.sigver import pre_encryption_part, make_temp, XmlsecError, \
-    SigverError
-from saml2.mdstore import MetadataStore
-from saml2.saml import assertion_from_string, EncryptedAssertion
-from saml2.samlp import response_from_string
-
-from saml2 import sigver, extension_elements_to_elements
+from saml2 import sigver
+from saml2 import extension_elements_to_elements
 from saml2 import class_name
 from saml2 import time_util
 from saml2 import saml, samlp
 from saml2 import config
+from saml2.sigver import pre_encryption_part
+from saml2.sigver import make_temp
+from saml2.sigver import XmlsecError
+from saml2.sigver import SigverError
+from saml2.mdstore import MetadataStore
+from saml2.saml import assertion_from_string
+from saml2.saml import EncryptedAssertion
+from saml2.samlp import response_from_string
 from saml2.s_utils import factory, do_attribute_statement
 
 from py.test import raises
@@ -510,6 +513,6 @@ def test_xmlsec_err():
 if __name__ == "__main__":
     t = TestSecurity()
     t.setup_class()
-    t.test_verify_1()
+    t.test_sign_assertion()
 
     #test_xmlsec_err()

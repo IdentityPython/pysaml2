@@ -1036,9 +1036,11 @@ class AuthnResponse(StatusResponse):
                     "issuer": self.issuer(), "not_on_or_after": nooa,
                     "authz_decision_info": self.authz_decision_info()}
         else:
+            authn_statement = self.assertion.authn_statement[0]
             return {"ava": self.ava, "name_id": self.name_id,
                     "came_from": self.came_from, "issuer": self.issuer(),
-                    "not_on_or_after": nooa, "authn_info": self.authn_info()}
+                    "not_on_or_after": nooa, "authn_info": self.authn_info(),
+                    "session_index": authn_statement.session_index}
 
     def __str__(self):
         if not isinstance(self.xmlstr, six.string_types):

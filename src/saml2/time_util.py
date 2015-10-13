@@ -280,7 +280,7 @@ def before(point):
     elif isinstance(point, int):
         point = time.gmtime(point)
 
-    return time.gmtime() < point
+    return time.gmtime() <= point
 
 
 def after(point):
