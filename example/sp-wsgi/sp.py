@@ -4,7 +4,10 @@ import logging
 import re
 import argparse
 import os
-from future.backports.http.cookies import SimpleCookie
+try:
+    from future.backports.http.cookies import SimpleCookie
+except:
+    from Cookie import SimpleCookie
 import six
 
 from saml2.extension.pefim import SPCertEnc
