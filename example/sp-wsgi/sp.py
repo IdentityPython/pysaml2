@@ -167,7 +167,7 @@ class Cache(object):
 
     def get_user(self, environ):
         cookie = environ.get("HTTP_COOKIE", '')
-
+        cookie = cookie.decode("UTF-8")
         logger.debug("Cookie: %s" % cookie)
         if cookie:
             cookie_obj = SimpleCookie(cookie)
@@ -205,7 +205,7 @@ class Cache(object):
         cookie[self.cookie_name]['path'] = "/"
         cookie[self.cookie_name]["expires"] = _expiration(480)
         logger.debug("Cookie expires: %s" % cookie[self.cookie_name]["expires"])
-        return cookie.output().split(": ", 1)
+        return cookie.output().encode("UTF-8").split(": ", 1)
 
 
 # -----------------------------------------------------------------------------
