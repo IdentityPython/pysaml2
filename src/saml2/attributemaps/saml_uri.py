@@ -11,7 +11,7 @@ PKCS_9 = 'urn:oid:1.2.840.113549.1.9.1.'
 SCHAC = 'urn:oid:1.3.6.1.4.1.25178.1.2.'
 SIS = 'urn:oid:1.2.752.194.10.2.'
 UMICH = 'urn:oid:1.3.6.1.4.1.250.1.57.'
-
+OPENOSI_OID = 'urn:oid:1.3.6.1.4.1.27630.2.1.1.' #openosi-0.82.schema http://www.openosi.org/osi/display/ldap/Home
 
 MAP = {
     'identifier': 'urn:oasis:names:tc:SAML:2.0:attrname-format:uri',
@@ -68,6 +68,13 @@ MAP = {
         NOREDUPERSON_OID+'10': 'norEduPersonLegalName',
         NOREDUPERSON_OID+'11': 'norEduOrgSchemaVersion',
         NOREDUPERSON_OID+'12': 'norEduOrgNIN',
+        OPENOSI_OID+'17': 'osiHomeUrl',
+        OPENOSI_OID+'19': 'osiPreferredTZ',
+        OPENOSI_OID+'72': 'osiICardTimeLastUpdated',
+        OPENOSI_OID+'104': 'osiMiddleName',
+        OPENOSI_OID+'107': 'osiOtherEmail',
+        OPENOSI_OID+'109': 'osiOtherHomePhone',
+        OPENOSI_OID+'120': 'osiWorkURL',
         PKCS_9+'1': 'email',
         SCHAC+'1': 'schacMotherTongue',
         SCHAC+'2': 'schacGender',
@@ -208,6 +215,13 @@ MAP = {
         'norEduPersonLegalName': NOREDUPERSON_OID+'10',
         'norEduPersonNIN': NOREDUPERSON_OID+'5',
         'o': X500ATTR_OID+'10',
+        'osiHomeUrl': OPENOSI_OID+'17',
+        'osiPreferredTZ': OPENOSI_OID+'19',
+        'osiICardTimeLastUpdated': OPENOSI_OID+'72',
+        'osiMiddleName': OPENOSI_OID+'104',
+        'osiOtherEmail': OPENOSI_OID+'107',
+        'osiOtherHomePhone': OPENOSI_OID+'109',
+        'osiWorkURL': OPENOSI_OID+'120',
         'ou': X500ATTR_OID+'11',
         'owner': X500ATTR_OID+'32',
         'physicalDeliveryOfficeName': X500ATTR_OID+'19',
