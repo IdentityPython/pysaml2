@@ -109,7 +109,7 @@ def create_artifact(entity_id, message_handle, endpoint_index=0):
 
     if not isinstance(message_handle, six.binary_type):
         message_handle = message_handle.encode('utf-8')
-    ter = b"".join((ARTIFACT_TYPECODE, 
+    ter = b"".join((ARTIFACT_TYPECODE,
                     ("%.2x" % endpoint_index).encode('ascii'),
                     sourceid.digest(),
                     message_handle))
@@ -283,11 +283,10 @@ class Entity(HTTPBase):
             except UnsupportedBinding:
                 pass
 
-        logger.error("Failed to find consumer URL: %s, %s, %s" % (entity_id,
-                                                                  bindings,
-                                                                  descr_type))
-        #logger.error("Bindings: %s" % bindings)
-        #logger.error("Entities: %s" % self.metadata)
+        logger.error("Failed to find consumer URL: %s, %s, %s",
+                     entity_id, bindings, descr_type)
+        #logger.error("Bindings: %s", bindings)
+        #logger.error("Entities: %s", self.metadata)
 
         raise SAMLError("Unknown entity or unsupported bindings")
 
@@ -363,7 +362,7 @@ class Entity(HTTPBase):
         :param msgtype:
         :return:
         """
-        #logger.debug("unravel '%s'" % txt)
+        #logger.debug("unravel '%s'", txt)
         if binding not in [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST,
                            BINDING_SOAP, BINDING_URI, BINDING_HTTP_ARTIFACT,
                            None]:
@@ -424,7 +423,7 @@ class Entity(HTTPBase):
         except (AttributeError, TypeError):
             to_sign = [(class_name(msg), mid)]
 
-        logger.info("REQUEST: %s" % msg)
+        logger.info("REQUEST: %s", msg)
         return signed_instance_factory(msg, self.sec, to_sign)
 
     def _message(self, request_cls, destination=None, message_id=0,
@@ -470,7 +469,7 @@ class Entity(HTTPBase):
         if sign:
             return reqid, self.sign(req, sign_prepare=sign_prepare)
         else:
-            logger.info("REQUEST: %s" % req)
+            logger.info("REQUEST: %s", req)
             return reqid, req
 
     @staticmethod
@@ -758,8 +757,8 @@ class Entity(HTTPBase):
                 if receiver_addresses:
                     break
 
-        _log_debug("receiver addresses: %s" % receiver_addresses)
-        _log_debug("Binding: %s" % binding)
+        _log_debug("receiver addresses: %s", receiver_addresses)
+        _log_debug("Binding: %s", binding)
 
         try:
             timeslack = self.config.accepted_time_diff
@@ -888,7 +887,7 @@ class Entity(HTTPBase):
         response = self._status_response(samlp.LogoutResponse, issuer, status,
                                          sign, **rinfo)
 
-        logger.info("Response: %s" % (response,))
+        logger.info("Response: %s", response)
 
         return response
 
@@ -925,7 +924,7 @@ class Entity(HTTPBase):
         msg = element_to_extension_element(self.artifact[artifact])
         response.extension_elements = [msg]
 
-        logger.info("Response: %s" % (response,))
+        logger.info("Response: %s", response)
 
         return response
 
@@ -993,7 +992,7 @@ class Entity(HTTPBase):
         response = self._status_response(samlp.ManageNameIDResponse, issuer,
                                          status, sign, **rinfo)
 
-        logger.info("Response: %s" % (response,))
+        logger.info("Response: %s", response)
 
         return response
 
@@ -1044,7 +1043,7 @@ class Entity(HTTPBase):
             try:
                 response = response_cls(self.sec, **kwargs)
             except Exception as exc:
-                logger.info("%s" % exc)
+                logger.info("%s", exc)
                 raise
 
             xmlstr = self.unravel(xmlstr, binding, response_cls.msgtype)
@@ -1055,7 +1054,7 @@ class Entity(HTTPBase):
             try:
                 response = response.loads(xmlstr, False, origxml=origxml)
             except SigverError as err:
-                logger.error("Signature Error: %s" % err)
+                logger.error("Signature Error: %s", err)
                 raise
             except UnsolicitedResponse:
                 logger.error("Unsolicited response")
@@ -1065,7 +1064,7 @@ class Entity(HTTPBase):
                     logger.error("Not well-formed XML")
                     raise
 
-            logger.debug("XMLSTR: %s" % xmlstr)
+            logger.debug("XMLSTR: %s", xmlstr)
 
             if response:
                 keys = None

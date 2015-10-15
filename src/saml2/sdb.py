@@ -72,7 +72,7 @@ class SessionStorage(object):
         try:
             statements = self.authn[key]
         except KeyError:
-            logger.info("Unknown subject %s" % name_id)
+            logger.info("Unknown subject %s", name_id)
             return []
 
         for statement in statements:
@@ -88,7 +88,7 @@ class SessionStorage(object):
         return result
 
     def remove_authn_statements(self, name_id):
-        logger.debug("remove authn about: %s" % name_id)
+        logger.debug("remove authn about: %s", name_id)
         nkey = sha1(code_binary(name_id)).hexdigest()
 
         del self.authn[nkey]

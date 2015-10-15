@@ -115,18 +115,18 @@ class Conversation(tool.Conversation):
 
         if use_artifact:
             saml_art = _client.use_artifact(str_req, self.args["entity_id"])
-            logger.info("SAML Artifact: %s" % saml_art)
+            logger.info("SAML Artifact: %s", saml_art)
             info_typ = "SAMLart"
         else:
-            logger.info("SAML Request: %s" % str_req)
+            logger.info("SAML Request: %s", str_req)
             info_typ = "SAMLRequest"
             # depending on binding send the query
 
         if self.args["request_binding"] is BINDING_SOAP:
             res = _client.send_using_soap(str_req, loc)
             if res.status_code >= 400:
-                logger.info("Received a HTTP error (%d) '%s'" % (
-                    res.status_code, res.text))
+                logger.info("Received a HTTP error (%d) '%s'",
+                    res.status_code, res.text)
                 raise HTTPError(res.text)
             else:
                 self.response_args["binding"] = BINDING_SOAP
@@ -156,8 +156,8 @@ class Conversation(tool.Conversation):
                 res = None
 
             if res is not None and res.status_code >= 400:
-                logger.info("Received a HTTP error (%d) '%s'" % (
-                    res.status_code, res.text))
+                logger.info("Received a HTTP error (%d) '%s'",
+                    res.status_code, res.text)
                 raise HTTPError(res.text)
 
         self.last_response = res
@@ -240,11 +240,11 @@ class Conversation(tool.Conversation):
                 self.test_sequence(self.oper.tests["post"])
             except KeyError:
                 pass
-            logger.info("SAML Response: %s" % _resp)
+            logger.info("SAML Response: %s", _resp)
         except FatalError as ferr:
             if _resp:
-                logger.info("Faulty response: %s" % _resp)
-            logger.error("Exception %s" % ferr)
+                logger.info("Faulty response: %s", _resp)
+            logger.error("Exception %s", ferr)
             raise
         except ElementTree.ParseError:
             return False
@@ -252,8 +252,8 @@ class Conversation(tool.Conversation):
             raise
         except Exception as err:
             if _resp:
-                logger.info("Faulty response: %s" % _resp)
-            logger.error("Exception %s" % err)
+                logger.info("Faulty response: %s", _resp)
+            logger.error("Exception %s", err)
             self.err_check("exception", err)
 
         return True

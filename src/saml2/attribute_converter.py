@@ -133,8 +133,8 @@ def to_local(acs, statement, allow_unknown_attributes=False):
                     allow_unknown_attributes:
                 _func = acs[0].lcd_ava_from
             else:
-                logger.info("Unsupported attribute name format: %s" % (
-                    attr.name_format,))
+                logger.info("Unsupported attribute name format: %s",
+                    attr.name_format)
                 continue
 
         try:
@@ -143,7 +143,7 @@ def to_local(acs, statement, allow_unknown_attributes=False):
             if allow_unknown_attributes:
                 key, val = acs[0].lcd_ava_from(attr)
             else:
-                logger.info("Unknown attribute name: %s" % (attr,))
+                logger.info("Unknown attribute name: %s", attr)
                 continue
         except AttributeError:
             continue
@@ -180,8 +180,8 @@ def list_to_local(acs, attrlist, allow_unknown_attributes=False):
                     allow_unknown_attributes:
                 _func = acs[0].lcd_ava_from
             else:
-                logger.info("Unsupported attribute name format: %s" % (
-                    attr.name_format,))
+                logger.info("Unsupported attribute name format: %s",
+                    attr.name_format)
                 continue
 
         try:
@@ -190,7 +190,7 @@ def list_to_local(acs, attrlist, allow_unknown_attributes=False):
             if allow_unknown_attributes:
                 key, val = acs[0].lcd_ava_from(attr)
             else:
-                logger.info("Unknown attribute name: %s" % (attr,))
+                logger.info("Unknown attribute name: %s", attr)
                 continue
         except AttributeError:
             continue

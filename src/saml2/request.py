@@ -43,7 +43,7 @@ class Request(object):
 
         # own copy
         self.xmlstr = xmldata[:]
-        logger.debug("xmlstr: %s" % (self.xmlstr,))
+        logger.debug("xmlstr: %s", self.xmlstr)
         try:
             self.message = self.signature_check(xmldata, origdoc=origdoc,
                                                 must=must,
@@ -55,15 +55,15 @@ class Request(object):
 
         if not self.message:
             logger.error("Response was not correctly signed")
-            logger.info(xmldata)
+            logger.info("Response: %s", xmldata)
             raise IncorrectlySigned()
 
-        logger.info("request: %s" % (self.message,))
+        logger.info("request: %s", self.message)
 
         try:
             valid_instance(self.message)
         except NotValid as exc:
-            logger.error("Not valid request: %s" % exc.args[0])
+            logger.error("Not valid request: %s", exc.args[0])
             raise
 
         return self
@@ -83,8 +83,8 @@ class Request(object):
         assert self.message.version == "2.0"
         if self.message.destination and self.receiver_addrs and \
                 self.message.destination not in self.receiver_addrs:
-            logger.error("%s not in %s" % (self.message.destination,
-                                                self.receiver_addrs))
+            logger.error("%s not in %s", self.message.destination,
+                                         self.receiver_addrs)
             raise OtherError("Not destined for me!")
 
         assert self.issue_instant_ok()

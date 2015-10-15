@@ -548,7 +548,7 @@ class VerifyAttributeNameFormat(Check):
                     try:
                         assert attr.name_format == conv.msg_constraints[
                             "name_format"]
-                        logger.debug("Attribute name format valid: " +
+                        logger.debug("Attribute name format valid: %s",
                                      attr.name_format)
                     except AssertionError:
                         if NAME_FORMAT_UNSPECIFIED != conv.msg_constraints[

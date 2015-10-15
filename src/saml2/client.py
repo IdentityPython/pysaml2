@@ -111,7 +111,7 @@ class Saml2Client(Base):
                 continue
 
             destination = self._sso_location(entityid, binding)
-            logger.info("destination to provider: %s" % destination)
+            logger.info("destination to provider: %s", destination)
 
             reqid, request = self.create_authn_request(
                 destination, vorg, scoping, response_binding, nameid_format,
@@ -120,7 +120,7 @@ class Saml2Client(Base):
 
             _req_str = str(request)
 
-            logger.info("AuthNReq: %s" % _req_str)
+            logger.info("AuthNReq: %s", _req_str)
 
             try:
                 sigalg = kwargs["sigalg"]
@@ -156,7 +156,7 @@ class Saml2Client(Base):
         if isinstance(name_id, six.string_types):
             name_id = decode(name_id)
 
-        logger.info("logout request for: %s" % name_id)
+        logger.info("logout request for: %s", name_id)
 
         # find out which IdPs/AAs I should notify
         entity_ids = self.users.issuers_of_info(name_id)
@@ -187,7 +187,7 @@ class Saml2Client(Base):
         responses = {}
 
         for entity_id in entity_ids:
-            logger.debug("Logout from '%s'" % entity_id)
+            logger.debug("Logout from '%s'", entity_id)
             # for all where I can use the SOAP binding, do those first
             for binding in [BINDING_SOAP, BINDING_HTTP_POST,
                             BINDING_HTTP_REDIRECT]:
@@ -201,11 +201,11 @@ class Saml2Client(Base):
                     srvs = None
 
                 if not srvs:
-                    logger.debug("No SLO '%s' service" % binding)
+                    logger.debug("No SLO '%s' service", binding)
                     continue
 
                 destination = destinations(srvs)[0]
-                logger.info("destination to provider: %s" % destination)
+                logger.info("destination to provider: %s", destination)
                 try:
                     session_info = self.users.get_info_from(name_id, entity_id)
                     session_indexes = [session_info['session_index']]
@@ -246,12 +246,12 @@ class Saml2Client(Base):
                     if response and response.status_code == 200:
                         not_done.remove(entity_id)
                         response = response.text
-                        logger.info("Response: %s" % response)
+                        logger.info("Response: %s", response)
                         res = self.parse_logout_request_response(response,
                                                                  binding)
                         responses[entity_id] = res
                     else:
-                        logger.info("NOT OK response from %s" % destination)
+                        logger.info("NOT OK response from %s", destination)
 
                 else:
                     self.state[req_id] = {"entity_id": entity_id,
@@ -298,11 +298,11 @@ class Saml2Client(Base):
             response message, response headers and message)
         """
 
-        logger.info("state: %s" % (self.state,))
+        logger.info("state: %s", self.state)
         status = self.state[response.in_response_to]
-        logger.info("status: %s" % (status,))
+        logger.info("status: %s", status)
         issuer = response.issuer()
-        logger.info("issuer: %s" % issuer)
+        logger.info("issuer: %s", issuer)
         del self.state[response.in_response_to]
         if status["entity_ids"] == [issuer]:  # done
             self.local_logout(decode(status["name_id"]))
@@ -343,10 +343,10 @@ class Saml2Client(Base):
 
         if response:
             # not_done.remove(entity_id)
-            logger.info("OK response from %s" % destination)
+            logger.info("OK response from %s", destination)
             return response
         else:
-            logger.info("NOT OK response from %s" % destination)
+            logger.info("NOT OK response from %s", destination)
 
         return None
 
@@ -497,7 +497,7 @@ class Saml2Client(Base):
                     'method': "POST
                 }
         """
-        logger.info("logout request: %s" % request)
+        logger.info("logout request: %s", request)
 
         _req = self._parse_request(request, LogoutRequest,
                                    "single_logout_service", binding)

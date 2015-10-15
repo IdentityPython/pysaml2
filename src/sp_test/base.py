@@ -80,14 +80,14 @@ class Conversation():
 
     def check_severity(self, stat):
         if stat["status"] >= 3:
-            logger.error("WHERE: %s" % stat["id"])
-            logger.error("STATUS:%s" % STATUSCODE[stat["status"]])
+            logger.error("WHERE: %s", stat["id"])
+            logger.error("STATUS:%s", STATUSCODE[stat["status"]])
             try:
-                logger.error("HTTP STATUS: %s" % stat["http_status"])
+                logger.error("HTTP STATUS: %s", stat["http_status"])
             except KeyError:
                 pass
             try:
-                logger.error("INFO: %s" % stat["message"])
+                logger.error("INFO: %s", stat["message"])
             except KeyError:
                 pass
 
@@ -153,9 +153,9 @@ class Conversation():
         Create the <operation> directory; delete all possibly existing files
         Write response content into response_x.<ext> (with x incrementing from 0)
         """
-        logger.info("<-- Status: %s" % response.status_code)
+        logger.info("<-- Status: %s", response.status_code)
         if response.status_code in [302, 301, 303]:
-            logger.info("<-- location: %s" %
+            logger.info("<-- location: %s",
                         response.headers._store['location'][1])
         else:
             if self.commandlineargs.content_log:
@@ -183,11 +183,11 @@ class Conversation():
                 f = open(fn, "w")
                 f.write(response.content)
                 f.close()
-                logger.info("<-- Response content (encoding=%s) in file %s" %
-                            (encoding, fn))
+                logger.info("<-- Response content (encoding=%s) in file %s",
+                            encoding, fn)
                 pass
             else:
-                logger.info("<-- Content: %s" % response.content)
+                logger.info("<-- Content: %s", response.content)
 
     def wb_send_GET_startpage(self):
         """
@@ -251,7 +251,7 @@ class Conversation():
                     raise FatalError(
                         "Too long sequence of redirects: %s" % rdseq)
 
-            logger.info("--> REDIRECT TO: %s" % url)
+            logger.info("--> REDIRECT TO: %s", url)
             # If back to me
             for_me = False
             try:
@@ -491,11 +491,11 @@ class Conversation():
                 _spec = self.interaction.pick_interaction(_base, content)
             except InteractionNeeded:
                 self.position = url
-                logger.error("Page Content: %s" % content)
+                logger.error("Page Content: %s", content)
                 raise
             except KeyError:
                 self.position = url
-                logger.error("Page Content: %s" % content)
+                logger.error("Page Content: %s", content)
                 self.err_check("interaction-needed")
 
             if _spec == _last_action:
@@ -506,7 +506,7 @@ class Conversation():
                 _last_action = _spec
 
             if len(_spec) > 2:
-                logger.info(">> %s <<" % _spec["page-type"])
+                logger.info(">> %s <<", _spec["page-type"])
                 if _spec["page-type"] == "login":
                     self.login_page = content
 

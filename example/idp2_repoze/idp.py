@@ -83,7 +83,7 @@ def dict2list_of_tuples(d):
 class Service(object):
     def __init__(self, environ, start_response, user=None):
         self.environ = environ
-        logger.debug("ENVIRON: %s" % environ)
+        logger.debug("ENVIRON: %s", environ)
         self.start_response = start_response
         self.user = user
 
@@ -93,22 +93,22 @@ class Service(object):
             return dict([(k, v[0]) for k, v in parse_qs(_qs).items()])
         else:
             return None
-    
+
     def unpack_post(self):
         _dict = parse_qs(get_post(self.environ))
-        logger.debug("unpack_post:: %s" % _dict)
+        logger.debug("unpack_post:: %s", _dict)
         try:
             return dict([(k, v[0]) for k, v in _dict.items()])
         except Exception:
             return None
-    
+
     def unpack_soap(self):
         try:
             query = get_post(self.environ)
             return {"SAMLRequest": query, "RelayState": ""}
         except Exception:
             return None
-    
+
     def unpack_either(self):
         if self.environ["REQUEST_METHOD"] == "GET":
             _dict = self.unpack_redirect()
@@ -116,11 +116,11 @@ class Service(object):
             _dict = self.unpack_post()
         else:
             _dict = None
-        logger.debug("_dict: %s" % _dict)
+        logger.debug("_dict: %s", _dict)
         return _dict
 
     def operation(self, _dict, binding):
-        logger.debug("_operation: %s" % _dict)
+        logger.debug("_operation: %s", _dict)
         if not _dict or not 'SAMLRequest' in _dict:
             resp = BadRequest('Error parsing request or no request')
             return resp(self.environ, self.start_response)
@@ -178,7 +178,7 @@ class Service(object):
         """
         logger.debug("- SOAP -")
         _dict = self.unpack_soap()
-        logger.debug("_dict: %s" % _dict)
+        logger.debug("_dict: %s", _dict)
         return self.operation(_dict, BINDING_SOAP)
 
     def uri(self):
@@ -196,8 +196,8 @@ class Service(object):
     #         "PATH_INFO"], "key": key})
     #     headers = [('Content-Type', 'text/plain')]
     #
-    #     logger.debug("location: %s" % loc)
-    #     logger.debug("headers: %s" % headers)
+    #     logger.debug("location: %s", loc)
+    #     logger.debug("headers: %s", headers)
     #
     #     resp = Redirect(loc, headers=headers)
     #
@@ -255,15 +255,15 @@ class SSO(Service):
 
         logger.info("parsed OK")
         _authn_req = self.req_info.message
-        logger.debug("%s" % _authn_req)
+        logger.debug("%s", _authn_req)
 
         self.binding_out, self.destination = IDP.pick_binding(
             "assertion_consumer_service",
             bindings=self.response_bindings,
             entity_id=_authn_req.issuer.text)
 
-        logger.debug("Binding: %s, destination: %s" % (self.binding_out,
-                                                       self.destination))
+        logger.debug("Binding: %s, destination: %s", self.binding_out,
+                                                       self.destination)
 
         resp_args = {}
         try:
@@ -282,18 +282,18 @@ class SSO(Service):
         try:
             resp_args, _resp = self.verify_request(query, binding_in)
         except UnknownPrincipal as excp:
-            logger.error("UnknownPrincipal: %s" % (excp,))
+            logger.error("UnknownPrincipal: %s", excp)
             resp = ServiceError("UnknownPrincipal: %s" % (excp,))
             return resp(self.environ, self.start_response)
         except UnsupportedBinding as excp:
-            logger.error("UnsupportedBinding: %s" % (excp,))
+            logger.error("UnsupportedBinding: %s", excp)
             resp = ServiceError("UnsupportedBinding: %s" % (excp,))
             return resp(self.environ, self.start_response)
 
         if not _resp:
             identity = USERS[self.user].copy()
             #identity["eduPersonTargetedID"] = get_eptid(IDP, query, session)
-            logger.info("Identity: %s" % (identity,))
+            logger.info("Identity: %s", identity)
 
             if REPOZE_ID_EQUIVALENT:
                 identity[REPOZE_ID_EQUIVALENT] = self.user
@@ -310,15 +310,15 @@ class SSO(Service):
                 resp = ServiceError("Exception: %s" % (excp,))
                 return resp(self.environ, self.start_response)
 
-        logger.info("AuthNResponse: %s" % _resp)
+        logger.info("AuthNResponse: %s", _resp)
         http_args = IDP.apply_binding(self.binding_out,
                                       "%s" % _resp, self.destination,
                                       relay_state, response=True)
-        logger.debug("HTTPargs: %s" % http_args)
+        logger.debug("HTTPargs: %s", http_args)
         return self.response(self.binding_out, http_args)
 
     def _store_request(self, _dict):
-        logger.debug("_store_request: %s" % _dict)
+        logger.debug("_store_request: %s", _dict)
         key = sha1(_dict["SAMLRequest"]).hexdigest()
         # store the AuthnRequest
         IDP.ticket[key] = _dict
@@ -412,7 +412,7 @@ class SSO(Service):
                 except TypeError:
                     resp = Unauthorized()
                 else:
-                    logger.debug("Authz_info: %s" % _info)
+                    logger.debug("Authz_info: %s", _info)
                     try:
                         (user, passwd) = _info.split(":")
                         if is_equal(PASSWD[user], passwd):
@@ -448,7 +448,7 @@ def do_authentication(environ, start_response, authn_context, key,
 
     if len(auth_info):
         method, reference = auth_info[0]
-        logger.debug("Authn chosen: %s (ref=%s)" % (method, reference))
+        logger.debug("Authn chosen: %s (ref=%s)", method, reference)
         return method(environ, start_response, reference, key, redirect_uri)
     else:
         resp = Unauthorized("No usable authentication method")
@@ -482,7 +482,7 @@ def username_password_authn(environ, start_response, reference, key,
         "authn_reference": reference,
         "redirect_uri": redirect_uri
     }
-    logger.info("do_authentication argv: %s" % argv)
+    logger.info("do_authentication argv: %s", argv)
     return resp(environ, start_response, **argv)
 
 
@@ -498,7 +498,7 @@ def verify_username_and_password(dic):
 def do_verify(environ, start_response, _):
     query = parse_qs(get_post(environ))
 
-    logger.debug("do_verify: %s" % query)
+    logger.debug("do_verify: %s", query)
 
     try:
         _ok, user = verify_username_and_password(query)
@@ -512,13 +512,13 @@ def do_verify(environ, start_response, _):
         uid = rndstr(24)
         IDP.cache.uid2user[uid] = user
         IDP.cache.user2uid[user] = uid
-        logger.debug("Register %s under '%s'" % (user, uid))
+        logger.debug("Register %s under '%s'", user, uid)
 
         kaka = set_cookie("idpauthn", "/", uid, query["authn_reference"][0])
 
         lox = "%s?id=%s&key=%s" % (query["redirect_uri"][0], uid,
                                    query["key"][0])
-        logger.debug("Redirect => %s" % lox)
+        logger.debug("Redirect => %s", lox)
         resp = Redirect(lox, headers=[kaka], content="text/html")
 
     return resp(environ, start_response)
@@ -546,17 +546,17 @@ class SLO(Service):
         logger.info("--- Single Log Out Service ---")
         try:
             _, body = request.split("\n")
-            logger.debug("req: '%s'" % body)
+            logger.debug("req: '%s'", body)
             req_info = IDP.parse_logout_request(body, binding)
         except Exception as exc:
-            logger.error("Bad request: %s" % exc)
+            logger.error("Bad request: %s", exc)
             resp = BadRequest("%s" % exc)
             return resp(self.environ, self.start_response)
-    
+
         msg = req_info.message
         if msg.name_id:
             lid = IDP.ident.find_local_id(msg.name_id)
-            logger.info("local identifier: %s" % lid)
+            logger.info("local identifier: %s", lid)
             if lid in IDP.cache.user2uid:
                 uid = IDP.cache.user2uid[lid]
                 if uid in IDP.cache.uid2user:
@@ -566,55 +566,55 @@ class SLO(Service):
             try:
                 IDP.session_db.remove_authn_statements(msg.name_id)
             except KeyError as exc:
-                logger.error("ServiceError: %s" % exc)
+                logger.error("ServiceError: %s", exc)
                 resp = ServiceError("%s" % exc)
                 return resp(self.environ, self.start_response)
-    
+
         resp = IDP.create_logout_response(msg, [binding])
-    
+
         try:
             hinfo = IDP.apply_binding(binding, "%s" % resp, "", relay_state)
         except Exception as exc:
-            logger.error("ServiceError: %s" % exc)
+            logger.error("ServiceError: %s", exc)
             resp = ServiceError("%s" % exc)
             return resp(self.environ, self.start_response)
-    
+
         #_tlh = dict2list_of_tuples(hinfo["headers"])
         delco = delete_cookie(self.environ, "idpauthn")
         if delco:
             hinfo["headers"].append(delco)
-        logger.info("Header: %s" % (hinfo["headers"],))
+        logger.info("Header: %s", hinfo["headers"])
         resp = Response(hinfo["data"], headers=hinfo["headers"])
         return resp(self.environ, self.start_response)
-    
+
 # ----------------------------------------------------------------------------
 # Manage Name ID service
 # ----------------------------------------------------------------------------
 
 
 class NMI(Service):
-    
+
     def do(self, query, binding, relay_state=""):
         logger.info("--- Manage Name ID Service ---")
         req = IDP.parse_manage_name_id_request(query, binding)
         request = req.message
-    
+
         # Do the necessary stuff
         name_id = IDP.ident.handle_manage_name_id_request(
             request.name_id, request.new_id, request.new_encrypted_id,
             request.terminate)
-    
-        logger.debug("New NameID: %s" % name_id)
-    
+
+        logger.debug("New NameID: %s", name_id)
+
         _resp = IDP.create_manage_name_id_response(request)
-    
+
         # It's using SOAP binding
         hinfo = IDP.apply_binding(BINDING_SOAP, "%s" % _resp, "",
                                   relay_state, response=True)
-    
+
         resp = Response(hinfo["data"], headers=hinfo["headers"])
         return resp(self.environ, self.start_response)
-    
+
 # ----------------------------------------------------------------------------
 # === Assertion ID request ===
 # ----------------------------------------------------------------------------
@@ -630,15 +630,15 @@ class AIDR(Service):
         except Unknown:
             resp = NotFound(aid)
             return resp(self.environ, self.start_response)
-    
+
         hinfo = IDP.apply_binding(BINDING_URI, "%s" % assertion, response=True)
-    
-        logger.debug("HINFO: %s" % hinfo)
+
+        logger.debug("HINFO: %s", hinfo)
         resp = Response(hinfo["data"], headers=hinfo["headers"])
         return resp(self.environ, self.start_response)
 
     def operation(self, _dict, binding, **kwargs):
-        logger.debug("_operation: %s" % _dict)
+        logger.debug("_operation: %s", _dict)
         if not _dict or "ID" not in _dict:
             resp = BadRequest('Error parsing request or no request')
             return resp(self.environ, self.start_response)
@@ -678,7 +678,7 @@ class AQS(Service):
                                               _query.requested_authn_context,
                                               _query.session_index)
 
-        logger.debug("response: %s" % msg)
+        logger.debug("response: %s", msg)
         hinfo = IDP.apply_binding(BINDING_SOAP, "%s" % msg, "", "",
                                   response=True)
 
@@ -701,7 +701,7 @@ class ATTR(Service):
 
         name_id = _query.subject.name_id
         uid = name_id.text
-        logger.debug("Local uid: %s" % uid)
+        logger.debug("Local uid: %s", uid)
         identity = EXTRA[uid]
 
         # Comes in over SOAP so only need to construct the response
@@ -709,7 +709,7 @@ class ATTR(Service):
         msg = IDP.create_attribute_response(identity,
                                             name_id=name_id, **args)
 
-        logger.debug("response: %s" % msg)
+        logger.debug("response: %s", msg)
         hinfo = IDP.apply_binding(BINDING_SOAP, "%s" % msg, "", "",
                                   response=True)
 
@@ -739,23 +739,23 @@ class NIM(Service):
         except PolicyError:
             resp = BadRequest("Unknown entity")
             return resp(self.environ, self.start_response)
-    
+
         info = IDP.response_args(request)
         _resp = IDP.create_name_id_mapping_response(name_id, **info)
-    
+
         # Only SOAP
         hinfo = IDP.apply_binding(BINDING_SOAP, "%s" % _resp, "", "",
                                   response=True)
-    
+
         resp = Response(hinfo["data"], headers=hinfo["headers"])
         return resp(self.environ, self.start_response)
-    
+
 
 # ----------------------------------------------------------------------------
 # Cookie handling
 # ----------------------------------------------------------------------------
 def info_from_cookie(kaka):
-    logger.debug("KAKA: %s" % kaka)
+    logger.debug("KAKA: %s", kaka)
     if kaka:
         cookie_obj = SimpleCookie(kaka)
         morsel = cookie_obj.get("idpauthn", None)
@@ -772,14 +772,14 @@ def info_from_cookie(kaka):
 
 def delete_cookie(environ, name):
     kaka = environ.get("HTTP_COOKIE", '')
-    logger.debug("delete KAKA: %s" % kaka)
+    logger.debug("delete KAKA: %s", kaka)
     if kaka:
         cookie_obj = SimpleCookie(kaka)
         morsel = cookie_obj.get(name, None)
         cookie = SimpleCookie()
         cookie[name] = ""
         cookie[name]['path'] = "/"
-        logger.debug("Expire: %s" % morsel)
+        logger.debug("Expire: %s", morsel)
         cookie[name]["expires"] = _expiration("dawn")
         return tuple(cookie.output().split(": ", 1))
     return None
@@ -790,7 +790,7 @@ def set_cookie(name, _, *args):
     cookie[name] = base64.b64encode(":".join(args))
     cookie[name]['path'] = "/"
     cookie[name]["expires"] = _expiration(5)  # 5 minutes from now
-    logger.debug("Cookie expires: %s" % cookie[name]["expires"])
+    logger.debug("Cookie expires: %s", cookie[name]["expires"])
     return tuple(cookie.output().split(": ", 1))
 
 # ----------------------------------------------------------------------------
@@ -853,7 +853,7 @@ def metadata(environ, start_response):
         start_response('200 OK', [('Content-Type', "text/xml")])
         return metadata
     except Exception as ex:
-        logger.error("An error occured while creating metadata:" + ex.message)
+        logger.error("An error occured while creating metadata: %s", ex.message)
         return not_found(environ, start_response)
 
 def staticfile(environ, start_response):
@@ -867,7 +867,7 @@ def staticfile(environ, start_response):
         start_response('200 OK', [('Content-Type', "text/xml")])
         return open(path, 'r').read()
     except Exception as ex:
-        logger.error("An error occured while creating metadata:" + ex.message)
+        logger.error("An error occured while creating metadata: %s", ex.message)
         return not_found(environ, start_response)
 
 def application(environ, start_response):
@@ -878,9 +878,9 @@ def application(environ, start_response):
     the functions from above can access the url placeholders.
 
     If nothing matches, call the `not_found` function.
-    
+
     :param environ: The HTTP application environment
-    :param start_response: The application to run when the handling of the 
+    :param start_response: The application to run when the handling of the
         request is done
     :return: The response as a list of lines
     """
@@ -891,7 +891,7 @@ def application(environ, start_response):
         return metadata(environ, start_response)
 
     kaka = environ.get("HTTP_COOKIE", None)
-    logger.info("<application> PATH: %s" % path)
+    logger.info("<application> PATH: %s", path)
 
     if kaka:
         logger.info("= KAKA =")
@@ -900,7 +900,7 @@ def application(environ, start_response):
     else:
         try:
             query = parse_qs(environ["QUERY_STRING"])
-            logger.debug("QUERY: %s" % query)
+            logger.debug("QUERY: %s", query)
             user = IDP.cache.uid2user[query["id"][0]]
         except KeyError:
             user = None
@@ -919,7 +919,7 @@ def application(environ, start_response):
             except IndexError:
                 environ['myapp.url_args'] = path
 
-            logger.debug("Callback: %s" % (callback,))
+            logger.debug("Callback: %s", (callback,))
             if isinstance(callback, tuple):
                 cls = callback[0](environ, start_response, user)
                 func = getattr(cls, callback[1])

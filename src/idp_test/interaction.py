@@ -380,8 +380,8 @@ class Operation(object):
         _args["location"] = location
         _args["features"] = features
 
-        logger.info("--> FUNCTION: %s" % self.function.__name__)
-        logger.info("--> ARGS: %s" % _args)
+        logger.info("--> FUNCTION: %s", self.function.__name__)
+        logger.info("--> ARGS: %s", _args)
 
         result = self.function(httpc, response, **_args)
         self.post_op(result, conv, _args)

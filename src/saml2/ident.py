@@ -184,7 +184,7 @@ class IdentDB(object):
         try:
             _vals = self.db[userid]
         except KeyError:
-            logger.debug("failed to find userid %s in IdentDB" % userid)
+            logger.debug("failed to find userid %s in IdentDB", userid)
             return res
 
         for val in _vals.split(" "):
@@ -211,8 +211,8 @@ class IdentDB(object):
         :return:
         """
 
-        logger.debug("local_policy: %s, name_id_policy: %s" % (local_policy,
-                                                               name_id_policy))
+        logger.debug("local_policy: %s, name_id_policy: %s", local_policy,
+                                                               name_id_policy)
 
         if name_id_policy and name_id_policy.sp_name_qualifier:
             sp_name_qualifier = name_id_policy.sp_name_qualifier
@@ -280,8 +280,8 @@ class IdentDB(object):
         try:
             return self.db[name_id.text]
         except KeyError:
-            logger.debug("name: %s" % name_id.text)
-            #logger.debug("id sub keys: %s" % self.subkeys())
+            logger.debug("name: %s", name_id.text)
+            #logger.debug("id sub keys: %s", self.subkeys())
             return None
 
     def match_local_id(self, userid, sp_name_qualifier, name_qualifier):
