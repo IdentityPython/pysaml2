@@ -45,8 +45,8 @@ class Population(object):
     def get_identity(self, name_id, entities=None, check_not_on_or_after=True):
         return self.cache.get_identity(name_id, entities, check_not_on_or_after)
 
-    def get_info_from(self, name_id, entity_id):
-        return self.cache.get(name_id, entity_id)
+    def get_info_from(self, name_id, entity_id, check_not_on_or_after=True):
+        return self.cache.get(name_id, entity_id, check_not_on_or_after)
 
     def subjects(self):
         """Returns the name id's for all the persons in the cache"""

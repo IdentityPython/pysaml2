@@ -207,7 +207,9 @@ class Saml2Client(Base):
                 destination = destinations(srvs)[0]
                 logger.info("destination to provider: %s", destination)
                 try:
-                    session_info = self.users.get_info_from(name_id, entity_id)
+                    session_info = self.users.get_info_from(name_id,
+                                                            entity_id,
+                                                            False)
                     session_indexes = [session_info['session_index']]
                 except KeyError:
                     session_indexes = None
