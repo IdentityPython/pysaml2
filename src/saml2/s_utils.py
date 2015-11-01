@@ -236,20 +236,20 @@ def error_status_factory(info):
             msg = info.args[0]
         except IndexError:
             msg = "%s" % info
-        status = samlp.Status(
-            status_message=samlp.StatusMessage(text=msg),
-            status_code=samlp.StatusCode(
-                value=samlp.STATUS_RESPONDER,
-                status_code=samlp.StatusCode(
-                    value=exc_val)))
     else:
-        (errcode, text) = info
-        status = samlp.Status(
-            status_message=samlp.StatusMessage(text=text),
-            status_code=samlp.StatusCode(
-                value=samlp.STATUS_RESPONDER,
-                status_code=samlp.StatusCode(value=errcode)))
+        (exc_val, msg) = info
 
+    if msg:
+        status_msg = samlp.StatusMessage(text=msg)
+    else:
+        status_msg = None
+
+    status = samlp.Status(
+        status_message=status_msg,
+        status_code=samlp.StatusCode(
+            value=samlp.STATUS_RESPONDER,
+            status_code=samlp.StatusCode(
+                value=exc_val)))
     return status
 
 
