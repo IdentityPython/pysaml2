@@ -30,8 +30,15 @@ ERROR_STATUS_NO_HEADER = (
 'Value="urn:oasis:names:tc:SAML:2.0:status:UnknownPrincipal" '
 '/></ns0:StatusCode><ns0:StatusMessage>Error resolving '
 'principal</ns0:StatusMessage></ns0:Status>')
-ERROR_STATUS = '%s%s' % (XML_HEADER, ERROR_STATUS_NO_HEADER)
 
+ERROR_STATUS_NO_HEADER_EMPTY = (
+'<ns0:Status xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns0:StatusCode '
+'Value="urn:oasis:names:tc:SAML:2.0:status:Responder"><ns0:StatusCode '
+'Value="urn:oasis:names:tc:SAML:2.0:status:UnknownPrincipal" '
+'/></ns0:StatusCode></ns0:Status>')
+
+ERROR_STATUS = '%s%s' % (XML_HEADER, ERROR_STATUS_NO_HEADER)
+ERROR_STATUS_EMPTY = '%s%s' % (XML_HEADER, ERROR_STATUS_NO_HEADER_EMPTY)
 
 def _eq(l1, l2):
     return set(l1) == set(l2)
@@ -87,6 +94,18 @@ def test_status_from_exception():
     status_text = "%s" % stat
     print(status_text)
     assert status_text in (ERROR_STATUS_NO_HEADER, ERROR_STATUS)
+
+
+def test_status_from_tuple():
+    stat = utils.error_status_factory((samlp.STATUS_UNKNOWN_PRINCIPAL, 'Error resolving principal'))
+    status_text = "%s" % stat
+    assert status_text == ERROR_STATUS
+
+
+def test_status_from_tuple_empty_message():
+    stat = utils.error_status_factory((samlp.STATUS_UNKNOWN_PRINCIPAL, None))
+    status_text = "%s" % stat
+    assert status_text == ERROR_STATUS_EMPTY
 
 
 def test_attribute_sn():
