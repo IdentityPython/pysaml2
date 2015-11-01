@@ -5,9 +5,7 @@ import importlib
 import logging
 import os
 import re
-import socket
 import time
-import ssl
 
 from Cookie import SimpleCookie
 from hashlib import sha1
@@ -1072,7 +1070,8 @@ if __name__ == '__main__':
     _https = ""
     if CONFIG.HTTPS:
         SRV.ssl_adapter = ssl_pyopenssl.pyOpenSSLAdapter(CONFIG.SERVER_CERT,
-                                                         CONFIG.SERVER_KEY, CONFIG.CERT_CHAIN)
+                                                         CONFIG.SERVER_KEY,
+                                                         CONFIG.CERT_CHAIN)
         _https = " using SSL/TLS"
     logger.info("Server starting")
     print("IDP listening on %s:%s%s" % (HOST, PORT, _https))
