@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import base64
+from saml2.xmldsig import SIG_RSA_SHA256
 from saml2 import sigver
 from saml2 import extension_elements_to_elements
 from saml2 import class_name
@@ -510,9 +511,36 @@ def test_xmlsec_err():
         assert False
 
 
-if __name__ == "__main__":
-    t = TestSecurity()
-    t.setup_class()
-    t.test_sign_assertion()
+def test_sha256_signing():
+    conf = config.SPConfig()
+    conf.load_file("server_conf")
+    md = MetadataStore([saml, samlp], None, conf)
+    md.load("local", full_path("idp_example.xml"))
 
-    #test_xmlsec_err()
+    conf.metadata = md
+    conf.only_use_keys_in_metadata = False
+    sec = sigver.security_context(conf)
+
+    assertion = factory(
+        saml.Assertion, version="2.0", id="11111",
+        issue_instant="2009-10-30T13:20:28Z",
+        signature=sigver.pre_signature_part("11111", sec.my_cert, 1,
+                                            sign_alg=SIG_RSA_SHA256),
+        attribute_statement=do_attribute_statement(
+            {("", "", "surName"): ("Foo", ""),
+             ("", "", "givenName"): ("Bar", ""), })
+    )
+
+    s = sec.sign_statement(assertion, class_name(assertion),
+                           key_file=full_path("test.key"),
+                           node_id=assertion.id)
+    assert s
+
+
+
+if __name__ == "__main__":
+    # t = TestSecurity()
+    # t.setup_class()
+    # t.test_sign_assertion()
+
+    test_sha256_signing()
