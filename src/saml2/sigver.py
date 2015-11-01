@@ -8,7 +8,6 @@ Based on the use of xmlsec1 binaries and not the python xmlsec module.
 from OpenSSL import crypto
 
 import base64
-from base64 import b64decode
 import hashlib
 import logging
 import os
