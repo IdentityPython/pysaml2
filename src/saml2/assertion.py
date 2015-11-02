@@ -405,7 +405,7 @@ class Policy(object):
         :retur: The format
         """
 
-        return self.get("name_format", sp_entity_id, NAME_FORMAT_URI)
+        return self.get("name_form", sp_entity_id, NAME_FORMAT_URI)
 
     def get_lifetime(self, sp_entity_id):
         """ The lifetime of the assertion
