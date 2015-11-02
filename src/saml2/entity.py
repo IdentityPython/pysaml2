@@ -1108,7 +1108,7 @@ class Entity(HTTPBase):
             except Exception as err:
                 if "not well-formed" in "%s" % err:
                     logger.error("Not well-formed XML")
-                    raise
+                raise
 
             logger.debug("XMLSTR: %s", xmlstr)
 
