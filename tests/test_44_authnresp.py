@@ -125,7 +125,7 @@ class TestAuthnResponse:
         assert len(authn_info) == 1
         assert authn_info[0][0] == INTERNETPROTOCOLPASSWORD
         assert authn_info[0][1] == ["http://www.example.com/login"]
-        now = datetime.now()
+        now = datetime.utcnow()
         dt = parser.parse(authn_info[0][2])
         assert now.year == dt.year and now.month == dt.month and now.day == dt.day
         session_info = self.ar.session_info()

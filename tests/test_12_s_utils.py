@@ -97,15 +97,16 @@ def test_status_from_exception():
 
 
 def test_status_from_tuple():
-    stat = utils.error_status_factory((samlp.STATUS_UNKNOWN_PRINCIPAL, 'Error resolving principal'))
+    stat = utils.error_status_factory((samlp.STATUS_UNKNOWN_PRINCIPAL,
+                                       'Error resolving principal'))
     status_text = "%s" % stat
-    assert status_text == ERROR_STATUS
+    assert status_text in (ERROR_STATUS_NO_HEADER, ERROR_STATUS)
 
 
 def test_status_from_tuple_empty_message():
     stat = utils.error_status_factory((samlp.STATUS_UNKNOWN_PRINCIPAL, None))
     status_text = "%s" % stat
-    assert status_text == ERROR_STATUS_EMPTY
+    assert status_text == ERROR_STATUS_NO_HEADER_EMPTY
 
 
 def test_attribute_sn():
