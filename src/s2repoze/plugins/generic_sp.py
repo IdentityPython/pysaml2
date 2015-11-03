@@ -125,6 +125,8 @@ class SAML2GenericPlugin(object):
 
 	#### IIdentifier ####
 	def remember(self, environ, identity, **kw):
+		logger.debug("remember -- IDENTITY: {0}".format(identity))
+		logger.debug("remember -- ENVIRON: {0}".format(environ))
 		rememberer = self._get_rememberer(environ)
 		if not rememberer:
 			return []
@@ -527,47 +529,6 @@ class SAML2GenericPlugin(object):
 			return self._construct_identity(session_info)
 		else:
 			return None
-
-	# IMetadataProvider
-	def add_metadata(self, environ, identity):
-		""" Add information to the knowledge I have about the user """
-		name_id = identity['repoze.who.userid']
-		if isinstance(name_id, basestring):
-			try:
-				# Make sure that userids authenticated by another plugin
-				# don't cause problems here.
-				name_id = decode(name_id)
-			except:
-				pass
-
-		_cli = self.saml_client
-
-		if "user" not in identity:
-			identity["user"] = {}
-		try:
-			(ava, _) = _cli.users.get_identity(name_id)
-			#now = time.gmtime()
-			identity["user"].update(ava)
-		except KeyError:
-			pass
-
-		if "pysaml2_vo_expanded" not in identity and _cli.vorg:
-			# is this a Virtual Organization situation
-			for vo in _cli.vorg.values():
-				try:
-					if vo.do_aggregation(name_id):
-						# Get the extended identity
-						identity["user"] = _cli.users.get_identity(name_id)[0]
-						# Only do this once, mark that the identity has been
-						# expanded
-						identity["pysaml2_vo_expanded"] = 1
-				except KeyError:
-					logger.exception("add_metadata -- Failed to do attribute aggregation, "
-									 "missing common attribute")
-
-		if not identity["user"]:
-			# remove cookie and demand re-authentication
-			pass
 
 	# used 2 times : one to get the ticket, the other to validate it
 	@staticmethod

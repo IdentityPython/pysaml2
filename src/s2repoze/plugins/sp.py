@@ -134,6 +134,8 @@ class SAML2Plugin(object):
 	#### IIdentifier ####
 	def remember(self, environ, identity, **kw):
 		logger.debug("remember : START")
+		logger.debug("remember -- IDENTITY: {0}".format(identity))
+		logger.debug("remember -- ENVIRON: {0}".format(environ))
 		rememberer = self._get_rememberer(environ)
 		logger.debug("remember -- REMEMBERER: %s" % rememberer)
 		if not rememberer:
