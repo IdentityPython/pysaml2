@@ -78,7 +78,7 @@ class ECP_response(object):
 		return [self.content]
 
 
-class SAML2Plugin(object):
+class SAML2GenericPlugin(object):
 	implements(IChallenger, IIdentifier, IAuthenticator, IMetadataProvider)
 
 	def __init__(self, rememberer_name, config, saml_client, wayf, cache,
@@ -275,6 +275,7 @@ class SAML2Plugin(object):
 	def challenge(self, environ, _status, _app_headers, _forget_headers):
 		_cli = self.saml_client
 
+		#TODO: change to remote_user_key env variable
 		if 'REMOTE_USER' in environ:
 			name_id = decode(environ["REMOTE_USER"])
 
@@ -630,6 +631,6 @@ def make_plugin(remember_name=None,  # plugin for remember
 	scl = Saml2Client(config=conf, identity_cache=identity_cache,
 					  virtual_organization=virtual_organization)
 
-	plugin = SAML2Plugin(remember_name, conf, scl, wayf, cache, sid_store,
-						 discovery, idp_query_param)
+	plugin = SAML2GenericPlugin(remember_name, conf, scl, wayf, cache, sid_store,
+						 		discovery, idp_query_param)
 	return plugin
