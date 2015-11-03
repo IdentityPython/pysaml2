@@ -546,7 +546,7 @@ class SAML2GenericPlugin(object):
 					'userdata') == environ.get('s2repoze.sessioninfo').get('ava'):
 				return identity.get('login')
 
-			tktuser = identity.get('repoze.who.plugins.auth_tkt.userid', None)
+			tktuser = identity.get('altid', None)
 
 			if tktuser and self.saml_client.is_logged_in(decode(tktuser)):
 				return tktuser
