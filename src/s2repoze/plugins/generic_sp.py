@@ -125,13 +125,6 @@ class SAML2GenericPlugin(object):
 
 	#### IIdentifier ####
 	def remember(self, environ, identity, **kw):
-		logger.debug("remember -- IDENTITY.repoze.who.userid: {0}".format(identity.get('repoze.who.userid')))
-		logger.debug("remember -- IDENTITY.tokens: {0}".format(identity.get('tokens', ())))
-		logger.debug("remember -- IDENTITY.userdata: {0}".format(identity.get('userdata', {})))
-		logger.debug("remember -- IDENTITY.user: {0}".format(identity.get('user', {})))
-		logger.debug("remember -- IDENTITY.max_age: {0}".format(identity.get('max_age', None)))
-		logger.debug("remember -- IDENTITY.login: {0}".format(identity.get('login', 'NOLOGIN')))
-		
 		rememberer = self._get_rememberer(environ)
 		if not rememberer:
 			return []
@@ -392,7 +385,7 @@ class SAML2GenericPlugin(object):
 			"login": cni,
 			"password": "",
 			'repoze.who.userid': cni,
-			"user": session_info["ava"],
+			"userdata": session_info["ava"],
 		}
 
 		return identity
@@ -548,9 +541,9 @@ class SAML2GenericPlugin(object):
 	#noinspection PyUnusedLocal
 	def authenticate(self, environ, identity=None):
 		if identity:
-			if identity.get('user') and environ.get(
+			if identity.get('userdata') and environ.get(
 					's2repoze.sessioninfo') and identity.get(
-					'user') == environ.get('s2repoze.sessioninfo').get('ava'):
+					'userdata') == environ.get('s2repoze.sessioninfo').get('ava'):
 				return identity.get('login')
 
 			tktuser = identity.get('repoze.who.plugins.auth_tkt.userid', None)
