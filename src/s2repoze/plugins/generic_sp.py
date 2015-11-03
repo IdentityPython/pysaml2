@@ -125,8 +125,13 @@ class SAML2GenericPlugin(object):
 
 	#### IIdentifier ####
 	def remember(self, environ, identity, **kw):
-		logger.debug("remember -- IDENTITY: {0}".format(identity))
-		logger.debug("remember -- ENVIRON: {0}".format(environ))
+		logger.debug("remember -- IDENTITY.repoze.who.userid: {0}".format(identity.get('repoze.who.userid')))
+		logger.debug("remember -- IDENTITY.tokens: {0}".format(identity.get('tokens', ())))
+		logger.debug("remember -- IDENTITY.userdata: {0}".format(identity.get('userdata', {})))
+		logger.debug("remember -- IDENTITY.user: {0}".format(identity.get('user', {})))
+		logger.debug("remember -- IDENTITY.max_age: {0}".format(identity.get('max_age', None)))
+		logger.debug("remember -- IDENTITY.login: {0}".format(identity.get('login', 'NOLOGIN')))
+		
 		rememberer = self._get_rememberer(environ)
 		if not rememberer:
 			return []
