@@ -589,7 +589,7 @@ class MetaDataFile(InMemoryMetaData):
         self.cert = cert
 
     def get_metadata_content(self):
-        return open(self.filename).read()
+        return open(self.filename, 'rb').read()
 
     def load(self):
         _txt = self.get_metadata_content()
