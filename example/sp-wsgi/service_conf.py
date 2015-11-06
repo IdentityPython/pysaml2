@@ -1,8 +1,13 @@
 from saml2.assertion import Policy
+import saml2.xmldsig as ds
 
-HOST = '127.0.0.1'
+HOST = 'localhost'
 PORT = 8087
 HTTPS = False
+SIGN_ALG = None
+DIGEST_ALG = None
+#SIGN_ALG = ds.SIG_RSA_SHA512
+#DIGEST_ALG = ds.DIGEST_SHA512
 
 # Which groups of entity categories to use
 POLICY = Policy(
