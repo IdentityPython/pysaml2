@@ -332,7 +332,8 @@ class Server(Entity):
                         sign_assertion=False, sign_response=False,
                         best_effort=False, encrypt_assertion=False,
                         encrypt_cert_advice=None, encrypt_cert_assertion=None, authn_statement=None,
-                        encrypt_assertion_self_contained=False, encrypted_advice_attributes=False, pefim=False):
+                        encrypt_assertion_self_contained=False, encrypted_advice_attributes=False, pefim=False,
+                        sign_alg=None, digest_alg=None):
         """ Create a response. A layer of indirection.
 
         :param in_response_to: The session identifier of the request
@@ -397,7 +398,8 @@ class Server(Entity):
         to_sign = []
         if not encrypt_assertion:
             if sign_assertion:
-                assertion.signature = pre_signature_part(assertion.id, self.sec.my_cert, 1)
+                assertion.signature = pre_signature_part(assertion.id, self.sec.my_cert, 1,
+                                                         sign_alg=sign_alg)
                 to_sign.append((class_name(assertion), assertion.id))
 
         #if not encrypted_advice_attributes:
@@ -420,12 +422,14 @@ class Server(Entity):
             self.session_db.store_assertion(assertion, to_sign)
 
         return self._response(in_response_to, consumer_url, status, issuer,
-                              sign_response, to_sign,sp_entity_id=sp_entity_id, encrypt_assertion=encrypt_assertion,
+                              sign_response, to_sign,sp_entity_id=sp_entity_id,
+                              encrypt_assertion=encrypt_assertion,
                               encrypt_cert_advice=encrypt_cert_advice,
                               encrypt_cert_assertion=encrypt_cert_assertion,
                               encrypt_assertion_self_contained=encrypt_assertion_self_contained,
-                              encrypted_advice_attributes=encrypted_advice_attributes,sign_assertion=sign_assertion,
-                              pefim=pefim,
+                              encrypted_advice_attributes=encrypted_advice_attributes,
+                              sign_assertion=sign_assertion,
+                              pefim=pefim, sign_alg=sign_alg,
                               **args)
 
     # ------------------------------------------------------------------------
@@ -435,7 +439,7 @@ class Server(Entity):
                                   sp_entity_id, userid="", name_id=None,
                                   status=None, issuer=None,
                                   sign_assertion=False, sign_response=False,
-                                  attributes=None, **kwargs):
+                                  attributes=None, sign_alg=None, digest_alg=None, **kwargs):
         """ Create an attribute assertion response.
 
         :param identity: A dictionary with attributes and values that are
@@ -485,14 +489,14 @@ class Server(Entity):
 
             if sign_assertion:
                 assertion.signature = pre_signature_part(assertion.id,
-                                                         self.sec.my_cert, 1)
+                                                         self.sec.my_cert, 1, sign_alg=sign_alg)
                 # Just the assertion or the response and the assertion ?
                 to_sign = [(class_name(assertion), assertion.id)]
 
             args["assertion"] = assertion
 
         return self._response(in_response_to, destination, status, issuer,
-                              sign_response, to_sign, **args)
+                              sign_response, to_sign, sign_alg=sign_alg, **args)
 
     # ------------------------------------------------------------------------
 
@@ -502,7 +506,7 @@ class Server(Entity):
                               sign_response=None, sign_assertion=None,
                               encrypt_cert_advice=None, encrypt_cert_assertion=None, encrypt_assertion=None,
                               encrypt_assertion_self_contained=True,
-                              encrypted_advice_attributes=False, pefim=False,
+                              encrypted_advice_attributes=False, pefim=False, sign_alg=None, digest_alg=None,
                               **kwargs):
         """ Constructs an AuthenticationResponse
 
@@ -644,7 +648,8 @@ class Server(Entity):
                                                 encrypted_advice_attributes=encrypted_advice_attributes,
                                                 encrypt_cert_advice=encrypt_cert_advice,
                                                 encrypt_cert_assertion=encrypt_cert_assertion,
-                                                pefim=pefim)
+                                                pefim=pefim,
+                                                sign_alg=sign_alg)
             return self._authn_response(in_response_to,  # in_response_to
                                         destination,  # consumer_url
                                         sp_entity_id,  # sp_entity_id
@@ -661,7 +666,8 @@ class Server(Entity):
                                         encrypted_advice_attributes=encrypted_advice_attributes,
                                         encrypt_cert_advice=encrypt_cert_advice,
                                         encrypt_cert_assertion=encrypt_cert_assertion,
-                                        pefim=pefim)
+                                        pefim=pefim,
+                                        sign_alg=sign_alg)
 
         except MissingValue as exc:
             return self.create_error_response(in_response_to, destination,
@@ -681,7 +687,7 @@ class Server(Entity):
                                           authn_decl=authn_decl)
 
     #noinspection PyUnusedLocal
-    def create_assertion_id_request_response(self, assertion_id, sign=False,
+    def create_assertion_id_request_response(self, assertion_id, sign=False, sign_alg=None, digest_alg=None,
                                              **kwargs):
         """
 
@@ -698,7 +704,7 @@ class Server(Entity):
         if to_sign:
             if assertion.signature is None:
                 assertion.signature = pre_signature_part(assertion.id,
-                                                         self.sec.my_cert, 1)
+                                                         self.sec.my_cert, 1, sign_alg=sign_alg)
 
             return signed_instance_factory(assertion, self.sec, to_sign)
         else:
@@ -708,7 +714,7 @@ class Server(Entity):
     def create_name_id_mapping_response(self, name_id=None, encrypted_id=None,
                                         in_response_to=None,
                                         issuer=None, sign_response=False,
-                                        status=None, **kwargs):
+                                        status=None, sign_alg=None, digest_alg=None, **kwargs):
         """
         protocol for mapping a principal's name identifier into a
         different name identifier for the same principal.
@@ -730,7 +736,7 @@ class Server(Entity):
                                       in_response_to=in_response_to, **ms_args)
 
         if sign_response:
-            return self.sign(_resp)
+            return self.sign(_resp, sign_alg=sign_alg)
         else:
             logger.info("Message: %s" % _resp)
             return _resp
@@ -738,7 +744,7 @@ class Server(Entity):
     def create_authn_query_response(self, subject, session_index=None,
                                     requested_context=None, in_response_to=None,
                                     issuer=None, sign_response=False,
-                                    status=None, **kwargs):
+                                    status=None, sign_alg=None, digest_alg=None, **kwargs):
         """
         A successful <Response> will contain one or more assertions containing
         authentication statements.
@@ -759,7 +765,7 @@ class Server(Entity):
             args = {}
 
         return self._response(in_response_to, "", status, issuer,
-                              sign_response, to_sign=[], **args)
+                              sign_response, to_sign=[], sign_alg=sign_alg, **args)
 
     # ---------
 

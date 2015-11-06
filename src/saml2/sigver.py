@@ -1761,7 +1761,7 @@ class SecurityContext(object):
         return self.sign_statement(statement, class_name(
             samlp.AttributeQuery()), **kwargs)
 
-    def multiple_signatures(self, statement, to_sign, key=None, key_file=None):
+    def multiple_signatures(self, statement, to_sign, key=None, key_file=None, sign_alg=None, digest_alg=None):
         """
         Sign multiple parts of a statement
 
@@ -1780,7 +1780,7 @@ class SecurityContext(object):
                     sid = item.id
 
             if not item.signature:
-                item.signature = pre_signature_part(sid, self.cert_file)
+                item.signature = pre_signature_part(sid, self.cert_file, sign_alg=sign_alg)
 
             statement = self.sign_statement(statement, class_name(item),
                                             key=key, key_file=key_file,
@@ -1806,9 +1806,9 @@ def pre_signature_part(ident, public_key=None, identifier=None,
     """
 
     if not digest_alg:
-        digest_alg=ds.digest_default
+        digest_alg = ds.DefaultSignature().get_digest_alg()
     if not sign_alg:
-        sign_alg=ds.sig_default
+        sign_alg = ds.DefaultSignature().get_sign_alg()
     signature_method = ds.SignatureMethod(algorithm=sign_alg)
     canonicalization_method = ds.CanonicalizationMethod(
         algorithm=ds.ALG_EXC_C14N)
@@ -1918,12 +1918,12 @@ def pre_encrypt_assertion(response):
     return response
 
 
-def response_factory(sign=False, encrypt=False, **kwargs):
+def response_factory(sign=False, encrypt=False, sign_alg=None, digest_alg=None, **kwargs):
     response = samlp.Response(id=sid(), version=VERSION,
                               issue_instant=instant())
 
     if sign:
-        response.signature = pre_signature_part(kwargs["id"])
+        response.signature = pre_signature_part(kwargs["id"], sign_alg=sign_alg)
     if encrypt:
         pass
 

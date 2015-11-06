@@ -43,6 +43,7 @@ tests_require = [
     'pytest',
     'mako',
     'webob',
+    'mock'
     #'pytest-coverage',
 ]
 

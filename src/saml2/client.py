@@ -135,7 +135,7 @@ class Saml2Client(Base):
             raise SignOnError(
                 "No supported bindings available for authentication")
 
-    def global_logout(self, name_id, reason="", expire=None, sign=None):
+    def global_logout(self, name_id, reason="", expire=None, sign=None, sign_alg=None, digest_alg=None):
         """ More or less a layer of indirection :-/
         Bootstrapping the whole thing by finding all the IdPs that should
         be notified.
@@ -160,10 +160,10 @@ class Saml2Client(Base):
 
         # find out which IdPs/AAs I should notify
         entity_ids = self.users.issuers_of_info(name_id)
-        return self.do_logout(name_id, entity_ids, reason, expire, sign)
+        return self.do_logout(name_id, entity_ids, reason, expire, sign, sign_alg=sign_alg)
 
     def do_logout(self, name_id, entity_ids, reason, expire, sign=None,
-                  expected_binding=None, **kwargs):
+                  expected_binding=None, sign_alg=None, digest_alg=None, **kwargs):
         """
 
         :param name_id: Identifier of the Subject (a NameID instance)
@@ -226,11 +226,11 @@ class Saml2Client(Base):
                 key = None
                 if sign:
                     if binding == BINDING_HTTP_REDIRECT:
-                        sigalg = kwargs.get("sigalg", ds.sig_default)
+                        sigalg = kwargs.get("sigalg", ds.DefaultSignature().get_sign_alg())
                         key = kwargs.get("key", self.signkey)
                         srequest = str(request)
                     else:
-                        srequest = self.sign(request)
+                        srequest = self.sign(request, sign_alg=sign_alg)
                 else:
                     srequest = str(request)
 
@@ -290,7 +290,7 @@ class Saml2Client(Base):
         identity = self.users.get_identity(name_id)[0]
         return bool(identity)
 
-    def handle_logout_response(self, response):
+    def handle_logout_response(self, response, sign_alg=None, digest_alg=None):
         """ handles a Logout response
 
         :param response: A response.Response instance
@@ -309,10 +309,12 @@ class Saml2Client(Base):
             return 0, "200 Ok", [("Content-type", "text/html")], []
         else:
             status["entity_ids"].remove(issuer)
+            if "sign_alg" in status:
+                sign_alg = status["sign_alg"]
             return self.do_logout(decode(status["name_id"]),
                                   status["entity_ids"],
                                   status["reason"], status["not_on_or_after"],
-                                  status["sign"])
+                                  status["sign"], sign_alg=sign_alg)
 
     def _use_soap(self, destination, query_type, **kwargs):
         _create_func = getattr(self, "create_%s" % query_type)
