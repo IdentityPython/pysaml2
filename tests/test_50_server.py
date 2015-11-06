@@ -273,7 +273,7 @@ class TestServer1():
 
     def test_sso_response_with_identity(self):
         name_id = self.server.ident.transient_nameid(
-            "urn:mace:example.com:saml:roland:sp", "id12")
+            "https://example.com/sp", "id12")
         resp = self.server.create_authn_response(
             {
                 "eduPersonEntitlement": "Short stop",
@@ -284,7 +284,7 @@ class TestServer1():
             },
             "id12",  # in_response_to
             "http://localhost:8087/",  # destination
-            "urn:mace:example.com:saml:roland:sp",  # sp_entity_id
+            "https://example.com/sp",  # sp_entity_id
             name_id=name_id,
             authn=AUTHN
         )
@@ -312,8 +312,8 @@ class TestServer1():
             if attr.friendly_name == "givenName":
                 break
         assert len(attr.attribute_value) == 1
-        assert attr.name == "urn:oid:2.5.4.42"
-        assert attr.name_format == "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
+        assert attr.name == "urn:mace:dir:attribute-def:givenName"
+        assert attr.name_format == "urn:oasis:names:tc:SAML:2.0:attrname-format:basic"
         value = attr.attribute_value[0]
         assert value.text.strip() == "Derek"
         assert value.get_type() == "xs:string"

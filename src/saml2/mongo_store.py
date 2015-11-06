@@ -113,7 +113,7 @@ class SessionStorageMDB(object):
         return result
 
     def remove_authn_statements(self, name_id):
-        logger.debug("remove authn about: %s" % name_id)
+        logger.debug("remove authn about: %s", name_id)
         key = sha1(code_binary(name_id)).hexdigest()
         for item in self.assertion.find({"name_id_key": key}):
             self.assertion.remove(item["_id"])

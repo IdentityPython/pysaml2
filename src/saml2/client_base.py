@@ -140,7 +140,7 @@ class Base(Entity):
             if srvs:
                 return destinations(srvs)[0]
             else:
-                logger.info("_sso_location: %s, %s" % (entityid, binding))
+                logger.info("_sso_location: %s, %s", entityid, binding)
                 raise IdpUnspecified("No IdP to send to given the premises")
 
         # get the idp location from the metadata. If there is more than one
@@ -580,12 +580,12 @@ class Base(Entity):
                                             "assertion_consumer_service",
                                             binding, **kwargs)
             except StatusError as err:
-                logger.error("SAML status error: %s" % err)
+                logger.error("SAML status error: %s", err)
                 raise
             except UnravelError:
                 return None
             except Exception as err:
-                logger.error("XML parse error: %s" % err)
+                logger.error("XML parse error: %s", err)
                 raise
 
             if resp is None:
@@ -596,8 +596,7 @@ class Base(Entity):
                     logger.info("--- ADDED person info ----")
                 pass
             else:
-                logger.error("Response type not supported: %s" % (
-                    saml2.class_name(resp),))
+                logger.error("Response type not supported: %s", saml2.class_name(resp))
         return resp
 
     # ------------------------------------------------------------------------
@@ -701,7 +700,7 @@ class Base(Entity):
                 _binding = BINDING_SOAP
                 kwargs["binding"] = _binding
 
-            logger.debug("entityid: %s, binding: %s" % (entityid, _binding))
+            logger.debug("entityid: %s, binding: %s", entityid, _binding)
 
             # The IDP publishes support for ECP by using the SOAP binding on
             # SingleSignOnService

@@ -618,8 +618,7 @@ class Server(Entity):
                     name_id = self.ident.construct_nameid(userid, policy,
                                                           sp_entity_id,
                                                           name_id_policy)
-                    logger.debug("construct_nameid: %s => %s" % (userid,
-                                                                 name_id))
+                    logger.debug("construct_nameid: %s => %s", userid, name_id)
             except IOError as exc:
                 response = self.create_error_response(in_response_to,
                                                       destination,
@@ -738,7 +737,7 @@ class Server(Entity):
         if sign_response:
             return self.sign(_resp, sign_alg=sign_alg)
         else:
-            logger.info("Message: %s" % _resp)
+            logger.info("Message: %s", _resp)
             return _resp
 
     def create_authn_query_response(self, subject, session_index=None,
@@ -816,7 +815,7 @@ class Server(Entity):
         """
 
         lid = self.ident.find_local_id(name_id)
-        logger.info("Clean out %s" % lid)
+        logger.info("Clean out %s", lid)
 
         # remove the authentications
         try:

@@ -32,7 +32,7 @@ from saml2.sigver import rm_xmltag
 from saml2.sigver import verify_redirect_signature
 from saml2.s_utils import do_attribute_statement
 from saml2.s_utils import factory
-from saml2.time_util import in_a_while
+from saml2.time_util import in_a_while, a_while_ago
 
 from fakeIDP import FakeIDP
 from fakeIDP import unpack_form
@@ -1241,6 +1241,36 @@ class TestClient:
             "name_id": nid,
             "issuer": "urn:mace:example.com:saml:roland:idp",
             "not_on_or_after": in_a_while(minutes=15),
+            "ava": {
+                "givenName": "Anders",
+                "surName": "Andersson",
+                "mail": "anders.andersson@example.com"
+            },
+            "session_index": SessionIndex("_foo")
+        }
+        self.client.users.add_information_about_person(session_info)
+        entity_ids = self.client.users.issuers_of_info(nid)
+        assert entity_ids == ["urn:mace:example.com:saml:roland:idp"]
+        resp = self.client.do_logout(nid, entity_ids, "Tired",
+                                     in_a_while(minutes=5), sign=True,
+                                     expected_binding=BINDING_HTTP_POST)
+        assert resp
+        assert len(resp) == 1
+        assert list(resp.keys()) == entity_ids
+        binding, info = resp[entity_ids[0]]
+        assert binding == BINDING_HTTP_POST
+
+        _dic = unpack_form(info["data"][3])
+        res = self.server.parse_logout_request(_dic["SAMLRequest"],
+                                               BINDING_HTTP_POST)
+        assert b'<ns0:SessionIndex>_foo</ns0:SessionIndex>' in res.xmlstr
+
+    def test_do_logout_session_expired(self):
+        # information about the user from an IdP
+        session_info = {
+            "name_id": nid,
+            "issuer": "urn:mace:example.com:saml:roland:idp",
+            "not_on_or_after": a_while_ago(minutes=15),
             "ava": {
                 "givenName": "Anders",
                 "surName": "Andersson",

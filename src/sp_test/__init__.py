@@ -232,7 +232,7 @@ class Client(object):
             else:
                 self.test_log = exception_trace("RUN", err)
             tsum = self.test_summation(self.args.oper)
-            logger.error("Unexpected exception in test driver %s" %
+            logger.error("Unexpected exception in test driver %s",
                          traceback.format_exception(*sys.exc_info()))
 
 

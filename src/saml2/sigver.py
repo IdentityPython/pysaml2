@@ -8,7 +8,6 @@ Based on the use of xmlsec1 binaries and not the python xmlsec module.
 from OpenSSL import crypto
 
 import base64
-from base64 import b64decode
 import hashlib
 import logging
 import os
@@ -778,7 +777,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         :param xpath: What should be encrypted
         :return:
         """
-        logger.debug("Encryption input len: %d" % len(text))
+        logger.debug("Encryption input len: %d", len(text))
         _, fil = make_temp(str(text).encode('utf-8'), decode=False)
 
         com_list = [self.xmlsec, "--encrypt", "--pubkey-cert-pem", recv_key,
@@ -838,7 +837,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         :return: The decrypted document
         """
 
-        logger.debug("Decrypt input len: %d" % len(enctext))
+        logger.debug("Decrypt input len: %d", len(enctext))
         _, fil = make_temp(str(enctext).encode('utf-8'), decode=False)
 
         com_list = [self.xmlsec, "--decrypt", "--privkey-pem",
@@ -882,8 +881,8 @@ class CryptoBackendXmlSec1(CryptoBackend):
                 if signed_statement:
                     return signed_statement.decode('utf-8')
             logger.error(
-                "Signing operation failed :\nstdout : %s\nstderr : %s" % (
-                    stdout, stderr))
+                "Signing operation failed :\nstdout : %s\nstderr : %s",
+                    stdout, stderr)
             raise SigverError(stderr)
         except DecryptError:
             raise SigverError("Signing failed")
@@ -948,7 +947,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         com_list.extend(["--output", ntf.name])
         com_list += extra_args
 
-        logger.debug("xmlsec command: %s" % " ".join(com_list))
+        logger.debug("xmlsec command: %s", " ".join(com_list))
 
         pof = Popen(com_list, stderr=PIPE, stdout=PIPE)
 
@@ -956,14 +955,14 @@ class CryptoBackendXmlSec1(CryptoBackend):
         p_err = pof.stderr.read().decode('utf-8')
 
         if pof.returncode is not None and pof.returncode < 0:
-            logger.error(LOG_LINE % (p_out, p_err))
+            logger.error(LOG_LINE, p_out, p_err)
             raise XmlsecError("%d:%s" % (pof.returncode, p_err))
 
         try:
             if validate_output:
                 parse_xmlsec_output(p_err)
         except XmlsecError as exc:
-            logger.error(LOG_LINE_2 % (p_out, p_err, exc))
+            logger.error(LOG_LINE_2, p_out, p_err, exc)
             raise
 
         ntf.seek(0)
@@ -1226,7 +1225,7 @@ class CertHandler(object):
                     cert_str, self._cert_str, self._key_str)
             else:
                 valid, mess = self._osw.verify(self._cert_str, cert_str)
-                logger.info("CertHandler.verify_cert: %s" % mess)
+                logger.info("CertHandler.verify_cert: %s", mess)
                 return valid
         return True
 
@@ -1463,8 +1462,8 @@ class SecurityContext(object):
                                decode=False, delete=self._xmlsec_delete_tmpfiles)
                     for cert in cert_from_instance(item)]
         else:
-            logger.debug("==== Certs from metadata ==== %s: %s ====" % (issuer,
-                                                                        certs))
+            logger.debug("==== Certs from metadata ==== %s: %s ====", issuer,
+                                                                        certs)
 
         if not certs:
             raise MissingKey("%s" % issuer)
@@ -1498,13 +1497,13 @@ class SecurityContext(object):
                         verified = True
                         break
             except XmlsecError as exc:
-                logger.error("check_sig: %s" % exc)
+                logger.error("check_sig: %s", exc)
                 pass
             except SignatureError as exc:
-                logger.error("check_sig: %s" % exc)
+                logger.error("check_sig: %s", exc)
                 pass
             except Exception as exc:
-                logger.error("check_sig: %s" % exc)
+                logger.error("check_sig: %s", exc)
                 raise
 
         if (not verified) and (not only_valid_cert):

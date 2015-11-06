@@ -356,7 +356,7 @@ class Policy(object):
 
                 _are[key.lower()] = [re.compile(value) for value in values]
             spec["attribute_restrictions"] = _are
-        logger.debug("policy restrictions: %s" % self._restrictions)
+        logger.debug("policy restrictions: %s", self._restrictions)
 
         return self._restrictions
 
@@ -405,7 +405,7 @@ class Policy(object):
         :retur: The format
         """
 
-        return self.get("name_format", sp_entity_id, NAME_FORMAT_URI)
+        return self.get("name_form", sp_entity_id, NAME_FORMAT_URI)
 
     def get_lifetime(self, sp_entity_id):
         """ The lifetime of the assertion
@@ -486,7 +486,7 @@ class Policy(object):
 
         _ava = None
         if required or optional:
-            logger.debug("required: %s, optional: %s" % (required, optional))
+            logger.debug("required: %s, optional: %s", required, optional)
             _ava = filter_on_attributes(
                 ava.copy(), required, optional, self.acs,
                 self.get_fail_on_missing_requested(sp_entity_id))

@@ -16,21 +16,21 @@ def fetch_metadata(url, path, maxage=600):
     fetch = False
     if not os.path.isfile(path):
         fetch = True
-        logger.debug("metadata file %s not found" % path)
+        logger.debug("metadata file %s not found", path)
     elif (os.path.getmtime(path) + maxage) < time.time():
         fetch = True
-        logger.debug("metadata file %s from %s is more than %s s old" %
-                     (path,
-                      strftime("%Y-%m-%d %H:%M:%S", time.localtime(os.path.getmtime(path))),
-                      maxage))
+        logger.debug("metadata file %s from %s is more than %s s old",
+                     path,
+                     strftime("%Y-%m-%d %H:%M:%S", time.localtime(os.path.getmtime(path))),
+                     maxage)
     else:
-        logger.debug("metadata file %s is less than %s s old" % (path, maxage))
+        logger.debug("metadata file %s is less than %s s old", path, maxage)
     if fetch:
         f=urllib.URLopener()
         try:
             f.retrieve(url, path)
-            logger.debug("downloaded metadata from %s into %s" % (url, path))
+            logger.debug("downloaded metadata from %s into %s", url, path)
         except:
-            logger.debug("downloaded metadata from %s failed: %s" %
-                         (url, sys.exc_info()[0]))
+            logger.debug("downloaded metadata from %s failed: %s",
+                         url, sys.exc_info()[0])
 

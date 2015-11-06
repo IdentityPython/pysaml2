@@ -169,18 +169,18 @@ def make_soap_enveloped_saml_thingy(thingy, header_parts=None):
     if isinstance(thingy, six.string_types):
         # remove the first XML version/encoding line
         if thingy[0:5].lower() == '<?xml':
-            logger.debug("thingy0: %s" % thingy)
+            logger.debug("thingy0: %s", thingy)
             _part = thingy.split("\n")
             thingy = "".join(_part[1:])
         thingy = thingy.replace(PREFIX, "")
-        logger.debug("thingy: %s" % thingy)
+        logger.debug("thingy: %s", thingy)
         _child = ElementTree.Element('')
         _child.tag = '{%s}FuddleMuddle' % DUMMY_NAMESPACE
         body.append(_child)
         _str = ElementTree.tostring(envelope, encoding="UTF-8")
         if isinstance(_str, six.binary_type):
             _str = _str.decode('utf-8')
-        logger.debug("SOAP precursor: %s" % _str)
+        logger.debug("SOAP precursor: %s", _str)
         # find an remove the namespace definition
         i = _str.find(DUMMY_NAMESPACE)
         j = _str.rfind("xmlns:", 0, i)

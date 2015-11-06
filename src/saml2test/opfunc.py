@@ -109,17 +109,17 @@ def do_request(client, url, method, body="", headers=None):
     if headers is None:
         headers = {}
 
-    logger.info("--> URL: %s" % url)
-    logger.info("--> BODY: %s" % body)
-    logger.info("--> Headers: %s" % (headers,))
+    logger.info("--> URL: %s", url)
+    logger.info("--> BODY: %s", body)
+    logger.info("--> Headers: %s", headers)
 
     response = client.http_request(url, method=method, data=body,
                                    headers=headers)
 
-    logger.info("<-- RESPONSE: %s" % response)
-    logger.info("<-- CONTENT: %s" % response.text)
+    logger.info("<-- RESPONSE: %s", response)
+    logger.info("<-- CONTENT: %s", response.text)
     if response.cookies:
-        logger.info("<-- COOKIES: %s" % response.cookies)
+        logger.info("<-- COOKIES: %s", response.cookies)
 
     return url, response, response.text
 
@@ -366,8 +366,8 @@ class Operation(object):
 
         _args["location"] = location
 
-        logger.info("--> FUNCTION: %s" % self.function.__name__)
-        logger.info("--> ARGS: %s" % (_args,))
+        logger.info("--> FUNCTION: %s", self.function.__name__)
+        logger.info("--> ARGS: %s", _args)
 
         result = self.function(self.conv.client, response, content, **_args)
         self.post_op(result, self.conv, _args)

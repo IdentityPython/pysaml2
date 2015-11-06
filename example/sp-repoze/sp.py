@@ -37,7 +37,7 @@ def dict_to_table(ava, lev=0, width=1):
                 txt.append("<td>%s</td>\n" % valarr)
         elif isinstance(valarr, list):
             i = 0
-            n = len(valarr)       
+            n = len(valarr)
             for val in valarr:
                 if not i:
                     txt.append("<th rowspan=%d>%s</td>\n" % (len(valarr), prop))
@@ -105,7 +105,7 @@ def whoami(environ, start_response, user):
     response.extend("<a href='logout'>Logout</a>")
     resp = Response(response)
     return resp(environ, start_response)
-    
+
 
 #noinspection PyUnusedLocal
 def not_found(environ, start_response):
@@ -128,7 +128,7 @@ def slo(environ, start_response, user):
 
     if "QUERY_STRING" in environ:
         query = parse_qs(environ["QUERY_STRING"])
-        logger.info("query: %s" % query)
+        logger.info("query: %s", query)
         try:
             response = sc.parse_logout_request_response(
                 query["SAMLResponse"][0], binding=BINDING_HTTP_REDIRECT)
@@ -147,19 +147,19 @@ def slo(environ, start_response, user):
         headers.append(delco)
     resp = Redirect("/done", headers=headers)
     return resp(environ, start_response)
-    
+
 
 #noinspection PyUnusedLocal
 def logout(environ, start_response, user):
     # This is where it starts when a user wants to log out
     client = environ['repoze.who.plugins']["saml2auth"]
     subject_id = environ["repoze.who.identity"]['repoze.who.userid']
-    logger.info("[logout] subject_id: '%s'" % (subject_id,))
+    logger.info("[logout] subject_id: '%s'", subject_id)
     target = "/done"
 
     # What if more than one
     _dict = client.saml_client.global_logout(subject_id)
-    logger.info("[logout] global_logout > %s" % (_dict,))
+    logger.info("[logout] global_logout > %s", _dict)
     rem = environ['repoze.who.plugins'][client.rememberer_name]
     rem.forget(environ, subject_id)
 
@@ -180,15 +180,15 @@ def logout(environ, start_response, user):
 #noinspection PyUnusedLocal
 def done(environ, start_response, user):
     # remove cookie and stored info
-    logger.info("[done] environ: %s" % environ)
+    logger.info("[done] environ: %s", environ)
     subject_id = environ["repoze.who.identity"]['repoze.who.userid']
     client = environ['repoze.who.plugins']["saml2auth"]
-    logger.info("[logout done] remaining subjects: %s" % (
-        client.saml_client.users.subjects(),))
+    logger.info("[logout done] remaining subjects: %s",
+        client.saml_client.users.subjects())
 
     start_response('200 OK', [('Content-Type', 'text/html')])
     return ["<h3>You are now logged out from this service</h3>"]
-        
+
 # ----------------------------------------------------------------------------
 
 # map urls to functions
@@ -215,7 +215,7 @@ def metadata(environ, start_response):
         start_response('200 OK', [('Content-Type', "text/xml")])
         return metadata
     except Exception as ex:
-        logger.error("An error occured while creating metadata:" + ex.message)
+        logger.error("An error occured while creating metadata: %s", ex.message)
         return not_found(environ, start_response)
 
 def application(environ, start_response):
@@ -226,14 +226,14 @@ def application(environ, start_response):
     the functions from above can access the url placeholders.
 
     If nothing matches, call the `not_found` function.
-    
+
     :param environ: The HTTP application environment
-    :param start_response: The application to run when the handling of the 
+    :param start_response: The application to run when the handling of the
         request is done
     :return: The response as a list of lines
     """
     path = environ.get('PATH_INFO', '').lstrip('/')
-    logger.info("<application> PATH: %s" % path)
+    logger.info("<application> PATH: %s", path)
 
     if path == "metadata":
         return metadata(environ, start_response)
@@ -241,9 +241,9 @@ def application(environ, start_response):
     user = environ.get("REMOTE_USER", "")
     if not user:
         user = environ.get("repoze.who.identity", "")
-        logger.info("repoze.who.identity: '%s'" % user)
+        logger.info("repoze.who.identity: '%s'", user)
     else:
-        logger.info("REMOTE_USER: '%s'" % user)
+        logger.info("REMOTE_USER: '%s'", user)
     #logger.info(logging.Logger.manager.loggerDict)
     for regex, callback in urls:
         if user:
