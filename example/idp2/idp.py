@@ -51,6 +51,7 @@ from saml2.sigver import encrypt_cert_from_item
 from idp_user import USERS
 from idp_user import EXTRA
 from mako.lookup import TemplateLookup
+import saml2.xmldsig as ds
 
 logger = logging.getLogger("saml2.idp")
 logger.setLevel(logging.WARNING)
@@ -1066,6 +1067,18 @@ if __name__ == '__main__':
 
     HOST = CONFIG.HOST
     PORT = CONFIG.PORT
+
+    sign_alg = None
+    digest_alg = None
+    try:
+        sign_alg = CONFIG.SIGN_ALG
+    except:
+        pass
+    try:
+        digest_alg = CONFIG.DIGEST_ALG
+    except:
+        pass
+    ds.DefaultSignature(sign_alg, digest_alg)
 
     SRV = wsgiserver.CherryPyWSGIServer((HOST, PORT), application)
 
