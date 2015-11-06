@@ -877,8 +877,17 @@ if __name__ == '__main__':
     POLICY = service_conf.POLICY
 
     add_urls()
-
-    ds.DefaultSignature(service_conf.SIGN_ALG, service_conf.DIGEST_ALG)
+    sign_alg = None
+    digest_alg = None
+    try:
+        sign_alg = service_conf.SIGN_ALG
+    except:
+        pass
+    try:
+        digest_alg = service_conf.DIGEST_ALG
+    except:
+        pass
+    ds.DefaultSignature(sign_alg, digest_alg)
 
     SRV = wsgiserver.CherryPyWSGIServer((HOST, PORT), application)
 
