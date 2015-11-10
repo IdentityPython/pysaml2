@@ -125,6 +125,7 @@ class SAML2GenericPlugin(object):
 
 	#### IIdentifier ####
 	def remember(self, environ, identity, **kw):
+		logger.debug('saml - remember')
 		rememberer = self._get_rememberer(environ)
 		if not rememberer:
 			return []
