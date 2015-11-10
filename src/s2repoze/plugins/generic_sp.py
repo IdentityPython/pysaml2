@@ -125,11 +125,14 @@ class SAML2GenericPlugin(object):
 
 	#### IIdentifier ####
 	def remember(self, environ, identity, **kw):
-		logger.debug('saml - remember')
-		rememberer = self._get_rememberer(environ)
-		if not rememberer:
-			return []
-		return rememberer.remember(environ, identity)
+		#pcrownov: Commenting out since pyramid_whoauth calls each rememberer plugin causing real one to
+		#			be called multiple times
+		#logger.debug('saml - remember')
+		#rememberer = self._get_rememberer(environ)
+		#if not rememberer:
+		#	return []
+		#return rememberer.remember(environ, identity)
+		return []
 
 
 	#### IIdentifier ####
