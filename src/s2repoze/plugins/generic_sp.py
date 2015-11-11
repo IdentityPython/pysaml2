@@ -128,7 +128,7 @@ class SAML2GenericPlugin(object):
 		return self._get_outstanding_queries.get(key)
 
 	def _set_outstanding_query(self, key, value):
-		logger.debug('sid_store_type: {0}'.format(sid_store_type))
+		logger.debug('sid_store_type: {0}'.format(self.sid_store_type))
 		if self.sid_store_type == 'memcache':
 			queries = self._get_outstanding_queries()
 			queries[key] = value
