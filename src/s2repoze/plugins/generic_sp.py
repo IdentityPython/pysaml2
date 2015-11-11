@@ -83,8 +83,8 @@ class SAML2GenericPlugin(object):
 	implements(IChallenger, IIdentifier, IAuthenticator, IMetadataProvider)
 
 	def __init__(self, rememberer_name, config, saml_client, wayf, cache,
-				 sid_store=None, sid_store_type=None, discovery="", idp_query_param="",
-				 sid_store_cert=None, sid_store_cert_type=None):
+				 sid_store=None, sid_store_type='local', discovery="", idp_query_param="",
+				 sid_store_cert=None, sid_store_cert_type='local'):
 		self.rememberer_name = rememberer_name
 		self.wayf = wayf
 		self.saml_client = saml_client
