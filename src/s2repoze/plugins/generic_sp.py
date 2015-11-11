@@ -46,7 +46,8 @@ from saml2.profile import paos
 logger = logging.getLogger(__name__)
 
 PAOS_HEADER_INFO = 'ver="%s";"%s"' % (paos.NAMESPACE, ECP_SERVICE)
-
+CERT_STORE_KEY = 'OUTSTANDING_CERTS'
+QUERY_STORE_KEY = 'OUTSTANDING_QUERIES'
 
 def construct_came_from(environ):
 	""" The URL that the user used when the process where interupted
@@ -82,8 +83,8 @@ class SAML2GenericPlugin(object):
 	implements(IChallenger, IIdentifier, IAuthenticator, IMetadataProvider)
 
 	def __init__(self, rememberer_name, config, saml_client, wayf, cache,
-				 sid_store=None, discovery="", idp_query_param="",
-				 sid_store_cert=None, ):
+				 sid_store=None, sid_store_type=None, discovery="", idp_query_param="",
+				 sid_store_cert=None, sid_store_cert_type=None):
 		self.rememberer_name = rememberer_name
 		self.wayf = wayf
 		self.saml_client = saml_client
@@ -91,6 +92,8 @@ class SAML2GenericPlugin(object):
 		self.cache = cache
 		self.discosrv = discovery
 		self.idp_query_param = idp_query_param
+		self.sid_store_type = sid_store_type.lower()
+		self.sid_store_cert_type = sid_store_cert_type.lower()
 		self.logout_endpoints = [urlparse(ep)[2] for ep in config.endpoint(
 			"single_logout_service")]
 		try:
@@ -98,15 +101,61 @@ class SAML2GenericPlugin(object):
 		except KeyError:
 			self.metadata = None
 		if sid_store:
-			self.outstanding_queries = shelve.open(sid_store, writeback=True)
+			if self.sid_store_type == 'memcache':
+				self.outstanding_query_store = memcache.Client([sid_store], debug=0)
+			else:
+				self.outstanding_query_store = shelve.open(sid_store, writeback=True)
 		else:
 			self.outstanding_queries = {}
 		if sid_store_cert:
-			self.outstanding_certs = shelve.open(sid_store_cert, writeback=True)
+			if self.sid_store_cert_type == 'memcache':
+				self.outstanding_cert_store = memcache.Client([sid_store_cert], debug=0)
+			else:
+				self.outstanding_cert_store = shelve.open(sid_store_cert, writeback=True)
 		else:
 			self.outstanding_certs = {}
 
 		self.iam = platform.node()
+
+	def _get_outstanding_queries(self):
+		if sid_store_type == 'memcache':
+			return outstanding_query_store.get(QUERY_STORE_KEY)
+
+		return outstanding_query_store
+
+	def _get_outstanding_query(self, key):
+		if sid_store_type == 'memcache':
+			return outstanding_query_store.get(QUERY_STORE_KEY).get(key)
+
+		return outstanding_query_store.get(key)
+
+	def _set_outstanding_query(self, key, value):
+		if sid_store_type == 'memcache':
+			queries = outstanding_query_store.get(QUERY_STORE_KEY)
+			queries[key] = value
+			outstanding_query_store.set(QUERY_STORE_KEY, queries)
+		else
+			outstanding_query_store[key] = value
+
+	def _get_outstanding_certs(self):
+		if sid_store_type == 'memcache':
+			return outstanding_cert_store.get(CERT_STORE_KEY)
+
+		return outstanding_cert_store
+
+	def _get_outstanding_cert(self, key):
+		if sid_store_type == 'memcache':
+			return outstanding_cert_store.get(CERT_STORE_KEY).get(key)
+
+		return outstanding_cert_store.get(key)
+
+	def _set_outstanding_cert(self, key, value):
+		if sid_store_type == 'memcache':
+			certs = outstanding_cert_store.get(CERT_STORE_KEY)
+			certs[key] = value
+			outstanding_cert_store.set(CERT_STORE_KEY, certs)
+		else
+			outstanding_cert_store[key] = value
 
 	def _get_rememberer(self, request):
 		api = request.get('repoze.who.api', None)
@@ -171,7 +220,7 @@ class SAML2GenericPlugin(object):
 
 	def _wayf_redirect(self, came_from):
 		sid_ = sid()
-		self.outstanding_queries[sid_] = came_from
+		self._set_outstanding_query(sid_, came_from)
 		return -1, HTTPSeeOther(headers=[('Location',
 										  "%s?%s" % (self.wayf, sid_))])
 
@@ -258,7 +307,7 @@ class SAML2GenericPlugin(object):
 							query=environ.get("QUERY_STRING"))
 					else:
 						sid_ = sid()
-						self.outstanding_queries[sid_] = came_from
+						self._set_outstanding_query(sid_, came_from)
 
 						eid = _cli.config.entityid
 						ret = _cli.config.getattr(
@@ -317,7 +366,7 @@ class SAML2GenericPlugin(object):
 		if done == -1:
 			return response
 		elif done > 0:
-			self.outstanding_queries[done] = came_from
+			self._set_outstanding_query(done, came_from)
 			return ECP_response(response)
 		else:
 			entity_id = response
@@ -354,7 +403,7 @@ class SAML2GenericPlugin(object):
 					_sid = req_id
 
 				if cert is not None:
-					self.outstanding_certs[_sid] = cert
+					self._set_outstanding_cert(_sid, cert)
 
 				ht_args = _cli.apply_binding(_binding, msg_str,
 											 destination=dest,
@@ -372,11 +421,11 @@ class SAML2GenericPlugin(object):
 						environ["PATH_INFO"])[1] == "":
 					query = parse_qs(environ["QUERY_STRING"])
 					sid = query["sid"][0]
-					came_from = self.outstanding_queries[sid]
+					self._get_outstanding_query(sid_)
 			except:
 				pass
 			# remember the request
-			self.outstanding_queries[_sid] = came_from
+			self._set_outstanding_query(sid_, came_from)
 
 			if not ht_args["data"] and ht_args["headers"][0][0] == "Location":
 				return HTTPSeeOther(headers=ht_args["headers"])
@@ -399,8 +448,8 @@ class SAML2GenericPlugin(object):
 			# Evaluate the response, returns a AuthnResponse instance
 			try:
 				authresp = self.saml_client.parse_authn_request_response(
-					post["SAMLResponse"][0], binding, self.outstanding_queries,
-					self.outstanding_certs)
+					post["SAMLResponse"][0], binding, self._get_outstanding_queries(),
+					self._get_outstanding_certs())
 
 			except Exception, excp:
 				logger.exception("Exception: %s" % (excp,))
@@ -577,6 +626,9 @@ def make_plugin(remember_name=None,  # plugin for remember
 				saml_conf="",
 				wayf="",
 				sid_store="",
+				sid_store_type=None,
+				sid_store_cert=None,
+				sid_store_cert_type=None,
 				identity_cache="",
 				discovery="",
 				idp_query_param=""
@@ -594,6 +646,7 @@ def make_plugin(remember_name=None,  # plugin for remember
 	scl = Saml2Client(config=conf, identity_cache=identity_cache,
 					  virtual_organization=virtual_organization)
 
-	plugin = SAML2GenericPlugin(remember_name, conf, scl, wayf, cache, sid_store,
-						 		discovery, idp_query_param)
+	plugin = SAML2GenericPlugin(remember_name, conf, scl, wayf, cache, 
+								sid_store, sid_store_type, discovery, idp_query_param,
+								sid_store_cert, sid_store_cert_type)
 	return plugin
