@@ -134,7 +134,7 @@ class SAML2GenericPlugin(object):
 			queries = outstanding_query_store.get(QUERY_STORE_KEY)
 			queries[key] = value
 			outstanding_query_store.set(QUERY_STORE_KEY, queries)
-		else
+		else:
 			outstanding_query_store[key] = value
 
 	def _get_outstanding_certs(self):
@@ -154,7 +154,7 @@ class SAML2GenericPlugin(object):
 			certs = outstanding_cert_store.get(CERT_STORE_KEY)
 			certs[key] = value
 			outstanding_cert_store.set(CERT_STORE_KEY, certs)
-		else
+		else:
 			outstanding_cert_store[key] = value
 
 	def _get_rememberer(self, request):
