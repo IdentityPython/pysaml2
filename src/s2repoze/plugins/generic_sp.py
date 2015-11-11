@@ -114,7 +114,7 @@ class SAML2GenericPlugin(object):
 			else:
 				self.outstanding_cert_store = shelve.open(sid_store_cert, writeback=True)
 		else:
-			self.outstanding_certs = {}
+			self.outstanding_cert_store = {}
 
 		self.iam = platform.node()
 
