@@ -214,7 +214,6 @@ def for_me(conditions, myself):
 def authn_response(conf, return_addrs, outstanding_queries=None, timeslack=0,
                    asynchop=True, allow_unsolicited=False,
                    want_assertions_signed=False):
-    logger.debug('AUTHN_RESPONSE: START')
     sec = security_context(conf)
     if not timeslack:
         try:
@@ -275,11 +274,7 @@ class StatusResponse(object):
     def _postamble(self):
         if not self.response:
             logger.error("Response was not correctly signed")
-            if self.xmlstr:
-                logger.info(self.xmlstr)
             raise IncorrectlySigned()
-
-        logger.debug("response: %s" % (self.response,))
 
         try:
             valid_instance(self.response)
@@ -310,7 +305,6 @@ class StatusResponse(object):
 
         # own copy
         self.xmlstr = xmldata[:]
-        logger.debug("xmlstr: %s" % (self.xmlstr,))
         if origxml:
             self.origxml = origxml
         else:
@@ -336,9 +330,7 @@ class StatusResponse(object):
     def status_ok(self):
         if self.response.status:
             status = self.response.status
-            logger.info("status: %s" % (status,))
             if status.status_code.value != samlp.STATUS_SUCCESS:
-                logger.info("Not successful operation: %s" % status)
                 if status.status_code.status_code:
                     excep = STATUSCODE2EXCEPTION[
                         status.status_code.status_code.value]
@@ -497,8 +489,6 @@ class AuthnResponse(StatusResponse):
         self._loads(xmldata, decode, origxml)
 
         if self.asynchop:
-            logger.debug('SAML IN RESPONSE TO: %s' % self.in_response_to)
-            logger.debug('SAML OUTSTANDING: %s' % self.outstanding_queries)
             if self.in_response_to in self.outstanding_queries:
                 self.came_from = self.outstanding_queries[self.in_response_to]
                 #del self.outstanding_queries[self.in_response_to]
@@ -557,8 +547,6 @@ class AuthnResponse(StatusResponse):
         # The Identity Provider MUST include a <saml:Conditions> element
         assert self.assertion.conditions
         conditions = self.assertion.conditions
-
-        logger.debug("conditions: %s" % conditions)
 
         # if no sub-elements or elements are supplied, then the
         # assertion is considered to be valid.
@@ -638,10 +626,6 @@ class AuthnResponse(StatusResponse):
 
             ava = {}
             for _attr_statem in self.assertion.attribute_statement:
-                logger.debug("Attribute Statement: %s" % _attr_statem)
-                for aconv in self.attribute_converters:
-                    logger.debug("Converts name format: %s" % aconv.name_format)
-
                 self.decrypt_attributes(_attr_statem)
                 ava.update(to_local(self.attribute_converters, _attr_statem, self.allow_unknown_attributes))
         return ava
@@ -675,9 +659,6 @@ class AuthnResponse(StatusResponse):
                     # This is where I don't allow unsolicited reponses
                     # Either in_response_to == None or has a value I don't
                     # recognize
-                    logger.debug("in response to: '%s'" % data.in_response_to)
-                    logger.info("outstanding queries: %s" % (
-                        self.outstanding_queries.keys(),))
                     raise Exception(
                         "Combination of session id and requestURI I don't "
                         "recall")
@@ -737,7 +718,6 @@ class AuthnResponse(StatusResponse):
             else:
                 raise VerificationError("Missing NameID")
 
-        logger.info("Subject NameID: %s" % self.name_id)
         return self.name_id
 
     def _assertion(self, assertion, verified=False):
@@ -748,11 +728,9 @@ class AuthnResponse(StatusResponse):
         """
 
         if not hasattr(assertion, 'signature') or not assertion.signature:
-            logger.debug("unsigned")
             if self.require_signature:
                 raise SignatureError("Signature missing for assertion")
         else:
-            logger.debug("signed")
 
             if not verified:
                 try:
@@ -763,9 +741,6 @@ class AuthnResponse(StatusResponse):
                     raise
 
         self.assertion = assertion
-        logger.debug("assertion context: %s" % (self.context,))
-        logger.debug("assertion keys: %s" % (assertion.keyswv()))
-        logger.debug("outstanding_queries: %s" % (self.outstanding_queries,))
 
         #if self.context == "AuthnReq" or self.context == "AttrQuery":
         if self.context == "AuthnReq":
@@ -776,12 +751,8 @@ class AuthnResponse(StatusResponse):
         if not self.condition_ok():
             raise VerificationError("Condition not OK")
 
-        logger.debug("--- Getting Identity ---")
-
         if self.context == "AuthnReq" or self.context == "AttrQuery":
             self.ava = self.get_identity()
-
-            logger.debug("--- AVA: %s" % (self.ava,))
 
         try:
             self.get_subject()
@@ -825,7 +796,6 @@ class AuthnResponse(StatusResponse):
 
         res = []
         if self.response.encrypted_assertion:
-            logger.debug("***Encrypted assertion/-s***")
             decr_text = self.sec.decrypt(self.xmlstr, key_file)
             resp = samlp.response_from_string(decr_text)
             res = self.decrypt_assertions(resp.encrypted_assertion, decr_text)
@@ -837,7 +807,6 @@ class AuthnResponse(StatusResponse):
             self.xmlstr = decr_text
 
         if self.response.assertion:
-            logger.debug("***Unencrypted assertion***")
             for assertion in self.response.assertion:
                 if not self._assertion(assertion, assertion in res):
                     return False
@@ -1071,7 +1040,6 @@ class AssertionIDResponse(object):
     def loads(self, xmldata, decode=True, origxml=None):
         # own copy
         self.xmlstr = xmldata[:]
-        logger.debug("xmlstr: %s" % (self.xmlstr,))
         self.origxml = origxml
 
         try:
@@ -1100,11 +1068,7 @@ class AssertionIDResponse(object):
     def _postamble(self):
         if not self.response:
             logger.error("Response was not correctly signed")
-            if self.xmlstr:
-                logger.info(self.xmlstr)
             raise IncorrectlySigned()
-
-        logger.debug("response: %s" % (self.response,))
 
         return self
 

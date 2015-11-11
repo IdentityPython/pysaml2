@@ -136,6 +136,16 @@ class SAML2GenericPlugin(object):
 		else:
 			self._get_outstanding_queries()[key] = value
 
+	def _delete_outstanding_query(self, key):
+		logger.debug('sid_store_type: {0}'.format(self.sid_store_type))
+		if self.sid_store_type == 'memcache':
+			queries = self._get_outstanding_queries()
+			queries.pop(key, None)
+			self.outstanding_query_store.set(QUERY_STORE_KEY, queries)
+		else:
+			self._get_outstanding_queries().pop(key, None)
+
+
 	def _get_outstanding_certs(self):
 		if self.sid_store_type == 'memcache':
 			return self.outstanding_cert_store.get(CERT_STORE_KEY) or {}
@@ -455,6 +465,8 @@ class SAML2GenericPlugin(object):
 		except TypeError, excp:
 			return None
 
+		logger.debug('auth response: {0}'.format(authresp))
+		logger.debug('Session Info: {0}'.format(session_info))
 		if session_info["came_from"]:
 			try:
 				path, query = session_info["came_from"].split('?')
