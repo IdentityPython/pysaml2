@@ -128,7 +128,6 @@ class SAML2GenericPlugin(object):
 		return self._get_outstanding_queries.get(key)
 
 	def _set_outstanding_query(self, key, value):
-		logger.debug('sid_store_type: {0}'.format(self.sid_store_type))
 		if self.sid_store_type == 'memcache':
 			queries = self._get_outstanding_queries()
 			queries[key] = value
@@ -137,14 +136,12 @@ class SAML2GenericPlugin(object):
 			self._get_outstanding_queries()[key] = value
 
 	def _delete_outstanding_query(self, key):
-		logger.debug('sid_store_type: {0}'.format(self.sid_store_type))
 		if self.sid_store_type == 'memcache':
 			queries = self._get_outstanding_queries()
 			queries.pop(key, None)
 			self.outstanding_query_store.set(QUERY_STORE_KEY, queries)
 		else:
 			self._get_outstanding_queries().pop(key, None)
-
 
 	def _get_outstanding_certs(self):
 		if self.sid_store_type == 'memcache':
@@ -162,6 +159,15 @@ class SAML2GenericPlugin(object):
 			self.outstanding_cert_store.set(CERT_STORE_KEY, certs)
 		else:
 			self._get_outstanding_certs()[key] = value
+
+	def _delete_outstanding_cert(self, key):
+		if self.sid_store_type == 'memcache':
+			certs = self._get_outstanding_certs()
+			certs.pop(key, None)
+			self.outstanding_cert_store.set(QUERY_STORE_KEY, certs)
+		else:
+			self._get_outstanding_certs().pop(key, None)
+
 
 	def _get_rememberer(self, request):
 		api = request.get('repoze.who.api', None)
@@ -462,11 +468,10 @@ class SAML2GenericPlugin(object):
 				raise
 
 			session_info = authresp.session_info()
+			session_id = authresp.session_id()
 		except TypeError, excp:
 			return None
 
-		logger.debug('auth response: {0}'.format(authresp))
-		logger.debug('Session Info: {0}'.format(session_info))
 		if session_info["came_from"]:
 			try:
 				path, query = session_info["came_from"].split('?')
@@ -474,6 +479,11 @@ class SAML2GenericPlugin(object):
 				environ["QUERY_STRING"] = query
 			except ValueError:
 				environ["PATH_INFO"] = session_info["came_from"]
+
+		#remove the id from the system so no one else can use it
+		if session_id:
+			logger.debug('Session ID: {0}'.format(authresp.session_id()))
+			self._delete_outstanding_query(session_id)
 
 		return session_info
 
