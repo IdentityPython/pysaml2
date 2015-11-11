@@ -120,23 +120,20 @@ class SAML2GenericPlugin(object):
 
 	def _get_outstanding_queries(self):
 		if self.sid_store_type == 'memcache':
-			return self.outstanding_query_store.get(QUERY_STORE_KEY)
+			return self.outstanding_query_store.get(QUERY_STORE_KEY, {})
 
 		return self.outstanding_query_store
 
 	def _get_outstanding_query(self, key):
-		if self.sid_store_type == 'memcache':
-			return self.outstanding_query_store.get(QUERY_STORE_KEY).get(key)
-
-		return self.outstanding_query_store.get(key)
+		return self._get_outstanding_queries.get(key)
 
 	def _set_outstanding_query(self, key, value):
 		if self.sid_store_type == 'memcache':
-			queries = self.outstanding_query_store.get(QUERY_STORE_KEY)
+			queries = self._get_outstanding_queries()
 			queries[key] = value
 			self.outstanding_query_store.set(QUERY_STORE_KEY, queries)
 		else:
-			self.outstanding_query_store[key] = value
+			self._get_outstanding_queries()[key] = value
 
 	def _get_outstanding_certs(self):
 		if self.sid_store_type == 'memcache':
@@ -145,18 +142,15 @@ class SAML2GenericPlugin(object):
 		return self.outstanding_cert_store
 
 	def _get_outstanding_cert(self, key):
-		if self.sid_store_type == 'memcache':
-			return outstanding_cert_store.get(CERT_STORE_KEY).get(key)
-
-		return self.outstanding_cert_store.get(key)
+		return self._get_outstanding_certs.get(key)
 
 	def _set_outstanding_cert(self, key, value):
 		if self.sid_store_type == 'memcache':
-			certs = self.outstanding_cert_store.get(CERT_STORE_KEY)
+			certs = self._get_outstanding_certs()
 			certs[key] = value
 			self.outstanding_cert_store.set(CERT_STORE_KEY, certs)
 		else:
-			self.outstanding_cert_store[key] = value
+			self._get_outstanding_certs()[key] = value
 
 	def _get_rememberer(self, request):
 		api = request.get('repoze.who.api', None)
