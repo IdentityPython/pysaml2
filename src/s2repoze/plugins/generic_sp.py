@@ -421,11 +421,11 @@ class SAML2GenericPlugin(object):
 						environ["PATH_INFO"])[1] == "":
 					query = parse_qs(environ["QUERY_STRING"])
 					sid = query["sid"][0]
-					self._get_outstanding_query(sid_)
+					came_from = self._get_outstanding_query(sid)
 			except:
 				pass
 			# remember the request
-			self._set_outstanding_query(sid_, came_from)
+			self._set_outstanding_query(_sid, came_from)
 
 			if not ht_args["data"] and ht_args["headers"][0][0] == "Location":
 				return HTTPSeeOther(headers=ht_args["headers"])
