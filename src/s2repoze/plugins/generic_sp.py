@@ -83,8 +83,8 @@ class SAML2GenericPlugin(object):
 	implements(IChallenger, IIdentifier, IAuthenticator, IMetadataProvider)
 
 	def __init__(self, rememberer_name, config, saml_client, wayf, cache,
-				 sid_store=None, sid_store_type='local', discovery="", idp_query_param="",
-				 sid_store_cert=None, sid_store_cert_type='local'):
+				 sid_store=None, sid_store_type=None, discovery="", idp_query_param="",
+				 sid_store_cert=None, sid_store_cert_type=None):
 		self.rememberer_name = rememberer_name
 		self.wayf = wayf
 		self.saml_client = saml_client
@@ -92,8 +92,8 @@ class SAML2GenericPlugin(object):
 		self.cache = cache
 		self.discosrv = discovery
 		self.idp_query_param = idp_query_param
-		self.sid_store_type = sid_store_type.lower()
-		self.sid_store_cert_type = sid_store_cert_type.lower()
+		self.sid_store_type = (sid_store_type or 'local').lower()
+		self.sid_store_cert_type = (sid_store_cert_type or 'local').lower()
 		self.logout_endpoints = [urlparse(ep)[2] for ep in config.endpoint(
 			"single_logout_service")]
 		try:
