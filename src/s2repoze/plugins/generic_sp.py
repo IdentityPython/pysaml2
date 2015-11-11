@@ -11,6 +11,7 @@ import sys
 import platform
 import shelve
 import traceback
+import memcache
 import saml2
 from urlparse import parse_qs, urlparse
 from saml2.md import Extensions
@@ -118,44 +119,44 @@ class SAML2GenericPlugin(object):
 		self.iam = platform.node()
 
 	def _get_outstanding_queries(self):
-		if sid_store_type == 'memcache':
-			return outstanding_query_store.get(QUERY_STORE_KEY)
+		if self.sid_store_type == 'memcache':
+			return self.outstanding_query_store.get(QUERY_STORE_KEY)
 
-		return outstanding_query_store
+		return self.outstanding_query_store
 
 	def _get_outstanding_query(self, key):
-		if sid_store_type == 'memcache':
-			return outstanding_query_store.get(QUERY_STORE_KEY).get(key)
+		if self.sid_store_type == 'memcache':
+			return self.outstanding_query_store.get(QUERY_STORE_KEY).get(key)
 
-		return outstanding_query_store.get(key)
+		return self.outstanding_query_store.get(key)
 
 	def _set_outstanding_query(self, key, value):
-		if sid_store_type == 'memcache':
-			queries = outstanding_query_store.get(QUERY_STORE_KEY)
+		if self.sid_store_type == 'memcache':
+			queries = self.outstanding_query_store.get(QUERY_STORE_KEY)
 			queries[key] = value
-			outstanding_query_store.set(QUERY_STORE_KEY, queries)
+			self.outstanding_query_store.set(QUERY_STORE_KEY, queries)
 		else:
-			outstanding_query_store[key] = value
+			self.outstanding_query_store[key] = value
 
 	def _get_outstanding_certs(self):
-		if sid_store_type == 'memcache':
-			return outstanding_cert_store.get(CERT_STORE_KEY)
+		if self.sid_store_type == 'memcache':
+			return self.outstanding_cert_store.get(CERT_STORE_KEY)
 
-		return outstanding_cert_store
+		return self.outstanding_cert_store
 
 	def _get_outstanding_cert(self, key):
-		if sid_store_type == 'memcache':
+		if self.sid_store_type == 'memcache':
 			return outstanding_cert_store.get(CERT_STORE_KEY).get(key)
 
-		return outstanding_cert_store.get(key)
+		return self.outstanding_cert_store.get(key)
 
 	def _set_outstanding_cert(self, key, value):
-		if sid_store_type == 'memcache':
-			certs = outstanding_cert_store.get(CERT_STORE_KEY)
+		if self.sid_store_type == 'memcache':
+			certs = self.outstanding_cert_store.get(CERT_STORE_KEY)
 			certs[key] = value
-			outstanding_cert_store.set(CERT_STORE_KEY, certs)
+			self.outstanding_cert_store.set(CERT_STORE_KEY, certs)
 		else:
-			outstanding_cert_store[key] = value
+			self.outstanding_cert_store[key] = value
 
 	def _get_rememberer(self, request):
 		api = request.get('repoze.who.api', None)
