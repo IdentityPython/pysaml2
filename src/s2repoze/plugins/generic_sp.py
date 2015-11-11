@@ -120,7 +120,7 @@ class SAML2GenericPlugin(object):
 
 	def _get_outstanding_queries(self):
 		if self.sid_store_type == 'memcache':
-			return self.outstanding_query_store.get(QUERY_STORE_KEY, {})
+			return self.outstanding_query_store.get(QUERY_STORE_KEY) or {}
 
 		return self.outstanding_query_store
 
@@ -128,6 +128,7 @@ class SAML2GenericPlugin(object):
 		return self._get_outstanding_queries.get(key)
 
 	def _set_outstanding_query(self, key, value):
+		logger.debug('sid_store_type: {0}'.format(sid_store_type))
 		if self.sid_store_type == 'memcache':
 			queries = self._get_outstanding_queries()
 			queries[key] = value
@@ -137,7 +138,7 @@ class SAML2GenericPlugin(object):
 
 	def _get_outstanding_certs(self):
 		if self.sid_store_type == 'memcache':
-			return self.outstanding_cert_store.get(CERT_STORE_KEY)
+			return self.outstanding_cert_store.get(CERT_STORE_KEY) or {}
 
 		return self.outstanding_cert_store
 
