@@ -3,8 +3,8 @@ language: python
 sudo: false
 
 env:
-  - TOX_ENV=py27
-  - TOX_ENV=py34
+  - TOXENV=py27
+  - TOXENV=py34
 
 addons:
   apt:
@@ -14,5 +14,8 @@ addons:
 services:
   - mongodb
 
+install:
+  - pip install -U tox
+
 script:
-  - ./setup.py test
+  - tox
