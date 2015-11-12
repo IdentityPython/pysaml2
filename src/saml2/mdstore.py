@@ -319,19 +319,20 @@ class MetaData(object):
         def extract_certs(srvs):
             res = []
             for srv in srvs:
-                for key in srv["key_descriptor"]:
-                    if "use" in key and key["use"] == use:
-                        for dat in key["key_info"]["x509_data"]:
-                            cert = repack_cert(
-                                dat["x509_certificate"]["text"])
-                            if cert not in res:
-                                res.append(cert)
-                    elif not "use" in key:
-                        for dat in key["key_info"]["x509_data"]:
-                            cert = repack_cert(
-                                dat["x509_certificate"]["text"])
-                            if cert not in res:
-                                res.append(cert)
+                if "key_descriptor" in srv:
+                    for key in srv["key_descriptor"]:
+                        if "use" in key and key["use"] == use:
+                            for dat in key["key_info"]["x509_data"]:
+                                cert = repack_cert(
+                                    dat["x509_certificate"]["text"])
+                                if cert not in res:
+                                    res.append(cert)
+                        elif not "use" in key:
+                            for dat in key["key_info"]["x509_data"]:
+                                cert = repack_cert(
+                                    dat["x509_certificate"]["text"])
+                                if cert not in res:
+                                    res.append(cert)
 
             return res
 

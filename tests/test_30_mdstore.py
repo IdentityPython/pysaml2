@@ -392,5 +392,43 @@ def test_get_certs_from_metadata():
     assert certs1[0] == certs2[0] == TEST_CERT
 
 
+def test_get_certs_from_metadata_without_keydescriptor():
+    mds = MetadataStore(ONTS.values(), ATTRCONV, None)
+    mds.imp([{
+        "class": "saml2.mdstore.InMemoryMetaData",
+        "metadata": [("""
+<EntitiesDescriptor
+    xmlns="urn:oasis:names:tc:SAML:2.0:metadata"
+    xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata"
+    xmlns:shibmeta="urn:mace:shibboleth:metadata:1.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+    Name="urn:mace:example.com:test-1.0">
+  <EntityDescriptor
+    entityID="http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"
+    xml:base="swamid-1.0/idp.umu.se-saml2.xml">
+  <IDPSSODescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+    <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
+    <SingleSignOnService
+        Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
+        Location="http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"/>
+  </IDPSSODescriptor>
+  <Organization>
+    <OrganizationName xml:lang="en">Catalogix</OrganizationName>
+    <OrganizationDisplayName xml:lang="en">Catalogix</OrganizationDisplayName>
+    <OrganizationURL xml:lang="en">http://www.catalogix.se</OrganizationURL>
+  </Organization>
+  <ContactPerson contactType="technical">
+    <SurName>Hedberg</SurName>
+    <EmailAddress>datordrift@catalogix.se</EmailAddress>
+  </ContactPerson>
+</EntityDescriptor>
+</EntitiesDescriptor>""",)]
+    }])
+    certs = mds.certs("http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php", "idpsso")
+
+    assert len(certs) == 0
+
+
 if __name__ == "__main__":
     test_get_certs_from_metadata()
