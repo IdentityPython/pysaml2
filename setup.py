@@ -20,17 +20,6 @@ install_requires = [
     'six'
 ]
 
-tests_require = [
-    'mongodict',
-    'pyasn1',
-    'pymongo==3.0.1',
-    'python-memcached >= 1.51',
-    'pytest',
-    'mako',
-    'webob',
-    #'pytest-coverage',
-]
-
 version = ''
 with open('src/saml2/__init__.py', 'r') as fd:
     version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
@@ -63,11 +52,6 @@ setup(
 
     scripts=["tools/parse_xsd2.py", "tools/make_metadata.py",
              "tools/mdexport.py", "tools/merge_metadata.py"],
-
-    tests_require=tests_require,
-    extras_require={
-        'testing': tests_require,
-    },
     install_requires=install_requires,
     zip_safe=False,
 )
