@@ -155,6 +155,9 @@ class Base(Entity):
         except IndexError:
             raise IdpUnspecified("No IdP to send to given the premises")
 
+    def sso_location(self, entityid=None, binding=BINDING_HTTP_REDIRECT):
+        return self._sso_location(entityid, binding)
+
     def _my_name(self):
         return self.config.name
 
