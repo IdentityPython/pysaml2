@@ -17,7 +17,6 @@ from saml2 import time_util
 
 __author__ = 'rohe0002'
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -73,8 +72,8 @@ class Created(Response):
 
 class Redirect(Response):
     _template = '<html>\n<head><title>Redirecting to %s</title></head>\n' \
-        '<body>\nYou are being redirected to <a href="%s">%s</a>\n' \
-        '</body>\n</html>'
+                '<body>\nYou are being redirected to <a href="%s">%s</a>\n' \
+                '</body>\n</html>'
     _status = '302 Found'
 
     def __call__(self, environ, start_response, **kwargs):
@@ -86,8 +85,8 @@ class Redirect(Response):
 
 class SeeOther(Response):
     _template = '<html>\n<head><title>Redirecting to %s</title></head>\n' \
-        '<body>\nYou are being redirected to <a href="%s">%s</a>\n' \
-        '</body>\n</html>'
+                '<body>\nYou are being redirected to <a href="%s">%s</a>\n' \
+                '</body>\n</html>'
     _status = '303 See Other'
 
     def __call__(self, environ, start_response, **kwargs):
@@ -155,6 +154,7 @@ class HttpParameters():
             self.sigalg = dict["SigAlg"][0]
         except KeyError:
             pass
+
 
 def extract(environ, empty=False, err=False):
     """Extracts strings in form data and returns a dict.
@@ -266,7 +266,7 @@ def unpack_artifact(environ):
 
 def unpack_any(environ):
     if environ['REQUEST_METHOD'].upper() == 'GET':
-    # Could be either redirect or artifact
+        # Could be either redirect or artifact
         _dict = unpack_redirect(environ)
         if "ID" in _dict:
             binding = BINDING_URI
@@ -307,7 +307,7 @@ def cookie_signature(seed, *parts):
     return sha1.hexdigest()
 
 
-def make_cookie(name, load, seed, expire=0, domain="",  path="",
+def make_cookie(name, load, seed, expire=0, domain="", path="",
                 timestamp=""):
     """
     Create and return a cookie
