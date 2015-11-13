@@ -60,10 +60,10 @@ REQ2SRV = {
     "discovery_service_request": "discovery_response"
 }
 
-
 ENTITYATTRIBUTES = "urn:oasis:names:tc:SAML:metadata:attribute&EntityAttributes"
 ENTITY_CATEGORY = "http://macedir.org/entity-category"
 ENTITY_CATEGORY_SUPPORT = "http://macedir.org/entity-category-support"
+
 
 # ---------------------------------------------------
 
@@ -121,6 +121,7 @@ class MetaData(object):
         self.metadata = metadata
         self.entity = None
         self.cert = None
+        self.to_old = []
 
     def items(self):
         '''
@@ -360,7 +361,8 @@ class InMemoryMetaData(MetaData):
             try:
                 if not valid(entity_descr.valid_until):
                     logger.error("Entity descriptor (entity id:%s) to old",
-                        entity_descr.entity_id)
+                                 entity_descr.entity_id)
+                    self.to_old.append(entity_descr.entity_id)
                     return
             except AttributeError:
                 pass
@@ -423,7 +425,8 @@ class InMemoryMetaData(MetaData):
                 try:
                     if not valid(self.entities_descr.valid_until):
                         raise ToOld(
-                            "Metadata not valid anymore, it's only valid until %s" % (
+                            "Metadata not valid anymore, it's only valid "
+                            "until %s" % (
                                 self.entities_descr.valid_until,))
                 except AttributeError:
                     pass
@@ -564,8 +567,8 @@ class InMemoryMetaData(MetaData):
                 return True
 
             node_name = self.node_name \
-                or "%s:%s" % (md.EntitiesDescriptor.c_namespace,
-                              md.EntitiesDescriptor.c_tag)
+                        or "%s:%s" % (md.EntitiesDescriptor.c_namespace,
+                                      md.EntitiesDescriptor.c_tag)
 
             if self.security.verify_signature(
                     txt, node_name=node_name, cert_file=self.cert):
@@ -581,6 +584,7 @@ class MetaDataFile(InMemoryMetaData):
     Handles Metadata file on the same machine. The format of the file is
     the SAML Metadata format.
     """
+
     def __init__(self, onts, attrc, filename=None, cert=None, **kwargs):
         super(MetaDataFile, self).__init__(onts, attrc, **kwargs)
         if not filename:
@@ -601,6 +605,7 @@ class MetaDataLoader(MetaDataFile):
     Handles Metadata file loaded by a passed in function.
     The format of the file is the SAML Metadata format.
     """
+
     def __init__(self, onts, attrc, loader_callable, cert=None,
                  security=None, **kwargs):
         super(MetaDataLoader, self).__init__(onts, attrc, **kwargs)
@@ -686,6 +691,7 @@ class MetaDataMD(InMemoryMetaData):
     Handles locally stored metadata, the file format is the text representation
     of the Python representation of the metadata.
     """
+
     def __init__(self, onts, attrc, filename, **kwargs):
         super(MetaDataMD, self).__init__(onts, attrc, **kwargs)
         self.filename = filename
@@ -701,6 +707,7 @@ SAML_METADATA_CONTENT_TYPE = 'application/samlmetadata+xml'
 class MetaDataMDX(InMemoryMetaData):
     """ Uses the md protocol to fetch entity information
     """
+
     def __init__(self, entity_transform, onts, attrc, url, security, cert,
                  http, **kwargs):
         """
@@ -733,8 +740,8 @@ class MetaDataMDX(InMemoryMetaData):
                 mdx_url, headers={'Accept': SAML_METADATA_CONTENT_TYPE})
             if response.status_code == 200:
                 node_name = self.node_name \
-                    or "%s:%s" % (md.EntitiesDescriptor.c_namespace,
-                                  md.EntitiesDescriptor.c_tag)
+                            or "%s:%s" % (md.EntitiesDescriptor.c_namespace,
+                                          md.EntitiesDescriptor.c_tag)
 
                 _txt = response.text.encode("utf-8")
 
@@ -770,6 +777,7 @@ class MetadataStore(object):
         self.metadata = {}
         self.check_validity = check_validity
         self.filter = filter
+        self.to_old = {}
 
     def load(self, typ, *args, **kwargs):
         if self.filter:
@@ -861,12 +869,15 @@ class MetadataStore(object):
                 for key in item['metadata']:
                     # Separately handle MetaDataFile and directory
                     if MDloader == MetaDataFile and os.path.isdir(key[0]):
-                        files = [f for f in os.listdir(key[0]) if isfile(join(key[0], f))]
+                        files = [f for f in os.listdir(key[0]) if
+                                 isfile(join(key[0], f))]
                         for fil in files:
                             _fil = join(key[0], fil)
                             _md = MetaDataFile(self.onts, self.attrc, _fil)
                             _md.load()
                             self.metadata[_fil] = _md
+                            if _md.to_old:
+                                self.to_old[_fil] = _md.to_old
                         return
 
                     if len(key) == 2:
@@ -875,11 +886,13 @@ class MetadataStore(object):
                     _md = MDloader(self.onts, self.attrc, key[0], **kwargs)
                     _md.load()
                     self.metadata[key[0]] = _md
+                    if _md.to_old:
+                        self.to_old[key[0]] = _md.to_old
 
     def service(self, entity_id, typ, service, binding=None):
         known_entity = False
         logger.debug("service(%s, %s, %s, %s)", entity_id, typ, service,
-                                                  binding)
+                     binding)
         for key, _md in self.metadata.items():
             srvs = _md.service(entity_id, typ, service, binding)
             if srvs:
@@ -1179,7 +1192,7 @@ class MetadataStore(object):
             for ent_id, ent_desc in _md.items():
                 if descriptor in ent_desc:
                     if ent_id in res:
-                        #print("duplicated entity_id: %s" % res)
+                        # print("duplicated entity_id: %s" % res)
                         pass
                     else:
                         res.append(ent_id)
@@ -1214,4 +1227,3 @@ class MetadataStore(object):
             return "%s" % res
         elif format == "md":
             return json.dumps(self.items(), indent=2)
-
