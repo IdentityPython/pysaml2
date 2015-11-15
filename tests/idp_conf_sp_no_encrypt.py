@@ -36,7 +36,6 @@ CONFIG = {
                     # }
                 }
             },
-            "subject_data": full_path("subject_data_3.db"),
             #"domain": "umu.se",
             #"name_qualifier": ""
         },

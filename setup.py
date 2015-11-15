@@ -6,21 +6,6 @@ import sys
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
 
-
-class PyTest(TestCommand):
-
-    def finalize_options(self):
-        TestCommand.finalize_options(self)
-        self.test_args = []
-        self.test_suite = True
-
-    def run_tests(self):
-        #import here, cause outside the eggs aren't loaded
-        import pytest
-        errno = pytest.main(self.test_args)
-        sys.exit(errno)
-
-
 install_requires = [
     # core dependencies
     'decorator',
@@ -33,17 +18,6 @@ install_requires = [
     'pyOpenSSL',
     'python-dateutil',
     'six'
-]
-
-tests_require = [
-    'mongodict',
-    'pyasn1',
-    'pymongo==3.0.1',
-    'python-memcached >= 1.51',
-    'pytest',
-    'mako',
-    'webob',
-    #'pytest-coverage',
 ]
 
 version = ''
@@ -78,13 +52,6 @@ setup(
 
     scripts=["tools/parse_xsd2.py", "tools/make_metadata.py",
              "tools/mdexport.py", "tools/merge_metadata.py"],
-
-    tests_require=tests_require,
-    extras_require={
-        'testing': tests_require,
-    },
     install_requires=install_requires,
     zip_safe=False,
-    test_suite='tests',
-    cmdclass={'test': PyTest},
 )
