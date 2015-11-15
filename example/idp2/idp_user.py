@@ -68,7 +68,7 @@ USERS = {
         "ou": "IT",
         "initials": "P",
         #"schacHomeOrganization": "example.com",
-        "email": "roland@example.com",
+        "mail": "roland@example.com",
         "displayName": "P. Roland Hedberg",
         "labeledURL": "http://www.example.com/rohe My homepage",
         "norEduPersonNIN": "SE197001012222"
