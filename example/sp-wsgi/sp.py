@@ -38,6 +38,7 @@ from saml2.httputil import NotImplemented
 from saml2.response import StatusError
 from saml2.response import VerificationError
 from saml2.s_utils import UnknownPrincipal
+from saml2.s_utils import decode_base64_and_inflate
 from saml2.s_utils import UnsupportedBinding
 from saml2.s_utils import sid
 from saml2.s_utils import rndstr
@@ -633,8 +634,18 @@ class SLO(Service):
         self.sp = sp
         self.cache = cache
 
-    def do(self, response, binding, relay_state="", mtype="response"):
-        req_info = self.sp.parse_logout_request_response(response, binding)
+    def do(self, message, binding, relay_state="", mtype="response"):
+        try:
+            txt = decode_base64_and_inflate(message)
+            is_logout_request = 'LogoutRequest' in txt.split('>', 1)[0]
+        except:   # TODO: parse the XML correctly
+            is_logout_request = False
+
+        if is_logout_request:
+            self.sp.parse_logout_request(message, binding)
+        else:
+            self.sp.parse_logout_request_response(message, binding)
+
         return finish_logout(self.environ, self.start_response)
 
 # ----------------------------------------------------------------------------
