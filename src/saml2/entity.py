@@ -224,7 +224,7 @@ class Entity(HTTPBase):
             info = self.use_http_form_post(msg_str, destination,
                                            relay_state, typ)
             info["url"] = destination
-            info["method"] = "GET"
+            info["method"] = "POST"
         elif binding == BINDING_HTTP_REDIRECT:
             logger.info("HTTP REDIRECT")
             info = self.use_http_get(msg_str, destination, relay_state, typ,
