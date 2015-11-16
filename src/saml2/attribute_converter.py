@@ -428,7 +428,7 @@ class AttributeConverter(object):
             _attr = self._to[attr]
         except KeyError:
             try:
-                _attr = self._to[attr.to_lower()]
+                _attr = self._to[attr.lower()]
             except:
                 _attr = ''
 
