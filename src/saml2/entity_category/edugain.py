@@ -5,9 +5,10 @@ COCO = COC
 
 RELEASE = {
     "": ["eduPersonTargetedID"],
-    COC: ["eduPersonPrincipalName", "eduPersonScopedAffiliation", "mail",
-          "displayName", "schacHomeOrganization"],
-    COCO: ["eduPersonPrincipalName", "eduPersonScopedAffiliation", "mail",
-           "displayName", "schacHomeOrganization"]
+    # COC: ["eduPersonPrincipalName", "eduPersonScopedAffiliation", "mail",
+    #       "displayName", "schacHomeOrganization"],
+    COCO: ["eduPersonPrincipalName", "eduPersonScopedAffiliation",
+           'eduPersonAffiliation', "mail", "displayName", 'cn',
+           "schacHomeOrganization", 'schacHomeOrganizationType']
 }
 
