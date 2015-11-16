@@ -748,6 +748,11 @@ class MetaDataMDX(InMemoryMetaData):
                 logger.info("Response status: %s", response.status_code)
             raise KeyError
 
+    def single_sign_on_service(self, entity_id, binding=None, typ="idpsso"):
+        if binding is None:
+            binding = BINDING_HTTP_REDIRECT
+        return self.service(entity_id, "idpsso_descriptor", "single_sign_on_service", binding)
+
 
 class MetadataStore(object):
     def __init__(self, onts, attrc, config, ca_certs=None,

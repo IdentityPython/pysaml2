@@ -317,6 +317,20 @@ def test_mdx_service():
     assert len(certs) == 1
 
 
+@responses.activate
+def test_mdx_single_sign_on_service():
+    entity_id = "http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"
+
+    url = "http://mdx.example.com/entities/{}".format(
+        quote_plus(MetaDataMDX.sha1_entity_transform(entity_id)))
+    responses.add(responses.GET, url, body=TEST_METADATA_STRING, status=200,
+                  content_type=SAML_METADATA_CONTENT_TYPE)
+
+    mdx = MetaDataMDX("http://mdx.example.com")
+    sso_loc = mdx.single_sign_on_service(entity_id, BINDING_HTTP_REDIRECT)
+    assert sso_loc[0]["location"] == "http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"
+
+
 # pyff-test not available
 # def test_mdx_service():
 #     sec_config.xmlsec_binary = sigver.get_xmlsec_binary(["/opt/local/bin"])
