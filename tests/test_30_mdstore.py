@@ -2,11 +2,14 @@
 # -*- coding: utf-8 -*-
 import datetime
 import re
-from six.moves.urllib.parse import quote_plus
+#from six.moves.urllib.parse import quote_plus
+from future.backports.urllib.parse import quote_plus
 from saml2.config import Config
-from saml2.httpbase import HTTPBase
-from saml2.mdstore import MetadataStore, MetaDataMDX
+from saml2.mdstore import MetadataStore
+from saml2.mdstore import MetaDataMDX
+from saml2.mdstore import SAML_METADATA_CONTENT_TYPE
 from saml2.mdstore import destinations
+from saml2.mdstore import load_extensions
 from saml2.mdstore import name
 from saml2 import md
 from saml2 import sigver
@@ -18,15 +21,12 @@ from saml2 import saml
 from saml2 import config
 from saml2.attribute_converter import ac_factory
 from saml2.attribute_converter import d_to_local_name
-from saml2.extension import mdui
-from saml2.extension import idpdisc
-from saml2.extension import dri
-from saml2.extension import mdattr
-from saml2.extension import ui
 from saml2.s_utils import UnknownPrincipal
 from saml2 import xmldsig
 from saml2 import xmlenc
 from pathutils import full_path
+
+import responses
 
 sec_config = config.Config()
 # sec_config.xmlsec_binary = sigver.get_xmlsec_binary(["/opt/local/bin"])
@@ -88,15 +88,12 @@ TEST_METADATA_STRING = """
 
 ONTS = {
     saml.NAMESPACE: saml,
-    mdui.NAMESPACE: mdui,
-    mdattr.NAMESPACE: mdattr,
-    dri.NAMESPACE: dri,
-    ui.NAMESPACE: ui,
-    idpdisc.NAMESPACE: idpdisc,
     md.NAMESPACE: md,
     xmldsig.NAMESPACE: xmldsig,
     xmlenc.NAMESPACE: xmlenc
 }
+
+ONTS.update(load_extensions())
 
 ATTRCONV = ac_factory(full_path("attributemaps"))
 
@@ -149,6 +146,10 @@ METADATACONF = {
     "11": [{
         "class": "saml2.mdstore.InMemoryMetaData",
         "metadata": [(TEST_METADATA_STRING,)]
+    }],
+    "12": [{
+        "class": "saml2.mdstore.MetaDataFile",
+        "metadata": [(full_path("uu.xml"),)],
     }],
 }
 
@@ -303,6 +304,36 @@ def test_metadata_file():
     assert len(mds.keys()) == 560
 
 
+@responses.activate
+def test_mdx_service():
+    entity_id = "http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"
+
+    url = "http://mdx.example.com/entities/{}".format(
+        quote_plus(MetaDataMDX.sha1_entity_transform(entity_id)))
+    responses.add(responses.GET, url, body=TEST_METADATA_STRING, status=200,
+                  content_type=SAML_METADATA_CONTENT_TYPE)
+
+    mdx = MetaDataMDX("http://mdx.example.com")
+    sso_loc = mdx.service(entity_id, "idpsso_descriptor", "single_sign_on_service")
+    assert sso_loc[BINDING_HTTP_REDIRECT][0]["location"] == "http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"
+    certs = mdx.certs(entity_id, "idpsso")
+    assert len(certs) == 1
+
+
+@responses.activate
+def test_mdx_single_sign_on_service():
+    entity_id = "http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"
+
+    url = "http://mdx.example.com/entities/{}".format(
+        quote_plus(MetaDataMDX.sha1_entity_transform(entity_id)))
+    responses.add(responses.GET, url, body=TEST_METADATA_STRING, status=200,
+                  content_type=SAML_METADATA_CONTENT_TYPE)
+
+    mdx = MetaDataMDX("http://mdx.example.com")
+    sso_loc = mdx.single_sign_on_service(entity_id, BINDING_HTTP_REDIRECT)
+    assert sso_loc[0]["location"] == "http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"
+
+
 # pyff-test not available
 # def test_mdx_service():
 #     sec_config.xmlsec_binary = sigver.get_xmlsec_binary(["/opt/local/bin"])
@@ -429,6 +460,12 @@ def test_get_certs_from_metadata_without_keydescriptor():
 
     assert len(certs) == 0
 
+def test_metadata_extension_algsupport():
+    mds = MetadataStore(list(ONTS.values()), ATTRCONV, None)
+    mds.imp(METADATACONF["12"])
+    mdf = mds.metadata[full_path("uu.xml")]
+    _txt = mdf.dumps()
+    assert mds
 
 if __name__ == "__main__":
-    test_get_certs_from_metadata()
+    test_metadata_extension_algsupport()

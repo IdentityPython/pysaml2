@@ -979,7 +979,7 @@ def extension_elements_to_elements(extension_elements, schemas):
     if isinstance(schemas, list):
         pass
     elif isinstance(schemas, dict):
-        schemas = schemas.values()
+        schemas = list(schemas.values())
     else:
         return res
 

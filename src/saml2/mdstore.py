@@ -1,19 +1,20 @@
 from __future__ import print_function
+
+import hashlib
 import logging
 import os
 import sys
 import json
-import six
 
+import requests
+import six
 from hashlib import sha1
 from os.path import isfile, join
 from saml2.httpbase import HTTPBase
 from saml2.extension.idpdisc import BINDING_DISCO
 from saml2.extension.idpdisc import DiscoveryResponse
 from saml2.md import EntitiesDescriptor
-
 from saml2.mdie import to_dict
-
 from saml2 import md
 from saml2 import samlp
 from saml2 import SAMLError
@@ -66,6 +67,20 @@ ENTITY_CATEGORY_SUPPORT = "http://macedir.org/entity-category-support"
 
 
 # ---------------------------------------------------
+
+def load_extensions():
+    from saml2 import extension
+    import pkgutil
+
+    package = extension
+    prefix = package.__name__ + "."
+    ext_map = {}
+    for importer, modname, ispkg in pkgutil.iter_modules(package.__path__,
+                                                         prefix):
+        module = __import__(modname, fromlist="dummy")
+        ext_map[module.NAMESPACE] = module
+
+    return ext_map
 
 
 def destinations(srvs):
@@ -564,8 +579,8 @@ class InMemoryMetaData(MetaData):
                 return True
 
             node_name = self.node_name \
-                or "%s:%s" % (md.EntitiesDescriptor.c_namespace,
-                              md.EntitiesDescriptor.c_tag)
+                        or "%s:%s" % (md.EntitiesDescriptor.c_namespace,
+                                      md.EntitiesDescriptor.c_tag)
 
             if self.security.verify_signature(
                     txt, node_name=node_name, cert_file=self.cert):
@@ -705,27 +720,31 @@ class MetaDataMDX(InMemoryMetaData):
     """ Uses the md protocol to fetch entity information
     """
 
-    def __init__(self, entity_transform, onts, attrc, url, security, cert,
-                 http, **kwargs):
+    @staticmethod
+    def sha1_entity_transform(entity_id):
+        return "{{sha1}}{}".format(
+            hashlib.sha1(entity_id.encode("utf-8")).hexdigest())
+
+    def __init__(self, url, entity_transform=None):
         """
-        :params entity_transform: function transforming (e.g. base64 or sha1
+        :params url: mdx service url
+        :params entity_transform: function transforming (e.g. base64,
+        sha1 hash or URL quote
         hash) the entity id. It is applied to the entity id before it is
-        concatenated with the request URL sent to the MDX server.
-        :params onts:
-        :params attrc:
-        :params url:
-        :params security: SecurityContext()
-        :params cert:
-        :params http:
+        concatenated with the request URL sent to the MDX server. Defaults to
+        sha1 transformation.
         """
-        super(MetaDataMDX, self).__init__(onts, attrc, **kwargs)
+        super(MetaDataMDX, self).__init__(None, None)
         self.url = url
-        self.security = security
-        self.cert = cert
-        self.http = http
-        self.entity_transform = entity_transform
+
+        if entity_transform:
+            self.entity_transform = entity_transform
+        else:
+
+            self.entity_transform = MetaDataMDX.sha1_entity_transform
 
     def load(self):
+        # Do nothing
         pass
 
     def __getitem__(self, item):
@@ -733,13 +752,9 @@ class MetaDataMDX(InMemoryMetaData):
             return self.entity[item]
         except KeyError:
             mdx_url = "%s/entities/%s" % (self.url, self.entity_transform(item))
-            response = self.http.send(
-                mdx_url, headers={'Accept': SAML_METADATA_CONTENT_TYPE})
+            response = requests.get(mdx_url, headers={
+                'Accept': SAML_METADATA_CONTENT_TYPE})
             if response.status_code == 200:
-                node_name = self.node_name \
-                            or "%s:%s" % (md.EntitiesDescriptor.c_namespace,
-                                          md.EntitiesDescriptor.c_tag)
-
                 _txt = response.text.encode("utf-8")
 
                 if self.parse_and_check_signature(_txt):
@@ -747,6 +762,12 @@ class MetaDataMDX(InMemoryMetaData):
             else:
                 logger.info("Response status: %s", response.status_code)
             raise KeyError
+
+    def single_sign_on_service(self, entity_id, binding=None, typ="idpsso"):
+        if binding is None:
+            binding = BINDING_HTTP_REDIRECT
+        return self.service(entity_id, "idpsso_descriptor",
+                            "single_sign_on_service", binding)
 
 
 class MetadataStore(MetaData):
