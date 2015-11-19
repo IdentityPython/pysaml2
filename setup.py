@@ -17,8 +17,7 @@ install_requires = [
     'pytz',
     'pyOpenSSL',
     'python-dateutil',
-    'six',
-    'future'
+    'six'
 ]
 
 version = ''

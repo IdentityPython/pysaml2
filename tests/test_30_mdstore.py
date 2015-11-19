@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 import datetime
 import re
-#from six.moves.urllib.parse import quote_plus
-from future.backports.urllib.parse import quote_plus
+from six.moves.urllib.parse import quote_plus
+#from future.backports.urllib.parse import quote_plus
 from saml2.config import Config
 from saml2.mdstore import MetadataStore
 from saml2.mdstore import MetaDataMDX
