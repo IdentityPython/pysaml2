@@ -464,7 +464,6 @@ def test_metadata_extension_algsupport():
     mds = MetadataStore(list(ONTS.values()), ATTRCONV, None)
     mds.imp(METADATACONF["12"])
     mdf = mds.metadata[full_path("uu.xml")]
-    _txt = mdf.dumps()
     assert mds
 
 if __name__ == "__main__":
