@@ -761,7 +761,7 @@ def entity_descriptor(confd):
     return entd
 
 
-def entities_descriptor(eds, valid_for, name, ident, sign, secc):
+def entities_descriptor(eds, valid_for, name, ident, sign, secc, sign_alg=None, digest_alg=None):
     entities = md.EntitiesDescriptor(entity_descriptor=eds)
     if valid_for:
         entities.valid_until = in_a_while(hours=valid_for)
@@ -782,7 +782,7 @@ def entities_descriptor(eds, valid_for, name, ident, sign, secc):
             raise SAMLError("If you want to do signing you should define " +
                             "where your public key are")
 
-        entities.signature = pre_signature_part(ident, secc.my_cert, 1)
+        entities.signature = pre_signature_part(ident, secc.my_cert, 1, sign_alg=sign_alg, digest_alg=digest_alg)
         entities.id = ident
         xmldoc = secc.sign_statement("%s" % entities, class_name(entities))
         entities = md.entities_descriptor_from_string(xmldoc)
@@ -792,7 +792,7 @@ def entities_descriptor(eds, valid_for, name, ident, sign, secc):
     return entities, xmldoc
 
 
-def sign_entity_descriptor(edesc, ident, secc):
+def sign_entity_descriptor(edesc, ident, secc, sign_alg=None, digest_alg=None):
     """
 
     :param edesc: EntityDescriptor instance
@@ -804,7 +804,7 @@ def sign_entity_descriptor(edesc, ident, secc):
     if not ident:
         ident = sid()
 
-    edesc.signature = pre_signature_part(ident, secc.my_cert, 1)
+    edesc.signature = pre_signature_part(ident, secc.my_cert, 1, sign_alg=sign_alg, digest_alg=digest_alg)
     edesc.id = ident
     xmldoc = secc.sign_statement("%s" % edesc, class_name(edesc))
     edesc = md.entity_descriptor_from_string(xmldoc)

@@ -32,6 +32,7 @@ from saml2 import BINDING_HTTP_REDIRECT
 
 from py.test import raises
 from pathutils import full_path
+import saml2.xmldsig as ds
 
 nid = NameID(name_qualifier="foo", format=NAMEID_FORMAT_TRANSIENT,
              text="123456")
@@ -86,6 +87,7 @@ def generate_cert():
 
 
 class TestServer1():
+
     def setup_class(self):
         self.server = Server("idp_conf")
 
