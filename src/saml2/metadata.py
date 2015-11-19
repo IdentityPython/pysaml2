@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from saml2.algsupport import algorithm_support_in_metadata
 from saml2.md import AttributeProfile
 from saml2.sigver import security_context
 from saml2.config import Config
@@ -726,6 +727,12 @@ def entity_descriptor(confd):
         attr = Attribute(attribute_value=ava,
                          name="http://macedir.org/entity-category")
         item = mdattr.EntityAttributes(attribute=attr)
+        entd.extensions.add_extension_element(item)
+
+    if not entd.extensions:
+        entd.extensions = md.Extensions()
+
+    for item in algorithm_support_in_metadata(confd.xmlsec_binary):
         entd.extensions.add_extension_element(item)
 
     serves = confd.serves
