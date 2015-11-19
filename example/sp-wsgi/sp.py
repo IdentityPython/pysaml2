@@ -45,6 +45,7 @@ from saml2.s_utils import rndstr
 #from srtest import exception_trace
 from saml2.samlp import Extensions
 from saml2 import xmldsig as ds
+import saml2.xmldsig as ds
 
 logger = logging.getLogger("")
 hdlr = logging.FileHandler('spx.log')
@@ -890,6 +891,17 @@ if __name__ == '__main__':
     POLICY = service_conf.POLICY
 
     add_urls()
+    sign_alg = None
+    digest_alg = None
+    try:
+        sign_alg = service_conf.SIGN_ALG
+    except:
+        pass
+    try:
+        digest_alg = service_conf.DIGEST_ALG
+    except:
+        pass
+    ds.DefaultSignature(sign_alg, digest_alg)
 
     SRV = wsgiserver.CherryPyWSGIServer((HOST, PORT), application)
 

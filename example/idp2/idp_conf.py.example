@@ -8,6 +8,7 @@ from saml2.saml import NAME_FORMAT_URI
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 import os.path
+import saml2.xmldsig as ds
 
 try:
     from saml2.sigver import get_xmlsec_binary
@@ -39,6 +40,11 @@ else:
 SERVER_CERT = "pki/mycert.pem"
 SERVER_KEY = "pki/mykey.pem"
 CERT_CHAIN = ""
+SIGN_ALG = None
+DIGEST_ALG = None
+#SIGN_ALG = ds.SIG_RSA_SHA512
+#DIGEST_ALG = ds.DIGEST_SHA512
+
 
 CONFIG = {
     "entityid": "%s/idp.xml" % BASE,
