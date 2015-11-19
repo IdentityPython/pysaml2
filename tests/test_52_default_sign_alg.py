@@ -165,8 +165,6 @@ class TestSignedResponse():
 
         self.verify_assertion(sresponse.assertion)
 
-
-
 if __name__ == "__main__":
     ts = TestSignedResponse()
     ts.setup_class()
