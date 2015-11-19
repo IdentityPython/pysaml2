@@ -143,16 +143,19 @@ class Service(object):
                     return resp(self.environ, self.start_response)
             else:
                 kwargs = {}
+
             try:
-                _encrypt_cert = encrypt_cert_from_item(
+                kwargs['encrypt_cert'] = encrypt_cert_from_item(
                     saml_msg["req_info"].message)
-                return self.do(saml_msg["SAMLRequest"], binding,
-                               saml_msg["RelayState"],
-                               encrypt_cert=_encrypt_cert, **kwargs)
             except KeyError:
-                # Can live with no relay state
-                return self.do(saml_msg["SAMLRequest"], binding,
-                               saml_msg["RelayState"], **kwargs)
+                pass
+
+            try:
+                kwargs['relay_state'] = saml_msg['RelayState']
+            except KeyError:
+                pass
+
+            return self.do(saml_msg["SAMLRequest"], binding, **kwargs)
 
     def artifact_operation(self, saml_msg):
         if not saml_msg:

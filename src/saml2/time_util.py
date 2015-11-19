@@ -301,6 +301,10 @@ not_on_or_after = before
 valid = before
 
 
+def utc_time_sans_frac():
+    return int("%d" % time.mktime(time.gmtime()))
+
+
 def later_than(after, before):
     """ True if then is later or equal to that """
     if isinstance(after, six.string_types):

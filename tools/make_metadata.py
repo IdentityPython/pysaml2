@@ -67,9 +67,10 @@ secc = security_context(conf)
 
 if args.id:
     desc, xmldoc = entities_descriptor(eds, valid_for, args.name, args.id,
-                               args.sign, secc)
+                                       args.sign, secc)
     valid_instance(desc)
-    print(desc.to_string(nspair))
+    xmldoc = metadata_tostring_fix(desc, nspair, xmldoc)
+    print(xmldoc.decode("utf-8"))
 else:
     for eid in eds:
         if args.sign:

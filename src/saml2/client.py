@@ -56,6 +56,7 @@ class Saml2Client(Base):
             successfull log in.
         :param binding: Which binding to use for sending the request
         :param vorg: The entity_id of the virtual organization I'm a member of
+        :param nameid_format:
         :param scoping: For which IdPs this query are aimed.
         :param consent: Whether the principal have given her consent
         :param extensions: Possible extensions
@@ -95,6 +96,7 @@ class Saml2Client(Base):
             successfull log in.
         :param binding: Which binding to use for sending the request
         :param vorg: The entity_id of the virtual organization I'm a member of
+        :param nameid_format:
         :param scoping: For which IdPs this query are aimed.
         :param consent: Whether the principal have given her consent
         :param extensions: Possible extensions

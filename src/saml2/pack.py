@@ -79,6 +79,32 @@ def http_form_post_message(message, location, relay_state="",
     return {"headers": [("Content-type", "text/html")], "data": response}
 
 
+def http_post_message(message, relay_state="", typ="SAMLRequest", **kwargs):
+    """
+
+    :param message: The message
+    :param relay_state: for preserving and conveying state information
+    :return: A tuple containing header information and a HTML message.
+    """
+    if not isinstance(message, six.string_types):
+        message = str(message)
+    if not isinstance(message, six.binary_type):
+        message = message.encode('utf-8')
+
+    if typ == "SAMLRequest" or typ == "SAMLResponse":
+        _msg = base64.b64encode(message)
+    else:
+        _msg = message
+    _msg = _msg.decode('ascii')
+
+    part = {typ: _msg}
+    if relay_state:
+        part["RelayState"] = relay_state
+
+    return {"headers": [("Content-type", 'application/x-www-form-urlencoded')],
+            "data": urlencode(part)}
+
+
 def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
                           sigalg=None, key=None, **kwargs):
     """The HTTP Redirect binding defines a mechanism by which SAML protocol

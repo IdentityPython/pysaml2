@@ -425,11 +425,19 @@ class AttributeConverter(object):
         :return: An Attribute instance
         """
         try:
+            _attr = self._to[attr]
+        except KeyError:
+            try:
+                _attr = self._to[attr.lower()]
+            except:
+                _attr = ''
+
+        if _attr:
             return factory(saml.Attribute,
-                           name=self._to[attr],
+                           name=_attr,
                            name_format=self.name_format,
                            friendly_name=attr)
-        except KeyError:
+        else:
             return factory(saml.Attribute, name=attr)
 
     def from_format(self, attr):
