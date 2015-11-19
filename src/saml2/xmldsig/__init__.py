@@ -62,6 +62,36 @@ TRANSFORM_XPATH = 'http://www.w3.org/TR/1999/REC-xpath-19991116'
 TRANSFORM_ENVELOPED = 'http://www.w3.org/2000/09/xmldsig#enveloped-signature'
 
 
+class DefaultSignature(object):
+    class _DefaultSignature(object):
+        def __init__(self, sign_alg=None, digest_alg=None):
+            if sign_alg is None:
+                self.sign_alg = sig_default
+            else:
+                self.sign_alg = sign_alg
+            if digest_alg is None:
+                self.digest_alg = digest_default
+            else:
+                self.digest_alg = digest_alg
+
+        def __str__(self):
+            return repr(self) + self.sign_alg
+    instance = None
+
+    def __init__(self, sign_alg=None, digest_alg=None):
+        if not DefaultSignature.instance:
+            DefaultSignature.instance = DefaultSignature._DefaultSignature(sign_alg, digest_alg)
+
+    def __getattr__(self, name):
+        return getattr(self.instance, name)
+
+    def get_sign_alg(self):
+        return self.sign_alg
+
+    def get_digest_alg(self):
+        return self.digest_alg
+
+
 class CryptoBinary_(SamlBase):
     """The http://www.w3.org/2000/09/xmldsig#:CryptoBinary element """
 
