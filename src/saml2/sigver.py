@@ -1779,7 +1779,7 @@ class SecurityContext(object):
                     sid = item.id
 
             if not item.signature:
-                item.signature = pre_signature_part(sid, self.cert_file, sign_alg=sign_alg)
+                item.signature = pre_signature_part(sid, self.cert_file, sign_alg=sign_alg, digest_alg=digest_alg)
 
             statement = self.sign_statement(statement, class_name(item),
                                             key=key, key_file=key_file,
@@ -1922,7 +1922,7 @@ def response_factory(sign=False, encrypt=False, sign_alg=None, digest_alg=None, 
                               issue_instant=instant())
 
     if sign:
-        response.signature = pre_signature_part(kwargs["id"], sign_alg=sign_alg)
+        response.signature = pre_signature_part(kwargs["id"], sign_alg=sign_alg, digest_alg=digest_alg)
     if encrypt:
         pass
 

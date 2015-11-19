@@ -775,7 +775,7 @@ def entities_descriptor(eds, valid_for, name, ident, sign, secc, sign_alg=None, 
             raise SAMLError("If you want to do signing you should define " +
                             "where your public key are")
 
-        entities.signature = pre_signature_part(ident, secc.my_cert, 1, sign_alg=sign_alg)
+        entities.signature = pre_signature_part(ident, secc.my_cert, 1, sign_alg=sign_alg, digest_alg=digest_alg)
         entities.id = ident
         xmldoc = secc.sign_statement("%s" % entities, class_name(entities))
         entities = md.entities_descriptor_from_string(xmldoc)
@@ -797,7 +797,7 @@ def sign_entity_descriptor(edesc, ident, secc, sign_alg=None, digest_alg=None):
     if not ident:
         ident = sid()
 
-    edesc.signature = pre_signature_part(ident, secc.my_cert, 1, sign_alg=sign_alg)
+    edesc.signature = pre_signature_part(ident, secc.my_cert, 1, sign_alg=sign_alg, digest_alg=digest_alg)
     edesc.id = ident
     xmldoc = secc.sign_statement("%s" % edesc, class_name(edesc))
     edesc = md.entity_descriptor_from_string(xmldoc)

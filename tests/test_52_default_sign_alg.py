@@ -142,12 +142,12 @@ class TestSignedResponse():
             sign_response=True,
             sign_assertion=True,
             sign_alg=ds.SIG_RSA_SHA256,
-            digest_alg=ds.DIGEST_SHA512
+            digest_alg=ds.DIGEST_SHA256
         )
 
         sresponse = response_from_string(signed_resp)
         assert ds.SIG_RSA_SHA256 in str(sresponse), "Not correctly signed!"
-        assert ds.DIGEST_SHA512 in str(sresponse), "Not correctly signed!"
+        assert ds.DIGEST_SHA256 in str(sresponse), "Not correctly signed!"
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
@@ -155,7 +155,7 @@ class TestSignedResponse():
                                                  id_attr="")
         assert valid
         assert ds.SIG_RSA_SHA256 in str(sresponse.assertion[0]), "Not correctly signed!"
-        assert ds.DIGEST_SHA512 in str(sresponse.assertion[0]), "Not correctly signed!"
+        assert ds.DIGEST_SHA256 in str(sresponse.assertion[0]), "Not correctly signed!"
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',

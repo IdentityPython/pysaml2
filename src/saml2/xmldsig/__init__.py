@@ -61,8 +61,8 @@ TRANSFORM_XPATH = 'http://www.w3.org/TR/1999/REC-xpath-19991116'
 TRANSFORM_ENVELOPED = 'http://www.w3.org/2000/09/xmldsig#enveloped-signature'
 
 
-class DefaultSignature:
-    class _DefaultSignature:
+class DefaultSignature(object):
+    class _DefaultSignature(object):
         def __init__(self, sign_alg=None, digest_alg=None):
             if sign_alg is None:
                 self.sign_alg = sig_default

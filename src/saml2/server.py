@@ -399,7 +399,7 @@ class Server(Entity):
         if not encrypt_assertion:
             if sign_assertion:
                 assertion.signature = pre_signature_part(assertion.id, self.sec.my_cert, 1,
-                                                         sign_alg=sign_alg)
+                                                         sign_alg=sign_alg, digest_alg=digest_alg)
                 to_sign.append((class_name(assertion), assertion.id))
 
         #if not encrypted_advice_attributes:
@@ -429,7 +429,7 @@ class Server(Entity):
                               encrypt_assertion_self_contained=encrypt_assertion_self_contained,
                               encrypted_advice_attributes=encrypted_advice_attributes,
                               sign_assertion=sign_assertion,
-                              pefim=pefim, sign_alg=sign_alg,
+                              pefim=pefim, sign_alg=sign_alg, digest_alg=digest_alg,
                               **args)
 
     # ------------------------------------------------------------------------
@@ -489,14 +489,14 @@ class Server(Entity):
 
             if sign_assertion:
                 assertion.signature = pre_signature_part(assertion.id,
-                                                         self.sec.my_cert, 1, sign_alg=sign_alg)
+                                                         self.sec.my_cert, 1, sign_alg=sign_alg, digest_alg=digest_alg)
                 # Just the assertion or the response and the assertion ?
                 to_sign = [(class_name(assertion), assertion.id)]
 
             args["assertion"] = assertion
 
         return self._response(in_response_to, destination, status, issuer,
-                              sign_response, to_sign, sign_alg=sign_alg, **args)
+                              sign_response, to_sign, sign_alg=sign_alg, digest_alg=digest_alg, **args)
 
     # ------------------------------------------------------------------------
 
@@ -648,7 +648,7 @@ class Server(Entity):
                                                 encrypt_cert_advice=encrypt_cert_advice,
                                                 encrypt_cert_assertion=encrypt_cert_assertion,
                                                 pefim=pefim,
-                                                sign_alg=sign_alg)
+                                                sign_alg=sign_alg, digest_alg=digest_alg)
             return self._authn_response(in_response_to,  # in_response_to
                                         destination,  # consumer_url
                                         sp_entity_id,  # sp_entity_id
@@ -666,7 +666,7 @@ class Server(Entity):
                                         encrypt_cert_advice=encrypt_cert_advice,
                                         encrypt_cert_assertion=encrypt_cert_assertion,
                                         pefim=pefim,
-                                        sign_alg=sign_alg)
+                                        sign_alg=sign_alg, digest_alg=digest_alg)
 
         except MissingValue as exc:
             return self.create_error_response(in_response_to, destination,
@@ -703,7 +703,7 @@ class Server(Entity):
         if to_sign:
             if assertion.signature is None:
                 assertion.signature = pre_signature_part(assertion.id,
-                                                         self.sec.my_cert, 1, sign_alg=sign_alg)
+                                                         self.sec.my_cert, 1, sign_alg=sign_alg, digest_alg=digest_alg)
 
             return signed_instance_factory(assertion, self.sec, to_sign)
         else:
@@ -735,7 +735,7 @@ class Server(Entity):
                                       in_response_to=in_response_to, **ms_args)
 
         if sign_response:
-            return self.sign(_resp, sign_alg=sign_alg)
+            return self.sign(_resp, sign_alg=sign_alg, digest_alg=digest_alg)
         else:
             logger.info("Message: %s", _resp)
             return _resp
@@ -764,7 +764,7 @@ class Server(Entity):
             args = {}
 
         return self._response(in_response_to, "", status, issuer,
-                              sign_response, to_sign=[], sign_alg=sign_alg, **args)
+                              sign_response, to_sign=[], sign_alg=sign_alg, digest_alg=digest_alg, **args)
 
     # ---------
 

@@ -160,7 +160,7 @@ class Saml2Client(Base):
 
         # find out which IdPs/AAs I should notify
         entity_ids = self.users.issuers_of_info(name_id)
-        return self.do_logout(name_id, entity_ids, reason, expire, sign, sign_alg=sign_alg)
+        return self.do_logout(name_id, entity_ids, reason, expire, sign, sign_alg=sign_alg, digest_alg=digest_alg)
 
     def do_logout(self, name_id, entity_ids, reason, expire, sign=None,
                   expected_binding=None, sign_alg=None, digest_alg=None, **kwargs):
@@ -232,7 +232,7 @@ class Saml2Client(Base):
                         key = kwargs.get("key", self.signkey)
                         srequest = str(request)
                     else:
-                        srequest = self.sign(request, sign_alg=sign_alg)
+                        srequest = self.sign(request, sign_alg=sign_alg, digest_alg=digest_alg)
                 else:
                     srequest = str(request)
 
@@ -316,7 +316,7 @@ class Saml2Client(Base):
             return self.do_logout(decode(status["name_id"]),
                                   status["entity_ids"],
                                   status["reason"], status["not_on_or_after"],
-                                  status["sign"], sign_alg=sign_alg)
+                                  status["sign"], sign_alg=sign_alg, digest_alg=digest_alg)
 
     def _use_soap(self, destination, query_type, **kwargs):
         _create_func = getattr(self, "create_%s" % query_type)
