@@ -1,23 +1,17 @@
-#!/usr/bin/env python
-from saml2.sigver import _get_xmlsec_cryptobackend, SecurityContext
+ #!/usr/bin/env python
+from saml2.sigver import _get_xmlsec_cryptobackend
+from saml2.sigver import SecurityContext
 from saml2.httpbase import HTTPBase
 
 from saml2 import saml
 from saml2 import md
 from saml2.attribute_converter import ac_factory
-from saml2.extension import dri
-from saml2.extension import idpdisc
-from saml2.extension import mdattr
-from saml2.extension import mdrpi
-from saml2.extension import mdui
-from saml2.extension import shibmd
-from saml2.extension import ui
 from saml2 import xmldsig
 from saml2 import xmlenc
 
 import argparse
 
-from saml2.mdstore import MetaDataFile, MetaDataExtern
+from saml2.mdstore import MetaDataFile, MetaDataExtern, load_extensions
 
 __author__ = 'rolandh'
 
@@ -29,18 +23,12 @@ dictionary format.
 
 ONTS = {
     saml.NAMESPACE: saml,
-    mdui.NAMESPACE: mdui,
-    mdattr.NAMESPACE: mdattr,
-    mdrpi.NAMESPACE: mdrpi,
-    dri.NAMESPACE: dri,
-    ui.NAMESPACE: ui,
-    idpdisc.NAMESPACE: idpdisc,
     md.NAMESPACE: md,
     xmldsig.NAMESPACE: xmldsig,
     xmlenc.NAMESPACE: xmlenc,
-    shibmd.NAMESPACE: shibmd
 }
 
+ONTS.update(load_extensions())
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-t', dest='type')
