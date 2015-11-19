@@ -12,7 +12,8 @@ NAMESPACE = 'http://www.w3.org/2000/09/xmldsig#'
 ENCODING_BASE64 = 'http://www.w3.org/2000/09/xmldsig#base64'
 
 # digest and signature algorithms (not implemented = commented out)
-DIGEST_MD5 = 'http://www.w3.org/2001/04/xmldsig-more#md5'  # test framework only!
+DIGEST_MD5 = 'http://www.w3.org/2001/04/xmldsig-more#md5'  # test framework
+# only!
 DIGEST_SHA1 = 'http://www.w3.org/2000/09/xmldsig#sha1'
 DIGEST_SHA224 = 'http://www.w3.org/2001/04/xmldsig-more#sha224'
 DIGEST_SHA256 = 'http://www.w3.org/2001/04/xmlenc#sha256'
@@ -28,20 +29,20 @@ DIGEST_ALLOWED_ALG = (('DIGEST_SHA1', DIGEST_SHA1),
                       ('DIGEST_RIPEMD160', DIGEST_RIPEMD160))
 DIGEST_AVAIL_ALG = DIGEST_ALLOWED_ALG + (('DIGEST_MD5', DIGEST_MD5),)
 
-# SIG_DSA_SHA1 = 'http,//www.w3.org/2000/09/xmldsig#dsa-sha1'
-# SIG_DSA_SHA256 = 'http://www.w3.org/2009/xmldsig11#dsa-sha256'
-# SIG_ECDSA_SHA1 = 'http://www.w3.org/2001/04/xmldsig-more#ECDSA_sha1'
-# SIG_ECDSA_SHA224 = 'http://www.w3.org/2001/04/xmldsig-more#ECDSA_sha224'
-# SIG_ECDSA_SHA256 = 'http://www.w3.org/2001/04/xmldsig-more#ECDSA_sha256'
-# SIG_ECDSA_SHA384 = 'http://www.w3.org/2001/04/xmldsig-more#ECDSA_sha384'
-# SIG_ECDSA_SHA512 = 'http://www.w3.org/2001/04/xmldsig-more#ECDSA_sha512'
+SIG_DSA_SHA1 = 'http,//www.w3.org/2000/09/xmldsig#dsa-sha1'
+SIG_DSA_SHA256 = 'http://www.w3.org/2009/xmldsig11#dsa-sha256'
+SIG_ECDSA_SHA1 = 'http://www.w3.org/2001/04/xmldsig-more#ECDSA_sha1'
+SIG_ECDSA_SHA224 = 'http://www.w3.org/2001/04/xmldsig-more#ECDSA_sha224'
+SIG_ECDSA_SHA256 = 'http://www.w3.org/2001/04/xmldsig-more#ECDSA_sha256'
+SIG_ECDSA_SHA384 = 'http://www.w3.org/2001/04/xmldsig-more#ECDSA_sha384'
+SIG_ECDSA_SHA512 = 'http://www.w3.org/2001/04/xmldsig-more#ECDSA_sha512'
 SIG_RSA_MD5 = 'http://www.w3.org/2001/04/xmldsig-more#rsa-md5'  # test framework
 SIG_RSA_SHA1 = 'http://www.w3.org/2000/09/xmldsig#rsa-sha1'
 SIG_RSA_SHA224 = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha224'
 SIG_RSA_SHA256 = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'
 SIG_RSA_SHA384 = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha384'
 SIG_RSA_SHA512 = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha512'
-# SIG_RSA_RIPEMD160 = 'http://www.w3.org/2001/04/xmldsig-more#rsa-ripemd160'
+SIG_RSA_RIPEMD160 = 'http://www.w3.org/2001/04/xmldsig-more#rsa-ripemd160'
 sig_default = SIG_RSA_SHA1
 SIG_ALLOWED_ALG = (('SIG_RSA_SHA1', SIG_RSA_SHA1),
                    ('SIG_RSA_SHA224', SIG_RSA_SHA224),
@@ -138,7 +139,8 @@ def signature_value_type__from_string(xml_string):
 
 
 class CanonicalizationMethodType_(SamlBase):
-    """The http://www.w3.org/2000/09/xmldsig#:CanonicalizationMethodType element """
+    """The http://www.w3.org/2000/09/xmldsig#:CanonicalizationMethodType
+    element """
 
     c_tag = 'CanonicalizationMethodType'
     c_namespace = NAMESPACE
@@ -190,8 +192,8 @@ class TransformType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{http://www.w3.org/2000/09/xmldsig#}XPath'] = ('x_path',
-                                                               [TransformType_XPath])
+    c_children['{http://www.w3.org/2000/09/xmldsig#}XPath'] = (
+        'x_path', [TransformType_XPath])
     c_cardinality['x_path'] = {"min": 0}
     c_attributes['Algorithm'] = ('algorithm', 'anyURI', True)
     c_child_order.extend(['x_path'])
@@ -331,9 +333,9 @@ class X509IssuerSerialType_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{http://www.w3.org/2000/09/xmldsig#}X509IssuerName'] = (
-    'x509_issuer_name', X509IssuerName)
+        'x509_issuer_name', X509IssuerName)
     c_children['{http://www.w3.org/2000/09/xmldsig#}X509SerialNumber'] = (
-    'x509_serial_number', X509SerialNumber)
+        'x509_serial_number', X509SerialNumber)
     c_child_order.extend(['x509_issuer_name', 'x509_serial_number'])
 
     def __init__(self,
@@ -393,9 +395,10 @@ class PGPDataType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{http://www.w3.org/2000/09/xmldsig#}PGPKeyID'] = ('pgp_key_id', PGPKeyID)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}PGPKeyID'] = (
+        'pgp_key_id', PGPKeyID)
     c_children['{http://www.w3.org/2000/09/xmldsig#}PGPKeyPacket'] = (
-    'pgp_key_packet', PGPKeyPacket)
+        'pgp_key_packet', PGPKeyPacket)
     c_cardinality['pgp_key_packet'] = {"min": 0, "max": 1}
     c_child_order.extend(['pgp_key_id', 'pgp_key_packet'])
 
@@ -529,7 +532,8 @@ class SignaturePropertyType_(SamlBase):
 
 
 def signature_property_type__from_string(xml_string):
-    return saml2.create_class_from_xml_string(SignaturePropertyType_, xml_string)
+    return saml2.create_class_from_xml_string(SignaturePropertyType_,
+                                              xml_string)
 
 
 class HMACOutputLengthType_(SamlBase):
@@ -659,8 +663,8 @@ class DSAKeyValueType_(SamlBase):
     c_cardinality['j'] = {"min": 0, "max": 1}
     c_children['{http://www.w3.org/2000/09/xmldsig#}Seed'] = ('seed', Seed)
     c_cardinality['seed'] = {"min": 0, "max": 1}
-    c_children['{http://www.w3.org/2000/09/xmldsig#}PgenCounter'] = ('pgen_counter',
-                                                                     PgenCounter)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}PgenCounter'] = (
+        'pgen_counter', PgenCounter)
     c_cardinality['pgen_counter'] = {"min": 0, "max": 1}
     c_child_order.extend(['p', 'q', 'g', 'y', 'j', 'seed', 'pgen_counter'])
 
@@ -809,7 +813,7 @@ class SignatureMethodType_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{http://www.w3.org/2000/09/xmldsig#}HMACOutputLength'] = (
-    'hmac_output_length', HMACOutputLength)
+        'hmac_output_length', HMACOutputLength)
     c_cardinality['hmac_output_length'] = {"min": 0, "max": 1}
     c_attributes['Algorithm'] = ('algorithm', 'anyURI', True)
     c_child_order.extend(['hmac_output_length'])
@@ -957,17 +961,20 @@ class X509DataType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{http://www.w3.org/2000/09/xmldsig#}X509IssuerSerial'] = ('x509_issuer_serial',
-                                                                          X509IssuerSerial)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}X509IssuerSerial'] = (
+        'x509_issuer_serial',
+        X509IssuerSerial)
     c_cardinality['x509_issuer_serial'] = {"min": 0, "max": 1}
     c_children['{http://www.w3.org/2000/09/xmldsig#}X509SKI'] = ('x509_ski',
                                                                  X509SKI)
     c_cardinality['x509_ski'] = {"min": 0, "max": 1}
-    c_children['{http://www.w3.org/2000/09/xmldsig#}X509SubjectName'] = ('x509_subject_name',
-                                                                         X509SubjectName)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}X509SubjectName'] = (
+        'x509_subject_name',
+        X509SubjectName)
     c_cardinality['x509_subject_name'] = {"min": 0, "max": 1}
-    c_children['{http://www.w3.org/2000/09/xmldsig#}X509Certificate'] = ('x509_certificate',
-                                                                         X509Certificate)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}X509Certificate'] = (
+        'x509_certificate',
+        X509Certificate)
     c_cardinality['x509_certificate'] = {"min": 0, "max": 1}
     c_children['{http://www.w3.org/2000/09/xmldsig#}X509CRL'] = ('x509_crl',
                                                                  X509CRL)
@@ -1147,11 +1154,11 @@ class KeyValueType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{http://www.w3.org/2000/09/xmldsig#}DSAKeyValue'] = ('dsa_key_value',
-                                                                     DSAKeyValue)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}DSAKeyValue'] = (
+        'dsa_key_value', DSAKeyValue)
     c_cardinality['dsa_key_value'] = {"min": 0, "max": 1}
-    c_children['{http://www.w3.org/2000/09/xmldsig#}RSAKeyValue'] = ('rsa_key_value',
-                                                                     RSAKeyValue)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}RSAKeyValue'] = (
+        'rsa_key_value', RSAKeyValue)
     c_cardinality['rsa_key_value'] = {"min": 0, "max": 1}
     c_child_order.extend(['dsa_key_value', 'rsa_key_value'])
 
@@ -1191,7 +1198,8 @@ def x509_data_from_string(xml_string):
 
 
 class SignaturePropertiesType_(SamlBase):
-    """The http://www.w3.org/2000/09/xmldsig#:SignaturePropertiesType element """
+    """The http://www.w3.org/2000/09/xmldsig#:SignaturePropertiesType element
+    """
 
     c_tag = 'SignaturePropertiesType'
     c_namespace = NAMESPACE
@@ -1200,7 +1208,7 @@ class SignaturePropertiesType_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{http://www.w3.org/2000/09/xmldsig#}SignatureProperty'] = (
-    'signature_property', [SignatureProperty])
+        'signature_property', [SignatureProperty])
     c_cardinality['signature_property'] = {"min": 1}
     c_attributes['Id'] = ('id', 'ID', False)
     c_child_order.extend(['signature_property'])
@@ -1222,7 +1230,8 @@ class SignaturePropertiesType_(SamlBase):
 
 
 def signature_properties_type__from_string(xml_string):
-    return saml2.create_class_from_xml_string(SignaturePropertiesType_, xml_string)
+    return saml2.create_class_from_xml_string(SignaturePropertiesType_,
+                                              xml_string)
 
 
 class Transforms(TransformsType_):
@@ -1264,8 +1273,8 @@ class RetrievalMethodType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{http://www.w3.org/2000/09/xmldsig#}Transforms'] = ('transforms',
-                                                                    Transforms)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}Transforms'] = (
+        'transforms', Transforms)
     c_cardinality['transforms'] = {"min": 0, "max": 1}
     c_attributes['URI'] = ('uri', 'anyURI', False)
     c_attributes['Type'] = ('type', 'anyURI', False)
@@ -1317,13 +1326,13 @@ class ReferenceType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{http://www.w3.org/2000/09/xmldsig#}Transforms'] = ('transforms',
-                                                                    Transforms)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}Transforms'] = (
+        'transforms', Transforms)
     c_cardinality['transforms'] = {"min": 0, "max": 1}
-    c_children['{http://www.w3.org/2000/09/xmldsig#}DigestMethod'] = ('digest_method',
-                                                                      DigestMethod)
-    c_children['{http://www.w3.org/2000/09/xmldsig#}DigestValue'] = ('digest_value',
-                                                                     DigestValue)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}DigestMethod'] = (
+        'digest_method', DigestMethod)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}DigestValue'] = (
+        'digest_value', DigestValue)
     c_attributes['Id'] = ('id', 'ID', False)
     c_attributes['URI'] = ('uri', 'anyURI', False)
     c_attributes['Type'] = ('type', 'anyURI', False)
@@ -1507,9 +1516,9 @@ class SignedInfoType_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{http://www.w3.org/2000/09/xmldsig#}CanonicalizationMethod'] = (
-    'canonicalization_method', CanonicalizationMethod)
-    c_children['{http://www.w3.org/2000/09/xmldsig#}SignatureMethod'] = ('signature_method',
-                                                                         SignatureMethod)
+        'canonicalization_method', CanonicalizationMethod)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}SignatureMethod'] = (
+        'signature_method', SignatureMethod)
     c_children['{http://www.w3.org/2000/09/xmldsig#}Reference'] = ('reference',
                                                                    [Reference])
     c_cardinality['reference'] = {"min": 1}
@@ -1595,10 +1604,10 @@ class SignatureType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{http://www.w3.org/2000/09/xmldsig#}SignedInfo'] = ('signed_info',
-                                                                    SignedInfo)
+    c_children['{http://www.w3.org/2000/09/xmldsig#}SignedInfo'] = (
+        'signed_info', SignedInfo)
     c_children['{http://www.w3.org/2000/09/xmldsig#}SignatureValue'] = (
-    'signature_value', SignatureValue)
+        'signature_value', SignatureValue)
     c_children['{http://www.w3.org/2000/09/xmldsig#}KeyInfo'] = ('key_info',
                                                                  KeyInfo)
     c_cardinality['key_info'] = {"min": 0, "max": 1}
@@ -1659,7 +1668,8 @@ ELEMENT_FROM_STRING = {
     SignedInfo.c_tag: signed_info_from_string,
     SignedInfoType_.c_tag: signed_info_type__from_string,
     CanonicalizationMethod.c_tag: canonicalization_method_from_string,
-    CanonicalizationMethodType_.c_tag: canonicalization_method_type__from_string,
+    CanonicalizationMethodType_.c_tag:
+        canonicalization_method_type__from_string,
     SignatureMethod.c_tag: signature_method_from_string,
     SignatureMethodType_.c_tag: signature_method_type__from_string,
     Reference.c_tag: reference_from_string,
