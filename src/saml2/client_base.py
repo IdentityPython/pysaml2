@@ -205,7 +205,7 @@ class Base(Entity):
                              nameid_format=None,
                              service_url_binding=None, message_id=0,
                              consent=None, extensions=None, sign=None,
-                             allow_create=False, sign_prepare=False, **kwargs):
+                             allow_create=False, sign_prepare=False, sign_alg=None, digest_alg=None, **kwargs):
         """ Creates an authentication request.
 
         :param destination: Where the request should be sent.
@@ -342,15 +342,15 @@ class Base(Entity):
                 return self._message(AuthnRequest, destination, message_id,
                                      consent, extensions, sign, sign_prepare,
                                      protocol_binding=binding,
-                                     scoping=scoping, nsprefix=nsprefix, **args)
+                                     scoping=scoping, nsprefix=nsprefix, sign_alg=sign_alg, digest_alg=digest_alg, **args)
         return self._message(AuthnRequest, destination, message_id, consent,
                              extensions, sign, sign_prepare,
                              protocol_binding=binding,
-                             scoping=scoping, nsprefix=nsprefix, **args)
+                             scoping=scoping, nsprefix=nsprefix, sign_alg=sign_alg, digest_alg=digest_alg, **args)
 
     def create_attribute_query(self, destination, name_id=None,
                                attribute=None, message_id=0, consent=None,
-                               extensions=None, sign=False, sign_prepare=False,
+                               extensions=None, sign=False, sign_prepare=False, sign_alg=None, digest_alg=None,
                                **kwargs):
         """ Constructs an AttributeQuery
 
@@ -407,7 +407,7 @@ class Base(Entity):
 
         return self._message(AttributeQuery, destination, message_id, consent,
                              extensions, sign, sign_prepare, subject=subject,
-                             attribute=attribute, nsprefix=nsprefix)
+                             attribute=attribute, nsprefix=nsprefix, sign_alg=sign_alg, digest_alg=digest_alg)
 
     # MUST use SOAP for
     # AssertionIDRequest, SubjectQuery,
@@ -415,7 +415,7 @@ class Base(Entity):
     def create_authz_decision_query(self, destination, action,
                                     evidence=None, resource=None, subject=None,
                                     message_id=0, consent=None, extensions=None,
-                                    sign=None, **kwargs):
+                                    sign=None, sign_alg=None, digest_alg=None, **kwargs):
         """ Creates an authz decision query.
 
         :param destination: The IdP endpoint
@@ -433,7 +433,7 @@ class Base(Entity):
         return self._message(AuthzDecisionQuery, destination, message_id,
                              consent, extensions, sign, action=action,
                              evidence=evidence, resource=resource,
-                             subject=subject, **kwargs)
+                             subject=subject, sign_alg=sign_alg, digest_alg=digest_alg, **kwargs)
 
     def create_authz_decision_query_using_assertion(self, destination,
                                                     assertion, action=None,
@@ -485,7 +485,7 @@ class Base(Entity):
 
     def create_authn_query(self, subject, destination=None, authn_context=None,
                            session_index="", message_id=0, consent=None,
-                           extensions=None, sign=False, nsprefix=None):
+                           extensions=None, sign=False, nsprefix=None, sign_alg=None, digest_alg=None):
         """
 
         :param subject: The subject its all about as a <Subject> instance
@@ -502,14 +502,14 @@ class Base(Entity):
                              extensions, sign, subject=subject,
                              session_index=session_index,
                              requested_authn_context=authn_context,
-                             nsprefix=nsprefix)
+                             nsprefix=nsprefix, sign_alg=sign_alg, digest_alg=digest_alg)
 
     def create_name_id_mapping_request(self, name_id_policy,
                                        name_id=None, base_id=None,
                                        encrypted_id=None, destination=None,
                                        message_id=0, consent=None,
                                        extensions=None, sign=False,
-                                       nsprefix=None):
+                                       nsprefix=None, sign_alg=None, digest_alg=None):
         """
 
         :param name_id_policy:
@@ -531,17 +531,17 @@ class Base(Entity):
             return self._message(NameIDMappingRequest, destination, message_id,
                                  consent, extensions, sign,
                                  name_id_policy=name_id_policy, name_id=name_id,
-                                 nsprefix=nsprefix)
+                                 nsprefix=nsprefix, sign_alg=sign_alg, digest_alg=digest_alg)
         elif base_id:
             return self._message(NameIDMappingRequest, destination, message_id,
                                  consent, extensions, sign,
                                  name_id_policy=name_id_policy, base_id=base_id,
-                                 nsprefix=nsprefix)
+                                 nsprefix=nsprefix, sign_alg=sign_alg, digest_alg=digest_alg)
         else:
             return self._message(NameIDMappingRequest, destination, message_id,
                                  consent, extensions, sign,
                                  name_id_policy=name_id_policy,
-                                 encrypted_id=encrypted_id, nsprefix=nsprefix)
+                                 encrypted_id=encrypted_id, nsprefix=nsprefix, sign_alg=sign_alg, digest_alg=digest_alg)
 
     # ======== response handling ===========
 
