@@ -12,3 +12,6 @@ print(ed)
 
 assert ed.spsso_descriptor.extensions
 assert len(ed.spsso_descriptor.extensions.extension_elements) == 3
+
+assert ed.extensions
+assert len(ed.extensions.extension_elements) > 1
