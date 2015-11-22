@@ -729,10 +729,9 @@ def entity_descriptor(confd):
         item = mdattr.EntityAttributes(attribute=attr)
         entd.extensions.add_extension_element(item)
 
-    if not entd.extensions:
-        entd.extensions = md.Extensions()
-
     for item in algorithm_support_in_metadata(confd.xmlsec_binary):
+        if not entd.extensions:
+            entd.extensions = md.Extensions()
         entd.extensions.add_extension_element(item)
 
     serves = confd.serves
