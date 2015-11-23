@@ -4,10 +4,8 @@ import logging
 import re
 import argparse
 import os
-try:
-    from future.backports.http.cookies import SimpleCookie
-except:
-    from Cookie import SimpleCookie
+
+from six.moves.http_cookies import SimpleCookie
 import six
 
 from saml2.extension.pefim import SPCertEnc
@@ -172,7 +170,6 @@ class Cache(object):
 
     def get_user(self, environ):
         cookie = environ.get("HTTP_COOKIE", '')
-        cookie = cookie.decode("UTF-8")
         logger.debug("Cookie: %s", cookie)
         if cookie:
             cookie_obj = SimpleCookie(cookie)
@@ -847,7 +844,6 @@ CERT_CHAIN = service_conf.CERT_CHAIN
 
 if __name__ == '__main__':
     from cherrypy import wsgiserver
-    from cherrypy.wsgiserver import ssl_pyopenssl
 
     _parser = argparse.ArgumentParser()
     _parser.add_argument('-d', dest='debug', action='store_true',
@@ -907,6 +903,7 @@ if __name__ == '__main__':
 
     _https = ""
     if service_conf.HTTPS:
+        from cherrypy.wsgiserver import ssl_pyopenssl
         SRV.ssl_adapter = ssl_pyopenssl.pyOpenSSLAdapter(SERVER_CERT,
                                                          SERVER_KEY, CERT_CHAIN)
         _https = " using SSL/TLS"
