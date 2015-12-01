@@ -9,21 +9,16 @@ from saml2.mdstore import MetadataStore
 from saml2.mdstore import MetaDataMDX
 from saml2.mdstore import SAML_METADATA_CONTENT_TYPE
 from saml2.mdstore import destinations
-from saml2.mdstore import load_extensions
 from saml2.mdstore import name
-from saml2 import md
 from saml2 import sigver
 from saml2 import BINDING_SOAP
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_ARTIFACT
-from saml2 import saml
 from saml2 import config
 from saml2.attribute_converter import ac_factory
 from saml2.attribute_converter import d_to_local_name
 from saml2.s_utils import UnknownPrincipal
-from saml2 import xmldsig
-from saml2 import xmlenc
 from pathutils import full_path
 
 import responses
@@ -86,14 +81,6 @@ TEST_METADATA_STRING = """
 </EntitiesDescriptor>
 """.format(cert_data=TEST_CERT)
 
-ONTS = {
-    saml.NAMESPACE: saml,
-    md.NAMESPACE: md,
-    xmldsig.NAMESPACE: xmldsig,
-    xmlenc.NAMESPACE: xmlenc
-}
-
-ONTS.update(load_extensions())
 
 ATTRCONV = ac_factory(full_path("attributemaps"))
 
@@ -167,7 +154,7 @@ def _fix_valid_until(xmlstring):
 
 def test_swami_1():
     UMU_IDP = 'https://idp.umu.se/saml2/idp/metadata.php'
-    mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
+    mds = MetadataStore(ATTRCONV, sec_config,
                         disable_ssl_certificate_validation=True)
 
     mds.imp(METADATACONF["1"])
@@ -200,7 +187,7 @@ def test_swami_1():
 
 
 def test_incommon_1():
-    mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
+    mds = MetadataStore(ATTRCONV, sec_config,
                         disable_ssl_certificate_validation=True)
 
     mds.imp(METADATACONF["2"])
@@ -238,7 +225,7 @@ def test_incommon_1():
 
 
 def test_ext_2():
-    mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
+    mds = MetadataStore(ATTRCONV, sec_config,
                         disable_ssl_certificate_validation=True)
 
     mds.imp(METADATACONF["3"])
@@ -251,7 +238,7 @@ def test_ext_2():
 
 
 def test_example():
-    mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
+    mds = MetadataStore(ATTRCONV, sec_config,
                         disable_ssl_certificate_validation=True)
 
     mds.imp(METADATACONF["4"])
@@ -267,7 +254,7 @@ def test_example():
 
 
 def test_switch_1():
-    mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
+    mds = MetadataStore(ATTRCONV, sec_config,
                         disable_ssl_certificate_validation=True)
 
     mds.imp(METADATACONF["5"])
@@ -296,7 +283,7 @@ def test_switch_1():
 
 def test_metadata_file():
     sec_config.xmlsec_binary = sigver.get_xmlsec_binary(["/opt/local/bin"])
-    mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
+    mds = MetadataStore(ATTRCONV, sec_config,
                         disable_ssl_certificate_validation=True)
 
     mds.imp(METADATACONF["8"])
@@ -339,7 +326,7 @@ def test_mdx_single_sign_on_service():
 #     sec_config.xmlsec_binary = sigver.get_xmlsec_binary(["/opt/local/bin"])
 #     http = HTTPBase(verify=False, ca_bundle=None)
 #
-#     mdx = MetaDataMDX(quote_plus, ONTS.values(), ATTRCONV,
+#     mdx = MetaDataMDX(quote_plus, ATTRCONV,
 #                       "http://pyff-test.nordu.net",
 #                       sec_config, None, http)
 #     foo = mdx.service("https://idp.umu.se/saml2/idp/metadata.php",
@@ -353,7 +340,7 @@ def test_mdx_single_sign_on_service():
 #     sec_config.xmlsec_binary = sigver.get_xmlsec_binary(["/opt/local/bin"])
 #     http = HTTPBase(verify=False, ca_bundle=None)
 #
-#     mdx = MetaDataMDX(quote_plus, ONTS.values(), ATTRCONV,
+#     mdx = MetaDataMDX(quote_plus, ATTRCONV,
 #                       "http://pyff-test.nordu.net",
 #                       sec_config, None, http)
 #     foo = mdx.certs("https://idp.umu.se/saml2/idp/metadata.php", "idpsso")
@@ -363,7 +350,7 @@ def test_mdx_single_sign_on_service():
 
 def test_load_local_dir():
     sec_config.xmlsec_binary = sigver.get_xmlsec_binary(["/opt/local/bin"])
-    mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
+    mds = MetadataStore(ATTRCONV, sec_config,
                         disable_ssl_certificate_validation=True)
 
     mds.imp(METADATACONF["9"])
@@ -374,7 +361,7 @@ def test_load_local_dir():
 
 def test_load_extern_incommon():
     sec_config.xmlsec_binary = sigver.get_xmlsec_binary(["/opt/local/bin"])
-    mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
+    mds = MetadataStore(ATTRCONV, sec_config,
                         disable_ssl_certificate_validation=True)
 
     mds.imp(METADATACONF["10"])
@@ -398,7 +385,7 @@ def test_load_local():
 
 def test_load_string():
     sec_config.xmlsec_binary = sigver.get_xmlsec_binary(["/opt/local/bin"])
-    mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
+    mds = MetadataStore(ATTRCONV, sec_config,
                         disable_ssl_certificate_validation=True)
 
     mds.imp(METADATACONF["11"])
@@ -415,7 +402,7 @@ def test_load_string():
 
 
 def test_get_certs_from_metadata():
-    mds = MetadataStore(ONTS.values(), ATTRCONV, None)
+    mds = MetadataStore(ATTRCONV, None)
     mds.imp(METADATACONF["11"])
     certs1 = mds.certs("http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php", "any")
     certs2 = mds.certs("http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php", "idpsso")
@@ -424,7 +411,7 @@ def test_get_certs_from_metadata():
 
 
 def test_get_certs_from_metadata_without_keydescriptor():
-    mds = MetadataStore(ONTS.values(), ATTRCONV, None)
+    mds = MetadataStore(ATTRCONV, None)
     mds.imp([{
         "class": "saml2.mdstore.InMemoryMetaData",
         "metadata": [("""
@@ -461,7 +448,7 @@ def test_get_certs_from_metadata_without_keydescriptor():
     assert len(certs) == 0
 
 def test_metadata_extension_algsupport():
-    mds = MetadataStore(list(ONTS.values()), ATTRCONV, None)
+    mds = MetadataStore(ATTRCONV, None)
     mds.imp(METADATACONF["12"])
     mdf = mds.metadata[full_path("uu.xml")]
     assert mds

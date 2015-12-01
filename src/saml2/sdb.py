@@ -15,18 +15,6 @@ from saml2 import xmldsig
 from saml2 import xmlenc
 
 
-ONTS = {
-    saml.NAMESPACE: saml,
-    mdui.NAMESPACE: mdui,
-    mdattr.NAMESPACE: mdattr,
-    dri.NAMESPACE: dri,
-    ui.NAMESPACE: ui,
-    idpdisc.NAMESPACE: idpdisc,
-    md.NAMESPACE: md,
-    xmldsig.NAMESPACE: xmldsig,
-    xmlenc.NAMESPACE: xmlenc
-}
-
 __author__ = 'rolandh'
 
 logger = logging.getLogger(__name__)

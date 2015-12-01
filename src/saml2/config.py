@@ -26,27 +26,6 @@ from saml2.virtual_org import VirtualOrg
 
 logger = logging.getLogger(__name__)
 
-from saml2 import md
-from saml2 import saml
-from saml2.extension import mdui
-from saml2.extension import idpdisc
-from saml2.extension import dri
-from saml2.extension import mdattr
-from saml2.extension import ui
-from saml2 import xmldsig
-from saml2 import xmlenc
-
-ONTS = {
-    saml.NAMESPACE: saml,
-    mdui.NAMESPACE: mdui,
-    mdattr.NAMESPACE: mdattr,
-    dri.NAMESPACE: dri,
-    ui.NAMESPACE: ui,
-    idpdisc.NAMESPACE: idpdisc,
-    md.NAMESPACE: md,
-    xmldsig.NAMESPACE: xmldsig,
-    xmlenc.NAMESPACE: xmlenc
-}
 
 COMMON_ARGS = [
     "entityid", "xmlsec_binary", "debug", "key_file", "cert_file",
@@ -408,8 +387,7 @@ class Config(object):
         except:
             disable_validation = False
 
-        mds = MetadataStore(
-            list(ONTS.values()), acs, self, ca_certs,
+        mds = MetadataStore(acs, self, ca_certs,
             disable_ssl_certificate_validation=disable_validation)
 
         mds.imp(metadata_conf)

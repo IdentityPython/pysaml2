@@ -30,21 +30,6 @@ A script that imports and verifies metadata.
 """
 
 
-ONTS = {
-    saml.NAMESPACE: saml,
-    mdui.NAMESPACE: mdui,
-    mdattr.NAMESPACE: mdattr,
-    mdrpi.NAMESPACE: mdrpi,
-    dri.NAMESPACE: dri,
-    ui.NAMESPACE: ui,
-    idpdisc.NAMESPACE: idpdisc,
-    md.NAMESPACE: md,
-    xmldsig.NAMESPACE: xmldsig,
-    xmlenc.NAMESPACE: xmlenc,
-    shibmd.NAMESPACE: shibmd
-}
-
-
 parser = argparse.ArgumentParser()
 parser.add_argument('-t', dest='type')
 parser.add_argument('-u', dest='url')
@@ -68,17 +53,17 @@ if args.type == "local":
     if args.cert and args.xmlsec:
         crypto = _get_xmlsec_cryptobackend(args.xmlsec)
         sc = SecurityContext(crypto)
-        metad = MetaDataFile(ONTS.values(), args.item, args.item,
-                             cert=args.cert, security=sc, **kwargs)
+        metad = MetaDataFile(args.item, args.item, cert=args.cert, security=sc,
+                             **kwargs)
     else:
-        metad = MetaDataFile(ONTS.values(), args.item, args.item, **kwargs)
+        metad = MetaDataFile(args.item, args.item, **kwargs)
 elif args.type == "external":
     ATTRCONV = ac_factory(args.attrsmap)
     httpc = HTTPBase()
     crypto = _get_xmlsec_cryptobackend(args.xmlsec)
     sc = SecurityContext(crypto)
-    metad = MetaDataExtern(ONTS.values(), ATTRCONV, args.url,
-                           sc, cert=args.cert, http=httpc, **kwargs)
+    metad = MetaDataExtern(ATTRCONV, args.url, sc, cert=args.cert, http=httpc,
+                           **kwargs)
 
 if metad:
     try:

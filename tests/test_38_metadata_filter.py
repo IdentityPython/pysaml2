@@ -19,17 +19,6 @@ __author__ = 'roland'
 
 sec_config = config.Config()
 
-ONTS = {
-    saml.NAMESPACE: saml,
-    mdui.NAMESPACE: mdui,
-    mdattr.NAMESPACE: mdattr,
-    dri.NAMESPACE: dri,
-    ui.NAMESPACE: ui,
-    idpdisc.NAMESPACE: idpdisc,
-    md.NAMESPACE: md,
-    xmldsig.NAMESPACE: xmldsig,
-    xmlenc.NAMESPACE: xmlenc
-}
 
 ATTRCONV = ac_factory(full_path("attributemaps"))
 
@@ -41,7 +30,7 @@ METADATACONF = {
 }
 
 def test_swamid_sp():
-    mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
+    mds = MetadataStore(ATTRCONV, sec_config,
                         disable_ssl_certificate_validation=True,
                         filter=AllowDescriptor(["spsso"]))
 
@@ -52,7 +41,7 @@ def test_swamid_sp():
     assert idps == {}
 
 def test_swamid_idp():
-    mds = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
+    mds = MetadataStore(ATTRCONV, sec_config,
                         disable_ssl_certificate_validation=True,
                         filter=AllowDescriptor(["idpsso"]))
 

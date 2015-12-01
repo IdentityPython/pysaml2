@@ -7,39 +7,25 @@ import pymongo.uri_parser
 import pymongo.errors
 from saml2.eptid import Eptid
 from saml2.mdstore import InMemoryMetaData
+from saml2.mdstore import metadata_modules
+from saml2.mdstore import load_metadata_modules
 from saml2.s_utils import PolicyError
 
-from saml2.ident import code_binary, IdentDB, Unknown
-from saml2.mdie import to_dict, from_dict
+from saml2.ident import code_binary
+from saml2.ident import IdentDB
+from saml2.ident import Unknown
+from saml2.mdie import to_dict
+from saml2.mdie import from_dict
 
-from saml2 import md
-from saml2 import saml
-from saml2.extension import mdui
-from saml2.extension import idpdisc
-from saml2.extension import dri
-from saml2.extension import mdattr
-from saml2.extension import ui
-from saml2 import xmldsig
-from saml2 import xmlenc
 import six
 
-
-ONTS = {
-    saml.NAMESPACE: saml,
-    mdui.NAMESPACE: mdui,
-    mdattr.NAMESPACE: mdattr,
-    dri.NAMESPACE: dri,
-    ui.NAMESPACE: ui,
-    idpdisc.NAMESPACE: idpdisc,
-    md.NAMESPACE: md,
-    xmldsig.NAMESPACE: xmldsig,
-    xmlenc.NAMESPACE: xmlenc
-}
 
 __author__ = 'rolandh'
 
 logger = logging.getLogger(__name__)
 
+ONTS = load_metadata_modules()
+MMODS = metadata_modules()
 
 class CorruptDatabase(Exception):
     pass
@@ -64,7 +50,7 @@ class SessionStorageMDB(object):
         doc = {
             "name_id_key": nkey,
             "assertion_id": assertion.id,
-            "assertion": to_dict(assertion, ONTS.values(), True),
+            "assertion": to_dict(assertion, MMODS, True),
             "to_sign": to_sign
         }
 
@@ -151,7 +137,7 @@ class IdentMDB(IdentDB):
         return _id
 
     def store(self, ident, name_id):
-        self.mdb.store(ident, name_id=to_dict(name_id, ONTS.values(), True))
+        self.mdb.store(ident, name_id=to_dict(name_id, MMODS, True))
 
     def find_nameid(self, userid, nformat=None, sp_name_qualifier=None,
                     name_qualifier=None, sp_provided_id=None, **kwargs):
@@ -172,13 +158,13 @@ class IdentMDB(IdentDB):
         return res
 
     def find_local_id(self, name_id):
-        cnid = to_dict(name_id, ONTS.values(), True)
+        cnid = to_dict(name_id, MMODS, True)
         for item in self.mdb.get(name_id=cnid):
             return item[self.mdb.primary_key]
         return None
 
     def remove_remote(self, name_id):
-        cnid = to_dict(name_id, ONTS.values(), True)
+        cnid = to_dict(name_id, MMODS, True)
         self.mdb.remove(name_id=cnid)
 
     def handle_name_id_mapping_request(self, name_id, name_id_policy):

@@ -20,16 +20,6 @@ A script that imports and verifies metadata and then dumps it in a basic
 dictionary format.
 """
 
-
-ONTS = {
-    saml.NAMESPACE: saml,
-    md.NAMESPACE: md,
-    xmldsig.NAMESPACE: xmldsig,
-    xmlenc.NAMESPACE: xmlenc,
-}
-
-ONTS.update(load_extensions())
-
 parser = argparse.ArgumentParser()
 parser.add_argument('-t', dest='type')
 parser.add_argument('-u', dest='url')
@@ -44,14 +34,13 @@ args = parser.parse_args()
 metad = None
 
 if args.type == "local":
-    metad = MetaDataFile(ONTS.values(), args.item, args.item)
+    metad = MetaDataFile(args.item, args.item)
 elif args.type == "external":
     ATTRCONV = ac_factory(args.attrsmap)
     httpc = HTTPBase()
     crypto = _get_xmlsec_cryptobackend(args.xmlsec)
     sc = SecurityContext(crypto)
-    metad = MetaDataExtern(ONTS.values(), ATTRCONV, args.url,
-                           sc, cert=args.cert, http=httpc)
+    metad = MetaDataExtern(ATTRCONV, args.url, sc, cert=args.cert, http=httpc)
 
 if metad is not None:
     metad.load()

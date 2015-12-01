@@ -15,17 +15,6 @@ from saml2.server import Server
 from saml2 import xmldsig
 from saml2 import xmlenc
 
-ONTS = {
-    saml.NAMESPACE: saml,
-    mdui.NAMESPACE: mdui,
-    mdattr.NAMESPACE: mdattr,
-    dri.NAMESPACE: dri,
-    ui.NAMESPACE: ui,
-    idpdisc.NAMESPACE: idpdisc,
-    md.NAMESPACE: md,
-    xmldsig.NAMESPACE: xmldsig,
-    xmlenc.NAMESPACE: xmlenc
-}
 
 ATTRCONV = ac_factory(full_path("attributemaps"))
 sec_config = config.Config()
@@ -33,7 +22,7 @@ sec_config.xmlsec_binary = sigver.get_xmlsec_binary(["/opt/local/bin"])
 
 __author__ = 'rolandh'
 
-MDS = MetadataStore(ONTS.values(), ATTRCONV, sec_config,
+MDS = MetadataStore(ATTRCONV, sec_config,
                     disable_ssl_certificate_validation=True)
 MDS.imp([{"class": "saml2.mdstore.MetaDataMD",
           "metadata": [(full_path("swamid.md"),)]}])
@@ -90,7 +79,7 @@ def test_filter_ava3():
         }
     })
 
-    mds = MetadataStore(list(ONTS.values()), ATTRCONV, sec_config,
+    mds = MetadataStore(ATTRCONV, sec_config,
                         disable_ssl_certificate_validation=True)
     mds.imp([{"class": "saml2.mdstore.MetaDataFile",
               "metadata": [(full_path("entity_cat_sfs_hei.xml"),)]}])
@@ -114,7 +103,7 @@ def test_filter_ava4():
         }
     })
 
-    mds = MetadataStore(list(ONTS.values()), ATTRCONV, sec_config,
+    mds = MetadataStore(ATTRCONV, sec_config,
                         disable_ssl_certificate_validation=True)
     mds.imp([{"class": "saml2.mdstore.MetaDataFile",
               "metadata": [(full_path("entity_cat_re_nren.xml"),)]}])
@@ -140,7 +129,7 @@ def test_filter_ava5():
         }
     })
 
-    mds = MetadataStore(list(ONTS.values()), ATTRCONV, sec_config,
+    mds = MetadataStore(ATTRCONV, sec_config,
                         disable_ssl_certificate_validation=True)
     mds.imp([{"class": "saml2.mdstore.MetaDataFile",
               "metadata": [(full_path("entity_cat_re.xml"),)]}])

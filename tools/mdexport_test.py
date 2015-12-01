@@ -22,19 +22,6 @@ dictionary format.
 """
 
 
-ONTS = {
-    saml.NAMESPACE: saml,
-    mdui.NAMESPACE: mdui,
-    mdattr.NAMESPACE: mdattr,
-    dri.NAMESPACE: dri,
-    ui.NAMESPACE: ui,
-    idpdisc.NAMESPACE: idpdisc,
-    md.NAMESPACE: md,
-    xmldsig.NAMESPACE: xmldsig,
-    xmlenc.NAMESPACE: xmlenc,
-    shibmd.NAMESPACE: shibmd
-}
-
 MDIMPORT = {
     "swamid": {
         "url": "https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2",
@@ -58,10 +45,10 @@ def main():
     metad = None
 
     if item["type"] == "local":
-        metad = MetaDataFile(sys.argv[1], ONTS.values(), item["file"])
+        metad = MetaDataFile(sys.argv[1], item["file"])
     elif item["type"] == "external":
-        metad = MetaDataExtern(sys.argv[1], ONTS.values(),
-                               item["url"], "/opt/local/bin/xmlsec1", item["cert"])
+        metad = MetaDataExtern(sys.argv[1], item["url"],
+                               "/opt/local/bin/xmlsec1", item["cert"])
 
     if metad:
         metad.load()

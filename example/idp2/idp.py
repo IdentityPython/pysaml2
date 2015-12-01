@@ -1073,11 +1073,11 @@ if __name__ == '__main__':
     digest_alg = None
     try:
         sign_alg = CONFIG.SIGN_ALG
-    except:
+    except AttributeError:
         pass
     try:
         digest_alg = CONFIG.DIGEST_ALG
-    except:
+    except AttributeError:
         pass
     ds.DefaultSignature(sign_alg, digest_alg)
 

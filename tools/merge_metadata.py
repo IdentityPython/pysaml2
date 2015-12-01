@@ -1,20 +1,7 @@
 #!/usr/bin/env python
 from saml2.sigver import _get_xmlsec_cryptobackend, SecurityContext
 from saml2.httpbase import HTTPBase
-
-from saml2 import saml
-from saml2 import md
 from saml2.attribute_converter import ac_factory
-from saml2.extension import dri
-from saml2.extension import idpdisc
-from saml2.extension import mdattr
-from saml2.extension import mdrpi
-from saml2.extension import mdui
-from saml2.extension import shibmd
-from saml2.extension import ui
-from saml2 import xmldsig
-from saml2 import xmlenc
-
 import argparse
 
 from saml2.mdstore import MetaDataFile, MetaDataExtern, MetadataStore
@@ -24,22 +11,6 @@ __author__ = 'rolandh'
 """
 A script that imports and verifies metadata.
 """
-
-
-ONTS = {
-    saml.NAMESPACE: saml,
-    mdui.NAMESPACE: mdui,
-    mdattr.NAMESPACE: mdattr,
-    mdrpi.NAMESPACE: mdrpi,
-    dri.NAMESPACE: dri,
-    ui.NAMESPACE: ui,
-    idpdisc.NAMESPACE: idpdisc,
-    md.NAMESPACE: md,
-    xmldsig.NAMESPACE: xmldsig,
-    xmlenc.NAMESPACE: xmlenc,
-    shibmd.NAMESPACE: shibmd
-}
-
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-a', dest='attrsmap')
@@ -65,7 +36,7 @@ metad = None
 
 ATTRCONV = ac_factory(args.attrsmap)
 
-mds = MetadataStore(ONTS.values(), None, None)
+mds = MetadataStore(None, None)
 
 for line in open(args.conf).readlines():
     line = line.strip()
@@ -81,14 +52,14 @@ for line in open(args.conf).readlines():
         kwargs = {}
 
     if spec[0] == "local":
-        metad = MetaDataFile(ONTS.values(), spec[1], spec[1], **kwargs)
+        metad = MetaDataFile(spec[1], spec[1], **kwargs)
     elif spec[0] == "remote":
         ATTRCONV = ac_factory(args.attrsmap)
         httpc = HTTPBase()
         crypto = _get_xmlsec_cryptobackend(args.xmlsec)
         sc = SecurityContext(crypto, key_type="", cert_type="")
-        metad = MetaDataExtern(ONTS.values(), ATTRCONV, spec[1],
-                               sc, cert=spec[2], http=httpc, **kwargs)
+        metad = MetaDataExtern(ATTRCONV, spec[1], sc, cert=spec[2], http=httpc,
+                               **kwargs)
 
     if metad is not None:
         try:

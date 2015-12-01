@@ -9,6 +9,6 @@ RELEASE = {
     #       "displayName", "schacHomeOrganization"],
     COCO: ["eduPersonPrincipalName", "eduPersonScopedAffiliation",
            'eduPersonAffiliation', "mail", "displayName", 'cn',
-           "schacHomeOrganization", 'schacHomeOrganizationType']
+           "schacHomeOrganization"]
 }
 

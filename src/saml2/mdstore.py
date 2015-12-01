@@ -9,18 +9,24 @@ import json
 import requests
 import six
 from hashlib import sha1
-from os.path import isfile, join
+from os.path import isfile
+from os.path import join
+
+from saml2 import md
+from saml2 import saml
+from saml2 import samlp
+from saml2 import xmldsig
+from saml2 import xmlenc
+from saml2 import SAMLError
+from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_HTTP_POST
+from saml2 import BINDING_SOAP
+
 from saml2.httpbase import HTTPBase
 from saml2.extension.idpdisc import BINDING_DISCO
 from saml2.extension.idpdisc import DiscoveryResponse
 from saml2.md import EntitiesDescriptor
 from saml2.mdie import to_dict
-from saml2 import md
-from saml2 import samlp
-from saml2 import SAMLError
-from saml2 import BINDING_HTTP_REDIRECT
-from saml2 import BINDING_HTTP_POST
-from saml2 import BINDING_SOAP
 from saml2.s_utils import UnsupportedBinding
 from saml2.s_utils import UnknownSystemEntity
 from saml2.sigver import split_len
@@ -83,6 +89,24 @@ def load_extensions():
     return ext_map
 
 
+def load_metadata_modules():
+    mods = {
+        saml.NAMESPACE: saml,
+        md.NAMESPACE: md,
+        xmldsig.NAMESPACE: xmldsig,
+        xmlenc.NAMESPACE: xmlenc
+    }
+
+    mods.update(load_extensions())
+    return mods
+
+
+def metadata_modules():
+    _res = [saml, md, xmldsig, xmlenc]
+    _res.extend(list(load_extensions().values()))
+    return _res
+
+
 def destinations(srvs):
     return [s["location"] for s in srvs]
 
@@ -129,14 +153,16 @@ def repack_cert(cert):
 
 
 class MetaData(object):
-    def __init__(self, onts, attrc, metadata='', node_name=None,
+    def __init__(self, attrc, metadata='', node_name=None,
                  check_validity=True, security=None, **kwargs):
-        self.onts = onts
         self.attrc = attrc
         self.metadata = metadata
         self.entity = None
         self.cert = None
         self.to_old = []
+        self.node_name = node_name
+        self.check_validity = check_validity
+        self.security = security
 
     def items(self):
         '''
@@ -369,9 +395,9 @@ class MetaData(object):
 
 
 class InMemoryMetaData(MetaData):
-    def __init__(self, onts, attrc, metadata="", node_name=None,
+    def __init__(self, attrc, metadata="", node_name=None,
                  check_validity=True, security=None, **kwargs):
-        super(InMemoryMetaData, self).__init__(onts, attrc, metadata=metadata)
+        super(InMemoryMetaData, self).__init__(attrc, metadata=metadata)
         self.entity = {}
         self.security = security
         self.node_name = node_name
@@ -424,7 +450,7 @@ class InMemoryMetaData(MetaData):
                   entity_descr.entity_id, file=sys.stderr)
             return
 
-        _ent = to_dict(entity_descr, self.onts)
+        _ent = to_dict(entity_descr, metadata_modules())
         flag = 0
         # verify support for SAML2
         for descr in ["spsso", "idpsso", "role", "authn_authority",
@@ -597,8 +623,8 @@ class MetaDataFile(InMemoryMetaData):
     the SAML Metadata format.
     """
 
-    def __init__(self, onts, attrc, filename=None, cert=None, **kwargs):
-        super(MetaDataFile, self).__init__(onts, attrc, **kwargs)
+    def __init__(self, attrc, filename=None, cert=None, **kwargs):
+        super(MetaDataFile, self).__init__(attrc, **kwargs)
         if not filename:
             raise SAMLError('No file specified.')
         self.filename = filename
@@ -618,9 +644,9 @@ class MetaDataLoader(MetaDataFile):
     The format of the file is the SAML Metadata format.
     """
 
-    def __init__(self, onts, attrc, loader_callable, cert=None,
+    def __init__(self, attrc, loader_callable, cert=None,
                  security=None, **kwargs):
-        super(MetaDataLoader, self).__init__(onts, attrc, **kwargs)
+        super(MetaDataLoader, self).__init__(attrc, **kwargs)
         self.metadata_provider_callable = self.get_metadata_loader(
             loader_callable)
         self.cert = cert
@@ -662,17 +688,16 @@ class MetaDataExtern(InMemoryMetaData):
     Accessible but HTTP GET.
     """
 
-    def __init__(self, onts, attrc, url=None, security=None, cert=None,
+    def __init__(self, attrc, url=None, security=None, cert=None,
                  http=None, **kwargs):
         """
-        :params onts:
         :params attrc:
         :params url: Location of the metadata
         :params security: SecurityContext()
         :params cert: CertificMDloaderate used to sign the metadata
         :params http:
         """
-        super(MetaDataExtern, self).__init__(onts, attrc, **kwargs)
+        super(MetaDataExtern, self).__init__(attrc, **kwargs)
         if not url:
             raise SAMLError('URL not specified.')
         else:
@@ -704,8 +729,8 @@ class MetaDataMD(InMemoryMetaData):
     of the Python representation of the metadata.
     """
 
-    def __init__(self, onts, attrc, filename, **kwargs):
-        super(MetaDataMD, self).__init__(onts, attrc, **kwargs)
+    def __init__(self, attrc, filename, **kwargs):
+        super(MetaDataMD, self).__init__(attrc, **kwargs)
         self.filename = filename
 
     def load(self):
@@ -771,18 +796,16 @@ class MetaDataMDX(InMemoryMetaData):
 
 
 class MetadataStore(MetaData):
-    def __init__(self, onts, attrc, config, ca_certs=None,
+    def __init__(self, attrc, config, ca_certs=None,
                  check_validity=True,
                  disable_ssl_certificate_validation=False,
                  filter=None):
         """
-        :params onts:
         :params attrc:
         :params config: Config()
         :params ca_certs:
         :params disable_ssl_certificate_validation:
         """
-        self.onts = onts
         self.attrc = attrc
 
         if disable_ssl_certificate_validation:
@@ -810,18 +833,18 @@ class MetadataStore(MetaData):
                 files = [f for f in os.listdir(key) if isfile(join(key, f))]
                 for fil in files:
                     _fil = join(key, fil)
-                    _md = MetaDataFile(self.onts, self.attrc, _fil, **_args)
+                    _md = MetaDataFile(self.attrc, _fil, **_args)
                     _md.load()
                     self.metadata[_fil] = _md
                 return
             else:
                 # else it's just a plain old file so read it
-                _md = MetaDataFile(self.onts, self.attrc, key, **_args)
+                _md = MetaDataFile(self.attrc, key, **_args)
         elif typ == "inline":
             self.ii += 1
             key = self.ii
             kwargs.update(_args)
-            _md = InMemoryMetaData(self.onts, self.attrc, args[0])
+            _md = InMemoryMetaData(self.attrc, args[0])
         elif typ == "remote":
             key = kwargs["url"]
             for _key in ["node_name", "check_validity"]:
@@ -833,15 +856,15 @@ class MetadataStore(MetaData):
             if "cert" not in kwargs:
                 kwargs["cert"] = ""
 
-            _md = MetaDataExtern(self.onts, self.attrc,
+            _md = MetaDataExtern(self.attrc,
                                  kwargs["url"], self.security,
                                  kwargs["cert"], self.http, **_args)
         elif typ == "mdfile":
             key = args[0]
-            _md = MetaDataMD(self.onts, self.attrc, args[0], **_args)
+            _md = MetaDataMD(self.attrc, args[0], **_args)
         elif typ == "loader":
             key = args[0]
-            _md = MetaDataLoader(self.onts, self.attrc, args[0], **_args)
+            _md = MetaDataLoader(self.attrc, args[0], **_args)
         else:
             raise SAMLError("Unknown metadata type '%s'" % typ)
         _md.load()
@@ -891,7 +914,7 @@ class MetadataStore(MetaData):
                                  isfile(join(key[0], f))]
                         for fil in files:
                             _fil = join(key[0], fil)
-                            _md = MetaDataFile(self.onts, self.attrc, _fil)
+                            _md = MetaDataFile(self.attrc, _fil)
                             _md.load()
                             self.metadata[_fil] = _md
                             if _md.to_old:
@@ -901,7 +924,7 @@ class MetadataStore(MetaData):
                     if len(key) == 2:
                         kwargs["cert"] = key[1]
 
-                    _md = MDloader(self.onts, self.attrc, key[0], **kwargs)
+                    _md = MDloader(self.attrc, key[0], **kwargs)
                     _md.load()
                     self.metadata[key[0]] = _md
                     if _md.to_old:
