@@ -1,49 +1,47 @@
 #!/usr/bin/env python
 from __future__ import print_function
-import logging
-import re
+
 import argparse
+import importlib
+import logging
 import os
-
-from six.moves.http_cookies import SimpleCookie
-import six
-
-from saml2.extension.pefim import SPCertEnc
-from saml2.metadata import create_metadata_string
-import service_conf
-
-from six.moves.urllib.parse import parse_qs
+import re
 import sys
 
-from saml2 import BINDING_HTTP_REDIRECT, element_to_extension_element
-from saml2 import BINDING_SOAP
-from saml2 import time_util
-from saml2 import ecp
+import six
+from six.moves.http_cookies import SimpleCookie
+from six.moves.urllib.parse import parse_qs
+
+import saml2.xmldsig as ds
 from saml2 import BINDING_HTTP_ARTIFACT
 from saml2 import BINDING_HTTP_POST
+from saml2 import BINDING_HTTP_REDIRECT, element_to_extension_element
+from saml2 import BINDING_SOAP
+from saml2 import ecp
+from saml2 import time_util
 from saml2.client import Saml2Client
 from saml2.ecp_client import PAOS_HEADER_INFO
-from saml2.httputil import geturl, make_cookie, parse_cookie
-from saml2.httputil import get_post
-from saml2.httputil import Response
+from saml2.extension.pefim import SPCertEnc
 from saml2.httputil import BadRequest
-from saml2.httputil import ServiceError
-from saml2.httputil import SeeOther
-from saml2.httputil import Unauthorized
 from saml2.httputil import NotFound
-from saml2.httputil import Redirect
 from saml2.httputil import NotImplemented
+from saml2.httputil import Redirect
+from saml2.httputil import Response
+from saml2.httputil import SeeOther
+from saml2.httputil import ServiceError
+from saml2.httputil import Unauthorized
+from saml2.httputil import get_post
+from saml2.httputil import geturl, make_cookie, parse_cookie
+from saml2.metadata import create_metadata_string
 from saml2.response import StatusError
 from saml2.response import VerificationError
 from saml2.s_utils import UnknownPrincipal
-from saml2.s_utils import decode_base64_and_inflate
 from saml2.s_utils import UnsupportedBinding
-from saml2.s_utils import sid
+from saml2.s_utils import decode_base64_and_inflate
 from saml2.s_utils import rndstr
-#from srtest import exception_trace
+from saml2.s_utils import sid
+from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.samlp import Extensions
-from saml2 import xmldsig as ds
-import saml2.xmldsig as ds
 
 logger = logging.getLogger("")
 hdlr = logging.FileHandler('spx.log')
@@ -53,7 +51,6 @@ base_formatter = logging.Formatter(
 hdlr.setFormatter(base_formatter)
 logger.addHandler(hdlr)
 logger.setLevel(logging.INFO)
-
 
 SP = None
 SEED = ""
@@ -139,7 +136,7 @@ class ECPResponse(object):
     def __init__(self, content):
         self.content = content
 
-    #noinspection PyUnusedLocal
+    # noinspection PyUnusedLocal
     def __call__(self, environ, start_response):
         start_response('%s %s' % (self.code, self.title),
                        [('Content-Type', "text/xml")])
@@ -351,7 +348,7 @@ class ACS(Service):
         :param response: The SAML response, transport encoded
         :param binding: Which binding the query came in over
         """
-        #tmp_outstanding_queries = dict(self.outstanding_queries)
+        # tmp_outstanding_queries = dict(self.outstanding_queries)
         if not response:
             logger.info("Missing Response")
             resp = Unauthorized('Unknown user')
@@ -404,6 +401,7 @@ class ACS(Service):
                 res["more"].append(key)
 
         return res
+
 
 # -----------------------------------------------------------------------------
 # REQUESTERS
@@ -554,7 +552,7 @@ class SSO(object):
                 "single_sign_on_service", self.bindings, "idpsso",
                 entity_id=entity_id)
             logger.debug("binding: %s, destination: %s", _binding,
-                                                           destination)
+                         destination)
             # Binding here is the response binding that is which binding the
             # IDP should use to return the response.
             acs = _cli.config.getattr("endpoints", "sp")[
@@ -565,19 +563,20 @@ class SSO(object):
             extensions = None
             cert = None
             if _cli.config.generate_cert_func is not None:
-                    cert_str, req_key_str = _cli.config.generate_cert_func()
-                    cert = {
-                        "cert": cert_str,
-                        "key": req_key_str
-                    }
-                    spcertenc = SPCertEnc(x509_data=ds.X509Data(
-                        x509_certificate=ds.X509Certificate(text=cert_str)))
-                    extensions = Extensions(extension_elements=[
-                        element_to_extension_element(spcertenc)])
+                cert_str, req_key_str = _cli.config.generate_cert_func()
+                cert = {
+                    "cert": cert_str,
+                    "key": req_key_str
+                }
+                spcertenc = SPCertEnc(x509_data=ds.X509Data(
+                    x509_certificate=ds.X509Certificate(text=cert_str)))
+                extensions = Extensions(extension_elements=[
+                    element_to_extension_element(spcertenc)])
 
             req_id, req = _cli.create_authn_request(destination,
                                                     binding=return_binding,
-                                                    extensions=extensions)
+                                                    extensions=extensions,
+                                                    nameid_format=NAMEID_FORMAT_PERSISTENT)
             _rstate = rndstr()
             self.cache.relay_state[_rstate] = came_from
             ht_args = _cli.apply_binding(_binding, "%s" % req, destination,
@@ -636,7 +635,7 @@ class SLO(Service):
         try:
             txt = decode_base64_and_inflate(message)
             is_logout_request = 'LogoutRequest' in txt.split('>', 1)[0]
-        except:   # TODO: parse the XML correctly
+        except:  # TODO: parse the XML correctly
             is_logout_request = False
 
         if is_logout_request:
@@ -646,10 +645,11 @@ class SLO(Service):
 
         return finish_logout(self.environ, self.start_response)
 
+
 # ----------------------------------------------------------------------------
 
 
-#noinspection PyUnusedLocal
+# noinspection PyUnusedLocal
 def not_found(environ, start_response):
     """Called if no URL matches."""
     resp = NotFound('Not Found')
@@ -659,7 +659,7 @@ def not_found(environ, start_response):
 # ----------------------------------------------------------------------------
 
 
-#noinspection PyUnusedLocal
+# noinspection PyUnusedLocal
 def main(environ, start_response, sp):
     user = CACHE.get_user(environ)
 
@@ -687,10 +687,11 @@ def disco(environ, start_response, _sp):
     resp.headers.append(kaka)
     return resp(environ, start_response)
 
+
 # ----------------------------------------------------------------------------
 
 
-#noinspection PyUnusedLocal
+# noinspection PyUnusedLocal
 def logout(environ, start_response, sp):
     user = CACHE.get_user(environ)
 
@@ -737,9 +738,10 @@ def finish_logout(environ, start_response):
     cookie = CACHE.delete_cookie(environ)
 
     resp = Response('You are now logged out of this service', headers=[
-      cookie,
+        cookie,
     ])
     return resp(environ, start_response)
+
 
 # ----------------------------------------------------------------------------
 
@@ -768,16 +770,17 @@ def add_urls():
     urls.append(("%s/redirect$" % base, (SLO, "redirect", SP)))
     urls.append(("%s/redirect/(.*)$" % base, (SLO, "redirect", SP)))
 
+
 # ----------------------------------------------------------------------------
 
 def metadata(environ, start_response):
     try:
         path = _args.path
         if path is None or len(path) == 0:
-            path = os.path.dirname(os.path.abspath( __file__ ))
+            path = os.path.dirname(os.path.abspath(__file__))
         if path[-1] != "/":
             path += "/"
-        metadata = create_metadata_string(path+"sp_conf.py", None,
+        metadata = create_metadata_string(path + "sp_conf.py", None,
                                           _args.valid, _args.cert, _args.keyfile,
                                           _args.id, _args.name, _args.sign)
         start_response('200 OK', [('Content-Type', "text/xml")])
@@ -785,6 +788,7 @@ def metadata(environ, start_response):
     except Exception as ex:
         logger.error("An error occured while creating metadata: %s", ex.message)
         return not_found(environ, start_response)
+
 
 def application(environ, start_response):
     """
@@ -824,23 +828,12 @@ def application(environ, start_response):
         resp = BadRequest("%s" % err)
         return resp(environ, start_response)
     except Exception as err:
-        #_err = exception_trace("RUN", err)
-        #logging.error(exception_trace("RUN", _err))
+        # _err = exception_trace("RUN", err)
+        # logging.error(exception_trace("RUN", _err))
         print(err, file=sys.stderr)
         resp = ServiceError("%s" % err)
         return resp(environ, start_response)
 
-# ----------------------------------------------------------------------------
-
-HOST = service_conf.HOST
-PORT = service_conf.PORT
-# ------- HTTPS -------
-# These should point to relevant files
-SERVER_CERT = service_conf.SERVER_CERT
-SERVER_KEY = service_conf.SERVER_KEY
-# This is of course the certificate chain for the CA that signed
-# your cert and all the way up to the top
-CERT_CHAIN = service_conf.CERT_CHAIN
 
 if __name__ == '__main__':
     from cherrypy import wsgiserver
@@ -866,7 +859,8 @@ if __name__ == '__main__':
     _parser.add_argument('-n', dest='name')
     _parser.add_argument('-S', dest='sign', action='store_true',
                          help="sign the metadata")
-
+    _parser.add_argument('-C', dest='service_conf_module',
+                         help="service config module")
 
     ARGS = {}
     _args = _parser.parse_args()
@@ -881,6 +875,21 @@ if __name__ == '__main__':
         SEED = _args.seed
     else:
         SEED = "SnabbtInspel"
+
+    if _args.service_conf_module:
+        service_conf = importlib.import_module(_args.service_conf_module)
+    else:
+        import service_conf
+
+    HOST = service_conf.HOST
+    PORT = service_conf.PORT
+    # ------- HTTPS -------
+    # These should point to relevant files
+    SERVER_CERT = service_conf.SERVER_CERT
+    SERVER_KEY = service_conf.SERVER_KEY
+    # This is of course the certificate chain for the CA that signed
+    # your cert and all the way up to the top
+    CERT_CHAIN = service_conf.CERT_CHAIN
 
     SP = Saml2Client(config_file="%s" % CNFBASE)
 
@@ -904,6 +913,7 @@ if __name__ == '__main__':
     _https = ""
     if service_conf.HTTPS:
         from cherrypy.wsgiserver import ssl_pyopenssl
+
         SRV.ssl_adapter = ssl_pyopenssl.pyOpenSSLAdapter(SERVER_CERT,
                                                          SERVER_KEY, CERT_CHAIN)
         _https = " using SSL/TLS"
