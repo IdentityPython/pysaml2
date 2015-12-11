@@ -243,9 +243,9 @@ class Base(Entity):
                 del kwargs["assertion_consumer_service_url"]
             except KeyError:
                 try:
-                    args["attribute_consuming_service_index"] = str(kwargs[
-                        "attribute_consuming_service_index"])
-                    del kwargs["attribute_consuming_service_index"]
+                    args["assertion_consumer_service_index"] = str(kwargs[
+                        "assertion_consumer_service_index"])
+                    del kwargs["assertion_consumer_service_index"]
                 except KeyError:
                     if service_url_binding is None:
                         service_urls = self.service_urls(binding)

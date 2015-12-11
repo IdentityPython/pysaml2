@@ -1,11 +1,9 @@
 from __future__ import print_function
-
 import hashlib
 import logging
 import os
 import sys
 import json
-
 import requests
 import six
 from hashlib import sha1
@@ -926,6 +924,24 @@ class MetadataStore(MetaData):
         else:
             logger.error("Unknown system entity: %s", entity_id)
             raise UnknownSystemEntity(entity_id)
+
+    def extension(self, entity_id, typ, service):
+        for key, _md in self.metadata.items():
+            try:
+                srvs = _md[entity_id][typ]
+            except KeyError:
+                return None
+
+            if not srvs:
+                return srvs
+
+            res = []
+            for srv in srvs:
+                if "extensions" in srv:
+                    for elem in srv["extensions"]["extension_elements"]:
+                        if elem["__class__"] == service:
+                            res.append(elem)
+            return res
 
     def ext_service(self, entity_id, typ, service, binding=None):
         known_entity = False

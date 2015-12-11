@@ -452,8 +452,23 @@ This directive has as value a dictionary with one or more of the following keys:
 * single_logout_service (aa, idp, sp)
 * single_sign_on_service (idp)
 
-The values per service is a list of tuples containing endpoint and binding
-type.
+The values per service is a list of endpoint specifications.
+An endpoint specification can either be just the URL::
+
+  ”http://localhost:8088/A"
+
+or it can be a 2-tuple (URL+binding)::
+
+  from saml2 import BINDING_HTTP_POST
+  (”http://localhost:8087/A”, BINDING_HTTP_POST)
+
+or a 3-tuple (URL+binding+index)::
+
+  from saml2 import BINDING_HTTP_POST
+  (”http://lingon.catalogix.se:8087/A”, BINDING_HTTP_POST, 1)
+
+If no binding is specified, no index can be set.
+If no index is specified, the index is set based on the position in the list.
 
 Example::
 
