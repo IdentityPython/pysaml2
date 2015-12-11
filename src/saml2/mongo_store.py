@@ -365,8 +365,8 @@ def export_mdstore_to_mongo_db(mds, database, collection, sub_collection=""):
 
 
 class MetadataMDB(InMemoryMetaData):
-    def __init__(self, onts, attrc, database="", collection=""):
-        super(MetadataMDB, self).__init__(onts, attrc)
+    def __init__(self, attrc, database="", collection=""):
+        super(MetadataMDB, self).__init__(attrc)
         self.mdb = MDB(database, collection)
         self.mdb.primary_key = "entity_id"
 
