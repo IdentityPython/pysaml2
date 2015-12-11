@@ -20,11 +20,13 @@ from saml2.sigver import REQ_ORDER
 from saml2.sigver import RESP_ORDER
 from saml2.sigver import SIGNER_ALGS
 import six
+from saml2.xmldsig import SIG_ALLOWED_ALG
 
 logger = logging.getLogger(__name__)
 
 try:
     from xml.etree import cElementTree as ElementTree
+
     if ElementTree.VERSION < '1.3.0':
         # cElementTree has no support for register_namespace
         # neither _namespace_map, thus we sacrify performance
@@ -106,7 +108,7 @@ def http_post_message(message, relay_state="", typ="SAMLRequest", **kwargs):
 
 
 def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
-                          sigalg=None, key=None, **kwargs):
+                          sigalg='', signer=None, **kwargs):
     """The HTTP Redirect binding defines a mechanism by which SAML protocol
     messages can be transmitted within URL parameters.
     Messages are encoded for use with this binding using a URL encoding
@@ -118,7 +120,9 @@ def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
     :param location: Where the message should be posted to
     :param relay_state: for preserving and conveying state information
     :param typ: What type of message it is SAMLRequest/SAMLResponse/SAMLart
-    :param sigalg: The signature algorithm to use.
+    :param sigalg: Which algorithm the signature function will use to sign
+        the message
+    :param signer: A signature function that can be used to sign the message
     :param key: Key to use for signing
     :return: A tuple containing header information and a HTML message.
     """
@@ -141,20 +145,15 @@ def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
     if relay_state:
         args["RelayState"] = relay_state
 
-    if sigalg:
-        # sigalgs, one of the ones defined in xmldsig
-
+    if signer:
+        # sigalgs, should be one defined in xmldsig
+        assert sigalg in [b for a, b in SIG_ALLOWED_ALG]
         args["SigAlg"] = sigalg
 
-        try:
-            signer = SIGNER_ALGS[sigalg]
-        except:
-            raise Unsupported("Signing algorithm")
-        else:
-            string = "&".join([urlencode({k: args[k]})
-                               for k in _order if k in args]).encode('ascii')
-            args["Signature"] = base64.b64encode(signer.sign(string, key))
-            string = urlencode(args)
+        string = "&".join([urlencode({k: args[k]})
+                           for k in _order if k in args]).encode('ascii')
+        args["Signature"] = base64.b64encode(signer.sign(string))
+        string = urlencode(args)
     else:
         string = urlencode(args)
 
@@ -240,11 +239,11 @@ def parse_soap_enveloped_saml(text, body_class, header_class=None):
     envelope = ElementTree.fromstring(text)
     assert envelope.tag == '{%s}Envelope' % NAMESPACE
 
-    #print(len(envelope))
+    # print(len(envelope))
     body = None
     header = {}
     for part in envelope:
-        #print(">",part.tag)
+        # print(">",part.tag)
         if part.tag == '{%s}Body' % NAMESPACE:
             for sub in part:
                 try:
@@ -255,17 +254,18 @@ def parse_soap_enveloped_saml(text, body_class, header_class=None):
         elif part.tag == '{%s}Header' % NAMESPACE:
             if not header_class:
                 raise Exception("Header where I didn't expect one")
-            #print("--- HEADER ---")
+            # print("--- HEADER ---")
             for sub in part:
-                #print(">>",sub.tag)
+                # print(">>",sub.tag)
                 for klass in header_class:
-                    #print("?{%s}%s" % (klass.c_namespace,klass.c_tag))
+                    # print("?{%s}%s" % (klass.c_namespace,klass.c_tag))
                     if sub.tag == "{%s}%s" % (klass.c_namespace, klass.c_tag):
                         header[sub.tag] = \
                             saml2.create_class_from_element_tree(klass, sub)
                         break
 
     return body, header
+
 
 # -----------------------------------------------------------------------------
 

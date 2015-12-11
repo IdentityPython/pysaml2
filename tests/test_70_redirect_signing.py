@@ -30,14 +30,11 @@ def test():
         destination = srvs[0]["location"]
         req_id, req = sp.create_authn_request(destination, id="id1")
 
-        try:
-            key = sp.sec.key
-        except AttributeError:
-            key = import_rsa_key_from_file(sp.sec.key_file)
+        signer = sp.sec.sec_backend.get_signer(SIG_RSA_SHA1)
 
         info = http_redirect_message(req, destination, relay_state="RS",
                                      typ="SAMLRequest", sigalg=SIG_RSA_SHA1,
-                                     key=key)
+                                     signer=signer)
 
         verified_ok = False
 
@@ -47,7 +44,8 @@ def test():
                 _certs = idp.metadata.certs(sp.config.entityid, "any", "signing")
                 for cert in _certs:
                     if verify_redirect_signature(
-                            list_values2simpletons(_dict), cert):
+                            list_values2simpletons(_dict), sp.sec.sec_backend,
+                            cert):
                         verified_ok = True
 
         assert verified_ok

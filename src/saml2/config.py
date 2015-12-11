@@ -53,7 +53,8 @@ COMMON_ARGS = [
     "tmp_key_file",
     "validate_certificate",
     "extensions",
-    "allow_unknown_attributes"
+    "allow_unknown_attributes",
+    "crypto_backend"
 ]
 
 SP_ARGS = [

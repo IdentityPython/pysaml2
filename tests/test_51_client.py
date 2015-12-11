@@ -1176,11 +1176,9 @@ class TestClient:
         msg_str = "%s" % self.client.create_authn_request(
             "http://localhost:8088/sso", message_id="id1")[1]
 
-        key = self.client.signkey
-
         info = self.client.apply_binding(
             BINDING_HTTP_REDIRECT, msg_str, destination="",
-            relay_state="relay2", sigalg=SIG_RSA_SHA256, key=key)
+            relay_state="relay2", sigalg=SIG_RSA_SHA256)
 
         loc = info["headers"][0][1]
         qs = parse_qs(loc[1:])
@@ -1188,7 +1186,7 @@ class TestClient:
                     ['SigAlg', 'SAMLRequest', 'RelayState', 'Signature'])
 
         assert verify_redirect_signature(list_values2simpletons(qs),
-                                         sigkey=key)
+                                         self.client.sec.sec_backend)
 
         res = self.server.parse_authn_request(qs["SAMLRequest"][0],
                                               BINDING_HTTP_REDIRECT)
@@ -1198,7 +1196,6 @@ class TestClient:
         conf = config.SPConfig()
         conf.load_file("sp_slo_redirect_conf")
         client = Saml2Client(conf)
-        key = client.signkey
 
         # information about the user from an IdP
         session_info = {
@@ -1229,10 +1226,10 @@ class TestClient:
                     ['SigAlg', 'SAMLRequest', 'RelayState', 'Signature'])
 
         assert verify_redirect_signature(list_values2simpletons(qs),
-                                         sigkey=key)
+                                         client.sec.sec_backend)
 
         res = self.server.parse_logout_request(qs["SAMLRequest"][0],
-                                              BINDING_HTTP_REDIRECT)
+                                               BINDING_HTTP_REDIRECT)
         print(res)
 
     def test_do_logout_post(self):

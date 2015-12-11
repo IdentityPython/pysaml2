@@ -43,6 +43,9 @@ class ToOld(Exception):
     pass
 
 
+class SourceNotFound(Exception):
+    pass
+
 REQ2SRV = {
     # IDP
     "authn_request": "single_sign_on_service",
@@ -718,7 +721,7 @@ class MetaDataExtern(InMemoryMetaData):
             return self.parse_and_check_signature(_txt)
         else:
             logger.info("Response status: %s", response.status_code)
-        return False
+            raise SourceNotFound(self.url)
 
 
 class MetaDataMD(InMemoryMetaData):

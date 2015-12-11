@@ -47,7 +47,8 @@ setup(
         "License :: OSI Approved :: Apache Software License",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3.4"
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5"
     ],
 
     scripts=["tools/parse_xsd2.py", "tools/make_metadata.py",

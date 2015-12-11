@@ -66,7 +66,8 @@ class Saml2Client(Base):
         :return: session id and AuthnRequest info
         """
 
-        reqid, negotiated_binding, info = self.prepare_for_negotiated_authenticate(
+        reqid, negotiated_binding, info = \
+            self.prepare_for_negotiated_authenticate(
             entityid=entityid,
             relay_state=relay_state,
             binding=binding,
@@ -137,7 +138,8 @@ class Saml2Client(Base):
             raise SignOnError(
                 "No supported bindings available for authentication")
 
-    def global_logout(self, name_id, reason="", expire=None, sign=None, sign_alg=None, digest_alg=None):
+    def global_logout(self, name_id, reason="", expire=None, sign=None,
+                      sign_alg=None, digest_alg=None):
         """ More or less a layer of indirection :-/
         Bootstrapping the whole thing by finding all the IdPs that should
         be notified.
@@ -162,10 +164,12 @@ class Saml2Client(Base):
 
         # find out which IdPs/AAs I should notify
         entity_ids = self.users.issuers_of_info(name_id)
-        return self.do_logout(name_id, entity_ids, reason, expire, sign, sign_alg=sign_alg, digest_alg=digest_alg)
+        return self.do_logout(name_id, entity_ids, reason, expire, sign,
+                              sign_alg=sign_alg, digest_alg=digest_alg)
 
     def do_logout(self, name_id, entity_ids, reason, expire, sign=None,
-                  expected_binding=None, sign_alg=None, digest_alg=None, **kwargs):
+                  expected_binding=None, sign_alg=None, digest_alg=None,
+                  **kwargs):
         """
 
         :param name_id: Identifier of the Subject (a NameID instance)
@@ -227,22 +231,22 @@ class Saml2Client(Base):
                     sign = self.logout_requests_signed
 
                 sigalg = None
-                key = None
                 if sign:
                     if binding == BINDING_HTTP_REDIRECT:
-                        sigalg = kwargs.get("sigalg", ds.DefaultSignature().get_sign_alg())
-                        key = kwargs.get("key", self.signkey)
+                        sigalg = kwargs.get(
+                            "sigalg", ds.DefaultSignature().get_sign_alg())
+                        #key = kwargs.get("key", self.signkey)
                         srequest = str(request)
                     else:
-                        srequest = self.sign(request, sign_alg=sign_alg, digest_alg=digest_alg)
+                        srequest = self.sign(request, sign_alg=sign_alg,
+                                             digest_alg=digest_alg)
                 else:
                     srequest = str(request)
 
                 relay_state = self._relay_state(req_id)
 
                 http_info = self.apply_binding(binding, srequest, destination,
-                                               relay_state, sigalg=sigalg,
-                                               key=key)
+                                               relay_state, sigalg=sigalg)
 
                 if binding == BINDING_SOAP:
                     response = self.send(**http_info)
@@ -318,7 +322,8 @@ class Saml2Client(Base):
             return self.do_logout(decode(status["name_id"]),
                                   status["entity_ids"],
                                   status["reason"], status["not_on_or_after"],
-                                  status["sign"], sign_alg=sign_alg, digest_alg=digest_alg)
+                                  status["sign"], sign_alg=sign_alg,
+                                  digest_alg=digest_alg)
 
     def _use_soap(self, destination, query_type, **kwargs):
         _create_func = getattr(self, "create_%s" % query_type)

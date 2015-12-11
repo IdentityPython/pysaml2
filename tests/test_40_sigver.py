@@ -112,6 +112,9 @@ class FakeConfig():
     tmp_key_file = None
     validate_certificate = False
 
+    def getattr(self, attr, default):
+        return getattr(self, attr, default)
+
 
 class TestSecurity():
     def setup_class(self):

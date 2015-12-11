@@ -12,6 +12,7 @@ from py.test import raises
 from saml2 import root_logger
 
 from pathutils import dotname, full_path
+from saml2.sigver import security_context, CryptoBackendXMLSecurity
 
 sp1 = {
     "entityid": "urn:mace:umu.se:saml:roland:sp",
@@ -164,6 +165,33 @@ ECP_SP = {
         }
     },
     #"xmlsec_binary" : "/opt/local/bin/xmlsec1",
+}
+
+IDP_XMLSECURITY = {
+    "entityid": "urn:mace:umu.se:saml:roland:idp",
+    "name": "Rolands IdP",
+    "service": {
+        "idp": {
+            "endpoints": {
+                "single_sign_on_service": ["http://localhost:8088/"],
+                "single_logout_service": [
+                    ("http://localhost:8088/", BINDING_HTTP_REDIRECT)],
+            },
+            "policy": {
+                "default": {
+                    "attribute_restrictions": {
+                        "givenName": None,
+                        "surName": None,
+                        "eduPersonAffiliation": ["(member|staff)"],
+                        "mail": [".*@example.com"],
+                    }
+                },
+                "urn:mace:umu.se:saml:roland:sp": None
+            },
+        }
+    },
+    "key_file": "pkcs11:///usr/lunasa/lib/libCryptoki2_64.so:1/eduID dev SAML signing key?pin=123456",
+    "crypto_backend": "XMLSecurity"
 }
 
 
@@ -371,5 +399,14 @@ def test_assertion_consumer_service():
     assert acs[0][
         "location"] == 'https://www.zimride.com/Shibboleth.sso/SAML2/POST'
 
+
+def test_crypto_backend():
+    idpc = IdPConfig()
+    idpc.load(IDP_XMLSECURITY)
+
+    assert idpc.crypto_backend == 'XMLSecurity'
+    sec = security_context(idpc)
+    assert isinstance(sec.crypto, CryptoBackendXMLSecurity)
+
 if __name__ == "__main__":
-    test_2()
+    test_crypto_backend()

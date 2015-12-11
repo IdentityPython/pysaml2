@@ -389,6 +389,10 @@ class SSO(Service):
                 resp = BadRequest("Message signature verification failure")
                 return resp(self.environ, self.start_response)
 
+            if not self.req_info:
+                resp = BadRequest("Message parsing failed")
+                return resp(self.environ, self.start_response)
+
             _req = self.req_info.message
 
             if "SigAlg" in saml_msg and "Signature" in saml_msg:
@@ -397,7 +401,8 @@ class SSO(Service):
                 _certs = IDP.metadata.certs(issuer, "any", "signing")
                 verified_ok = False
                 for cert in _certs:
-                    if verify_redirect_signature(saml_msg, cert):
+                    if verify_redirect_signature(saml_msg, IDP.sec.sec_backend,
+                                                 cert):
                         verified_ok = True
                         break
                 if not verified_ok:

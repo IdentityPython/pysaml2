@@ -338,8 +338,10 @@ class Server(Entity):
                         status=None, authn=None, issuer=None, policy=None,
                         sign_assertion=False, sign_response=False,
                         best_effort=False, encrypt_assertion=False,
-                        encrypt_cert_advice=None, encrypt_cert_assertion=None, authn_statement=None,
-                        encrypt_assertion_self_contained=False, encrypted_advice_attributes=False, 
+                        encrypt_cert_advice=None, encrypt_cert_assertion=None,
+                        authn_statement=None,
+                        encrypt_assertion_self_contained=False,
+                        encrypted_advice_attributes=False,
                         pefim=False, sign_alg=None, digest_alg=None):
         """ Create a response. A layer of indirection.
 
@@ -417,8 +419,10 @@ class Server(Entity):
         to_sign = []
         if not encrypt_assertion:
             if sign_assertion:
-                assertion.signature = pre_signature_part(assertion.id, self.sec.my_cert, 1,
-                                                         sign_alg=sign_alg, digest_alg=digest_alg)
+                assertion.signature = pre_signature_part(assertion.id,
+                                                         self.sec.my_cert, 1,
+                                                         sign_alg=sign_alg,
+                                                         digest_alg=digest_alg)
                 to_sign.append((class_name(assertion), assertion.id))
 
         args["assertion"] = assertion
@@ -434,7 +438,8 @@ class Server(Entity):
                               encrypt_assertion_self_contained=encrypt_assertion_self_contained,
                               encrypted_advice_attributes=encrypted_advice_attributes,
                               sign_assertion=sign_assertion,
-                              pefim=pefim, sign_alg=sign_alg, digest_alg=digest_alg,
+                              pefim=pefim, sign_alg=sign_alg,
+                              digest_alg=digest_alg,
                               **args)
 
     # ------------------------------------------------------------------------
@@ -444,7 +449,8 @@ class Server(Entity):
                                   sp_entity_id, userid="", name_id=None,
                                   status=None, issuer=None,
                                   sign_assertion=False, sign_response=False,
-                                  attributes=None, sign_alg=None, digest_alg=None, **kwargs):
+                                  attributes=None, sign_alg=None,
+                                  digest_alg=None, **kwargs):
         """ Create an attribute assertion response.
 
         :param identity: A dictionary with attributes and values that are
@@ -494,16 +500,114 @@ class Server(Entity):
 
             if sign_assertion:
                 assertion.signature = pre_signature_part(assertion.id,
-                                                         self.sec.my_cert, 1, sign_alg=sign_alg, digest_alg=digest_alg)
+                                                         self.sec.my_cert, 1,
+                                                         sign_alg=sign_alg,
+                                                         digest_alg=digest_alg)
                 # Just the assertion or the response and the assertion ?
                 to_sign = [(class_name(assertion), assertion.id)]
 
             args["assertion"] = assertion
 
         return self._response(in_response_to, destination, status, issuer,
-                              sign_response, to_sign, sign_alg=sign_alg, digest_alg=digest_alg, **args)
+                              sign_response, to_sign, sign_alg=sign_alg,
+                              digest_alg=digest_alg, **args)
 
     # ------------------------------------------------------------------------
+
+    def gather_authn_response_args(self, sp_entity_id, name_id_policy, userid,
+                                   **kwargs):
+        param_default = {
+            'sign_assertion': False,
+            'sign_response': False,
+            'encrypt_assertion': False,
+            'encrypt_assertion_self_contained': True,
+            'encrypted_advice_attributes': False,
+            'encrypt_cert_advice': None,
+            'encrypt_cert_assertion': None
+        }
+
+        args = {}
+
+        try:
+            args["policy"] = kwargs["release_policy"]
+        except KeyError:
+            args["policy"] = self.config.getattr("policy", "idp")
+
+        try:
+            args['best_effort'] = kwargs["best_effort"]
+        except KeyError:
+            args['best_effort'] = False
+
+        for param in ['sign_assertion', 'sign_response', 'encrypt_assertion',
+                      'encrypt_assertion_self_contained',
+                      'encrypted_advice_attributes', 'encrypt_cert_advice',
+                      'encrypt_cert_assertion']:
+            try:
+                _val = kwargs[param]
+            except:
+                _val = None
+
+            if _val is None:
+                _val = self.config.getattr(param, "idp")
+
+            if _val is None:
+                args[param] = param_default[param]
+            else:
+                args[param] = _val
+
+        for arg, attr, eca, pefim in [
+            ('encrypted_advice_attributes', 'verify_encrypt_cert_advice',
+              'encrypt_cert_advice', kwargs["pefim"]),
+            ('encrypt_assertion', 'verify_encrypt_cert_assertion',
+             'encrypt_cert_assertion', False)]:
+
+            if args[arg] or pefim:
+                _enc_cert = self.config.getattr(attr, "idp")
+
+                if _enc_cert is not None:
+                    if kwargs[eca] is None:
+                        raise CertificateError(
+                            "No SPCertEncType certificate for encryption "
+                            "contained in authentication "
+                            "request.")
+                    if not _enc_cert(kwargs[eca]):
+                        raise CertificateError(
+                            "Invalid certificate for encryption!")
+
+        if 'name_id' not in kwargs or not kwargs['name_id']:
+            nid_formats = []
+            for _sp in self.metadata[sp_entity_id]["spsso_descriptor"]:
+                if "name_id_format" in _sp:
+                    nid_formats.extend([n["text"] for n in
+                                        _sp["name_id_format"]])
+            try:
+                snq = name_id_policy.sp_name_qualifier
+            except AttributeError:
+                snq = sp_entity_id
+
+            if not snq:
+                snq = sp_entity_id
+
+            kwa = {"sp_name_qualifier": snq}
+
+            try:
+                kwa["format"] = name_id_policy.format
+            except AttributeError:
+                pass
+
+            _nids = self.ident.find_nameid(userid, **kwa)
+            # either none or one
+            if _nids:
+                args['name_id'] = _nids[0]
+            else:
+                args['name_id'] = self.ident.construct_nameid(
+                    userid, args['policy'], sp_entity_id, name_id_policy)
+                logger.debug("construct_nameid: %s => %s", userid,
+                             args['name_id'])
+        else:
+            args['name_id'] = kwargs['name_id']
+
+        return args
 
     def create_authn_response(self, identity, in_response_to, destination,
                               sp_entity_id, name_id_policy=None, userid=None,
@@ -513,7 +617,8 @@ class Server(Entity):
                               encrypt_cert_assertion=None,
                               encrypt_assertion=None,
                               encrypt_assertion_self_contained=True,
-                              encrypted_advice_attributes=False, pefim=False, sign_alg=None, digest_alg=None,
+                              encrypted_advice_attributes=False, pefim=False,
+                              sign_alg=None, digest_alg=None,
                               **kwargs):
         """ Constructs an AuthenticationResponse
 
@@ -547,105 +652,22 @@ class Server(Entity):
         """
 
         try:
-            policy = kwargs["release_policy"]
-        except KeyError:
-            policy = self.config.getattr("policy", "idp")
-
-        try:
-            best_effort = kwargs["best_effort"]
-        except KeyError:
-            best_effort = False
-
-        if sign_assertion is None:
-            sign_assertion = self.config.getattr("sign_assertion", "idp")
-        if sign_assertion is None:
-            sign_assertion = False
-
-        if sign_response is None:
-            sign_response = self.config.getattr("sign_response", "idp")
-        if sign_response is None:
-            sign_response = False
-
-        if encrypt_assertion is None:
-            encrypt_assertion = self.config.getattr("encrypt_assertion", "idp")
-        if encrypt_assertion is None:
-            encrypt_assertion = False
-
-        if encrypt_assertion_self_contained is None:
-            encrypt_assertion_self_contained = self.config.getattr(
-                "encrypt_assertion_self_contained", "idp")
-        if encrypt_assertion_self_contained is None:
-            encrypt_assertion_self_contained = True
-
-        if encrypted_advice_attributes is None:
-            encrypted_advice_attributes = self.config.getattr(
-                "encrypted_advice_attributes", "idp")
-        if encrypted_advice_attributes is None:
-            encrypted_advice_attributes = False
-
-        if encrypted_advice_attributes or pefim:
-            verify_encrypt_cert = self.config.getattr(
-                "verify_encrypt_cert_advice", "idp")
-            if verify_encrypt_cert is not None:
-                if encrypt_cert_advice is None:
-                    raise CertificateError(
-                        "No SPCertEncType certificate for encryption "
-                        "contained in authentication "
-                        "request.")
-                if not verify_encrypt_cert(encrypt_cert_advice):
-                    raise CertificateError(
-                        "Invalid certificate for encryption!")
-
-        if encrypt_assertion:
-            verify_encrypt_cert = self.config.getattr(
-                "verify_encrypt_cert_assertion", "idp")
-            if verify_encrypt_cert is not None:
-                if encrypt_cert_assertion is None:
-                    raise CertificateError(
-                        "No SPCertEncType certificate for encryption "
-                        "contained in authentication "
-                        "request.")
-                if not verify_encrypt_cert(encrypt_cert_assertion):
-                    raise CertificateError(
-                        "Invalid certificate for encryption!")
-
-        if not name_id:
-            try:
-                nid_formats = []
-                for _sp in self.metadata[sp_entity_id]["spsso_descriptor"]:
-                    if "name_id_format" in _sp:
-                        nid_formats.extend([n["text"] for n in
-                                            _sp["name_id_format"]])
-                try:
-                    snq = name_id_policy.sp_name_qualifier
-                except AttributeError:
-                    snq = sp_entity_id
-
-                if not snq:
-                    snq = sp_entity_id
-
-                kwa = {"sp_name_qualifier": snq}
-
-                try:
-                    kwa["format"] = name_id_policy.format
-                except AttributeError:
-                    pass
-
-                _nids = self.ident.find_nameid(userid, **kwa)
-                # either none or one
-                if _nids:
-                    name_id = _nids[0]
-                else:
-                    name_id = self.ident.construct_nameid(userid, policy,
-                                                          sp_entity_id,
-                                                          name_id_policy)
-                    logger.debug("construct_nameid: %s => %s", userid, name_id)
-            except IOError as exc:
-                response = self.create_error_response(in_response_to,
-                                                      destination,
-                                                      sp_entity_id,
-                                                      exc, name_id)
-                return ("%s" % response).split("\n")
+            args = self.gather_authn_response_args(
+                sp_entity_id, name_id_policy=name_id_policy, userid=userid,
+                name_id=name_id, sign_response=sign_response,
+                sign_assertion=sign_assertion,
+                encrypt_cert_advice=encrypt_cert_advice,
+                encrypt_cert_assertion=encrypt_cert_assertion,
+                encrypt_assertion=encrypt_assertion,
+                encrypt_assertion_self_contained=encrypt_assertion_self_contained,
+                encrypted_advice_attributes=encrypted_advice_attributes,
+                pefim=pefim, **kwargs)
+        except IOError as exc:
+            response = self.create_error_response(in_response_to,
+                                                  destination,
+                                                  sp_entity_id,
+                                                  exc, name_id)
+            return ("%s" % response).split("\n")
 
         try:
             _authn = authn
@@ -654,44 +676,14 @@ class Server(Entity):
                     self.sec.cert_handler.generate_cert():
                 with self.lock:
                     self.sec.cert_handler.update_cert(True)
-                    return self._authn_response(in_response_to,
-                                                # in_response_to
-                                                destination,  # consumer_url
-                                                sp_entity_id,  # sp_entity_id
-                                                identity,
-                                                # identity as dictionary
-                                                name_id,
-                                                authn=_authn,
-                                                issuer=issuer,
-                                                policy=policy,
-                                                sign_assertion=sign_assertion,
-                                                sign_response=sign_response,
-                                                best_effort=best_effort,
-                                                encrypt_assertion=encrypt_assertion,
-                                                encrypt_assertion_self_contained=encrypt_assertion_self_contained,
-                                                encrypted_advice_attributes=encrypted_advice_attributes,
-                                                encrypt_cert_advice=encrypt_cert_advice,
-                                                encrypt_cert_assertion=encrypt_cert_assertion,
-                                                pefim=pefim,
-                                                sign_alg=sign_alg, digest_alg=digest_alg)
-            return self._authn_response(in_response_to,  # in_response_to
-                                        destination,  # consumer_url
-                                        sp_entity_id,  # sp_entity_id
-                                        identity,  # identity as dictionary
-                                        name_id,
-                                        authn=_authn,
-                                        issuer=issuer,
-                                        policy=policy,
-                                        sign_assertion=sign_assertion,
-                                        sign_response=sign_response,
-                                        best_effort=best_effort,
-                                        encrypt_assertion=encrypt_assertion,
-                                        encrypt_assertion_self_contained=encrypt_assertion_self_contained,
-                                        encrypted_advice_attributes=encrypted_advice_attributes,
-                                        encrypt_cert_advice=encrypt_cert_advice,
-                                        encrypt_cert_assertion=encrypt_cert_assertion,
-                                        pefim=pefim,
-                                        sign_alg=sign_alg, digest_alg=digest_alg)
+                    return self._authn_response(
+                        in_response_to, destination, sp_entity_id, identity,
+                        authn=_authn, issuer=issuer, pefim=pefim,
+                        sign_alg=sign_alg, digest_alg=digest_alg, **args)
+            return self._authn_response(
+                in_response_to, destination, sp_entity_id, identity,
+                authn=_authn, issuer=issuer, pefim=pefim, sign_alg=sign_alg,
+                digest_alg=digest_alg, **args)
 
         except MissingValue as exc:
             return self.create_error_response(in_response_to, destination,
@@ -710,8 +702,9 @@ class Server(Entity):
                                           sign_response, sign_assertion,
                                           authn_decl=authn_decl)
 
-    #noinspection PyUnusedLocal
-    def create_assertion_id_request_response(self, assertion_id, sign=False, sign_alg=None, 
+    # noinspection PyUnusedLocal
+    def create_assertion_id_request_response(self, assertion_id, sign=False,
+                                             sign_alg=None,
                                              digest_alg=None, **kwargs):
         """
 
@@ -728,7 +721,9 @@ class Server(Entity):
         if to_sign:
             if assertion.signature is None:
                 assertion.signature = pre_signature_part(assertion.id,
-                                                         self.sec.my_cert, 1, sign_alg=sign_alg, digest_alg=digest_alg)
+                                                         self.sec.my_cert, 1,
+                                                         sign_alg=sign_alg,
+                                                         digest_alg=digest_alg)
 
             return signed_instance_factory(assertion, self.sec, to_sign)
         else:
@@ -738,7 +733,8 @@ class Server(Entity):
     def create_name_id_mapping_response(self, name_id=None, encrypted_id=None,
                                         in_response_to=None,
                                         issuer=None, sign_response=False,
-                                        status=None, sign_alg=None, digest_alg=None, **kwargs):
+                                        status=None, sign_alg=None,
+                                        digest_alg=None, **kwargs):
         """
         protocol for mapping a principal's name identifier into a
         different name identifier for the same principal.
@@ -768,7 +764,8 @@ class Server(Entity):
     def create_authn_query_response(self, subject, session_index=None,
                                     requested_context=None, in_response_to=None,
                                     issuer=None, sign_response=False,
-                                    status=None, sign_alg=None, digest_alg=None, **kwargs):
+                                    status=None, sign_alg=None, digest_alg=None,
+                                    **kwargs):
         """
         A successful <Response> will contain one or more assertions containing
         authentication statements.
@@ -789,7 +786,8 @@ class Server(Entity):
             args = {}
 
         return self._response(in_response_to, "", status, issuer,
-                              sign_response, to_sign=[], sign_alg=sign_alg, digest_alg=digest_alg, **args)
+                              sign_response, to_sign=[], sign_alg=sign_alg,
+                              digest_alg=digest_alg, **args)
 
     # ---------
 
