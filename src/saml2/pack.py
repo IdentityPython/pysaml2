@@ -123,7 +123,6 @@ def http_redirect_message(message, location, relay_state="", typ="SAMLRequest",
     :param sigalg: Which algorithm the signature function will use to sign
         the message
     :param signer: A signature function that can be used to sign the message
-    :param key: Key to use for signing
     :return: A tuple containing header information and a HTML message.
     """
 
