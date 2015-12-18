@@ -124,7 +124,7 @@ def create_artifact(entity_id, message_handle, endpoint_index=0):
 
 class Entity(HTTPBase):
     def __init__(self, entity_type, config=None, config_file="",
-                 virtual_organization=""):
+                 virtual_organization="", msg_cb=None):
         self.entity_type = entity_type
         self.users = None
 
@@ -176,6 +176,8 @@ class Entity(HTTPBase):
             self.sourceid = self.metadata.construct_source_id()
         else:
             self.sourceid = {}
+
+        self.msg_cb = msg_cb
 
     def _issuer(self, entityid=None):
         """ Return an Issuer instance """
@@ -465,7 +467,6 @@ class Entity(HTTPBase):
                 kwargs[key] = val
 
         req = request_cls(**kwargs)
-        reqid = req.id
 
         if destination:
             req.destination = destination
@@ -478,6 +479,11 @@ class Entity(HTTPBase):
 
         if nsprefix:
             req.register_prefix(nsprefix)
+
+        if self.msg_cb:
+            req = self.msg_cb(req)
+
+        reqid = req.id
 
         if sign:
             return reqid, self.sign(req, sign_prepare=sign_prepare,
