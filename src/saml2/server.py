@@ -74,8 +74,8 @@ class Server(Entity):
     """ A class that does things that IdPs or AAs do """
 
     def __init__(self, config_file="", config=None, cache=None, stype="idp",
-                 symkey=""):
-        Entity.__init__(self, stype, config, config_file)
+                 symkey="", msg_cb=None):
+        Entity.__init__(self, stype, config, config_file, msg_cb=msg_cb)
         self.eptid = None
         self.init_config(stype)
         self.cache = cache
