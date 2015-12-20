@@ -59,6 +59,10 @@ class HTTPError(SAMLError):
     pass
 
 
+TIME_FORMAT = ["%d-%b-%Y %H:%M:%S %Z", "%d-%b-%y %H:%M:%S %Z",
+               "%d %b %Y %H:%M:%S %Z"]
+
+
 def _since_epoch(cdate):
     """
     :param cdate: date format 'Wed, 06-Jun-2012 01:34:34 GMT'
@@ -70,20 +74,20 @@ def _since_epoch(cdate):
             return utc_now()
 
     cdate = cdate[5:] # assume short weekday, i.e. do not support obsolete RFC 1036 date format
-    try:
-        t = time.strptime(cdate, "%d-%b-%Y %H:%M:%S %Z")   # e.g. 18-Apr-2014 12:30:51 GMT
-    except ValueError:
+    t = -1
+    for time_format in TIME_FORMAT :
         try:
-            t = time.strptime(cdate, "%d-%b-%y %H:%M:%S %Z")   # e.g. 18-Apr-14 12:30:51 GMT
+            t = time.strptime(cdate, time_format)   # e.g. 18-Apr-2014 12:30:51 GMT
         except ValueError:
-            try:
-                t = time.strptime(cdate, "%d %b %Y %H:%M:%S %Z")   # e.g. 18 Apr 2014 12:30:51 GMT
-            except ValueError:
-                raise (Exception, 'ValueError: Date "{0}" does not match any of '.format(cdate) + \
-                                  '"%d-%b-%Y %H:%M:%S %Z", ' + \
-                                  '"%d-%b-%y %H:%M:%S %Z", ' + \
-                                  '"%d %b %Y %H:%M:%S %Z".')
-    #return int(time.mktime(t))
+            pass
+        else:
+            break
+
+    if t == -1:
+        raise (Exception,
+               'ValueError: Date "{0}" does not match any of: {1}'.format(
+                   cdate,TIME_FORMAT))
+
     return calendar.timegm(t)
 
 
@@ -199,7 +203,7 @@ class HTTPBase(object):
                                          name=std_attr["name"])
                 except ValueError:
                     pass
-            elif morsel["expires"] and morsel["expires"] < utc_now():
+            elif std_attr["expires"] and std_attr["expires"] < utc_now():
                 try:
                     self.cookiejar.clear(domain=std_attr["domain"],
                                          path=std_attr["path"],
