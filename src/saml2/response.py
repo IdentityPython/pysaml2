@@ -743,19 +743,16 @@ class AuthnResponse(StatusResponse):
 
         subject.subject_confirmation = subjconf
 
-        # The subject must contain a name_id
-        try:
-            assert subject.name_id
+        # The subject may contain a name_id
+
+        if subject.name_id:
             self.name_id = subject.name_id
-        except AssertionError:
-            if subject.encrypted_id:
-                # decrypt encrypted ID
-                _name_id_str = self.sec.decrypt(
-                    subject.encrypted_id.encrypted_data.to_string())
-                _name_id = saml.name_id_from_string(_name_id_str)
-                self.name_id = _name_id
-            else:
-                raise VerificationError("Missing NameID")
+        elif subject.encrypted_id:
+            # decrypt encrypted ID
+            _name_id_str = self.sec.decrypt(
+                subject.encrypted_id.encrypted_data.to_string())
+            _name_id = saml.name_id_from_string(_name_id_str)
+            self.name_id = _name_id
 
         logger.info("Subject NameID: %s", self.name_id)
         return self.name_id
