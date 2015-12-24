@@ -1035,8 +1035,6 @@ def application(environ, start_response):
 # ----------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    from wsgiref.simple_server import make_server
-
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', dest='path', help='Path to configuration file.')
     parser.add_argument('-v', dest='valid',
