@@ -284,7 +284,7 @@ class AttributeConverter(object):
         if self._fro is None and self._to is not None:
             self._fro = dict(
                 [(value.lower(), key) for key, value in self._to.items()])
-        if self._to is None and self.fro is not None:
+        if self._to is None and self._fro is not None:
             self._to = dict(
                 [(value.lower(), key) for key, value in self._fro.items()])
 

@@ -5,13 +5,14 @@ from saml2 import attribute_converter, saml
 from attribute_statement_data import *
 
 from pathutils import full_path
-from saml2.attribute_converter import AttributeConverterNOOP
+from saml2.attribute_converter import AttributeConverterNOOP, AttributeConverter
 from saml2.attribute_converter import to_local
 from saml2.saml import attribute_from_string
 
 
-def _eq(l1,l2):
+def _eq(l1, l2):
     return set(l1) == set(l2)
+
 
 BASIC_NF = 'urn:oasis:names:tc:SAML:2.0:attrname-format:basic'
 URI_NF = 'urn:oasis:names:tc:SAML:2.0:attrname-format:uri'
@@ -30,11 +31,11 @@ class TestAC():
     def test_setup(self):
         print(self.acs)
         assert len(self.acs) == 3
-        assert _eq([a.name_format for a in self.acs],[BASIC_NF, URI_NF, SAML1] )
+        assert _eq([a.name_format for a in self.acs], [BASIC_NF, URI_NF, SAML1])
 
     def test_ava_fro_1(self):
         ats = saml.attribute_statement_from_string(STATEMENT1)
-        #print(ats)
+        # print(ats)
         ava = None
 
         for ac in self.acs:
@@ -56,7 +57,7 @@ class TestAC():
 
     def test_ava_fro_2(self):
         ats = saml.attribute_statement_from_string(STATEMENT2)
-        #print(ats)
+        # print(ats)
         ava = {}
         for ac in self.acs:
             ava.update(ac.fro(ats))
@@ -66,7 +67,7 @@ class TestAC():
                                 'uid', 'mail', 'givenName', 'sn'])
 
     def test_to_attrstat_1(self):
-        ava = { "givenName": "Roland", "sn": "Hedberg" }
+        ava = {"givenName": "Roland", "sn": "Hedberg"}
 
         statement = attribute_converter.from_local(self.acs, ava, BASIC_NF)
 
@@ -90,7 +91,7 @@ class TestAC():
             assert False
 
     def test_to_attrstat_2(self):
-        ava = { "givenName": "Roland", "surname": "Hedberg" }
+        ava = {"givenName": "Roland", "surname": "Hedberg"}
 
         statement = attribute_converter.from_local(self.acs, ava, URI_NF)
 
@@ -117,17 +118,17 @@ class TestAC():
 
         attr = [
             saml.Attribute(
-                friendly_name="surName",
-                name="urn:oid:2.5.4.4",
-                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"),
+                    friendly_name="surName",
+                    name="urn:oid:2.5.4.4",
+                    name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"),
             saml.Attribute(
-                friendly_name="efternamn",
-                name="urn:oid:2.5.4.42",
-                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"),
+                    friendly_name="efternamn",
+                    name="urn:oid:2.5.4.42",
+                    name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"),
             saml.Attribute(
-                friendly_name="titel",
-                name="urn:oid:2.5.4.12",
-                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri")]
+                    friendly_name="titel",
+                    name="urn:oid:2.5.4.12",
+                    name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:uri")]
 
         lan = [attribute_converter.to_local_name(self.acs, a) for a in attr]
 
@@ -153,8 +154,8 @@ class TestAC():
     def test_to_local_name_from_basic(self):
         attr = [
             saml.Attribute(
-                name="urn:mace:dir:attribute-def:eduPersonPrimaryOrgUnitDN",
-                name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:basic")
+                    name="urn:mace:dir:attribute-def:eduPersonPrimaryOrgUnitDN",
+                    name_format="urn:oasis:names:tc:SAML:2.0:attrname-format:basic")
         ]
 
         lan = [attribute_converter.to_local_name(self.acs, a) for a in attr]
@@ -162,7 +163,7 @@ class TestAC():
         assert _eq(lan, ['eduPersonPrimaryOrgUnitDN'])
 
     def test_to_and_for(self):
-        ava = { "givenName": "Roland", "surname": "Hedberg" }
+        ava = {"givenName": "Roland", "surname": "Hedberg"}
 
         basic_ac = [a for a in self.acs if a.name_format == BASIC_NF][0]
 
@@ -192,9 +193,26 @@ class TestAC():
                        'uid': ['demouser'], 'urn:example:com:foo': ['Thing'],
                        'user_id': ['bob']}
 
+    def test_adjust_with_only_from_defined(self):
+        attr_conv = AttributeConverter()
+        attr_conv._fro = {"id1": "name1", "id2": "name2"}
+        attr_conv.adjust()
+        assert attr_conv._to is not None
+
+    def test_adjust_with_only_to_defined(self):
+        attr_conv = AttributeConverter()
+        attr_conv._to = {"id1": "name1", "id2": "name2"}
+        attr_conv.adjust()
+        assert attr_conv._fro is not None
+
+    def test_adjust_with_no_mapping_defined(self):
+        attr_conv = AttributeConverter()
+        attr_conv.adjust()
+        assert attr_conv._fro is None and attr_conv._to is None
+
 
 def test_noop_attribute_conversion():
-    ava = {"urn:oid:2.5.4.4": "Roland", "urn:oid:2.5.4.42": "Hedberg" }
+    ava = {"urn:oid:2.5.4.4": "Roland", "urn:oid:2.5.4.42": "Hedberg"}
     aconv = AttributeConverterNOOP(URI_NF)
     res = aconv.to_(ava)
 
@@ -229,4 +247,4 @@ if __name__ == "__main__":
     t = TestAC()
     t.setup_class()
     t.test_to_attrstat_1()
-    #test_schac()
+    # test_schac()
