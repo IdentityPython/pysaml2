@@ -16,7 +16,6 @@ from saml2.s_utils import sid, MissingValue
 from saml2.s_utils import factory
 from saml2.s_utils import assertion_factory
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -78,55 +77,54 @@ def filter_on_attributes(ava, required=None, optional=None, acs=None,
         are missing fail or fail not depending on this parameter.
     :return: The modified attribute value assertion
     """
+
+    def _match_attr_name(attr, ava):
+        try:
+            friendly_name = attr["friendly_name"]
+        except KeyError:
+            friendly_name = get_local_name(acs, attr["name"], attr["name_format"])
+
+        _fn = _match(friendly_name, ava)
+        if not _fn:  # In the unlikely case that someone has provided us with URIs as attribute names
+            _fn = _match(attr["name"], ava)
+
+        return _fn
+
+    def _apply_attr_value_restrictions(attr, res, must=False):
+        try:
+            values = [av["text"] for av in attr["attribute_value"]]
+        except KeyError:
+            values = []
+
+        try:
+            res[_fn].extend(_filter_values(ava[_fn], values))
+        except KeyError:
+            res[_fn] = _filter_values(ava[_fn], values)
+
+        return _filter_values(ava[_fn], values, must)
+
     res = {}
 
     if required is None:
         required = []
 
-    nform = "friendly_name"
     for attr in required:
-        try:
-            _name = attr[nform]
-        except KeyError:
-            if nform == "friendly_name":
-                _name = get_local_name(acs, attr["name"],
-                                       attr["name_format"])
-            else:
-                continue
-
-        _fn = _match(_name, ava)
-        if not _fn:  # In the unlikely case that someone has provided us
-                     # with URIs as attribute names
-            _fn = _match(attr["name"], ava)
+        _fn = _match_attr_name(attr, ava)
 
         if _fn:
-            try:
-                values = [av["text"] for av in attr["attribute_value"]]
-            except KeyError:
-                values = []
-            res[_fn] = _filter_values(ava[_fn], values, True)
-            continue
+            _apply_attr_value_restrictions(attr, res, True)
         elif fail_on_unfulfilled_requirements:
             desc = "Required attribute missing: '%s' (%s)" % (attr["name"],
-                                                              _name)
+                                                              _fn)
             raise MissingValue(desc)
 
     if optional is None:
         optional = []
 
     for attr in optional:
-        for nform in ["friendly_name", "name"]:
-            if nform in attr:
-                _fn = _match(attr[nform], ava)
-                if _fn:
-                    try:
-                        values = [av["text"] for av in attr["attribute_value"]]
-                    except KeyError:
-                        values = []
-                    try:
-                        res[_fn].extend(_filter_values(ava[_fn], values))
-                    except KeyError:
-                        res[_fn] = _filter_values(ava[_fn], values)
+        _fn = _match_attr_name(attr, ava)
+        if _fn:
+            _apply_attr_value_restrictions(attr, res, False)
 
     return res
 
@@ -154,8 +152,8 @@ def filter_on_demands(ava, required=None, optional=None):
                 for val in vals:
                     if val not in ava[lava[attr]]:
                         raise MissingValue(
-                            "Required attribute value missing: %s,%s" % (attr,
-                                                                         val))
+                                "Required attribute value missing: %s,%s" % (attr,
+                                                                             val))
         else:
             raise MissingValue("Required attribute missing: %s" % (attr,))
 
@@ -334,7 +332,7 @@ class Policy(object):
                 ecs = []
                 for cat in items:
                     _mod = importlib.import_module(
-                        "saml2.entity_category.%s" % cat)
+                            "saml2.entity_category.%s" % cat)
                     _ec = {}
                     for key, items in _mod.RELEASE.items():
                         _ec[key] = [k.lower() for k in items]
@@ -488,8 +486,8 @@ class Policy(object):
         if required or optional:
             logger.debug("required: %s, optional: %s", required, optional)
             _ava = filter_on_attributes(
-                ava.copy(), required, optional, self.acs,
-                self.get_fail_on_missing_requested(sp_entity_id))
+                    ava.copy(), required, optional, self.acs,
+                    self.get_fail_on_missing_requested(sp_entity_id))
 
         _rest = self.get_entity_categories(sp_entity_id, mdstore)
         if _rest:
@@ -539,9 +537,9 @@ class Policy(object):
                        # How long might depend on who's getting it
                        not_on_or_after=self.not_on_or_after(sp_entity_id),
                        audience_restriction=[factory(
-                           saml.AudienceRestriction,
-                           audience=[factory(saml.Audience,
-                                             text=sp_entity_id)])])
+                               saml.AudienceRestriction,
+                               audience=[factory(saml.Audience,
+                                                 text=sp_entity_id)])])
 
     def get_sign(self, sp_entity_id):
         """
@@ -571,7 +569,7 @@ def _authn_context_class_ref(authn_class, authn_auth=None):
         return factory(saml.AuthnContext,
                        authn_context_class_ref=cntx_class,
                        authenticating_authority=factory(
-                           saml.AuthenticatingAuthority, text=authn_auth))
+                               saml.AuthenticatingAuthority, text=authn_auth))
     else:
         return factory(saml.AuthnContext,
                        authn_context_class_ref=cntx_class)
@@ -587,7 +585,7 @@ def _authn_context_decl(decl, authn_auth=None):
     return factory(saml.AuthnContext,
                    authn_context_decl=decl,
                    authenticating_authority=factory(
-                       saml.AuthenticatingAuthority, text=authn_auth))
+                           saml.AuthenticatingAuthority, text=authn_auth))
 
 
 def _authn_context_decl_ref(decl_ref, authn_auth=None):
@@ -600,7 +598,7 @@ def _authn_context_decl_ref(decl_ref, authn_auth=None):
     return factory(saml.AuthnContext,
                    authn_context_decl_ref=decl_ref,
                    authenticating_authority=factory(
-                       saml.AuthenticatingAuthority, text=authn_auth))
+                           saml.AuthenticatingAuthority, text=authn_auth))
 
 
 def authn_statement(authn_class=None, authn_auth=None,
@@ -626,29 +624,29 @@ def authn_statement(authn_class=None, authn_auth=None,
 
     if authn_class:
         res = factory(
-            saml.AuthnStatement,
-            authn_instant=_instant,
-            session_index=sid(),
-            authn_context=_authn_context_class_ref(
-                authn_class, authn_auth))
+                saml.AuthnStatement,
+                authn_instant=_instant,
+                session_index=sid(),
+                authn_context=_authn_context_class_ref(
+                        authn_class, authn_auth))
     elif authn_decl:
         res = factory(
-            saml.AuthnStatement,
-            authn_instant=_instant,
-            session_index=sid(),
-            authn_context=_authn_context_decl(authn_decl, authn_auth))
+                saml.AuthnStatement,
+                authn_instant=_instant,
+                session_index=sid(),
+                authn_context=_authn_context_decl(authn_decl, authn_auth))
     elif authn_decl_ref:
         res = factory(
-            saml.AuthnStatement,
-            authn_instant=_instant,
-            session_index=sid(),
-            authn_context=_authn_context_decl_ref(authn_decl_ref,
-                                                       authn_auth))
+                saml.AuthnStatement,
+                authn_instant=_instant,
+                session_index=sid(),
+                authn_context=_authn_context_decl_ref(authn_decl_ref,
+                                                      authn_auth))
     else:
         res = factory(
-            saml.AuthnStatement,
-            authn_instant=_instant,
-            session_index=sid())
+                saml.AuthnStatement,
+                authn_instant=_instant,
+                session_index=sid())
 
     if subject_locality:
         res.subject_locality = saml.SubjectLocality(text=subject_locality)
@@ -698,7 +696,7 @@ class Assertion(dict):
             _name_format = NAME_FORMAT_URI
 
         attr_statement = saml.AttributeStatement(attribute=from_local(
-            attrconvs, self, _name_format))
+                attrconvs, self, _name_format))
 
         if encrypt == "attributes":
             for attr in attr_statement.attribute:
@@ -725,33 +723,33 @@ class Assertion(dict):
 
         if not add_subject:
             _ass = assertion_factory(
-                issuer=issuer,
-                conditions=conds,
-                subject=None
+                    issuer=issuer,
+                    conditions=conds,
+                    subject=None
             )
         else:
             _ass = assertion_factory(
-                issuer=issuer,
-                conditions=conds,
-                subject=factory(
-                    saml.Subject,
-                    name_id=name_id,
-                    subject_confirmation=[factory(
-                        saml.SubjectConfirmation,
-                        method=saml.SCM_BEARER,
-                        subject_confirmation_data=factory(
-                            saml.SubjectConfirmationData,
-                            in_response_to=in_response_to,
-                            recipient=consumer_url,
-                            not_on_or_after=policy.not_on_or_after(sp_entity_id)))]
-                ),
+                    issuer=issuer,
+                    conditions=conds,
+                    subject=factory(
+                            saml.Subject,
+                            name_id=name_id,
+                            subject_confirmation=[factory(
+                                    saml.SubjectConfirmation,
+                                    method=saml.SCM_BEARER,
+                                    subject_confirmation_data=factory(
+                                            saml.SubjectConfirmationData,
+                                            in_response_to=in_response_to,
+                                            recipient=consumer_url,
+                                            not_on_or_after=policy.not_on_or_after(sp_entity_id)))]
+                    ),
             )
 
         if _authn_statement:
             _ass.authn_statement = [_authn_statement]
 
         if not attr_statement.empty():
-            _ass.attribute_statement=[attr_statement]
+            _ass.attribute_statement = [attr_statement]
 
         return _ass
 
