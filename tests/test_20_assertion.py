@@ -1,4 +1,6 @@
 # coding=utf-8
+import pytest
+
 from saml2.authn_context import pword
 from saml2.mdie import to_dict
 from saml2 import md, assertion
@@ -81,14 +83,32 @@ def test_filter_on_attributes_1():
 def test_filter_on_attributes_without_friendly_name():
     ava = {"eduPersonTargetedID": "test@example.com", "eduPersonAffiliation": "test",
            "extra": "foo"}
-    eptid = to_dict(Attribute(name="urn:oid:1.3.6.1.4.1.5923.1.1.1.10", name_format=NAME_FORMAT_URI), ONTS)
+    eptid = to_dict(
+            Attribute(name="urn:oid:1.3.6.1.4.1.5923.1.1.1.10", name_format=NAME_FORMAT_URI), ONTS)
     ep_affiliation = to_dict(
-        Attribute(name="urn:oid:1.3.6.1.4.1.5923.1.1.1.1", name_format=NAME_FORMAT_URI), ONTS)
+            Attribute(name="urn:oid:1.3.6.1.4.1.5923.1.1.1.1", name_format=NAME_FORMAT_URI), ONTS)
 
     restricted_ava = filter_on_attributes(ava, required=[eptid], optional=[ep_affiliation],
                                           acs=ac_factory())
     assert restricted_ava == {"eduPersonTargetedID": "test@example.com",
                               "eduPersonAffiliation": "test"}
+
+
+def test_filter_on_attributes_with_missing_required_attribute():
+    ava = {"extra": "foo"}
+    eptid = to_dict(Attribute(
+            friendly_name="eduPersonTargetedID", name="urn:oid:1.3.6.1.4.1.5923.1.1.1.10",
+            name_format=NAME_FORMAT_URI), ONTS)
+    with pytest.raises(MissingValue):
+        filter_on_attributes(ava, required=[eptid])
+
+
+def test_filter_on_attributes_with_missing_optional_attribute():
+    ava = {"extra": "foo"}
+    eptid = to_dict(Attribute(
+            friendly_name="eduPersonTargetedID", name="urn:oid:1.3.6.1.4.1.5923.1.1.1.10",
+            name_format=NAME_FORMAT_URI), ONTS)
+    assert filter_on_attributes(ava, optional=[eptid]) == {}
 
 
 # ----------------------------------------------------------------------

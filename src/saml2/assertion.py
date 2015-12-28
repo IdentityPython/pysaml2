@@ -78,12 +78,30 @@ def filter_on_attributes(ava, required=None, optional=None, acs=None,
     :return: The modified attribute value assertion
     """
 
-    def _attr_name(attr):
-        """Get the friendly name of an attribute name"""
+    def _match_attr_name(attr, ava):
         try:
-            return attr["friendly_name"]
+            friendly_name = attr["friendly_name"]
         except KeyError:
-            return get_local_name(acs, attr["name"], attr["name_format"])
+            friendly_name = get_local_name(acs, attr["name"], attr["name_format"])
+
+        _fn = _match(friendly_name, ava)
+        if not _fn:  # In the unlikely case that someone has provided us with URIs as attribute names
+            _fn = _match(attr["name"], ava)
+
+        return _fn
+
+    def _apply_attr_value_restrictions(attr, res, must=False):
+        try:
+            values = [av["text"] for av in attr["attribute_value"]]
+        except KeyError:
+            values = []
+
+        try:
+            res[_fn].extend(_filter_values(ava[_fn], values))
+        except KeyError:
+            res[_fn] = _filter_values(ava[_fn], values)
+
+        return _filter_values(ava[_fn], values, must)
 
     res = {}
 
@@ -91,39 +109,22 @@ def filter_on_attributes(ava, required=None, optional=None, acs=None,
         required = []
 
     for attr in required:
-        _name = _attr_name(attr)
-        _fn = _match(_name, ava)
-        if not _fn:  # In the unlikely case that someone has provided us
-            # with URIs as attribute names
-            _fn = _match(attr["name"], ava)
+        _fn = _match_attr_name(attr, ava)
 
         if _fn:
-            try:
-                values = [av["text"] for av in attr["attribute_value"]]
-            except KeyError:
-                values = []
-            res[_fn] = _filter_values(ava[_fn], values, True)
-            continue
+            _apply_attr_value_restrictions(attr, res, True)
         elif fail_on_unfulfilled_requirements:
             desc = "Required attribute missing: '%s' (%s)" % (attr["name"],
-                                                              _name)
+                                                              _fn)
             raise MissingValue(desc)
 
     if optional is None:
         optional = []
 
     for attr in optional:
-        _name = _attr_name(attr)
-        _fn = _match(_name, ava)
+        _fn = _match_attr_name(attr, ava)
         if _fn:
-            try:
-                values = [av["text"] for av in attr["attribute_value"]]
-            except KeyError:
-                values = []
-            try:
-                res[_fn].extend(_filter_values(ava[_fn], values))
-            except KeyError:
-                res[_fn] = _filter_values(ava[_fn], values)
+            _apply_attr_value_restrictions(attr, res, False)
 
     return res
 
