@@ -1539,27 +1539,11 @@ class SecurityContext(object):
         for _, pem_file in certs:
             try:
                 last_pem_file = pem_file
-                if origdoc is not None:
-                    try:
-                        if self.verify_signature(origdoc, pem_file,
-                                                 node_name=node_name,
-                                                 node_id=item.id,
-                                                 id_attr=id_attr):
-                            verified = True
-                            break
-                    except Exception:
-                        if self.verify_signature(decoded_xml, pem_file,
-                                                 node_name=node_name,
-                                                 node_id=item.id,
-                                                 id_attr=id_attr):
-                            verified = True
-                            break
-                else:
-                    if self.verify_signature(decoded_xml, pem_file,
-                                             node_name=node_name,
-                                             node_id=item.id, id_attr=id_attr):
-                        verified = True
-                        break
+                if self.verify_signature(decoded_xml, pem_file,
+                                         node_name=node_name,
+                                         node_id=item.id, id_attr=id_attr):
+                    verified = True
+                    break
             except XmlsecError as exc:
                 logger.error("check_sig: %s", exc)
                 pass
