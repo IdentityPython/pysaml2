@@ -2,11 +2,13 @@
 from __future__ import print_function
 
 import argparse
+import cgi
 import importlib
 import logging
 import os
 import re
 import sys
+import xml.dom.minidom
 
 import six
 from six.moves.http_cookies import SimpleCookie
@@ -46,7 +48,7 @@ from saml2.samlp import Extensions
 logger = logging.getLogger("")
 hdlr = logging.FileHandler('spx.log')
 base_formatter = logging.Formatter(
-    "%(asctime)s %(name)s:%(levelname)s %(message)s")
+        "%(asctime)s %(name)s:%(levelname)s %(message)s")
 
 hdlr.setFormatter(base_formatter)
 logger.addHandler(hdlr)
@@ -329,9 +331,15 @@ class Service(object):
 
 
 class User(object):
-    def __init__(self, name_id, data):
+    def __init__(self, name_id, data, saml_response):
         self.name_id = name_id
         self.data = data
+        self.response = saml_response
+
+    @property
+    def authn_statement(self):
+        xml_doc = xml.dom.minidom.parseString(str(self.response.assertion.authn_statement[0]))
+        return xml_doc.toprettyxml()
 
 
 class ACS(Service):
@@ -356,7 +364,7 @@ class ACS(Service):
 
         try:
             self.response = self.sp.parse_authn_request_response(
-                response, binding, self.outstanding_queries, self.cache.outstanding_certs)
+                    response, binding, self.outstanding_queries, self.cache.outstanding_certs)
         except UnknownPrincipal as excp:
             logger.error("UnknownPrincipal: %s", excp)
             resp = ServiceError("UnknownPrincipal: %s" % (excp,))
@@ -374,7 +382,7 @@ class ACS(Service):
 
         logger.info("AVA: %s", self.response.ava)
 
-        user = User(self.response.name_id, self.response.ava)
+        user = User(self.response.name_id, self.response.ava, self.response)
         cookie = self.cache.set_cookie(user)
 
         resp = Redirect("/", headers=[
@@ -385,7 +393,7 @@ class ACS(Service):
     def verify_attributes(self, ava):
         logger.info("SP: %s", self.sp.config.entityid)
         rest = POLICY.get_entity_categories(
-            self.sp.config.entityid, self.sp.metadata)
+                self.sp.config.entityid, self.sp.metadata)
 
         akeys = [k.lower() for k in ava.keys()]
 
@@ -470,7 +478,7 @@ class SSO(object):
                     _rstate = rndstr()
                     self.cache.relay_state[_rstate] = geturl(self.environ)
                     _entityid = _cli.config.ecp_endpoint(
-                        self.environ["REMOTE_ADDR"])
+                            self.environ["REMOTE_ADDR"])
 
                     if not _entityid:
                         return -1, ServiceError("No IdP to talk to")
@@ -522,7 +530,7 @@ class SSO(object):
             elif self.discosrv:
                 if query:
                     idp_entity_id = _cli.parse_discovery_service_response(
-                        query=self.environ.get("QUERY_STRING"))
+                            query=self.environ.get("QUERY_STRING"))
                 if not idp_entity_id:
                     sid_ = sid()
                     self.cache.outstanding_queries[sid_] = came_from
@@ -532,7 +540,7 @@ class SSO(object):
                                               "sp")["discovery_response"][0][0]
                     ret += "?sid=%s" % sid_
                     loc = _cli.create_discovery_service_request(
-                        self.discosrv, eid, **{"return": ret})
+                            self.discosrv, eid, **{"return": ret})
                     return -1, SeeOther(loc)
             elif len(idps) == 1:
                 # idps is a dictionary
@@ -549,8 +557,8 @@ class SSO(object):
         try:
             # Picks a binding to use for sending the Request to the IDP
             _binding, destination = _cli.pick_binding(
-                "single_sign_on_service", self.bindings, "idpsso",
-                entity_id=entity_id)
+                    "single_sign_on_service", self.bindings, "idpsso",
+                    entity_id=entity_id)
             logger.debug("binding: %s, destination: %s", _binding,
                          destination)
             # Binding here is the response binding that is which binding the
@@ -569,7 +577,7 @@ class SSO(object):
                     "key": req_key_str
                 }
                 spcertenc = SPCertEnc(x509_data=ds.X509Data(
-                    x509_certificate=ds.X509Certificate(text=cert_str)))
+                        x509_certificate=ds.X509Certificate(text=cert_str)))
                 extensions = Extensions(extension_elements=[
                     element_to_extension_element(spcertenc)])
 
@@ -590,7 +598,7 @@ class SSO(object):
         except Exception as exc:
             logger.exception(exc)
             resp = ServiceError(
-                "Failed to construct the AuthnRequest: %s" % exc)
+                    "Failed to construct the AuthnRequest: %s" % exc)
             return resp
 
         # remember the request
@@ -668,7 +676,9 @@ def main(environ, start_response, sp):
         return sso.do()
 
     body = dict_to_table(user.data)
-    body += '<br><a href="/logout">logout</a>'
+    authn_stmt = cgi.escape(user.authn_statement)
+    body.append('<br><pre>' + authn_stmt + "</pre>")
+    body.append('<br><a href="/logout">logout</a>')
 
     resp = Response(body)
     return resp(environ, start_response)
