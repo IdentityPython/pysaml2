@@ -95,7 +95,7 @@ The ID of the entity and the URL on which it is listening.::
 
         "idp_url" : "https://example.com/saml2/idp/SSOService.php",
 
-Since this is a very simple SP it only need to know about one IdP, therefor there
+Since this is a very simple SP it only needs to know about one IdP, therefore there
 is really no need for a metadata file or a WAYF-function or anything like that.
 It needs the URL of the IdP and that's all.::
 
@@ -139,7 +139,7 @@ building metadata. ::
 Another piece of information that only matters if you build and distribute
 metadata.
 
-So, now to that part. In order to allow the IdP to talk to you you may have
+So, now to that part. In order to allow the IdP to talk to you, you may have
 to provide the one running the IdP with a metadata file.
 If you have a SP configuration file similar to the one I've walked you
 through here, but with your information, you can make the metadata file
@@ -153,7 +153,7 @@ Change directory to where you have the configuration file and do ::
 
 who.ini
 -------
-The file named who.ini is the repoze.who configuration file
+The file named ``who.ini`` is the ``sp-repoze`` folder
 
 I'm not going through the INI file format here. You should read
 `Middleware Responsibilities <http://docs.repoze.org/who/2.0/middleware.html>`_ 
@@ -203,7 +203,7 @@ Open a Terminal::
 
 Note that you should not have the .py extension on the sp_conf.py while running the program
 
-Now you should be able to open a web browser go to to service provider (if you didn't change sp_conf.py it should be: http://localhost:8087)
+Now you should be able to open a web browser and go to to service provider (if you didn't change sp_conf.py it should be: http://localhost:8087)
 
 You should be redirected to the IDP and presented with a login screen.
 
