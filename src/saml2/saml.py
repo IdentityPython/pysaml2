@@ -441,7 +441,7 @@ class SubjectConfirmationDataType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_attributes['NotBefore'] = ('not_before', 'AsTime', False)
+    c_attributes['NotBefore'] = ('not_before', 'dateTime', False)
     c_attributes['NotOnOrAfter'] = ('not_on_or_after', 'dateTime', False)
     c_attributes['Recipient'] = ('recipient', 'anyURI', False)
     c_attributes['InResponseTo'] = ('in_response_to', 'NCName', False)
