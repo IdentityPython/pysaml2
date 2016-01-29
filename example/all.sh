@@ -5,6 +5,9 @@ startme() {
     if [ ! -f sp_conf.py ] ; then
         cp sp_conf.py.example sp_conf.py
     fi
+    if [ ! -f service_conf.py ] ; then
+        cp service_conf.py.example service_conf.py
+    fi
     ../../tools/make_metadata.py sp_conf > sp.xml
 
     cd ../idp2
