@@ -851,6 +851,13 @@ class TestSubjectConfirmation:
         assert sc.subject_confirmation_data.in_response_to == "responseID"
         assert sc.subject_confirmation_data.address == "127.0.0.1"
 
+    def testVerify(self):
+        """Test SubjectConfirmation verify"""
+
+        sc = saml.subject_confirmation_from_string(
+            saml2_data.TEST_SUBJECT_CONFIRMATION)
+        assert sc.verify()
+
 
 class TestSubject:
     def setup_class(self):
