@@ -30,10 +30,11 @@ Setup
 
 **sp-wsgi:**
 
-* Go to the folder:
-[your path]/pysaml2/example/sp-wsgi
+* Go to the folder and copy the example files::
 
-* Take the file named sp_conf.py.example and rename it sp_conf.py
+    cd [your path]/pysaml2/example/sp-wsgi
+    cp service_conf.py.example service_conf.py
+    cp sp_conf.py.example sp_conf.py
 
 sp_conf.py is configured to run on localhost on port 8087. If you want to you could make the necessary changes before proceeding to the next step.
 
