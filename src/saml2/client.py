@@ -31,11 +31,6 @@ from saml2.client_base import LogoutError
 from saml2.client_base import NoServiceDefined
 from saml2.mdstore import destinations
 
-try:
-    from urllib.parse import parse_qs
-except ImportError:
-    from urlparse import parse_qs
-
 import logging
 
 logger = logging.getLogger(__name__)
@@ -68,17 +63,17 @@ class Saml2Client(Base):
 
         reqid, negotiated_binding, info = \
             self.prepare_for_negotiated_authenticate(
-            entityid=entityid,
-            relay_state=relay_state,
-            binding=binding,
-            vorg=vorg,
-            nameid_format=nameid_format,
-            scoping=scoping,
-            consent=consent,
-            extensions=extensions,
-            sign=sign,
-            response_binding=response_binding,
-            **kwargs)
+                entityid=entityid,
+                relay_state=relay_state,
+                binding=binding,
+                vorg=vorg,
+                nameid_format=nameid_format,
+                scoping=scoping,
+                consent=consent,
+                extensions=extensions,
+                sign=sign,
+                response_binding=response_binding,
+                **kwargs)
 
         assert negotiated_binding == binding
 
@@ -126,12 +121,12 @@ class Saml2Client(Base):
             logger.info("AuthNReq: %s", _req_str)
 
             try:
-                sigalg = kwargs["sigalg"]
+                args = {'sigalg': kwargs["sigalg"]}
             except KeyError:
-                sigalg = ""
+                args = {}
 
             http_info = self.apply_binding(binding, _req_str, destination,
-                                           relay_state, sigalg=sigalg)
+                                           relay_state, **args)
 
             return reqid, binding, http_info
         else:
@@ -235,7 +230,7 @@ class Saml2Client(Base):
                     if binding == BINDING_HTTP_REDIRECT:
                         sigalg = kwargs.get(
                             "sigalg", ds.DefaultSignature().get_sign_alg())
-                        #key = kwargs.get("key", self.signkey)
+                        # key = kwargs.get("key", self.signkey)
                         srequest = str(request)
                     else:
                         srequest = self.sign(request, sign_alg=sign_alg,
