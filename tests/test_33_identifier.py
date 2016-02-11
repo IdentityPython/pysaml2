@@ -84,6 +84,17 @@ class TestIdentifier():
 
         assert id == "foobar"
 
+    def test_persistent_2(self):
+        userid = 'foobar'
+        nameid1 = self.id.persistent_nameid(userid, sp_name_qualifier="sp1",
+                                            name_qualifier="name0")
+
+        nameid2 = self.id.persistent_nameid(userid, sp_name_qualifier="sp1",
+                                            name_qualifier="name0")
+
+        # persistent NameIDs should be _persistent_ :-)
+        assert nameid1 == nameid2
+
     def test_transient_1(self):
         policy = Policy({
             "default": {
@@ -124,8 +135,8 @@ class TestIdentifier():
                                      'name_qualifier'])
         assert nameid.sp_name_qualifier == 'http://vo.example.org/biomed'
         assert nameid.format == NAMEID_FORMAT_PERSISTENT
-        # we want to keep the user identifier in the nameid node
-        assert nameid.text == "foobar"
+        # we want to *NOT* keep the user identifier in the nameid node
+        assert nameid.text != "foobar"
 
     def test_vo_2(self):
         policy = Policy({
