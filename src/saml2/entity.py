@@ -394,7 +394,7 @@ class Entity(HTTPBase):
                 else:
                     xmlstr = txt
             except Exception:
-                raise UnravelError()
+                raise UnravelError("Unravelling binding '%s' failed" % binding)
 
         return xmlstr
 
