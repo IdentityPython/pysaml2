@@ -480,7 +480,7 @@ class Server(Entity):
                 pass
 
         to_sign = []
-        args = {}
+
         if identity:
             _issuer = self._issuer(issuer)
             ast = Assertion(identity)
@@ -505,12 +505,16 @@ class Server(Entity):
                                                          digest_alg=digest_alg)
                 # Just the assertion or the response and the assertion ?
                 to_sign = [(class_name(assertion), assertion.id)]
+                kwargs['sign_assertion'] = True
 
-            args["assertion"] = assertion
+            kwargs["assertion"] = assertion
+
+        if sp_entity_id:
+            kwargs['sp_entity_id'] = sp_entity_id
 
         return self._response(in_response_to, destination, status, issuer,
                               sign_response, to_sign, sign_alg=sign_alg,
-                              digest_alg=digest_alg, **args)
+                              digest_alg=digest_alg, **kwargs)
 
     # ------------------------------------------------------------------------
 

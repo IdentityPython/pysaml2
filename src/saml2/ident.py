@@ -29,8 +29,8 @@ class Unknown(SAMLError):
 def code(item):
     """
     Turn a NameID class instance into a quoted string of comma separated
-    attribute,value pairs. The attribute name is replaced with a digits.
-    Depends on knowledge on the specific order of the attributes for that
+    attribute,value pairs. The attribute names are replaced with digits.
+    Depends on knowledge on the specific order of the attributes for the
     class that is used.
 
     :param item: The class instance

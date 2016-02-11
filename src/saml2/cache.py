@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import shelve
+import six
 from saml2.ident import code, decode
 from saml2 import time_util, SAMLError
 import logging
@@ -98,6 +99,8 @@ class Cache(object):
         if check_not_on_or_after and time_util.after(timestamp):
             raise ToOld("past %s" % str(timestamp))
 
+        if 'name_id' in info and isinstance(info['name_id'], six.string_types):
+            info['name_id'] = decode(info['name_id'])
         return info or None
 
     def set(self, name_id, entity_id, info, not_on_or_after=0):

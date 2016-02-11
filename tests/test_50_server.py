@@ -1204,7 +1204,7 @@ class TestServer2():
         print(aa_policy.__dict__)
         response = self.server.create_attribute_response(
             IDENTITY.copy(), "aaa", "http://example.com/sp/",
-            "urn:mace:example.com:sp:1")
+            "http://www.example.com/roland/sp")
 
         assert response is not None
         assert response.destination == "http://example.com/sp/"

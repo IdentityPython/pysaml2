@@ -1,6 +1,7 @@
 import logging
-from saml2.cache import Cache
 import six
+from saml2.cache import Cache
+from saml2.ident import code
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +21,8 @@ class Population(object):
         this function will overwrite that information"""
 
         name_id = session_info["name_id"]
+        # make friendly to (JSON) serialization
+        session_info['name_id'] = code(name_id)
         issuer = session_info["issuer"]
         del session_info["issuer"]
         self.cache.set(name_id, issuer, session_info,

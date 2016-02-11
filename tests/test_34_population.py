@@ -10,8 +10,9 @@ IDP_OTHER = "urn:mace:example.com:saml:other:idp"
 
 nid = NameID(name_qualifier="foo", format=NAMEID_FORMAT_TRANSIENT, 
              text="123456")
+
 nida = NameID(name_qualifier="foo", format=NAMEID_FORMAT_TRANSIENT,
-             text="abcdef")
+              text="abcdef")
 
 cnid = code(nid)
 cnida = code(nida)
@@ -57,7 +58,7 @@ class TestPopulationMemoryBased():
         info = self.population.get_info_from(nid, IDP_ONE)
         assert sorted(list(info.keys())) == sorted(["not_on_or_after",
                                                     "name_id", "ava"])
-        assert info["name_id"] == nid 
+        assert info["name_id"] == nid
         assert info["ava"] == {'mail': 'anders.andersson@example.com', 
                                 'givenName': 'Anders', 
                                 'surName': 'Andersson'}
