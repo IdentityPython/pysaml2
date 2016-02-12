@@ -17,7 +17,7 @@
     provides methods and functions to convert SAML classes to and from strings.
 """
 
-__version__ = "4.0.3rc1"
+__version__ = "4.0.3"
 
 import logging
 import six
