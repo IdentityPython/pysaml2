@@ -797,6 +797,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         com_list = [self.xmlsec, "--version"]
         pof = Popen(com_list, stderr=PIPE, stdout=PIPE)
         content = pof.stdout.read().decode('ascii')
+        pof.wait()
         try:
             return content.split(" ")[1]
         except IndexError:
@@ -990,6 +991,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
 
         p_out = pof.stdout.read().decode('utf-8')
         p_err = pof.stderr.read().decode('utf-8')
+        pof.wait()
 
         if pof.returncode is not None and pof.returncode < 0:
             logger.error(LOG_LINE, p_out, p_err)

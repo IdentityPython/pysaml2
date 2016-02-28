@@ -39,6 +39,7 @@ def get_algorithm_support(xmlsec):
 
     p_out = pof.stdout.read().decode('utf-8')
     p_err = pof.stderr.read().decode('utf-8')
+    pof.wait()
 
     if not p_err:
         p = p_out.split('\n')
