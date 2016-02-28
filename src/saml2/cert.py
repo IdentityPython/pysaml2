@@ -8,7 +8,7 @@ import six
 from OpenSSL import crypto
 from os.path import join
 from os import remove
-from Crypto.Util import asn1
+from Cryptodome.Util import asn1
 
 class WrongInput(Exception):
     pass

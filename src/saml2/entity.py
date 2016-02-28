@@ -4,7 +4,7 @@ from binascii import hexlify
 import copy
 import logging
 from hashlib import sha1
-from Crypto.PublicKey import RSA
+from Cryptodome.PublicKey import RSA
 import requests
 import six
 from saml2.metadata import ENDPOINTS

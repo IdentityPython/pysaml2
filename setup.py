@@ -13,7 +13,7 @@ install_requires = [
     'paste',
     'zope.interface',
     'repoze.who',
-    'pycryptodome',  # 'Crypto'
+    'pycryptodomex',
     'pytz',
     'pyOpenSSL',
     'python-dateutil',
