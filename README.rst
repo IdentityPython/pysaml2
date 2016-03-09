@@ -3,7 +3,7 @@ PySAML2 - SAML2 in Python
 *************************
 
 :Author: Roland Hedberg
-:Version: 3.0.0
+:Version: 4.0.4
 
 PySAML2 is a pure python implementation of SAML2. It contains all
 necessary pieces for building a SAML2 service provider or an identity provider.
