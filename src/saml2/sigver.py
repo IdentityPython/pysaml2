@@ -12,11 +12,12 @@ import hashlib
 import logging
 import os
 import ssl
+import six
 
 from time import mktime
 from binascii import hexlify
+
 from future.backports.urllib.parse import urlencode
-import six
 
 # from Crypto.PublicKey.RSA import importKey
 # from Crypto.Signature import PKCS1_v1_5
