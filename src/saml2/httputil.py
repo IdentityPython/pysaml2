@@ -5,14 +5,16 @@ import time
 import cgi
 import six
 
-from six.moves.urllib.parse import quote, parse_qs
-from six.moves.http_cookies import SimpleCookie
+from future.backports.http.cookies import SimpleCookie
+from future.backports.urllib.parse import quote
+from future.backports.urllib.parse import parse_qs
 
-from saml2 import BINDING_HTTP_ARTIFACT, SAMLError
+from saml2 import BINDING_HTTP_ARTIFACT
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_URI
 from saml2 import BINDING_SOAP
+from saml2 import SAMLError
 from saml2 import time_util
 
 __author__ = 'rohe0002'
@@ -240,10 +242,7 @@ def unpack_redirect(environ):
 
 
 def unpack_post(environ):
-    try:
-        return dict([(k, v[0]) for k, v in parse_qs(get_post(environ))])
-    except Exception:
-        return None
+    return dict([(k, v[0]) for k, v in parse_qs(get_post(environ))])
 
 
 def unpack_soap(environ):

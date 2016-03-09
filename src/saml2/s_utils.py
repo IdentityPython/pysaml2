@@ -169,6 +169,7 @@ def rndstr(size=16, alphabet=""):
         alphabet = string.ascii_letters[0:52] + string.digits
     return type(alphabet)().join(rng.choice(alphabet) for _ in range(size))
 
+
 def rndbytes(size=16, alphabet=""):
     """
     Returns rndstr always as a binary type

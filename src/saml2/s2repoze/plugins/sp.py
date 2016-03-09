@@ -5,7 +5,6 @@ and SAML2 attribute aggregations as metadata collector in your
 WSGI application.
 
 """
-import cgi
 import logging
 import sys
 import platform
@@ -13,9 +12,11 @@ import shelve
 import traceback
 import saml2
 import six
-from six.moves.urllib.parse import parse_qs, urlparse
 from saml2.samlp import Extensions
 from saml2 import xmldsig as ds
+
+from future.backports.urllib.parse import parse_qs
+from future.backports.urllib.parse import urlparse
 
 from six import StringIO
 

@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 import os
+from base64 import b64encode
+from base64 import b64decode
+
 from Cryptodome import Random
 from Cryptodome.Cipher import AES
-from base64 import b64encode, b64decode
 
 __author__ = 'rolandh'
 
