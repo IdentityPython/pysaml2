@@ -20,15 +20,11 @@ class Population(object):
         """If there already are information from this source in the cache
         this function will overwrite that information"""
 
+        session_info = dict(session_info)
         name_id = session_info["name_id"]
-        # make friendly to (JSON) serialization
-        #session_info['name_id'] = code(name_id)
-        name_id_coded = code(name_id)
-        issuer = session_info["issuer"]
-        del session_info["issuer"]
+        issuer = session_info.pop("issuer")
         self.cache.set(name_id, issuer, session_info,
                        session_info["not_on_or_after"])
-        session_info['name_id'] = name_id_coded
         return name_id
 
     def stale_sources_for_person(self, name_id, sources=None):
