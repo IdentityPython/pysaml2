@@ -39,7 +39,7 @@ COMMON_ARGS = [
     "logger",
     "only_use_keys_in_metadata",
     "disable_ssl_certificate_validation",
-    "referred_binding",
+    "preferred_binding",
     "session_storage",
     "entity_category",
     "xmlsec_path",
