@@ -1385,7 +1385,7 @@ class SecurityContext(object):
 
         if not template:
             this_dir, this_filename = os.path.split(__file__)
-            self.template = os.path.join(this_dir, "xml", "template.xml")
+            self.template = os.path.join(this_dir, "xml_template", "template.xml")
         else:
             self.template = template
 
