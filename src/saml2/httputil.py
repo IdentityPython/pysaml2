@@ -64,8 +64,20 @@ class Response(object):
         else:
             if isinstance(message, six.string_types):
                 return [message]
+            elif isinstance(message, six.binary_type):
+                return [message]
             else:
                 return message
+
+    def add_header(self, ava):
+        """
+        Does *NOT* replace a header of the same type, just adds a new
+        :param ava: (type, value) tuple
+        """
+        self.headers.append(ava)
+
+    def reply(self, **kwargs):
+        return self.response(self.message, **kwargs)
 
 
 class Created(Response):
