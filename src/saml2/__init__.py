@@ -25,6 +25,7 @@ from saml2.validate import valid_instance
 
 try:
     from xml.etree import cElementTree as ElementTree
+
     if ElementTree.VERSION < '1.3.0':
         # cElementTree has no support for register_namespace
         # neither _namespace_map, thus we sacrify performance
@@ -40,17 +41,17 @@ root_logger = logging.getLogger(__name__)
 root_logger.level = logging.NOTSET
 
 NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:assertion'
-#TEMPLATE = '{urn:oasis:names:tc:SAML:2.0:assertion}%s'
-#XSI_NAMESPACE = 'http://www.w3.org/2001/XMLSchema-instance'
+# TEMPLATE = '{urn:oasis:names:tc:SAML:2.0:assertion}%s'
+# XSI_NAMESPACE = 'http://www.w3.org/2001/XMLSchema-instance'
 
 NAMEID_FORMAT_EMAILADDRESS = (
     "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress")
 
 # These are defined in saml2.saml
-#NAME_FORMAT_UNSPECIFIED = (
+# NAME_FORMAT_UNSPECIFIED = (
 #    "urn:oasis:names:tc:SAML:2.0:attrname-format:unspecified")
-#NAME_FORMAT_URI = "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
-#NAME_FORMAT_BASIC = "urn:oasis:names:tc:SAML:2.0:attrname-format:basic"
+# NAME_FORMAT_URI = "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
+# NAME_FORMAT_BASIC = "urn:oasis:names:tc:SAML:2.0:attrname-format:basic"
 
 DECISION_TYPE_PERMIT = "Permit"
 DECISION_TYPE_DENY = "Deny"
@@ -290,7 +291,6 @@ def _extension_element_from_element_tree(element_tree):
 
 
 class ExtensionContainer(object):
-
     c_tag = ""
     c_namespace = ""
 
@@ -300,6 +300,7 @@ class ExtensionContainer(object):
         self.text = text
         self.extension_elements = extension_elements or []
         self.extension_attributes = extension_attributes or {}
+        self.encrypted_assertion = None
 
     # Three methods to create an object from an ElementTree
     def harvest_element_tree(self, tree):
@@ -403,7 +404,7 @@ def make_vals(val, klass, klass_inst=None, prop=None, part=False,
     """
     cinst = None
 
-    #print("make_vals(%s, %s)" % (val, klass))
+    # print("make_vals(%s, %s)" % (val, klass))
 
     if isinstance(val, dict):
         cinst = klass().loadd(val, base64encode=base64encode)
@@ -571,8 +572,8 @@ class SamlBase(ExtensionContainer):
 
     def tag_get_uri(self, elem):
         if elem.tag[0] == "{":
-                uri, tag = elem.tag[1:].split("}")
-                return uri
+            uri, tag = elem.tag[1:].split("}")
+            return uri
         return None
 
     def get_ns_map(self, elements, uri_set):
@@ -592,12 +593,17 @@ class SamlBase(ExtensionContainer):
             prefix_map["encas%d" % len(prefix_map)] = uri
         return prefix_map
 
-    def get_xml_string_with_self_contained_assertion_within_advice_encrypted_assertion(self, assertion_tag, advice_tag):
-        for tmp_encrypted_assertion in self.assertion.advice.encrypted_assertion:
+    def get_xml_string_with_self_contained_assertion_within_advice_encrypted_assertion(
+            self, assertion_tag, advice_tag):
+        for tmp_encrypted_assertion in \
+                self.assertion.advice.encrypted_assertion:
             if tmp_encrypted_assertion.encrypted_data is None:
-                prefix_map = self.get_prefix_map([tmp_encrypted_assertion._to_element_tree().find(assertion_tag)])
+                prefix_map = self.get_prefix_map([
+                                                     tmp_encrypted_assertion._to_element_tree().find(
+                                                         assertion_tag)])
                 tree = self._to_element_tree()
-                encs = tree.find(assertion_tag).find(advice_tag).findall(tmp_encrypted_assertion._to_element_tree().tag)
+                encs = tree.find(assertion_tag).find(advice_tag).findall(
+                    tmp_encrypted_assertion._to_element_tree().tag)
                 for enc in encs:
                     assertion = enc.find(assertion_tag)
                     if assertion is not None:
@@ -605,17 +611,23 @@ class SamlBase(ExtensionContainer):
 
         return ElementTree.tostring(tree, encoding="UTF-8").decode('utf-8')
 
-    def get_xml_string_with_self_contained_assertion_within_encrypted_assertion(self, assertion_tag):
-        """ Makes a encrypted assertion only containing self contained namespaces.
+    def get_xml_string_with_self_contained_assertion_within_encrypted_assertion(
+            self, assertion_tag):
+        """ Makes a encrypted assertion only containing self contained
+        namespaces.
 
         :param assertion_tag: Tag for the assertion to be transformed.
         :return: A new samlp.Resonse in string representation.
         """
-        prefix_map = self.get_prefix_map([self.encrypted_assertion._to_element_tree().find(assertion_tag)])
+        prefix_map = self.get_prefix_map(
+            [self.encrypted_assertion._to_element_tree().find(assertion_tag)])
 
         tree = self._to_element_tree()
 
-        self.set_prefixes(tree.find(self.encrypted_assertion._to_element_tree().tag).find(assertion_tag), prefix_map)
+        self.set_prefixes(
+            tree.find(
+                self.encrypted_assertion._to_element_tree().tag).find(
+                assertion_tag), prefix_map)
 
         return ElementTree.tostring(tree, encoding="UTF-8").decode('utf-8')
 
@@ -648,6 +660,7 @@ class SamlBase(ExtensionContainer):
                     new_name = uri_map[uri] + ":" + tag
                     memo[name] = new_name
                     return new_name
+
         # fix element name
         name = fixup(elem.tag)
         if name:
@@ -724,7 +737,7 @@ class SamlBase(ExtensionContainer):
                 childs.append(member)
         return childs
 
-    #noinspection PyUnusedLocal
+    # noinspection PyUnusedLocal
     def set_text(self, val, base64encode=False):
         """ Sets the text property of this instance.
 

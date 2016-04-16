@@ -154,6 +154,12 @@ def rm_xmltag(statement):
 
 
 def signed(item):
+    """
+    Is any part of the document signed ?
+
+    :param item: A Samlbase instance
+    :return: True if some part of it is signed
+    """
     if SIG in item.c_children.keys() and item.signature:
         return True
     else:

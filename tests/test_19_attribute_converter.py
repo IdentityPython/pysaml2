@@ -230,11 +230,13 @@ def test_noop_attribute_conversion():
 
 ava = """<?xml version='1.0' encoding='UTF-8'?>
 <ns0:Attribute xmlns:ns0="urn:oasis:names:tc:SAML:2.0:assertion"
-xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-FriendlyName="schacHomeOrganization" Name="urn:oid:1.3.6.1.4.1.25178.1.2.9"
-NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"><ns0
-:AttributeValue xsi:nil="true"
-xsi:type="xs:string">uu.se</ns0:AttributeValue></ns0:Attribute>"""
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   FriendlyName="schacHomeOrganization" Name="urn:oid:1.3.6.1.4.1.25178.1.2.9"
+   NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
+   <ns0:AttributeValue xsi:nil="true" xsi:type="xs:string">
+     uu.se
+   </ns0:AttributeValue>
+</ns0:Attribute>"""
 
 
 def test_schac():

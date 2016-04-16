@@ -370,6 +370,9 @@ def do_attribute_statement(identity):
 def factory(klass, **kwargs):
     instance = klass()
     for key, val in kwargs.items():
+        if isinstance(val, dict):
+            cls = instance.child_class(key)
+            val = factory(cls, **val)
         setattr(instance, key, val)
     return instance
 

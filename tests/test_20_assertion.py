@@ -810,10 +810,16 @@ def test_assertion_with_noop_attribute_conv():
     })
     name_id = NameID(format=NAMEID_FORMAT_TRANSIENT, text="foobar")
     issuer = Issuer(text="entityid", format=NAMEID_FORMAT_ENTITY)
-    msg = ast.construct("sp_entity_id", "in_response_to", "consumer_url",
-                        name_id, [AttributeConverterNOOP(NAME_FORMAT_URI)],
-                        policy, issuer=issuer, authn_decl=ACD,
-                        authn_auth="authn_authn")
+    subject_confirmation_specs = {
+        'recipient': 'consumer_url',
+        'in_response_to': 'in_response_to',
+        'subject_confirmation_method': saml.SCM_BEARER
+    }
+    msg = ast.construct(
+        "sp_entity_id", [AttributeConverterNOOP(NAME_FORMAT_URI)], policy,
+        issuer=issuer, authn_decl=ACD, name_id=name_id,
+        authn_auth="authn_authn",
+        subject_confirmation_specs=subject_confirmation_specs)
 
     print(msg)
     for attr in msg.attribute_statement[0].attribute:
@@ -858,10 +864,16 @@ def test_assertion_with_zero_attributes():
     })
     name_id = NameID(format=NAMEID_FORMAT_TRANSIENT, text="foobar")
     issuer = Issuer(text="entityid", format=NAMEID_FORMAT_ENTITY)
-    msg = ast.construct("sp_entity_id", "in_response_to", "consumer_url",
-                        name_id, [AttributeConverterNOOP(NAME_FORMAT_URI)],
-                        policy, issuer=issuer, authn_decl=ACD,
-                        authn_auth="authn_authn")
+    subject_confirmation_specs = {
+        'recipient': 'consumer_url',
+        'in_response_to': 'in_response_to',
+        'subject_confirmation_method': saml.SCM_BEARER
+    }
+
+    msg = ast.construct(
+        "sp_entity_id", [AttributeConverterNOOP(NAME_FORMAT_URI)], policy,
+        issuer=issuer, authn_decl=ACD, authn_auth="authn_authn",
+        name_id=name_id, subject_confirmation_specs=subject_confirmation_specs)
 
     print(msg)
     assert msg.attribute_statement == []
@@ -879,11 +891,18 @@ def test_assertion_with_authn_instant():
     })
     name_id = NameID(format=NAMEID_FORMAT_TRANSIENT, text="foobar")
     issuer = Issuer(text="entityid", format=NAMEID_FORMAT_ENTITY)
-    msg = ast.construct("sp_entity_id", "in_response_to", "consumer_url",
-                        name_id, [AttributeConverterNOOP(NAME_FORMAT_URI)],
-                        policy, issuer=issuer, authn_decl=ACD,
-                        authn_auth="authn_authn",
-                        authn_instant=1234567890)
+
+    subject_confirmation_specs = {
+        'recipient': 'consumer_url',
+        'in_response_to': 'in_response_to',
+        'subject_confirmation_method': saml.SCM_BEARER
+    }
+
+    msg = ast.construct(
+        "sp_entity_id", [AttributeConverterNOOP(NAME_FORMAT_URI)], policy,
+        issuer=issuer, authn_decl=ACD, authn_auth="authn_authn",
+        authn_instant=1234567890, name_id=name_id,
+        subject_confirmation_specs=subject_confirmation_specs)
 
     print(msg)
     assert msg.authn_statement[0].authn_instant == "2009-02-13T23:31:30Z"

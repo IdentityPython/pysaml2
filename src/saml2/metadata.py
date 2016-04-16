@@ -760,7 +760,8 @@ def entity_descriptor(confd):
     return entd
 
 
-def entities_descriptor(eds, valid_for, name, ident, sign, secc, sign_alg=None, digest_alg=None):
+def entities_descriptor(eds, valid_for, name, ident, sign, secc, sign_alg=None,
+                        digest_alg=None):
     entities = md.EntitiesDescriptor(entity_descriptor=eds)
     if valid_for:
         entities.valid_until = in_a_while(hours=valid_for)
@@ -781,7 +782,9 @@ def entities_descriptor(eds, valid_for, name, ident, sign, secc, sign_alg=None, 
             raise SAMLError("If you want to do signing you should define " +
                             "where your public key are")
 
-        entities.signature = pre_signature_part(ident, secc.my_cert, 1, sign_alg=sign_alg, digest_alg=digest_alg)
+        entities.signature = pre_signature_part(ident, secc.my_cert, 1,
+                                                sign_alg=sign_alg,
+                                                digest_alg=digest_alg)
         entities.id = ident
         xmldoc = secc.sign_statement("%s" % entities, class_name(entities))
         entities = md.entities_descriptor_from_string(xmldoc)

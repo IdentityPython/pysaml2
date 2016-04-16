@@ -831,7 +831,7 @@ class MetadataStore(MetaData):
 
         typ = args[0]
         if typ == "local":
-            key = args[0]
+            key = args[1]
             # if library read every file in the library
             if os.path.isdir(key):
                 files = [f for f in os.listdir(key) if isfile(join(key, f))]
@@ -848,7 +848,7 @@ class MetadataStore(MetaData):
             self.ii += 1
             key = self.ii
             kwargs.update(_args)
-            _md = InMemoryMetaData(self.attrc, args[0])
+            _md = InMemoryMetaData(self.attrc, args[1])
         elif typ == "remote":
             key = kwargs["url"]
             for _key in ["node_name", "check_validity"]:
@@ -864,11 +864,11 @@ class MetadataStore(MetaData):
                                  kwargs["url"], self.security,
                                  kwargs["cert"], self.http, **_args)
         elif typ == "mdfile":
-            key = args[0]
-            _md = MetaDataMD(self.attrc, args[0], **_args)
+            key = args[1]
+            _md = MetaDataMD(self.attrc, args[1], **_args)
         elif typ == "loader":
-            key = args[0]
-            _md = MetaDataLoader(self.attrc, args[0], **_args)
+            key = args[1]
+            _md = MetaDataLoader(self.attrc, args[1], **_args)
         else:
             raise SAMLError("Unknown metadata type '%s'" % typ)
         _md.load()

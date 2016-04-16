@@ -654,6 +654,47 @@ def authn_statement(authn_class=None, authn_auth=None,
     return res
 
 
+def do_subject_confirmation(policy, sp_entity_id, key_info=None, **treeargs):
+    """
+
+    :param policy: Policy instance
+    :param sp_entity_id: The entityid of the SP
+    :param subject_confirmation_method: How was the subject confirmed
+    :param address: The network address/location from which an attesting entity
+        can present the assertion.
+    :param key_info: Information of the key used to confirm the subject
+    :param in_response_to: The ID of a SAML protocol message in response to
+        which an attesting entity can present the assertion.
+    :param recipient: A URI specifying the entity or location to which an
+        attesting entity can present the assertion.
+    :param not_before: A time instant before which the subject cannot be
+        confirmed. The time value MUST be encoded in UTC.
+    :return:
+    """
+
+    _sc = factory(saml.SubjectConfirmation, **treeargs)
+
+    _scd = _sc.subject_confirmation_data
+    _scd.not_on_or_after = policy.not_on_or_after(sp_entity_id)
+
+    if _sc.method == saml.SCM_HOLDER_OF_KEY:
+        _scd.add_extension_element(key_info)
+
+    return _sc
+
+
+def do_subject(policy, sp_entity_id, name_id, **farg):
+    #
+    specs = farg['subject_confirmation']
+
+    if isinstance(specs, list):
+        res = [do_subject_confirmation(policy, sp_entity_id, **s) for s in specs]
+    else:
+        res = [do_subject_confirmation(policy, sp_entity_id, **specs)]
+
+    return factory(saml.Subject, name_id=name_id, subject_confirmation=res)
+
+
 class Assertion(dict):
     """ Handles assertions about subjects """
 
@@ -661,17 +702,16 @@ class Assertion(dict):
         dict.__init__(self, dic)
         self.acs = []
 
-    def construct(self, sp_entity_id, in_response_to, consumer_url,
-                  name_id, attrconvs, policy, issuer, authn_class=None,
-                  authn_auth=None, authn_decl=None, encrypt=None,
-                  sec_context=None, authn_decl_ref=None, authn_instant="",
-                  subject_locality="", authn_statem=None, add_subject=True):
+    def construct(self, sp_entity_id, attrconvs, policy, issuer, farg,
+                  authn_class=None, authn_auth=None, authn_decl=None,
+                  encrypt=None, sec_context=None, authn_decl_ref=None,
+                  authn_instant="", subject_locality="", authn_statem=None,
+                  name_id=None):
         """ Construct the Assertion
 
         :param sp_entity_id: The entityid of the SP
         :param in_response_to: An identifier of the message, this message is
             a response to
-        :param consumer_url: The intended consumer of the assertion
         :param name_id: An NameID instance
         :param attrconvs: AttributeConverters
         :param policy: The policy that should be adhered to when replying
@@ -721,29 +761,11 @@ class Assertion(dict):
         else:
             _authn_statement = None
 
-        if not add_subject:
-            _ass = assertion_factory(
-                    issuer=issuer,
-                    conditions=conds,
-                    subject=None
-            )
-        else:
-            _ass = assertion_factory(
-                    issuer=issuer,
-                    conditions=conds,
-                    subject=factory(
-                            saml.Subject,
-                            name_id=name_id,
-                            subject_confirmation=[factory(
-                                    saml.SubjectConfirmation,
-                                    method=saml.SCM_BEARER,
-                                    subject_confirmation_data=factory(
-                                            saml.SubjectConfirmationData,
-                                            in_response_to=in_response_to,
-                                            recipient=consumer_url,
-                                            not_on_or_after=policy.not_on_or_after(sp_entity_id)))]
-                    ),
-            )
+        subject = do_subject(policy, sp_entity_id, name_id,
+                             **farg['subject'])
+
+        _ass = assertion_factory(issuer=issuer, conditions=conds,
+                                 subject=subject)
 
         if _authn_statement:
             _ass.authn_statement = [_authn_statement]

@@ -604,7 +604,7 @@ class Entity(HTTPBase):
 
         :param in_response_to: The session identifier of the request
         :param consumer_url: The URL which should receive the response
-        :param status: The status of the response
+        :param status: An instance of samlp.Status
         :param issuer: The issuer of the response
         :param sign: Whether the response should be signed or not
         :param to_sign: If there are other parts to sign

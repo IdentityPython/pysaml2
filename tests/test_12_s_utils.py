@@ -8,9 +8,10 @@ import six
 from saml2 import s_utils as utils
 from saml2 import saml
 from saml2 import samlp
+from saml2.argtree import set_arg
 
 from saml2.s_utils import do_attribute_statement
-from saml2.saml import Attribute
+from saml2.saml import Attribute, Subject
 from saml2.saml import NAME_FORMAT_URI
 
 from py.test import raises
@@ -20,25 +21,29 @@ from pathutils import full_path
 XML_HEADER = '<?xml version=\'1.0\' encoding=\'UTF-8\'?>\n'
 
 SUCCESS_STATUS_NO_HEADER = (
-'<ns0:Status xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns0:StatusCode '
-'Value="urn:oasis:names:tc:SAML:2.0:status:Success" /></ns0:Status>')
+    '<ns0:Status xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns0'
+    ':StatusCode '
+    'Value="urn:oasis:names:tc:SAML:2.0:status:Success" /></ns0:Status>')
 SUCCESS_STATUS = '%s%s' % (XML_HEADER, SUCCESS_STATUS_NO_HEADER)
 
 ERROR_STATUS_NO_HEADER = (
-'<ns0:Status xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns0:StatusCode '
-'Value="urn:oasis:names:tc:SAML:2.0:status:Responder"><ns0:StatusCode '
-'Value="urn:oasis:names:tc:SAML:2.0:status:UnknownPrincipal" '
-'/></ns0:StatusCode><ns0:StatusMessage>Error resolving '
-'principal</ns0:StatusMessage></ns0:Status>')
+    '<ns0:Status xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns0'
+    ':StatusCode '
+    'Value="urn:oasis:names:tc:SAML:2.0:status:Responder"><ns0:StatusCode '
+    'Value="urn:oasis:names:tc:SAML:2.0:status:UnknownPrincipal" '
+    '/></ns0:StatusCode><ns0:StatusMessage>Error resolving '
+    'principal</ns0:StatusMessage></ns0:Status>')
 
 ERROR_STATUS_NO_HEADER_EMPTY = (
-'<ns0:Status xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns0:StatusCode '
-'Value="urn:oasis:names:tc:SAML:2.0:status:Responder"><ns0:StatusCode '
-'Value="urn:oasis:names:tc:SAML:2.0:status:UnknownPrincipal" '
-'/></ns0:StatusCode></ns0:Status>')
+    '<ns0:Status xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"><ns0'
+    ':StatusCode '
+    'Value="urn:oasis:names:tc:SAML:2.0:status:Responder"><ns0:StatusCode '
+    'Value="urn:oasis:names:tc:SAML:2.0:status:UnknownPrincipal" '
+    '/></ns0:StatusCode></ns0:Status>')
 
 ERROR_STATUS = '%s%s' % (XML_HEADER, ERROR_STATUS_NO_HEADER)
 ERROR_STATUS_EMPTY = '%s%s' % (XML_HEADER, ERROR_STATUS_NO_HEADER_EMPTY)
+
 
 def _eq(l1, l2):
     return set(l1) == set(l2)
@@ -213,7 +218,7 @@ def test_conditions():
 
 
 def test_value_1():
-    #FriendlyName="givenName" Name="urn:oid:2.5.4.42" 
+    # FriendlyName="givenName" Name="urn:oid:2.5.4.42"
     # NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
     attribute = utils.factory(saml.Attribute, name="urn:oid:2.5.4.42",
                               name_format=NAME_FORMAT_URI)
@@ -530,3 +535,14 @@ def test_signature():
     arr.append(csum)
 
     assert utils.verify_signature("abcdef", arr)
+
+
+def test_complex_factory():
+    r = set_arg(Subject, 'in_response_to', '123456')
+    subject = utils.factory(Subject, **r[0])
+    assert _eq(subject.keyswv(), ['subject_confirmation'])
+    assert _eq(subject.subject_confirmation.keyswv(),
+               ['subject_confirmation_data'])
+    assert _eq(subject.subject_confirmation.subject_confirmation_data.keyswv(),
+               ['in_response_to'])
+    assert subject.subject_confirmation.subject_confirmation_data.in_response_to == '123456'

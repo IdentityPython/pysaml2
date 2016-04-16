@@ -811,15 +811,22 @@ class TestClient:
                                            format=saml.NAMEID_FORMAT_PERSISTENT)
 
         asser = Assertion({"givenName": "Derek", "surName": "Jeter"})
+        subject_confirmation_specs = {
+                'recipient': "http://lingon.catalogix.se:8087/",
+                'in_response_to': "_012345",
+                'subject_confirmation_method': saml.SCM_BEARER
+            }
+
         assertion = asser.construct(
-            self.client.config.entityid, "_012345",
-            "http://lingon.catalogix.se:8087/",
-            factory(saml.NameID, format=saml.NAMEID_FORMAT_TRANSIENT),
-            policy=self.server.config.getattr("policy", "idp"),
+            self.client.config.entityid,
+            self.server.config.attribute_converters,
+            self.server.config.getattr("policy", "idp"),
+            name_id=factory(saml.NameID, format=saml.NAMEID_FORMAT_TRANSIENT),
             issuer=self.server._issuer(),
-            attrconvs=self.server.config.attribute_converters,
             authn_class=INTERNETPROTOCOLPASSWORD,
-            authn_auth="http://www.example.com/login")
+            authn_auth="http://www.example.com/login",
+            subject_confirmation_specs=subject_confirmation_specs
+        )
 
         assertion.signature = sigver.pre_signature_part(
             assertion.id, _sec.my_cert, 1)
@@ -866,26 +873,34 @@ class TestClient:
                                            format=saml.NAMEID_FORMAT_PERSISTENT)
 
         asser = Assertion({"givenName": "Derek", "surName": "Jeter"})
+
+        subject_confirmation_specs = {
+                'recipient': "http://lingon.catalogix.se:8087/",
+                'in_response_to': "_012345",
+                'subject_confirmation_method': saml.SCM_BEARER
+            }
+        name_id = factory(saml.NameID, format=saml.NAMEID_FORMAT_TRANSIENT)
+
         assertion = asser.construct(
-            self.client.config.entityid, "_012345",
-            "http://lingon.catalogix.se:8087/",
-            factory(saml.NameID, format=saml.NAMEID_FORMAT_TRANSIENT),
-            policy=self.server.config.getattr("policy", "idp"),
+            self.client.config.entityid,
+            self.server.config.attribute_converters,
+            self.server.config.getattr("policy", "idp"),
             issuer=self.server._issuer(),
-            attrconvs=self.server.config.attribute_converters,
+            name_id=name_id,
             authn_class=INTERNETPROTOCOLPASSWORD,
-            authn_auth="http://www.example.com/login")
+            authn_auth="http://www.example.com/login",
+            subject_confirmation_specs=subject_confirmation_specs)
 
         a_asser = Assertion({"uid": "test01", "email": "test.testsson@test.se"})
         a_assertion = a_asser.construct(
-            self.client.config.entityid, "_012345",
-            "http://lingon.catalogix.se:8087/",
-            factory(saml.NameID, format=saml.NAMEID_FORMAT_TRANSIENT),
-            policy=self.server.config.getattr("policy", "idp"),
+            self.client.config.entityid,
+            self.server.config.attribute_converters,
+            self.server.config.getattr("policy", "idp"),
             issuer=self.server._issuer(),
-            attrconvs=self.server.config.attribute_converters,
             authn_class=INTERNETPROTOCOLPASSWORD,
-            authn_auth="http://www.example.com/login")
+            authn_auth="http://www.example.com/login",
+            name_id=name_id,
+            subject_confirmation_specs=subject_confirmation_specs)
 
         a_assertion.signature = sigver.pre_signature_part(
             a_assertion.id, _sec.my_cert, 1)
@@ -944,70 +959,80 @@ class TestClient:
                                            format=saml.NAMEID_FORMAT_PERSISTENT)
 
         asser_1 = Assertion({"givenName": "Derek"})
+
+        subject_confirmation_specs = {
+                'recipient': "http://lingon.catalogix.se:8087/",
+                'in_response_to': "_012345",
+                'subject_confirmation_method': saml.SCM_BEARER
+            }
+        name_id = factory(saml.NameID, format=saml.NAMEID_FORMAT_TRANSIENT)
+
         assertion_1 = asser_1.construct(
-            self.client.config.entityid, "_012345",
-            "http://lingon.catalogix.se:8087/",
-            factory(saml.NameID, format=saml.NAMEID_FORMAT_TRANSIENT),
-            policy=self.server.config.getattr("policy", "idp"),
+            self.client.config.entityid,
+            self.server.config.attribute_converters,
+            self.server.config.getattr("policy", "idp"),
             issuer=self.server._issuer(),
-            attrconvs=self.server.config.attribute_converters,
             authn_class=INTERNETPROTOCOLPASSWORD,
-            authn_auth="http://www.example.com/login")
+            authn_auth="http://www.example.com/login",
+            name_id=name_id,
+            subject_confirmation_specs=subject_confirmation_specs)
 
         asser_2 = Assertion({"surName": "Jeter"})
+
         assertion_2 = asser_2.construct(
-            self.client.config.entityid, "_012345",
-            "http://lingon.catalogix.se:8087/",
-            factory(saml.NameID, format=saml.NAMEID_FORMAT_TRANSIENT),
-            policy=self.server.config.getattr("policy", "idp"),
+            self.client.config.entityid,
+            self.server.config.attribute_converters,
+            self.server.config.getattr("policy", "idp"),
             issuer=self.server._issuer(),
-            attrconvs=self.server.config.attribute_converters,
             authn_class=INTERNETPROTOCOLPASSWORD,
-            authn_auth="http://www.example.com/login")
+            authn_auth="http://www.example.com/login",
+            name_id=name_id,
+            subject_confirmation_specs=subject_confirmation_specs)
 
         a_asser_1 = Assertion({"uid": "test01"})
         a_assertion_1 = a_asser_1.construct(
-            self.client.config.entityid, "_012345",
-            "http://lingon.catalogix.se:8087/",
-            factory(saml.NameID, format=saml.NAMEID_FORMAT_TRANSIENT),
-            policy=self.server.config.getattr("policy", "idp"),
+            self.client.config.entityid,
+            self.server.config.attribute_converters,
+            self.server.config.getattr("policy", "idp"),
             issuer=self.server._issuer(),
-            attrconvs=self.server.config.attribute_converters,
             authn_class=INTERNETPROTOCOLPASSWORD,
-            authn_auth="http://www.example.com/login")
+            authn_auth="http://www.example.com/login",
+            name_id=name_id,
+            subject_confirmation_specs=subject_confirmation_specs)
+
 
         a_asser_2 = Assertion({"email": "test.testsson@test.se"})
         a_assertion_2 = a_asser_2.construct(
-            self.client.config.entityid, "_012345",
-            "http://lingon.catalogix.se:8087/",
-            factory(saml.NameID, format=saml.NAMEID_FORMAT_TRANSIENT),
-            policy=self.server.config.getattr("policy", "idp"),
+            self.client.config.entityid,
+            self.server.config.attribute_converters,
+            self.server.config.getattr("policy", "idp"),
             issuer=self.server._issuer(),
-            attrconvs=self.server.config.attribute_converters,
             authn_class=INTERNETPROTOCOLPASSWORD,
-            authn_auth="http://www.example.com/login")
+            authn_auth="http://www.example.com/login",
+            name_id=name_id,
+            subject_confirmation_specs=subject_confirmation_specs)
 
         a_asser_3 = Assertion({"street": "street"})
         a_assertion_3 = a_asser_3.construct(
-            self.client.config.entityid, "_012345",
-            "http://lingon.catalogix.se:8087/",
-            factory(saml.NameID, format=saml.NAMEID_FORMAT_TRANSIENT),
-            policy=self.server.config.getattr("policy", "idp"),
+            self.client.config.entityid,
+            self.server.config.attribute_converters,
+            self.server.config.getattr("policy", "idp"),
             issuer=self.server._issuer(),
-            attrconvs=self.server.config.attribute_converters,
             authn_class=INTERNETPROTOCOLPASSWORD,
-            authn_auth="http://www.example.com/login")
+            authn_auth="http://www.example.com/login",
+            name_id=name_id,
+            subject_confirmation_specs=subject_confirmation_specs)
 
         a_asser_4 = Assertion({"title": "title"})
         a_assertion_4 = a_asser_4.construct(
-            self.client.config.entityid, "_012345",
-            "http://lingon.catalogix.se:8087/",
-            factory(saml.NameID, format=saml.NAMEID_FORMAT_TRANSIENT),
-            policy=self.server.config.getattr("policy", "idp"),
+            self.client.config.entityid,
+            self.server.config.attribute_converters,
+            self.server.config.getattr("policy", "idp"),
             issuer=self.server._issuer(),
-            attrconvs=self.server.config.attribute_converters,
             authn_class=INTERNETPROTOCOLPASSWORD,
-            authn_auth="http://www.example.com/login")
+            authn_auth="http://www.example.com/login",
+            name_id=name_id,
+            subject_confirmation_specs=subject_confirmation_specs)
 
         a_assertion_1.signature = sigver.pre_signature_part(
             a_assertion_1.id, _sec.my_cert, 1)
