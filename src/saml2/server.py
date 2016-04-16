@@ -18,6 +18,7 @@ from saml2 import saml
 from saml2 import element_to_extension_element
 from saml2 import class_name
 from saml2 import BINDING_HTTP_REDIRECT
+from saml2.argtree import add_path
 
 from saml2.entity import Entity
 from saml2.eptid import Eptid
@@ -290,7 +291,7 @@ class Server(Entity):
 
     def setup_assertion(self, authn, sp_entity_id, in_response_to, consumer_url,
                         name_id, policy, _issuer, authn_statement, identity,
-                        best_effort, sign_response, farg, **kwargs):
+                        best_effort, sign_response, farg=None, **kwargs):
         """
         Construct and return the Assertion
 
@@ -322,14 +323,17 @@ class Server(Entity):
                 return self.create_error_response(in_response_to, consumer_url,
                                                   exc, sign_response)
 
-        try:
-            subject_confirmation_specs = kwargs['subject_confirmation']
-        except KeyError:
-            subject_confirmation_data = {
-                'recipient': consumer_url,
-                'in_response_to': in_response_to,
-                'method': saml.SCM_BEARER
-            }
+        if not farg:
+            farg = add_path(
+                {},
+                ['assertion', 'subject', 'subject_confirmation', 'method',
+                 saml.SCM_BEARER])
+            add_path(
+                farg['assertion']['subject']['subject_confirmation'],
+                ['subject_confirmation_data', 'in_response_to', in_response_to])
+            add_path(
+                farg['assertion']['subject']['subject_confirmation'],
+                ['subject_confirmation_data', 'recipient', consumer_url])
 
         if authn:  # expected to be a dictionary
             # Would like to use dict comprehension but ...
@@ -427,29 +431,23 @@ class Server(Entity):
         if pefim:
             encrypted_advice_attributes = True
             encrypt_assertion_self_contained = True
-            assertion_attributes = self.setup_assertion(None, sp_entity_id,
-                                                        None, None, None,
-                                                        policy,
-                                                        None, None, identity,
-                                                        best_effort,
-                                                        sign_response, False,
-                                                        **assertion_args)
-            assertion = self.setup_assertion(authn, sp_entity_id,
-                                             ass_in_response_to, consumer_url,
-                                             name_id, policy, _issuer,
-                                             authn_statement, [], True,
-                                             sign_response, **assertion_args)
+            assertion_attributes = self.setup_assertion(
+                None, sp_entity_id, None, None, None, policy, None, None,
+                identity, best_effort, sign_response,  farg=assertion_args)
+            assertion = self.setup_assertion(
+                authn, sp_entity_id, ass_in_response_to, consumer_url, name_id,
+                policy, _issuer, authn_statement, [], True, sign_response,
+                farg=assertion_args)
             assertion.advice = saml.Advice()
 
             # assertion.advice.assertion_id_ref.append(saml.AssertionIDRef())
             # assertion.advice.assertion_uri_ref.append(saml.AssertionURIRef())
             assertion.advice.assertion.append(assertion_attributes)
         else:
-            assertion = self.setup_assertion(authn, sp_entity_id,
-                                             ass_in_response_to, consumer_url,
-                                             name_id, policy, _issuer,
-                                             authn_statement, identity, True,
-                                             sign_response, **assertion_args)
+            assertion = self.setup_assertion(
+                authn, sp_entity_id, ass_in_response_to, consumer_url, name_id,
+                policy, _issuer, authn_statement, identity, True,
+                sign_response, farg=assertion_args)
 
         to_sign = []
         if not encrypt_assertion:
@@ -484,7 +482,7 @@ class Server(Entity):
                                   status=None, issuer=None,
                                   sign_assertion=False, sign_response=False,
                                   attributes=None, sign_alg=None,
-                                  digest_alg=None, **kwargs):
+                                  digest_alg=None, farg=None, **kwargs):
         """ Create an attribute assertion response.
 
         :param identity: A dictionary with attributes and values that are
@@ -516,6 +514,19 @@ class Server(Entity):
         to_sign = []
 
         if identity:
+            if not farg:
+                farg = add_path(
+                    {},
+                    ['assertion', 'subject', 'subject_confirmation', 'method',
+                     saml.SCM_BEARER])
+                add_path(
+                    farg['assertion']['subject']['subject_confirmation'],
+                    ['subject_confirmation_data', 'in_response_to',
+                     in_response_to])
+                add_path(
+                    farg['assertion']['subject']['subject_confirmation'],
+                    ['subject_confirmation_data', 'recipient', destination])
+
             _issuer = self._issuer(issuer)
             ast = Assertion(identity)
             if policy:
@@ -527,19 +538,10 @@ class Server(Entity):
                 restr = restriction_from_attribute_spec(attributes)
                 ast = filter_attribute_value_assertions(ast)
 
-            try:
-                subject_confirmation_specs = kwargs['subject_confirmation_specs']
-            except KeyError:
-                subject_confirmation_specs = {
-                    'recipient': destination,
-                    'in_response_to': in_response_to,
-                    'subject_confirmation_method': saml.SCM_BEARER
-                }
-
             assertion = ast.construct(
                 sp_entity_id, self.config.attribute_converters, policy,
                 issuer=_issuer, name_id=name_id,
-                subject_confirmation_specs=subject_confirmation_specs)
+                farg=farg['assertion'])
 
             if sign_assertion:
                 assertion.signature = pre_signature_part(assertion.id,
@@ -712,8 +714,7 @@ class Server(Entity):
                 encrypt_cert_advice=encrypt_cert_advice,
                 encrypt_cert_assertion=encrypt_cert_assertion,
                 encrypt_assertion=encrypt_assertion,
-                encrypt_assertion_self_contained
-                =encrypt_assertion_self_contained,
+                encrypt_assertion_self_contained=encrypt_assertion_self_contained,
                 encrypted_advice_attributes=encrypted_advice_attributes,
                 pefim=pefim, **kwargs)
         except IOError as exc:

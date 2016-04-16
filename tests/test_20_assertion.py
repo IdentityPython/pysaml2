@@ -1,6 +1,7 @@
 # coding=utf-8
 import pytest
 
+from saml2.argtree import add_path
 from saml2.authn_context import pword
 from saml2.mdie import to_dict
 from saml2 import md, assertion
@@ -810,16 +811,21 @@ def test_assertion_with_noop_attribute_conv():
     })
     name_id = NameID(format=NAMEID_FORMAT_TRANSIENT, text="foobar")
     issuer = Issuer(text="entityid", format=NAMEID_FORMAT_ENTITY)
-    subject_confirmation_specs = {
-        'recipient': 'consumer_url',
-        'in_response_to': 'in_response_to',
-        'subject_confirmation_method': saml.SCM_BEARER
-    }
+
+    farg = add_path(
+        {},
+        ['subject', 'subject_confirmation', 'method', saml.SCM_BEARER])
+    add_path(
+        farg['subject']['subject_confirmation'],
+        ['subject_confirmation_data', 'in_response_to', 'in_response_to'])
+    add_path(
+        farg['subject']['subject_confirmation'],
+        ['subject_confirmation_data', 'recipient', 'consumer_url'])
+
     msg = ast.construct(
         "sp_entity_id", [AttributeConverterNOOP(NAME_FORMAT_URI)], policy,
-        issuer=issuer, authn_decl=ACD, name_id=name_id,
-        authn_auth="authn_authn",
-        subject_confirmation_specs=subject_confirmation_specs)
+        issuer=issuer, farg=farg, authn_decl=ACD, name_id=name_id,
+        authn_auth="authn_authn")
 
     print(msg)
     for attr in msg.attribute_statement[0].attribute:
@@ -864,16 +870,20 @@ def test_assertion_with_zero_attributes():
     })
     name_id = NameID(format=NAMEID_FORMAT_TRANSIENT, text="foobar")
     issuer = Issuer(text="entityid", format=NAMEID_FORMAT_ENTITY)
-    subject_confirmation_specs = {
-        'recipient': 'consumer_url',
-        'in_response_to': 'in_response_to',
-        'subject_confirmation_method': saml.SCM_BEARER
-    }
+    farg = add_path(
+        {},
+        ['subject', 'subject_confirmation', 'method', saml.SCM_BEARER])
+    add_path(
+        farg['subject']['subject_confirmation'],
+        ['subject_confirmation_data', 'in_response_to', 'in_response_to'])
+    add_path(
+        farg['subject']['subject_confirmation'],
+        ['subject_confirmation_data', 'recipient', 'consumer_url'])
 
     msg = ast.construct(
         "sp_entity_id", [AttributeConverterNOOP(NAME_FORMAT_URI)], policy,
         issuer=issuer, authn_decl=ACD, authn_auth="authn_authn",
-        name_id=name_id, subject_confirmation_specs=subject_confirmation_specs)
+        name_id=name_id, farg=farg)
 
     print(msg)
     assert msg.attribute_statement == []
@@ -892,17 +902,20 @@ def test_assertion_with_authn_instant():
     name_id = NameID(format=NAMEID_FORMAT_TRANSIENT, text="foobar")
     issuer = Issuer(text="entityid", format=NAMEID_FORMAT_ENTITY)
 
-    subject_confirmation_specs = {
-        'recipient': 'consumer_url',
-        'in_response_to': 'in_response_to',
-        'subject_confirmation_method': saml.SCM_BEARER
-    }
+    farg = add_path(
+        {},
+        ['subject', 'subject_confirmation', 'method', saml.SCM_BEARER])
+    add_path(
+        farg['subject']['subject_confirmation'],
+        ['subject_confirmation_data', 'in_response_to', 'in_response_to'])
+    add_path(
+        farg['subject']['subject_confirmation'],
+        ['subject_confirmation_data', 'recipient', 'consumer_url'])
 
     msg = ast.construct(
         "sp_entity_id", [AttributeConverterNOOP(NAME_FORMAT_URI)], policy,
         issuer=issuer, authn_decl=ACD, authn_auth="authn_authn",
-        authn_instant=1234567890, name_id=name_id,
-        subject_confirmation_specs=subject_confirmation_specs)
+        authn_instant=1234567890, name_id=name_id, farg=farg)
 
     print(msg)
     assert msg.authn_statement[0].authn_instant == "2009-02-13T23:31:30Z"
