@@ -44,7 +44,31 @@ logger = logging.getLogger(__name__)
 
 NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:assertion'
 # TEMPLATE = '{urn:oasis:names:tc:SAML:2.0:assertion}%s'
-# XSI_NAMESPACE = 'http://www.w3.org/2001/XMLSchema-instance'
+SAMLP_NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:protocol'
+XSI_NAMESPACE = 'http://www.w3.org/2001/XMLSchema-instance'
+XS_NAMESPACE = 'http://www.w3.org/2001/XMLSchema'
+DS_NAMESPACE = 'http://www.w3.org/2000/09/xmldsig#'
+MD_NAMESPACE = "urn:oasis:names:tc:SAML:2.0:metadata"
+MDATTR_NAMESPACE = 'urn:oasis:names:tc:SAML:metadata:attribute'
+MDUI_NAMESPACE = "urn:oasis:names:tc:SAML:metadata:ui"
+XENC_NAMESPACE = 'http://www.w3.org/2001/04/xmlenc#'
+ALG_NAMESPACE = 'urn:oasis:names:tc:SAML:metadata:algsupport'
+IDPDISC_NAMESPACE = 'urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol'
+ECP_NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:profiles:SSO:ecp'
+OASIS_DEFAULT_NS_PREFIXES = {
+    'saml': NAMESPACE,
+    'samlp': SAMLP_NAMESPACE,
+    'ds': DS_NAMESPACE,
+    'xsi': XSI_NAMESPACE,
+    'xs': XS_NAMESPACE,
+    'xenc': XENC_NAMESPACE,
+    'mdui': MDUI_NAMESPACE,
+    'md': MD_NAMESPACE,
+    'mdattr': MDATTR_NAMESPACE,
+    'alg': ALG_NAMESPACE,
+    'idpdisc': IDPDISC_NAMESPACE,
+    'ecp': ECP_NAMESPACE,
+}
 
 NAMEID_FORMAT_EMAILADDRESS = (
     "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress")
@@ -556,7 +580,8 @@ class SamlBase(ExtensionContainer):
         self._add_members_to_element_tree(new_tree)
         return new_tree
 
-    def register_prefix(self, nspair):
+    @staticmethod
+    def register_prefix(nspair):
         """
         Register with ElementTree a set of namespaces
 
@@ -1048,3 +1073,6 @@ def is_required_attribute(cls, attr):
     :return: True if required
     """
     return cls.c_attributes[attr][REQUIRED]
+
+
+SamlBase.register_prefix(OASIS_DEFAULT_NS_PREFIXES)
