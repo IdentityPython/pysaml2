@@ -814,8 +814,16 @@ class AuthnResponse(StatusResponse):
                     encrypted_assertion.extension_elements, [saml, samlp])
                 for assertion in assertions:
                     if assertion.signature and not verified:
+                        assertion_id_pos = decr_txt.index(assertion.id)
+                        assertion_beg_tag = decr_txt.rindex('<', 0, assertion_id_pos)
+
+                        closing_assertion_pos = decr_txt.index('Assertion', assertion_id_pos)
+                        assertion_end_tag = decr_txt.index('>', closing_assertion_pos) + 1
+
+                        origdoc = decr_txt[assertion_beg_tag:assertion_end_tag]
+
                         if not self.sec.check_signature(
-                                assertion, origdoc=decr_txt,
+                                assertion, origdoc=origdoc,
                                 node_name=class_name(assertion), issuer=issuer):
                             logger.error("Failed to verify signature on '%s'" % assertion)
                             raise SignatureError()
