@@ -270,6 +270,19 @@ idp/aa
 
 Directives that are specific to an IdP or AA service instance
 
+sign_assertion
+""""""""""""""
+
+Specifies if the IdP should sign the assertion in an authentication response
+or not. Can be True or False. Default is False.
+
+sign_response
+"""""""""""""
+
+Specifies if the IdP should sign the authentication response or not. Can be
+True or False. Default is False.
+
+
 policy
 """"""
 
