@@ -850,6 +850,8 @@ class MetadataStore(MetaData):
             kwargs.update(_args)
             _md = InMemoryMetaData(self.attrc, args[1])
         elif typ == "remote":
+            if "url" not in kwargs:
+                raise ValueError("Remote metadata must be structured as a dict containing the key 'url'")
             key = kwargs["url"]
             for _key in ["node_name", "check_validity"]:
                 try:
