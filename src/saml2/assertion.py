@@ -1,20 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import copy
 import importlib
 import logging
-
 import re
-from saml2.saml import NAME_FORMAT_URI
 import six
-from saml2 import xmlenc
 
 from saml2 import saml
-
-from saml2.time_util import instant, in_a_while
+from saml2 import xmlenc
 from saml2.attribute_converter import from_local, get_local_name
-from saml2.s_utils import sid, MissingValue
-from saml2.s_utils import factory
 from saml2.s_utils import assertion_factory
+from saml2.s_utils import factory
+from saml2.s_utils import sid, MissingValue
+from saml2.saml import NAME_FORMAT_URI
+from saml2.time_util import instant, in_a_while
 
 logger = logging.getLogger(__name__)
 
@@ -319,7 +318,7 @@ class Policy(object):
             a compiled regular expression.
         """
 
-        self._restrictions = restrictions.copy()
+        self._restrictions = copy.deepcopy(restrictions)
 
         for who, spec in self._restrictions.items():
             if spec is None:
