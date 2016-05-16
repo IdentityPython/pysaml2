@@ -532,7 +532,7 @@ class Server(Entity):
         to_sign = []
 
         if identity:
-            farg = self.update_farg(in_response_to, destination, farg=farg)
+            farg = self.update_farg(in_response_to, sp_entity_id, farg=farg)
 
             _issuer = self._issuer(issuer)
             ast = Assertion(identity)

@@ -270,7 +270,7 @@ def post_entity_categories(maps, **kwargs):
     restrictions = {}
     try:
         required = [d['friendly_name'].lower() for d in kwargs['required']]
-    except KeyError:
+    except (KeyError, TypeError):
         required = []
 
     if kwargs["mds"]:
