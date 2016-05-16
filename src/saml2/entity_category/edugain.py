@@ -12,3 +12,4 @@ RELEASE = {
            "schacHomeOrganization"]
 }
 
+ONLY_REQUIRED = {COCO: True}

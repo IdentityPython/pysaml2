@@ -26,7 +26,7 @@ MAP = {
         EDUPERSON_OID+'6': 'eduPersonPrimaryAffiliation',
         EDUPERSON_OID+'7': 'eduPersonPrimaryOrgUnitDN',
         EDUPERSON_OID+'8': 'eduPersonPrincipalName',
-        EDUPERSON_OID+'9': 'eduPersonPrincipalNamePrior',
+        EDUPERSON_OID+'9': 'eduPersonPrincipalName',
         EDUPERSON_OID+'10': 'eduPersonScopedAffiliation',
         EDUPERSON_OID+'11': 'eduPersonTargetedID',
         EDUPERSON_OID+'12': 'eduPersonAssurance',

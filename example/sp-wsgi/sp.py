@@ -356,9 +356,14 @@ class ACS(Service):
             return resp(self.environ, self.start_response)
 
         try:
+            conv_info = {'remote_addr': self.environ['REMOTE_ADDR'],
+                         'request_uri': self.environ['REQUEST_URI'],
+                         'entity_id': self.sp.config.entityid,
+                         'endpoints': self.sp.config.getattr('endpoints', 'sp')}
+
             self.response = self.sp.parse_authn_request_response(
                 response, binding, self.outstanding_queries,
-                self.cache.outstanding_certs)
+                self.cache.outstanding_certs, conv_info=conv_info)
         except UnknownPrincipal as excp:
             logger.error("UnknownPrincipal: %s", excp)
             resp = ServiceError("UnknownPrincipal: %s" % (excp,))
