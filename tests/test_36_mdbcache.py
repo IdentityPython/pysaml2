@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import pytest
 
 __author__ = 'rolandh'
 
@@ -11,6 +12,7 @@ from pytest import raises
 SESSION_INFO_PATTERN = {"ava":{}, "came from":"", "not_on_or_after":0,
                     "issuer":"", "session_id":-1}
 
+@pytest.mark.mongo
 class TestMongoDBCache():
     def setup_class(self):
         try:

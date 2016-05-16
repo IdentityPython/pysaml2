@@ -68,3 +68,31 @@ def add_path(tdict, path):
     t[path[-2]] = path[-1]
 
     return tdict
+
+
+def is_set(tdict, path):
+    """
+
+    :param tdict: a dictionary representing a argument tree
+    :param path: a path list
+    :return: True/False if the value is set
+    """
+    t = tdict
+    for step in path:
+        try:
+            t = t[step]
+        except KeyError:
+            return False
+
+    if t is not None:
+        return True
+
+    return False
+
+
+def get_attr(tdict, path):
+    t = tdict
+    for step in path:
+        t = t[step]
+
+    return t

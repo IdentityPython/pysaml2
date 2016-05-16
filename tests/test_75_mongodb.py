@@ -1,5 +1,6 @@
 from contextlib import closing
 from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
+import pytest
 from saml2 import BINDING_HTTP_POST
 from saml2.authn_context import INTERNETPROTOCOLPASSWORD
 from saml2.client import Saml2Client
@@ -19,6 +20,7 @@ def _eq(l1, l2):
     return set(l1) == set(l2)
 
 
+@pytest.mark.mongo
 def test_flow():
     sp = Saml2Client(config_file="servera_conf")
     try:
@@ -63,6 +65,7 @@ def test_flow():
         pass
 
 
+@pytest.mark.mongo
 def test_eptid_mongo_db():
     try:
         edb = EptidMDB("secret", "idp")

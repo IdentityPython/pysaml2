@@ -18,7 +18,7 @@ from saml2 import saml
 from saml2 import element_to_extension_element
 from saml2 import class_name
 from saml2 import BINDING_HTTP_REDIRECT
-from saml2.argtree import add_path
+from saml2.argtree import add_path, is_set
 
 from saml2.entity import Entity
 from saml2.eptid import Eptid
@@ -289,6 +289,41 @@ class Server(Entity):
         return self._parse_request(xml_string, NameIDMappingRequest,
                                    "name_id_mapping_service", binding)
 
+    @staticmethod
+    def update_farg(in_response_to, consumer_url, farg=None):
+        if not farg:
+            farg = add_path(
+                {},
+                ['assertion', 'subject', 'subject_confirmation', 'method',
+                 saml.SCM_BEARER])
+            add_path(
+                farg['assertion']['subject']['subject_confirmation'],
+                ['subject_confirmation_data', 'in_response_to', in_response_to])
+            add_path(
+                farg['assertion']['subject']['subject_confirmation'],
+                ['subject_confirmation_data', 'recipient', consumer_url])
+        else:
+            if not is_set(farg,
+                          ['assertion', 'subject', 'subject_confirmation',
+                           'method']):
+                add_path(farg,
+                         ['assertion', 'subject', 'subject_confirmation',
+                          'method', saml.SCM_BEARER])
+            if not is_set(farg,
+                          ['assertion', 'subject', 'subject_confirmation',
+                           'subject_confirmation_data', 'in_response_to']):
+                add_path(farg,
+                         ['assertion', 'subject', 'subject_confirmation',
+                          'subject_confirmation_data', 'in_response_to',
+                          in_response_to])
+            if not is_set(farg, ['assertion', 'subject', 'subject_confirmation',
+                                 'subject_confirmation_data', 'recipient']):
+                add_path(farg,
+                         ['assertion', 'subject', 'subject_confirmation',
+                          'subject_confirmation_data', 'recipient',
+                          consumer_url])
+        return farg
+
     def setup_assertion(self, authn, sp_entity_id, in_response_to, consumer_url,
                         name_id, policy, _issuer, authn_statement, identity,
                         best_effort, sign_response, farg=None, **kwargs):
@@ -323,17 +358,7 @@ class Server(Entity):
                 return self.create_error_response(in_response_to, consumer_url,
                                                   exc, sign_response)
 
-        if not farg:
-            farg = add_path(
-                {},
-                ['assertion', 'subject', 'subject_confirmation', 'method',
-                 saml.SCM_BEARER])
-            add_path(
-                farg['assertion']['subject']['subject_confirmation'],
-                ['subject_confirmation_data', 'in_response_to', in_response_to])
-            add_path(
-                farg['assertion']['subject']['subject_confirmation'],
-                ['subject_confirmation_data', 'recipient', consumer_url])
+        farg = self.update_farg(in_response_to, consumer_url, farg)
 
         if authn:  # expected to be a dictionary
             # Would like to use dict comprehension but ...
@@ -369,7 +394,7 @@ class Server(Entity):
                         encrypt_assertion_self_contained=False,
                         encrypted_advice_attributes=False,
                         pefim=False, sign_alg=None, digest_alg=None,
-                        assertion_args=None):
+                        farg=None):
         """ Create a response. A layer of indirection.
 
         :param in_response_to: The session identifier of the request
@@ -401,11 +426,11 @@ class Server(Entity):
         :param sign_assertion: True if assertions should be signed.
         :param pefim: True if a response according to the PEFIM profile
         should be created.
-        :param assertion_args: Argument to pass on to the assertion constructor
+        :param farg: Argument to pass on to the assertion constructor
         :return: A response instance
         """
 
-        if assertion_args is None:
+        if farg is None:
             assertion_args = {}
 
         args = {}
@@ -421,23 +446,16 @@ class Server(Entity):
         #    tmp_authn_statement = authn_statement
         #    authn_statement = None
 
-        try:
-            ass_in_response_to = assertion_args['in_response_to']
-        except KeyError:
-            ass_in_response_to = in_response_to
-        else:
-            del assertion_args['in_response_to']
-
         if pefim:
             encrypted_advice_attributes = True
             encrypt_assertion_self_contained = True
             assertion_attributes = self.setup_assertion(
                 None, sp_entity_id, None, None, None, policy, None, None,
-                identity, best_effort, sign_response,  farg=assertion_args)
+                identity, best_effort, sign_response, farg=farg)
             assertion = self.setup_assertion(
-                authn, sp_entity_id, ass_in_response_to, consumer_url, name_id,
+                authn, sp_entity_id, in_response_to, consumer_url, name_id,
                 policy, _issuer, authn_statement, [], True, sign_response,
-                farg=assertion_args)
+                farg=farg)
             assertion.advice = saml.Advice()
 
             # assertion.advice.assertion_id_ref.append(saml.AssertionIDRef())
@@ -445,9 +463,9 @@ class Server(Entity):
             assertion.advice.assertion.append(assertion_attributes)
         else:
             assertion = self.setup_assertion(
-                authn, sp_entity_id, ass_in_response_to, consumer_url, name_id,
+                authn, sp_entity_id, in_response_to, consumer_url, name_id,
                 policy, _issuer, authn_statement, identity, True,
-                sign_response, farg=assertion_args)
+                sign_response, farg=farg)
 
         to_sign = []
         if not encrypt_assertion:
@@ -514,18 +532,7 @@ class Server(Entity):
         to_sign = []
 
         if identity:
-            if not farg:
-                farg = add_path(
-                    {},
-                    ['assertion', 'subject', 'subject_confirmation', 'method',
-                     saml.SCM_BEARER])
-                add_path(
-                    farg['assertion']['subject']['subject_confirmation'],
-                    ['subject_confirmation_data', 'in_response_to',
-                     in_response_to])
-                add_path(
-                    farg['assertion']['subject']['subject_confirmation'],
-                    ['subject_confirmation_data', 'recipient', destination])
+            farg = self.update_farg(in_response_to, destination, farg=farg)
 
             _issuer = self._issuer(issuer)
             ast = Assertion(identity)
@@ -656,7 +663,7 @@ class Server(Entity):
         else:
             args['name_id'] = kwargs['name_id']
 
-        for param in ['status', 'assertion_args']:
+        for param in ['status', 'farg']:
             try:
                 args[param] = kwargs[param]
             except KeyError:
@@ -714,7 +721,8 @@ class Server(Entity):
                 encrypt_cert_advice=encrypt_cert_advice,
                 encrypt_cert_assertion=encrypt_cert_assertion,
                 encrypt_assertion=encrypt_assertion,
-                encrypt_assertion_self_contained=encrypt_assertion_self_contained,
+                encrypt_assertion_self_contained
+                =encrypt_assertion_self_contained,
                 encrypted_advice_attributes=encrypted_advice_attributes,
                 pefim=pefim, **kwargs)
         except IOError as exc:

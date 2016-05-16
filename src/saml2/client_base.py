@@ -558,7 +558,7 @@ class Base(Entity):
     # ======== response handling ===========
 
     def parse_authn_request_response(self, xmlstr, binding, outstanding=None,
-            outstanding_certs=None):
+                                     outstanding_certs=None, conv_info=None):
         """ Deal with an AuthnResponse
 
         :param xmlstr: The reply as a xml string
@@ -566,11 +566,8 @@ class Base(Entity):
         :param outstanding: A dictionary with session IDs as keys and
             the original web request from the user before redirection
             as values.
-        :param only_identity_in_encrypted_assertion: Must exist an assertion
-        that is not encrypted that contains all
-                                                    other information like
-                                                    subject and
-                                                    authentication statement.
+        :param outstanding_certs:
+        :param conv_info: Information about the conversation.
         :return: An response.AuthnResponse or None
         """
 
@@ -592,6 +589,7 @@ class Base(Entity):
                 "attribute_converters": self.config.attribute_converters,
                 "allow_unknown_attributes":
                     self.config.allow_unknown_attributes,
+                'conv_info': conv_info
             }
             try:
                 resp = self._parse_response(xmlstr, AuthnResponse,

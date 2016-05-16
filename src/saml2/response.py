@@ -220,7 +220,7 @@ def for_me(conditions, myself):
 
 def authn_response(conf, return_addrs, outstanding_queries=None, timeslack=0,
                    asynchop=True, allow_unsolicited=False,
-                   want_assertions_signed=False):
+                   want_assertions_signed=False, conv_info=None):
     sec = security_context(conf)
     if not timeslack:
         try:
@@ -231,12 +231,13 @@ def authn_response(conf, return_addrs, outstanding_queries=None, timeslack=0,
     return AuthnResponse(sec, conf.attribute_converters, conf.entityid,
                          return_addrs, outstanding_queries, timeslack,
                          asynchop=asynchop, allow_unsolicited=allow_unsolicited,
-                         want_assertions_signed=want_assertions_signed)
+                         want_assertions_signed=want_assertions_signed,
+                         conv_info=conv_info)
 
 
 # comes in over SOAP so synchronous
 def attribute_response(conf, return_addrs, timeslack=0, asynchop=False,
-                       test=False):
+                       test=False, conv_info=None):
     sec = security_context(conf)
     if not timeslack:
         try:
@@ -246,14 +247,14 @@ def attribute_response(conf, return_addrs, timeslack=0, asynchop=False,
 
     return AttributeResponse(sec, conf.attribute_converters, conf.entityid,
                              return_addrs, timeslack, asynchop=asynchop,
-                             test=test)
+                             test=test, conv_info=conv_info)
 
 
 class StatusResponse(object):
     msgtype = "status_response"
 
     def __init__(self, sec_context, return_addrs=None, timeslack=0,
-                 request_id=0, asynchop=True):
+                 request_id=0, asynchop=True, conv_info=None):
         self.sec = sec_context
         self.return_addrs = return_addrs
 
@@ -272,6 +273,7 @@ class StatusResponse(object):
         self.not_signed = False
         self.asynchop = asynchop
         self.do_not_verify = False
+        self.conv_info = conv_info or {}
 
     def _clear(self):
         self.xmlstr = ""
@@ -429,9 +431,9 @@ class LogoutResponse(StatusResponse):
     msgtype = "logout_response"
 
     def __init__(self, sec_context, return_addrs=None, timeslack=0,
-                 asynchop=True):
+                 asynchop=True, conv_info=None):
         StatusResponse.__init__(self, sec_context, return_addrs, timeslack,
-                                asynchop=asynchop)
+                                asynchop=asynchop, conv_info=conv_info)
         self.signature_check = self.sec.correctly_signed_logout_response
 
 
@@ -439,9 +441,9 @@ class NameIDMappingResponse(StatusResponse):
     msgtype = "name_id_mapping_response"
 
     def __init__(self, sec_context, return_addrs=None, timeslack=0,
-                 request_id=0, asynchop=True):
+                 request_id=0, asynchop=True, conv_info=None):
         StatusResponse.__init__(self, sec_context, return_addrs, timeslack,
-                                request_id, asynchop)
+                                request_id, asynchop, conv_info=conv_info)
         self.signature_check = self.sec \
             .correctly_signed_name_id_mapping_response
 
@@ -450,9 +452,9 @@ class ManageNameIDResponse(StatusResponse):
     msgtype = "manage_name_id_response"
 
     def __init__(self, sec_context, return_addrs=None, timeslack=0,
-                 request_id=0, asynchop=True):
+                 request_id=0, asynchop=True, conv_info=None):
         StatusResponse.__init__(self, sec_context, return_addrs, timeslack,
-                                request_id, asynchop)
+                                request_id, asynchop, conv_info=conv_info)
         self.signature_check = self.sec.correctly_signed_manage_name_id_response
 
 
@@ -469,10 +471,10 @@ class AuthnResponse(StatusResponse):
                  timeslack=0, asynchop=True, allow_unsolicited=False,
                  test=False, allow_unknown_attributes=False,
                  want_assertions_signed=False, want_response_signed=False,
-                 **kwargs):
+                 conv_info=None, **kwargs):
 
         StatusResponse.__init__(self, sec_context, return_addrs, timeslack,
-                                asynchop=asynchop)
+                                asynchop=asynchop, conv_info=conv_info)
         self.entity_id = entity_id
         self.attribute_converters = attribute_converters
         if outstanding_queries:
@@ -721,6 +723,10 @@ class AuthnResponse(StatusResponse):
         assert self.assertion.subject
         subject = self.assertion.subject
         subjconf = []
+
+        if not self.verify_attesting_entity(subject.subject_confirmation):
+            raise VerificationError("No valid attesting address")
+
         for subject_confirmation in subject.subject_confirmation:
             _data = subject_confirmation.subject_confirmation_data
 
@@ -735,6 +741,10 @@ class AuthnResponse(StatusResponse):
             else:
                 raise ValueError("Unknown subject confirmation method: %s" % (
                     subject_confirmation.method,))
+
+            _recip = _data.recipient
+            if not _recip or not self.verify_recipient(_recip):
+                raise VerificationError("No valid recipient")
 
             subjconf.append(subject_confirmation)
 
@@ -933,7 +943,7 @@ class AuthnResponse(StatusResponse):
             decr_text_old = None
             while (self.find_encrypt_data(
                     resp) or self.find_encrypt_data_assertion_list(
-                    _enc_assertions)) and \
+                _enc_assertions)) and \
                             decr_text_old != decr_text:
                 decr_text_old = decr_text
                 decr_text = self.sec.decrypt_keys(decr_text, keys)
@@ -984,9 +994,11 @@ class AuthnResponse(StatusResponse):
         return True
 
     def verify(self, keys=None):
-        """ Verify that the assertion is syntactically correct and
-        the signature is correct if present.
-        :param key_file: If not the default key file should be used this is it.
+        """ Verify that the assertion is syntactically correct and the
+        signature is correct if present.
+
+        :param keys: If not the default key file should be used then use one
+        of these.
         """
 
         try:
@@ -1069,21 +1081,54 @@ class AuthnResponse(StatusResponse):
             return "%s" % self.xmlstr.decode("utf-8")
         return "%s" % self.xmlstr
 
-    def verify_attesting_entity(self, address):
+    def verify_recipient(self, recipient):
         """
-        Assumes one assertion. At least one address specification has to be
-        correct.
+        Verify that I'm the recipient of the assertion
+        
+        :param recipient: A URI specifying the entity or location to which an 
+            attesting entity can present the assertion.
+        :return: True/False
+        """
+        if not self.conv_info:
+            return True
 
-        :param address: IP address of attesting entity
+        _info = self.conv_info
+
+        try:
+            if recipient == _info['entity_id']:
+                return True
+        except KeyError:
+            pass
+
+        try:
+            if recipient in self.return_addrs:
+                return True
+        except KeyError:
+            pass
+
+        return False
+
+    def verify_attesting_entity(self, subject_confirmation):
+        """
+        At least one address specification has to be correct.
+
+        :param subject_confirmation: A SubbjectConfirmation instance
         :return: True/False
         """
 
+        try:
+            address = self.conv_info['remote_addr']
+        except KeyError:
+            address = '0.0.0.0'
+
         correct = 0
-        for subject_conf in self.assertion.subject.subject_confirmation:
+        for subject_conf in subject_confirmation:
             if subject_conf.subject_confirmation_data is None:
                 correct += 1  # In reality undefined
             elif subject_conf.subject_confirmation_data.address:
-                if subject_conf.subject_confirmation_data.address == address:
+                if address == '0.0.0.0':  # accept anything
+                    correct += 1
+                elif subject_conf.subject_confirmation_data.address == address:
                     correct += 1
             else:
                 correct += 1
@@ -1098,10 +1143,12 @@ class AuthnQueryResponse(AuthnResponse):
     msgtype = "authn_query_response"
 
     def __init__(self, sec_context, attribute_converters, entity_id,
-                 return_addrs=None, timeslack=0, asynchop=False, test=False):
+                 return_addrs=None, timeslack=0, asynchop=False, test=False,
+                 conv_info=None):
         AuthnResponse.__init__(self, sec_context, attribute_converters,
                                entity_id, return_addrs, timeslack=timeslack,
-                               asynchop=asynchop, test=test)
+                               asynchop=asynchop, test=test,
+                               conv_info=conv_info)
         self.entity_id = entity_id
         self.attribute_converters = attribute_converters
         self.assertion = None
@@ -1115,10 +1162,12 @@ class AttributeResponse(AuthnResponse):
     msgtype = "attribute_response"
 
     def __init__(self, sec_context, attribute_converters, entity_id,
-                 return_addrs=None, timeslack=0, asynchop=False, test=False):
+                 return_addrs=None, timeslack=0, asynchop=False, test=False,
+                 conv_info=None):
         AuthnResponse.__init__(self, sec_context, attribute_converters,
                                entity_id, return_addrs, timeslack=timeslack,
-                               asynchop=asynchop, test=test)
+                               asynchop=asynchop, test=test,
+                               conv_info=conv_info)
         self.entity_id = entity_id
         self.attribute_converters = attribute_converters
         self.assertion = None
@@ -1131,10 +1180,11 @@ class AuthzResponse(AuthnResponse):
     msgtype = "authz_decision_response"
 
     def __init__(self, sec_context, attribute_converters, entity_id,
-                 return_addrs=None, timeslack=0, asynchop=False):
+                 return_addrs=None, timeslack=0, asynchop=False,
+                 conv_info=None):
         AuthnResponse.__init__(self, sec_context, attribute_converters,
                                entity_id, return_addrs, timeslack=timeslack,
-                               asynchop=asynchop)
+                               asynchop=asynchop, conv_info=conv_info)
         self.entity_id = entity_id
         self.attribute_converters = attribute_converters
         self.assertion = None
@@ -1145,10 +1195,12 @@ class ArtifactResponse(AuthnResponse):
     msgtype = "artifact_response"
 
     def __init__(self, sec_context, attribute_converters, entity_id,
-                 return_addrs=None, timeslack=0, asynchop=False, test=False):
+                 return_addrs=None, timeslack=0, asynchop=False, test=False,
+                 conv_info=None):
         AuthnResponse.__init__(self, sec_context, attribute_converters,
                                entity_id, return_addrs, timeslack=timeslack,
-                               asynchop=asynchop, test=test)
+                               asynchop=asynchop, test=test,
+                               conv_info=conv_info)
         self.entity_id = entity_id
         self.attribute_converters = attribute_converters
         self.assertion = None
@@ -1158,7 +1210,7 @@ class ArtifactResponse(AuthnResponse):
 def response_factory(xmlstr, conf, return_addrs=None, outstanding_queries=None,
                      timeslack=0, decode=True, request_id=0, origxml=None,
                      asynchop=True, allow_unsolicited=False,
-                     want_assertions_signed=False):
+                     want_assertions_signed=False, conv_info=None):
     sec_context = security_context(conf)
     if not timeslack:
         try:
@@ -1171,23 +1223,23 @@ def response_factory(xmlstr, conf, return_addrs=None, outstanding_queries=None,
     extension_schema = conf.extension_schema
 
     response = StatusResponse(sec_context, return_addrs, timeslack, request_id,
-                              asynchop)
+                              asynchop, conv_info=conv_info)
     try:
         response.loads(xmlstr, decode, origxml)
         if response.response.assertion or response.response.encrypted_assertion:
-            authnresp = AuthnResponse(sec_context, attribute_converters,
-                                      entity_id, return_addrs,
-                                      outstanding_queries, timeslack, asynchop,
-                                      allow_unsolicited,
-                                      extension_schema=extension_schema,
-                                      want_assertions_signed=want_assertions_signed)
+            authnresp = AuthnResponse(
+                sec_context, attribute_converters, entity_id, return_addrs,
+                outstanding_queries, timeslack, asynchop, allow_unsolicited,
+                extension_schema=extension_schema,
+                want_assertions_signed=want_assertions_signed,
+                conv_info=conv_info)
             authnresp.update(response)
             return authnresp
     except TypeError:
         response.signature_check = sec_context.correctly_signed_logout_response
         response.loads(xmlstr, decode, origxml)
         logoutresp = LogoutResponse(sec_context, return_addrs, timeslack,
-                                    asynchop=asynchop)
+                                    asynchop=asynchop, conv_info=conv_info)
         logoutresp.update(response)
         return logoutresp
 

@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 import datetime
 import re
-from six.moves.urllib.parse import quote_plus
-#from future.backports.urllib.parse import quote_plus
+
+from future.backports.urllib.parse import quote_plus
+
 from saml2.config import Config
 from saml2.mdstore import MetadataStore
 from saml2.mdstore import MetaDataMDX
@@ -446,6 +447,7 @@ def test_get_certs_from_metadata_without_keydescriptor():
     certs = mds.certs("http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php", "idpsso")
 
     assert len(certs) == 0
+
 
 def test_metadata_extension_algsupport():
     mds = MetadataStore(ATTRCONV, None)
