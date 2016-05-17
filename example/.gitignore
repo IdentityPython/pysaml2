@@ -1,6 +1,6 @@
 idp/idp_conf.py
 idp2/idp.subject
-idp2/idp_conf.py
+idp2/test_idp_conf.py
 sp/outstanding
 sp/sp_conf.py
 server.crt

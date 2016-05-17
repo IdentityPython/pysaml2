@@ -7,11 +7,14 @@ import os
 import re
 import time
 
-from Cookie import SimpleCookie
+#from Cookie import SimpleCookie
 from hashlib import sha1
-from urlparse import parse_qs
+#from urlparse import parse_qs
 from cherrypy import wsgiserver
-from cherrypy.wsgiserver import ssl_pyopenssl
+#from cherrypy.wsgiserver import ssl_pyopenssl
+from cherrypy.wsgiserver.ssl_builtin import BuiltinSSLAdapter
+from future.backports.http.cookies import SimpleCookie
+from future.backports.urllib.parse import parse_qs
 
 from saml2 import BINDING_HTTP_ARTIFACT
 from saml2 import BINDING_URI
@@ -1088,10 +1091,13 @@ if __name__ == '__main__':
 
     _https = ""
     if CONFIG.HTTPS:
-        SRV.ssl_adapter = ssl_pyopenssl.pyOpenSSLAdapter(CONFIG.SERVER_CERT,
-                                                         CONFIG.SERVER_KEY,
-                                                         CONFIG.CERT_CHAIN)
-        _https = " using SSL/TLS"
+        https = "using HTTPS"
+        # SRV.ssl_adapter = ssl_pyopenssl.pyOpenSSLAdapter(
+        #     config.SERVER_CERT, config.SERVER_KEY, config.CERT_CHAIN)
+        SRV.ssl_adapter = BuiltinSSLAdapter(CONFIG.SERVER_CERT,
+                                            CONFIG.SERVER_KEY,
+                                            CONFIG.CERT_CHAIN)
+
     logger.info("Server starting")
     print("IDP listening on %s:%s%s" % (HOST, PORT, _https))
     try:
