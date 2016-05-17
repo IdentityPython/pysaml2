@@ -273,13 +273,8 @@ def post_entity_categories(maps, **kwargs):
         required = []
 
     if kwargs["mds"]:
-        try:
+        if "sp_entity_id" in kwargs:
             ecs = kwargs["mds"].entity_categories(kwargs["sp_entity_id"])
-        except KeyError:
-            for ec_map in maps:
-                for attr in ec_map[""]:
-                    restrictions[attr] = None
-        else:
             for ec_map in maps:
                 for key, (atlist, only_required) in ec_map.items():
                     if key == "":  # always released
@@ -305,6 +300,10 @@ def post_entity_categories(maps, **kwargs):
 
                     for attr in attrs:
                         restrictions[attr] = None
+        else:
+            for ec_map in maps:
+                for attr in ec_map[""]:
+                    restrictions[attr] = None
 
     return restrictions
 
