@@ -305,7 +305,7 @@ class MetaData(object):
         raise NotImplementedError
 
     def dumps(self):
-        return json.dumps(self.items(), indent=2)
+        return json.dumps(list(self.items()), indent=2)
 
     def with_descriptor(self, descriptor):
         '''
