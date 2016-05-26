@@ -1,19 +1,11 @@
 from contextlib import closing
-from saml2 import saml, sigver
-from saml2 import md
+from saml2 import sigver
 from saml2 import config
 from saml2.assertion import Policy
 from saml2.attribute_converter import ac_factory
-from saml2.extension import mdui
-from saml2.extension import idpdisc
-from saml2.extension import dri
-from saml2.extension import mdattr
-from saml2.extension import ui
 from pathutils import full_path
 from saml2.mdstore import MetadataStore
 from saml2.server import Server
-from saml2 import xmldsig
-from saml2 import xmlenc
 
 
 ATTRCONV = ac_factory(full_path("attributemaps"))
