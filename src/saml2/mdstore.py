@@ -269,7 +269,7 @@ class MetaData(object):
         """
         Return any entity that matches the specification
 
-        :param typ:
+        :param typ: Type of entity
         :param service:
         :param binding:
         :return:
@@ -280,6 +280,37 @@ class MetaData(object):
             if bind:
                 res[ent] = bind
 
+        return res
+
+    def any2(self, typ, service, binding=None):
+        """
+
+        :param type:
+        :param service:
+        :param binding:
+        :return:
+        """
+        res = {}
+        for entid, item in self.items():
+            hit = False
+            try:
+                descr = item['{}sso_descriptor'.format(typ)]
+            except KeyError:
+                continue
+            else:
+                for desc in descr:
+                    try:
+                        srvs = desc[service]
+                    except KeyError:
+                        continue
+                    else:
+                        for srv in srvs:
+                            if srv['binding'] == binding:
+                                res[entid] = item
+                                hit = True
+                                break
+                    if hit:
+                        break
         return res
 
     def bindings(self, entity_id, typ, service):
