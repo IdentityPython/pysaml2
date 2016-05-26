@@ -1,4 +1,7 @@
-from six.moves.urllib.parse import urlencode, parse_qs, urlparse
+from future.backports.urllib.parse import parse_qs
+from future.backports.urllib.parse import urlencode
+from future.backports.urllib.parse import urlparse
+
 from saml2.entity import Entity
 from saml2.response import VerificationError
 
@@ -9,7 +12,8 @@ IDPDISC_POLICY = "urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol:si
 
 class DiscoveryServer(Entity):
     def __init__(self, config=None, config_file=""):
-        Entity.__init__(self, "disco", config, config_file)
+        if config or config_file:
+            Entity.__init__(self, "disco", config, config_file)
 
     def parse_discovery_service_request(self, url="", query=""):
         if url:
@@ -22,7 +26,8 @@ class DiscoveryServer(Entity):
 
         # verify
 
-        for key in ["isPassive", "return", "returnIDParam", "policy"]:
+        for key in ["isPassive", "return", "returnIDParam", "policy",
+                    'entityID']:
             try:
                 assert len(dsr[key]) == 1
                 dsr[key] = dsr[key][0]
