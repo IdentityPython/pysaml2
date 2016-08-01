@@ -586,7 +586,7 @@ def parse_xmlsec_output(output):
     :param output: The output from Popen
     :return: A boolean; True if the command was a success otherwise False
     """
-    for line in output.split("\n"):
+    for line in output.splitlines():
         if line == "OK":
             return True
         elif line == "FAIL":
