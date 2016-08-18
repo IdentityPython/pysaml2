@@ -31,6 +31,8 @@ tmp*
 *.tmpl
 *.iml
 _build/
+.cache
+*.swp
 
 example/idp3/htdocs/login.mako
 
