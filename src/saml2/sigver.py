@@ -934,7 +934,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
             # this doesn't work if --store-signatures are used
             if stdout == "":
                 if signed_statement:
-                    return signed_statement.decode('utf-8')
+                    return signed_statement
             logger.error(
                 "Signing operation failed :\nstdout : %s\nstderr : %s",
                 stdout, stderr)
