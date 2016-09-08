@@ -808,6 +808,6 @@ def sign_entity_descriptor(edesc, ident, secc, sign_alg=None, digest_alg=None):
 
     edesc.signature = pre_signature_part(ident, secc.my_cert, 1, sign_alg=sign_alg, digest_alg=digest_alg)
     edesc.id = ident
-    xmldoc = secc.sign_statement("%s" % edesc, class_name(edesc))
+    xmldoc = secc.sign_statement("%s" % edesc, class_name(edesc)).encode('utf-8')
     edesc = md.entity_descriptor_from_string(xmldoc)
     return edesc, xmldoc
