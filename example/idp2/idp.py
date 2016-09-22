@@ -7,14 +7,12 @@ import os
 import re
 import time
 
-#from Cookie import SimpleCookie
 from hashlib import sha1
-#from urlparse import parse_qs
 from cherrypy import wsgiserver
-#from cherrypy.wsgiserver import ssl_pyopenssl
 from cherrypy.wsgiserver.ssl_builtin import BuiltinSSLAdapter
 from future.backports.http.cookies import SimpleCookie
 from future.backports.urllib.parse import parse_qs
+from future.utils import PY3
 
 from saml2 import BINDING_HTTP_ARTIFACT
 from saml2 import BINDING_URI
@@ -854,7 +852,12 @@ class NIM(Service):
 def info_from_cookie(kaka):
     logger.debug("KAKA: %s", kaka)
     if kaka:
-        cookie_obj = SimpleCookie(kaka)
+        cookie_obj = SimpleCookie()
+        if PY3:
+            import builtins
+            cookie_obj.load(builtins.str(kaka))
+        else:
+            cookie_obj.load(str(kaka))
         morsel = cookie_obj.get("idpauthn", None)
         if morsel:
             try:
