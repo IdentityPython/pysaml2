@@ -91,7 +91,7 @@ def validate_on_or_after(not_on_or_after, slack):
         nooa = calendar.timegm(time_util.str_to_time(not_on_or_after))
         if now > nooa + slack:
             raise ResponseLifetimeExceed(
-                "Can't use it, it's too old %d > %d".format(now - slack, nooa))
+                "Can't use it, it's too old %d > %d" % (now - slack, nooa))
         return nooa
     else:
         return False
