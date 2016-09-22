@@ -902,6 +902,9 @@ class MetadataStore(MetaData):
         elif typ == "loader":
             key = args[1]
             _md = MetaDataLoader(self.attrc, args[1], **_args)
+        elif typ == "mdq":
+            key = args[1]
+            _md = MetaDataMDX(args[1])
         else:
             raise SAMLError("Unknown metadata type '%s'" % typ)
         _md.load()
