@@ -902,6 +902,9 @@ class MetadataStore(MetaData):
         elif typ == "loader":
             key = args[1]
             _md = MetaDataLoader(self.attrc, args[1], **_args)
+        elif typ == "mdq":
+            key = args[1]
+            _md = MetaDataMDX(args[1])
         else:
             raise SAMLError("Unknown metadata type '%s'" % typ)
         _md.load()
@@ -992,10 +995,7 @@ class MetadataStore(MetaData):
             try:
                 srvs = _md[entity_id][typ]
             except KeyError:
-                return None
-
-            if not srvs:
-                return srvs
+                continue
 
             res = []
             for srv in srvs:
@@ -1004,6 +1004,8 @@ class MetadataStore(MetaData):
                         if elem["__class__"] == service:
                             res.append(elem)
             return res
+
+        return None
 
     def ext_service(self, entity_id, typ, service, binding=None):
         known_entity = False

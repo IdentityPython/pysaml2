@@ -615,7 +615,7 @@ def _authn_context_decl_ref(decl_ref, authn_auth=None):
 
 def authn_statement(authn_class=None, authn_auth=None,
                     authn_decl=None, authn_decl_ref=None, authn_instant="",
-                    subject_locality=""):
+                    subject_locality="", session_not_on_or_after=None):
     """
     Construct the AuthnStatement
     :param authn_class: Authentication Context Class reference
@@ -639,6 +639,7 @@ def authn_statement(authn_class=None, authn_auth=None,
             saml.AuthnStatement,
             authn_instant=_instant,
             session_index=sid(),
+            session_not_on_or_after=session_not_on_or_after,
             authn_context=_authn_context_class_ref(
                 authn_class, authn_auth))
     elif authn_decl:
@@ -646,19 +647,22 @@ def authn_statement(authn_class=None, authn_auth=None,
             saml.AuthnStatement,
             authn_instant=_instant,
             session_index=sid(),
+            session_not_on_or_after=session_not_on_or_after,
             authn_context=_authn_context_decl(authn_decl, authn_auth))
     elif authn_decl_ref:
         res = factory(
             saml.AuthnStatement,
             authn_instant=_instant,
             session_index=sid(),
+            session_not_on_or_after=session_not_on_or_after,
             authn_context=_authn_context_decl_ref(authn_decl_ref,
                                                   authn_auth))
     else:
         res = factory(
             saml.AuthnStatement,
             authn_instant=_instant,
-            session_index=sid())
+            session_index=sid(),
+            session_not_on_or_after=session_not_on_or_after)
 
     if subject_locality:
         res.subject_locality = saml.SubjectLocality(text=subject_locality)
@@ -719,7 +723,7 @@ class Assertion(dict):
                   authn_class=None, authn_auth=None, authn_decl=None,
                   encrypt=None, sec_context=None, authn_decl_ref=None,
                   authn_instant="", subject_locality="", authn_statem=None,
-                  name_id=None):
+                  name_id=None, session_not_on_or_after=None):
         """ Construct the Assertion
 
         :param sp_entity_id: The entityid of the SP
@@ -770,7 +774,8 @@ class Assertion(dict):
             _authn_statement = authn_statement(authn_class, authn_auth,
                                                authn_decl, authn_decl_ref,
                                                authn_instant,
-                                               subject_locality)
+                                               subject_locality,
+                                               session_not_on_or_after=session_not_on_or_after)
         else:
             _authn_statement = None
 

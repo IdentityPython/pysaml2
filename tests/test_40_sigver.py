@@ -540,6 +540,19 @@ def test_sha256_signing():
     assert s
 
 
+def test_xmlsec_output_line_parsing():
+    output1 = "prefix\nOK\npostfix"
+    assert sigver.parse_xmlsec_output(output1)
+
+    output2 = "prefix\nFAIL\npostfix"
+    raises(sigver.XmlsecError, sigver.parse_xmlsec_output, output2)
+
+    output3 = "prefix\r\nOK\r\npostfix"
+    assert sigver.parse_xmlsec_output(output3)
+
+    output4 = "prefix\r\nFAIL\r\npostfix"
+    raises(sigver.XmlsecError, sigver.parse_xmlsec_output, output4)
+
 
 if __name__ == "__main__":
     # t = TestSecurity()

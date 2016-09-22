@@ -270,6 +270,19 @@ idp/aa
 
 Directives that are specific to an IdP or AA service instance
 
+sign_assertion
+""""""""""""""
+
+Specifies if the IdP should sign the assertion in an authentication response
+or not. Can be True or False. Default is False.
+
+sign_response
+"""""""""""""
+
+Specifies if the IdP should sign the authentication response or not. Can be
+True or False. Default is False.
+
+
 policy
 """"""
 
@@ -419,7 +432,7 @@ Indicates if this SP wants the IdP to send the assertions signed. This
 sets the WantAssertionsSigned attribute of the SPSSODescriptor node
 of the metadata so the IdP will know this SP preference.
 
-Valid values are True or False. Default value is True.
+Valid values are True or False. Default value is False.
 
 Example::
 

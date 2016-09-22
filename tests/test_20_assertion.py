@@ -86,7 +86,7 @@ def test_filter_on_attributes_without_friendly_name():
            "eduPersonAffiliation": "test",
            "extra": "foo"}
     eptid = to_dict(
-        Attribute(name="urn:oid:1.3.6.1.4.1.5923.1.1.1.11",
+        Attribute(name="urn:oid:1.3.6.1.4.1.5923.1.1.1.10",
                   name_format=NAME_FORMAT_URI), ONTS)
     ep_affiliation = to_dict(
         Attribute(name="urn:oid:1.3.6.1.4.1.5923.1.1.1.1",

@@ -1,4 +1,4 @@
- #!/usr/bin/env python
+#!/usr/bin/env python
 from saml2.sigver import _get_xmlsec_cryptobackend
 from saml2.sigver import SecurityContext
 from saml2.httpbase import HTTPBase

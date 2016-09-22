@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import datetime
 import re
+from collections import OrderedDict
 
 from future.backports.urllib.parse import quote_plus
 
@@ -454,6 +455,17 @@ def test_metadata_extension_algsupport():
     mds.imp(METADATACONF["12"])
     mdf = mds.metadata[full_path("uu.xml")]
     assert mds
+
+
+def test_extension():
+    mds = MetadataStore(ATTRCONV, None)
+    # use ordered dict to force expected entity to be last
+    metadata = OrderedDict()
+    metadata["1"] = {"entity1": {}}
+    metadata["2"] = {"entity2": {"idpsso_descriptor": [{"extensions": {"extension_elements": [{"__class__": "test"}]}}]}}
+    mds.metadata = metadata
+    assert mds.extension("entity2", "idpsso_descriptor", "test")
+
 
 if __name__ == "__main__":
     test_metadata_extension_algsupport()

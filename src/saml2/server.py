@@ -326,7 +326,8 @@ class Server(Entity):
 
     def setup_assertion(self, authn, sp_entity_id, in_response_to, consumer_url,
                         name_id, policy, _issuer, authn_statement, identity,
-                        best_effort, sign_response, farg=None, **kwargs):
+                        best_effort, sign_response, farg=None,
+                        session_not_on_or_after=None, **kwargs):
         """
         Construct and return the Assertion
 
@@ -370,17 +371,20 @@ class Server(Entity):
             assertion = ast.construct(
                 sp_entity_id, self.config.attribute_converters, policy,
                 issuer=_issuer, farg=farg['assertion'], name_id=name_id,
+                session_not_on_or_after=session_not_on_or_after,
                 **authn_args)
 
         elif authn_statement:  # Got a complete AuthnStatement
             assertion = ast.construct(
                 sp_entity_id, self.config.attribute_converters, policy,
                 issuer=_issuer, authn_statem=authn_statement,
-                farg=farg['assertion'], name_id=name_id, **kwargs)
+                farg=farg['assertion'], name_id=name_id,
+                **kwargs)
         else:
             assertion = ast.construct(
                 sp_entity_id, self.config.attribute_converters, policy,
                 issuer=_issuer, farg=farg['assertion'], name_id=name_id,
+                session_not_on_or_after=session_not_on_or_after,
                 **kwargs)
         return assertion
 
@@ -394,7 +398,7 @@ class Server(Entity):
                         encrypt_assertion_self_contained=False,
                         encrypted_advice_attributes=False,
                         pefim=False, sign_alg=None, digest_alg=None,
-                        farg=None):
+                        farg=None, session_not_on_or_after=None):
         """ Create a response. A layer of indirection.
 
         :param in_response_to: The session identifier of the request
@@ -455,7 +459,7 @@ class Server(Entity):
             assertion = self.setup_assertion(
                 authn, sp_entity_id, in_response_to, consumer_url, name_id,
                 policy, _issuer, authn_statement, [], True, sign_response,
-                farg=farg)
+                farg=farg, session_not_on_or_after=session_not_on_or_after)
             assertion.advice = saml.Advice()
 
             # assertion.advice.assertion_id_ref.append(saml.AssertionIDRef())
@@ -465,7 +469,8 @@ class Server(Entity):
             assertion = self.setup_assertion(
                 authn, sp_entity_id, in_response_to, consumer_url, name_id,
                 policy, _issuer, authn_statement, identity, True,
-                sign_response, farg=farg)
+                sign_response, farg=farg,
+                session_not_on_or_after=session_not_on_or_after)
 
         to_sign = []
         if not encrypt_assertion:
@@ -681,6 +686,7 @@ class Server(Entity):
                               encrypt_assertion_self_contained=True,
                               encrypted_advice_attributes=False, pefim=False,
                               sign_alg=None, digest_alg=None,
+                              session_not_on_or_after=None,
                               **kwargs):
         """ Constructs an AuthenticationResponse
 
@@ -741,11 +747,13 @@ class Server(Entity):
                     return self._authn_response(
                         in_response_to, destination, sp_entity_id, identity,
                         authn=_authn, issuer=issuer, pefim=pefim,
-                        sign_alg=sign_alg, digest_alg=digest_alg, **args)
+                        sign_alg=sign_alg, digest_alg=digest_alg,
+                        session_not_on_or_after=session_not_on_or_after, **args)
             return self._authn_response(
                 in_response_to, destination, sp_entity_id, identity,
                 authn=_authn, issuer=issuer, pefim=pefim, sign_alg=sign_alg,
-                digest_alg=digest_alg, **args)
+                digest_alg=digest_alg,
+                session_not_on_or_after=session_not_on_or_after, **args)
 
         except MissingValue as exc:
             return self.create_error_response(in_response_to, destination,
@@ -756,13 +764,15 @@ class Server(Entity):
                                       name_id_policy=None, userid=None,
                                       name_id=None, authn=None, authn_decl=None,
                                       issuer=None, sign_response=False,
-                                      sign_assertion=False, **kwargs):
+                                      sign_assertion=False,
+                                      session_not_on_or_after=None, **kwargs):
 
         return self.create_authn_response(identity, in_response_to, destination,
                                           sp_entity_id, name_id_policy, userid,
                                           name_id, authn, issuer,
                                           sign_response, sign_assertion,
-                                          authn_decl=authn_decl)
+                                          authn_decl=authn_decl,
+                                          session_not_on_or_after=session_not_on_or_after)
 
     # noinspection PyUnusedLocal
     def create_assertion_id_request_response(self, assertion_id, sign=False,
