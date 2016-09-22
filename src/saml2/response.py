@@ -219,8 +219,8 @@ def for_me(conditions, myself):
 
 
 def authn_response(conf, return_addrs, outstanding_queries=None, timeslack=0,
-                   asynchop=True, allow_unsolicited=False,
-                   want_assertions_signed=False, conv_info=None):
+        asynchop=True, allow_unsolicited=False,
+        want_assertions_signed=False, conv_info=None):
     sec = security_context(conf)
     if not timeslack:
         try:
@@ -237,7 +237,7 @@ def authn_response(conf, return_addrs, outstanding_queries=None, timeslack=0,
 
 # comes in over SOAP so synchronous
 def attribute_response(conf, return_addrs, timeslack=0, asynchop=False,
-                       test=False, conv_info=None):
+        test=False, conv_info=None):
     sec = security_context(conf)
     if not timeslack:
         try:
@@ -254,7 +254,7 @@ class StatusResponse(object):
     msgtype = "status_response"
 
     def __init__(self, sec_context, return_addrs=None, timeslack=0,
-                 request_id=0, asynchop=True, conv_info=None):
+            request_id=0, asynchop=True, conv_info=None):
         self.sec = sec_context
         self.return_addrs = return_addrs
 
@@ -431,7 +431,7 @@ class LogoutResponse(StatusResponse):
     msgtype = "logout_response"
 
     def __init__(self, sec_context, return_addrs=None, timeslack=0,
-                 asynchop=True, conv_info=None):
+            asynchop=True, conv_info=None):
         StatusResponse.__init__(self, sec_context, return_addrs, timeslack,
                                 asynchop=asynchop, conv_info=conv_info)
         self.signature_check = self.sec.correctly_signed_logout_response
@@ -441,7 +441,7 @@ class NameIDMappingResponse(StatusResponse):
     msgtype = "name_id_mapping_response"
 
     def __init__(self, sec_context, return_addrs=None, timeslack=0,
-                 request_id=0, asynchop=True, conv_info=None):
+            request_id=0, asynchop=True, conv_info=None):
         StatusResponse.__init__(self, sec_context, return_addrs, timeslack,
                                 request_id, asynchop, conv_info=conv_info)
         self.signature_check = self.sec \
@@ -452,7 +452,7 @@ class ManageNameIDResponse(StatusResponse):
     msgtype = "manage_name_id_response"
 
     def __init__(self, sec_context, return_addrs=None, timeslack=0,
-                 request_id=0, asynchop=True, conv_info=None):
+            request_id=0, asynchop=True, conv_info=None):
         StatusResponse.__init__(self, sec_context, return_addrs, timeslack,
                                 request_id, asynchop, conv_info=conv_info)
         self.signature_check = self.sec.correctly_signed_manage_name_id_response
@@ -467,11 +467,11 @@ class AuthnResponse(StatusResponse):
     msgtype = "authn_response"
 
     def __init__(self, sec_context, attribute_converters, entity_id,
-                 return_addrs=None, outstanding_queries=None,
-                 timeslack=0, asynchop=True, allow_unsolicited=False,
-                 test=False, allow_unknown_attributes=False,
-                 want_assertions_signed=False, want_response_signed=False,
-                 conv_info=None, **kwargs):
+            return_addrs=None, outstanding_queries=None,
+            timeslack=0, asynchop=True, allow_unsolicited=False,
+            test=False, allow_unknown_attributes=False,
+            want_assertions_signed=False, want_response_signed=False,
+            conv_info=None, **kwargs):
 
         StatusResponse.__init__(self, sec_context, return_addrs, timeslack,
                                 asynchop=asynchop, conv_info=conv_info)
@@ -525,6 +525,7 @@ class AuthnResponse(StatusResponse):
                 except AttributeError:
                     pass
             elif self.allow_unsolicited:
+                # Should check that I haven't seen this before
                 pass
             else:
                 logger.exception(
@@ -821,7 +822,7 @@ class AuthnResponse(StatusResponse):
             raise
 
     def decrypt_assertions(self, encrypted_assertions, decr_txt, issuer=None,
-                           verified=False):
+            verified=False):
         """ Moves the decrypted assertion from the encrypted assertion to a
         list.
 
@@ -1143,8 +1144,8 @@ class AuthnQueryResponse(AuthnResponse):
     msgtype = "authn_query_response"
 
     def __init__(self, sec_context, attribute_converters, entity_id,
-                 return_addrs=None, timeslack=0, asynchop=False, test=False,
-                 conv_info=None):
+            return_addrs=None, timeslack=0, asynchop=False, test=False,
+            conv_info=None):
         AuthnResponse.__init__(self, sec_context, attribute_converters,
                                entity_id, return_addrs, timeslack=timeslack,
                                asynchop=asynchop, test=test,
@@ -1162,8 +1163,8 @@ class AttributeResponse(AuthnResponse):
     msgtype = "attribute_response"
 
     def __init__(self, sec_context, attribute_converters, entity_id,
-                 return_addrs=None, timeslack=0, asynchop=False, test=False,
-                 conv_info=None):
+            return_addrs=None, timeslack=0, asynchop=False, test=False,
+            conv_info=None):
         AuthnResponse.__init__(self, sec_context, attribute_converters,
                                entity_id, return_addrs, timeslack=timeslack,
                                asynchop=asynchop, test=test,
@@ -1180,8 +1181,8 @@ class AuthzResponse(AuthnResponse):
     msgtype = "authz_decision_response"
 
     def __init__(self, sec_context, attribute_converters, entity_id,
-                 return_addrs=None, timeslack=0, asynchop=False,
-                 conv_info=None):
+            return_addrs=None, timeslack=0, asynchop=False,
+            conv_info=None):
         AuthnResponse.__init__(self, sec_context, attribute_converters,
                                entity_id, return_addrs, timeslack=timeslack,
                                asynchop=asynchop, conv_info=conv_info)
@@ -1195,8 +1196,8 @@ class ArtifactResponse(AuthnResponse):
     msgtype = "artifact_response"
 
     def __init__(self, sec_context, attribute_converters, entity_id,
-                 return_addrs=None, timeslack=0, asynchop=False, test=False,
-                 conv_info=None):
+            return_addrs=None, timeslack=0, asynchop=False, test=False,
+            conv_info=None):
         AuthnResponse.__init__(self, sec_context, attribute_converters,
                                entity_id, return_addrs, timeslack=timeslack,
                                asynchop=asynchop, test=test,
@@ -1208,9 +1209,9 @@ class ArtifactResponse(AuthnResponse):
 
 
 def response_factory(xmlstr, conf, return_addrs=None, outstanding_queries=None,
-                     timeslack=0, decode=True, request_id=0, origxml=None,
-                     asynchop=True, allow_unsolicited=False,
-                     want_assertions_signed=False, conv_info=None):
+        timeslack=0, decode=True, request_id=0, origxml=None,
+        asynchop=True, allow_unsolicited=False,
+        want_assertions_signed=False, conv_info=None):
     sec_context = security_context(conf)
     if not timeslack:
         try:
@@ -1254,7 +1255,7 @@ class AssertionIDResponse(object):
     msgtype = "assertion_id_response"
 
     def __init__(self, sec_context, attribute_converters, timeslack=0,
-                 **kwargs):
+            **kwargs):
 
         self.sec = sec_context
         self.timeslack = timeslack
