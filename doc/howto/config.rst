@@ -432,7 +432,7 @@ Indicates if this SP wants the IdP to send the assertions signed. This
 sets the WantAssertionsSigned attribute of the SPSSODescriptor node
 of the metadata so the IdP will know this SP preference.
 
-Valid values are True or False. Default value is True.
+Valid values are True or False. Default value is False.
 
 Example::
 
