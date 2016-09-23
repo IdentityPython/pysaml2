@@ -5,9 +5,8 @@ import time
 import cgi
 import six
 
-from future.backports.http.cookies import SimpleCookie
-from future.backports.urllib.parse import quote
-from future.backports.urllib.parse import parse_qs
+from six.moves.urllib.parse import quote, parse_qs
+from six.moves.http_cookies import SimpleCookie
 
 from saml2 import BINDING_HTTP_ARTIFACT
 from saml2 import BINDING_HTTP_REDIRECT
