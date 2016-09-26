@@ -377,14 +377,17 @@ class AttributeConverter(object):
                 ext = extension_elements_to_elements(value.extension_elements,
                                                      [saml])
                 for ex in ext:
-                    cval = {}
-                    for key, (name, typ, mul) in ex.c_attributes.items():
-                        exv = getattr(ex, name)
-                        if exv:
-                            cval[name] = exv
-                    if ex.text:
-                        cval["value"] = ex.text.strip()
-                    val.append({ex.c_tag: cval})
+                    if attr == "eduPersonTargetedID" and ex.text:
+                        val.append(ex.text.strip())
+                    else:
+                        cval = {}
+                        for key, (name, typ, mul) in ex.c_attributes.items():
+                            exv = getattr(ex, name)
+                            if exv:
+                                cval[name] = exv
+                        if ex.text:
+                            cval["value"] = ex.text.strip()
+                        val.append({ex.c_tag: cval})
             elif not value.text:
                 val.append('')
             else:
