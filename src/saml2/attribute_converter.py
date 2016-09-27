@@ -11,7 +11,7 @@ from saml2.s_utils import do_ava
 from saml2 import saml
 from saml2 import extension_elements_to_elements
 from saml2 import SAMLError
-from saml2.saml import NAME_FORMAT_UNSPECIFIED
+from saml2.saml import NAME_FORMAT_UNSPECIFIED, NAMEID_FORMAT_PERSISTENT, NameID
 
 import logging
 logger = logging.getLogger(__name__)
@@ -488,14 +488,19 @@ class AttributeConverter(object):
         """
         attributes = []
         for key, value in attrvals.items():
-            lkey = key.lower()
-            try:
+            name = self._to.get(key.lower())
+            if name:
+                if name == "urn:oid:1.3.6.1.4.1.5923.1.1.1.10":
+                    # special case for eduPersonTargetedID
+                    attr_value = do_ava(NameID(format=NAMEID_FORMAT_PERSISTENT, text=value).to_string())
+                else:
+                    attr_value = do_ava(value)
                 attributes.append(factory(saml.Attribute,
-                                          name=self._to[lkey],
+                                          name=name,
                                           name_format=self.name_format,
                                           friendly_name=key,
-                                          attribute_value=do_ava(value)))
-            except KeyError:
+                                          attribute_value=attr_value))
+            else:
                 attributes.append(factory(saml.Attribute,
                                           name=key,
                                           attribute_value=do_ava(value)))

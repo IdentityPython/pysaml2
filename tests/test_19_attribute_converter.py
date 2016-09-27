@@ -5,10 +5,10 @@ from saml2 import attribute_converter, saml
 from attribute_statement_data import *
 
 from pathutils import full_path
-from saml2.attribute_converter import AttributeConverterNOOP
+from saml2.attribute_converter import AttributeConverterNOOP, from_local
 from saml2.attribute_converter import AttributeConverter
 from saml2.attribute_converter import to_local
-from saml2.saml import attribute_from_string
+from saml2.saml import attribute_from_string, name_id_from_string, NameID, NAMEID_FORMAT_PERSISTENT
 from saml2.saml import attribute_statement_from_string
 
 
@@ -209,6 +209,13 @@ class TestAC():
         attr_conv = AttributeConverter()
         attr_conv.adjust()
         assert attr_conv._fro is None and attr_conv._to is None
+
+    def test_from_local_nest_eduPersonTargetedID_in_NameID(self):
+        ava = {"edupersontargetedid": "test value"}
+        attributes = from_local(self.acs, ava, URI_NF)
+        assert len(attributes) == 1
+        assert len(attributes[0].attribute_value) == 1
+        assert attributes[0].attribute_value[0].text == NameID(format=NAMEID_FORMAT_PERSISTENT, text="test value").to_string().decode("utf-8")
 
 
 def test_noop_attribute_conversion():
