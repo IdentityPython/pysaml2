@@ -131,6 +131,65 @@ class TestAuthnResponse:
         session_info = self.ar.session_info()
         assert session_info["authn_info"] == authn_info
 
+    def test_unpack_nested_eptid(self):
+        authn_response_xml = """<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
+                xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
+                ID="CORTO54673f841c5297dd3614527d38e217332f9e3000"
+                Version="2.0"
+                IssueInstant="2016-09-23T14:00:45Z"
+                Destination="https://sp.example.com/acs/post"
+                InResponseTo="id-Wnv7CMQO1pFJoRWgi"
+                >
+            <saml:Issuer>https://idp.example.com</saml:Issuer>
+            <samlp:Status>
+                <samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success" />
+            </samlp:Status>
+            <saml:Assertion xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                            xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                            ID="CORTOadad7cb5e1237cf30fa7ab49544c15eec582854e"
+                            Version="2.0"
+                            IssueInstant="2016-09-23T14:00:45Z"
+                            >
+                <saml:Issuer>https://idp.example.com</saml:Issuer>
+                <saml:Subject>
+                    <saml:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent">b8e734571d9adb0e6444a5b49a22f4206df24d88</saml:NameID>
+                    <saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
+                        <saml:SubjectConfirmationData Recipient="https://sp.example.com/acs/post"
+                                                      InResponseTo="id-Wnv7CMQO1pFJoRWgi"
+                                                      />
+                    </saml:SubjectConfirmation>
+                </saml:Subject>
+                <saml:Conditions NotBefore="2016-09-23T14:00:44Z">
+                    <saml:AudienceRestriction>
+                        <saml:Audience>https://sp.example.com</saml:Audience>
+                    </saml:AudienceRestriction>
+                </saml:Conditions>
+                <saml:AuthnStatement AuthnInstant="2016-09-23T13:55:40Z"
+                                     SessionIndex="_9f1148918f12525c6cad9aea29bc557afab2cb8c33"
+                                     >
+                    <saml:AuthnContext>
+                        <saml:AuthnContextClassRef>urn:oasis:names:tc:SAML:2.0:ac:classes:Password</saml:AuthnContextClassRef>
+                        <saml:AuthenticatingAuthority>https://idp.example.com</saml:AuthenticatingAuthority>
+                    </saml:AuthnContext>
+                </saml:AuthnStatement>
+                <saml:AttributeStatement>
+                    <saml:Attribute Name="urn:oid:1.3.6.1.4.1.5923.1.1.1.10"
+                                    NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
+                                    >
+                        <saml:AttributeValue>
+                            <saml:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent">b8e734571d9adb0e6444a5b49a22f4206df24d88</saml:NameID>
+                        </saml:AttributeValue>
+                    </saml:Attribute>
+                </saml:AttributeStatement>
+            </saml:Assertion>
+        </samlp:Response>"""
+
+        resp = authn_response(self.conf, "https://sp.example.com/acs/post", asynchop=False, allow_unsolicited=True)
+        resp.loads(authn_response_xml, False)
+        resp.parse_assertion()
+        ava = resp.get_identity()
+        assert ava["eduPersonTargetedID"] == ["b8e734571d9adb0e6444a5b49a22f4206df24d88"]
+
 if __name__ == "__main__":
     t = TestAuthnResponse()
     t.setup_class()
