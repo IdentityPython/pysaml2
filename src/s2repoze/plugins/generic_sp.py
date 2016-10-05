@@ -172,6 +172,7 @@ class SAML2GenericPlugin(object):
 	def _get_rememberer(self, request):
 		api = request.get('repoze.who.api', None)
 		if not api:
+			logger.error("_get_rememberer -- Error getting rememberer from requests, none exists: {0}".format(request))
 			return None
 		api_identifiers = api.identifiers
 		rememberer = None
