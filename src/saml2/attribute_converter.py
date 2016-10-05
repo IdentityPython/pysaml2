@@ -8,7 +8,7 @@ from importlib import import_module
 
 from saml2.s_utils import factory
 from saml2.s_utils import do_ava
-from saml2 import saml
+from saml2 import saml, ExtensionElement, NAMESPACE
 from saml2 import extension_elements_to_elements
 from saml2 import SAMLError
 from saml2.saml import NAME_FORMAT_UNSPECIFIED, NAMEID_FORMAT_PERSISTENT, NameID
@@ -495,7 +495,12 @@ class AttributeConverter(object):
             if name:
                 if name == "urn:oid:1.3.6.1.4.1.5923.1.1.1.10":
                     # special case for eduPersonTargetedID
-                    attr_value = do_ava(NameID(format=NAMEID_FORMAT_PERSISTENT, text=value).to_string())
+                    attr_value = []
+                    for v in value:
+                        extension_element = ExtensionElement("NameID", NAMESPACE,
+                                                             attributes={'Format': NAMEID_FORMAT_PERSISTENT}, text=v)
+                        attrval = saml.AttributeValue(extension_elements=[extension_element])
+                        attr_value.append(attrval)
                 else:
                     attr_value = do_ava(value)
                 attributes.append(factory(saml.Attribute,

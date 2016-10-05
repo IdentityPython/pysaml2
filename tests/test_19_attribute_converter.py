@@ -211,11 +211,12 @@ class TestAC():
         assert attr_conv._fro is None and attr_conv._to is None
 
     def test_from_local_nest_eduPersonTargetedID_in_NameID(self):
-        ava = {"edupersontargetedid": "test value"}
+        ava = {"edupersontargetedid": ["test value1", "test value2"]}
         attributes = from_local(self.acs, ava, URI_NF)
         assert len(attributes) == 1
-        assert len(attributes[0].attribute_value) == 1
-        assert attributes[0].attribute_value[0].text == NameID(format=NAMEID_FORMAT_PERSISTENT, text="test value").to_string().decode("utf-8")
+        assert len(attributes[0].attribute_value) == 2
+        assert attributes[0].attribute_value[0].extension_elements[0].text == "test value1"
+        assert attributes[0].attribute_value[1].extension_elements[0].text == "test value2"
 
 
 def test_noop_attribute_conversion():
