@@ -476,7 +476,7 @@ class Server(Entity):
         if not encrypt_assertion:
             if sign_assertion:
                 assertion.signature = pre_signature_part(assertion.id,
-                                                         self.sec.my_cert, 1,
+                                                         self.sec.my_cert, 2,
                                                          sign_alg=sign_alg,
                                                          digest_alg=digest_alg)
                 to_sign.append((class_name(assertion), assertion.id))
