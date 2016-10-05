@@ -166,7 +166,9 @@ class AttributeValueBase(SamlBase):
 
         try:
             self.extension_attributes[XSI_TYPE] = typ
+            self.extension_attributes['xmlns:xs'] = XS_NAMESPACE
         except AttributeError:
+            self._extatt['xmlns:xs'] = XS_NAMESPACE
             self._extatt[XSI_TYPE] = typ
 
     def get_type(self):
