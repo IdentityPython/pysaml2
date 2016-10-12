@@ -96,6 +96,7 @@ class Cache(object):
         """
         cni = code(name_id)
         (timestamp, info) = self._db[cni][entity_id]
+        info = info.copy()
         if check_not_on_or_after and time_util.after(timestamp):
             raise ToOld("past %s" % str(timestamp))
 
