@@ -1,5 +1,6 @@
 EDUCOURSE_OID = 'urn:oid:1.3.6.1.4.1.5923.1.6.1.'
 EDUPERSON_OID = 'urn:oid:1.3.6.1.4.1.5923.1.1.1.'
+EDUMEMBER1_OID = 'urn:oid:1.3.6.1.4.1.5923.1.5.1.'
 LDAPGVAT_OID = 'urn:oid:1.2.40.0.10.2.1.1.' # ldap.gv.at definitions as specified in http://www.ref.gv.at/AG-IZ-PVP2-Version-2-1-0-2.2754.0.html
 UCL_DIR_PILOT = 'urn:oid:0.9.2342.19200300.100.1.'
 X500ATTR_OID = 'urn:oid:2.5.4.'
@@ -18,6 +19,7 @@ MAP = {
     'fro': {
         EDUCOURSE_OID+'1': 'eduCourseOffering',
         EDUCOURSE_OID+'2': 'eduCourseMember',
+        EDUMEMBER1_OID+'1': 'isMemberOf',
         EDUPERSON_OID+'1': 'eduPersonAffiliation',
         EDUPERSON_OID+'2': 'eduPersonNickname',
         EDUPERSON_OID+'3': 'eduPersonOrgDN',
@@ -203,6 +205,7 @@ MAP = {
         'houseIdentifier': X500ATTR_OID+'51',
         'initials': X500ATTR_OID+'43',
         'internationaliSDNNumber': X500ATTR_OID+'25',
+        'isMemberOf': EDUMEMBER1_OID+'1',
         'jpegPhoto': UCL_DIR_PILOT+'60',
         'knowledgeInformation': X500ATTR_OID+'2',
         'l': X500ATTR_OID+'7',
