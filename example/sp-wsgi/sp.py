@@ -106,21 +106,21 @@ def handle_static(environ, start_response, path):
     :return: wsgi response for the static file.
     """
     try:
-        text = open(path).read()
+        data = open(path, 'rb').read()
         if path.endswith(".ico"):
-            resp = Response(text, headers=[('Content-Type', "image/x-icon")])
+            resp = Response(data, headers=[('Content-Type', "image/x-icon")])
         elif path.endswith(".html"):
-            resp = Response(text, headers=[('Content-Type', 'text/html')])
+            resp = Response(data, headers=[('Content-Type', 'text/html')])
         elif path.endswith(".txt"):
-            resp = Response(text, headers=[('Content-Type', 'text/plain')])
+            resp = Response(data, headers=[('Content-Type', 'text/plain')])
         elif path.endswith(".css"):
-            resp = Response(text, headers=[('Content-Type', 'text/css')])
+            resp = Response(data, headers=[('Content-Type', 'text/css')])
         elif path.endswith(".js"):
-            resp = Response(text, headers=[('Content-Type', 'text/javascript')])
+            resp = Response(data, headers=[('Content-Type', 'text/javascript')])
         elif path.endswith(".png"):
-            resp = Response(text, headers=[('Content-Type', 'image/png')])
+            resp = Response(data, headers=[('Content-Type', 'image/png')])
         else:
-            resp = Response(text)
+            resp = Response(data)
     except IOError:
         resp = NotFound()
     return resp(environ, start_response)
