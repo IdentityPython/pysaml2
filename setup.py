@@ -27,12 +27,12 @@ with open('src/saml2/__init__.py', 'r') as fd:
                         fd.read(), re.MULTILINE).group(1)
 
 setup(
-    name='pysaml2',
+    name='pytesttest',
     version=version,
     description='Python implementation of SAML Version 2',
     # long_description = read("README"),
-    author='Roland Hedberg',
-    author_email='roland.hedberg@adm.umu.se',
+    author='test',
+    author_email='test@example.com',
     license='Apache 2.0',
     url='https://github.com/rohe/pysaml2',
 
