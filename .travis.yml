@@ -29,6 +29,7 @@ deploy:
     secure: Pnhp2shnvnsQxRvTK21b6geBckQfcVxeTlygqORoLyFip5YletkrNXPxzE/RGtoj74GyC25inJiPqgoXYAQGYULRJFavEnSpwd8LB3kR8K2ZJo6++yj5AncHuDy22WYKqQHVgYNWBJsJVhA8Zxk02io7epRjx8w2DeYgrT69sjCaFVDhP+xnVTIMPbHbf4vkzvi5+K7BpciyDmc5k9Z1Vci8eu9mtP2cbsOv2Nm/pytijR3G+2UFofJY5Wobupkg4H78/m6gPWcn0cEU7yOnzfMcbLpMlRhMJbnjlSz2uHcDMF+ACaExt3FT+2TrPkxc6SBNha7O98h3XDi5DcXKbu0yrkZ+FYVp9nQ/Bo5wK0CyMkK4OfvkV4Map7YiLjHpWwYMGzXvsaPr8Q8jn0GRPy5toh117P1TlBz9mA9FRikUfLEP1mHzzD2Ei8XjgApzE+UGEtAKW4Gru1eV3pRbUF4kDHw4CuiC6lPULk56+1Lhgn4VXWamAwqF8yrtO6OnKmg6SMWklRvAx6SjE3fme/57m87/AdUpWXPVD1eTh2TJXsAxNnC6o8lvaIrfJ/I7OKVVhNphVU3onNo67VG7+xLxwZdhZq9tTuReGgSOAlQSWMSzOWvoML+kobJvoOUQbddeBAiI8Kt7w+f/sHI2ONDcZrHW9WFU/Iq/rDoFJv4=
   on:
     tags: true
+    condition: "$TOXENV = py27"
 - provider: pypi
   distributions: sdist bdist_wheel
   password:
@@ -37,3 +38,4 @@ deploy:
     secure: Pnhp2shnvnsQxRvTK21b6geBckQfcVxeTlygqORoLyFip5YletkrNXPxzE/RGtoj74GyC25inJiPqgoXYAQGYULRJFavEnSpwd8LB3kR8K2ZJo6++yj5AncHuDy22WYKqQHVgYNWBJsJVhA8Zxk02io7epRjx8w2DeYgrT69sjCaFVDhP+xnVTIMPbHbf4vkzvi5+K7BpciyDmc5k9Z1Vci8eu9mtP2cbsOv2Nm/pytijR3G+2UFofJY5Wobupkg4H78/m6gPWcn0cEU7yOnzfMcbLpMlRhMJbnjlSz2uHcDMF+ACaExt3FT+2TrPkxc6SBNha7O98h3XDi5DcXKbu0yrkZ+FYVp9nQ/Bo5wK0CyMkK4OfvkV4Map7YiLjHpWwYMGzXvsaPr8Q8jn0GRPy5toh117P1TlBz9mA9FRikUfLEP1mHzzD2Ei8XjgApzE+UGEtAKW4Gru1eV3pRbUF4kDHw4CuiC6lPULk56+1Lhgn4VXWamAwqF8yrtO6OnKmg6SMWklRvAx6SjE3fme/57m87/AdUpWXPVD1eTh2TJXsAxNnC6o8lvaIrfJ/I7OKVVhNphVU3onNo67VG7+xLxwZdhZq9tTuReGgSOAlQSWMSzOWvoML+kobJvoOUQbddeBAiI8Kt7w+f/sHI2ONDcZrHW9WFU/Iq/rDoFJv4=
   on:
     branch: master
+    condition: "$TOXENV = py27"
