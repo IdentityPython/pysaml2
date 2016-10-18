@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import os
 import re
 
 import sys
@@ -22,12 +23,18 @@ install_requires = [
 ]
 
 version = ''
+
 with open('src/saml2/__init__.py', 'r') as fd:
     version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
                         fd.read(), re.MULTILINE).group(1)
 
+if os.getenv('TRAVIS_TAG'):
+   version = os.getenv('TRAVIS_TAG')
+elif os.getenv('TRAVIS_COMMIT'):
+   version = '%s.dev0' % version
+
 setup(
-    name='pysaml2',
+    name='pytesttest',
     version=version,
     description='Python implementation of SAML Version 2',
     # long_description = read("README"),
