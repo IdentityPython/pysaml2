@@ -30,7 +30,7 @@ with open('src/saml2/__init__.py', 'r') as fd:
 
 if os.getenv('TRAVIS_TAG'):
    version = os.getenv('TRAVIS_TAG')
-else:
+elif os.getenv('TRAVIS_COMMIT'):
    version = '%s.dev0' % version
 
 setup(
