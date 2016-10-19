@@ -33,6 +33,8 @@ tmp*
 _build/
 .cache
 *.swp
+.tox
+env
 
 example/idp3/htdocs/login.mako
 
@@ -191,8 +193,6 @@ example/idp2/old_idp.xml
 example/sp-repoze/old_sp.xml
 
 example/sp-repoze/sp_conf_2.Pygmalion
-
-.gitignore.swp
 
 example/sp-repoze/sp_conf_2.py
 
