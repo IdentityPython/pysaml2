@@ -84,13 +84,10 @@ class RegistrationInfoType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:metadata:rpi}RegistrationPolicy'] = (
-    'registration_policy', [RegistrationPolicy])
+    c_children['{urn:oasis:names:tc:SAML:metadata:rpi}RegistrationPolicy'] = ('registration_policy', [RegistrationPolicy])
     c_cardinality['registration_policy'] = {"min": 0}
-    c_attributes['registrationAuthority'] = (
-    'registration_authority', 'string', True)
-    c_attributes['registrationInstant'] = (
-    'registration_instant', 'dateTime', False)
+    c_attributes['registrationAuthority'] = ('registration_authority', 'string', True)
+    c_attributes['registrationInstant'] = ('registration_instant', 'dateTime', False)
     c_child_order.extend(['registration_policy'])
 
     def __init__(self,
@@ -122,8 +119,7 @@ class PublicationInfoType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:metadata:rpi}UsagePolicy'] = (
-    'usage_policy', [UsagePolicy])
+    c_children['{urn:oasis:names:tc:SAML:metadata:rpi}UsagePolicy'] = ('usage_policy', [UsagePolicy])
     c_cardinality['usage_policy'] = {"min": 0}
     c_attributes['publisher'] = ('publisher', 'string', True)
     c_attributes['creationInstant'] = ('creation_instant', 'dateTime', False)
@@ -206,8 +202,7 @@ class PublicationPathType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:metadata:rpi}Publication'] = (
-    'publication', [Publication])
+    c_children['{urn:oasis:names:tc:SAML:metadata:rpi}Publication'] = ('publication', [Publication])
     c_cardinality['publication'] = {"min": 0}
     c_child_order.extend(['publication'])
 
@@ -271,4 +266,3 @@ ELEMENT_BY_TAG = {
 
 def factory(tag, **kwargs):
     return ELEMENT_BY_TAG[tag](**kwargs)
-

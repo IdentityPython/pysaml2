@@ -6,7 +6,7 @@ from saml2.extension.algsupport import DigestMethod
 __author__ = 'roland'
 
 DIGEST_METHODS = {
-    "hmac-md5": 'http://www.w3.org/2001/04/xmldsig-more#md5', # test framework only!
+    "hmac-md5": 'http://www.w3.org/2001/04/xmldsig-more#md5',  # test framework only!
     "hmac-sha1": 'http://www.w3.org/2000/09/xmldsig#sha1',
     "hmac-sha224": 'http://www.w3.org/2001/04/xmldsig-more#sha224',
     "hmac-sha256": 'http://www.w3.org/2001/04/xmlenc#sha256',

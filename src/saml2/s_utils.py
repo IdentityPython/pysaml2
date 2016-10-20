@@ -23,10 +23,6 @@ from saml2 import samlp
 from saml2 import VERSION
 from saml2.time_util import instant
 
-try:
-    from hashlib import md5
-except ImportError:
-    from md5 import md5
 import zlib
 
 logger = logging.getLogger(__name__)
@@ -224,7 +220,7 @@ def identity_attribute(form, attribute, forward_map=None):
     # default is name
     return attribute.name
 
-#----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 
 def error_status_factory(info):

@@ -52,4 +52,3 @@ class UserInfoDB(UserInfo):
             return self.filter(self.db[userid], user_info_claims)
         except KeyError:
             return {}
-

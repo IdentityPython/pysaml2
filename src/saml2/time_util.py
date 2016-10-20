@@ -23,9 +23,9 @@ TIME_FORMAT_WITH_FRAGMENT = re.compile(
 # ---------------------------------------------------------------------------
 # I'm sure this is implemented somewhere else can't find it now though, so I
 # made an attempt.
-#Implemented according to
-#http://www.w3.org/TR/2001/REC-xmlschema-2-20010502/
-#adding-durations-to-dateTimes
+# Implemented according to
+# http://www.w3.org/TR/2001/REC-xmlschema-2-20010502/
+# adding-durations-to-dateTimes
 
 
 def f_quotient(arg0, arg1, arg2=0):
@@ -74,7 +74,7 @@ def parse_duration(duration):
     dlen = len(duration)
 
     for code, typ in D_FORMAT:
-        #print(duration[index:], code)
+        # print(duration[index:], code)
         if duration[index] == '-':
             raise Exception("Negation not allowed on individual items")
         if code == "T":
@@ -124,11 +124,11 @@ def add_duration(tid, duration):
     (sign, dur) = parse_duration(duration)
 
     if sign == '+':
-        #Months
+        # Months
         temp = tid.tm_mon + dur["tm_mon"]
         month = modulo(temp, 1, 13)
         carry = f_quotient(temp, 1, 13)
-        #Years
+        # Years
         year = tid.tm_year + dur["tm_year"] + carry
         # seconds
         temp = tid.tm_sec + dur["tm_sec"]

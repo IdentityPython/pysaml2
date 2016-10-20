@@ -750,13 +750,11 @@ class ContactType_(SamlBase):
                  contact_type=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.extensions = extensions
         self.company = company
         self.given_name = given_name
@@ -1068,8 +1066,7 @@ class IDPSSODescriptorType_(SSODescriptorType_):
                  text=None,
                  extension_elements=None,
                  extension_attributes=None,
-                 want_authn_requests_only_with_valid_cert=None,
-    ):
+                 want_authn_requests_only_with_valid_cert=None):
         SSODescriptorType_.__init__(self,
                                     artifact_resolution_service=artifact_resolution_service,
                                     single_logout_service=single_logout_service,
@@ -1087,8 +1084,7 @@ class IDPSSODescriptorType_(SSODescriptorType_):
                                     error_url=error_url,
                                     text=text,
                                     extension_elements=extension_elements,
-                                    extension_attributes=extension_attributes,
-        )
+                                    extension_attributes=extension_attributes)
         self.single_sign_on_service = single_sign_on_service or []
         self.name_id_mapping_service = name_id_mapping_service or []
         self.assertion_id_request_service = assertion_id_request_service or []
@@ -1137,13 +1133,11 @@ class AttributeConsumingServiceType_(SamlBase):
                  is_default=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.service_name = service_name or []
         self.service_description = service_description or []
         self.requested_attribute = requested_attribute or []
@@ -1198,8 +1192,7 @@ class AuthnAuthorityDescriptorType_(RoleDescriptorType_):
                  error_url=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         RoleDescriptorType_.__init__(self,
                                      signature=signature,
                                      extensions=extensions,
@@ -1213,8 +1206,7 @@ class AuthnAuthorityDescriptorType_(RoleDescriptorType_):
                                      error_url=error_url,
                                      text=text,
                                      extension_elements=extension_elements,
-                                     extension_attributes=extension_attributes,
-        )
+                                     extension_attributes=extension_attributes)
         self.authn_query_service = authn_query_service or []
         self.assertion_id_request_service = assertion_id_request_service or []
         self.name_id_format = name_id_format or []
@@ -1266,8 +1258,7 @@ class PDPDescriptorType_(RoleDescriptorType_):
                  error_url=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         RoleDescriptorType_.__init__(self,
                                      signature=signature,
                                      extensions=extensions,
@@ -1281,8 +1272,7 @@ class PDPDescriptorType_(RoleDescriptorType_):
                                      error_url=error_url,
                                      text=text,
                                      extension_elements=extension_elements,
-                                     extension_attributes=extension_attributes,
-        )
+                                     extension_attributes=extension_attributes)
         self.authz_service = authz_service or []
         self.assertion_id_request_service = assertion_id_request_service or []
         self.name_id_format = name_id_format or []
@@ -1344,8 +1334,7 @@ class AttributeAuthorityDescriptorType_(RoleDescriptorType_):
                  error_url=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         RoleDescriptorType_.__init__(self,
                                      signature=signature,
                                      extensions=extensions,
@@ -1359,8 +1348,7 @@ class AttributeAuthorityDescriptorType_(RoleDescriptorType_):
                                      error_url=error_url,
                                      text=text,
                                      extension_elements=extension_elements,
-                                     extension_attributes=extension_attributes,
-        )
+                                     extension_attributes=extension_attributes)
         self.attribute_service = attribute_service or []
         self.assertion_id_request_service = assertion_id_request_service or []
         self.name_id_format = name_id_format or []
@@ -1417,13 +1405,11 @@ class AffiliationDescriptorType_(SamlBase):
                  id=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.signature = signature
         self.extensions = extensions
         self.affiliate_member = affiliate_member or []
@@ -1598,8 +1584,7 @@ class SPSSODescriptorType_(SSODescriptorType_):
                  error_url=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SSODescriptorType_.__init__(self,
                                     artifact_resolution_service=artifact_resolution_service,
                                     single_logout_service=single_logout_service,
@@ -1617,8 +1602,7 @@ class SPSSODescriptorType_(SSODescriptorType_):
                                     error_url=error_url,
                                     text=text,
                                     extension_elements=extension_elements,
-                                    extension_attributes=extension_attributes,
-        )
+                                    extension_attributes=extension_attributes)
         self.assertion_consumer_service = assertion_consumer_service or []
         self.attribute_consuming_service = attribute_consuming_service or []
         self.authn_requests_signed = authn_requests_signed
@@ -1735,13 +1719,11 @@ class EntityDescriptorType_(SamlBase):
                  id=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.signature = signature
         self.extensions = extensions
         self.role_descriptor = role_descriptor or []
@@ -1780,7 +1762,7 @@ def entity_descriptor_from_string(xml_string):
     return saml2.create_class_from_xml_string(EntityDescriptor, xml_string)
 
 
-#..................
+# ..................
 # ['EntitiesDescriptor', 'EntitiesDescriptorType']
 class EntitiesDescriptorType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:metadata:EntitiesDescriptorType
@@ -1822,13 +1804,11 @@ class EntitiesDescriptorType_(SamlBase):
                  name=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.signature = signature
         self.extensions = extensions
         self.entity_descriptor = entity_descriptor or []
@@ -2012,6 +1992,3 @@ ELEMENT_BY_TAG = {
 
 def factory(tag, **kwargs):
     return ELEMENT_BY_TAG[tag](**kwargs)
-
-
-

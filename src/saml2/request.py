@@ -83,8 +83,9 @@ class Request(object):
         assert self.message.version == "2.0"
         if self.message.destination and self.receiver_addrs and \
                 self.message.destination not in self.receiver_addrs:
-            logger.error("%s not in %s", self.message.destination,
-                                         self.receiver_addrs)
+            logger.error("%s not in %s",
+                         self.message.destination,
+                         self.receiver_addrs)
             raise OtherError("Not destined for me!")
 
         assert self.issue_instant_ok()
@@ -242,6 +243,6 @@ SERVICE2REQUEST = {
     "authn_query_service": AuthnQuery,
     "manage_name_id_service": ManageNameIDRequest,
     "name_id_mapping_service": NameIDMappingRequest,
-    #"artifact_resolve_service": ArtifactResolve,
+    # "artifact_resolve_service": ArtifactResolve,
     "single_logout_service": LogoutRequest
 }

@@ -56,7 +56,6 @@ class AESCipher(object):
         except KeyError:
             raise Exception("Unsupported chaining mode")
 
-
     def encrypt(self, msg, iv=None, alg="aes_128_cbc", padding="PKCS#7",
                 b64enc=True, block_size=BLOCK_SIZE):
         """
@@ -79,7 +78,7 @@ class AESCipher(object):
         if _block_size:
             plen = _block_size - (len(msg) % _block_size)
             c = chr(plen)
-            msg += c*plen
+            msg += c * plen
 
         cipher, iv = self.build_cipher(iv, alg)
         cmsg = iv + cipher.encrypt(msg)
@@ -87,7 +86,6 @@ class AESCipher(object):
             return b64encode(cmsg)
         else:
             return cmsg
-
 
     def decrypt(self, msg, iv=None, alg="aes_128_cbc", padding="PKCS#7", b64dec=True):
         """

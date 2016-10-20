@@ -89,7 +89,7 @@ class Base(Entity):
     """ The basic pySAML2 service provider class """
 
     def __init__(self, config=None, identity_cache=None, state_cache=None,
-            virtual_organization="", config_file="", msg_cb=None):
+                 virtual_organization="", config_file="", msg_cb=None):
         """
         :param config: A saml2.config.Config instance
         :param identity_cache: Where the class should store identity information
@@ -203,12 +203,12 @@ class Base(Entity):
             return None
 
     def create_authn_request(self, destination, vorg="", scoping=None,
-            binding=saml2.BINDING_HTTP_POST,
-            nameid_format=None,
-            service_url_binding=None, message_id=0,
-            consent=None, extensions=None, sign=None,
-            allow_create=False, sign_prepare=False, sign_alg=None,
-            digest_alg=None, **kwargs):
+                             binding=saml2.BINDING_HTTP_POST,
+                             nameid_format=None,
+                             service_url_binding=None, message_id=0,
+                             consent=None, extensions=None, sign=None,
+                             allow_create=False, sign_prepare=False, sign_alg=None,
+                             digest_alg=None, **kwargs):
         """ Creates an authentication request.
 
         :param destination: Where the request should be sent.
@@ -246,8 +246,7 @@ class Base(Entity):
                 del kwargs["assertion_consumer_service_url"]
             except KeyError:
                 try:
-                    args["assertion_consumer_service_index"] = str(kwargs[
-                                                                       "assertion_consumer_service_index"])
+                    args["assertion_consumer_service_index"] = str(kwargs["assertion_consumer_service_index"])
                     del kwargs["assertion_consumer_service_index"]
                 except KeyError:
                     if service_url_binding is None:
@@ -334,8 +333,8 @@ class Base(Entity):
         if sign is None:
             sign = self.authn_requests_signed
 
-        if (sign and self.sec.cert_handler.generate_cert()) or \
-                        client_crt is not None:
+        if ((sign and self.sec.cert_handler.generate_cert()) or
+            client_crt is not None):
             with self.lock:
                 self.sec.cert_handler.update_cert(True, client_crt)
                 if client_crt is not None:
@@ -353,10 +352,10 @@ class Base(Entity):
                              sign_alg=sign_alg, digest_alg=digest_alg, **args)
 
     def create_attribute_query(self, destination, name_id=None,
-            attribute=None, message_id=0, consent=None,
-            extensions=None, sign=False, sign_prepare=False, sign_alg=None,
-            digest_alg=None,
-            **kwargs):
+                               attribute=None, message_id=0, consent=None,
+                               extensions=None, sign=False, sign_prepare=False, sign_alg=None,
+                               digest_alg=None,
+                               **kwargs):
         """ Constructs an AttributeQuery
 
         :param destination: To whom the query should be sent
@@ -419,9 +418,9 @@ class Base(Entity):
     # AssertionIDRequest, SubjectQuery,
     # AuthnQuery, AttributeQuery, or AuthzDecisionQuery
     def create_authz_decision_query(self, destination, action,
-            evidence=None, resource=None, subject=None,
-            message_id=0, consent=None, extensions=None,
-            sign=None, sign_alg=None, digest_alg=None, **kwargs):
+                                    evidence=None, resource=None, subject=None,
+                                    message_id=0, consent=None, extensions=None,
+                                    sign=None, sign_alg=None, digest_alg=None, **kwargs):
         """ Creates an authz decision query.
 
         :param destination: The IdP endpoint
@@ -443,12 +442,12 @@ class Base(Entity):
                              digest_alg=digest_alg, **kwargs)
 
     def create_authz_decision_query_using_assertion(self, destination,
-            assertion, action=None,
-            resource=None,
-            subject=None, message_id=0,
-            consent=None,
-            extensions=None,
-            sign=False, nsprefix=None):
+                                                    assertion, action=None,
+                                                    resource=None,
+                                                    subject=None, message_id=0,
+                                                    consent=None,
+                                                    extensions=None,
+                                                    sign=False, nsprefix=None):
         """ Makes an authz decision query based on a previously received
         Assertion.
 
@@ -473,9 +472,9 @@ class Base(Entity):
             _action = None
 
         return self.create_authz_decision_query(
-                destination, _action, saml.Evidence(assertion=assertion),
-                resource, subject, message_id=message_id, consent=consent,
-                extensions=extensions, sign=sign, nsprefix=nsprefix)
+            destination, _action, saml.Evidence(assertion=assertion),
+            resource, subject, message_id=message_id, consent=consent,
+            extensions=extensions, sign=sign, nsprefix=nsprefix)
 
     @staticmethod
     def create_assertion_id_request(assertion_id_refs, **kwargs):
@@ -491,9 +490,9 @@ class Base(Entity):
             return 0, assertion_id_refs[0]
 
     def create_authn_query(self, subject, destination=None, authn_context=None,
-            session_index="", message_id=0, consent=None,
-            extensions=None, sign=False, nsprefix=None, sign_alg=None,
-            digest_alg=None):
+                           session_index="", message_id=0, consent=None,
+                           extensions=None, sign=False, nsprefix=None, sign_alg=None,
+                           digest_alg=None):
         """
 
         :param subject: The subject its all about as a <Subject> instance
@@ -514,11 +513,11 @@ class Base(Entity):
                              digest_alg=digest_alg)
 
     def create_name_id_mapping_request(self, name_id_policy,
-            name_id=None, base_id=None,
-            encrypted_id=None, destination=None,
-            message_id=0, consent=None,
-            extensions=None, sign=False,
-            nsprefix=None, sign_alg=None, digest_alg=None):
+                                       name_id=None, base_id=None,
+                                       encrypted_id=None, destination=None,
+                                       message_id=0, consent=None,
+                                       extensions=None, sign=False,
+                                       nsprefix=None, sign_alg=None, digest_alg=None):
         """
 
         :param name_id_policy:
@@ -572,7 +571,7 @@ class Base(Entity):
         """
 
         try:
-            _ = self.config.entityid
+            self.config.entityid
         except KeyError:
             raise SAMLError("Missing entity_id specification")
 
@@ -621,8 +620,7 @@ class Base(Entity):
     # SubjectQuery, AuthnQuery, RequestedAuthnContext, AttributeQuery,
     # AuthzDecisionQuery all get Response as response
 
-    def parse_authz_decision_query_response(self, response,
-            binding=BINDING_SOAP):
+    def parse_authz_decision_query_response(self, response, binding=BINDING_SOAP):
         """ Verify that the response is OK
         """
         kwargs = {"entity_id": self.config.entityid,
@@ -673,7 +671,7 @@ class Base(Entity):
     # ------------------- ECP ------------------------------------------------
 
     def create_ecp_authn_request(self, entityid=None, relay_state="",
-            sign=False, **kwargs):
+                                 sign=False, **kwargs):
         """ Makes an authentication request.
 
         :param entityid: The entity ID of the IdP to send the request to
@@ -725,7 +723,7 @@ class Base(Entity):
             _, location = self.pick_binding("single_sign_on_service",
                                             [_binding], entity_id=entityid)
             req_id, authn_req = self.create_authn_request(
-                    location, service_url_binding=BINDING_PAOS, **kwargs)
+                location, service_url_binding=BINDING_PAOS, **kwargs)
 
         # ----------------------------------------
         # The SOAP envelope
@@ -745,8 +743,7 @@ class Base(Entity):
 
         _relay_state = None
         for item in rdict["header"]:
-            if item.c_tag == "RelayState" and \
-                            item.c_namespace == ecp.NAMESPACE:
+            if item.c_tag == "RelayState" and item.c_namespace == ecp.NAMESPACE:
                 _relay_state = item
 
         response = self.parse_authn_request_response(rdict["body"],
@@ -819,8 +816,7 @@ class Base(Entity):
         return "%s?%s" % (url, params)
 
     @staticmethod
-    def parse_discovery_service_response(url="", query="",
-            returnIDParam="entityID"):
+    def parse_discovery_service_response(url="", query="", returnIDParam="entityID"):
         """
         Deal with the response url from a Discovery Service
 

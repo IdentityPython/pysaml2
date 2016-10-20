@@ -402,7 +402,7 @@ class MetaData(object):
                                     dat["x509_certificate"]["text"])
                                 if cert not in res:
                                     res.append(cert)
-                        elif not "use" in key:
+                        elif "use" not in key:
                             for dat in key["key_info"]["x509_data"]:
                                 cert = repack_cert(
                                     dat["x509_certificate"]["text"])
@@ -638,9 +638,9 @@ class InMemoryMetaData(MetaData):
             if not self.signed():
                 return True
 
-            node_name = self.node_name \
-                        or "%s:%s" % (md.EntitiesDescriptor.c_namespace,
-                                      md.EntitiesDescriptor.c_tag)
+            node_name = (self.node_name or
+                         "%s:%s" % (md.EntitiesDescriptor.c_namespace,
+                                    md.EntitiesDescriptor.c_tag))
 
             if self.security.verify_signature(
                     txt, node_name=node_name, cert_file=self.cert):

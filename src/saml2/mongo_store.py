@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 ONTS = load_metadata_modules()
 MMODS = metadata_modules()
 
+
 class CorruptDatabase(Exception):
     pass
 
@@ -54,7 +55,7 @@ class SessionStorageMDB(object):
             "to_sign": to_sign
         }
 
-        _ = self.assertion.insert(doc)
+        self.assertion.insert(doc)
 
     def get_assertion(self, cid):
         res = []
@@ -182,7 +183,7 @@ class IdentMDB(IdentDB):
         pass
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 class MDB(object):
     primary_key = "mdb"
 
@@ -196,7 +197,7 @@ class MDB(object):
         else:
             doc = {}
         doc.update(kwargs)
-        _ = self.db.insert(doc)
+        self.db.insert(doc)
 
     def get(self, value=None, **kwargs):
         if value is not None:
@@ -254,7 +255,7 @@ def _mdb_get_database(uri, **kwargs):
     :params database: name as string or (uri, name)
     :returns: pymongo database object
     """
-    if not "tz_aware" in kwargs:
+    if "tz_aware" not in kwargs:
         # default, but not forced
         kwargs["tz_aware"] = True
 
@@ -285,7 +286,7 @@ def _mdb_get_database(uri, **kwargs):
     return _db
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 class EptidMDB(Eptid):
     def __init__(self, secret, database="", collection="eptid"):
         Eptid.__init__(self, secret)
@@ -302,10 +303,10 @@ class EptidMDB(Eptid):
             raise CorruptDatabase("Found more than one EPTID document")
 
     def __setitem__(self, key, value):
-        _ = self.mdb.store(key, **{"eptid": value})
+        self.mdb.store(key, **{"eptid": value})
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 def protect(dic):
     res = {}

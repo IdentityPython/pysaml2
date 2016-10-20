@@ -10,6 +10,7 @@ from os.path import join
 from os import remove
 from Cryptodome.Util import asn1
 
+
 class WrongInput(Exception):
     pass
 
@@ -119,7 +120,6 @@ class OpenSSLWrapper(object):
             c_f = join(cert_dir, cert_file)
             k_f = join(cert_dir, key_file)
 
-
         # create a key pair
         k = crypto.PKey()
         k.generate_key(crypto.TYPE_RSA, key_length)
@@ -140,13 +140,12 @@ class OpenSSLWrapper(object):
         cert.get_subject().CN = cn
         if not request:
             cert.set_serial_number(sn)
-            cert.gmtime_adj_notBefore(valid_from)  #Valid before present time
-            cert.gmtime_adj_notAfter(valid_to)  #3 650 days
+            cert.gmtime_adj_notBefore(valid_from)  # Valid before present time
+            cert.gmtime_adj_notAfter(valid_to)  # 3 650 days
             cert.set_issuer(cert.get_subject())
         cert.set_pubkey(k)
         cert.sign(k, hash_alg)
 
-        filesCreated = False
         try:
             if request:
                 tmp_cert = crypto.dump_certificate_request(crypto.FILETYPE_PEM,
@@ -173,7 +172,6 @@ class OpenSSLWrapper(object):
                 else:
                     fc.write(tmp_cert.decode('utf-8'))
                 fk.write(tmp_key.decode('utf-8'))
-                filesCreated = True
                 try:
                     fc.close()
                 except:
@@ -203,7 +201,6 @@ class OpenSSLWrapper(object):
 
         if type in ["der", "cer", "crt"]:
             return base64.b64encode(str(str_data))
-
 
     def create_cert_signed_certificate(self, sign_cert_str, sign_key_str,
                                        request_cert_str, hash_alg="sha256",
@@ -292,7 +289,6 @@ class OpenSSLWrapper(object):
             return False
         return True
 
-
     def verify(self, signing_cert_str, cert_str):
         """
         Verifies if a certificate is valid and signed by a given certificate.
@@ -343,7 +339,7 @@ class OpenSSLWrapper(object):
             der_seq.decode(cert_asn1)
 
             cert_certificate = der_seq[0]
-            #cert_signature_algorithm=der_seq[1]
+            # cert_signature_algorithm=der_seq[1]
             cert_signature = der_seq[2]
 
             cert_signature_decoded = asn1.DerObject()
@@ -355,7 +351,7 @@ class OpenSSLWrapper(object):
             if ((isinstance(sig_pay0, int) and sig_pay0 != 0) or
                 (isinstance(sig_pay0, str) and sig_pay0 != '\x00')):
                 return (False,
-                       "The certificate should not contain any unused bits.")
+                        "The certificate should not contain any unused bits.")
 
             signature = signature_payload[1:]
 

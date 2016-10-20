@@ -17,7 +17,7 @@ from saml2 import BINDING_SOAP, BINDING_PAOS
 from saml2.profile import paos
 from saml2.profile import ecp
 
-#from saml2.client import Saml2Client
+# from saml2.client import Saml2Client
 from saml2.server import Server
 
 from saml2.schema import soapenv
@@ -37,7 +37,7 @@ def ecp_capable(headers):
     return False
 
 
-#noinspection PyUnusedLocal
+# noinspection PyUnusedLocal
 def ecp_auth_request(cls, entityid=None, relay_state="", sign=False):
     """ Makes an authentication request.
 

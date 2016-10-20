@@ -40,7 +40,7 @@ class SPCertEncType_(SamlBase):
         else:
             self.key_info = []
         self.verify_depth = verify_depth
-        #self.x509_data = x509_data
+        # self.x509_data = x509_data
 
 
 def spcertenc_type__from_string(xml_string):

@@ -73,9 +73,9 @@ def _since_epoch(cdate):
         if len(cdate) < 5:
             return utc_now()
 
-    cdate = cdate[5:] # assume short weekday, i.e. do not support obsolete RFC 1036 date format
+    cdate = cdate[5:]  # assume short weekday, i.e. do not support obsolete RFC 1036 date format
     t = -1
-    for time_format in TIME_FORMAT :
+    for time_format in TIME_FORMAT:
         try:
             t = time.strptime(cdate, time_format)   # e.g. 18-Apr-2014 12:30:51 GMT
         except ValueError:
@@ -86,7 +86,7 @@ def _since_epoch(cdate):
     if t == -1:
         raise (Exception,
                'ValueError: Date "{0}" does not match any of: {1}'.format(
-                   cdate,TIME_FORMAT))
+                   cdate, TIME_FORMAT))
 
     return calendar.timegm(t)
 
@@ -103,7 +103,7 @@ class HTTPBase(object):
     def __init__(self, verify=True, ca_bundle=None, key_file=None,
                  cert_file=None):
         self.request_args = {"allow_redirects": False}
-        #self.cookies = {}
+        # self.cookies = {}
         self.cookiejar = http_cookiejar.CookieJar()
 
         self.request_args["verify"] = verify
@@ -126,9 +126,9 @@ class HTTPBase(object):
         """
         part = urlparse(url)
 
-        #if part.port:
+        # if part.port:
         #    _domain = "%s:%s" % (part.hostname, part.port)
-        #else:
+        # else:
         _domain = part.hostname
 
         cookie_dict = {}
@@ -255,7 +255,7 @@ class HTTPBase(object):
 
     @staticmethod
     def use_http_post(message, destination, relay_state,
-                           typ="SAMLRequest"):
+                      typ="SAMLRequest"):
         """
         Return a urlencoded message that should be POSTed to the recipient.
 

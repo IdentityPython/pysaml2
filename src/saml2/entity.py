@@ -7,9 +7,6 @@ import six
 from binascii import hexlify
 from hashlib import sha1
 
-# from Crypto.PublicKey import RSA
-from Cryptodome.PublicKey import RSA
-
 from saml2.metadata import ENDPOINTS
 from saml2.profile import paos, ecp
 from saml2.soap import parse_soap_enveloped_saml_artifact_resolve
@@ -66,7 +63,6 @@ from saml2.httpbase import HTTPBase
 from saml2.sigver import security_context
 from saml2.sigver import response_factory
 from saml2.sigver import SigverError
-from saml2.sigver import CryptoBackendXmlSec1
 from saml2.sigver import make_temp
 from saml2.sigver import pre_encryption_part
 from saml2.sigver import pre_signature_part
@@ -649,11 +645,10 @@ class Entity(HTTPBase):
         if not has_encrypt_cert and encrypt_cert_assertion is None:
             encrypt_assertion = False
 
-        if encrypt_assertion or (
-                        encrypted_advice_attributes and
-                            response.assertion.advice is
-                    not None and
-                        len(response.assertion.advice.assertion) == 1):
+        if (encrypt_assertion or
+            (encrypted_advice_attributes and
+             response.assertion.advice is not None and
+             len(response.assertion.advice.assertion) == 1)):
             if sign:
                 response.signature = pre_signature_part(response.id,
                                                         self.sec.my_cert, 1,
@@ -816,7 +811,6 @@ class Entity(HTTPBase):
         :return: A request instance
         """
 
-        _log_info = logger.info
         _log_debug = logger.debug
 
         # The addresses I should receive messages like this on
@@ -1164,10 +1158,6 @@ class Entity(HTTPBase):
                         keys = []
                         for _cert in cert:
                             keys.append(_cert["key"])
-                only_identity_in_encrypted_assertion = False
-                if "only_identity_in_encrypted_assertion" in kwargs:
-                    only_identity_in_encrypted_assertion = kwargs[
-                        "only_identity_in_encrypted_assertion"]
 
                 response = response.verify(keys)
 

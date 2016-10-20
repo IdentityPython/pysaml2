@@ -14,11 +14,9 @@ from six.moves.urllib.parse import urlparse, urlencode
 import saml2
 import base64
 from saml2.s_utils import deflate_and_base64_encode
-from saml2.s_utils import Unsupported
 import logging
 from saml2.sigver import REQ_ORDER
 from saml2.sigver import RESP_ORDER
-from saml2.sigver import SIGNER_ALGS
 import six
 from saml2.xmldsig import SIG_ALLOWED_ALG
 

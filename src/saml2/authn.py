@@ -158,7 +158,7 @@ class UsernamePasswordMako(UserAuthnMethod):
             wants the user after authentication.
         """
 
-        #logger.debug("verify(%s)" % request)
+        # logger.debug("verify(%s)" % request)
         if isinstance(request, six.string_types):
             _dict = parse_qs(request)
         elif isinstance(request, dict):
@@ -200,7 +200,7 @@ class UsernamePasswordMako(UserAuthnMethod):
 
     def done(self, areq):
         try:
-            _ = areq[self.query_param]
+            areq[self.query_param]
             return False
         except KeyError:
             return True

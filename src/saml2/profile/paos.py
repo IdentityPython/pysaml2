@@ -7,9 +7,10 @@
 import saml2
 from saml2 import SamlBase
 
-#import soapenv as S
+# import soapenv as S
 
 NAMESPACE = 'urn:liberty:paos:2003-08'
+
 
 class RequestType_(SamlBase):
     """The urn:liberty:paos:2003-08:RequestType element """
@@ -27,25 +28,24 @@ class RequestType_(SamlBase):
     c_attributes['{http://schemas.xmlsoap.org/soap/envelope/}actor'] = ('actor', 'None', True)
 
     def __init__(self,
-            response_consumer_url=None,
-            service=None,
-            message_id=None,
-            must_understand=None,
-            actor=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 response_consumer_url=None,
+                 service=None,
+                 message_id=None,
+                 must_understand=None,
+                 actor=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         SamlBase.__init__(self,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.response_consumer_url=response_consumer_url
-        self.service=service
-        self.message_id=message_id
-        self.must_understand=must_understand
-        self.actor=actor
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.response_consumer_url = response_consumer_url
+        self.service = service
+        self.message_id = message_id
+        self.must_understand = must_understand
+        self.actor = actor
+
 
 def request_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(RequestType_, xml_string)
@@ -65,21 +65,20 @@ class ResponseType_(SamlBase):
     c_attributes['{http://schemas.xmlsoap.org/soap/envelope/}actor'] = ('actor', 'None', True)
 
     def __init__(self,
-            ref_to_message_id=None,
-            must_understand=None,
-            actor=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 ref_to_message_id=None,
+                 must_understand=None,
+                 actor=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         SamlBase.__init__(self,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.ref_to_message_id=ref_to_message_id
-        self.must_understand=must_understand
-        self.actor=actor
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.ref_to_message_id = ref_to_message_id
+        self.must_understand = must_understand
+        self.actor = actor
+
 
 def response_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(ResponseType_, xml_string)
@@ -95,6 +94,7 @@ class Request(RequestType_):
     c_child_order = RequestType_.c_child_order[:]
     c_cardinality = RequestType_.c_cardinality.copy()
 
+
 def request_from_string(xml_string):
     return saml2.create_class_from_xml_string(Request, xml_string)
 
@@ -108,6 +108,7 @@ class Response(ResponseType_):
     c_attributes = ResponseType_.c_attributes.copy()
     c_child_order = ResponseType_.c_child_order[:]
     c_cardinality = ResponseType_.c_cardinality.copy()
+
 
 def response_from_string(xml_string):
     return saml2.create_class_from_xml_string(Response, xml_string)
@@ -130,4 +131,3 @@ ELEMENT_BY_TAG = {
 
 def factory(tag, **kwargs):
     return ELEMENT_BY_TAG[tag](**kwargs)
-

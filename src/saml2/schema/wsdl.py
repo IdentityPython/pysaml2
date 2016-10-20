@@ -1,6 +1,6 @@
-#!!!! 'NoneType' object has no attribute 'py_class'
-#!!!! 'NoneType' object has no attribute 'py_class'
 #!/usr/bin/env python
+# !!!! 'NoneType' object has no attribute 'py_class'
+# !!!! 'NoneType' object has no attribute 'py_class'
 
 #
 # Generated Fri May 27 17:23:24 2011 by parse_xsd.py version 0.4.
@@ -12,6 +12,7 @@ from saml2 import SamlBase
 
 NAMESPACE = 'http://schemas.xmlsoap.org/wsdl/'
 
+
 class TDocumentation_(SamlBase):
     """The http://schemas.xmlsoap.org/wsdl/:tDocumentation element """
 
@@ -21,6 +22,7 @@ class TDocumentation_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def t_documentation__from_string(xml_string):
     return saml2.create_class_from_xml_string(TDocumentation_, xml_string)
@@ -34,6 +36,7 @@ class TDocumented_documentation(TDocumentation_):
     c_attributes = TDocumentation_.c_attributes.copy()
     c_child_order = TDocumentation_.c_child_order[:]
     c_cardinality = TDocumentation_.c_cardinality.copy()
+
 
 def t_documented_documentation_from_string(xml_string):
     return saml2.create_class_from_xml_string(TDocumented_documentation, xml_string)
@@ -49,21 +52,20 @@ class TDocumented_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{http://schemas.xmlsoap.org/wsdl/}documentation'] = ('documentation', TDocumented_documentation)
-    c_cardinality['documentation'] = {"min":0, "max":1}
+    c_cardinality['documentation'] = {"min": 0, "max": 1}
     c_child_order.extend(['documentation'])
 
     def __init__(self,
-            documentation=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 documentation=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         SamlBase.__init__(self,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.documentation=documentation
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.documentation = documentation
+
 
 def t_documented__from_string(xml_string):
     return saml2.create_class_from_xml_string(TDocumented_, xml_string)
@@ -104,21 +106,20 @@ class TImport_(TExtensibleAttributesDocumented_):
     c_attributes['location'] = ('location', 'anyURI', True)
 
     def __init__(self,
-            namespace=None,
-            location=None,
-            documentation=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 namespace=None,
+                 location=None,
+                 documentation=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         TExtensibleAttributesDocumented_.__init__(self,
-                documentation=documentation,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.namespace=namespace
-        self.location=location
+                                                  documentation=documentation,
+                                                  text=text,
+                                                  extension_elements=extension_elements,
+                                                  extension_attributes=extension_attributes)
+        self.namespace = namespace
+        self.location = location
+
 
 def t_import__from_string(xml_string):
     return saml2.create_class_from_xml_string(TImport_, xml_string)
@@ -133,6 +134,7 @@ class TTypes_(TExtensibleDocumented_):
     c_attributes = TExtensibleDocumented_.c_attributes.copy()
     c_child_order = TExtensibleDocumented_.c_child_order[:]
     c_cardinality = TExtensibleDocumented_.c_cardinality.copy()
+
 
 def t_types__from_string(xml_string):
     return saml2.create_class_from_xml_string(TTypes_, xml_string)
@@ -152,23 +154,22 @@ class TPart_(TExtensibleAttributesDocumented_):
     c_attributes['type'] = ('type', 'QName', False)
 
     def __init__(self,
-            name=None,
-            element=None,
-            type=None,
-            documentation=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 name=None,
+                 element=None,
+                 type=None,
+                 documentation=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         TExtensibleAttributesDocumented_.__init__(self,
-                documentation=documentation,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.name=name
-        self.element=element
-        self.type=type
+                                                  documentation=documentation,
+                                                  text=text,
+                                                  extension_elements=extension_elements,
+                                                  extension_attributes=extension_attributes)
+        self.name = name
+        self.element = element
+        self.type = type
+
 
 def t_part__from_string(xml_string):
     return saml2.create_class_from_xml_string(TPart_, xml_string)
@@ -187,21 +188,20 @@ class TOperation_(TExtensibleDocumented_):
     c_attributes['parameterOrder'] = ('parameter_order', 'NMTOKENS', False)
 
     def __init__(self,
-            name=None,
-            parameter_order=None,
-            documentation=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 name=None,
+                 parameter_order=None,
+                 documentation=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         TExtensibleDocumented_.__init__(self,
-                documentation=documentation,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.name=name
-        self.parameter_order=parameter_order
+                                        documentation=documentation,
+                                        text=text,
+                                        extension_elements=extension_elements,
+                                        extension_attributes=extension_attributes)
+        self.name = name
+        self.parameter_order = parameter_order
+
 
 def t_operation__from_string(xml_string):
     return saml2.create_class_from_xml_string(TOperation_, xml_string)
@@ -220,21 +220,20 @@ class TParam_(TExtensibleAttributesDocumented_):
     c_attributes['message'] = ('message', 'QName', True)
 
     def __init__(self,
-            name=None,
-            message=None,
-            documentation=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 name=None,
+                 message=None,
+                 documentation=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         TExtensibleAttributesDocumented_.__init__(self,
-                documentation=documentation,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.name=name
-        self.message=message
+                                                  documentation=documentation,
+                                                  text=text,
+                                                  extension_elements=extension_elements,
+                                                  extension_attributes=extension_attributes)
+        self.name = name
+        self.message = message
+
 
 def t_param__from_string(xml_string):
     return saml2.create_class_from_xml_string(TParam_, xml_string)
@@ -253,21 +252,20 @@ class TFault_(TExtensibleAttributesDocumented_):
     c_attributes['message'] = ('message', 'QName', True)
 
     def __init__(self,
-            name=None,
-            message=None,
-            documentation=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 name=None,
+                 message=None,
+                 documentation=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         TExtensibleAttributesDocumented_.__init__(self,
-                documentation=documentation,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.name=name
-        self.message=message
+                                                  documentation=documentation,
+                                                  text=text,
+                                                  extension_elements=extension_elements,
+                                                  extension_attributes=extension_attributes)
+        self.name = name
+        self.message = message
+
 
 def t_fault__from_string(xml_string):
     return saml2.create_class_from_xml_string(TFault_, xml_string)
@@ -285,19 +283,18 @@ class TBindingOperationMessage_(TExtensibleDocumented_):
     c_attributes['name'] = ('name', 'NCName', False)
 
     def __init__(self,
-            name=None,
-            documentation=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 name=None,
+                 documentation=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         TExtensibleDocumented_.__init__(self,
-                documentation=documentation,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.name=name
+                                        documentation=documentation,
+                                        text=text,
+                                        extension_elements=extension_elements,
+                                        extension_attributes=extension_attributes)
+        self.name = name
+
 
 def t_binding_operation_message__from_string(xml_string):
     return saml2.create_class_from_xml_string(TBindingOperationMessage_, xml_string)
@@ -315,19 +312,18 @@ class TBindingOperationFault_(TExtensibleDocumented_):
     c_attributes['name'] = ('name', 'NCName', True)
 
     def __init__(self,
-            name=None,
-            documentation=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 name=None,
+                 documentation=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         TExtensibleDocumented_.__init__(self,
-                documentation=documentation,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.name=name
+                                        documentation=documentation,
+                                        text=text,
+                                        extension_elements=extension_elements,
+                                        extension_attributes=extension_attributes)
+        self.name = name
+
 
 def t_binding_operation_fault__from_string(xml_string):
     return saml2.create_class_from_xml_string(TBindingOperationFault_, xml_string)
@@ -342,6 +338,7 @@ class TBindingOperation_input(TBindingOperationMessage_):
     c_child_order = TBindingOperationMessage_.c_child_order[:]
     c_cardinality = TBindingOperationMessage_.c_cardinality.copy()
 
+
 def t_binding_operation_input_from_string(xml_string):
     return saml2.create_class_from_xml_string(TBindingOperation_input, xml_string)
 
@@ -355,6 +352,7 @@ class TBindingOperation_output(TBindingOperationMessage_):
     c_child_order = TBindingOperationMessage_.c_child_order[:]
     c_cardinality = TBindingOperationMessage_.c_cardinality.copy()
 
+
 def t_binding_operation_output_from_string(xml_string):
     return saml2.create_class_from_xml_string(TBindingOperation_output, xml_string)
 
@@ -367,6 +365,7 @@ class TBindingOperation_fault(TBindingOperationFault_):
     c_attributes = TBindingOperationFault_.c_attributes.copy()
     c_child_order = TBindingOperationFault_.c_child_order[:]
     c_cardinality = TBindingOperationFault_.c_cardinality.copy()
+
 
 def t_binding_operation_fault_from_string(xml_string):
     return saml2.create_class_from_xml_string(TBindingOperation_fault, xml_string)
@@ -382,34 +381,33 @@ class TBindingOperation_(TExtensibleDocumented_):
     c_child_order = TExtensibleDocumented_.c_child_order[:]
     c_cardinality = TExtensibleDocumented_.c_cardinality.copy()
     c_children['{http://schemas.xmlsoap.org/wsdl/}input'] = ('input', TBindingOperation_input)
-    c_cardinality['input'] = {"min":0, "max":1}
+    c_cardinality['input'] = {"min": 0, "max": 1}
     c_children['{http://schemas.xmlsoap.org/wsdl/}output'] = ('output', TBindingOperation_output)
-    c_cardinality['output'] = {"min":0, "max":1}
+    c_cardinality['output'] = {"min": 0, "max": 1}
     c_children['{http://schemas.xmlsoap.org/wsdl/}fault'] = ('fault', [TBindingOperation_fault])
-    c_cardinality['fault'] = {"min":0}
+    c_cardinality['fault'] = {"min": 0}
     c_attributes['name'] = ('name', 'NCName', True)
     c_child_order.extend(['input', 'output', 'fault'])
 
     def __init__(self,
-            input=None,
-            output=None,
-            fault=None,
-            name=None,
-            documentation=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 input=None,
+                 output=None,
+                 fault=None,
+                 name=None,
+                 documentation=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         TExtensibleDocumented_.__init__(self,
-                documentation=documentation,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.input=input
-        self.output=output
-        self.fault=fault or []
-        self.name=name
+                                        documentation=documentation,
+                                        text=text,
+                                        extension_elements=extension_elements,
+                                        extension_attributes=extension_attributes)
+        self.input = input
+        self.output = output
+        self.fault = fault or []
+        self.name = name
+
 
 def t_binding_operation__from_string(xml_string):
     return saml2.create_class_from_xml_string(TBindingOperation_, xml_string)
@@ -428,21 +426,20 @@ class TPort_(TExtensibleDocumented_):
     c_attributes['binding'] = ('binding', 'QName', True)
 
     def __init__(self,
-            name=None,
-            binding=None,
-            documentation=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 name=None,
+                 binding=None,
+                 documentation=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         TExtensibleDocumented_.__init__(self,
-                documentation=documentation,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.name=name
-        self.binding=binding
+                                        documentation=documentation,
+                                        text=text,
+                                        extension_elements=extension_elements,
+                                        extension_attributes=extension_attributes)
+        self.name = name
+        self.binding = binding
+
 
 def t_port__from_string(xml_string):
     return saml2.create_class_from_xml_string(TPort_, xml_string)
@@ -460,17 +457,15 @@ class TExtensibilityElement_(SamlBase):
     c_attributes['required'] = ('required', 'None', False)
 
     def __init__(self,
-            required=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 required=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         SamlBase.__init__(self,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.required=required
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.required = required
 
 
 class Import(TImport_):
@@ -482,6 +477,7 @@ class Import(TImport_):
     c_attributes = TImport_.c_attributes.copy()
     c_child_order = TImport_.c_child_order[:]
     c_cardinality = TImport_.c_cardinality.copy()
+
 
 def import_from_string(xml_string):
     return saml2.create_class_from_xml_string(Import, xml_string)
@@ -497,6 +493,7 @@ class Types(TTypes_):
     c_child_order = TTypes_.c_child_order[:]
     c_cardinality = TTypes_.c_cardinality.copy()
 
+
 def types_from_string(xml_string):
     return saml2.create_class_from_xml_string(Types, xml_string)
 
@@ -509,6 +506,7 @@ class TMessage_part(TPart_):
     c_attributes = TPart_.c_attributes.copy()
     c_child_order = TPart_.c_child_order[:]
     c_cardinality = TPart_.c_cardinality.copy()
+
 
 def t_message_part_from_string(xml_string):
     return saml2.create_class_from_xml_string(TMessage_part, xml_string)
@@ -524,26 +522,25 @@ class TMessage_(TExtensibleDocumented_):
     c_child_order = TExtensibleDocumented_.c_child_order[:]
     c_cardinality = TExtensibleDocumented_.c_cardinality.copy()
     c_children['{http://schemas.xmlsoap.org/wsdl/}part'] = ('part', [TMessage_part])
-    c_cardinality['part'] = {"min":0}
+    c_cardinality['part'] = {"min": 0}
     c_attributes['name'] = ('name', 'NCName', True)
     c_child_order.extend(['part'])
 
     def __init__(self,
-            part=None,
-            name=None,
-            documentation=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 part=None,
+                 name=None,
+                 documentation=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         TExtensibleDocumented_.__init__(self,
-                documentation=documentation,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.part=part or []
-        self.name=name
+                                        documentation=documentation,
+                                        text=text,
+                                        extension_elements=extension_elements,
+                                        extension_attributes=extension_attributes)
+        self.part = part or []
+        self.name = name
+
 
 def t_message__from_string(xml_string):
     return saml2.create_class_from_xml_string(TMessage_, xml_string)
@@ -557,6 +554,7 @@ class TPortType_operation(TOperation_):
     c_attributes = TOperation_.c_attributes.copy()
     c_child_order = TOperation_.c_child_order[:]
     c_cardinality = TOperation_.c_cardinality.copy()
+
 
 def t_port_type_operation_from_string(xml_string):
     return saml2.create_class_from_xml_string(TPortType_operation, xml_string)
@@ -572,26 +570,25 @@ class TPortType_(TExtensibleAttributesDocumented_):
     c_child_order = TExtensibleAttributesDocumented_.c_child_order[:]
     c_cardinality = TExtensibleAttributesDocumented_.c_cardinality.copy()
     c_children['{http://schemas.xmlsoap.org/wsdl/}operation'] = ('operation', [TPortType_operation])
-    c_cardinality['operation'] = {"min":0}
+    c_cardinality['operation'] = {"min": 0}
     c_attributes['name'] = ('name', 'NCName', True)
     c_child_order.extend(['operation'])
 
     def __init__(self,
-            operation=None,
-            name=None,
-            documentation=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 operation=None,
+                 name=None,
+                 documentation=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         TExtensibleAttributesDocumented_.__init__(self,
-                documentation=documentation,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.operation=operation or []
-        self.name=name
+                                                  documentation=documentation,
+                                                  text=text,
+                                                  extension_elements=extension_elements,
+                                                  extension_attributes=extension_attributes)
+        self.operation = operation or []
+        self.name = name
+
 
 def t_port_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(TPortType_, xml_string)
@@ -605,6 +602,7 @@ class TBinding_operation(TBindingOperation_):
     c_attributes = TBindingOperation_.c_attributes.copy()
     c_child_order = TBindingOperation_.c_child_order[:]
     c_cardinality = TBindingOperation_.c_cardinality.copy()
+
 
 def t_binding_operation_from_string(xml_string):
     return saml2.create_class_from_xml_string(TBinding_operation, xml_string)
@@ -620,29 +618,28 @@ class TBinding_(TExtensibleDocumented_):
     c_child_order = TExtensibleDocumented_.c_child_order[:]
     c_cardinality = TExtensibleDocumented_.c_cardinality.copy()
     c_children['{http://schemas.xmlsoap.org/wsdl/}operation'] = ('operation', [TBinding_operation])
-    c_cardinality['operation'] = {"min":0}
+    c_cardinality['operation'] = {"min": 0}
     c_attributes['name'] = ('name', 'NCName', True)
     c_attributes['type'] = ('type', 'QName', True)
     c_child_order.extend(['operation'])
 
     def __init__(self,
-            operation=None,
-            name=None,
-            type=None,
-            documentation=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 operation=None,
+                 name=None,
+                 type=None,
+                 documentation=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         TExtensibleDocumented_.__init__(self,
-                documentation=documentation,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.operation=operation or []
-        self.name=name
-        self.type=type
+                                        documentation=documentation,
+                                        text=text,
+                                        extension_elements=extension_elements,
+                                        extension_attributes=extension_attributes)
+        self.operation = operation or []
+        self.name = name
+        self.type = type
+
 
 def t_binding__from_string(xml_string):
     return saml2.create_class_from_xml_string(TBinding_, xml_string)
@@ -656,6 +653,7 @@ class TService_port(TPort_):
     c_attributes = TPort_.c_attributes.copy()
     c_child_order = TPort_.c_child_order[:]
     c_cardinality = TPort_.c_cardinality.copy()
+
 
 def t_service_port_from_string(xml_string):
     return saml2.create_class_from_xml_string(TService_port, xml_string)
@@ -671,26 +669,25 @@ class TService_(TExtensibleDocumented_):
     c_child_order = TExtensibleDocumented_.c_child_order[:]
     c_cardinality = TExtensibleDocumented_.c_cardinality.copy()
     c_children['{http://schemas.xmlsoap.org/wsdl/}port'] = ('port', [TService_port])
-    c_cardinality['port'] = {"min":0}
+    c_cardinality['port'] = {"min": 0}
     c_attributes['name'] = ('name', 'NCName', True)
     c_child_order.extend(['port'])
 
     def __init__(self,
-            port=None,
-            name=None,
-            documentation=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 port=None,
+                 name=None,
+                 documentation=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         TExtensibleDocumented_.__init__(self,
-                documentation=documentation,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.port=port or []
-        self.name=name
+                                        documentation=documentation,
+                                        text=text,
+                                        extension_elements=extension_elements,
+                                        extension_attributes=extension_attributes)
+        self.port = port or []
+        self.name = name
+
 
 def t_service__from_string(xml_string):
     return saml2.create_class_from_xml_string(TService_, xml_string)
@@ -706,6 +703,7 @@ class Message(TMessage_):
     c_child_order = TMessage_.c_child_order[:]
     c_cardinality = TMessage_.c_cardinality.copy()
 
+
 def message_from_string(xml_string):
     return saml2.create_class_from_xml_string(Message, xml_string)
 
@@ -719,6 +717,7 @@ class PortType(TPortType_):
     c_attributes = TPortType_.c_attributes.copy()
     c_child_order = TPortType_.c_child_order[:]
     c_cardinality = TPortType_.c_cardinality.copy()
+
 
 def port_type_from_string(xml_string):
     return saml2.create_class_from_xml_string(PortType, xml_string)
@@ -734,6 +733,7 @@ class Binding(TBinding_):
     c_child_order = TBinding_.c_child_order[:]
     c_cardinality = TBinding_.c_cardinality.copy()
 
+
 def binding_from_string(xml_string):
     return saml2.create_class_from_xml_string(Binding, xml_string)
 
@@ -747,6 +747,7 @@ class Service(TService_):
     c_attributes = TService_.c_attributes.copy()
     c_child_order = TService_.c_child_order[:]
     c_cardinality = TService_.c_cardinality.copy()
+
 
 def service_from_string(xml_string):
     return saml2.create_class_from_xml_string(Service, xml_string)
@@ -762,49 +763,48 @@ class TDefinitions_(TExtensibleDocumented_):
     c_child_order = TExtensibleDocumented_.c_child_order[:]
     c_cardinality = TExtensibleDocumented_.c_cardinality.copy()
     c_children['{http://schemas.xmlsoap.org/wsdl/}import'] = ('import', Import)
-    c_cardinality['import'] = {"min":0, "max":1}
+    c_cardinality['import'] = {"min": 0, "max": 1}
     c_children['{http://schemas.xmlsoap.org/wsdl/}types'] = ('types', Types)
-    c_cardinality['types'] = {"min":0, "max":1}
+    c_cardinality['types'] = {"min": 0, "max": 1}
     c_children['{http://schemas.xmlsoap.org/wsdl/}message'] = ('message', Message)
-    c_cardinality['message'] = {"min":0, "max":1}
+    c_cardinality['message'] = {"min": 0, "max": 1}
     c_children['{http://schemas.xmlsoap.org/wsdl/}portType'] = ('port_type', PortType)
-    c_cardinality['port_type'] = {"min":0, "max":1}
+    c_cardinality['port_type'] = {"min": 0, "max": 1}
     c_children['{http://schemas.xmlsoap.org/wsdl/}binding'] = ('binding', Binding)
-    c_cardinality['binding'] = {"min":0, "max":1}
+    c_cardinality['binding'] = {"min": 0, "max": 1}
     c_children['{http://schemas.xmlsoap.org/wsdl/}service'] = ('service', Service)
-    c_cardinality['service'] = {"min":0, "max":1}
+    c_cardinality['service'] = {"min": 0, "max": 1}
     c_attributes['targetNamespace'] = ('target_namespace', 'anyURI', False)
     c_attributes['name'] = ('name', 'NCName', False)
     c_child_order.extend(['import', 'types', 'message', 'port_type', 'binding', 'service'])
 
     def __init__(self,
-            import_=None,
-            types=None,
-            message=None,
-            port_type=None,
-            binding=None,
-            service=None,
-            target_namespace=None,
-            name=None,
-            documentation=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 import_=None,
+                 types=None,
+                 message=None,
+                 port_type=None,
+                 binding=None,
+                 service=None,
+                 target_namespace=None,
+                 name=None,
+                 documentation=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         TExtensibleDocumented_.__init__(self,
-                documentation=documentation,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.import_=import_
-        self.types=types
-        self.message=message
-        self.port_type=port_type
-        self.binding=binding
-        self.service=service
-        self.target_namespace=target_namespace
-        self.name=name
+                                        documentation=documentation,
+                                        text=text,
+                                        extension_elements=extension_elements,
+                                        extension_attributes=extension_attributes)
+        self.import_ = import_
+        self.types = types
+        self.message = message
+        self.port_type = port_type
+        self.binding = binding
+        self.service = service
+        self.target_namespace = target_namespace
+        self.name = name
+
 
 def t_definitions__from_string(xml_string):
     return saml2.create_class_from_xml_string(TDefinitions_, xml_string)
@@ -820,11 +820,12 @@ class Definitions(TDefinitions_):
     c_child_order = TDefinitions_.c_child_order[:]
     c_cardinality = TDefinitions_.c_cardinality.copy()
 
+
 def definitions_from_string(xml_string):
     return saml2.create_class_from_xml_string(Definitions, xml_string)
 
 
-#..................
+# ..................
 # []
 ELEMENT_FROM_STRING = {
     TDocumentation_.c_tag: t_documentation__from_string,
@@ -900,4 +901,3 @@ ELEMENT_BY_TAG = {
 
 def factory(tag, **kwargs):
     return ELEMENT_BY_TAG[tag](**kwargs)
-

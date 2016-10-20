@@ -67,7 +67,7 @@ def to_dict(_dict, onts, mdb_safe=False):
                 if mdb_safe:
                     _val = dict([(k.replace(".", "__"), v) for k, v in
                                  val.items()])
-                    #_val = {k.replace(".", "__"): v for k, v in val.items()}
+                    # _val = {k.replace(".", "__"): v for k, v in val.items()}
                 else:
                     _val = val
             else:

@@ -76,7 +76,7 @@ def valid_date_time(item):
 
 def valid_url(url):
     try:
-        _ = urlparse.urlparse(url)
+        urlparse.urlparse(url)
     except Exception:
         raise NotValid("URL")
 
@@ -411,7 +411,7 @@ def valid_instance(instance):
             _cmin = _cmax = _card = None
 
         if value:
-            #_has_val = True
+            # _has_val = True
             if isinstance(value, list):
                 _list = True
                 vlen = len(value)

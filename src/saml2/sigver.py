@@ -461,7 +461,7 @@ def cert_from_key_info_dict(key_info, ignore_age=False):
     :return: A possibly empty list of certs in their text representation
     """
     res = []
-    if not "x509_data" in key_info:
+    if "x509_data" not in key_info:
         return res
 
     for x509_data in key_info["x509_data"]:
@@ -519,7 +519,7 @@ def key_from_key_value(key_info):
 
 def key_from_key_value_dict(key_info):
     res = []
-    if not "key_value" in key_info:
+    if "key_value" not in key_info:
         return res
 
     for value in key_info["key_value"]:
@@ -1150,7 +1150,6 @@ def security_context(conf, debug=None):
         raise SigverError('Unknown crypto_backend %s' % (
             repr(conf.crypto_backend)))
 
-
     enc_key_files = []
     if conf.encryption_keypairs is not None:
         for _encryption_keypair in conf.encryption_keypairs:
@@ -1195,7 +1194,7 @@ def encrypt_cert_from_item(item):
                     #            certs = cert_from_instance(item)
                     #            if len(certs) > 0:
                     #                _encrypt_cert = certs[0]
-    except Exception as _exception:
+    except Exception:
         pass
 
     #    if _encrypt_cert is None:
@@ -1280,12 +1279,14 @@ class CertHandler(object):
 
             self._cert_info = None
             self._generate_cert_func_active = False
-            if generate_cert_info is not None and len(self._cert_str) > 0 and \
-                            len(self._key_str) > 0 and tmp_key_file is not \
-                    None and tmp_cert_file is not None:
-                self._generate_cert = True
-                self._cert_info = generate_cert_info
-                self._cert_handler_extra_class = cert_handler_extra_class
+            if (generate_cert_info is not None and
+                len(self._cert_str) > 0 and
+                len(self._key_str) > 0 and
+                tmp_key_file is not None and
+                tmp_cert_file is not None):
+                    self._generate_cert = True
+                    self._cert_info = generate_cert_info
+                    self._cert_handler_extra_class = cert_handler_extra_class
 
     def verify_cert(self, cert_file):
         if self._verify_cert:
@@ -1319,9 +1320,8 @@ class CertHandler(object):
                     self._cert_handler_extra_class.generate_cert(
                         self._cert_info, self._cert_str, self._key_str)
             else:
-                self._tmp_cert_str, self._tmp_key_str = self._osw \
-                    .create_certificate(
-                    self._cert_info, request=True)
+                self._tmp_cert_str, self._tmp_key_str = self._osw.create_certificate(self._cert_info,
+                                                                                     request=True)
                 self._tmp_cert_str = self._osw.create_cert_signed_certificate(
                     self._cert_str, self._key_str, self._tmp_cert_str)
                 valid, mess = self._osw.verify(self._cert_str,
@@ -1840,21 +1840,21 @@ class SecurityContext(object):
         :param key_file: A file that contains the key to be used
         :return: A possibly multiple signed statement
         """
-        for (item, sid, id_attr) in to_sign:
-            if not sid:
+        for (item, s_id, id_attr) in to_sign:
+            if not s_id:
                 if not item.id:
-                    sid = item.id = sid()
+                    s_id = item.id = s_id()
                 else:
-                    sid = item.id
+                    s_id = item.id
 
             if not item.signature:
-                item.signature = pre_signature_part(sid, self.cert_file,
+                item.signature = pre_signature_part(s_id, self.cert_file,
                                                     sign_alg=sign_alg,
                                                     digest_alg=digest_alg)
 
             statement = self.sign_statement(statement, class_name(item),
                                             key=key, key_file=key_file,
-                                            node_id=sid, id_attr=id_attr)
+                                            node_id=s_id, id_attr=id_attr)
         return statement
 
 

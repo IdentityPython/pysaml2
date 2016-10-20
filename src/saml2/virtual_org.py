@@ -60,7 +60,7 @@ class VirtualOrg(object):
     def do_aggregation(self, name_id):
 
         logger.info("** Do VO aggregation **\nSubjectID: %s, VO:%s",
-            name_id, self._name)
+                    name_id, self._name)
 
         to_ask = self.members_to_ask(name_id)
         if to_ask:
@@ -70,7 +70,7 @@ class VirtualOrg(object):
             # extends returns a list of session_infos
             for session_info in resolver.extend(
                     com_identifier, self.sp.config.entityid, to_ask):
-                _ = self._cache_session(session_info)
+                self._cache_session(session_info)
 
             logger.info(">Issuers: %s", self.sp.users.issuers_of_info(name_id))
             logger.info("AVA: %s", self.sp.users.get_identity(name_id))

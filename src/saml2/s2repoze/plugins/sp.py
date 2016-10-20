@@ -43,7 +43,7 @@ from saml2.config import config_factory
 from saml2.profile import paos
 
 # from saml2.population import Population
-#from saml2.attribute_resolver import AttributeResolver
+# from saml2.attribute_resolver import AttributeResolver
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +74,7 @@ class ECP_response(object):
     def __init__(self, content):
         self.content = content
 
-    #noinspection PyUnusedLocal
+    # noinspection PyUnusedLocal
     def __call__(self, environ, start_response):
         start_response('%s %s' % (self.code, self.title),
                        [('Content-Type', "text/xml")])
@@ -117,12 +117,12 @@ class SAML2Plugin(object):
         rememberer = environ['repoze.who.plugins'][self.rememberer_name]
         return rememberer
 
-    #### IIdentifier ####
+    # IIdentifier
     def remember(self, environ, identity):
         rememberer = self._get_rememberer(environ)
         return rememberer.remember(environ, identity)
 
-    #### IIdentifier ####
+    # IIdentifier
     def forget(self, environ, identity):
         rememberer = self._get_rememberer(environ)
         return rememberer.forget(environ, identity)
@@ -141,11 +141,10 @@ class SAML2Plugin(object):
             length = 0
         if length != 0:
             body = environ['wsgi.input'].read(length)  # get the POST variables
-            environ[
-                's2repoze.body'] = body  # store the request body for later
-                # use by pysaml2
-            environ['wsgi.input'] = StringIO(body)  # restore the request body
-                # as a stream so that everything seems untouched
+            # store the request body for later use by pysaml2
+            environ['s2repoze.body'] = body
+            # restore the request body as a stream so that everything seems untouched
+            environ['wsgi.input'] = StringIO(body)
 
         post = parse_qs(body)  # parse the POST fields into a dict
 
@@ -160,7 +159,7 @@ class SAML2Plugin(object):
         return -1, HTTPSeeOther(headers=[('Location',
                                           "%s?%s" % (self.wayf, sid_))])
 
-    #noinspection PyUnusedLocal
+    # noinspection PyUnusedLocal
     def _pick_idp(self, environ, came_from):
         """
         If more than one idp and if none is selected, I have to do wayf or
@@ -264,8 +263,8 @@ class SAML2Plugin(object):
         logger.info("Chosen IdP: '%s'", idp_entity_id)
         return 0, idp_entity_id
 
-    #### IChallenger ####
-    #noinspection PyUnusedLocal
+    # IChallenger
+    # noinspection PyUnusedLocal
     def challenge(self, environ, _status, _app_headers, _forget_headers):
 
         _cli = self.saml_client
@@ -274,7 +273,6 @@ class SAML2Plugin(object):
             name_id = decode(environ["REMOTE_USER"])
 
             _cli = self.saml_client
-            path_info = environ['PATH_INFO']
 
             if 'samlsp.logout' in environ:
                 responses = _cli.global_logout(name_id)
@@ -286,7 +284,7 @@ class SAML2Plugin(object):
                 response.headers += _forget_headers
             return response
 
-        #logger = environ.get('repoze.who.logger','')
+        # logger = environ.get('repoze.who.logger','')
 
         # Which page was accessed to get here
         came_from = construct_came_from(environ)
@@ -438,18 +436,18 @@ class SAML2Plugin(object):
 
         return session_info
 
-    #### IIdentifier ####
+    # IIdentifier
     def identify(self, environ):
         """
         Tries to do the identification
         """
-        #logger = environ.get('repoze.who.logger', '')
+        # logger = environ.get('repoze.who.logger', '')
 
         query = parse_dict_querystring(environ)
-        if ("CONTENT_LENGTH" not in environ or not environ[
-            "CONTENT_LENGTH"]) and \
-                        "SAMLResponse" not in query and "SAMLRequest" not in \
-                query:
+        if (("CONTENT_LENGTH" not in environ or
+             not environ["CONTENT_LENGTH"]) and
+            "SAMLResponse" not in query and
+            "SAMLRequest" not in query):
             logger.debug('[identify] get or empty post')
             return None
 
@@ -507,12 +505,11 @@ class SAML2Plugin(object):
             else:
                 logger.info("[sp.identify] --- SAMLResponse ---")
                 # check for SAML2 authN response
-                #if self.debug:
+                # if self.debug:
                 try:
                     if logout:
                         response = \
-                            self.saml_client.parse_logout_request_response(
-                            post["SAMLResponse"][0], binding)
+                            self.saml_client.parse_logout_request_response(post["SAMLResponse"][0], binding)
                         if response:
                             action = self.saml_client.handle_logout_response(
                                 response)
@@ -520,7 +517,7 @@ class SAML2Plugin(object):
                             if type(action) == dict:
                                 request = self._handle_logout(action)
                             else:
-                                #logout complete
+                                # logout complete
                                 request = HTTPSeeOther(headers=[
                                     ('Location', "/")])
                             if request:
@@ -578,7 +575,7 @@ class SAML2Plugin(object):
             identity["user"] = {}
         try:
             (ava, _) = _cli.users.get_identity(name_id)
-            #now = time.gmtime()
+            # now = time.gmtime()
             logger.debug("[add_metadata] adds: %s", ava)
             identity["user"].update(ava)
         except KeyError:
@@ -612,8 +609,8 @@ class SAML2Plugin(object):
             url = construct_url(environ)
         return url
 
-    #### IAuthenticatorPlugin ####
-    #noinspection PyUnusedLocal
+    # IAuthenticatorPlugin
+    # noinspection PyUnusedLocal
     def authenticate(self, environ, identity=None):
         if identity:
             if identity.get('user') and environ.get(
@@ -649,8 +646,7 @@ def make_plugin(remember_name=None,  # plugin for remember
                 sid_store="",
                 identity_cache="",
                 discovery="",
-                idp_query_param=""
-):
+                idp_query_param=""):
     if saml_conf is "":
         raise ValueError(
             'must include saml_conf in configuration')

@@ -7,11 +7,8 @@
 import saml2
 from saml2 import SamlBase
 
-from saml2 import xmldsig as ds
-from saml2.schema import soapenv
-from saml2.ws import wsutil as wsu
-
 NAMESPACE = 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd'
+
 
 class AttributedString_(SamlBase):
     """The http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd:AttributedString element """
@@ -26,20 +23,20 @@ class AttributedString_(SamlBase):
     c_attributes['{http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd}Id'] = ('Id', 'string', False)
 
     def __init__(self,
-            Id=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.Id=Id
+                 Id=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.Id = Id
+
 
 def attributed_string__from_string(xml_string):
     return saml2.create_class_from_xml_string(AttributedString_, xml_string)
+
 
 class PasswordString_(AttributedString_):
     """The http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd:PasswordString element """
@@ -53,22 +50,22 @@ class PasswordString_(AttributedString_):
     c_attributes['Type'] = ('type', 'anyURI', False)
 
     def __init__(self,
-            type=None,
-            Id=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        AttributedString_.__init__(self, 
-                Id=Id,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.type=type
+                 type=None,
+                 Id=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
+        AttributedString_.__init__(self,
+                                   Id=Id,
+                                   text=text,
+                                   extension_elements=extension_elements,
+                                   extension_attributes=extension_attributes)
+        self.type = type
+
 
 def password_string__from_string(xml_string):
     return saml2.create_class_from_xml_string(PasswordString_, xml_string)
+
 
 class EncodedString_(AttributedString_):
     """The http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd:EncodedString element """
@@ -82,22 +79,22 @@ class EncodedString_(AttributedString_):
     c_attributes['EncodingType'] = ('encoding_type', 'anyURI', False)
 
     def __init__(self,
-            encoding_type=None,
-            Id=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        AttributedString_.__init__(self, 
-                Id=Id,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.encoding_type=encoding_type
+                 encoding_type=None,
+                 Id=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
+        AttributedString_.__init__(self,
+                                   Id=Id,
+                                   text=text,
+                                   extension_elements=extension_elements,
+                                   extension_attributes=extension_attributes)
+        self.encoding_type = encoding_type
+
 
 def encoded_string__from_string(xml_string):
     return saml2.create_class_from_xml_string(EncodedString_, xml_string)
+
 
 class UsernameTokenType_Username(AttributedString_):
 
@@ -108,8 +105,10 @@ class UsernameTokenType_Username(AttributedString_):
     c_child_order = AttributedString_.c_child_order[:]
     c_cardinality = AttributedString_.c_cardinality.copy()
 
+
 def username_token_type__username_from_string(xml_string):
     return saml2.create_class_from_xml_string(UsernameTokenType_Username, xml_string)
+
 
 class UsernameTokenType_(SamlBase):
     """The http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd:UsernameTokenType element """
@@ -125,22 +124,22 @@ class UsernameTokenType_(SamlBase):
     c_child_order.extend(['username'])
 
     def __init__(self,
-            username=None,
-            Id=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.username=username
-        self.Id=Id
+                 username=None,
+                 Id=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.username = username
+        self.Id = Id
+
 
 def username_token_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(UsernameTokenType_, xml_string)
+
 
 class BinarySecurityTokenType_(EncodedString_):
     """The http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd:BinarySecurityTokenType element """
@@ -154,24 +153,24 @@ class BinarySecurityTokenType_(EncodedString_):
     c_attributes['ValueType'] = ('value_type', 'anyURI', False)
 
     def __init__(self,
-            value_type=None,
-            encoding_type=None,
-            Id=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        EncodedString_.__init__(self, 
-                encoding_type=encoding_type,
-                Id=Id,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.value_type=value_type
+                 value_type=None,
+                 encoding_type=None,
+                 Id=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
+        EncodedString_.__init__(self,
+                                encoding_type=encoding_type,
+                                Id=Id,
+                                text=text,
+                                extension_elements=extension_elements,
+                                extension_attributes=extension_attributes)
+        self.value_type = value_type
+
 
 def binary_security_token_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(BinarySecurityTokenType_, xml_string)
+
 
 class KeyIdentifierType_(EncodedString_):
     """The http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd:KeyIdentifierType element """
@@ -185,24 +184,24 @@ class KeyIdentifierType_(EncodedString_):
     c_attributes['ValueType'] = ('value_type', 'anyURI', False)
 
     def __init__(self,
-            value_type=None,
-            encoding_type=None,
-            Id=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        EncodedString_.__init__(self, 
-                encoding_type=encoding_type,
-                Id=Id,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.value_type=value_type
+                 value_type=None,
+                 encoding_type=None,
+                 Id=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
+        EncodedString_.__init__(self,
+                                encoding_type=encoding_type,
+                                Id=Id,
+                                text=text,
+                                extension_elements=extension_elements,
+                                extension_attributes=extension_attributes)
+        self.value_type = value_type
+
 
 def key_identifier_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(KeyIdentifierType_, xml_string)
+
 
 class TUsage_(SamlBase):
     """The http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd:tUsage element """
@@ -214,8 +213,10 @@ class TUsage_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def t_usage__from_string(xml_string):
     return saml2.create_class_from_xml_string(TUsage_, xml_string)
+
 
 class ReferenceType_(SamlBase):
     """The http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd:ReferenceType element """
@@ -230,22 +231,22 @@ class ReferenceType_(SamlBase):
     c_attributes['ValueType'] = ('value_type', 'anyURI', False)
 
     def __init__(self,
-            uri=None,
-            value_type=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.uri=uri
-        self.value_type=value_type
+                 uri=None,
+                 value_type=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.uri = uri
+        self.value_type = value_type
+
 
 def reference_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(ReferenceType_, xml_string)
+
 
 class EmbeddedType_(SamlBase):
     """The http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd:EmbeddedType element """
@@ -259,20 +260,20 @@ class EmbeddedType_(SamlBase):
     c_attributes['ValueType'] = ('value_type', 'anyURI', False)
 
     def __init__(self,
-            value_type=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.value_type=value_type
+                 value_type=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.value_type = value_type
+
 
 def embedded_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(EmbeddedType_, xml_string)
+
 
 class SecurityTokenReferenceType_(SamlBase):
     """The http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd:SecurityTokenReferenceType element """
@@ -287,22 +288,22 @@ class SecurityTokenReferenceType_(SamlBase):
     c_attributes['Usage'] = ('Usage', 'None', False)
 
     def __init__(self,
-            Id=None,
-            Usage=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.Id=Id
-        self.Usage=Usage
+                 Id=None,
+                 Usage=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.Id = Id
+        self.Usage = Usage
+
 
 def security_token_reference_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(SecurityTokenReferenceType_, xml_string)
+
 
 class SecurityHeaderType_(SamlBase):
     """The http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd:SecurityHeaderType element """
@@ -314,8 +315,10 @@ class SecurityHeaderType_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def security_header_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(SecurityHeaderType_, xml_string)
+
 
 class TransformationParametersType_(SamlBase):
     """The http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd:TransformationParametersType element """
@@ -327,8 +330,10 @@ class TransformationParametersType_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def transformation_parameters_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(TransformationParametersType_, xml_string)
+
 
 class UsernameToken(UsernameTokenType_):
     """The http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd:UsernameToken element """
@@ -340,8 +345,10 @@ class UsernameToken(UsernameTokenType_):
     c_child_order = UsernameTokenType_.c_child_order[:]
     c_cardinality = UsernameTokenType_.c_cardinality.copy()
 
+
 def username_token_from_string(xml_string):
     return saml2.create_class_from_xml_string(UsernameToken, xml_string)
+
 
 class BinarySecurityToken(BinarySecurityTokenType_):
     """The http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd:BinarySecurityToken element """
@@ -352,6 +359,7 @@ class BinarySecurityToken(BinarySecurityTokenType_):
     c_attributes = BinarySecurityTokenType_.c_attributes.copy()
     c_child_order = BinarySecurityTokenType_.c_child_order[:]
     c_cardinality = BinarySecurityTokenType_.c_cardinality.copy()
+
 
 def binary_security_token_from_string(xml_string):
     return saml2.create_class_from_xml_string(BinarySecurityToken, xml_string)
@@ -367,6 +375,7 @@ class Reference(ReferenceType_):
     c_child_order = ReferenceType_.c_child_order[:]
     c_cardinality = ReferenceType_.c_cardinality.copy()
 
+
 def reference_from_string(xml_string):
     return saml2.create_class_from_xml_string(Reference, xml_string)
 
@@ -380,6 +389,7 @@ class Embedded(EmbeddedType_):
     c_attributes = EmbeddedType_.c_attributes.copy()
     c_child_order = EmbeddedType_.c_child_order[:]
     c_cardinality = EmbeddedType_.c_cardinality.copy()
+
 
 def embedded_from_string(xml_string):
     return saml2.create_class_from_xml_string(Embedded, xml_string)
@@ -395,6 +405,7 @@ class KeyIdentifier(KeyIdentifierType_):
     c_child_order = KeyIdentifierType_.c_child_order[:]
     c_cardinality = KeyIdentifierType_.c_cardinality.copy()
 
+
 def key_identifier_from_string(xml_string):
     return saml2.create_class_from_xml_string(KeyIdentifier, xml_string)
 
@@ -408,6 +419,7 @@ class SecurityTokenReference(SecurityTokenReferenceType_):
     c_attributes = SecurityTokenReferenceType_.c_attributes.copy()
     c_child_order = SecurityTokenReferenceType_.c_child_order[:]
     c_cardinality = SecurityTokenReferenceType_.c_cardinality.copy()
+
 
 def security_token_reference_from_string(xml_string):
     return saml2.create_class_from_xml_string(SecurityTokenReference, xml_string)
@@ -423,6 +435,7 @@ class Security(SecurityHeaderType_):
     c_child_order = SecurityHeaderType_.c_child_order[:]
     c_cardinality = SecurityHeaderType_.c_cardinality.copy()
 
+
 def security_from_string(xml_string):
     return saml2.create_class_from_xml_string(Security, xml_string)
 
@@ -436,6 +449,7 @@ class TransformationParameters(TransformationParametersType_):
     c_attributes = TransformationParametersType_.c_attributes.copy()
     c_child_order = TransformationParametersType_.c_child_order[:]
     c_cardinality = TransformationParametersType_.c_cardinality.copy()
+
 
 def transformation_parameters_from_string(xml_string):
     return saml2.create_class_from_xml_string(TransformationParameters, xml_string)
@@ -451,6 +465,7 @@ class Password(PasswordString_):
     c_child_order = PasswordString_.c_child_order[:]
     c_cardinality = PasswordString_.c_cardinality.copy()
 
+
 def password_from_string(xml_string):
     return saml2.create_class_from_xml_string(Password, xml_string)
 
@@ -464,6 +479,7 @@ class Nonce(EncodedString_):
     c_attributes = EncodedString_.c_attributes.copy()
     c_child_order = EncodedString_.c_child_order[:]
     c_cardinality = EncodedString_.c_cardinality.copy()
+
 
 def nonce_from_string(xml_string):
     return saml2.create_class_from_xml_string(Nonce, xml_string)
@@ -480,11 +496,12 @@ class FaultcodeEnum_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def faultcode_enum__from_string(xml_string):
     return saml2.create_class_from_xml_string(FaultcodeEnum_, xml_string)
 
 
-#..................
+# ..................
 ('#', [])
 ELEMENT_FROM_STRING = {
     AttributedString_.c_tag: attributed_string__from_string,
@@ -543,4 +560,3 @@ ELEMENT_BY_TAG = {
 
 def factory(tag, **kwargs):
     return ELEMENT_BY_TAG[tag](**kwargs)
-

@@ -1,3 +1,4 @@
+flake8==3.0.4
+mock==2.0.0
 pymongo==3.0.1
 responses==0.5.0
-mock
