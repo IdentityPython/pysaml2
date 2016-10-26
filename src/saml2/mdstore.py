@@ -930,7 +930,7 @@ class MetadataStore(MetaData):
                     raise SAMLError("Misconfiguration in metadata %s" % item)
                 mod, clas = key.rsplit('.', 1)
                 try:
-                    mod = import_module(mod)
+                    mod = importlib.import_module(mod)
                     MDloader = getattr(mod, clas)
                 except (ImportError, AttributeError):
                     raise SAMLError("Unknown metadata loader %s" % key)
