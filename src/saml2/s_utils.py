@@ -1,33 +1,22 @@
 #!/usr/bin/env python
+
+import base64
+import hashlib
+import hmac
 import logging
 import random
-
-import time
-import base64
-import six
 import sys
-import hmac
-import string
-
-# from python 2.5
-import imp
+import time
 import traceback
+import zlib
 
-if sys.version_info >= (2, 5):
-    import hashlib
-else:  # before python 2.5
-    import sha
+import six
 
 from saml2 import saml
 from saml2 import samlp
 from saml2 import VERSION
 from saml2.time_util import instant
 
-try:
-    from hashlib import md5
-except ImportError:
-    from md5 import md5
-import zlib
 
 logger = logging.getLogger(__name__)
 
@@ -405,67 +394,6 @@ def verify_signature(secret, parts):
         return True
     else:
         return False
-
-
-FTICKS_FORMAT = "F-TICKS/SWAMID/2.0%s#"
-
-
-def fticks_log(sp, logf, idp_entity_id, user_id, secret, assertion):
-    """
-    'F-TICKS/' federationIdentifier '/' version *('#' attribute '=' value) '#'
-    Allowed attributes:
-        TS	the login time stamp
-        RP	the relying party entityID
-        AP	the asserting party entityID (typcially the IdP)
-        PN	a sha256-hash of the local principal name and a unique key
-        AM	the authentication method URN
-
-    :param sp: Client instance
-    :param logf: The log function to use
-    :param idp_entity_id: IdP entity ID
-    :param user_id: The user identifier
-    :param secret: A salt to make the hash more secure
-    :param assertion: A SAML Assertion instance gotten from the IdP
-    """
-    csum = hmac.new(secret, digestmod=hashlib.sha1)
-    csum.update(user_id)
-    ac = assertion.AuthnStatement[0].AuthnContext[0]
-
-    info = {
-        "TS": time.time(),
-        "RP": sp.entity_id,
-        "AP": idp_entity_id,
-        "PN": csum.hexdigest(),
-        "AM": ac.AuthnContextClassRef.text
-    }
-    logf.info(FTICKS_FORMAT % "#".join(["%s=%s" % (a, v) for a, v in info]))
-
-
-def dynamic_importer(name, class_name=None):
-    """
-    Dynamically imports modules / classes
-    """
-    try:
-        fp, pathname, description = imp.find_module(name)
-    except ImportError:
-        print("unable to locate module: " + name)
-        return None, None
-
-    try:
-        package = imp.load_module(name, fp, pathname, description)
-    except Exception:
-        raise
-
-    if class_name:
-        try:
-            _class = imp.load_module("%s.%s" % (name, class_name), fp,
-                                     pathname, description)
-        except Exception:
-            raise
-
-        return package, _class
-    else:
-        return package, None
 
 
 def exception_trace(exc):

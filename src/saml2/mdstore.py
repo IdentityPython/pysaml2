@@ -1,17 +1,17 @@
 from __future__ import print_function
 import hashlib
+import importlib
+import json
 import logging
 import os
 import sys
-import json
-import requests
-import six
 
 from hashlib import sha1
 from os.path import isfile
 from os.path import join
 
-from future.backports.test.support import import_module
+import requests
+import six
 
 from saml2 import md
 from saml2 import saml
@@ -694,7 +694,7 @@ class MetaDataLoader(MetaDataFile):
         i = func.rfind('.')
         module, attr = func[:i], func[i + 1:]
         try:
-            mod = import_module(module)
+            mod = importlib.import_module(module)
         except Exception as e:
             raise RuntimeError(
                 'Cannot find metadata provider function %s: "%s"' % (func, e))

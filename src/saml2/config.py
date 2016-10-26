@@ -1,13 +1,14 @@
 #!/usr/bin/env python
+
 import copy
-import sys
-import os
-import re
+import importlib
 import logging
 import logging.handlers
-import six
+import os
+import re
+import sys
 
-from future.backports.test.support import import_module
+import six
 
 from saml2 import root_logger, BINDING_URI, SAMLError
 from saml2 import BINDING_SOAP
@@ -359,7 +360,7 @@ class Config(object):
         else:
             sys.path.insert(0, head)
 
-        return import_module(tail)
+        return importlib.import_module(tail)
 
     def load_file(self, config_file, metadata_construction=False):
         if config_file.endswith(".py"):
