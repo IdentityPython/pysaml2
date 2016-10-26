@@ -5,6 +5,7 @@ import hashlib
 import hmac
 import logging
 import random
+import string
 import sys
 import time
 import traceback
