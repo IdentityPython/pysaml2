@@ -7,7 +7,6 @@ import logging
 import random
 import string
 import sys
-import time
 import traceback
 import zlib
 
@@ -378,10 +377,7 @@ def signature(secret, parts):
             part = part.encode('utf-8')
         newparts.append(part)
     parts = newparts
-    if sys.version_info >= (2, 5):
-        csum = hmac.new(secret, digestmod=hashlib.sha1)
-    else:
-        csum = hmac.new(secret, digestmod=sha)
+    csum = hmac.new(secret, digestmod=hashlib.sha1)
 
     for part in parts:
         csum.update(part)
