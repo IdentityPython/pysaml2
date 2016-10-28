@@ -493,7 +493,10 @@ def cert_from_instance(instance):
 
 
 def intarr2long(arr):
-    return long(''.join(["%02x" % byte for byte in arr]), 16)
+    if six.PY2:
+        return long(''.join(["%02x" % byte for byte in arr]), 16)
+    else:
+        return int(''.join(["%02x" % byte for byte in arr]), 16)
 
 
 def dehexlify(bi):
