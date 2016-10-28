@@ -106,10 +106,7 @@ def _verify_value_type(typ, val):
         try:
             return str(val)
         except UnicodeEncodeError:
-            if six.PY2:
-                return unicode(val)
-            else:
-                return val.decode('utf8')
+            return val.decode('utf8')
     if typ == XSD + "integer" or typ == XSD + "int":
         return int(val)
     if typ == XSD + "float" or typ == XSD + "double":
