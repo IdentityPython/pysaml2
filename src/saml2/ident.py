@@ -140,8 +140,10 @@ class IdentDB(object):
         del self.db[name_id.text]
 
     def remove_local(self, sid):
-        if isinstance(sid, unicode):
+        try:
             sid = sid.encode("utf-8")
+        except AttributeError:
+            pass
 
         try:
             for val in self.db[sid].split(" "):
