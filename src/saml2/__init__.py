@@ -36,6 +36,7 @@ except ImportError:
         import cElementTree as ElementTree
     except ImportError:
         from elementtree import ElementTree
+import defusedxml.ElementTree
 
 root_logger = logging.getLogger(__name__)
 root_logger.level = logging.NOTSET
@@ -87,7 +88,7 @@ def create_class_from_xml_string(target_class, xml_string):
     """
     if not isinstance(xml_string, six.binary_type):
         xml_string = xml_string.encode('utf-8')
-    tree = ElementTree.fromstring(xml_string)
+    tree = defusedxml.ElementTree.fromstring(xml_string)
     return create_class_from_element_tree(target_class, tree)
 
 
@@ -269,7 +270,7 @@ class ExtensionElement(object):
 
 
 def extension_element_from_string(xml_string):
-    element_tree = ElementTree.fromstring(xml_string)
+    element_tree = defusedxml.ElementTree.fromstring(xml_string)
     return _extension_element_from_element_tree(element_tree)
 
 

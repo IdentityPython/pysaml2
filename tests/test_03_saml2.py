@@ -17,6 +17,7 @@ except ImportError:
         import cElementTree as ElementTree
     except ImportError:
         from elementtree import ElementTree
+from defusedxml.common import EntitiesForbidden
 
 ITEMS = {
     NameID: ["""<?xml version="1.0" encoding="utf-8"?>
@@ -164,6 +165,19 @@ def test_create_class_from_xml_string_wrong_class_spec():
     kl = create_class_from_xml_string(SubjectConfirmationData,
                                       ITEMS[SubjectConfirmation])
     assert kl == None
+
+
+def test_create_class_from_xml_string_xxe():
+    xml = """<?xml version="1.0"?>
+    <!DOCTYPE lolz [
+    <!ENTITY lol "lol">
+    <!ELEMENT lolz (#PCDATA)>
+    <!ENTITY lol1 "&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;">
+    ]>
+    <lolz>&lol1;</lolz>
+    """
+    with raises(EntitiesForbidden) as err:
+        create_class_from_xml_string(NameID, xml)
 
 
 def test_ee_1():
@@ -452,6 +466,19 @@ def test_ee_7():
     assert len(nid.children) == 0
     assert _eq(nid.attributes.keys(), ["Format"])
     assert nid.text.strip() == "http://federationX.org"
+
+
+def test_ee_xxe():
+    xml = """<?xml version="1.0"?>
+    <!DOCTYPE lolz [
+    <!ENTITY lol "lol">
+    <!ELEMENT lolz (#PCDATA)>
+    <!ENTITY lol1 "&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;">
+    ]>
+    <lolz>&lol1;</lolz>
+    """
+    with raises(EntitiesForbidden):
+        saml2.extension_element_from_string(xml)
 
 
 def test_extension_element_loadd():
