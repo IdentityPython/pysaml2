@@ -12,9 +12,13 @@ except ImportError:
         import cElementTree as ElementTree
     except ImportError:
         from elementtree import ElementTree
+from defusedxml.common import EntitiesForbidden
+
+from pytest import raises
 
 import saml2.samlp as samlp
 from saml2.samlp import NAMESPACE as SAMLP_NAMESPACE
+from saml2 import soap
 
 NAMESPACE = "http://schemas.xmlsoap.org/soap/envelope/"
 
@@ -66,3 +70,42 @@ def test_make_soap_envelope():
     assert len(body) == 1
     saml_part = body[0]
     assert saml_part.tag == '{%s}AuthnRequest' % SAMLP_NAMESPACE
+
+
+def test_parse_soap_enveloped_saml_thingy_xxe():
+    xml = """<?xml version="1.0"?>
+    <!DOCTYPE lolz [
+    <!ENTITY lol "lol">
+    <!ELEMENT lolz (#PCDATA)>
+    <!ENTITY lol1 "&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;">
+    ]>
+    <lolz>&lol1;</lolz>
+    """
+    with raises(EntitiesForbidden):
+        soap.parse_soap_enveloped_saml_thingy(xml, None)
+
+
+def test_class_instances_from_soap_enveloped_saml_thingies_xxe():
+    xml = """<?xml version="1.0"?>
+    <!DOCTYPE lolz [
+    <!ENTITY lol "lol">
+    <!ELEMENT lolz (#PCDATA)>
+    <!ENTITY lol1 "&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;">
+    ]>
+    <lolz>&lol1;</lolz>
+    """
+    with raises(soap.XmlParseError):
+        soap.class_instances_from_soap_enveloped_saml_thingies(xml, None)
+
+
+def test_open_soap_envelope_xxe():
+    xml = """<?xml version="1.0"?>
+    <!DOCTYPE lolz [
+    <!ENTITY lol "lol">
+    <!ELEMENT lolz (#PCDATA)>
+    <!ENTITY lol1 "&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;">
+    ]>
+    <lolz>&lol1;</lolz>
+    """
+    with raises(soap.XmlParseError):
+        soap.open_soap_envelope(xml)

@@ -19,6 +19,7 @@ except ImportError:
     except ImportError:
         #noinspection PyUnresolvedReferences
         from elementtree import ElementTree
+import defusedxml.ElementTree
 
 
 logger = logging.getLogger(__name__)
@@ -133,7 +134,7 @@ def parse_soap_enveloped_saml_thingy(text, expected_tags):
     :param expected_tags: What the tag of the SAML thingy is expected to be.
     :return: SAML thingy as a string
     """
-    envelope = ElementTree.fromstring(text)
+    envelope = defusedxml.ElementTree.fromstring(text)
 
     # Make sure it's a SOAP message
     assert envelope.tag == '{%s}Envelope' % soapenv.NAMESPACE
@@ -183,7 +184,7 @@ def class_instances_from_soap_enveloped_saml_thingies(text, modules):
     :return: The body and headers as class instances
     """
     try:
-        envelope = ElementTree.fromstring(text)
+        envelope = defusedxml.ElementTree.fromstring(text)
     except Exception as exc:
         raise XmlParseError("%s" % exc)
 
@@ -209,7 +210,7 @@ def open_soap_envelope(text):
     :return: dictionary with two keys "body"/"header"
     """
     try:
-        envelope = ElementTree.fromstring(text)
+        envelope = defusedxml.ElementTree.fromstring(text)
     except Exception as exc:
         raise XmlParseError("%s" % exc)
 
