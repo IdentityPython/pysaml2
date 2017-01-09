@@ -9,9 +9,10 @@ from saml2 import SamlBase
 
 from saml2 import saml
 from saml2 import samlp
-#import soapenv as S
+# import soapenv as S
 
 NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:profiles:SSO:ecp'
+
 
 class RequestType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:profiles:SSO:ecp:RequestType element """
@@ -24,7 +25,7 @@ class RequestType_(SamlBase):
     c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Issuer'] = ('issuer', saml.Issuer)
     c_children['{urn:oasis:names:tc:SAML:2.0:protocol}IDPList'] = ('idp_list', samlp.IDPList)
-    c_cardinality['idp_list'] = {"min":0, "max":1}
+    c_cardinality['idp_list'] = {"min": 0, "max": 1}
     c_attributes['{http://schemas.xmlsoap.org/soap/envelope/}mustUnderstand'] = ('must_understand', 'None', True)
     c_attributes['{http://schemas.xmlsoap.org/soap/envelope/}actor'] = ('actor', 'None', True)
     c_attributes['ProviderName'] = ('provider_name', 'string', False)
@@ -32,27 +33,26 @@ class RequestType_(SamlBase):
     c_child_order.extend(['issuer', 'idp_list'])
 
     def __init__(self,
-            issuer=None,
-            idp_list=None,
-            must_understand=None,
-            actor=None,
-            provider_name=None,
-            is_passive=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 issuer=None,
+                 idp_list=None,
+                 must_understand=None,
+                 actor=None,
+                 provider_name=None,
+                 is_passive=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         SamlBase.__init__(self,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.issuer=issuer
-        self.idp_list=idp_list
-        self.must_understand=must_understand
-        self.actor=actor
-        self.provider_name=provider_name
-        self.is_passive=is_passive
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.issuer = issuer
+        self.idp_list = idp_list
+        self.must_understand = must_understand
+        self.actor = actor
+        self.provider_name = provider_name
+        self.is_passive = is_passive
+
 
 def request_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(RequestType_, xml_string)
@@ -72,21 +72,20 @@ class ResponseType_(SamlBase):
     c_attributes['AssertionConsumerServiceURL'] = ('assertion_consumer_service_url', 'anyURI', True)
 
     def __init__(self,
-            must_understand=None,
-            actor=None,
-            assertion_consumer_service_url=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 must_understand=None,
+                 actor=None,
+                 assertion_consumer_service_url=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         SamlBase.__init__(self,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.must_understand=must_understand
-        self.actor=actor
-        self.assertion_consumer_service_url=assertion_consumer_service_url
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.must_understand = must_understand
+        self.actor = actor
+        self.assertion_consumer_service_url = assertion_consumer_service_url
+
 
 def response_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(ResponseType_, xml_string)
@@ -106,19 +105,18 @@ class RelayStateType_(SamlBase):
     c_attributes['{http://schemas.xmlsoap.org/soap/envelope/}actor'] = ('actor', 'string', True)
 
     def __init__(self,
-            must_understand=None,
-            actor=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 must_understand=None,
+                 actor=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         SamlBase.__init__(self,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.must_understand=must_understand
-        self.actor=actor
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.must_understand = must_understand
+        self.actor = actor
+
 
 def relay_state_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(RelayStateType_, xml_string)
@@ -134,6 +132,7 @@ class Request(RequestType_):
     c_child_order = RequestType_.c_child_order[:]
     c_cardinality = RequestType_.c_cardinality.copy()
 
+
 def request_from_string(xml_string):
     return saml2.create_class_from_xml_string(Request, xml_string)
 
@@ -148,6 +147,7 @@ class Response(ResponseType_):
     c_child_order = ResponseType_.c_child_order[:]
     c_cardinality = ResponseType_.c_cardinality.copy()
 
+
 def response_from_string(xml_string):
     return saml2.create_class_from_xml_string(Response, xml_string)
 
@@ -161,6 +161,7 @@ class RelayState(RelayStateType_):
     c_attributes = RelayStateType_.c_attributes.copy()
     c_child_order = RelayStateType_.c_child_order[:]
     c_cardinality = RelayStateType_.c_cardinality.copy()
+
 
 def relay_state_from_string(xml_string):
     return saml2.create_class_from_xml_string(RelayState, xml_string)
@@ -187,4 +188,3 @@ ELEMENT_BY_TAG = {
 
 def factory(tag, **kwargs):
     return ELEMENT_BY_TAG[tag](**kwargs)
-

@@ -17,7 +17,7 @@ except ImportError:
     try:
         import cElementTree as ElementTree
     except ImportError:
-        #noinspection PyUnresolvedReferences
+        # noinspection PyUnresolvedReferences
         from elementtree import ElementTree
 import defusedxml.ElementTree
 
@@ -122,7 +122,7 @@ def parse_soap_enveloped_saml_authn_response(text):
     return parse_soap_enveloped_saml_thingy(text, tags)
 
 
-#def parse_soap_enveloped_saml_logout_response(text):
+# def parse_soap_enveloped_saml_logout_response(text):
 #    expected_tag = '{%s}LogoutResponse' % SAMLP_NAMESPACE
 #    return parse_soap_enveloped_saml_thingy(text, [expected_tag])
 
@@ -163,6 +163,7 @@ NS_AND_TAG = re.compile("\{([^}]+)\}(.*)")
 
 
 def instanciate_class(item, modules):
+
     m = NS_AND_TAG.match(item.tag)
     ns, tag = m.groups()
     for module in modules:

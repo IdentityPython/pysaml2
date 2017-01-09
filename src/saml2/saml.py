@@ -175,7 +175,6 @@ class AttributeValueBase(SamlBase):
             except AttributeError:
                 self._extatt['xmlns:xs'] = XS_NAMESPACE
 
-
     def get_type(self):
         try:
             return self.extension_attributes[XSI_TYPE]
@@ -213,12 +212,12 @@ class AttributeValueBase(SamlBase):
                         assert typ == "xs:string"
                     except AssertionError:
                         if typ == "xs:int":
-                            _ = int(val)
+                            int(val)
                         elif typ == "xs:boolean":
                             if val.lower() not in ["true", "false"]:
                                 raise ValueError("Not a boolean")
                         elif typ == "xs:float":
-                            _ = float(val)
+                            float(val)
                         elif typ == "xs:base64Binary":
                             pass
                         else:
@@ -266,9 +265,9 @@ class AttributeValueBase(SamlBase):
         for attribute, value in iter(tree.attrib.items()):
             self._convert_element_attribute_to_member(attribute, value)
         if tree.text:
-            #print("set_text:", tree.text)
+            # print("set_text:", tree.text)
             # clear type
-            #self.clear_type()
+            # self.clear_type()
             self.set_text(tree.text)
             if XSI_NIL in self.extension_attributes:
                 del self.extension_attributes[XSI_NIL]
@@ -1436,7 +1435,7 @@ def subject_from_string(xml_string):
     return saml2.create_class_from_xml_string(Subject, xml_string)
 
 
-#..................
+# ..................
 # ['AuthzDecisionStatement', 'EvidenceType', 'AdviceType', 'Evidence',
 # 'Assertion', 'AssertionType', 'AuthzDecisionStatementType', 'Advice']
 class EvidenceType_(SamlBase):
@@ -1557,7 +1556,7 @@ def authz_decision_statement_from_string(xml_string):
                                               xml_string)
 
 
-#..................
+# ..................
 # ['Assertion', 'AssertionType', 'AdviceType', 'Advice']
 class AssertionType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:assertion:AssertionType element """

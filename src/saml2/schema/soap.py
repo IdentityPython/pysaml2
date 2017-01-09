@@ -11,6 +11,7 @@ from saml2.schema import wsdl
 
 NAMESPACE = 'http://schemas.xmlsoap.org/wsdl/soap/'
 
+
 class EncodingStyle_(SamlBase):
     """The http://schemas.xmlsoap.org/wsdl/soap/:encodingStyle element """
 
@@ -20,6 +21,7 @@ class EncodingStyle_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def encoding_style__from_string(xml_string):
     return saml2.create_class_from_xml_string(EncodingStyle_, xml_string)
@@ -35,6 +37,7 @@ class TStyleChoice_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def t_style_choice__from_string(xml_string):
     return saml2.create_class_from_xml_string(TStyleChoice_, xml_string)
@@ -53,21 +56,20 @@ class TOperation_(wsdl.TExtensibilityElement_):
     c_attributes['style'] = ('style', TStyleChoice_, False)
 
     def __init__(self,
-            soap_action=None,
-            style=None,
-            required=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 soap_action=None,
+                 style=None,
+                 required=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         wsdl.TExtensibilityElement_.__init__(self,
-                required=required,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.soap_action=soap_action
-        self.style=style
+                                             required=required,
+                                             text=text,
+                                             extension_elements=extension_elements,
+                                             extension_attributes=extension_attributes)
+        self.soap_action = soap_action
+        self.style = style
+
 
 def t_operation__from_string(xml_string):
     return saml2.create_class_from_xml_string(TOperation_, xml_string)
@@ -83,6 +85,7 @@ class UseChoice_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def use_choice__from_string(xml_string):
     return saml2.create_class_from_xml_string(UseChoice_, xml_string)
@@ -104,25 +107,23 @@ class TFaultRes_(SamlBase):
     c_attributes['namespace'] = ('namespace', 'anyURI', False)
 
     def __init__(self,
-            required=None,
-            parts=None,
-            encoding_style=None,
-            use=None,
-            namespace=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 required=None,
+                 parts=None,
+                 encoding_style=None,
+                 use=None,
+                 namespace=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         SamlBase.__init__(self,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.required=required
-        self.parts=parts
-        self.encoding_style=encoding_style
-        self.use=use
-        self.namespace=namespace
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.required = required
+        self.parts = parts
+        self.encoding_style = encoding_style
+        self.use = use
+        self.namespace = namespace
 
 
 class TFault_(TFaultRes_):
@@ -137,27 +138,26 @@ class TFault_(TFaultRes_):
     c_attributes['name'] = ('name', 'NCName', True)
 
     def __init__(self,
-            name=None,
-            required=None,
-            parts=None,
-            encoding_style=None,
-            use=None,
-            namespace=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 name=None,
+                 required=None,
+                 parts=None,
+                 encoding_style=None,
+                 use=None,
+                 namespace=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         TFaultRes_.__init__(self,
-                required=required,
-                parts=parts,
-                encoding_style=encoding_style,
-                use=use,
-                namespace=namespace,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.name=name
+                            required=required,
+                            parts=parts,
+                            encoding_style=encoding_style,
+                            use=use,
+                            namespace=namespace,
+                            text=text,
+                            extension_elements=extension_elements,
+                            extension_attributes=extension_attributes)
+        self.name = name
+
 
 def t_fault__from_string(xml_string):
     return saml2.create_class_from_xml_string(TFault_, xml_string)
@@ -179,25 +179,24 @@ class THeaderFault_(SamlBase):
     c_attributes['namespace'] = ('namespace', 'anyURI', False)
 
     def __init__(self,
-            message=None,
-            part=None,
-            use=None,
-            encoding_style=None,
-            namespace=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 message=None,
+                 part=None,
+                 use=None,
+                 encoding_style=None,
+                 namespace=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         SamlBase.__init__(self,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.message=message
-        self.part=part
-        self.use=use
-        self.encoding_style=encoding_style
-        self.namespace=namespace
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.message = message
+        self.part = part
+        self.use = use
+        self.encoding_style = encoding_style
+        self.namespace = namespace
+
 
 def t_header_fault__from_string(xml_string):
     return saml2.create_class_from_xml_string(THeaderFault_, xml_string)
@@ -215,19 +214,18 @@ class TAddress_(wsdl.TExtensibilityElement_):
     c_attributes['location'] = ('location', 'anyURI', True)
 
     def __init__(self,
-            location=None,
-            required=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 location=None,
+                 required=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         wsdl.TExtensibilityElement_.__init__(self,
-                required=required,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.location=location
+                                             required=required,
+                                             text=text,
+                                             extension_elements=extension_elements,
+                                             extension_attributes=extension_attributes)
+        self.location = location
+
 
 def t_address__from_string(xml_string):
     return saml2.create_class_from_xml_string(TAddress_, xml_string)
@@ -246,21 +244,20 @@ class TBinding_(wsdl.TExtensibilityElement_):
     c_attributes['style'] = ('style', TStyleChoice_, False)
 
     def __init__(self,
-            transport=None,
-            style=None,
-            required=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 transport=None,
+                 style=None,
+                 required=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         wsdl.TExtensibilityElement_.__init__(self,
-                required=required,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.transport=transport
-        self.style=style
+                                             required=required,
+                                             text=text,
+                                             extension_elements=extension_elements,
+                                             extension_attributes=extension_attributes)
+        self.transport = transport
+        self.style = style
+
 
 def t_binding__from_string(xml_string):
     return saml2.create_class_from_xml_string(TBinding_, xml_string)
@@ -275,6 +272,7 @@ class Operation(TOperation_):
     c_attributes = TOperation_.c_attributes.copy()
     c_child_order = TOperation_.c_child_order[:]
     c_cardinality = TOperation_.c_cardinality.copy()
+
 
 def operation_from_string(xml_string):
     return saml2.create_class_from_xml_string(Operation, xml_string)
@@ -295,25 +293,24 @@ class TBody_(wsdl.TExtensibilityElement_):
     c_attributes['namespace'] = ('namespace', 'anyURI', False)
 
     def __init__(self,
-            parts=None,
-            encoding_style=None,
-            use=None,
-            namespace=None,
-            required=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 parts=None,
+                 encoding_style=None,
+                 use=None,
+                 namespace=None,
+                 required=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         wsdl.TExtensibilityElement_.__init__(self,
-                required=required,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.parts=parts
-        self.encoding_style=encoding_style
-        self.use=use
-        self.namespace=namespace
+                                             required=required,
+                                             text=text,
+                                             extension_elements=extension_elements,
+                                             extension_attributes=extension_attributes)
+        self.parts = parts
+        self.encoding_style = encoding_style
+        self.use = use
+        self.namespace = namespace
+
 
 def t_body__from_string(xml_string):
     return saml2.create_class_from_xml_string(TBody_, xml_string)
@@ -329,6 +326,7 @@ class Fault(TFault_):
     c_child_order = TFault_.c_child_order[:]
     c_cardinality = TFault_.c_cardinality.copy()
 
+
 def fault_from_string(xml_string):
     return saml2.create_class_from_xml_string(Fault, xml_string)
 
@@ -342,6 +340,7 @@ class Headerfault(THeaderFault_):
     c_attributes = THeaderFault_.c_attributes.copy()
     c_child_order = THeaderFault_.c_child_order[:]
     c_cardinality = THeaderFault_.c_cardinality.copy()
+
 
 def headerfault_from_string(xml_string):
     return saml2.create_class_from_xml_string(Headerfault, xml_string)
@@ -357,6 +356,7 @@ class Address(TAddress_):
     c_child_order = TAddress_.c_child_order[:]
     c_cardinality = TAddress_.c_cardinality.copy()
 
+
 def address_from_string(xml_string):
     return saml2.create_class_from_xml_string(Address, xml_string)
 
@@ -370,6 +370,7 @@ class Binding(TBinding_):
     c_attributes = TBinding_.c_attributes.copy()
     c_child_order = TBinding_.c_child_order[:]
     c_cardinality = TBinding_.c_cardinality.copy()
+
 
 def binding_from_string(xml_string):
     return saml2.create_class_from_xml_string(Binding, xml_string)
@@ -385,6 +386,7 @@ class Body(TBody_):
     c_child_order = TBody_.c_child_order[:]
     c_cardinality = TBody_.c_cardinality.copy()
 
+
 def body_from_string(xml_string):
     return saml2.create_class_from_xml_string(Body, xml_string)
 
@@ -399,7 +401,7 @@ class THeader_(wsdl.TExtensibilityElement_):
     c_child_order = wsdl.TExtensibilityElement_.c_child_order[:]
     c_cardinality = wsdl.TExtensibilityElement_.c_cardinality.copy()
     c_children['{http://schemas.xmlsoap.org/wsdl/soap/}headerfault'] = ('headerfault', [Headerfault])
-    c_cardinality['headerfault'] = {"min":0}
+    c_cardinality['headerfault'] = {"min": 0}
     c_attributes['message'] = ('message', 'QName', True)
     c_attributes['part'] = ('part', 'NMTOKEN', True)
     c_attributes['use'] = ('use', UseChoice_, True)
@@ -408,29 +410,28 @@ class THeader_(wsdl.TExtensibilityElement_):
     c_child_order.extend(['headerfault'])
 
     def __init__(self,
-            headerfault=None,
-            message=None,
-            part=None,
-            use=None,
-            encoding_style=None,
-            namespace=None,
-            required=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 headerfault=None,
+                 message=None,
+                 part=None,
+                 use=None,
+                 encoding_style=None,
+                 namespace=None,
+                 required=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         wsdl.TExtensibilityElement_.__init__(self,
-                required=required,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.headerfault=headerfault or []
-        self.message=message
-        self.part=part
-        self.use=use
-        self.encoding_style=encoding_style
-        self.namespace=namespace
+                                             required=required,
+                                             text=text,
+                                             extension_elements=extension_elements,
+                                             extension_attributes=extension_attributes)
+        self.headerfault = headerfault or []
+        self.message = message
+        self.part = part
+        self.use = use
+        self.encoding_style = encoding_style
+        self.namespace = namespace
+
 
 def t_header__from_string(xml_string):
     return saml2.create_class_from_xml_string(THeader_, xml_string)
@@ -445,6 +446,7 @@ class Header(THeader_):
     c_attributes = THeader_.c_attributes.copy()
     c_child_order = THeader_.c_child_order[:]
     c_cardinality = THeader_.c_cardinality.copy()
+
 
 def header_from_string(xml_string):
     return saml2.create_class_from_xml_string(Header, xml_string)
@@ -508,4 +510,3 @@ ELEMENT_BY_TAG = {
 
 def factory(tag, **kwargs):
     return ELEMENT_BY_TAG[tag](**kwargs)
-

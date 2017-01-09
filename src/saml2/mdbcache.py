@@ -4,7 +4,7 @@ from pymongo.mongo_client import MongoClient
 
 __author__ = 'rolandh'
 
-#import cjson
+# import cjson
 import time
 from datetime import datetime
 
@@ -124,7 +124,7 @@ class Cache(object):
                "info": info,
                "timestamp": timestamp}
 
-        _ = self._cache.insert(doc)
+        self._cache.insert(doc)
 
     def reset(self, subject_id, entity_id):
         """ Scrap the assertions received from a IdP or an AA about a special

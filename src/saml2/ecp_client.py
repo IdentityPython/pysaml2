@@ -144,7 +144,7 @@ class Client(Entity):
             error = ("response_consumer_url '%s' does not match" % rc_url,
                      "assertion_consumer_service_url '%s" % _acs_url)
             # Send an error message to the SP
-            _ = self.send(rc_url, "POST", data=soap.soap_fault(error))
+            self.send(rc_url, "POST", data=soap.soap_fault(error))
             # Raise an exception so the user knows something went wrong
             raise SAMLError(error)
 
@@ -290,9 +290,9 @@ class Client(Entity):
         except (soap.XmlParseError, AssertionError, KeyError):
             pass
 
-        #print("RESP",response, self.http.response)
+        # print("RESP",response, self.http.response)
 
-        if  response.status_code != 404:
+        if response.status_code != 404:
             raise SAMLError("Error performing operation: %s" % (
                 response.error,))
 

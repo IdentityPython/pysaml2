@@ -11,8 +11,10 @@ from saml2.cache import ToOld, CacheError
 
 logger = logging.getLogger(__name__)
 
+
 def _key(prefix, name):
     return "%s_%s" % (prefix, name)
+
 
 class Cache(object):
     def __init__(self, servers, debug=0):
@@ -53,7 +55,7 @@ class Cache(object):
         res = {}
         oldees = []
         for (entity_id, item) in self._cache.get_multi(entities,
-                                                    subject_id+'_').items():
+                                                       subject_id + '_').items():
             try:
                 info = self.get_info(item)
             except ToOld:

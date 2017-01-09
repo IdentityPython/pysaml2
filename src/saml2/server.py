@@ -44,7 +44,6 @@ from saml2.sigver import CertificateError
 
 from saml2.assertion import Assertion
 from saml2.assertion import Policy
-from saml2.assertion import restriction_from_attribute_spec
 from saml2.assertion import filter_attribute_value_assertions
 
 from saml2.ident import IdentDB, decode
@@ -434,9 +433,6 @@ class Server(Entity):
         :return: A response instance
         """
 
-        if farg is None:
-            assertion_args = {}
-
         args = {}
         # if identity:
         _issuer = self._issuer(issuer)
@@ -547,7 +543,6 @@ class Server(Entity):
                 policy = Policy()
 
             if attributes:
-                restr = restriction_from_attribute_spec(attributes)
                 ast = filter_attribute_value_assertions(ast)
 
             assertion = ast.construct(
@@ -727,8 +722,7 @@ class Server(Entity):
                 encrypt_cert_advice=encrypt_cert_advice,
                 encrypt_cert_assertion=encrypt_cert_assertion,
                 encrypt_assertion=encrypt_assertion,
-                encrypt_assertion_self_contained
-                =encrypt_assertion_self_contained,
+                encrypt_assertion_self_contained=encrypt_assertion_self_contained,
                 encrypted_advice_attributes=encrypted_advice_attributes,
                 pefim=pefim, **kwargs)
         except IOError as exc:

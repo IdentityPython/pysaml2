@@ -8,4 +8,3 @@ RELEASE = {
                                "eduPersonScopedAffiliation", "mail",
                                "givenName", "sn", "displayName"]
 }
-

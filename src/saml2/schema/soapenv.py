@@ -9,6 +9,7 @@ from saml2 import SamlBase
 
 NAMESPACE = 'http://schemas.xmlsoap.org/soap/envelope/'
 
+
 class Header_(SamlBase):
     """The http://schemas.xmlsoap.org/soap/envelope/:Header element """
 
@@ -18,6 +19,7 @@ class Header_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def header__from_string(xml_string):
     return saml2.create_class_from_xml_string(Header_, xml_string)
@@ -33,6 +35,7 @@ class Body_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def body__from_string(xml_string):
     return saml2.create_class_from_xml_string(Body_, xml_string)
 
@@ -46,6 +49,7 @@ class EncodingStyle_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def encoding_style__from_string(xml_string):
     return saml2.create_class_from_xml_string(EncodingStyle_, xml_string)
@@ -61,6 +65,7 @@ class Fault_faultcode(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def fault_faultcode_from_string(xml_string):
     return saml2.create_class_from_xml_string(Fault_faultcode, xml_string)
 
@@ -74,6 +79,7 @@ class Fault_faultstring(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def fault_faultstring_from_string(xml_string):
     return saml2.create_class_from_xml_string(Fault_faultstring, xml_string)
@@ -89,6 +95,7 @@ class Fault_faultactor(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def fault_faultactor_from_string(xml_string):
     return saml2.create_class_from_xml_string(Fault_faultactor, xml_string)
 
@@ -102,6 +109,7 @@ class Detail_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def detail__from_string(xml_string):
     return saml2.create_class_from_xml_string(Detail_, xml_string)
@@ -117,24 +125,23 @@ class Envelope_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{http://schemas.xmlsoap.org/soap/envelope/}Header'] = ('header', Header_)
-    c_cardinality['header'] = {"min":0, "max":1}
+    c_cardinality['header'] = {"min": 0, "max": 1}
     c_children['{http://schemas.xmlsoap.org/soap/envelope/}Body'] = ('body', Body_)
     c_child_order.extend(['header', 'body'])
 
     def __init__(self,
-            header=None,
-            body=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 header=None,
+                 body=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         SamlBase.__init__(self,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.header=header
-        self.body=body
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.header = header
+        self.body = body
+
 
 def envelope__from_string(xml_string):
     return saml2.create_class_from_xml_string(Envelope_, xml_string)
@@ -150,6 +157,7 @@ class Header(Header_):
     c_child_order = Header_.c_child_order[:]
     c_cardinality = Header_.c_cardinality.copy()
 
+
 def header_from_string(xml_string):
     return saml2.create_class_from_xml_string(Header, xml_string)
 
@@ -164,6 +172,7 @@ class Body(Body_):
     c_child_order = Body_.c_child_order[:]
     c_cardinality = Body_.c_cardinality.copy()
 
+
 def body_from_string(xml_string):
     return saml2.create_class_from_xml_string(Body, xml_string)
 
@@ -176,6 +185,7 @@ class Fault_detail(Detail_):
     c_attributes = Detail_.c_attributes.copy()
     c_child_order = Detail_.c_child_order[:]
     c_cardinality = Detail_.c_cardinality.copy()
+
 
 def fault_detail_from_string(xml_string):
     return saml2.create_class_from_xml_string(Fault_detail, xml_string)
@@ -193,29 +203,28 @@ class Fault_(SamlBase):
     c_children['{http://schemas.xmlsoap.org/soap/envelope/}faultcode'] = ('faultcode', Fault_faultcode)
     c_children['{http://schemas.xmlsoap.org/soap/envelope/}faultstring'] = ('faultstring', Fault_faultstring)
     c_children['{http://schemas.xmlsoap.org/soap/envelope/}faultactor'] = ('faultactor', Fault_faultactor)
-    c_cardinality['faultactor'] = {"min":0, "max":1}
+    c_cardinality['faultactor'] = {"min": 0, "max": 1}
     c_children['{http://schemas.xmlsoap.org/soap/envelope/}detail'] = ('detail', Fault_detail)
-    c_cardinality['detail'] = {"min":0, "max":1}
+    c_cardinality['detail'] = {"min": 0, "max": 1}
     c_child_order.extend(['faultcode', 'faultstring', 'faultactor', 'detail'])
 
     def __init__(self,
-            faultcode=None,
-            faultstring=None,
-            faultactor=None,
-            detail=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 faultcode=None,
+                 faultstring=None,
+                 faultactor=None,
+                 detail=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         SamlBase.__init__(self,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.faultcode=faultcode
-        self.faultstring=faultstring
-        self.faultactor=faultactor
-        self.detail=detail
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.faultcode = faultcode
+        self.faultstring = faultstring
+        self.faultactor = faultactor
+        self.detail = detail
+
 
 def fault__from_string(xml_string):
     return saml2.create_class_from_xml_string(Fault_, xml_string)
@@ -231,6 +240,7 @@ class Envelope(Envelope_):
     c_child_order = Envelope_.c_child_order[:]
     c_cardinality = Envelope_.c_cardinality.copy()
 
+
 def envelope_from_string(xml_string):
     return saml2.create_class_from_xml_string(Envelope, xml_string)
 
@@ -245,11 +255,12 @@ class Fault(Fault_):
     c_child_order = Fault_.c_child_order[:]
     c_cardinality = Fault_.c_cardinality.copy()
 
+
 def fault_from_string(xml_string):
     return saml2.create_class_from_xml_string(Fault, xml_string)
 
 
-#..................
+# ..................
 # []
 AG_encodingStyle = [
     ('encodingStyle', '', False),
@@ -290,4 +301,3 @@ ELEMENT_BY_TAG = {
 
 def factory(tag, **kwargs):
     return ELEMENT_BY_TAG[tag](**kwargs)
-

@@ -11,6 +11,7 @@ from saml2 import saml
 
 NAMESPACE = 'urn:oasis:names:tc:SAML:metadata:attribute'
 
+
 class EntityAttributesType_(SamlBase):
     """The urn:oasis:names:tc:SAML:metadata:attribute:EntityAttributesType element """
 
@@ -21,25 +22,24 @@ class EntityAttributesType_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Attribute'] = ('attribute', [saml.Attribute])
-    c_cardinality['attribute'] = {"min":0}
+    c_cardinality['attribute'] = {"min": 0}
     c_children['{urn:oasis:names:tc:SAML:2.0:assertion}Assertion'] = ('assertion', [saml.Assertion])
-    c_cardinality['assertion'] = {"min":0}
+    c_cardinality['assertion'] = {"min": 0}
     c_child_order.extend(['attribute', 'assertion'])
 
     def __init__(self,
-            attribute=None,
-            assertion=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
+                 attribute=None,
+                 assertion=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
         SamlBase.__init__(self,
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.attribute=attribute or []
-        self.assertion=assertion or []
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.attribute = attribute or []
+        self.assertion = assertion or []
+
 
 def entity_attributes_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(EntityAttributesType_, xml_string)
@@ -54,6 +54,7 @@ class EntityAttributes(EntityAttributesType_):
     c_attributes = EntityAttributesType_.c_attributes.copy()
     c_child_order = EntityAttributesType_.c_child_order[:]
     c_cardinality = EntityAttributesType_.c_cardinality.copy()
+
 
 def entity_attributes_from_string(xml_string):
     return saml2.create_class_from_xml_string(EntityAttributes, xml_string)
@@ -72,4 +73,3 @@ ELEMENT_BY_TAG = {
 
 def factory(tag, **kwargs):
     return ELEMENT_BY_TAG[tag](**kwargs)
-

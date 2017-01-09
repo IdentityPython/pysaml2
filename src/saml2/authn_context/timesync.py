@@ -194,13 +194,11 @@ class AlphabetType_(SamlBase):
                  case=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.required_chars = required_chars
         self.excluded_chars = excluded_chars
         self.case = case
@@ -546,13 +544,11 @@ class GoverningAgreementsType_(SamlBase):
                  governing_agreement_ref=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.governing_agreement_ref = governing_agreement_ref or []
 
 
@@ -675,13 +671,11 @@ class TokenType_(SamlBase):
                  extension=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.time_sync_token = time_sync_token
         self.extension = extension or []
 
@@ -726,13 +720,11 @@ class SharedSecretChallengeResponseType_(SamlBase):
                  method=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.extension = extension or []
         self.method = method
 
@@ -763,13 +755,11 @@ class PublicKeyType_(SamlBase):
                  key_validation=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.extension = extension or []
         self.key_validation = key_validation
 
@@ -830,13 +820,11 @@ class PasswordType_(SamlBase):
                  external_verification=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.length = length
         self.alphabet = alphabet
         self.generation = generation
@@ -879,13 +867,11 @@ class RestrictedPasswordType_(SamlBase):
                  external_verification=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.length = length
         self.generation = generation
         self.extension = extension or []
@@ -928,13 +914,11 @@ class ActivationLimitType_(SamlBase):
                  activation_limit_session=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.activation_limit_duration = activation_limit_duration
         self.activation_limit_usages = activation_limit_usages
         self.activation_limit_session = activation_limit_session
@@ -963,13 +947,11 @@ class ExtensionOnlyType_(SamlBase):
                  extension=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.extension = extension or []
 
 
@@ -995,13 +977,11 @@ class PrincipalAuthenticationMechanismType_(SamlBase):
                  token=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.token = token
 
 
@@ -1476,13 +1456,11 @@ class IdentificationType_(SamlBase):
                  nym=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.physical_verification = physical_verification
         self.written_consent = written_consent
         self.governing_agreements = governing_agreements
@@ -1560,13 +1538,11 @@ class AuthenticatorTransportProtocolType_(SamlBase):
                  extension=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.http = http
         self.ssl = ssl
         self.mobile_network_no_encryption = mobile_network_no_encryption
@@ -1640,13 +1616,11 @@ class ActivationPinType_(SamlBase):
                  extension=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.length = length
         self.alphabet = alphabet
         self.generation = generation
@@ -1682,13 +1656,11 @@ class SecurityAuditType_(SamlBase):
                  extension=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.switch_audit = switch_audit
         self.extension = extension or []
 
@@ -1788,13 +1760,11 @@ class OperationalProtectionType_(SamlBase):
                  extension=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.security_audit = security_audit
         self.deactivation_call_center = deactivation_call_center
         self.extension = extension or []
@@ -1829,13 +1799,11 @@ class KeyActivationType_(SamlBase):
                  extension=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.activation_pin = activation_pin
         self.extension = extension or []
 
@@ -1909,13 +1877,11 @@ class PrivateKeyProtectionType_(SamlBase):
                  extension=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.key_activation = key_activation
         self.key_storage = key_storage
         self.key_sharing = key_sharing
@@ -1956,13 +1922,11 @@ class SecretKeyProtectionType_(SamlBase):
                  extension=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.key_activation = key_activation
         self.key_storage = key_storage
         self.extension = extension or []
@@ -2033,13 +1997,11 @@ class TechnicalProtectionBaseType_(SamlBase):
                  extension=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.private_key_protection = private_key_protection
         self.secret_key_protection = secret_key_protection
         self.extension = extension or []
@@ -2065,7 +2027,7 @@ def technical_protection_from_string(xml_string):
     return saml2.create_class_from_xml_string(TechnicalProtection, xml_string)
 
 
-#..................
+# ..................
 # ['ComplexAuthenticator', 'Authenticator', 'AuthnMethod', 'ComplexAuthenticatorType', 'AuthenticatorBaseType', 'AuthnContextDeclarationBaseType', 'AuthnMethodBaseType', 'AuthenticationContextDeclaration']
 class ComplexAuthenticatorType_(SamlBase):
     """The urn:oasis:names:tc:SAML:2.0:ac:classes:TimeSyncToken:ComplexAuthenticatorType element """
@@ -2159,13 +2121,11 @@ class ComplexAuthenticatorType_(SamlBase):
                  extension=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.previous_session = previous_session
         self.resume_session = resume_session
         self.dig_sig = dig_sig
@@ -2298,13 +2258,11 @@ class AuthenticatorBaseType_(SamlBase):
                  extension=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.previous_session = previous_session
         self.resume_session = resume_session
         self.dig_sig = dig_sig
@@ -2376,13 +2334,11 @@ class AuthnMethodBaseType_(SamlBase):
                  extension=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.principal_authentication_mechanism = principal_authentication_mechanism
         self.authenticator = authenticator
         self.authenticator_transport_protocol = authenticator_transport_protocol
@@ -2455,13 +2411,11 @@ class AuthnContextDeclarationBaseType_(SamlBase):
                  id=None,
                  text=None,
                  extension_elements=None,
-                 extension_attributes=None,
-    ):
+                 extension_attributes=None):
         SamlBase.__init__(self,
                           text=text,
                           extension_elements=extension_elements,
-                          extension_attributes=extension_attributes,
-        )
+                          extension_attributes=extension_attributes)
         self.identification = identification
         self.technical_protection = technical_protection
         self.operational_protection = operational_protection
@@ -2696,4 +2650,3 @@ ELEMENT_BY_TAG = {
 
 def factory(tag, **kwargs):
     return ELEMENT_BY_TAG[tag](**kwargs)
-

@@ -11,7 +11,7 @@ from saml2.s_utils import do_ava
 from saml2 import saml, ExtensionElement, NAMESPACE
 from saml2 import extension_elements_to_elements
 from saml2 import SAMLError
-from saml2.saml import NAME_FORMAT_UNSPECIFIED, NAMEID_FORMAT_PERSISTENT, NameID
+from saml2.saml import NAME_FORMAT_UNSPECIFIED, NAMEID_FORMAT_PERSISTENT
 
 import logging
 logger = logging.getLogger(__name__)
@@ -134,7 +134,7 @@ def to_local(acs, statement, allow_unknown_attributes=False):
                 _func = acs[0].lcd_ava_from
             else:
                 logger.info("Unsupported attribute name format: %s",
-                    attr.name_format)
+                            attr.name_format)
                 continue
 
         try:
@@ -181,7 +181,7 @@ def list_to_local(acs, attrlist, allow_unknown_attributes=False):
                 _func = acs[0].lcd_ava_from
             else:
                 logger.info("Unsupported attribute name format: %s",
-                    attr.name_format)
+                            attr.name_format)
                 continue
 
         try:
@@ -205,9 +205,9 @@ def list_to_local(acs, attrlist, allow_unknown_attributes=False):
 
 def from_local(acs, ava, name_format):
     for aconv in acs:
-        #print(ac.format, name_format)
+        # print(ac.format, name_format)
         if aconv.name_format == name_format:
-            #print("Found a name_form converter")
+            # print("Found a name_form converter")
             return aconv.to_(ava)
 
     return None
@@ -221,9 +221,9 @@ def from_local_name(acs, attr, name_format):
     :return: An Attribute instance
     """
     for aconv in acs:
-        #print(ac.format, name_format)
+        # print(ac.format, name_format)
         if aconv.name_format == name_format:
-            #print("Found a name_form converter")
+            # print("Found a name_form converter")
             return aconv.to_format(attr)
     return attr
 
@@ -244,7 +244,7 @@ def to_local_name(acs, attr):
 
 def get_local_name(acs, attr, name_format):
     for aconv in acs:
-        #print(ac.format, name_format)
+        # print(ac.format, name_format)
         if aconv.name_format == name_format:
             return aconv._fro[attr]
 

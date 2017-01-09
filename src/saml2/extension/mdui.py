@@ -97,8 +97,7 @@ class KeywordsType_(ListOfStrings_):
     c_attributes = ListOfStrings_.c_attributes.copy()
     c_child_order = ListOfStrings_.c_child_order[:]
     c_cardinality = ListOfStrings_.c_cardinality.copy()
-    c_attributes['{http://www.w3.org/XML/1998/namespace}lang'] = (
-    'lang', 'mdui:listOfStrings', True)
+    c_attributes['{http://www.w3.org/XML/1998/namespace}lang'] = ('lang', 'mdui:listOfStrings', True)
 
     def __init__(self,
                  lang=None,

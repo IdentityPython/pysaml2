@@ -18,8 +18,7 @@ _DAV_METHODS = (
     'TRACE',
     'DELETE',
     'COPY',
-    'MOVE'
-    )
+    'MOVE')
 
 _DAV_USERAGENTS = (
     'Microsoft Data Access Internet Publishing Provider',
@@ -30,8 +29,8 @@ _DAV_USERAGENTS = (
     'neon',
     'davlib',
     'wsAPI',
-    'Microsoft-WebDAV'
-    )
+    'Microsoft-WebDAV')
+
 
 def my_request_classifier(environ):
     """ Returns one of the classifiers 'dav', 'xmlpost', or 'browser',
@@ -53,15 +52,17 @@ def my_request_classifier(environ):
 
 zope.interface.directlyProvides(my_request_classifier, IRequestClassifier)
 
+
 class MyChallengeDecider:
     def __init__(self, path_login="", path_logout=""):
         self.path_login = path_login
         self.path_logout = path_logout
+
     def __call__(self, environ, status, _headers):
         if status.startswith('401 '):
             return True
         else:
-            if environ.has_key('samlsp.pending'):
+            if 'samlsp.pending' in environ:
                 return True
 
             uri = environ.get('REQUEST_URI', None)
@@ -76,7 +77,7 @@ class MyChallengeDecider:
 
             # If the user is already authent, whatever happens(except logout),
             #   don't make a challenge
-            if environ.has_key('repoze.who.identity'):
+            if 'repoze.who.identity' in environ:
                 return False
 
             # require a challenge for login
@@ -87,8 +88,7 @@ class MyChallengeDecider:
         return False
 
 
-
-def make_plugin(path_login = None, path_logout = None):
+def make_plugin(path_login=None, path_logout=None):
     if path_login is None:
         raise ValueError(
             'must include path_login in configuration')
@@ -110,4 +110,3 @@ def make_plugin(path_login = None, path_logout = None):
     plugin = MyChallengeDecider(list_login, list_logout)
 
     return plugin
-

@@ -10,9 +10,9 @@ from saml2 import SamlBase
 from saml2.ws import wsaddr as wsa
 from saml2.ws import wssec as wsse
 from saml2.ws import wsutil as wsu
-from saml2.ws import wspol as wsp
 
 NAMESPACE = 'http://docs.oasis-open.org/ws-sx/ws-trust/200512/'
+
 
 class RequestSecurityTokenType_(SamlBase):
     """The http://docs.oasis-open.org/ws-sx/ws-trust/200512/:RequestSecurityTokenType element """
@@ -26,17 +26,16 @@ class RequestSecurityTokenType_(SamlBase):
     c_attributes['Context'] = ('context', 'anyURI', False)
 
     def __init__(self,
-            context=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.context=context
+                 context=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.context = context
+
 
 def request_security_token_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(RequestSecurityTokenType_, xml_string)
@@ -53,6 +52,7 @@ class TokenType(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def token_type_from_string(xml_string):
     return saml2.create_class_from_xml_string(TokenType, xml_string)
 
@@ -66,6 +66,7 @@ class RequestTypeOpenEnum_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def request_type_open_enum__from_string(xml_string):
     return saml2.create_class_from_xml_string(RequestTypeOpenEnum_, xml_string)
@@ -81,6 +82,7 @@ class RequestTypeEnum_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def request_type_enum__from_string(xml_string):
     return saml2.create_class_from_xml_string(RequestTypeEnum_, xml_string)
@@ -98,17 +100,16 @@ class RequestSecurityTokenResponseType_(SamlBase):
     c_attributes['Context'] = ('context', 'anyURI', False)
 
     def __init__(self,
-            context=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.context=context
+                 context=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.context = context
+
 
 def request_security_token_response_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(RequestSecurityTokenResponseType_, xml_string)
@@ -123,6 +124,7 @@ class RequestedSecurityTokenType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def requested_security_token_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(RequestedSecurityTokenType_, xml_string)
@@ -139,6 +141,7 @@ class BinarySecretTypeEnum_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def binary_secret_type_enum__from_string(xml_string):
     return saml2.create_class_from_xml_string(BinarySecretTypeEnum_, xml_string)
 
@@ -152,6 +155,7 @@ class BinarySecretTypeOpenEnum_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def binary_secret_type_open_enum__from_string(xml_string):
     return saml2.create_class_from_xml_string(BinarySecretTypeOpenEnum_, xml_string)
@@ -169,17 +173,16 @@ class ClaimsType_(SamlBase):
     c_attributes['Dialect'] = ('dialect', 'anyURI', False)
 
     def __init__(self,
-            dialect=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.dialect=dialect
+                 dialect=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.dialect = dialect
+
 
 def claims_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(ClaimsType_, xml_string)
@@ -195,6 +198,7 @@ class EntropyType_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def entropy_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(EntropyType_, xml_string)
 
@@ -209,25 +213,24 @@ class LifetimeType_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd}Created'] = ('created', wsu.Created)
-    c_cardinality['created'] = {"min":0, "max":1}
+    c_cardinality['created'] = {"min": 0, "max": 1}
     c_children['{http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd}Expires'] = ('expires', wsu.Expires)
-    c_cardinality['expires'] = {"min":0, "max":1}
+    c_cardinality['expires'] = {"min": 0, "max": 1}
     c_child_order.extend(['created', 'expires'])
 
     def __init__(self,
-            created=None,
-            expires=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.created=created
-        self.expires=expires
+                 created=None,
+                 expires=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.created = created
+        self.expires = expires
+
 
 def lifetime_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(LifetimeType_, xml_string)
@@ -241,6 +244,7 @@ class RequestSecurityTokenCollectionType_RequestSecurityToken(RequestSecurityTok
     c_attributes = RequestSecurityTokenType_.c_attributes.copy()
     c_child_order = RequestSecurityTokenType_.c_child_order[:]
     c_cardinality = RequestSecurityTokenType_.c_cardinality.copy()
+
 
 def request_security_token_collection_type__request_security_token_from_string(xml_string):
     return saml2.create_class_from_xml_string(RequestSecurityTokenCollectionType_RequestSecurityToken, xml_string)
@@ -256,21 +260,20 @@ class RequestSecurityTokenCollectionType_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{http://docs.oasis-open.org/ws-sx/ws-trust/200512/}RequestSecurityToken'] = ('request_security_token', [RequestSecurityTokenCollectionType_RequestSecurityToken])
-    c_cardinality['request_security_token'] = {"min":2}
+    c_cardinality['request_security_token'] = {"min": 2}
     c_child_order.extend(['request_security_token'])
 
     def __init__(self,
-            request_security_token=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.request_security_token=request_security_token or []
+                 request_security_token=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.request_security_token = request_security_token or []
+
 
 def request_security_token_collection_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(RequestSecurityTokenCollectionType_, xml_string)
@@ -287,6 +290,7 @@ class ComputedKeyEnum_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def computed_key_enum__from_string(xml_string):
     return saml2.create_class_from_xml_string(ComputedKeyEnum_, xml_string)
 
@@ -300,6 +304,7 @@ class ComputedKeyOpenEnum_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def computed_key_open_enum__from_string(xml_string):
     return saml2.create_class_from_xml_string(ComputedKeyOpenEnum_, xml_string)
@@ -318,17 +323,16 @@ class RequestedReferenceType_(SamlBase):
     c_child_order.extend(['security_token_reference'])
 
     def __init__(self,
-            security_token_reference=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.security_token_reference=security_token_reference
+                 security_token_reference=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.security_token_reference = security_token_reference
+
 
 def requested_reference_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(RequestedReferenceType_, xml_string)
@@ -344,6 +348,7 @@ class RequestedProofTokenType_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def requested_proof_token_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(RequestedProofTokenType_, xml_string)
 
@@ -358,6 +363,7 @@ class RenewTargetType_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def renew_target_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(RenewTargetType_, xml_string)
 
@@ -371,6 +377,7 @@ class AllowPostdatingType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def allow_postdating_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(AllowPostdatingType_, xml_string)
@@ -389,19 +396,18 @@ class RenewingType_(SamlBase):
     c_attributes['OK'] = ('ok', 'boolean', False)
 
     def __init__(self,
-            allow=None,
-            ok=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.allow=allow
-        self.ok=ok
+                 allow=None,
+                 ok=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.allow = allow
+        self.ok = ok
+
 
 def renewing_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(RenewingType_, xml_string)
@@ -417,6 +423,7 @@ class CancelTargetType_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def cancel_target_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(CancelTargetType_, xml_string)
 
@@ -431,6 +438,7 @@ class RequestedTokenCancelledType_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def requested_token_cancelled_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(RequestedTokenCancelledType_, xml_string)
 
@@ -444,6 +452,7 @@ class ValidateTargetType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def validate_target_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(ValidateTargetType_, xml_string)
@@ -460,6 +469,7 @@ class StatusCodeEnum_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def status_code_enum__from_string(xml_string):
     return saml2.create_class_from_xml_string(StatusCodeEnum_, xml_string)
 
@@ -473,6 +483,7 @@ class StatusCodeOpenEnum_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def status_code_open_enum__from_string(xml_string):
     return saml2.create_class_from_xml_string(StatusCodeOpenEnum_, xml_string)
@@ -488,6 +499,7 @@ class Challenge(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def challenge_from_string(xml_string):
     return saml2.create_class_from_xml_string(Challenge, xml_string)
@@ -507,19 +519,18 @@ class BinaryExchangeType_(SamlBase):
     c_attributes['EncodingType'] = ('encoding_type', 'anyURI', True)
 
     def __init__(self,
-            value_type=None,
-            encoding_type=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.value_type=value_type
-        self.encoding_type=encoding_type
+                 value_type=None,
+                 encoding_type=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.value_type = value_type
+        self.encoding_type = encoding_type
+
 
 def binary_exchange_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(BinaryExchangeType_, xml_string)
@@ -535,6 +546,7 @@ class RequestKETType_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def request_ket_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(RequestKETType_, xml_string)
 
@@ -548,6 +560,7 @@ class KeyExchangeTokenType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def key_exchange_token_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(KeyExchangeTokenType_, xml_string)
@@ -564,6 +577,7 @@ class CombinedHash(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def combined_hash_from_string(xml_string):
     return saml2.create_class_from_xml_string(CombinedHash, xml_string)
 
@@ -578,6 +592,7 @@ class OnBehalfOfType_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def on_behalf_of_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(OnBehalfOfType_, xml_string)
 
@@ -591,6 +606,7 @@ class Issuer(wsa.EndpointReferenceType_):
     c_attributes = wsa.EndpointReferenceType_.c_attributes.copy()
     c_child_order = wsa.EndpointReferenceType_.c_child_order[:]
     c_cardinality = wsa.EndpointReferenceType_.c_cardinality.copy()
+
 
 def issuer_from_string(xml_string):
     return saml2.create_class_from_xml_string(Issuer, xml_string)
@@ -607,6 +623,7 @@ class AuthenticationType(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def authentication_type_from_string(xml_string):
     return saml2.create_class_from_xml_string(AuthenticationType, xml_string)
 
@@ -622,6 +639,7 @@ class KeyTypeEnum_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def key_type_enum__from_string(xml_string):
     return saml2.create_class_from_xml_string(KeyTypeEnum_, xml_string)
 
@@ -635,6 +653,7 @@ class KeyTypeOpenEnum_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def key_type_open_enum__from_string(xml_string):
     return saml2.create_class_from_xml_string(KeyTypeOpenEnum_, xml_string)
@@ -651,6 +670,7 @@ class KeySize(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def key_size_from_string(xml_string):
     return saml2.create_class_from_xml_string(KeySize, xml_string)
 
@@ -665,6 +685,7 @@ class SignatureAlgorithm(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def signature_algorithm_from_string(xml_string):
     return saml2.create_class_from_xml_string(SignatureAlgorithm, xml_string)
@@ -681,6 +702,7 @@ class EncryptionAlgorithm(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def encryption_algorithm_from_string(xml_string):
     return saml2.create_class_from_xml_string(EncryptionAlgorithm, xml_string)
 
@@ -695,6 +717,7 @@ class CanonicalizationAlgorithm(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def canonicalization_algorithm_from_string(xml_string):
     return saml2.create_class_from_xml_string(CanonicalizationAlgorithm, xml_string)
@@ -711,6 +734,7 @@ class ComputedKeyAlgorithm(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def computed_key_algorithm_from_string(xml_string):
     return saml2.create_class_from_xml_string(ComputedKeyAlgorithm, xml_string)
 
@@ -725,6 +749,7 @@ class EncryptionType_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def encryption_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(EncryptionType_, xml_string)
 
@@ -738,6 +763,7 @@ class ProofEncryptionType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def proof_encryption_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(ProofEncryptionType_, xml_string)
@@ -755,17 +781,16 @@ class UseKeyType_(SamlBase):
     c_attributes['Sig'] = ('sig', 'anyURI', False)
 
     def __init__(self,
-            sig=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.sig=sig
+                 sig=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.sig = sig
+
 
 def use_key_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(UseKeyType_, xml_string)
@@ -782,6 +807,7 @@ class KeyWrapAlgorithm(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def key_wrap_algorithm_from_string(xml_string):
     return saml2.create_class_from_xml_string(KeyWrapAlgorithm, xml_string)
 
@@ -796,6 +822,7 @@ class SignWith(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def sign_with_from_string(xml_string):
     return saml2.create_class_from_xml_string(SignWith, xml_string)
@@ -812,6 +839,7 @@ class EncryptWith(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def encrypt_with_from_string(xml_string):
     return saml2.create_class_from_xml_string(EncryptWith, xml_string)
 
@@ -825,6 +853,7 @@ class DelegateToType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def delegate_to_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(DelegateToType_, xml_string)
@@ -841,6 +870,7 @@ class Forwardable(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def forwardable_from_string(xml_string):
     return saml2.create_class_from_xml_string(Forwardable, xml_string)
 
@@ -856,6 +886,7 @@ class Delegatable(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def delegatable_from_string(xml_string):
     return saml2.create_class_from_xml_string(Delegatable, xml_string)
 
@@ -869,6 +900,7 @@ class ParticipantType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def participant_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(ParticipantType_, xml_string)
@@ -884,6 +916,7 @@ class RequestSecurityToken(RequestSecurityTokenType_):
     c_child_order = RequestSecurityTokenType_.c_child_order[:]
     c_cardinality = RequestSecurityTokenType_.c_cardinality.copy()
 
+
 def request_security_token_from_string(xml_string):
     return saml2.create_class_from_xml_string(RequestSecurityToken, xml_string)
 
@@ -897,6 +930,7 @@ class RequestType(RequestTypeOpenEnum_):
     c_attributes = RequestTypeOpenEnum_.c_attributes.copy()
     c_child_order = RequestTypeOpenEnum_.c_child_order[:]
     c_cardinality = RequestTypeOpenEnum_.c_cardinality.copy()
+
 
 def request_type_from_string(xml_string):
     return saml2.create_class_from_xml_string(RequestType, xml_string)
@@ -912,6 +946,7 @@ class RequestSecurityTokenResponse(RequestSecurityTokenResponseType_):
     c_child_order = RequestSecurityTokenResponseType_.c_child_order[:]
     c_cardinality = RequestSecurityTokenResponseType_.c_cardinality.copy()
 
+
 def request_security_token_response_from_string(xml_string):
     return saml2.create_class_from_xml_string(RequestSecurityTokenResponse, xml_string)
 
@@ -925,6 +960,7 @@ class RequestedSecurityToken(RequestedSecurityTokenType_):
     c_attributes = RequestedSecurityTokenType_.c_attributes.copy()
     c_child_order = RequestedSecurityTokenType_.c_child_order[:]
     c_cardinality = RequestedSecurityTokenType_.c_cardinality.copy()
+
 
 def requested_security_token_from_string(xml_string):
     return saml2.create_class_from_xml_string(RequestedSecurityToken, xml_string)
@@ -943,17 +979,16 @@ class BinarySecretType_(SamlBase):
     c_attributes['Type'] = ('type', BinarySecretTypeOpenEnum_, False)
 
     def __init__(self,
-            type=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.type=type
+                 type=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.type = type
+
 
 def binary_secret_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(BinarySecretType_, xml_string)
@@ -969,6 +1004,7 @@ class Claims(ClaimsType_):
     c_child_order = ClaimsType_.c_child_order[:]
     c_cardinality = ClaimsType_.c_cardinality.copy()
 
+
 def claims_from_string(xml_string):
     return saml2.create_class_from_xml_string(Claims, xml_string)
 
@@ -982,6 +1018,7 @@ class Entropy(EntropyType_):
     c_attributes = EntropyType_.c_attributes.copy()
     c_child_order = EntropyType_.c_child_order[:]
     c_cardinality = EntropyType_.c_cardinality.copy()
+
 
 def entropy_from_string(xml_string):
     return saml2.create_class_from_xml_string(Entropy, xml_string)
@@ -997,6 +1034,7 @@ class Lifetime(LifetimeType_):
     c_child_order = LifetimeType_.c_child_order[:]
     c_cardinality = LifetimeType_.c_cardinality.copy()
 
+
 def lifetime_from_string(xml_string):
     return saml2.create_class_from_xml_string(Lifetime, xml_string)
 
@@ -1010,6 +1048,7 @@ class RequestSecurityTokenCollection(RequestSecurityTokenCollectionType_):
     c_attributes = RequestSecurityTokenCollectionType_.c_attributes.copy()
     c_child_order = RequestSecurityTokenCollectionType_.c_child_order[:]
     c_cardinality = RequestSecurityTokenCollectionType_.c_cardinality.copy()
+
 
 def request_security_token_collection_from_string(xml_string):
     return saml2.create_class_from_xml_string(RequestSecurityTokenCollection, xml_string)
@@ -1025,21 +1064,20 @@ class RequestSecurityTokenResponseCollectionType_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{http://docs.oasis-open.org/ws-sx/ws-trust/200512/}RequestSecurityTokenResponse'] = ('request_security_token_response', [RequestSecurityTokenResponse])
-    c_cardinality['request_security_token_response'] = {"min":1}
+    c_cardinality['request_security_token_response'] = {"min": 1}
     c_child_order.extend(['request_security_token_response'])
 
     def __init__(self,
-            request_security_token_response=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.request_security_token_response=request_security_token_response or []
+                 request_security_token_response=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.request_security_token_response = request_security_token_response or []
+
 
 def request_security_token_response_collection_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(RequestSecurityTokenResponseCollectionType_, xml_string)
@@ -1055,6 +1093,7 @@ class ComputedKey(ComputedKeyOpenEnum_):
     c_child_order = ComputedKeyOpenEnum_.c_child_order[:]
     c_cardinality = ComputedKeyOpenEnum_.c_cardinality.copy()
 
+
 def computed_key_from_string(xml_string):
     return saml2.create_class_from_xml_string(ComputedKey, xml_string)
 
@@ -1068,6 +1107,7 @@ class RequestedAttachedReference(RequestedReferenceType_):
     c_attributes = RequestedReferenceType_.c_attributes.copy()
     c_child_order = RequestedReferenceType_.c_child_order[:]
     c_cardinality = RequestedReferenceType_.c_cardinality.copy()
+
 
 def requested_attached_reference_from_string(xml_string):
     return saml2.create_class_from_xml_string(RequestedAttachedReference, xml_string)
@@ -1083,6 +1123,7 @@ class RequestedUnattachedReference(RequestedReferenceType_):
     c_child_order = RequestedReferenceType_.c_child_order[:]
     c_cardinality = RequestedReferenceType_.c_cardinality.copy()
 
+
 def requested_unattached_reference_from_string(xml_string):
     return saml2.create_class_from_xml_string(RequestedUnattachedReference, xml_string)
 
@@ -1096,6 +1137,7 @@ class RequestedProofToken(RequestedProofTokenType_):
     c_attributes = RequestedProofTokenType_.c_attributes.copy()
     c_child_order = RequestedProofTokenType_.c_child_order[:]
     c_cardinality = RequestedProofTokenType_.c_cardinality.copy()
+
 
 def requested_proof_token_from_string(xml_string):
     return saml2.create_class_from_xml_string(RequestedProofToken, xml_string)
@@ -1111,6 +1153,7 @@ class IssuedTokens(RequestSecurityTokenResponseCollectionType_):
     c_child_order = RequestSecurityTokenResponseCollectionType_.c_child_order[:]
     c_cardinality = RequestSecurityTokenResponseCollectionType_.c_cardinality.copy()
 
+
 def issued_tokens_from_string(xml_string):
     return saml2.create_class_from_xml_string(IssuedTokens, xml_string)
 
@@ -1124,6 +1167,7 @@ class RenewTarget(RenewTargetType_):
     c_attributes = RenewTargetType_.c_attributes.copy()
     c_child_order = RenewTargetType_.c_child_order[:]
     c_cardinality = RenewTargetType_.c_cardinality.copy()
+
 
 def renew_target_from_string(xml_string):
     return saml2.create_class_from_xml_string(RenewTarget, xml_string)
@@ -1139,6 +1183,7 @@ class AllowPostdating(AllowPostdatingType_):
     c_child_order = AllowPostdatingType_.c_child_order[:]
     c_cardinality = AllowPostdatingType_.c_cardinality.copy()
 
+
 def allow_postdating_from_string(xml_string):
     return saml2.create_class_from_xml_string(AllowPostdating, xml_string)
 
@@ -1152,6 +1197,7 @@ class Renewing(RenewingType_):
     c_attributes = RenewingType_.c_attributes.copy()
     c_child_order = RenewingType_.c_child_order[:]
     c_cardinality = RenewingType_.c_cardinality.copy()
+
 
 def renewing_from_string(xml_string):
     return saml2.create_class_from_xml_string(Renewing, xml_string)
@@ -1167,6 +1213,7 @@ class CancelTarget(CancelTargetType_):
     c_child_order = CancelTargetType_.c_child_order[:]
     c_cardinality = CancelTargetType_.c_cardinality.copy()
 
+
 def cancel_target_from_string(xml_string):
     return saml2.create_class_from_xml_string(CancelTarget, xml_string)
 
@@ -1180,6 +1227,7 @@ class RequestedTokenCancelled(RequestedTokenCancelledType_):
     c_attributes = RequestedTokenCancelledType_.c_attributes.copy()
     c_child_order = RequestedTokenCancelledType_.c_child_order[:]
     c_cardinality = RequestedTokenCancelledType_.c_cardinality.copy()
+
 
 def requested_token_cancelled_from_string(xml_string):
     return saml2.create_class_from_xml_string(RequestedTokenCancelled, xml_string)
@@ -1195,6 +1243,7 @@ class ValidateTarget(ValidateTargetType_):
     c_child_order = ValidateTargetType_.c_child_order[:]
     c_cardinality = ValidateTargetType_.c_cardinality.copy()
 
+
 def validate_target_from_string(xml_string):
     return saml2.create_class_from_xml_string(ValidateTarget, xml_string)
 
@@ -1207,6 +1256,7 @@ class StatusType_Code(StatusCodeOpenEnum_):
     c_attributes = StatusCodeOpenEnum_.c_attributes.copy()
     c_child_order = StatusCodeOpenEnum_.c_child_order[:]
     c_cardinality = StatusCodeOpenEnum_.c_cardinality.copy()
+
 
 def status_type__code_from_string(xml_string):
     return saml2.create_class_from_xml_string(StatusType_Code, xml_string)
@@ -1221,6 +1271,7 @@ class StatusType_Reason(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def status_type__reason_from_string(xml_string):
     return saml2.create_class_from_xml_string(StatusType_Reason, xml_string)
@@ -1237,23 +1288,22 @@ class StatusType_(SamlBase):
     c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{http://docs.oasis-open.org/ws-sx/ws-trust/200512/}Code'] = ('code', StatusType_Code)
     c_children['{http://docs.oasis-open.org/ws-sx/ws-trust/200512/}Reason'] = ('reason', StatusType_Reason)
-    c_cardinality['reason'] = {"min":0, "max":1}
+    c_cardinality['reason'] = {"min": 0, "max": 1}
     c_child_order.extend(['code', 'reason'])
 
     def __init__(self,
-            code=None,
-            reason=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.code=code
-        self.reason=reason
+                 code=None,
+                 reason=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.code = code
+        self.reason = reason
+
 
 def status_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(StatusType_, xml_string)
@@ -1272,17 +1322,16 @@ class SignChallengeType_(SamlBase):
     c_child_order.extend(['challenge'])
 
     def __init__(self,
-            challenge=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.challenge=challenge
+                 challenge=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.challenge = challenge
+
 
 def sign_challenge_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(SignChallengeType_, xml_string)
@@ -1298,6 +1347,7 @@ class BinaryExchange(BinaryExchangeType_):
     c_child_order = BinaryExchangeType_.c_child_order[:]
     c_cardinality = BinaryExchangeType_.c_cardinality.copy()
 
+
 def binary_exchange_from_string(xml_string):
     return saml2.create_class_from_xml_string(BinaryExchange, xml_string)
 
@@ -1311,6 +1361,7 @@ class RequestKET(RequestKETType_):
     c_attributes = RequestKETType_.c_attributes.copy()
     c_child_order = RequestKETType_.c_child_order[:]
     c_cardinality = RequestKETType_.c_cardinality.copy()
+
 
 def request_ket_from_string(xml_string):
     return saml2.create_class_from_xml_string(RequestKET, xml_string)
@@ -1326,6 +1377,7 @@ class KeyExchangeToken(KeyExchangeTokenType_):
     c_child_order = KeyExchangeTokenType_.c_child_order[:]
     c_cardinality = KeyExchangeTokenType_.c_cardinality.copy()
 
+
 def key_exchange_token_from_string(xml_string):
     return saml2.create_class_from_xml_string(KeyExchangeToken, xml_string)
 
@@ -1340,21 +1392,20 @@ class AuthenticatorType_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{http://docs.oasis-open.org/ws-sx/ws-trust/200512/}CombinedHash'] = ('combined_hash', CombinedHash)
-    c_cardinality['combined_hash'] = {"min":0, "max":1}
+    c_cardinality['combined_hash'] = {"min": 0, "max": 1}
     c_child_order.extend(['combined_hash'])
 
     def __init__(self,
-            combined_hash=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.combined_hash=combined_hash
+                 combined_hash=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.combined_hash = combined_hash
+
 
 def authenticator_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(AuthenticatorType_, xml_string)
@@ -1370,6 +1421,7 @@ class OnBehalfOf(OnBehalfOfType_):
     c_child_order = OnBehalfOfType_.c_child_order[:]
     c_cardinality = OnBehalfOfType_.c_cardinality.copy()
 
+
 def on_behalf_of_from_string(xml_string):
     return saml2.create_class_from_xml_string(OnBehalfOf, xml_string)
 
@@ -1383,6 +1435,7 @@ class KeyType(KeyTypeOpenEnum_):
     c_attributes = KeyTypeOpenEnum_.c_attributes.copy()
     c_child_order = KeyTypeOpenEnum_.c_child_order[:]
     c_cardinality = KeyTypeOpenEnum_.c_cardinality.copy()
+
 
 def key_type_from_string(xml_string):
     return saml2.create_class_from_xml_string(KeyType, xml_string)
@@ -1398,6 +1451,7 @@ class Encryption(EncryptionType_):
     c_child_order = EncryptionType_.c_child_order[:]
     c_cardinality = EncryptionType_.c_cardinality.copy()
 
+
 def encryption_from_string(xml_string):
     return saml2.create_class_from_xml_string(Encryption, xml_string)
 
@@ -1411,6 +1465,7 @@ class ProofEncryption(ProofEncryptionType_):
     c_attributes = ProofEncryptionType_.c_attributes.copy()
     c_child_order = ProofEncryptionType_.c_child_order[:]
     c_cardinality = ProofEncryptionType_.c_cardinality.copy()
+
 
 def proof_encryption_from_string(xml_string):
     return saml2.create_class_from_xml_string(ProofEncryption, xml_string)
@@ -1426,6 +1481,7 @@ class UseKey(UseKeyType_):
     c_child_order = UseKeyType_.c_child_order[:]
     c_cardinality = UseKeyType_.c_cardinality.copy()
 
+
 def use_key_from_string(xml_string):
     return saml2.create_class_from_xml_string(UseKey, xml_string)
 
@@ -1440,6 +1496,7 @@ class DelegateTo(DelegateToType_):
     c_child_order = DelegateToType_.c_child_order[:]
     c_cardinality = DelegateToType_.c_cardinality.copy()
 
+
 def delegate_to_from_string(xml_string):
     return saml2.create_class_from_xml_string(DelegateTo, xml_string)
 
@@ -1453,6 +1510,7 @@ class ParticipantsType_Primary(ParticipantType_):
     c_child_order = ParticipantType_.c_child_order[:]
     c_cardinality = ParticipantType_.c_cardinality.copy()
 
+
 def participants_type__primary_from_string(xml_string):
     return saml2.create_class_from_xml_string(ParticipantsType_Primary, xml_string)
 
@@ -1465,6 +1523,7 @@ class ParticipantsType_Participant(ParticipantType_):
     c_attributes = ParticipantType_.c_attributes.copy()
     c_child_order = ParticipantType_.c_child_order[:]
     c_cardinality = ParticipantType_.c_cardinality.copy()
+
 
 def participants_type__participant_from_string(xml_string):
     return saml2.create_class_from_xml_string(ParticipantsType_Participant, xml_string)
@@ -1480,25 +1539,24 @@ class ParticipantsType_(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
     c_children['{http://docs.oasis-open.org/ws-sx/ws-trust/200512/}Primary'] = ('primary', ParticipantsType_Primary)
-    c_cardinality['primary'] = {"min":0, "max":1}
+    c_cardinality['primary'] = {"min": 0, "max": 1}
     c_children['{http://docs.oasis-open.org/ws-sx/ws-trust/200512/}Participant'] = ('participant', [ParticipantsType_Participant])
-    c_cardinality['participant'] = {"min":0}
+    c_cardinality['participant'] = {"min": 0}
     c_child_order.extend(['primary', 'participant'])
 
     def __init__(self,
-            primary=None,
-            participant=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.primary=primary
-        self.participant=participant or []
+                 primary=None,
+                 participant=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.primary = primary
+        self.participant = participant or []
+
 
 def participants_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(ParticipantsType_, xml_string)
@@ -1514,6 +1572,7 @@ class BinarySecret(BinarySecretType_):
     c_child_order = BinarySecretType_.c_child_order[:]
     c_cardinality = BinarySecretType_.c_cardinality.copy()
 
+
 def binary_secret_from_string(xml_string):
     return saml2.create_class_from_xml_string(BinarySecret, xml_string)
 
@@ -1527,6 +1586,7 @@ class RequestSecurityTokenResponseCollection(RequestSecurityTokenResponseCollect
     c_attributes = RequestSecurityTokenResponseCollectionType_.c_attributes.copy()
     c_child_order = RequestSecurityTokenResponseCollectionType_.c_child_order[:]
     c_cardinality = RequestSecurityTokenResponseCollectionType_.c_cardinality.copy()
+
 
 def request_security_token_response_collection_from_string(xml_string):
     return saml2.create_class_from_xml_string(RequestSecurityTokenResponseCollection, xml_string)
@@ -1542,6 +1602,7 @@ class Status(StatusType_):
     c_child_order = StatusType_.c_child_order[:]
     c_cardinality = StatusType_.c_cardinality.copy()
 
+
 def status_from_string(xml_string):
     return saml2.create_class_from_xml_string(Status, xml_string)
 
@@ -1555,6 +1616,7 @@ class SignChallenge(SignChallengeType_):
     c_attributes = SignChallengeType_.c_attributes.copy()
     c_child_order = SignChallengeType_.c_child_order[:]
     c_cardinality = SignChallengeType_.c_cardinality.copy()
+
 
 def sign_challenge_from_string(xml_string):
     return saml2.create_class_from_xml_string(SignChallenge, xml_string)
@@ -1570,6 +1632,7 @@ class SignChallengeResponse(SignChallengeType_):
     c_child_order = SignChallengeType_.c_child_order[:]
     c_cardinality = SignChallengeType_.c_cardinality.copy()
 
+
 def sign_challenge_response_from_string(xml_string):
     return saml2.create_class_from_xml_string(SignChallengeResponse, xml_string)
 
@@ -1584,6 +1647,7 @@ class Authenticator(AuthenticatorType_):
     c_child_order = AuthenticatorType_.c_child_order[:]
     c_cardinality = AuthenticatorType_.c_cardinality.copy()
 
+
 def authenticator_from_string(xml_string):
     return saml2.create_class_from_xml_string(Authenticator, xml_string)
 
@@ -1597,6 +1661,7 @@ class Participants(ParticipantsType_):
     c_attributes = ParticipantsType_.c_attributes.copy()
     c_child_order = ParticipantsType_.c_child_order[:]
     c_cardinality = ParticipantsType_.c_cardinality.copy()
+
 
 def participants_from_string(xml_string):
     return saml2.create_class_from_xml_string(Participants, xml_string)
@@ -1799,4 +1864,3 @@ ELEMENT_BY_TAG = {
 
 def factory(tag, **kwargs):
     return ELEMENT_BY_TAG[tag](**kwargs)
-
