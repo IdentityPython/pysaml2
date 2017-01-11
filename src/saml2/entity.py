@@ -7,9 +7,6 @@ import six
 from binascii import hexlify
 from hashlib import sha1
 
-# from Crypto.PublicKey import RSA
-from Cryptodome.PublicKey import RSA
-
 from saml2.metadata import ENDPOINTS
 from saml2.profile import paos, ecp
 from saml2.soap import parse_soap_enveloped_saml_artifact_resolve
