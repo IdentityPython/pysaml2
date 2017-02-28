@@ -1,2 +1,2 @@
 mako
-cherrypy
+cherrypy==7.1.0
