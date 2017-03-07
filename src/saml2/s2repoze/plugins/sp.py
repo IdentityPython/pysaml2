@@ -26,7 +26,7 @@ from paste.httpexceptions import HTTPInternalServerError
 from paste.request import parse_dict_querystring
 from paste.request import construct_url
 from saml2.extension.pefim import SPCertEnc
-from saml2.httputil import SeeOther
+from saml2.httputil import getpath, SeeOther
 from saml2.client_base import ECP_SERVICE
 from zope.interface import implementer
 
@@ -477,9 +477,9 @@ class SAML2Plugin(object):
             pass
 
         try:
-            path_info = environ['PATH_INFO']
+            path = getpath(environ)
             logout = False
-            if path_info in self.logout_endpoints:
+            if path in self.logout_endpoints:
                 logout = True
 
             if logout and "SAMLRequest" in post:
