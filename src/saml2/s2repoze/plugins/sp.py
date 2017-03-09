@@ -553,10 +553,10 @@ class SAML2Plugin(object):
                 environ["post.fieldstorage"] = post
                 return {}
 
-        if session_info:
+        try:
             environ["s2repoze.sessioninfo"] = session_info
             return self._construct_identity(session_info)
-        else:
+        except UnboundLocalError:
             return None
 
     # IMetadataProvider
