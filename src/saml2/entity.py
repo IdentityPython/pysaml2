@@ -422,6 +422,12 @@ class Entity(HTTPBase):
 
     def sign(self, msg, mid=None, to_sign=None, sign_prepare=False,
              sign_alg=None, digest_alg=None):
+        if sign_alg is None and self.signing_algorithm:
+            sign_alg = self.signing_algorithm
+
+        if digest_alg is None and self.digest_algorithm:
+            digest_alg = self.digest_algorithm
+
         if msg.signature is None:
             msg.signature = pre_signature_part(msg.id, self.sec.my_cert, 1,
                                                sign_alg=sign_alg,

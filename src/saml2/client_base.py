@@ -119,8 +119,11 @@ class Base(Entity):
             v = self.config.getattr(foo, "sp")
             if v is True or v == 'true':
                 setattr(self, foo, True)
+        for algorithm in ('signing_algorithm', 'digest_algorithm'):
+            setattr(self, algorithm, self.config.getattr(algorithm, "sp"))
 
         self.artifact2response = {}
+
 
     #
     # Private methods
