@@ -18,6 +18,7 @@ from saml2.saml import EncryptedAssertion
 from saml2.samlp import response_from_string
 from saml2.s_utils import factory, do_attribute_statement
 
+import pytest
 from py.test import raises
 
 from pathutils import full_path
@@ -67,7 +68,10 @@ Yj4cAafWaYfjBU2zi1ElwStIaJ5nyp/s/8B8SAPK2T79McMyccP3wSW13LHkmM1j
 wKe3ACFXBvqGQN0IbcH49hu0FKhYFM/GPDJcIHFBsiyMBXChpye9vBaTNEBCtU3K
 jjyG0hRT2mAQ9h+bkPmOvlEo/aH0xR68Z9hw4PF13w=="""
 
-from pyasn1.codec.der import decoder
+try:
+    from pyasn1.codec.der import decoder
+except ImportError:
+    decoder = None
 
 
 def test_cert_from_instance_1():
@@ -80,6 +84,8 @@ def test_cert_from_instance_1():
     assert certs[0] == CERT1
 
 
+@pytest.mark.skipif(not decoder,
+                    reason="pyasn1 is not installed")
 def test_cert_from_instance_ssp():
     xml_response = open(SIMPLE_SAML_PHP_RESPONSE).read()
     response = samlp.response_from_string(xml_response)
