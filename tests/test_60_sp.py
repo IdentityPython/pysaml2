@@ -2,11 +2,16 @@
 # -*- coding: utf-8 -*-
 
 import base64
+import pytest
 from saml2.authn_context import INTERNETPROTOCOLPASSWORD
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.samlp import NameIDPolicy
-from saml2.s2repoze.plugins.sp import make_plugin
 from saml2.server import Server
+
+try:
+    from saml2.s2repoze.plugins.sp import make_plugin
+except ImportError:
+    make_plugin = None
 
 ENV1 = {'SERVER_SOFTWARE': 'CherryPy/3.1.2 WSGI Server',
         'SCRIPT_NAME': '',
@@ -43,6 +48,8 @@ AUTHN = {
 }
 
 
+@pytest.mark.skipif(not make_plugin,
+                    reason="s2repoze dependencies not installed")
 class TestSP():
     def setup_class(self):
         self.sp = make_plugin("rem", saml_conf="server_conf")
