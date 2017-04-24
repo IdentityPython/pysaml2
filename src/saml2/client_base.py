@@ -246,8 +246,8 @@ class Base(Entity):
                 del kwargs["assertion_consumer_service_url"]
             except KeyError:
                 try:
-                    args["assertion_consumer_service_index"] = str(kwargs[
-                                                                       "assertion_consumer_service_index"])
+                    args["assertion_consumer_service_index"] = str(
+                        kwargs["assertion_consumer_service_index"])
                     del kwargs["assertion_consumer_service_index"]
                 except KeyError:
                     if service_url_binding is None:
@@ -268,7 +268,7 @@ class Base(Entity):
         # all of these have cardinality 0..1
         _msg = AuthnRequest()
         for param in ["scoping", "requested_authn_context", "conditions",
-                      "subject", "scoping"]:
+                      "subject"]:
             try:
                 _item = kwargs[param]
             except KeyError:
