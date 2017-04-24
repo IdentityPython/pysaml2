@@ -7,6 +7,7 @@ import six
 from future.backports.urllib.parse import parse_qs
 from future.backports.urllib.parse import urlencode
 from future.backports.urllib.parse import urlparse
+from pytest import raises
 
 from saml2.argtree import add_path
 from saml2.cert import OpenSSLWrapper
@@ -25,6 +26,7 @@ from saml2.assertion import Assertion
 from saml2.authn_context import INTERNETPROTOCOLPASSWORD
 from saml2.client import Saml2Client
 from saml2.config import SPConfig
+from saml2.pack import parse_soap_enveloped_saml
 from saml2.response import LogoutResponse
 from saml2.saml import NAMEID_FORMAT_PERSISTENT, EncryptedAssertion, Advice
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
@@ -37,6 +39,8 @@ from saml2.sigver import verify_redirect_signature
 from saml2.s_utils import do_attribute_statement
 from saml2.s_utils import factory
 from saml2.time_util import in_a_while, a_while_ago
+
+from defusedxml.common import EntitiesForbidden
 
 from fakeIDP import FakeIDP
 from fakeIDP import unpack_form
@@ -275,6 +279,26 @@ class TestClient:
         nid_policy = ar.name_id_policy
         assert nid_policy.allow_create == "false"
         assert nid_policy.format == saml.NAMEID_FORMAT_TRANSIENT
+
+    def test_create_auth_request_nameid_policy_allow_create(self):
+        conf = config.SPConfig()
+        conf.load_file("sp_conf_nameidpolicy")
+        client = Saml2Client(conf)
+        ar_str = "%s" % client.create_authn_request(
+            "http://www.example.com/sso", message_id="id1")[1]
+
+        ar = samlp.authn_request_from_string(ar_str)
+        print(ar)
+        assert ar.assertion_consumer_service_url == ("http://lingon.catalogix"
+                                                     ".se:8087/")
+        assert ar.destination == "http://www.example.com/sso"
+        assert ar.protocol_binding == BINDING_HTTP_POST
+        assert ar.version == "2.0"
+        assert ar.provider_name == "urn:mace:example.com:saml:roland:sp"
+        assert ar.issuer.text == "urn:mace:example.com:saml:roland:sp"
+        nid_policy = ar.name_id_policy
+        assert nid_policy.allow_create == "true"
+        assert nid_policy.format == saml.NAMEID_FORMAT_PERSISTENT
 
     def test_create_auth_request_vo(self):
         assert list(self.client.config.vorg.keys()) == [
@@ -1552,6 +1576,17 @@ class TestClientWithDummy():
                'http://www.example.com/login'
         assert ac.authn_context_class_ref.text == INTERNETPROTOCOLPASSWORD
 
+def test_parse_soap_enveloped_saml_xxe():
+    xml = """<?xml version="1.0"?>
+    <!DOCTYPE lolz [
+    <!ENTITY lol "lol">
+    <!ELEMENT lolz (#PCDATA)>
+    <!ENTITY lol1 "&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;">
+    ]>
+    <lolz>&lol1;</lolz>
+    """
+    with raises(EntitiesForbidden):
+        parse_soap_enveloped_saml(xml, None)
 
 # if __name__ == "__main__":
 #     tc = TestClient()

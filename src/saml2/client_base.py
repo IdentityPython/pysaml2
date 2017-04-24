@@ -207,7 +207,7 @@ class Base(Entity):
             nameid_format=None,
             service_url_binding=None, message_id=0,
             consent=None, extensions=None, sign=None,
-            allow_create=False, sign_prepare=False, sign_alg=None,
+            allow_create=None, sign_prepare=False, sign_alg=None,
             digest_alg=None, **kwargs):
         """ Creates an authentication request.
 
@@ -288,10 +288,15 @@ class Base(Entity):
             args["name_id_policy"] = kwargs["name_id_policy"]
             del kwargs["name_id_policy"]
         except KeyError:
-            if allow_create:
-                allow_create = "true"
-            else:
-                allow_create = "false"
+            if allow_create is None:
+                allow_create = self.config.getattr("name_id_format_allow_create", "sp")
+                if allow_create is None:
+                    allow_create = "false"
+                else:
+                    if allow_create is True:
+                        allow_create = "true"
+                    else:
+                        allow_create = "false"
 
             if nameid_format == "":
                 name_id_policy = None

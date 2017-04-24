@@ -37,6 +37,7 @@ except ImportError:
         import cElementTree as ElementTree
     except ImportError:
         from elementtree import ElementTree
+import defusedxml.ElementTree
 
 NAMESPACE = "http://schemas.xmlsoap.org/soap/envelope/"
 FORM_SPEC = """<form method="post" action="%s">
@@ -235,7 +236,7 @@ def parse_soap_enveloped_saml(text, body_class, header_class=None):
     :param text: The SOAP object as XML
     :return: header parts and body as saml.samlbase instances
     """
-    envelope = ElementTree.fromstring(text)
+    envelope = defusedxml.ElementTree.fromstring(text)
     assert envelope.tag == '{%s}Envelope' % NAMESPACE
 
     # print(len(envelope))
