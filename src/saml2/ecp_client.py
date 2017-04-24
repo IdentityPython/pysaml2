@@ -119,7 +119,7 @@ class Client(Entity):
         if response.status_code != 200:
             raise SAMLError(
                 "Request to IdP failed (%s): %s" % (response.status_code,
-                                                    response.error))
+                                                    response.text))
 
         # SAMLP response in a SOAP envelope body, ecp response in headers
         respdict = self.parse_soap_message(response.text)
@@ -200,22 +200,19 @@ class Client(Entity):
 
         ht_args = self.use_soap(idp_response, args["rc_url"],
                                 [args["relay_state"]])
-
+        ht_args["headers"][0] = ('Content-Type', MIME_PAOS)
         logger.debug("[P3] Post to SP: %s", ht_args["data"])
 
-        ht_args["headers"].append(('Content-Type', 'application/vnd.paos+xml'))
-
         # POST the package from the IdP to the SP
-        response = self.send(args["rc_url"], "POST", **ht_args)
+        response = self.send(**ht_args)
 
         if response.status_code == 302:
             # ignore where the SP is redirecting us to and go for the
             # url I started off with.
             pass
         else:
-            print(response.error)
             raise SAMLError(
-                "Error POSTing package to SP: %s" % response.error)
+                "Error POSTing package to SP: %s" % response.text)
 
         logger.debug("[P3] SP response: %s", response.text)
 
@@ -255,8 +252,7 @@ class Client(Entity):
         :param opargs: Arguments to the HTTP call
         :return: The page
         """
-        if url not in opargs:
-            url = self._sp
+        sp_url = self._sp
 
         # ********************************************
         # Phase 1 - First conversation with the SP
@@ -264,13 +260,13 @@ class Client(Entity):
         # headers needed to indicate to the SP that I'm ECP enabled
 
         opargs["headers"] = self.add_paos_headers(opargs["headers"])
-
-        response = self.send(url, op, **opargs)
-        logger.debug("[Op] SP response: %s", response)
+        response = self.send(sp_url, op, **opargs)
+        logger.debug("[Op] SP response: %s" % response)
+        print(response.text)
 
         if response.status_code != 200:
             raise SAMLError(
-                "Request to SP failed: %s" % response.error)
+                "Request to SP failed: %s" % response.text)
 
         # The response might be a AuthnRequest instance in a SOAP envelope
         # body. If so it's the start of the ECP conversation
@@ -282,7 +278,6 @@ class Client(Entity):
         # header blocks may also be present
         try:
             respdict = self.parse_soap_message(response.text)
-
             self.ecp_conversation(respdict, idp_entity_id)
 
             # should by now be authenticated so this should go smoothly
@@ -290,11 +285,9 @@ class Client(Entity):
         except (soap.XmlParseError, AssertionError, KeyError):
             pass
 
-        #print("RESP",response, self.http.response)
-
-        if  response.status_code != 404:
+        if response.status_code >= 400:
             raise SAMLError("Error performing operation: %s" % (
-                response.error,))
+                response.text,))
 
         return response
 
