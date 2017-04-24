@@ -280,6 +280,26 @@ class TestClient:
         assert nid_policy.allow_create == "false"
         assert nid_policy.format == saml.NAMEID_FORMAT_TRANSIENT
 
+    def test_create_auth_request_nameid_policy_allow_create(self):
+        conf = config.SPConfig()
+        conf.load_file("sp_conf_nameidpolicy")
+        client = Saml2Client(conf)
+        ar_str = "%s" % client.create_authn_request(
+            "http://www.example.com/sso", message_id="id1")[1]
+
+        ar = samlp.authn_request_from_string(ar_str)
+        print(ar)
+        assert ar.assertion_consumer_service_url == ("http://lingon.catalogix"
+                                                     ".se:8087/")
+        assert ar.destination == "http://www.example.com/sso"
+        assert ar.protocol_binding == BINDING_HTTP_POST
+        assert ar.version == "2.0"
+        assert ar.provider_name == "urn:mace:example.com:saml:roland:sp"
+        assert ar.issuer.text == "urn:mace:example.com:saml:roland:sp"
+        nid_policy = ar.name_id_policy
+        assert nid_policy.allow_create == "true"
+        assert nid_policy.format == saml.NAMEID_FORMAT_PERSISTENT
+
     def test_create_auth_request_vo(self):
         assert list(self.client.config.vorg.keys()) == [
             "urn:mace:example.com:it:tek"]
