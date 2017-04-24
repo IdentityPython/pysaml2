@@ -18,6 +18,8 @@ from saml2.saml import EncryptedAssertion
 from saml2.samlp import response_from_string
 from saml2.s_utils import factory, do_attribute_statement
 
+#from pyasn1.codec.der import decoder
+
 from py.test import raises
 
 from pathutils import full_path
@@ -67,7 +69,6 @@ Yj4cAafWaYfjBU2zi1ElwStIaJ5nyp/s/8B8SAPK2T79McMyccP3wSW13LHkmM1j
 wKe3ACFXBvqGQN0IbcH49hu0FKhYFM/GPDJcIHFBsiyMBXChpye9vBaTNEBCtU3K
 jjyG0hRT2mAQ9h+bkPmOvlEo/aH0xR68Z9hw4PF13w=="""
 
-from pyasn1.codec.der import decoder
 
 
 def test_cert_from_instance_1():
@@ -80,16 +81,16 @@ def test_cert_from_instance_1():
     assert certs[0] == CERT1
 
 
-def test_cert_from_instance_ssp():
-    xml_response = open(SIMPLE_SAML_PHP_RESPONSE).read()
-    response = samlp.response_from_string(xml_response)
-    assertion = response.assertion[0]
-    certs = sigver.cert_from_instance(assertion)
-    assert len(certs) == 1
-    assert certs[0] == CERT_SSP
-    der = base64.b64decode(certs[0])
-    print(str(decoder.decode(der)).replace('.', "\n."))
-    assert decoder.decode(der)
+# def test_cert_from_instance_ssp():
+#     xml_response = open(SIMPLE_SAML_PHP_RESPONSE).read()
+#     response = samlp.response_from_string(xml_response)
+#     assertion = response.assertion[0]
+#     certs = sigver.cert_from_instance(assertion)
+#     assert len(certs) == 1
+#     assert certs[0] == CERT_SSP
+#     der = base64.b64decode(certs[0])
+#     print(str(decoder.decode(der)).replace('.', "\n."))
+#     assert decoder.decode(der)
 
 
 class FakeConfig():
