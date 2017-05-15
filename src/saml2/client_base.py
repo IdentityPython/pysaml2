@@ -304,11 +304,20 @@ class Base(Entity):
                 if nameid_format is None:
                     nameid_format = self.config.getattr("name_id_format", "sp")
 
+                    # If no nameid_format has been set in the configuration
+                    # or passed in then transient is the default.
                     if nameid_format is None:
                         nameid_format = NAMEID_FORMAT_TRANSIENT
+
+                    # If a list has been configured or passed in choose the
+                    # first since NameIDPolicy can only have one format specified.
                     elif isinstance(nameid_format, list):
-                        # NameIDPolicy can only have one format specified
                         nameid_format = nameid_format[0]
+
+                    # Allow a deployer to signal that no format should be specified
+                    # in the NameIDPolicy by passing in or configuring the string 'None'.
+                    elif nameid_format == 'None':
+                        nameid_format = None
 
                 name_id_policy = samlp.NameIDPolicy(allow_create=allow_create,
                                                     format=nameid_format)
