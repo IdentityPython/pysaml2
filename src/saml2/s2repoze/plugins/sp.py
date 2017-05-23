@@ -459,9 +459,18 @@ class SAML2Plugin(object):
 
         uri = environ.get('REQUEST_URI', construct_url(environ))
 
-        logger.debug('[sp.identify] uri: %s', uri)
+        handled_urls = (
+            self.conf.endpoint('assertion_consumer_service') +
+            self.conf.endpoint('single_logout_service')
+        )
+        for item in handled_urls:
+            if ~item.find(uri):
+                break
+        else:
+            logger.debug('[sp.identify] uri passed: %s', uri)
+            return
 
-        query = parse_dict_querystring(environ)
+        logger.debug('[sp.identify] uri: %s', uri)
         logger.debug('[sp.identify] query: %s', query)
 
         if "SAMLResponse" in query or "SAMLRequest" in query:
