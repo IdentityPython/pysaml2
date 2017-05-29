@@ -139,10 +139,12 @@ class AttributeValueBase(SamlBase):
         if self._extatt:
             self.extension_attributes = self._extatt
 
-        if not text:
-            self.extension_attributes = {XSI_NIL: 'true'}
-        else:
+        if text:
             self.set_text(text)
+        elif not extension_elements:
+            self.extension_attributes = {XSI_NIL: 'true'}
+        elif XSI_TYPE in self.extension_attributes:
+            del self.extension_attributes[XSI_TYPE]
 
     def __setattr__(self, key, value):
         if key == "text":
