@@ -464,7 +464,7 @@ class SAML2Plugin(object):
             self.conf.endpoint('single_logout_service')
         )
         for item in handled_urls:
-            if ~item.find(uri):
+            if item.find(uri):
                 break
         else:
             logger.debug('[sp.identify] uri passed: %s', uri)
