@@ -463,8 +463,10 @@ class SAML2Plugin(object):
             self.conf.endpoint('assertion_consumer_service') +
             self.conf.endpoint('single_logout_service')
         )
+        logger.debug("Handled URLs: %s" % (handled_urls))
+        logger.debug('[sp.identify] uri: %s', uri)
         for item in handled_urls:
-            if ~item.find(uri):
+            if item.find(uri) >= 0:
                 break
         else:
             logger.debug('[sp.identify] uri passed: %s', uri)
