@@ -457,7 +457,7 @@ class SAML2Plugin(object):
         #     logger.info("ENVIRON: %s", environ)
         #     logger.info("self: %s", self.__dict__)
 
-        uri = environ.get('REQUEST_URI', construct_url(environ))
+        uri = environ.get('REQUEST_URI', construct_url(environ)).split('?')[0]
 
         handled_urls = (
             self.conf.endpoint('assertion_consumer_service') +
