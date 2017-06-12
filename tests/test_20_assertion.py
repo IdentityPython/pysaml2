@@ -81,6 +81,18 @@ def test_filter_on_attributes_1():
     assert ava["serialNumber"] == ["12345"]
 
 
+def test_filter_on_attributes_2():
+    
+    a = to_dict(Attribute(friendly_name="surName",name="urn:oid:2.5.4.4",
+                          name_format=NAME_FORMAT_URI), ONTS)
+    required = [a]
+    ava = {"sn":["kakavas"]}
+
+    ava = filter_on_attributes(ava,required,acs=ac_factory())
+    assert list(ava.keys()) == ['sn']
+    assert ava["sn"] == ["kakavas"]
+
+
 def test_filter_on_attributes_without_friendly_name():
     ava = {"eduPersonTargetedID": "test@example.com",
            "eduPersonAffiliation": "test",
@@ -923,3 +935,4 @@ def test_assertion_with_authn_instant():
 
 if __name__ == "__main__":
     test_assertion_2()
+
