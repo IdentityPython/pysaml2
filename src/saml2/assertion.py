@@ -79,10 +79,15 @@ def filter_on_attributes(ava, required=None, optional=None, acs=None,
 
     def _match_attr_name(attr, ava):
         try:
-            friendly_name = attr["friendly_name"]
-        except KeyError:
-            friendly_name = get_local_name(acs, attr["name"],
+            friendly_name = get_local_name(acs, attr["name"], 
                                            attr["name_format"])
+        except:
+            friendly_name = None
+        if not friendly_name:
+            try:
+                friendly_name = attr["friendly_name"]
+            except KeyError:
+                pass
 
         _fn = _match(friendly_name, ava)
         if not _fn:  # In the unlikely case that someone has provided us with
@@ -90,6 +95,7 @@ def filter_on_attributes(ava, required=None, optional=None, acs=None,
             _fn = _match(attr["name"], ava)
 
         return _fn
+
 
     def _apply_attr_value_restrictions(attr, res, must=False):
         try:
@@ -105,7 +111,6 @@ def filter_on_attributes(ava, required=None, optional=None, acs=None,
         return _filter_values(ava[_fn], values, must)
 
     res = {}
-
     if required is None:
         required = []
 
