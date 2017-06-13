@@ -96,7 +96,7 @@ class TestServer1():
         self.client = client.Saml2Client(conf)
         self.name_id = self.server.ident.transient_nameid(
             "urn:mace:example.com:saml:roland:sp", "id12")
-        self.ava = {"givenName": ["Derek"], "surName": ["Jeter"],
+        self.ava = {"givenName": ["Derek"], "sn": ["Jeter"],
                "mail": ["derek@nyy.mlb.com"], "title": "The man"}
 
     def teardown_class(self):
@@ -110,7 +110,7 @@ class TestServer1():
 
         assert ava ==\
                {'mail': ['derek@nyy.mlb.com'], 'givenName': ['Derek'],
-                'surName': ['Jeter'], 'title': ['The man']}
+                'sn': ['Jeter'], 'title': ['The man']}
 
 
     def verify_encrypted_assertion(self, assertion, decr_text):
@@ -145,7 +145,7 @@ class TestServer1():
                                 format=saml.NAMEID_FORMAT_TRANSIENT)),
             attribute_statement=do_attribute_statement(
                 {
-                    ("", "", "surName"): ("Jeter", ""),
+                    ("", "", "sn"): ("Jeter", ""),
                     ("", "", "givenName"): ("Derek", ""),
                 }
             ),
@@ -164,12 +164,12 @@ class TestServer1():
         attr1 = attribute_statement.attribute[1]
         if attr0.attribute_value[0].text == "Derek":
             assert attr0.friendly_name == "givenName"
-            assert attr1.friendly_name == "surName"
+            assert attr1.friendly_name == "sn"
             assert attr1.attribute_value[0].text == "Jeter"
         else:
             assert attr1.friendly_name == "givenName"
             assert attr1.attribute_value[0].text == "Derek"
-            assert attr0.friendly_name == "surName"
+            assert attr0.friendly_name == "sn"
             assert attr0.attribute_value[0].text == "Jeter"
         # 
         subject = assertion.subject
@@ -187,7 +187,7 @@ class TestServer1():
                                 name_id=saml.NAMEID_FORMAT_TRANSIENT),
                 attribute_statement=do_attribute_statement(
                     {
-                        ("", "", "surName"): ("Jeter", ""),
+                        ("", "", "sn"): ("Jeter", ""),
                         ("", "", "givenName"): ("Derek", ""),
                     }
                 ),
@@ -277,7 +277,7 @@ class TestServer1():
         resp = self.server.create_authn_response(
             {
                 "eduPersonEntitlement": "Short stop",
-                "surName": "Jeter",
+                "sn": "Jeter",
                 "givenName": "Derek",
                 "mail": "derek.jeter@nyy.mlb.com",
                 "title": "The man"
@@ -394,7 +394,7 @@ class TestServer1():
         conf.load_file("server_conf")
         self.client = client.Saml2Client(conf)
 
-        ava = {"givenName": ["Derek"], "surName": ["Jeter"],
+        ava = {"givenName": ["Derek"], "sn": ["Jeter"],
                "mail": ["derek@nyy.mlb.com"], "title": "The man"}
 
         npolicy = samlp.NameIDPolicy(format=saml.NAMEID_FORMAT_TRANSIENT,
@@ -425,7 +425,7 @@ class TestServer1():
     def test_signed_response(self):
         name_id = self.server.ident.transient_nameid(
             "urn:mace:example.com:saml:roland:sp", "id12")
-        ava = {"givenName": ["Derek"], "surName": ["Jeter"],
+        ava = {"givenName": ["Derek"], "sn": ["Jeter"],
                "mail": ["derek@nyy.mlb.com"], "title": "The man"}
 
         signed_resp = self.server.create_authn_response(
@@ -1139,7 +1139,7 @@ class TestServer1():
             "not_on_or_after": soon,
             "user": {
                 "givenName": "Leo",
-                "surName": "Laport",
+                "sn": "Laport",
             }
         }
         self.client.users.add_information_about_person(sinfo)
@@ -1163,7 +1163,7 @@ class TestServer1():
             "not_on_or_after": soon,
             "user": {
                 "givenName": "Leo",
-                "surName": "Laport",
+                "sn": "Laport",
             }
         }
 
@@ -1188,7 +1188,7 @@ class TestServer1():
 #------------------------------------------------------------------------
 
 IDENTITY = {"eduPersonAffiliation": ["staff", "member"],
-            "surName": ["Jeter"], "givenName": ["Derek"],
+            "sn": ["Jeter"], "givenName": ["Derek"],
             "mail": ["foo@gmail.com"], "title": "The man"}
 
 
@@ -1234,7 +1234,7 @@ def _logout_request(conf_file):
         "not_on_or_after": soon,
         "user": {
             "givenName": "Leo",
-            "surName": "Laport",
+            "sn": "Laport",
         }
     }
     sp.users.add_information_about_person(sinfo)
