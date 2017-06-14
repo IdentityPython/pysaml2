@@ -210,7 +210,7 @@ class Base(Entity):
             nameid_format=None,
             service_url_binding=None, message_id=0,
             consent=None, extensions=None, sign=None,
-            allow_create=False, sign_prepare=False, sign_alg=None,
+            allow_create=None, sign_prepare=False, sign_alg=None,
             digest_alg=None, **kwargs):
         """ Creates an authentication request.
 
@@ -249,8 +249,8 @@ class Base(Entity):
                 del kwargs["assertion_consumer_service_url"]
             except KeyError:
                 try:
-                    args["assertion_consumer_service_index"] = str(kwargs[
-                                                                       "assertion_consumer_service_index"])
+                    args["assertion_consumer_service_index"] = str(
+                        kwargs["assertion_consumer_service_index"])
                     del kwargs["assertion_consumer_service_index"]
                 except KeyError:
                     if service_url_binding is None:
@@ -271,7 +271,7 @@ class Base(Entity):
         # all of these have cardinality 0..1
         _msg = AuthnRequest()
         for param in ["scoping", "requested_authn_context", "conditions",
-                      "subject", "scoping"]:
+                      "subject"]:
             try:
                 _item = kwargs[param]
             except KeyError:
@@ -291,10 +291,15 @@ class Base(Entity):
             args["name_id_policy"] = kwargs["name_id_policy"]
             del kwargs["name_id_policy"]
         except KeyError:
-            if allow_create:
-                allow_create = "true"
-            else:
-                allow_create = "false"
+            if allow_create is None:
+                allow_create = self.config.getattr("name_id_format_allow_create", "sp")
+                if allow_create is None:
+                    allow_create = "false"
+                else:
+                    if allow_create is True:
+                        allow_create = "true"
+                    else:
+                        allow_create = "false"
 
             if nameid_format == "":
                 name_id_policy = None
@@ -302,11 +307,20 @@ class Base(Entity):
                 if nameid_format is None:
                     nameid_format = self.config.getattr("name_id_format", "sp")
 
+                    # If no nameid_format has been set in the configuration
+                    # or passed in then transient is the default.
                     if nameid_format is None:
                         nameid_format = NAMEID_FORMAT_TRANSIENT
+
+                    # If a list has been configured or passed in choose the
+                    # first since NameIDPolicy can only have one format specified.
                     elif isinstance(nameid_format, list):
-                        # NameIDPolicy can only have one format specified
                         nameid_format = nameid_format[0]
+
+                    # Allow a deployer to signal that no format should be specified
+                    # in the NameIDPolicy by passing in or configuring the string 'None'.
+                    elif nameid_format == 'None':
+                        nameid_format = None
 
                 name_id_policy = samlp.NameIDPolicy(allow_create=allow_create,
                                                     format=nameid_format)
