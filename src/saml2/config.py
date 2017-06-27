@@ -27,6 +27,8 @@ logger = logging.getLogger(__name__)
 __author__ = 'rolandh'
 
 
+ATTR_ENTITYID_ENDPOINT = "entityid_endpoint"
+
 COMMON_ARGS = [
     "entityid", "xmlsec_binary", "debug", "key_file", "cert_file",
     "encryption_keypairs", "additional_cert_files",
@@ -54,7 +56,8 @@ COMMON_ARGS = [
     "validate_certificate",
     "extensions",
     "allow_unknown_attributes",
-    "crypto_backend"
+    "crypto_backend",
+    ATTR_ENTITYID_ENDPOINT,
 ]
 
 SP_ARGS = [
@@ -510,6 +513,9 @@ class Config(object):
             for endp, binding in specs:
                 res[endp] = (service, binding)
         return res
+
+    def expose_entityid_endpoint(self):
+        return self.getattr(ATTR_ENTITYID_ENDPOINT, "")
 
 
 class SPConfig(Config):
