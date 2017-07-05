@@ -78,18 +78,15 @@ def filter_on_attributes(ava, required=None, optional=None, acs=None,
     """
 
     def _match_attr_name(attr, ava):
-        try:
-            friendly_name = get_local_name(acs, attr["name"], 
-                                           attr["name_format"])
-        except:
-            friendly_name = None
-        if not friendly_name:
+        
+        local_name = get_local_name(acs, attr["name"], attr["name_format"])
+        if not local_name:
             try:
-                friendly_name = attr["friendly_name"]
+                local_name = attr["friendly_name"]
             except KeyError:
                 pass
 
-        _fn = _match(friendly_name, ava)
+        _fn = _match(local_name, ava)
         if not _fn:  # In the unlikely case that someone has provided us with
             #  URIs as attribute names
             _fn = _match(attr["name"], ava)
