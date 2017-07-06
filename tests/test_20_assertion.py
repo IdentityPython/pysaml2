@@ -64,7 +64,7 @@ def test_filter_on_attributes_0():
     required = [a]
     ava = {"serialNumber": ["12345"]}
 
-    ava = filter_on_attributes(ava, required)
+    ava = filter_on_attributes(ava, required, acs=ac_factory())
     assert list(ava.keys()) == ["serialNumber"]
     assert ava["serialNumber"] == ["12345"]
 
@@ -76,7 +76,7 @@ def test_filter_on_attributes_1():
     required = [a]
     ava = {"serialNumber": ["12345"], "givenName": ["Lars"]}
 
-    ava = filter_on_attributes(ava, required)
+    ava = filter_on_attributes(ava, required, acs=ac_factory())
     assert list(ava.keys()) == ["serialNumber"]
     assert ava["serialNumber"] == ["12345"]
 
@@ -118,7 +118,7 @@ def test_filter_on_attributes_with_missing_required_attribute():
         name="urn:oid:1.3.6.1.4.1.5923.1.1.1.10",
         name_format=NAME_FORMAT_URI), ONTS)
     with pytest.raises(MissingValue):
-        filter_on_attributes(ava, required=[eptid])
+        filter_on_attributes(ava, required=[eptid], acs=ac_factory())
 
 
 def test_filter_on_attributes_with_missing_optional_attribute():
@@ -127,7 +127,7 @@ def test_filter_on_attributes_with_missing_optional_attribute():
         friendly_name="eduPersonTargetedID",
         name="urn:oid:1.3.6.1.4.1.5923.1.1.1.10",
         name_format=NAME_FORMAT_URI), ONTS)
-    assert filter_on_attributes(ava, optional=[eptid]) == {}
+    assert filter_on_attributes(ava, optional=[eptid], acs=ac_factory()) == {}
 
 
 # ----------------------------------------------------------------------
@@ -432,7 +432,7 @@ def test_filter_values_req_2():
     required = [a1, a2]
     ava = {"serialNumber": ["12345"], "givenName": ["Lars"]}
 
-    raises(MissingValue, filter_on_attributes, ava, required)
+    raises(MissingValue, filter_on_attributes, ava, required, acs=ac_factory())
 
 
 def test_filter_values_req_3():
@@ -444,7 +444,7 @@ def test_filter_values_req_3():
     required = [a]
     ava = {"serialNumber": ["12345"]}
 
-    ava = filter_on_attributes(ava, required)
+    ava = filter_on_attributes(ava, required, acs=ac_factory())
     assert list(ava.keys()) == ["serialNumber"]
     assert ava["serialNumber"] == ["12345"]
 
@@ -458,7 +458,7 @@ def test_filter_values_req_4():
     required = [a]
     ava = {"serialNumber": ["12345"]}
 
-    raises(MissingValue, filter_on_attributes, ava, required)
+    raises(MissingValue, filter_on_attributes, ava, required, acs=ac_factory())
 
 
 def test_filter_values_req_5():
@@ -470,7 +470,7 @@ def test_filter_values_req_5():
     required = [a]
     ava = {"serialNumber": ["12345", "54321"]}
 
-    ava = filter_on_attributes(ava, required)
+    ava = filter_on_attributes(ava, required, acs=ac_factory())
     assert list(ava.keys()) == ["serialNumber"]
     assert ava["serialNumber"] == ["12345"]
 
@@ -484,7 +484,7 @@ def test_filter_values_req_6():
     required = [a]
     ava = {"serialNumber": ["12345", "54321"]}
 
-    ava = filter_on_attributes(ava, required)
+    ava = filter_on_attributes(ava, required, acs=ac_factory())
     assert list(ava.keys()) == ["serialNumber"]
     assert ava["serialNumber"] == ["54321"]
 
@@ -501,7 +501,7 @@ def test_filter_values_req_opt_0():
 
     ava = {"serialNumber": ["12345", "54321"]}
 
-    ava = filter_on_attributes(ava, [r], [o])
+    ava = filter_on_attributes(ava, [r], [o], acs=ac_factory())
     assert list(ava.keys()) == ["serialNumber"]
     assert _eq(ava["serialNumber"], ["12345", "54321"])
 
@@ -519,7 +519,7 @@ def test_filter_values_req_opt_1():
 
     ava = {"serialNumber": ["12345", "54321"]}
 
-    ava = filter_on_attributes(ava, [r], [o])
+    ava = filter_on_attributes(ava, [r], [o], acs=ac_factory())
     assert list(ava.keys()) == ["serialNumber"]
     assert _eq(ava["serialNumber"], ["12345", "54321"])
 
@@ -555,7 +555,7 @@ def test_filter_values_req_opt_2():
     ava = {"surname": ["Hedberg"], "givenName": ["Roland"],
            "eduPersonAffiliation": ["staff"], "uid": ["rohe0002"]}
 
-    raises(MissingValue, "filter_on_attributes(ava, r, o)")
+    raises(MissingValue, "filter_on_attributes(ava, r, o, acs=ac_factory())")
 
 
 # ---------------------------------------------------------------------------
