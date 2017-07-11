@@ -366,7 +366,7 @@ class TestClient:
     def test_response_1(self):
         IDP = "urn:mace:example.com:saml:roland:idp"
 
-        ava = {"givenName": ["Derek"], "surName": ["Jeter"],
+        ava = {"givenName": ["Derek"], "sn": ["Jeter"],
                "mail": ["derek@nyy.mlb.com"], "title": ["The man"]}
 
         nameid_policy = samlp.NameIDPolicy(allow_create="false",
@@ -414,7 +414,7 @@ class TestClient:
 
         # --- authenticate another person
 
-        ava = {"givenName": ["Alfonson"], "surName": ["Soriano"],
+        ava = {"givenName": ["Alfonson"], "sn": ["Soriano"],
                "mail": ["alfonson@chc.mlb.com"], "title": ["outfielder"]}
 
         resp_str = "%s" % self.server.create_authn_response(
@@ -732,7 +732,7 @@ class TestClient:
 
     def setup_verify_authn_response(self):
         idp = "urn:mace:example.com:saml:roland:idp"
-        ava = {"givenName": ["Derek"], "surName": ["Jeter"],
+        ava = {"givenName": ["Derek"], "sn": ["Jeter"],
                "mail": ["derek@nyy.mlb.com"], "title": ["The man"]}
         ava_verify = {'mail': ['derek@nyy.mlb.com'], 'givenName': ['Derek'],
                       'sn': ['Jeter'], 'title': ["The man"]}
@@ -781,7 +781,7 @@ class TestClient:
                                 format=saml.NAMEID_FORMAT_TRANSIENT)),
             attribute_statement=do_attribute_statement(
                 {
-                    ("", "", "surName"): ("Jeter", ""),
+                    ("", "", "sn"): ("Jeter", ""),
                     ("", "", "givenName"): ("Derek", ""),
                 }
             ),
@@ -845,7 +845,7 @@ class TestClient:
         nameid_policy = samlp.NameIDPolicy(allow_create="false",
                                            format=saml.NAMEID_FORMAT_PERSISTENT)
 
-        asser = Assertion({"givenName": "Derek", "surName": "Jeter"})
+        asser = Assertion({"givenName": "Derek", "sn": "Jeter"})
         farg = add_path(
             {},
             ['assertion', 'subject', 'subject_confirmation', 'method',
@@ -916,7 +916,7 @@ class TestClient:
         nameid_policy = samlp.NameIDPolicy(allow_create="false",
                                            format=saml.NAMEID_FORMAT_PERSISTENT)
 
-        asser = Assertion({"givenName": "Derek", "surName": "Jeter"})
+        asser = Assertion({"givenName": "Derek", "sn": "Jeter"})
 
         subject_confirmation_specs = {
             'recipient': "http://lingon.catalogix.se:8087/",
@@ -1047,7 +1047,7 @@ class TestClient:
             name_id=name_id,
             farg=farg['assertion'])
 
-        asser_2 = Assertion({"surName": "Jeter"})
+        asser_2 = Assertion({"sn": "Jeter"})
 
         assertion_2 = asser_2.construct(
             self.client.config.entityid,
@@ -1333,7 +1333,7 @@ class TestClient:
             "not_on_or_after": in_a_while(minutes=15),
             "ava": {
                 "givenName": "Anders",
-                "surName": "Andersson",
+                "sn": "Andersson",
                 "mail": "anders.andersson@example.com"
             }
         }
@@ -1370,7 +1370,7 @@ class TestClient:
             "not_on_or_after": in_a_while(minutes=15),
             "ava": {
                 "givenName": "Anders",
-                "surName": "Andersson",
+                "sn": "Andersson",
                 "mail": "anders.andersson@example.com"
             },
             "session_index": SessionIndex("_foo")
@@ -1400,7 +1400,7 @@ class TestClient:
             "not_on_or_after": a_while_ago(minutes=15),
             "ava": {
                 "givenName": "Anders",
-                "surName": "Andersson",
+                "sn": "Andersson",
                 "mail": "anders.andersson@example.com"
             },
             "session_index": SessionIndex("_foo")
@@ -1493,7 +1493,7 @@ class TestClientWithDummy():
             "not_on_or_after": in_a_while(minutes=15),
             "ava": {
                 "givenName": "Anders",
-                "surName": "Andersson",
+                "sn": "Andersson",
                 "mail": "anders.andersson@example.com"
             }
         }
