@@ -207,7 +207,6 @@ class Config(object):
         self.crypto_backend = 'xmlsec1'
         self.scope = ""
         self.allow_unknown_attributes = False
-        self.allow_unsolicited = False
         self.extension_schema = {}
         self.cert_handler_extra_class = None
         self.verify_encrypt_cert_advice = None
