@@ -68,6 +68,7 @@ sp2 = {
             },
             "authn_requests_signed": True,
             "logout_requests_signed": True,
+            "force_authn": True,
         }
     },
     #"xmlsec_binary" : "/opt/local/bin/xmlsec1",
@@ -407,6 +408,16 @@ def test_crypto_backend():
     assert idpc.crypto_backend == 'XMLSecurity'
     sec = security_context(idpc)
     assert isinstance(sec.crypto, CryptoBackendXMLSecurity)
+
+def test_unset_force_authn():
+    cnf = SPConfig().load(sp1)
+    assert bool(cnf.getattr('force_authn', 'sp')) == False
+
+
+def test_set_force_authn():
+    cnf = SPConfig().load(sp2)
+    assert bool(cnf.getattr('force_authn', 'sp')) == True
+
 
 if __name__ == "__main__":
     test_crypto_backend()
