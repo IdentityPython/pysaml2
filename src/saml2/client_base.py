@@ -18,6 +18,8 @@ from saml2.samlp import NameIDMappingRequest
 from saml2.samlp import AttributeQuery
 from saml2.samlp import AuthzDecisionQuery
 from saml2.samlp import AuthnRequest
+from saml2.samlp import Extensions
+from saml2.extension import sp_type
 
 import saml2
 import time
@@ -346,6 +348,14 @@ class Base(Entity):
         finally:
             if force_authn:
                 args['force_authn'] = 'true'
+
+        conf_sp_type = self.config.getattr('sp_type', 'sp')
+        conf_sp_type_in_md = self.config.getattr('sp_type_in_metadata', 'sp')
+        if conf_sp_type and conf_sp_type_in_md is False:
+            if not extensions:
+                extensions = Extensions()
+            item = sp_type.SPType(text=conf_sp_type)
+            extensions.add_extension_element(item)
 
         if kwargs:
             _args, extensions = self._filter_args(AuthnRequest(), extensions,
