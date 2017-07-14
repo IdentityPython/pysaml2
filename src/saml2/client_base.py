@@ -235,26 +235,30 @@ class Base(Entity):
 
         args = {}
 
-        try:
-            args["assertion_consumer_service_url"] = kwargs[
-                "assertion_consumer_service_urls"][0]
-            del kwargs["assertion_consumer_service_urls"]
-        except KeyError:
+        if self.config.getattr('hide_assertion_consumer_service', 'sp'):
+            args["assertion_consumer_service_url"] = None
+            binding = None
+        else:
             try:
                 args["assertion_consumer_service_url"] = kwargs[
-                    "assertion_consumer_service_url"]
-                del kwargs["assertion_consumer_service_url"]
+                    "assertion_consumer_service_urls"][0]
+                del kwargs["assertion_consumer_service_urls"]
             except KeyError:
                 try:
-                    args["assertion_consumer_service_index"] = str(
-                        kwargs["assertion_consumer_service_index"])
-                    del kwargs["assertion_consumer_service_index"]
+                    args["assertion_consumer_service_url"] = kwargs[
+                        "assertion_consumer_service_url"]
+                    del kwargs["assertion_consumer_service_url"]
                 except KeyError:
-                    if service_url_binding is None:
-                        service_urls = self.service_urls(binding)
-                    else:
-                        service_urls = self.service_urls(service_url_binding)
-                    args["assertion_consumer_service_url"] = service_urls[0]
+                    try:
+                        args["assertion_consumer_service_index"] = str(
+                            kwargs["assertion_consumer_service_index"])
+                        del kwargs["assertion_consumer_service_index"]
+                    except KeyError:
+                        if service_url_binding is None:
+                            service_urls = self.service_urls(binding)
+                        else:
+                            service_urls = self.service_urls(service_url_binding)
+                        args["assertion_consumer_service_url"] = service_urls[0]
 
         try:
             args["provider_name"] = kwargs["provider_name"]
