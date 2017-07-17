@@ -390,7 +390,7 @@ def test_load_remote_encoding():
     crypto = sigver._get_xmlsec_cryptobackend()
     sc = sigver.SecurityContext(crypto, key_type="", cert_type="")
     httpc = HTTPBase()
-    mds = MetaDataExtern(ATTRCONV, 'http://metadata.aai.switch.ch/metadata.aaitest.xml', sc, '/tmp/SWITCHaaiRootCA.crt.pem', httpc)
+    mds = MetaDataExtern(ATTRCONV, 'http://metadata.aai.switch.ch/metadata.aaitest.xml', sc, full_path('SWITCHaaiRootCA.crt.pem'), httpc)
     mds.load()
 
 

@@ -814,7 +814,7 @@ class MetaDataMDX(InMemoryMetaData):
             response = requests.get(mdx_url, headers={
                 'Accept': SAML_METADATA_CONTENT_TYPE})
             if response.status_code == 200:
-                _txt = response.text.encode("utf-8")
+                _txt = response.content
 
                 if self.parse_and_check_signature(_txt):
                     return self.entity[item]
