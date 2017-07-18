@@ -10,6 +10,8 @@ import six
 
 from saml2.entity import Entity
 
+import saml2.attributemaps as attributemaps
+
 from saml2.mdstore import destinations
 from saml2.profile import paos, ecp
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
@@ -20,6 +22,7 @@ from saml2.samlp import AuthzDecisionQuery
 from saml2.samlp import AuthnRequest
 from saml2.samlp import Extensions
 from saml2.extension import sp_type
+from saml2.extension import requested_attributes
 
 import saml2
 import time
@@ -355,6 +358,59 @@ class Base(Entity):
             if not extensions:
                 extensions = Extensions()
             item = sp_type.SPType(text=conf_sp_type)
+            extensions.add_extension_element(item)
+
+        requested_attrs = self.config.getattr('requested_attributes', 'sp')
+        if requested_attrs:
+            if not extensions:
+                extensions = Extensions()
+
+            attributemapsmods = []
+            for modname in attributemaps.__all__:
+                attributemapsmods.append(getattr(attributemaps, modname))
+
+            items = []
+            for attr in requested_attrs:
+                friendly_name = attr.get('friendly_name')
+                name = attr.get('name')
+                name_format = attr.get('name_format')
+                is_required = str(attr.get('required', False)).lower()
+
+                if not name and not friendly_name:
+                    raise ValueError(
+                        "Missing required attribute: '{}' or '{}'".format(
+                            'name', 'friendly_name'))
+
+                if not name:
+                    for mod in attributemapsmods:
+                        try:
+                            name = mod.MAP['to'][friendly_name]
+                        except KeyError:
+                            continue
+                        else:
+                            if not name_format:
+                                name_format = mod.MAP['identifier']
+                            break
+
+                if not friendly_name:
+                    for mod in attributemapsmods:
+                        try:
+                            friendly_name = mod.MAP['fro'][name]
+                        except KeyError:
+                            continue
+                        else:
+                            if not name_format:
+                                name_format = mod.MAP['identifier']
+                            break
+
+                items.append(requested_attributes.RequestedAttribute(
+                    is_required=is_required,
+                    name_format=name_format,
+                    friendly_name=friendly_name,
+                    name=name))
+
+            item = requested_attributes.RequestedAttributes(
+                extension_elements=items)
             extensions.add_extension_element(item)
 
         if kwargs:

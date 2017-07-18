@@ -80,6 +80,7 @@ SP_ARGS = [
     "force_authn",
     "sp_type",
     "sp_type_in_metadata",
+    "requested_attributes",
 ]
 
 AA_IDP_ARGS = [

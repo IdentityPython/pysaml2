@@ -14,6 +14,19 @@ CONFIG = {
             "required_attributes": ["surName", "givenName", "mail"],
             "optional_attributes": ["title"],
             "idp": ["urn:mace:example.com:saml:roland:idp"],
+            "requested_attributes": [
+                {
+                    "name": "http://eidas.europa.eu/attributes/naturalperson/DateOfBirth",
+                    "required": False,
+                },
+                {
+                    "friendly_name": "PersonIdentifier",
+                    "required": True,
+                },
+                {
+                    "friendly_name": "PlaceOfBirth",
+                },
+            ],
         }
     },
     "debug": 1,

@@ -22,6 +22,8 @@ from saml2 import samlp
 from saml2 import sigver
 from saml2 import s_utils
 from saml2.assertion import Assertion
+from saml2.extension.requested_attributes import RequestedAttributes
+from saml2.extension.requested_attributes import RequestedAttribute
 
 from saml2.authn_context import INTERNETPROTOCOLPASSWORD
 from saml2.client import Saml2Client
@@ -279,6 +281,20 @@ class TestClient:
         nid_policy = ar.name_id_policy
         assert nid_policy.allow_create == "false"
         assert nid_policy.format == saml.NAMEID_FORMAT_TRANSIENT
+
+        node_requested_attributes = None
+        for e in ar.extensions.extension_elements:
+            if e.tag == RequestedAttributes.c_tag:
+                node_requested_attributes = e
+                break
+        assert node_requested_attributes is not None
+
+        for c in node_requested_attributes.children:
+            assert c.tag == RequestedAttribute.c_tag
+            assert c.attributes['isRequired'] in ['true', 'false']
+            assert c.attributes['Name']
+            assert c.attributes['FriendlyName']
+            assert c.attributes['NameFormat']
 
     def test_create_auth_request_unset_force_authn(self):
         req_id, req = self.client.create_authn_request(
