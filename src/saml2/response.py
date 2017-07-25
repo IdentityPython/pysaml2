@@ -666,7 +666,7 @@ class AuthnResponse(StatusResponse):
                 _attr_statem = _assertion.attribute_statement[0]
                 ava.update(self.read_attribute_statement(_attr_statem))
             if not ava:
-                logger.error("Missing Attribute Statement")
+                logger.debug("Assertion contains no attribute statements")
         return ava
 
     def _bearer_confirmed(self, data):
