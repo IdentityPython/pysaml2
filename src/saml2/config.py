@@ -76,6 +76,7 @@ SP_ARGS = [
     "name_id_format_allow_create",
     "logout_requests_signed",
     "requested_attribute_name_format",
+    "hide_assertion_consumer_service",
     "force_authn",
 ]
 
