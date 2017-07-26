@@ -280,6 +280,17 @@ class TestClient:
         assert nid_policy.allow_create == "false"
         assert nid_policy.format == saml.NAMEID_FORMAT_TRANSIENT
 
+    def test_create_auth_request_unset_force_authn(self):
+        req_id, req = self.client.create_authn_request(
+            "http://www.example.com/sso", sign=False, message_id="id1")
+        assert bool(req.force_authn) == False
+
+    def test_create_auth_request_set_force_authn(self):
+        req_id, req = self.client.create_authn_request(
+            "http://www.example.com/sso", sign=False, message_id="id1",
+            force_authn="true")
+        assert bool(req.force_authn) == True
+
     def test_create_auth_request_nameid_policy_allow_create(self):
         conf = config.SPConfig()
         conf.load_file("sp_conf_nameidpolicy")

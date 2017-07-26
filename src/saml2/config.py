@@ -75,7 +75,8 @@ SP_ARGS = [
     "name_id_format",
     "name_id_format_allow_create",
     "logout_requests_signed",
-    "requested_attribute_name_format"
+    "requested_attribute_name_format",
+    "force_authn",
 ]
 
 AA_IDP_ARGS = [

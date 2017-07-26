@@ -335,6 +335,14 @@ class Base(Entity):
         except KeyError:
             nsprefix = None
 
+        try:
+            force_authn = kwargs['force_authn']
+        except KeyError:
+            force_authn = self.config.getattr('force_authn', 'sp')
+        finally:
+            if force_authn:
+                args['force_authn'] = 'true'
+
         if kwargs:
             _args, extensions = self._filter_args(AuthnRequest(), extensions,
                                                   **kwargs)
