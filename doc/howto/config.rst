@@ -511,6 +511,52 @@ Example::
     This is relevant only for the eIDAS SAML profile.
 
 
+requested_attributes
+""""""""""""""""""""
+
+A list of attributes that the SP requires from an eIDAS-Service (IdP).
+Each attribute is an object with the following attributes:
+
+* friendly_name
+* name
+* required
+* name_format
+
+Where friendly_name is an attribute name such as *DateOfBirth*, name is the
+full attribute name such as
+*http://eidas.europa.eu/attributes/naturalperson/DateOfBirth*, required
+indicates whether this attributed is required for authentication, and
+name_format indicates the name format for that attribute, such as
+*urn:oasis:names:tc:SAML:2.0:attrname-format:uri*.
+
+It is mandatory that at least name or friendly_name is set.
+By default attributes are assumed to be required.
+Missing attributes are infered based on the attribute maps data.
+
+Example::
+
+    "service": {
+        "sp": {
+            "requested_attributes": [
+                {
+                    "name": "http://eidas.europa.eu/attributes/naturalperson/PersonIdentifier",
+                },
+                {
+                    "friendly_name": "DateOfBirth",
+                    "required": False,
+                },
+            ],
+        }
+    }
+
+.. note::
+    This is relevant only for the eIDAS SAML profile.
+
+    This option is different from the required_attributes and
+    optional_attributes parameters that control the requested
+    attributes in the metadata of an SP.
+
+
 idp
 """
 
