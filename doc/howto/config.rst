@@ -423,6 +423,21 @@ Example::
     }
 
 
+force_authn
+"""""""""""
+
+Mandates that the identity provider MUST authenticate the presenter directly
+rather than rely on a previous security context.
+
+Example::
+
+    "service": {
+        "sp": {
+            "force_authn": True,
+        }
+    }
+
+
 idp
 """
 
