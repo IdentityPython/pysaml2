@@ -453,6 +453,28 @@ Example::
     }
 
 
+hide_assertion_consumer_service
+"""""""""""""""""""""""""""""""
+
+When set to true the AuthnRequest will not include the
+AssertionConsumerServiceURL and ProtocolBinding attributes.
+
+Example::
+
+    "service": {
+        "sp": {
+            "hide_assertion_consumer_service": True,
+        }
+    }
+
+This kind of functionality is required for the eIDAS SAML profile
+
+> eIDAS-Connectors SHOULD NOT provide AssertionConsumerServiceURL.
+
+.. note::
+    This is relevant only for the eIDAS SAML profile.
+
+
 idp
 """
 
