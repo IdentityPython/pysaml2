@@ -202,6 +202,39 @@ Where you describe the organization responsible for the service.::
     where the second part is the language code. If you don't specify a
     language the default is "en" (English).
 
+preferred_binding
+^^^^^^^^^^^^^^^^^
+
+Which binding should be prefered for a service.
+Example configuration::
+
+    "preferred_binding" = {
+        "single_sign_on_service": [
+            'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',
+            'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
+            'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact',
+        ],
+        "single_logout_service": [
+            'urn:oasis:names:tc:SAML:2.0:bindings:SOAP',
+            'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',
+            'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
+            'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact',
+        ],
+    }
+
+The available services are:
+
+* manage_name_id_service
+* assertion_consumer_service
+* name_id_mapping_service
+* authn_query_service
+* attribute_service
+* authz_service
+* assertion_id_request_service
+* artifact_resolution_service
+* attribute_consuming_service
+
+
 service
 ^^^^^^^
 
