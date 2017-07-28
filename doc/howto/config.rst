@@ -408,6 +408,21 @@ Example::
     }
 
 
+want_response_signed
+""""""""""""""""""""
+
+Indicates that Authentication Responses to this SP must be signed. If set to
+True, the SP will not consume any SAML Responses that are not signed.
+
+Example::
+
+    "service": {
+        "sp": {
+            "want_response_signed": True,
+        }
+    }
+
+
 idp
 """
 
