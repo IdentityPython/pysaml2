@@ -438,6 +438,21 @@ Example::
     }
 
 
+allow_unsolicited
+"""""""""""""""""
+
+When set to true, the SP will consume unsolicited SAML Responses, i.e. SAML
+Responses for which it has not sent a respective SAML Authentication Request.
+
+Example::
+
+    "service": {
+        "sp": {
+            "allow_unsolicited": True,
+        }
+    }
+
+
 idp
 """
 
