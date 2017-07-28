@@ -475,6 +475,42 @@ This kind of functionality is required for the eIDAS SAML profile
     This is relevant only for the eIDAS SAML profile.
 
 
+sp_type
+"""""""
+
+Sets the value for the eIDAS SPType node. By the eIDAS specification the value
+can be one of *public* and *private*.
+
+Example::
+
+    "service": {
+        "sp": {
+            "sp_type": "private",
+        }
+    }
+
+.. note::
+    This is relevant only for the eIDAS SAML profile.
+
+
+sp_type_in_metadata
+"""""""""""""""""""
+
+Whether the SPType node should appear in the metadata document
+or as part of each AuthnRequest.
+
+Example::
+
+    "service": {
+        "sp": {
+            "sp_type_in_metadata": True,
+        }
+    }
+
+.. note::
+    This is relevant only for the eIDAS SAML profile.
+
+
 idp
 """
 
