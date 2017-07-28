@@ -61,7 +61,7 @@ attribute_map_dir
 Format::
 
     "attribute_map_dir": "attribute-maps"
-    
+
 Points to a directory which has the attribute maps in Python modules.
 A typical map file will looks like this::
 
@@ -91,9 +91,9 @@ The *to* and *fro* sub-dictionaries then contain the mapping between the names.
 
 As you see the format is again a python dictionary where the key is the
 name to convert from, and the value is the name to convert to.
-    
-Since *to* in most cases is the inverse of the *fro* file, the 
-software allowes you to only specify one of them and it will 
+
+Since *to* in most cases is the inverse of the *fro* file, the
+software allowes you to only specify one of them and it will
 automatically create the other.
 
 cert_file
@@ -109,11 +109,11 @@ This is the public part of the service private/public key pair.
 contact_person
 ^^^^^^^^^^^^^^
 
-This is only used by *make_metadata.py* when it constructs the metadata for 
+This is only used by *make_metadata.py* when it constructs the metadata for
 the service described by the configuration file.
 This is where you describe who can be contacted if questions arise
 about the service or if support is needed. The possible types are according to
-the standard **technical**, **support**, **administrative**, **billing** 
+the standard **technical**, **support**, **administrative**, **billing**
 and **other**.::
 
     contact_person: [{
@@ -179,9 +179,9 @@ a file accessible on the server the service runs on, or somewhere on the net.::
             }],
     },
 
-The above configuration means that the service should read two local 
+The above configuration means that the service should read two local
 metadata files, and on top of that load one from the net. To verify the
-authenticity of the file downloaded from the net, the local copy of the 
+authenticity of the file downloaded from the net, the local copy of the
 public key should be used.
 This public key must be acquired by some out-of-band method.
 
@@ -198,16 +198,16 @@ Where you describe the organization responsible for the service.::
     }
 
 .. note:: You can specify the language of the name, or the language used on
-    the webpage, by entering a tuple, instead of a simple string, 
+    the webpage, by entering a tuple, instead of a simple string,
     where the second part is the language code. If you don't specify a
     language the default is "en" (English).
 
 service
 ^^^^^^^
 
-Which services the server will provide; those are combinations of "idp", "sp" 
+Which services the server will provide; those are combinations of "idp", "sp"
 and "aa".
-So if a server is a Service Provider (SP) then the configuration 
+So if a server is a Service Provider (SP) then the configuration
 could look something like this::
 
     "service": {
@@ -225,7 +225,7 @@ could look something like this::
             },
         }
     },
-    
+
 There are two options common to all services: 'name' and 'endpoints'.
 The remaining options are specific to one or the other of the service types.
 Which one is specified along side the name of the option.
@@ -312,17 +312,17 @@ An example might be::
             }
         }
     }
-    
-*lifetime* 
-    This is the maximum amount of time before the information should be 
-    regarded as stale. In an Assertion this is represented in the NotOnOrAfter 
-    attribute.    
+
+*lifetime*
+    This is the maximum amount of time before the information should be
+    regarded as stale. In an Assertion this is represented in the NotOnOrAfter
+    attribute.
 *attribute_restrictions*
     By default there is no restrictions as to which attributes should be
-    return. Instead all the attributes and values that are gathered by the 
+    return. Instead all the attributes and values that are gathered by the
     database backends will be returned if nothing else is stated.
     In the example above the SP with the entity identifier
-    "urn:mace:umu.se:saml:roland:sp" 
+    "urn:mace:umu.se:saml:roland:sp"
     has an attribute restriction: only the attributes
     'givenName' and 'surName' are to be returned. There is no limitations as to
     what values on these attributes that can be returned.
@@ -332,7 +332,7 @@ An example might be::
     the friendly name, and the saml attribute name will be taken from the uri/oid
     defined in the attribute map.
 
-If restrictions on values are deemed necessary those are represented by 
+If restrictions on values are deemed necessary those are represented by
 regular expressions.::
 
     "service": {
@@ -380,7 +380,7 @@ idp
 
 Defines the set of IdPs that this SP is allowed to use; if unset, all listed
 IdPs may be used.  If set, then the value is expected to be a list with entity
-identifiers for the allowed IdPs. 
+identifiers for the allowed IdPs.
 A typical configuration, when the allowed set of IdPs are limited, would look
 something like this::
 
@@ -404,7 +404,7 @@ Example::
             "optional_attributes": ["title"],
         }
     }
-    
+
 Since the attribute names used here are the user friendly ones an attribute map
 must exist, so that the server can use the full name when communicating
 with other servers.
@@ -422,7 +422,7 @@ Example::
         }
     }
 
-Again as for *optional_attributes* the names given are expected to be 
+Again as for *optional_attributes* the names given are expected to be
 the user friendly names.
 
 want_assertions_signed
@@ -444,7 +444,7 @@ Example::
 
 
 idp/aa/sp
-^^^^^^^^^ 
+^^^^^^^^^
 
 If the configuration is covering both two or three different service types
 (like if one server is actually acting as both an IdP and a SP) then in some
@@ -516,7 +516,7 @@ Example::
 subject_data
 """"""""""""
 
-The name of a database where the map between a local identifier and 
+The name of a database where the map between a local identifier and
 a distributed identifier is kept. By default this is a shelve database.
 So if you just specify name, then a shelve database with that name
 is created. On the other hand if you specify a tuple then the first
@@ -548,8 +548,8 @@ Gives information about common identifiers for virtual_organizations::
     },
 
 Keys in this dictionary are the identifiers for the virtual organizations.
-The arguments per organization are 'nameid_format' and 'common_identifier'. 
-Useful if all the IdPs and AAs that are involved in a virtual organization 
+The arguments per organization are 'nameid_format' and 'common_identifier'.
+Useful if all the IdPs and AAs that are involved in a virtual organization
 have common attribute values for users that are part of the VO.
 
 Complete example
@@ -622,9 +622,9 @@ A slightly more complex configuration::
         "key_file" : "./mykey.pem",
         "cert_file" : "./mycert.pem",
         "xmlsec_binary" : "/usr/local/bin/xmlsec1",
-        "metadata" : { 
+        "metadata" : {
             "local": ["example.xml"],
-            "remote": [{ 
+            "remote": [{
                 "url":"https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2",
                 "cert":"kalmar2.pem"}]
         },
@@ -640,9 +640,9 @@ A slightly more complex configuration::
             "type": "technical",
             }]
     }
-    
-Uses metadata files, both local and remote, and will talk to whatever 
-IdP that appears in any of the metadata files. 
+
+Uses metadata files, both local and remote, and will talk to whatever
+IdP that appears in any of the metadata files.
 
 Other considerations
 ::::::::::::::::::::
