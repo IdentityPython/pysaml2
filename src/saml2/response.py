@@ -470,7 +470,7 @@ class AuthnResponse(StatusResponse):
             return_addrs=None, outstanding_queries=None,
             timeslack=0, asynchop=True, allow_unsolicited=False,
             test=False, allow_unknown_attributes=False,
-            want_assertions_signed=False, want_response_signed=True,
+            want_assertions_signed=False, want_response_signed=False,
             conv_info=None, **kwargs):
 
         StatusResponse.__init__(self, sec_context, return_addrs, timeslack,
