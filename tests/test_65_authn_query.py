@@ -92,6 +92,8 @@ def test_flow():
         # ------- @SP ----------
 
         xmlstr = get_msg(hinfo, binding)
+        # Explicitly allow unsigned responses for this test
+        sp.want_response_signed = False
         aresp = sp.parse_authn_request_response(xmlstr, binding,
                                                 {resp.in_response_to: "/"})
 

@@ -46,6 +46,8 @@ AUTHN = {
 class TestSP():
     def setup_class(self):
         self.sp = make_plugin("rem", saml_conf="server_conf")
+        # Explicitly allow unsigned responses for this test
+        self.sp.saml_client.want_response_signed = False
         self.server = Server(config_file="idp_conf")
 
     def teardown_class(self):

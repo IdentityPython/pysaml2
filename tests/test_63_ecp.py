@@ -92,7 +92,7 @@ def test_complete_flow():
                                                 entity_id=sp_entity_id)
 
         resp = idp.create_ecp_authn_request_response(
-            destination, {"eduPersonEntitlement": "Short stop",
+            destination,{"eduPersonEntitlement": "Short stop",
                           "surName": "Jeter",
                           "givenName": "Derek",
                           "mail": "derek.jeter@nyy.mlb.com",
@@ -136,7 +136,8 @@ def test_complete_flow():
                 assert inst.text == "XYZ"
 
         # parse the response
-
+        # Explicitly allow unsigned responses for this test
+        sp.want_response_signed = False
         resp = sp.parse_authn_request_response(respdict["body"], None, {sid: "/"})
 
         print(resp.response)
