@@ -92,7 +92,7 @@ def test_complete_flow():
                                                 entity_id=sp_entity_id)
 
         resp = idp.create_ecp_authn_request_response(
-            destination,{"eduPersonEntitlement": "Short stop",
+            destination, {"eduPersonEntitlement": "Short stop",
                           "surName": "Jeter",
                           "givenName": "Derek",
                           "mail": "derek.jeter@nyy.mlb.com",
