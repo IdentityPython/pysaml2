@@ -126,8 +126,8 @@ class Base(Entity):
             if v is False or v == 'false':
                 setattr(self, param, False)
 
-        if self.entity_type == "sp" and not any(self.want_assertions_signed,
-                                                self.want_response_signed):
+        if self.entity_type == "sp" and not any([self.want_assertions_signed,
+                                                self.want_response_signed]):
             logger.warning("The SAML service provider accepts unsigned SAML Responses " +
                            "and Assertions. This configuration is insecure.")
 
