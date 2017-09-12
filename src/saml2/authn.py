@@ -146,7 +146,8 @@ class UsernamePasswordMako(UserAuthnMethod):
         return resp
 
     def _verify(self, pwd, user):
-        assert is_equal(pwd, self.passwd[user])
+        if not is_equal(pwd, self.passwd[user]):
+            raise ValueError("Wrong password")
 
     def verify(self, request, **kwargs):
         """
@@ -176,7 +177,7 @@ class UsernamePasswordMako(UserAuthnMethod):
             return_to = create_return_url(self.return_to, _dict["query"][0],
                                           **{self.query_param: "true"})
             resp = Redirect(return_to, headers=[cookie])
-        except (AssertionError, KeyError):
+        except (ValueError, KeyError):
             resp = Unauthorized("Unknown user or wrong password")
 
         return resp
