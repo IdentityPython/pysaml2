@@ -40,12 +40,35 @@ except ImportError:
 import defusedxml.ElementTree
 
 NAMESPACE = "http://schemas.xmlsoap.org/soap/envelope/"
-FORM_SPEC = """<form method="post" action="%s">
-   <input type="hidden" name="%s" value="%s" />
-   <input type="hidden" name="RelayState" value="%s" />
-   <input type="submit" value="Submit" />
-</form>"""
 
+FORM_SPEC = """\
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+    </head>
+    <body onload="document.forms[0].submit()">
+        <noscript>
+            <p>
+                <strong>Note:</strong> Since your browser does not support JavaScript,
+                you must press the Continue button once to proceed.
+            </p>
+        </noscript>
+        
+        <form action="{action}" method="post">
+            <div>
+                <input type="hidden" name="RelayState" value="{relay_state}"/>                
+                                
+                <input type="hidden" name="{saml_type}" value="{saml_response}"/>
+            </div>
+            <noscript>
+                <div>
+                    <input type="submit" value="Continue"/>
+                </div>
+            </noscript>
+        </form>
+            </body>
+</html>"""
 
 def http_form_post_message(message, location, relay_state="",
                            typ="SAMLRequest", **kwargs):
@@ -58,8 +81,6 @@ def http_form_post_message(message, location, relay_state="",
     :param relay_state: for preserving and conveying state information
     :return: A tuple containing header information and a HTML message.
     """
-    response = ["<head>", """<title>SAML 2.0 POST</title>""", "</head><body>"]
-
     if not isinstance(message, six.string_types):
         message = str(message)
     if not isinstance(message, six.binary_type):
@@ -71,16 +92,16 @@ def http_form_post_message(message, location, relay_state="",
         _msg = message
     _msg = _msg.decode('ascii')
 
-    response.append(FORM_SPEC % (location, typ, _msg, relay_state))
+    args = {
+       'action'        : location,
+       'saml_type'     : typ,
+       'relay_state'   : relay_state,
+       'saml_response' : _msg
+       }
 
-    response.append("""<script type="text/javascript">""")
-    response.append("     window.onload = function ()")
-    response.append(" { document.forms[0].submit(); }")
-    response.append("""</script>""")
-    response.append("</body>")
+    response = FORM_SPEC.format(**args)
 
     return {"headers": [("Content-type", "text/html")], "data": response}
-
 
 def http_post_message(message, relay_state="", typ="SAMLRequest", **kwargs):
     """
