@@ -1404,7 +1404,7 @@ class TestClient:
         binding, info = resp[entity_ids[0]]
         assert binding == BINDING_HTTP_POST
 
-        _dic = unpack_form(info["data"][3])
+        _dic = unpack_form(info["data"])
         res = self.server.parse_logout_request(_dic["SAMLRequest"],
                                                BINDING_HTTP_POST)
         assert b'<ns0:SessionIndex>_foo</ns0:SessionIndex>' in res.xmlstr
@@ -1434,7 +1434,7 @@ class TestClient:
         binding, info = resp[entity_ids[0]]
         assert binding == BINDING_HTTP_POST
 
-        _dic = unpack_form(info["data"][3])
+        _dic = unpack_form(info["data"])
         res = self.server.parse_logout_request(_dic["SAMLRequest"],
                                                BINDING_HTTP_POST)
         assert b'<ns0:SessionIndex>_foo</ns0:SessionIndex>' in res.xmlstr
@@ -1531,7 +1531,7 @@ class TestClientWithDummy():
         sid, http_args = self.client.prepare_for_authenticate(
             "urn:mace:example.com:saml:roland:idp", relay_state="really",
             binding=binding, response_binding=response_binding)
-        _dic = unpack_form(http_args["data"][3])
+        _dic = unpack_form(http_args["data"])
 
         req = self.server.parse_authn_request(_dic["SAMLRequest"], binding)
         resp_args = self.server.response_args(req.message, [response_binding])
@@ -1566,7 +1566,7 @@ class TestClientWithDummy():
         sid, auth_binding, http_args = self.client.prepare_for_negotiated_authenticate(
             "urn:mace:example.com:saml:roland:idp", relay_state="really",
             binding=binding, response_binding=response_binding)
-        _dic = unpack_form(http_args["data"][3])
+        _dic = unpack_form(http_args["data"])
 
         assert binding == auth_binding
 
@@ -1586,7 +1586,7 @@ class TestClientWithDummy():
 
         response = self.client.send(**http_args)
         print(response.text)
-        _dic = unpack_form(response.text[3], "SAMLResponse")
+        _dic = unpack_form(response.text, "SAMLResponse")
         resp = self.client.parse_authn_request_response(_dic["SAMLResponse"],
                                                         BINDING_HTTP_POST,
                                                         {sid: "/"})
