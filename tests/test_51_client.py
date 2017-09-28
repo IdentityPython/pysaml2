@@ -1549,7 +1549,7 @@ class TestClientWithDummy():
 
         response = self.client.send(**http_args)
         print(response.text)
-        _dic = unpack_form(response.text[3], "SAMLResponse")
+        _dic = unpack_form(response.text, "SAMLResponse")
         # Explicitly allow unsigned responses for this test
         self.client.want_response_signed = False
         resp = self.client.parse_authn_request_response(_dic["SAMLResponse"],
