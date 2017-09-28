@@ -3,6 +3,7 @@ from six.moves.urllib.parse import urlparse
 import re
 import struct
 import base64
+import time
 
 from saml2 import time_util
 
@@ -42,8 +43,8 @@ NCNAME = re.compile("(?P<NCName>[a-zA-Z_](\w|[_.-])*)")
 
 def valid_ncname(name):
     match = NCNAME.match(name)
-    if not match:
-        raise NotValid("NCName")
+    #if not match:                      # hack for invalid authnRequest/ID from meteor saml lib
+    #    raise NotValid("NCName")
     return True
 
 
@@ -90,8 +91,10 @@ def validate_on_or_after(not_on_or_after, slack):
         now = time_util.utc_now()
         nooa = calendar.timegm(time_util.str_to_time(not_on_or_after))
         if now > nooa + slack:
+            now_str=time.strftime('%Y-%M-%dT%H:%M:%SZ', time.gmtime(now))
             raise ResponseLifetimeExceed(
-                "Can't use it, it's too old %d > %d" % (now - slack, nooa))
+                "Can't use repsonse, too old (now=%s + slack=%d > " \
+                "not_on_or_after=%s" % (now_str, slack, not_on_or_after))
         return nooa
     else:
         return False
@@ -102,8 +105,9 @@ def validate_before(not_before, slack):
         now = time_util.utc_now()
         nbefore = calendar.timegm(time_util.str_to_time(not_before))
         if nbefore > now + slack:
-            raise ToEarly("Can't use it yet %d <= %d" % (now + slack, nbefore))
-
+            now_str = time.strftime('%Y-%M-%dT%H:%M:%SZ', time.gmtime(now))
+            raise ToEarly("Can't use response yet: (now=%s + slack=%d) "
+                          "<= notbefore=%s" % (now_str, slack, not_before))
     return True
 
 
