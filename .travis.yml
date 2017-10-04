@@ -1,10 +1,10 @@
-language: python
-
 sudo: false
-
-env:
-  - TOXENV=py27
-  - TOXENV=py34
+language: python
+python:
+  - 2.7
+  - 3.4
+  - 3.5
+  - 3.6
 
 addons:
   apt:
@@ -15,7 +15,7 @@ services:
   - mongodb
 
 install:
-  - pip install -U tox
+  - pip install tox-travis
 
 script:
   - tox
