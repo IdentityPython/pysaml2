@@ -701,15 +701,14 @@ def entity_descriptor(confd):
     enc_cert = None
     if confd.cert_file is not None:
         mycert = []
-        mycert.append("".join(open(confd.cert_file).readlines()[1:-1]))
+        mycert.append("".join(read_cert(confd.cert_file)))
         if confd.additional_cert_files is not None:
             for _cert_file in confd.additional_cert_files:
-                mycert.append("".join(open(_cert_file).readlines()[1:-1]))
+                mycert.append("".join(read_cert(_cert_file)))
     if confd.encryption_keypairs is not None:
         enc_cert = []
         for _encryption in confd.encryption_keypairs:
-            enc_cert.append(
-                "".join(open(_encryption["cert_file"]).readlines()[1:-1]))
+            enc_cert.append("".join(read_cert(_encryption["cert_file"])))
 
     entd = md.EntityDescriptor()
     entd.entity_id = confd.entityid
@@ -821,3 +820,9 @@ def sign_entity_descriptor(edesc, ident, secc, sign_alg=None, digest_alg=None):
     xmldoc = secc.sign_statement("%s" % edesc, class_name(edesc))
     edesc = md.entity_descriptor_from_string(xmldoc)
     return edesc, xmldoc
+
+
+def read_cert(path):
+    with open(path) as fp:
+        lines = fp.readlines()
+    return lines[1:-1]

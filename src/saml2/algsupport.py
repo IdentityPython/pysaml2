@@ -36,10 +36,9 @@ SIGNING_METHODS = {
 def get_algorithm_support(xmlsec):
     com_list = [xmlsec, '--list-transforms']
     pof = Popen(com_list, stderr=PIPE, stdout=PIPE)
-
-    p_out = pof.stdout.read().decode('utf-8')
-    p_err = pof.stderr.read().decode('utf-8')
-    pof.wait()
+    p_out, p_err = pof.communicate()
+    p_out = p_out.decode('utf-8')
+    p_err = p_err.decode('utf-8')
 
     if not p_err:
         p = p_out.splitlines()
