@@ -600,8 +600,8 @@ class SamlBase(ExtensionContainer):
                 self.assertion.advice.encrypted_assertion:
             if tmp_encrypted_assertion.encrypted_data is None:
                 prefix_map = self.get_prefix_map([
-                                                     tmp_encrypted_assertion._to_element_tree().find(
-                                                         assertion_tag)])
+                    tmp_encrypted_assertion._to_element_tree().find(
+                        assertion_tag)])
                 tree = self._to_element_tree()
                 encs = tree.find(assertion_tag).find(advice_tag).findall(
                     tmp_encrypted_assertion._to_element_tree().tag)
@@ -1018,3 +1018,19 @@ def extension_elements_as_dict(extension_elements, onts):
         except KeyError:
             res[elem.c_tag] = [elem]
     return res
+
+
+REQUIRED = 2
+
+
+def is_required_attribute(cls, attr):
+    """
+    Check if the attribute is a required attribute for a specific SamlBase
+    class.
+    
+    :param cls: The class 
+    :param attr: An attribute, note it must be the name of the attribute 
+        that appears in the XSD in which the class is defined.
+    :return: True if required
+    """
+    return cls.c_attributes[attr][REQUIRED]
