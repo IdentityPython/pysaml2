@@ -78,6 +78,9 @@ SP_ARGS = [
     "requested_attribute_name_format",
     "hide_assertion_consumer_service",
     "force_authn",
+    "sp_type",
+    "sp_type_in_metadata",
+    "requested_attributes",
 ]
 
 AA_IDP_ARGS = [

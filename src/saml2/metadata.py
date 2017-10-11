@@ -9,6 +9,7 @@ from saml2.extension import mdui
 from saml2.extension import idpdisc
 from saml2.extension import shibmd
 from saml2.extension import mdattr
+from saml2.extension import sp_type
 from saml2.saml import NAME_FORMAT_URI
 from saml2.saml import AttributeValue
 from saml2.saml import Attribute
@@ -722,7 +723,8 @@ def entity_descriptor(confd):
         entd.contact_person = do_contact_person_info(confd.contact_person)
 
     if confd.entity_category:
-        entd.extensions = md.Extensions()
+        if not entd.extensions:
+            entd.extensions = md.Extensions()
         ava = [AttributeValue(text=c) for c in confd.entity_category]
         attr = Attribute(attribute_value=ava,
                          name="http://macedir.org/entity-category")
@@ -732,6 +734,14 @@ def entity_descriptor(confd):
     for item in algorithm_support_in_metadata(confd.xmlsec_binary):
         if not entd.extensions:
             entd.extensions = md.Extensions()
+        entd.extensions.add_extension_element(item)
+
+    conf_sp_type = confd.getattr('sp_type', 'sp')
+    conf_sp_type_in_md = confd.getattr('sp_type_in_metadata', 'sp')
+    if conf_sp_type and conf_sp_type_in_md is True:
+        if not entd.extensions:
+            entd.extensions = md.Extensions()
+        item = sp_type.SPType(text=conf_sp_type)
         entd.extensions.add_extension_element(item)
 
     serves = confd.serves
