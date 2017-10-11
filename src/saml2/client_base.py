@@ -113,17 +113,30 @@ class Base(Entity):
         else:
             self.state = state_cache
 
-        self.logout_requests_signed = False
-        self.allow_unsolicited = False
-        self.authn_requests_signed = False
-        self.want_assertions_signed = False
-        self.want_response_signed = False
-        for foo in ["allow_unsolicited", "authn_requests_signed",
-                    "logout_requests_signed", "want_assertions_signed",
-                    "want_response_signed"]:
-            v = self.config.getattr(foo, "sp")
-            if v is True or v == 'true':
-                setattr(self, foo, True)
+        attribute_defaults = {
+            "logout_requests_signed": False,
+            "allow_unsolicited": False,
+            "authn_requests_signed": False,
+            "want_assertions_signed": False,
+            "want_response_signed": True,
+        }
+
+        for attr, val_default in attribute_defaults.items():
+            val_config = self.config.getattr(attr, "sp")
+            if val_config is None:
+                val = val_default
+            else:
+                val = val_config
+
+            if val == 'true':
+                val = True
+
+            setattr(self, attr, val)
+
+        if self.entity_type == "sp" and not any([self.want_assertions_signed,
+                                                self.want_response_signed]):
+            logger.warning("The SAML service provider accepts unsigned SAML Responses " +
+                           "and Assertions. This configuration is insecure.")
 
         self.artifact2response = {}
 

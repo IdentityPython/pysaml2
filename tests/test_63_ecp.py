@@ -136,7 +136,8 @@ def test_complete_flow():
                 assert inst.text == "XYZ"
 
         # parse the response
-
+        # Explicitly allow unsigned responses for this test
+        sp.want_response_signed = False
         resp = sp.parse_authn_request_response(respdict["body"], None, {sid: "/"})
 
         print(resp.response)

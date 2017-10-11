@@ -405,6 +405,7 @@ class TestClient:
             destination="http://lingon.catalogix.se:8087/",
             sp_entity_id="urn:mace:example.com:saml:roland:sp",
             name_id_policy=nameid_policy,
+            sign_response=True,
             userid="foba0001@example.com",
             authn=AUTHN)
 
@@ -449,6 +450,7 @@ class TestClient:
             in_response_to="id2",
             destination="http://lingon.catalogix.se:8087/",
             sp_entity_id="urn:mace:example.com:saml:roland:sp",
+            sign_response=True,
             name_id_policy=nameid_policy,
             userid="also0001@example.com",
             authn=AUTHN)
@@ -905,7 +907,6 @@ class TestClient:
                                      node_id=assertion.id)
 
         sigass = rm_xmltag(sigass)
-
         response = sigver.response_factory(
             in_response_to="_012345",
             destination="http://lingon.catalogix.se:8087/",
@@ -928,6 +929,8 @@ class TestClient:
 
         resp_str = base64.encodestring(enctext.encode('utf-8'))
         # Now over to the client side
+        # Explicitely allow unsigned responses for this and the following 2 tests
+        self.client.want_response_signed = False
         resp = self.client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
             {"_012345": "http://foo.example.com/service"})
@@ -1329,6 +1332,9 @@ class TestClient:
 
     def test_signed_redirect(self):
 
+        # Revert configuration change to disallow unsinged responses
+        self.client.want_response_signed = True
+
         msg_str = "%s" % self.client.create_authn_request(
             "http://localhost:8088/sso", message_id="id1")[1]
 
@@ -1560,6 +1566,8 @@ class TestClientWithDummy():
         response = self.client.send(**http_args)
         print(response.text)
         _dic = unpack_form(response.text, "SAMLResponse")
+        # Explicitly allow unsigned responses for this test
+        self.client.want_response_signed = False
         resp = self.client.parse_authn_request_response(_dic["SAMLResponse"],
                                                         BINDING_HTTP_POST,
                                                         {sid: "/"})
