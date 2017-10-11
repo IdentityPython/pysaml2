@@ -910,7 +910,8 @@ class AuthnResponse(StatusResponse):
         else:  # This is a saml2int limitation
             try:
                 assert len(self.response.assertion) == 1 or \
-                       len(self.response.encrypted_assertion) == 1
+                       len(self.response.encrypted_assertion) == 1 or \
+                       self.assertion is not None
             except AssertionError:
                 raise Exception("No assertion part")
 
