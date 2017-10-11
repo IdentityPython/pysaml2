@@ -130,6 +130,17 @@ def test_filter_on_attributes_with_missing_optional_attribute():
     assert filter_on_attributes(ava, optional=[eptid], acs=ac_factory()) == {}
 
 
+def test_filter_on_attributes_with_missing_name_format():
+    ava = {"eduPersonTargetedID": "test@example.com",
+           "eduPersonAffiliation": "test",
+           "extra": "foo"}
+    eptid = to_dict(Attribute(friendly_name="eduPersonTargetedID",
+                              name="urn:myown:eptid",
+                              name_format=''), ONTS)
+    ava = filter_on_attributes(ava, optional=[eptid], acs=ac_factory())
+    assert ava['eduPersonTargetedID'] == "test@example.com"
+
+
 # ----------------------------------------------------------------------
 
 def test_lifetime_1():
@@ -148,6 +159,7 @@ def test_lifetime_1():
         }}
 
     r = Policy(conf)
+
     assert r is not None
 
     assert r.get_lifetime("urn:mace:umu.se:saml:roland:sp") == {"minutes": 5}
@@ -215,25 +227,22 @@ def test_ava_filter_2():
             "lifetime": {"minutes": 5},
             "attribute_restrictions": {
                 "givenName": None,
-                "surName": None,
+                "sn": None,
                 "mail": [".*@.*\.umu\.se"],
             }
         }}
 
     policy = Policy(conf)
 
-    ava = {"givenName": "Derek",
-           "surName": "Jeter",
-           "mail": "derek@example.com"}
+    ava = {"givenName": "Derek", "sn": "Jeter", "mail": "derek@example.com"}
 
     # mail removed because it doesn't match the regular expression
     _ava = policy.filter(ava, 'urn:mace:umu.se:saml:roland:sp', None, [mail],
                          [gn, sn])
 
-    assert _eq(sorted(list(_ava.keys())), ["givenName", "surName"])
+    assert _eq(sorted(list(_ava.keys())), ["givenName", 'sn'])
 
-    ava = {"givenName": "Derek",
-           "surName": "Jeter"}
+    ava = {"givenName": "Derek", "sn": "Jeter"}
 
     # it wasn't there to begin with
     try:
@@ -746,7 +755,7 @@ def test_req_opt():
                 is_required="false"), ONTS)]
 
     policy = Policy()
-    ava = {'givenname': 'Roland', 'surname': 'Hedberg',
+    ava = {'givenname': 'Roland', 'sn': 'Hedberg',
            'uid': 'rohe0002', 'edupersonaffiliation': 'staff'}
 
     sp_entity_id = "urn:mace:example.com:saml:curt:sp"
