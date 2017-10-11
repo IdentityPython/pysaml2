@@ -118,9 +118,10 @@ class Base(Entity):
         self.authn_requests_signed = False
         self.want_assertions_signed = False
         self.want_response_signed = False
+        self.asynchop = False
         for foo in ["allow_unsolicited", "authn_requests_signed",
                     "logout_requests_signed", "want_assertions_signed",
-                    "want_response_signed"]:
+                    "want_response_signed", "asynchop"]:
             v = self.config.getattr(foo, "sp")
             if v is True or v == 'true':
                 setattr(self, foo, True)
@@ -679,6 +680,7 @@ class Base(Entity):
                 "return_addrs": self.service_urls(binding=binding),
                 "entity_id": self.config.entityid,
                 "attribute_converters": self.config.attribute_converters,
+                "asynchop": self.asynchop,
                 "allow_unknown_attributes":
                     self.config.allow_unknown_attributes,
                 'conv_info': conv_info
