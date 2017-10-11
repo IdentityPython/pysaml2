@@ -6,6 +6,8 @@ CONFIG = {
     "description": "My own SP",
     "service": {
         "sp": {
+            "sp_type": "public",
+            "sp_type_in_metadata": True,
             "endpoints": {
                 "assertion_consumer_service": [
                     "http://lingon.catalogix.se:8087/"],

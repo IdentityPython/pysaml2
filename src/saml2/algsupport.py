@@ -23,7 +23,7 @@ SIGNING_METHODS = {
     "rsa-sha256": 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256',
     "rsa-sha384": 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha384',
     "rsa-sha512": 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha512',
-    "dsa-sha1": 'http,//www.w3.org/2000/09/xmldsig#dsa-sha1',
+    "dsa-sha1": 'http://www.w3.org/2000/09/xmldsig#dsa-sha1',
     'dsa-sha256': 'http://www.w3.org/2009/xmldsig11#dsa-sha256',
     'ecdsa_sha1': 'http://www.w3.org/2001/04/xmldsig-more#ECDSA_sha1',
     'ecdsa_sha224': 'http://www.w3.org/2001/04/xmldsig-more#ECDSA_sha224',

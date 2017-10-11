@@ -1,15 +1,18 @@
 import os
+import pytest
 
 #TODO: On my system this function seems to be returning an incorrect location
-def pytest_funcarg__xmlsec(request):
+@pytest.fixture
+def xmlsec(request):
     for path in os.environ["PATH"].split(":"):
         fil = os.path.join(path, "xmlsec1")
         if os.access(fil,os.X_OK):
             return fil
 
     raise Exception("Can't find xmlsec1")
-    
-def pytest_funcarg__AVA(request):
+
+@pytest.fixture
+def AVA(request):
     return [
         {
             "surName": ["Jeter"],
@@ -27,4 +30,4 @@ def pytest_funcarg__AVA(request):
             "surName": ["Hedberg"],
             "givenName": ["Roland"],
         },
-    ]    
+    ]

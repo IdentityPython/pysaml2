@@ -13,10 +13,19 @@ SCHAC = 'urn:oid:1.3.6.1.4.1.25178.1.2.'
 SIS = 'urn:oid:1.2.752.194.10.2.'
 UMICH = 'urn:oid:1.3.6.1.4.1.250.1.57.'
 OPENOSI_OID = 'urn:oid:1.3.6.1.4.1.27630.2.1.1.' #openosi-0.82.schema http://www.openosi.org/osi/display/ldap/Home
+EIDAS_NATURALPERSON = 'http://eidas.europa.eu/attributes/naturalperson/'
 
 MAP = {
     'identifier': 'urn:oasis:names:tc:SAML:2.0:attrname-format:uri',
     'fro': {
+        EIDAS_NATURALPERSON+'PersonIdentifier': 'PersonIdentifier',
+        EIDAS_NATURALPERSON+'FamilyName': 'FamilyName',
+        EIDAS_NATURALPERSON+'FirstName': 'FirstName',
+        EIDAS_NATURALPERSON+'DateOfBirth': 'DateOfBirth',
+        EIDAS_NATURALPERSON+'BirthName': 'BirthName',
+        EIDAS_NATURALPERSON+'PlaceOfBirth': 'PlaceOfBirth',
+        EIDAS_NATURALPERSON+'CurrentAddress': 'CurrentAddress',
+        EIDAS_NATURALPERSON+'Gender': 'Gender',
         EDUCOURSE_OID+'1': 'eduCourseOffering',
         EDUCOURSE_OID+'2': 'eduCourseMember',
         EDUMEMBER1_OID+'1': 'isMemberOf',
@@ -161,6 +170,14 @@ MAP = {
         X500ATTR_OID+'65': 'pseudonym',
     },
     'to': {
+        'PersonIdentifier': EIDAS_NATURALPERSON+'PersonIdentifier',
+        'FamilyName': EIDAS_NATURALPERSON+'FamilyName',
+        'FirstName': EIDAS_NATURALPERSON+'FirstName',
+        'DateOfBirth': EIDAS_NATURALPERSON+'DateOfBirth',
+        'BirthName': EIDAS_NATURALPERSON+'BirthName',
+        'PlaceOfBirth': EIDAS_NATURALPERSON+'PlaceOfBirth',
+        'CurrentAddress': EIDAS_NATURALPERSON+'CurrentAddress',
+        'Gender': EIDAS_NATURALPERSON+'Gender',
         'associatedDomain': UCL_DIR_PILOT+'37',
         'authorityRevocationList': X500ATTR_OID+'38',
         'businessCategory': X500ATTR_OID+'15',

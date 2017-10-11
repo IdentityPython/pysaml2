@@ -38,3 +38,15 @@ testing. To run the tests on your system's version of python
 
 To run tests in multiple python environments, you can use
 `pyenv <https://github.com/yyuu/pyenv>`_ with `tox <https://tox.readthedocs.io/en/latest/>`_.
+
+
+Please contribute!
+==================
+
+To help out, you could:
+
+1. Test and report any bugs or other difficulties.
+2. Implement missing features.
+3. Write more unit tests.
+
+**If you have the time and inclination I'm looking for Collaborators**

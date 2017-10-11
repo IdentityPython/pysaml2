@@ -10,6 +10,7 @@ from saml2.attribute_converter import AttributeConverter
 from saml2.attribute_converter import to_local
 from saml2.saml import attribute_from_string, name_id_from_string, NameID, NAMEID_FORMAT_PERSISTENT
 from saml2.saml import attribute_statement_from_string
+import saml2.attributemaps.saml_uri as saml_map
 
 
 def _eq(l1, l2):
@@ -139,12 +140,14 @@ class TestAC():
     def test_to_local_name_from_unspecified(self):
         _xml = """<?xml version='1.0' encoding='UTF-8'?>
         <ns0:AttributeStatement xmlns:ns0="urn:oasis:names:tc:SAML:2.0:assertion">
-<ns0:Attribute
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    Name="EmailAddress"
-    NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:unspecified">
-    <ns0:AttributeValue xsi:type="xs:string">foo@bar.com</ns0:AttributeValue>
-</ns0:Attribute></ns0:AttributeStatement>"""
+            <ns0:Attribute
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                Name="EmailAddress"
+                NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:unspecified">
+                <ns0:AttributeValue xsi:type="xs:string">foo@bar.com</ns0:AttributeValue>
+            </ns0:Attribute>
+        </ns0:AttributeStatement>
+        """
 
         attr = attribute_statement_from_string(_xml)
         ava = attribute_converter.to_local(self.acs, attr)
@@ -236,26 +239,70 @@ def test_noop_attribute_conversion():
             assert attr.attribute_value[0].text == "Roland"
 
 
-ava = """<?xml version='1.0' encoding='UTF-8'?>
-<ns0:Attribute xmlns:ns0="urn:oasis:names:tc:SAML:2.0:assertion"
-   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-   FriendlyName="schacHomeOrganization" Name="urn:oid:1.3.6.1.4.1.25178.1.2.9"
-   NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
-   <ns0:AttributeValue xsi:nil="true" xsi:type="xs:string">
-     uu.se
-   </ns0:AttributeValue>
-</ns0:Attribute>"""
+class BuilderAVA():
+    def __init__(self, name, friendly_name, name_format):
+        template = """<?xml version='1.0' encoding='UTF-8'?>
+        <ns0:Attribute xmlns:ns0="urn:oasis:names:tc:SAML:2.0:assertion"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            Name="{attr_name}"
+            FriendlyName="{attr_friendly_name}"
+            NameFormat="{attr_name_format}">
+            <ns0:AttributeValue xsi:nil="true" xsi:type="xs:string">
+                uu.se
+            </ns0:AttributeValue>
+        </ns0:Attribute>
+        """
+
+        self.ava = template.format(
+            attr_name=name,
+            attr_friendly_name=friendly_name,
+            attr_name_format=name_format)
 
 
-def test_schac():
-    attr = attribute_from_string(ava)
-    acs = attribute_converter.ac_factory()
-    for ac in acs:
-        try:
-            res = ac.ava_from(attr)
-            assert res[0] == "schacHomeOrganization"
-        except KeyError:
-            pass
+class TestSchac():
+    def test(self):
+        failures = 0
+        friendly_name = "schacHomeOrganization"
+        ava_schac = BuilderAVA(
+            "urn:oid:1.3.6.1.4.1.25178.1.2.9",
+            friendly_name,
+            saml_map.MAP['identifier'])
+
+        attr = attribute_from_string(ava_schac.ava)
+        acs = attribute_converter.ac_factory()
+
+        for ac in acs:
+            try:
+                res = ac.ava_from(attr)
+            except KeyError:
+                failures += 1
+            else:
+                assert res[0] == "schacHomeOrganization"
+
+        assert failures != len(acs)
+
+
+class TestEIDAS():
+    def test(self):
+        failures = 0
+        friendly_name = 'PersonIdentifier'
+        ava_eidas = BuilderAVA(
+            saml_map.EIDAS_NATURALPERSON + friendly_name,
+            friendly_name,
+            saml_map.MAP['identifier'])
+
+        attr = attribute_from_string(ava_eidas.ava)
+        acs = attribute_converter.ac_factory()
+
+        for ac in acs:
+            try:
+                res = ac.ava_from(attr)
+            except KeyError:
+                failures += 1
+            else:
+                assert res[0] == friendly_name
+
+        assert failures != len(acs)
 
 
 if __name__ == "__main__":

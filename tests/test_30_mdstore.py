@@ -7,12 +7,13 @@ from collections import OrderedDict
 from future.backports.urllib.parse import quote_plus
 
 from saml2.config import Config
-from saml2.mdstore import MetadataStore
+from saml2.mdstore import MetadataStore, MetaDataExtern
 from saml2.mdstore import MetaDataMDX
 from saml2.mdstore import SAML_METADATA_CONTENT_TYPE
 from saml2.mdstore import destinations
 from saml2.mdstore import name
 from saml2 import sigver
+from saml2.httpbase import HTTPBase
 from saml2 import BINDING_SOAP
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
@@ -383,6 +384,14 @@ def test_load_local():
     }
     cfg = saml_config.load(config_dict)
     assert cfg
+
+
+def test_load_remote_encoding():
+    crypto = sigver._get_xmlsec_cryptobackend()
+    sc = sigver.SecurityContext(crypto, key_type="", cert_type="")
+    httpc = HTTPBase()
+    mds = MetaDataExtern(ATTRCONV, 'http://metadata.aai.switch.ch/metadata.aaitest.xml', sc, full_path('SWITCHaaiRootCA.crt.pem'), httpc)
+    mds.load()
 
 
 def test_load_string():

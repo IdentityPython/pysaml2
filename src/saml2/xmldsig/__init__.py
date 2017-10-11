@@ -29,7 +29,7 @@ DIGEST_ALLOWED_ALG = (('DIGEST_SHA1', DIGEST_SHA1),
                       ('DIGEST_RIPEMD160', DIGEST_RIPEMD160))
 DIGEST_AVAIL_ALG = DIGEST_ALLOWED_ALG + (('DIGEST_MD5', DIGEST_MD5),)
 
-SIG_DSA_SHA1 = 'http,//www.w3.org/2000/09/xmldsig#dsa-sha1'
+SIG_DSA_SHA1 = 'http://www.w3.org/2000/09/xmldsig#dsa-sha1'
 SIG_DSA_SHA256 = 'http://www.w3.org/2009/xmldsig11#dsa-sha256'
 SIG_ECDSA_SHA1 = 'http://www.w3.org/2001/04/xmldsig-more#ECDSA_sha1'
 SIG_ECDSA_SHA224 = 'http://www.w3.org/2001/04/xmldsig-more#ECDSA_sha224'

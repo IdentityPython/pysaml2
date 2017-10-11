@@ -27,7 +27,7 @@ def get_msg(hinfo, binding, response=False):
     if binding == BINDING_SOAP:
         msg = hinfo["data"]
     elif binding == BINDING_HTTP_POST:
-        _inp = hinfo["data"][3]
+        _inp = hinfo["data"]
         i = _inp.find(TAG1)
         i += len(TAG1) + 1
         j = _inp.find('"', i)

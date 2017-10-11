@@ -666,7 +666,7 @@ class AuthnResponse(StatusResponse):
                 _attr_statem = _assertion.attribute_statement[0]
                 ava.update(self.read_attribute_statement(_attr_statem))
             if not ava:
-                logger.error("Missing Attribute Statement")
+                logger.debug("Assertion contains no attribute statements")
         return ava
 
     def _bearer_confirmed(self, data):
@@ -910,7 +910,8 @@ class AuthnResponse(StatusResponse):
         else:  # This is a saml2int limitation
             try:
                 assert len(self.response.assertion) == 1 or \
-                       len(self.response.encrypted_assertion) == 1
+                       len(self.response.encrypted_assertion) == 1 or \
+                       self.assertion is not None
             except AssertionError:
                 raise Exception("No assertion part")
 

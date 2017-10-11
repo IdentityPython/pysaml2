@@ -750,7 +750,7 @@ class MetaDataExtern(InMemoryMetaData):
         """
         response = self.http.send(self.url)
         if response.status_code == 200:
-            _txt = response.text.encode("utf-8")
+            _txt = response.content
             return self.parse_and_check_signature(_txt)
         else:
             logger.info("Response status: %s", response.status_code)
@@ -814,7 +814,7 @@ class MetaDataMDX(InMemoryMetaData):
             response = requests.get(mdx_url, headers={
                 'Accept': SAML_METADATA_CONTENT_TYPE})
             if response.status_code == 200:
-                _txt = response.text.encode("utf-8")
+                _txt = response.content
 
                 if self.parse_and_check_signature(_txt):
                     return self.entity[item]

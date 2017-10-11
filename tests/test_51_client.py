@@ -22,6 +22,8 @@ from saml2 import samlp
 from saml2 import sigver
 from saml2 import s_utils
 from saml2.assertion import Assertion
+from saml2.extension.requested_attributes import RequestedAttributes
+from saml2.extension.requested_attributes import RequestedAttribute
 
 from saml2.authn_context import INTERNETPROTOCOLPASSWORD
 from saml2.client import Saml2Client
@@ -280,6 +282,51 @@ class TestClient:
         assert nid_policy.allow_create == "false"
         assert nid_policy.format == saml.NAMEID_FORMAT_TRANSIENT
 
+        node_requested_attributes = None
+        for e in ar.extensions.extension_elements:
+            if e.tag == RequestedAttributes.c_tag:
+                node_requested_attributes = e
+                break
+        assert node_requested_attributes is not None
+
+        for c in node_requested_attributes.children:
+            assert c.tag == RequestedAttribute.c_tag
+            assert c.attributes['isRequired'] in ['true', 'false']
+            assert c.attributes['Name']
+            assert c.attributes['FriendlyName']
+            assert c.attributes['NameFormat']
+
+    def test_create_auth_request_unset_force_authn(self):
+        req_id, req = self.client.create_authn_request(
+            "http://www.example.com/sso", sign=False, message_id="id1")
+        assert bool(req.force_authn) == False
+
+    def test_create_auth_request_set_force_authn(self):
+        req_id, req = self.client.create_authn_request(
+            "http://www.example.com/sso", sign=False, message_id="id1",
+            force_authn="true")
+        assert bool(req.force_authn) == True
+
+    def test_create_auth_request_nameid_policy_allow_create(self):
+        conf = config.SPConfig()
+        conf.load_file("sp_conf_nameidpolicy")
+        client = Saml2Client(conf)
+        ar_str = "%s" % client.create_authn_request(
+            "http://www.example.com/sso", message_id="id1")[1]
+
+        ar = samlp.authn_request_from_string(ar_str)
+        print(ar)
+        assert ar.assertion_consumer_service_url == ("http://lingon.catalogix"
+                                                     ".se:8087/")
+        assert ar.destination == "http://www.example.com/sso"
+        assert ar.protocol_binding == BINDING_HTTP_POST
+        assert ar.version == "2.0"
+        assert ar.provider_name == "urn:mace:example.com:saml:roland:sp"
+        assert ar.issuer.text == "urn:mace:example.com:saml:roland:sp"
+        nid_policy = ar.name_id_policy
+        assert nid_policy.allow_create == "true"
+        assert nid_policy.format == saml.NAMEID_FORMAT_PERSISTENT
+
     def test_create_auth_request_vo(self):
         assert list(self.client.config.vorg.keys()) == [
             "urn:mace:example.com:it:tek"]
@@ -346,7 +393,7 @@ class TestClient:
     def test_response_1(self):
         IDP = "urn:mace:example.com:saml:roland:idp"
 
-        ava = {"givenName": ["Derek"], "surName": ["Jeter"],
+        ava = {"givenName": ["Derek"], "sn": ["Jeter"],
                "mail": ["derek@nyy.mlb.com"], "title": ["The man"]}
 
         nameid_policy = samlp.NameIDPolicy(allow_create="false",
@@ -394,7 +441,7 @@ class TestClient:
 
         # --- authenticate another person
 
-        ava = {"givenName": ["Alfonson"], "surName": ["Soriano"],
+        ava = {"givenName": ["Alfonson"], "sn": ["Soriano"],
                "mail": ["alfonson@chc.mlb.com"], "title": ["outfielder"]}
 
         resp_str = "%s" % self.server.create_authn_response(
@@ -712,7 +759,7 @@ class TestClient:
 
     def setup_verify_authn_response(self):
         idp = "urn:mace:example.com:saml:roland:idp"
-        ava = {"givenName": ["Derek"], "surName": ["Jeter"],
+        ava = {"givenName": ["Derek"], "sn": ["Jeter"],
                "mail": ["derek@nyy.mlb.com"], "title": ["The man"]}
         ava_verify = {'mail': ['derek@nyy.mlb.com'], 'givenName': ['Derek'],
                       'sn': ['Jeter'], 'title': ["The man"]}
@@ -761,7 +808,7 @@ class TestClient:
                                 format=saml.NAMEID_FORMAT_TRANSIENT)),
             attribute_statement=do_attribute_statement(
                 {
-                    ("", "", "surName"): ("Jeter", ""),
+                    ("", "", "sn"): ("Jeter", ""),
                     ("", "", "givenName"): ("Derek", ""),
                 }
             ),
@@ -825,7 +872,7 @@ class TestClient:
         nameid_policy = samlp.NameIDPolicy(allow_create="false",
                                            format=saml.NAMEID_FORMAT_PERSISTENT)
 
-        asser = Assertion({"givenName": "Derek", "surName": "Jeter"})
+        asser = Assertion({"givenName": "Derek", "sn": "Jeter"})
         farg = add_path(
             {},
             ['assertion', 'subject', 'subject_confirmation', 'method',
@@ -896,7 +943,7 @@ class TestClient:
         nameid_policy = samlp.NameIDPolicy(allow_create="false",
                                            format=saml.NAMEID_FORMAT_PERSISTENT)
 
-        asser = Assertion({"givenName": "Derek", "surName": "Jeter"})
+        asser = Assertion({"givenName": "Derek", "sn": "Jeter"})
 
         subject_confirmation_specs = {
             'recipient': "http://lingon.catalogix.se:8087/",
@@ -1027,7 +1074,7 @@ class TestClient:
             name_id=name_id,
             farg=farg['assertion'])
 
-        asser_2 = Assertion({"surName": "Jeter"})
+        asser_2 = Assertion({"sn": "Jeter"})
 
         assertion_2 = asser_2.construct(
             self.client.config.entityid,
@@ -1313,7 +1360,7 @@ class TestClient:
             "not_on_or_after": in_a_while(minutes=15),
             "ava": {
                 "givenName": "Anders",
-                "surName": "Andersson",
+                "sn": "Andersson",
                 "mail": "anders.andersson@example.com"
             }
         }
@@ -1350,7 +1397,7 @@ class TestClient:
             "not_on_or_after": in_a_while(minutes=15),
             "ava": {
                 "givenName": "Anders",
-                "surName": "Andersson",
+                "sn": "Andersson",
                 "mail": "anders.andersson@example.com"
             },
             "session_index": SessionIndex("_foo")
@@ -1367,7 +1414,7 @@ class TestClient:
         binding, info = resp[entity_ids[0]]
         assert binding == BINDING_HTTP_POST
 
-        _dic = unpack_form(info["data"][3])
+        _dic = unpack_form(info["data"])
         res = self.server.parse_logout_request(_dic["SAMLRequest"],
                                                BINDING_HTTP_POST)
         assert b'<ns0:SessionIndex>_foo</ns0:SessionIndex>' in res.xmlstr
@@ -1380,7 +1427,7 @@ class TestClient:
             "not_on_or_after": a_while_ago(minutes=15),
             "ava": {
                 "givenName": "Anders",
-                "surName": "Andersson",
+                "sn": "Andersson",
                 "mail": "anders.andersson@example.com"
             },
             "session_index": SessionIndex("_foo")
@@ -1397,7 +1444,7 @@ class TestClient:
         binding, info = resp[entity_ids[0]]
         assert binding == BINDING_HTTP_POST
 
-        _dic = unpack_form(info["data"][3])
+        _dic = unpack_form(info["data"])
         res = self.server.parse_logout_request(_dic["SAMLRequest"],
                                                BINDING_HTTP_POST)
         assert b'<ns0:SessionIndex>_foo</ns0:SessionIndex>' in res.xmlstr
@@ -1473,7 +1520,7 @@ class TestClientWithDummy():
             "not_on_or_after": in_a_while(minutes=15),
             "ava": {
                 "givenName": "Anders",
-                "surName": "Andersson",
+                "sn": "Andersson",
                 "mail": "anders.andersson@example.com"
             }
         }
@@ -1494,7 +1541,7 @@ class TestClientWithDummy():
         sid, http_args = self.client.prepare_for_authenticate(
             "urn:mace:example.com:saml:roland:idp", relay_state="really",
             binding=binding, response_binding=response_binding)
-        _dic = unpack_form(http_args["data"][3])
+        _dic = unpack_form(http_args["data"])
 
         req = self.server.parse_authn_request(_dic["SAMLRequest"], binding)
         resp_args = self.server.response_args(req.message, [response_binding])
@@ -1512,7 +1559,7 @@ class TestClientWithDummy():
 
         response = self.client.send(**http_args)
         print(response.text)
-        _dic = unpack_form(response.text[3], "SAMLResponse")
+        _dic = unpack_form(response.text, "SAMLResponse")
         resp = self.client.parse_authn_request_response(_dic["SAMLResponse"],
                                                         BINDING_HTTP_POST,
                                                         {sid: "/"})
@@ -1527,7 +1574,7 @@ class TestClientWithDummy():
         sid, auth_binding, http_args = self.client.prepare_for_negotiated_authenticate(
             "urn:mace:example.com:saml:roland:idp", relay_state="really",
             binding=binding, response_binding=response_binding)
-        _dic = unpack_form(http_args["data"][3])
+        _dic = unpack_form(http_args["data"])
 
         assert binding == auth_binding
 
@@ -1547,7 +1594,7 @@ class TestClientWithDummy():
 
         response = self.client.send(**http_args)
         print(response.text)
-        _dic = unpack_form(response.text[3], "SAMLResponse")
+        _dic = unpack_form(response.text, "SAMLResponse")
         resp = self.client.parse_authn_request_response(_dic["SAMLResponse"],
                                                         BINDING_HTTP_POST,
                                                         {sid: "/"})

@@ -73,8 +73,14 @@ SP_ARGS = [
     "allow_unsolicited",
     "ecp",
     "name_id_format",
+    "name_id_format_allow_create",
     "logout_requests_signed",
-    "requested_attribute_name_format"
+    "requested_attribute_name_format",
+    "hide_assertion_consumer_service",
+    "force_authn",
+    "sp_type",
+    "sp_type_in_metadata",
+    "requested_attributes",
 ]
 
 AA_IDP_ARGS = [
@@ -187,6 +193,7 @@ class Config(object):
         self.contact_person = None
         self.name_form = None
         self.name_id_format = None
+        self.name_id_format_allow_create = None
         self.virtual_organization = None
         self.logger = None
         self.only_use_keys_in_metadata = True
@@ -205,7 +212,6 @@ class Config(object):
         self.crypto_backend = 'xmlsec1'
         self.scope = ""
         self.allow_unknown_attributes = False
-        self.allow_unsolicited = False
         self.extension_schema = {}
         self.cert_handler_extra_class = None
         self.verify_encrypt_cert_advice = None

@@ -8,7 +8,7 @@ from binascii import hexlify
 from hashlib import sha1
 
 from saml2.metadata import ENDPOINTS
-from saml2.profile import paos, ecp
+from saml2.profile import paos, ecp, samlec
 from saml2.soap import parse_soap_enveloped_saml_artifact_resolve
 from saml2.soap import class_instances_from_soap_enveloped_saml_thingies
 from saml2.soap import open_soap_envelope
@@ -224,7 +224,7 @@ class Entity(HTTPBase):
             info["method"] = "POST"
         elif binding == BINDING_HTTP_REDIRECT:
             logger.info("HTTP REDIRECT")
-            if 'sigalg' in kwargs:
+            if kwargs.get('sigalg', ''):
                 signer = self.sec.sec_backend.get_signer(kwargs['sigalg'])
             else:
                 signer = None
@@ -407,7 +407,8 @@ class Entity(HTTPBase):
         """
         return class_instances_from_soap_enveloped_saml_thingies(text, [paos,
                                                                         ecp,
-                                                                        samlp])
+                                                                        samlp,
+                                                                        samlec])
 
     @staticmethod
     def unpack_soap_message(text):
