@@ -484,7 +484,7 @@ class Saml2Client(Base):
             raise SAMLError("Unsupported binding")
 
     def handle_logout_request(self, request, name_id, binding, sign=False,
-                              relay_state=""):
+                              sign_alg=None, relay_state=""):
         """
         Deal with a LogoutRequest
 
@@ -531,7 +531,7 @@ class Saml2Client(Base):
                 "single_logout_service"]
 
         response = self.create_logout_response(_req.message, response_bindings,
-                                               status, sign)
+                                               status, sign, sign_alg=sign_alg)
         rinfo = self.response_args(_req.message, response_bindings)
 
         return self.apply_binding(rinfo["binding"], response,
