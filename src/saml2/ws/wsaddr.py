@@ -227,7 +227,7 @@ class RelatesToType_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -330,7 +330,7 @@ class ProblemActionType_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -366,7 +366,7 @@ class EndpointReferenceType_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -528,4 +528,3 @@ ELEMENT_BY_TAG = {
 
 def factory(tag, **kwargs):
     return ELEMENT_BY_TAG[tag](**kwargs)
-

@@ -24,8 +24,8 @@ NAMESPACE = "http://schemas.xmlsoap.org/soap/envelope/"
 
 example = """<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
     <Body>
-        <samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" 
-            xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" 
+        <samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
+            xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
             ID="_6c3a4f8b9c2d" Version="2.0" IssueInstant="2004-03-27T08:42:00Z">
         <saml:Issuer>https://www.example.com/SAML</saml:Issuer>
         <Status>
@@ -59,7 +59,7 @@ def test_make_soap_envelope():
     envelope.tag = '{%s}Envelope' % NAMESPACE
     body = ElementTree.Element('')
     body.tag = '{%s}Body' % NAMESPACE
-    envelope.append(body)    
+    envelope.append(body)
     request = samlp.AuthnRequest()
     request.become_child_element_of(body)
 

@@ -28,7 +28,7 @@ TEST_SPKI_DATA = """<?xml version="1.0" encoding="utf-8"?>
 <SPKIData xmlns="http://www.w3.org/2000/09/xmldsig#">
   <SPKISexp>spki sexp</SPKISexp>
   <SPKISexp>spki sexp2</SPKISexp>
-</SPKIData>  
+</SPKIData>
 """
 
 TEST_PGP_DATA = """<?xml version="1.0" encoding="utf-8"?>
@@ -186,7 +186,7 @@ TEST_KEY_INFO = """<?xml version="1.0" encoding="utf-8"?>
   <SPKIData>
     <SPKISexp>spki sexp</SPKISexp>
     <SPKISexp>spki sexp2</SPKISexp>
-  </SPKIData>  
+  </SPKIData>
 </KeyInfo>
 """
 
@@ -335,7 +335,7 @@ TEST_SIGNATURE = """<?xml version="1.0" encoding="utf-8"?>
     <SPKIData>
       <SPKISexp>spki sexp</SPKISexp>
       <SPKISexp>spki sexp2</SPKISexp>
-    </SPKIData>  
+    </SPKIData>
   </KeyInfo>
   <Object Id="object_id" Encoding="http://www.w3.org/2000/09/xmldsig#base64">
     V2VkIEp1biAgNCAxMjoxMTowMyBFRFQgMjAwMwo

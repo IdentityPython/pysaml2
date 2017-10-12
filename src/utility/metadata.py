@@ -33,4 +33,3 @@ def fetch_metadata(url, path, maxage=600):
         except:
             logger.debug("downloaded metadata from %s failed: %s",
                          url, sys.exc_info()[0])
-

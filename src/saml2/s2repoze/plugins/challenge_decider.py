@@ -110,4 +110,3 @@ def make_plugin(path_login = None, path_logout = None):
     plugin = MyChallengeDecider(list_login, list_logout)
 
     return plugin
-

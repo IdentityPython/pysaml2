@@ -30,7 +30,7 @@ allow you to use it with other frameworks.
 Testing
 =======
 PySAML2 uses the `pytest <http://doc.pytest.org/en/latest/>`_ framework for
-testing. To run the tests on your system's version of python 
+testing. To run the tests on your system's version of python
 
 1. Create and activate a `virtualenv <https://virtualenv.pypa.io/en/stable/>`_.
 2. Inside the virtualenv, install the dependencies needed for testing :code:`pip install -r tests/test_requirements.txt`

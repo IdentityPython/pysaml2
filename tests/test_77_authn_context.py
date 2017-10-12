@@ -1,4 +1,3 @@
-
 __author__ = 'rolandh'
 
 ex1 = """<AuthenticationContextDeclaration

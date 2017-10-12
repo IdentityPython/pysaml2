@@ -82,7 +82,7 @@ def test_filter_on_attributes_1():
 
 
 def test_filter_on_attributes_2():
-    
+
     a = to_dict(Attribute(friendly_name="surName",name="urn:oid:2.5.4.4",
                           name_format=NAME_FORMAT_URI), ONTS)
     required = [a]
@@ -944,4 +944,3 @@ def test_assertion_with_authn_instant():
 
 if __name__ == "__main__":
     test_assertion_2()
-

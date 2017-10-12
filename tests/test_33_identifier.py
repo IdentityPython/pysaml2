@@ -189,4 +189,3 @@ class TestIdentifier():
     def teardown_class(self):
         if os.path.exists("subject.db"):
             os.unlink("subject.db")
-

@@ -61,4 +61,3 @@ Table of contents
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

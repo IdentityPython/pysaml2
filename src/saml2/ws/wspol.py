@@ -33,7 +33,7 @@ class PolicyReference(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -83,7 +83,7 @@ class PolicyAttachment(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -121,7 +121,7 @@ class OperatorContentType_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -158,7 +158,7 @@ class Policy(OperatorContentType_):
             extension_elements=None,
             extension_attributes=None,
         ):
-        OperatorContentType_.__init__(self, 
+        OperatorContentType_.__init__(self,
                 policy=policy,
                 all=all,
                 exactly_one=exactly_one,
@@ -238,4 +238,3 @@ ELEMENT_BY_TAG = {
 
 def factory(tag, **kwargs):
     return ELEMENT_BY_TAG[tag](**kwargs)
-

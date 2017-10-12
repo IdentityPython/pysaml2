@@ -60,6 +60,3 @@ if metad:
         raise
     else:
         print("OK")
-
-
-

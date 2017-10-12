@@ -37,4 +37,3 @@ To generate new keys, run create_key.sh and follow its instructions.
 
 There are alternate IdP and SP configs in idp2_repoze/ and sp-repoze/ that
 are still in flux; do not use them unless you know what you are doing.
-
