@@ -794,7 +794,7 @@ class MetaDataMDX(InMemoryMetaData):
         sha1 transformation.
         """
         super(MetaDataMDX, self).__init__(None, '')
-        self.url = url
+        self.url = url.rstrip('/')
 
         if entity_transform:
             self.entity_transform = entity_transform
