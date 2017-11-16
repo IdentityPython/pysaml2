@@ -3,7 +3,7 @@ PySAML2 - SAML2 in Python
 *************************
 
 :Author: Roland Hedberg
-:Version: 4.4.0
+:Version: 4.5.0
 
 .. image:: https://api.travis-ci.org/rohe/pysaml2.png?branch=master
     :target: https://travis-ci.org/rohe/pysaml2
