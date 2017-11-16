@@ -8,8 +8,13 @@ import re
 import time
 
 from hashlib import sha1
-from cherrypy import wsgiserver
-from cherrypy.wsgiserver.ssl_builtin import BuiltinSSLAdapter
+
+try:
+    from cheroot.wsgi import Server as WSGIServer
+    from cheroot.ssl.builtin import BuiltinSSLAdapter
+except ImportError:
+    from cherrypy.wsgiserver import CherryPyWSGIServer as WSGIServer
+    from cherrypy.wsgiserver.ssl_builtin import BuiltinSSLAdapter
 
 from six.moves.urllib.parse import parse_qs
 from six.moves.http_cookies import SimpleCookie
@@ -1085,7 +1090,7 @@ if __name__ == '__main__':
         pass
     ds.DefaultSignature(sign_alg, digest_alg)
 
-    SRV = wsgiserver.CherryPyWSGIServer((HOST, PORT), application)
+    SRV = WSGIServer((HOST, PORT), application)
 
     _https = ""
     if CONFIG.HTTPS:
