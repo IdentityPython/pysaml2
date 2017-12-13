@@ -113,7 +113,7 @@ class Entity(HTTPBase):
         self.entity_type = entity_type
         self.users = None
         
-        logger.info('Config, Config_file: %s, %s', config, config_file)
+        logger.info('Config, Config_file: %s, %s' % (config, config_file))
 
         if config:
             self.config = config

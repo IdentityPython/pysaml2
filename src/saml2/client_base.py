@@ -185,7 +185,7 @@ class Base(Entity):
         return True
 
     def service_urls(self, binding=BINDING_HTTP_POST):
-    	logger.info("Config: %s", self.config)
+    	logger.info("Config: %s" % self.config)
         _res = self.config.endpoint("assertion_consumer_service", binding, "sp")
         if _res:
             return _res
@@ -239,12 +239,12 @@ class Base(Entity):
                         "attribute_consuming_service_index"])
                     del kwargs["attribute_consuming_service_index"]
                 except KeyError:
-                	logger.info('binding, service_url_binding: %s, %s', binding, service_url_binding)
+                	logger.info('binding, service_url_binding: %s, %s' % (binding, service_url_binding))
                     if service_url_binding is None:
                         service_urls = self.service_urls(binding)
                     else:
                         service_urls = self.service_urls(service_url_binding)
-                    logger.info('service_urls: %s', service_urls)
+                    logger.info('service_urls: %s' % service_urls)
                     args["assertion_consumer_service_url"] = service_urls[0]
 
         try:

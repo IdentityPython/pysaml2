@@ -846,7 +846,7 @@ class MetadataStore(object):
 
     def service(self, entity_id, typ, service, binding=None):
         known_entity = False
-        logger.debug("service(%s, %s, %s, %s)" % (entity_id, typ, service,
+        logger.debug("service_(%s, %s, %s, %s)" % (entity_id, typ, service,
                                                   binding))
         for key, _md in self.metadata.items():
             srvs = _md.service(entity_id, typ, service, binding)
