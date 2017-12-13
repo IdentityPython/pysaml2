@@ -112,6 +112,8 @@ class Entity(HTTPBase):
                  virtual_organization=""):
         self.entity_type = entity_type
         self.users = None
+        
+        logger.info('Config, Config_file: %s, %s', config, config_file)
 
         if config:
             self.config = config
