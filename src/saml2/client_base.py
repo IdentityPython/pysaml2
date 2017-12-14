@@ -185,9 +185,8 @@ class Base(Entity):
         return True
 
     def service_urls(self, binding=BINDING_HTTP_POST):
-        logger.info("Service Config:")
-        for k in self.config:
-            logger.info('key: %s, value: %s' % (k, self.config[k]))
+        logger.info("Service Config: %s" % (self.config))
+        
         _res = self.config.endpoint("assertion_consumer_service", binding, "sp")
         if _res:
             return _res
