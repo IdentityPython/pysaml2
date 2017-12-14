@@ -409,9 +409,11 @@ class Config(object):
         :param binding: The expected binding
         :return: All the endpoints that matches the given restrictions
         """
+        logger.info("Getting endpoints for %s, %s, %s" % (service, binding, context))
         spec = []
         unspec = []
         endps = self.getattr("endpoints", context)
+        logger.info("Config - Endps: %s" % endps)
         if endps and service in endps:
             for endpspec in endps[service]:
                 try:
