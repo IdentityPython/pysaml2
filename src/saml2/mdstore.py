@@ -820,7 +820,7 @@ class MetaDataMDX(InMemoryMetaData):
         # described by a single <EntityDescriptor> element. The protocol
         # does allow multiple entities to be returned in an
         # <EntitiesDescriptor> element but we will not currently support
-        # that use case since it is unlikely to leveraged for most
+        # that use case since it is unlikely to be leveraged for most
         # flows.
         self.node_name = "%s:%s" % (md.EntityDescriptor.c_namespace,
                                       md.EntityDescriptor.c_tag)
@@ -929,7 +929,7 @@ class MetadataStore(MetaData):
             if 'url' in kwargs:
                 key = kwargs['url']
                 url = kwargs['url']
-                cert = kwargs.get('cert', None)
+                cert = kwargs.get('cert')
                 security = self.security
                 entity_transform = kwargs.get('entity_transform', None)
                 _md = MetaDataMDX(url, security, cert, entity_transform)
