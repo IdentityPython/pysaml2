@@ -30,6 +30,7 @@ from saml2.saml import NameID
 from saml2.saml import EncryptedAssertion
 from saml2.saml import Issuer
 from saml2.saml import NAMEID_FORMAT_ENTITY
+from saml2.response import AuthnResponse
 from saml2.response import LogoutResponse
 from saml2.response import UnsolicitedResponse
 from saml2.time_util import instant
@@ -1231,13 +1232,14 @@ class Entity(HTTPBase):
         finally:
             response.require_signature = require_signature
 
-        # If so configured enforce that either the response is signed
-        # or the assertions are signed.
-        if response.require_signature_or_response_signature:
-            if not response_is_signed and not assertions_are_signed:
-                msg = "Neither the response nor the assertions are signed"
-                logger.error(msg)
-                raise SigverError(msg)
+        # If so configured enforce that either the AuthnResponse is signed
+        # or the assertions within it are signed.
+        if isinstance(response, AuthnResponse):
+            if response.require_signature_or_response_signature:
+                if not response_is_signed and not assertions_are_signed:
+                    msg = "Neither the response nor the assertions are signed"
+                    logger.error(msg)
+                    raise SigverError(msg)
 
         return response
 
