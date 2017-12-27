@@ -119,6 +119,7 @@ class Base(Entity):
             "authn_requests_signed": False,
             "want_assertions_signed": False,
             "want_response_signed": True,
+            "want_assertions_or_response_signed" : False
         }
 
         for attr, val_default in attribute_defaults.items():
@@ -134,6 +135,7 @@ class Base(Entity):
             setattr(self, attr, val)
 
         if self.entity_type == "sp" and not any([self.want_assertions_signed,
+                                                 self.want_assertions_or_response_signed,
                                                 self.want_response_signed]):
             logger.warning("The SAML service provider accepts unsigned SAML Responses " +
                            "and Assertions. This configuration is insecure.")
@@ -688,6 +690,7 @@ class Base(Entity):
                 "outstanding_certs": outstanding_certs,
                 "allow_unsolicited": self.allow_unsolicited,
                 "want_assertions_signed": self.want_assertions_signed,
+                "want_assertions_or_response_signed": self.want_assertions_or_response_signed,
                 "want_response_signed": self.want_response_signed,
                 "return_addrs": self.service_urls(binding=binding),
                 "entity_id": self.config.entityid,

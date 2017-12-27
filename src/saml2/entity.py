@@ -63,6 +63,7 @@ from saml2.httpbase import HTTPBase
 from saml2.sigver import security_context
 from saml2.sigver import response_factory
 from saml2.sigver import SigverError
+from saml2.sigver import SignatureError
 from saml2.sigver import CryptoBackendXmlSec1
 from saml2.sigver import make_temp
 from saml2.sigver import pre_encryption_part
@@ -1101,8 +1102,13 @@ class Entity(HTTPBase):
             otherwise the response.
         """
 
-        response = None
+        # If there is no XML string the reply does not contain a valid
+        # SAML response.
+        if not xmlstr:
+            return None
 
+        # Augment as necessary arguments to be passed with the 
+        # instantiation of the response class.
         if self.config.accepted_time_diff:
             kwargs["timeslack"] = self.config.accepted_time_diff
 
@@ -1112,67 +1118,126 @@ class Entity(HTTPBase):
             else:
                 kwargs["asynchop"] = True
 
-        if xmlstr:
-            if "return_addrs" not in kwargs:
-                if binding in [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST]:
-                    try:
-                        # expected return address
-                        kwargs["return_addrs"] = self.config.endpoint(
-                            service, binding=binding)
-                    except Exception:
-                        logger.info("Not supposed to handle this!")
-                        return None
+        if "return_addrs" not in kwargs:
+            if binding in [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST]:
+                try:
+                    # expected return address
+                    kwargs["return_addrs"] = self.config.endpoint(
+                        service, binding=binding)
+                except Exception:
+                    msg = ("No return address could be found "
+                           "for use with binding %s" % binding)
+                    logger.info(msg)
+                    return None
 
-            try:
-                response = response_cls(self.sec, **kwargs)
-            except Exception as exc:
-                logger.info("%s", exc)
-                raise
+        # Instantiate the response class.
+        try:
+            response = response_cls(self.sec, **kwargs)
+        except Exception as exc:
+            msg = ("Unable to instantiate response class %s: %s" % 
+                    (response_cls, exc))
+            logger.info(msg)
+            raise
 
-            xmlstr = self.unravel(xmlstr, binding, response_cls.msgtype)
-            origxml = xmlstr
-            if not xmlstr:  # Not a valid reponse
-                return None
+        # Unpack the XML appropriately for the binding and type of response.
+        xmlstr = self.unravel(xmlstr, binding, response_cls.msgtype)
+        if not xmlstr:  # Not a valid reponse
+            return None
 
-            try:
-                response = response.loads(xmlstr, False, origxml=origxml)
-            except SigverError as err:
+        logger.debug("Unpacked XML to be used for response: %s", xmlstr)
+
+        # Record the response signature requirement.
+        require_response_signature = response.require_response_signature
+
+        # Force the requirement that the response be signed in order to
+        # force signature checking to happen so that we can know whether
+        # or not the response is signed. The attribute on the response class
+        # is reset to the recorded value in the finally clause below.
+        response.require_response_signature = True
+
+        try:
+            # Use the response class instance to consume the unpacked XML
+            # and attempt to create a fully valid response. Signature checking
+            # on the response is done here.
+            response = response.loads(xmlstr, False, origxml=xmlstr)
+            response_is_signed = True
+        except SigverError as err:
+            response_is_signed = False
+            if require_response_signature:
                 logger.error("Signature Error: %s", err)
                 raise
-            except UnsolicitedResponse:
-                logger.error("Unsolicited response")
-                raise
-            except Exception as err:
-                if "not well-formed" in "%s" % err:
-                    logger.error("Not well-formed XML")
-                raise
+            else:
+                # The response is not signed but a signature is not required
+                # so reset the attribute on the response class to the recorded
+                # value and attempt to consume the unpacked XML again.
+                response.require_response_signature = require_response_signature
+                response = response.loads(xmlstr, False, origxml=xmlstr)
+        except UnsolicitedResponse:
+            logger.error("Unsolicited response")
+            raise
+        except Exception as err:
+            if "not well-formed" in "%s" % err:
+                logger.error("Not well-formed XML: %s" % err)
+            raise
+        finally:
+            response.require_response_signature = require_response_signature
 
-            logger.debug("XMLSTR: %s", xmlstr)
+        # The response is not valid so return None.
+        if not response:
+            return None
 
-            if response:
+        # Prepare certificates IdP may have used to encrypt.
+        keys = None
+        if outstanding_certs:
+            try:
+                cert = outstanding_certs[response.in_response_to]
+            except KeyError:
                 keys = None
-                if outstanding_certs:
-                    try:
-                        cert = outstanding_certs[response.in_response_to]
-                    except KeyError:
-                        keys = None
-                    else:
-                        if not isinstance(cert, list):
-                            cert = [cert]
-                        keys = []
-                        for _cert in cert:
-                            keys.append(_cert["key"])
-                only_identity_in_encrypted_assertion = False
-                if "only_identity_in_encrypted_assertion" in kwargs:
-                    only_identity_in_encrypted_assertion = kwargs[
-                        "only_identity_in_encrypted_assertion"]
+            else:
+                if not isinstance(cert, list):
+                    cert = [cert]
+                keys = []
+                for _cert in cert:
+                    keys.append(_cert["key"])
+        only_identity_in_encrypted_assertion = False
+        if "only_identity_in_encrypted_assertion" in kwargs:
+            only_identity_in_encrypted_assertion = kwargs[
+                "only_identity_in_encrypted_assertion"]
 
+        # Record the assertions signature requirement.
+        require_signature = response.require_signature
+
+        # Force the requirement that the assertions be signed in order to
+        # force signature checking to happen so that we can know whether
+        # or not the assertions are signed. The attribute on the response class
+        # is reset to the recorded value in the finally clause below.
+        response.require_signature = True
+
+        try:
+            # Verify that the assertion is syntactically correct and the
+            # signature on the assertion is correct if present. 
+            response = response.verify(keys)
+            assertions_are_signed = True
+        except SignatureError as err:
+            assertions_are_signed = False
+            if require_signature:
+                logger.error("Signature Error: %s", err)
+                raise
+            else:
+                response.require_signature = require_signature
                 response = response.verify(keys)
+        except Exception as err:
+            logger.error("Exception verifying assertion: %s" % err)
+        finally:
+            response.require_signature = require_signature
 
-            if not response:
-                return None
-
-                # logger.debug(response)
+        # If so configured enforce that either the response is signed
+        # or the assertions are signed.
+        if response.require_signature_or_response_signature:
+            if not response_is_signed and not assertions_are_signed:
+                msg = "Neither the response nor the assertions are signed"
+                logger.error(msg)
+                raise SigverError(msg)
 
         return response
 

@@ -470,7 +470,9 @@ class AuthnResponse(StatusResponse):
             return_addrs=None, outstanding_queries=None,
             timeslack=0, asynchop=True, allow_unsolicited=False,
             test=False, allow_unknown_attributes=False,
-            want_assertions_signed=False, want_response_signed=False,
+            want_assertions_signed=False,
+            want_assertions_or_response_signed=False,
+            want_response_signed=False,
             conv_info=None, **kwargs):
 
         StatusResponse.__init__(self, sec_context, return_addrs, timeslack,
@@ -489,6 +491,7 @@ class AuthnResponse(StatusResponse):
         self.session_not_on_or_after = 0
         self.allow_unsolicited = allow_unsolicited
         self.require_signature = want_assertions_signed
+        self.require_signature_or_response_signature = want_assertions_or_response_signed
         self.require_response_signature = want_response_signed
         self.test = test
         self.allow_unknown_attributes = allow_unknown_attributes

@@ -624,6 +624,33 @@ Example::
         }
     }
 
+want_assertions_or_response_signed
+""""""""""""""""""""
+
+Indicates that *either* the Authentication Response *or* the assertions
+contained within the response to this SP must be signed. 
+
+Valid values are True or False. Default value is False.
+
+This configuration directive **does not** override ``want_response_signed``
+or ``want_assertions_signed``. For example, if ``want_response_signed`` is True
+and the Authentication Response is not signed an exception will be thrown
+regardless of the value for this configuration directive.
+
+Thus to configure the SP to accept either a signed response or signed assertions
+set ``want_response_signed`` and ``want_assertions_signed`` both to False and
+this directive to True.
+
+Example::
+
+    "service": {
+        "sp": {
+            "want_response_signed": False,
+            "want_assertions_signed": False,
+            "want_assertions_or_response_signed": True
+        }
+    }
+
 
 idp/aa/sp
 ^^^^^^^^^
