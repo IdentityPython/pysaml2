@@ -65,6 +65,7 @@ SP_ARGS = [
     "subject_data",
     "want_response_signed",
     "want_assertions_signed",
+    "want_assertions_or_response_signed",
     "authn_requests_signed",
     "name_form",
     "endpoints",
