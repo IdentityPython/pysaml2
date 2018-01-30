@@ -21,10 +21,22 @@ UMICH = 'urn:oid:1.3.6.1.4.1.250.1.57.'
 OPENOSI_OID = 'urn:oid:1.3.6.1.4.1.27630.2.1.1.'
 
 EIDAS_NATURALPERSON = 'http://eidas.europa.eu/attributes/naturalperson/'
+EIDAS_LEGALPERSON = 'http://eidas.europa.eu/attributes/legalperson/'
 
 MAP = {
     'identifier': 'urn:oasis:names:tc:SAML:2.0:attrname-format:uri',
     'fro': {
+        EIDAS_LEGALPERSON+'LegalPersonIdentifier': 'LegalPersonIdentifier',
+        EIDAS_LEGALPERSON+'LegalAddress': 'LegalAddress',
+        EIDAS_LEGALPERSON+'LegalName': 'LegalName',
+        EIDAS_LEGALPERSON+'VATRegistration': 'VATRegistration',
+        EIDAS_LEGALPERSON+'TaxReference': 'TaxReference',
+        EIDAS_LEGALPERSON+'BusinessCodes': 'BusinessCodes',
+        EIDAS_LEGALPERSON+'LEI': 'LEI',
+        EIDAS_LEGALPERSON+'EORI': 'EORI',
+        EIDAS_LEGALPERSON+'SEED': 'SEED',
+        EIDAS_LEGALPERSON+'SIC': 'SIC',
+        EIDAS_LEGALPERSON+'D-2012-17-EUIdentifier': 'D-2012-17-EUIdentifier',
         EIDAS_NATURALPERSON+'PersonIdentifier': 'PersonIdentifier',
         EIDAS_NATURALPERSON+'FamilyName': 'FamilyName',
         EIDAS_NATURALPERSON+'FirstName': 'FirstName',
@@ -177,6 +189,17 @@ MAP = {
         X500ATTR_OID+'65': 'pseudonym',
     },
     'to': {
+        'LegalPersonIdentifier': EIDAS_LEGALPERSON+'LegalPersonIdentifier',
+        'LegalAddress': EIDAS_LEGALPERSON+'LegalAddress',
+        'LegalName': EIDAS_LEGALPERSON+'LegalName',
+        'VATRegistration': EIDAS_LEGALPERSON+'VATRegistration',
+        'TaxReference': EIDAS_LEGALPERSON+'TaxReference',
+        'BusinessCodes': EIDAS_LEGALPERSON+'BusinessCodes',
+        'LEI': EIDAS_LEGALPERSON+'LEI',
+        'EORI': EIDAS_LEGALPERSON+'EORI',
+        'SEED': EIDAS_LEGALPERSON+'SEED',
+        'SIC': EIDAS_LEGALPERSON+'SIC',
+        'D-2012-17-EUIdentifier': EIDAS_LEGALPERSON+'D-2012-17-EUIdentifier',
         'PersonIdentifier': EIDAS_NATURALPERSON+'PersonIdentifier',
         'FamilyName': EIDAS_NATURALPERSON+'FamilyName',
         'FirstName': EIDAS_NATURALPERSON+'FirstName',
