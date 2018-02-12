@@ -23,6 +23,7 @@ CONFIG = {
     "description": "Example SP",
     "service": {
         "sp": {
+            "want_response_signed": False,
             "authn_requests_signed": True,
             "logout_requests_signed": True,
             "endpoints": {
