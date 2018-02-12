@@ -942,7 +942,7 @@ NON_AUTHN_URLS = [
 
 def metadata(environ, start_response):
     try:
-        path = args.path
+        path = args.path[:]
         if path is None or len(path) == 0:
             path = os.path.dirname(os.path.abspath(__file__))
         if path[-1] != "/":
@@ -1042,7 +1042,7 @@ def application(environ, start_response):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-p', dest='path', help='Path to configuration file.')
+    parser.add_argument('-p', dest='path', help='Path to configuration file.', default='./idp_conf.py')
     parser.add_argument('-v', dest='valid',
                         help="How long, in days, the metadata is valid from "
                              "the time of creation")
