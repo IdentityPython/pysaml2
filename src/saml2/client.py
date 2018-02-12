@@ -466,7 +466,7 @@ class Saml2Client(Base):
                                   attribute=attribute,
                                   sp_name_qualifier=sp_name_qualifier,
                                   name_qualifier=name_qualifier,
-                                  nameid_format=nameid_format,
+                                  format=nameid_format,
                                   response_args=response_args)
         elif binding == BINDING_HTTP_POST:
             mid = sid()
