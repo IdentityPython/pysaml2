@@ -75,7 +75,8 @@ except ImportError:
 
 
 def test_cert_from_instance_1():
-    xml_response = open(SIGNED).read()
+    with open(SIGNED) as fp:
+        xml_response = fp.read()
     response = samlp.response_from_string(xml_response)
     assertion = response.assertion[0]
     certs = sigver.cert_from_instance(assertion)
@@ -87,7 +88,8 @@ def test_cert_from_instance_1():
 @pytest.mark.skipif(not decoder,
                     reason="pyasn1 is not installed")
 def test_cert_from_instance_ssp():
-    xml_response = open(SIMPLE_SAML_PHP_RESPONSE).read()
+    with open(SIMPLE_SAML_PHP_RESPONSE) as fp:
+        xml_response = fp.read()
     response = samlp.response_from_string(xml_response)
     assertion = response.assertion[0]
     certs = sigver.cert_from_instance(assertion)
@@ -150,13 +152,15 @@ class TestSecurity():
         )
 
     def test_verify_1(self):
-        xml_response = open(SIGNED).read()
+        with open(SIGNED) as fp:
+            xml_response = fp.read()
         response = self.sec.correctly_signed_response(xml_response)
         assert response
 
     def test_non_verify_1(self):
         """ unsigned is OK """
-        xml_response = open(UNSIGNED).read()
+        with open(UNSIGNED) as fp:
+            xml_response = fp.read()
         response = self.sec.correctly_signed_response(xml_response)
         assert response
 

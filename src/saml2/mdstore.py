@@ -665,7 +665,8 @@ class MetaDataFile(InMemoryMetaData):
         self.cert = cert
 
     def get_metadata_content(self):
-        return open(self.filename, 'rb').read()
+        with open(self.filename, 'rb') as fp:
+            return fp.read()
 
     def load(self, *args, **kwargs):
         _txt = self.get_metadata_content()
@@ -768,7 +769,9 @@ class MetaDataMD(InMemoryMetaData):
         self.filename = filename
 
     def load(self, *args, **kwargs):
-        for key, item in json.loads(open(self.filename).read()):
+        with open(self.filename) as fp:
+            data = json.load(fp)
+        for key, item in data:
             self.entity[key] = item
 
 

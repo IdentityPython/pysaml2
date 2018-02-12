@@ -194,10 +194,11 @@ def parse_attribute_map(filenames):
     forward = {}
     backward = {}
     for filename in filenames:
-        for line in open(filename).readlines():
-            (name, friendly_name, name_format) = line.strip().split()
-            forward[(name, name_format)] = friendly_name
-            backward[friendly_name] = (name, name_format)
+        with open(filename) as fp:
+            for line in fp:
+                (name, friendly_name, name_format) = line.strip().split()
+                forward[(name, name_format)] = friendly_name
+                backward[friendly_name] = (name, name_format)
 
     return forward, backward
 
