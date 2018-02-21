@@ -5,7 +5,7 @@
 * [ ] Have you added information on what your changes do and why you chose this as your solution?
 * [ ] Have you written new tests for your changes?
 * [ ] Does your submission pass tests?
-* [ ] Have you lint your code locally prior to submission?
+* [ ] This project follows PEP8 style guide. Have you run your code against the 'flake8' linter?
 
 
 
