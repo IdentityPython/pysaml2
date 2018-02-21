@@ -41,7 +41,7 @@ def code(item):
     for attr in ATTR:
         val = getattr(item, attr)
         if val:
-            _res.append("%d=%s" % (i, quote(val)))
+            _res.append("%d=%s" % (i, quote(val.encode('utf-8'))))
         i += 1
     return ",".join(_res)
 
@@ -66,7 +66,7 @@ def decode(txt):
         if part.find("=") != -1:
             i, val = part.split("=")
             try:
-                setattr(_nid, ATTR[int(i)], unquote(val))
+                setattr(_nid, ATTR[int(i)], unquote(val.decode('utf-8')))
             except:
                 pass
     return _nid
