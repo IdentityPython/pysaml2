@@ -6,10 +6,6 @@
 __author__ = 'tmatsuo@example.com (Takashi MATSUO)'
 
 import unittest
-try:
-  from xml.etree import ElementTree
-except ImportError:
-  from elementtree import ElementTree
 import ds_data
 import saml2.xmldsig as ds
 

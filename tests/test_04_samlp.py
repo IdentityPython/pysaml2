@@ -6,10 +6,6 @@
 
 __author__ = 'roland.hedberg@adm.umu.se (Roland Hedberg)'
 
-try:
-  from xml.etree import ElementTree
-except ImportError:
-  from elementtree import ElementTree
 import saml2
 
 import samlp_data

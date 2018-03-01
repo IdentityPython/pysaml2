@@ -10,13 +10,6 @@ from saml2.saml import Attribute
 from py.test import raises
 import saml2_data
 
-try:
-    from xml.etree import cElementTree as ElementTree
-except ImportError:
-    try:
-        import cElementTree as ElementTree
-    except ImportError:
-        from elementtree import ElementTree
 from defusedxml.common import EntitiesForbidden
 
 ITEMS = {

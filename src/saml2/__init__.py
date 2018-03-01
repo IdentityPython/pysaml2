@@ -20,23 +20,12 @@
 __version__ = "4.5.0"
 
 import logging
-import six
+
+import saml2.xml_safe as ElementTree
 from saml2.validate import valid_instance
 
-try:
-    from xml.etree import cElementTree as ElementTree
+import six
 
-    if ElementTree.VERSION < '1.3.0':
-        # cElementTree has no support for register_namespace
-        # neither _namespace_map, thus we sacrify performance
-        # for correctness
-        from xml.etree import ElementTree
-except ImportError:
-    try:
-        import cElementTree as ElementTree
-    except ImportError:
-        from elementtree import ElementTree
-import defusedxml.ElementTree
 
 root_logger = logging.getLogger(__name__)
 root_logger.level = logging.NOTSET
@@ -88,7 +77,7 @@ def create_class_from_xml_string(target_class, xml_string):
     """
     if not isinstance(xml_string, six.binary_type):
         xml_string = xml_string.encode('utf-8')
-    tree = defusedxml.ElementTree.fromstring(xml_string)
+    tree = ElementTree.fromstring(xml_string)
     return create_class_from_element_tree(target_class, tree)
 
 
@@ -270,7 +259,7 @@ class ExtensionElement(object):
 
 
 def extension_element_from_string(xml_string):
-    element_tree = defusedxml.ElementTree.fromstring(xml_string)
+    element_tree = ElementTree.fromstring(xml_string)
     return _extension_element_from_element_tree(element_tree)
 
 
@@ -556,13 +545,7 @@ class SamlBase(ExtensionContainer):
         :return:
         """
         for prefix, uri in nspair.items():
-            try:
-                ElementTree.register_namespace(prefix, uri)
-            except AttributeError:
-                # Backwards compatibility with ET < 1.3
-                ElementTree._namespace_map[uri] = prefix
-            except ValueError:
-                pass
+            ElementTree.register_namespace(prefix, uri)
 
     def get_ns_map_attribute(self, attributes, uri_set):
         for attribute in attributes:

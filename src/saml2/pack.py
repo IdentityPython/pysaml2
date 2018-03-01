@@ -21,23 +21,9 @@ from saml2.sigver import RESP_ORDER
 from saml2.sigver import SIGNER_ALGS
 import six
 from saml2.xmldsig import SIG_ALLOWED_ALG
+import saml2.xml_safe as ElementTree
 
 logger = logging.getLogger(__name__)
-
-try:
-    from xml.etree import cElementTree as ElementTree
-
-    if ElementTree.VERSION < '1.3.0':
-        # cElementTree has no support for register_namespace
-        # neither _namespace_map, thus we sacrify performance
-        # for correctness
-        from xml.etree import ElementTree
-except ImportError:
-    try:
-        import cElementTree as ElementTree
-    except ImportError:
-        from elementtree import ElementTree
-import defusedxml.ElementTree
 
 NAMESPACE = "http://schemas.xmlsoap.org/soap/envelope/"
 
@@ -257,7 +243,7 @@ def parse_soap_enveloped_saml(text, body_class, header_class=None):
     :param text: The SOAP object as XML
     :return: header parts and body as saml.samlbase instances
     """
-    envelope = defusedxml.ElementTree.fromstring(text)
+    envelope = ElementTree.fromstring(text)
     assert envelope.tag == '{%s}Envelope' % NAMESPACE
 
     # print(len(envelope))
