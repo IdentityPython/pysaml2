@@ -26,6 +26,8 @@ from pathutils import full_path
 SIGNED = full_path("saml_signed.xml")
 UNSIGNED = full_path("saml_unsigned.xml")
 SIMPLE_SAML_PHP_RESPONSE = full_path("simplesamlphp_authnresponse.xml")
+OKTA_RESPONSE = full_path("okta_response.xml")
+OKTA_ASSERTION = full_path("okta_assertion")
 
 PUB_KEY = full_path("test.pem")
 PRIV_KEY = full_path("test.key")
@@ -491,6 +493,30 @@ def test_xbox():
             assertions.append(ass)
 
     print(assertions)
+
+
+def test_okta():
+    conf = config.Config()
+    conf.load_file("server_conf")
+    conf.id_attr_name = 'Id'
+    md = MetadataStore([saml, samlp], None, conf)
+    md.load("local", full_path("idp_example.xml"))
+
+    conf.metadata = md
+    conf.only_use_keys_in_metadata = False
+    sec = sigver.security_context(conf)
+    with open(OKTA_RESPONSE) as f:
+        enctext = f.read()
+    decr_text = sec.decrypt(enctext)
+    _seass = saml.encrypted_assertion_from_string(decr_text)
+    assers = extension_elements_to_elements(_seass.extension_elements,
+                                            [saml, samlp])
+
+    with open(OKTA_ASSERTION) as f:
+        okta_assertion = f.read()
+    expected_assert = assertion_from_string(okta_assertion)
+    assert len(assers) == 1
+    assert assers[0] == expected_assert
 
 
 def test_xmlsec_err():
