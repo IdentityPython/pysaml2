@@ -119,4 +119,3 @@ def make_plugin(login_form_qs='__do_login', rememberer_name=None, form=None):
         form = open(form).read()
     plugin = FormHiddenPlugin(login_form_qs, rememberer_name, form)
     return plugin
-

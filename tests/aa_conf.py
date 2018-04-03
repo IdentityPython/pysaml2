@@ -1,4 +1,3 @@
-
 from saml2 import BINDING_SOAP, BINDING_HTTP_REDIRECT, NAME_FORMAT_URI
 BASE = "http://localhost:8089/"
 
@@ -45,4 +44,3 @@ CONFIG={
         },
     ],
 }
-

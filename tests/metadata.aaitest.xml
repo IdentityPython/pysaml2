@@ -135,9 +135,9 @@
         </ds:KeyInfo>
     </ds:Signature>
     <!--
-		This metadata file is generated for the AAI Test federation, 
+		This metadata file is generated for the AAI Test federation,
 		which is for development and testing purposes only!
-		Use at your own risk. SWITCH won't take responsibility 
+		Use at your own risk. SWITCH won't take responsibility
 		for the data included in this file.
 -->
     <Extensions>

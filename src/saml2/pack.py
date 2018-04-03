@@ -54,11 +54,11 @@ FORM_SPEC = """\
                 you must press the Continue button once to proceed.
             </p>
         </noscript>
-        
+
         <form action="{action}" method="post">
             <div>
-                <input type="hidden" name="RelayState" value="{relay_state}"/>                
-                                
+                <input type="hidden" name="RelayState" value="{relay_state}"/>
+
                 <input type="hidden" name="{saml_type}" value="{saml_response}"/>
             </div>
             <noscript>

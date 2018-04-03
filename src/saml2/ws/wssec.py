@@ -31,7 +31,7 @@ class AttributedString_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -59,7 +59,7 @@ class PasswordString_(AttributedString_):
             extension_elements=None,
             extension_attributes=None,
         ):
-        AttributedString_.__init__(self, 
+        AttributedString_.__init__(self,
                 Id=Id,
                 text=text,
                 extension_elements=extension_elements,
@@ -88,7 +88,7 @@ class EncodedString_(AttributedString_):
             extension_elements=None,
             extension_attributes=None,
         ):
-        AttributedString_.__init__(self, 
+        AttributedString_.__init__(self,
                 Id=Id,
                 text=text,
                 extension_elements=extension_elements,
@@ -131,7 +131,7 @@ class UsernameTokenType_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -161,7 +161,7 @@ class BinarySecurityTokenType_(EncodedString_):
             extension_elements=None,
             extension_attributes=None,
         ):
-        EncodedString_.__init__(self, 
+        EncodedString_.__init__(self,
                 encoding_type=encoding_type,
                 Id=Id,
                 text=text,
@@ -192,7 +192,7 @@ class KeyIdentifierType_(EncodedString_):
             extension_elements=None,
             extension_attributes=None,
         ):
-        EncodedString_.__init__(self, 
+        EncodedString_.__init__(self,
                 encoding_type=encoding_type,
                 Id=Id,
                 text=text,
@@ -236,7 +236,7 @@ class ReferenceType_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -264,7 +264,7 @@ class EmbeddedType_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -293,7 +293,7 @@ class SecurityTokenReferenceType_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -543,4 +543,3 @@ ELEMENT_BY_TAG = {
 
 def factory(tag, **kwargs):
     return ELEMENT_BY_TAG[tag](**kwargs)
-

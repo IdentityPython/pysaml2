@@ -35,7 +35,7 @@ class TestObject:
     assert new_object.encoding == ds.ENCODING_BASE64
     assert new_object.text.strip() == \
                  "V2VkIEp1biAgNCAxMjoxMTowMyBFRFQgMjAwMwo"
-    
+
 
 class TestMgmtData:
 
@@ -156,7 +156,7 @@ class TestX509Data:
     self.x509_data.x509_certificate = ds.X509Certificate(
                                                 text="x509 certificate")
     self.x509_data.x509_crl = ds.X509CRL(text="x509 crl")
-    
+
     new_x509_data = ds.x509_data_from_string(self.x509_data.to_string())
     print(new_x509_data.keyswv())
     print(new_x509_data.__dict__.keys())
@@ -231,7 +231,7 @@ class TestTransforms:
                  ds.TRANSFORM_ENVELOPED
     assert new_transforms.transform[0].x_path[0].text.strip() == "xpath"
     assert new_transforms.transform[1].x_path[0].text.strip() == "xpath"
-    
+
   def testUsingTestData(self):
     """Test for transform_from_string() using test data"""
     new_transforms = ds.transforms_from_string(ds_data.TEST_TRANSFORMS)
@@ -261,7 +261,7 @@ class TestRetrievalMethod:
     assert new_retrieval_method.uri == "http://www.example.com/URI"
     assert new_retrieval_method.type == "http://www.example.com/Type"
     assert isinstance(new_retrieval_method.transforms, ds.Transforms)
-    
+
   def testUsingTestData(self):
     """Test for retrieval_method_from_string() using test data"""
     new_retrieval_method = ds.retrieval_method_from_string(
@@ -285,7 +285,7 @@ class TestRSAKeyValue:
     assert isinstance(new_rsa_key_value.exponent, ds.Exponent)
     assert new_rsa_key_value.modulus.text.strip() == "modulus"
     assert new_rsa_key_value.exponent.text.strip() == "exponent"
-    
+
   def testUsingTestData(self):
     """Test for rsa_key_value_from_string() using test data"""
     new_rsa_key_value = ds.rsa_key_value_from_string(
@@ -325,7 +325,7 @@ class TestDSAKeyValue:
     assert new_dsa_key_value.j.text.strip() == "j"
     assert new_dsa_key_value.seed.text.strip() == "seed"
     assert new_dsa_key_value.pgen_counter.text.strip() == "pgen counter"
-    
+
   def testUsingTestData(self):
     """Test for dsa_key_value_from_string() using test data"""
     new_dsa_key_value = ds.dsa_key_value_from_string(
@@ -362,7 +362,7 @@ class TestKeyValue:
       ds_data.TEST_RSA_KEY_VALUE)
     new_key_value = ds.key_value_from_string(self.key_value.to_string())
     assert isinstance(new_key_value.rsa_key_value, ds.RSAKeyValue)
-    
+
   def testUsingTestData(self):
     """Test for key_value_from_string() using test data"""
     new_key_value = ds.key_value_from_string(ds_data.TEST_KEY_VALUE1)
@@ -384,7 +384,7 @@ class TestKeyName:
     self.key_name.text = "key name"
     new_key_name = ds.key_name_from_string(self.key_name.to_string())
     assert new_key_name.text.strip() == "key name"
-    
+
   def testUsingTestData(self):
     """Test for key_name_from_string() using test data"""
     new_key_name = ds.key_name_from_string(ds_data.TEST_KEY_NAME)
@@ -423,7 +423,7 @@ class TestKeyInfo:
     assert isinstance(new_key_info.spki_data[0], ds.SPKIData)
     assert isinstance(new_key_info.mgmt_data[0], ds.MgmtData)
     assert new_key_info.id == "id"
-    
+
   def testUsingTestData(self):
     """Test for key_info_from_string() using test data"""
     new_key_info = ds.key_info_from_string(ds_data.TEST_KEY_INFO)
@@ -436,7 +436,7 @@ class TestKeyInfo:
     assert isinstance(new_key_info.spki_data[0], ds.SPKIData)
     assert isinstance(new_key_info.mgmt_data[0], ds.MgmtData)
     assert new_key_info.id == "id"
-  
+
 
 class TestDigestValue:
 
@@ -448,7 +448,7 @@ class TestDigestValue:
     self.digest_value.text = "digest value"
     new_digest_value = ds.digest_value_from_string(self.digest_value.to_string())
     assert new_digest_value.text.strip() == "digest value"
-    
+
   def testUsingTestData(self):
     """Test for digest_value_from_string() using test data"""
     new_digest_value = ds.digest_value_from_string(ds_data.TEST_DIGEST_VALUE)
@@ -466,7 +466,7 @@ class TestDigestMethod:
     new_digest_method = ds.digest_method_from_string(
       self.digest_method.to_string())
     assert new_digest_method.algorithm == ds.DIGEST_SHA1
-    
+
   def testUsingTestData(self):
     """Test for digest_method_from_string() using test data"""
     new_digest_method = ds.digest_method_from_string(
@@ -497,7 +497,7 @@ class TestReference:
     assert new_reference.id == "id"
     assert new_reference.uri == "http://www.example.com/URI"
     assert new_reference.type == "http://www.example.com/Type"
-    
+
   def testUsingTestData(self):
     """Test for reference_from_string() using test data"""
     new_reference = ds.reference_from_string(ds_data.TEST_REFERENCE)
@@ -524,7 +524,7 @@ class TestSignatureMethod:
                       ds.HMACOutputLength)
     assert new_signature_method.hmac_output_length.text.strip() == "8"
     assert new_signature_method.algorithm == ds.SIG_RSA_SHA1
-    
+
   def testUsingTestData(self):
     """Test for signature_method_from_string() using test data"""
     new_signature_method = ds.signature_method_from_string(
@@ -546,7 +546,7 @@ class TestCanonicalizationMethod:
     new_canonicalization_method = ds.canonicalization_method_from_string(
       self.canonicalization_method.to_string())
     assert new_canonicalization_method.algorithm == ds.C14N_WITH_C
-    
+
   def testUsingTestData(self):
     """Test for canonicalization_method_from_string() using test data"""
     new_canonicalization_method = ds.canonicalization_method_from_string(
@@ -574,7 +574,7 @@ class TestSignedInfo:
                             ds.CanonicalizationMethod)
     assert isinstance(new_si.signature_method, ds.SignatureMethod)
     assert isinstance(new_si.reference[0], ds.Reference)
-    
+
   def testUsingTestData(self):
     """Test for signed_info_from_string() using test data"""
     new_si = ds.signed_info_from_string(ds_data.TEST_SIGNED_INFO)
@@ -597,7 +597,7 @@ class TestSignatureValue:
       self.signature_value.to_string())
     assert new_signature_value.id == "id"
     assert new_signature_value.text.strip() == "signature value"
-    
+
   def testUsingTestData(self):
     """Test for signature_value_from_string() using test data"""
     new_signature_value = ds.signature_value_from_string(
@@ -627,7 +627,7 @@ class TestSignature:
     assert isinstance(new_signature.signature_value, ds.SignatureValue)
     assert isinstance(new_signature.key_info, ds.KeyInfo)
     assert isinstance(new_signature.object[0], ds.Object)
-    
+
   def testUsingTestData(self):
     """Test for signature_value_from_string() using test data"""
     new_signature = ds.signature_from_string(ds_data.TEST_SIGNATURE)

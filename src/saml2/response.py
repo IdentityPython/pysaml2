@@ -1086,8 +1086,8 @@ class AuthnResponse(StatusResponse):
     def verify_recipient(self, recipient):
         """
         Verify that I'm the recipient of the assertion
-        
-        :param recipient: A URI specifying the entity or location to which an 
+
+        :param recipient: A URI specifying the entity or location to which an
             attesting entity can present the assertion.
         :return: True/False
         """

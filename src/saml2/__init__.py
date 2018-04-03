@@ -1027,9 +1027,9 @@ def is_required_attribute(cls, attr):
     """
     Check if the attribute is a required attribute for a specific SamlBase
     class.
-    
-    :param cls: The class 
-    :param attr: An attribute, note it must be the name of the attribute 
+
+    :param cls: The class
+    :param attr: An attribute, note it must be the name of the attribute
         that appears in the XSD in which the class is defined.
     :return: True if required
     """

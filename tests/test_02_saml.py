@@ -617,7 +617,7 @@ BASIC_BASE64_AV = """<?xml version="1.0" encoding="utf-8"?>
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic"
 Name="FirstName">
-<AttributeValue 
+<AttributeValue
 xsi:type="xs:base64Binary">VU5JTkVUVA==</AttributeValue>
 </Attribute>"""
 

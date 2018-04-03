@@ -25,8 +25,8 @@ def render_body(context,**pageargs):
         next = context.get('next', UNDEFINED)
         __M_writer = context.writer()
         # SOURCE LINE 1
-        self.seen_css = set() 
-        
+        self.seen_css = set()
+
         __M_writer(u'\n')
         # SOURCE LINE 7
         __M_writer(u'\n')
@@ -74,8 +74,8 @@ def render_css_link(context,path,media=''):
             pass
         # SOURCE LINE 6
         __M_writer(u'    ')
-        self.seen_css.add(path) 
-        
+        self.seen_css.add(path)
+
         __M_writer(u'\n')
     finally:
         __M_buf, __M_writer = context._pop_buffer_and_writer()
@@ -129,5 +129,3 @@ def render_css(context):
         context.caller_stack._pop_frame()
     __M_writer(filters.trim(__M_buf.getvalue()))
     return ''
-
-

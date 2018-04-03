@@ -20,10 +20,10 @@ from saml2 import xmldsig as ds
 
 
 # class TestRequestAbstractType:
-# 
+#
 #     def setup_class(self):
 #         self.ar = samlp.RequestAbstractType_()
-# 
+#
 #     def testAccessors(self):
 #         """Test for RequestAbstractType accessors"""
 #         self.ar.id = "request id"
@@ -34,7 +34,7 @@ from saml2 import xmldsig as ds
 #         self.ar.issuer = saml.Issuer()
 #         self.ar.signature = ds.Signature()
 #         self.ar.extensions = samlp.Extensions()
-# 
+#
 #         new_ar = samlp.request_abstract_type__from_string(self.ar.to_string())
 #         assert new_ar.id == "request id"
 #         assert new_ar.version == saml2.VERSION
@@ -44,7 +44,7 @@ from saml2 import xmldsig as ds
 #         assert isinstance(new_ar.issuer, saml.Issuer)
 #         assert isinstance(new_ar.signature, ds.Signature)
 #         assert isinstance(new_ar.extensions, samlp.Extensions)
-#         
+#
 #     def testUsingTestData(self):
 #         """Test for request_abstract_type_from_string() using test data"""
 #         # TODO:
@@ -59,7 +59,7 @@ class TestStatusDetail:
         """Test for StatusDetail accessors"""
         # TODO:
         pass
-    
+
 
 class TestStatusMessage:
 
@@ -70,7 +70,7 @@ class TestStatusMessage:
         """Test for StatusMessage accessors"""
         # TODO:
         pass
-    
+
 
 class TestStatusCode:
 
@@ -122,10 +122,10 @@ class TestStatus:
         assert isinstance(new_status.status_detail, samlp.StatusDetail)
 
 # class TestStatusResponseType:
-# 
+#
 #     def setup_class(self):
 #         self.sr = samlp.StatusResponseType()
-# 
+#
 #     def testAccessors(self):
 #         """Test for StatusResponseType accessors"""
 #         self.sr.id = "response id"
@@ -138,7 +138,7 @@ class TestStatus:
 #         self.sr.signature = ds.Signature()
 #         self.sr.extensions = samlp.Extensions()
 #         self.sr.status = samlp.Status()
-# 
+#
 #         new_sr = samlp.status_response_type_from_string(self.sr.to_string())
 #         assert new_sr.id == "response id"
 #         assert new_sr.in_response_to == "request id"
@@ -150,7 +150,7 @@ class TestStatus:
 #         assert isinstance(new_sr.signature, ds.Signature)
 #         assert isinstance(new_sr.extensions, samlp.Extensions)
 #         assert isinstance(new_sr.status, samlp.Status)
-#         
+#
 #     def testUsingTestData(self):
 #         """Test for status_response_from_string() using test data"""
 #         # TODO:
@@ -478,7 +478,7 @@ class TestLogoutRequest:
 
 
 class TestLogoutResponse:
-    
+
     def setup_class(self):
         self.lr = samlp.LogoutResponse()
 
@@ -506,7 +506,7 @@ class TestLogoutResponse:
         assert isinstance(new_lr.signature, ds.Signature)
         assert isinstance(new_lr.extensions, samlp.Extensions)
         assert isinstance(new_lr.status, samlp.Status)
-        
+
     def testUsingTestData(self):
         """Test for logout_response_from_string() using test data"""
         new_lr = samlp.logout_response_from_string(
@@ -521,4 +521,3 @@ class TestLogoutResponse:
         assert isinstance(new_lr.signature, ds.Signature)
         assert isinstance(new_lr.extensions, samlp.Extensions)
         assert isinstance(new_lr.status, samlp.Status)
-

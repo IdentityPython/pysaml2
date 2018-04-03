@@ -18,10 +18,10 @@ def test_1():
     cd = ed.cipher_data
     assert cd.cipher_value is not None
     assert cd.cipher_value.text == "A23B45C56"
-    
+
 data2 = """<?xml version='1.0' encoding='UTF-8'?>
-<ns0:EncryptedData 
-    Type="http://www.w3.org/2001/04/xmlenc#Element" 
+<ns0:EncryptedData
+    Type="http://www.w3.org/2001/04/xmlenc#Element"
     xmlns:ns0="http://www.w3.org/2001/04/xmlenc#">
     <ns0:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#tripledes-cbc" />
     <ns1:KeyInfo xmlns:ns1="http://www.w3.org/2000/09/xmldsig#">
@@ -59,8 +59,8 @@ def test_2():
     assert cd.cipher_value.text == "DEADBEEF"
 
 data3 = """<?xml version='1.0' encoding='UTF-8'?>
-<ns0:EncryptedData 
-    Id="ED" 
+<ns0:EncryptedData
+    Id="ED"
     xmlns:ns0="http://www.w3.org/2001/04/xmlenc#">
     <ns0:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc" />
     <ns1:KeyInfo xmlns:ns1="http://www.w3.org/2000/09/xmldsig#">
@@ -93,8 +93,8 @@ def test_3():
     assert cd.cipher_value.text == "DEADBEEF"
 
 data4 = """<?xml version='1.0' encoding='UTF-8'?>
-<ns0:EncryptedKey 
-    Id="EK" 
+<ns0:EncryptedKey
+    Id="EK"
     xmlns:ns0="http://www.w3.org/2001/04/xmlenc#">
     <ns0:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#rsa-1_5" />
     <ns1:KeyInfo xmlns:ns1="http://www.w3.org/2000/09/xmldsig#">
@@ -111,7 +111,7 @@ data4 = """<?xml version='1.0' encoding='UTF-8'?>
 
 
 # data4 = """<EncryptedKey Id='EK' xmlns='http://www.w3.org/2001/04/xmlenc#'>
-#     <EncryptionMethod 
+#     <EncryptionMethod
 #            Algorithm="http://www.w3.org/2001/04/xmlenc#rsa-1_5"/>
 #     <ds:KeyInfo xmlns:ds='http://www.w3.org/2000/09/xmldsig#'>
 #         <ds:KeyName>John Smith</ds:KeyName>
@@ -146,7 +146,7 @@ def test_4():
 data5 = """<CipherReference URI="http://www.example.com/CipherValues.xml"
     xmlns="http://www.w3.org/2001/04/xmlenc#">
     <Transforms xmlns:ds='http://www.w3.org/2000/09/xmldsig#'>
-        <ds:Transform 
+        <ds:Transform
            Algorithm="http://www.w3.org/TR/1999/REC-xpath-19991116">
            <ds:XPath xmlns:rep="http://www.example.org/repository">
              self::text()[parent::rep:CipherValue[@Id="example1"]]
@@ -172,8 +172,8 @@ def test_5():
         assert len(tr.x_path) == 1
         xp = tr.x_path[0]
         assert xp.text.strip() == """self::text()[parent::rep:CipherValue[@Id="example1"]]"""
-        
-        
+
+
 data6 = """<ReferenceList xmlns="http://www.w3.org/2001/04/xmlenc#">
     <DataReference URI="#invoice34">
       <ds:Transforms xmlns:ds='http://www.w3.org/2000/09/xmldsig#'>
@@ -199,11 +199,10 @@ def test_6():
     assert ee.namespace == "http://www.w3.org/2000/09/xmldsig#"
     trs = saml2.extension_element_to_element(ee, xmldsig.ELEMENT_FROM_STRING,
                                         namespace=xmldsig.NAMESPACE)
-    
+
     assert trs
     assert len(trs.transform) == 1
     tr = trs.transform[0]
     assert tr.algorithm == "http://www.w3.org/TR/1999/REC-xpath-19991116"
     assert len(tr.x_path) == 1
     assert tr.x_path[0].text.strip() == """self::xenc:EncryptedData[@Id="example1"]"""
-

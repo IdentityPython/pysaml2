@@ -62,7 +62,7 @@ class TestAuthnResponse:
             self.conf = config_factory("sp", dotname("server_conf"))
             self.conf.only_use_keys_in_metadata = False
             self.ar = authn_response(self.conf, "http://lingon.catalogix.se:8087/")
-    
+
     def test_verify_1(self):
         xml_response = "%s" % (self._resp_,)
         print(xml_response)
@@ -70,23 +70,23 @@ class TestAuthnResponse:
         self.ar.timeslack = 10000
         self.ar.loads(xml_response, decode=False)
         self.ar.verify()
-        
+
         print(self.ar.__dict__)
         assert self.ar.came_from == 'http://localhost:8088/sso'
         assert self.ar.session_id() == "id12"
         assert self.ar.ava["givenName"] == IDENTITY["givenName"]
         assert self.ar.name_id
         assert self.ar.issuer() == 'urn:mace:example.com:saml:roland:idp'
-    
+
     def test_verify_signed_1(self):
         xml_response = self._sign_resp_
         print(xml_response)
-        
+
         self.ar.outstanding_queries = {"id12": "http://localhost:8088/sso"}
         self.ar.timeslack = 10000
         self.ar.loads(xml_response, decode=False)
         self.ar.verify()
-        
+
         print(self.ar.__dict__)
         assert self.ar.came_from == 'http://localhost:8088/sso'
         assert self.ar.session_id() == "id12"
@@ -98,14 +98,14 @@ class TestAuthnResponse:
         with open(XML_RESPONSE_FILE) as fp:
             xml_response = fp.read()
         ID = "bahigehogffohiphlfmplepdpcohkhhmheppcdie"
-        self.ar.outstanding_queries = {ID: "http://localhost:8088/foo"}    
+        self.ar.outstanding_queries = {ID: "http://localhost:8088/foo"}
         self.ar.return_addr = "http://xenosmilus.umdc.umu.se:8087/login"
         self.ar.entity_id = "xenosmilus.umdc.umu.se"
         # roughly a year, should create the response on the fly
         self.ar.timeslack = 315360000 # indecent long time
         self.ar.loads(xml_response, decode=False)
         self.ar.verify()
-        
+
         print(self.ar.__dict__)
         assert self.ar.came_from == 'http://localhost:8088/foo'
         assert self.ar.session_id() == ID

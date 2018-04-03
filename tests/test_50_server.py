@@ -171,7 +171,7 @@ class TestServer1():
             assert attr1.attribute_value[0].text == "Derek"
             assert attr0.friendly_name == "sn"
             assert attr0.attribute_value[0].text == "Jeter"
-        # 
+        #
         subject = assertion.subject
         assert _eq(subject.keyswv(), ["text", "name_id"])
         assert subject.text == "_aaa"

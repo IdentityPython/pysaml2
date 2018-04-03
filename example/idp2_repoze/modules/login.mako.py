@@ -57,5 +57,3 @@ def render_body(context,**pageargs):
         return ''
     finally:
         context.caller_stack._pop_frame()
-
-

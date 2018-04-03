@@ -211,4 +211,3 @@ TEST_ACTION = """<?xml version="1.0" encoding="utf-8"?>
 <Action xmlns="urn:oasis:names:tc:SAML:2.0:assertion"
   Namespace="http://www.example.com/Namespace"/>
 """
-

@@ -295,16 +295,16 @@ class TestAdditionalMetadataLocation:
 
 
 # class TestKeySize:
-# 
+#
 #   def setup_class(self):
 #     self.key_size = md.KeySize()
-# 
+#
 #   def testAccessors(self):
 #     """Test for KeySize accessors"""
 #     self.key_size.text = "128"
 #     new_key_size = md.key_size_from_string(self.key_size.to_string())
 #     assert new_key_size.text.strip() == "128"
-# 
+#
 #   def testUsingTestData(self):
 #     """Test for key_size_from_string() using test data."""
 #     new_key_size = md.key_size_from_string(md_data.TEST_KEY_SIZE)
@@ -312,16 +312,16 @@ class TestAdditionalMetadataLocation:
 
 
 # class TestOAEPparams:
-# 
+#
 #   def setup_class(self):
 #     self.oaep_params = md.OAEPparams()
-# 
+#
 #   def testAccessors(self):
 #     """Test for OAEPparams accessors"""
 #     self.oaep_params.text = "9lWu3Q=="
 #     new_oaep_params = md.oae_pparams_from_string(self.oaep_params.to_string())
 #     assert new_oaep_params.text.strip() == "9lWu3Q=="
-# 
+#
 #   def testUsingTestData(self):
 #     """Test for oae_pparams_from_string() using test data."""
 #     new_oaep_params = md.oae_pparams_from_string(md_data.TEST_OAEP_PARAMS)
@@ -439,7 +439,7 @@ class TestRoleDescriptor:
 # class TestSSODescriptor:
 #   def setup_class(self):
 #     self.sso_descriptor = md.SSODescriptorType_()
-# 
+#
 #   def testAccessors(self):
 #     """Test for SSODescriptorType accessors"""
 #     self.sso_descriptor.id = "ID"
@@ -461,7 +461,7 @@ class TestRoleDescriptor:
 #       md.ManageNameIDService())
 #     self.sso_descriptor.name_id_format.append(
 #       md.NameIDFormat())
-# 
+#
 #     new_sso_descriptor = md.sso_descriptor_type__from_string(
 #       self.sso_descriptor.to_string())
 #     assert new_sso_descriptor.id == "ID"
@@ -484,7 +484,7 @@ class TestRoleDescriptor:
 #                             md.ManageNameIDService)
 #     assert isinstance(new_sso_descriptor.name_id_format[0],
 #                             md.NameIDFormat)
-# 
+#
 
 class TestArtifactResolutionService:
     def setup_class(self):
