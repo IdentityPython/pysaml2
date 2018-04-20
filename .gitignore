@@ -35,6 +35,11 @@ _build/
 *.swp
 .tox
 env
+bin/
+include/
+lib/
+local/
+pip-selfcheck.json
 
 example/idp3/htdocs/login.mako
 
