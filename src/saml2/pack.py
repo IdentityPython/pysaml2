@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#
-
 """Contains classes and functions that are necessary to implement
 different bindings.
 
@@ -10,24 +6,21 @@ Bindings normally consists of three parts:
 - how to package the information
 - which protocol to use
 """
-import html
-from six.moves.urllib.parse import urlparse, urlencode
-import saml2
+
 import base64
-from saml2.s_utils import deflate_and_base64_encode
-from saml2.s_utils import Unsupported
+import html
 import logging
-from saml2.sigver import REQ_ORDER
-from saml2.sigver import RESP_ORDER
-from saml2.sigver import SIGNER_ALGS
-import six
+
+import saml2
+from saml2.s_utils import deflate_and_base64_encode
+from saml2.sigver import REQ_ORDER, RESP_ORDER
 from saml2.xmldsig import SIG_ALLOWED_ALG
 
-logger = logging.getLogger(__name__)
+import six
+from six.moves.urllib.parse import urlencode, urlparse
 
 try:
     from xml.etree import cElementTree as ElementTree
-
     if ElementTree.VERSION < '1.3.0':
         # cElementTree has no support for register_namespace
         # neither _namespace_map, thus we sacrify performance
@@ -39,6 +32,9 @@ except ImportError:
     except ImportError:
         from elementtree import ElementTree
 import defusedxml.ElementTree
+
+
+logger = logging.getLogger(__name__)
 
 NAMESPACE = "http://schemas.xmlsoap.org/soap/envelope/"
 
@@ -66,6 +62,7 @@ HTML_FORM_SPEC = """<!DOCTYPE html>
     </form>
   </body>
 </html>"""
+
 
 def http_form_post_message(message, location, relay_state="",
                            typ="SAMLRequest", **kwargs):
@@ -107,6 +104,7 @@ def http_form_post_message(message, location, relay_state="",
         action=location)
 
     return {"headers": [("Content-type", "text/html")], "data": response}
+
 
 def http_post_message(message, relay_state="", typ="SAMLRequest", **kwargs):
     """
@@ -273,7 +271,8 @@ def parse_soap_enveloped_saml(text, body_class, header_class=None):
         if part.tag == '{%s}Body' % NAMESPACE:
             for sub in part:
                 try:
-                    body = saml2.create_class_from_element_tree(body_class, sub)
+                    body = saml2.create_class_from_element_tree(
+                            body_class, sub)
                 except Exception:
                     raise Exception(
                         "Wrong body type (%s) in SOAP envelope" % sub.tag)
