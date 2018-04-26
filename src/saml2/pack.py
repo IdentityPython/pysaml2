@@ -10,6 +10,7 @@ Bindings normally consists of three parts:
 - how to package the information
 - which protocol to use
 """
+import html
 from six.moves.urllib.parse import urlparse, urlencode
 import saml2
 import base64
@@ -41,33 +42,29 @@ import defusedxml.ElementTree
 
 NAMESPACE = "http://schemas.xmlsoap.org/soap/envelope/"
 
-FORM_SPEC = """\
-<!DOCTYPE html>
+HTML_INPUT_ELEMENT_SPEC = '<input type="{type}" name="{name}" value="{val}"/>'
+
+HTML_FORM_SPEC = """<!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8" />
-    </head>
-    <body onload="document.forms[0].submit()">
-        <noscript>
-            <p>
-                <strong>Note:</strong> Since your browser does not support JavaScript,
-                you must press the Continue button once to proceed.
-            </p>
-        </noscript>
-        
-        <form action="{action}" method="post">
-            <div>
-                <input type="hidden" name="RelayState" value="{relay_state}"/>                
-                                
-                <input type="hidden" name="{saml_type}" value="{saml_response}"/>
-            </div>
-            <noscript>
-                <div>
-                    <input type="submit" value="Continue"/>
-                </div>
-            </noscript>
-        </form>
-            </body>
+  <head>
+    <meta charset="utf-8" />
+  </head>
+  <body onload="document.forms[0].submit()">
+    <noscript>
+      <p>
+        <strong>Note:</strong>
+        Since your browser does not support JavaScript,
+        you must press the Continue button once to proceed.
+      </p>
+    </noscript>
+    <form action="{action}" method="post">
+      {saml_response_input}
+      {relay_state_input}
+      <noscript>
+        <input type="submit" value="Continue"/>
+      </noscript>
+    </form>
+  </body>
 </html>"""
 
 def http_form_post_message(message, location, relay_state="",
@@ -92,14 +89,20 @@ def http_form_post_message(message, location, relay_state="",
         _msg = message
     _msg = _msg.decode('ascii')
 
-    args = {
-       'action'        : location,
-       'saml_type'     : typ,
-       'relay_state'   : relay_state,
-       'saml_response' : _msg
-       }
+    saml_response_input = HTML_INPUT_ELEMENT_SPEC.format(
+            name=html.escape(typ),
+            val=html.escape(_msg),
+            type='hidden')
 
-    response = FORM_SPEC.format(**args)
+    relay_state_input = HTML_INPUT_ELEMENT_SPEC.format(
+            name='RelayState',
+            val=html.escape(relay_state),
+            type='hidden')
+
+    response = HTML_FORM_SPEC.format(
+        saml_response_input=saml_response_input,
+        relay_state_input=relay_state_input,
+        action=location)
 
     return {"headers": [("Content-type", "text/html")], "data": response}
 
