@@ -1179,8 +1179,13 @@ class Entity(HTTPBase):
     # ------------------------------------------------------------------------
 
     def parse_logout_request_response(self, xmlstr, binding=BINDING_SOAP):
+        kwargs = None
+        if xmlstr:
+            kwargs = {
+                "return_addrs": self.config.endpoint("single_logout_service", binding, "sp")
+            }
         return self._parse_response(xmlstr, LogoutResponse,
-                                    "single_logout_service", binding)
+                                    "single_logout_service", binding, **kwargs)
 
     # ------------------------------------------------------------------------
 
