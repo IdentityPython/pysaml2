@@ -39,7 +39,7 @@ setup(
     author='Roland Hedberg',
     author_email='roland.hedberg@adm.umu.se',
     license='Apache 2.0',
-    url='https://github.com/rohe/pysaml2',
+    url='https://github.com/IdentityPython/pysaml2',
 
     packages=['saml2', 'saml2/xmldsig', 'saml2/xmlenc', 'saml2/s2repoze',
               'saml2/s2repoze.plugins', "saml2/profile", "saml2/schema",
