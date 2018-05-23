@@ -94,10 +94,12 @@ def http_form_post_message(message, location, relay_state="",
             val=html.escape(_msg),
             type='hidden')
 
-    relay_state_input = HTML_INPUT_ELEMENT_SPEC.format(
-            name='RelayState',
-            val=html.escape(relay_state),
-            type='hidden')
+    relay_state_input = ""
+    if relay_state:
+        relay_state_input = HTML_INPUT_ELEMENT_SPEC.format(
+                name='RelayState',
+                val=html.escape(relay_state),
+                type='hidden')
 
     response = HTML_FORM_SPEC.format(
         saml_response_input=saml_response_input,
