@@ -7,19 +7,10 @@ Suppport for the client part of the SAML2.0 SOAP binding.
 """
 import logging
 
+import saml2.xml_safe as ElementTree
 from saml2 import create_class_from_element_tree
 from saml2.samlp import NAMESPACE as SAMLP_NAMESPACE
 from saml2.schema import soapenv
-
-try:
-    from xml.etree import cElementTree as ElementTree
-except ImportError:
-    try:
-        import cElementTree as ElementTree
-    except ImportError:
-        #noinspection PyUnresolvedReferences
-        from elementtree import ElementTree
-import defusedxml.ElementTree
 
 
 logger = logging.getLogger(__name__)
@@ -134,7 +125,7 @@ def parse_soap_enveloped_saml_thingy(text, expected_tags):
     :param expected_tags: What the tag of the SAML thingy is expected to be.
     :return: SAML thingy as a string
     """
-    envelope = defusedxml.ElementTree.fromstring(text)
+    envelope = ElementTree.fromstring(text)
 
     # Make sure it's a SOAP message
     assert envelope.tag == '{%s}Envelope' % soapenv.NAMESPACE
@@ -184,7 +175,7 @@ def class_instances_from_soap_enveloped_saml_thingies(text, modules):
     :return: The body and headers as class instances
     """
     try:
-        envelope = defusedxml.ElementTree.fromstring(text)
+        envelope = ElementTree.fromstring(text)
     except Exception as exc:
         raise XmlParseError("%s" % exc)
 
@@ -210,7 +201,7 @@ def open_soap_envelope(text):
     :return: dictionary with two keys "body"/"header"
     """
     try:
-        envelope = defusedxml.ElementTree.fromstring(text)
+        envelope = ElementTree.fromstring(text)
     except Exception as exc:
         raise XmlParseError("%s" % exc)
 

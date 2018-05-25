@@ -31,6 +31,7 @@ from tempfile import NamedTemporaryFile
 from subprocess import Popen
 from subprocess import PIPE
 
+import saml2.xml_safe as ElementTree
 from saml2 import samlp
 from saml2 import SamlBase
 from saml2 import SAMLError
@@ -1034,11 +1035,10 @@ class CryptoBackendXMLSecurity(CryptoBackend):
         :returns: Signed XML as string
         """
         import xmlsec
-        import lxml.etree
 
         xml = xmlsec.parse_xml(statement)
         signed = xmlsec.sign(xml, key_file)
-        return lxml.etree.tostring(signed, xml_declaration=True)
+        return ElementTree.tostring(signed, xml_declaration=True)
 
     def validate_signature(self, signedtext, cert_file, cert_type, node_name,
                            node_id, id_attr):

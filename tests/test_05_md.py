@@ -8,11 +8,6 @@ __author__ = 'roland.hedberg@umu.se (Roland Hedberg)'
 
 import unittest
 
-try:
-    from xml.etree import ElementTree
-except ImportError:
-    from elementtree import ElementTree
-
 import saml2
 from saml2 import xmldsig as ds
 from saml2 import saml

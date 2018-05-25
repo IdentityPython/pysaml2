@@ -1,18 +1,7 @@
 #!/usr/bin/env python
 
-try:
-    from xml.etree import cElementTree as ElementTree
-    if ElementTree.VERSION < '1.3.0':
-        # cElementTree has no support for register_namespace
-        # neither _namespace_map, thus we sacrify performance
-        # for correctness
-        from xml.etree import ElementTree
-except ImportError:
-    try:
-        import cElementTree as ElementTree
-    except ImportError:
-        from elementtree import ElementTree
 from defusedxml.common import EntitiesForbidden
+import saml2.xml_safe as ElementTree
 
 from pytest import raises
 
