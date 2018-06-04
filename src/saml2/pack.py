@@ -260,7 +260,7 @@ def parse_soap_enveloped_saml(text, body_class, header_class=None):
     :param text: The SOAP object as XML
     :return: header parts and body as saml.samlbase instances
     """
-    envelope = defusedxml.ElementTree.fromstring(text)
+    envelope = defusedxml.ElementTree.fromstring(text, forbid_dtd=True)
     assert envelope.tag == '{%s}Envelope' % NAMESPACE
 
     # print(len(envelope))
