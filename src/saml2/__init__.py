@@ -88,7 +88,7 @@ def create_class_from_xml_string(target_class, xml_string):
     """
     if not isinstance(xml_string, six.binary_type):
         xml_string = xml_string.encode('utf-8')
-    tree = defusedxml.ElementTree.fromstring(xml_string)
+    tree = defusedxml.ElementTree.fromstring(xml_string, forbid_dtd=True)
     return create_class_from_element_tree(target_class, tree)
 
 
@@ -270,7 +270,7 @@ class ExtensionElement(object):
 
 
 def extension_element_from_string(xml_string):
-    element_tree = defusedxml.ElementTree.fromstring(xml_string)
+    element_tree = defusedxml.ElementTree.fromstring(xml_string, forbid_dtd=True)
     return _extension_element_from_element_tree(element_tree)
 
 
