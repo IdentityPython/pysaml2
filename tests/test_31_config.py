@@ -322,7 +322,11 @@ def test_conf_syslog():
 
     # otherwise the logger setting is not changed
     root_logger.level = logging.NOTSET
-    root_logger.handlers = []
+    while root_logger.handlers:
+        handler = root_logger.handlers[-1]
+        root_logger.removeHandler(handler)
+        handler.flush()
+        handler.close()
 
     print(c.logger)
     c.setup_logger()

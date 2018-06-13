@@ -849,7 +849,12 @@ def application(environ, start_response):
 
 
 if __name__ == '__main__':
-    from cherrypy import wsgiserver
+    try:
+        from cheroot.wsgi import Server as WSGIServer
+        from cheroot.ssl import pyopenssl
+    except ImportError:
+        from cherrypy.wsgiserver import CherryPyWSGIServer as WSGIServer
+        from cherrypy.wsgiserver import ssl_pyopenssl as pyopenssl
 
     _parser = argparse.ArgumentParser()
     _parser.add_argument('-d', dest='debug', action='store_true',
@@ -923,14 +928,12 @@ if __name__ == '__main__':
         pass
     ds.DefaultSignature(sign_alg, digest_alg)
 
-    SRV = wsgiserver.CherryPyWSGIServer((HOST, PORT), application)
+    SRV = WSGIServer((HOST, PORT), application)
 
     _https = ""
     if service_conf.HTTPS:
-        from cherrypy.wsgiserver import ssl_pyopenssl
-
-        SRV.ssl_adapter = ssl_pyopenssl.pyOpenSSLAdapter(SERVER_CERT,
-                                                         SERVER_KEY, CERT_CHAIN)
+        SRV.ssl_adapter = pyopenssl.pyOpenSSLAdapter(
+                SERVER_CERT, SERVER_KEY, CERT_CHAIN)
         _https = " using SSL/TLS"
     logger.info("Server starting")
     print("SP listening on %s:%s%s" % (HOST, PORT, _https))

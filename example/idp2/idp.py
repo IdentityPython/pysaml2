@@ -8,8 +8,13 @@ import re
 import time
 
 from hashlib import sha1
-from cherrypy import wsgiserver
-from cherrypy.wsgiserver.ssl_builtin import BuiltinSSLAdapter
+
+try:
+    from cheroot.wsgi import Server as WSGIServer
+    from cheroot.ssl.builtin import BuiltinSSLAdapter
+except ImportError:
+    from cherrypy.wsgiserver import CherryPyWSGIServer as WSGIServer
+    from cherrypy.wsgiserver.ssl_builtin import BuiltinSSLAdapter
 
 from six.moves.urllib.parse import parse_qs
 from six.moves.http_cookies import SimpleCookie
@@ -937,7 +942,7 @@ NON_AUTHN_URLS = [
 
 def metadata(environ, start_response):
     try:
-        path = args.path
+        path = args.path[:]
         if path is None or len(path) == 0:
             path = os.path.dirname(os.path.abspath(__file__))
         if path[-1] != "/":
@@ -1037,7 +1042,7 @@ def application(environ, start_response):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-p', dest='path', help='Path to configuration file.')
+    parser.add_argument('-p', dest='path', help='Path to configuration file.', default='./idp_conf.py')
     parser.add_argument('-v', dest='valid',
                         help="How long, in days, the metadata is valid from "
                              "the time of creation")
@@ -1085,7 +1090,7 @@ if __name__ == '__main__':
         pass
     ds.DefaultSignature(sign_alg, digest_alg)
 
-    SRV = wsgiserver.CherryPyWSGIServer((HOST, PORT), application)
+    SRV = WSGIServer((HOST, PORT), application)
 
     _https = ""
     if CONFIG.HTTPS:

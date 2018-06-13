@@ -95,7 +95,8 @@ class TestAuthnResponse:
         assert self.ar.name_id
 
     def test_parse_2(self):
-        xml_response = open(XML_RESPONSE_FILE).read()
+        with open(XML_RESPONSE_FILE) as fp:
+            xml_response = fp.read()
         ID = "bahigehogffohiphlfmplepdpcohkhhmheppcdie"
         self.ar.outstanding_queries = {ID: "http://localhost:8088/foo"}    
         self.ar.return_addr = "http://xenosmilus.umdc.umu.se:8087/login"

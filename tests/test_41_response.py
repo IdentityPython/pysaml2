@@ -94,7 +94,8 @@ class TestResponse:
         assert isinstance(resp, AuthnResponse)
 
     def test_false_sign(self):
-        xml_response = open(FALSE_ASSERT_SIGNED).read()
+        with open(FALSE_ASSERT_SIGNED) as fp:
+            xml_response = fp.read()
         resp = response_factory(
             xml_response, self.conf,
             return_addrs=["http://lingon.catalogix.se:8087/"],
@@ -113,7 +114,8 @@ class TestResponse:
             assert False
 
     def test_other_response(self):
-        xml_response = open(full_path("attribute_response.xml")).read()
+        with open(full_path("attribute_response.xml")) as fp:
+            xml_response = fp.read()
         resp = response_factory(
             xml_response, self.conf,
             return_addrs=['https://myreviewroom.com/saml2/acs/'],
