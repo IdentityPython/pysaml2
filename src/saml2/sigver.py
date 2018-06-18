@@ -935,6 +935,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
                            decode=False, delete=self._xmlsec_delete_tmpfiles)
 
         com_list = [self.xmlsec, "--verify",
+                    "--enabled-reference-uris", "empty,same-doc",
                     "--pubkey-cert-%s" % cert_type, cert_file,
                     "--id-attr:%s" % id_attr, node_name]
 
