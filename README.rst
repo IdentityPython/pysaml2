@@ -10,13 +10,13 @@ PySAML2 - SAML2 in Python
     :target: https://travis-ci.org/IdentityPython/pysaml2
 
 .. image:: https://img.shields.io/pypi/pyversions/pysaml2.svg
-    :target: https://pypi.python.org/pypi/pysaml2
+    :target: https://pypi.org/project/pysaml2/
 
 .. image:: https://img.shields.io/pypi/v/pysaml2.svg
-    :target: https://pypi.python.org/pypi/pysaml2
+    :target: https://pypi.org/project/pysaml2/
 
 .. image:: https://img.shields.io/pypi/dm/pysaml2.svg
-    :target: https://pypi.python.org/pypi/pysaml2
+    :target: https://pypi.org/project/pysaml2/
 
 
 PySAML2 is a pure python implementation of SAML2. It contains all
