@@ -5,11 +5,13 @@ python:
   - 3.4
   - 3.5
   - 3.6
+  - pypy
+  - pypy3
 
 addons:
   apt:
     packages:
-    - xmlsec1
+      - xmlsec1
 
 services:
   - mongodb
