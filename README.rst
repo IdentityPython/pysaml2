@@ -31,7 +31,7 @@ PySAML2 uses the `pytest <http://doc.pytest.org/en/latest/>`_ framework for
 testing. To run the tests on your system's version of python
 
 1. Create and activate a `virtualenv <https://virtualenv.pypa.io/en/stable/>`_.
-2. Inside the virtualenv, install the dependencies needed for testing :code:`pip install -r tests/test_requirements.txt`
+2. Inside the virtualenv, install the dependencies needed for testing :code:`pip install -r tests/test-requirements.txt`
 3. Run the tests :code:`py.test tests`
 
 To run tests in multiple python environments, you can use
