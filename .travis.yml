@@ -19,6 +19,11 @@ services:
 install:
   - pip install tox
   - pip install tox-travis
+  - pip install codecov
 
 script:
+  - codecov --version
   - tox
+
+after_success:
+  - codecov
