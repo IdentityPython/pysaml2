@@ -17,6 +17,7 @@ services:
   - mongodb
 
 install:
+  - pip install tox
   - pip install tox-travis
 
 script:
