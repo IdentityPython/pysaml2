@@ -1,3 +1,6 @@
+Changelog
+=========
+
 0.4.2 (2012-03-27)
 ------------------
 - Add default attribute mappings
