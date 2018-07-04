@@ -1,18 +1,19 @@
-__author__ = 'haho0032'
-
 import base64
-import datetime
-import dateutil.parser
-import pytz
-import six
+import os
+
 from OpenSSL import crypto
-from os.path import join
-from os import remove
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.x509 import load_pem_x509_certificate
 
+import six
+
+import saml2.datetime.asn1
+import saml2.datetime.compare
+
+
 backend = default_backend()
+
 
 class WrongInput(Exception):
     pass
@@ -113,15 +114,15 @@ class OpenSSLWrapper(object):
             cert_file = "%s.crt" % cn
             key_file = "%s.key" % cn
             try:
-                remove(cert_file)
+                os.remove(cert_file)
             except:
                 pass
             try:
-                remove(key_file)
+                os.remove(key_file)
             except:
                 pass
-            c_f = join(cert_dir, cert_file)
-            k_f = join(cert_dir, key_file)
+            c_f = os.path.join(cert_dir, cert_file)
+            k_f = os.path.join(cert_dir, key_file)
 
 
         # create a key pair
@@ -289,12 +290,14 @@ class OpenSSLWrapper(object):
                     "certificate.")
 
     def certificate_not_valid_yet(self, cert):
-        starts_to_be_valid = dateutil.parser.parse(cert.get_notBefore())
-        now = pytz.UTC.localize(datetime.datetime.utcnow())
-        if starts_to_be_valid < now:
-            return False
-        return True
+        not_before = cert.get_notBefore()
+        if not not_before:
+            return True
 
+        not_before = not_before.decode()
+        starts_to_be_valid = saml2.datetime.asn1.parse(not_before)
+        is_valid = saml2.datetime.compare.before_now(starts_to_be_valid)
+        return not is_valid
 
     def verify(self, signing_cert_str, cert_str):
         """
