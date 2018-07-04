@@ -1,16 +1,11 @@
-#!/usr/bin/env python
 import logging
+
 from pymongo.mongo_client import MongoClient
 
-__author__ = 'rolandh'
-
-#import cjson
-import time
-from datetime import datetime
-
-from saml2 import time_util
+import saml2.datetime
+import saml2.datetime.compare
 from saml2.cache import ToOld
-from saml2.time_util import TIME_FORMAT
+
 
 logger = logging.getLogger(__name__)
 
@@ -88,8 +83,11 @@ class Cache(object):
         """
         timestamp = item["timestamp"]
 
-        if check_not_on_or_after and not time_util.not_on_or_after(timestamp):
-            raise ToOld()
+        if check_not_on_or_after:
+            date_time = saml2.datetime.fromtimestamp(timestamp)
+            is_invalid = saml2.datetime.compare.before_now(date_time)
+            if is_invalid:
+                raise ToOld()
 
         try:
             return item["info"]
@@ -105,7 +103,7 @@ class Cache(object):
             return self._get_info(res, check_not_on_or_after)
 
     def set(self, subject_id, entity_id, info, timestamp=0):
-        """ Stores session information in the cache. Assumes that the subject_id
+        """Stores session information in the cache. Assumes that the subject_id
         is unique within the context of the Service Provider.
 
         :param subject_id: The subject identifier
@@ -114,17 +112,12 @@ class Cache(object):
         :param info: The session info, the assertion is part of this
         :param timestamp: A time after which the assertion is not valid.
         """
-
-        if isinstance(timestamp, datetime) or isinstance(timestamp,
-                                                         time.struct_time):
-            timestamp = time.strftime(TIME_FORMAT, timestamp)
-
-        doc = {"subject_id": subject_id,
-               "entity_id": entity_id,
-               "info": info,
-               "timestamp": timestamp}
-
-        _ = self._cache.insert(doc)
+        self._cache.insert({
+            "subject_id": subject_id,
+            "entity_id": entity_id,
+            "info": info,
+            "timestamp": timestamp,
+        })
 
     def reset(self, subject_id, entity_id):
         """ Scrap the assertions received from a IdP or an AA about a special
@@ -164,12 +157,13 @@ class Cache(object):
             valid or not.
         """
 
-        item = self._cache.find_one({"subject_id": subject_id,
-                                     "entity_id": entity_id})
-        try:
-            return time_util.not_on_or_after(item["timestamp"])
-        except ToOld:
-            return False
+        item = self._cache.find_one({
+            "subject_id": subject_id,
+            "entity_id": entity_id,
+        })
+        timestamp = item["timestamp"]
+        date_time = saml2.datetime.fromtimestamp(timestamp)
+        return saml2.datetime.compare.before_now(date_time)
 
     def subjects(self):
         """ Return identifiers for all the subjects that are in the cache.
