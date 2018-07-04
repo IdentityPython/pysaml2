@@ -1,23 +1,18 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#
-
-""" Functions connected to signing and verifying.
+"""
+Functions connected to signing and verifying.
 Based on the use of xmlsec1 binaries and not the python xmlsec module.
 """
-from OpenSSL import crypto
 
 import base64
 import hashlib
 import logging
 import os
-import ssl
-import six
-
-from time import mktime
 from binascii import hexlify
+from subprocess import PIPE
+from subprocess import Popen
+from tempfile import NamedTemporaryFile
 
-from future.backports.urllib.parse import urlencode
+from OpenSSL import crypto
 
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.backends import default_backend
@@ -27,43 +22,37 @@ from cryptography.hazmat.primitives.asymmetric.padding import PKCS1v15
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from cryptography.x509 import load_pem_x509_certificate
 
-from tempfile import NamedTemporaryFile
-from subprocess import Popen
-from subprocess import PIPE
+from future.backports.urllib.parse import urlencode
 
-from saml2 import samlp
-from saml2 import SamlBase
-from saml2 import SAMLError
-from saml2 import extension_elements_to_elements
-from saml2 import class_name
-from saml2 import saml
+import six
+
+import saml2.datetime.utils
+import saml2.xmldsig as ds
 from saml2 import ExtensionElement
+from saml2 import SAMLError
+from saml2 import SamlBase
 from saml2 import VERSION
-
+from saml2 import class_name
+from saml2 import extension_elements_to_elements
+from saml2 import saml
+from saml2 import samlp
 from saml2.cert import OpenSSLWrapper
 from saml2.extension import pefim
 from saml2.extension.pefim import SPCertEnc
-from saml2.saml import EncryptedAssertion
-
-import saml2.xmldsig as ds
-
-from saml2.s_utils import sid
 from saml2.s_utils import Unsupported
-
-from saml2.time_util import instant
-from saml2.time_util import utc_now
-from saml2.time_util import str_to_time
-
+from saml2.s_utils import sid
+from saml2.saml import EncryptedAssertion
 from saml2.xmldsig import SIG_RSA_SHA1
 from saml2.xmldsig import SIG_RSA_SHA224
 from saml2.xmldsig import SIG_RSA_SHA256
 from saml2.xmldsig import SIG_RSA_SHA384
 from saml2.xmldsig import SIG_RSA_SHA512
-from saml2.xmlenc import EncryptionMethod
-from saml2.xmlenc import EncryptedKey
 from saml2.xmlenc import CipherData
 from saml2.xmlenc import CipherValue
 from saml2.xmlenc import EncryptedData
+from saml2.xmlenc import EncryptedKey
+from saml2.xmlenc import EncryptionMethod
+
 
 logger = logging.getLogger(__name__)
 
@@ -376,14 +365,6 @@ def split_len(seq, length):
 
 
 # --------------------------------------------------------------------------
-
-M2_TIME_FORMAT = "%b %d %H:%M:%S %Y"
-
-
-def to_time(_time):
-    assert _time.endswith(" GMT")
-    _time = _time[:-4]
-    return mktime(str_to_time(_time, M2_TIME_FORMAT))
 
 
 def active_cert(key):
@@ -1963,8 +1944,11 @@ def pre_encrypt_assertion(response):
 
 def response_factory(sign=False, encrypt=False, sign_alg=None, digest_alg=None,
                      **kwargs):
-    response = samlp.Response(id=sid(), version=VERSION,
-                              issue_instant=instant())
+    instant = saml2.datetime.utils.instant()
+    response = samlp.Response(
+            id=sid(),
+            version=VERSION,
+            issue_instant=instant)
 
     if sign:
         response.signature = pre_signature_part(kwargs["id"], sign_alg=sign_alg,
