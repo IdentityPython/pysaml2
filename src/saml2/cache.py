@@ -1,10 +1,14 @@
-#!/usr/bin/env python
-
-import shelve
-import six
-from saml2.ident import code, decode
-from saml2 import time_util, SAMLError
 import logging
+import shelve
+
+import six
+
+import saml2.datetime
+import saml2.datetime.compare
+from saml2 import SAMLError
+from saml2.ident import code
+from saml2.ident import decode
+
 
 logger = logging.getLogger(__name__)
 
@@ -43,8 +47,7 @@ class Cache(object):
             except AttributeError:
                 pass
 
-    def get_identity(self, name_id, entities=None,
-                     check_not_on_or_after=True):
+    def get_identity(self, name_id, entities=None, check_not_on_or_after=True):
         """ Get all the identity information that has been received and
         are still valid about the subject.
 
@@ -97,8 +100,12 @@ class Cache(object):
         cni = code(name_id)
         (timestamp, info) = self._db[cni][entity_id]
         info = info.copy()
-        if check_not_on_or_after and time_util.after(timestamp):
-            raise ToOld("past %s" % str(timestamp))
+
+        if check_not_on_or_after:
+            date_time = saml2.datetime.fromtimestamp(timestamp)
+            is_valid = saml2.datetime.compare.after_now(date_time)
+            if not is_valid:
+                raise ToOld("past %s" % str(timestamp))
 
         if 'name_id' in info and isinstance(info['name_id'], six.string_types):
             info['name_id'] = decode(info['name_id'])
@@ -172,7 +179,9 @@ class Cache(object):
         if not info:
             return False
         else:
-            return time_util.not_on_or_after(timestamp)
+            date_time = saml2.datetime.fromtimestamp(timestamp)
+            is_valid = saml2.datetime.compare.after_now(date_time)
+            return is_valid
 
     def subjects(self):
         """ Return identifiers for all the subjects that are in the cache.
