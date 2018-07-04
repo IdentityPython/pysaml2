@@ -1,36 +1,34 @@
-#!/usr/bin/env python
-from saml2.algsupport import algorithm_support_in_metadata
-from saml2.md import AttributeProfile
-from saml2.sigver import security_context
-from saml2.config import Config
-from saml2.validate import valid_instance
-from saml2.time_util import in_a_while
-from saml2.extension import mdui
-from saml2.extension import idpdisc
-from saml2.extension import shibmd
-from saml2.extension import mdattr
-from saml2.extension import sp_type
-from saml2.saml import NAME_FORMAT_URI
-from saml2.saml import AttributeValue
-from saml2.saml import Attribute
-from saml2.attribute_converter import from_local_name
-from saml2 import md, SAMLError
+import six
+
+import saml2.datetime
+import saml2.datetime.compute
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_SOAP
-from saml2 import samlp
+from saml2 import SAMLError
 from saml2 import class_name
-
+from saml2 import md
+from saml2 import samlp
 from saml2 import xmldsig as ds
-import six
-
-from saml2.sigver import pre_signature_part
-
+from saml2.algsupport import algorithm_support_in_metadata
+from saml2.attribute_converter import from_local_name
+from saml2.config import Config
+from saml2.extension import idpdisc
+from saml2.extension import mdattr
+from saml2.extension import mdui
+from saml2.extension import shibmd
+from saml2.extension import sp_type
+from saml2.md import AttributeProfile
 from saml2.s_utils import factory
 from saml2.s_utils import rec_factory
 from saml2.s_utils import sid
+from saml2.saml import Attribute
+from saml2.saml import AttributeValue
+from saml2.saml import NAME_FORMAT_URI
+from saml2.sigver import pre_signature_part
+from saml2.sigver import security_context
+from saml2.validate import valid_instance
 
-__author__ = 'rolandh'
 
 NSPAIR = {
     "saml2p": "urn:oasis:names:tc:SAML:2.0:protocol",
@@ -78,12 +76,9 @@ def metadata_tostring_fix(desc, nspair, xmlstring=""):
 
 def create_metadata_string(configfile, config=None, valid=None, cert=None,
                            keyfile=None, mid=None, name=None, sign=None):
-    valid_for = 0
+    valid_for = valid or 0  # Hours
     nspair = {"xs": "http://www.w3.org/2001/XMLSchema"}
     # paths = [".", "/opt/local/bin"]
-
-    if valid:
-        valid_for = int(valid)  # Hours
 
     eds = []
     if config is None:
@@ -714,8 +709,9 @@ def entity_descriptor(confd):
     entd.entity_id = confd.entityid
 
     if confd.valid_for:
-        entd.valid_until = in_a_while(hours=int(confd.valid_for))
-
+        validity_period = saml2.datetime.unit.hours(confd.valid_for)
+        valid_until = saml2.datetime.compute.add_to_now(validity_period)
+        entd.valid_until = saml2.datetime.to_string(valid_until)
     if confd.organization is not None:
         entd.organization = do_organization_info(confd.organization)
     if confd.contact_person is not None:
@@ -773,7 +769,9 @@ def entities_descriptor(eds, valid_for, name, ident, sign, secc, sign_alg=None,
                         digest_alg=None):
     entities = md.EntitiesDescriptor(entity_descriptor=eds)
     if valid_for:
-        entities.valid_until = in_a_while(hours=valid_for)
+        validity_period = saml2.datetime.unit.hours(valid_for)
+        valid_until = saml2.datetime.compute.add_to_now(validity_period)
+        entities.valid_until = saml2.datetime.to_string(valid_until)
     if name:
         entities.name = name
     if ident:
