@@ -1,7 +1,10 @@
 import logging
+
 import six
+
+import saml2.datetime.compute
 from saml2.cache import Cache
-from saml2.ident import code
+
 
 logger = logging.getLogger(__name__)
 
@@ -23,8 +26,9 @@ class Population(object):
         session_info = dict(session_info)
         name_id = session_info["name_id"]
         issuer = session_info.pop("issuer")
-        self.cache.set(name_id, issuer, session_info,
-                       session_info["not_on_or_after"])
+        nooa = session_info["not_on_or_after"]
+        nooa = saml2.datetime.compute.timestamp(nooa) if nooa else 0
+        self.cache.set(name_id, issuer, session_info, nooa)
         return name_id
 
     def stale_sources_for_person(self, name_id, sources=None):
