@@ -1,11 +1,10 @@
-from saml2.saml import NameID
-from saml2.saml import NAMEID_FORMAT_TRANSIENT
-
-__author__ = 'rolandh'
-
+import saml2.datetime
+import saml2.datetime.compute
 from saml2 import config
 from saml2.client import Saml2Client
-from saml2.time_util import str_to_time, in_a_while
+from saml2.saml import NAMEID_FORMAT_TRANSIENT
+from saml2.saml import NameID
+
 
 SESSION_INFO_PATTERN = {"ava": {}, "came from": "", "not_on_or_after": 0,
                         "issuer": "", "session_id": -1}
@@ -17,7 +16,8 @@ nid0 = NameID(name_qualifier="foo", format=NAMEID_FORMAT_TRANSIENT,
 
 
 def add_derek_info(sp):
-    not_on_or_after = str_to_time(in_a_while(days=1))
+    period = saml2.datetime.unit.days(1)
+    not_on_or_after = saml2.datetime.compute.add_to_now(period)
     session_info = SESSION_INFO_PATTERN.copy()
     session_info["ava"] = {"givenName": ["Derek"], "umuselin": ["deje0001"]}
     session_info["issuer"] = "urn:mace:example.com:saml:idp"

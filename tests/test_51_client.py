@@ -9,6 +9,8 @@ from future.backports.urllib.parse import urlencode
 from future.backports.urllib.parse import urlparse
 from pytest import raises
 
+import saml2.datetime
+import saml2.datetime.compute
 from saml2.argtree import add_path
 from saml2.cert import OpenSSLWrapper
 from saml2.xmldsig import SIG_RSA_SHA256
@@ -40,13 +42,16 @@ from saml2.sigver import rm_xmltag
 from saml2.sigver import verify_redirect_signature
 from saml2.s_utils import do_attribute_statement
 from saml2.s_utils import factory
-from saml2.time_util import in_a_while, a_while_ago
 
 from defusedxml.common import EntitiesForbidden
 
 from fakeIDP import FakeIDP
 from fakeIDP import unpack_form
 from pathutils import full_path
+
+
+MIN_15 = saml2.datetime.unit.minutes(15)
+MIN_5 = saml2.datetime.unit.minutes(5)
 
 AUTHN = {
     "class_ref": INTERNETPROTOCOLPASSWORD,
@@ -378,9 +383,12 @@ class TestClient:
             self.client.sec.verify_signature(ar_str, node_name=class_name(ar))
 
     def test_create_logout_request(self):
+        dt_in_5_min = saml2.datetime.compute.add_to_now(MIN_5)
+        expire = saml2.datetime.to_string(dt_in_5_min)
         req_id, req = self.client.create_logout_request(
             "http://localhost:8088/slo", "urn:mace:example.com:saml:roland:idp",
-            name_id=nid, reason="Tired", expire=in_a_while(minutes=15),
+            name_id=nid, reason="Tired",
+            expire=expire,
             session_indexes=["_foo"])
 
         assert req.destination == "http://localhost:8088/slo"
@@ -1360,10 +1368,11 @@ class TestClient:
         client = Saml2Client(conf)
 
         # information about the user from an IdP
+        nooa = saml2.datetime.compute.add_to_now(MIN_15)
         session_info = {
             "name_id": nid,
             "issuer": "urn:mace:example.com:saml:roland:idp",
-            "not_on_or_after": in_a_while(minutes=15),
+            "not_on_or_after": nooa,
             "ava": {
                 "givenName": "Anders",
                 "sn": "Andersson",
@@ -1374,8 +1383,10 @@ class TestClient:
         entity_ids = client.users.issuers_of_info(nid)
         assert entity_ids == ["urn:mace:example.com:saml:roland:idp"]
 
-        resp = client.do_logout(nid, entity_ids, "Tired", in_a_while(minutes=5),
-                                sign=True,
+        dt_in_5_min = saml2.datetime.compute.add_to_now(MIN_5)
+        expire = saml2.datetime.to_string(dt_in_5_min)
+        resp = client.do_logout(nid, entity_ids, "Tired",
+                                expire, sign=True,
                                 expected_binding=BINDING_HTTP_REDIRECT)
 
         assert list(resp.keys()) == entity_ids
@@ -1397,10 +1408,11 @@ class TestClient:
 
     def test_do_logout_post(self):
         # information about the user from an IdP
+        nooa = saml2.datetime.compute.add_to_now(MIN_15)
         session_info = {
             "name_id": nid,
             "issuer": "urn:mace:example.com:saml:roland:idp",
-            "not_on_or_after": in_a_while(minutes=15),
+            "not_on_or_after": nooa,
             "ava": {
                 "givenName": "Anders",
                 "sn": "Andersson",
@@ -1411,8 +1423,11 @@ class TestClient:
         self.client.users.add_information_about_person(session_info)
         entity_ids = self.client.users.issuers_of_info(nid)
         assert entity_ids == ["urn:mace:example.com:saml:roland:idp"]
+
+        dt_in_5_min = saml2.datetime.compute.add_to_now(MIN_5)
+        expire = saml2.datetime.to_string(dt_in_5_min)
         resp = self.client.do_logout(nid, entity_ids, "Tired",
-                                     in_a_while(minutes=5), sign=True,
+                                     expire, sign=True,
                                      expected_binding=BINDING_HTTP_POST)
         assert resp
         assert len(resp) == 1
@@ -1427,10 +1442,11 @@ class TestClient:
 
     def test_do_logout_session_expired(self):
         # information about the user from an IdP
+        nooa = saml2.datetime.compute.add_to_now(MIN_15)
         session_info = {
             "name_id": nid,
             "issuer": "urn:mace:example.com:saml:roland:idp",
-            "not_on_or_after": a_while_ago(minutes=15),
+            "not_on_or_after": nooa,
             "ava": {
                 "givenName": "Anders",
                 "sn": "Andersson",
@@ -1441,8 +1457,11 @@ class TestClient:
         self.client.users.add_information_about_person(session_info)
         entity_ids = self.client.users.issuers_of_info(nid)
         assert entity_ids == ["urn:mace:example.com:saml:roland:idp"]
+
+        dt_in_5_min = saml2.datetime.compute.add_to_now(MIN_5)
+        expire = saml2.datetime.to_string(dt_in_5_min)
         resp = self.client.do_logout(nid, entity_ids, "Tired",
-                                     in_a_while(minutes=5), sign=True,
+                                     expire, sign=True,
                                      expected_binding=BINDING_HTTP_POST)
         assert resp
         assert len(resp) == 1
@@ -1520,10 +1539,11 @@ class TestClientWithDummy():
         """ one IdP/AA logout from"""
 
         # information about the user from an IdP
+        nooa = saml2.datetime.compute.add_to_now(MIN_15)
         session_info = {
             "name_id": nid,
             "issuer": "urn:mace:example.com:saml:roland:idp",
-            "not_on_or_after": in_a_while(minutes=15),
+            "not_on_or_after": nooa,
             "ava": {
                 "givenName": "Anders",
                 "sn": "Andersson",
@@ -1533,7 +1553,10 @@ class TestClientWithDummy():
         self.client.users.add_information_about_person(session_info)
         entity_ids = self.client.users.issuers_of_info(nid)
         assert entity_ids == ["urn:mace:example.com:saml:roland:idp"]
-        resp = self.client.global_logout(nid, "Tired", in_a_while(minutes=5))
+
+        dt_in_5_min = saml2.datetime.compute.add_to_now(MIN_5)
+        expire = saml2.datetime.to_string(dt_in_5_min)
+        resp = self.client.global_logout(nid, "Tired", expire)
         print(resp)
         assert resp
         assert len(resp) == 1
