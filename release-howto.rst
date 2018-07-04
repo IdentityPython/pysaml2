@@ -40,7 +40,7 @@ When releasing a new version, the following steps should be taken:
 8. Upload the documentation to PyPI. First you need to generate the html
    version of the documentation::
 
-    cd doc
+    cd docs/
     make clean
     make html
     cd _build/html

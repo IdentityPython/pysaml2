@@ -5,8 +5,8 @@ include CHANGELOG.rst
 
 include src/saml2/xml_template/template.xml
 
-graft doc
-prune doc/build
+graft docs
+prune docs/build
 
 prune tests
 prune example
