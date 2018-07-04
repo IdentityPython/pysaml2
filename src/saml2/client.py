@@ -1,37 +1,33 @@
-# !/usr/bin/env python
-# -*- coding: utf-8 -*-
-#
+"""High level functions to be used by Service Providers (SP)."""
+
+import logging
+
 import six
 
-"""Contains classes and functions that a SAML2.0 Service Provider (SP) may use
-to conclude its tasks.
-"""
-from saml2.request import LogoutRequest
 import saml2
-
-from saml2 import saml, SAMLError
-from saml2 import BINDING_HTTP_REDIRECT
-from saml2 import BINDING_HTTP_POST
-from saml2 import BINDING_SOAP
-
+import saml2.datetime
 import saml2.xmldsig as ds
-
-from saml2.ident import decode, code
+from saml2 import BINDING_HTTP_POST
+from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_SOAP
+from saml2 import SAMLError
+from saml2 import saml
+from saml2.client_base import Base
+from saml2.client_base import LogoutError
+from saml2.client_base import NoServiceDefined
+from saml2.client_base import SignOnError
 from saml2.httpbase import HTTPError
+from saml2.ident import code
+from saml2.ident import decode
+from saml2.mdstore import destinations
+from saml2.request import LogoutRequest
 from saml2.s_utils import sid
 from saml2.s_utils import status_message_factory
 from saml2.s_utils import success_status_factory
+from saml2.saml import AssertionIDRef
 from saml2.samlp import STATUS_REQUEST_DENIED
 from saml2.samlp import STATUS_UNKNOWN_PRINCIPAL
-from saml2.time_util import not_on_or_after
-from saml2.saml import AssertionIDRef
-from saml2.client_base import Base
-from saml2.client_base import SignOnError
-from saml2.client_base import LogoutError
-from saml2.client_base import NoServiceDefined
-from saml2.mdstore import destinations
 
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -166,7 +162,6 @@ class Saml2Client(Base):
                   expected_binding=None, sign_alg=None, digest_alg=None,
                   **kwargs):
         """
-
         :param name_id: Identifier of the Subject (a NameID instance)
         :param entity_ids: List of entity ids for the IdPs that have provided
             information concerning the subject
@@ -179,7 +174,9 @@ class Saml2Client(Base):
         :return:
         """
         # check time
-        if not not_on_or_after(expire):  # I've run out of time
+        expire_date_time = saml2.datetime.parse(expire)
+        is_valid = saml2.datetime.compare.after_now(expire_date_time)
+        if not is_valid:  # I've run out of time
             # Do the local logout anyway
             self.local_logout(name_id)
             return 0, "504 Gateway Timeout", [], []
@@ -314,11 +311,14 @@ class Saml2Client(Base):
             status["entity_ids"].remove(issuer)
             if "sign_alg" in status:
                 sign_alg = status["sign_alg"]
-            return self.do_logout(decode(status["name_id"]),
-                                  status["entity_ids"],
-                                  status["reason"], status["not_on_or_after"],
-                                  status["sign"], sign_alg=sign_alg,
-                                  digest_alg=digest_alg)
+            return self.do_logout(
+                    decode(status["name_id"]),
+                    status["entity_ids"],
+                    status["reason"],
+                    status["not_on_or_after"],
+                    status["sign"],
+                    sign_alg=sign_alg,
+                    digest_alg=digest_alg)
 
     def _use_soap(self, destination, query_type, **kwargs):
         _create_func = getattr(self, "create_%s" % query_type)
