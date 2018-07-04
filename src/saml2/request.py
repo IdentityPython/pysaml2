@@ -1,12 +1,14 @@
 import logging
 
+import saml2.datetime.duration
+from saml2 import BINDING_HTTP_REDIRECT
 from saml2.attribute_converter import to_local
-from saml2 import time_util, BINDING_HTTP_REDIRECT
-from saml2.s_utils import OtherError
-
-from saml2.validate import valid_instance
-from saml2.validate import NotValid
 from saml2.response import IncorrectlySigned
+from saml2.s_utils import OtherError
+from saml2.validate import NotValid
+from saml2.validate import issue_instant_ok
+from saml2.validate import valid_instance
+
 
 logger = logging.getLogger(__name__)
 
@@ -18,9 +20,25 @@ def _dummy(data, **_arg):
 class Request(object):
     def __init__(self, sec_context, receiver_addrs, attribute_converters=None,
                  timeslack=0):
+        """Initialize a Request object.
+
+        timeslack is a number indicating the skew amount in the specified time
+        unit. If no timeslack is set, the default is 4 minutes.
+
+        Quote from the SAML2-core specification - section 1.3.3 Time Values:
+        > [E92] SAML system entities SHOULD allow for reasonable clock skew
+        > between systems when interpreting time instants and enforcing
+        > security policies based on them.  Tolerances of 3-5 minutes are
+        > reasonable defaults, but allowing for configurability is a suggested
+        > practice in implementations.
+        """
+
+        DEFAULT_TIMESLACK = {
+            saml2.datetime.unit.minutes: 4,
+        }
+
         self.sec = sec_context
         self.receiver_addrs = receiver_addrs
-        self.timeslack = timeslack
         self.xmlstr = ""
         self.name_id = ""
         self.message = None
@@ -29,6 +47,10 @@ class Request(object):
         self.binding = None
         self.relay_state = ""
         self.signature_check = _dummy  # has to be set !!!
+
+        if not timeslack:
+            timeslack = DEFAULT_TIMESLACK
+        self.timeslack = saml2.datetime.duration.parse(timeslack)
 
     def _clear(self):
         self.xmlstr = ""
@@ -45,9 +67,9 @@ class Request(object):
         self.xmlstr = xmldata[:]
         logger.debug("xmlstr: %s", self.xmlstr)
         try:
-            self.message = self.signature_check(xmldata, origdoc=origdoc,
-                                                must=must,
-                                                only_valid_cert=only_valid_cert)
+            self.message = self.signature_check(
+                    xmldata, origdoc=origdoc, must=must,
+                    only_valid_cert=only_valid_cert)
         except TypeError:
             raise
         except Exception as excp:
@@ -68,26 +90,14 @@ class Request(object):
 
         return self
 
-    def issue_instant_ok(self):
-        """ Check that the request was issued at a reasonable time """
-        upper = time_util.shift_time(time_util.time_in_a_while(days=1),
-                                     self.timeslack).timetuple()
-        lower = time_util.shift_time(time_util.time_a_while_ago(days=1),
-                                     - self.timeslack).timetuple()
-        # print("issue_instant: %s" % self.message.issue_instant)
-        # print("%s < x < %s" % (lower, upper))
-        issued_at = time_util.str_to_time(self.message.issue_instant)
-        return issued_at > lower and issued_at < upper
-
     def _verify(self):
         assert self.message.version == "2.0"
         if self.message.destination and self.receiver_addrs and \
                 self.message.destination not in self.receiver_addrs:
-            logger.error("%s not in %s", self.message.destination,
-                                         self.receiver_addrs)
+            logger.error("%s not in %s", self.message.destination, self.receiver_addrs)
             raise OtherError("Not destined for me!")
 
-        assert self.issue_instant_ok()
+        assert issue_instant_ok(self.message.issue_instant, self.timeslack)
         return self
 
     def loads(self, xmldata, binding, origdoc=None, must=None,
