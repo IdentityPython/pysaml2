@@ -1,5 +1,6 @@
 ### Custom.gitignore
 
+example/*/*.subject
 example/*/*.xml
 example/*/*_conf.py
 example/*/modules/
