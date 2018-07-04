@@ -605,7 +605,7 @@ class Server(Entity):
                       'encrypt_cert_assertion']:
             try:
                 _val = kwargs[param]
-            except:
+            except KeyError:
                 _val = None
 
             if _val is None:
