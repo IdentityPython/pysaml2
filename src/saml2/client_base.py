@@ -1,57 +1,49 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#
-
-"""Contains classes and functions that a SAML2.0 Service Provider (SP) may use
-to conclude its tasks.
-"""
+import logging
 import threading
+
 import six
-
-from saml2.entity import Entity
-
-import saml2.attributemaps as attributemaps
-
-from saml2.mdstore import destinations
-from saml2.profile import paos, ecp
-from saml2.saml import NAMEID_FORMAT_TRANSIENT
-from saml2.samlp import AuthnQuery, RequestedAuthnContext
-from saml2.samlp import NameIDMappingRequest
-from saml2.samlp import AttributeQuery
-from saml2.samlp import AuthzDecisionQuery
-from saml2.samlp import AuthnRequest
-from saml2.samlp import Extensions
-from saml2.extension import sp_type
-from saml2.extension import requested_attributes
-
-import saml2
-import time
-from saml2.soap import make_soap_enveloped_saml_thingy
-
 from six.moves.urllib.parse import parse_qs
 from six.moves.urllib.parse import urlencode
 from six.moves.urllib.parse import urlparse
 
-from saml2.s_utils import signature
+import saml2
+import saml2.attributemaps as attributemaps
+import saml2.datetime.utils
+from saml2 import BINDING_HTTP_POST
+from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_PAOS
+from saml2 import BINDING_SOAP
+from saml2 import SAMLError
+from saml2 import saml
+from saml2 import samlp
+from saml2 import soap
+from saml2.entity import Entity
+from saml2.extension import requested_attributes
+from saml2.extension import sp_type
+from saml2.mdstore import destinations
+from saml2.population import Population
+from saml2.profile import ecp
+from saml2.profile import paos
+from saml2.response import AssertionIDResponse
+from saml2.response import AttributeResponse
+from saml2.response import AuthnQueryResponse
+from saml2.response import AuthnResponse
+from saml2.response import AuthzResponse
+from saml2.response import NameIDMappingResponse
+from saml2.response import StatusError
 from saml2.s_utils import UnravelError
 from saml2.s_utils import do_attributes
+from saml2.s_utils import signature
+from saml2.saml import NAMEID_FORMAT_TRANSIENT
+from saml2.samlp import AttributeQuery
+from saml2.samlp import AuthnQuery
+from saml2.samlp import AuthnRequest
+from saml2.samlp import AuthzDecisionQuery
+from saml2.samlp import Extensions
+from saml2.samlp import NameIDMappingRequest
+from saml2.samlp import RequestedAuthnContext
+from saml2.soap import make_soap_enveloped_saml_thingy
 
-from saml2 import samlp, BINDING_SOAP, SAMLError
-from saml2 import saml
-from saml2 import soap
-from saml2.population import Population
-
-from saml2.response import AttributeResponse, StatusError
-from saml2.response import AuthzResponse
-from saml2.response import AssertionIDResponse
-from saml2.response import AuthnQueryResponse
-from saml2.response import NameIDMappingResponse
-from saml2.response import AuthnResponse
-
-from saml2 import BINDING_HTTP_REDIRECT
-from saml2 import BINDING_HTTP_POST
-from saml2 import BINDING_PAOS
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -145,12 +137,13 @@ class Base(Entity):
     #
 
     def _relay_state(self, session_id):
-        vals = [session_id, str(int(time.time()))]
+        timestamp = saml2.datetime.utils.instant()
+        vals = [session_id, timestamp]
         if self.config.secret is None:
-            vals.append(signature("", vals))
+            vals.append(signature('', vals))
         else:
             vals.append(signature(self.config.secret, vals))
-        return "|".join(vals)
+        return '|'.join(vals)
 
     def _sso_location(self, entityid=None, binding=BINDING_HTTP_REDIRECT):
         if entityid:
