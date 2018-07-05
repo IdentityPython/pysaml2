@@ -1,21 +1,25 @@
-import calendar
+import copy
+import logging
+import re
+
+import requests
+
 import six
 from six.moves import http_cookiejar
-import copy
-import re
-from six.moves.urllib.parse import urlparse
-from six.moves.urllib.parse import urlencode
-import requests
-import time
 from six.moves.http_cookies import SimpleCookie
-from saml2.time_util import utc_now
-from saml2 import class_name, SAMLError
+from six.moves.urllib.parse import urlencode
+from six.moves.urllib.parse import urlparse
+
+import saml2.datetime
+import saml2.datetime.compare
+import saml2.datetime.compute
+from saml2 import SAMLError
+from saml2 import class_name
 from saml2.pack import http_form_post_message
 from saml2.pack import http_post_message
-from saml2.pack import make_soap_enveloped_saml_thingy
 from saml2.pack import http_redirect_message
+from saml2.pack import make_soap_enveloped_saml_thingy
 
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -59,38 +63,6 @@ class HTTPError(SAMLError):
     pass
 
 
-TIME_FORMAT = ["%d-%b-%Y %H:%M:%S %Z", "%d-%b-%y %H:%M:%S %Z",
-               "%d %b %Y %H:%M:%S %Z"]
-
-
-def _since_epoch(cdate):
-    """
-    :param cdate: date format 'Wed, 06-Jun-2012 01:34:34 GMT'
-    :return: UTC time
-    """
-
-    if len(cdate) < 29:  # somethings broken
-        if len(cdate) < 5:
-            return utc_now()
-
-    cdate = cdate[5:] # assume short weekday, i.e. do not support obsolete RFC 1036 date format
-    t = -1
-    for time_format in TIME_FORMAT :
-        try:
-            t = time.strptime(cdate, time_format)   # e.g. 18-Apr-2014 12:30:51 GMT
-        except ValueError:
-            pass
-        else:
-            break
-
-    if t == -1:
-        raise (Exception,
-               'ValueError: Date "{0}" does not match any of: {1}'.format(
-                   cdate,TIME_FORMAT))
-
-    return calendar.timegm(t)
-
-
 def set_list2dict(sl):
     return dict(sl)
 
@@ -132,12 +104,12 @@ class HTTPBase(object):
         _domain = part.hostname
 
         cookie_dict = {}
-        now = utc_now()
         for _, a in list(self.cookiejar._cookies.items()):
             for _, b in a.items():
                 for cookie in list(b.values()):
                     # print(cookie)
-                    if cookie.expires and cookie.expires <= now:
+                    if cookie.expires and saml2.datetime.compare.before_now(
+                            cookie.expires):
                         continue
                     if not re.search("%s$" % cookie.domain, _domain):
                         continue
@@ -173,7 +145,7 @@ class HTTPBase(object):
                 if attr in ATTRS:
                     if morsel[attr]:
                         if attr == "expires":
-                            std_attr[attr] = _since_epoch(morsel[attr])
+                            std_attr[attr] = saml2.datetime.parse(morsel[attr])
                         elif attr == "path":
                             if morsel[attr].endswith(","):
                                 std_attr[attr] = morsel[attr][:-1]
@@ -181,9 +153,11 @@ class HTTPBase(object):
                                 std_attr[attr] = morsel[attr]
                         else:
                             std_attr[attr] = morsel[attr]
-                elif attr == "max-age":
-                    if morsel["max-age"]:
-                        std_attr["expires"] = time.time() + int(morsel["max-age"])
+                elif attr == "max-age" and morsel["max-age"]:
+                    amount = int(morsel["max-age"])
+                    period = saml2.datetime.unit.minutes(amount)
+                    expiry = saml2.datetime.compute.add_to_now(period)
+                    std_attr["expires"] = expiry
 
             for att, item in PAIRS.items():
                 if std_attr[att]:
@@ -203,7 +177,8 @@ class HTTPBase(object):
                                          name=std_attr["name"])
                 except ValueError:
                     pass
-            elif std_attr["expires"] and std_attr["expires"] < utc_now():
+            elif std_attr["expires"] and saml2.datetime.compare.before_now(
+                    std_attr["expires"]):
                 try:
                     self.cookiejar.clear(domain=std_attr["domain"],
                                          path=std_attr["path"],

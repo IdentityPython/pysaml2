@@ -1,22 +1,23 @@
+import cgi
 import hashlib
 import hmac
 import logging
-import time
-import cgi
+
 import six
-
-from six.moves.urllib.parse import quote, parse_qs
 from six.moves.http_cookies import SimpleCookie
+from six.moves.urllib.parse import parse_qs
+from six.moves.urllib.parse import quote
 
+import saml2.datetime
+import saml2.datetime.compute
+import saml2.datetime.utils
 from saml2 import BINDING_HTTP_ARTIFACT
-from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
-from saml2 import BINDING_URI
+from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_SOAP
+from saml2 import BINDING_URI
 from saml2 import SAMLError
-from saml2 import time_util
 
-__author__ = 'rohe0002'
 
 logger = logging.getLogger(__name__)
 
@@ -303,12 +304,21 @@ def unpack_any(environ):
     return _dict, binding
 
 
-def _expiration(timeout, time_format=None):
-    if timeout == "now":
-        return time_util.instant(time_format)
-    else:
-        # validity time should match lifetime of assertions
-        return time_util.in_a_while(minutes=timeout, format=time_format)
+def _expiration(timeout):
+    """Return the expiry date of the cookie as a string.
+
+    `timeout` is the number of minutes after which the cookie is considered
+    expired.
+
+    The parameter timeout is expected to be of type: int
+
+    The object returned is of type: str
+    """
+    # validity time should match lifetime of assertions
+    period = saml2.datetime.unit.minutes(timeout)
+    date_time = saml2.datetime.compute.add_to_now(period)
+    date_time_str = saml2.datetime.to_string(date_time)
+    return date_time_str
 
 
 def cookie_signature(seed, *parts):
@@ -320,10 +330,8 @@ def cookie_signature(seed, *parts):
     return sha1.hexdigest()
 
 
-def make_cookie(name, load, seed, expire=0, domain="", path="",
-                timestamp=""):
-    """
-    Create and return a cookie
+def make_cookie(name, load, seed, expire=0, domain='', path='', timestamp=''):
+    """Create and return a cookie.
 
     :param name: Cookie name
     :param load: Cookie load
@@ -335,7 +343,7 @@ def make_cookie(name, load, seed, expire=0, domain="", path="",
     """
     cookie = SimpleCookie()
     if not timestamp:
-        timestamp = str(int(time.mktime(time.gmtime())))
+        timestamp = saml2.datetime.utils.instant()
     signature = cookie_signature(seed, load, timestamp)
     cookie[name] = "|".join([load, timestamp, signature])
     if path:
@@ -343,8 +351,7 @@ def make_cookie(name, load, seed, expire=0, domain="", path="",
     if domain:
         cookie[name]["domain"] = domain
     if expire:
-        cookie[name]["expires"] = _expiration(expire,
-                                              "%a, %d-%b-%Y %H:%M:%S GMT")
+        cookie[name]["expires"] = _expiration(expire)
 
     return tuple(cookie.output().split(": ", 1))
 
