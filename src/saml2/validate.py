@@ -1,15 +1,17 @@
-import calendar
-from six.moves.urllib.parse import urlparse
+import base64
 import re
 import struct
-import base64
-import time
 
-from saml2 import time_util
+from six.moves.urllib.parse import urlparse
+
+import saml2.datetime
+import saml2.datetime.compare
+import saml2.datetime.compute
+import saml2.datetime.duration
+
 
 XSI_NAMESPACE = 'http://www.w3.org/2001/XMLSchema-instance'
 XSI_NIL = '{%s}nil' % XSI_NAMESPACE
-# ---------------------------------------------------------
 
 
 class NotValid(Exception):
@@ -29,15 +31,20 @@ class ShouldValueError(ValueError):
 
 
 class ResponseLifetimeExceed(Exception):
-    pass
+    def __init__(self, nooa, slack):
+        msg_tpl = "Can't use response, too old: not_on_or_after={} slack={}"
+        msg = msg_tpl.format(saml2.datetime.to_string(nooa), slack)
+        super(self.__class__, self).__init__(msg)
 
 
-class ToEarly(Exception):
-    pass
+class TooEarly(Exception):
+    def __init__(self, nbefore, slack):
+        msg_tpl = "Can't use response yet: notbefore={} slack={}"
+        msg = msg_tpl.format(saml2.datetime.to_string(nbefore), slack)
+        super(self.__class__, self).__init__(msg)
+
 
 # --------------------- validators -------------------------------------
-#
-
 NCNAME = re.compile("(?P<NCName>[a-zA-Z_](\w|[_.-])*)")
 
 
@@ -69,7 +76,7 @@ def valid_any_uri(item):
 
 def valid_date_time(item):
     try:
-        time_util.str_to_time(item)
+        saml2.datetime.parse(item)
     except Exception:
         raise NotValid("dateTime")
     return True
@@ -87,27 +94,80 @@ def valid_url(url):
 
 
 def validate_on_or_after(not_on_or_after, slack):
-    if not_on_or_after:
-        now = time_util.utc_now()
-        nooa = calendar.timegm(time_util.str_to_time(not_on_or_after))
-        if now > nooa + slack:
-            now_str=time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(now))
-            raise ResponseLifetimeExceed(
-                "Can't use response, too old (now=%s + slack=%d > " \
-                "not_on_or_after=%s" % (now_str, slack, not_on_or_after))
-        return nooa
-    else:
+    """
+    It is valid if the current time is not the same as (on) or later (after)
+    than the nooa value. In other words, it is valid if the current time is
+    earlier (before) than the nooa value.
+
+        is_valid = now < nooa
+
+    To allow for skew we relax/extend nooa value by the configured time slack:
+
+        is_valid = now < nooa + skew
+
+    A simple example:
+
+    - PC1 current time (now): 10:05
+    - PC2 current time (now): 10:07
+    - nooa value is set 5min after each PC time
+    - configured skew/time slack: 5min
+
+    case 1:
+    req from PC1 to PC2 with nooa: 10:05+5 = 10:10
+    [PC2now] 10:10 < [nooa] 10:07 => invalid
+    [PC2now] 10:10 < [nooa] 10:07 + [skew] 5 = 10:12 => valid
+
+    case 2:
+    req from PC2 to PC1 with nooa: 10:07+5 = 10:12
+    [PC1now] 10:05 < [nooa] 10:12 => valid
+    [PC1now] 10:05 < [nooa] 10:12 + [skew] 3 = 10:15 => valid
+    """
+    if not not_on_or_after:
         return False
+
+    relaxed = saml2.datetime.compute.add(not_on_or_after, slack)
+    is_valid = saml2.datetime.compare.after_now(relaxed)
+    if not is_valid:
+        raise ResponseLifetimeExceed(not_on_or_after, slack)
+    return True
 
 
 def validate_before(not_before, slack):
-    if not_before:
-        now = time_util.utc_now()
-        nbefore = calendar.timegm(time_util.str_to_time(not_before))
-        if nbefore > now + slack:
-            now_str = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(now))
-            raise ToEarly("Can't use response yet: (now=%s + slack=%d) "
-                          "<= notbefore=%s" % (now_str, slack, not_before))
+    """
+    It is valid if the current time is not earlier (before) than the nbefore
+    value. In other words, it is valid if the current time is the same as (on)
+    or later (after) than the nbefore value.
+
+        is_valid = nbefore <= now
+
+    To allow for skew we relax/extend the current time value by the configured
+    time slack:
+
+        is_valid = nbefore <= now + skew
+
+    A simple example:
+
+    - PC1 current time (now): 10:05
+    - PC2 current time (now): 10:07
+    - nbefore value is set 1min after each PC time
+    - configured skew/time slack: 5min
+
+    case 1:
+    req from PC1 to PC2 with nbefore: 10:05+1 = 10:06
+    [nbefore] 10:06 <= [PC2now] 10:07 => valid
+    [nbefore] 10:06 <= [PC2now] 10:07 + [skew] 5 = 10:12 => valid
+
+    case 2:
+    req from PC2 to PC1 with nbefore: 10:07+1 = 10:08
+    [nbefore] 10:08 <= [PC1now] 10:05 => invalid
+    [nbefore] 10:08 <= [PC1now] 10:05 + [skew] 5 = 10:10 => valid
+    """
+    if not not_before:
+        return True
+    relaxed = saml2.datetime.compute.subtract(not_before, slack)
+    is_invalid = saml2.datetime.compare.after_now(relaxed)
+    if is_invalid:
+        raise TooEarly(not_before, slack)
     return True
 
 
@@ -129,7 +189,7 @@ def valid_ipv4(address):
             return False
     return True
 
-#
+
 IPV6_PATTERN = re.compile(r"""
     ^
     \s*                         # Leading whitespace
@@ -173,7 +233,7 @@ def valid_boolean(val):
 
 def valid_duration(val):
     try:
-        time_util.parse_duration(val)
+        saml2.datetime.duration.parse(val)
     except Exception:
         raise NotValid("duration")
     return True
@@ -285,7 +345,6 @@ def valid_anytype(val):
 
     raise NotValid("AnyType")
 
-# -----------------------------------------------------------------------------
 
 VALIDATOR = {
     "ID": valid_id,
@@ -303,8 +362,6 @@ VALIDATOR = {
     "anyType": valid_anytype,
     "string": valid_string,
 }
-
-# -----------------------------------------------------------------------------
 
 
 def validate_value_type(value, spec):
@@ -356,6 +413,7 @@ def _valid_instance(instance, val):
         raise NotValid(
             "Class '%s' instance cardinality error: %s" % (
                 instance.__class__.__name__, exc.args[0]))
+
 
 ERROR_TEXT = "Wrong type of value '%s' on attribute '%s' expected it to be %s"
 
