@@ -1,17 +1,19 @@
 import logging
+
 import six
-import time
+from six.moves.urllib.parse import parse_qs
+from six.moves.urllib.parse import urlencode
+from six.moves.urllib.parse import urlsplit
+
+import saml2.datetime.utils
 from saml2 import SAMLError
 from saml2.aes import AESCipher
-from saml2.httputil import Response
-from saml2.httputil import make_cookie
 from saml2.httputil import Redirect
+from saml2.httputil import Response
 from saml2.httputil import Unauthorized
+from saml2.httputil import make_cookie
 from saml2.httputil import parse_cookie
 
-from six.moves.urllib.parse import urlencode, parse_qs, urlsplit
-
-__author__ = 'rolandh'
 
 logger = logging.getLogger(__name__)
 
@@ -170,7 +172,7 @@ class UsernamePasswordMako(UserAuthnMethod):
         # verify username and password
         try:
             self._verify(_dict["password"][0], _dict["login"][0])
-            timestamp = str(int(time.mktime(time.gmtime())))
+            timestamp = saml2.datetime.utils.instant()
             msg = "::".join([_dict["login"][0], timestamp])
             info = self.aes.encrypt(msg.encode())
             self.active[info] = timestamp
