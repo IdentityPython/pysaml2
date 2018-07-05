@@ -11,7 +11,6 @@ install_requires = [
     'requests >= 1.0.0',
     'future',
     'cryptography',
-    'pytz',
     'pyOpenSSL',
     'python-dateutil',
     'defusedxml',

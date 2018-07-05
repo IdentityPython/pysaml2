@@ -3,7 +3,7 @@ __author__ = 'haho0032'
 import base64
 import datetime
 import dateutil.parser
-import pytz
+import dateutil.tz
 import six
 from OpenSSL import crypto
 from os.path import join
@@ -290,7 +290,7 @@ class OpenSSLWrapper(object):
 
     def certificate_not_valid_yet(self, cert):
         starts_to_be_valid = dateutil.parser.parse(cert.get_notBefore())
-        now = pytz.UTC.localize(datetime.datetime.utcnow())
+        now = datetime.datetime.now(dateutil.tz.tzutc())
         if starts_to_be_valid < now:
             return False
         return True
