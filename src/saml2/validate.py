@@ -520,3 +520,9 @@ def valid_domain_name(dns_name):
         dns_name, re.I)
     if not m:
         raise ValueError("Not a proper domain name")
+
+
+def issue_instant_ok(issue_instant, timeslack):
+    """Check that the request/response was issued at a reasonable time."""
+    issued_at = saml2.datetime.parse(issue_instant)
+    return saml2.datetime.compare.within_now(timeslack, issued_at)
