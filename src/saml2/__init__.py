@@ -17,10 +17,11 @@
     provides methods and functions to convert SAML classes to and from strings.
 """
 
-__version__ = "4.5.0"
-
 import logging
+
 import six
+
+import saml2.version
 from saml2.validate import valid_instance
 
 try:
@@ -37,6 +38,10 @@ except ImportError:
     except ImportError:
         from elementtree import ElementTree
 import defusedxml.ElementTree
+
+
+__version__ = str(saml2.version.version)
+
 
 root_logger = logging.getLogger(__name__)
 root_logger.level = logging.NOTSET
@@ -1027,9 +1032,9 @@ def is_required_attribute(cls, attr):
     """
     Check if the attribute is a required attribute for a specific SamlBase
     class.
-    
-    :param cls: The class 
-    :param attr: An attribute, note it must be the name of the attribute 
+
+    :param cls: The class
+    :param attr: An attribute, note it must be the name of the attribute
         that appears in the XSD in which the class is defined.
     :return: True if required
     """

@@ -1,7 +1,17 @@
-include INSTALL
-include LICENSE.txt
-include README
-include TODO
-recursive-include tests *
-recursive-include example *
-recursive-include doc *
+include VERSION
+include LICENSE
+include README.rst
+include CHANGELOG.rst
+
+include src/saml2/xml_template/template.xml
+
+graft docs
+prune docs/build
+
+prune tests
+prune example
+prune .github
+
+global-exclude *.py[cod]
+global-exclude __pycache__
+global-exclude *.egg-info
