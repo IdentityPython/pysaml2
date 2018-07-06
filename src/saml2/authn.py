@@ -120,7 +120,7 @@ class UsernamePasswordMako(UserAuthnMethod):
         self.return_to = return_to
         self.active = {}
         self.query_param = "upm_answer"
-        self.aes = AESCipher(self.srv.symkey, srv.iv)
+        self.aes = AESCipher(self.srv.symkey.encode(), srv.iv)
 
     def __call__(self, cookie=None, policy_url=None, logo_url=None,
                  query="", **kwargs):
@@ -171,7 +171,8 @@ class UsernamePasswordMako(UserAuthnMethod):
         try:
             self._verify(_dict["password"][0], _dict["login"][0])
             timestamp = str(int(time.mktime(time.gmtime())))
-            info = self.aes.encrypt("::".join([_dict["login"][0], timestamp]))
+            msg = "::".join([_dict["login"][0], timestamp])
+            info = self.aes.encrypt(msg.encode())
             self.active[info] = timestamp
             cookie = make_cookie(self.cookie_name, info, self.srv.seed)
             return_to = create_return_url(self.return_to, _dict["query"][0],
@@ -191,7 +192,8 @@ class UsernamePasswordMako(UserAuthnMethod):
                 info, timestamp = parse_cookie(self.cookie_name,
                                                self.srv.seed, cookie)
                 if self.active[info] == timestamp:
-                    uid, _ts = self.aes.decrypt(info).split("::")
+                    msg = self.aes.decrypt(info).decode()
+                    uid, _ts = msg.split("::")
                     if timestamp == _ts:
                         return {"uid": uid}
             except Exception:
