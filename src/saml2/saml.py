@@ -23,18 +23,24 @@ XS_NAMESPACE = 'http://www.w3.org/2001/XMLSchema'
 XSI_TYPE = '{%s}type' % XSI_NAMESPACE
 XSI_NIL = '{%s}nil' % XSI_NAMESPACE
 
-NAMEID_FORMAT_EMAILADDRESS = (
-    "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress")
 NAMEID_FORMAT_UNSPECIFIED = (
     "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified")
-NAMEID_FORMAT_ENCRYPTED = (
-    "urn:oasis:names:tc:SAML:2.0:nameid-format:encrypted")
+NAMEID_FORMAT_EMAILADDRESS = (
+    "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress")
+NAMEID_FORMAT_X509SUBJECTNAME = (
+    "urn:oasis:names:tc:SAML:1.1:nameid-format:X509SubjectName")
+NAMEID_FORMAT_WINDOWSDOMAINQUALIFIEDNAME = (
+    "urn:oasis:names:tc:SAML:1.1:nameid-format:WindowsDomainQualifiedName")
+NAMEID_FORMAT_KERBEROS = (
+    "urn:oasis:names:tc:SAML:2.0:nameid-format:kerberos")
+NAMEID_FORMAT_ENTITY = (
+    "urn:oasis:names:tc:SAML:2.0:nameid-format:entity")
 NAMEID_FORMAT_PERSISTENT = (
     "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent")
 NAMEID_FORMAT_TRANSIENT = (
     "urn:oasis:names:tc:SAML:2.0:nameid-format:transient")
-NAMEID_FORMAT_ENTITY = (
-    "urn:oasis:names:tc:SAML:2.0:nameid-format:entity")
+NAMEID_FORMAT_ENCRYPTED = (
+    "urn:oasis:names:tc:SAML:2.0:nameid-format:encrypted")
 NAMEID_FORMATS_SAML2 = (
     ('NAMEID_FORMAT_EMAILADDRESS', NAMEID_FORMAT_EMAILADDRESS),
     ('NAMEID_FORMAT_ENCRYPTED', NAMEID_FORMAT_ENCRYPTED),
