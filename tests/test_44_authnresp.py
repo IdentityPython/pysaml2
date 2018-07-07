@@ -1,15 +1,13 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 from contextlib import closing
-from datetime import datetime
-from dateutil import parser
-from saml2.authn_context import INTERNETPROTOCOLPASSWORD
-
-from saml2.server import Server
-from saml2.response import authn_response
-from saml2.config import config_factory
 
 from pathutils import dotname, full_path
+
+import saml2.datetime
+from saml2.authn_context import INTERNETPROTOCOLPASSWORD
+from saml2.config import config_factory
+from saml2.response import authn_response
+from saml2.server import Server
+
 
 XML_RESPONSE_FILE = full_path("saml_signed.xml")
 XML_RESPONSE_FILE2 = full_path("saml2_response.xml")
@@ -61,32 +59,33 @@ class TestAuthnResponse:
 
             self.conf = config_factory("sp", dotname("server_conf"))
             self.conf.only_use_keys_in_metadata = False
-            self.ar = authn_response(self.conf, "http://lingon.catalogix.se:8087/")
-    
+            self.ar = authn_response(
+                    self.conf,
+                    "http://lingon.catalogix.se:8087/",
+                    timeslack=1000)
+
     def test_verify_1(self):
         xml_response = "%s" % (self._resp_,)
         print(xml_response)
         self.ar.outstanding_queries = {"id12": "http://localhost:8088/sso"}
-        self.ar.timeslack = 10000
         self.ar.loads(xml_response, decode=False)
         self.ar.verify()
-        
+
         print(self.ar.__dict__)
         assert self.ar.came_from == 'http://localhost:8088/sso'
         assert self.ar.session_id() == "id12"
         assert self.ar.ava["givenName"] == IDENTITY["givenName"]
         assert self.ar.name_id
         assert self.ar.issuer() == 'urn:mace:example.com:saml:roland:idp'
-    
+
     def test_verify_signed_1(self):
         xml_response = self._sign_resp_
         print(xml_response)
-        
+
         self.ar.outstanding_queries = {"id12": "http://localhost:8088/sso"}
-        self.ar.timeslack = 10000
         self.ar.loads(xml_response, decode=False)
         self.ar.verify()
-        
+
         print(self.ar.__dict__)
         assert self.ar.came_from == 'http://localhost:8088/sso'
         assert self.ar.session_id() == "id12"
@@ -98,14 +97,14 @@ class TestAuthnResponse:
         with open(XML_RESPONSE_FILE) as fp:
             xml_response = fp.read()
         ID = "bahigehogffohiphlfmplepdpcohkhhmheppcdie"
-        self.ar.outstanding_queries = {ID: "http://localhost:8088/foo"}    
+        self.ar.outstanding_queries = {ID: "http://localhost:8088/foo"}
         self.ar.return_addr = "http://xenosmilus.umdc.umu.se:8087/login"
         self.ar.entity_id = "xenosmilus.umdc.umu.se"
         # roughly a year, should create the response on the fly
-        self.ar.timeslack = 315360000 # indecent long time
+        self.ar.timeslack = saml2.datetime.unit.days(365)
         self.ar.loads(xml_response, decode=False)
         self.ar.verify()
-        
+
         print(self.ar.__dict__)
         assert self.ar.came_from == 'http://localhost:8088/foo'
         assert self.ar.session_id() == ID
@@ -116,7 +115,6 @@ class TestAuthnResponse:
         self.ar.outstanding_queries = {"id12": "http://localhost:8088/sso"}
         self.ar.return_addr = "http://lingon.catalogix.se:8087/"
         self.ar.entity_id = "urn:mace:example.com:saml:roland:sp"
-        self.ar.timeslack = 10000
         self.ar.loads(xml_response, decode=False)
         self.ar.verify()
 
@@ -126,9 +124,13 @@ class TestAuthnResponse:
         assert len(authn_info) == 1
         assert authn_info[0][0] == INTERNETPROTOCOLPASSWORD
         assert authn_info[0][1] == ["http://www.example.com/login"]
-        now = datetime.utcnow()
-        dt = parser.parse(authn_info[0][2])
-        assert now.year == dt.year and now.month == dt.month and now.day == dt.day
+        dt_data = authn_info[0][2]
+        dt = saml2.datetime.parse(dt_data)
+        now = saml2.datetime.compute.utcnow()
+        assert now.year == dt.year
+        assert now.month == dt.month
+        assert now.day == dt.day
+
         session_info = self.ar.session_info()
         assert session_info["authn_info"] == authn_info
 

@@ -3,12 +3,17 @@ from saml2.ident import code
 from saml2.saml import NAMEID_FORMAT_TRANSIENT, NameID
 
 from saml2.population import Population
-from saml2.time_util import in_a_while
+
+import saml2.datetime
+import saml2.datetime.compute
+
+
+MIN_15 = saml2.datetime.unit.minutes(15)
 
 IDP_ONE = "urn:mace:example.com:saml:one:idp"
 IDP_OTHER = "urn:mace:example.com:saml:other:idp"
 
-nid = NameID(name_qualifier="foo", format=NAMEID_FORMAT_TRANSIENT, 
+nid = NameID(name_qualifier="foo", format=NAMEID_FORMAT_TRANSIENT,
              text="123456")
 
 nida = NameID(name_qualifier="foo", format=NAMEID_FORMAT_TRANSIENT,
@@ -23,12 +28,12 @@ def _eq(l1, l2):
 class TestPopulationMemoryBased():
     def setup_class(self):
         self.population = Population()
-        
+
     def test_add_person(self):
         session_info = {
             "name_id": nid,
             "issuer": IDP_ONE,
-            "not_on_or_after": in_a_while(minutes=15),
+            "not_on_or_after": saml2.datetime.compute.add_to_now(MIN_15),
             "ava": {
                 "givenName": "Anders",
                 "surName": "Andersson",
@@ -36,7 +41,7 @@ class TestPopulationMemoryBased():
             }
         }
         self.population.add_information_about_person(session_info)
-        
+
         issuers = self.population.issuers_of_info(nid)
         assert list(issuers) == [IDP_ONE]
         subjects = [code(c) for c in self.population.subjects()]
@@ -51,30 +56,30 @@ class TestPopulationMemoryBased():
 
         (identity, stale) = self.population.get_identity(nid)
         assert stale == []
-        assert identity == {'mail': 'anders.andersson@example.com', 
-                            'givenName': 'Anders', 
+        assert identity == {'mail': 'anders.andersson@example.com',
+                            'givenName': 'Anders',
                             'surName': 'Andersson'}
 
         info = self.population.get_info_from(nid, IDP_ONE)
         assert sorted(list(info.keys())) == sorted(["not_on_or_after",
                                                     "name_id", "ava"])
         assert info["name_id"] == nid
-        assert info["ava"] == {'mail': 'anders.andersson@example.com', 
-                                'givenName': 'Anders', 
+        assert info["ava"] == {'mail': 'anders.andersson@example.com',
+                                'givenName': 'Anders',
                                 'surName': 'Andersson'}
 
     def test_extend_person(self):
         session_info = {
             "name_id": nid,
             "issuer": IDP_OTHER,
-            "not_on_or_after": in_a_while(minutes=15),
+            "not_on_or_after": saml2.datetime.compute.add_to_now(MIN_15),
             "ava": {
                 "eduPersonEntitlement": "Anka"
             }
         }
-        
+
         self.population.add_information_about_person(session_info)
-        
+
         issuers = self.population.issuers_of_info(nid)
         assert _eq(issuers, [IDP_ONE, IDP_OTHER])
         subjects = [code(c) for c in self.population.subjects()]
@@ -89,8 +94,8 @@ class TestPopulationMemoryBased():
 
         (identity, stale) = self.population.get_identity(nid)
         assert stale == []
-        assert identity == {'mail': 'anders.andersson@example.com', 
-                            'givenName': 'Anders', 
+        assert identity == {'mail': 'anders.andersson@example.com',
+                            'givenName': 'Anders',
                             'surName': 'Andersson',
                             "eduPersonEntitlement": "Anka"}
 
@@ -99,12 +104,12 @@ class TestPopulationMemoryBased():
                                                     "name_id", "ava"])
         assert info["name_id"] == nid
         assert info["ava"] == {"eduPersonEntitlement": "Anka"}
-    
+
     def test_add_another_person(self):
         session_info = {
             "name_id": nida,
             "issuer": IDP_ONE,
-            "not_on_or_after": in_a_while(minutes=15),
+            "not_on_or_after": saml2.datetime.compute.add_to_now(MIN_15),
             "ava": {
                 "givenName": "Bertil",
                 "surName": "Bertilsson",
@@ -117,7 +122,7 @@ class TestPopulationMemoryBased():
         assert list(issuers) == [IDP_ONE]
         subjects = [code(c) for c in self.population.subjects()]
         assert _eq(subjects, [cnid, cnida])
-        
+
         stales = self.population.stale_sources_for_person(nida)
         assert stales == []
         # are any of the possible sources not used or gone stale
@@ -145,7 +150,7 @@ class TestPopulationMemoryBased():
         session_info = {
             "name_id": nid,
             "issuer": IDP_ONE,
-            "not_on_or_after": in_a_while(minutes=15),
+            "not_on_or_after": saml2.datetime.compute.add_to_now(MIN_15),
             "ava": {
                 "givenName": "Arne",
                 "surName": "Andersson",
@@ -153,7 +158,7 @@ class TestPopulationMemoryBased():
             }
         }
         self.population.add_information_about_person(session_info)
-        
+
         issuers = self.population.issuers_of_info(nid)
         assert _eq(issuers, [IDP_ONE, IDP_OTHER])
         subjects = [code(c) for c in self.population.subjects()]
@@ -168,8 +173,8 @@ class TestPopulationMemoryBased():
 
         (identity, stale) = self.population.get_identity(nid)
         assert stale == []
-        assert identity == {'mail': 'arne.andersson@example.com', 
-                            'givenName': 'Arne', 
+        assert identity == {'mail': 'arne.andersson@example.com',
+                            'givenName': 'Arne',
                             'surName': 'Andersson',
                             "eduPersonEntitlement": "Anka"}
 

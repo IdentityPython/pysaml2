@@ -1,75 +1,78 @@
 import base64
 import copy
 import logging
-import requests
-import six
-
 from binascii import hexlify
 from hashlib import sha1
 
-from saml2.metadata import ENDPOINTS
-from saml2.profile import paos, ecp, samlec
-from saml2.soap import parse_soap_enveloped_saml_artifact_resolve
-from saml2.soap import class_instances_from_soap_enveloped_saml_thingies
-from saml2.soap import open_soap_envelope
+import requests
 
-from saml2 import samlp
-from saml2 import SamlBase
-from saml2 import SAMLError
-from saml2 import saml
-from saml2 import response as saml_response
-from saml2 import BINDING_URI
+import six
+
+import saml2.datetime.utils
 from saml2 import BINDING_HTTP_ARTIFACT
+from saml2 import BINDING_HTTP_POST
+from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_PAOS
-from saml2 import request as saml_request
-from saml2 import soap
+from saml2 import BINDING_SOAP
+from saml2 import BINDING_URI
+from saml2 import SAMLError
+from saml2 import SamlBase
+from saml2 import VERSION
+from saml2 import class_name
 from saml2 import element_to_extension_element
 from saml2 import extension_elements_to_elements
-
-from saml2.saml import NameID
+from saml2 import request as saml_request
+from saml2 import response as saml_response
+from saml2 import saml
+from saml2 import samlp
+from saml2 import soap
+from saml2.config import config_factory
+from saml2.httpbase import HTTPBase
+from saml2.mdstore import destinations
+from saml2.metadata import ENDPOINTS
+from saml2.profile import ecp
+from saml2.profile import paos
+from saml2.profile import samlec
+from saml2.response import LogoutResponse
+from saml2.response import UnsolicitedResponse
+from saml2.s_utils import UnravelError
+from saml2.s_utils import UnsupportedBinding
+from saml2.s_utils import decode_base64_and_inflate
+from saml2.s_utils import error_status_factory
+from saml2.s_utils import rndbytes
+from saml2.s_utils import sid
+from saml2.s_utils import success_status_factory
 from saml2.saml import EncryptedAssertion
 from saml2.saml import Issuer
 from saml2.saml import NAMEID_FORMAT_ENTITY
-from saml2.response import LogoutResponse
-from saml2.response import UnsolicitedResponse
-from saml2.time_util import instant
-from saml2.s_utils import sid
-from saml2.s_utils import UnravelError
-from saml2.s_utils import error_status_factory
-from saml2.s_utils import rndbytes
-from saml2.s_utils import success_status_factory
-from saml2.s_utils import decode_base64_and_inflate
-from saml2.s_utils import UnsupportedBinding
-from saml2.samlp import AuthnRequest, SessionIndex, response_from_string
-from saml2.samlp import AuthzDecisionQuery
-from saml2.samlp import AuthnQuery
-from saml2.samlp import AssertionIDRequest
-from saml2.samlp import ManageNameIDRequest
-from saml2.samlp import NameIDMappingRequest
-from saml2.samlp import artifact_resolve_from_string
+from saml2.saml import NameID
+from saml2.samlp import Artifact
 from saml2.samlp import ArtifactResolve
 from saml2.samlp import ArtifactResponse
-from saml2.samlp import Artifact
-from saml2.samlp import LogoutRequest
+from saml2.samlp import AssertionIDRequest
 from saml2.samlp import AttributeQuery
-from saml2.mdstore import destinations
-from saml2 import BINDING_HTTP_POST
-from saml2 import BINDING_HTTP_REDIRECT
-from saml2 import BINDING_SOAP
-from saml2 import VERSION
-from saml2 import class_name
-from saml2.config import config_factory
-from saml2.httpbase import HTTPBase
-from saml2.sigver import security_context
-from saml2.sigver import response_factory
+from saml2.samlp import AuthnQuery
+from saml2.samlp import AuthnRequest
+from saml2.samlp import AuthzDecisionQuery
+from saml2.samlp import LogoutRequest
+from saml2.samlp import ManageNameIDRequest
+from saml2.samlp import NameIDMappingRequest
+from saml2.samlp import SessionIndex
+from saml2.samlp import artifact_resolve_from_string
+from saml2.samlp import response_from_string
 from saml2.sigver import SigverError
-from saml2.sigver import CryptoBackendXmlSec1
 from saml2.sigver import make_temp
+from saml2.sigver import pre_encrypt_assertion
 from saml2.sigver import pre_encryption_part
 from saml2.sigver import pre_signature_part
-from saml2.sigver import pre_encrypt_assertion
+from saml2.sigver import response_factory
+from saml2.sigver import security_context
 from saml2.sigver import signed_instance_factory
+from saml2.soap import class_instances_from_soap_enveloped_saml_thingies
+from saml2.soap import open_soap_envelope
+from saml2.soap import parse_soap_enveloped_saml_artifact_resolve
 from saml2.virtual_org import VirtualOrg
+
 
 logger = logging.getLogger(__name__)
 
@@ -306,8 +309,13 @@ class Entity(HTTPBase):
         if not message_id:
             message_id = sid()
 
-        return {"id": message_id, "version": VERSION,
-                "issue_instant": instant(), "issuer": self._issuer()}
+        instant = saml2.datetime.utils.instant()
+        return {
+            "id": message_id,
+            "version": VERSION,
+            "issue_instant": instant,
+            "issuer": self._issuer(),
+        }
 
     def response_args(self, message, bindings=None, descr_type=""):
         """
@@ -780,9 +788,13 @@ class Entity(HTTPBase):
         if not status:
             status = success_status_factory()
 
-        response = response_class(issuer=issuer, id=mid, version=VERSION,
-                                  issue_instant=instant(),
-                                  status=status, **kwargs)
+        instant = saml2.datetime.utils.instant()
+        response = response_class(
+                issuer=issuer,
+                id=mid,
+                version=VERSION,
+                issue_instant=instant,
+                status=status, **kwargs)
 
         if sign:
             return self.sign(response, mid, sign_alg=sign_alg,
@@ -814,9 +826,6 @@ class Entity(HTTPBase):
         :return: A request instance
         """
 
-        _log_info = logger.info
-        _log_debug = logger.debug
-
         # The addresses I should receive messages like this on
         receiver_addresses = self.config.endpoint(service, binding,
                                                   self.entity_type)
@@ -826,8 +835,8 @@ class Entity(HTTPBase):
                 if receiver_addresses:
                     break
 
-        _log_debug("receiver addresses: %s", receiver_addresses)
-        _log_debug("Binding: %s", binding)
+        logger.debug("receiver addresses: %s", receiver_addresses)
+        logger.debug("Binding: %s", binding)
 
         try:
             timeslack = self.config.accepted_time_diff
@@ -851,11 +860,11 @@ class Entity(HTTPBase):
         _request = _request.loads(xmlstr, binding, origdoc=enc_request,
                                   must=must, only_valid_cert=only_valid_cert)
 
-        _log_debug("Loaded request")
+        logger.debug("Loaded request")
 
         if _request:
             _request = _request.verify()
-            _log_debug("Verified request")
+            logger.debug("Verified request")
 
         if not _request:
             return None

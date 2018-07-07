@@ -7,6 +7,9 @@ from contextlib import closing
 from six.moves.urllib.parse import parse_qs
 import uuid
 
+import saml2.datetime
+import saml2.datetime.compute
+
 from saml2.cert import OpenSSLWrapper
 from saml2.sigver import make_temp, EncryptError, CertificateError
 from saml2.assertion import Policy
@@ -22,7 +25,6 @@ from saml2 import config
 from saml2 import extension_elements_to_elements
 from saml2 import s_utils
 from saml2 import sigver
-from saml2 import time_util
 from saml2.s_utils import OtherError
 from saml2.s_utils import do_attribute_statement
 from saml2.s_utils import factory
@@ -42,6 +44,8 @@ AUTHN = {
     "authn_auth": "http://www.example.com/login"
 }
 
+period = saml2.datetime.unit.days(1)
+soon = saml2.datetime.compute.add_to_now(period)
 
 def _eq(l1, l2):
     return set(l1) == set(l2)
@@ -171,7 +175,7 @@ class TestServer1():
             assert attr1.attribute_value[0].text == "Derek"
             assert attr0.friendly_name == "sn"
             assert attr0.attribute_value[0].text == "Jeter"
-        # 
+        #
         subject = assertion.subject
         assert _eq(subject.keyswv(), ["text", "name_id"])
         assert subject.text == "_aaa"
@@ -1132,7 +1136,6 @@ class TestServer1():
 
 
     def test_slo_http_post(self):
-        soon = time_util.in_a_while(days=1)
         sinfo = {
             "name_id": nid,
             "issuer": "urn:mace:example.com:saml:roland:idp",
@@ -1156,7 +1159,6 @@ class TestServer1():
         assert request
 
     def test_slo_soap(self):
-        soon = time_util.in_a_while(days=1)
         sinfo = {
             "name_id": nid,
             "issuer": "urn:mace:example.com:saml:roland:idp",
@@ -1227,7 +1229,6 @@ def _logout_request(conf_file):
     conf.load_file(conf_file)
     sp = client.Saml2Client(conf)
 
-    soon = time_util.in_a_while(days=1)
     sinfo = {
         "name_id": nid,
         "issuer": "urn:mace:example.com:saml:roland:idp",

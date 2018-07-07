@@ -1,52 +1,55 @@
 from __future__ import print_function
+
 import hashlib
 import importlib
 import json
 import logging
 import os
 import sys
-
-from hashlib import sha1
 from os.path import isfile
 from os.path import join
 
 import requests
+
 import six
 
+import saml2.datetime
+import saml2.datetime.compare
+from saml2 import BINDING_HTTP_POST
+from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_SOAP
+from saml2 import SAMLError
 from saml2 import md
 from saml2 import saml
 from saml2 import samlp
 from saml2 import xmldsig
 from saml2 import xmlenc
-from saml2 import SAMLError
-from saml2 import BINDING_HTTP_REDIRECT
-from saml2 import BINDING_HTTP_POST
-from saml2 import BINDING_SOAP
-
-from saml2.httpbase import HTTPBase
 from saml2.extension.idpdisc import BINDING_DISCO
 from saml2.extension.idpdisc import DiscoveryResponse
+from saml2.httpbase import HTTPBase
 from saml2.md import EntitiesDescriptor
 from saml2.mdie import to_dict
-from saml2.s_utils import UnsupportedBinding
 from saml2.s_utils import UnknownSystemEntity
-from saml2.sigver import split_len
-from saml2.validate import valid_instance
-from saml2.time_util import valid
-from saml2.validate import NotValid
+from saml2.s_utils import UnsupportedBinding
 from saml2.sigver import security_context
+from saml2.sigver import split_len
+from saml2.validate import NotValid
+from saml2.validate import valid_instance
 
-__author__ = 'rolandh'
 
 logger = logging.getLogger(__name__)
 
 
 class ToOld(Exception):
-    pass
+    def __init__(self, until):
+        msg_tpl = "Metadata not valid anymore, it's only valid until {}"
+        msg = msg_tpl.format(until)
+        super(self.__class__, self).__init__(msg)
 
 
 class SourceNotFound(Exception):
     pass
+
 
 REQ2SRV = {
     # IDP
@@ -469,14 +472,20 @@ class InMemoryMetaData(MetaData):
 
     def do_entity_descriptor(self, entity_descr):
         if self.check_validity:
-            try:
-                if not valid(entity_descr.valid_until):
-                    logger.error("Entity descriptor (entity id:%s) to old",
-                                 entity_descr.entity_id)
-                    self.to_old.append(entity_descr.entity_id)
-                    return
-            except AttributeError:
-                pass
+            if entity_descr.valid_until:
+                valid_until_date_time = saml2.datetime.parse(
+                        entity_descr.valid_until)
+                is_valid = saml2.datetime.compare.after_now(
+                        valid_until_date_time)
+            else:
+                is_valid = entity_descr.valid_until is None
+
+            if not is_valid:
+                msg_tpl = "Entity descriptor (entity id:{}) too old"
+                msg = msg_tpl.format(entity_descr.entity_id)
+                logger.error(msg)
+                self.to_old.append(entity_descr.entity_id)
+                return
 
         # have I seen this entity_id before ? If so if log: ignore it
         if entity_descr.entity_id in self.entity:
@@ -533,14 +542,16 @@ class InMemoryMetaData(MetaData):
                 return
 
             if self.check_validity:
-                try:
-                    if not valid(self.entities_descr.valid_until):
-                        raise ToOld(
-                            "Metadata not valid anymore, it's only valid "
-                            "until %s" % (
-                                self.entities_descr.valid_until,))
-                except AttributeError:
-                    pass
+                if self.entities_descr.valid_until is None:
+                    is_valid = True
+                else:
+                    valid_until_date_time = saml2.datetime.parse(
+                            self.entities_descr.valid_until)
+                    is_valid = saml2.datetime.compare.after_now(
+                            valid_until_date_time)
+
+                if not is_valid:
+                    raise ToOld(self.entities_descr.valid_until)
 
             for entity_descr in self.entities_descr.entity_descriptor:
                 self.do_entity_descriptor(entity_descr)
@@ -615,7 +626,7 @@ class InMemoryMetaData(MetaData):
                         if "artifact_resolution_service" in srv:
                             if isinstance(eid, six.string_types):
                                 eid = eid.encode('utf-8')
-                            s = sha1(eid)
+                            s = hashlib.sha1(eid)
                             res[s.digest()] = ent
                 except KeyError:
                     pass

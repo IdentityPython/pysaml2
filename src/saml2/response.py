@@ -1,11 +1,27 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#
-
-import calendar
 import logging
+
 import six
-from saml2.samlp import STATUS_VERSION_MISMATCH
+
+import saml2.compat
+import saml2.datetime
+import saml2.datetime.compare
+import saml2.datetime.duration
+from saml2 import SAMLError
+from saml2 import class_name
+from saml2 import extension_elements_to_elements
+from saml2 import saml
+from saml2 import samlp
+from saml2 import xmldsig as ds
+from saml2 import xmlenc as xenc
+from saml2.attribute_converter import to_local
+from saml2.s_utils import RequestVersionTooHigh
+from saml2.s_utils import RequestVersionTooLow
+from saml2.saml import SCM_BEARER
+from saml2.saml import SCM_HOLDER_OF_KEY
+from saml2.saml import SCM_SENDER_VOUCHES
+from saml2.saml import XSI_TYPE
+from saml2.saml import attribute_from_string
+from saml2.saml import encrypted_attribute_from_string
 from saml2.samlp import STATUS_AUTHN_FAILED
 from saml2.samlp import STATUS_INVALID_ATTR_NAME_OR_VALUE
 from saml2.samlp import STATUS_INVALID_NAMEID_POLICY
@@ -21,45 +37,24 @@ from saml2.samlp import STATUS_REQUEST_VERSION_DEPRECATED
 from saml2.samlp import STATUS_REQUEST_VERSION_TOO_HIGH
 from saml2.samlp import STATUS_REQUEST_VERSION_TOO_LOW
 from saml2.samlp import STATUS_RESOURCE_NOT_RECOGNIZED
+from saml2.samlp import STATUS_RESPONDER
 from saml2.samlp import STATUS_TOO_MANY_RESPONSES
 from saml2.samlp import STATUS_UNKNOWN_ATTR_PROFILE
 from saml2.samlp import STATUS_UNKNOWN_PRINCIPAL
 from saml2.samlp import STATUS_UNSUPPORTED_BINDING
-from saml2.samlp import STATUS_RESPONDER
-
-from saml2 import xmldsig as ds
-from saml2 import xmlenc as xenc
-
-from saml2 import samlp
-from saml2 import class_name
-from saml2 import saml
-from saml2 import extension_elements_to_elements
-from saml2 import SAMLError
-from saml2 import time_util
-
-from saml2.s_utils import RequestVersionTooLow
-from saml2.s_utils import RequestVersionTooHigh
-from saml2.saml import attribute_from_string, XSI_TYPE
-from saml2.saml import SCM_BEARER
-from saml2.saml import SCM_HOLDER_OF_KEY
-from saml2.saml import SCM_SENDER_VOUCHES
-from saml2.saml import encrypted_attribute_from_string
-from saml2.sigver import security_context
+from saml2.samlp import STATUS_VERSION_MISMATCH
 from saml2.sigver import SignatureError
+from saml2.sigver import security_context
 from saml2.sigver import signed
-from saml2.attribute_converter import to_local
-from saml2.time_util import str_to_time, later_than
-
-from saml2.validate import validate_on_or_after
-from saml2.validate import validate_before
-from saml2.validate import valid_instance
-from saml2.validate import valid_address
 from saml2.validate import NotValid
+from saml2.validate import issue_instant_ok
+from saml2.validate import valid_address
+from saml2.validate import valid_instance
+from saml2.validate import validate_before
+from saml2.validate import validate_on_or_after
+
 
 logger = logging.getLogger(__name__)
-
-
-# ---------------------------------------------------------------------------
 
 
 class IncorrectlySigned(SAMLError):
@@ -254,13 +249,27 @@ class StatusResponse(object):
     msgtype = "status_response"
 
     def __init__(self, sec_context, return_addrs=None, timeslack=0,
-            request_id=0, asynchop=True, conv_info=None):
+                 request_id=0, asynchop=True, conv_info=None):
+        """Initialize a StatusResponse object.
+
+        timeslack is a number indicating the skew amount in the specified time
+        unit. If no timeslack is set, the default is 4 minutes.
+
+        Quote from the SAML2-core specification - section 1.3.3 Time Values:
+        > [E92] SAML system entities SHOULD allow for reasonable clock skew
+        > between systems when interpreting time instants and enforcing
+        > security policies based on them.  Tolerances of 3-5 minutes are
+        > reasonable defaults, but allowing for configurability is a suggested
+        > practice in implementations.
+        """
+
+        DEFAULT_TIMESLACK = {
+            saml2.datetime.unit.minutes: 4,
+        }
+
         self.sec = sec_context
         self.return_addrs = return_addrs
-
-        self.timeslack = timeslack
         self.request_id = request_id
-
         self.xmlstr = ""
         self.origxml = ""
         self.name_id = None
@@ -274,6 +283,10 @@ class StatusResponse(object):
         self.asynchop = asynchop
         self.do_not_verify = False
         self.conv_info = conv_info or {}
+
+        if not timeslack:
+            timeslack = DEFAULT_TIMESLACK
+        self.timeslack = saml2.datetime.duration.parse(timeslack)
 
     def _clear(self):
         self.xmlstr = ""
@@ -370,17 +383,6 @@ class StatusResponse(object):
                     "%s from %s" % (msg, status.status_code.value,))
         return True
 
-    def issue_instant_ok(self):
-        """ Check that the response was issued at a reasonable time """
-        upper = time_util.shift_time(time_util.time_in_a_while(days=1),
-                                     self.timeslack).timetuple()
-        lower = time_util.shift_time(time_util.time_a_while_ago(days=1),
-                                     -self.timeslack).timetuple()
-        # print("issue_instant: %s" % self.response.issue_instant)
-        # print("%s < x < %s" % (lower, upper))
-        issued_at = str_to_time(self.response.issue_instant)
-        return lower < issued_at < upper
-
     def _verify(self):
         if self.request_id and self.in_response_to and \
                         self.in_response_to != self.request_id:
@@ -404,7 +406,7 @@ class StatusResponse(object):
                              self.return_addrs)
                 return None
 
-        assert self.issue_instant_ok()
+        assert issue_instant_ok(self.response.issue_instant, self.timeslack)
         assert self.status_ok()
         return self
 
@@ -543,22 +545,19 @@ class AuthnResponse(StatusResponse):
 
     def authn_statement_ok(self, optional=False):
         try:
-            # the assertion MUST contain one AuthNStatement
-            assert len(self.assertion.authn_statement) == 1
-        except AssertionError:
+            authn_statement = self.assertion.authn_statement[0]
+        except IndexError as e:
             if optional:
                 return True
-            else:
-                logger.error("No AuthnStatement")
-                raise
+            msg = "No AuthnStatement"
+            logger.error(msg)
+            saml2.compat.raise_from(AssertionError(msg), e)
 
-        authn_statement = self.assertion.authn_statement[0]
         if authn_statement.session_not_on_or_after:
-            if validate_on_or_after(authn_statement.session_not_on_or_after,
-                                    self.timeslack):
-                self.session_not_on_or_after = calendar.timegm(
-                    time_util.str_to_time(
-                        authn_statement.session_not_on_or_after))
+            snooa = saml2.datetime.parse(
+                    authn_statement.session_not_on_or_after)
+            if validate_on_or_after(snooa, self.timeslack):
+                self.session_not_on_or_after = snooa
             else:
                 return False
         return True
@@ -581,16 +580,19 @@ class AuthnResponse(StatusResponse):
 
         # if both are present NotBefore must be earlier than NotOnOrAfter
         if conditions.not_before and conditions.not_on_or_after:
-            if not later_than(conditions.not_on_or_after,
-                              conditions.not_before):
+            is_valid = saml2.datetime.compare.before(
+                    conditions.not_before, conditions.not_on_or_after)
+            if not is_valid:
                 return False
 
         try:
             if conditions.not_on_or_after:
-                self.not_on_or_after = validate_on_or_after(
-                    conditions.not_on_or_after, self.timeslack)
+                nooa = saml2.datetime.parse(conditions.not_on_or_after)
+                if validate_on_or_after(nooa, self.timeslack):
+                    self.not_on_or_after = nooa
             if conditions.not_before:
-                validate_before(conditions.not_before, self.timeslack)
+                nbefore = saml2.datetime.parse(conditions.not_before)
+                validate_before(nbefore, self.timeslack)
         except Exception as excp:
             logger.error("Exception on conditions: %s", excp)
             if not lax:
@@ -679,12 +681,18 @@ class AuthnResponse(StatusResponse):
                 # verify that I got it from the correct sender
 
         # These two will raise exception if untrue
-        validate_on_or_after(data.not_on_or_after, self.timeslack)
-        validate_before(data.not_before, self.timeslack)
+        if data.not_on_or_after:
+            nooa = saml2.datetime.parse(data.not_on_or_after)
+            validate_on_or_after(nooa, self.timeslack)
+        if data.not_before:
+            nbefore = saml2.datetime.parse(data.not_before)
+            validate_before(nbefore, self.timeslack)
 
         # not_before must be < not_on_or_after
-        if not later_than(data.not_on_or_after, data.not_before):
-            return False
+        if data.not_on_or_after and data.not_before:
+            is_valid = saml2.datetime.compare.before(nbefore, nooa)
+            if not is_valid:
+                return False
 
         if self.asynchop and self.came_from is None:
             if data.in_response_to:
@@ -1062,7 +1070,7 @@ class AuthnResponse(StatusResponse):
         response.
         :returns: Dictionary with information
         """
-        if self.session_not_on_or_after > 0:
+        if self.session_not_on_or_after:
             nooa = self.session_not_on_or_after
         else:
             nooa = self.not_on_or_after
@@ -1086,8 +1094,8 @@ class AuthnResponse(StatusResponse):
     def verify_recipient(self, recipient):
         """
         Verify that I'm the recipient of the assertion
-        
-        :param recipient: A URI specifying the entity or location to which an 
+
+        :param recipient: A URI specifying the entity or location to which an
             attesting entity can present the assertion.
         :return: True/False
         """

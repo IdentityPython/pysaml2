@@ -1,11 +1,17 @@
-#!/usr/bin/env python
-
 import time
+
 import py
-from saml2.saml import NameID, NAMEID_FORMAT_TRANSIENT
+
+import saml2.datetime
+import saml2.datetime.compute
 from saml2.cache import Cache
-from saml2.time_util import in_a_while, str_to_time
 from saml2.ident import code
+from saml2.saml import NAMEID_FORMAT_TRANSIENT
+from saml2.saml import NameID
+
+
+DAYS_1 = saml2.datetime.unit.days(1)
+SECONDS_1 = saml2.datetime.unit.seconds(1)
 
 SESSION_INFO_PATTERN = {"ava": {}, "came from": "", "not_on_or_after": 0,
                         "issuer": "", "session_id": -1}
@@ -30,7 +36,8 @@ class TestClass:
         self.cache = Cache()
 
     def test_set(self):
-        not_on_or_after = str_to_time(in_a_while(days=1))
+        nooa = saml2.datetime.compute.add_to_now(DAYS_1)
+        not_on_or_after = saml2.datetime.compute.timestamp(nooa)
         session_info = SESSION_INFO_PATTERN.copy()
         session_info["ava"] = {"givenName": ["Derek"]}
         self.cache.set(nid[0], "abcd", session_info, not_on_or_after)
@@ -41,7 +48,8 @@ class TestClass:
         assert ava["givenName"] == ["Derek"]
 
     def test_add_ava_info(self):
-        not_on_or_after = str_to_time(in_a_while(days=1))
+        nooa = saml2.datetime.compute.add_to_now(DAYS_1)
+        not_on_or_after = saml2.datetime.compute.timestamp(nooa)
         session_info = SESSION_INFO_PATTERN.copy()
         session_info["ava"] = {"surName": ["Jeter"]}
         self.cache.set(nid[0], "bcde", session_info, not_on_or_after)
@@ -84,12 +92,11 @@ class TestClass:
         assert nid_eq(self.cache.subjects(), [nid[0]])
 
     def test_second_subject(self):
-        not_on_or_after = str_to_time(in_a_while(days=1))
+        nooa = saml2.datetime.compute.add_to_now(DAYS_1)
+        not_on_or_after = saml2.datetime.compute.timestamp(nooa)
         session_info = SESSION_INFO_PATTERN.copy()
-        session_info["ava"] = {"givenName": ["Ichiro"],
-                               "surName": ["Suzuki"]}
-        self.cache.set(nid[1], "abcd", session_info,
-                       not_on_or_after)
+        session_info["ava"] = {"givenName": ["Ichiro"], "surName": ["Suzuki"]}
+        self.cache.set(nid[1], "abcd", session_info, not_on_or_after)
 
         (ava, inactive) = self.cache.get_identity(nid[1])
         assert inactive == []
@@ -101,7 +108,8 @@ class TestClass:
     def test_receivers(self):
         assert _eq(self.cache.receivers(nid[1]), ["abcd"])
 
-        not_on_or_after = str_to_time(in_a_while(days=1))
+        nooa = saml2.datetime.compute.add_to_now(DAYS_1)
+        not_on_or_after = saml2.datetime.compute.timestamp(nooa)
         session_info = SESSION_INFO_PATTERN.copy()
         session_info["ava"] = {"givenName": ["Ichiro"],
                                "surName": ["Suzuki"]}
@@ -112,7 +120,8 @@ class TestClass:
         assert nid_eq(self.cache.subjects(), nid[0:2])
 
     def test_timeout(self):
-        not_on_or_after = str_to_time(in_a_while(seconds=1))
+        nooa = saml2.datetime.compute.add_to_now(SECONDS_1)
+        not_on_or_after = saml2.datetime.compute.timestamp(nooa)
         session_info = SESSION_INFO_PATTERN.copy()
         session_info["ava"] = {"givenName": ["Alex"],
                                "surName": ["Rodriguez"]}

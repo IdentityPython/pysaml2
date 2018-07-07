@@ -1,22 +1,25 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 import copy
 import importlib
 import logging
 import re
+
 import six
 
+import saml2.datetime
+import saml2.datetime.compute
+import saml2.datetime.duration
+import saml2.datetime.utils
 from saml2 import saml
 from saml2 import xmlenc
-from saml2.attribute_converter import from_local, ac_factory
+from saml2.attribute_converter import ac_factory
+from saml2.attribute_converter import from_local
 from saml2.attribute_converter import get_local_name
+from saml2.s_utils import MissingValue
 from saml2.s_utils import assertion_factory
 from saml2.s_utils import factory
 from saml2.s_utils import sid
-from saml2.s_utils import MissingValue
 from saml2.saml import NAME_FORMAT_URI
-from saml2.time_util import instant
-from saml2.time_util import in_a_while
+
 
 logger = logging.getLogger(__name__)
 
@@ -433,12 +436,14 @@ class Policy(object):
         return self.get("name_form", sp_entity_id, NAME_FORMAT_URI)
 
     def get_lifetime(self, sp_entity_id):
-        """ The lifetime of the assertion
+        """
+        The lifetime of the assertion
+
         :param sp_entity_id: The SP entity ID
         :param: lifetime as a dictionary
         """
-        # default is a hour
-        return self.get("lifetime", sp_entity_id, {"hours": 1})
+        lifetime_default = {"hours": 1}
+        return self.get('lifetime', sp_entity_id, lifetime_default)
 
     def get_attribute_restrictions(self, sp_entity_id):
         """ Return the attribute restriction for SP that want the information
@@ -473,7 +478,6 @@ class Policy(object):
 
     def get_entity_categories(self, sp_entity_id, mds, required):
         """
-
         :param sp_entity_id:
         :param mds: MetadataStore instance
         :return: A dictionary with restrictions
@@ -485,14 +489,17 @@ class Policy(object):
                         post_func=post_entity_categories, **kwargs)
 
     def not_on_or_after(self, sp_entity_id):
-        """ When the assertion stops being valid, should not be
-        used after this time.
+        """
+        When the assertion stops being valid, should not be used after this
+        time.
 
         :param sp_entity_id: The SP entity ID
         :return: String representation of the time
         """
-
-        return in_a_while(**self.get_lifetime(sp_entity_id))
+        lifetime = self.get_lifetime(sp_entity_id)
+        period = saml2.datetime.duration.parse(lifetime)
+        nooa = saml2.datetime.compute.add_to_now(period)
+        return saml2.datetime.to_string(nooa)
 
     def filter(self, ava, sp_entity_id, mdstore, required=None, optional=None):
         """ What attribute and attribute values returns depends on what
@@ -558,14 +565,17 @@ class Policy(object):
         :param sp_entity_id: The SP entity ID
         :return: A saml.Condition instance
         """
-        return factory(saml.Conditions,
-                       not_before=instant(),
-                       # How long might depend on who's getting it
-                       not_on_or_after=self.not_on_or_after(sp_entity_id),
-                       audience_restriction=[factory(
-                           saml.AudienceRestriction,
-                           audience=[factory(saml.Audience,
-                                             text=sp_entity_id)])])
+        instant = saml2.datetime.utils.instant()
+        audience = [factory(saml.Audience, text=sp_entity_id)]
+        audience_restriction = [
+            factory(saml.AudienceRestriction, audience=audience)
+        ]
+        return factory(
+                saml.Conditions,
+                not_before=instant,
+                # How long might depend on who's getting it
+                not_on_or_after=self.not_on_or_after(sp_entity_id),
+                audience_restriction=audience_restriction)
 
     def get_sign(self, sp_entity_id):
         """
@@ -644,9 +654,10 @@ def authn_statement(authn_class=None, authn_auth=None,
     :return: An AuthnContext instance
     """
     if authn_instant:
-        _instant = instant(time_stamp=authn_instant)
+        _date_time_instant = saml2.datetime.fromtimestamp(authn_instant)
+        _instant = saml2.datetime.to_string(_date_time_instant)
     else:
-        _instant = instant()
+        _instant = saml2.datetime.utils.instant()
 
     if authn_class:
         res = factory(
@@ -785,11 +796,12 @@ class Assertion(dict):
         if authn_statem:
             _authn_statement = authn_statem
         elif authn_auth or authn_class or authn_decl or authn_decl_ref:
-            _authn_statement = authn_statement(authn_class, authn_auth,
-                                               authn_decl, authn_decl_ref,
-                                               authn_instant,
-                                               subject_locality,
-                                               session_not_on_or_after=session_not_on_or_after)
+            _authn_statement = authn_statement(
+                    authn_class, authn_auth,
+                    authn_decl, authn_decl_ref,
+                    authn_instant,
+                    subject_locality,
+                    session_not_on_or_after=session_not_on_or_after)
         else:
             _authn_statement = None
 

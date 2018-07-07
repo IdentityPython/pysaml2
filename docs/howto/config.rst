@@ -270,6 +270,17 @@ If your computer and another computer that you are communicating with are not
 in synch regarding the computer clock, then here you can state how big a
 difference you are prepared to accept.
 
+The value of accepted_time_diff can be:
+- a number indicating the amount of time in seconds, or
+- a dictionary with a single entry where the key is the time unit type and the
+  value is the amount.
+
+example::
+
+    "accepted_time_diff": 300,
+    # or
+    "accepted_time_diff": {"minutes": 5},
+
 .. note:: This will indiscriminately effect all time comparisons.
     Hence your server my accept a statement that in fact is to old.
 

@@ -1,16 +1,22 @@
-#!/usr/bin/env python
-import pytest
-
-__author__ = 'rolandh'
-
 import time
-from saml2.cache import ToOld
-from saml2.mdbcache import Cache
-from saml2.time_util import in_a_while, str_to_time
+
+import pytest
 from pytest import raises
 
-SESSION_INFO_PATTERN = {"ava":{}, "came from":"", "not_on_or_after":0,
-                    "issuer":"", "session_id":-1}
+import saml2.datetime
+import saml2.datetime.compute
+from saml2.cache import ToOld
+from saml2.mdbcache import Cache
+
+
+SESSION_INFO_PATTERN = {
+    "ava": {},
+    "came from": "",
+    "not_on_or_after": 0,
+    "issuer": "",
+    "session_id": -1,
+}
+
 
 @pytest.mark.mongo
 class TestMongoDBCache():
@@ -23,9 +29,11 @@ class TestMongoDBCache():
 
     def test_set_get_1(self):
         if self.cache is not None:
-            not_on_or_after = str_to_time(in_a_while(days=1))
+            period = saml2.datetime.unit.days(1)
+            date_time = saml2.datetime.compute.add_to_now(period)
+            not_on_or_after = saml2.datetime.compute.timestamp(date_time)
             session_info = SESSION_INFO_PATTERN.copy()
-            session_info["ava"] = {"givenName":["Derek"]}
+            session_info["ava"] = {"givenName": ["Derek"]}
             # subject_id, entity_id, info, timestamp
             self.cache.set("1234", "abcd", session_info, not_on_or_after)
 
@@ -38,14 +46,14 @@ class TestMongoDBCache():
 
     def test_set_get_2(self):
         if self.cache is not None:
-            not_on_or_after = str_to_time(in_a_while(seconds=1))
+            period = saml2.datetime.unit.seconds(1)
+            date_time = saml2.datetime.compute.add_to_now(period)
+            not_on_or_after = saml2.datetime.compute.timestamp(date_time)
             session_info = SESSION_INFO_PATTERN.copy()
-            session_info["ava"] = {"givenName":["Mariano"]}
+            session_info["ava"] = {"givenName": ["Mariano"]}
             # subject_id, entity_id, info, timestamp
-            self.cache.set("1235", "abcd", session_info,
-                            not_on_or_after)
+            self.cache.set("1235", "abcd", session_info, not_on_or_after)
             time.sleep(2)
-
             raises(ToOld, 'self.cache.get("1235", "abcd")')
             info = self.cache.get("1235", "abcd", False)
             assert info != {}
@@ -66,14 +74,17 @@ class TestMongoDBCache():
 
     def test_identity(self):
         if self.cache is not None:
-            not_on_or_after = str_to_time(in_a_while(days=1))
+            period = saml2.datetime.unit.days(1)
+            date_time = saml2.datetime.compute.add_to_now(period)
+            not_on_or_after = saml2.datetime.compute.timestamp(date_time)
             session_info = SESSION_INFO_PATTERN.copy()
-            session_info["ava"] = {"givenName":["Derek"]}
+            session_info["ava"] = {"givenName": ["Derek"]}
             self.cache.set("1234", "abcd", session_info, not_on_or_after)
 
-            not_on_or_after = str_to_time(in_a_while(days=1))
+            date_time = saml2.datetime.compute.add_to_now(period)
+            not_on_or_after = saml2.datetime.compute.timestamp(date_time)
             session_info = SESSION_INFO_PATTERN.copy()
-            session_info["ava"] = {"mail":["Derek.Jeter@mlb.com"]}
+            session_info["ava"] = {"mail": ["Derek.Jeter@mlb.com"]}
             self.cache.set("1234", "xyzv", session_info, not_on_or_after)
 
             (ident, _) = self.cache.get_identity("1234")

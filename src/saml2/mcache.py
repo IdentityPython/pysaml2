@@ -2,8 +2,12 @@
 import logging
 
 import memcache
-from saml2 import time_util
-from saml2.cache import ToOld, CacheError
+
+import saml2.datetime
+import saml2.datetime.compare
+from saml2.cache import CacheError
+from saml2.cache import ToOld
+
 
 # The assumption is that any subject may consist of data
 # gathered from several different sources, all with their own
@@ -11,8 +15,10 @@ from saml2.cache import ToOld, CacheError
 
 logger = logging.getLogger(__name__)
 
+
 def _key(prefix, name):
     return "%s_%s" % (prefix, name)
+
 
 class Cache(object):
     def __init__(self, servers, debug=0):
@@ -79,8 +85,11 @@ class Cache(object):
         except ValueError:
             raise ToOld()
 
-        if check_not_on_or_after and not time_util.not_on_or_after(timestamp):
-            raise ToOld()
+        if check_not_on_or_after:
+            date_time = saml2.datetime.fromtimestamp(timestamp)
+            is_valid = saml2.datetime.compare.before_now(date_time)
+            if not is_valid:
+                raise ToOld()
 
         return info or None
 
@@ -165,13 +174,8 @@ class Cache(object):
         except TypeError:
             return False
 
-        # if not info:
-        #     return False
-
-        try:
-            return time_util.not_on_or_after(timestamp)
-        except ToOld:
-            return False
+        date_time = saml2.datetime.fromtimestamp(timestamp)
+        return saml2.datetime.compare.before_now(date_time)
 
     def subjects(self):
         """ Return identifiers for all the subjects that are in the cache.

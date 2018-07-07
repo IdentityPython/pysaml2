@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
 import base64
+
+import saml2.datetime
 from saml2.xmldsig import SIG_RSA_SHA256
 from saml2 import sigver
 from saml2 import extension_elements_to_elements
 from saml2 import class_name
-from saml2 import time_util
 from saml2 import saml, samlp
 from saml2 import config
 from saml2.sigver import pre_encryption_part
@@ -175,7 +176,7 @@ class TestSecurity():
                                    'version', 'signature', 'id'])
         assert sass.version == "2.0"
         assert sass.id == "11111"
-        assert time_util.str_to_time(sass.issue_instant)
+        assert saml2.datetime.parse(sass.issue_instant)
 
         print("Crypto version : %s" % (self.sec.crypto.version()))
 
@@ -187,7 +188,7 @@ class TestSecurity():
         ass = self._assertion
         # basic test with two of the same
         to_sign = [(ass, ass.id, ''),
-                   (ass, ass.id, '')
+                   (ass, ass.id, ''),
         ]
         sign_ass = self.sec.multiple_signatures("%s" % ass, to_sign)
         sass = saml.assertion_from_string(sign_ass)
@@ -195,7 +196,7 @@ class TestSecurity():
                                    'version', 'signature', 'id'])
         assert sass.version == "2.0"
         assert sass.id == "11111"
-        assert time_util.str_to_time(sass.issue_instant)
+        assert saml2.datetime.parse(sass.issue_instant)
 
         print("Crypto version : %s" % (self.sec.crypto.version()))
 
