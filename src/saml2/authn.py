@@ -120,7 +120,7 @@ class UsernamePasswordMako(UserAuthnMethod):
         self.return_to = return_to
         self.active = {}
         self.query_param = "upm_answer"
-        self.aes = AESCipher(self.srv.symkey.encode(), srv.iv)
+        self.aes = AESCipher(self.srv.symkey.encode())
 
     def __call__(self, cookie=None, policy_url=None, logo_url=None,
                  query="", **kwargs):

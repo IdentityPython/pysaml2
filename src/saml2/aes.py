@@ -11,36 +11,27 @@ from cryptography.hazmat.primitives.ciphers import modes
 POSTFIX_MODE = {
     'cbc': modes.CBC,
     'cfb': modes.CFB,
-    'ecb': modes.ECB,
 }
 
 AES_BLOCK_SIZE = int(algorithms.AES.block_size / 8)
 
 
 class AESCipher(object):
-    def __init__(self, key, iv=None):
+    def __init__(self, key):
         """
         :param key: The encryption key
-        :param iv: Init vector
         :return: AESCipher instance
         """
         self.key = key
-        self.iv = iv
 
-    def build_cipher(self, iv=None, alg='aes_128_cbc'):
+    def build_cipher(self, alg='aes_128_cbc'):
         """
-        :param iv: init vector
         :param alg: cipher algorithm
         :return: A Cipher instance
         """
         typ, bits, cmode = alg.lower().split('_')
         bits = int(bits)
-
-        if not iv:
-            if self.iv:
-                iv = self.iv
-            else:
-                iv = os.urandom(AES_BLOCK_SIZE)
+        iv = os.urandom(AES_BLOCK_SIZE)
 
         if len(iv) != AES_BLOCK_SIZE:
             raise Exception('Wrong iv size: {}'.format(len(iv)))
@@ -63,11 +54,10 @@ class AESCipher(object):
 
         return cipher, iv
 
-    def encrypt(self, msg, iv=None, alg='aes_128_cbc', padding='PKCS#7',
-                b64enc=True, block_size=AES_BLOCK_SIZE):
+    def encrypt(self, msg, alg='aes_128_cbc', padding='PKCS#7', b64enc=True,
+                block_size=AES_BLOCK_SIZE):
         """
         :param key: The encryption key
-        :param iv: init vector
         :param msg: Message to be encrypted
         :param padding: Which padding that should be used
         :param b64enc: Whether the result should be base64encoded
@@ -87,7 +77,7 @@ class AESCipher(object):
             c = chr(plen).encode()
             msg += c * plen
 
-        cipher, iv = self.build_cipher(iv, alg)
+        cipher, iv = self.build_cipher(alg)
         encryptor = cipher.encryptor()
         cmsg = iv + encryptor.update(msg) + encryptor.finalize()
 
@@ -98,20 +88,15 @@ class AESCipher(object):
 
         return enc_msg
 
-    def decrypt(self, msg, iv=None, alg='aes_128_cbc', padding='PKCS#7',
-                b64dec=True):
+    def decrypt(self, msg, alg='aes_128_cbc', padding='PKCS#7', b64dec=True):
         """
         :param key: The encryption key
-        :param iv: init vector
         :param msg: Base64 encoded message to be decrypted
         :return: The decrypted message
         """
         data = b64decode(msg) if b64dec else msg
 
-        _iv = data[:AES_BLOCK_SIZE]
-        if iv:
-            assert iv == _iv
-        cipher, iv = self.build_cipher(iv, alg=alg)
+        cipher, iv = self.build_cipher(alg=alg)
         decryptor = cipher.decryptor()
         res = decryptor.update(data)[AES_BLOCK_SIZE:] + decryptor.finalize()
         if padding in ['PKCS#5', 'PKCS#7']:
@@ -122,20 +107,19 @@ class AESCipher(object):
 
 def run_test():
     key = b'1234523451234545'  # 16 byte key
-    iv = os.urandom(AES_BLOCK_SIZE)
     # Iff padded, the message doesn't have to be multiple of 16 in length
     original_msg = b'ToBeOrNotTobe W.S.'
     aes = AESCipher(key)
 
-    encrypted_msg = aes.encrypt(original_msg, iv)
-    decrypted_msg = aes.decrypt(encrypted_msg, iv)
+    encrypted_msg = aes.encrypt(original_msg)
+    decrypted_msg = aes.decrypt(encrypted_msg)
     assert decrypted_msg == original_msg
 
     encrypted_msg = aes.encrypt(original_msg)
     decrypted_msg = aes.decrypt(encrypted_msg)
     assert decrypted_msg == original_msg
 
-    aes = AESCipher(key, iv)
+    aes = AESCipher(key)
     encrypted_msg = aes.encrypt(original_msg)
     decrypted_msg = aes.decrypt(encrypted_msg)
     assert decrypted_msg == original_msg
