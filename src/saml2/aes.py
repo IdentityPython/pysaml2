@@ -103,27 +103,3 @@ class AESCipher(object):
             idx = bytearray(res)[-1]
             res = res[:-idx]
         return res
-
-
-def run_test():
-    key = b'1234523451234545'  # 16 byte key
-    # Iff padded, the message doesn't have to be multiple of 16 in length
-    original_msg = b'ToBeOrNotTobe W.S.'
-    aes = AESCipher(key)
-
-    encrypted_msg = aes.encrypt(original_msg)
-    decrypted_msg = aes.decrypt(encrypted_msg)
-    assert decrypted_msg == original_msg
-
-    encrypted_msg = aes.encrypt(original_msg)
-    decrypted_msg = aes.decrypt(encrypted_msg)
-    assert decrypted_msg == original_msg
-
-    aes = AESCipher(key)
-    encrypted_msg = aes.encrypt(original_msg)
-    decrypted_msg = aes.decrypt(encrypted_msg)
-    assert decrypted_msg == original_msg
-
-
-if __name__ == '__main__':
-    run_test()
