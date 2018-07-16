@@ -9,10 +9,8 @@ from OpenSSL import crypto
 from os.path import join
 from os import remove
 
-from cryptography.hazmat.backends import default_backend
-from cryptography.x509 import load_pem_x509_certificate
+import saml2.cryptography.pki
 
-backend = default_backend()
 
 class WrongInput(Exception):
     pass
@@ -325,7 +323,8 @@ class OpenSSLWrapper(object):
                 cert_algorithm = cert_algorithm.decode('ascii')
                 cert_str = cert_str.encode('ascii')
 
-            cert_crypto = load_pem_x509_certificate(cert_str, backend)
+            cert_crypto = saml2.cryptography.pki.load_pem_x509_certificate(
+                    cert_str)
 
             try:
                 crypto.verify(ca_cert, cert_crypto.signature,

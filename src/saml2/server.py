@@ -14,6 +14,7 @@ import shelve
 import six
 import threading
 
+import saml2.cryptography.symmetric
 from saml2 import saml
 from saml2 import element_to_extension_element
 from saml2 import class_name
@@ -84,7 +85,10 @@ class Server(Entity):
         self.cache = cache
         self.ticket = {}
         self.session_db = self.choose_session_storage()
-        self.symkey = symkey
+        if symkey:
+            self.symkey = symkey.encode()
+        else:
+            self.symkey = saml2.cryptography.symmetric.Default.generate_key()
         self.seed = rndstr()
         self.lock = threading.Lock()
 
