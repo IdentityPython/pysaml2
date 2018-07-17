@@ -31,7 +31,7 @@ class Cache(object):
         self.debug = debug
 
     def delete(self, subject_id):
-        self._cache.remove({"subject_id": subject_id})
+        self._cache.delete_many({'subject_id': subject_id})
 
     def get_identity(self, subject_id, entities=None,
                      check_not_on_or_after=True):
@@ -196,4 +196,4 @@ class Cache(object):
                            {"$set": {"timestamp": newtime}})
 
     def clear(self):
-        self._cache.remove()
+        self._cache.delete_many({})

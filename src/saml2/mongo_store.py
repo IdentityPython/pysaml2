@@ -178,11 +178,7 @@ class IdentMDB(IdentDB):
         # else create and return a new one
         return self.construct_nameid(_id, name_id_policy=name_id_policy)
 
-    def close(self):
-        pass
 
-
-#------------------------------------------------------------------------------
 class MDB(object):
     primary_key = "mdb"
 

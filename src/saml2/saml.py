@@ -3,6 +3,8 @@
 #
 # Generated Mon May  2 14:23:33 2011 by parse_xsd.py version 0.4.
 #
+import base64
+
 from saml2.validate import valid_ipv4, MustValueError
 from saml2.validate import valid_ipv6
 from saml2.validate import ShouldValueError
@@ -81,11 +83,12 @@ SCM_HOLDER_OF_KEY = "urn:oasis:names:tc:SAML:2.0:cm:holder-of-key"
 SCM_SENDER_VOUCHES = "urn:oasis:names:tc:SAML:2.0:cm:sender-vouches"
 SCM_BEARER = "urn:oasis:names:tc:SAML:2.0:cm:bearer"
 
-# -----------------------------------------------------------------------------
 XSD = "xs:"
 NS_SOAP_ENC = "http://schemas.xmlsoap.org/soap/encoding/"
 
-# -----------------------------------------------------------------------------
+
+_b64_decode_fn = getattr(base64, 'decodebytes', base64.decodestring)
+_b64_encode_fn = getattr(base64, 'encodebytes', base64.encodestring)
 
 
 def _decode_attribute_value(typ, text):
@@ -96,11 +99,9 @@ def _decode_attribute_value(typ, text):
     if typ == XSD + "float" or typ == XSD + "double":
         return str(float(text))
     if typ == XSD + "boolean":
-        return "%s" % (text == "true" or text == "True")
+        return str(text.lower() == "true")
     if typ == XSD + "base64Binary":
-        import base64
-
-        return base64.decodestring(text)
+        return _b64_decode_fn(text)
     raise ValueError("type %s not supported" % type)
 
 
@@ -124,9 +125,7 @@ def _verify_value_type(typ, val):
         else:
             raise ValueError("Faulty boolean value")
     if typ == XSD + "base64Binary":
-        import base64
-
-        return base64.decodestring(val.encode('utf-8'))
+        return _b64_decode_fn(val.encode())
 
 
 class AttributeValueBase(SamlBase):
@@ -181,7 +180,6 @@ class AttributeValueBase(SamlBase):
             except AttributeError:
                 self._extatt['xmlns:xs'] = XS_NAMESPACE
 
-
     def get_type(self):
         try:
             return self.extension_attributes[XSI_TYPE]
@@ -204,13 +202,11 @@ class AttributeValueBase(SamlBase):
     def set_text(self, val, base64encode=False):
         typ = self.get_type()
         if base64encode:
-            import base64
-
-            val = base64.encodestring(val)
+            val = _b64_encode_fn(val)
             self.set_type("xs:base64Binary")
         else:
             if isinstance(val, six.binary_type):
-                val = val.decode('utf-8')
+                val = val.decode()
             if isinstance(val, six.string_types):
                 if not typ:
                     self.set_type("xs:string")

@@ -113,7 +113,6 @@ class Server(Entity):
             typ, data = _spec
             if typ.lower() == "mongodb":
                 from saml2.mongo_store import SessionStorageMDB
-
                 return SessionStorageMDB(database=data, collection="session")
 
         raise NotImplementedError("No such storage type implemented")
@@ -142,15 +141,12 @@ class Server(Entity):
                 idb = _shelve_compat(addr, writeback=True, protocol=2)
             elif typ == "memcached":
                 import memcache
-
                 idb = memcache.Client(addr)
             elif typ == "dict":  # in-memory dictionary
                 idb = {}
             elif typ == "mongodb":
                 from saml2.mongo_store import IdentMDB
-
                 self.ident = IdentMDB(database=addr, collection="ident")
-
             elif typ == "identdb":
                 mod, clas = addr.rsplit('.', 1)
                 mod = importlib.import_module(mod)
@@ -182,7 +178,6 @@ class Server(Entity):
                     self.eptid = EptidShelve(secret, addr)
                 elif typ == "mongodb":
                     from saml2.mongo_store import EptidMDB
-
                     self.eptid = EptidMDB(secret, database=addr,
                                           collection="eptid")
                 else:

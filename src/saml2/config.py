@@ -373,7 +373,6 @@ class Config(object):
             config_file = config_file[:-3]
 
         mod = self._load(config_file)
-        # return self.load(eval(open(config_file).read()))
         return self.load(copy.deepcopy(mod.CONFIG), metadata_construction)
 
     def load_metadata(self, metadata_conf):

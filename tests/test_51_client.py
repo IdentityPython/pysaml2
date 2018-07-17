@@ -53,6 +53,8 @@ AUTHN = {
     "authn_auth": "http://www.example.com/login"
 }
 
+encode_fn = getattr(base64, 'encodebytes', base64.encodestring)
+
 
 def generate_cert():
     sn = uuid.uuid4().urn
@@ -177,7 +179,7 @@ class TestClient:
             "E8042FB4-4D5B-48C3-8E14-8EDD852790DD",
             format=saml.NAMEID_FORMAT_PERSISTENT,
             message_id="id1")
-        reqstr = "%s" % req.to_string().decode('utf-8')
+        reqstr = "%s" % req.to_string().decode()
 
         assert req.destination == "https://idp.example.com/idp/"
         assert req.id == "id1"
@@ -411,7 +413,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = base64.encodestring(resp_str.encode('utf-8'))
+        resp_str = encode_fn(resp_str.encode())
 
         authn_response = self.client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -455,7 +457,7 @@ class TestClient:
             userid="also0001@example.com",
             authn=AUTHN)
 
-        resp_str = base64.encodestring(resp_str.encode('utf-8'))
+        resp_str = encode_fn(resp_str.encode())
 
         self.client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -505,7 +507,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = base64.encodestring(resp_str.encode('utf-8'))
+        resp_str = encode_fn(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -540,7 +542,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = base64.encodestring(resp_str.encode('utf-8'))
+        resp_str = encode_fn(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -575,7 +577,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = base64.encodestring(resp_str.encode('utf-8'))
+        resp_str = encode_fn(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -619,7 +621,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = base64.encodestring(resp_str.encode('utf-8'))
+        resp_str = encode_fn(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -672,7 +674,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = base64.encodestring(resp_str.encode('utf-8'))
+        resp_str = encode_fn(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -708,7 +710,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = base64.encodestring(resp_str.encode('utf-8'))
+        resp_str = encode_fn(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -751,7 +753,7 @@ class TestClient:
 
         resp_str = "%s" % resp
 
-        resp_str = base64.encodestring(resp_str.encode('utf-8'))
+        resp_str = encode_fn(resp_str.encode())
 
         authn_response = _client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -927,7 +929,7 @@ class TestClient:
 
         # seresp = samlp.response_from_string(enctext)
 
-        resp_str = base64.encodestring(enctext.encode('utf-8'))
+        resp_str = encode_fn(enctext.encode())
         # Now over to the client side
         # Explicitely allow unsigned responses for this and the following 2 tests
         self.client.want_response_signed = False
@@ -1030,7 +1032,7 @@ class TestClient:
 
         # seresp = samlp.response_from_string(enctext)
 
-        resp_str = base64.encodestring(enctext.encode('utf-8'))
+        resp_str = encode_fn(enctext.encode())
         # Now over to the client side
         resp = self.client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
@@ -1315,7 +1317,7 @@ class TestClient:
 
         # seresp = samlp.response_from_string(enctext)
 
-        resp_str = base64.encodestring(str(response).encode('utf-8'))
+        resp_str = encode_fn(str(response).encode())
         # Now over to the client side
         resp = self.client.parse_authn_request_response(
             resp_str, BINDING_HTTP_POST,
