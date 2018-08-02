@@ -262,7 +262,7 @@ class Saml2Client(Base):
                                           "entity_ids": entity_ids,
                                           "name_id": code(name_id),
                                           "reason": reason,
-                                          "not_on_of_after": expire,
+                                          "not_on_or_after": expire,
                                           "sign": sign}
 
                     responses[entity_id] = (binding, http_info)
