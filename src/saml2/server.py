@@ -83,12 +83,9 @@ class Server(Entity):
         self.init_config(stype)
         self.cache = cache
         self.ticket = {}
-        #
         self.session_db = self.choose_session_storage()
-        # Needed for
         self.symkey = symkey
         self.seed = rndstr()
-        self.iv = os.urandom(16)
         self.lock = threading.Lock()
 
     def getvalid_certificate_str(self):
