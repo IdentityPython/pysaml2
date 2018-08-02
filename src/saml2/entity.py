@@ -1115,10 +1115,17 @@ class Entity(HTTPBase):
             return response
 
         if "return_addrs" not in kwargs:
-            if binding in [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST]:
+            bindings = {
+                BINDING_SOAP,
+                BINDING_HTTP_REDIRECT,
+                BINDING_HTTP_POST,
+            }
+            if binding in bindings:
                 # expected return address
                 kwargs["return_addrs"] = self.config.endpoint(
-                        service, binding=binding)
+                        service,
+                        binding=binding,
+                        context=self.entity_type)
 
         try:
             response = response_cls(self.sec, **kwargs)

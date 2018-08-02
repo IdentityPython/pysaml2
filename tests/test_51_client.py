@@ -1581,6 +1581,43 @@ class TestClientWithDummy():
         assert ac.authn_context_class_ref.text == INTERNETPROTOCOLPASSWORD
 
 
+class TestClientNoConfigContext():
+    def setup_class(self):
+        self.server = FakeIDP("idp_all_conf")
+
+        conf = config.Config()  # not SPConfig
+        conf.load_file("servera_conf")
+        self.client = Saml2Client(conf)
+
+        self.client.send = self.server.receive
+
+    def test_logout_1(self):
+        """ one IdP/AA logout from"""
+
+        # information about the user from an IdP
+        session_info = {
+            "name_id": nid,
+            "issuer": "urn:mace:example.com:saml:roland:idp",
+            "not_on_or_after": in_a_while(minutes=15),
+            "ava": {
+                "givenName": "Anders",
+                "sn": "Andersson",
+                "mail": "anders.andersson@example.com"
+            }
+        }
+        self.client.users.add_information_about_person(session_info)
+        entity_ids = self.client.users.issuers_of_info(nid)
+        assert entity_ids == ["urn:mace:example.com:saml:roland:idp"]
+        resp = self.client.global_logout(nid, "Tired", in_a_while(minutes=5))
+        assert resp
+        assert len(resp) == 1
+        assert list(resp.keys()) == entity_ids
+        response = resp[entity_ids[0]]
+        assert isinstance(response, LogoutResponse)
+        assert response.return_addrs
+        assert len(response.return_addrs) == 1
+
+
 def test_parse_soap_enveloped_saml_xxe():
     xml = """<?xml version="1.0"?>
     <!DOCTYPE lolz [
