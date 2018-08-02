@@ -19,13 +19,8 @@ from binascii import hexlify
 
 from future.backports.urllib.parse import urlencode
 
-from cryptography.exceptions import InvalidSignature
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives.asymmetric.padding import PKCS1v15
-from cryptography.hazmat.primitives.serialization import load_pem_private_key
-from cryptography.x509 import load_pem_x509_certificate
+import saml2.cryptography.asymmetric
+import saml2.cryptography.pki
 
 from tempfile import NamedTemporaryFile
 from subprocess import Popen
@@ -74,8 +69,6 @@ TRIPLE_DES_CBC = "http://www.w3.org/2001/04/xmlenc#tripledes-cbc"
 XMLTAG = "<?xml version='1.0'?>"
 PREFIX1 = "<?xml version='1.0' encoding='UTF-8'?>"
 PREFIX2 = '<?xml version="1.0" encoding="UTF-8"?>'
-
-backend = default_backend()
 
 
 class SigverError(SAMLError):
@@ -489,7 +482,7 @@ def base64_to_long(data):
 
 
 def extract_rsa_key_from_x509_cert(pem):
-    cert = load_pem_x509_certificate(pem, backend)
+    cert = saml2.cryptography.pki.load_pem_x509_certificate(pem)
     return cert.public_key()
 
 
@@ -499,7 +492,9 @@ def pem_format(key):
 
 
 def import_rsa_key_from_file(filename):
-    return load_pem_private_key(read_file(filename, 'rb'), None, backend)
+    data = read_file(filename, 'rb')
+    key = saml2.cryptography.asymmetric.load_pem_private_key(data, None)
+    return key
 
 
 def parse_xmlsec_output(output):
@@ -542,31 +537,20 @@ class RSASigner(Signer):
         self.digest = digest
 
     def sign(self, msg, key=None):
-        if key is None:
-            key = self.key
-
-        return key.sign(msg, PKCS1v15(), self.digest)
+        return saml2.cryptography.asymmetric.key_sign(
+                key or self.key, msg, self.digest)
 
     def verify(self, msg, sig, key=None):
-        if key is None:
-            key = self.key
-
-        try:
-            if isinstance(key, rsa.RSAPrivateKey):
-                key = key.public_key()
-
-            key.verify(sig, msg, PKCS1v15(), self.digest)
-            return True
-        except InvalidSignature:
-            return False
+        return saml2.cryptography.asymmetric.key_verify(
+                key or self.key, sig, msg, self.digest)
 
 
 SIGNER_ALGS = {
-    SIG_RSA_SHA1: RSASigner(hashes.SHA1()),
-    SIG_RSA_SHA224: RSASigner(hashes.SHA224()),
-    SIG_RSA_SHA256: RSASigner(hashes.SHA256()),
-    SIG_RSA_SHA384: RSASigner(hashes.SHA384()),
-    SIG_RSA_SHA512: RSASigner(hashes.SHA512()),
+    SIG_RSA_SHA1: RSASigner(saml2.cryptography.asymmetric.hashes.SHA1()),
+    SIG_RSA_SHA224: RSASigner(saml2.cryptography.asymmetric.hashes.SHA224()),
+    SIG_RSA_SHA256: RSASigner(saml2.cryptography.asymmetric.hashes.SHA256()),
+    SIG_RSA_SHA384: RSASigner(saml2.cryptography.asymmetric.hashes.SHA384()),
+    SIG_RSA_SHA512: RSASigner(saml2.cryptography.asymmetric.hashes.SHA512()),
 }
 
 REQ_ORDER = ["SAMLRequest", "RelayState", "SigAlg"]
