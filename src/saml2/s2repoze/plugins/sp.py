@@ -484,9 +484,13 @@ class SAML2Plugin(object):
 
             if logout and "SAMLRequest" in post:
                 print("logout request received")
+                if binding == BINDING_HTTP_REDIRECT:
+                    saml_request = post["SAMLRequest"]
+                else:
+                    saml_request = post["SAMLRequest"][0]
                 try:
                     response = self.saml_client.handle_logout_request(
-                        post["SAMLRequest"][0],
+                        saml_request,
                         self.saml_client.users.subjects()[0], binding)
                     environ['samlsp.pending'] = self._handle_logout(response)
                     return {}
