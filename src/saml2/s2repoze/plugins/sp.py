@@ -445,26 +445,25 @@ class SAML2Plugin(object):
         """
         #logger = environ.get('repoze.who.logger', '')
 
+        session_info = None
+
+        uri = environ.get('REQUEST_URI', construct_url(environ))
         query = parse_dict_querystring(environ)
-        if ("CONTENT_LENGTH" not in environ or not environ[
-            "CONTENT_LENGTH"]) and \
-                        "SAMLResponse" not in query and "SAMLRequest" not in \
-                query:
+
+        logger.debug('[sp.identify] uri: %s', uri)
+        logger.debug('[sp.identify] query: %s', query)
+
+        is_request = "SAMLRequest" in query
+        is_response = "SAMLResponse" in query
+        has_content_length = \
+                "CONTENT_LENGTH" in environ \
+                or environ["CONTENT_LENGTH"]
+
+        if not has_content_length and not is_request and not is_response:
             logger.debug('[identify] get or empty post')
             return None
 
-        # if logger:
-        #     logger.info("ENVIRON: %s", environ)
-        #     logger.info("self: %s", self.__dict__)
-
-        uri = environ.get('REQUEST_URI', construct_url(environ))
-
-        logger.debug('[sp.identify] uri: %s', uri)
-
-        query = parse_dict_querystring(environ)
-        logger.debug('[sp.identify] query: %s', query)
-
-        if "SAMLResponse" in query or "SAMLRequest" in query:
+        if is_request or is_response:
             post = query
             binding = BINDING_HTTP_REDIRECT
         else:
@@ -482,7 +481,7 @@ class SAML2Plugin(object):
             if path in self.logout_endpoints:
                 logout = True
 
-            if logout and "SAMLRequest" in post:
+            if logout and is_request:
                 print("logout request received")
                 if binding == BINDING_HTTP_REDIRECT:
                     saml_request = post["SAMLRequest"]
@@ -498,10 +497,9 @@ class SAML2Plugin(object):
                     import traceback
 
                     traceback.print_exc()
-            elif "SAMLResponse" not in post:
+            elif not is_response:
                 logger.info("[sp.identify] --- NOT SAMLResponse ---")
-                # Not for me, put the post back where next in line can
-                # find it
+                # Not for me, put the post back where next in line can find it
                 environ["post.fieldstorage"] = post
                 # restore wsgi.input incase that is needed
                 # only of s2repoze.body is present
@@ -511,12 +509,11 @@ class SAML2Plugin(object):
             else:
                 logger.info("[sp.identify] --- SAMLResponse ---")
                 # check for SAML2 authN response
-                #if self.debug:
                 try:
                     if logout:
                         response = \
                             self.saml_client.parse_logout_request_response(
-                            post["SAMLResponse"][0], binding)
+                                post["SAMLResponse"][0], binding)
                         if response:
                             action = self.saml_client.handle_logout_response(
                                 response)
@@ -524,7 +521,6 @@ class SAML2Plugin(object):
                             if type(action) == dict:
                                 request = self._handle_logout(action)
                             else:
-                                #logout complete
                                 request = HTTPSeeOther(headers=[
                                     ('Location', "/")])
                             if request:
@@ -555,9 +551,11 @@ class SAML2Plugin(object):
 
         if session_info:
             environ["s2repoze.sessioninfo"] = session_info
-            return self._construct_identity(session_info)
+            identity_info = self._construct_identity(session_info)
         else:
-            return None
+            identity_info = None
+
+        return identity_info
 
     # IMetadataProvider
     def add_metadata(self, environ, identity):
