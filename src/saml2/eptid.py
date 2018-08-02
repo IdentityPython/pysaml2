@@ -56,6 +56,9 @@ class Eptid(object):
             self[key] = val
             return val
 
+    def close(self):
+        pass
+
 
 class EptidShelve(Eptid):
     def __init__(self, secret, filename):
@@ -64,3 +67,6 @@ class EptidShelve(Eptid):
             if filename.endswith('.db'):
                 filename = filename.rsplit('.db', 1)[0]
         self._db = shelve.open(filename, writeback=True, protocol=2)
+
+    def close(self):
+        self._db.close()

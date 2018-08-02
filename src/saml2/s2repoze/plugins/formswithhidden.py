@@ -116,7 +116,8 @@ def make_plugin(login_form_qs='__do_login', rememberer_name=None, form=None):
         raise ValueError(
             'must include rememberer key (name of another IIdentifier plugin)')
     if form is not None:
-        form = open(form).read()
+        with open(form, 'r') as f:
+            form = f.read()
     plugin = FormHiddenPlugin(login_form_qs, rememberer_name, form)
     return plugin
 

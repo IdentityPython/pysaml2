@@ -488,54 +488,6 @@ def base64_to_long(data):
     return intarr2long(dehexlify(_d))
 
 
-def key_from_key_value(key_info):
-    res = []
-    for value in key_info.key_value:
-        if value.rsa_key_value:
-            e = base64_to_long(value.rsa_key_value.exponent)
-            m = base64_to_long(value.rsa_key_value.modulus)
-            key = RSA.construct((m, e))
-            res.append(key)
-    return res
-
-
-def key_from_key_value_dict(key_info):
-    res = []
-    if not "key_value" in key_info:
-        return res
-
-    for value in key_info["key_value"]:
-        if "rsa_key_value" in value:
-            e = base64_to_long(value["rsa_key_value"]["exponent"])
-            m = base64_to_long(value["rsa_key_value"]["modulus"])
-            key = RSA.construct((m, e))
-            res.append(key)
-    return res
-
-
-# =============================================================================
-
-
-# def rsa_load(filename):
-#    """Read a PEM-encoded RSA key pair from a file."""
-#    return M2Crypto.RSA.load_key(filename, M2Crypto.util
-# .no_passphrase_callback)
-#
-#
-# def rsa_loads(key):
-#    """Read a PEM-encoded RSA key pair from a string."""
-#    return M2Crypto.RSA.load_key_string(key,
-#                                        M2Crypto.util.no_passphrase_callback)
-
-
-def rsa_eq(key1, key2):
-    # Check if two RSA keys are in fact the same
-    if key1.n == key2.n and key1.e == key2.e:
-        return True
-    else:
-        return False
-
-
 def extract_rsa_key_from_x509_cert(pem):
     cert = load_pem_x509_certificate(pem, backend)
     return cert.public_key()
