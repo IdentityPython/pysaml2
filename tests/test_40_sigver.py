@@ -26,6 +26,8 @@ from pathutils import full_path
 SIGNED = full_path("saml_signed.xml")
 UNSIGNED = full_path("saml_unsigned.xml")
 SIMPLE_SAML_PHP_RESPONSE = full_path("simplesamlphp_authnresponse.xml")
+OKTA_RESPONSE = full_path("okta_response.xml")
+OKTA_ASSERTION = full_path("okta_assertion")
 
 PUB_KEY = full_path("test.pem")
 PRIV_KEY = full_path("test.key")
@@ -112,7 +114,6 @@ class FakeConfig():
     key_file = PRIV_KEY
     encryption_keypairs = [{"key_file": ENC_PRIV_KEY, "cert_file": ENC_PUB_KEY}]
     enc_key_files = [ENC_PRIV_KEY]
-    debug = False
     cert_handler_extra_class = None
     generate_cert_func = None
     generate_cert_info = False
@@ -137,7 +138,7 @@ class TestSecurity():
         # (TestSecurityMetadata below) excersise the SPConfig() mechanism.
         #
         conf = FakeConfig()
-        self.sec = sigver.security_context(FakeConfig())
+        self.sec = sigver.security_context(conf)
 
         self._assertion = factory(
             saml.Assertion,
@@ -474,7 +475,6 @@ def test_xbox():
         str(encrypted_assertion), conf.cert_file, pre, "des-192",
         '/*[local-name()="EncryptedAssertion"]/*[local-name()="Assertion"]')
 
-
     decr_text = sec.decrypt(enctext)
     _seass = saml.encrypted_assertion_from_string(decr_text)
     assertions = []
@@ -493,6 +493,30 @@ def test_xbox():
             assertions.append(ass)
 
     print(assertions)
+
+
+def test_okta():
+    conf = config.Config()
+    conf.load_file("server_conf")
+    conf.id_attr_name = 'Id'
+    md = MetadataStore([saml, samlp], None, conf)
+    md.load("local", full_path("idp_example.xml"))
+
+    conf.metadata = md
+    conf.only_use_keys_in_metadata = False
+    sec = sigver.security_context(conf)
+    with open(OKTA_RESPONSE) as f:
+        enctext = f.read()
+    decr_text = sec.decrypt(enctext)
+    _seass = saml.encrypted_assertion_from_string(decr_text)
+    assers = extension_elements_to_elements(_seass.extension_elements,
+                                            [saml, samlp])
+
+    with open(OKTA_ASSERTION) as f:
+        okta_assertion = f.read()
+    expected_assert = assertion_from_string(okta_assertion)
+    assert len(assers) == 1
+    assert assers[0] == expected_assert
 
 
 def test_xmlsec_err():
