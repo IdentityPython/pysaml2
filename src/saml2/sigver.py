@@ -205,7 +205,6 @@ def _get_xmlsec_cryptobackend(path=None, search_paths=None):
     return CryptoBackendXmlSec1(path)
 
 
-ID_ATTR = 'ID'
 NODE_NAME = 'urn:oasis:names:tc:SAML:2.0:assertion:Assertion'
 ENC_NODE_NAME = 'urn:oasis:names:tc:SAML:2.0:assertion:EncryptedAssertion'
 ENC_KEY_CLASS = 'EncryptedKey'
@@ -653,7 +652,7 @@ class CryptoBackend(object):
     def encrypt_assertion(self, statement, enc_key, template, key_type, node_xpath):
         raise NotImplementedError()
 
-    def decrypt(self, enctext, key_file):
+    def decrypt(self, enctext, key_file, id_attr):
         raise NotImplementedError()
 
     def sign_statement(self, statement, node_name, key_file, node_id, id_attr):
@@ -779,7 +778,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
 
         return output.decode()
 
-    def decrypt(self, enctext, key_file):
+    def decrypt(self, enctext, key_file, id_attr):
         """
 
         :param enctext: XML document containing an encrypted part
@@ -794,7 +793,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
             self.xmlsec,
             '--decrypt',
             '--privkey-pem', key_file,
-            '--id-attr:{id_attr}'.format(id_attr=ID_ATTR),
+            '--id-attr:{id_attr}'.format(id_attr=id_attr),
             ENC_KEY_CLASS,
         ]
 
@@ -1011,6 +1010,11 @@ def security_context(conf):
     except AttributeError:
         metadata = None
 
+    try:
+        id_attr = conf.id_attr_name
+    except AttributeError:
+        id_attr = None
+
     sec_backend = None
 
     if conf.crypto_backend == 'xmlsec1':
@@ -1069,7 +1073,8 @@ def security_context(conf):
             validate_certificate=conf.validate_certificate,
             enc_key_files=enc_key_files,
             encryption_keypairs=conf.encryption_keypairs,
-            sec_backend=sec_backend)
+            sec_backend=sec_backend,
+            id_attr=id_attr)
 
 
 def encrypt_cert_from_item(item):
@@ -1239,6 +1244,7 @@ class CertHandler(object):
 # openssl x509 -inform pem -noout -in server.crt -pubkey > publickey.pem
 # openssl rsa -inform pem -noout -in publickey.pem -pubin -modulus
 class SecurityContext(object):
+    DEFAULT_ID_ATTR_NAME = 'ID'
     my_cert = None
 
     def __init__(
@@ -1257,7 +1263,10 @@ class SecurityContext(object):
             enc_key_files=None, enc_key_type='pem',
             encryption_keypairs=None,
             enc_cert_type='pem',
-            sec_backend=None):
+            sec_backend=None,
+            id_attr=''):
+
+        self.id_attr = id_attr or SecurityContext.DEFAULT_ID_ATTR_NAME
 
         self.crypto = crypto
         assert (isinstance(self.crypto, CryptoBackend))
@@ -1348,7 +1357,7 @@ class SecurityContext(object):
         return self.crypto.encrypt_assertion(
                 statement, enc_key, template, key_type, node_xpath)
 
-    def decrypt_keys(self, enctext, keys=None):
+    def decrypt_keys(self, enctext, keys=None, id_attr=''):
         """ Decrypting an encrypted text by the use of a private key.
 
         :param enctext: The encrypted text as a string
@@ -1356,12 +1365,15 @@ class SecurityContext(object):
         """
         _enctext = None
 
+        if not id_attr:
+            id_attr = self.id_attr
+
         if not isinstance(keys, list):
             keys = [keys]
 
         if self.enc_key_files is not None:
             for _enc_key_file in self.enc_key_files:
-                _enctext = self.crypto.decrypt(enctext, _enc_key_file)
+                _enctext = self.crypto.decrypt(enctext, _enc_key_file, id_attr)
                 if _enctext is not None and len(_enctext) > 0:
                     return _enctext
 
@@ -1370,13 +1382,13 @@ class SecurityContext(object):
                 if not isinstance(_key, six.binary_type):
                     _key = str(_key).encode('ascii')
                 _, key_file = make_temp(_key, decode=False)
-                _enctext = self.crypto.decrypt(enctext, key_file)
+                _enctext = self.crypto.decrypt(enctext, key_file, id_attr)
                 if _enctext is not None and len(_enctext) > 0:
                     return _enctext
 
         return enctext
 
-    def decrypt(self, enctext, key_file=None):
+    def decrypt(self, enctext, key_file=None, id_attr=''):
         """ Decrypting an encrypted text by the use of a private key.
 
         :param enctext: The encrypted text as a string
@@ -1384,14 +1396,17 @@ class SecurityContext(object):
         """
         _enctext = None
 
+        if not id_attr:
+            id_attr = self.id_attr
+
         if self.enc_key_files is not None:
             for _enc_key_file in self.enc_key_files:
-                _enctext = self.crypto.decrypt(enctext, _enc_key_file)
+                _enctext = self.crypto.decrypt(enctext, _enc_key_file, id_attr)
                 if _enctext is not None and len(_enctext) > 0:
                     return _enctext
 
         if key_file is not None and len(key_file.strip()) > 0:
-            _enctext = self.crypto.decrypt(enctext, key_file)
+            _enctext = self.crypto.decrypt(enctext, key_file, id_attr)
             if _enctext is not None and len(_enctext) > 0:
                 return _enctext
 
@@ -1415,7 +1430,7 @@ class SecurityContext(object):
             cert_type = self.cert_type
 
         if not id_attr:
-            id_attr = ID_ATTR
+            id_attr = self.id_attr
 
         return self.crypto.validate_signature(
                 signedtext,
@@ -1650,7 +1665,7 @@ class SecurityContext(object):
         :return: The signed statement
         """
         if not id_attr:
-            id_attr = ID_ATTR
+            id_attr = self.id_attr
 
         if not key_file and key:
             _, key_file = make_temp(str(key).encode(), '.pem')

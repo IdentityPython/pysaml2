@@ -66,6 +66,7 @@ COMMON_ARGS = [
     "extensions",
     "allow_unknown_attributes",
     "crypto_backend",
+    "id_attr_name",
 ]
 
 SP_ARGS = [
@@ -221,6 +222,7 @@ class Config(object):
         self.name_qualifier = ""
         self.entity_category = ""
         self.crypto_backend = 'xmlsec1'
+        self.id_attr_name = None
         self.scope = ""
         self.allow_unknown_attributes = False
         self.extension_schema = {}
