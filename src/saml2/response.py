@@ -36,6 +36,7 @@ from saml2 import saml
 from saml2 import extension_elements_to_elements
 from saml2 import SAMLError
 from saml2 import time_util
+from saml2 import xml_util
 
 from saml2.s_utils import RequestVersionTooLow
 from saml2.s_utils import RequestVersionTooHigh
@@ -938,6 +939,7 @@ class AuthnResponse(StatusResponse):
             decr_text_old = None
             while self.find_encrypt_data(resp) and decr_text_old != decr_text:
                 decr_text_old = decr_text
+                decr_text = xml_util.replace_retrieval_method(decr_text)
                 decr_text = self.sec.decrypt_keys(decr_text, keys)
                 resp = samlp.response_from_string(decr_text)
             _enc_assertions = self.decrypt_assertions(resp.encrypted_assertion,
@@ -948,6 +950,7 @@ class AuthnResponse(StatusResponse):
                 _enc_assertions)) and \
                             decr_text_old != decr_text:
                 decr_text_old = decr_text
+                decr_text = xml_util.replace_retrieval_method(decr_text)
                 decr_text = self.sec.decrypt_keys(decr_text, keys)
                 resp = samlp.response_from_string(decr_text)
                 _enc_assertions = self.decrypt_assertions(
