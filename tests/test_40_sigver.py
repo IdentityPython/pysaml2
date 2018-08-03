@@ -112,7 +112,6 @@ class FakeConfig():
     key_file = PRIV_KEY
     encryption_keypairs = [{"key_file": ENC_PRIV_KEY, "cert_file": ENC_PUB_KEY}]
     enc_key_files = [ENC_PRIV_KEY]
-    debug = False
     cert_handler_extra_class = None
     generate_cert_func = None
     generate_cert_info = False
@@ -137,7 +136,7 @@ class TestSecurity():
         # (TestSecurityMetadata below) excersise the SPConfig() mechanism.
         #
         conf = FakeConfig()
-        self.sec = sigver.security_context(FakeConfig())
+        self.sec = sigver.security_context(conf)
 
         self._assertion = factory(
             saml.Assertion,
@@ -473,7 +472,6 @@ def test_xbox():
     enctext = sec.crypto.encrypt(
         str(encrypted_assertion), conf.cert_file, pre, "des-192",
         '/*[local-name()="EncryptedAssertion"]/*[local-name()="Assertion"]')
-
 
     decr_text = sec.decrypt(enctext)
     _seass = saml.encrypted_assertion_from_string(decr_text)

@@ -157,7 +157,7 @@ class BadGateway(Response):
     _status = "502 Bad Gateway"
 
 
-class HttpParameters():
+class HttpParameters(object):
     """GET or POST signature parameters for Redirect or POST-SimpleSign bindings
     because they are not contained in XML unlike the POST binding
     """

@@ -28,10 +28,21 @@ __author__ = 'rolandh'
 
 
 COMMON_ARGS = [
-    "entityid", "xmlsec_binary", "debug", "key_file", "cert_file",
-    "encryption_keypairs", "additional_cert_files",
-    "metadata_key_usage", "secret", "accepted_time_diff", "name", "ca_certs",
-    "description", "valid_for", "verify_ssl_cert",
+    "debug",
+    "entityid",
+    "xmlsec_binary",
+    "key_file",
+    "cert_file",
+    "encryption_keypairs",
+    "additional_cert_files",
+    "metadata_key_usage",
+    "secret",
+    "accepted_time_diff",
+    "name",
+    "ca_certs",
+    "description",
+    "valid_for",
+    "verify_ssl_cert",
     "organization",
     "contact_person",
     "name_form",
@@ -54,7 +65,7 @@ COMMON_ARGS = [
     "validate_certificate",
     "extensions",
     "allow_unknown_attributes",
-    "crypto_backend"
+    "crypto_backend",
 ]
 
 SP_ARGS = [
