@@ -1101,8 +1101,6 @@ class Entity(HTTPBase):
             otherwise the response.
         """
 
-        response = None
-
         if self.config.accepted_time_diff:
             kwargs["timeslack"] = self.config.accepted_time_diff
 
@@ -1112,68 +1110,66 @@ class Entity(HTTPBase):
             else:
                 kwargs["asynchop"] = True
 
-        if xmlstr:
-            if "return_addrs" not in kwargs:
-                if binding in [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST]:
-                    try:
-                        # expected return address
-                        kwargs["return_addrs"] = self.config.endpoint(
-                            service, binding=binding)
-                    except Exception:
-                        logger.info("Not supposed to handle this!")
-                        return None
+        response = None
+        if not xmlstr:
+            return response
 
+        if "return_addrs" not in kwargs:
+            bindings = {
+                BINDING_SOAP,
+                BINDING_HTTP_REDIRECT,
+                BINDING_HTTP_POST,
+            }
+            if binding in bindings:
+                # expected return address
+                kwargs["return_addrs"] = self.config.endpoint(
+                        service,
+                        binding=binding,
+                        context=self.entity_type)
+
+        try:
+            response = response_cls(self.sec, **kwargs)
+        except Exception as exc:
+            logger.info("%s", exc)
+            raise
+
+        xmlstr = self.unravel(xmlstr, binding, response_cls.msgtype)
+        origxml = xmlstr
+        if not xmlstr:  # Not a valid reponse
+            return None
+
+        try:
+            response = response.loads(xmlstr, False, origxml=origxml)
+        except SigverError as err:
+            logger.error("Signature Error: %s", err)
+            raise
+        except UnsolicitedResponse:
+            logger.error("Unsolicited response")
+            raise
+        except Exception as err:
+            if "not well-formed" in "%s" % err:
+                logger.error("Not well-formed XML")
+            raise
+
+        logger.debug("XMLSTR: %s", xmlstr)
+
+        if not response:
+            return response
+
+        keys = None
+        if outstanding_certs:
             try:
-                response = response_cls(self.sec, **kwargs)
-            except Exception as exc:
-                logger.info("%s", exc)
-                raise
-
-            xmlstr = self.unravel(xmlstr, binding, response_cls.msgtype)
-            origxml = xmlstr
-            if not xmlstr:  # Not a valid reponse
-                return None
-
-            try:
-                response = response.loads(xmlstr, False, origxml=origxml)
-            except SigverError as err:
-                logger.error("Signature Error: %s", err)
-                raise
-            except UnsolicitedResponse:
-                logger.error("Unsolicited response")
-                raise
-            except Exception as err:
-                if "not well-formed" in "%s" % err:
-                    logger.error("Not well-formed XML")
-                raise
-
-            logger.debug("XMLSTR: %s", xmlstr)
-
-            if response:
+                cert = outstanding_certs[response.in_response_to]
+            except KeyError:
                 keys = None
-                if outstanding_certs:
-                    try:
-                        cert = outstanding_certs[response.in_response_to]
-                    except KeyError:
-                        keys = None
-                    else:
-                        if not isinstance(cert, list):
-                            cert = [cert]
-                        keys = []
-                        for _cert in cert:
-                            keys.append(_cert["key"])
-                only_identity_in_encrypted_assertion = False
-                if "only_identity_in_encrypted_assertion" in kwargs:
-                    only_identity_in_encrypted_assertion = kwargs[
-                        "only_identity_in_encrypted_assertion"]
+            else:
+                if not isinstance(cert, list):
+                    cert = [cert]
+                keys = []
+                for _cert in cert:
+                    keys.append(_cert["key"])
 
-                response = response.verify(keys)
-
-            if not response:
-                return None
-
-                # logger.debug(response)
-
+        response = response.verify(keys)
         return response
 
     # ------------------------------------------------------------------------
