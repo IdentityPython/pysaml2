@@ -54,7 +54,8 @@ COMMON_ARGS = [
     "validate_certificate",
     "extensions",
     "allow_unknown_attributes",
-    "crypto_backend"
+    "crypto_backend",
+    "decrypt_id_attr"
 ]
 
 SP_ARGS = [
@@ -225,6 +226,7 @@ class Config(object):
         self.attribute = []
         self.attribute_profile = []
         self.requested_attribute_name_format = NAME_FORMAT_URI
+        self.decrypt_id_attr = None
 
     def setattr(self, context, attr, val):
         if context == "":

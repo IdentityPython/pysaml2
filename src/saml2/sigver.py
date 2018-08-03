@@ -196,7 +196,8 @@ def get_xmlsec_binary(paths=None):
     raise SigverError("Can't find %s" % bin_name)
 
 
-def _get_xmlsec_cryptobackend(path=None, search_paths=None, debug=False):
+def _get_xmlsec_cryptobackend(path=None, search_paths=None, debug=False,
+                              decrypt_id_attr=None):
     """
     Initialize a CryptoBackendXmlSec1 crypto backend.
 
@@ -204,7 +205,7 @@ def _get_xmlsec_cryptobackend(path=None, search_paths=None, debug=False):
     """
     if path is None:
         path = get_xmlsec_binary(paths=search_paths)
-    return CryptoBackendXmlSec1(path, debug=debug)
+    return CryptoBackendXmlSec1(path, debug=debug, decrypt_id_attr=decrypt_id_attr)
 
 
 ID_ATTR = "ID"
@@ -669,7 +670,7 @@ def read_cert_from_file(cert_file, cert_type):
 
 
 class CryptoBackend():
-    def __init__(self, debug=False):
+    def __init__(self, debug=False, decrypt_id_attr=None):
         self.debug = debug
 
     def version(self):
@@ -719,6 +720,9 @@ class CryptoBackendXmlSec1(CryptoBackend):
             self.non_xml_crypto = RSACrypto(kwargs['rsa_key'])
         except KeyError:
             pass
+        self.decrypt_id_attr = kwargs.get('decrypt_id_attr')
+        if self.decrypt_id_attr is None:
+            self.decrypt_id_attr = ID_ATTR
 
     def version(self):
         com_list = [self.xmlsec, "--version"]
@@ -801,12 +805,12 @@ class CryptoBackendXmlSec1(CryptoBackend):
         :param key_file: The key to use for the decryption
         :return: The decrypted document
         """
-
         logger.debug("Decrypt input len: %d", len(enctext))
         _, fil = make_temp(str(enctext).encode('utf-8'), decode=False)
 
         com_list = [self.xmlsec, "--decrypt", "--privkey-pem",
-                    key_file, "--id-attr:%s" % ID_ATTR, ENC_KEY_CLASS]
+                    key_file, "--id-attr:%s" % self.decrypt_id_attr,
+                    ENC_KEY_CLASS]
 
         (_stdout, _stderr, output) = self._run_xmlsec(com_list, [fil],
                                                       exception=DecryptError,
@@ -1022,6 +1026,11 @@ def security_context(conf, debug=None):
     except AttributeError:
         metadata = None
 
+    try:
+        id_attr = conf.decrypt_id_attr
+    except AttributeError:
+        id_attr = None
+
     _only_md = conf.only_use_keys_in_metadata
     if _only_md is None:
         _only_md = False
@@ -1041,7 +1050,9 @@ def security_context(conf, debug=None):
             # if not os.access(, os.F_OK):
             raise SigverError(
                 "xmlsec binary not in '%s' !" % xmlsec_binary)
-        crypto = _get_xmlsec_cryptobackend(xmlsec_binary, debug=debug)
+        crypto = _get_xmlsec_cryptobackend(xmlsec_binary,
+                                           debug=debug,
+                                           decrypt_id_attr=id_attr)
         _file_name = conf.getattr("key_file", "")
         if _file_name:
             try:
