@@ -736,6 +736,63 @@ class TestClient:
 
         self.verify_authn_response(idp, authn_response, _client, ava_verify)
 
+    def test_response_no_name_id(self):
+        """ Test that the SP client can parse an authentication response
+        from an IdP that does not contain a <NameID> element."""
+
+        conf = config.SPConfig()
+        conf.load_file("server_conf")
+        client = Saml2Client(conf)
+
+        # Use the same approach as the other tests for mocking up
+        # an authentication response to parse.
+        idp, ava, ava_verify, nameid_policy = (
+                self.setup_verify_authn_response()
+                )
+
+        # Mock up an authentication response but do not encrypt it
+        # nor sign it since below we will modify it directly. Note that
+        # setting name_id to None still results in a response that includes
+        # a <NameID> element.
+        resp = self.server.create_authn_response(
+            identity=ava,
+            in_response_to="id1",
+            destination="http://lingon.catalogix.se:8087/",
+            sp_entity_id="urn:mace:example.com:saml:roland:sp",
+            name_id=None,
+            userid="foba0001@example.com",
+            authn=AUTHN,
+            sign_response=False,
+            sign_assertion=False,
+            encrypt_assertion=False,
+            encrypt_assertion_self_contained=False
+        )
+
+        # The create_authn_response method above will return an instance
+        # of saml2.samlp.Response when neither encrypting nor signing and
+        # so we can remove the <NameID> element directly.
+        resp.assertion.subject.name_id = None
+
+        # Assert that the response does not contain a NameID element so that
+        # the parsing below is a fair test.
+        assert str(resp).find("NameID") == -1
+
+        # Cast the response to a string and encode it to mock up the payload
+        # the SP client is expected to receive via HTTP POST binding.
+        resp_str = encode_fn(str(resp).encode())
+
+        # We do not need the client to verify a signature for this test.
+        client.want_assertions_signed = False
+        client.want_response_signed = False
+
+        # Parse the authentication response that does not include a <NameID>.
+        authn_response = client.parse_authn_request_response(
+            resp_str, BINDING_HTTP_POST,
+            {"id1": "http://foo.example.com/service"})
+
+        # A successful test is parsing the response.
+        assert authn_response is not None
+
     def setup_verify_authn_response(self):
         idp = "urn:mace:example.com:saml:roland:idp"
         ava = {"givenName": ["Derek"], "sn": ["Jeter"],
