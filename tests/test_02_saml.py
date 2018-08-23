@@ -243,6 +243,10 @@ class TestSAMLBase:
         av.set_text(None)
         assert av.text == ""
 
+        av = AttributeValue()
+        av.set_type('invalid')
+        raises(ValueError, "av.set_text('free text')")
+
     def test_make_vals_div(self):
         foo = saml2.make_vals(666, AttributeValue, part=True)
         assert foo.text == "666"

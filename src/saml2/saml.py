@@ -224,7 +224,7 @@ class AttributeValueBase(SamlBase):
                         elif typ == "xs:base64Binary":
                             pass
                         else:
-                            ValueError("Type and value doesn't match")
+                            raise ValueError("Type and value doesn't match")
             elif isinstance(val, bool):
                 if val:
                     val = "true"
