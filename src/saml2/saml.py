@@ -811,7 +811,16 @@ def base_id_from_string(xml_string):
 
 
 class NameID(NameIDType_):
-    """The urn:oasis:names:tc:SAML:2.0:assertion:NameID element """
+    """The urn:oasis:names:tc:SAML:2.0:assertion:NameID element
+
+    From the Oasis SAML2 Technical Overview:
+
+    "The <NameID> element within a <Subject> offers the ability to provide name
+     identifiers in a number of different formats. SAML's predefined formats
+     include: Email address, X.509 subject name, Windows domain qualified name,
+     Kerberos principal name, Entity identifier, Persistent identifier,
+     Transient identifier."
+     """
 
     c_tag = 'NameID'
     c_namespace = NAMESPACE
