@@ -1,6 +1,15 @@
 Changelog
 =========
 
+4.6.1 (2018-08-29)
+------------------
+
+- Allow multiple AttributeStatement tags per Assertion
+- Raise ValueError for invalid attribute type
+- Make NameID element optional
+- tests: fix test that depended on actual datetime
+- build: Set minimum build-tool version through pyproject.toml
+
 4.6.0 (2018-08-07)
 ------------------
 
