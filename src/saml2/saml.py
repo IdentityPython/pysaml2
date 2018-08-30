@@ -205,9 +205,11 @@ class AttributeValueBase(SamlBase):
             val = _b64_encode_fn(val)
             self.set_type("xs:base64Binary")
         else:
-            if isinstance(val, six.binary_type):
+            if typ == "xs:anyType":
+                pass
+            elif isinstance(val, six.binary_type):
                 val = val.decode()
-            if isinstance(val, six.string_types):
+            elif isinstance(val, six.string_types):
                 if not typ:
                     self.set_type("xs:string")
                 else:
@@ -253,10 +255,7 @@ class AttributeValueBase(SamlBase):
                     self._extatt[XSI_TYPE] = typ
                 val = ""
             else:
-                if typ == "xs:anyType":
-                    pass
-                else:
-                    raise ValueError
+                raise ValueError
 
         SamlBase.__setattr__(self, "text", val)
         return self
