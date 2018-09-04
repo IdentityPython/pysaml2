@@ -200,7 +200,7 @@ class AttributeValueBase(SamlBase):
             pass
 
     def set_text(self, value, base64encode=False):
-        _xs_type_from_type = {
+        xs_type_from_type = {
             str:        'xs:string',
             int:        'xs:integer',
             float:      'xs:float',
@@ -208,52 +208,68 @@ class AttributeValueBase(SamlBase):
             type(None): '',
         }
 
-        _type_from_xs_type = {
-            'xs:string':       str,
-            'xs:integer':      int,
-            'xs:short':        int,
-            'xs:int':          int,
-            'xs:long':         int,
-            'xs:float':        float,
-            'xs:double':       float,
-            'xs:boolean':      bool,
-            'xs:base64Binary': str,
-            'xs:anyType':      type(value),
-            '':                type(None),
-        }
-
-        _typed_value_constructor_from_xs_type = {
-            'xs:string':       str,
-            'xs:integer':      int,
-            'xs:short':        int,
-            'xs:int':          int,
-            'xs:long':         int,
-            'xs:float':        float,
-            'xs:double':       float,
-            'xs:boolean':      lambda x:
-                True if str(x).lower() == 'true'
-                else False if str(x).lower() == 'false'
-                else None,
-            'xs:base64Binary': str,
-            'xs:anyType':      lambda x: value,
-            '':                lambda x: None,
-        }
-
-        _text_constructor_from_xs_type = {
-            'xs:string':       str,
-            'xs:integer':      str,
-            'xs:short':        str,
-            'xs:int':          str,
-            'xs:long':         str,
-            'xs:float':        str,
-            'xs:double':       str,
-            'xs:boolean':      lambda x: str(x).lower(),
-            'xs:base64Binary': lambda x:
-                _b64_encode_fn(x.encode())
-                if base64encode
-                else x,
-            'xs:anyType':      lambda x: value,
-            '':                lambda x: '',
+        xs_types_map = {
+            'xs:string': {
+                'type': str,
+                'typed_constructor': str,
+                'text_constructor': str,
+            },
+            'xs:integer': {
+                'type': int,
+                'typed_constructor': int,
+                'text_constructor': str,
+            },
+            'xs:short': {
+                'type': int,
+                'typed_constructor': int,
+                'text_constructor': str,
+            },
+            'xs:int': {
+                'type': int,
+                'typed_constructor': int,
+                'text_constructor': str,
+            },
+            'xs:long': {
+                'type': int,
+                'typed_constructor': int,
+                'text_constructor': str,
+            },
+            'xs:float': {
+                'type': float,
+                'typed_constructor': float,
+                'text_constructor': str,
+            },
+            'xs:double': {
+                'type': float,
+                'typed_constructor': float,
+                'text_constructor': str,
+            },
+            'xs:boolean': {
+                'type': bool,
+                'typed_constructor': lambda x:
+                    True if str(x).lower() == 'true'
+                    else False if str(x).lower() == 'false'
+                    else None,
+                'text_constructor': lambda x: str(x).lower(),
+            },
+            'xs:base64Binary': {
+                'type': str,
+                'typed_constructor': str,
+                'text_constructor': lambda x:
+                    _b64_encode_fn(x.encode())
+                    if base64encode
+                    else x,
+            },
+            'xs:anyType': {
+                'type': type(value),
+                'typed_constructor': lambda x: value,
+                'text_constructor': lambda x: value,
+            },
+            '': {
+                'type': type(None),
+                'typed_constructor': lambda x: None,
+                'text_constructor': lambda x: '',
+            },
         }
 
         if isinstance(value, six.binary_type):
@@ -263,11 +279,11 @@ class AttributeValueBase(SamlBase):
             'xs:base64Binary'    \
             if base64encode      \
             else self.get_type() \
-            or _xs_type_from_type.get(type(value), type(None))
-
-        valid_type = _type_from_xs_type.get(xs_type, type(None))
-        to_typed = _typed_value_constructor_from_xs_type.get(xs_type, str)
-        to_text = _text_constructor_from_xs_type.get(xs_type, str)
+            or xs_type_from_type.get(type(value), type(None))
+        xs_type_map = xs_types_map.get(xs_type, {})
+        valid_type = xs_type_map.get('type', type(None))
+        to_typed = xs_type_map.get('typed_constructor', str)
+        to_text = xs_type_map.get('text_constructor', str)
 
         value = to_typed(value)
         if type(value) is not valid_type:
