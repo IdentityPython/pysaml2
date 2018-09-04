@@ -230,22 +230,55 @@ class TestSAMLBase:
         assert "saml:AttributeValue" in nsstr
         assert "saml:AttributeValue" not in txt
 
-    def test_set_text(self):
-        av = AttributeValue()
-        av.set_text(True)
-        assert av.text == "true"
-        av.set_text(False)
-        assert av.text == "false"
-        # can't change value to another type
-        raises(AssertionError, "av.set_text(491)")
-
+    def test_set_text_empty(self):
         av = AttributeValue()
         av.set_text(None)
-        assert av.text == ""
+        assert av.get_type() == ''
+        assert av.text == ''
 
+    def test_set_text_value(self):
+        value = 123
+        av = AttributeValue(value)
+        assert av.get_type() == 'xs:integer'
+        assert av.text == str(value)
+
+    def test_set_text_update_same_type(self):
         av = AttributeValue()
-        av.set_type('invalid')
-        raises(ValueError, "av.set_text('free text')")
+        av.set_text(True)
+        assert av.get_type() == 'xs:boolean'
+        assert av.text == 'true'
+        av.set_text(False)
+        assert av.get_type() == 'xs:boolean'
+        assert av.text == 'false'
+
+    def test_set_text_cannot_change_value_type(self):
+        av = AttributeValue()
+        av.set_text(True)
+        assert av.get_type() == 'xs:boolean'
+        assert av.text == 'true'
+        with raises(ValueError):
+            av.set_text(123)
+        assert av.get_type() == 'xs:boolean'
+        assert av.text == 'true'
+
+    def test_set_xs_type_anytype_unchanged_value(self):
+        av = AttributeValue()
+        av.set_type('xs:anyType')
+        for value in [
+            [1, 2, 3],
+            {'key': 'value'},
+            True,
+            123,
+        ]:
+            av.set_text(value)
+            # the value is unchanged
+            assert av.text == value
+
+    def test_set_invalid_type_before_text(self):
+        av = AttributeValue()
+        av.set_type('invalid-type')
+        with raises(ValueError):
+            av.set_text('foobar')
 
     def test_make_vals_div(self):
         foo = saml2.make_vals(666, AttributeValue, part=True)
