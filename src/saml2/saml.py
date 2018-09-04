@@ -200,8 +200,18 @@ class AttributeValueBase(SamlBase):
             pass
 
     def set_text(self, value, base64encode=False):
+        def _wrong_type_value(xs_type, value):
+            msg = _str('Type and value do not match: {xs_type}:{type}:{value}')
+            msg = msg.format(xs_type=xs_type, type=type(value), value=value)
+            raise ValueError(msg)
+
+        # only work with six.string_types
+        _str = unicode if six.PY2 else str
+        if isinstance(value, six.binary_type):
+            value = value.decode()
+
         xs_type_from_type = {
-            str:        'xs:string',
+            _str:       'xs:string',
             int:        'xs:integer',
             float:      'xs:float',
             bool:       'xs:boolean',
@@ -210,51 +220,51 @@ class AttributeValueBase(SamlBase):
 
         xs_types_map = {
             'xs:string': {
-                'type': str,
-                'typed_constructor': str,
-                'text_constructor': str,
+                'type': _str,
+                'typed_constructor': _str,
+                'text_constructor': _str,
             },
             'xs:integer': {
                 'type': int,
                 'typed_constructor': int,
-                'text_constructor': str,
+                'text_constructor': _str,
             },
             'xs:short': {
                 'type': int,
                 'typed_constructor': int,
-                'text_constructor': str,
+                'text_constructor': _str,
             },
             'xs:int': {
                 'type': int,
                 'typed_constructor': int,
-                'text_constructor': str,
+                'text_constructor': _str,
             },
             'xs:long': {
                 'type': int,
                 'typed_constructor': int,
-                'text_constructor': str,
+                'text_constructor': _str,
             },
             'xs:float': {
                 'type': float,
                 'typed_constructor': float,
-                'text_constructor': str,
+                'text_constructor': _str,
             },
             'xs:double': {
                 'type': float,
                 'typed_constructor': float,
-                'text_constructor': str,
+                'text_constructor': _str,
             },
             'xs:boolean': {
                 'type': bool,
-                'typed_constructor': lambda x:
-                    True if str(x).lower() == 'true'
-                    else False if str(x).lower() == 'false'
-                    else None,
-                'text_constructor': lambda x: str(x).lower(),
+                'typed_constructor': lambda x: {
+                    'true': True,
+                    'false': False,
+                }[_str(x).lower()],
+                'text_constructor': lambda x: _str(x).lower(),
             },
             'xs:base64Binary': {
-                'type': str,
-                'typed_constructor': str,
+                'type': _str,
+                'typed_constructor': _str,
                 'text_constructor': lambda x:
                     _b64_encode_fn(x.encode())
                     if base64encode
@@ -262,8 +272,8 @@ class AttributeValueBase(SamlBase):
             },
             'xs:anyType': {
                 'type': type(value),
-                'typed_constructor': lambda x: value,
-                'text_constructor': lambda x: value,
+                'typed_constructor': lambda x: x,
+                'text_constructor': lambda x: x,
             },
             '': {
                 'type': type(None),
@@ -271,9 +281,6 @@ class AttributeValueBase(SamlBase):
                 'text_constructor': lambda x: '',
             },
         }
-
-        if isinstance(value, six.binary_type):
-            value = value.decode()
 
         xs_type = \
             'xs:base64Binary'    \
@@ -285,11 +292,16 @@ class AttributeValueBase(SamlBase):
         to_typed = xs_type_map.get('typed_constructor', str)
         to_text = xs_type_map.get('text_constructor', str)
 
-        value = to_typed(value)
+        # cast to correct type before type-checking
+        if type(value) is _str and valid_type is not _str:
+            try:
+                value = to_typed(value)
+            except (TypeError, ValueError, KeyError) as e:
+                # the cast failed
+                _wrong_type_value(xs_type=xs_type, value=value)
+
         if type(value) is not valid_type:
-            msg_tpl = 'Type and value do not match: {type}:{value}'
-            msg = msg_tpl.format(type=xs_type, value=value)
-            raise ValueError(msg)
+            _wrong_type_value(xs_type=xs_type, value=value)
 
         text = to_text(value)
         self.set_type(xs_type)
