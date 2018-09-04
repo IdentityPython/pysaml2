@@ -166,7 +166,7 @@ class AttributeValueBase(SamlBase):
     def set_type(self, typ):
         try:
             del self.extension_attributes[XSI_NIL]
-        except KeyError:
+        except (AttributeError, KeyError):
             pass
 
         try:
@@ -199,66 +199,90 @@ class AttributeValueBase(SamlBase):
         except KeyError:
             pass
 
-    def set_text(self, val, base64encode=False):
-        typ = self.get_type()
-        if base64encode:
-            val = _b64_encode_fn(val)
-            self.set_type("xs:base64Binary")
-        else:
-            if isinstance(val, six.binary_type):
-                val = val.decode()
-            if isinstance(val, six.string_types):
-                if not typ:
-                    self.set_type("xs:string")
-                else:
-                    try:
-                        assert typ == "xs:string"
-                    except AssertionError:
-                        if typ == "xs:int":
-                            _ = int(val)
-                        elif typ == "xs:boolean":
-                            if val.lower() not in ["true", "false"]:
-                                raise ValueError("Not a boolean")
-                        elif typ == "xs:float":
-                            _ = float(val)
-                        elif typ == "xs:base64Binary":
-                            pass
-                        else:
-                            raise ValueError("Type and value doesn't match")
-            elif isinstance(val, bool):
-                if val:
-                    val = "true"
-                else:
-                    val = "false"
-                if not typ:
-                    self.set_type("xs:boolean")
-                else:
-                    assert typ == "xs:boolean"
-            elif isinstance(val, int):
-                val = str(val)
-                if not typ:
-                    self.set_type("xs:integer")
-                else:
-                    assert typ == "xs:integer"
-            elif isinstance(val, float):
-                val = str(val)
-                if not typ:
-                    self.set_type("xs:float")
-                else:
-                    assert typ == "xs:float"
-            elif not val:
-                try:
-                    self.extension_attributes[XSI_TYPE] = typ
-                except AttributeError:
-                    self._extatt[XSI_TYPE] = typ
-                val = ""
-            else:
-                if typ == "xs:anyType":
-                    pass
-                else:
-                    raise ValueError
+    def set_text(self, value, base64encode=False):
+        _xs_type_from_type = {
+            str:        'xs:string',
+            int:        'xs:integer',
+            float:      'xs:float',
+            bool:       'xs:boolean',
+            type(None): '',
+        }
 
-        SamlBase.__setattr__(self, "text", val)
+        _type_from_xs_type = {
+            'xs:anyType':      str,
+            'xs:string':       str,
+            'xs:integer':      int,
+            'xs:short':        int,
+            'xs:int':          int,
+            'xs:long':         int,
+            'xs:float':        float,
+            'xs:double':       float,
+            'xs:boolean':      bool,
+            'xs:base64Binary': str,
+            '':                type(None),
+        }
+
+        _typed_value_constructor_from_xs_type = {
+            'xs:anyType':      str,
+            'xs:string':       str,
+            'xs:integer':      int,
+            'xs:short':        int,
+            'xs:int':          int,
+            'xs:long':         int,
+            'xs:float':        float,
+            'xs:double':       float,
+            'xs:boolean':      lambda x:
+                True if str(x).lower() == 'true'
+                else False if str(x).lower() == 'false'
+                else None,
+            'xs:base64Binary': str,
+            '':                lambda x: None,
+        }
+
+        _text_constructor_from_xs_type = {
+            'xs:anyType':      str,
+            'xs:string':       str,
+            'xs:integer':      str,
+            'xs:short':        str,
+            'xs:int':          str,
+            'xs:long':         str,
+            'xs:float':        str,
+            'xs:double':       str,
+            'xs:boolean':      lambda x: str(x).lower(),
+            'xs:base64Binary': lambda x:
+                _b64_encode_fn(x.encode())
+                if base64encode
+                else x,
+            '':                lambda x: '',
+        }
+
+        if isinstance(value, six.binary_type):
+            value = value.decode()
+
+        xs_type = \
+            'xs:base64Binary'    \
+            if base64encode      \
+            else self.get_type() \
+            or _xs_type_from_type.get(type(value))
+
+        if xs_type is None:
+            msg_tpl = 'No corresponding xs-type for {type}:{value}'
+            msg = msg_tpl.format(type=type(value), value=value)
+            raise ValueError(msg)
+
+        valid_type = _type_from_xs_type.get(xs_type, type(None))
+        to_typed = _typed_value_constructor_from_xs_type.get(xs_type, str)
+        to_text = _text_constructor_from_xs_type.get(xs_type, str)
+
+        value = to_typed(value)
+        if type(value) is not valid_type:
+            msg_tpl = 'Type and value do not match: {type}:{value}'
+            msg = msg_tpl.format(type=xs_type, value=value)
+            raise ValueError(msg)
+
+        text = to_text(value)
+        self.set_type(xs_type)
+        SamlBase.__setattr__(self, 'text', text)
         return self
 
     def harvest_element_tree(self, tree):
