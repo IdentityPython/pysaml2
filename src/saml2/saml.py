@@ -209,7 +209,6 @@ class AttributeValueBase(SamlBase):
         }
 
         _type_from_xs_type = {
-            'xs:anyType':      str,
             'xs:string':       str,
             'xs:integer':      int,
             'xs:short':        int,
@@ -219,11 +218,11 @@ class AttributeValueBase(SamlBase):
             'xs:double':       float,
             'xs:boolean':      bool,
             'xs:base64Binary': str,
+            'xs:anyType':      type(value),
             '':                type(None),
         }
 
         _typed_value_constructor_from_xs_type = {
-            'xs:anyType':      str,
             'xs:string':       str,
             'xs:integer':      int,
             'xs:short':        int,
@@ -236,11 +235,11 @@ class AttributeValueBase(SamlBase):
                 else False if str(x).lower() == 'false'
                 else None,
             'xs:base64Binary': str,
+            'xs:anyType':      lambda x: value,
             '':                lambda x: None,
         }
 
         _text_constructor_from_xs_type = {
-            'xs:anyType':      str,
             'xs:string':       str,
             'xs:integer':      str,
             'xs:short':        str,
@@ -253,6 +252,7 @@ class AttributeValueBase(SamlBase):
                 _b64_encode_fn(x.encode())
                 if base64encode
                 else x,
+            'xs:anyType':      lambda x: value,
             '':                lambda x: '',
         }
 
@@ -263,12 +263,7 @@ class AttributeValueBase(SamlBase):
             'xs:base64Binary'    \
             if base64encode      \
             else self.get_type() \
-            or _xs_type_from_type.get(type(value))
-
-        if xs_type is None:
-            msg_tpl = 'No corresponding xs-type for {type}:{value}'
-            msg = msg_tpl.format(type=type(value), value=value)
-            raise ValueError(msg)
+            or _xs_type_from_type.get(type(value), type(None))
 
         valid_type = _type_from_xs_type.get(xs_type, type(None))
         to_typed = _typed_value_constructor_from_xs_type.get(xs_type, str)
