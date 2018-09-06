@@ -1,6 +1,21 @@
 Changelog
 =========
 
+4.6.2 (2018-09-06)
+------------------
+
+Refactor AttributeValueBase::set_text method.
+
+- set_text is doing too many things. At least the structure is a bit cleaner;
+  though, still complex.
+- set_text will set the type if no type has been set.
+- set_text should not modify the type if it has already been set,
+- set_text should not depend on the type's namespace.
+- set_text should not interfere with the 'anyType' type.
+- set_text will raise a ValueError if the value cannot be represented by the
+  type.
+- set_text will raise a ValueError if the type is unknown.
+
 4.6.1 (2018-08-29)
 ------------------
 
