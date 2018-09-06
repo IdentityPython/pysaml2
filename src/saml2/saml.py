@@ -83,7 +83,7 @@ SCM_HOLDER_OF_KEY = "urn:oasis:names:tc:SAML:2.0:cm:holder-of-key"
 SCM_SENDER_VOUCHES = "urn:oasis:names:tc:SAML:2.0:cm:sender-vouches"
 SCM_BEARER = "urn:oasis:names:tc:SAML:2.0:cm:bearer"
 
-XSD = "xs:"
+XSD = "xs"
 NS_SOAP_ENC = "http://schemas.xmlsoap.org/soap/encoding/"
 
 
@@ -163,9 +163,9 @@ class AttributeValueBase(SamlBase):
             pass
 
     def set_text(self, value, base64encode=False):
-        def _wrong_type_value(xs_type, value):
-            msg = _str('Type and value do not match: {xs_type}:{type}:{value}')
-            msg = msg.format(xs_type=xs_type, type=type(value), value=value)
+        def _wrong_type_value(xsd, value):
+            msg = _str('Type and value do not match: {xsd}:{type}:{value}')
+            msg = msg.format(xsd=xsd, type=type(value), value=value)
             raise ValueError(msg)
 
         # only work with six.string_types
@@ -173,55 +173,55 @@ class AttributeValueBase(SamlBase):
         if isinstance(value, six.binary_type):
             value = value.decode()
 
-        xs_type_from_type = {
-            _str:       'xs:string',
-            int:        'xs:integer',
-            float:      'xs:float',
-            bool:       'xs:boolean',
+        type_to_xsd = {
+            _str:       'string',
+            int:        'integer',
+            float:      'float',
+            bool:       'boolean',
             type(None): '',
         }
 
-        # entries of xs-types each declaring:
+        # entries of xsd-types each declaring:
         # - a corresponding python type
         # - a function to turn a string into that type
         # - a function to turn that type into a text-value
-        xs_types_map = {
-            'xs:string': {
+        xsd_types_props = {
+            'string': {
                 'type': _str,
                 'to_type': _str,
                 'to_text': _str,
             },
-            'xs:integer': {
+            'integer': {
                 'type': int,
                 'to_type': int,
                 'to_text': _str,
             },
-            'xs:short': {
+            'short': {
                 'type': int,
                 'to_type': int,
                 'to_text': _str,
             },
-            'xs:int': {
+            'int': {
                 'type': int,
                 'to_type': int,
                 'to_text': _str,
             },
-            'xs:long': {
+            'long': {
                 'type': int,
                 'to_type': int,
                 'to_text': _str,
             },
-            'xs:float': {
+            'float': {
                 'type': float,
                 'to_type': float,
                 'to_text': _str,
             },
-            'xs:double': {
+            'double': {
                 'type': float,
                 'to_type': float,
                 'to_text': _str,
             },
-            'xs:boolean': {
+            'boolean': {
                 'type': bool,
                 'to_type': lambda x: {
                     'true': True,
@@ -229,7 +229,7 @@ class AttributeValueBase(SamlBase):
                 }[_str(x).lower()],
                 'to_text': lambda x: _str(x).lower(),
             },
-            'xs:base64Binary': {
+            'base64Binary': {
                 'type': _str,
                 'to_type': _str,
                 'to_text': lambda x:
@@ -237,7 +237,7 @@ class AttributeValueBase(SamlBase):
                     if base64encode
                     else x,
             },
-            'xs:anyType': {
+            'anyType': {
                 'type': type(value),
                 'to_type': lambda x: x,
                 'to_text': lambda x: x,
@@ -249,15 +249,24 @@ class AttributeValueBase(SamlBase):
             },
         }
 
-        xs_type = \
-            'xs:base64Binary'    \
-            if base64encode      \
-            else self.get_type() \
-            or xs_type_from_type.get(type(value), type(None))
-        xs_type_map = xs_types_map.get(xs_type, {})
-        valid_type = xs_type_map.get('type', type(None))
-        to_type = xs_type_map.get('to_type', str)
-        to_text = xs_type_map.get('to_text', str)
+        xsd_string = (
+            'base64Binary' if base64encode
+            else self.get_type()
+            or type_to_xsd.get(type(value)))
+
+        xsd_ns, xsd_type = (
+            ['', type(None)] if xsd_string is None
+            else ['', ''] if xsd_string is ''
+            else [
+                XSD if xsd_string in xsd_types_props else '',
+                xsd_string
+            ] if ':' not in xsd_string
+            else xsd_string.split(':', 1))
+
+        xsd_type_props = xsd_types_props.get(xsd_type, {})
+        valid_type = xsd_type_props.get('type', type(None))
+        to_type = xsd_type_props.get('to_type', str)
+        to_text = xsd_type_props.get('to_text', str)
 
         # cast to correct type before type-checking
         if type(value) is _str and valid_type is not _str:
@@ -265,13 +274,16 @@ class AttributeValueBase(SamlBase):
                 value = to_type(value)
             except (TypeError, ValueError, KeyError) as e:
                 # the cast failed
-                _wrong_type_value(xs_type=xs_type, value=value)
+                _wrong_type_value(xsd=xsd_type, value=value)
 
         if type(value) is not valid_type:
-            _wrong_type_value(xs_type=xs_type, value=value)
+            _wrong_type_value(xsd=xsd_type, value=value)
 
         text = to_text(value)
-        self.set_type(xs_type)
+        self.set_type(
+            '{ns}:{type}'.format(ns=xsd_ns, type=xsd_type) if xsd_ns
+            else xsd_type if xsd_type
+            else '')
         SamlBase.__setattr__(self, 'text', text)
         return self
 
