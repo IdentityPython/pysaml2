@@ -91,43 +91,6 @@ _b64_decode_fn = getattr(base64, 'decodebytes', base64.decodestring)
 _b64_encode_fn = getattr(base64, 'encodebytes', base64.encodestring)
 
 
-def _decode_attribute_value(typ, text):
-    if typ == XSD + "string":
-        return text or ""
-    if typ == XSD + "integer" or typ == XSD + "int":
-        return str(int(text))
-    if typ == XSD + "float" or typ == XSD + "double":
-        return str(float(text))
-    if typ == XSD + "boolean":
-        return str(text.lower() == "true")
-    if typ == XSD + "base64Binary":
-        return _b64_decode_fn(text)
-    raise ValueError("type %s not supported" % type)
-
-
-def _verify_value_type(typ, val):
-    #  print("verify value type: %s, %s" % (typ, val))
-    if typ == XSD + "string":
-        try:
-            return str(val)
-        except UnicodeEncodeError:
-            if six.PY2:
-                return unicode(val)
-            else:
-                return val.decode('utf8')
-    if typ == XSD + "integer" or typ == XSD + "int":
-        return int(val)
-    if typ == XSD + "float" or typ == XSD + "double":
-        return float(val)
-    if typ == XSD + "boolean":
-        if val.lower() == "true" or val.lower() == "false":
-            pass
-        else:
-            raise ValueError("Faulty boolean value")
-    if typ == XSD + "base64Binary":
-        return _b64_decode_fn(val.encode())
-
-
 class AttributeValueBase(SamlBase):
     def __init__(self,
                  text=None,
@@ -325,11 +288,6 @@ class AttributeValueBase(SamlBase):
             self.set_text(tree.text)
             if XSI_NIL in self.extension_attributes:
                 del self.extension_attributes[XSI_NIL]
-            try:
-                typ = self.extension_attributes[XSI_TYPE]
-                _verify_value_type(typ, getattr(self, "text"))
-            except KeyError:
-                pass
 
 
 class BaseIDAbstractType_(SamlBase):
