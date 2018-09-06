@@ -218,67 +218,71 @@ class AttributeValueBase(SamlBase):
             type(None): '',
         }
 
+        # entries of xs-types each declaring:
+        # - a corresponding python type
+        # - a function to turn a string into that type
+        # - a function to turn that type into a text-value
         xs_types_map = {
             'xs:string': {
                 'type': _str,
-                'typed_constructor': _str,
-                'text_constructor': _str,
+                'to_type': _str,
+                'to_text': _str,
             },
             'xs:integer': {
                 'type': int,
-                'typed_constructor': int,
-                'text_constructor': _str,
+                'to_type': int,
+                'to_text': _str,
             },
             'xs:short': {
                 'type': int,
-                'typed_constructor': int,
-                'text_constructor': _str,
+                'to_type': int,
+                'to_text': _str,
             },
             'xs:int': {
                 'type': int,
-                'typed_constructor': int,
-                'text_constructor': _str,
+                'to_type': int,
+                'to_text': _str,
             },
             'xs:long': {
                 'type': int,
-                'typed_constructor': int,
-                'text_constructor': _str,
+                'to_type': int,
+                'to_text': _str,
             },
             'xs:float': {
                 'type': float,
-                'typed_constructor': float,
-                'text_constructor': _str,
+                'to_type': float,
+                'to_text': _str,
             },
             'xs:double': {
                 'type': float,
-                'typed_constructor': float,
-                'text_constructor': _str,
+                'to_type': float,
+                'to_text': _str,
             },
             'xs:boolean': {
                 'type': bool,
-                'typed_constructor': lambda x: {
+                'to_type': lambda x: {
                     'true': True,
                     'false': False,
                 }[_str(x).lower()],
-                'text_constructor': lambda x: _str(x).lower(),
+                'to_text': lambda x: _str(x).lower(),
             },
             'xs:base64Binary': {
                 'type': _str,
-                'typed_constructor': _str,
-                'text_constructor': lambda x:
+                'to_type': _str,
+                'to_text': lambda x:
                     _b64_encode_fn(x.encode())
                     if base64encode
                     else x,
             },
             'xs:anyType': {
                 'type': type(value),
-                'typed_constructor': lambda x: x,
-                'text_constructor': lambda x: x,
+                'to_type': lambda x: x,
+                'to_text': lambda x: x,
             },
             '': {
                 'type': type(None),
-                'typed_constructor': lambda x: None,
-                'text_constructor': lambda x: '',
+                'to_type': lambda x: None,
+                'to_text': lambda x: '',
             },
         }
 
@@ -289,13 +293,13 @@ class AttributeValueBase(SamlBase):
             or xs_type_from_type.get(type(value), type(None))
         xs_type_map = xs_types_map.get(xs_type, {})
         valid_type = xs_type_map.get('type', type(None))
-        to_typed = xs_type_map.get('typed_constructor', str)
-        to_text = xs_type_map.get('text_constructor', str)
+        to_type = xs_type_map.get('to_type', str)
+        to_text = xs_type_map.get('to_text', str)
 
         # cast to correct type before type-checking
         if type(value) is _str and valid_type is not _str:
             try:
-                value = to_typed(value)
+                value = to_type(value)
             except (TypeError, ValueError, KeyError) as e:
                 # the cast failed
                 _wrong_type_value(xs_type=xs_type, value=value)
