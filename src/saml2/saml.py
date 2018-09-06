@@ -83,49 +83,12 @@ SCM_HOLDER_OF_KEY = "urn:oasis:names:tc:SAML:2.0:cm:holder-of-key"
 SCM_SENDER_VOUCHES = "urn:oasis:names:tc:SAML:2.0:cm:sender-vouches"
 SCM_BEARER = "urn:oasis:names:tc:SAML:2.0:cm:bearer"
 
-XSD = "xs:"
+XSD = "xs"
 NS_SOAP_ENC = "http://schemas.xmlsoap.org/soap/encoding/"
 
 
 _b64_decode_fn = getattr(base64, 'decodebytes', base64.decodestring)
 _b64_encode_fn = getattr(base64, 'encodebytes', base64.encodestring)
-
-
-def _decode_attribute_value(typ, text):
-    if typ == XSD + "string":
-        return text or ""
-    if typ == XSD + "integer" or typ == XSD + "int":
-        return str(int(text))
-    if typ == XSD + "float" or typ == XSD + "double":
-        return str(float(text))
-    if typ == XSD + "boolean":
-        return str(text.lower() == "true")
-    if typ == XSD + "base64Binary":
-        return _b64_decode_fn(text)
-    raise ValueError("type %s not supported" % type)
-
-
-def _verify_value_type(typ, val):
-    #  print("verify value type: %s, %s" % (typ, val))
-    if typ == XSD + "string":
-        try:
-            return str(val)
-        except UnicodeEncodeError:
-            if six.PY2:
-                return unicode(val)
-            else:
-                return val.decode('utf8')
-    if typ == XSD + "integer" or typ == XSD + "int":
-        return int(val)
-    if typ == XSD + "float" or typ == XSD + "double":
-        return float(val)
-    if typ == XSD + "boolean":
-        if val.lower() == "true" or val.lower() == "false":
-            pass
-        else:
-            raise ValueError("Faulty boolean value")
-    if typ == XSD + "base64Binary":
-        return _b64_decode_fn(val.encode())
 
 
 class AttributeValueBase(SamlBase):
@@ -166,7 +129,7 @@ class AttributeValueBase(SamlBase):
     def set_type(self, typ):
         try:
             del self.extension_attributes[XSI_NIL]
-        except KeyError:
+        except (AttributeError, KeyError):
             pass
 
         try:
@@ -199,66 +162,129 @@ class AttributeValueBase(SamlBase):
         except KeyError:
             pass
 
-    def set_text(self, val, base64encode=False):
-        typ = self.get_type()
-        if base64encode:
-            val = _b64_encode_fn(val)
-            self.set_type("xs:base64Binary")
-        else:
-            if isinstance(val, six.binary_type):
-                val = val.decode()
-            if isinstance(val, six.string_types):
-                if not typ:
-                    self.set_type("xs:string")
-                else:
-                    try:
-                        assert typ == "xs:string"
-                    except AssertionError:
-                        if typ == "xs:int":
-                            _ = int(val)
-                        elif typ == "xs:boolean":
-                            if val.lower() not in ["true", "false"]:
-                                raise ValueError("Not a boolean")
-                        elif typ == "xs:float":
-                            _ = float(val)
-                        elif typ == "xs:base64Binary":
-                            pass
-                        else:
-                            raise ValueError("Type and value doesn't match")
-            elif isinstance(val, bool):
-                if val:
-                    val = "true"
-                else:
-                    val = "false"
-                if not typ:
-                    self.set_type("xs:boolean")
-                else:
-                    assert typ == "xs:boolean"
-            elif isinstance(val, int):
-                val = str(val)
-                if not typ:
-                    self.set_type("xs:integer")
-                else:
-                    assert typ == "xs:integer"
-            elif isinstance(val, float):
-                val = str(val)
-                if not typ:
-                    self.set_type("xs:float")
-                else:
-                    assert typ == "xs:float"
-            elif not val:
-                try:
-                    self.extension_attributes[XSI_TYPE] = typ
-                except AttributeError:
-                    self._extatt[XSI_TYPE] = typ
-                val = ""
-            else:
-                if typ == "xs:anyType":
-                    pass
-                else:
-                    raise ValueError
+    def set_text(self, value, base64encode=False):
+        def _wrong_type_value(xsd, value):
+            msg = _str('Type and value do not match: {xsd}:{type}:{value}')
+            msg = msg.format(xsd=xsd, type=type(value), value=value)
+            raise ValueError(msg)
 
-        SamlBase.__setattr__(self, "text", val)
+        # only work with six.string_types
+        _str = unicode if six.PY2 else str
+        if isinstance(value, six.binary_type):
+            value = value.decode()
+
+        type_to_xsd = {
+            _str:       'string',
+            int:        'integer',
+            float:      'float',
+            bool:       'boolean',
+            type(None): '',
+        }
+
+        # entries of xsd-types each declaring:
+        # - a corresponding python type
+        # - a function to turn a string into that type
+        # - a function to turn that type into a text-value
+        xsd_types_props = {
+            'string': {
+                'type': _str,
+                'to_type': _str,
+                'to_text': _str,
+            },
+            'integer': {
+                'type': int,
+                'to_type': int,
+                'to_text': _str,
+            },
+            'short': {
+                'type': int,
+                'to_type': int,
+                'to_text': _str,
+            },
+            'int': {
+                'type': int,
+                'to_type': int,
+                'to_text': _str,
+            },
+            'long': {
+                'type': int,
+                'to_type': int,
+                'to_text': _str,
+            },
+            'float': {
+                'type': float,
+                'to_type': float,
+                'to_text': _str,
+            },
+            'double': {
+                'type': float,
+                'to_type': float,
+                'to_text': _str,
+            },
+            'boolean': {
+                'type': bool,
+                'to_type': lambda x: {
+                    'true': True,
+                    'false': False,
+                }[_str(x).lower()],
+                'to_text': lambda x: _str(x).lower(),
+            },
+            'base64Binary': {
+                'type': _str,
+                'to_type': _str,
+                'to_text': lambda x:
+                    _b64_encode_fn(x.encode())
+                    if base64encode
+                    else x,
+            },
+            'anyType': {
+                'type': type(value),
+                'to_type': lambda x: x,
+                'to_text': lambda x: x,
+            },
+            '': {
+                'type': type(None),
+                'to_type': lambda x: None,
+                'to_text': lambda x: '',
+            },
+        }
+
+        xsd_string = (
+            'base64Binary' if base64encode
+            else self.get_type()
+            or type_to_xsd.get(type(value)))
+
+        xsd_ns, xsd_type = (
+            ['', type(None)] if xsd_string is None
+            else ['', ''] if xsd_string is ''
+            else [
+                XSD if xsd_string in xsd_types_props else '',
+                xsd_string
+            ] if ':' not in xsd_string
+            else xsd_string.split(':', 1))
+
+        xsd_type_props = xsd_types_props.get(xsd_type, {})
+        valid_type = xsd_type_props.get('type', type(None))
+        to_type = xsd_type_props.get('to_type', str)
+        to_text = xsd_type_props.get('to_text', str)
+
+        # cast to correct type before type-checking
+        if type(value) is _str and valid_type is not _str:
+            try:
+                value = to_type(value)
+            except (TypeError, ValueError, KeyError) as e:
+                # the cast failed
+                _wrong_type_value(xsd=xsd_type, value=value)
+
+        if type(value) is not valid_type:
+            _wrong_type_value(xsd=xsd_type, value=value)
+
+        text = to_text(value)
+        self.set_type(
+            '{ns}:{type}'.format(ns=xsd_ns, type=xsd_type) if xsd_ns
+            else xsd_type if xsd_type
+            else '')
+        SamlBase.__setattr__(self, 'text', text)
         return self
 
     def harvest_element_tree(self, tree):
@@ -274,11 +300,6 @@ class AttributeValueBase(SamlBase):
             self.set_text(tree.text)
             if XSI_NIL in self.extension_attributes:
                 del self.extension_attributes[XSI_NIL]
-            try:
-                typ = self.extension_attributes[XSI_TYPE]
-                _verify_value_type(typ, getattr(self, "text"))
-            except KeyError:
-                pass
 
 
 class BaseIDAbstractType_(SamlBase):
