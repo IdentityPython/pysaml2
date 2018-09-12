@@ -8,6 +8,7 @@ import hashlib
 import logging
 import os
 import ssl
+import sys
 import six
 
 from time import mktime
@@ -55,6 +56,9 @@ from saml2.xmlenc import EncryptedKey
 from saml2.xmlenc import CipherData
 from saml2.xmlenc import CipherValue
 from saml2.xmlenc import EncryptedData
+
+
+ENCODING = sys.getdefaultencoding()
 
 
 logger = logging.getLogger(__name__)
@@ -115,7 +119,7 @@ def rm_xmltag(statement):
     try:
         _t = statement.startswith(XMLTAG)
     except TypeError:
-        statement = statement.decode()
+        statement = statement.decode(encoding=ENCODING)
         _t = statement.startswith(XMLTAG)
 
     if _t:
@@ -597,7 +601,7 @@ def make_str(txt):
     if isinstance(txt, six.string_types):
         return txt
     else:
-        return txt.decode()
+        return txt.decode(encoding=ENCODING)
 
 
 def read_cert_from_file(cert_file, cert_type):
@@ -613,7 +617,7 @@ def read_cert_from_file(cert_file, cert_type):
         return ''
 
     if cert_type == 'pem':
-        _a = read_file(cert_file, 'rb').decode()
+        _a = read_file(cert_file, 'rb').decode(encoding=ENCODING)
         _b = _a.replace('\r\n', '\n')
         lines = _b.split('\n')
 
@@ -776,7 +780,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         if not output:
             raise EncryptError(_stderr)
 
-        return output.decode()
+        return output.decode(encoding=ENCODING)
 
     def decrypt(self, enctext, key_file, id_attr):
         """
@@ -803,7 +807,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
             exception=DecryptError,
             validate_output=False)
 
-        return output.decode()
+        return output.decode(encoding=ENCODING)
 
     def sign_statement(self, statement, node_name, key_file, node_id, id_attr):
         """
@@ -846,7 +850,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
             # this doesn't work if --store-signatures are used
             if stdout == '':
                 if signed_statement:
-                    return signed_statement.decode()
+                    return signed_statement.decode(encoding=ENCODING)
 
             logger.error('Signing operation failed :\nstdout : %s\nstderr : %s', stdout, stderr)
             raise SigverError(stderr)
@@ -911,8 +915,8 @@ class CryptoBackendXmlSec1(CryptoBackend):
 
             pof = Popen(com_list, stderr=PIPE, stdout=PIPE)
             p_out, p_err = pof.communicate()
-            p_out = p_out.decode()
-            p_err = p_err.decode()
+            p_out = p_out.decode(encoding=ENCODING)
+            p_err = p_err.decode(encoding=ENCODING)
 
             if pof.returncode is not None and pof.returncode < 0:
                 logger.error(LOG_LINE, p_out, p_err)
