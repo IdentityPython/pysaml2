@@ -340,7 +340,7 @@ def make_temp(string, suffix='', decode=True, delete=True):
     ntf = NamedTemporaryFile(suffix=suffix, delete=delete)
     # Python3 tempfile requires byte-like object
     if not isinstance(string, six.binary_type):
-        string = string.encode()
+        string = string.encode(encoding=ENCODING)
 
     if decode:
         ntf.write(base64.b64decode(string))
