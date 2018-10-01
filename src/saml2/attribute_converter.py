@@ -278,23 +278,15 @@ class AttributeConverter(object):
 
     def lcd_ava_from(self, attribute):
         """
-        In nothing else works, this should
+        If nothing else works, this should
 
-        :param attribute: An Attribute Instance
+        :param attribute: an Attribute instance
         :return:
         """
-        try:
-            name = attribute.friendly_name.strip()
-        except AttributeError:
-            name = attribute.name.strip()
-
-        values = []
-        for value in attribute.attribute_value:
-            if not value.text:
-                values.append('')
-            else:
-                values.append(value.text.strip())
-
+        name = attribute.name.strip()
+        values = [
+            (value.text or '').strip()
+            for value in attribute.attribute_value]
         return name, values
 
     def fail_safe_fro(self, statement):
