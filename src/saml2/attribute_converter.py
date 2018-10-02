@@ -118,42 +118,7 @@ def to_local(acs, statement, allow_unknown_attributes=False):
     :param allow_unknown_attributes: If unknown attributes are allowed
     :return: A key,values dictionary
     """
-    if not acs:
-        acs = [AttributeConverter()]
-        acsd = {"": acs}
-    else:
-        acsd = dict([(a.name_format, a) for a in acs])
-
-    ava = {}
-    for attr in statement.attribute:
-        try:
-            _func = acsd[attr.name_format].ava_from
-        except KeyError:
-            if attr.name_format == NAME_FORMAT_UNSPECIFIED or \
-                    allow_unknown_attributes:
-                _func = acs[0].lcd_ava_from
-            else:
-                logger.info("Unsupported attribute name format: %s",
-                    attr.name_format)
-                continue
-
-        try:
-            key, val = _func(attr)
-        except KeyError:
-            if allow_unknown_attributes:
-                key, val = acs[0].lcd_ava_from(attr)
-            else:
-                logger.info("Unknown attribute name: %s", attr)
-                continue
-        except AttributeError:
-            continue
-
-        try:
-            ava[key].extend(val)
-        except KeyError:
-            ava[key] = val
-
-    return ava
+    return list_to_local(acs, statement.attribute, allow_unknown_attributes)
 
 
 def list_to_local(acs, attrlist, allow_unknown_attributes=False):
