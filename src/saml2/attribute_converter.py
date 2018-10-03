@@ -89,26 +89,6 @@ def ac_factory(path=""):
     return acs
 
 
-def ac_factory_II(path):
-    return ac_factory(path)
-
-
-# def ava_fro(acs, statement):
-#     """  Translates attributes according to their name_formats into the local
-#      names.
-#
-#     :param acs: AttributeConverter instances
-#     :param statement: A SAML statement
-#     :return: A dictionary with attribute names replaced with local names.
-#     """
-#     if not statement:
-#         return {}
-#
-#     acsdic = dict([(ac.name_format, ac) for ac in acs])
-#     acsdic[None] = acsdic[NAME_FORMAT_URI]
-#     return dict([acsdic[a.name_format].ava_from(a) for a in statement])
-
-
 def to_local(acs, statement, allow_unknown_attributes=False):
     """ Replaces the attribute names in a attribute value assertion with the
     equivalent name from a local name format.
