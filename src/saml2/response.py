@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-
+from future.utils import python_2_unicode_compatible
 import calendar
 import logging
 import six
+
 from saml2.samlp import STATUS_VERSION_MISMATCH
 from saml2.samlp import STATUS_AUTHN_FAILED
 from saml2.samlp import STATUS_INVALID_ATTR_NAME_OR_VALUE
@@ -460,7 +461,7 @@ class ManageNameIDResponse(StatusResponse):
 
 # ----------------------------------------------------------------------------
 
-
+@python_2_unicode_compatible
 class AuthnResponse(StatusResponse):
     """ This is where all the profile compliance is checked.
     This one does saml2int compliance. """
@@ -1081,9 +1082,9 @@ class AuthnResponse(StatusResponse):
                     "session_index": authn_statement.session_index}
 
     def __str__(self):
-        if not isinstance(self.xmlstr, six.string_types):
-            return "%s" % self.xmlstr.decode("utf-8")
-        return "%s" % self.xmlstr
+        if isinstance(self.xmlstr, six.string_types):
+            return self.xmlstr
+        return str(self.xmlstr)
 
     def verify_recipient(self, recipient):
         """
