@@ -1,6 +1,12 @@
 Changelog
 =========
 
+4.6.3 (2018-10-08)
+------------------
+
+Do not map between attribute FriendlyName and attribute Name when no
+attributemaps are provided.
+
 4.6.2 (2018-09-06)
 ------------------
 
