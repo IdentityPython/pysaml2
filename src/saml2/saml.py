@@ -171,7 +171,7 @@ class AttributeValueBase(SamlBase):
         # only work with six.string_types
         _str = unicode if six.PY2 else str
         if isinstance(value, six.binary_type):
-            value = value.decode()
+            value = value.decode('utf-8')
 
         type_to_xsd = {
             _str:       'string',

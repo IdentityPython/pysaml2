@@ -310,7 +310,9 @@ def signed_instance_factory(instance, seccont, elements_to_sign=None):
     :return: A class instance if not signed otherwise a string
     """
     if elements_to_sign:
-        signed_xml = str(instance)
+        signed_xml = instance
+        if not isinstance(instance, six.string_types):
+            signed_xml = instance.to_string()
         for (node_name, nodeid) in elements_to_sign:
             signed_xml = seccont.sign_statement(
                 signed_xml, node_name=node_name, node_id=nodeid)
@@ -336,7 +338,7 @@ def make_temp(string, suffix='', decode=True, delete=True):
     ntf = NamedTemporaryFile(suffix=suffix, delete=delete)
     # Python3 tempfile requires byte-like object
     if not isinstance(string, six.binary_type):
-        string = string.encode()
+        string = string.encode('utf-8')
 
     if decode:
         ntf.write(base64.b64decode(string))
@@ -712,7 +714,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         :return:
         """
         logger.debug('Encryption input len: %d', len(text))
-        _, fil = make_temp(str(text).encode(), decode=False)
+        _, fil = make_temp(text, decode=False)
 
         com_list = [
             self.xmlsec,
@@ -743,13 +745,17 @@ class CryptoBackendXmlSec1(CryptoBackend):
         :param key_type: The type of session key to use.
         :return: The encrypted text
         """
+        if six.PY2:
+            _str = unicode
+        else:
+            _str = str
 
         if isinstance(statement, SamlBase):
             statement = pre_encrypt_assertion(statement)
 
-        _, fil = make_temp(str(statement).encode(), decode=False,
+        _, fil = make_temp(_str(statement), decode=False,
                            delete=False)
-        _, tmpl = make_temp(str(template).encode(), decode=False)
+        _, tmpl = make_temp(_str(template), decode=False)
 
         if not node_xpath:
             node_xpath = ASSERT_XPATH
@@ -776,7 +782,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         if not output:
             raise EncryptError(_stderr)
 
-        return output.decode()
+        return output.decode('utf-8')
 
     def decrypt(self, enctext, key_file, id_attr):
         """
@@ -787,7 +793,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         """
 
         logger.debug('Decrypt input len: %d', len(enctext))
-        _, fil = make_temp(str(enctext).encode(), decode=False)
+        _, fil = make_temp(enctext, decode=False)
 
         com_list = [
             self.xmlsec,
@@ -802,8 +808,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
             [fil],
             exception=DecryptError,
             validate_output=False)
-
-        return output.decode()
+        return output.decode('utf-8')
 
     def sign_statement(self, statement, node_name, key_file, node_id, id_attr):
         """
@@ -846,7 +851,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
             # this doesn't work if --store-signatures are used
             if stdout == '':
                 if signed_statement:
-                    return signed_statement.decode()
+                    return signed_statement.decode('utf-8')
 
             logger.error('Signing operation failed :\nstdout : %s\nstderr : %s', stdout, stderr)
             raise SigverError(stderr)
@@ -866,7 +871,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         :return: Boolean True if the signature was correct otherwise False.
         """
         if not isinstance(signedtext, six.binary_type):
-            signedtext = signedtext.encode()
+            signedtext = signedtext.encode('utf-8')
 
         _, fil = make_temp(
                 signedtext,
@@ -1409,7 +1414,6 @@ class SecurityContext(object):
             _enctext = self.crypto.decrypt(enctext, key_file, id_attr)
             if _enctext is not None and len(_enctext) > 0:
                 return _enctext
-
         return enctext
 
     def verify_signature(self, signedtext, cert_file=None, cert_type='pem', node_name=NODE_NAME, node_id=None, id_attr=''):
