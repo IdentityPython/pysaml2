@@ -1082,9 +1082,10 @@ class AuthnResponse(StatusResponse):
                     "session_index": authn_statement.session_index}
 
     def __str__(self):
-        if isinstance(self.xmlstr, six.string_types):
-            return self.xmlstr
-        return str(self.xmlstr)
+        if six.PY2:
+            return self.xmlstr.decode('utf-8')
+        else:
+            return str(self.xmlstr)
 
     def verify_recipient(self, recipient):
         """
