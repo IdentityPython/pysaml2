@@ -4,6 +4,7 @@
 
 import calendar
 import logging
+import re
 import six
 from saml2.samlp import STATUS_VERSION_MISMATCH
 from saml2.samlp import STATUS_AUTHN_FAILED
@@ -381,6 +382,26 @@ class StatusResponse(object):
         issued_at = str_to_time(self.response.issue_instant)
         return lower < issued_at < upper
 
+    def _validate_destination(self):
+        if self.response.destination:
+            if self.valid_destination_regex is not None:
+                does_match = bool(
+                    re.search(
+                        self.valid_destination_regex,
+                        self.response.destination,
+                    )
+                )
+                if not does_match:
+                    logger.error("%s does not match regex: %s",
+                                 self.response.destination,
+                                 self.valid_destination_regex)
+                    return False
+            elif self.response.destination not in self.return_addrs:
+                logger.error("%s not in %s", self.response.destination,
+                             self.return_addrs)
+                return False
+        return True
+
     def _verify(self):
         if self.request_id and self.in_response_to and \
                         self.in_response_to != self.request_id:
@@ -398,10 +419,7 @@ class StatusResponse(object):
                 raise RequestVersionTooHigh()
 
         if self.asynchop:
-            if self.response.destination and \
-                            self.response.destination not in self.return_addrs:
-                logger.error("%s not in %s", self.response.destination,
-                             self.return_addrs)
+            if not self._validate_destination():
                 return None
 
         assert self.issue_instant_ok()
@@ -471,7 +489,7 @@ class AuthnResponse(StatusResponse):
             timeslack=0, asynchop=True, allow_unsolicited=False,
             test=False, allow_unknown_attributes=False,
             want_assertions_signed=False, want_response_signed=False,
-            conv_info=None, **kwargs):
+            conv_info=None, valid_destination_regex=None, **kwargs):
 
         StatusResponse.__init__(self, sec_context, return_addrs, timeslack,
                                 asynchop=asynchop, conv_info=conv_info)
@@ -492,6 +510,7 @@ class AuthnResponse(StatusResponse):
         self.require_response_signature = want_response_signed
         self.test = test
         self.allow_unknown_attributes = allow_unknown_attributes
+        self.valid_destination_regex = valid_destination_regex
         #
         try:
             self.extension_schema = kwargs["extension_schema"]
@@ -1088,8 +1107,8 @@ class AuthnResponse(StatusResponse):
     def verify_recipient(self, recipient):
         """
         Verify that I'm the recipient of the assertion
-        
-        :param recipient: A URI specifying the entity or location to which an 
+
+        :param recipient: A URI specifying the entity or location to which an
             attesting entity can present the assertion.
         :return: True/False
         """

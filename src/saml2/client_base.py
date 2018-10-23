@@ -119,6 +119,7 @@ class Base(Entity):
             "authn_requests_signed": False,
             "want_assertions_signed": False,
             "want_response_signed": True,
+            "valid_destination_regex": None,
         }
 
         for attr, val_default in attribute_defaults.items():
@@ -693,7 +694,8 @@ class Base(Entity):
             "attribute_converters": self.config.attribute_converters,
             "allow_unknown_attributes":
                 self.config.allow_unknown_attributes,
-            'conv_info': conv_info
+            'conv_info': conv_info,
+            "valid_destination_regex": self.valid_destination_regex,
         }
 
         try:

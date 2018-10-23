@@ -93,6 +93,7 @@ SP_ARGS = [
     "sp_type",
     "sp_type_in_metadata",
     "requested_attributes",
+    "valid_destination_regex",
 ]
 
 AA_IDP_ARGS = [

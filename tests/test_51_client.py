@@ -736,6 +736,49 @@ class TestClient:
 
         self.verify_authn_response(idp, authn_response, _client, ava_verify)
 
+    def test_response_invalid_destination_regex(self):
+        conf = config.SPConfig()
+        conf.load_file("server_conf")
+        _client = Saml2Client(conf)
+        _client.valid_destination_regex = 'this-wont-match'
+
+        idp, ava, ava_verify, nameid_policy = self.setup_verify_authn_response()
+
+        self.name_id = self.server.ident.transient_nameid(
+            "urn:mace:example.com:saml:roland:sp", "id1")
+
+        cert_str, cert_key_str = generate_cert()
+
+        cert = \
+            {
+                "cert": cert_str,
+                "key": cert_key_str
+            }
+
+        resp = self.server.create_authn_response(
+            identity=ava,
+            in_response_to="id1",
+            destination="http://lingon.catalogix.se:8087/",
+            sp_entity_id="urn:mace:example.com:saml:roland:sp",
+            name_id=self.name_id,
+            userid="foba0001@example.com",
+            authn=AUTHN,
+            sign_response=True,
+            sign_assertion=True,
+            encrypt_assertion=True,
+            encrypt_assertion_self_contained=True,
+            encrypt_cert_assertion=cert_str
+        )
+
+        resp_str = "%s" % resp
+
+        resp_str = encode_fn(resp_str.encode())
+
+        with raises(AttributeError):
+            _client.parse_authn_request_response(
+                resp_str, BINDING_HTTP_POST,
+                {"id1": "http://foo.example.com/service"}, {"id1": cert})
+
     def test_response_no_name_id(self):
         """ Test that the SP client can parse an authentication response
         from an IdP that does not contain a <NameID> element."""
