@@ -38,7 +38,7 @@ CONFIG = {
     "ca_certs": full_path("cacerts.txt"),
     "xmlsec_binary": xmlsec_path,
     "metadata": [{
-        "class": "saml2.mdstore.MetaDataFile",
+        "class": "saml2_tophat.mdstore.MetaDataFile",
         "metadata": [(full_path("idp.xml"), ), (full_path("vo_metadata.xml"), )],
     }],
     "virtual_organization": {

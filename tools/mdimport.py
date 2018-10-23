@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import time
-from saml2.attribute_converter import ac_factory
-from saml2.mdstore import MetaDataMD, MetaDataFile
+from saml2_tophat.attribute_converter import ac_factory
+from saml2_tophat.mdstore import MetaDataMD, MetaDataFile
 
 __author__ = 'rolandh'
 

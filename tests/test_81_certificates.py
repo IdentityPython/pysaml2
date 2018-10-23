@@ -4,7 +4,7 @@ import time
 
 __author__ = 'haho0032'
 import unittest
-from saml2.cert import OpenSSLWrapper
+from saml2_tophat.cert import OpenSSLWrapper
 
 
 class TestGenerateCertificates(unittest.TestCase):

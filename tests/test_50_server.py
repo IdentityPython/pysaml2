@@ -7,32 +7,32 @@ from contextlib import closing
 from six.moves.urllib.parse import parse_qs
 import uuid
 
-from saml2.cert import OpenSSLWrapper
-from saml2.sigver import make_temp, EncryptError, CertificateError
-from saml2.assertion import Policy
-from saml2.authn_context import INTERNETPROTOCOLPASSWORD
-from saml2.saml import NameID, NAMEID_FORMAT_TRANSIENT
-from saml2.samlp import response_from_string
+from saml2_tophat.cert import OpenSSLWrapper
+from saml2_tophat.sigver import make_temp, EncryptError, CertificateError
+from saml2_tophat.assertion import Policy
+from saml2_tophat.authn_context import INTERNETPROTOCOLPASSWORD
+from saml2_tophat.saml import NameID, NAMEID_FORMAT_TRANSIENT
+from saml2_tophat.samlp import response_from_string
 
-from saml2.server import Server
-from saml2 import samlp
-from saml2 import saml
-from saml2 import client
-from saml2 import config
-from saml2 import extension_elements_to_elements
-from saml2 import s_utils
-from saml2 import sigver
-from saml2 import time_util
-from saml2.s_utils import OtherError
-from saml2.s_utils import do_attribute_statement
-from saml2.s_utils import factory
-from saml2.soap import make_soap_enveloped_saml_thingy
-from saml2 import BINDING_HTTP_POST
-from saml2 import BINDING_HTTP_REDIRECT
+from saml2_tophat.server import Server
+from saml2_tophat import samlp
+from saml2_tophat import saml
+from saml2_tophat import client
+from saml2_tophat import config
+from saml2_tophat import extension_elements_to_elements
+from saml2_tophat import s_utils
+from saml2_tophat import sigver
+from saml2_tophat import time_util
+from saml2_tophat.s_utils import OtherError
+from saml2_tophat.s_utils import do_attribute_statement
+from saml2_tophat.s_utils import factory
+from saml2_tophat.soap import make_soap_enveloped_saml_thingy
+from saml2_tophat import BINDING_HTTP_POST
+from saml2_tophat import BINDING_HTTP_REDIRECT
 
 from py.test import raises
 from pathutils import full_path
-import saml2.xmldsig as ds
+import saml2_tophat.xmldsig as ds
 
 nid = NameID(name_qualifier="foo", format=NAMEID_FORMAT_TRANSIENT,
              text="123456")
@@ -171,7 +171,7 @@ class TestServer1():
             assert attr1.attribute_value[0].text == "Derek"
             assert attr0.friendly_name == "sn"
             assert attr0.attribute_value[0].text == "Jeter"
-        # 
+        #
         subject = assertion.subject
         assert _eq(subject.keyswv(), ["text", "name_id"])
         assert subject.text == "_aaa"

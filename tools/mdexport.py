@@ -1,17 +1,17 @@
 #!/usr/bin/env python
-from saml2.sigver import _get_xmlsec_cryptobackend
-from saml2.sigver import SecurityContext
-from saml2.httpbase import HTTPBase
+from saml2_tophat.sigver import _get_xmlsec_cryptobackend
+from saml2_tophat.sigver import SecurityContext
+from saml2_tophat.httpbase import HTTPBase
 
-from saml2 import saml
-from saml2 import md
-from saml2.attribute_converter import ac_factory
-from saml2 import xmldsig
-from saml2 import xmlenc
+from saml2_tophat import saml
+from saml2_tophat import md
+from saml2_tophat.attribute_converter import ac_factory
+from saml2_tophat import xmldsig
+from saml2_tophat import xmlenc
 
 import argparse
 
-from saml2.mdstore import MetaDataFile, MetaDataExtern, load_extensions
+from saml2_tophat.mdstore import MetaDataFile, MetaDataExtern, load_extensions
 
 __author__ = 'rolandh'
 

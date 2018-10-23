@@ -1,16 +1,16 @@
 from contextlib import closing
 from six.moves.urllib.parse import parse_qs
 from six.moves.urllib.parse import urlparse
-from saml2.authn_context import INTERNETPROTOCOLPASSWORD
-from saml2.samlp import AuthnRequest
-from saml2.samlp import NameIDPolicy
-from saml2.saml import Assertion
-from saml2.saml import NAMEID_FORMAT_TRANSIENT
-from saml2 import BINDING_HTTP_POST
-from saml2 import BINDING_URI
-from saml2 import BINDING_SOAP
-from saml2.client import Saml2Client
-from saml2.server import Server
+from saml2_tophat.authn_context import INTERNETPROTOCOLPASSWORD
+from saml2_tophat.samlp import AuthnRequest
+from saml2_tophat.samlp import NameIDPolicy
+from saml2_tophat.saml import Assertion
+from saml2_tophat.saml import NAMEID_FORMAT_TRANSIENT
+from saml2_tophat import BINDING_HTTP_POST
+from saml2_tophat import BINDING_URI
+from saml2_tophat import BINDING_SOAP
+from saml2_tophat.client import Saml2Client
+from saml2_tophat.server import Server
 
 __author__ = 'rolandh'
 

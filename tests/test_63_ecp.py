@@ -1,19 +1,19 @@
 from contextlib import closing
-from saml2.authn_context import INTERNETPROTOCOLPASSWORD
-from saml2.httpbase import set_list2dict
-from saml2.profile.ecp import RelayState
-from saml2.profile.paos import Request
-from saml2.server import Server
-from saml2.samlp import Response
-from saml2.samlp import STATUS_SUCCESS
-from saml2.samlp import AuthnRequest
-from saml2 import ecp_client
-from saml2 import BINDING_SOAP
-from saml2 import BINDING_PAOS
-from saml2 import create_class_from_xml_string
+from saml2_tophat.authn_context import INTERNETPROTOCOLPASSWORD
+from saml2_tophat.httpbase import set_list2dict
+from saml2_tophat.profile.ecp import RelayState
+from saml2_tophat.profile.paos import Request
+from saml2_tophat.server import Server
+from saml2_tophat.samlp import Response
+from saml2_tophat.samlp import STATUS_SUCCESS
+from saml2_tophat.samlp import AuthnRequest
+from saml2_tophat import ecp_client
+from saml2_tophat import BINDING_SOAP
+from saml2_tophat import BINDING_PAOS
+from saml2_tophat import create_class_from_xml_string
 
-from saml2.profile import ecp as ecp_prof
-from saml2.client import Saml2Client
+from saml2_tophat.profile import ecp as ecp_prof
+from saml2_tophat.client import Saml2Client
 
 from pathutils import dotname, full_path
 

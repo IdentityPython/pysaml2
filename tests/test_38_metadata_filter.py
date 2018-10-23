@@ -1,17 +1,17 @@
-from saml2 import md
-from saml2 import saml
-from saml2 import config
-from saml2 import xmldsig
-from saml2 import xmlenc
+from saml2_tophat import md
+from saml2_tophat import saml
+from saml2_tophat import config
+from saml2_tophat import xmldsig
+from saml2_tophat import xmlenc
 
-from saml2.filter import AllowDescriptor
-from saml2.mdstore import MetadataStore
-from saml2.attribute_converter import ac_factory
-from saml2.extension import mdui
-from saml2.extension import idpdisc
-from saml2.extension import dri
-from saml2.extension import mdattr
-from saml2.extension import ui
+from saml2_tophat.filter import AllowDescriptor
+from saml2_tophat.mdstore import MetadataStore
+from saml2_tophat.attribute_converter import ac_factory
+from saml2_tophat.extension import mdui
+from saml2_tophat.extension import idpdisc
+from saml2_tophat.extension import dri
+from saml2_tophat.extension import mdattr
+from saml2_tophat.extension import ui
 
 from pathutils import full_path
 
@@ -24,7 +24,7 @@ ATTRCONV = ac_factory(full_path("attributemaps"))
 
 METADATACONF = {
     "1": [{
-        "class": "saml2.mdstore.MetaDataFile",
+        "class": "saml2_tophat.mdstore.MetaDataFile",
         "metadata": [(full_path("swamid-2.0.xml"), )],
     }],
 }

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 
-"""Tests for saml2.md"""
+"""Tests for saml2_tophat.md"""
 
 __author__ = 'roland.hedberg@umu.se (Roland Hedberg)'
 
@@ -13,15 +13,15 @@ try:
 except ImportError:
     from elementtree import ElementTree
 
-import saml2
-from saml2 import xmldsig as ds
-from saml2 import saml
-from saml2 import samlp
-from saml2 import md
-from saml2.extension import idpdisc
-from saml2.extension import shibmd
+import saml2_tophat
+from saml2_tophat import xmldsig as ds
+from saml2_tophat import saml
+from saml2_tophat import samlp
+from saml2_tophat import md
+from saml2_tophat.extension import idpdisc
+from saml2_tophat.extension import shibmd
 
-from saml2 import extension_element_to_element
+from saml2_tophat import extension_element_to_element
 import md_data, ds_data
 
 
@@ -31,12 +31,12 @@ class TestEndpointType:
 
     def testAccessors(self):
         """Test for EndpointType accessors"""
-        self.endpoint.binding = saml2.BINDING_HTTP_POST
+        self.endpoint.binding = saml2_tophat.BINDING_HTTP_POST
         self.endpoint.location = "http://www.example.com/endpoint"
         self.endpoint.response_location = "http://www.example.com/response"
         print(self.endpoint.__class__.c_attributes.items())
         new_endpoint = md.endpoint_type__from_string(self.endpoint.to_string())
-        assert new_endpoint.binding == saml2.BINDING_HTTP_POST
+        assert new_endpoint.binding == saml2_tophat.BINDING_HTTP_POST
         assert new_endpoint.location == "http://www.example.com/endpoint"
         assert new_endpoint.response_location == \
                "http://www.example.com/response"
@@ -44,7 +44,7 @@ class TestEndpointType:
     def testUsingTestData(self):
         """Test for endpoint_type_from_string() using test data."""
         new_endpoint = md.endpoint_type__from_string(md_data.TEST_ENDPOINT)
-        assert new_endpoint.binding == saml2.BINDING_HTTP_POST
+        assert new_endpoint.binding == saml2_tophat.BINDING_HTTP_POST
         assert new_endpoint.location == "http://www.example.com/endpoint"
         assert new_endpoint.response_location == \
                "http://www.example.com/response"
@@ -56,13 +56,13 @@ class TestIndexedEndpointType:
 
     def testAccessors(self):
         """Test for IndexedEndpointType accessors"""
-        self.i_e.binding = saml2.BINDING_HTTP_POST
+        self.i_e.binding = saml2_tophat.BINDING_HTTP_POST
         self.i_e.location = "http://www.example.com/endpoint"
         self.i_e.response_location = "http://www.example.com/response"
         self.i_e.index = "1"
         self.i_e.is_default = "false"
         new_i_e = md.indexed_endpoint_type__from_string(self.i_e.to_string())
-        assert new_i_e.binding == saml2.BINDING_HTTP_POST
+        assert new_i_e.binding == saml2_tophat.BINDING_HTTP_POST
         assert new_i_e.location == "http://www.example.com/endpoint"
         assert new_i_e.response_location == "http://www.example.com/response"
         assert new_i_e.index == "1"
@@ -72,7 +72,7 @@ class TestIndexedEndpointType:
         """Test for indexed_endpoint_type_from_string() using test data."""
         new_i_e = md.indexed_endpoint_type__from_string(
             md_data.TEST_INDEXED_ENDPOINT)
-        assert new_i_e.binding == saml2.BINDING_HTTP_POST
+        assert new_i_e.binding == saml2_tophat.BINDING_HTTP_POST
         assert new_i_e.location == "http://www.example.com/endpoint"
         assert new_i_e.response_location == "http://www.example.com/response"
         assert new_i_e.index == "1"
@@ -86,7 +86,7 @@ class TestExtensions:
     def testAccessors(self):
         """Test for Extensions accessors"""
         self.extensions.extension_elements.append(
-            saml2.extension_element_from_string(
+            saml2_tophat.extension_element_from_string(
                 """<?xml version='1.0' encoding='UTF-8'?>
                 <hoge>fuga</hoge>
                 """))
@@ -295,16 +295,16 @@ class TestAdditionalMetadataLocation:
 
 
 # class TestKeySize:
-# 
+#
 #   def setup_class(self):
 #     self.key_size = md.KeySize()
-# 
+#
 #   def testAccessors(self):
 #     """Test for KeySize accessors"""
 #     self.key_size.text = "128"
 #     new_key_size = md.key_size_from_string(self.key_size.to_string())
 #     assert new_key_size.text.strip() == "128"
-# 
+#
 #   def testUsingTestData(self):
 #     """Test for key_size_from_string() using test data."""
 #     new_key_size = md.key_size_from_string(md_data.TEST_KEY_SIZE)
@@ -312,16 +312,16 @@ class TestAdditionalMetadataLocation:
 
 
 # class TestOAEPparams:
-# 
+#
 #   def setup_class(self):
 #     self.oaep_params = md.OAEPparams()
-# 
+#
 #   def testAccessors(self):
 #     """Test for OAEPparams accessors"""
 #     self.oaep_params.text = "9lWu3Q=="
 #     new_oaep_params = md.oae_pparams_from_string(self.oaep_params.to_string())
 #     assert new_oaep_params.text.strip() == "9lWu3Q=="
-# 
+#
 #   def testUsingTestData(self):
 #     """Test for oae_pparams_from_string() using test data."""
 #     new_oaep_params = md.oae_pparams_from_string(md_data.TEST_OAEP_PARAMS)
@@ -439,7 +439,7 @@ class TestRoleDescriptor:
 # class TestSSODescriptor:
 #   def setup_class(self):
 #     self.sso_descriptor = md.SSODescriptorType_()
-# 
+#
 #   def testAccessors(self):
 #     """Test for SSODescriptorType accessors"""
 #     self.sso_descriptor.id = "ID"
@@ -461,7 +461,7 @@ class TestRoleDescriptor:
 #       md.ManageNameIDService())
 #     self.sso_descriptor.name_id_format.append(
 #       md.NameIDFormat())
-# 
+#
 #     new_sso_descriptor = md.sso_descriptor_type__from_string(
 #       self.sso_descriptor.to_string())
 #     assert new_sso_descriptor.id == "ID"
@@ -484,7 +484,7 @@ class TestRoleDescriptor:
 #                             md.ManageNameIDService)
 #     assert isinstance(new_sso_descriptor.name_id_format[0],
 #                             md.NameIDFormat)
-# 
+#
 
 class TestArtifactResolutionService:
     def setup_class(self):
@@ -492,14 +492,14 @@ class TestArtifactResolutionService:
 
     def testAccessors(self):
         """Test for ArtifactResolutionService accessors"""
-        self.i_e.binding = saml2.BINDING_HTTP_POST
+        self.i_e.binding = saml2_tophat.BINDING_HTTP_POST
         self.i_e.location = "http://www.example.com/endpoint"
         self.i_e.response_location = "http://www.example.com/response"
         self.i_e.index = "1"
         self.i_e.is_default = "false"
         new_i_e = md.artifact_resolution_service_from_string(
             self.i_e.to_string())
-        assert new_i_e.binding == saml2.BINDING_HTTP_POST
+        assert new_i_e.binding == saml2_tophat.BINDING_HTTP_POST
         assert new_i_e.location == "http://www.example.com/endpoint"
         assert new_i_e.response_location == "http://www.example.com/response"
         assert new_i_e.index == "1"
@@ -510,7 +510,7 @@ class TestArtifactResolutionService:
         data."""
         new_i_e = md.artifact_resolution_service_from_string(
             md_data.TEST_ARTIFACT_RESOLUTION_SERVICE)
-        assert new_i_e.binding == saml2.BINDING_HTTP_POST
+        assert new_i_e.binding == saml2_tophat.BINDING_HTTP_POST
         assert new_i_e.location == "http://www.example.com/endpoint"
         assert new_i_e.response_location == "http://www.example.com/response"
         assert new_i_e.index == "1"
@@ -523,12 +523,12 @@ class TestSingleLogout:
 
     def testAccessors(self):
         """Test for SingleLogoutService accessors"""
-        self.endpoint.binding = saml2.BINDING_HTTP_POST
+        self.endpoint.binding = saml2_tophat.BINDING_HTTP_POST
         self.endpoint.location = "http://www.example.com/endpoint"
         self.endpoint.response_location = "http://www.example.com/response"
         new_endpoint = md.single_logout_service_from_string(
             self.endpoint.to_string())
-        assert new_endpoint.binding == saml2.BINDING_HTTP_POST
+        assert new_endpoint.binding == saml2_tophat.BINDING_HTTP_POST
         assert new_endpoint.location == "http://www.example.com/endpoint"
         assert new_endpoint.response_location == \
                "http://www.example.com/response"
@@ -537,7 +537,7 @@ class TestSingleLogout:
         """Test for single_logout_service_from_string() using test data."""
         new_endpoint = md.single_logout_service_from_string(
             md_data.TEST_SINGLE_LOGOUT_SERVICE)
-        assert new_endpoint.binding == saml2.BINDING_HTTP_POST
+        assert new_endpoint.binding == saml2_tophat.BINDING_HTTP_POST
         assert new_endpoint.location == "http://www.example.com/endpoint"
         assert new_endpoint.response_location == \
                "http://www.example.com/response"
@@ -549,12 +549,12 @@ class TestManageNameIDService:
 
     def testAccessors(self):
         """Test for ManageNameIDService accessors"""
-        self.endpoint.binding = saml2.BINDING_HTTP_POST
+        self.endpoint.binding = saml2_tophat.BINDING_HTTP_POST
         self.endpoint.location = "http://www.example.com/endpoint"
         self.endpoint.response_location = "http://www.example.com/response"
         new_endpoint = md.manage_name_id_service_from_string(
             self.endpoint.to_string())
-        assert new_endpoint.binding == saml2.BINDING_HTTP_POST
+        assert new_endpoint.binding == saml2_tophat.BINDING_HTTP_POST
         assert new_endpoint.location == "http://www.example.com/endpoint"
         assert new_endpoint.response_location == \
                "http://www.example.com/response"
@@ -563,7 +563,7 @@ class TestManageNameIDService:
         """Test for manage_name_id_service_from_string() using test data."""
         new_endpoint = md.manage_name_id_service_from_string(
             md_data.TEST_MANAGE_NAMEID_SERVICE)
-        assert new_endpoint.binding == saml2.BINDING_HTTP_POST
+        assert new_endpoint.binding == saml2_tophat.BINDING_HTTP_POST
         assert new_endpoint.location == "http://www.example.com/endpoint"
         assert new_endpoint.response_location == \
                "http://www.example.com/response"
@@ -595,12 +595,12 @@ class TestSingleSignOnService:
 
     def testAccessors(self):
         """Test for SingelSignOnService accessors"""
-        self.endpoint.binding = saml2.BINDING_HTTP_POST
+        self.endpoint.binding = saml2_tophat.BINDING_HTTP_POST
         self.endpoint.location = "http://www.example.com/endpoint"
         self.endpoint.response_location = "http://www.example.com/response"
         new_endpoint = md.single_sign_on_service_from_string(
             self.endpoint.to_string())
-        assert new_endpoint.binding == saml2.BINDING_HTTP_POST
+        assert new_endpoint.binding == saml2_tophat.BINDING_HTTP_POST
         assert new_endpoint.location == "http://www.example.com/endpoint"
         assert new_endpoint.response_location == \
                "http://www.example.com/response"
@@ -609,7 +609,7 @@ class TestSingleSignOnService:
         """Test for SingelSignOn_service_from_string() using test data."""
         new_endpoint = md.single_sign_on_service_from_string(
             md_data.TEST_SINGLE_SIGN_ON_SERVICE)
-        assert new_endpoint.binding == saml2.BINDING_HTTP_POST
+        assert new_endpoint.binding == saml2_tophat.BINDING_HTTP_POST
         assert new_endpoint.location == "http://www.example.com/endpoint"
         assert new_endpoint.response_location == \
                "http://www.example.com/response"
@@ -621,12 +621,12 @@ class TestNameIDMappingService:
 
     def testAccessors(self):
         """Test for NameIDMappingService accessors"""
-        self.endpoint.binding = saml2.BINDING_HTTP_POST
+        self.endpoint.binding = saml2_tophat.BINDING_HTTP_POST
         self.endpoint.location = "http://www.example.com/endpoint"
         self.endpoint.response_location = "http://www.example.com/response"
         new_endpoint = md.name_id_mapping_service_from_string(
             self.endpoint.to_string())
-        assert new_endpoint.binding == saml2.BINDING_HTTP_POST
+        assert new_endpoint.binding == saml2_tophat.BINDING_HTTP_POST
         assert new_endpoint.location == "http://www.example.com/endpoint"
         assert new_endpoint.response_location == \
                "http://www.example.com/response"
@@ -635,7 +635,7 @@ class TestNameIDMappingService:
         """Test for name_id_mapping_service_from_string() using test data."""
         new_endpoint = md.name_id_mapping_service_from_string(
             md_data.TEST_NAME_ID_MAPPING_SERVICE)
-        assert new_endpoint.binding == saml2.BINDING_HTTP_POST
+        assert new_endpoint.binding == saml2_tophat.BINDING_HTTP_POST
         assert new_endpoint.location == "http://www.example.com/endpoint"
         assert new_endpoint.response_location == \
                "http://www.example.com/response"
@@ -647,12 +647,12 @@ class TestAssertionIDRequestService:
 
     def testAccessors(self):
         """Test for AssertionIDRequestService accessors"""
-        self.endpoint.binding = saml2.BINDING_HTTP_POST
+        self.endpoint.binding = saml2_tophat.BINDING_HTTP_POST
         self.endpoint.location = "http://www.example.com/endpoint"
         self.endpoint.response_location = "http://www.example.com/response"
         new_endpoint = md.assertion_id_request_service_from_string(
             self.endpoint.to_string())
-        assert new_endpoint.binding == saml2.BINDING_HTTP_POST
+        assert new_endpoint.binding == saml2_tophat.BINDING_HTTP_POST
         assert new_endpoint.location == "http://www.example.com/endpoint"
         assert new_endpoint.response_location == \
                "http://www.example.com/response"
@@ -662,7 +662,7 @@ class TestAssertionIDRequestService:
         data."""
         new_endpoint = md.assertion_id_request_service_from_string(
             md_data.TEST_ASSERTION_ID_REQUEST_SERVICE)
-        assert new_endpoint.binding == saml2.BINDING_HTTP_POST
+        assert new_endpoint.binding == saml2_tophat.BINDING_HTTP_POST
         assert new_endpoint.location == "http://www.example.com/endpoint"
         assert new_endpoint.response_location == \
                "http://www.example.com/response"
@@ -812,14 +812,14 @@ class TestIDPSSODescriptor:
         scope.text = "example.org"
         scope.regexp = "false"
         descriptor.extensions = md.Extensions()
-        ext = saml2.element_to_extension_element(scope)
+        ext = saml2_tophat.element_to_extension_element(scope)
         descriptor.extensions.extension_elements.append(ext)
         exts = descriptor.extensions
         assert len(exts.extension_elements) == 1
         elem = exts.extension_elements[0]
-        inst = saml2.extension_element_to_element(elem,
-                                                  shibmd.ELEMENT_FROM_STRING,
-                                                  namespace=shibmd.NAMESPACE)
+        inst = saml2_tophat.extension_element_to_element(elem,
+                                                         shibmd.ELEMENT_FROM_STRING,
+                                                         namespace=shibmd.NAMESPACE)
         assert isinstance(inst, shibmd.Scope)
         assert inst.text == "example.org"
         assert inst.regexp == "false"
@@ -831,14 +831,14 @@ class TestAssertionConsumerService:
 
     def testAccessors(self):
         """Test for AssertionConsumerService accessors"""
-        self.i_e.binding = saml2.BINDING_HTTP_POST
+        self.i_e.binding = saml2_tophat.BINDING_HTTP_POST
         self.i_e.location = "http://www.example.com/endpoint"
         self.i_e.response_location = "http://www.example.com/response"
         self.i_e.index = "1"
         self.i_e.is_default = "false"
         new_i_e = md.assertion_consumer_service_from_string(
             self.i_e.to_string())
-        assert new_i_e.binding == saml2.BINDING_HTTP_POST
+        assert new_i_e.binding == saml2_tophat.BINDING_HTTP_POST
         assert new_i_e.location == "http://www.example.com/endpoint"
         assert new_i_e.response_location == "http://www.example.com/response"
         assert new_i_e.index == "1"
@@ -848,7 +848,7 @@ class TestAssertionConsumerService:
         """Test for assertion_consumer_service_from_string() using test data."""
         new_i_e = md.assertion_consumer_service_from_string(
             md_data.TEST_ASSERTION_CONSUMER_SERVICE)
-        assert new_i_e.binding == saml2.BINDING_HTTP_POST
+        assert new_i_e.binding == saml2_tophat.BINDING_HTTP_POST
         assert new_i_e.location == "http://www.example.com/endpoint"
         assert new_i_e.response_location == "http://www.example.com/response"
         assert new_i_e.index == "1"

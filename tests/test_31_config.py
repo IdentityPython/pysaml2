@@ -3,16 +3,16 @@
 
 import sys
 import logging
-from saml2.mdstore import MetadataStore, name
+from saml2_tophat.mdstore import MetadataStore, name
 
-from saml2 import BINDING_HTTP_REDIRECT, BINDING_SOAP, BINDING_HTTP_POST
-from saml2.config import SPConfig, IdPConfig, Config
+from saml2_tophat import BINDING_HTTP_REDIRECT, BINDING_SOAP, BINDING_HTTP_POST
+from saml2_tophat.config import SPConfig, IdPConfig, Config
 from py.test import raises
 
-from saml2 import root_logger
+from saml2_tophat import root_logger
 
 from pathutils import dotname, full_path
-from saml2.sigver import security_context, CryptoBackendXMLSecurity
+from saml2_tophat.sigver import security_context, CryptoBackendXMLSecurity
 
 sp1 = {
     "entityid": "urn:mace:umu.se:saml:roland:sp",
@@ -34,7 +34,7 @@ sp1 = {
     "key_file": full_path("test.key"),
     "cert_file": full_path("test.pem"),
     "metadata": [{
-        "class": "saml2.mdstore.MetaDataFile",
+        "class": "saml2_tophat.mdstore.MetaDataFile",
         "metadata": [(full_path("metadata.xml"), ),
                   (full_path("urn-mace-swami.se-swamid-test-1.0-metadata.xml"), )],
     }],
@@ -64,7 +64,7 @@ sp2 = {
             "required_attributes": ["surName", "givenName", "mail"],
             "optional_attributes": ["title"],
             "idp": {
-                "": "https://example.com/saml2/idp/SSOService.php",
+                "": "https://example.com/saml2_tophat/idp/SSOService.php",
             },
             "authn_requests_signed": True,
             "logout_requests_signed": True,
@@ -235,7 +235,7 @@ def test_2():
     assert len(c._sp_idp) == 1
     assert list(c._sp_idp.keys()) == [""]
     assert list(c._sp_idp.values()) == [
-        "https://example.com/saml2/idp/SSOService.php"]
+        "https://example.com/saml2_tophat/idp/SSOService.php"]
     assert c.only_use_keys_in_metadata is True
 
 
@@ -312,7 +312,7 @@ def test_wayf():
     except AssertionError:
         assert handler.maxBytes == 500000
     assert handler.mode == "a"
-    assert root_logger.name == "saml2"
+    assert root_logger.name == "saml2_tophat"
     assert root_logger.level == 20
 
 
@@ -345,7 +345,7 @@ def test_conf_syslog():
         assert handler.socktype == 2
     else:
         pass
-    assert root_logger.name == "saml2"
+    assert root_logger.name == "saml2_tophat"
     assert root_logger.level == 20
 
 #noinspection PyUnresolvedReferences

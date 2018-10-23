@@ -1,11 +1,11 @@
 from contextlib import closing
-from saml2 import sigver
-from saml2 import config
-from saml2.assertion import Policy
-from saml2.attribute_converter import ac_factory
+from saml2_tophat import sigver
+from saml2_tophat import config
+from saml2_tophat.assertion import Policy
+from saml2_tophat.attribute_converter import ac_factory
 from pathutils import full_path
-from saml2.mdstore import MetadataStore
-from saml2.server import Server
+from saml2_tophat.mdstore import MetadataStore
+from saml2_tophat.server import Server
 
 
 ATTRCONV = ac_factory(full_path("attributemaps"))
@@ -16,7 +16,7 @@ __author__ = 'rolandh'
 
 MDS = MetadataStore(ATTRCONV, sec_config,
                     disable_ssl_certificate_validation=True)
-MDS.imp([{"class": "saml2.mdstore.MetaDataMD",
+MDS.imp([{"class": "saml2_tophat.mdstore.MetaDataMD",
           "metadata": [(full_path("swamid.md"),)]}])
 
 
@@ -73,7 +73,7 @@ def test_filter_ava3():
 
     mds = MetadataStore(ATTRCONV, sec_config,
                         disable_ssl_certificate_validation=True)
-    mds.imp([{"class": "saml2.mdstore.MetaDataFile",
+    mds.imp([{"class": "saml2_tophat.mdstore.MetaDataFile",
               "metadata": [(full_path("entity_cat_sfs_hei.xml"),)]}])
 
     ava = {"givenName": ["Derek"], "sn": ["Jeter"],
@@ -97,7 +97,7 @@ def test_filter_ava4():
 
     mds = MetadataStore(ATTRCONV, sec_config,
                         disable_ssl_certificate_validation=True)
-    mds.imp([{"class": "saml2.mdstore.MetaDataFile",
+    mds.imp([{"class": "saml2_tophat.mdstore.MetaDataFile",
               "metadata": [(full_path("entity_cat_re_nren.xml"),)]}])
 
     ava = {"givenName": ["Derek"], "sn": ["Jeter"],
@@ -123,7 +123,7 @@ def test_filter_ava5():
 
     mds = MetadataStore(ATTRCONV, sec_config,
                         disable_ssl_certificate_validation=True)
-    mds.imp([{"class": "saml2.mdstore.MetaDataFile",
+    mds.imp([{"class": "saml2_tophat.mdstore.MetaDataFile",
               "metadata": [(full_path("entity_cat_re.xml"),)]}])
 
     ava = {"givenName": ["Derek"], "sn": ["Jeter"],

@@ -5,14 +5,14 @@ import base64
 
 import six
 
-from saml2 import s_utils as utils
-from saml2 import saml
-from saml2 import samlp
-from saml2.argtree import set_arg
+from saml2_tophat import s_utils as utils
+from saml2_tophat import saml
+from saml2_tophat import samlp
+from saml2_tophat.argtree import set_arg
 
-from saml2.s_utils import do_attribute_statement
-from saml2.saml import Attribute, Subject
-from saml2.saml import NAME_FORMAT_URI
+from saml2_tophat.s_utils import do_attribute_statement
+from saml2_tophat.saml import Attribute, Subject
+from saml2_tophat.saml import NAME_FORMAT_URI
 
 from py.test import raises
 

@@ -3,11 +3,11 @@
 from contextlib import closing
 from datetime import datetime
 from dateutil import parser
-from saml2.authn_context import INTERNETPROTOCOLPASSWORD
+from saml2_tophat.authn_context import INTERNETPROTOCOLPASSWORD
 
-from saml2.server import Server
-from saml2.response import authn_response
-from saml2.config import config_factory
+from saml2_tophat.server import Server
+from saml2_tophat.response import authn_response
+from saml2_tophat.config import config_factory
 
 from pathutils import dotname, full_path
 

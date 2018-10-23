@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-from saml2.sigver import _get_xmlsec_cryptobackend, SecurityContext
-from saml2.httpbase import HTTPBase
-from saml2.attribute_converter import ac_factory
+from saml2_tophat.sigver import _get_xmlsec_cryptobackend, SecurityContext
+from saml2_tophat.httpbase import HTTPBase
+from saml2_tophat.attribute_converter import ac_factory
 import argparse
 
-from saml2.mdstore import MetaDataFile, MetaDataExtern, MetadataStore
+from saml2_tophat.mdstore import MetaDataFile, MetaDataExtern, MetadataStore
 
 __author__ = 'rolandh'
 

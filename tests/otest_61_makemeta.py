@@ -1,16 +1,16 @@
-import saml2
-from saml2 import mdstore
-from saml2 import md
-from saml2 import BINDING_HTTP_POST
-from saml2 import extension_elements_to_elements
+import saml2_tophat
+from saml2_tophat import mdstore
+from saml2_tophat import md
+from saml2_tophat import BINDING_HTTP_POST
+from saml2_tophat import extension_elements_to_elements
 
-from saml2.extension import shibmd
-from saml2.extension import mdui
-from saml2.extension import idpdisc
+from saml2_tophat.extension import shibmd
+from saml2_tophat.extension import mdui
+from saml2_tophat.extension import idpdisc
 
-from saml2.attribute_converter import ac_factory
-from saml2.saml import NAME_FORMAT_URI
-from saml2.config import SPConfig, IdPConfig
+from saml2_tophat.attribute_converter import ac_factory
+from saml2_tophat.saml import NAME_FORMAT_URI
+from saml2_tophat.config import SPConfig, IdPConfig
 
 def _eq(l1,l2):
     return set(l1) == set(l2)
@@ -28,7 +28,7 @@ SP = {
             "required_attributes": ["sn", "givenName", "mail"],
             "optional_attributes": ["title"],
             "idp": {
-                "" : "https://example.com/saml2/idp/SSOService.php",
+                "" : "https://example.com/saml2_tophat/idp/SSOService.php",
             },
         }
     },
@@ -59,8 +59,8 @@ IDP = {
             "scope": ["example.org"],
             "ui_info": {
                 "privacy_statement_url":
-                            "http://example.com/saml2/privacyStatement.html",
-                "information_url": "http://example.com/saml2/info.html",
+                            "http://example.com/saml2_tophat/privacyStatement.html",
+                "information_url": "http://example.com/saml2_tophat/info.html",
                 "logo": {
                     "height": "40",
                     "width" : "30",
@@ -116,7 +116,7 @@ def test_org_3():
     org = metadata.do_organization_info(desc)
     assert _eq(org.keyswv(), ['organization_display_name'])
     assert len(org.organization_display_name) == 1
-                                                
+
 def test_contact_0():
     conf = [{
         "given_name":"Roland",
@@ -126,7 +126,7 @@ def test_contact_0():
         "contact_type": "technical"
         }]
     contact_person = metadata.do_contact_person_info(conf)
-    assert _eq(contact_person[0].keyswv(), ['given_name', 'sur_name', 
+    assert _eq(contact_person[0].keyswv(), ['given_name', 'sur_name',
                                             'contact_type', 'telephone_number',
                                             "email_address"])
     print(contact_person[0])
@@ -141,27 +141,27 @@ def test_contact_0():
     assert len(person.email_address) == 2
     assert isinstance(person.email_address[0], md.EmailAddress)
     assert person.email_address[0].text == "foo@eample.com"
-    
+
 def test_do_endpoints():
     eps = metadata.do_endpoints(SP["service"]["sp"]["endpoints"],
                                     metadata.ENDPOINTS["sp"])
     print(eps)
-    assert _eq(eps.keys(), ["assertion_consumer_service", 
+    assert _eq(eps.keys(), ["assertion_consumer_service",
                             "single_logout_service"])
-                            
+
     assert len(eps["single_logout_service"]) == 1
     sls = eps["single_logout_service"][0]
     assert sls.location == "http://localhost:8087/logout"
     assert sls.binding == BINDING_HTTP_POST
-    
+
     assert len(eps["assertion_consumer_service"]) == 1
     acs = eps["assertion_consumer_service"][0]
     assert acs.location == "http://localhost:8087/"
     assert acs.binding == BINDING_HTTP_POST
-    
+
     assert "artifact_resolution_service" not in eps
     assert "manage_name_id_service" not in eps
-    
+
 def test_required_attributes():
     attrconverters = ac_factory("../tests/attributemaps")
     ras = metadata.do_requested_attribute(
@@ -183,19 +183,19 @@ def test_optional_attributes():
     assert ras[0].name == 'urn:oid:2.5.4.12'
     assert ras[0].name_format == NAME_FORMAT_URI
     assert ras[0].is_required == "false"
-    
+
 def test_do_sp_sso_descriptor():
     conf = SPConfig().load(SP, metadata_construction=True)
     spsso = metadata.do_spsso_descriptor(conf)
-    
+
     assert isinstance(spsso, md.SPSSODescriptor)
-    assert _eq(spsso.keyswv(), ['authn_requests_signed', 
-                                'attribute_consuming_service', 
-                                'single_logout_service', 
-                                'protocol_support_enumeration', 
-                                'assertion_consumer_service', 
+    assert _eq(spsso.keyswv(), ['authn_requests_signed',
+                                'attribute_consuming_service',
+                                'single_logout_service',
+                                'protocol_support_enumeration',
+                                'assertion_consumer_service',
                                 'want_assertions_signed'])
-                                
+
     assert spsso.authn_requests_signed == "false"
     assert spsso.want_assertions_signed == "true"
     assert len (spsso.attribute_consuming_service) == 1
@@ -213,7 +213,7 @@ def test_do_sp_sso_descriptor():
 
 def test_do_sp_sso_descriptor_2():
     SP["service"]["sp"]["discovery_response"] = "http://example.com/sp/ds"
-    
+
     conf = SPConfig().load(SP, metadata_construction=True)
     spsso = metadata.do_spsso_descriptor(conf)
 
@@ -230,9 +230,9 @@ def test_do_sp_sso_descriptor_2():
     exts = spsso.extensions.extension_elements
     assert len(exts) == 1
     print(exts)
-    idpd = saml2.extension_element_to_element(exts[0],
-                                              idpdisc.ELEMENT_FROM_STRING,
-                                              namespace=idpdisc.NAMESPACE)
+    idpd = saml2_tophat.extension_element_to_element(exts[0],
+                                                     idpdisc.ELEMENT_FROM_STRING,
+                                                     namespace=idpdisc.NAMESPACE)
     print(idpd)
     assert idpd.location == "http://example.com/sp/ds"
     assert idpd.index == "0"
@@ -255,23 +255,23 @@ def test_do_idp_sso_descriptor():
     idpsso = metadata.do_idpsso_descriptor(conf)
 
     assert isinstance(idpsso, md.IDPSSODescriptor)
-    assert _eq(idpsso.keyswv(), ['protocol_support_enumeration', 
-                                'single_sign_on_service', 
+    assert _eq(idpsso.keyswv(), ['protocol_support_enumeration',
+                                'single_sign_on_service',
                                 'want_authn_requests_signed',
                                 "extensions"])
     exts = idpsso.extensions.extension_elements
     assert len(exts) == 2
     print(exts)
-    inst = saml2.extension_element_to_element(exts[0],
-                                              shibmd.ELEMENT_FROM_STRING,
-                                              namespace=shibmd.NAMESPACE)
+    inst = saml2_tophat.extension_element_to_element(exts[0],
+                                                     shibmd.ELEMENT_FROM_STRING,
+                                                     namespace=shibmd.NAMESPACE)
     assert isinstance(inst, shibmd.Scope)
     assert inst.text == "example.org"
     assert inst.regexp == "false"
 
-    uiinfo = saml2.extension_element_to_element(exts[1],
-                                              mdui.ELEMENT_FROM_STRING,
-                                              namespace=mdui.NAMESPACE)
+    uiinfo = saml2_tophat.extension_element_to_element(exts[1],
+                                                       mdui.ELEMENT_FROM_STRING,
+                                                       namespace=mdui.NAMESPACE)
 
     assert uiinfo
     assert _eq(uiinfo.keyswv(), ['display_name', 'description',
@@ -279,7 +279,7 @@ def test_do_idp_sso_descriptor():
                                  'keywords', 'logo'])
 
     assert len(uiinfo.privacy_statement_url) == 1
-    assert uiinfo.privacy_statement_url[0].text == "http://example.com/saml2/privacyStatement.html"
+    assert uiinfo.privacy_statement_url[0].text == "http://example.com/saml2_tophat/privacyStatement.html"
     assert len(uiinfo.description) == 1
     assert uiinfo.description[0].text == "Exempel bolag"
     assert uiinfo.description[0].lang == "se"

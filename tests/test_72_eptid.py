@@ -1,4 +1,4 @@
-from saml2.eptid import Eptid, EptidShelve
+from saml2_tophat.eptid import Eptid, EptidShelve
 
 __author__ = 'rolandh'
 

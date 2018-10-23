@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 
-"""Tests for saml2.saml"""
+"""Tests for saml2_tophat.saml"""
 
 __author__ = 'roland.hedberg@adm.umu.se (Roland Hedberg)'
 
@@ -11,20 +11,20 @@ try:
 except ImportError:
     from elementtree import ElementTree
 
-import saml2
+import saml2_tophat
 import saml2_data
 import ds_data
 
-from saml2 import xmldsig as ds
+from saml2_tophat import xmldsig as ds
 
-from saml2 import saml
+from saml2_tophat import saml
 
 from py.test import raises
 
-from saml2.saml import Issuer
-from saml2.saml import Attribute
-from saml2.saml import AttributeValue
-from saml2.saml import NAMEID_FORMAT_EMAILADDRESS
+from saml2_tophat.saml import Issuer
+from saml2_tophat.saml import Attribute
+from saml2_tophat.saml import AttributeValue
+from saml2_tophat.saml import NAMEID_FORMAT_EMAILADDRESS
 
 
 class TestExtensionElement:
@@ -36,12 +36,12 @@ class TestExtensionElement:
             "text": "free text"
         }
 
-        ee = saml2.ExtensionElement(ava["tag"])
+        ee = saml2_tophat.ExtensionElement(ava["tag"])
         ee.loadd(ava)
 
         del ava["tag"]
         print(ava)
-        ee = saml2.ExtensionElement("")
+        ee = saml2_tophat.ExtensionElement("")
 
         with raises(KeyError):
             ee.loadd(ava)
@@ -49,7 +49,7 @@ class TestExtensionElement:
         ava["tag"] = "foo"
         del ava["namespace"]
 
-        ee = saml2.ExtensionElement("")
+        ee = saml2_tophat.ExtensionElement("")
         with raises(KeyError):
             ee.loadd(ava)
 
@@ -87,7 +87,7 @@ class TestExtensionElement:
             ]
         }
 
-        ee = saml2.ExtensionElement(ava["tag"])
+        ee = saml2_tophat.ExtensionElement(ava["tag"])
         ee.loadd(ava)
 
         c = ee.find_children(tag="tag")
@@ -145,9 +145,9 @@ class TestExtensionContainer:
                     "text": "A comment"
                 }]
 
-        ees = [saml2.ExtensionElement("").loadd(a) for a in avas]
+        ees = [saml2_tophat.ExtensionElement("").loadd(a) for a in avas]
         print(ees)
-        ec = saml2.ExtensionContainer(extension_elements=ees)
+        ec = saml2_tophat.ExtensionContainer(extension_elements=ees)
         esl = ec.find_extensions(tag="tag2")
         assert len(esl) == 1
         esl = ec.find_extensions(tag="tag3")
@@ -170,7 +170,7 @@ class TestExtensionContainer:
                  saml.NameID(sp_name_qualifier="sp1", text="bar"),
                  saml.Audience(text="http://example.org")]
 
-        ec = saml2.ExtensionContainer()
+        ec = saml2_tophat.ExtensionContainer()
         ec.add_extension_elements(items)
         esl = ec.find_extensions(tag="NameID")
         assert len(esl) == 2
@@ -182,7 +182,7 @@ class TestExtensionContainer:
         assert len(esl) == 3
 
     def test_add_extension_attribute(self):
-        ec = saml2.ExtensionContainer()
+        ec = saml2_tophat.ExtensionContainer()
         ec.add_extension_attribute("foo", "bar")
         assert len(ec.extension_attributes) == 1
         assert list(ec.extension_attributes.keys())[0] == "foo"
@@ -196,7 +196,7 @@ class TestSAMLBase:
             "text": "free text"
         }
 
-        foo = saml2.make_vals(ava, Issuer, part=True)
+        foo = saml2_tophat.make_vals(ava, Issuer, part=True)
         print(foo)
         assert foo.format == NAMEID_FORMAT_EMAILADDRESS
         assert foo.sp_name_qualifier == "loa"
@@ -205,7 +205,7 @@ class TestSAMLBase:
     def test_make_vals_str(self):
         ava = "free text"
 
-        foo = saml2.make_vals(ava, Issuer, part=True)
+        foo = saml2_tophat.make_vals(ava, Issuer, part=True)
         print(foo)
         assert foo.keyswv() == ["text"]
         assert foo.text == "free text"
@@ -214,16 +214,16 @@ class TestSAMLBase:
         ava = ["foo", "bar", "lions", "saints"]
 
         with raises(Exception):
-            saml2.make_vals(ava, AttributeValue, Attribute(), part=True)
+            saml2_tophat.make_vals(ava, AttributeValue, Attribute(), part=True)
 
         attr = Attribute()
-        saml2.make_vals(ava, AttributeValue, attr, prop="attribute_value")
+        saml2_tophat.make_vals(ava, AttributeValue, attr, prop="attribute_value")
         assert sorted(attr.keyswv()) == sorted(["name_format",
                                                 "attribute_value"])
         assert len(attr.attribute_value) == 4
 
     def test_to_string_nspair(self):
-        foo = saml2.make_vals("lions", AttributeValue, part=True)
+        foo = saml2_tophat.make_vals("lions", AttributeValue, part=True)
         txt = foo.to_string().decode('utf-8')
         nsstr = foo.to_string({"saml": saml.NAMESPACE}).decode('utf-8')
         assert nsstr != txt
@@ -283,13 +283,13 @@ class TestSAMLBase:
             av.set_text('foobar')
 
     def test_make_vals_div(self):
-        foo = saml2.make_vals(666, AttributeValue, part=True)
+        foo = saml2_tophat.make_vals(666, AttributeValue, part=True)
         assert foo.text == "666"
 
-        foo = saml2.make_vals(True, AttributeValue, part=True)
+        foo = saml2_tophat.make_vals(True, AttributeValue, part=True)
         assert foo.text == "true"
 
-        foo = saml2.make_vals(False, AttributeValue, part=True)
+        foo = saml2_tophat.make_vals(False, AttributeValue, part=True)
         assert foo.text == "false"
 
 
@@ -310,7 +310,7 @@ class TestNameID:
         new_name_id = saml.name_id_from_string(self.name_id.to_string())
         assert len(new_name_id.extension_elements) == 0
 
-        self.name_id.extension_elements.append(saml2.ExtensionElement(
+        self.name_id.extension_elements.append(saml2_tophat.ExtensionElement(
             'foo', text='bar'))
         assert len(self.name_id.extension_elements) == 1
         assert self.name_id.format == saml.NAMEID_FORMAT_EMAILADDRESS
@@ -1218,7 +1218,7 @@ class TestAssertion:
     def testAccessors(self):
         """Test for Assertion accessors"""
         self.assertion.id = "assertion id"
-        self.assertion.version = saml2.VERSION
+        self.assertion.version = saml2_tophat.VERSION
         self.assertion.issue_instant = "2007-08-31T01:05:02Z"
         self.assertion.issuer = saml.issuer_from_string(saml2_data.TEST_ISSUER)
         self.assertion.signature = ds.signature_from_string(
@@ -1239,7 +1239,7 @@ class TestAssertion:
 
         new_assertion = saml.assertion_from_string(self.assertion.to_string())
         assert new_assertion.id == "assertion id"
-        assert new_assertion.version == saml2.VERSION
+        assert new_assertion.version == saml2_tophat.VERSION
         assert new_assertion.issue_instant == "2007-08-31T01:05:02Z"
         assert isinstance(new_assertion.issuer, saml.Issuer)
         assert isinstance(new_assertion.signature, ds.Signature)

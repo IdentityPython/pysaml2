@@ -2,13 +2,13 @@
 import argparse
 import os
 import sys
-from saml2.metadata import entity_descriptor, metadata_tostring_fix
-from saml2.metadata import entities_descriptor
-from saml2.metadata import sign_entity_descriptor
+from saml2_tophat.metadata import entity_descriptor, metadata_tostring_fix
+from saml2_tophat.metadata import entities_descriptor
+from saml2_tophat.metadata import sign_entity_descriptor
 
-from saml2.sigver import security_context
-from saml2.validate import valid_instance
-from saml2.config import Config
+from saml2_tophat.sigver import security_context
+from saml2_tophat.validate import valid_instance
+from saml2_tophat.config import Config
 
 # =============================================================================
 # Script that creates a SAML2 metadata file from a pysaml2 entity configuration

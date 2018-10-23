@@ -6,14 +6,14 @@ import mock
 
 from contextlib import closing
 
-from saml2 import config
-from saml2.authn_context import INTERNETPROTOCOLPASSWORD
+from saml2_tophat import config
+from saml2_tophat.authn_context import INTERNETPROTOCOLPASSWORD
 
-from saml2.server import Server
-from saml2.response import response_factory
-from saml2.response import StatusResponse
-from saml2.response import AuthnResponse
-from saml2.sigver import SignatureError
+from saml2_tophat.server import Server
+from saml2_tophat.response import response_factory
+from saml2_tophat.response import StatusResponse
+from saml2_tophat.response import AuthnResponse
+from saml2_tophat.sigver import SignatureError
 
 from pathutils import full_path
 
@@ -96,7 +96,7 @@ class TestResponse:
         assert isinstance(resp, StatusResponse)
         assert isinstance(resp, AuthnResponse)
 
-    @mock.patch('saml2.time_util.datetime')
+    @mock.patch('saml2_tophat.time_util.datetime')
     def test_false_sign(self, mock_datetime):
         mock_datetime.utcnow = mock.Mock(
             return_value=datetime.datetime(2016, 9, 4, 9, 59, 39))
@@ -124,7 +124,7 @@ class TestResponse:
             xml_response = fp.read()
         resp = response_factory(
             xml_response, self.conf,
-            return_addrs=['https://myreviewroom.com/saml2/acs/'],
+            return_addrs=['https://myreviewroom.com/saml2_tophat/acs/'],
             outstanding_queries={'id-f4d370f3d03650f3ec0da694e2348bfe':
                                  "http://localhost:8088/sso"},
             timeslack=TIMESLACK, decode=False)

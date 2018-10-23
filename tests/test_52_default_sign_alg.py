@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
-from saml2.authn_context import INTERNETPROTOCOLPASSWORD
-from saml2.saml import NameID, NAMEID_FORMAT_TRANSIENT
-from saml2.samlp import response_from_string
+from saml2_tophat.authn_context import INTERNETPROTOCOLPASSWORD
+from saml2_tophat.saml import NameID, NAMEID_FORMAT_TRANSIENT
+from saml2_tophat.samlp import response_from_string
 
-from saml2.server import Server
-from saml2 import client
-from saml2 import config
+from saml2_tophat.server import Server
+from saml2_tophat import client
+from saml2_tophat import config
 from mock.mock import Mock, MagicMock
-import saml2.xmldsig as ds
+import saml2_tophat.xmldsig as ds
 
 nid = NameID(name_qualifier="foo", format=NAMEID_FORMAT_TRANSIENT,
              text="123456")

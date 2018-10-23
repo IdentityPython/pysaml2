@@ -1,7 +1,7 @@
 from contextlib import closing
-from saml2 import BINDING_HTTP_POST
-from saml2.client import Saml2Client
-from saml2.server import Server
+from saml2_tophat import BINDING_HTTP_POST
+from saml2_tophat.client import Saml2Client
+from saml2_tophat.server import Server
 
 import sys
 if sys.version_info.major < 3:

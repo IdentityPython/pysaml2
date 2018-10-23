@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-from saml2.saml import NAME_FORMAT_URI
+from saml2_tophat.saml import NAME_FORMAT_URI
 
 __author__ = 'rolandh'
 
 import json
-from saml2 import xmldsig as ds
-from saml2.saml import NAME_FORMAT_UNSPECIFIED, NAME_FORMAT_URI, NAME_FORMAT_BASIC
+from saml2_tophat import xmldsig as ds
+from saml2_tophat.saml import NAME_FORMAT_UNSPECIFIED, NAME_FORMAT_URI, NAME_FORMAT_BASIC
 
 BASE = "http://localhost:8088"
 

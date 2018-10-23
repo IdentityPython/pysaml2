@@ -2,10 +2,10 @@
 
 import time
 import py
-from saml2.saml import NameID, NAMEID_FORMAT_TRANSIENT
-from saml2.cache import Cache
-from saml2.time_util import in_a_while, str_to_time
-from saml2.ident import code
+from saml2_tophat.saml import NameID, NAMEID_FORMAT_TRANSIENT
+from saml2_tophat.cache import Cache
+from saml2_tophat.time_util import in_a_while, str_to_time
+from saml2_tophat.ident import code
 
 SESSION_INFO_PATTERN = {"ava": {}, "came from": "", "not_on_or_after": 0,
                         "issuer": "", "session_id": -1}
