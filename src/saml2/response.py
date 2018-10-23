@@ -319,7 +319,10 @@ class StatusResponse(object):
     def _loads(self, xmldata, decode=True, origxml=None):
 
         # own copy
-        self.xmlstr = xmldata[:]
+        if isinstance(xmldata, six.binary_type):
+            self.xmlstr = xmldata[:].decode('utf-8')
+        else:
+            self.xmlstr = xmldata[:]
         logger.debug("xmlstr: %s", self.xmlstr)
         if origxml:
             self.origxml = origxml
@@ -1082,15 +1085,13 @@ class AuthnResponse(StatusResponse):
                     "session_index": authn_statement.session_index}
 
     def __str__(self):
-        if isinstance(self.xmlstr, six.string_types):
-            return self.xmlstr
-        return str(self.xmlstr)
+        return self.xmlstr
 
     def verify_recipient(self, recipient):
         """
         Verify that I'm the recipient of the assertion
-        
-        :param recipient: A URI specifying the entity or location to which an 
+
+        :param recipient: A URI specifying the entity or location to which an
             attesting entity can present the assertion.
         :return: True/False
         """
