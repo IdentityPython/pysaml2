@@ -37,6 +37,7 @@ from saml2.server import Server
 from saml2.sigver import pre_encryption_part, pre_encrypt_assertion
 from saml2.sigver import rm_xmltag
 from saml2.sigver import verify_redirect_signature
+from saml2.sigver import SignatureError, SigverError
 from saml2.s_utils import do_attribute_statement
 from saml2.s_utils import factory
 from saml2.time_util import in_a_while, a_while_ago
@@ -1486,6 +1487,160 @@ class TestClient:
         res = self.server.parse_logout_request(_dic["SAMLRequest"],
                                                BINDING_HTTP_POST)
         assert b'<ns0:SessionIndex>_foo</ns0:SessionIndex>' in res.xmlstr
+
+    def test_signature_wants(self):
+
+        ava = {
+            "givenName": ["Derek"],
+            "sn": ["Jeter"],
+            "mail": ["derek@nyy.mlb.com"],
+            "title": ["The man"]
+            }
+
+        nameid_policy = samlp.NameIDPolicy(
+                            allow_create="false",
+                            format=saml.NAMEID_FORMAT_PERSISTENT)
+
+        kwargs = {
+            "identity": ava,
+            "in_response_to": "id1",
+            "destination": "http://lingon.catalogix.se:8087/",
+            "sp_entity_id": "urn:mace:example.com:saml:roland:sp",
+            "name_id_policy": nameid_policy,
+            "userid": "foba0001@example.com",
+            "authn": AUTHN
+            }
+
+        outstanding = {"id1": "http://foo.example.com/service"}
+
+        def create_authn_response(**kwargs):
+            return encode_fn(
+                    str(self.server.create_authn_response(**kwargs)).encode())
+
+        def parse_authn_response(response):
+            self.client.parse_authn_request_response(response,
+                                                BINDING_HTTP_POST, outstanding)
+
+        def set_client_want(response, assertion, either):
+            self.client.want_response_signed = response
+            self.client.want_assertions_signed = assertion
+            self.client.want_assertions_or_response_signed = either
+
+        # Response is signed but assertion is not.
+        kwargs["sign_response"] = True
+        kwargs["sign_assertion"] = False
+        response = create_authn_response(**kwargs)
+
+        set_client_want(True, True, True)
+        raises(SignatureError, parse_authn_response, response)
+
+        set_client_want(True, True, False)
+        raises(SignatureError, parse_authn_response, response)
+
+        set_client_want(True, False, True)
+        parse_authn_response(response)
+
+        set_client_want(True, False, False)
+        parse_authn_response(response)
+
+        set_client_want(False, True, True)
+        raises(SignatureError, parse_authn_response, response)
+
+        set_client_want(False, True, False)
+        raises(SignatureError, parse_authn_response, response)
+
+        set_client_want(False, False, True)
+        parse_authn_response(response)
+
+        set_client_want(False, False, False)
+        parse_authn_response(response)
+
+        # Response is not signed but assertion is signed.
+        kwargs["sign_response"] = False
+        kwargs["sign_assertion"] = True
+        response = create_authn_response(**kwargs)
+
+        set_client_want(True, True, True)
+        raises(SignatureError, parse_authn_response, response)
+
+        set_client_want(True, True, False)
+        raises(SignatureError, parse_authn_response, response)
+
+        set_client_want(True, False, True)
+        raises(SignatureError, parse_authn_response, response)
+
+        set_client_want(True, False, False)
+        raises(SignatureError, parse_authn_response, response)
+
+        set_client_want(False, True, True)
+        parse_authn_response(response)
+
+        set_client_want(False, True, False)
+        parse_authn_response(response)
+
+        set_client_want(False, False, True)
+        parse_authn_response(response)
+
+        set_client_want(False, False, False)
+        parse_authn_response(response)
+
+        # Both response and assertion are signed.
+        kwargs["sign_response"] = True
+        kwargs["sign_assertion"] = True
+        response = create_authn_response(**kwargs)
+
+        set_client_want(True, True, True)
+        parse_authn_response(response)
+
+        set_client_want(True, True, False)
+        parse_authn_response(response)
+
+        set_client_want(True, False, True)
+        parse_authn_response(response)
+
+        set_client_want(True, False, False)
+        parse_authn_response(response)
+
+        set_client_want(False, True, True)
+        parse_authn_response(response)
+
+        set_client_want(False, True, False)
+        parse_authn_response(response)
+
+        set_client_want(False, False, True)
+        parse_authn_response(response)
+
+        set_client_want(False, False, False)
+        parse_authn_response(response)
+
+        # Neither response nor assertion is signed.
+        kwargs["sign_response"] = False
+        kwargs["sign_assertion"] = False
+        response = create_authn_response(**kwargs)
+
+        set_client_want(True, True, True)
+        raises(SignatureError, parse_authn_response, response)
+
+        set_client_want(True, True, False)
+        raises(SignatureError, parse_authn_response, response)
+
+        set_client_want(True, False, True)
+        raises(SignatureError, parse_authn_response, response)
+
+        set_client_want(True, False, False)
+        raises(SignatureError, parse_authn_response, response)
+
+        set_client_want(False, True, True)
+        raises(SignatureError, parse_authn_response, response)
+
+        set_client_want(False, True, False)
+        raises(SignatureError, parse_authn_response, response)
+
+        set_client_want(False, False, True)
+        raises(SigverError, parse_authn_response, response)
+
+        set_client_want(False, False, False)
+        parse_authn_response(response)
 
 
 class TestClientNonAsciiAva:
