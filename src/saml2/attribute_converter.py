@@ -130,7 +130,7 @@ def list_to_local(acs, attrlist, allow_unknown_attributes=False):
                 continue
 
         try:
-            key, val = _func(attr)
+            key, val = _func(attr, allow_unknown_attributes)
         except KeyError:
             if allow_unknown_attributes:
                 key, val = acs[0].lcd_ava_from(attr)
@@ -295,18 +295,9 @@ class AttributeConverter(object):
         return result
 
     def ava_from(self, attribute, allow_unknown=False):
-        try:
-            attr = self._fro[attribute.name.strip().lower()]
-        except AttributeError:
-            attr = attribute.friendly_name.strip().lower()
-        except KeyError:
-            if allow_unknown:
-                try:
-                    attr = attribute.name.strip().lower()
-                except AttributeError:
-                    attr = attribute.friendly_name.strip().lower()
-            else:
-                raise
+        attr = attribute.name.strip()
+        if not (attr.lower() in self._fro or allow_unknown):
+            raise
 
         val = []
         for value in attribute.attribute_value:
@@ -314,7 +305,7 @@ class AttributeConverter(object):
                 ext = extension_elements_to_elements(value.extension_elements,
                                                      [saml])
                 for ex in ext:
-                    if attr == "eduPersonTargetedID" and ex.text:
+                    if ex.text and (attr == "urn:oid:1.3.6.1.4.1.5923.1.1.1.10" or attr.lower() == "urn:mace:dir:attribute-def:edupersontargetedid"):
                         val.append(ex.text.strip())
                     else:
                         cval = {}
@@ -428,27 +419,28 @@ class AttributeConverter(object):
         """
         attributes = []
         for key, value in attrvals.items():
-            name = self._to.get(key.lower())
-            if name:
-                if name == "urn:oid:1.3.6.1.4.1.5923.1.1.1.10":
-                    # special case for eduPersonTargetedID
-                    attr_value = []
-                    for v in value:
-                        extension_element = ExtensionElement("NameID", NAMESPACE,
-                                                             attributes={'Format': NAMEID_FORMAT_PERSISTENT}, text=v)
-                        attrval = saml.AttributeValue(extension_elements=[extension_element])
-                        attr_value.append(attrval)
-                else:
-                    attr_value = do_ava(value)
+            if key == "urn:oid:1.3.6.1.4.1.5923.1.1.1.10" or key.lower() == "urn:mace:dir:attribute-def:edupersontargetedid":
+                # special case for eduPersonTargetedID
+                attr_value = []
+                for v in value:
+                    extension_element = ExtensionElement("NameID", NAMESPACE,
+                                                         attributes={'Format': NAMEID_FORMAT_PERSISTENT}, text=v)
+                    attrval = saml.AttributeValue(extension_elements=[extension_element])
+                    attr_value.append(attrval)
+            else:
+                attr_value = do_ava(value)
+
+            friendlyname = self._fro.get(key.lower())
+            if friendlyname:
                 attributes.append(factory(saml.Attribute,
-                                          name=name,
+                                          name=key,
                                           name_format=self.name_format,
-                                          friendly_name=key,
+                                          friendly_name=friendlyname,
                                           attribute_value=attr_value))
             else:
                 attributes.append(factory(saml.Attribute,
                                           name=key,
-                                          attribute_value=do_ava(value)))
+                                          attribute_value=attr_value))
 
         return attributes
 
