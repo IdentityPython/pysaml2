@@ -371,7 +371,7 @@ class SSO(Service):
     @staticmethod
     def _store_request(saml_msg):
         logger.debug("_store_request: %s", saml_msg)
-        key = sha1(saml_msg["SAMLRequest"]).hexdigest()
+        key = sha1(saml_msg["SAMLRequest"].encode()).hexdigest()
         # store the AuthnRequest
         IDP.ticket[key] = saml_msg
         return key
