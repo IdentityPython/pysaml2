@@ -368,7 +368,11 @@ class SAML2Plugin(object):
                     self.outstanding_certs[_sid] = cert
 
                 ht_args = _cli.apply_binding(
-                    _binding, msg_str, destination=dest, relay_state=came_from
+                    _binding,
+                    msg_str,
+                    destination=dest,
+                    relay_state=came_from,
+                    sign=_cli.authn_requests_signed,
                 )
 
                 logger.debug("ht_args: %s", ht_args)

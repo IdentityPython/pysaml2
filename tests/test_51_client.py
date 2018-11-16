@@ -1375,7 +1375,7 @@ class TestClient:
 
         info = self.client.apply_binding(
             BINDING_HTTP_REDIRECT, msg_str, destination="",
-            relay_state="relay2", sigalg=SIG_RSA_SHA256)
+            relay_state="relay2", sign=True, sigalg=SIG_RSA_SHA256)
 
         loc = info["headers"][0][1]
         qs = parse_qs(loc[1:])
@@ -2875,7 +2875,7 @@ class TestClientNonAsciiAva:
 
         info = self.client.apply_binding(
             BINDING_HTTP_REDIRECT, msg_str, destination="",
-            relay_state="relay2", sigalg=SIG_RSA_SHA256)
+            relay_state="relay2", sign=True, sigalg=SIG_RSA_SHA256)
 
         loc = info["headers"][0][1]
         qs = parse_qs(loc[1:])
