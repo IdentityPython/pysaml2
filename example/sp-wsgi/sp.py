@@ -9,6 +9,8 @@ import os
 import re
 import sys
 import xml.dom.minidom
+
+from saml2.client_base import MIME_PAOS
 from saml2.sigver import SignatureError
 
 import six
@@ -470,7 +472,7 @@ class SSO(object):
         logger.debug("[_pick_idp] %s", self.environ)
         if "HTTP_PAOS" in self.environ:
             if self.environ["HTTP_PAOS"] == PAOS_HEADER_INFO:
-                if 'application/vnd.paos+xml' in self.environ["HTTP_ACCEPT"]:
+                if MIME_PAOS in self.environ["HTTP_ACCEPT"]:
                     # Where should I redirect the user to
                     # entityid -> the IdP to use
                     # relay_state -> when back from authentication

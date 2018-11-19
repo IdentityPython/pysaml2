@@ -27,7 +27,7 @@ from paste.request import parse_dict_querystring
 from paste.request import construct_url
 from saml2.extension.pefim import SPCertEnc
 from saml2.httputil import getpath, SeeOther
-from saml2.client_base import ECP_SERVICE
+from saml2.client_base import ECP_SERVICE, MIME_PAOS
 from zope.interface import implementer
 
 from repoze.who.interfaces import IChallenger, IIdentifier, IAuthenticator
@@ -179,7 +179,7 @@ class SAML2Plugin(object):
         logger.info("[_pick_idp] %s", environ)
         if "HTTP_PAOS" in environ:
             if environ["HTTP_PAOS"] == PAOS_HEADER_INFO:
-                if 'application/vnd.paos+xml' in environ["HTTP_ACCEPT"]:
+                if MIME_PAOS in environ["HTTP_ACCEPT"]:
                     # Where should I redirect the user to
                     # entityid -> the IdP to use
                     # relay_state -> when back from authentication
