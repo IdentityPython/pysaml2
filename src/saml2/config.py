@@ -563,14 +563,30 @@ class IdPConfig(Config):
         Config.__init__(self)
 
 
-def config_factory(typ, filename):
-    if typ == "sp":
-        conf = SPConfig().load_file(filename)
-        conf.context = typ
-    elif typ in ["aa", "idp", "pdp", "aq"]:
-        conf = IdPConfig().load_file(filename)
-        conf.context = typ
+def config_factory(_type, config):
+    """
+
+    :type _type: str
+    :param _type: 
+    
+    :type config: str or dict
+    :param config: Name of file with pysaml2 config or CONFIG dict
+    
+    :return:
+    """
+    if _type == "sp":
+        conf = SPConfig()
+    elif _type in ["aa", "idp", "pdp", "aq"]:
+        conf = IdPConfig()
     else:
-        conf = Config().load_file(filename)
-        conf.context = typ
+        conf = Config()
+
+    if isinstance(config, dict):
+        conf.load(copy.deepcopy(config))
+    elif isinstance(config, str):
+        conf.load_file(config)
+    else:
+        raise ValueError('Unknown type of config')
+
+    conf.context = _type
     return conf
