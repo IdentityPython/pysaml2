@@ -103,12 +103,12 @@ class Service(object):
     def unpack_redirect(self):
         if "QUERY_STRING" in self.environ:
             _qs = self.environ["QUERY_STRING"]
-            return dict([(k, v[0]) for k, v in parse_qs(_qs).items()])
+            return dict([(k, v[0]) for k, v in _get_query(_qs).items()])
         else:
             return None
 
     def unpack_post(self):
-        _dict = parse_qs(get_post(self.environ))
+        _dict = _get_query(get_post(self.environ))
         logger.debug("unpack_post:: %s", _dict)
         try:
             return dict([(k, v[0]) for k, v in _dict.items()])
@@ -297,7 +297,7 @@ class SSO(Service):
 
         resp_args = {}
         try:
-            resp_args = IDP.response_args(_authn_req)
+            resp_args = IDP.response_args(_authn_req, self.response_bindings)
             _resp = None
         except UnknownPrincipal as excp:
             _resp = IDP.create_error_response(_authn_req.id,
@@ -482,13 +482,13 @@ class SSO(Service):
                     resp = Unauthorized()
                 else:
                     try:
-                        (user, passwd) = _info.split(":")
-                        if is_equal(PASSWD[user], passwd):
+                        (user, passwd) = _info.split(b":")
+                        user = user.decode()
+                        if not is_equal(PASSWD[user], passwd):
                             resp = Unauthorized()
                         self.user = user
-                        self.environ[
-                            "idp.authn"] = AUTHN_BROKER.get_authn_by_accr(
-                            PASSWORD)
+                        self.environ["idp.authn"] = \
+                            AUTHN_BROKER.get_authn_by_accr(PASSWORD)
                     except ValueError:
                         resp = Unauthorized()
             else:
@@ -531,11 +531,11 @@ def do_authentication(environ, start_response, authn_context, key,
 # -----------------------------------------------------------------------------
 
 PASSWD = {
-    "daev0001": "qwerty",
-    "testuser": "qwerty",
-    "roland": "dianakra",
-    "babs": "howes",
-    "upper": "crust"}
+    "daev0001": b"qwerty",
+    "testuser": b"qwerty",
+    "roland": b"dianakra",
+    "babs": b"howes",
+    "upper": b"crust"}
 
 
 def username_password_authn(environ, start_response, reference, key,
@@ -563,18 +563,46 @@ def username_password_authn(environ, start_response, reference, key,
     return resp(environ, start_response, **argv)
 
 
+def _ensure_string(thing):
+    import six
+    if isinstance(thing, six.binary_type):
+        return thing.decode()
+    elif isinstance(thing, six.string_types):
+        return thing
+    elif isinstance(thing, list):
+        return [_ensure_string(item) for item in thing]
+    else:
+        return thing
+
+
+def _convert_dict_with_bytes(d):
+    new_d = {}
+    for key, value in d.items():
+        new_key = _ensure_string(key)
+        new_value = _ensure_string(value)
+        new_d[new_key] = new_value
+    return new_d
+
+
+def _get_query(qs):
+    query = parse_qs(qs)
+    return _convert_dict_with_bytes(query)
+
+
 def verify_username_and_password(dic):
     global PASSWD
     # verify username and password
-    if PASSWD[dic["login"][0]] == dic["password"][0]:
-        return True, dic["login"][0]
+    login = dic["login"][0]
+    password = dic["password"][0].encode()
+
+    if PASSWD[login] == password:
+        return True, login
     else:
         return False, ""
 
 
 def do_verify(environ, start_response, _):
-    query = parse_qs(get_post(environ))
-
+    query = _get_query(get_post(environ))
     logger.debug("do_verify: %s", query)
 
     try:
@@ -861,7 +889,8 @@ def info_from_cookie(kaka):
         morsel = cookie_obj.get("idpauthn", None)
         if morsel:
             try:
-                key, ref = base64.b64decode(morsel.value).split(":")
+                key, ref = \
+                    _ensure_string(base64.b64decode(morsel.value)).split(":")
                 return IDP.cache.uid2user[key], ref
             except (KeyError, TypeError):
                 return None, None
@@ -886,8 +915,10 @@ def delete_cookie(environ, name):
 
 
 def set_cookie(name, _, *args):
+    args = [a.encode() for a in args]
+
     cookie = SimpleCookie()
-    cookie[name] = base64.b64encode(":".join(args))
+    cookie[name] = base64.b64encode(b":".join(args)).decode()
     cookie[name]['path'] = "/"
     cookie[name]["expires"] = _expiration(5)  # 5 minutes from now
     logger.debug("Cookie expires: %s", cookie[name]["expires"])
@@ -951,7 +982,7 @@ def metadata(environ, start_response):
                                           args.valid, args.cert, args.keyfile,
                                           args.id, args.name, args.sign)
         start_response('200 OK', [('Content-Type', "text/xml")])
-        return metadata
+        return [metadata]
     except Exception as ex:
         logger.error("An error occured while creating metadata: %s", ex.message)
         return not_found(environ, start_response)
@@ -1042,7 +1073,8 @@ def application(environ, start_response):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-p', dest='path', help='Path to configuration file.', default='./idp_conf.py')
+    parser.add_argument('-p', dest='path', help='Path to configuration file.',
+                        default='./idp_conf.py')
     parser.add_argument('-v', dest='valid',
                         help="How long, in days, the metadata is valid from "
                              "the time of creation")
