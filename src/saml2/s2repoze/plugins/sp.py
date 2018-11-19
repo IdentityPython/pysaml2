@@ -651,8 +651,7 @@ def make_plugin(remember_name=None,  # plugin for remember
                 sid_store="",
                 identity_cache="",
                 discovery="",
-                idp_query_param=""
-):
+                idp_query_param=""):
     if saml_conf is "":
         raise ValueError(
             'must include saml_conf in configuration')

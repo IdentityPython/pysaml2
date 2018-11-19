@@ -84,8 +84,7 @@ class Saml2Client(Base):
             nameid_format=None, scoping=None, consent=None, extensions=None,
             sign=None, response_binding=saml2.BINDING_HTTP_POST, **kwargs):
         """ Makes all necessary preparations for an authentication request
-        that negotiates
-        which binding to use for authentication.
+        that negotiates which binding to use for authentication.
 
         :param entityid: The entity ID of the IdP to send the request to
         :param relay_state: To where the user should be returned after

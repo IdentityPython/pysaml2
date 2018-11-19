@@ -381,11 +381,11 @@ class Config(object):
 
         return importlib.import_module(tail)
 
-    def load_file(self, config_file, metadata_construction=False):
-        if config_file.endswith(".py"):
-            config_file = config_file[:-3]
+    def load_file(self, config_filename, metadata_construction=False):
+        if config_filename.endswith(".py"):
+            config_filename = config_filename[:-3]
 
-        mod = self._load(config_file)
+        mod = self._load(config_filename)
         return self.load(copy.deepcopy(mod.CONFIG), metadata_construction)
 
     def load_metadata(self, metadata_conf):
