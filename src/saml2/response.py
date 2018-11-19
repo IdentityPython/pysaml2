@@ -569,11 +569,14 @@ class AuthnResponse(StatusResponse):
         # check authn_statement.session_index
 
     def condition_ok(self, lax=False):
+        if not self.assertion.conditions:
+            # Conditions is Optional for Assertion, so, if it's absent, then we
+            # assume that its valid
+            return True
+
         if self.test:
             lax = True
 
-        # The Identity Provider MUST include a <saml:Conditions> element
-        assert self.assertion.conditions
         conditions = self.assertion.conditions
 
         logger.debug("conditions: %s", conditions)
