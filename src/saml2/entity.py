@@ -377,7 +377,7 @@ class Entity(HTTPBase):
         # logger.debug("unravel '%s'", txt)
         if binding not in [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST,
                            BINDING_SOAP, BINDING_URI, BINDING_HTTP_ARTIFACT,
-                           None]:
+                           BINDING_PAOS, None]:
             raise UnknownBinding("Don't know how to handle '%s'" % binding)
         else:
             try:
@@ -389,6 +389,8 @@ class Entity(HTTPBase):
                     func = getattr(soap,
                                    "parse_soap_enveloped_saml_%s" % msgtype)
                     xmlstr = func(txt)
+                elif binding == BINDING_PAOS:
+                    xmlstr = txt
                 elif binding == BINDING_HTTP_ARTIFACT:
                     xmlstr = base64.b64decode(txt)
                 else:
