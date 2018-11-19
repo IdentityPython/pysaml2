@@ -1506,9 +1506,6 @@ class SecurityContext(object):
                         id_attr=id_attr):
                     verified = True
                     break
-            except SignatureError as exc:
-                logger.error('check_sig: %s', exc)
-                pass
             except XmlsecError as exc:
                 logger.error('check_sig: %s', exc)
                 pass
