@@ -62,10 +62,7 @@ class Response(object):
             message = mte.render(**argv)
 
         if isinstance(message, six.string_types):
-            # Note(JP): A WSGI app should always respond
-            # with bytes, so at this point the message should
-            # become encoded instead of passing a text object.
-            return [message.encode()]
+            return [message.encode('utf-8')]
         elif isinstance(message, six.binary_type):
             return [message]
         else:
