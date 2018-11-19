@@ -10,6 +10,7 @@ from hashlib import sha1
 
 from mako.lookup import TemplateLookup
 
+import six
 from six.moves.http_cookies import SimpleCookie
 from six.moves.urllib.parse import parse_qs
 
@@ -578,16 +579,20 @@ def username_password_authn(
 
 
 def verify_username_and_password(dic):
-    global PASSWD
     # verify username and password
-    if PASSWD[dic["login"][0]] == dic["password"][0]:
-        return True, dic["login"][0]
+    username = dic["login"][0]
+    password = dic["password"][0]
+    if PASSWD[username] == password:
+        return True, username
     else:
-        return False, ""
+        return False, None
 
 
 def do_verify(environ, start_response, _):
-    query = parse_qs(get_post(environ))
+    query_str = get_post(environ)
+    if not isinstance(query_str, six.string_types):
+        query_str = query_str.decode("ascii")
+    query = parse_qs(query_str)
 
     logger.debug("do_verify: %s", query)
 
@@ -877,7 +882,10 @@ def info_from_cookie(kaka):
         morsel = cookie_obj.get("idpauthn", None)
         if morsel:
             try:
-                key, ref = base64.b64decode(morsel.value).split(":")
+                data = base64.b64decode(morsel.value)
+                if not isinstance(data, six.string_types):
+                    data = data.decode("ascii")
+                key, ref = data.split(":", 1)
                 return IDP.cache.uid2user[key], ref
             except (KeyError, TypeError):
                 return None, None
@@ -903,7 +911,16 @@ def delete_cookie(environ, name):
 
 def set_cookie(name, _, *args):
     cookie = SimpleCookie()
-    cookie[name] = base64.b64encode(":".join(args))
+
+    data = ":".join(args)
+    if not isinstance(data, six.binary_type):
+        data = data.encode("ascii")
+
+    data64 = base64.b64encode(data)
+    if not isinstance(data64, six.string_types):
+        data64 = data64.decode("ascii")
+
+    cookie[name] = data64
     cookie[name]["path"] = "/"
     cookie[name]["expires"] = _expiration(5)  # 5 minutes from now
     logger.debug("Cookie expires: %s", cookie[name]["expires"])
