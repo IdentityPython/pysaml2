@@ -1487,10 +1487,10 @@ class SecurityContext(object):
                 for cert in cert_from_instance(item)
             ]
         else:
-            logger.debug('==== Certs from metadata ==== %s: %s ====', issuer, certs)
+            logger.debug('==== Certs from metadata ==== %s: %s ====', _issuer, certs)
 
         if not certs:
-            raise MissingKey(issuer)
+            raise MissingKey(_issuer)
 
         verified = False
         last_pem_file = None
@@ -1506,10 +1506,10 @@ class SecurityContext(object):
                         id_attr=id_attr):
                     verified = True
                     break
-            except XmlsecError as exc:
+            except SignatureError as exc:
                 logger.error('check_sig: %s', exc)
                 pass
-            except SignatureError as exc:
+            except XmlsecError as exc:
                 logger.error('check_sig: %s', exc)
                 pass
             except Exception as exc:
