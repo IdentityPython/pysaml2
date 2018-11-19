@@ -1136,8 +1136,7 @@ class Entity(HTTPBase):
             return None
 
         try:
-            origxml = xmlstr
-            response = response.loads(xmlstr, False, origxml=origxml)
+            response = response.loads(xmlstr, False, origxml=xmlstr)
         except SigverError as err:
             logger.error("Signature Error: %s", err)
             raise
