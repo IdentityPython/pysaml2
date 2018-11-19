@@ -6,7 +6,7 @@
 Contains classes used in the SAML ECP profile
 """
 import logging
-from saml2.client_base import ACTOR
+from saml2.client_base import ACTOR, MIME_PAOS
 from saml2.ecp_client import SERVICE
 
 from saml2 import element_to_extension_element
@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 def ecp_capable(headers):
-    if "application/vnd.paos+xml" in headers["Accept"]:
+    if MIME_PAOS in headers["Accept"]:
         if "PAOS" in headers:
             if 'ver="%s";"%s"' % (paos.NAMESPACE,
                                   SERVICE) in headers["PAOS"]:
