@@ -52,7 +52,7 @@ from saml2.response import AuthnResponse
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_PAOS
-import logging
+
 
 logger = logging.getLogger(__name__)
 
