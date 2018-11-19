@@ -63,7 +63,6 @@ from saml2.httpbase import HTTPBase
 from saml2.sigver import security_context
 from saml2.sigver import response_factory
 from saml2.sigver import SigverError
-from saml2.sigver import CryptoBackendXmlSec1
 from saml2.sigver import make_temp
 from saml2.sigver import pre_encryption_part
 from saml2.sigver import pre_signature_part
@@ -554,7 +553,6 @@ class Entity(HTTPBase):
         _certs = []
 
         if encrypt_cert:
-            _certs = []
             _certs.append(encrypt_cert)
         elif sp_entity_id is not None:
             _certs = self.metadata.certs(sp_entity_id, "any", "encryption")
@@ -1134,12 +1132,11 @@ class Entity(HTTPBase):
             raise
 
         xmlstr = self.unravel(xmlstr, binding, response_cls.msgtype)
-        origxml = xmlstr
         if not xmlstr:  # Not a valid reponse
             return None
 
         try:
-            response = response.loads(xmlstr, False, origxml=origxml)
+            response = response.loads(xmlstr, False, origxml=xmlstr)
         except SigverError as err:
             logger.error("Signature Error: %s", err)
             raise

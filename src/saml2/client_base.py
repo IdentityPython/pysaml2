@@ -7,6 +7,8 @@ to conclude its tasks.
 """
 import threading
 import six
+import time
+import logging
 
 from saml2.entity import Entity
 
@@ -25,7 +27,6 @@ from saml2.extension import sp_type
 from saml2.extension import requested_attributes
 
 import saml2
-import time
 from saml2.soap import make_soap_enveloped_saml_thingy
 
 from six.moves.urllib.parse import parse_qs
@@ -51,7 +52,7 @@ from saml2.response import AuthnResponse
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_PAOS
-import logging
+
 
 logger = logging.getLogger(__name__)
 
@@ -94,7 +95,7 @@ class Base(Entity):
     """ The basic pySAML2 service provider class """
 
     def __init__(self, config=None, identity_cache=None, state_cache=None,
-            virtual_organization="", config_file="", msg_cb=None):
+                 virtual_organization="", config_file="", msg_cb=None):
         """
         :param config: A saml2.config.Config instance
         :param identity_cache: Where the class should store identity information
@@ -133,10 +134,13 @@ class Base(Entity):
 
             setattr(self, attr, val)
 
-        if self.entity_type == "sp" and not any([self.want_assertions_signed,
-                                                self.want_response_signed]):
-            logger.warning("The SAML service provider accepts unsigned SAML Responses " +
-                           "and Assertions. This configuration is insecure.")
+        if self.entity_type == "sp" and not any(
+            [self.want_assertions_signed, self.want_response_signed]
+        ):
+            logger.warning(
+                "The SAML service provider accepts unsigned SAML Responses "
+                "and Assertions. This configuration is insecure."
+            )
 
         self.artifact2response = {}
 
