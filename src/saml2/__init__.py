@@ -130,6 +130,31 @@ def create_class_from_element_tree(target_class, tree, namespace=None,
         return None
 
 
+def parse_xml_and_get_ns(file_like):
+    """Behaves like ElementTree.fromstring, but also retrieves namespaces as
+    separate parameter.
+
+    :param file_like: File-like object, that implements read() method.
+    :return: ElementTree.Element and ns (as dict)
+    """
+    events = "start", "start-ns"
+    root = None
+    ns = {}
+    for event, elem in defusedxml.ElementTree.iterparse(file_like, events):
+        if event == "start-ns":
+            # if elem[0] in ns and ns[elem[0]] != elem[1]:
+            #     # NOTE: It is perfectly valid to have the same prefix refer
+            #     #     to different URI namespaces in different parts of the
+            #     #     document. This exception serves as a reminder that this
+            #     #     solution is not robust.    Use at your own peril.
+            #     raise KeyError("Duplicate prefix with different URI found.")
+            ns[elem[0]] = elem[1]
+        elif event == "start":
+            if root is None:
+                root = elem
+    return ElementTree.ElementTree(root).getroot(), ns
+
+
 class Error(Exception):
     """Exception class thrown by this module."""
     pass
@@ -639,6 +664,8 @@ class SamlBase(ExtensionContainer):
         return ElementTree.tostring(tree, encoding="UTF-8").decode('utf-8')
 
     def set_prefixes(self, elem, prefix_map):
+
+        self.register_prefix(prefix_map)
 
         # check if this is a tree wrapper
         if not ElementTree.iselement(elem):

@@ -6,8 +6,13 @@
 Suppport for the client part of the SAML2.0 SOAP binding.
 """
 import logging
+from io import BytesIO
+import re
 
-from saml2 import create_class_from_element_tree
+from six import StringIO
+
+import six
+from saml2 import create_class_from_element_tree, parse_xml_and_get_ns
 from saml2.samlp import NAMESPACE as SAMLP_NAMESPACE
 from saml2.schema import soapenv
 
@@ -126,6 +131,7 @@ def parse_soap_enveloped_saml_authn_response(text):
 #    expected_tag = '{%s}LogoutResponse' % SAMLP_NAMESPACE
 #    return parse_soap_enveloped_saml_thingy(text, [expected_tag])
 
+
 def parse_soap_enveloped_saml_thingy(text, expected_tags):
     """Parses a SOAP enveloped SAML thing and returns the thing as
     a string.
@@ -157,7 +163,6 @@ def parse_soap_enveloped_saml_thingy(text, expected_tags):
         raise WrongMessageType("Was '%s' expected one of %s" % (saml_part.tag,
                                                                 expected_tags))
 
-import re
 
 NS_AND_TAG = re.compile("\{([^}]+)\}(.*)")
 
@@ -184,13 +189,17 @@ def class_instances_from_soap_enveloped_saml_thingies(text, modules):
     :return: The body and headers as class instances
     """
     try:
-        envelope = defusedxml.ElementTree.fromstring(text)
+        if isinstance(text, six.string_types):
+            io_wrapper = StringIO
+        else:
+            io_wrapper = BytesIO
+        envelope, ns = parse_xml_and_get_ns(io_wrapper(text))
     except Exception as exc:
         raise XmlParseError("%s" % exc)
 
     assert envelope.tag == '{%s}Envelope' % soapenv.NAMESPACE
     assert len(envelope) >= 1
-    env = {"header": [], "body": None}
+    env = {"header": [], "body": None, "ns": ns}
 
     for part in envelope:
         if part.tag == '{%s}Body' % soapenv.NAMESPACE:
@@ -210,13 +219,17 @@ def open_soap_envelope(text):
     :return: dictionary with two keys "body"/"header"
     """
     try:
-        envelope = defusedxml.ElementTree.fromstring(text)
+        if isinstance(text, six.string_types):
+            io_wrapper = StringIO
+        else:
+            io_wrapper = BytesIO
+        envelope, ns = parse_xml_and_get_ns(io_wrapper(text))
     except Exception as exc:
         raise XmlParseError("%s" % exc)
 
     assert envelope.tag == '{%s}Envelope' % soapenv.NAMESPACE
     assert len(envelope) >= 1
-    content = {"header": [], "body": None}
+    content = {"header": [], "body": None, "ns": ns}
 
     for part in envelope:
         if part.tag == '{%s}Body' % soapenv.NAMESPACE:
