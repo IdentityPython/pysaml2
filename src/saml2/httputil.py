@@ -55,21 +55,18 @@ class Response(object):
 
     def _response(self, message="", **argv):
         if self.template:
-            return [self.template % message]
+            message = self.template % message
         elif self.mako_lookup and self.mako_template:
             argv["message"] = message
             mte = self.mako_lookup.get_template(self.mako_template)
-            return [mte.render(**argv)]
+            message = mte.render(**argv)
+
+        if isinstance(message, six.string_types):
+            return [message.encode('utf-8')]
+        elif isinstance(message, six.binary_type):
+            return [message]
         else:
-            if isinstance(message, six.string_types):
-                # Note(JP): A WSGI app should always respond
-                # with bytes, so at this point the message should
-                # become encoded instead of passing a text object.
-                return [message]
-            elif isinstance(message, six.binary_type):
-                return [message]
-            else:
-                return message
+            return message
 
     def add_header(self, ava):
         """
