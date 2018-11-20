@@ -697,9 +697,17 @@ def main(environ, start_response, sp):
         return sso.do()
 
     body = dict_to_table(user.data)
-    authn_stmt = cgi.escape(user.authn_statement)
-    body.append("<br><pre>" + authn_stmt + "</pre>")
-    body.append('<br><a href="/logout">logout</a>')
+    body.append(
+        "<br><pre>{authn_stmt}</pre>".format(
+            authn_stmt=cgi.escape(user.authn_statement)
+        )
+    )
+    body.append("<br><a href='/logout'>logout</a>")
+
+    body = [
+        item if not isinstance(item, six.binary_type) else item.encode("utf-8")
+        for item in body
+    ]
 
     resp = Response(body)
     return resp(environ, start_response)
