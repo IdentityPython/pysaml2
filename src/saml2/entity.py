@@ -1187,11 +1187,6 @@ class Entity(HTTPBase):
                 for _cert in cert:
                     keys.append(_cert["key"])
 
-        only_identity_in_encrypted_assertion = False
-        if "only_identity_in_encrypted_assertion" in kwargs:
-            only_identity_in_encrypted_assertion = kwargs[
-                "only_identity_in_encrypted_assertion"]
-
         try:
             assertions_are_signed = False
             # Record the assertions signature requirement.
