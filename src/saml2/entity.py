@@ -1137,20 +1137,17 @@ class Entity(HTTPBase):
         if not xmlstr:  # Not a valid reponse
             return None
 
-        # Record the response signature requirement.
-        require_response_signature = response.require_response_signature
-
-        # Force the requirement that the response be signed in order to
-        # force signature checking to happen so that we can know whether
-        # or not the response is signed. The attribute on the response class
-        # is reset to the recorded value in the finally clause below.
-        response.require_response_signature = True
-
         try:
-            response = response.loads(xmlstr, False, origxml=xmlstr)
-            response_is_signed = True
-        except SigverError as err:
             response_is_signed = False
+            # Record the response signature requirement.
+            require_response_signature = response.require_response_signature
+            # Force the requirement that the response be signed in order to
+            # force signature checking to happen so that we can know whether
+            # or not the response is signed. The attribute on the response class
+            # is reset to the recorded value in the finally clause below.
+            response.require_response_signature = True
+            response = response.loads(xmlstr, False, origxml=xmlstr)
+        except SigverError as err:
             if require_response_signature:
                 logger.error("Signature Error: %s", err)
                 raise
@@ -1160,15 +1157,15 @@ class Entity(HTTPBase):
                 # value and attempt to consume the unpacked XML again.
                 response.require_response_signature = require_response_signature
                 response = response.loads(xmlstr, False, origxml=xmlstr)
-
         except UnsolicitedResponse:
             logger.error("Unsolicited response")
             raise
         except Exception as err:
-            response_is_signed = False
             if "not well-formed" in "%s" % err:
                 logger.error("Not well-formed XML")
             raise
+        else:
+            response_is_signed = True
         finally:
             response.require_response_signature = require_response_signature
 
@@ -1195,22 +1192,19 @@ class Entity(HTTPBase):
             only_identity_in_encrypted_assertion = kwargs[
                 "only_identity_in_encrypted_assertion"]
 
-        # Record the assertions signature requirement.
-        require_signature = response.require_signature
-
-        # Force the requirement that the assertions be signed in order to
-        # force signature checking to happen so that we can know whether
-        # or not the assertions are signed. The attribute on the response class
-        # is reset to the recorded value in the finally clause below.
-        response.require_signature = True
-
         try:
+            assertions_are_signed = False
+            # Record the assertions signature requirement.
+            require_signature = response.require_signature
+            # Force the requirement that the assertions be signed in order to
+            # force signature checking to happen so that we can know whether
+            # or not the assertions are signed. The attribute on the response class
+            # is reset to the recorded value in the finally clause below.
+            response.require_signature = True
             # Verify that the assertion is syntactically correct and the
             # signature on the assertion is correct if present.
             response = response.verify(keys)
-            assertions_are_signed = True
         except SignatureError as err:
-            assertions_are_signed = False
             if require_signature:
                 logger.error("Signature Error: %s", err)
                 raise
@@ -1219,6 +1213,8 @@ class Entity(HTTPBase):
                 response = response.verify(keys)
         except Exception as err:
             logger.error("Exception verifying assertion: %s" % err)
+        else:
+            assertions_are_signed = True
         finally:
             response.require_signature = require_signature
 
