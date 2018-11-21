@@ -225,8 +225,9 @@ class Entity(HTTPBase):
             info["method"] = "POST"
         elif binding == BINDING_HTTP_REDIRECT:
             logger.info("HTTP REDIRECT")
-            if sign and kwargs.get('sigalg', ''):
-                signer = self.sec.sec_backend.get_signer(kwargs['sigalg'])
+            sigalg = kwargs.get("sigalg")
+            if sign and sigalg:
+                signer = self.sec.sec_backend.get_signer(sigalg)
             else:
                 signer = None
             info = self.use_http_get(msg_str, destination, relay_state, typ,
