@@ -1,5 +1,25 @@
 # Changelog
 
+## 4.6.4 (2018-11-22)
+
+- Make use of the sign argument to entity.Entity::apply_binding when binding is
+  HTTP-Redirect. Reminder: use [authn_requests_signed configuration option][0]
+  to indicate that Authentication Requests sent by the SP must be signed
+- Add want_assertions_or_response_signed configuration option - see
+  [documentation][1] about the introduced behaviour
+- Fix code for idp and sp examples
+- Do not require assertion conditions
+- Fix response encoding format
+- Various code improvements for config, sigver, client_base, client,
+  ecp_client, ecp, s2repoze and entity modules
+- Support non-ascii attribute values for encryption and decryption
+
+Thanks to @johanlundberg @skoranda @yuqing0708 @erakli
+
+  [0]: https://github.com/IdentityPython/pysaml2/blob/master/docs/howto/config.rst#authn-requests-signed
+  [1]: https://github.com/IdentityPython/pysaml2/blob/master/docs/howto/config.rst#want-assertions-or-response-signed
+
+
 ## 4.6.3 (2018-10-08)
 
 Do not map between attribute FriendlyName and attribute Name when no
