@@ -1,14 +1,11 @@
-Changelog
-=========
+# Changelog
 
-4.6.3 (2018-10-08)
-------------------
+## 4.6.3 (2018-10-08)
 
 Do not map between attribute FriendlyName and attribute Name when no
 attributemaps are provided.
 
-4.6.2 (2018-09-06)
-------------------
+## 4.6.2 (2018-09-06)
 
 Refactor AttributeValueBase::set_text method.
 
@@ -22,8 +19,7 @@ Refactor AttributeValueBase::set_text method.
   type.
 - set_text will raise a ValueError if the type is unknown.
 
-4.6.1 (2018-08-29)
-------------------
+## 4.6.1 (2018-08-29)
 
 - Allow multiple AttributeStatement tags per Assertion
 - Raise ValueError for invalid attribute type
@@ -31,8 +27,7 @@ Refactor AttributeValueBase::set_text method.
 - tests: fix test that depended on actual datetime
 - build: Set minimum build-tool version through pyproject.toml
 
-4.6.0 (2018-08-07)
-------------------
+## 4.6.0 (2018-08-07)
 
 - Allow configuration and specification of id attribute name
 - Retrieve SLO endpoint by the appropriate service type
@@ -72,12 +67,12 @@ Refactor AttributeValueBase::set_text method.
 - examples: Fix wsgiserver usage for example sp
 - examples: Fix cherrypy.wsgiserver usage
 
-0.4.2 (2012-03-27)
-------------------
+## 0.4.2 (2012-03-27)
+
 - Add default attribute mappings
 
-0.4.1 (2012-03-18)
-------------------
+## 0.4.1 (2012-03-18)
+
 - Auto sign authentication and logout requests following config options.
 - Add backwards compatibility with ElementTree in python < 2.7.
 - Fix minor bugs in the tests.
