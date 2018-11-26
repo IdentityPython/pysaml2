@@ -152,46 +152,17 @@ def do_organization_info(ava):
     return org
 
 
-def do_contact_person_info(lava):
-    """ Creates a ContactPerson instance from configuration information"""
+def do_contact_person_info(ava):
+    """Create a ContactPerson instance from configuration information."""
+    cper = md.ContactPerson()
+    cper.loadd(ava)
+    if not cper.contact_type:
+        cper.contact_type = "technical"
+    return cper
 
-    cps = []
-    if lava is None:
-        return cps
 
-    contact_person = md.ContactPerson
-    for ava in lava:
-        cper = md.ContactPerson()
-        for (key, classpec) in contact_person.c_children.values():
-            try:
-                value = ava[key]
-                data = []
-                if isinstance(classpec, list):
-                    # What if value is not a list ?
-                    if isinstance(value, six.string_types):
-                        data = [classpec[0](text=value)]
-                    else:
-                        for val in value:
-                            data.append(classpec[0](text=val))
-                else:
-                    data = classpec(text=value)
-                setattr(cper, key, data)
-            except KeyError:
-                pass
-        for (prop, classpec, _) in contact_person.c_attributes.values():
-            try:
-                # should do a check for valid value
-                setattr(cper, prop, ava[prop])
-            except KeyError:
-                pass
-
-        # ContactType must have a value
-        typ = getattr(cper, "contact_type")
-        if not typ:
-            setattr(cper, "contact_type", "technical")
-
-        cps.append(cper)
-
+def do_contact_persons_info(lava):
+    cps = [do_contact_person_info(ava) for ava in lava]
     return cps
 
 
@@ -719,7 +690,7 @@ def entity_descriptor(confd):
     if confd.organization is not None:
         entd.organization = do_organization_info(confd.organization)
     if confd.contact_person is not None:
-        entd.contact_person = do_contact_person_info(confd.contact_person)
+        entd.contact_person = do_contact_persons_info(confd.contact_person)
 
     if confd.entity_category:
         if not entd.extensions:
