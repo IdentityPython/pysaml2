@@ -692,6 +692,17 @@ def entity_descriptor(confd):
     if confd.contact_person is not None:
         entd.contact_person = do_contact_persons_info(confd.contact_person)
 
+    if confd.assurance_certification:
+        if not entd.extensions:
+            entd.extensions = md.Extensions()
+        ava = [AttributeValue(text=c) for c in confd.assurance_certification]
+        attr = Attribute(
+            attribute_value=ava,
+            name="urn:oasis:names:tc:SAML:attribute:assurance-certification"
+        )
+        item = mdattr.EntityAttributes(attribute=attr)
+        entd.extensions.add_extension_element(item)
+
     if confd.entity_category:
         if not entd.extensions:
             entd.extensions = md.Extensions()

@@ -52,6 +52,7 @@ COMMON_ARGS = [
     "disable_ssl_certificate_validation",
     "preferred_binding",
     "session_storage",
+    "assurance_certification",
     "entity_category",
     "xmlsec_path",
     "extension_schemas",
@@ -221,7 +222,8 @@ class Config(object):
         self.preferred_binding = PREFERRED_BINDING
         self.domain = ""
         self.name_qualifier = ""
-        self.entity_category = ""
+        self.assurance_certification = []
+        self.entity_category = []
         self.crypto_backend = 'xmlsec1'
         self.id_attr_name = None
         self.scope = ""
@@ -568,11 +570,11 @@ def config_factory(_type, config):
     """
 
     :type _type: str
-    :param _type: 
-    
+    :param _type:
+
     :type config: str or dict
     :param config: Name of file with pysaml2 config or CONFIG dict
-    
+
     :return:
     """
     if _type == "sp":

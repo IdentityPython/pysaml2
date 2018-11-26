@@ -55,6 +55,24 @@ Configuration directives
 General directives
 ------------------
 
+assurance_certification
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Format::
+
+    "assurance_specification": [
+        "https://refeds.org/sirtfi",
+    ]
+
+Generates an `Attribute` element with name-format
+`urn:oasis:names:tc:SAML:2.0:attrname-format:uri` and name
+`urn:oasis:names:tc:SAML:attribute:assurance-certification` that contains
+`AttributeValue` elements with the given values from the list.
+The element is added under the generated metadata `EntityDescriptor` as an
+`Extension` element under the `EntityAttributes` element.
+
+Read more about `representing assurance information at the specification <https://wiki.oasis-open.org/security/SAML2IDAssuranceProfile>`_.
+
 attribute_map_dir
 ^^^^^^^^^^^^^^^^^
 
@@ -666,7 +684,7 @@ Where the endpoints for the services provided are.
 This directive has as value a dictionary with one or more of the following keys:
 
 * artifact_resolution_service (aa, idp and sp)
-* `assertion_consumer_service <https://wiki.shibboleth.net/confluence/display/CONCEPT/AssertionConsumerService>`_ (sp) 
+* `assertion_consumer_service <https://wiki.shibboleth.net/confluence/display/CONCEPT/AssertionConsumerService>`_ (sp)
 * assertion_id_request_service (aa, idp)
 * attribute_service (aa)
 * manage_name_id_service (aa, idp)
