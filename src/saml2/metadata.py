@@ -667,6 +667,19 @@ def do_pdp_descriptor(conf, cert=None, enc_cert=None):
     return pdp
 
 
+def _add_attr_to_entity_attributes(extensions, attribute):
+    try:
+        entity_attributes = next(filter(
+            lambda el: el.tag == mdattr.EntityAttributes.c_tag,
+            extensions.extension_elements
+        ))
+    except StopIteration:
+        entity_attributes = mdattr.EntityAttributes(attribute=attribute)
+        extensions.add_extension_element(entity_attributes)
+    else:
+        entity_attributes.children.append(attribute)
+
+
 def entity_descriptor(confd):
     mycert = None
     enc_cert = None
@@ -698,19 +711,18 @@ def entity_descriptor(confd):
         ava = [AttributeValue(text=c) for c in confd.assurance_certification]
         attr = Attribute(
             attribute_value=ava,
-            name="urn:oasis:names:tc:SAML:attribute:assurance-certification"
+            name="urn:oasis:names:tc:SAML:attribute:assurance-certification",
         )
-        item = mdattr.EntityAttributes(attribute=attr)
-        entd.extensions.add_extension_element(item)
+        _add_attr_to_entity_attributes(entd.extensions, attr)
 
     if confd.entity_category:
         if not entd.extensions:
             entd.extensions = md.Extensions()
         ava = [AttributeValue(text=c) for c in confd.entity_category]
-        attr = Attribute(attribute_value=ava,
-                         name="http://macedir.org/entity-category")
-        item = mdattr.EntityAttributes(attribute=attr)
-        entd.extensions.add_extension_element(item)
+        attr = Attribute(
+            attribute_value=ava, name="http://macedir.org/entity-category"
+        )
+        _add_attr_to_entity_attributes(entd.extensions, attr)
 
     for item in algorithm_support_in_metadata(confd.xmlsec_binary):
         if not entd.extensions:
