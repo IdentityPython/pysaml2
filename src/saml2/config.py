@@ -54,6 +54,7 @@ COMMON_ARGS = [
     "session_storage",
     "assurance_certification",
     "entity_category",
+    "entity_category_support",
     "xmlsec_path",
     "extension_schemas",
     "cert_handler_extra_class",
@@ -224,6 +225,7 @@ class Config(object):
         self.name_qualifier = ""
         self.assurance_certification = []
         self.entity_category = []
+        self.entity_category_support = []
         self.crypto_backend = 'xmlsec1'
         self.id_attr_name = None
         self.scope = ""
