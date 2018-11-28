@@ -724,6 +724,15 @@ def entity_descriptor(confd):
         )
         _add_attr_to_entity_attributes(entd.extensions, attr)
 
+    if confd.entity_category_support:
+        if not entd.extensions:
+            entd.extensions = md.Extensions()
+        ava = [AttributeValue(text=c) for c in confd.entity_category_support]
+        attr = Attribute(
+            attribute_value=ava, name="http://macedir.org/entity-category-support"
+        )
+        _add_attr_to_entity_attributes(entd.extensions, attr)
+
     for item in algorithm_support_in_metadata(confd.xmlsec_binary):
         if not entd.extensions:
             entd.extensions = md.Extensions()
