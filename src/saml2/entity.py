@@ -1207,8 +1207,6 @@ class Entity(HTTPBase):
             else:
                 response.require_signature = require_signature
                 response = response.verify(keys)
-        except Exception as err:
-            logger.error("Exception verifying assertion: %s" % err)
         else:
             assertions_are_signed = True
         finally:
