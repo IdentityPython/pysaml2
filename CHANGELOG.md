@@ -1,5 +1,14 @@
 # Changelog
 
+## 4.6.5 (2018-12-04)
+
+- Fix for response status error case handling (introduced in v4.6.5)
+- Added assurance-certification support
+- Added entity-category-support support
+
+Thanks @rectalogic @skanct
+
+
 ## 4.6.4 (2018-11-22)
 
 - Make use of the sign argument to entity.Entity::apply_binding when binding is
