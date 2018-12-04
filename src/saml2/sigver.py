@@ -9,11 +9,14 @@ import logging
 import os
 import ssl
 import six
+import warnings
 
 from time import mktime
 from binascii import hexlify
 
-from future.backports.urllib.parse import urlencode
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    from future.backports.urllib.parse import urlencode
 
 import saml2.cryptography.asymmetric
 import saml2.cryptography.pki
