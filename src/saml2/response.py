@@ -360,8 +360,8 @@ class StatusResponse(object):
             if status.status_code.value != samlp.STATUS_SUCCESS:
                 logger.info("Not successful operation: %s", status)
                 if status.status_code.status_code:
-                    excep = STATUSCODE2EXCEPTION[
-                        status.status_code.status_code.value]
+                    excep = STATUSCODE2EXCEPTION.get(
+                        status.status_code.status_code.value, StatusError)
                 else:
                     excep = StatusError
                 if status.status_message:

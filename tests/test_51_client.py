@@ -28,7 +28,7 @@ from saml2.extension.requested_attributes import RequestedAttribute
 from saml2.authn_context import INTERNETPROTOCOLPASSWORD
 from saml2.client import Saml2Client
 from saml2.pack import parse_soap_enveloped_saml
-from saml2.response import LogoutResponse, StatusInvalidNameidPolicy
+from saml2.response import LogoutResponse, StatusInvalidNameidPolicy, StatusError
 from saml2.saml import NAMEID_FORMAT_PERSISTENT, EncryptedAssertion, Advice
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.saml import NameID
@@ -2321,6 +2321,37 @@ class TestClientNonAsciiAva:
 
         # Parse the authentication error response
         with raises(StatusInvalidNameidPolicy):
+            client.parse_authn_request_response(
+                resp_str, BINDING_HTTP_POST,
+                {"id1": "http://foo.example.com/service"})
+
+    def test_response_error_status_non_standard_status_code(self):
+        """ Test that the SP client can parse an authentication response
+        from an IdP that contains an error status."""
+
+        conf = config.SPConfig()
+        conf.load_file("server_conf")
+        client = Saml2Client(conf)
+
+        resp = self.server.create_error_response(
+            in_response_to="id1",
+            destination="http://lingon.catalogix.se:8087/",
+            info=('http://example.com/status/1.0/cancel', None),
+        )
+
+        # Cast the response to a string and encode it to mock up the payload
+        # the SP client is expected to receive via HTTP POST binding.
+        if six.PY2:
+            resp_str = encode_fn(str(resp))
+        else:
+            resp_str = encode_fn(bytes(str(resp), 'utf-8'))
+
+        # We do not need the client to verify a signature for this test.
+        client.want_assertions_signed = False
+        client.want_response_signed = False
+
+        # Parse the authentication error response
+        with raises(StatusError):
             client.parse_authn_request_response(
                 resp_str, BINDING_HTTP_POST,
                 {"id1": "http://foo.example.com/service"})
