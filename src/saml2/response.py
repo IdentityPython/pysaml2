@@ -354,26 +354,29 @@ class StatusResponse(object):
         return self._postamble()
 
     def status_ok(self):
-        if self.response.status:
-            status = self.response.status
-            logger.info("status: %s", status)
-            if status.status_code.value != samlp.STATUS_SUCCESS:
-                logger.info("Not successful operation: %s", status)
-                if status.status_code.status_code:
-                    excep = STATUSCODE2EXCEPTION[
-                        status.status_code.status_code.value]
-                else:
-                    excep = StatusError
-                if status.status_message:
-                    msg = status.status_message.text
-                else:
-                    try:
-                        msg = status.status_code.status_code.value
-                    except Exception:
-                        msg = "Unknown error"
-                raise excep(
-                    "%s from %s" % (msg, status.status_code.value,))
-        return True
+        status = self.response.status
+        logger.info("status: %s", status)
+
+        if not status or status.status_code.value == samlp.STATUS_SUCCESS:
+            return True
+
+        err_code = (
+            status.status_code.status_code.value
+            if status.status_code.status_code
+            else None
+        )
+        err_msg = (
+            status.status_message.text
+            if status.status_message
+            else err_code or "Unknown error"
+        )
+        err_cls = STATUSCODE2EXCEPTION.get(err_code, StatusError)
+
+        msg = "Unsuccessful operation: {status}\n{msg} from {code}".format(
+            status=status, msg=err_msg, code=err_code
+        )
+        logger.info(msg)
+        raise err_cls(msg)
 
     def issue_instant_ok(self):
         """ Check that the response was issued at a reasonable time """
