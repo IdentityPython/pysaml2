@@ -1,6 +1,4 @@
-from future.backports.urllib.parse import parse_qs
-from future.backports.urllib.parse import urlencode
-from future.backports.urllib.parse import urlparse
+from six.moves.urllib import parse
 
 from saml2.entity import Entity
 from saml2.response import VerificationError
@@ -17,10 +15,10 @@ class DiscoveryServer(Entity):
 
     def parse_discovery_service_request(self, url="", query=""):
         if url:
-            part = urlparse(url)
-            dsr = parse_qs(part[4])
+            part = parse.urlparse(url)
+            dsr = parse.parse_qs(part[4])
         elif query:
-            dsr = parse_qs(query)
+            dsr = parse.parse_qs(query)
         else:
             dsr = {}
 
@@ -35,9 +33,9 @@ class DiscoveryServer(Entity):
                 pass
 
         if "return" in dsr:
-            part = urlparse(dsr["return"])
+            part = parse.urlparse(dsr["return"])
             if part.query:
-                qp = parse_qs(part.query)
+                qp = parse.parse_qs(part.query)
                 if "returnIDParam" in dsr:
                     assert dsr["returnIDParam"] not in qp.keys()
                 else:
@@ -74,9 +72,9 @@ class DiscoveryServer(Entity):
             return_url = kwargs["return"]
 
         if entity_id:
-            qp = urlencode({returnIDParam: entity_id})
+            qp = parse.urlencode({returnIDParam: entity_id})
 
-            part = urlparse(return_url)
+            part = parse.urlparse(return_url)
             if part.query:
                 # Iff there is a query part add the new info at the end
                 return_url = "%s&%s" % (return_url, qp)

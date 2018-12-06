@@ -15,10 +15,8 @@ import six
 from saml2.samlp import Extensions
 from saml2 import xmldsig as ds
 
-from future.backports.urllib.parse import parse_qs
-from future.backports.urllib.parse import urlparse
-
 from six import StringIO
+from six.moves.urllib import parse
 
 from paste.httpexceptions import HTTPSeeOther, HTTPRedirection
 from paste.httpexceptions import HTTPNotImplemented
@@ -104,7 +102,7 @@ class SAML2Plugin(object):
         self.discosrv = discovery
         self.idp_query_param = idp_query_param
         self.logout_endpoints = [
-            urlparse(ep)[2] for ep in config.endpoint("single_logout_service")
+            parse.urlparse(ep)[2] for ep in config.endpoint("single_logout_service")
         ]
         try:
             self.metadata = self.conf.metadata
@@ -158,7 +156,7 @@ class SAML2Plugin(object):
             environ["wsgi.input"] = StringIO(body)  # restore the request body
             # as a stream so that everything seems untouched
 
-        post = parse_qs(body)  # parse the POST fields into a dict
+        post = parse.parse_qs(body)  # parse the POST fields into a dict
 
         logger.debug("identify post: %s", post)
 
@@ -218,7 +216,7 @@ class SAML2Plugin(object):
             query = environ.get(key)
             if query:
                 try:
-                    _idp_entity_id = dict(parse_qs(query))[self.idp_query_param][0]
+                    _idp_entity_id = dict(parse.parse_qs(query))[self.idp_query_param][0]
                     if _idp_entity_id in idps:
                         idp_entity_id = _idp_entity_id
                     break
@@ -239,7 +237,7 @@ class SAML2Plugin(object):
                 if self.wayf:
                     if query:
                         try:
-                            wayf_selected = dict(parse_qs(query))["wayf_selected"][0]
+                            wayf_selected = dict(parse.parse_qs(query))["wayf_selected"][0]
                         except KeyError:
                             return self._wayf_redirect(came_from)
                         idp_entity_id = wayf_selected
@@ -385,7 +383,7 @@ class SAML2Plugin(object):
                 if (environ["PATH_INFO"]) in ret and ret.split(environ["PATH_INFO"])[
                     1
                 ] == "":
-                    query = parse_qs(environ["QUERY_STRING"])
+                    query = parse.parse_qs(environ["QUERY_STRING"])
                     sid = query["sid"][0]
                     came_from = self.outstanding_queries[sid]
             except:

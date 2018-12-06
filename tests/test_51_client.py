@@ -4,9 +4,7 @@
 import base64
 import uuid
 import six
-from future.backports.urllib.parse import parse_qs
-from future.backports.urllib.parse import urlencode
-from future.backports.urllib.parse import urlparse
+from six.moves.urllib import parse
 from pytest import raises
 
 from saml2.argtree import add_path
@@ -1378,7 +1376,7 @@ class TestClient:
             relay_state="relay2", sign=True, sigalg=SIG_RSA_SHA256)
 
         loc = info["headers"][0][1]
-        qs = parse_qs(loc[1:])
+        qs = parse.parse_qs(loc[1:])
         assert _leq(qs.keys(),
                     ['SigAlg', 'SAMLRequest', 'RelayState', 'Signature'])
 
@@ -1417,8 +1415,8 @@ class TestClient:
         assert binding == BINDING_HTTP_REDIRECT
 
         loc = info["headers"][0][1]
-        _, _, _, _, qs, _ = urlparse(loc)
-        qs = parse_qs(qs)
+        _, _, _, _, qs, _ = parse.urlparse(loc)
+        qs = parse.parse_qs(qs)
         assert _leq(qs.keys(),
                     ['SigAlg', 'SAMLRequest', 'RelayState', 'Signature'])
 
@@ -2940,7 +2938,7 @@ class TestClientNonAsciiAva:
             relay_state="relay2", sign=True, sigalg=SIG_RSA_SHA256)
 
         loc = info["headers"][0][1]
-        qs = parse_qs(loc[1:])
+        qs = parse.parse_qs(loc[1:])
         assert _leq(qs.keys(),
                     ['SigAlg', 'SAMLRequest', 'RelayState', 'Signature'])
 
@@ -2979,8 +2977,8 @@ class TestClientNonAsciiAva:
         assert binding == BINDING_HTTP_REDIRECT
 
         loc = info["headers"][0][1]
-        _, _, _, _, qs, _ = urlparse(loc)
-        qs = parse_qs(qs)
+        _, _, _, _, qs, _ = parse.urlparse(loc)
+        qs = parse.parse_qs(qs)
         assert _leq(qs.keys(),
                     ['SigAlg', 'SAMLRequest', 'RelayState', 'Signature'])
 
@@ -3076,8 +3074,8 @@ class TestClientWithDummy():
         assert http_args["headers"][0][0] == "Location"
         assert http_args["data"] == []
         redirect_url = http_args["headers"][0][1]
-        _, _, _, _, qs, _ = urlparse(redirect_url)
-        qs_dict = parse_qs(qs)
+        _, _, _, _, qs, _ = parse.urlparse(redirect_url)
+        qs_dict = parse.parse_qs(qs)
         req = self.server.parse_authn_request(qs_dict["SAMLRequest"][0],
                                               binding)
         resp_args = self.server.response_args(req.message, [response_binding])
@@ -3097,8 +3095,8 @@ class TestClientWithDummy():
         assert http_args["headers"][0][0] == "Location"
         assert http_args["data"] == []
         redirect_url = http_args["headers"][0][1]
-        _, _, _, _, qs, _ = urlparse(redirect_url)
-        qs_dict = parse_qs(qs)
+        _, _, _, _, qs, _ = parse.urlparse(redirect_url)
+        qs_dict = parse.parse_qs(qs)
         req = self.server.parse_authn_request(qs_dict["SAMLRequest"][0],
                                               binding)
         resp_args = self.server.response_args(req.message, [response_binding])
@@ -3152,7 +3150,7 @@ class TestClientWithDummy():
         # Here I fake what the client will do
         # create the form post
 
-        http_args["data"] = urlencode(_dic)
+        http_args["data"] = parse.urlencode(_dic)
         http_args["method"] = "POST"
         http_args["dummy"] = _dic["SAMLRequest"]
         http_args["headers"] = [('Content-type',
@@ -3188,7 +3186,7 @@ class TestClientWithDummy():
         # Here I fake what the client will do
         # create the form post
 
-        http_args["data"] = urlencode(_dic)
+        http_args["data"] = parse.urlencode(_dic)
         http_args["method"] = "POST"
         http_args["dummy"] = _dic["SAMLRequest"]
         http_args["headers"] = [('Content-type',

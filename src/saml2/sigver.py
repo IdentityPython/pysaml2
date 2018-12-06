@@ -13,7 +13,7 @@ import six
 from time import mktime
 from binascii import hexlify
 
-from future.backports.urllib.parse import urlencode
+from six.moves.urllib import parse
 
 import saml2.cryptography.asymmetric
 import saml2.cryptography.pki
@@ -578,7 +578,7 @@ def verify_redirect_signature(saml_msg, crypto, cert=None, sigkey=None):
             _args = saml_msg.copy()
             del _args['Signature']  # everything but the signature
             string = '&'.join(
-                [urlencode({k: _args[k]}) for k in _order if k in
+                [parse.urlencode({k: _args[k]}) for k in _order if k in
                  _args]).encode('ascii')
 
             if cert:

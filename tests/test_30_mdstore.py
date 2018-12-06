@@ -4,7 +4,7 @@ import datetime
 import re
 from collections import OrderedDict
 
-from future.backports.urllib.parse import quote_plus
+from six.moves.urllib import parse
 
 from saml2.config import Config
 from saml2.mdstore import MetadataStore, MetaDataExtern
@@ -299,7 +299,7 @@ def test_mdx_service():
     entity_id = "http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"
 
     url = "http://mdx.example.com/entities/{}".format(
-        quote_plus(MetaDataMDX.sha1_entity_transform(entity_id)))
+        parse.quote_plus(MetaDataMDX.sha1_entity_transform(entity_id)))
     responses.add(responses.GET, url, body=TEST_METADATA_STRING, status=200,
                   content_type=SAML_METADATA_CONTENT_TYPE)
 
@@ -315,7 +315,7 @@ def test_mdx_single_sign_on_service():
     entity_id = "http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"
 
     url = "http://mdx.example.com/entities/{}".format(
-        quote_plus(MetaDataMDX.sha1_entity_transform(entity_id)))
+        parse.quote_plus(MetaDataMDX.sha1_entity_transform(entity_id)))
     responses.add(responses.GET, url, body=TEST_METADATA_STRING, status=200,
                   content_type=SAML_METADATA_CONTENT_TYPE)
 
