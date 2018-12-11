@@ -193,18 +193,21 @@ For example::
 
     "metadata" : {
         "local": [
-            "metadata.xml", "vo_metadata.xml"
-            ],
+            "metadata.xml",
+            "vo_metadata.xml",
+        ],
         "remote": [
             {
-                "url":"https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2",
-                "cert":"kalmar2.cert"
-            }],
+                "url": "https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2",
+                "cert": "kalmar2.cert",
+            },
+        ],
         "mdq": [
             {
-                "url":"http://mdq.ukfederation.org.uk/",
-                "cert":"ukfederation-mdq.pem"
-            }],
+                "url": "http://mdq.ukfederation.org.uk/",
+                "cert": "ukfederation-mdq.pem",
+            },
+        ],
     },
 
 The above configuration means that the service should read two aggregate local
