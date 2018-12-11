@@ -212,10 +212,11 @@ For example::
 
 The above configuration means that the service should read two aggregate local
 metadata files, one aggregate metadata file from a remote server, and query a
-remote MDQ server. To verify the authenticity of the metadata aggregate downloaded from the
-remote server and the MDQ server local copies of the metadata signing certificates should be used.
-These public keys must be acquired by some secure out-of-band method before being
-placed on the local file system.
+remote MDQ server. To verify the authenticity of the metadata aggregate
+downloaded from the remote server and the MDQ server local copies of the
+metadata signing certificates should be used.  These public keys must be
+acquired by some secure out-of-band method before being placed on the local
+file system.
 
 organization
 ^^^^^^^^^^^^
