@@ -781,8 +781,8 @@ SAML_METADATA_CONTENT_TYPE = 'application/samlmetadata+xml'
 class MetaDataMDX(InMemoryMetaData):
     """
     Uses the MDQ protocol to fetch entity information.
-    The protocol is defined at 
-    https://datatracker.ietf.org/doc/draft-young-md-query-saml/ 
+    The protocol is defined at:
+    https://datatracker.ietf.org/doc/draft-young-md-query-saml/
     """
 
     @staticmethod
@@ -790,7 +790,7 @@ class MetaDataMDX(InMemoryMetaData):
         return "{{sha1}}{}".format(
             hashlib.sha1(entity_id.encode("utf-8")).hexdigest())
 
-    def __init__(self, url=None, security=None, cert=None, 
+    def __init__(self, url=None, security=None, cert=None,
                  entity_transform=None, **kwargs):
         """
         :params url: mdx service url

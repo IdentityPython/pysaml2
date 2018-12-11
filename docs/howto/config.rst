@@ -183,7 +183,7 @@ the client key in an HTTPS session.
 metadata
 ^^^^^^^^
 
-Contains a list of places where metadata can be found. This can be 
+Contains a list of places where metadata can be found. This can be
 
 * a local file accessible on the server the service runs on
 * a remote URL serving aggregate metadata
@@ -209,7 +209,7 @@ For example::
 
 The above configuration means that the service should read two aggregate local
 metadata files, one aggregate metadata file from a remote server, and query a
-remote MDQ server. To verify the authenticity of the metadata aggregate downloaded from the 
+remote MDQ server. To verify the authenticity of the metadata aggregate downloaded from the
 remot server and the MDQ server local copies of the metadata signing certificates should be used.
 These public keys must be acquired by some secure out-of-band method before being
 placed on the local file system.
