@@ -1,10 +1,12 @@
 Changelog
 =========
 
-4.6.3.2 (2018-10-23)
+4.6.3-1 (2018-10-23)
 -------------------------
 
-Added the SP config parameter: valid_destination_regex
+Tophat Fork.
+
+- Added the SP config parameter: valid_destination_regex
 
 4.6.3 (2018-10-08)
 ------------------
