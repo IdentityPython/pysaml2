@@ -779,7 +779,10 @@ SAML_METADATA_CONTENT_TYPE = 'application/samlmetadata+xml'
 
 
 class MetaDataMDX(InMemoryMetaData):
-    """ Uses the md protocol to fetch entity information
+    """
+    Uses the MDQ protocol to fetch entity information.
+    The protocol is defined at:
+    https://datatracker.ietf.org/doc/draft-young-md-query-saml/
     """
 
     @staticmethod
@@ -787,23 +790,40 @@ class MetaDataMDX(InMemoryMetaData):
         return "{{sha1}}{}".format(
             hashlib.sha1(entity_id.encode("utf-8")).hexdigest())
 
-    def __init__(self, url, entity_transform=None):
+    def __init__(self, url=None, security=None, cert=None,
+                 entity_transform=None, **kwargs):
         """
         :params url: mdx service url
+        :params security: SecurityContext()
+        :params cert: certificate used to check signature of signed metadata
         :params entity_transform: function transforming (e.g. base64,
         sha1 hash or URL quote
         hash) the entity id. It is applied to the entity id before it is
         concatenated with the request URL sent to the MDX server. Defaults to
         sha1 transformation.
         """
-        super(MetaDataMDX, self).__init__(None, '')
+        super(MetaDataMDX, self).__init__(None, **kwargs)
+        if not url:
+            raise SAMLError('URL for MDQ server not specified.')
+
         self.url = url.rstrip('/')
 
         if entity_transform:
             self.entity_transform = entity_transform
         else:
-
             self.entity_transform = MetaDataMDX.sha1_entity_transform
+
+        self.cert = cert
+        self.security = security
+
+        # We assume that the MDQ server will return a single entity
+        # described by a single <EntityDescriptor> element. The protocol
+        # does allow multiple entities to be returned in an
+        # <EntitiesDescriptor> element but we will not currently support
+        # that use case since it is unlikely to be leveraged for most
+        # flows.
+        self.node_name = "%s:%s" % (md.EntityDescriptor.c_namespace,
+                                      md.EntityDescriptor.c_tag)
 
     def load(self, *args, **kwargs):
         # Do nothing
@@ -906,8 +926,17 @@ class MetadataStore(MetaData):
             key = args[1]
             _md = MetaDataLoader(self.attrc, args[1], **_args)
         elif typ == "mdq":
-            key = args[1]
-            _md = MetaDataMDX(args[1])
+            if 'url' in kwargs:
+                key = kwargs['url']
+                url = kwargs['url']
+                cert = kwargs.get('cert')
+                security = self.security
+                entity_transform = kwargs.get('entity_transform', None)
+                _md = MetaDataMDX(url, security, cert, entity_transform)
+            else:
+                key = args[1]
+                url = args[1]
+                _md = MetaDataMDX(url)
         else:
             raise SAMLError("Unknown metadata type '%s'" % typ)
         _md.load()

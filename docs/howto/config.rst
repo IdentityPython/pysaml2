@@ -183,25 +183,40 @@ the client key in an HTTPS session.
 metadata
 ^^^^^^^^
 
-Contains a list of places where metadata can be found. This can be either
-a file accessible on the server the service runs on, or somewhere on the net.::
+Contains a list of places where metadata can be found. This can be
+
+* a local file accessible on the server the service runs on
+* a remote URL serving aggregate metadata
+* a metadata query protocol (MDQ) service URL
+
+For example::
 
     "metadata" : {
         "local": [
-            "metadata.xml", "vo_metadata.xml"
-            ],
+            "metadata.xml",
+            "vo_metadata.xml",
+        ],
         "remote": [
             {
-                "url":"https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2",
-                "cert":"kalmar2.cert"
-            }],
+                "url": "https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2",
+                "cert": "kalmar2.cert",
+            },
+        ],
+        "mdq": [
+            {
+                "url": "http://mdq.ukfederation.org.uk/",
+                "cert": "ukfederation-mdq.pem",
+            },
+        ],
     },
 
-The above configuration means that the service should read two local
-metadata files, and on top of that load one from the net. To verify the
-authenticity of the file downloaded from the net, the local copy of the
-public key should be used.
-This public key must be acquired by some out-of-band method.
+The above configuration means that the service should read two aggregate local
+metadata files, one aggregate metadata file from a remote server, and query a
+remote MDQ server. To verify the authenticity of the metadata aggregate
+downloaded from the remote server and the MDQ server local copies of the
+metadata signing certificates should be used.  These public keys must be
+acquired by some secure out-of-band method before being placed on the local
+file system.
 
 organization
 ^^^^^^^^^^^^
