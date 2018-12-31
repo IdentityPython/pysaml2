@@ -14,6 +14,7 @@ import cryptography.hazmat.primitives.ciphers as _ciphers
 
 
 _warnings.simplefilter('default')
+_warnings.simplefilter('ignore', ImportWarning)
 
 
 class Default(object):
