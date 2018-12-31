@@ -6,15 +6,10 @@ library. Reference: https://cryptography.io/en/latest/fernet/
 
 import base64 as _base64
 import os as _os
-import warnings as _warnings
 
 import cryptography.fernet as _fernet
 import cryptography.hazmat.backends as _backends
 import cryptography.hazmat.primitives.ciphers as _ciphers
-
-
-_warnings.simplefilter('default')
-_warnings.simplefilter('ignore', ImportWarning)
 
 
 class Default(object):
