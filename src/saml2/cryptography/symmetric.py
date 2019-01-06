@@ -13,9 +13,6 @@ import cryptography.hazmat.backends as _backends
 import cryptography.hazmat.primitives.ciphers as _ciphers
 
 
-_warnings.simplefilter('default')
-
-
 class Default(object):
     """The default symmetric cryptography method."""
 
