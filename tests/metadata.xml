@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <ns0:EntitiesDescriptor name="urn:mace:example.com:saml:test"
-                        validUntil="2020-12-04T17:31:07Z"
+                        validUntil="2999-12-04T17:31:07Z"
                         xmlns:ns0="urn:oasis:names:tc:SAML:2.0:metadata">
   <ns0:EntityDescriptor entityID="urn:mace:example.com:saml:roland:sp">
     <ns0:SPSSODescriptor AuthnRequestsSigned="False" WantAssertionsSigned="True"
