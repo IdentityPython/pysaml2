@@ -592,7 +592,6 @@ def verify_redirect_signature(saml_msg, crypto, cert=None, sigkey=None):
 
 
 LOG_LINE = 60 * '=' + '\n%s\n' + 60 * '-' + '\n%s' + 60 * '='
-LOG_LINE_2 = 60 * '=' + '\n%s\n%s\n' + 60 * '-' + '\n%s' + 60 * '='
 
 
 def make_str(txt):
@@ -727,9 +726,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         if xpath:
             com_list.extend(['--node-xpath', xpath])
 
-        (_stdout, _stderr, output) = self._run_xmlsec(
-            com_list, [template], validate_output=False
-        )
+        (_stdout, _stderr, output) = self._run_xmlsec(com_list, [template])
 
         return output
 
@@ -770,9 +767,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         if node_id:
             com_list.extend(['--node-id', node_id])
 
-        (_stdout, _stderr, output) = self._run_xmlsec(
-            com_list, [tmpl], validate_output=False
-        )
+        (_stdout, _stderr, output) = self._run_xmlsec(com_list, [tmpl])
 
         os.unlink(fil)
         if not output:
@@ -799,9 +794,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
             ENC_KEY_CLASS,
         ]
 
-        (_stdout, _stderr, output) = self._run_xmlsec(
-            com_list, [fil], validate_output=False
-        )
+        (_stdout, _stderr, output) = self._run_xmlsec(com_list, [fil])
         return output.decode('utf-8')
 
     def sign_statement(self, statement, node_name, key_file, node_id, id_attr):
@@ -838,7 +831,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
 
         try:
             (stdout, stderr, signed_statement) = self._run_xmlsec(
-                com_list, [fil], validate_output=False
+                com_list, [fil]
             )
 
             # this doesn't work if --store-signatures are used
@@ -888,13 +881,12 @@ class CryptoBackendXmlSec1(CryptoBackend):
 
         return parse_xmlsec_output(stderr)
 
-    def _run_xmlsec(self, com_list, extra_args, validate_output=True):
+    def _run_xmlsec(self, com_list, extra_args):
         """
         Common code to invoke xmlsec and parse the output.
         :param com_list: Key-value parameter list for xmlsec
         :param extra_args: Positional parameters to be appended after all
             key-value parameters
-        :param validate_output: Parse and validate the output
         :result: Whatever xmlsec wrote to an --output temporary file
         """
         with NamedTemporaryFile(suffix='.xml', delete=self._xmlsec_delete_tmpfiles) as ntf:
@@ -912,13 +904,6 @@ class CryptoBackendXmlSec1(CryptoBackend):
                 logger.error(LOG_LINE, p_out, p_err)
                 raise XmlsecError('{err_code}:{err_msg}'.format(
                     err_code=pof.returncode, err_msg=p_err))
-
-            try:
-                if validate_output:
-                    parse_xmlsec_output(p_err)
-            except XmlsecError as exc:
-                logger.error(LOG_LINE_2, p_out, p_err, exc)
-                raise
 
             ntf.seek(0)
             return p_out, p_err, ntf.read()
