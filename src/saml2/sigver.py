@@ -5,6 +5,7 @@ from OpenSSL import crypto
 
 import base64
 import hashlib
+import itertools
 import logging
 import os
 import ssl
@@ -857,7 +858,8 @@ class CryptoBackendXmlSec1(CryptoBackend):
         :param cert_type: The file type of the certificate
         :param node_name: The name of the class that is signed
         :param node_id: The identifier of the node
-        :param id_attr: Should normally be one of 'id', 'Id' or 'ID'
+        :param id_attr: The attribute name for the identifier, normally one of
+            'id','Id' or 'ID'
         :return: Boolean True if the signature was correct otherwise False.
         """
         if not isinstance(signedtext, six.binary_type):
@@ -1350,40 +1352,32 @@ class SecurityContext(object):
         """ Decrypting an encrypted text by the use of a private key.
 
         :param enctext: The encrypted text as a string
+        :param keys: Keys to try to decrypt enctext with
+        :param id_attr: The attribute name for the identifier, normally one of
+            'id','Id' or 'ID'
         :return: The decrypted text
         """
-        _enctext = None
-
-        if not id_attr:
-            id_attr = self.id_attr
+        key_files = []
 
         if not isinstance(keys, list):
             keys = [keys]
 
-        if self.enc_key_files is not None:
-            for _enc_key_file in self.enc_key_files:
-                try:
-                    _enctext = self.crypto.decrypt(enctext, _enc_key_file, id_attr)
-                except XmlsecError as e:
-                    continue
-                else:
-                    if _enctext:
-                        return _enctext
+        keys = [key for key in keys if key]
+        for key in keys:
+            if not isinstance(key, six.binary_type):
+                key = key.encode("ascii")
+            _, key_file = make_temp(key, decode=False, delete=False)
+            key_files.append(key_file)
 
-        for _key in keys:
-            if _key is not None and len(_key.strip()) > 0:
-                if not isinstance(_key, six.binary_type):
-                    _key = str(_key).encode('ascii')
-                _, key_file = make_temp(_key, decode=False)
-                try:
-                    _enctext = self.crypto.decrypt(enctext, key_file, id_attr)
-                except XmlsecError as e:
-                    continue
-                else:
-                    if _enctext:
-                        return _enctext
-
-        return enctext
+        try:
+            dectext = self.decrypt(enctext, key_file=key_files, id_attr=id_attr)
+        except DecryptError as e:
+            raise
+        else:
+            return dectext
+        finally:
+            for key_file in key_files:
+                os.unlink(key_file)
 
     def decrypt(self, enctext, key_file=None, id_attr=''):
         """ Decrypting an encrypted text by the use of a private key.
@@ -1391,26 +1385,27 @@ class SecurityContext(object):
         :param enctext: The encrypted text as a string
         :return: The decrypted text
         """
-        _enctext = None
-
         if not id_attr:
             id_attr = self.id_attr
 
-        if self.enc_key_files is not None:
-            for _enc_key_file in self.enc_key_files:
-                try:
-                    _enctext = self.crypto.decrypt(enctext, _enc_key_file, id_attr)
-                except XmlsecError:
-                    continue
-                else:
-                    if _enctext is not None and len(_enctext) > 0:
-                        return _enctext
+        if not isinstance(key_file, list):
+            key_file = [key_file]
 
-        if key_file is not None and len(key_file.strip()) > 0:
-            _enctext = self.crypto.decrypt(enctext, key_file, id_attr)
-            if _enctext is not None and len(_enctext) > 0:
-                return _enctext
-        return enctext
+        key_files = [
+            key for key in itertools.chain(key_file, self.enc_key_files) if key
+        ]
+        for key_file in key_files:
+            try:
+                dectext = self.crypto.decrypt(enctext, key_file, id_attr)
+            except XmlsecError as e:
+                continue
+            else:
+                if dectext:
+                    return dectext
+
+        errmsg = "No key was able to decrypt the ciphertext. Keys tried: {keys}"
+        errmsg = errmsg.format(keys=key_files)
+        raise DecryptError(errmsg)
 
     def verify_signature(self, signedtext, cert_file=None, cert_type='pem', node_name=NODE_NAME, node_id=None, id_attr=''):
         """ Verifies the signature of a XML document.
@@ -1420,7 +1415,8 @@ class SecurityContext(object):
         :param cert_type: The file type of the certificate
         :param node_name: The name of the class that is signed
         :param node_id: The identifier of the node
-        :param id_attr: Should normally be one of 'id', 'Id' or 'ID'
+        :param id_attr: The attribute name for the identifier, normally one of
+            'id','Id' or 'ID'
         :return: Boolean True if the signature was correct otherwise False.
         """
         # This is only for testing purposes, otherwise when would you receive
@@ -1527,7 +1523,8 @@ class SecurityContext(object):
         :param item: Parsed entity
         :param node_name: The name of the node/class/element that is signed
         :param origdoc: The original XML string
-        :param id_attr:
+        :param id_attr: The attribute name for the identifier, normally one of
+            'id','Id' or 'ID'
         :param must:
         :return:
         """
