@@ -932,14 +932,13 @@ def test_xmlsec_err():
              ("", "", "givenName"): ("Bar", ""), })
     )
 
-    try:
-        sec.sign_statement(assertion, class_name(assertion),
-                           key_file=INVALID_KEY,
-                           node_id=assertion.id)
-    except (XmlsecError, SigverError) as err:  # should throw an exception
-        pass
-    else:
-        assert False
+    with raises(XmlsecError):
+        sec.sign_statement(
+            assertion,
+            class_name(assertion),
+            key_file=INVALID_KEY,
+            node_id=assertion.id,
+        )
 
 
 def test_xmlsec_err_non_ascii_ava():
@@ -961,14 +960,13 @@ def test_xmlsec_err_non_ascii_ava():
              ("", "", "givenName"): ("Bär", ""), })
     )
 
-    try:
-        sec.sign_statement(assertion, class_name(assertion),
-                           key_file=INVALID_KEY,
-                           node_id=assertion.id)
-    except (XmlsecError, SigverError) as err:  # should throw an exception
-        pass
-    else:
-        assert False
+    with raises(XmlsecError):
+        sec.sign_statement(
+            assertion,
+            class_name(assertion),
+            key_file=INVALID_KEY,
+            node_id=assertion.id,
+        )
 
 
 def test_sha256_signing():

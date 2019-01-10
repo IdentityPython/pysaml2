@@ -8,7 +8,7 @@ from six.moves.urllib.parse import parse_qs
 import uuid
 
 from saml2.cert import OpenSSLWrapper
-from saml2.sigver import make_temp, EncryptError, CertificateError
+from saml2.sigver import make_temp, DecryptError, EncryptError, CertificateError
 from saml2.assertion import Policy
 from saml2.authn_context import INTERNETPROTOCOLPASSWORD
 from saml2.saml import NameID, NAMEID_FORMAT_TRANSIENT
@@ -33,6 +33,7 @@ from saml2 import BINDING_HTTP_REDIRECT
 from py.test import raises
 from pathutils import full_path
 import saml2.xmldsig as ds
+
 
 nid = NameID(name_qualifier="foo", format=NAMEID_FORMAT_TRANSIENT,
              text="123456")
@@ -171,7 +172,7 @@ class TestServer1():
             assert attr1.attribute_value[0].text == "Derek"
             assert attr0.friendly_name == "sn"
             assert attr0.attribute_value[0].text == "Jeter"
-        # 
+
         subject = assertion.subject
         assert _eq(subject.keyswv(), ["text", "name_id"])
         assert subject.text == "_aaa"
@@ -613,9 +614,11 @@ class TestServer1():
 
         decr_text_old = copy.deepcopy("%s" % signed_resp)
 
-        decr_text = self.server.sec.decrypt(signed_resp, self.client.config.encryption_keypairs[0]["key_file"])
-
-        assert decr_text == decr_text_old
+        with raises(DecryptError):
+            decr_text = self.server.sec.decrypt(
+                signed_resp,
+                self.client.config.encryption_keypairs[0]["key_file"],
+            )
 
         decr_text = self.server.sec.decrypt(signed_resp, self.client.config.encryption_keypairs[1]["key_file"])
 
@@ -958,7 +961,7 @@ class TestServer1():
         self.verify_advice_assertion(resp, decr_text_2)
 
     def test_encrypted_response_8(self):
-        try:
+        with raises(EncryptError):
             _resp = self.server.create_authn_response(
                 self.ava,
                 "id12",  # in_response_to
@@ -973,13 +976,8 @@ class TestServer1():
                 encrypt_cert_advice="whatever",
                 encrypt_cert_assertion="whatever"
             )
-            assert False, "Must throw an exception"
-        except EncryptError as ex:
-            pass
-        except Exception as ex:
-            assert False, "Wrong exception!"
 
-        try:
+        with raises(EncryptError):
             _resp = self.server.create_authn_response(
                 self.ava,
                 "id12",  # in_response_to
@@ -993,13 +991,8 @@ class TestServer1():
                 pefim=True,
                 encrypt_cert_advice="whatever",
             )
-            assert False, "Must throw an exception"
-        except EncryptError as ex:
-            pass
-        except Exception as ex:
-            assert False, "Wrong exception!"
 
-        try:
+        with raises(EncryptError):
             _resp = self.server.create_authn_response(
                 self.ava,
                 "id12",  # in_response_to
@@ -1013,15 +1006,10 @@ class TestServer1():
                 encrypted_advice_attributes=False,
                 encrypt_cert_assertion="whatever"
             )
-            assert False, "Must throw an exception"
-        except EncryptError as ex:
-            pass
-        except Exception as ex:
-            assert False, "Wrong exception!"
 
         _server = Server("idp_conf_verify_cert")
 
-        try:
+        with raises(CertificateError):
             _resp = _server.create_authn_response(
                 self.ava,
                 "id12",  # in_response_to
@@ -1036,13 +1024,8 @@ class TestServer1():
                 encrypt_cert_advice="whatever",
                 encrypt_cert_assertion="whatever"
             )
-            assert False, "Must throw an exception"
-        except CertificateError as ex:
-            pass
-        except Exception as ex:
-            assert False, "Wrong exception!"
 
-        try:
+        with raises(CertificateError):
             _resp = _server.create_authn_response(
                 self.ava,
                 "id12",  # in_response_to
@@ -1056,13 +1039,8 @@ class TestServer1():
                 pefim=True,
                 encrypt_cert_advice="whatever",
             )
-            assert False, "Must throw an exception"
-        except CertificateError as ex:
-            pass
-        except Exception as ex:
-            assert False, "Wrong exception!"
 
-        try:
+        with raises(CertificateError):
             _resp = _server.create_authn_response(
                 self.ava,
                 "id12",  # in_response_to
@@ -1076,11 +1054,6 @@ class TestServer1():
                 encrypted_advice_attributes=False,
                 encrypt_cert_assertion="whatever"
             )
-            assert False, "Must throw an exception"
-        except CertificateError as ex:
-            pass
-        except Exception as ex:
-            assert False, "Wrong exception!"
 
     def test_encrypted_response_9(self):
         _server = Server("idp_conf_sp_no_encrypt")
@@ -1715,9 +1688,11 @@ class TestServer1NonAsciiAva():
 
         decr_text_old = copy.deepcopy("%s" % signed_resp)
 
-        decr_text = self.server.sec.decrypt(signed_resp, self.client.config.encryption_keypairs[0]["key_file"])
-
-        assert decr_text == decr_text_old
+        with raises(DecryptError):
+            decr_text = self.server.sec.decrypt(
+                signed_resp,
+                self.client.config.encryption_keypairs[0]["key_file"],
+            )
 
         decr_text = self.server.sec.decrypt(signed_resp, self.client.config.encryption_keypairs[1]["key_file"])
 
