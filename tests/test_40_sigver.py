@@ -791,7 +791,7 @@ def test_xbox():
         str(encrypted_assertion), conf.cert_file, pre, "des-192",
         '/*[local-name()="EncryptedAssertion"]/*[local-name()="Assertion"]')
 
-    decr_text = sec.decrypt(enctext)
+    decr_text = sec.decrypt(enctext, key_file=PRIV_KEY)
     _seass = saml.encrypted_assertion_from_string(decr_text)
     assertions = []
     assers = extension_elements_to_elements(_seass.extension_elements,
@@ -844,7 +844,7 @@ def test_xbox_non_ascii_ava():
         str(encrypted_assertion), conf.cert_file, pre, "des-192",
         '/*[local-name()="EncryptedAssertion"]/*[local-name()="Assertion"]')
 
-    decr_text = sec.decrypt(enctext)
+    decr_text = sec.decrypt(enctext, key_file=PRIV_KEY)
     _seass = saml.encrypted_assertion_from_string(decr_text)
     assertions = []
     assers = extension_elements_to_elements(_seass.extension_elements,
