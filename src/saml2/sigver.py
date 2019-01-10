@@ -728,10 +728,8 @@ class CryptoBackendXmlSec1(CryptoBackend):
             com_list.extend(['--node-xpath', xpath])
 
         (_stdout, _stderr, output) = self._run_xmlsec(
-            com_list,
-            [template],
-            exception=DecryptError,
-            validate_output=False)
+            com_list, [template], validate_output=False
+        )
 
         return output
 
@@ -773,10 +771,8 @@ class CryptoBackendXmlSec1(CryptoBackend):
             com_list.extend(['--node-id', node_id])
 
         (_stdout, _stderr, output) = self._run_xmlsec(
-            com_list,
-            [tmpl],
-            exception=EncryptError,
-            validate_output=False)
+            com_list, [tmpl], validate_output=False
+        )
 
         os.unlink(fil)
         if not output:
@@ -804,10 +800,8 @@ class CryptoBackendXmlSec1(CryptoBackend):
         ]
 
         (_stdout, _stderr, output) = self._run_xmlsec(
-            com_list,
-            [fil],
-            exception=DecryptError,
-            validate_output=False)
+            com_list, [fil], validate_output=False
+        )
         return output.decode('utf-8')
 
     def sign_statement(self, statement, node_name, key_file, node_id, id_attr):
@@ -844,9 +838,8 @@ class CryptoBackendXmlSec1(CryptoBackend):
 
         try:
             (stdout, stderr, signed_statement) = self._run_xmlsec(
-                com_list,
-                [fil],
-                validate_output=False)
+                com_list, [fil], validate_output=False
+            )
 
             # this doesn't work if --store-signatures are used
             if stdout == '':
@@ -891,21 +884,17 @@ class CryptoBackendXmlSec1(CryptoBackend):
         if node_id:
             com_list.extend(['--node-id', node_id])
 
-        (_stdout, stderr, _output) = self._run_xmlsec(
-            com_list,
-            [fil],
-            exception=SignatureError)
+        (_stdout, stderr, _output) = self._run_xmlsec(com_list, [fil])
 
         return parse_xmlsec_output(stderr)
 
-    def _run_xmlsec(self, com_list, extra_args, validate_output=True, exception=XmlsecError):
+    def _run_xmlsec(self, com_list, extra_args, validate_output=True):
         """
         Common code to invoke xmlsec and parse the output.
         :param com_list: Key-value parameter list for xmlsec
         :param extra_args: Positional parameters to be appended after all
             key-value parameters
         :param validate_output: Parse and validate the output
-        :param exception: The exception class to raise on errors
         :result: Whatever xmlsec wrote to an --output temporary file
         """
         with NamedTemporaryFile(suffix='.xml', delete=self._xmlsec_delete_tmpfiles) as ntf:

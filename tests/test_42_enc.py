@@ -73,7 +73,8 @@ def test_enc1():
 
     crypto = CryptoBackendXmlSec1(xmlsec_path)
     (_stdout, _stderr, output) = crypto._run_xmlsec(
-        com_list, [tmpl], exception=EncryptError, validate_output=False)
+        com_list, [tmpl], validate_output=False
+    )
 
     print(output)
     assert _stderr == ""
