@@ -678,10 +678,9 @@ class CryptoBackendXmlSec1(CryptoBackend):
         CryptoBackend.__init__(self, **kwargs)
         assert (isinstance(xmlsec_binary, six.string_types))
         self.xmlsec = xmlsec_binary
-        if os.environ.get('PYSAML2_KEEP_XMLSEC_TMP', None):
-            self._xmlsec_delete_tmpfiles = False
-        else:
-            self._xmlsec_delete_tmpfiles = True
+        self._xmlsec_delete_tmpfiles = os.environ.get(
+            'PYSAML2_KEEP_XMLSEC_TMP', False
+        )
 
         try:
             self.non_xml_crypto = RSACrypto(kwargs['rsa_key'])
@@ -817,10 +816,11 @@ class CryptoBackendXmlSec1(CryptoBackend):
             statement = str(statement)
 
         _, fil = make_temp(
-                statement,
-                suffix='.xml',
-                decode=False,
-                delete=self._xmlsec_delete_tmpfiles)
+            statement,
+            suffix='.xml',
+            decode=False,
+            delete=self._xmlsec_delete_tmpfiles,
+        )
 
         com_list = [
             self.xmlsec,
@@ -864,10 +864,11 @@ class CryptoBackendXmlSec1(CryptoBackend):
             signedtext = signedtext.encode('utf-8')
 
         _, fil = make_temp(
-                signedtext,
-                suffix='.xml',
-                decode=False,
-                delete=self._xmlsec_delete_tmpfiles)
+            signedtext,
+            suffix='.xml',
+            decode=False,
+            delete=self._xmlsec_delete_tmpfiles,
+        )
 
         com_list = [
             self.xmlsec,
@@ -1461,11 +1462,14 @@ class SecurityContext(object):
 
             for cert in _certs:
                 if isinstance(cert, six.string_types):
-                    certs.append(make_temp(
-                        pem_format(cert),
-                        suffix='.pem',
-                        decode=False,
-                        delete=self._xmlsec_delete_tmpfiles))
+                    certs.append(
+                        make_temp(
+                            pem_format(cert),
+                            suffix='.pem',
+                            decode=False,
+                            delete=self._xmlsec_delete_tmpfiles,
+                        )
+                    )
                 else:
                     certs.append(cert)
         else:
@@ -1478,7 +1482,8 @@ class SecurityContext(object):
                     pem_format(cert),
                     suffix='.pem',
                     decode=False,
-                    delete=self._xmlsec_delete_tmpfiles)
+                    delete=self._xmlsec_delete_tmpfiles,
+                )
                 for cert in cert_from_instance(item)
             ]
         else:
