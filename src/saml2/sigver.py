@@ -835,19 +835,16 @@ class CryptoBackendXmlSec1(CryptoBackend):
             com_list.extend(['--node-id', node_id])
 
         try:
-            (stdout, stderr, signed_statement) = self._run_xmlsec(
-                com_list, [fil]
-            )
+            (stdout, stderr, output) = self._run_xmlsec(com_list, [fil])
+        except XmlsecError as e:
+            raise SignatureError(com_list)
 
-            # this doesn't work if --store-signatures are used
-            if stdout == '':
-                if signed_statement:
-                    return signed_statement.decode('utf-8')
-
-            logger.error('Signing operation failed :\nstdout : %s\nstderr : %s', stdout, stderr)
-            raise SigverError(stderr)
-        except DecryptError:
-            raise SigverError('Signing failed')
+        # this does not work if --store-signatures is used
+        if output:
+            return output.decode("utf-8")
+        if stdout:
+            return stdout.decode("utf-8")
+        raise SignatureError(stderr)
 
     def validate_signature(self, signedtext, cert_file, cert_type, node_name, node_id, id_attr):
         """
