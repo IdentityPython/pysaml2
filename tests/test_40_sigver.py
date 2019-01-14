@@ -24,6 +24,7 @@ from py.test import raises
 
 from pathutils import full_path
 
+
 SIGNED = full_path("saml_signed.xml")
 UNSIGNED = full_path("saml_unsigned.xml")
 SIMPLE_SAML_PHP_RESPONSE = full_path("simplesamlphp_authnresponse.xml")
@@ -35,6 +36,12 @@ PRIV_KEY = full_path("test.key")
 
 ENC_PUB_KEY = full_path("pki/test_1.crt")
 ENC_PRIV_KEY = full_path("pki/test.key")
+
+INVALID_KEY = full_path("non-existent.key")
+
+IDP_EXAMPLE = full_path("idp_example.xml")
+METADATA_CERT = full_path("metadata_cert.xml")
+
 
 def _eq(l1, l2):
     return set(l1) == set(l2)
@@ -721,7 +728,7 @@ class TestSecurityMetadata():
         conf = config.SPConfig()
         conf.load_file("server_conf")
         md = MetadataStore([saml, samlp], None, conf)
-        md.load("local", full_path("metadata_cert.xml"))
+        md.load("local", METADATA_CERT)
 
         conf.metadata = md
         conf.only_use_keys_in_metadata = False
@@ -742,7 +749,7 @@ class TestSecurityMetadataNonAsciiAva():
         conf = config.SPConfig()
         conf.load_file("server_conf")
         md = MetadataStore([saml, samlp], None, conf)
-        md.load("local", full_path("metadata_cert.xml"))
+        md.load("local", METADATA_CERT)
 
         conf.metadata = md
         conf.only_use_keys_in_metadata = False
@@ -762,7 +769,7 @@ def test_xbox():
     conf = config.SPConfig()
     conf.load_file("server_conf")
     md = MetadataStore([saml, samlp], None, conf)
-    md.load("local", full_path("idp_example.xml"))
+    md.load("local", IDP_EXAMPLE)
 
     conf.metadata = md
     conf.only_use_keys_in_metadata = False
@@ -773,41 +780,50 @@ def test_xbox():
         issue_instant="2009-10-30T13:20:28Z",
         signature=sigver.pre_signature_part("11111", sec.my_cert, 1),
         attribute_statement=do_attribute_statement(
-            {("", "", "surName"): ("Foo", ""),
-             ("", "", "givenName"): ("Bar", ""), })
+            {
+                ("", "", "surName"): ("Foo", ""),
+                ("", "", "givenName"): ("Bar", ""),
+            }
+        )
     )
 
-    sigass = sec.sign_statement(assertion, class_name(assertion),
-                                key_file=full_path("test.key"),
-                                node_id=assertion.id)
+    sigass = sec.sign_statement(
+        assertion,
+        class_name(assertion),
+        key_file=PRIV_KEY,
+        node_id=assertion.id,
+    )
 
     _ass0 = saml.assertion_from_string(sigass)
-
     encrypted_assertion = EncryptedAssertion()
     encrypted_assertion.add_extension_element(_ass0)
 
-    _, pre = make_temp(str(pre_encryption_part()).encode('utf-8'), decode=False)
+    _, pre = make_temp(
+        str(pre_encryption_part()).encode('utf-8'), decode=False
+    )
     enctext = sec.crypto.encrypt(
-        str(encrypted_assertion), conf.cert_file, pre, "des-192",
-        '/*[local-name()="EncryptedAssertion"]/*[local-name()="Assertion"]')
+        str(encrypted_assertion),
+        conf.cert_file,
+        pre,
+        "des-192",
+        '/*[local-name()="EncryptedAssertion"]/*[local-name()="Assertion"]',
+    )
 
-    decr_text = sec.decrypt(enctext)
+    decr_text = sec.decrypt(enctext, key_file=PRIV_KEY)
     _seass = saml.encrypted_assertion_from_string(decr_text)
     assertions = []
-    assers = extension_elements_to_elements(_seass.extension_elements,
-                                            [saml, samlp])
-
-    sign_cert_file = full_path("test.pem")
+    assers = extension_elements_to_elements(
+        _seass.extension_elements, [saml, samlp]
+    )
 
     for ass in assers:
-        _ass = "%s" % ass
-        #_ass = _ass.replace('xsi:nil="true" ', '')
-        #assert sigass == _ass
-        _txt = sec.verify_signature(_ass, sign_cert_file,
-                                    node_name=class_name(assertion))
+        _txt = sec.verify_signature(
+            str(ass), PUB_KEY, node_name=class_name(assertion)
+        )
         if _txt:
             assertions.append(ass)
 
+    assert assertions
     print(assertions)
 
 
@@ -815,7 +831,7 @@ def test_xbox_non_ascii_ava():
     conf = config.SPConfig()
     conf.load_file("server_conf")
     md = MetadataStore([saml, samlp], None, conf)
-    md.load("local", full_path("idp_example.xml"))
+    md.load("local", IDP_EXAMPLE)
 
     conf.metadata = md
     conf.only_use_keys_in_metadata = False
@@ -826,41 +842,50 @@ def test_xbox_non_ascii_ava():
         issue_instant="2009-10-30T13:20:28Z",
         signature=sigver.pre_signature_part("11111", sec.my_cert, 1),
         attribute_statement=do_attribute_statement(
-            {("", "", "surName"): ("Föö", ""),
-             ("", "", "givenName"): ("Bär", ""), })
+            {
+                ("", "", "surName"): ("Föö", ""),
+                ("", "", "givenName"): ("Bär", ""),
+            }
+        )
     )
 
-    sigass = sec.sign_statement(assertion, class_name(assertion),
-                                key_file=full_path("test.key"),
-                                node_id=assertion.id)
+    sigass = sec.sign_statement(
+        assertion,
+        class_name(assertion),
+        key_file=PRIV_KEY,
+        node_id=assertion.id,
+    )
 
     _ass0 = saml.assertion_from_string(sigass)
-
     encrypted_assertion = EncryptedAssertion()
     encrypted_assertion.add_extension_element(_ass0)
 
-    _, pre = make_temp(str(pre_encryption_part()).encode('utf-8'), decode=False)
+    _, pre = make_temp(
+        str(pre_encryption_part()).encode('utf-8'), decode=False
+    )
     enctext = sec.crypto.encrypt(
-        str(encrypted_assertion), conf.cert_file, pre, "des-192",
-        '/*[local-name()="EncryptedAssertion"]/*[local-name()="Assertion"]')
+        str(encrypted_assertion),
+        conf.cert_file,
+        pre,
+        "des-192",
+        '/*[local-name()="EncryptedAssertion"]/*[local-name()="Assertion"]',
+    )
 
-    decr_text = sec.decrypt(enctext)
+    decr_text = sec.decrypt(enctext, key_file=PRIV_KEY)
     _seass = saml.encrypted_assertion_from_string(decr_text)
     assertions = []
-    assers = extension_elements_to_elements(_seass.extension_elements,
-                                            [saml, samlp])
-
-    sign_cert_file = full_path("test.pem")
+    assers = extension_elements_to_elements(
+        _seass.extension_elements, [saml, samlp]
+    )
 
     for ass in assers:
-        _ass = "%s" % ass
-        #_ass = _ass.replace('xsi:nil="true" ', '')
-        #assert sigass == _ass
-        _txt = sec.verify_signature(_ass, sign_cert_file,
-                                    node_name=class_name(assertion))
+        _txt = sec.verify_signature(
+            str(ass), PUB_KEY, node_name=class_name(assertion)
+        )
         if _txt:
             assertions.append(ass)
 
+    assert assertions
     print(assertions)
 
 
@@ -869,7 +894,7 @@ def test_okta():
     conf.load_file("server_conf")
     conf.id_attr_name = 'Id'
     md = MetadataStore([saml, samlp], None, conf)
-    md.load("local", full_path("idp_example.xml"))
+    md.load("local", IDP_EXAMPLE)
 
     conf.metadata = md
     conf.only_use_keys_in_metadata = False
@@ -892,7 +917,7 @@ def test_xmlsec_err():
     conf = config.SPConfig()
     conf.load_file("server_conf")
     md = MetadataStore([saml, samlp], None, conf)
-    md.load("local", full_path("idp_example.xml"))
+    md.load("local", IDP_EXAMPLE)
 
     conf.metadata = md
     conf.only_use_keys_in_metadata = False
@@ -907,21 +932,20 @@ def test_xmlsec_err():
              ("", "", "givenName"): ("Bar", ""), })
     )
 
-    try:
-        sec.sign_statement(assertion, class_name(assertion),
-                           key_file=full_path("tes.key"),
-                           node_id=assertion.id)
-    except (XmlsecError, SigverError) as err:  # should throw an exception
-        pass
-    else:
-        assert False
+    with raises(XmlsecError):
+        sec.sign_statement(
+            assertion,
+            class_name(assertion),
+            key_file=INVALID_KEY,
+            node_id=assertion.id,
+        )
 
 
 def test_xmlsec_err_non_ascii_ava():
     conf = config.SPConfig()
     conf.load_file("server_conf")
     md = MetadataStore([saml, samlp], None, conf)
-    md.load("local", full_path("idp_example.xml"))
+    md.load("local", IDP_EXAMPLE)
 
     conf.metadata = md
     conf.only_use_keys_in_metadata = False
@@ -936,21 +960,20 @@ def test_xmlsec_err_non_ascii_ava():
              ("", "", "givenName"): ("Bär", ""), })
     )
 
-    try:
-        sec.sign_statement(assertion, class_name(assertion),
-                           key_file=full_path("tes.key"),
-                           node_id=assertion.id)
-    except (XmlsecError, SigverError) as err:  # should throw an exception
-        pass
-    else:
-        assert False
+    with raises(XmlsecError):
+        sec.sign_statement(
+            assertion,
+            class_name(assertion),
+            key_file=INVALID_KEY,
+            node_id=assertion.id,
+        )
 
 
 def test_sha256_signing():
     conf = config.SPConfig()
     conf.load_file("server_conf")
     md = MetadataStore([saml, samlp], None, conf)
-    md.load("local", full_path("idp_example.xml"))
+    md.load("local", IDP_EXAMPLE)
 
     conf.metadata = md
     conf.only_use_keys_in_metadata = False
@@ -967,7 +990,7 @@ def test_sha256_signing():
     )
 
     s = sec.sign_statement(assertion, class_name(assertion),
-                           key_file=full_path("test.key"),
+                           key_file=PRIV_KEY,
                            node_id=assertion.id)
     assert s
 
@@ -976,7 +999,7 @@ def test_sha256_signing_non_ascii_ava():
     conf = config.SPConfig()
     conf.load_file("server_conf")
     md = MetadataStore([saml, samlp], None, conf)
-    md.load("local", full_path("idp_example.xml"))
+    md.load("local", IDP_EXAMPLE)
 
     conf.metadata = md
     conf.only_use_keys_in_metadata = False
@@ -993,7 +1016,7 @@ def test_sha256_signing_non_ascii_ava():
     )
 
     s = sec.sign_statement(assertion, class_name(assertion),
-                           key_file=full_path("test.key"),
+                           key_file=PRIV_KEY,
                            node_id=assertion.id)
     assert s
 
