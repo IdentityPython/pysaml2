@@ -254,7 +254,8 @@ class Base(Entity):
             of fulfilling the request, to create a new identifier to represent
             the principal.
         :param kwargs: Extra key word arguments
-        :return: tuple of request ID and <samlp:AuthnRequest> instance
+        :return: either a tuple of request ID and <samlp:AuthnRequest> instance
+                 or a tuple of request ID and str when sign is set to True
         """
         client_crt = None
         if "client_crt" in kwargs:
