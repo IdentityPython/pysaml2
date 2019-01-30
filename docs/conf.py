@@ -11,8 +11,13 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys, os
+from __future__ import unicode_literals
+
+import os
+
 import alabaster
+
+import saml2.version
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -39,15 +44,15 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'pysaml2'
-copyright = u'2010-2011, Roland Hedberg'
+project = 'pysaml2'
+copyright = '2010-2011, Roland Hedberg'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
 # The short X.Y version.
-version = ''
+version = str(saml2.version.version)
 # The full version, including alpha/beta/rc tags.
 release = ''
 
@@ -180,8 +185,13 @@ htmlhelp_basename = 'pysaml2doc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'pysaml2.tex', u'pysaml2 Documentation',
-   u'Roland Hedberg', 'manual'),
+    (
+        'index',
+        'pysaml2.tex',
+        'pysaml2 Documentation',
+        'Roland Hedberg',
+        'manual',
+    ),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of

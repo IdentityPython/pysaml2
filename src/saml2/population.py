@@ -1,7 +1,8 @@
 import logging
+
 import six
+
 from saml2.cache import Cache
-from saml2.ident import code
 
 logger = logging.getLogger(__name__)
 

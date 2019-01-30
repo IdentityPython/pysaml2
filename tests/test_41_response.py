@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import datetime
+import mock
+
 from contextlib import closing
 
 from saml2 import config
@@ -16,7 +19,7 @@ from pathutils import full_path
 
 FALSE_ASSERT_SIGNED = full_path("saml_false_signed.xml")
 
-TIMESLACK = 62000000  # Roughly +- 24 month
+TIMESLACK = 60*5
 
 
 def _eq(l1, l2):
@@ -93,7 +96,10 @@ class TestResponse:
         assert isinstance(resp, StatusResponse)
         assert isinstance(resp, AuthnResponse)
 
-    def test_false_sign(self):
+    @mock.patch('saml2.time_util.datetime')
+    def test_false_sign(self, mock_datetime):
+        mock_datetime.utcnow = mock.Mock(
+            return_value=datetime.datetime(2016, 9, 4, 9, 59, 39))
         with open(FALSE_ASSERT_SIGNED) as fp:
             xml_response = fp.read()
         resp = response_factory(

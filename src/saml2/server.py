@@ -14,6 +14,7 @@ import shelve
 import six
 import threading
 
+import saml2.cryptography.symmetric
 from saml2 import saml
 from saml2 import element_to_extension_element
 from saml2 import class_name
@@ -83,12 +84,12 @@ class Server(Entity):
         self.init_config(stype)
         self.cache = cache
         self.ticket = {}
-        #
         self.session_db = self.choose_session_storage()
-        # Needed for
-        self.symkey = symkey
+        if symkey:
+            self.symkey = symkey.encode()
+        else:
+            self.symkey = saml2.cryptography.symmetric.Default.generate_key()
         self.seed = rndstr()
-        self.iv = os.urandom(16)
         self.lock = threading.Lock()
 
     def getvalid_certificate_str(self):
@@ -113,7 +114,6 @@ class Server(Entity):
             typ, data = _spec
             if typ.lower() == "mongodb":
                 from saml2.mongo_store import SessionStorageMDB
-
                 return SessionStorageMDB(database=data, collection="session")
 
         raise NotImplementedError("No such storage type implemented")
@@ -142,15 +142,12 @@ class Server(Entity):
                 idb = _shelve_compat(addr, writeback=True, protocol=2)
             elif typ == "memcached":
                 import memcache
-
                 idb = memcache.Client(addr)
             elif typ == "dict":  # in-memory dictionary
                 idb = {}
             elif typ == "mongodb":
                 from saml2.mongo_store import IdentMDB
-
                 self.ident = IdentMDB(database=addr, collection="ident")
-
             elif typ == "identdb":
                 mod, clas = addr.rsplit('.', 1)
                 mod = importlib.import_module(mod)
@@ -182,7 +179,6 @@ class Server(Entity):
                     self.eptid = EptidShelve(secret, addr)
                 elif typ == "mongodb":
                     from saml2.mongo_store import EptidMDB
-
                     self.eptid = EptidMDB(secret, database=addr,
                                           collection="eptid")
                 else:
@@ -605,7 +601,7 @@ class Server(Entity):
                       'encrypt_cert_assertion']:
             try:
                 _val = kwargs[param]
-            except:
+            except KeyError:
                 _val = None
 
             if _val is None:

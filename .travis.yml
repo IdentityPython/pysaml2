@@ -1,21 +1,29 @@
-language: python
-
 sudo: false
-
-env:
-  - TOXENV=py27
-  - TOXENV=py34
+language: python
+python:
+  - 2.7
+  - 3.4
+  - 3.5
+  - 3.6
+  - pypy
+  - pypy3
 
 addons:
   apt:
     packages:
-    - xmlsec1
+      - xmlsec1
 
 services:
   - mongodb
 
 install:
-  - pip install -U tox
+  - pip install tox
+  - pip install tox-travis
+  - pip install codecov
 
 script:
+  - codecov --version
   - tox
+
+after_success:
+  - codecov

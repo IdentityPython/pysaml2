@@ -9,10 +9,8 @@ from OpenSSL import crypto
 from os.path import join
 from os import remove
 
-from cryptography.hazmat.backends import default_backend
-from cryptography.x509 import load_pem_x509_certificate
+import saml2.cryptography.pki
 
-backend = default_backend()
 
 class WrongInput(Exception):
     pass
@@ -150,7 +148,6 @@ class OpenSSLWrapper(object):
         cert.set_pubkey(k)
         cert.sign(k, hash_alg)
 
-        filesCreated = False
         try:
             if request:
                 tmp_cert = crypto.dump_certificate_request(crypto.FILETYPE_PEM,
@@ -169,33 +166,18 @@ class OpenSSLWrapper(object):
             else:
                 tmp_key = crypto.dump_privatekey(crypto.FILETYPE_PEM, k)
             if write_to_file:
-                fc = open(c_f, "wt")
-                fk = open(k_f, "wt")
-
-                if request:
+                with open(c_f, 'wt') as fc:
                     fc.write(tmp_cert.decode('utf-8'))
-                else:
-                    fc.write(tmp_cert.decode('utf-8'))
-                fk.write(tmp_key.decode('utf-8'))
-                filesCreated = True
-                try:
-                    fc.close()
-                except:
-                    pass
-
-                try:
-                    fk.close()
-                except:
-                    pass
+                with open(k_f, 'wt') as fk:
+                    fk.write(tmp_key.decode('utf-8'))
                 return c_f, k_f
             return tmp_cert, tmp_key
         except Exception as ex:
             raise CertificateError("Certificate cannot be generated.", ex)
 
     def write_str_to_file(self, file, str_data):
-        f = open(file, "wt")
-        f.write(str_data)
-        f.close()
+        with open(file, 'wt') as f:
+            f.write(str_data)
 
     def read_str_from_file(self, file, type="pem"):
         with open(file, 'rb') as f:
@@ -341,7 +323,8 @@ class OpenSSLWrapper(object):
                 cert_algorithm = cert_algorithm.decode('ascii')
                 cert_str = cert_str.encode('ascii')
 
-            cert_crypto = load_pem_x509_certificate(cert_str, backend)
+            cert_crypto = saml2.cryptography.pki.load_pem_x509_certificate(
+                    cert_str)
 
             try:
                 crypto.verify(ca_cert, cert_crypto.signature,

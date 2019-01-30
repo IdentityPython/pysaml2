@@ -72,8 +72,7 @@ def test_enc1():
                 "--node-xpath", ASSERT_XPATH]
 
     crypto = CryptoBackendXmlSec1(xmlsec_path)
-    (_stdout, _stderr, output) = crypto._run_xmlsec(
-        com_list, [tmpl], exception=EncryptError, validate_output=False)
+    (_stdout, _stderr, output) = crypto._run_xmlsec(com_list, [tmpl])
 
     print(output)
     assert _stderr == ""

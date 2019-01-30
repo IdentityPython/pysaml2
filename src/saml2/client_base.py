@@ -7,6 +7,8 @@ to conclude its tasks.
 """
 import threading
 import six
+import time
+import logging
 
 from saml2.entity import Entity
 
@@ -25,7 +27,6 @@ from saml2.extension import sp_type
 from saml2.extension import requested_attributes
 
 import saml2
-import time
 from saml2.soap import make_soap_enveloped_saml_thingy
 
 from six.moves.urllib.parse import parse_qs
@@ -51,7 +52,7 @@ from saml2.response import AuthnResponse
 from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_PAOS
-import logging
+
 
 logger = logging.getLogger(__name__)
 
@@ -94,7 +95,7 @@ class Base(Entity):
     """ The basic pySAML2 service provider class """
 
     def __init__(self, config=None, identity_cache=None, state_cache=None,
-            virtual_organization="", config_file="", msg_cb=None):
+                 virtual_organization="", config_file="", msg_cb=None):
         """
         :param config: A saml2.config.Config instance
         :param identity_cache: Where the class should store identity information
@@ -119,6 +120,7 @@ class Base(Entity):
             "authn_requests_signed": False,
             "want_assertions_signed": False,
             "want_response_signed": True,
+            "want_assertions_or_response_signed" : False
         }
 
         for attr, val_default in attribute_defaults.items():
@@ -133,10 +135,17 @@ class Base(Entity):
 
             setattr(self, attr, val)
 
-        if self.entity_type == "sp" and not any([self.want_assertions_signed,
-                                                self.want_response_signed]):
-            logger.warning("The SAML service provider accepts unsigned SAML Responses " +
-                           "and Assertions. This configuration is insecure.")
+        if self.entity_type == "sp" and not any(
+            [
+                self.want_assertions_signed,
+                self.want_response_signed,
+                self.want_assertions_or_response_signed,
+            ]
+        ):
+            logger.warning(
+                "The SAML service provider accepts unsigned SAML Responses "
+                "and Assertions. This configuration is insecure."
+            )
 
         self.artifact2response = {}
 
@@ -245,7 +254,8 @@ class Base(Entity):
             of fulfilling the request, to create a new identifier to represent
             the principal.
         :param kwargs: Extra key word arguments
-        :return: tuple of request ID and <samlp:AuthnRequest> instance
+        :return: either a tuple of request ID and <samlp:AuthnRequest> instance
+                 or a tuple of request ID and str when sign is set to True
         """
         client_crt = None
         if "client_crt" in kwargs:
@@ -676,50 +686,50 @@ class Base(Entity):
         :return: An response.AuthnResponse or None
         """
 
-        try:
-            _ = self.config.entityid
-        except KeyError:
+        if not getattr(self.config, 'entityid', None):
             raise SAMLError("Missing entity_id specification")
 
-        resp = None
-        if xmlstr:
-            kwargs = {
-                "outstanding_queries": outstanding,
-                "outstanding_certs": outstanding_certs,
-                "allow_unsolicited": self.allow_unsolicited,
-                "want_assertions_signed": self.want_assertions_signed,
-                "want_response_signed": self.want_response_signed,
-                "return_addrs": self.service_urls(binding=binding),
-                "entity_id": self.config.entityid,
-                "attribute_converters": self.config.attribute_converters,
-                "allow_unknown_attributes":
-                    self.config.allow_unknown_attributes,
-                'conv_info': conv_info
-            }
-            try:
-                resp = self._parse_response(xmlstr, AuthnResponse,
-                                            "assertion_consumer_service",
-                                            binding, **kwargs)
-            except StatusError as err:
-                logger.error("SAML status error: %s", err)
-                raise
-            except UnravelError:
-                return None
-            except Exception as err:
-                logger.error("XML parse error: %s", err)
-                raise
+        if not xmlstr:
+            return None
 
-            if resp is None:
-                return None
-            elif isinstance(resp, AuthnResponse):
-                if resp.assertion is not None and len(
-                        resp.response.encrypted_assertion) == 0:
-                    self.users.add_information_about_person(resp.session_info())
-                    logger.info("--- ADDED person info ----")
-                pass
-            else:
-                logger.error("Response type not supported: %s",
-                             saml2.class_name(resp))
+        kwargs = {
+            "outstanding_queries": outstanding,
+            "outstanding_certs": outstanding_certs,
+            "allow_unsolicited": self.allow_unsolicited,
+            "want_assertions_signed": self.want_assertions_signed,
+            "want_assertions_or_response_signed": self.want_assertions_or_response_signed,
+            "want_response_signed": self.want_response_signed,
+            "return_addrs": self.service_urls(binding=binding),
+            "entity_id": self.config.entityid,
+            "attribute_converters": self.config.attribute_converters,
+            "allow_unknown_attributes":
+                self.config.allow_unknown_attributes,
+            'conv_info': conv_info
+        }
+
+        try:
+            resp = self._parse_response(xmlstr, AuthnResponse,
+                                        "assertion_consumer_service",
+                                        binding, **kwargs)
+        except StatusError as err:
+            logger.error("SAML status error: %s", err)
+            raise
+        except UnravelError:
+            return None
+        except Exception as err:
+            logger.error("XML parse error: %s", err)
+            raise
+
+        if not isinstance(resp, AuthnResponse):
+            logger.error("Response type not supported: %s",
+                         saml2.class_name(resp))
+            return None
+
+        if (resp.assertion and len(resp.response.encrypted_assertion) == 0 and
+                resp.assertion.subject.name_id):
+            self.users.add_information_about_person(resp.session_info())
+            logger.info("--- ADDED person info ----")
+
         return resp
 
     # ------------------------------------------------------------------------

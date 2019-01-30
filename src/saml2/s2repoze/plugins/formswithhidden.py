@@ -37,24 +37,26 @@ _DEFAULT_FORM = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN
 
 HIDDEN_PRE_LINE = """<input type=hidden name="%s" value="%s">"""
 
+
 class FormHiddenPlugin(FormPlugin):
 
     implements(IChallenger, IIdentifier)
 
     # IIdentifier
     def identify(self, environ):
-        logger = environ.get('repoze.who.logger','')
+        logger = environ.get("repoze.who.logger", "")
         logger.info("formplugin identify")
-        #logger and logger.info("environ keys: %s", environ.keys())
+        # logger and logger.info("environ keys: %s", environ.keys())
         query = parse_dict_querystring(environ)
         # If the extractor finds a special query string on any request,
         # it will attempt to find the values in the input body.
         if query.get(self.login_form_qs):
             form = parse_formvars(environ)
             from StringIO import StringIO
+
             # we need to replace wsgi.input because we've read it
             # this smells funny
-            environ['wsgi.input'] = StringIO()
+            environ["wsgi.input"] = StringIO()
             form.update(query)
             qinfo = {}
             for key, val in form.items():
@@ -63,32 +65,31 @@ class FormHiddenPlugin(FormPlugin):
             if qinfo:
                 environ["s2repoze.qinfo"] = qinfo
             try:
-                login = form['login']
-                password = form['password']
+                login = form["login"]
+                password = form["password"]
             except KeyError:
                 return None
             del query[self.login_form_qs]
             query.update(qinfo)
-            environ['QUERY_STRING'] = urllib.urlencode(query)
-            environ['repoze.who.application'] = HTTPFound(
-                                                    construct_url(environ))
-            credentials = {'login':login, 'password':password}
-            max_age = form.get('max_age', None)
+            environ["QUERY_STRING"] = urllib.urlencode(query)
+            environ["repoze.who.application"] = HTTPFound(construct_url(environ))
+            credentials = {"login": login, "password": password}
+            max_age = form.get("max_age", None)
             if max_age is not None:
-                credentials['max_age'] = max_age
+                credentials["max_age"] = max_age
             return credentials
 
         return None
 
     # IChallenger
     def challenge(self, environ, status, app_headers, forget_headers):
-        logger = environ.get('repoze.who.logger','')
+        logger = environ.get("repoze.who.logger", "")
         logger.info("formplugin challenge")
         if app_headers:
             location = LOCATION(app_headers)
             if location:
                 headers = list(app_headers) + list(forget_headers)
-                return HTTPFound(headers = headers)
+                return HTTPFound(headers=headers)
 
         query = parse_dict_querystring(environ)
         hidden = []
@@ -101,22 +102,24 @@ class FormHiddenPlugin(FormPlugin):
 
         if self.formcallable is not None:
             form = self.formcallable(environ)
+
         def auth_form(environ, start_response):
             content_length = CONTENT_LENGTH.tuples(str(len(form)))
-            content_type = CONTENT_TYPE.tuples('text/html')
+            content_type = CONTENT_TYPE.tuples("text/html")
             headers = content_length + content_type + forget_headers
-            start_response('200 OK', headers)
+            start_response("200 OK", headers)
             return [form]
 
         return auth_form
 
 
-def make_plugin(login_form_qs='__do_login', rememberer_name=None, form=None):
+def make_plugin(login_form_qs="__do_login", rememberer_name=None, form=None):
     if rememberer_name is None:
         raise ValueError(
-            'must include rememberer key (name of another IIdentifier plugin)')
+            "must include rememberer key (name of another IIdentifier plugin)"
+        )
     if form is not None:
-        form = open(form).read()
+        with open(form, "r") as f:
+            form = f.read()
     plugin = FormHiddenPlugin(login_form_qs, rememberer_name, form)
     return plugin
-
