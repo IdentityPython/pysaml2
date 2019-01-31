@@ -58,8 +58,7 @@ from saml2.xmlenc import CipherValue
 from saml2.xmlenc import EncryptedData
 
 
-#ENCODING = sys.getdefaultencoding()
-ENCODING = 'utf-8'
+ENCODING = sys.getdefaultencoding()
 
 logger = logging.getLogger(__name__)
 
