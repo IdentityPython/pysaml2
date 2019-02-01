@@ -30,6 +30,7 @@ from saml2.saml import NameID
 from saml2.saml import EncryptedAssertion
 from saml2.saml import Issuer
 from saml2.saml import NAMEID_FORMAT_ENTITY
+from saml2.response import AuthnResponse
 from saml2.response import LogoutResponse
 from saml2.response import UnsolicitedResponse
 from saml2.time_util import instant
@@ -63,7 +64,7 @@ from saml2.httpbase import HTTPBase
 from saml2.sigver import security_context
 from saml2.sigver import response_factory
 from saml2.sigver import SigverError
-from saml2.sigver import CryptoBackendXmlSec1
+from saml2.sigver import SignatureError
 from saml2.sigver import make_temp
 from saml2.sigver import pre_encryption_part
 from saml2.sigver import pre_signature_part
@@ -224,8 +225,9 @@ class Entity(HTTPBase):
             info["method"] = "POST"
         elif binding == BINDING_HTTP_REDIRECT:
             logger.info("HTTP REDIRECT")
-            if kwargs.get('sigalg', ''):
-                signer = self.sec.sec_backend.get_signer(kwargs['sigalg'])
+            sigalg = kwargs.get("sigalg")
+            if sign and sigalg:
+                signer = self.sec.sec_backend.get_signer(sigalg)
             else:
                 signer = None
             info = self.use_http_get(msg_str, destination, relay_state, typ,
@@ -554,7 +556,6 @@ class Entity(HTTPBase):
         _certs = []
 
         if encrypt_cert:
-            _certs = []
             _certs.append(encrypt_cert)
         elif sp_entity_id is not None:
             _certs = self.metadata.certs(sp_entity_id, "any", "encryption")
@@ -1134,15 +1135,29 @@ class Entity(HTTPBase):
             raise
 
         xmlstr = self.unravel(xmlstr, binding, response_cls.msgtype)
-        origxml = xmlstr
         if not xmlstr:  # Not a valid reponse
             return None
 
         try:
-            response = response.loads(xmlstr, False, origxml=origxml)
+            response_is_signed = False
+            # Record the response signature requirement.
+            require_response_signature = response.require_response_signature
+            # Force the requirement that the response be signed in order to
+            # force signature checking to happen so that we can know whether
+            # or not the response is signed. The attribute on the response class
+            # is reset to the recorded value in the finally clause below.
+            response.require_response_signature = True
+            response = response.loads(xmlstr, False, origxml=xmlstr)
         except SigverError as err:
-            logger.error("Signature Error: %s", err)
-            raise
+            if require_response_signature:
+                logger.error("Signature Error: %s", err)
+                raise
+            else:
+                # The response is not signed but a signature is not required
+                # so reset the attribute on the response class to the recorded
+                # value and attempt to consume the unpacked XML again.
+                response.require_response_signature = require_response_signature
+                response = response.loads(xmlstr, False, origxml=xmlstr)
         except UnsolicitedResponse:
             logger.error("Unsolicited response")
             raise
@@ -1150,6 +1165,10 @@ class Entity(HTTPBase):
             if "not well-formed" in "%s" % err:
                 logger.error("Not well-formed XML")
             raise
+        else:
+            response_is_signed = True
+        finally:
+            response.require_response_signature = require_response_signature
 
         logger.debug("XMLSTR: %s", xmlstr)
 
@@ -1169,7 +1188,38 @@ class Entity(HTTPBase):
                 for _cert in cert:
                     keys.append(_cert["key"])
 
-        response = response.verify(keys)
+        try:
+            assertions_are_signed = False
+            # Record the assertions signature requirement.
+            require_signature = response.require_signature
+            # Force the requirement that the assertions be signed in order to
+            # force signature checking to happen so that we can know whether
+            # or not the assertions are signed. The attribute on the response class
+            # is reset to the recorded value in the finally clause below.
+            response.require_signature = True
+            # Verify that the assertion is syntactically correct and the
+            # signature on the assertion is correct if present.
+            response = response.verify(keys)
+        except SignatureError as err:
+            if require_signature:
+                logger.error("Signature Error: %s", err)
+                raise
+            else:
+                response.require_signature = require_signature
+                response = response.verify(keys)
+        else:
+            assertions_are_signed = True
+        finally:
+            response.require_signature = require_signature
+
+        # If so configured enforce that either the response is signed
+        # or the assertions within it are signed.
+        if response.require_signature_or_response_signature:
+            if not response_is_signed and not assertions_are_signed:
+                msg = "Neither the response nor the assertions are signed"
+                logger.error(msg)
+                raise SigverError(msg)
+
         return response
 
     # ------------------------------------------------------------------------

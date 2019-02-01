@@ -1,4 +1,4 @@
-import warnings
+import warnings as _warnings
 import logging
 import six
 import time
@@ -15,7 +15,6 @@ from six.moves.urllib.parse import urlencode, parse_qs, urlsplit
 __author__ = 'rolandh'
 
 logger = logging.getLogger(__name__)
-warnings.simplefilter('default')
 
 
 class AuthnFailure(SAMLError):
@@ -130,7 +129,7 @@ class UsernamePasswordMako(UserAuthnMethod):
             'This attribute is deprecated. '
             'It will be removed in the next version. '
             'Use self.symmetric instead.')
-        warnings.warn(_deprecation_msg, DeprecationWarning)
+        _warnings.warn(_deprecation_msg, DeprecationWarning)
         return self.symmetric
 
     def __call__(self, cookie=None, policy_url=None, logo_url=None,

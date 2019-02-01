@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-
 import calendar
 import logging
 import six
+
 from saml2.samlp import STATUS_VERSION_MISMATCH
 from saml2.samlp import STATUS_AUTHN_FAILED
 from saml2.samlp import STATUS_INVALID_ATTR_NAME_OR_VALUE
@@ -270,6 +270,7 @@ class StatusResponse(object):
         self.signature_check = self.sec.correctly_signed_response
         self.require_signature = False
         self.require_response_signature = False
+        self.require_signature_or_response_signature = False
         self.not_signed = False
         self.asynchop = asynchop
         self.do_not_verify = False
@@ -318,7 +319,10 @@ class StatusResponse(object):
     def _loads(self, xmldata, decode=True, origxml=None):
 
         # own copy
-        self.xmlstr = xmldata[:]
+        if isinstance(xmldata, six.binary_type):
+            self.xmlstr = xmldata[:].decode('utf-8')
+        else:
+            self.xmlstr = xmldata[:]
         logger.debug("xmlstr: %s", self.xmlstr)
         if origxml:
             self.origxml = origxml
@@ -349,26 +353,29 @@ class StatusResponse(object):
         return self._postamble()
 
     def status_ok(self):
-        if self.response.status:
-            status = self.response.status
-            logger.info("status: %s", status)
-            if status.status_code.value != samlp.STATUS_SUCCESS:
-                logger.info("Not successful operation: %s", status)
-                if status.status_code.status_code:
-                    excep = STATUSCODE2EXCEPTION[
-                        status.status_code.status_code.value]
-                else:
-                    excep = StatusError
-                if status.status_message:
-                    msg = status.status_message.text
-                else:
-                    try:
-                        msg = status.status_code.status_code.value
-                    except Exception:
-                        msg = "Unknown error"
-                raise excep(
-                    "%s from %s" % (msg, status.status_code.value,))
-        return True
+        status = self.response.status
+        logger.info("status: %s", status)
+
+        if not status or status.status_code.value == samlp.STATUS_SUCCESS:
+            return True
+
+        err_code = (
+            status.status_code.status_code.value
+            if status.status_code.status_code
+            else None
+        )
+        err_msg = (
+            status.status_message.text
+            if status.status_message
+            else err_code or "Unknown error"
+        )
+        err_cls = STATUSCODE2EXCEPTION.get(err_code, StatusError)
+
+        msg = "Unsuccessful operation: {status}\n{msg} from {code}".format(
+            status=status, msg=err_msg, code=err_code
+        )
+        logger.info(msg)
+        raise err_cls(msg)
 
     def issue_instant_ok(self):
         """ Check that the response was issued at a reasonable time """
@@ -460,7 +467,6 @@ class ManageNameIDResponse(StatusResponse):
 
 # ----------------------------------------------------------------------------
 
-
 class AuthnResponse(StatusResponse):
     """ This is where all the profile compliance is checked.
     This one does saml2int compliance. """
@@ -470,7 +476,9 @@ class AuthnResponse(StatusResponse):
             return_addrs=None, outstanding_queries=None,
             timeslack=0, asynchop=True, allow_unsolicited=False,
             test=False, allow_unknown_attributes=False,
-            want_assertions_signed=False, want_response_signed=False,
+            want_assertions_signed=False,
+            want_assertions_or_response_signed=False,
+            want_response_signed=False,
             conv_info=None, **kwargs):
 
         StatusResponse.__init__(self, sec_context, return_addrs, timeslack,
@@ -489,6 +497,7 @@ class AuthnResponse(StatusResponse):
         self.session_not_on_or_after = 0
         self.allow_unsolicited = allow_unsolicited
         self.require_signature = want_assertions_signed
+        self.require_signature_or_response_signature = want_assertions_or_response_signed
         self.require_response_signature = want_response_signed
         self.test = test
         self.allow_unknown_attributes = allow_unknown_attributes
@@ -565,11 +574,14 @@ class AuthnResponse(StatusResponse):
         # check authn_statement.session_index
 
     def condition_ok(self, lax=False):
+        if not self.assertion.conditions:
+            # Conditions is Optional for Assertion, so, if it's absent, then we
+            # assume that its valid
+            return True
+
         if self.test:
             lax = True
 
-        # The Identity Provider MUST include a <saml:Conditions> element
-        assert self.assertion.conditions
         conditions = self.assertion.conditions
 
         logger.debug("conditions: %s", conditions)
@@ -1081,15 +1093,13 @@ class AuthnResponse(StatusResponse):
                     "session_index": authn_statement.session_index}
 
     def __str__(self):
-        if not isinstance(self.xmlstr, six.string_types):
-            return "%s" % self.xmlstr.decode("utf-8")
-        return "%s" % self.xmlstr
+        return self.xmlstr
 
     def verify_recipient(self, recipient):
         """
         Verify that I'm the recipient of the assertion
-        
-        :param recipient: A URI specifying the entity or location to which an 
+
+        :param recipient: A URI specifying the entity or location to which an
             attesting entity can present the assertion.
         :return: True/False
         """
@@ -1271,6 +1281,14 @@ class AssertionIDResponse(object):
         self.assertion = None
         self.context = "AssertionIdResponse"
         self.signature_check = self.sec.correctly_signed_assertion_id_response
+
+        # Because this class is not a subclass of StatusResponse we need
+        # to add these attributes directly so that the _parse_response()
+        # method of the Entity class can treat instances of this class
+        # like all other responses.
+        self.require_signature = False
+        self.require_response_signature = False
+        self.require_signature_or_response_signature = False
 
     def loads(self, xmldata, decode=True, origxml=None):
         # own copy

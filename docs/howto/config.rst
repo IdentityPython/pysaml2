@@ -55,6 +55,24 @@ Configuration directives
 General directives
 ------------------
 
+assurance_certification
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Format::
+
+    "assurance_specification": [
+        "https://refeds.org/sirtfi",
+    ]
+
+Generates an `Attribute` element with name-format
+`urn:oasis:names:tc:SAML:2.0:attrname-format:uri` and name
+`urn:oasis:names:tc:SAML:attribute:assurance-certification` that contains
+`AttributeValue` elements with the given values from the list.
+The element is added under the generated metadata `EntityDescriptor` as an
+`Extension` element under the `EntityAttributes` element.
+
+Read more about `representing assurance information at the specification <https://wiki.oasis-open.org/security/SAML2IDAssuranceProfile>`_.
+
 attribute_map_dir
 ^^^^^^^^^^^^^^^^^
 
@@ -165,25 +183,40 @@ the client key in an HTTPS session.
 metadata
 ^^^^^^^^
 
-Contains a list of places where metadata can be found. This can be either
-a file accessible on the server the service runs on, or somewhere on the net.::
+Contains a list of places where metadata can be found. This can be
+
+* a local file accessible on the server the service runs on
+* a remote URL serving aggregate metadata
+* a metadata query protocol (MDQ) service URL
+
+For example::
 
     "metadata" : {
         "local": [
-            "metadata.xml", "vo_metadata.xml"
-            ],
+            "metadata.xml",
+            "vo_metadata.xml",
+        ],
         "remote": [
             {
-                "url":"https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2",
-                "cert":"kalmar2.cert"
-            }],
+                "url": "https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2",
+                "cert": "kalmar2.cert",
+            },
+        ],
+        "mdq": [
+            {
+                "url": "http://mdq.ukfederation.org.uk/",
+                "cert": "ukfederation-mdq.pem",
+            },
+        ],
     },
 
-The above configuration means that the service should read two local
-metadata files, and on top of that load one from the net. To verify the
-authenticity of the file downloaded from the net, the local copy of the
-public key should be used.
-This public key must be acquired by some out-of-band method.
+The above configuration means that the service should read two aggregate local
+metadata files, one aggregate metadata file from a remote server, and query a
+remote MDQ server. To verify the authenticity of the metadata aggregate
+downloaded from the remote server and the MDQ server local copies of the
+metadata signing certificates should be used.  These public keys must be
+acquired by some secure out-of-band method before being placed on the local
+file system.
 
 organization
 ^^^^^^^^^^^^
@@ -624,6 +657,33 @@ Example::
         }
     }
 
+want_assertions_or_response_signed
+""""""""""""""""""""
+
+Indicates that *either* the Authentication Response *or* the assertions
+contained within the response to this SP must be signed.
+
+Valid values are True or False. Default value is False.
+
+This configuration directive **does not** override ``want_response_signed``
+or ``want_assertions_signed``. For example, if ``want_response_signed`` is True
+and the Authentication Response is not signed an exception will be thrown
+regardless of the value for this configuration directive.
+
+Thus to configure the SP to accept either a signed response or signed assertions
+set ``want_response_signed`` and ``want_assertions_signed`` both to False and
+this directive to True.
+
+Example::
+
+    "service": {
+        "sp": {
+            "want_response_signed": False,
+            "want_assertions_signed": False,
+            "want_assertions_or_response_signed": True
+        }
+    }
+
 
 idp/aa/sp
 ^^^^^^^^^
@@ -639,7 +699,7 @@ Where the endpoints for the services provided are.
 This directive has as value a dictionary with one or more of the following keys:
 
 * artifact_resolution_service (aa, idp and sp)
-* assertion_consumer_service (sp)
+* `assertion_consumer_service <https://wiki.shibboleth.net/confluence/display/CONCEPT/AssertionConsumerService>`_ (sp)
 * assertion_id_request_service (aa, idp)
 * attribute_service (aa)
 * manage_name_id_service (aa, idp)

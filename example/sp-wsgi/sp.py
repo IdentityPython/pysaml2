@@ -9,6 +9,8 @@ import os
 import re
 import sys
 import xml.dom.minidom
+
+from saml2.client_base import MIME_PAOS
 from saml2.sigver import SignatureError
 
 import six
@@ -47,9 +49,8 @@ from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.samlp import Extensions
 
 logger = logging.getLogger("")
-hdlr = logging.FileHandler('spx.log')
-base_formatter = logging.Formatter(
-    "%(asctime)s %(name)s:%(levelname)s %(message)s")
+hdlr = logging.FileHandler("spx.log")
+base_formatter = logging.Formatter("%(asctime)s %(name)s:%(levelname)s %(message)s")
 
 hdlr.setFormatter(base_formatter)
 logger.addHandler(hdlr)
@@ -91,7 +92,7 @@ def dict_to_table(ava, lev=0, width=1):
             txt.extend(dict_to_table(valarr, lev + 1, width - 1))
             txt.append("</td>\n")
         txt.append("</tr>\n")
-    txt.append('</table>\n')
+    txt.append("</table>\n")
     return txt
 
 
@@ -106,19 +107,19 @@ def handle_static(environ, start_response, path):
     :return: wsgi response for the static file.
     """
     try:
-        data = open(path, 'rb').read()
+        data = open(path, "rb").read()
         if path.endswith(".ico"):
-            resp = Response(data, headers=[('Content-Type', "image/x-icon")])
+            resp = Response(data, headers=[("Content-Type", "image/x-icon")])
         elif path.endswith(".html"):
-            resp = Response(data, headers=[('Content-Type', 'text/html')])
+            resp = Response(data, headers=[("Content-Type", "text/html")])
         elif path.endswith(".txt"):
-            resp = Response(data, headers=[('Content-Type', 'text/plain')])
+            resp = Response(data, headers=[("Content-Type", "text/plain")])
         elif path.endswith(".css"):
-            resp = Response(data, headers=[('Content-Type', 'text/css')])
+            resp = Response(data, headers=[("Content-Type", "text/css")])
         elif path.endswith(".js"):
-            resp = Response(data, headers=[('Content-Type', 'text/javascript')])
+            resp = Response(data, headers=[("Content-Type", "text/javascript")])
         elif path.endswith(".png"):
-            resp = Response(data, headers=[('Content-Type', 'image/png')])
+            resp = Response(data, headers=[("Content-Type", "image/png")])
         else:
             resp = Response(data)
     except IOError:
@@ -128,22 +129,23 @@ def handle_static(environ, start_response, path):
 
 class ECPResponse(object):
     code = 200
-    title = 'OK'
+    title = "OK"
 
     def __init__(self, content):
         self.content = content
 
     # noinspection PyUnusedLocal
     def __call__(self, environ, start_response):
-        start_response('%s %s' % (self.code, self.title),
-                       [('Content-Type', "text/xml")])
+        start_response(
+            "%s %s" % (self.code, self.title), [("Content-Type", "text/xml")]
+        )
         return [self.content]
 
 
 def _expiration(timeout, tformat=None):
     # Wed, 06-Jun-2012 01:34:34 GMT
     if not tformat:
-        tformat = '%a, %d-%b-%Y %T GMT'
+        tformat = "%a, %d-%b-%Y %T GMT"
 
     if timeout == "now":
         return time_util.instant(tformat)
@@ -163,7 +165,7 @@ class Cache(object):
         self.result = {}
 
     def get_user(self, environ):
-        cookie = environ.get("HTTP_COOKIE", '')
+        cookie = environ.get("HTTP_COOKIE", "")
         logger.debug("Cookie: %s", cookie)
         if cookie:
             cookie_obj = SimpleCookie(cookie)
@@ -179,7 +181,7 @@ class Cache(object):
         return None
 
     def delete_cookie(self, environ):
-        cookie = environ.get("HTTP_COOKIE", '')
+        cookie = environ.get("HTTP_COOKIE", "")
         logger.debug("delete cookie: %s", cookie)
         if cookie:
             _name = self.cookie_name
@@ -187,7 +189,7 @@ class Cache(object):
             morsel = cookie_obj.get(_name, None)
             cookie = SimpleCookie()
             cookie[_name] = ""
-            cookie[_name]['path'] = "/"
+            cookie[_name]["path"] = "/"
             logger.debug("Expire: %s", morsel)
             cookie[_name]["expires"] = _expiration("now")
             return cookie.output().split(": ", 1)
@@ -198,7 +200,7 @@ class Cache(object):
         self.uid2user[uid] = user
         cookie = SimpleCookie()
         cookie[self.cookie_name] = uid
-        cookie[self.cookie_name]['path'] = "/"
+        cookie[self.cookie_name]["path"] = "/"
         cookie[self.cookie_name]["expires"] = _expiration(480)
         logger.debug("Cookie expires: %s", cookie[self.cookie_name]["expires"])
         return cookie.output().split(": ", 1)
@@ -225,7 +227,7 @@ class Service(object):
             return None
 
     def unpack_post(self):
-        _dict = parse_qs(get_post(self.environ).decode('utf8'))
+        _dict = parse_qs(get_post(self.environ).decode("utf8"))
         logger.debug("unpack_post:: %s", _dict)
         return dict([(k, v[0]) for k, v in _dict.items()])
 
@@ -249,7 +251,7 @@ class Service(object):
     def operation(self, _dict, binding):
         logger.debug("_operation: %s", _dict)
         if not _dict:
-            resp = BadRequest('Error parsing request or no request')
+            resp = BadRequest("Error parsing request or no request")
             return resp(self.environ, self.start_response)
         else:
             try:
@@ -257,11 +259,13 @@ class Service(object):
             except KeyError:
                 _relay_state = ""
             if "SAMLResponse" in _dict:
-                return self.do(_dict["SAMLResponse"], binding,
-                               _relay_state, mtype="response")
+                return self.do(
+                    _dict["SAMLResponse"], binding, _relay_state, mtype="response"
+                )
             elif "SAMLRequest" in _dict:
-                return self.do(_dict["SAMLRequest"], binding,
-                               _relay_state, mtype="request")
+                return self.do(
+                    _dict["SAMLRequest"], binding, _relay_state, mtype="request"
+                )
 
     def artifact_operation(self, _dict):
         if not _dict:
@@ -313,7 +317,7 @@ class Service(object):
         return self.operation(_dict, BINDING_SOAP)
 
     def not_authn(self):
-        resp = Unauthorized('Unknown user')
+        resp = Unauthorized("Unknown user")
         return resp(self.environ, self.start_response)
 
 
@@ -331,7 +335,8 @@ class User(object):
     @property
     def authn_statement(self):
         xml_doc = xml.dom.minidom.parseString(
-            str(self.response.assertion.authn_statement[0]))
+            str(self.response.assertion.authn_statement[0])
+        )
         return xml_doc.toprettyxml()
 
 
@@ -352,18 +357,24 @@ class ACS(Service):
         # tmp_outstanding_queries = dict(self.outstanding_queries)
         if not response:
             logger.info("Missing Response")
-            resp = Unauthorized('Unknown user')
+            resp = Unauthorized("Unknown user")
             return resp(self.environ, self.start_response)
 
         try:
-            conv_info = {'remote_addr': self.environ['REMOTE_ADDR'],
-                         'request_uri': self.environ['REQUEST_URI'],
-                         'entity_id': self.sp.config.entityid,
-                         'endpoints': self.sp.config.getattr('endpoints', 'sp')}
+            conv_info = {
+                "remote_addr": self.environ["REMOTE_ADDR"],
+                "request_uri": self.environ["REQUEST_URI"],
+                "entity_id": self.sp.config.entityid,
+                "endpoints": self.sp.config.getattr("endpoints", "sp"),
+            }
 
             self.response = self.sp.parse_authn_request_response(
-                response, binding, self.outstanding_queries,
-                self.cache.outstanding_certs, conv_info=conv_info)
+                response,
+                binding,
+                self.outstanding_queries,
+                self.cache.outstanding_certs,
+                conv_info=conv_info,
+            )
         except UnknownPrincipal as excp:
             logger.error("UnknownPrincipal: %s", excp)
             resp = ServiceError("UnknownPrincipal: %s" % (excp,))
@@ -387,15 +398,12 @@ class ACS(Service):
         user = User(self.response.name_id, self.response.ava, self.response)
         cookie = self.cache.set_cookie(user)
 
-        resp = Redirect("/", headers=[
-            cookie,
-        ])
+        resp = Redirect("/", headers=[cookie])
         return resp(self.environ, self.start_response)
 
     def verify_attributes(self, ava):
         logger.info("SP: %s", self.sp.config.entityid)
-        rest = POLICY.get_entity_categories(
-            self.sp.config.entityid, self.sp.metadata)
+        rest = POLICY.get_entity_categories(self.sp.config.entityid, self.sp.metadata)
 
         akeys = [k.lower() for k in ava.keys()]
 
@@ -419,8 +427,16 @@ class ACS(Service):
 
 
 class SSO(object):
-    def __init__(self, sp, environ, start_response, cache=None,
-                 wayf=None, discosrv=None, bindings=None):
+    def __init__(
+        self,
+        sp,
+        environ,
+        start_response,
+        cache=None,
+        wayf=None,
+        discosrv=None,
+        bindings=None,
+    ):
         self.sp = sp
         self.environ = environ
         self.start_response = start_response
@@ -431,8 +447,11 @@ class SSO(object):
         if bindings:
             self.bindings = bindings
         else:
-            self.bindings = [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST,
-                             BINDING_HTTP_ARTIFACT]
+            self.bindings = [
+                BINDING_HTTP_REDIRECT,
+                BINDING_HTTP_POST,
+                BINDING_HTTP_ARTIFACT,
+            ]
         logger.debug("--- SSO ---")
 
     def response(self, binding, http_args, do_not_start_response=False):
@@ -457,7 +476,7 @@ class SSO(object):
         sid_ = sid()
         self.cache.outstanding_queries[sid_] = came_from
         logger.debug("Redirect to WAYF function: %s", self.wayf)
-        return -1, SeeOther(headers=[('Location', "%s?%s" % (self.wayf, sid_))])
+        return -1, SeeOther(headers=[("Location", "%s?%s" % (self.wayf, sid_))])
 
     def _pick_idp(self, came_from):
         """
@@ -470,7 +489,7 @@ class SSO(object):
         logger.debug("[_pick_idp] %s", self.environ)
         if "HTTP_PAOS" in self.environ:
             if self.environ["HTTP_PAOS"] == PAOS_HEADER_INFO:
-                if 'application/vnd.paos+xml' in self.environ["HTTP_ACCEPT"]:
+                if MIME_PAOS in self.environ["HTTP_ACCEPT"]:
                     # Where should I redirect the user to
                     # entityid -> the IdP to use
                     # relay_state -> when back from authentication
@@ -479,24 +498,23 @@ class SSO(object):
 
                     _rstate = rndstr()
                     self.cache.relay_state[_rstate] = geturl(self.environ)
-                    _entityid = _cli.config.ecp_endpoint(
-                        self.environ["REMOTE_ADDR"])
+                    _entityid = _cli.config.ecp_endpoint(self.environ["REMOTE_ADDR"])
 
                     if not _entityid:
                         return -1, ServiceError("No IdP to talk to")
                     logger.debug("IdP to talk to: %s", _entityid)
                     return ecp.ecp_auth_request(_cli, _entityid, _rstate)
                 else:
-                    return -1, ServiceError('Faulty Accept header')
+                    return -1, ServiceError("Faulty Accept header")
             else:
-                return -1, ServiceError('unknown ECP version')
+                return -1, ServiceError("unknown ECP version")
 
         # Find all IdPs
         idps = self.sp.metadata.with_descriptor("idpsso")
 
         idp_entity_id = None
 
-        kaka = self.environ.get("HTTP_COOKIE", '')
+        kaka = self.environ.get("HTTP_COOKIE", "")
         if kaka:
             try:
                 (idp_entity_id, _) = parse_cookie("ve_disco", "SEED_SAW", kaka)
@@ -509,8 +527,7 @@ class SSO(object):
         query = self.environ.get("QUERY_STRING")
         if not idp_entity_id and query:
             try:
-                _idp_entity_id = dict(parse_qs(query))[
-                    self.idp_query_param][0]
+                _idp_entity_id = dict(parse_qs(query))[self.idp_query_param][0]
                 if _idp_entity_id in idps:
                     idp_entity_id = _idp_entity_id
             except KeyError:
@@ -522,8 +539,7 @@ class SSO(object):
             if self.wayf:
                 if query:
                     try:
-                        wayf_selected = dict(parse_qs(query))[
-                            "wayf_selected"][0]
+                        wayf_selected = dict(parse_qs(query))["wayf_selected"][0]
                     except KeyError:
                         return self._wayf_redirect(came_from)
                     idp_entity_id = wayf_selected
@@ -532,23 +548,26 @@ class SSO(object):
             elif self.discosrv:
                 if query:
                     idp_entity_id = _cli.parse_discovery_service_response(
-                        query=self.environ.get("QUERY_STRING"))
+                        query=self.environ.get("QUERY_STRING")
+                    )
                 if not idp_entity_id:
                     sid_ = sid()
                     self.cache.outstanding_queries[sid_] = came_from
                     logger.debug("Redirect to Discovery Service function")
                     eid = _cli.config.entityid
-                    ret = _cli.config.getattr("endpoints",
-                                              "sp")["discovery_response"][0][0]
+                    ret = _cli.config.getattr("endpoints", "sp")["discovery_response"][
+                        0
+                    ][0]
                     ret += "?sid=%s" % sid_
                     loc = _cli.create_discovery_service_request(
-                        self.discosrv, eid, **{"return": ret})
+                        self.discosrv, eid, **{"return": ret}
+                    )
                     return -1, SeeOther(loc)
             elif len(idps) == 1:
                 # idps is a dictionary
                 idp_entity_id = list(idps.keys())[0]
             elif not len(idps):
-                return -1, ServiceError('Misconfiguration')
+                return -1, ServiceError("Misconfiguration")
             else:
                 return -1, NotImplemented("No WAYF or DS present!")
 
@@ -559,14 +578,12 @@ class SSO(object):
         try:
             # Picks a binding to use for sending the Request to the IDP
             _binding, destination = _cli.pick_binding(
-                "single_sign_on_service", self.bindings, "idpsso",
-                entity_id=entity_id)
-            logger.debug("binding: %s, destination: %s", _binding,
-                         destination)
+                "single_sign_on_service", self.bindings, "idpsso", entity_id=entity_id
+            )
+            logger.debug("binding: %s, destination: %s", _binding, destination)
             # Binding here is the response binding that is which binding the
             # IDP should use to return the response.
-            acs = _cli.config.getattr("endpoints", "sp")[
-                "assertion_consumer_service"]
+            acs = _cli.config.getattr("endpoints", "sp")["assertion_consumer_service"]
             # just pick one
             endp, return_binding = acs[0]
 
@@ -574,24 +591,27 @@ class SSO(object):
             cert = None
             if _cli.config.generate_cert_func is not None:
                 cert_str, req_key_str = _cli.config.generate_cert_func()
-                cert = {
-                    "cert": cert_str,
-                    "key": req_key_str
-                }
-                spcertenc = SPCertEnc(x509_data=ds.X509Data(
-                    x509_certificate=ds.X509Certificate(text=cert_str)))
-                extensions = Extensions(extension_elements=[
-                    element_to_extension_element(spcertenc)])
+                cert = {"cert": cert_str, "key": req_key_str}
+                spcertenc = SPCertEnc(
+                    x509_data=ds.X509Data(
+                        x509_certificate=ds.X509Certificate(text=cert_str)
+                    )
+                )
+                extensions = Extensions(
+                    extension_elements=[element_to_extension_element(spcertenc)]
+                )
 
-            req_id, req = _cli.create_authn_request(destination,
-                                                    binding=return_binding,
-                                                    extensions=extensions,
-                                                    nameid_format=NAMEID_FORMAT_PERSISTENT)
+            req_id, req = _cli.create_authn_request(
+                destination,
+                binding=return_binding,
+                extensions=extensions,
+                nameid_format=NAMEID_FORMAT_PERSISTENT,
+            )
             _rstate = rndstr()
             self.cache.relay_state[_rstate] = came_from
-            ht_args = _cli.apply_binding(_binding, "%s" % req, destination,
-                                         relay_state=_rstate,
-                                         sigalg=sigalg)
+            ht_args = _cli.apply_binding(
+                _binding, "%s" % req, destination, relay_state=_rstate, sigalg=sigalg
+            )
             _sid = req_id
 
             if cert is not None:
@@ -599,8 +619,7 @@ class SSO(object):
 
         except Exception as exc:
             logger.exception(exc)
-            resp = ServiceError(
-                "Failed to construct the AuthnRequest: %s" % exc)
+            resp = ServiceError("Failed to construct the AuthnRequest: %s" % exc)
             return resp
 
         # remember the request
@@ -644,7 +663,7 @@ class SLO(Service):
     def do(self, message, binding, relay_state="", mtype="response"):
         try:
             txt = decode_base64_and_inflate(message)
-            is_logout_request = 'LogoutRequest' in txt.split('>', 1)[0]
+            is_logout_request = "LogoutRequest" in txt.split(">", 1)[0]
         except:  # TODO: parse the XML correctly
             is_logout_request = False
 
@@ -662,7 +681,7 @@ class SLO(Service):
 # noinspection PyUnusedLocal
 def not_found(environ, start_response):
     """Called if no URL matches."""
-    resp = NotFound('Not Found')
+    resp = NotFound("Not Found")
     return resp(environ, start_response)
 
 
@@ -678,9 +697,17 @@ def main(environ, start_response, sp):
         return sso.do()
 
     body = dict_to_table(user.data)
-    authn_stmt = cgi.escape(user.authn_statement)
-    body.append('<br><pre>' + authn_stmt + "</pre>")
-    body.append('<br><a href="/logout">logout</a>')
+    body.append(
+        "<br><pre>{authn_stmt}</pre>".format(
+            authn_stmt=cgi.escape(user.authn_statement)
+        )
+    )
+    body.append("<br><a href='/logout'>logout</a>")
+
+    body = [
+        item if not isinstance(item, six.binary_type) else item.encode("utf-8")
+        for item in body
+    ]
 
     resp = Response(body)
     return resp(environ, start_response)
@@ -722,19 +749,19 @@ def logout(environ, start_response, sp):
             binding, http_info = logout_info
 
             if binding == BINDING_HTTP_POST:
-                body = ''.join(http_info['data'])
+                body = "".join(http_info["data"])
                 resp = Response(body)
                 return resp(environ, start_response)
             elif binding == BINDING_HTTP_REDIRECT:
-                for key, value in http_info['headers']:
-                    if key.lower() == 'location':
+                for key, value in http_info["headers"]:
+                    if key.lower() == "location":
                         resp = Redirect(value)
                         return resp(environ, start_response)
 
-                resp = ServiceError('missing Location header')
+                resp = ServiceError("missing Location header")
                 return resp(environ, start_response)
             else:
-                resp = ServiceError('unknown logout binding: %s', binding)
+                resp = ServiceError("unknown logout binding: %s", binding)
                 return resp(environ, start_response)
         else:  # result from logout, should be OK
             pass
@@ -749,9 +776,7 @@ def finish_logout(environ, start_response):
     # remove cookie and stored info
     cookie = CACHE.delete_cookie(environ)
 
-    resp = Response('You are now logged out of this service', headers=[
-        cookie,
-    ])
+    resp = Response("You are now logged out of this service", headers=[cookie])
     return resp(environ, start_response)
 
 
@@ -760,10 +785,10 @@ def finish_logout(environ, start_response):
 # map urls to functions
 urls = [
     # Hmm, place holder, NOT used
-    ('place', ("holder", None)),
-    (r'^$', main),
-    (r'^disco', disco),
-    (r'^logout$', logout),
+    ("place", ("holder", None)),
+    (r"^$", main),
+    (r"^disco", disco),
+    (r"^logout$", logout),
 ]
 
 
@@ -785,6 +810,7 @@ def add_urls():
 
 # ----------------------------------------------------------------------------
 
+
 def metadata(environ, start_response):
     try:
         path = _args.path
@@ -792,11 +818,17 @@ def metadata(environ, start_response):
             path = os.path.dirname(os.path.abspath(__file__))
         if path[-1] != "/":
             path += "/"
-        metadata = create_metadata_string(path + "sp_conf.py", None,
-                                          _args.valid, _args.cert,
-                                          _args.keyfile,
-                                          _args.id, _args.name, _args.sign)
-        start_response('200 OK', [('Content-Type', "text/xml")])
+        metadata = create_metadata_string(
+            path + "sp_conf.py",
+            None,
+            _args.valid,
+            _args.cert,
+            _args.keyfile,
+            _args.id,
+            _args.name,
+            _args.sign,
+        )
+        start_response("200 OK", [("Content-Type", "text/xml")])
         return metadata
     except Exception as ex:
         logger.error("An error occured while creating metadata: %s", ex.message)
@@ -815,7 +847,7 @@ def application(environ, start_response):
         request is done
     :return: The response as a list of lines
     """
-    path = environ.get('PATH_INFO', '').lstrip('/')
+    path = environ.get("PATH_INFO", "").lstrip("/")
     logger.debug("<application> PATH: '%s'", path)
 
     if path == "metadata":
@@ -848,7 +880,7 @@ def application(environ, start_response):
         return resp(environ, start_response)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         from cheroot.wsgi import Server as WSGIServer
         from cheroot.ssl import pyopenssl
@@ -857,30 +889,34 @@ if __name__ == '__main__':
         from cherrypy.wsgiserver import ssl_pyopenssl as pyopenssl
 
     _parser = argparse.ArgumentParser()
-    _parser.add_argument('-d', dest='debug', action='store_true',
-                         help="Print debug information")
-    _parser.add_argument('-D', dest='discosrv',
-                         help="Which disco server to use")
-    _parser.add_argument('-s', dest='seed',
-                         help="Cookie seed")
-    _parser.add_argument('-W', dest='wayf', action='store_true',
-                         help="Which WAYF url to use")
+    _parser.add_argument(
+        "-d", dest="debug", action="store_true", help="Print debug information"
+    )
+    _parser.add_argument("-D", dest="discosrv", help="Which disco server to use")
+    _parser.add_argument("-s", dest="seed", help="Cookie seed")
+    _parser.add_argument(
+        "-W", dest="wayf", action="store_true", help="Which WAYF url to use"
+    )
     _parser.add_argument("config", help="SAML client config")
-    _parser.add_argument('-p', dest='path', help='Path to configuration file.')
-    _parser.add_argument('-v', dest='valid', default="4",
-                         help="How long, in days, the metadata is valid from "
-                              "the time of creation")
-    _parser.add_argument('-c', dest='cert', help='certificate')
-    _parser.add_argument('-i', dest='id',
-                         help="The ID of the entities descriptor in the "
-                              "metadata")
-    _parser.add_argument('-k', dest='keyfile',
-                         help="A file with a key to sign the metadata with")
-    _parser.add_argument('-n', dest='name')
-    _parser.add_argument('-S', dest='sign', action='store_true',
-                         help="sign the metadata")
-    _parser.add_argument('-C', dest='service_conf_module',
-                         help="service config module")
+    _parser.add_argument("-p", dest="path", help="Path to configuration file.")
+    _parser.add_argument(
+        "-v",
+        dest="valid",
+        default="4",
+        help="How long, in days, the metadata is valid from " "the time of creation",
+    )
+    _parser.add_argument("-c", dest="cert", help="certificate")
+    _parser.add_argument(
+        "-i", dest="id", help="The ID of the entities descriptor in the " "metadata"
+    )
+    _parser.add_argument(
+        "-k", dest="keyfile", help="A file with a key to sign the metadata with"
+    )
+    _parser.add_argument("-n", dest="name")
+    _parser.add_argument(
+        "-S", dest="sign", action="store_true", help="sign the metadata"
+    )
+    _parser.add_argument("-C", dest="service_conf_module", help="service config module")
 
     ARGS = {}
     _args = _parser.parse_args()
@@ -933,7 +969,8 @@ if __name__ == '__main__':
     _https = ""
     if service_conf.HTTPS:
         SRV.ssl_adapter = pyopenssl.pyOpenSSLAdapter(
-                SERVER_CERT, SERVER_KEY, CERT_CHAIN)
+            SERVER_CERT, SERVER_KEY, CERT_CHAIN
+        )
         _https = " using SSL/TLS"
     logger.info("Server starting")
     print("SP listening on %s:%s%s" % (HOST, PORT, _https))

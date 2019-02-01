@@ -5,6 +5,7 @@ from OpenSSL import crypto
 
 import base64
 import hashlib
+import itertools
 import logging
 import os
 import ssl
@@ -14,7 +15,7 @@ import six
 from time import mktime
 from binascii import hexlify
 
-from future.backports.urllib.parse import urlencode
+from six.moves.urllib import parse
 
 import saml2.cryptography.asymmetric
 import saml2.cryptography.pki
@@ -313,7 +314,9 @@ def signed_instance_factory(instance, seccont, elements_to_sign=None):
     :return: A class instance if not signed otherwise a string
     """
     if elements_to_sign:
-        signed_xml = str(instance)
+        signed_xml = instance
+        if not isinstance(instance, six.string_types):
+            signed_xml = instance.to_string()
         for (node_name, nodeid) in elements_to_sign:
             signed_xml = seccont.sign_statement(
                 signed_xml, node_name=node_name, node_id=nodeid)
@@ -579,7 +582,7 @@ def verify_redirect_signature(saml_msg, crypto, cert=None, sigkey=None):
             _args = saml_msg.copy()
             del _args['Signature']  # everything but the signature
             string = '&'.join(
-                [urlencode({k: _args[k]}) for k in _order if k in
+                [parse.urlencode({k: _args[k]}) for k in _order if k in
                  _args]).encode('ascii')
 
             if cert:
@@ -590,10 +593,6 @@ def verify_redirect_signature(saml_msg, crypto, cert=None, sigkey=None):
             _sign = base64.b64decode(saml_msg['Signature'])
 
             return bool(signer.verify(string, _sign, _key))
-
-
-LOG_LINE = 60 * '=' + '\n%s\n' + 60 * '-' + '\n%s' + 60 * '='
-LOG_LINE_2 = 60 * '=' + '\n%s\n%s\n' + 60 * '-' + '\n%s' + 60 * '='
 
 
 def make_str(txt):
@@ -683,10 +682,9 @@ class CryptoBackendXmlSec1(CryptoBackend):
         CryptoBackend.__init__(self, **kwargs)
         assert (isinstance(xmlsec_binary, six.string_types))
         self.xmlsec = xmlsec_binary
-        if os.environ.get('PYSAML2_KEEP_XMLSEC_TMP', None):
-            self._xmlsec_delete_tmpfiles = False
-        else:
-            self._xmlsec_delete_tmpfiles = True
+        self._xmlsec_delete_tmpfiles = os.environ.get(
+            'PYSAML2_KEEP_XMLSEC_TMP', False
+        )
 
         try:
             self.non_xml_crypto = RSACrypto(kwargs['rsa_key'])
@@ -715,7 +713,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         :return:
         """
         logger.debug('Encryption input len: %d', len(text))
-        _, fil = make_temp(str(text).encode(), decode=False)
+        _, fil = make_temp(text, decode=False)
 
         com_list = [
             self.xmlsec,
@@ -728,11 +726,10 @@ class CryptoBackendXmlSec1(CryptoBackend):
         if xpath:
             com_list.extend(['--node-xpath', xpath])
 
-        (_stdout, _stderr, output) = self._run_xmlsec(
-            com_list,
-            [template],
-            exception=DecryptError,
-            validate_output=False)
+        try:
+            (_stdout, _stderr, output) = self._run_xmlsec(com_list, [template])
+        except XmlsecError as e:
+            six.raise_from(EncryptError(com_list), e)
 
         return output
 
@@ -746,13 +743,18 @@ class CryptoBackendXmlSec1(CryptoBackend):
         :param key_type: The type of session key to use.
         :return: The encrypted text
         """
+        if six.PY2:
+            _str = unicode
+        else:
+            _str = str
 
         if isinstance(statement, SamlBase):
             statement = pre_encrypt_assertion(statement)
 
-        _, fil = make_temp(str(statement).encode(), decode=False,
-                           delete=False)
-        _, tmpl = make_temp(str(template).encode(), decode=False)
+        _, fil = make_temp(
+            _str(statement), decode=False, delete=self._xmlsec_delete_tmpfiles
+        )
+        _, tmpl = make_temp(_str(template), decode=False)
 
         if not node_xpath:
             node_xpath = ASSERT_XPATH
@@ -769,11 +771,10 @@ class CryptoBackendXmlSec1(CryptoBackend):
         if node_id:
             com_list.extend(['--node-id', node_id])
 
-        (_stdout, _stderr, output) = self._run_xmlsec(
-            com_list,
-            [tmpl],
-            exception=EncryptError,
-            validate_output=False)
+        try:
+            (_stdout, _stderr, output) = self._run_xmlsec(com_list, [tmpl])
+        except XmlsecError as e:
+            six.raise_from(EncryptError(com_list), e)
 
         os.unlink(fil)
         if not output:
@@ -790,7 +791,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         """
 
         logger.debug('Decrypt input len: %d', len(enctext))
-        _, fil = make_temp(str(enctext).encode(), decode=False)
+        _, fil = make_temp(enctext, decode=False)
 
         com_list = [
             self.xmlsec,
@@ -800,11 +801,10 @@ class CryptoBackendXmlSec1(CryptoBackend):
             ENC_KEY_CLASS,
         ]
 
-        (_stdout, _stderr, output) = self._run_xmlsec(
-            com_list,
-            [fil],
-            exception=DecryptError,
-            validate_output=False)
+        try:
+            (_stdout, _stderr, output) = self._run_xmlsec(com_list, [fil])
+        except XmlsecError as e:
+            six.raise_from(DecryptError(com_list), e)
 
         return output.decode(encoding=ENCODING)
 
@@ -824,10 +824,11 @@ class CryptoBackendXmlSec1(CryptoBackend):
             statement = str(statement)
 
         _, fil = make_temp(
-                statement,
-                suffix='.xml',
-                decode=False,
-                delete=self._xmlsec_delete_tmpfiles)
+            statement,
+            suffix='.xml',
+            decode=False,
+            delete=self._xmlsec_delete_tmpfiles,
+        )
 
         com_list = [
             self.xmlsec,
@@ -841,20 +842,16 @@ class CryptoBackendXmlSec1(CryptoBackend):
             com_list.extend(['--node-id', node_id])
 
         try:
-            (stdout, stderr, signed_statement) = self._run_xmlsec(
-                com_list,
-                [fil],
-                validate_output=False)
+            (stdout, stderr, output) = self._run_xmlsec(com_list, [fil])
+        except XmlsecError as e:
+            raise SignatureError(com_list)
 
-            # this doesn't work if --store-signatures are used
-            if stdout == '':
-                if signed_statement:
-                    return signed_statement.decode(encoding=ENCODING)
-
-            logger.error('Signing operation failed :\nstdout : %s\nstderr : %s', stdout, stderr)
-            raise SigverError(stderr)
-        except DecryptError:
-            raise SigverError('Signing failed')
+        # this does not work if --store-signatures is used
+        if output:
+            return output.decode(encoding=ENCODING)
+        if stdout:
+            return stdout.decode(encoding=ENCODING)
+        raise SignatureError(stderr)
 
     def validate_signature(self, signedtext, cert_file, cert_type, node_name, node_id, id_attr):
         """
@@ -865,17 +862,19 @@ class CryptoBackendXmlSec1(CryptoBackend):
         :param cert_type: The file type of the certificate
         :param node_name: The name of the class that is signed
         :param node_id: The identifier of the node
-        :param id_attr: Should normally be one of 'id', 'Id' or 'ID'
+        :param id_attr: The attribute name for the identifier, normally one of
+            'id','Id' or 'ID'
         :return: Boolean True if the signature was correct otherwise False.
         """
         if not isinstance(signedtext, six.binary_type):
-            signedtext = signedtext.encode()
+            signedtext = signedtext.encode('utf-8')
 
         _, fil = make_temp(
-                signedtext,
-                suffix='.xml',
-                decode=False,
-                delete=self._xmlsec_delete_tmpfiles)
+            signedtext,
+            suffix='.xml',
+            decode=False,
+            delete=self._xmlsec_delete_tmpfiles,
+        )
 
         com_list = [
             self.xmlsec,
@@ -889,21 +888,19 @@ class CryptoBackendXmlSec1(CryptoBackend):
         if node_id:
             com_list.extend(['--node-id', node_id])
 
-        (_stdout, stderr, _output) = self._run_xmlsec(
-            com_list,
-            [fil],
-            exception=SignatureError)
+        try:
+            (_stdout, stderr, _output) = self._run_xmlsec(com_list, [fil])
+        except XmlsecError as e:
+            six.raise_from(SignatureError(com_list), e)
 
         return parse_xmlsec_output(stderr)
 
-    def _run_xmlsec(self, com_list, extra_args, validate_output=True, exception=XmlsecError):
+    def _run_xmlsec(self, com_list, extra_args):
         """
         Common code to invoke xmlsec and parse the output.
         :param com_list: Key-value parameter list for xmlsec
         :param extra_args: Positional parameters to be appended after all
             key-value parameters
-        :param validate_output: Parse and validate the output
-        :param exception: The exception class to raise on errors
         :result: Whatever xmlsec wrote to an --output temporary file
         """
         with NamedTemporaryFile(suffix='.xml', delete=self._xmlsec_delete_tmpfiles) as ntf:
@@ -917,17 +914,12 @@ class CryptoBackendXmlSec1(CryptoBackend):
             p_out = p_out.decode(encoding=ENCODING)
             p_err = p_err.decode(encoding=ENCODING)
 
-            if pof.returncode is not None and pof.returncode < 0:
-                logger.error(LOG_LINE, p_out, p_err)
-                raise XmlsecError('{err_code}:{err_msg}'.format(
-                    err_code=pof.returncode, err_msg=p_err))
-
-            try:
-                if validate_output:
-                    parse_xmlsec_output(p_err)
-            except XmlsecError as exc:
-                logger.error(LOG_LINE_2, p_out, p_err, exc)
-                raise
+            if pof.returncode != 0:
+                errmsg = "returncode={code}\nerror={err}\noutput={out}".format(
+                    code=pof.returncode, err=p_err, out=p_out
+                )
+                logger.error(errmsg)
+                raise XmlsecError(errmsg)
 
             ntf.seek(0)
             return p_out, p_err, ntf.read()
@@ -972,7 +964,10 @@ class CryptoBackendXMLSecurity(CryptoBackend):
 
         xml = xmlsec.parse_xml(statement)
         signed = xmlsec.sign(xml, key_file)
-        return lxml.etree.tostring(signed, xml_declaration=True)
+        signed_str = lxml.etree.tostring(signed, xml_declaration=False, encoding="UTF-8")
+        if not isinstance(signed_str, six.string_types):
+            signed_str = signed_str.decode("utf-8")
+        return signed_str
 
     def validate_signature(self, signedtext, cert_file, cert_type, node_name, node_id, id_attr):
         """
@@ -1364,32 +1359,32 @@ class SecurityContext(object):
         """ Decrypting an encrypted text by the use of a private key.
 
         :param enctext: The encrypted text as a string
+        :param keys: Keys to try to decrypt enctext with
+        :param id_attr: The attribute name for the identifier, normally one of
+            'id','Id' or 'ID'
         :return: The decrypted text
         """
-        _enctext = None
-
-        if not id_attr:
-            id_attr = self.id_attr
+        key_files = []
 
         if not isinstance(keys, list):
             keys = [keys]
 
-        if self.enc_key_files is not None:
-            for _enc_key_file in self.enc_key_files:
-                _enctext = self.crypto.decrypt(enctext, _enc_key_file, id_attr)
-                if _enctext is not None and len(_enctext) > 0:
-                    return _enctext
+        keys = [key for key in keys if key]
+        for key in keys:
+            if not isinstance(key, six.binary_type):
+                key = key.encode("ascii")
+            _, key_file = make_temp(key, decode=False, delete=False)
+            key_files.append(key_file)
 
-        for _key in keys:
-            if _key is not None and len(_key.strip()) > 0:
-                if not isinstance(_key, six.binary_type):
-                    _key = str(_key).encode('ascii')
-                _, key_file = make_temp(_key, decode=False)
-                _enctext = self.crypto.decrypt(enctext, key_file, id_attr)
-                if _enctext is not None and len(_enctext) > 0:
-                    return _enctext
-
-        return enctext
+        try:
+            dectext = self.decrypt(enctext, key_file=key_files, id_attr=id_attr)
+        except DecryptError as e:
+            raise
+        else:
+            return dectext
+        finally:
+            for key_file in key_files:
+                os.unlink(key_file)
 
     def decrypt(self, enctext, key_file=None, id_attr=''):
         """ Decrypting an encrypted text by the use of a private key.
@@ -1397,23 +1392,27 @@ class SecurityContext(object):
         :param enctext: The encrypted text as a string
         :return: The decrypted text
         """
-        _enctext = None
-
         if not id_attr:
             id_attr = self.id_attr
 
-        if self.enc_key_files is not None:
-            for _enc_key_file in self.enc_key_files:
-                _enctext = self.crypto.decrypt(enctext, _enc_key_file, id_attr)
-                if _enctext is not None and len(_enctext) > 0:
-                    return _enctext
+        if not isinstance(key_file, list):
+            key_file = [key_file]
 
-        if key_file is not None and len(key_file.strip()) > 0:
-            _enctext = self.crypto.decrypt(enctext, key_file, id_attr)
-            if _enctext is not None and len(_enctext) > 0:
-                return _enctext
+        key_files = [
+            key for key in itertools.chain(key_file, self.enc_key_files) if key
+        ]
+        for key_file in key_files:
+            try:
+                dectext = self.crypto.decrypt(enctext, key_file, id_attr)
+            except XmlsecError as e:
+                continue
+            else:
+                if dectext:
+                    return dectext
 
-        return enctext
+        errmsg = "No key was able to decrypt the ciphertext. Keys tried: {keys}"
+        errmsg = errmsg.format(keys=key_files)
+        raise DecryptError(errmsg)
 
     def verify_signature(self, signedtext, cert_file=None, cert_type='pem', node_name=NODE_NAME, node_id=None, id_attr=''):
         """ Verifies the signature of a XML document.
@@ -1423,7 +1422,8 @@ class SecurityContext(object):
         :param cert_type: The file type of the certificate
         :param node_name: The name of the class that is signed
         :param node_id: The identifier of the node
-        :param id_attr: Should normally be one of 'id', 'Id' or 'ID'
+        :param id_attr: The attribute name for the identifier, normally one of
+            'id','Id' or 'ID'
         :return: Boolean True if the signature was correct otherwise False.
         """
         # This is only for testing purposes, otherwise when would you receive
@@ -1465,11 +1465,14 @@ class SecurityContext(object):
 
             for cert in _certs:
                 if isinstance(cert, six.string_types):
-                    certs.append(make_temp(
-                        pem_format(cert),
-                        suffix='.pem',
-                        decode=False,
-                        delete=self._xmlsec_delete_tmpfiles))
+                    certs.append(
+                        make_temp(
+                            pem_format(cert),
+                            suffix='.pem',
+                            decode=False,
+                            delete=self._xmlsec_delete_tmpfiles,
+                        )
+                    )
                 else:
                     certs.append(cert)
         else:
@@ -1482,14 +1485,15 @@ class SecurityContext(object):
                     pem_format(cert),
                     suffix='.pem',
                     decode=False,
-                    delete=self._xmlsec_delete_tmpfiles)
+                    delete=self._xmlsec_delete_tmpfiles,
+                )
                 for cert in cert_from_instance(item)
             ]
         else:
-            logger.debug('==== Certs from metadata ==== %s: %s ====', issuer, certs)
+            logger.debug('==== Certs from metadata ==== %s: %s ====', _issuer, certs)
 
         if not certs:
-            raise MissingKey(issuer)
+            raise MissingKey(_issuer)
 
         verified = False
         last_pem_file = None
@@ -1506,9 +1510,6 @@ class SecurityContext(object):
                     verified = True
                     break
             except XmlsecError as exc:
-                logger.error('check_sig: %s', exc)
-                pass
-            except SignatureError as exc:
                 logger.error('check_sig: %s', exc)
                 pass
             except Exception as exc:
@@ -1529,7 +1530,8 @@ class SecurityContext(object):
         :param item: Parsed entity
         :param node_name: The name of the node/class/element that is signed
         :param origdoc: The original XML string
-        :param id_attr:
+        :param id_attr: The attribute name for the identifier, normally one of
+            'id','Id' or 'ID'
         :param must:
         :return:
         """

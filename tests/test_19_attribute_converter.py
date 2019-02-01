@@ -192,7 +192,7 @@ class TestAC():
         ava = to_local(self.acs, ats, True)
         assert ava == {'eduPersonAffiliation': ['staff'],
                        'givenName': ['Roland'], 'sn': ['Hedberg'],
-                       'swissEduPersonHomeOrganizationType': ['others'],
+                       'urn:oid:2.16.756.1.2.5.1.1.5': ['others'],
                        'uid': ['demouser'], 'urn:example:com:foo': ['Thing'],
                        'user_id': ['bob']}
 

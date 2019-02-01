@@ -785,14 +785,12 @@ class SamlBase(ExtensionContainer):
         """
 
         for prop, _typ, _req in self.c_attributes.values():
-            # print("# %s" % (prop))
             if prop in ava:
-                if isinstance(ava[prop], bool):
-                    setattr(self, prop, "%s" % ava[prop])
-                elif isinstance(ava[prop], int):
-                    setattr(self, prop, "%d" % ava[prop])
+                value = ava[prop]
+                if isinstance(value, (bool, int)):
+                    setattr(self, prop, str(value))
                 else:
-                    setattr(self, prop, ava[prop])
+                    setattr(self, prop, value)
 
         if "text" in ava:
             self.set_text(ava["text"], base64encode)

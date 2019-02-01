@@ -89,26 +89,6 @@ def ac_factory(path=""):
     return acs
 
 
-def ac_factory_II(path):
-    return ac_factory(path)
-
-
-# def ava_fro(acs, statement):
-#     """  Translates attributes according to their name_formats into the local
-#      names.
-#
-#     :param acs: AttributeConverter instances
-#     :param statement: A SAML statement
-#     :return: A dictionary with attribute names replaced with local names.
-#     """
-#     if not statement:
-#         return {}
-#
-#     acsdic = dict([(ac.name_format, ac) for ac in acs])
-#     acsdic[None] = acsdic[NAME_FORMAT_URI]
-#     return dict([acsdic[a.name_format].ava_from(a) for a in statement])
-
-
 def to_local(acs, statement, allow_unknown_attributes=False):
     """ Replaces the attribute names in a attribute value assertion with the
     equivalent name from a local name format.
@@ -118,42 +98,7 @@ def to_local(acs, statement, allow_unknown_attributes=False):
     :param allow_unknown_attributes: If unknown attributes are allowed
     :return: A key,values dictionary
     """
-    if not acs:
-        acs = [AttributeConverter()]
-        acsd = {"": acs}
-    else:
-        acsd = dict([(a.name_format, a) for a in acs])
-
-    ava = {}
-    for attr in statement.attribute:
-        try:
-            _func = acsd[attr.name_format].ava_from
-        except KeyError:
-            if attr.name_format == NAME_FORMAT_UNSPECIFIED or \
-                    allow_unknown_attributes:
-                _func = acs[0].lcd_ava_from
-            else:
-                logger.info("Unsupported attribute name format: %s",
-                    attr.name_format)
-                continue
-
-        try:
-            key, val = _func(attr)
-        except KeyError:
-            if allow_unknown_attributes:
-                key, val = acs[0].lcd_ava_from(attr)
-            else:
-                logger.info("Unknown attribute name: %s", attr)
-                continue
-        except AttributeError:
-            continue
-
-        try:
-            ava[key].extend(val)
-        except KeyError:
-            ava[key] = val
-
-    return ava
+    return list_to_local(acs, statement.attribute, allow_unknown_attributes)
 
 
 def list_to_local(acs, attrlist, allow_unknown_attributes=False):
@@ -313,23 +258,15 @@ class AttributeConverter(object):
 
     def lcd_ava_from(self, attribute):
         """
-        In nothing else works, this should
+        If nothing else works, this should
 
-        :param attribute: An Attribute Instance
+        :param attribute: an Attribute instance
         :return:
         """
-        try:
-            name = attribute.friendly_name.strip()
-        except AttributeError:
-            name = attribute.name.strip()
-
-        values = []
-        for value in attribute.attribute_value:
-            if not value.text:
-                values.append('')
-            else:
-                values.append(value.text.strip())
-
+        name = attribute.name.strip()
+        values = [
+            (value.text or '').strip()
+            for value in attribute.attribute_value]
         return name, values
 
     def fail_safe_fro(self, statement):

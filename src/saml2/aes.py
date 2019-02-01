@@ -8,8 +8,6 @@ _deprecation_msg = (
     'It will be removed in the next version. '
     'Use saml2.cryptography.symmetric instead.'
 ).format(name=__name__, type='module')
-
-_warnings.simplefilter('default')
 _warnings.warn(_deprecation_msg, DeprecationWarning)
 
 
