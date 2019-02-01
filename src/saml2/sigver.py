@@ -776,10 +776,6 @@ class CryptoBackendXmlSec1(CryptoBackend):
         except XmlsecError as e:
             six.raise_from(EncryptError(com_list), e)
 
-        os.unlink(fil)
-        if not output:
-            raise EncryptError(_stderr)
-
         return output.decode(encoding=ENCODING)
 
     def decrypt(self, enctext, key_file, id_attr):
