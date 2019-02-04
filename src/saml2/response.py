@@ -45,6 +45,7 @@ from saml2.saml import SCM_HOLDER_OF_KEY
 from saml2.saml import SCM_SENDER_VOUCHES
 from saml2.saml import encrypted_attribute_from_string
 from saml2.sigver import security_context
+from saml2.sigver import DecryptError
 from saml2.sigver import SignatureError
 from saml2.sigver import signed
 from saml2.attribute_converter import to_local
@@ -896,7 +897,6 @@ class AuthnResponse(StatusResponse):
         :param resp: A saml response.
         :return: True encrypted data exists otherwise false.
         """
-        _has_encrypt_data = False
         if resp.encrypted_assertion:
             res = self.find_encrypt_data_assertion(resp.encrypted_assertion)
             if res:
@@ -921,22 +921,16 @@ class AuthnResponse(StatusResponse):
         if self.context == "AuthnQuery":
             # can contain one or more assertions
             pass
-        else:  # This is a saml2int limitation
+        else:
+            # This is a saml2int limitation
             try:
-                assert len(self.response.assertion) == 1 or \
-                       len(self.response.encrypted_assertion) == 1 or \
-                       self.assertion is not None
+                assert (
+                    len(self.response.assertion) == 1
+                    or len(self.response.encrypted_assertion) == 1
+                    or self.assertion is not None
+                )
             except AssertionError:
                 raise Exception("No assertion part")
-
-        has_encrypted_assertions = self.find_encrypt_data(self.response)  #
-        # self.response.encrypted_assertion
-        # if not has_encrypted_assertions and self.response.assertion:
-        #    for tmp_assertion in self.response.assertion:
-        #        if tmp_assertion.advice:
-        #            if tmp_assertion.advice.encrypted_assertion:
-        #                has_encrypted_assertions = True
-        #                break
 
         if self.response.assertion:
             logger.debug("***Unencrypted assertion***")
@@ -944,33 +938,41 @@ class AuthnResponse(StatusResponse):
                 if not self._assertion(assertion, False):
                     return False
 
-        if has_encrypted_assertions:
-            _enc_assertions = []
+        if self.find_encrypt_data(self.response):
             logger.debug("***Encrypted assertion/-s***")
-            decr_text = "%s" % self.response
+            _enc_assertions = []
             resp = self.response
-            decr_text_old = None
-            while self.find_encrypt_data(resp) and decr_text_old != decr_text:
-                decr_text_old = decr_text
-                decr_text = self.sec.decrypt_keys(decr_text, keys)
-                resp = samlp.response_from_string(decr_text)
-            _enc_assertions = self.decrypt_assertions(resp.encrypted_assertion,
-                                                      decr_text)
-            decr_text_old = None
-            while (self.find_encrypt_data(
-                    resp) or self.find_encrypt_data_assertion_list(
-                _enc_assertions)) and \
-                            decr_text_old != decr_text:
-                decr_text_old = decr_text
-                decr_text = self.sec.decrypt_keys(decr_text, keys)
-                resp = samlp.response_from_string(decr_text)
-                _enc_assertions = self.decrypt_assertions(
-                    resp.encrypted_assertion, decr_text, verified=True)
-            # _enc_assertions = self.decrypt_assertions(
-            # resp.encrypted_assertion, decr_text, verified=True)
+            decr_text = str(self.response)
+
+            while self.find_encrypt_data(resp):
+                try:
+                    decr_text = self.sec.decrypt_keys(decr_text, keys)
+                except DecryptError as e:
+                    continue
+                else:
+                    resp = samlp.response_from_string(decr_text)
+
+            _enc_assertions = self.decrypt_assertions(
+                resp.encrypted_assertion, decr_text
+            )
+            while (
+                self.find_encrypt_data(resp)
+                or self.find_encrypt_data_assertion_list(_enc_assertions)
+            ):
+                try:
+                    decr_text = self.sec.decrypt_keys(decr_text, keys)
+                except DecryptError as e:
+                    continue
+                else:
+                    resp = samlp.response_from_string(decr_text)
+                    _enc_assertions = self.decrypt_assertions(
+                        resp.encrypted_assertion, decr_text, verified=True
+                    )
+
             all_assertions = _enc_assertions
             if resp.assertion:
                 all_assertions = all_assertions + resp.assertion
+
             if len(all_assertions) > 0:
                 for tmp_ass in all_assertions:
                     if tmp_ass.advice and tmp_ass.advice.encrypted_assertion:
@@ -985,6 +987,7 @@ class AuthnResponse(StatusResponse):
                             tmp_ass.advice.assertion = advice_res
                         if len(advice_res) > 0:
                             tmp_ass.advice.encrypted_assertion = []
+
             self.response.assertion = resp.assertion
             for assertion in _enc_assertions:
                 if not self._assertion(assertion, True):
