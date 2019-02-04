@@ -669,10 +669,11 @@ def do_pdp_descriptor(conf, cert=None, enc_cert=None):
 
 def _add_attr_to_entity_attributes(extensions, attribute):
     try:
-        entity_attributes = next(filter(
-            lambda el: el.tag == mdattr.EntityAttributes.c_tag,
-            extensions.extension_elements
-        ))
+        entity_attributes = next(
+            el
+            for el in extensions.extension_elements
+            if el.tag == mdattr.EntityAttributes.c_tag
+        )
     except StopIteration:
         entity_attributes = mdattr.EntityAttributes(attribute=attribute)
         extensions.add_extension_element(entity_attributes)
