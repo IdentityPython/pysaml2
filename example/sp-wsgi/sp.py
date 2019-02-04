@@ -705,7 +705,9 @@ def main(environ, start_response, sp):
     body.append("<br><a href='/logout'>logout</a>")
 
     body = [
-        item if not isinstance(item, six.binary_type) else item.encode("utf-8")
+        item
+        if isinstance(item, six.binary_type)
+        else item.encode("utf-8")
         for item in body
     ]
 
