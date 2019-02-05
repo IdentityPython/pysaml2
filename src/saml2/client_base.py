@@ -323,7 +323,7 @@ class Base(Entity):
             if allow_create is None:
                 allow_create = self.config.getattr("name_id_format_allow_create", "sp")
                 if allow_create is None:
-                    allow_create = "false"
+                    allow_create = "true"
                 else:
                     if allow_create is True:
                         allow_create = "true"
