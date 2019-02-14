@@ -605,10 +605,7 @@ class AuthnResponse(StatusResponse):
         for astat in self.assertion.authn_statement:
             context = astat.authn_context
             if context:
-                # MY: change to fix BGSU IdP issue
-                # we don't care about the auth type
-                # aclass = context.authn_context_class_ref.text
-                aclass = 'urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified'
+                aclass = context.authn_context_class_ref.text
                 try:
                     authn_auth = [
                             a.text for a in context.authenticating_authority]
