@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 import sys
 
-from saml2 import saml
-from saml2 import md
-from saml2.extension import mdui
-from saml2.extension import idpdisc
-from saml2.extension import dri
-from saml2.extension import mdattr
-from saml2.extension import ui
-from saml2.extension import shibmd
-from saml2 import xmldsig
-from saml2 import xmlenc
+from saml2_tophat import saml
+from saml2_tophat import md
+from saml2_tophat.extension import mdui
+from saml2_tophat.extension import idpdisc
+from saml2_tophat.extension import dri
+from saml2_tophat.extension import mdattr
+from saml2_tophat.extension import ui
+from saml2_tophat.extension import shibmd
+from saml2_tophat import xmldsig
+from saml2_tophat import xmlenc
 
-from saml2.mdstore import MetaDataFile, MetaDataExtern
+from saml2_tophat.mdstore import MetaDataFile, MetaDataExtern
 
 __author__ = 'rolandh'
 
@@ -24,7 +24,7 @@ dictionary format.
 
 MDIMPORT = {
     "swamid": {
-        "url": "https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2",
+        "url": "https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2_tophat",
         "cert": "kalmar2.pem",
         "type": "external"
     },

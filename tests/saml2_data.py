@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 
-"""Test data for saml2"""
+"""Test data for saml2_tophat"""
 
 __author__ = 'tmatsuo@example.com (Takashi MATSUO)'
 

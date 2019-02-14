@@ -14,7 +14,7 @@ def dotname(module):
         return module
 
 try:
-    from saml2.sigver import get_xmlsec_binary
+    from saml2_tophat.sigver import get_xmlsec_binary
 except ImportError:
     get_xmlsec_binary = None
 

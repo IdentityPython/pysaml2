@@ -1,4 +1,4 @@
-from saml2.extension.idpdisc import BINDING_DISCO
+from saml2_tophat.extension.idpdisc import BINDING_DISCO
 
 from pathutils import full_path
 from pathutils import xmlsec_path
@@ -20,7 +20,7 @@ CONFIG = {
     "debug": 1,
     "xmlsec_binary": xmlsec_path,
     "metadata": [{
-        "class": "saml2.mdstore.MetaDataFile",
+        "class": "saml2_tophat.mdstore.MetaDataFile",
         "metadata": [(full_path("servera.xml"), )],
     }],
 }

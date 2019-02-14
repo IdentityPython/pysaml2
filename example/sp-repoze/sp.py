@@ -8,18 +8,18 @@ import re
 import subprocess
 from urlparse import parse_qs
 import argparse
-from saml2 import BINDING_HTTP_REDIRECT, time_util
-from saml2.httputil import Response
-from saml2.httputil import Unauthorized
-from saml2.httputil import NotFound
-from saml2.httputil import Redirect
-#from saml2.httputil import ServiceError
-from saml2.metadata import create_metadata_string
-from saml2.metadata import entities_descriptor
-from saml2.config import Config
-from saml2.sigver import security_context
+from saml2_tophat import BINDING_HTTP_REDIRECT, time_util
+from saml2_tophat.httputil import Response
+from saml2_tophat.httputil import Unauthorized
+from saml2_tophat.httputil import NotFound
+from saml2_tophat.httputil import Redirect
+#from saml2_tophat.httputil import ServiceError
+from saml2_tophat.metadata import create_metadata_string
+from saml2_tophat.metadata import entities_descriptor
+from saml2_tophat.config import Config
+from saml2_tophat.sigver import security_context
 
-logger = logging.getLogger("saml2.SP")
+logger = logging.getLogger("saml2_tophat.SP")
 
 args = None
 # -----------------------------------------------------------------------------

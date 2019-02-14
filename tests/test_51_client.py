@@ -9,37 +9,37 @@ from future.backports.urllib.parse import urlencode
 from future.backports.urllib.parse import urlparse
 from pytest import raises
 
-from saml2.argtree import add_path
-from saml2.cert import OpenSSLWrapper
-from saml2.xmldsig import SIG_RSA_SHA256
-from saml2 import BINDING_HTTP_POST
-from saml2 import BINDING_HTTP_REDIRECT
-from saml2 import config
-from saml2 import class_name
-from saml2 import extension_elements_to_elements
-from saml2 import saml
-from saml2 import samlp
-from saml2 import sigver
-from saml2 import s_utils
-from saml2.assertion import Assertion
-from saml2.extension.requested_attributes import RequestedAttributes
-from saml2.extension.requested_attributes import RequestedAttribute
+from saml2_tophat.argtree import add_path
+from saml2_tophat.cert import OpenSSLWrapper
+from saml2_tophat.xmldsig import SIG_RSA_SHA256
+from saml2_tophat import BINDING_HTTP_POST
+from saml2_tophat import BINDING_HTTP_REDIRECT
+from saml2_tophat import config
+from saml2_tophat import class_name
+from saml2_tophat import extension_elements_to_elements
+from saml2_tophat import saml
+from saml2_tophat import samlp
+from saml2_tophat import sigver
+from saml2_tophat import s_utils
+from saml2_tophat.assertion import Assertion
+from saml2_tophat.extension.requested_attributes import RequestedAttributes
+from saml2_tophat.extension.requested_attributes import RequestedAttribute
 
-from saml2.authn_context import INTERNETPROTOCOLPASSWORD
-from saml2.client import Saml2Client
-from saml2.pack import parse_soap_enveloped_saml
-from saml2.response import LogoutResponse
-from saml2.saml import NAMEID_FORMAT_PERSISTENT, EncryptedAssertion, Advice
-from saml2.saml import NAMEID_FORMAT_TRANSIENT
-from saml2.saml import NameID
-from saml2.samlp import SessionIndex
-from saml2.server import Server
-from saml2.sigver import pre_encryption_part, pre_encrypt_assertion
-from saml2.sigver import rm_xmltag
-from saml2.sigver import verify_redirect_signature
-from saml2.s_utils import do_attribute_statement
-from saml2.s_utils import factory
-from saml2.time_util import in_a_while, a_while_ago
+from saml2_tophat.authn_context import INTERNETPROTOCOLPASSWORD
+from saml2_tophat.client import Saml2Client
+from saml2_tophat.pack import parse_soap_enveloped_saml
+from saml2_tophat.response import LogoutResponse
+from saml2_tophat.saml import NAMEID_FORMAT_PERSISTENT, EncryptedAssertion, Advice
+from saml2_tophat.saml import NAMEID_FORMAT_TRANSIENT
+from saml2_tophat.saml import NameID
+from saml2_tophat.samlp import SessionIndex
+from saml2_tophat.server import Server
+from saml2_tophat.sigver import pre_encryption_part, pre_encrypt_assertion
+from saml2_tophat.sigver import rm_xmltag
+from saml2_tophat.sigver import verify_redirect_signature
+from saml2_tophat.s_utils import do_attribute_statement
+from saml2_tophat.s_utils import factory
+from saml2_tophat.time_util import in_a_while, a_while_ago
 
 from defusedxml.common import EntitiesForbidden
 
@@ -736,6 +736,49 @@ class TestClient:
 
         self.verify_authn_response(idp, authn_response, _client, ava_verify)
 
+    def test_response_invalid_destination_regex(self):
+        conf = config.SPConfig()
+        conf.load_file("server_conf")
+        _client = Saml2Client(conf)
+        _client.valid_destination_regex = 'this-wont-match'
+
+        idp, ava, ava_verify, nameid_policy = self.setup_verify_authn_response()
+
+        self.name_id = self.server.ident.transient_nameid(
+            "urn:mace:example.com:saml:roland:sp", "id1")
+
+        cert_str, cert_key_str = generate_cert()
+
+        cert = \
+            {
+                "cert": cert_str,
+                "key": cert_key_str
+            }
+
+        resp = self.server.create_authn_response(
+            identity=ava,
+            in_response_to="id1",
+            destination="http://lingon.catalogix.se:8087/",
+            sp_entity_id="urn:mace:example.com:saml:roland:sp",
+            name_id=self.name_id,
+            userid="foba0001@example.com",
+            authn=AUTHN,
+            sign_response=True,
+            sign_assertion=True,
+            encrypt_assertion=True,
+            encrypt_assertion_self_contained=True,
+            encrypt_cert_assertion=cert_str
+        )
+
+        resp_str = "%s" % resp
+
+        resp_str = encode_fn(resp_str.encode())
+
+        with raises(AttributeError):
+            _client.parse_authn_request_response(
+                resp_str, BINDING_HTTP_POST,
+                {"id1": "http://foo.example.com/service"}, {"id1": cert})
+
     def test_response_no_name_id(self):
         """ Test that the SP client can parse an authentication response
         from an IdP that does not contain a <NameID> element."""
@@ -769,7 +812,7 @@ class TestClient:
         )
 
         # The create_authn_response method above will return an instance
-        # of saml2.samlp.Response when neither encrypting nor signing and
+        # of saml2_tophat.samlp.Response when neither encrypting nor signing and
         # so we can remove the <NameID> element directly.
         resp.assertion.subject.name_id = None
 

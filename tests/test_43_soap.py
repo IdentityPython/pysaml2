@@ -16,9 +16,9 @@ from defusedxml.common import EntitiesForbidden
 
 from pytest import raises
 
-import saml2.samlp as samlp
-from saml2.samlp import NAMESPACE as SAMLP_NAMESPACE
-from saml2 import soap
+import saml2_tophat.samlp as samlp
+from saml2_tophat.samlp import NAMESPACE as SAMLP_NAMESPACE
+from saml2_tophat import soap
 
 NAMESPACE = "http://schemas.xmlsoap.org/soap/envelope/"
 
@@ -59,7 +59,7 @@ def test_make_soap_envelope():
     envelope.tag = '{%s}Envelope' % NAMESPACE
     body = ElementTree.Element('')
     body.tag = '{%s}Body' % NAMESPACE
-    envelope.append(body)    
+    envelope.append(body)
     request = samlp.AuthnRequest()
     request.become_child_element_of(body)
 

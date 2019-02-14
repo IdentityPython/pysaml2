@@ -9,42 +9,42 @@ import os
 import re
 import sys
 import xml.dom.minidom
-from saml2.sigver import SignatureError
+from saml2_tophat.sigver import SignatureError
 
 import six
 from six.moves.http_cookies import SimpleCookie
 from six.moves.urllib.parse import parse_qs
 
-import saml2.xmldsig as ds
-from saml2 import BINDING_HTTP_ARTIFACT
-from saml2 import BINDING_HTTP_POST
-from saml2 import BINDING_HTTP_REDIRECT, element_to_extension_element
-from saml2 import BINDING_SOAP
-from saml2 import ecp
-from saml2 import time_util
-from saml2.client import Saml2Client
-from saml2.ecp_client import PAOS_HEADER_INFO
-from saml2.extension.pefim import SPCertEnc
-from saml2.httputil import BadRequest
-from saml2.httputil import NotFound
-from saml2.httputil import NotImplemented
-from saml2.httputil import Redirect
-from saml2.httputil import Response
-from saml2.httputil import SeeOther
-from saml2.httputil import ServiceError
-from saml2.httputil import Unauthorized
-from saml2.httputil import get_post
-from saml2.httputil import geturl, make_cookie, parse_cookie
-from saml2.metadata import create_metadata_string
-from saml2.response import StatusError
-from saml2.response import VerificationError
-from saml2.s_utils import UnknownPrincipal
-from saml2.s_utils import UnsupportedBinding
-from saml2.s_utils import decode_base64_and_inflate
-from saml2.s_utils import rndstr
-from saml2.s_utils import sid
-from saml2.saml import NAMEID_FORMAT_PERSISTENT
-from saml2.samlp import Extensions
+import saml2_tophat.xmldsig as ds
+from saml2_tophat import BINDING_HTTP_ARTIFACT
+from saml2_tophat import BINDING_HTTP_POST
+from saml2_tophat import BINDING_HTTP_REDIRECT, element_to_extension_element
+from saml2_tophat import BINDING_SOAP
+from saml2_tophat import ecp
+from saml2_tophat import time_util
+from saml2_tophat.client import Saml2Client
+from saml2_tophat.ecp_client import PAOS_HEADER_INFO
+from saml2_tophat.extension.pefim import SPCertEnc
+from saml2_tophat.httputil import BadRequest
+from saml2_tophat.httputil import NotFound
+from saml2_tophat.httputil import NotImplemented
+from saml2_tophat.httputil import Redirect
+from saml2_tophat.httputil import Response
+from saml2_tophat.httputil import SeeOther
+from saml2_tophat.httputil import ServiceError
+from saml2_tophat.httputil import Unauthorized
+from saml2_tophat.httputil import get_post
+from saml2_tophat.httputil import geturl, make_cookie, parse_cookie
+from saml2_tophat.metadata import create_metadata_string
+from saml2_tophat.response import StatusError
+from saml2_tophat.response import VerificationError
+from saml2_tophat.s_utils import UnknownPrincipal
+from saml2_tophat.s_utils import UnsupportedBinding
+from saml2_tophat.s_utils import decode_base64_and_inflate
+from saml2_tophat.s_utils import rndstr
+from saml2_tophat.s_utils import sid
+from saml2_tophat.saml import NAMEID_FORMAT_PERSISTENT
+from saml2_tophat.samlp import Extensions
 
 logger = logging.getLogger("")
 hdlr = logging.FileHandler('spx.log')

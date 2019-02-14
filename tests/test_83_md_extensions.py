@@ -1,6 +1,6 @@
-from saml2.config import Config
-from saml2.metadata import entity_descriptor
-from saml2.extension.sp_type import SPType
+from saml2_tophat.config import Config
+from saml2_tophat.metadata import entity_descriptor
+from saml2_tophat.extension.sp_type import SPType
 
 __author__ = 'roland'
 

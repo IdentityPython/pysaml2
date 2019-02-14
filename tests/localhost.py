@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from saml2.saml import NAME_FORMAT_URI
+from saml2_tophat.saml import NAME_FORMAT_URI
 
 __author__ = 'rolandh'
 

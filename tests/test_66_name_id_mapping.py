@@ -1,12 +1,12 @@
 __author__ = 'rolandh'
 
 from contextlib import closing
-from saml2.client import Saml2Client
-from saml2.saml import NameID, NAMEID_FORMAT_PERSISTENT
-from saml2.saml import NAMEID_FORMAT_TRANSIENT
-from saml2.server import Server
-from saml2.samlp import NameIDPolicy
-from saml2.samlp import NameIDMappingRequest
+from saml2_tophat.client import Saml2Client
+from saml2_tophat.saml import NameID, NAMEID_FORMAT_PERSISTENT
+from saml2_tophat.saml import NAMEID_FORMAT_TRANSIENT
+from saml2_tophat.server import Server
+from saml2_tophat.samlp import NameIDPolicy
+from saml2_tophat.samlp import NameIDMappingRequest
 
 
 def test_base_request():

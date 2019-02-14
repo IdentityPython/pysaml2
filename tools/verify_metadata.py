@@ -2,14 +2,14 @@
 
 import argparse
 
-from saml2.attribute_converter import ac_factory
-from saml2.httpbase import HTTPBase
+from saml2_tophat.attribute_converter import ac_factory
+from saml2_tophat.httpbase import HTTPBase
 
-from saml2.sigver import _get_xmlsec_cryptobackend
-from saml2.sigver import SecurityContext
+from saml2_tophat.sigver import _get_xmlsec_cryptobackend
+from saml2_tophat.sigver import SecurityContext
 
-from saml2.mdstore import MetaDataFile
-from saml2.mdstore import MetaDataExtern
+from saml2_tophat.mdstore import MetaDataFile
+from saml2_tophat.mdstore import MetaDataExtern
 
 __author__ = 'rolandh'
 

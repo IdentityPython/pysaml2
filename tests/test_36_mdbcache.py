@@ -4,9 +4,9 @@ import pytest
 __author__ = 'rolandh'
 
 import time
-from saml2.cache import ToOld
-from saml2.mdbcache import Cache
-from saml2.time_util import in_a_while, str_to_time
+from saml2_tophat.cache import ToOld
+from saml2_tophat.mdbcache import Cache
+from saml2_tophat.time_util import in_a_while, str_to_time
 from pytest import raises
 
 SESSION_INFO_PATTERN = {"ava":{}, "came from":"", "not_on_or_after":0,

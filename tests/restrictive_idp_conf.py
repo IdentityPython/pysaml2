@@ -1,5 +1,5 @@
-from saml2 import BINDING_SOAP, BINDING_HTTP_REDIRECT
-from saml2.saml import NAME_FORMAT_URI
+from saml2_tophat import BINDING_SOAP, BINDING_HTTP_REDIRECT
+from saml2_tophat.saml import NAME_FORMAT_URI
 
 BASE = "http://localhost:8089/"
 
@@ -38,7 +38,7 @@ CONFIG = {
     "cert_file" : full_path("test.pem"),
     "xmlsec_binary" : None,
     "metadata": [{
-        "class": "saml2.mdstore.MetaDataFile",
+        "class": "saml2_tophat.mdstore.MetaDataFile",
         "metadata": [(full_path("sp_0.metadata"), )],
     }],
     "attribute_map_dir" : full_path("attributemaps"),

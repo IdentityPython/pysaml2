@@ -1,9 +1,9 @@
 from contextlib import closing
-from saml2.authn_context import INTERNETPROTOCOLPASSWORD
-from saml2.server import Server
-from saml2.sigver import pre_encryption_part, ASSERT_XPATH, EncryptError
-from saml2.sigver import CryptoBackendXmlSec1
-from saml2.sigver import pre_encrypt_assertion
+from saml2_tophat.authn_context import INTERNETPROTOCOLPASSWORD
+from saml2_tophat.server import Server
+from saml2_tophat.sigver import pre_encryption_part, ASSERT_XPATH, EncryptError
+from saml2_tophat.sigver import CryptoBackendXmlSec1
+from saml2_tophat.sigver import pre_encrypt_assertion
 from pathutils import xmlsec_path
 from pathutils import full_path
 

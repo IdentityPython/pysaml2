@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
-import saml2
+import saml2_tophat
 
-from saml2 import create_class_from_xml_string, class_name, make_vals, md
-from saml2.saml import NameID, Issuer, SubjectLocality, AuthnContextClassRef
-from saml2.saml import SubjectConfirmationData, SubjectConfirmation
-from saml2.saml import Attribute
+from saml2_tophat import create_class_from_xml_string, class_name, make_vals, md
+from saml2_tophat.saml import NameID, Issuer, SubjectLocality, AuthnContextClassRef
+from saml2_tophat.saml import SubjectConfirmationData, SubjectConfirmation
+from saml2_tophat.saml import Attribute
 
 from py.test import raises
 import saml2_data
@@ -181,7 +181,7 @@ def test_create_class_from_xml_string_xxe():
 
 
 def test_ee_1():
-    ee = saml2.extension_element_from_string(
+    ee = saml2_tophat.extension_element_from_string(
         """<?xml version='1.0' encoding='UTF-8'?><foo>bar</foo>""")
     assert ee != None
     print(ee.__dict__)
@@ -193,7 +193,7 @@ def test_ee_1():
 
 
 def test_ee_2():
-    ee = saml2.extension_element_from_string(
+    ee = saml2_tophat.extension_element_from_string(
         """<?xml version='1.0' encoding='UTF-8'?><foo id="xyz">bar</foo>""")
     assert ee != None
     print(ee.__dict__)
@@ -205,7 +205,7 @@ def test_ee_2():
 
 
 def test_ee_3():
-    ee = saml2.extension_element_from_string(
+    ee = saml2_tophat.extension_element_from_string(
         """<?xml version='1.0' encoding='UTF-8'?>
         <foo xmlns="urn:mace:example.com:saml:ns" 
         id="xyz">bar</foo>""")
@@ -219,7 +219,7 @@ def test_ee_3():
 
 
 def test_ee_4():
-    ee = saml2.extension_element_from_string(
+    ee = saml2_tophat.extension_element_from_string(
         """<?xml version='1.0' encoding='UTF-8'?>
         <foo xmlns="urn:mace:example.com:saml:ns">
         <id>xyz</id><bar>tre</bar></foo>""")
@@ -244,11 +244,11 @@ def test_ee_4():
 
 
 def test_ee_5():
-    ee = saml2.extension_element_from_string(
+    ee = saml2_tophat.extension_element_from_string(
         """<?xml version='1.0' encoding='UTF-8'?>
         <foo xmlns="urn:mace:example.com:saml:ns">bar</foo>""")
 
-    ce = saml2.extension_element_from_string(
+    ce = saml2_tophat.extension_element_from_string(
         """<?xml version='1.0' encoding='UTF-8'?>
         <educause xmlns="urn:mace:example.com:saml:cu">rev</educause>""")
 
@@ -277,18 +277,18 @@ def test_ee_5():
 
 
 def test_ee_6():
-    ee = saml2.extension_element_from_string(
+    ee = saml2_tophat.extension_element_from_string(
         """<?xml version='1.0' encoding='UTF-8'?>
         <foo xmlns="urn:mace:example.com:saml:ns">bar</foo>""")
 
-    ce = saml2.extension_element_from_string(
+    ce = saml2_tophat.extension_element_from_string(
         """<?xml version='1.0' encoding='UTF-8'?>
         <educause xmlns="urn:mace:example.com:saml:cu">rev</educause>""")
 
     et = ee.transfer_to_element_tree()
     ce.become_child_element_of(et)
 
-    pee = saml2._extension_element_from_element_tree(et)
+    pee = saml2_tophat._extension_element_from_element_tree(et)
 
     assert pee != None
     print(pee.__dict__)
@@ -418,7 +418,7 @@ def test_make_vals_list_of_strs():
 
 def test_attribute_element_to_extension_element():
     attr = create_class_from_xml_string(Attribute, saml2_data.TEST_ATTRIBUTE)
-    ee = saml2.element_to_extension_element(attr)
+    ee = saml2_tophat.element_to_extension_element(attr)
     print(ee.__dict__)
     assert ee.tag == "Attribute"
     assert ee.namespace == 'urn:oasis:names:tc:SAML:2.0:assertion'
@@ -435,7 +435,7 @@ def test_attribute_element_to_extension_element():
 
 
 def test_ee_7():
-    ee = saml2.extension_element_from_string(
+    ee = saml2_tophat.extension_element_from_string(
         """<?xml version='1.0' encoding='UTF-8'?>
    <ExternalEntityAttributeAuthority
        xmlns="urn:oasis:names:tc:SAML:metadata:dynamicsaml">
@@ -478,7 +478,7 @@ def test_ee_xxe():
     <lolz>&lol1;</lolz>
     """
     with raises(EntitiesForbidden):
-        saml2.extension_element_from_string(xml)
+        saml2_tophat.extension_element_from_string(xml)
 
 
 def test_extension_element_loadd():
@@ -505,7 +505,7 @@ def test_extension_element_loadd():
                         }],
     }
 
-    ee = saml2.ExtensionElement(ava["tag"]).loadd(ava)
+    ee = saml2_tophat.ExtensionElement(ava["tag"]).loadd(ava)
     print(ee.__dict__)
     assert len(ee.children) == 2
     for child in ee.children:
@@ -553,7 +553,7 @@ def test_extensions_loadd():
            }
     }
 
-    extension = saml2.SamlBase()
+    extension = saml2_tophat.SamlBase()
     extension.loadd(ava)
 
     print(extension.__dict__)

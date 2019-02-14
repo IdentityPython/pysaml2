@@ -1,8 +1,8 @@
-from saml2.saml import NAMEID_FORMAT_TRANSIENT
-from saml2.client import Saml2Client
-from saml2 import config, BINDING_HTTP_POST
-from saml2 import saml
-from saml2 import samlp
+from saml2_tophat.saml import NAMEID_FORMAT_TRANSIENT
+from saml2_tophat.client import Saml2Client
+from saml2_tophat import config, BINDING_HTTP_POST
+from saml2_tophat import saml
+from saml2_tophat import samlp
 
 __author__ = 'roland'
 
@@ -15,7 +15,7 @@ def test_nsprefix():
 
     assert "ns0:StatusMessage" in txt
 
-    status_message.register_prefix({"saml2": saml.NAMESPACE,
+    status_message.register_prefix({"saml2_tophat": saml.NAMESPACE,
                                     "saml2p": samlp.NAMESPACE})
 
     txt = "%s" % status_message
@@ -34,12 +34,12 @@ def test_nsprefix2():
 
     reqid, req = client.create_authn_request(
         destination, nameid_format=NAMEID_FORMAT_TRANSIENT,
-        nsprefix={"saml2": saml.NAMESPACE, "saml2p": samlp.NAMESPACE})
+        nsprefix={"saml2_tophat": saml.NAMESPACE, "saml2p": samlp.NAMESPACE})
 
     txt = "%s" % req
 
     assert "saml2p:AuthnRequest" in txt
-    assert "saml2:Issuer" in txt
+    assert "saml2_tophat:Issuer" in txt
 
 if __name__ == "__main__":
     test_nsprefix2()

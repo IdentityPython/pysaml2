@@ -1,22 +1,22 @@
 #!/usr/bin/env python
 
 import base64
-from saml2.xmldsig import SIG_RSA_SHA256
-from saml2 import sigver
-from saml2 import extension_elements_to_elements
-from saml2 import class_name
-from saml2 import time_util
-from saml2 import saml, samlp
-from saml2 import config
-from saml2.sigver import pre_encryption_part
-from saml2.sigver import make_temp
-from saml2.sigver import XmlsecError
-from saml2.sigver import SigverError
-from saml2.mdstore import MetadataStore
-from saml2.saml import assertion_from_string
-from saml2.saml import EncryptedAssertion
-from saml2.samlp import response_from_string
-from saml2.s_utils import factory, do_attribute_statement
+from saml2_tophat.xmldsig import SIG_RSA_SHA256
+from saml2_tophat import sigver
+from saml2_tophat import extension_elements_to_elements
+from saml2_tophat import class_name
+from saml2_tophat import time_util
+from saml2_tophat import saml, samlp
+from saml2_tophat import config
+from saml2_tophat.sigver import pre_encryption_part
+from saml2_tophat.sigver import make_temp
+from saml2_tophat.sigver import XmlsecError
+from saml2_tophat.sigver import SigverError
+from saml2_tophat.mdstore import MetadataStore
+from saml2_tophat.saml import assertion_from_string
+from saml2_tophat.saml import EncryptedAssertion
+from saml2_tophat.samlp import response_from_string
+from saml2_tophat.s_utils import factory, do_attribute_statement
 
 import pytest
 from py.test import raises

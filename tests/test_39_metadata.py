@@ -1,7 +1,7 @@
 import copy
-from saml2.config import SPConfig
-from saml2.metadata import entity_descriptor
-from saml2.saml import NAME_FORMAT_URI, NAME_FORMAT_BASIC
+from saml2_tophat.config import SPConfig
+from saml2_tophat.metadata import entity_descriptor
+from saml2_tophat.saml import NAME_FORMAT_URI, NAME_FORMAT_BASIC
 
 __author__ = 'roland'
 
@@ -17,7 +17,7 @@ sp_conf = {
             "required_attributes": ["surName", "givenName", "mail"],
             "optional_attributes": ["title"],
             "idp": {
-                "": "https://example.com/saml2/idp/SSOService.php",
+                "": "https://example.com/saml2_tophat/idp/SSOService.php",
             },
             "authn_requests_signed": True,
             "logout_requests_signed": True,

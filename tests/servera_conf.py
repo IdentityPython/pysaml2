@@ -1,11 +1,11 @@
-from saml2.extension.idpdisc import BINDING_DISCO
-from saml2 import BINDING_SOAP
-from saml2 import BINDING_PAOS
-from saml2 import BINDING_HTTP_POST
-from saml2 import BINDING_HTTP_REDIRECT
-from saml2 import BINDING_HTTP_ARTIFACT
-from saml2.saml import NAMEID_FORMAT_TRANSIENT
-from saml2.saml import NAMEID_FORMAT_PERSISTENT
+from saml2_tophat.extension.idpdisc import BINDING_DISCO
+from saml2_tophat import BINDING_SOAP
+from saml2_tophat import BINDING_PAOS
+from saml2_tophat import BINDING_HTTP_POST
+from saml2_tophat import BINDING_HTTP_REDIRECT
+from saml2_tophat import BINDING_HTTP_ARTIFACT
+from saml2_tophat.saml import NAMEID_FORMAT_TRANSIENT
+from saml2_tophat.saml import NAMEID_FORMAT_PERSISTENT
 
 from pathutils import full_path
 from pathutils import xmlsec_path
@@ -52,7 +52,7 @@ CONFIG = {
     "ca_certs": full_path("cacerts.txt"),
     "xmlsec_binary": xmlsec_path,
     "metadata": [{
-        "class": "saml2.mdstore.MetaDataFile",
+        "class": "saml2_tophat.mdstore.MetaDataFile",
         "metadata": [(full_path("idp_all.xml"), ), (full_path("vo_metadata.xml"), )],
     }],
     "virtual_organization": {

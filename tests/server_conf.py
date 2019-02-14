@@ -11,6 +11,7 @@ CONFIG = {
                 "assertion_consumer_service": [
                     "http://lingon.catalogix.se:8087/"],
             },
+            "valid_destination_regex": "lingon\.catalogix\.se:8087/$",
             "required_attributes": ["surName", "givenName", "mail"],
             "optional_attributes": ["title"],
             "idp": ["urn:mace:example.com:saml:roland:idp"],
@@ -37,7 +38,7 @@ CONFIG = {
     "ca_certs": full_path("cacerts.txt"),
     "xmlsec_binary": xmlsec_path,
     "metadata": [{
-        "class": "saml2.mdstore.MetaDataFile",
+        "class": "saml2_tophat.mdstore.MetaDataFile",
         "metadata": [(full_path("idp.xml"), ), (full_path("vo_metadata.xml"), )],
     }],
     "virtual_organization": {
