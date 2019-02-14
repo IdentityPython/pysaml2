@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 
-"""Tests for saml2.samlp"""
+"""Tests for saml2_tophat.samlp"""
 
 __author__ = 'roland.hedberg@adm.umu.se (Roland Hedberg)'
 
@@ -10,41 +10,41 @@ try:
   from xml.etree import ElementTree
 except ImportError:
   from elementtree import ElementTree
-import saml2
+import saml2_tophat
 
 import samlp_data
 
-from saml2 import saml
-from saml2 import samlp
-from saml2 import xmldsig as ds
+from saml2_tophat import saml
+from saml2_tophat import samlp
+from saml2_tophat import xmldsig as ds
 
 
 # class TestRequestAbstractType:
-# 
+#
 #     def setup_class(self):
 #         self.ar = samlp.RequestAbstractType_()
-# 
+#
 #     def testAccessors(self):
 #         """Test for RequestAbstractType accessors"""
 #         self.ar.id = "request id"
-#         self.ar.version = saml2.VERSION
+#         self.ar.version = saml2_tophat.VERSION
 #         self.ar.issue_instant = "2007-09-14T01:05:02Z"
 #         self.ar.destination = "http://www.example.com/Destination"
 #         self.ar.consent = saml.CONSENT_UNSPECIFIED
 #         self.ar.issuer = saml.Issuer()
 #         self.ar.signature = ds.Signature()
 #         self.ar.extensions = samlp.Extensions()
-# 
+#
 #         new_ar = samlp.request_abstract_type__from_string(self.ar.to_string())
 #         assert new_ar.id == "request id"
-#         assert new_ar.version == saml2.VERSION
+#         assert new_ar.version == saml2_tophat.VERSION
 #         assert new_ar.issue_instant == "2007-09-14T01:05:02Z"
 #         assert new_ar.destination == "http://www.example.com/Destination"
 #         assert new_ar.consent == saml.CONSENT_UNSPECIFIED
 #         assert isinstance(new_ar.issuer, saml.Issuer)
 #         assert isinstance(new_ar.signature, ds.Signature)
 #         assert isinstance(new_ar.extensions, samlp.Extensions)
-#         
+#
 #     def testUsingTestData(self):
 #         """Test for request_abstract_type_from_string() using test data"""
 #         # TODO:
@@ -59,7 +59,7 @@ class TestStatusDetail:
         """Test for StatusDetail accessors"""
         # TODO:
         pass
-    
+
 
 class TestStatusMessage:
 
@@ -70,7 +70,7 @@ class TestStatusMessage:
         """Test for StatusMessage accessors"""
         # TODO:
         pass
-    
+
 
 class TestStatusCode:
 
@@ -122,15 +122,15 @@ class TestStatus:
         assert isinstance(new_status.status_detail, samlp.StatusDetail)
 
 # class TestStatusResponseType:
-# 
+#
 #     def setup_class(self):
 #         self.sr = samlp.StatusResponseType()
-# 
+#
 #     def testAccessors(self):
 #         """Test for StatusResponseType accessors"""
 #         self.sr.id = "response id"
 #         self.sr.in_response_to = "request id"
-#         self.sr.version = saml2.VERSION
+#         self.sr.version = saml2_tophat.VERSION
 #         self.sr.issue_instant = "2007-09-14T01:05:02Z"
 #         self.sr.destination = "http://www.example.com/Destination"
 #         self.sr.consent = saml.CONSENT_UNSPECIFIED
@@ -138,11 +138,11 @@ class TestStatus:
 #         self.sr.signature = ds.Signature()
 #         self.sr.extensions = samlp.Extensions()
 #         self.sr.status = samlp.Status()
-# 
+#
 #         new_sr = samlp.status_response_type_from_string(self.sr.to_string())
 #         assert new_sr.id == "response id"
 #         assert new_sr.in_response_to == "request id"
-#         assert new_sr.version == saml2.VERSION
+#         assert new_sr.version == saml2_tophat.VERSION
 #         assert new_sr.issue_instant == "2007-09-14T01:05:02Z"
 #         assert new_sr.destination == "http://www.example.com/Destination"
 #         assert new_sr.consent == saml.CONSENT_UNSPECIFIED
@@ -150,7 +150,7 @@ class TestStatus:
 #         assert isinstance(new_sr.signature, ds.Signature)
 #         assert isinstance(new_sr.extensions, samlp.Extensions)
 #         assert isinstance(new_sr.status, samlp.Status)
-#         
+#
 #     def testUsingTestData(self):
 #         """Test for status_response_from_string() using test data"""
 #         # TODO:
@@ -166,7 +166,7 @@ class TestResponse:
         """Test for Response accessors"""
         self.response.id = "response id"
         self.response.in_response_to = "request id"
-        self.response.version = saml2.VERSION
+        self.response.version = saml2_tophat.VERSION
         self.response.issue_instant = "2007-09-14T01:05:02Z"
         self.response.destination = "http://www.example.com/Destination"
         self.response.consent = saml.CONSENT_UNSPECIFIED
@@ -180,7 +180,7 @@ class TestResponse:
         new_response = samlp.response_from_string(self.response.to_string())
         assert new_response.id == "response id"
         assert new_response.in_response_to == "request id"
-        assert new_response.version == saml2.VERSION
+        assert new_response.version == saml2_tophat.VERSION
         assert new_response.issue_instant == "2007-09-14T01:05:02Z"
         assert new_response.destination == "http://www.example.com/Destination"
         assert new_response.consent == saml.CONSENT_UNSPECIFIED
@@ -344,7 +344,7 @@ class TestAuthnRequest:
     def testAccessors(self):
         """Test for AuthnRequest accessors"""
         self.ar.id = "request id"
-        self.ar.version = saml2.VERSION
+        self.ar.version = saml2_tophat.VERSION
         self.ar.issue_instant = "2007-09-14T01:05:02Z"
         self.ar.destination = "http://www.example.com/Destination"
         self.ar.consent = saml.CONSENT_UNSPECIFIED
@@ -361,13 +361,13 @@ class TestAuthnRequest:
         self.ar.is_passive = 'true'
         self.ar.assertion_consumer_service_index = "1"
         self.ar.assertion_consumer_service_url = "http://www.example.com/acs"
-        self.ar.protocol_binding = saml2.BINDING_HTTP_POST
+        self.ar.protocol_binding = saml2_tophat.BINDING_HTTP_POST
         self.ar.attribute_consuming_service_index = "2"
         self.ar.provider_name = "provider name"
 
         new_ar = samlp.authn_request_from_string(self.ar.to_string())
         assert new_ar.id == "request id"
-        assert new_ar.version == saml2.VERSION
+        assert new_ar.version == saml2_tophat.VERSION
         assert new_ar.issue_instant == "2007-09-14T01:05:02Z"
         assert new_ar.destination == "http://www.example.com/Destination"
         assert new_ar.consent == saml.CONSENT_UNSPECIFIED
@@ -386,7 +386,7 @@ class TestAuthnRequest:
         assert new_ar.assertion_consumer_service_index == '1'
         assert new_ar.assertion_consumer_service_url == \
                                  'http://www.example.com/acs'
-        assert new_ar.protocol_binding == saml2.BINDING_HTTP_POST
+        assert new_ar.protocol_binding == saml2_tophat.BINDING_HTTP_POST
         assert new_ar.attribute_consuming_service_index == '2'
         assert new_ar.provider_name == "provider name"
 
@@ -394,7 +394,7 @@ class TestAuthnRequest:
         """Test for authn_request_from_string() using test data"""
         new_ar = samlp.authn_request_from_string(samlp_data.TEST_AUTHN_REQUEST)
         assert new_ar.id == "request id"
-        assert new_ar.version == saml2.VERSION
+        assert new_ar.version == saml2_tophat.VERSION
         assert new_ar.issue_instant == "2007-09-14T01:05:02Z"
         assert new_ar.destination == "http://www.example.com/Destination"
         assert new_ar.consent == saml.CONSENT_UNSPECIFIED
@@ -413,7 +413,7 @@ class TestAuthnRequest:
         assert new_ar.assertion_consumer_service_index == '1'
         assert new_ar.assertion_consumer_service_url == \
                                  'http://www.example.com/acs'
-        assert new_ar.protocol_binding == saml2.BINDING_HTTP_POST
+        assert new_ar.protocol_binding == saml2_tophat.BINDING_HTTP_POST
         assert new_ar.attribute_consuming_service_index == '2'
         assert new_ar.provider_name == "provider name"
 
@@ -426,7 +426,7 @@ class TestLogoutRequest:
     def testAccessors(self):
         """Test for LogoutRequest accessors"""
         self.lr.id = "request id"
-        self.lr.version = saml2.VERSION
+        self.lr.version = saml2_tophat.VERSION
         self.lr.issue_instant = "2007-09-14T01:05:02Z"
         self.lr.destination = "http://www.example.com/Destination"
         self.lr.consent = saml.CONSENT_UNSPECIFIED
@@ -443,7 +443,7 @@ class TestLogoutRequest:
 
         new_lr = samlp.logout_request_from_string(self.lr.to_string())
         assert new_lr.id == "request id"
-        assert new_lr.version == saml2.VERSION
+        assert new_lr.version == saml2_tophat.VERSION
         assert new_lr.issue_instant == "2007-09-14T01:05:02Z"
         assert new_lr.destination == "http://www.example.com/Destination"
         assert new_lr.consent == saml.CONSENT_UNSPECIFIED
@@ -461,7 +461,7 @@ class TestLogoutRequest:
         """Test for logout_request_from_string() using test data"""
         new_lr = samlp.logout_request_from_string(samlp_data.TEST_LOGOUT_REQUEST)
         assert new_lr.id == "request id"
-        assert new_lr.version == saml2.VERSION
+        assert new_lr.version == saml2_tophat.VERSION
         assert new_lr.issue_instant == "2007-09-14T01:05:02Z"
         assert new_lr.destination == "http://www.example.com/Destination"
         assert new_lr.consent == saml.CONSENT_UNSPECIFIED
@@ -478,7 +478,7 @@ class TestLogoutRequest:
 
 
 class TestLogoutResponse:
-    
+
     def setup_class(self):
         self.lr = samlp.LogoutResponse()
 
@@ -486,7 +486,7 @@ class TestLogoutResponse:
         """Test for LogoutResponse accessors"""
         self.lr.id = "response id"
         self.lr.in_response_to = "request id"
-        self.lr.version = saml2.VERSION
+        self.lr.version = saml2_tophat.VERSION
         self.lr.issue_instant = "2007-09-14T01:05:02Z"
         self.lr.destination = "http://www.example.com/Destination"
         self.lr.consent = saml.CONSENT_UNSPECIFIED
@@ -498,7 +498,7 @@ class TestLogoutResponse:
         new_lr = samlp.logout_response_from_string(self.lr.to_string())
         assert new_lr.id == "response id"
         assert new_lr.in_response_to == "request id"
-        assert new_lr.version == saml2.VERSION
+        assert new_lr.version == saml2_tophat.VERSION
         assert new_lr.issue_instant == "2007-09-14T01:05:02Z"
         assert new_lr.destination == "http://www.example.com/Destination"
         assert new_lr.consent == saml.CONSENT_UNSPECIFIED
@@ -506,14 +506,14 @@ class TestLogoutResponse:
         assert isinstance(new_lr.signature, ds.Signature)
         assert isinstance(new_lr.extensions, samlp.Extensions)
         assert isinstance(new_lr.status, samlp.Status)
-        
+
     def testUsingTestData(self):
         """Test for logout_response_from_string() using test data"""
         new_lr = samlp.logout_response_from_string(
             samlp_data.TEST_LOGOUT_RESPONSE)
         assert new_lr.id == "response id"
         assert new_lr.in_response_to == "request id"
-        assert new_lr.version == saml2.VERSION
+        assert new_lr.version == saml2_tophat.VERSION
         assert new_lr.issue_instant == "2007-09-14T01:05:02Z"
         assert new_lr.destination == "http://www.example.com/Destination"
         assert new_lr.consent == saml.CONSENT_UNSPECIFIED

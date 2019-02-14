@@ -1,8 +1,8 @@
-from saml2 import saml
-from saml2.saml import Subject
-from saml2.samlp import Response
-from saml2.argtree import set_arg, add_path, is_set
-from saml2.argtree import find_paths
+from saml2_tophat import saml
+from saml2_tophat.saml import Subject
+from saml2_tophat.samlp import Response
+from saml2_tophat.argtree import set_arg, add_path, is_set
+from saml2_tophat.argtree import find_paths
 
 __author__ = 'roland'
 

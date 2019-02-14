@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from saml2 import BINDING_SOAP, BINDING_URI
-from saml2 import BINDING_HTTP_REDIRECT
-from saml2 import BINDING_HTTP_POST
-from saml2 import BINDING_HTTP_ARTIFACT
-from saml2.saml import NAMEID_FORMAT_PERSISTENT
-from saml2.saml import NAME_FORMAT_URI
+from saml2_tophat import BINDING_SOAP, BINDING_URI
+from saml2_tophat import BINDING_HTTP_REDIRECT
+from saml2_tophat import BINDING_HTTP_POST
+from saml2_tophat import BINDING_HTTP_ARTIFACT
+from saml2_tophat.saml import NAMEID_FORMAT_PERSISTENT
+from saml2_tophat.saml import NAME_FORMAT_URI
 
 from pathutils import full_path
 

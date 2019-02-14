@@ -19,45 +19,45 @@ except ImportError:
 from six.moves.urllib.parse import parse_qs
 from six.moves.http_cookies import SimpleCookie
 
-from saml2 import BINDING_HTTP_ARTIFACT
-from saml2 import BINDING_URI
-from saml2 import BINDING_PAOS
-from saml2 import BINDING_SOAP
-from saml2 import BINDING_HTTP_REDIRECT
-from saml2 import BINDING_HTTP_POST
-from saml2 import server
-from saml2 import time_util
-from saml2.authn import is_equal
+from saml2_tophat import BINDING_HTTP_ARTIFACT
+from saml2_tophat import BINDING_URI
+from saml2_tophat import BINDING_PAOS
+from saml2_tophat import BINDING_SOAP
+from saml2_tophat import BINDING_HTTP_REDIRECT
+from saml2_tophat import BINDING_HTTP_POST
+from saml2_tophat import server
+from saml2_tophat import time_util
+from saml2_tophat.authn import is_equal
 
-from saml2.authn_context import AuthnBroker
-from saml2.authn_context import PASSWORD
-from saml2.authn_context import UNSPECIFIED
-from saml2.authn_context import authn_context_class_ref
-from saml2.httputil import Response
-from saml2.httputil import NotFound
-from saml2.httputil import geturl
-from saml2.httputil import get_post
-from saml2.httputil import Redirect
-from saml2.httputil import Unauthorized
-from saml2.httputil import BadRequest
-from saml2.httputil import ServiceError
-from saml2.ident import Unknown
-from saml2.metadata import create_metadata_string
-from saml2.profile import ecp
-from saml2.s_utils import rndstr
-from saml2.s_utils import exception_trace
-from saml2.s_utils import UnknownPrincipal
-from saml2.s_utils import UnsupportedBinding
-from saml2.s_utils import PolicyError
-from saml2.sigver import verify_redirect_signature
-from saml2.sigver import encrypt_cert_from_item
+from saml2_tophat.authn_context import AuthnBroker
+from saml2_tophat.authn_context import PASSWORD
+from saml2_tophat.authn_context import UNSPECIFIED
+from saml2_tophat.authn_context import authn_context_class_ref
+from saml2_tophat.httputil import Response
+from saml2_tophat.httputil import NotFound
+from saml2_tophat.httputil import geturl
+from saml2_tophat.httputil import get_post
+from saml2_tophat.httputil import Redirect
+from saml2_tophat.httputil import Unauthorized
+from saml2_tophat.httputil import BadRequest
+from saml2_tophat.httputil import ServiceError
+from saml2_tophat.ident import Unknown
+from saml2_tophat.metadata import create_metadata_string
+from saml2_tophat.profile import ecp
+from saml2_tophat.s_utils import rndstr
+from saml2_tophat.s_utils import exception_trace
+from saml2_tophat.s_utils import UnknownPrincipal
+from saml2_tophat.s_utils import UnsupportedBinding
+from saml2_tophat.s_utils import PolicyError
+from saml2_tophat.sigver import verify_redirect_signature
+from saml2_tophat.sigver import encrypt_cert_from_item
 
 from idp_user import USERS
 from idp_user import EXTRA
 from mako.lookup import TemplateLookup
-import saml2.xmldsig as ds
+import saml2_tophat.xmldsig as ds
 
-logger = logging.getLogger("saml2.idp")
+logger = logging.getLogger("saml2_tophat.idp")
 logger.setLevel(logging.WARNING)
 
 

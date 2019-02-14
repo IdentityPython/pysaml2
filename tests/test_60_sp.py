@@ -3,13 +3,13 @@
 
 import base64
 import pytest
-from saml2.authn_context import INTERNETPROTOCOLPASSWORD
-from saml2.saml import NAMEID_FORMAT_TRANSIENT
-from saml2.samlp import NameIDPolicy
-from saml2.server import Server
+from saml2_tophat.authn_context import INTERNETPROTOCOLPASSWORD
+from saml2_tophat.saml import NAMEID_FORMAT_TRANSIENT
+from saml2_tophat.samlp import NameIDPolicy
+from saml2_tophat.server import Server
 
 try:
-    from saml2.s2repoze.plugins.sp import make_plugin
+    from saml2_tophat.s2repoze.plugins.sp import make_plugin
 except ImportError:
     make_plugin = None
 

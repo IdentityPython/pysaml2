@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 import os
 
-from saml2 import samlp
-from saml2.saml import NAMEID_FORMAT_PERSISTENT, NAMEID_FORMAT_TRANSIENT
-from saml2.config import IdPConfig
-from saml2.ident import IdentDB
-from saml2.assertion import Policy
+from saml2_tophat import samlp
+from saml2_tophat.saml import NAMEID_FORMAT_PERSISTENT, NAMEID_FORMAT_TRANSIENT
+from saml2_tophat.config import IdPConfig
+from saml2_tophat.ident import IdentDB
+from saml2_tophat.assertion import Policy
 
 def _eq(l1,l2):
     return set(l1) == set(l2)

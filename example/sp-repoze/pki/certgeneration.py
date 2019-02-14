@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from saml2.cert import OpenSSLWrapper
+from saml2_tophat.cert import OpenSSLWrapper
 
 __author__ = 'haho0032'
 

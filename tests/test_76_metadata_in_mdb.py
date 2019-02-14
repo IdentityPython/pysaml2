@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 from pymongo.errors import ConnectionFailure
-from saml2.attribute_converter import d_to_local_name
-from saml2.attribute_converter import ac_factory
-from saml2.mongo_store import export_mdstore_to_mongo_db
-from saml2.mongo_store import MetadataMDB
-from saml2.mdstore import MetadataStore
-from saml2.mdstore import destinations
-from saml2.mdstore import name
-from saml2 import config
+from saml2_tophat.attribute_converter import d_to_local_name
+from saml2_tophat.attribute_converter import ac_factory
+from saml2_tophat.mongo_store import export_mdstore_to_mongo_db
+from saml2_tophat.mongo_store import MetadataMDB
+from saml2_tophat.mdstore import MetadataStore
+from saml2_tophat.mdstore import destinations
+from saml2_tophat.mdstore import name
+from saml2_tophat import config
 from pathutils import full_path
 
 __author__ = 'rolandh'
@@ -29,7 +29,7 @@ def test_metadata():
                         disable_ssl_certificate_validation=True)
 
     # Import metadata from local file.
-    mds.imp([{"class": "saml2.mdstore.MetaDataFile",
+    mds.imp([{"class": "saml2_tophat.mdstore.MetaDataFile",
               "metadata": [(full_path("swamid-2.0.xml"), )]}])
     assert len(mds) == 1  # One source
 

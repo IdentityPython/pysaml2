@@ -1,36 +1,36 @@
 # coding=utf-8
 import pytest
 
-from saml2.argtree import add_path
-from saml2.authn_context import pword
-from saml2.mdie import to_dict
-from saml2 import md, assertion
-from saml2.saml import Attribute
-from saml2.saml import Issuer
-from saml2.saml import NAMEID_FORMAT_ENTITY
-from saml2.saml import NAME_FORMAT_URI
-from saml2.saml import AttributeValue
-from saml2.saml import NameID
-from saml2.saml import NAMEID_FORMAT_TRANSIENT
-from saml2.assertion import Policy
-from saml2.assertion import Assertion
-from saml2.assertion import filter_on_attributes
-from saml2.assertion import filter_attribute_value_assertions
-from saml2.assertion import from_local
-from saml2.s_utils import MissingValue
-from saml2 import attribute_converter
-from saml2.attribute_converter import ac_factory, AttributeConverterNOOP
+from saml2_tophat.argtree import add_path
+from saml2_tophat.authn_context import pword
+from saml2_tophat.mdie import to_dict
+from saml2_tophat import md, assertion
+from saml2_tophat.saml import Attribute
+from saml2_tophat.saml import Issuer
+from saml2_tophat.saml import NAMEID_FORMAT_ENTITY
+from saml2_tophat.saml import NAME_FORMAT_URI
+from saml2_tophat.saml import AttributeValue
+from saml2_tophat.saml import NameID
+from saml2_tophat.saml import NAMEID_FORMAT_TRANSIENT
+from saml2_tophat.assertion import Policy
+from saml2_tophat.assertion import Assertion
+from saml2_tophat.assertion import filter_on_attributes
+from saml2_tophat.assertion import filter_attribute_value_assertions
+from saml2_tophat.assertion import from_local
+from saml2_tophat.s_utils import MissingValue
+from saml2_tophat import attribute_converter
+from saml2_tophat.attribute_converter import ac_factory, AttributeConverterNOOP
 
 from py.test import raises
 
-from saml2.extension import mdui
-from saml2.extension import idpdisc
-from saml2.extension import dri
-from saml2.extension import mdattr
-from saml2.extension import ui
-from saml2 import saml
-from saml2 import xmldsig
-from saml2 import xmlenc
+from saml2_tophat.extension import mdui
+from saml2_tophat.extension import idpdisc
+from saml2_tophat.extension import dri
+from saml2_tophat.extension import mdattr
+from saml2_tophat.extension import ui
+from saml2_tophat import saml
+from saml2_tophat import xmldsig
+from saml2_tophat import xmlenc
 
 from pathutils import full_path
 
@@ -82,7 +82,7 @@ def test_filter_on_attributes_1():
 
 
 def test_filter_on_attributes_2():
-    
+
     a = to_dict(Attribute(friendly_name="surName",name="urn:oid:2.5.4.4",
                           name_format=NAME_FORMAT_URI), ONTS)
     required = [a]

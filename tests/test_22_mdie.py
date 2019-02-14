@@ -1,6 +1,6 @@
-from saml2 import md
-from saml2.mdie import from_dict
-from saml2.mdstore import load_metadata_modules
+from saml2_tophat import md
+from saml2_tophat.mdie import from_dict
+from saml2_tophat.mdstore import load_metadata_modules
 
 __author__ = 'rolandh'
 

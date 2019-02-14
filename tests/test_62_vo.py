@@ -1,11 +1,11 @@
-from saml2.saml import NameID
-from saml2.saml import NAMEID_FORMAT_TRANSIENT
+from saml2_tophat.saml import NameID
+from saml2_tophat.saml import NAMEID_FORMAT_TRANSIENT
 
 __author__ = 'rolandh'
 
-from saml2 import config
-from saml2.client import Saml2Client
-from saml2.time_util import str_to_time, in_a_while
+from saml2_tophat import config
+from saml2_tophat.client import Saml2Client
+from saml2_tophat.time_util import str_to_time, in_a_while
 
 SESSION_INFO_PATTERN = {"ava": {}, "came from": "", "not_on_or_after": 0,
                         "issuer": "", "session_id": -1}

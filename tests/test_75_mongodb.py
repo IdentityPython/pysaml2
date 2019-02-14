@@ -1,11 +1,11 @@
 from contextlib import closing
 from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 import pytest
-from saml2 import BINDING_HTTP_POST
-from saml2.authn_context import INTERNETPROTOCOLPASSWORD
-from saml2.client import Saml2Client
-from saml2.server import Server
-from saml2.mongo_store import EptidMDB
+from saml2_tophat import BINDING_HTTP_POST
+from saml2_tophat.authn_context import INTERNETPROTOCOLPASSWORD
+from saml2_tophat.client import Saml2Client
+from saml2_tophat.server import Server
+from saml2_tophat.mongo_store import EptidMDB
 
 __author__ = 'rolandh'
 

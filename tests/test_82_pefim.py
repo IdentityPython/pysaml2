@@ -1,14 +1,14 @@
-from saml2 import xmldsig as ds
-from saml2 import config
-from saml2 import extension_elements_to_elements
-from saml2 import element_to_extension_element
-from saml2 import saml
-from saml2.client import Saml2Client
-from saml2.extension import pefim
-from saml2.extension.pefim import SPCertEnc
-from saml2.samlp import Extensions
-from saml2.samlp import authn_request_from_string
-from saml2.sigver import read_cert_from_file
+from saml2_tophat import xmldsig as ds
+from saml2_tophat import config
+from saml2_tophat import extension_elements_to_elements
+from saml2_tophat import element_to_extension_element
+from saml2_tophat import saml
+from saml2_tophat.client import Saml2Client
+from saml2_tophat.extension import pefim
+from saml2_tophat.extension.pefim import SPCertEnc
+from saml2_tophat.samlp import Extensions
+from saml2_tophat.samlp import authn_request_from_string
+from saml2_tophat.sigver import read_cert_from_file
 from pathutils import full_path
 
 __author__ = 'roland'

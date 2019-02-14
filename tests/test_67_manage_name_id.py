@@ -1,9 +1,9 @@
 from contextlib import closing
-from saml2 import BINDING_SOAP
-from saml2.samlp import NewID
-from saml2.saml import NameID, NAMEID_FORMAT_TRANSIENT
-from saml2.client import Saml2Client
-from saml2.server import Server
+from saml2_tophat import BINDING_SOAP
+from saml2_tophat.samlp import NewID
+from saml2_tophat.saml import NameID, NAMEID_FORMAT_TRANSIENT
+from saml2_tophat.client import Saml2Client
+from saml2_tophat.server import Server
 
 __author__ = 'rolandh'
 

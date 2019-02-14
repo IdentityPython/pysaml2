@@ -3,29 +3,29 @@
 import datetime
 import re
 
-from saml2.mdstore import MetadataStore, MetaDataMDX
-from saml2.mdstore import destinations
-from saml2.mdstore import name
+from saml2_tophat.mdstore import MetadataStore, MetaDataMDX
+from saml2_tophat.mdstore import destinations
+from saml2_tophat.mdstore import name
 
-from saml2 import md
-from saml2 import sigver
-from saml2 import BINDING_SOAP
-from saml2 import BINDING_HTTP_REDIRECT
-from saml2 import BINDING_HTTP_POST
-from saml2 import BINDING_HTTP_ARTIFACT
-from saml2 import saml
-from saml2 import config
-from saml2.attribute_converter import ac_factory
-from saml2.attribute_converter import d_to_local_name
+from saml2_tophat import md
+from saml2_tophat import sigver
+from saml2_tophat import BINDING_SOAP
+from saml2_tophat import BINDING_HTTP_REDIRECT
+from saml2_tophat import BINDING_HTTP_POST
+from saml2_tophat import BINDING_HTTP_ARTIFACT
+from saml2_tophat import saml
+from saml2_tophat import config
+from saml2_tophat.attribute_converter import ac_factory
+from saml2_tophat.attribute_converter import d_to_local_name
 
-from saml2.extension import mdui
-from saml2.extension import idpdisc
-from saml2.extension import dri
-from saml2.extension import mdattr
-from saml2.extension import ui
-from saml2.s_utils import UnknownPrincipal
-from saml2 import xmldsig
-from saml2 import xmlenc
+from saml2_tophat.extension import mdui
+from saml2_tophat.extension import idpdisc
+from saml2_tophat.extension import dri
+from saml2_tophat.extension import mdattr
+from saml2_tophat.extension import ui
+from saml2_tophat.s_utils import UnknownPrincipal
+from saml2_tophat import xmldsig
+from saml2_tophat import xmlenc
 
 from pathutils import full_path
 
@@ -42,7 +42,7 @@ TEST_METADATA_STRING = """
     Name="urn:mace:example.com:test-1.0">
   <EntityDescriptor
     entityID="http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"
-    xml:base="swamid-1.0/idp.umu.se-saml2.xml">
+    xml:base="swamid-1.0/idp.umu.se-saml2_tophat.xml">
   <IDPSSODescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
     <KeyDescriptor>
       <ds:KeyInfo>

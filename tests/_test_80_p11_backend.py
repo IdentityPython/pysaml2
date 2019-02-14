@@ -18,11 +18,11 @@ import tempfile
 import pytest
 from pathutils import full_path
 
-from saml2 import sigver
-from saml2 import class_name
-from saml2 import time_util
-from saml2 import saml
-from saml2.s_utils import factory, do_attribute_statement
+from saml2_tophat import sigver
+from saml2_tophat import class_name
+from saml2_tophat import time_util
+from saml2_tophat import saml
+from saml2_tophat.s_utils import factory, do_attribute_statement
 
 #xmlsec = pytest.importorskip("xmlsec")
 

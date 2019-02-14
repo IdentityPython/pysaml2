@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import saml2
+import saml2_tophat
 
-from saml2 import saml
-from saml2 import samlp
-from saml2.validate import valid_duration, MustValueError
-from saml2.validate import valid_unsigned_short
-from saml2.validate import valid_non_negative_integer
-from saml2.validate import valid_string
-from saml2.validate import valid_instance
-from saml2.validate import valid_any_uri
-from saml2.validate import NotValid
-from saml2.validate import valid_anytype
+from saml2_tophat import saml
+from saml2_tophat import samlp
+from saml2_tophat.validate import valid_duration, MustValueError
+from saml2_tophat.validate import valid_unsigned_short
+from saml2_tophat.validate import valid_non_negative_integer
+from saml2_tophat.validate import valid_string
+from saml2_tophat.validate import valid_instance
+from saml2_tophat.validate import valid_any_uri
+from saml2_tophat.validate import NotValid
+from saml2_tophat.validate import valid_anytype
 
 from py.test import raises
 
@@ -94,7 +94,7 @@ def test_valid_instance():
     response = samlp.Response()
     response.id = "response id"
     response.in_response_to = "request id"
-    response.version = saml2.VERSION
+    response.version = saml2_tophat.VERSION
     response.issue_instant = "2007-09-14T01:05:02Z"
     response.destination = "http://www.example.com/Destination"
     response.consent = saml.CONSENT_UNSPECIFIED

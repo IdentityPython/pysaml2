@@ -75,58 +75,58 @@ STATEMENT1 = """<?xml version="1.0" encoding="utf-8"?>
 
 
 STATEMENT2 = """<?xml version="1.0" encoding="utf-8"?>
-<saml2:AttributeStatement xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion">
-    <saml2:Attribute FriendlyName="uid" Name="urn:oid:0.9.2342.19200300.100.1.1" 
+<saml2_tophat:AttributeStatement xmlns:saml2_tophat="urn:oasis:names:tc:SAML:2.0:assertion">
+    <saml2_tophat:Attribute FriendlyName="uid" Name="urn:oid:0.9.2342.19200300.100.1.1" 
         NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
-        <saml2:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+        <saml2_tophat:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" 
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-            xsi:type="xs:string">demouser</saml2:AttributeValue>
-    </saml2:Attribute>
-    <saml2:Attribute FriendlyName="surname"
+            xsi:type="xs:string">demouser</saml2_tophat:AttributeValue>
+    </saml2_tophat:Attribute>
+    <saml2_tophat:Attribute FriendlyName="surname"
         Name="urn:oid:2.5.4.4" 
         NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
-        <saml2:AttributeValue 
+        <saml2_tophat:AttributeValue 
             xmlns:xs="http://www.w3.org/2001/XMLSchema" 
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-            xsi:type="xs:string">SWITCHaai</saml2:AttributeValue>
-    </saml2:Attribute>
-    <saml2:Attribute FriendlyName="givenName" 
+            xsi:type="xs:string">SWITCHaai</saml2_tophat:AttributeValue>
+    </saml2_tophat:Attribute>
+    <saml2_tophat:Attribute FriendlyName="givenName" 
         Name="urn:oid:2.5.4.42" 
         NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
-        <saml2:AttributeValue 
+        <saml2_tophat:AttributeValue 
             xmlns:xs="http://www.w3.org/2001/XMLSchema" 
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-            xsi:type="xs:string">Demouser</saml2:AttributeValue>
-    </saml2:Attribute>
-    <saml2:Attribute FriendlyName="eduPersonAffiliation" 
+            xsi:type="xs:string">Demouser</saml2_tophat:AttributeValue>
+    </saml2_tophat:Attribute>
+    <saml2_tophat:Attribute FriendlyName="eduPersonAffiliation" 
         Name="urn:oid:1.3.6.1.4.1.5923.1.1.1.1" 
         NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
-        <saml2:AttributeValue 
+        <saml2_tophat:AttributeValue 
             xmlns:xs="http://www.w3.org/2001/XMLSchema" 
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-            xsi:type="xs:string">staff</saml2:AttributeValue>
-    </saml2:Attribute>
-    <saml2:Attribute FriendlyName="eduPersonEntitlement" 
+            xsi:type="xs:string">staff</saml2_tophat:AttributeValue>
+    </saml2_tophat:Attribute>
+    <saml2_tophat:Attribute FriendlyName="eduPersonEntitlement" 
         Name="urn:oid:1.3.6.1.4.1.5923.1.1.1.7" 
         NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
-        <saml2:AttributeValue 
+        <saml2_tophat:AttributeValue 
             xmlns:xs="http://www.w3.org/2001/XMLSchema" 
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-            xsi:type="xs:string">http://example.org/res/99999</saml2:AttributeValue>
-        <saml2:AttributeValue 
+            xsi:type="xs:string">http://example.org/res/99999</saml2_tophat:AttributeValue>
+        <saml2_tophat:AttributeValue 
             xmlns:xs="http://www.w3.org/2001/XMLSchema" 
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-            xsi:type="xs:string">http://publisher-xy.com/e-journals</saml2:AttributeValue>
-    </saml2:Attribute>
-    <saml2:Attribute FriendlyName="mail" 
+            xsi:type="xs:string">http://publisher-xy.com/e-journals</saml2_tophat:AttributeValue>
+    </saml2_tophat:Attribute>
+    <saml2_tophat:Attribute FriendlyName="mail" 
         Name="urn:oid:0.9.2342.19200300.100.1.3" 
         NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
-        <saml2:AttributeValue 
+        <saml2_tophat:AttributeValue 
             xmlns:xs="http://www.w3.org/2001/XMLSchema" 
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-            xsi:type="xs:string">demouser@example.org</saml2:AttributeValue>
-    </saml2:Attribute>
-</saml2:AttributeStatement>"""
+            xsi:type="xs:string">demouser@example.org</saml2_tophat:AttributeValue>
+    </saml2_tophat:Attribute>
+</saml2_tophat:AttributeStatement>"""
 
 STATEMENT3 = """<?xml version='1.0' encoding='UTF-8'?>
 <ns0:AttributeStatement xmlns:ns0="urn:oasis:names:tc:SAML:2.0:assertion">
@@ -159,43 +159,43 @@ STATEMENT4 = """<?xml version='1.0' encoding='UTF-8'?>
 </ns0:AttributeStatement>"""
 
 STATEMENT_MIXED = """<?xml version="1.0" encoding="utf-8"?>
-<saml2:AttributeStatement xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion">
-    <saml2:Attribute FriendlyName="uid" Name="urn:oid:0.9.2342.19200300.100.1.1"
+<saml2_tophat:AttributeStatement xmlns:saml2_tophat="urn:oasis:names:tc:SAML:2.0:assertion">
+    <saml2_tophat:Attribute FriendlyName="uid" Name="urn:oid:0.9.2342.19200300.100.1.1"
         NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
-        <saml2:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema"
+        <saml2_tophat:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xsi:type="xs:string">demouser</saml2:AttributeValue>
-    </saml2:Attribute>
-    <saml2:Attribute FriendlyName="swissEduPersonHomeOrganizationType"
+            xsi:type="xs:string">demouser</saml2_tophat:AttributeValue>
+    </saml2_tophat:Attribute>
+    <saml2_tophat:Attribute FriendlyName="swissEduPersonHomeOrganizationType"
         Name="urn:oid:2.16.756.1.2.5.1.1.5"
         NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
-        <saml2:AttributeValue
+        <saml2_tophat:AttributeValue
             xmlns:xs="http://www.w3.org/2001/XMLSchema"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xsi:type="xs:string">others</saml2:AttributeValue>
-    </saml2:Attribute>
-    <saml2:Attribute Name="urn:mace:dir:attribute-def:givenName"
+            xsi:type="xs:string">others</saml2_tophat:AttributeValue>
+    </saml2_tophat:Attribute>
+    <saml2_tophat:Attribute Name="urn:mace:dir:attribute-def:givenName"
         NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic">
-        <saml2:AttributeValue>Roland</saml2:AttributeValue>
-    </saml2:Attribute>
-    <saml2:Attribute Name="urn:mace:dir:attribute-def:sn"
+        <saml2_tophat:AttributeValue>Roland</saml2_tophat:AttributeValue>
+    </saml2_tophat:Attribute>
+    <saml2_tophat:Attribute Name="urn:mace:dir:attribute-def:sn"
         NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic">
-        <saml2:AttributeValue>Hedberg</saml2:AttributeValue>
-    </saml2:Attribute>
-    <saml2:Attribute FriendlyName="eduPersonAffiliation"
+        <saml2_tophat:AttributeValue>Hedberg</saml2_tophat:AttributeValue>
+    </saml2_tophat:Attribute>
+    <saml2_tophat:Attribute FriendlyName="eduPersonAffiliation"
         Name="urn:oid:1.3.6.1.4.1.5923.1.1.1.1"
         NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
-        <saml2:AttributeValue
+        <saml2_tophat:AttributeValue
             xmlns:xs="http://www.w3.org/2001/XMLSchema"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xsi:type="xs:string">staff</saml2:AttributeValue>
-    </saml2:Attribute>
-    <saml2:Attribute Name="urn:example:com:foo"
+            xsi:type="xs:string">staff</saml2_tophat:AttributeValue>
+    </saml2_tophat:Attribute>
+    <saml2_tophat:Attribute Name="urn:example:com:foo"
         NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:example">
-        <saml2:AttributeValue>Thing</saml2:AttributeValue>
-    </saml2:Attribute>
-    <saml2:Attribute Name="user_id"
+        <saml2_tophat:AttributeValue>Thing</saml2_tophat:AttributeValue>
+    </saml2_tophat:Attribute>
+    <saml2_tophat:Attribute Name="user_id"
         NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:unspecified">
-        <saml2:AttributeValue>bob</saml2:AttributeValue>
-    </saml2:Attribute>
-</saml2:AttributeStatement>"""
+        <saml2_tophat:AttributeValue>bob</saml2_tophat:AttributeValue>
+    </saml2_tophat:Attribute>
+</saml2_tophat:AttributeStatement>"""

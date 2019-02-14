@@ -1,6 +1,6 @@
-from saml2 import BINDING_SOAP, BINDING_HTTP_REDIRECT
-from saml2.saml import NAMEID_FORMAT_PERSISTENT
-from saml2.saml import NAME_FORMAT_URI
+from saml2_tophat import BINDING_SOAP, BINDING_HTTP_REDIRECT
+from saml2_tophat.saml import NAMEID_FORMAT_PERSISTENT
+from saml2_tophat.saml import NAME_FORMAT_URI
 
 from pathutils import full_path
 
@@ -38,7 +38,7 @@ CONFIG={
     "cert_file" : full_path("test.pem"),
     #"xmlsec_binary" : None,
     "metadata": [{
-        "class": "saml2.mdstore.MetaDataFile",
+        "class": "saml2_tophat.mdstore.MetaDataFile",
         "metadata": [(full_path("metadata.xml"), ), (full_path("vo_metadata.xml"), )],
     }],
     "attribute_map_dir" : full_path("attributemaps"),

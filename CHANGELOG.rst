@@ -1,6 +1,18 @@
 Changelog
 =========
 
+4.6.3-2 (2019-01-15)
+-------------------------
+
+- Cherry-picked `4530ef7fa09a68d227b967f82665339ae9ec58c2` from upstream
+
+4.6.3-1 (2018-10-23)
+-------------------------
+
+Tophat Fork.
+
+- Added the SP config parameter: valid_destination_regex
+
 4.6.3 (2018-10-08)
 ------------------
 

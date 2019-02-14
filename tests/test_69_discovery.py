@@ -1,5 +1,5 @@
-from saml2.client import Saml2Client
-from saml2.discovery import DiscoveryServer
+from saml2_tophat.client import Saml2Client
+from saml2_tophat.discovery import DiscoveryServer
 
 from pathutils import dotname
 

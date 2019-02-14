@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from saml2.saml import AUTHN_PASSWORD
+from saml2_tophat.saml import AUTHN_PASSWORD
 
 __author__ = 'rolandh'
 

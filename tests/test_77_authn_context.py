@@ -12,22 +12,22 @@ ex1 = """<AuthenticationContextDeclaration
   </AuthnMethod>
 </AuthenticationContextDeclaration>"""
 
-from saml2.saml import AuthnContext
-from saml2.saml import authn_context_from_string
-from saml2.saml import AuthnContextClassRef
-from saml2.samlp import RequestedAuthnContext
-from saml2.authn_context import pword
-from saml2.authn_context import ppt
-from saml2.authn_context import authn_context_class_ref
-from saml2.authn_context import requested_authn_context
-from saml2.authn_context import PASSWORDPROTECTEDTRANSPORT
-from saml2.authn_context import AL1
-from saml2.authn_context import AL2
-from saml2.authn_context import AL3
-from saml2.authn_context import AL4
-from saml2.authn_context import AuthnBroker
-from saml2.authn_context import authn_context_decl_from_extension_elements
-from saml2.authn_context import authn_context_factory
+from saml2_tophat.saml import AuthnContext
+from saml2_tophat.saml import authn_context_from_string
+from saml2_tophat.saml import AuthnContextClassRef
+from saml2_tophat.samlp import RequestedAuthnContext
+from saml2_tophat.authn_context import pword
+from saml2_tophat.authn_context import ppt
+from saml2_tophat.authn_context import authn_context_class_ref
+from saml2_tophat.authn_context import requested_authn_context
+from saml2_tophat.authn_context import PASSWORDPROTECTEDTRANSPORT
+from saml2_tophat.authn_context import AL1
+from saml2_tophat.authn_context import AL2
+from saml2_tophat.authn_context import AL3
+from saml2_tophat.authn_context import AL4
+from saml2_tophat.authn_context import AuthnBroker
+from saml2_tophat.authn_context import authn_context_decl_from_extension_elements
+from saml2_tophat.authn_context import authn_context_factory
 
 length = pword.Length(min="4")
 restricted_password = pword.RestrictedPassword(length=length)

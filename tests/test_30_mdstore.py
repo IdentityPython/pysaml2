@@ -6,22 +6,22 @@ from collections import OrderedDict
 
 from future.backports.urllib.parse import quote_plus
 
-from saml2.config import Config
-from saml2.mdstore import MetadataStore, MetaDataExtern
-from saml2.mdstore import MetaDataMDX
-from saml2.mdstore import SAML_METADATA_CONTENT_TYPE
-from saml2.mdstore import destinations
-from saml2.mdstore import name
-from saml2 import sigver
-from saml2.httpbase import HTTPBase
-from saml2 import BINDING_SOAP
-from saml2 import BINDING_HTTP_REDIRECT
-from saml2 import BINDING_HTTP_POST
-from saml2 import BINDING_HTTP_ARTIFACT
-from saml2 import config
-from saml2.attribute_converter import ac_factory
-from saml2.attribute_converter import d_to_local_name
-from saml2.s_utils import UnknownPrincipal
+from saml2_tophat.config import Config
+from saml2_tophat.mdstore import MetadataStore, MetaDataExtern
+from saml2_tophat.mdstore import MetaDataMDX
+from saml2_tophat.mdstore import SAML_METADATA_CONTENT_TYPE
+from saml2_tophat.mdstore import destinations
+from saml2_tophat.mdstore import name
+from saml2_tophat import sigver
+from saml2_tophat.httpbase import HTTPBase
+from saml2_tophat import BINDING_SOAP
+from saml2_tophat import BINDING_HTTP_REDIRECT
+from saml2_tophat import BINDING_HTTP_POST
+from saml2_tophat import BINDING_HTTP_ARTIFACT
+from saml2_tophat import config
+from saml2_tophat.attribute_converter import ac_factory
+from saml2_tophat.attribute_converter import d_to_local_name
+from saml2_tophat.s_utils import UnknownPrincipal
 from pathutils import full_path
 
 import responses
@@ -55,7 +55,7 @@ TEST_METADATA_STRING = """
     Name="urn:mace:example.com:test-1.0">
   <EntityDescriptor
     entityID="http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"
-    xml:base="swamid-1.0/idp.umu.se-saml2.xml">
+    xml:base="swamid-1.0/idp.umu.se-saml2_tophat.xml">
   <IDPSSODescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
     <KeyDescriptor>
       <ds:KeyInfo>
@@ -89,56 +89,56 @@ ATTRCONV = ac_factory(full_path("attributemaps"))
 
 METADATACONF = {
     "1": [{
-        "class": "saml2.mdstore.MetaDataFile",
+        "class": "saml2_tophat.mdstore.MetaDataFile",
         "metadata": [(full_path("swamid-1.0.xml"),)],
     }],
     "2": [{
-        "class": "saml2.mdstore.MetaDataFile",
+        "class": "saml2_tophat.mdstore.MetaDataFile",
         "metadata": [(full_path("InCommon-metadata.xml"),)],
     }],
     "3": [{
-        "class": "saml2.mdstore.MetaDataFile",
+        "class": "saml2_tophat.mdstore.MetaDataFile",
         "metadata": [(full_path("extended.xml"),)],
     }],
     # "7": [{
-    #     "class": "saml2.mdstore.MetaDataFile",
+    #     "class": "saml2_tophat.mdstore.MetaDataFile",
     #     "metadata": [(full_path("metadata_sp_1.xml"), ),
     #                  (full_path("InCommon-metadata.xml"), )], },
     #       {
-    #     "class": "saml2.mdstore.MetaDataExtern",
+    #     "class": "saml2_tophat.mdstore.MetaDataExtern",
     #     "metadata": [
     #         ("https://kalmar2.org/simplesaml/module.php/aggregator/?id
-    # =kalmarcentral2&set=saml2",
+    # =kalmarcentral2&set=saml2_tophat",
     #          full_path("kalmar2.pem")), ],
     # }],
     "4": [{
-        "class": "saml2.mdstore.MetaDataFile",
+        "class": "saml2_tophat.mdstore.MetaDataFile",
         "metadata": [(full_path("metadata_example.xml"),)],
     }],
     "5": [{
-        "class": "saml2.mdstore.MetaDataFile",
+        "class": "saml2_tophat.mdstore.MetaDataFile",
         "metadata": [(full_path("metadata.aaitest.xml"),)],
     }],
     "8": [{
-        "class": "saml2.mdstore.MetaDataMD",
+        "class": "saml2_tophat.mdstore.MetaDataMD",
         "metadata": [(full_path("swamid.md"),)],
     }],
     "9": [{
-        "class": "saml2.mdstore.MetaDataFile",
+        "class": "saml2_tophat.mdstore.MetaDataFile",
         "metadata": [(full_path("metadata"),)]
     }],
     "10": [{
-        "class": "saml2.mdstore.MetaDataExtern",
+        "class": "saml2_tophat.mdstore.MetaDataExtern",
         "metadata": [
             ("http://md.incommon.org/InCommon/InCommon-metadata-export.xml",
              full_path("inc-md-cert.pem"))]
     }],
     "11": [{
-        "class": "saml2.mdstore.InMemoryMetaData",
+        "class": "saml2_tophat.mdstore.InMemoryMetaData",
         "metadata": [(TEST_METADATA_STRING,)]
     }],
     "12": [{
-        "class": "saml2.mdstore.MetaDataFile",
+        "class": "saml2_tophat.mdstore.MetaDataFile",
         "metadata": [(full_path("uu.xml"),)],
     }],
 }
@@ -425,7 +425,7 @@ def test_get_certs_from_metadata():
 def test_get_certs_from_metadata_without_keydescriptor():
     mds = MetadataStore(ATTRCONV, None)
     mds.imp([{
-        "class": "saml2.mdstore.InMemoryMetaData",
+        "class": "saml2_tophat.mdstore.InMemoryMetaData",
         "metadata": [("""
 <EntitiesDescriptor
     xmlns="urn:oasis:names:tc:SAML:2.0:metadata"
@@ -436,7 +436,7 @@ def test_get_certs_from_metadata_without_keydescriptor():
     Name="urn:mace:example.com:test-1.0">
   <EntityDescriptor
     entityID="http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"
-    xml:base="swamid-1.0/idp.umu.se-saml2.xml">
+    xml:base="swamid-1.0/idp.umu.se-saml2_tophat.xml">
   <IDPSSODescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
     <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
     <SingleSignOnService

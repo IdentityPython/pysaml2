@@ -1,13 +1,13 @@
 from six.moves.urllib.parse import parse_qs
-from saml2.authn_context import INTERNETPROTOCOLPASSWORD
-from saml2.samlp import attribute_query_from_string, logout_request_from_string
-from saml2 import BINDING_HTTP_REDIRECT, pack
-from saml2 import BINDING_HTTP_POST
-from saml2 import BINDING_SOAP
-from saml2.server import Server
-from saml2.soap import parse_soap_enveloped_saml_attribute_query
-from saml2.soap import parse_soap_enveloped_saml_logout_request
-from saml2.soap import make_soap_enveloped_saml_thingy
+from saml2_tophat.authn_context import INTERNETPROTOCOLPASSWORD
+from saml2_tophat.samlp import attribute_query_from_string, logout_request_from_string
+from saml2_tophat import BINDING_HTTP_REDIRECT, pack
+from saml2_tophat import BINDING_HTTP_POST
+from saml2_tophat import BINDING_SOAP
+from saml2_tophat.server import Server
+from saml2_tophat.soap import parse_soap_enveloped_saml_attribute_query
+from saml2_tophat.soap import parse_soap_enveloped_saml_logout_request
+from saml2_tophat.soap import make_soap_enveloped_saml_thingy
 
 __author__ = 'rolandh'
 

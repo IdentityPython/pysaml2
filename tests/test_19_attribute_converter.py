@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 
-from saml2 import attribute_converter, saml
+from saml2_tophat import attribute_converter, saml
 
 from attribute_statement_data import *
 
 from pathutils import full_path
-from saml2.attribute_converter import AttributeConverterNOOP, from_local
-from saml2.attribute_converter import AttributeConverter
-from saml2.attribute_converter import to_local
-from saml2.saml import attribute_from_string, name_id_from_string, NameID, NAMEID_FORMAT_PERSISTENT
-from saml2.saml import attribute_statement_from_string
-import saml2.attributemaps.saml_uri as saml_map
+from saml2_tophat.attribute_converter import AttributeConverterNOOP, from_local
+from saml2_tophat.attribute_converter import AttributeConverter
+from saml2_tophat.attribute_converter import to_local
+from saml2_tophat.saml import attribute_from_string, name_id_from_string, NameID, NAMEID_FORMAT_PERSISTENT
+from saml2_tophat.saml import attribute_statement_from_string
+import saml2_tophat.attributemaps.saml_uri as saml_map
 
 
 def _eq(l1, l2):

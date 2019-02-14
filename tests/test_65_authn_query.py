@@ -1,19 +1,19 @@
 from contextlib import closing
 from six.moves.urllib.parse import urlparse, parse_qs
-from saml2 import BINDING_SOAP, BINDING_HTTP_POST
+from saml2_tophat import BINDING_SOAP, BINDING_HTTP_POST
 
 __author__ = 'rolandh'
 
-from saml2.authn_context import INTERNETPROTOCOLPASSWORD
-from saml2.authn_context import requested_authn_context
-from saml2.samlp import AuthnRequest
-from saml2.samlp import NameIDPolicy
-from saml2.samlp import AuthnQuery
-from saml2.client import Saml2Client
-from saml2.saml import Subject
-from saml2.saml import NameID
-from saml2.saml import NAMEID_FORMAT_TRANSIENT
-from saml2.server import Server
+from saml2_tophat.authn_context import INTERNETPROTOCOLPASSWORD
+from saml2_tophat.authn_context import requested_authn_context
+from saml2_tophat.samlp import AuthnRequest
+from saml2_tophat.samlp import NameIDPolicy
+from saml2_tophat.samlp import AuthnQuery
+from saml2_tophat.client import Saml2Client
+from saml2_tophat.saml import Subject
+from saml2_tophat.saml import NameID
+from saml2_tophat.saml import NAMEID_FORMAT_TRANSIENT
+from saml2_tophat.server import Server
 
 TAG1 = "name=\"SAMLRequest\" value="
 

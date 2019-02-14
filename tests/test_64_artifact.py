@@ -3,16 +3,16 @@ from contextlib import closing
 from hashlib import sha1
 from six.moves.urllib.parse import urlparse
 from six.moves.urllib.parse import parse_qs
-from saml2 import BINDING_HTTP_ARTIFACT
-from saml2 import BINDING_SOAP
-from saml2 import BINDING_HTTP_POST
-from saml2.authn_context import INTERNETPROTOCOLPASSWORD
-from saml2.client import Saml2Client
+from saml2_tophat import BINDING_HTTP_ARTIFACT
+from saml2_tophat import BINDING_SOAP
+from saml2_tophat import BINDING_HTTP_POST
+from saml2_tophat.authn_context import INTERNETPROTOCOLPASSWORD
+from saml2_tophat.client import Saml2Client
 
-from saml2.entity import create_artifact
-from saml2.entity import ARTIFACT_TYPECODE
-from saml2.s_utils import sid
-from saml2.server import Server
+from saml2_tophat.entity import create_artifact
+from saml2_tophat.entity import ARTIFACT_TYPECODE
+from saml2_tophat.s_utils import sid
+from saml2_tophat.server import Server
 
 __author__ = 'rolandh'
 
