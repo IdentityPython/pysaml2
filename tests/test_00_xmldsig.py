@@ -1,18 +1,5 @@
 #!/usr/bin/env python
 #
-# Copyright (C) 2007 SIOS Technology, Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
 """Tests for xmldsig"""
 
@@ -24,7 +11,7 @@ try:
 except ImportError:
   from elementtree import ElementTree
 import ds_data
-import xmldsig as ds
+import saml2.xmldsig as ds
 
 class TestObject:
 
@@ -70,17 +57,17 @@ class TestMgmtData:
 class TestSPKISexp:
 
   def setup_class(self):
-    self.spki_sexp = ds.SPKIDataType_SPKISexp()
+    self.spki_sexp = ds.SPKISexp()
 
   def testAccessors(self):
     """Test for SPKISexp accessors"""
     self.spki_sexp.text = "spki sexp"
-    new_spki_sexp = ds.spki_data_type__spki_sexp_from_string(self.spki_sexp.to_string())
+    new_spki_sexp = ds.spki_sexp_from_string(self.spki_sexp.to_string())
     assert new_spki_sexp.text.strip() == "spki sexp"
 
   def testUsingTestData(self):
     """Test for spki_sexp_from_string() using test data"""
-    new_spki_sexp = ds.spki_data_type__spki_sexp_from_string(ds_data.TEST_SPKI_SEXP)
+    new_spki_sexp = ds.spki_sexp_from_string(ds_data.TEST_SPKI_SEXP)
     assert new_spki_sexp.text.strip() == "spki sexp"
 
 
@@ -92,14 +79,14 @@ class TestSPKIData:
   def testAccessors(self):
     """Test for SPKIData accessors"""
     self.spki_data.spki_sexp.append(
-      ds.spki_data_type__spki_sexp_from_string(ds_data.TEST_SPKI_SEXP))
+      ds.spki_sexp_from_string(ds_data.TEST_SPKI_SEXP))
     new_spki_data = ds.spki_data_from_string(self.spki_data.to_string())
     assert new_spki_data.spki_sexp[0].text.strip() == "spki sexp"
 
   def testUsingTestData(self):
     """Test for spki_data_from_string() using test data"""
     new_spki_data = ds.spki_data_from_string(ds_data.TEST_SPKI_DATA)
-    print new_spki_data
+    print(new_spki_data)
     assert new_spki_data.spki_sexp[0].text.strip() == "spki sexp"
     assert new_spki_data.spki_sexp[1].text.strip() == "spki sexp2"
 
@@ -111,19 +98,19 @@ class TestPGPData:
 
   def testAccessors(self):
     """Test for PGPData accessors"""
-    self.pgp_data.pgp_key_id = ds.PGPDataType_PGPKeyID(text="pgp key id")
-    self.pgp_data.pgp_key_packet = ds.PGPDataType_PGPKeyPacket(text="pgp key packet")
+    self.pgp_data.pgp_key_id = ds.PGPKeyID(text="pgp key id")
+    self.pgp_data.pgp_key_packet = ds.PGPKeyPacket(text="pgp key packet")
     new_pgp_data = ds.pgp_data_from_string(self.pgp_data.to_string())
-    assert isinstance(new_pgp_data.pgp_key_id, ds.PGPDataType_PGPKeyID)
-    assert isinstance(new_pgp_data.pgp_key_packet, ds.PGPDataType_PGPKeyPacket)
+    assert isinstance(new_pgp_data.pgp_key_id, ds.PGPKeyID)
+    assert isinstance(new_pgp_data.pgp_key_packet, ds.PGPKeyPacket)
     assert new_pgp_data.pgp_key_id.text.strip() == "pgp key id"
     assert new_pgp_data.pgp_key_packet.text.strip() == "pgp key packet"
 
   def testUsingTestData(self):
     """Test for pgp_data_from_string() using test data"""
     new_pgp_data = ds.pgp_data_from_string(ds_data.TEST_PGP_DATA)
-    assert isinstance(new_pgp_data.pgp_key_id, ds.PGPDataType_PGPKeyID)
-    assert isinstance(new_pgp_data.pgp_key_packet, ds.PGPDataType_PGPKeyPacket)
+    assert isinstance(new_pgp_data.pgp_key_id, ds.PGPKeyID)
+    assert isinstance(new_pgp_data.pgp_key_packet, ds.PGPKeyPacket)
     assert new_pgp_data.pgp_key_id.text.strip() == "pgp key id"
     assert new_pgp_data.pgp_key_packet.text.strip() == "pgp key packet"
 
@@ -135,9 +122,9 @@ class TestX509IssuerSerial:
 
   def testAccessors(self):
     """Test for X509SerialNumber accessors"""
-    self.x509_issuer_serial.x509_issuer_name = ds.X509IssuerSerialType_X509IssuerName(
+    self.x509_issuer_serial.x509_issuer_name = ds.X509IssuerName(
       text="issuer name")
-    self.x509_issuer_serial.x509_serial_number = ds.X509IssuerSerialType_X509SerialNumber(text="1")
+    self.x509_issuer_serial.x509_serial_number = ds.X509SerialNumber(text="1")
     new_x509_issuer_serial = ds.x509_issuer_serial_type__from_string(
        self.x509_issuer_serial.to_string())
     assert new_x509_issuer_serial.x509_issuer_name.text.strip() == \
@@ -146,7 +133,7 @@ class TestX509IssuerSerial:
 
   def testUsingTestData(self):
     """Test for x509_issuer_serial_from_string() using test data"""
-    new_x509_issuer_serial = ds.x509_data_type__x509_issuer_serial_from_string(
+    new_x509_issuer_serial = ds.x509_issuer_serial_from_string(
       ds_data.TEST_X509_ISSUER_SERIAL)
     assert new_x509_issuer_serial.x509_issuer_name.text.strip() == \
                  "issuer name"
@@ -160,52 +147,46 @@ class TestX509Data:
 
   def testAccessors(self):
     """Test for X509Data accessors"""
-    st = ds.x509_data_type__x509_issuer_serial_from_string(ds_data.TEST_X509_ISSUER_SERIAL)
-    print st
+    st = ds.x509_issuer_serial_from_string(ds_data.TEST_X509_ISSUER_SERIAL)
+    print(st)
     self.x509_data.x509_issuer_serial= st
-    self.x509_data.x509_ski = ds.X509DataType_X509SKI(text="x509 ski")
-    self.x509_data.x509_subject_name = ds.X509DataType_X509SubjectName(
+    self.x509_data.x509_ski = ds.X509SKI(text="x509 ski")
+    self.x509_data.x509_subject_name = ds.X509SubjectName(
                                                 text="x509 subject name")
-    self.x509_data.x509_certificate = ds.X509DataType_X509Certificate(
+    self.x509_data.x509_certificate = ds.X509Certificate(
                                                 text="x509 certificate")
-    self.x509_data.x509_crl = ds.X509DataType_X509CRL(text="x509 crl")
+    self.x509_data.x509_crl = ds.X509CRL(text="x509 crl")
     
     new_x509_data = ds.x509_data_from_string(self.x509_data.to_string())
-    print new_x509_data.keyswv()
-    print new_x509_data.__dict__.keys()
+    print(new_x509_data.keyswv())
+    print(new_x509_data.__dict__.keys())
     assert new_x509_data.x509_issuer_serial
-    assert isinstance(new_x509_data.x509_issuer_serial,
-                            ds.X509DataType_X509IssuerSerial)
+    assert isinstance(new_x509_data.x509_issuer_serial, ds.X509IssuerSerial)
     assert new_x509_data.x509_ski.text.strip() == "x509 ski"
-    assert isinstance(new_x509_data.x509_ski, ds.X509DataType_X509SKI)
+    assert isinstance(new_x509_data.x509_ski, ds.X509SKI)
     assert new_x509_data.x509_subject_name.text.strip() == \
                  "x509 subject name"
-    assert isinstance(new_x509_data.x509_subject_name,
-                            ds.X509DataType_X509SubjectName)
+    assert isinstance(new_x509_data.x509_subject_name, ds.X509SubjectName)
     assert new_x509_data.x509_certificate.text.strip() == \
                  "x509 certificate"
-    assert isinstance(new_x509_data.x509_certificate,
-                            ds.X509DataType_X509Certificate)
+    assert isinstance(new_x509_data.x509_certificate, ds.X509Certificate)
     assert new_x509_data.x509_crl.text.strip() == "x509 crl"
-    assert isinstance(new_x509_data.x509_crl,ds.X509DataType_X509CRL)
+    assert isinstance(new_x509_data.x509_crl,ds.X509CRL)
 
   def testUsingTestData(self):
     """Test for x509_data_from_string() using test data"""
     new_x509_data = ds.x509_data_from_string(ds_data.TEST_X509_DATA)
-    assert isinstance(new_x509_data.x509_issuer_serial,
-                            ds.X509DataType_X509IssuerSerial)
+    assert isinstance(new_x509_data.x509_issuer_serial, ds.X509IssuerSerial)
     assert new_x509_data.x509_ski.text.strip() == "x509 ski"
-    assert isinstance(new_x509_data.x509_ski, ds.X509DataType_X509SKI)
+    assert isinstance(new_x509_data.x509_ski, ds.X509SKI)
     assert new_x509_data.x509_subject_name.text.strip() == \
                  "x509 subject name"
-    assert isinstance(new_x509_data.x509_subject_name,
-                            ds.X509DataType_X509SubjectName)
+    assert isinstance(new_x509_data.x509_subject_name, ds.X509SubjectName)
     assert new_x509_data.x509_certificate.text.strip() == \
                  "x509 certificate"
-    assert isinstance(new_x509_data.x509_certificate,
-                            ds.X509DataType_X509Certificate)
+    assert isinstance(new_x509_data.x509_certificate, ds.X509Certificate)
     assert new_x509_data.x509_crl.text.strip() == "x509 crl"
-    assert isinstance(new_x509_data.x509_crl,ds.X509DataType_X509CRL)
+    assert isinstance(new_x509_data.x509_crl,ds.X509CRL)
 
 
 class TestTransform:
@@ -297,11 +278,11 @@ class TestRSAKeyValue:
 
   def testAccessors(self):
     """Test for RSAKeyValue accessors"""
-    self.rsa_key_value.modulus = ds.RSAKeyValueType_Modulus(text="modulus")
-    self.rsa_key_value.exponent = ds.RSAKeyValueType_Exponent(text="exponent")
+    self.rsa_key_value.modulus = ds.Modulus(text="modulus")
+    self.rsa_key_value.exponent = ds.Exponent(text="exponent")
     new_rsa_key_value = ds.rsa_key_value_from_string(self.rsa_key_value.to_string())
-    assert isinstance(new_rsa_key_value.modulus, ds.RSAKeyValueType_Modulus)
-    assert isinstance(new_rsa_key_value.exponent, ds.RSAKeyValueType_Exponent)
+    assert isinstance(new_rsa_key_value.modulus, ds.Modulus)
+    assert isinstance(new_rsa_key_value.exponent, ds.Exponent)
     assert new_rsa_key_value.modulus.text.strip() == "modulus"
     assert new_rsa_key_value.exponent.text.strip() == "exponent"
     
@@ -309,8 +290,8 @@ class TestRSAKeyValue:
     """Test for rsa_key_value_from_string() using test data"""
     new_rsa_key_value = ds.rsa_key_value_from_string(
       ds_data.TEST_RSA_KEY_VALUE)
-    assert isinstance(new_rsa_key_value.modulus, ds.RSAKeyValueType_Modulus)
-    assert isinstance(new_rsa_key_value.exponent, ds.RSAKeyValueType_Exponent)
+    assert isinstance(new_rsa_key_value.modulus, ds.Modulus)
+    assert isinstance(new_rsa_key_value.exponent, ds.Exponent)
     assert new_rsa_key_value.modulus.text.strip() == "modulus"
     assert new_rsa_key_value.exponent.text.strip() == "exponent"
 
@@ -322,21 +303,21 @@ class TestDSAKeyValue:
 
   def testAccessors(self):
     """Test for DSAKeyValue accessors"""
-    self.dsa_key_value.p = ds.DSAKeyValueType_P(text="p")
-    self.dsa_key_value.q = ds.DSAKeyValueType_Q(text="q")
-    self.dsa_key_value.g = ds.DSAKeyValueType_G(text="g")
-    self.dsa_key_value.y = ds.DSAKeyValueType_Y(text="y")
-    self.dsa_key_value.j = ds.DSAKeyValueType_J(text="j")
-    self.dsa_key_value.seed = ds.DSAKeyValueType_Seed(text="seed")
-    self.dsa_key_value.pgen_counter = ds.DSAKeyValueType_PgenCounter(text="pgen counter")
+    self.dsa_key_value.p = ds.P(text="p")
+    self.dsa_key_value.q = ds.Q(text="q")
+    self.dsa_key_value.g = ds.G(text="g")
+    self.dsa_key_value.y = ds.Y(text="y")
+    self.dsa_key_value.j = ds.J(text="j")
+    self.dsa_key_value.seed = ds.Seed(text="seed")
+    self.dsa_key_value.pgen_counter = ds.PgenCounter(text="pgen counter")
     new_dsa_key_value = ds.dsa_key_value_from_string(self.dsa_key_value.to_string())
-    assert isinstance(new_dsa_key_value.p, ds.DSAKeyValueType_P)
-    assert isinstance(new_dsa_key_value.q, ds.DSAKeyValueType_Q)
-    assert isinstance(new_dsa_key_value.g, ds.DSAKeyValueType_G)
-    assert isinstance(new_dsa_key_value.y, ds.DSAKeyValueType_Y)
-    assert isinstance(new_dsa_key_value.j, ds.DSAKeyValueType_J)
-    assert isinstance(new_dsa_key_value.seed, ds.DSAKeyValueType_Seed)
-    assert isinstance(new_dsa_key_value.pgen_counter, ds.DSAKeyValueType_PgenCounter)
+    assert isinstance(new_dsa_key_value.p, ds.P)
+    assert isinstance(new_dsa_key_value.q, ds.Q)
+    assert isinstance(new_dsa_key_value.g, ds.G)
+    assert isinstance(new_dsa_key_value.y, ds.Y)
+    assert isinstance(new_dsa_key_value.j, ds.J)
+    assert isinstance(new_dsa_key_value.seed, ds.Seed)
+    assert isinstance(new_dsa_key_value.pgen_counter, ds.PgenCounter)
     assert new_dsa_key_value.p.text.strip() == "p"
     assert new_dsa_key_value.q.text.strip() == "q"
     assert new_dsa_key_value.g.text.strip() == "g"
@@ -349,13 +330,13 @@ class TestDSAKeyValue:
     """Test for dsa_key_value_from_string() using test data"""
     new_dsa_key_value = ds.dsa_key_value_from_string(
       ds_data.TEST_DSA_KEY_VALUE)
-    assert isinstance(new_dsa_key_value.p, ds.DSAKeyValueType_P)
-    assert isinstance(new_dsa_key_value.q, ds.DSAKeyValueType_Q)
-    assert isinstance(new_dsa_key_value.g, ds.DSAKeyValueType_G)
-    assert isinstance(new_dsa_key_value.y, ds.DSAKeyValueType_Y)
-    assert isinstance(new_dsa_key_value.j, ds.DSAKeyValueType_J)
-    assert isinstance(new_dsa_key_value.seed, ds.DSAKeyValueType_Seed)
-    assert isinstance(new_dsa_key_value.pgen_counter, ds.DSAKeyValueType_PgenCounter)
+    assert isinstance(new_dsa_key_value.p, ds.P)
+    assert isinstance(new_dsa_key_value.q, ds.Q)
+    assert isinstance(new_dsa_key_value.g, ds.G)
+    assert isinstance(new_dsa_key_value.y, ds.Y)
+    assert isinstance(new_dsa_key_value.j, ds.J)
+    assert isinstance(new_dsa_key_value.seed, ds.Seed)
+    assert isinstance(new_dsa_key_value.pgen_counter, ds.PgenCounter)
     assert new_dsa_key_value.p.text.strip() == "p"
     assert new_dsa_key_value.q.text.strip() == "q"
     assert new_dsa_key_value.g.text.strip() == "g"
@@ -536,20 +517,20 @@ class TestSignatureMethod:
   def testAccessors(self):
     """Test for SignatureMethod accessors"""
     self.signature_method.algorithm = ds.SIG_RSA_SHA1
-    self.signature_method.hmac_output_length = ds.SignatureMethodType_HMACOutputLength(text="8")
+    self.signature_method.hmac_output_length = ds.HMACOutputLength(text="8")
     new_signature_method = ds.signature_method_from_string(
       self.signature_method.to_string())
     assert isinstance(new_signature_method.hmac_output_length,
-                            ds.SignatureMethodType_HMACOutputLength)
+                      ds.HMACOutputLength)
     assert new_signature_method.hmac_output_length.text.strip() == "8"
     assert new_signature_method.algorithm == ds.SIG_RSA_SHA1
     
   def testUsingTestData(self):
     """Test for signature_method_from_string() using test data"""
     new_signature_method = ds.signature_method_from_string(
-      ds_data.TEST_SIGNATURE_METHOD)
+                        ds_data.TEST_SIGNATURE_METHOD)
     assert isinstance(new_signature_method.hmac_output_length,
-                            ds.SignatureMethodType_HMACOutputLength)
+                      ds.HMACOutputLength)
     assert new_signature_method.hmac_output_length.text.strip() == "8"
     assert new_signature_method.algorithm == ds.SIG_RSA_SHA1
 

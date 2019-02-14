@@ -1,522 +1,402 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2009-2011 Umeå University
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#            http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
-"""Contains classes and functions that a SAML2.0 Identity provider (IdP) 
+"""Contains classes and functions that a SAML2.0 Identity provider (IdP)
 or attribute authority (AA) may use to conclude its tasks.
 """
+import logging
+import os
 
+import importlib
+import dbm
 import shelve
-import sys
-import memcache
+import six
+import threading
 
+import saml2.cryptography.symmetric
 from saml2 import saml
+from saml2 import element_to_extension_element
 from saml2 import class_name
-from saml2 import soap
 from saml2 import BINDING_HTTP_REDIRECT
-from saml2 import BINDING_SOAP
-from saml2 import BINDING_PAOS
+from saml2.argtree import add_path, is_set
+
+from saml2.entity import Entity
+from saml2.eptid import Eptid
+from saml2.eptid import EptidShelve
+from saml2.samlp import NameIDMappingResponse
+from saml2.sdb import SessionStorage
+from saml2.schema import soapenv
 
 from saml2.request import AuthnRequest
+from saml2.request import AssertionIDRequest
 from saml2.request import AttributeQuery
-from saml2.request import LogoutRequest
+from saml2.request import NameIDMappingRequest
+from saml2.request import AuthzDecisionQuery
+from saml2.request import AuthnQuery
 
-from saml2.s_utils import sid
 from saml2.s_utils import MissingValue
-from saml2.s_utils import success_status_factory
-from saml2.s_utils import OtherError
-from saml2.s_utils import UnknownPrincipal
-from saml2.s_utils import UnsupportedBinding
-from saml2.s_utils import error_status_factory
+from saml2.s_utils import rndstr
+from saml2.s_utils import Unknown
 
-from saml2.time_util import instant
-
-from saml2.binding import http_soap_message
-from saml2.binding import http_redirect_message
-from saml2.binding import http_post_message
-
-from saml2.sigver import security_context
-from saml2.sigver import signed_instance_factory
 from saml2.sigver import pre_signature_part
-from saml2.sigver import response_factory, logoutresponse_factory
+from saml2.sigver import signed_instance_factory
+from saml2.sigver import CertificateError
 
-from saml2.config import config_factory
+from saml2.assertion import Assertion
+from saml2.assertion import Policy
+from saml2.assertion import restriction_from_attribute_spec
+from saml2.assertion import filter_attribute_value_assertions
 
-from saml2.assertion import Assertion, Policy
+from saml2.ident import IdentDB, decode
+from saml2.profile import ecp
 
-class UnknownVO(Exception):
-    pass
-    
-class Identifier(object):
-    """ A class that handles identifiers of objects """
-    def __init__(self, db, voconf=None, debug=0, log=None):
-        if isinstance(db, basestring):
-            self.map = shelve.open(db, writeback=True)
+logger = logging.getLogger(__name__)
+
+AUTHN_DICT_MAP = {
+    "decl": "authn_decl",
+    "authn_auth": "authn_auth",
+    "class_ref": "authn_class",
+    "authn_instant": "authn_instant",
+    "subject_locality": "subject_locality"
+}
+
+
+def _shelve_compat(name, *args, **kwargs):
+    try:
+        return shelve.open(name, *args, **kwargs)
+    except dbm.error[0]:
+        # Python 3 whichdb needs to try .db to determine type
+        if name.endswith('.db'):
+            name = name.rsplit('.db', 1)[0]
+            return shelve.open(name, *args, **kwargs)
         else:
-            self.map = db
-        self.voconf = voconf
-        self.debug = debug
-        self.log = log
-        
-    def _store(self, typ, entity_id, local, remote):
-        self.map["|".join([typ, entity_id, "f", local])] = remote
-        self.map["|".join([typ, entity_id, "b", remote])] = local
-    
-    def _get_remote(self, typ, entity_id, local):
-        return self.map["|".join([typ, entity_id, "f", local])]
+            raise
 
-    def _get_local(self, typ, entity_id, remote):
-        return self.map["|".join([typ, entity_id, "b", remote])]
-        
-    def persistent(self, entity_id, subject_id):
-        """ Keeps the link between a permanent identifier and a 
-        temporary/pseudo-temporary identifier for a subject
-        
-        The store supports look-up both ways: from a permanent local
-        identifier to a identifier used talking to a SP and from an
-        identifier given back by an SP to the local permanent.
-        
-        :param entity_id: SP entity ID or VO entity ID
-        :param subject_id: The local permanent identifier of the subject
-        :return: An arbitrary identifier for the subject unique to the
-            service/group of services/VO with a given entity_id
-        """
-        try:
-            return self._get_remote("persistent", entity_id, subject_id)
-        except KeyError:
-            temp_id = "xyz"
-            while True:
-                temp_id = sid()
-                try:
-                    self._get_local("persistent", entity_id, temp_id)
-                except KeyError:
-                    break
-            self._store("persistent", entity_id, subject_id, temp_id)
-            self.map.sync()
-            
-            return temp_id
 
-    def _get_vo_identifier(self, sp_name_qualifier, userid, identity):
-        try:
-            vo_conf = self.voconf[sp_name_qualifier]
-            if "common_identifier" in vo_conf:
-                try:
-                    subj_id = identity[vo_conf["common_identifier"]]
-                except KeyError:
-                    raise MissingValue("Common identifier")
-            else:
-                return self.persistent_nameid(sp_name_qualifier, userid)
-        except (KeyError, TypeError):
-            raise UnknownVO("%s" % sp_name_qualifier)
-
-        try:
-            nameid_format = vo_conf["nameid_format"]
-        except KeyError:
-            nameid_format = saml.NAMEID_FORMAT_PERSISTENT
-
-        return saml.NameID(format=nameid_format,
-                            sp_name_qualifier=sp_name_qualifier,
-                            text=subj_id)
-    
-    def persistent_nameid(self, sp_name_qualifier, userid):
-        """ Get or create a persistent identifier for this object to be used
-        when communicating with servers using a specific SPNameQualifier
-        
-        :param sp_name_qualifier: An identifier for a 'context'
-        :param userid: The local permanent identifier of the object 
-        :return: A persistent random identifier.
-        """
-        subj_id = self.persistent(sp_name_qualifier, userid)
-        return saml.NameID(format=saml.NAMEID_FORMAT_PERSISTENT,
-                            sp_name_qualifier=sp_name_qualifier,
-                            text=subj_id)
-
-    def transient_nameid(self, sp_entity_id, userid):
-        """ Returns a random one-time identifier. One-time means it is
-        kept around as long as the session is active.
-        
-        :param sp_entity_id: A qualifier to bind the created identifier to
-        :param userid: The local persistent identifier for the subject.
-        :return: The created identifier,
-        """
-        temp_id = sid()
-        while True:
-            try:
-                _ = self._get_local("transient", sp_entity_id, temp_id)
-                temp_id = sid()
-            except KeyError:
-                break
-        self._store("transient", sp_entity_id, userid, temp_id)
-        self.map.sync()
-
-        return saml.NameID(format=saml.NAMEID_FORMAT_TRANSIENT,
-                            sp_name_qualifier=sp_entity_id,
-                            text=temp_id)
-
-    def email_nameid(self, sp_name_qualifier, userid):
-        return saml.NameID(format=saml.NAMEID_FORMAT_EMAILADDRESS,
-                       sp_name_qualifier=sp_name_qualifier,
-                       text=userid)
-
-    def construct_nameid(self, local_policy, userid, sp_entity_id,
-                        identity=None, name_id_policy=None, sp_nid=None):
-        """ Returns a name_id for the object. How the name_id is 
-        constructed depends on the context.
-        
-        :param local_policy: The policy the server is configured to follow
-        :param userid: The local permanent identifier of the object
-        :param sp_entity_id: The 'user' of the name_id
-        :param identity: Attribute/value pairs describing the object
-        :param name_id_policy: The policy the server on the other side wants
-            us to follow.
-        :param sp_nid: Name ID Formats from the SPs metadata
-        :return: NameID instance precursor
-        """
-        if name_id_policy and name_id_policy.sp_name_qualifier:
-            try:
-                return self._get_vo_identifier(name_id_policy.sp_name_qualifier,
-                                                userid, identity)
-            except Exception:
-                pass
-
-        if sp_nid:
-            nameid_format = sp_nid[0]
-        else:
-            nameid_format = local_policy.get_nameid_format(sp_entity_id)
-
-        if nameid_format == saml.NAMEID_FORMAT_PERSISTENT:
-            return self.persistent_nameid(sp_entity_id, userid)
-        elif nameid_format == saml.NAMEID_FORMAT_TRANSIENT:
-            return self.transient_nameid(sp_entity_id, userid)
-        elif nameid_format == saml.NAMEID_FORMAT_EMAILADDRESS:
-            return self.email_nameid(sp_entity_id, userid)
-
-    def local_name(self, entity_id, remote_id):
-        """ Get the local persistent name that has the specified remote ID.
-        
-        :param entity_id: The identifier of the entity that got the remote id
-        :param remote_id: The identifier that was exported
-        :return: Local identifier
-        """
-        try:
-            return self._get_local("persistent", entity_id, remote_id)
-        except KeyError:
-            try:
-                return self._get_local("transient", entity_id, remote_id)
-            except KeyError:
-                return None
-        
-class Server(object):
+class Server(Entity):
     """ A class that does things that IdPs or AAs do """
-    def __init__(self, config_file="", config=None, _cache="",
-                    log=None, debug=0, stype="idp"):
 
-        self.log = log
-        self.debug = debug
-        self.ident = None
-        if config_file:
-            self.load_config(config_file, stype)
-        elif config:
-            self.conf = config
+    def __init__(self, config_file="", config=None, cache=None, stype="idp",
+                 symkey="", msg_cb=None):
+        Entity.__init__(self, stype, config, config_file, msg_cb=msg_cb)
+        self.eptid = None
+        self.init_config(stype)
+        self.cache = cache
+        self.ticket = {}
+        self.session_db = self.choose_session_storage()
+        if symkey:
+            self.symkey = symkey.encode()
         else:
-            raise Exception("Missing configuration")
+            self.symkey = saml2.cryptography.symmetric.Default.generate_key()
+        self.seed = rndstr()
+        self.lock = threading.Lock()
 
-        if self.log is None:
-            self.log = self.conf.setup_logger()
-            
-        self.metadata = self.conf.metadata
-        self.sec = security_context(self.conf, log)
-        self._cache = _cache
+    def getvalid_certificate_str(self):
+        if self.sec.cert_handler is not None:
+            return self.sec.cert_handler._last_validated_cert
+        return None
 
-        # if cache:
-        #     if isinstance(cache, basestring):
-        #         self.cache = Cache(cache)
-        #     else:
-        #         self.cache = cache
-        # else:
-        #     self.cache = Cache()
-        
-    def load_config(self, config_file, stype="idp"):
-        """ Load the server configuration 
-        
-        :param config_file: The name of the configuration file
+    def support_AssertionIDRequest(self):
+        return True
+
+    def support_AuthnQuery(self):
+        return True
+
+    def choose_session_storage(self):
+        _spec = self.config.getattr("session_storage", "idp")
+        if not _spec:
+            return SessionStorage()
+        elif isinstance(_spec, six.string_types):
+            if _spec.lower() == "memory":
+                return SessionStorage()
+        else:  # Should be tuple
+            typ, data = _spec
+            if typ.lower() == "mongodb":
+                from saml2.mongo_store import SessionStorageMDB
+                return SessionStorageMDB(database=data, collection="session")
+
+        raise NotImplementedError("No such storage type implemented")
+
+    def init_config(self, stype="idp"):
+        """ Remaining init of the server configuration
+
         :param stype: The type of Server ("idp"/"aa")
         """
-        self.conf = config_factory(stype, config_file)
         if stype == "aa":
             return
-        
+
+        # subject information is stored in a database
+        # default database is in memory which is OK in some setups
+        dbspec = self.config.getattr("subject_data", "idp")
+        idb = None
+        typ = ""
+        if not dbspec:
+            idb = {}
+        elif isinstance(dbspec, six.string_types):
+            idb = _shelve_compat(dbspec, writeback=True, protocol=2)
+        else:  # database spec is a a 2-tuple (type, address)
+            # print(>> sys.stderr, "DBSPEC: %s" % (dbspec,))
+            (typ, addr) = dbspec
+            if typ == "shelve":
+                idb = _shelve_compat(addr, writeback=True, protocol=2)
+            elif typ == "memcached":
+                import memcache
+                idb = memcache.Client(addr)
+            elif typ == "dict":  # in-memory dictionary
+                idb = {}
+            elif typ == "mongodb":
+                from saml2.mongo_store import IdentMDB
+                self.ident = IdentMDB(database=addr, collection="ident")
+            elif typ == "identdb":
+                mod, clas = addr.rsplit('.', 1)
+                mod = importlib.import_module(mod)
+                self.ident = getattr(mod, clas)()
+
+        if typ == "mongodb" or typ == "identdb":
+            pass
+        elif idb is not None:
+            self.ident = IdentDB(idb)
+        elif dbspec:
+            raise Exception("Couldn't open identity database: %s" %
+                            (dbspec,))
+
         try:
-            # subject information is stored in a database
-            # default database is a shelve database which is OK in some setups
-            dbspec = self.conf.subject_data
-            idb = None
-            if isinstance(dbspec, basestring):
-                idb = shelve.open(dbspec, writeback=True)
-            else: # database spec is a a 2-tuple (type, address)
-                print >> sys.stderr, "DBSPEC: %s" % dbspec
-                (typ, addr) = dbspec
-                if typ == "shelve":
-                    idb = shelve.open(addr, writeback=True)
-                elif typ == "memcached":
-                    idb = memcache.Client(addr)
-                elif typ == "dict": # in-memory dictionary
-                    idb = addr
-                    
-            if idb is not None:
-                self.ident = Identifier(idb, self.conf.virtual_organization,
-                                        self.debug, self.log)
+            _domain = self.config.getattr("domain", "idp")
+            if _domain:
+                self.ident.domain = _domain
+
+            self.ident.name_qualifier = self.config.entityid
+
+            dbspec = self.config.getattr("edu_person_targeted_id", "idp")
+            if not dbspec:
+                pass
             else:
-                raise Exception("Couldn't open identity database: %s" %
-                                (dbspec,))
-        except AttributeError:
-            self.ident = None
-    
-    def issuer(self, entityid=None):
-        """ Return an Issuer precursor """
-        if entityid:
-            return saml.Issuer(text=entityid,
-                                format=saml.NAMEID_FORMAT_ENTITY)
-        else:
-            return saml.Issuer(text=self.conf.entityid,
-                                format=saml.NAMEID_FORMAT_ENTITY)
-        
+                typ = dbspec[0]
+                addr = dbspec[1]
+                secret = dbspec[2]
+                if typ == "shelve":
+                    self.eptid = EptidShelve(secret, addr)
+                elif typ == "mongodb":
+                    from saml2.mongo_store import EptidMDB
+                    self.eptid = EptidMDB(secret, database=addr,
+                                          collection="eptid")
+                else:
+                    self.eptid = Eptid(secret)
+        except Exception:
+            self.ident.close()
+            raise
+
+    def wants(self, sp_entity_id, index=None):
+        """ Returns what attributes the SP requires and which are optional
+        if any such demands are registered in the Metadata.
+
+        :param sp_entity_id: The entity id of the SP
+        :param index: which of the attribute consumer services its all about
+            if index == None then all attribute consumer services are clumped
+            together.
+        :return: 2-tuple, list of required and list of optional attributes
+        """
+        return self.metadata.attribute_requirement(sp_entity_id, index)
+
+    def verify_assertion_consumer_service(self, request):
+        _acs = request.assertion_consumer_service_url
+        _aci = request.assertion_consumer_service_index
+        _binding = request.protocol_binding
+        _eid = request.issuer.text
+        if _acs:
+            # look up acs in for that binding in the metadata given the issuer
+            # Assuming the format is entity
+            for acs in self.metadata.assertion_consumer_service(_eid, _binding):
+                if _acs == acs.text:
+                    return True
+        elif _aci:
+            for acs in self.metadata.assertion_consumer_service(_eid, _binding):
+                if _aci == acs.index:
+                    return True
+
+        return False
+
+    # -------------------------------------------------------------------------
     def parse_authn_request(self, enc_request, binding=BINDING_HTTP_REDIRECT):
         """Parse a Authentication Request
-        
+
         :param enc_request: The request in its transport format
         :param binding: Which binding that was used to transport the message
             to this entity.
-        :return: A dictionary with keys:
-            consumer_url - as gotten from the SPs entity_id and the metadata
-            id - the id of the request
-            sp_entity_id - the entity id of the SP
-            request - The verified request
+        :return: A request instance
         """
-        
-        response = {}
-        if self.log:
-            _log_info = self.log.info
-        else:
-            _log_info = None
 
-        # The addresses I should receive messages like this on
-        receiver_addresses = self.conf.endpoint("single_sign_on_service",
-                                                 binding)
-        if self.debug and self.log:
-            _log_info("receiver addresses: %s" % receiver_addresses)
-            _log_info("Binding: %s" % binding)
+        return self._parse_request(enc_request, AuthnRequest,
+                                   "single_sign_on_service", binding)
 
-
-        try:
-            timeslack = self.conf.accepted_time_diff
-            if not timeslack:
-                timeslack = 0
-        except AttributeError:
-            timeslack = 0
-
-        authn_request = AuthnRequest(self.sec,
-                                     self.conf.attribute_converters,
-                                     receiver_addresses, log=self.log,
-                                     timeslack=timeslack)
-
-        if binding == BINDING_SOAP or binding == BINDING_PAOS:
-            # not base64 decoding and unzipping
-            authn_request.debug=True
-            _log_info("Don't decode")
-            authn_request = authn_request.loads(enc_request, decode=False)
-        else:
-            authn_request = authn_request.loads(enc_request)
-
-        if self.debug and self.log:
-            _log_info("Loaded authn_request")
-
-        if authn_request:
-            authn_request = authn_request.verify()
-
-        if self.debug and self.log:
-            _log_info("Verified authn_request")
-
-        if not authn_request:
-            return None
-            
-        response["id"] = authn_request.message.id # put in in_reply_to
-
-        sp_entity_id = authn_request.message.issuer.text
-        # try to find return address in metadata
-        try:
-            # What's the binding ? ProtocolBinding
-            _binding = authn_request.message.protocol_binding
-            consumer_url = self.metadata.consumer_url(sp_entity_id,
-                                                      binding=_binding)
-        except KeyError:
-            if self.log:
-                _log_info("Failed to find consumer URL for %s" % sp_entity_id)
-                _log_info("entities: %s" % self.metadata.entity.keys())
-            raise UnknownPrincipal(sp_entity_id)
-            
-        if not consumer_url: # what to do ?
-            if self.log:
-                _log_info("Couldn't find a consumer URL binding=%s" % _binding)
-            raise UnsupportedBinding(sp_entity_id)
-
-        response["sp_entity_id"] = sp_entity_id
-
-        if authn_request.message.assertion_consumer_service_url:
-            return_destination = \
-                        authn_request.message.assertion_consumer_service_url
-        
-            if consumer_url != return_destination:
-                # serious error on someones behalf
-                if self.log:
-                    _log_info("%s != %s" % (consumer_url, return_destination))
-                else:
-                    print >> sys.stderr, \
-                                "%s != %s" % (consumer_url, return_destination)
-                raise OtherError("ConsumerURL and return destination mismatch")
-        
-        response["consumer_url"] = consumer_url
-        response["request"] = authn_request.message
-
-        return response
-                        
-    def wants(self, sp_entity_id):
-        """ Returns what attributes the SP requiers and which are optional
-        if any such demands are registered in the Metadata.
-        
-        :param sp_entity_id: The entity id of the SP
-        :return: 2-tuple, list of required and list of optional attributes
-        """
-        return self.metadata.requests(sp_entity_id)
-        
-    def parse_attribute_query(self, xml_string, decode=True):
+    def parse_attribute_query(self, xml_string, binding):
         """ Parse an attribute query
-        
+
         :param xml_string: The Attribute Query as an XML string
-        :param decode: Whether the xmlstring is base64encoded and zipped
-        :return: 3-Tuple containing:
-            subject - identifier of the subject
-            attribute - which attributes that the requestor wants back
-            query - the whole query
+        :param binding: Which binding that was used for the request
+        :return: A query instance
         """
-        receiver_addresses = self.conf.endpoint("attribute_service")
-        attribute_query = AttributeQuery( self.sec, receiver_addresses)
 
-        attribute_query = attribute_query.loads(xml_string, decode=decode)
-        attribute_query = attribute_query.verify()
+        return self._parse_request(xml_string, AttributeQuery,
+                                   "attribute_service", binding)
 
-        self.log.info("KEYS: %s" % attribute_query.message.keys())
-        # Subject is described in the a saml.Subject instance
-        subject = attribute_query.subject_id()
-        attribute = attribute_query.attribute()
+    def parse_authz_decision_query(self, xml_string, binding):
+        """ Parse an authorization decision query
 
-        return subject, attribute, attribute_query.message
-            
-    # ------------------------------------------------------------------------
-
-    def _response(self, in_response_to, consumer_url=None, sp_entity_id=None, 
-                    identity=None, name_id=None, status=None, sign=False,
-                    policy=Policy(), authn=None, authn_decl=None, issuer=None):
-        """ Create a Response that adhers to the ??? profile.
-        
-        :param in_response_to: The session identifier of the request
-        :param consumer_url: The URL which should receive the response
-        :param sp_entity_id: The entity identifier of the SP
-        :param identity: A dictionary with attributes and values that are
-            expected to be the bases for the assertion in the response.
-        :param name_id: The identifier of the subject
-        :param status: The status of the response
-        :param sign: Whether the assertion should be signed or not 
-        :param policy: The attribute release policy for this instance
-        :param authn: A 2-tuple denoting the authn class and the authn
-            authority
-        :param authn_decl:
-        :param issuer: The issuer of the response
-        :return: A Response instance
+        :param xml_string: The Authz decision Query as an XML string
+        :param binding: Which binding that was used when receiving this query
+        :return: Query instance
         """
-                
-        to_sign = []
 
-        if not status: 
-            status = success_status_factory()
+        return self._parse_request(xml_string, AuthzDecisionQuery,
+                                   "authz_service", binding)
 
-        _issuer = self.issuer(issuer)
+    def parse_assertion_id_request(self, xml_string, binding):
+        """ Parse an assertion id query
 
-        response = response_factory(
-            issuer=_issuer,
-            in_response_to = in_response_to,
-            status = status,
-            )
+        :param xml_string: The AssertionIDRequest as an XML string
+        :param binding: Which binding that was used when receiving this request
+        :return: Query instance
+        """
 
-        if consumer_url:
-            response.destination = consumer_url
+        return self._parse_request(xml_string, AssertionIDRequest,
+                                   "assertion_id_request_service", binding)
 
-        if identity:            
-            ast = Assertion(identity)
-            try:
-                ast.apply_policy(sp_entity_id, policy, self.metadata)
-            except MissingValue, exc:
-                return self.error_response(in_response_to, consumer_url, 
-                                               sp_entity_id, exc, name_id)
+    def parse_authn_query(self, xml_string, binding):
+        """ Parse an authn query
 
-            if authn: # expected to be a 2-tuple class+authority
-                (authn_class, authn_authn) = authn
-                assertion = ast.construct(sp_entity_id, in_response_to, 
-                                            consumer_url, name_id,
-                                            self.conf.attribute_converters,
-                                            policy, issuer=_issuer, 
-                                            authn_class=authn_class, 
-                                            authn_auth=authn_authn)
-            elif authn_decl:
-                assertion = ast.construct(sp_entity_id, in_response_to, 
-                                            consumer_url, name_id,
-                                            self.conf.attribute_converters,
-                                            policy, issuer=_issuer, 
-                                            authn_decl=authn_decl)
-            else:
-                assertion = ast.construct(sp_entity_id, in_response_to, 
-                                            consumer_url, name_id,
-                                            self.conf.attribute_converters,
-                                            policy, issuer=_issuer)
-            
-            if sign:
-                assertion.signature = pre_signature_part(assertion.id,
-                                                        self.sec.my_cert, 1)
-                # Just the assertion or the response and the assertion ?
-                to_sign = [(class_name(assertion), assertion.id)]
+        :param xml_string: The AuthnQuery as an XML string
+        :param binding: Which binding that was used when receiving this query
+        :return: Query instance
+        """
 
-            # Store which assertion that has been sent to which SP about which
-            # subject.
-            
-            # self.cache.set(assertion.subject.name_id.text, 
-            #                 sp_entity_id, {"ava": identity, "authn": authn}, 
-            #                 assertion.conditions.not_on_or_after)
-            
-            response.assertion = assertion
-                
-        return signed_instance_factory(response, self.sec, to_sign)
+        return self._parse_request(xml_string, AuthnQuery,
+                                   "authn_query_service", binding)
 
-    # ------------------------------------------------------------------------
-    
-    def do_response(self, in_response_to, consumer_url,
-                        sp_entity_id, identity=None, name_id=None, 
-                        status=None, sign=False, authn=None, authn_decl=None,
-                        issuer=None):
+    def parse_name_id_mapping_request(self, xml_string, binding):
+        """ Parse a nameid mapping request
+
+        :param xml_string: The NameIDMappingRequest as an XML string
+        :param binding: Which binding that was used when receiving this request
+        :return: Query instance
+        """
+
+        return self._parse_request(xml_string, NameIDMappingRequest,
+                                   "name_id_mapping_service", binding)
+
+    @staticmethod
+    def update_farg(in_response_to, consumer_url, farg=None):
+        if not farg:
+            farg = add_path(
+                {},
+                ['assertion', 'subject', 'subject_confirmation', 'method',
+                 saml.SCM_BEARER])
+            add_path(
+                farg['assertion']['subject']['subject_confirmation'],
+                ['subject_confirmation_data', 'in_response_to', in_response_to])
+            add_path(
+                farg['assertion']['subject']['subject_confirmation'],
+                ['subject_confirmation_data', 'recipient', consumer_url])
+        else:
+            if not is_set(farg,
+                          ['assertion', 'subject', 'subject_confirmation',
+                           'method']):
+                add_path(farg,
+                         ['assertion', 'subject', 'subject_confirmation',
+                          'method', saml.SCM_BEARER])
+            if not is_set(farg,
+                          ['assertion', 'subject', 'subject_confirmation',
+                           'subject_confirmation_data', 'in_response_to']):
+                add_path(farg,
+                         ['assertion', 'subject', 'subject_confirmation',
+                          'subject_confirmation_data', 'in_response_to',
+                          in_response_to])
+            if not is_set(farg, ['assertion', 'subject', 'subject_confirmation',
+                                 'subject_confirmation_data', 'recipient']):
+                add_path(farg,
+                         ['assertion', 'subject', 'subject_confirmation',
+                          'subject_confirmation_data', 'recipient',
+                          consumer_url])
+        return farg
+
+    def setup_assertion(self, authn, sp_entity_id, in_response_to, consumer_url,
+                        name_id, policy, _issuer, authn_statement, identity,
+                        best_effort, sign_response, farg=None,
+                        session_not_on_or_after=None, **kwargs):
+        """
+        Construct and return the Assertion
+
+        :param authn: Authentication information
+        :param sp_entity_id:
+        :param in_response_to: The ID of the request this is an answer to
+        :param consumer_url: The recipient of the assertion
+        :param name_id: The NameID of the subject
+        :param policy: Assertion policies
+        :param _issuer: Issuer of the statement
+        :param authn_statement: An AuthnStatement instance
+        :param identity: Identity information about the Subject
+        :param best_effort: Even if not the SPs demands can be met send a
+            response.
+        :param sign_response: Sign the response, only applicable if
+            ErrorResponse
+        :param kwargs: Extra keyword arguments
+        :return: An Assertion instance
+        """
+
+        ast = Assertion(identity)
+        ast.acs = self.config.getattr("attribute_converters", "idp")
+        if policy is None:
+            policy = Policy()
+        try:
+            ast.apply_policy(sp_entity_id, policy, self.metadata)
+        except MissingValue as exc:
+            if not best_effort:
+                return self.create_error_response(in_response_to, consumer_url,
+                                                  exc, sign_response)
+
+        farg = self.update_farg(in_response_to, consumer_url, farg)
+
+        if authn:  # expected to be a dictionary
+            # Would like to use dict comprehension but ...
+            authn_args = dict(
+                [(AUTHN_DICT_MAP[k], v) for k, v in authn.items() if
+                 k in AUTHN_DICT_MAP])
+            authn_args.update(kwargs)
+
+            assertion = ast.construct(
+                sp_entity_id, self.config.attribute_converters, policy,
+                issuer=_issuer, farg=farg['assertion'], name_id=name_id,
+                session_not_on_or_after=session_not_on_or_after,
+                **authn_args)
+
+        elif authn_statement:  # Got a complete AuthnStatement
+            assertion = ast.construct(
+                sp_entity_id, self.config.attribute_converters, policy,
+                issuer=_issuer, authn_statem=authn_statement,
+                farg=farg['assertion'], name_id=name_id,
+                **kwargs)
+        else:
+            assertion = ast.construct(
+                sp_entity_id, self.config.attribute_converters, policy,
+                issuer=_issuer, farg=farg['assertion'], name_id=name_id,
+                session_not_on_or_after=session_not_on_or_after,
+                **kwargs)
+        return assertion
+
+    def _authn_response(self, in_response_to, consumer_url,
+                        sp_entity_id, identity=None, name_id=None,
+                        status=None, authn=None, issuer=None, policy=None,
+                        sign_assertion=False, sign_response=False,
+                        best_effort=False, encrypt_assertion=False,
+                        encrypt_cert_advice=None, encrypt_cert_assertion=None,
+                        authn_statement=None,
+                        encrypt_assertion_self_contained=False,
+                        encrypted_advice_attributes=False,
+                        pefim=False, sign_alg=None, digest_alg=None,
+                        farg=None, session_not_on_or_after=None):
         """ Create a response. A layer of indirection.
-        
+
         :param in_response_to: The session identifier of the request
         :param consumer_url: The URL which should receive the response
         :param sp_entity_id: The entity identifier of the SP
@@ -524,82 +404,286 @@ class Server(object):
             expected to be the bases for the assertion in the response.
         :param name_id: The identifier of the subject
         :param status: The status of the response
-        :param sign: Whether the assertion should be signed or not 
-        :param authn: A 2-tuple denoting the authn class and the authn
-            authority.
-        :param authn_decl:
+        :param authn: A dictionary containing information about the
+            authn context.
         :param issuer: The issuer of the response
-        :return: A Response instance.
+        :param policy:
+        :param sign_assertion: Whether the assertion should be signed or not
+        :param sign_response: Whether the response should be signed or not
+        :param best_effort: Even if not the SPs demands can be met send a
+            response.
+        :param encrypt_assertion: True if assertions should be encrypted.
+        :param encrypt_assertion_self_contained: True if all encrypted
+        assertions should have alla namespaces
+        selfcontained.
+        :param encrypted_advice_attributes: True if assertions in the advice
+        element should be encrypted.
+        :param encrypt_cert_advice: Certificate to be used for encryption of
+        assertions in the advice element.
+        :param encrypt_cert_assertion: Certificate to be used for encryption
+        of assertions.
+        :param authn_statement: Authentication statement.
+        :param sign_assertion: True if assertions should be signed.
+        :param pefim: True if a response according to the PEFIM profile
+        should be created.
+        :param farg: Argument to pass on to the assertion constructor
+        :return: A response instance
         """
 
-        policy = self.conf.policy
+        if farg is None:
+            assertion_args = {}
 
-        return self._response(in_response_to, consumer_url,
-                        sp_entity_id, identity, name_id, 
-                        status, sign, policy, authn, authn_decl, issuer)
-                        
-    # ------------------------------------------------------------------------
-    
-    def error_response(self, in_response_to, destination, spid, info, 
-                        name_id=None, sign=False, issuer=None):
-        """ Create a error response.
-        
-        :param in_response_to: The identifier of the message this is a response
-            to.
-            :param destination: The intended recipient of this message
-        :param spid: The entitiy ID of the SP that will get this.
-        :param info: Either an Exception instance or a 2-tuple consisting of
-            error code and descriptive text
-        :param name_id:
-        :param sign: Whether the message should be signed or not
-        :param issuer: The issuer of the response
-        :return: A Response instance
-        """
-        status = error_status_factory(info)
-            
+        args = {}
+        # if identity:
+        _issuer = self._issuer(issuer)
+
+        # if encrypt_assertion and show_nameid:
+        #    tmp_name_id = name_id
+        #    name_id = None
+        #    name_id = None
+        #    tmp_authn = authn
+        #    authn = None
+        #    tmp_authn_statement = authn_statement
+        #    authn_statement = None
+
+        if pefim:
+            encrypted_advice_attributes = True
+            encrypt_assertion_self_contained = True
+            assertion_attributes = self.setup_assertion(
+                None, sp_entity_id, None, None, None, policy, None, None,
+                identity, best_effort, sign_response, farg=farg)
+            assertion = self.setup_assertion(
+                authn, sp_entity_id, in_response_to, consumer_url, name_id,
+                policy, _issuer, authn_statement, [], True, sign_response,
+                farg=farg, session_not_on_or_after=session_not_on_or_after)
+            assertion.advice = saml.Advice()
+
+            # assertion.advice.assertion_id_ref.append(saml.AssertionIDRef())
+            # assertion.advice.assertion_uri_ref.append(saml.AssertionURIRef())
+            assertion.advice.assertion.append(assertion_attributes)
+        else:
+            assertion = self.setup_assertion(
+                authn, sp_entity_id, in_response_to, consumer_url, name_id,
+                policy, _issuer, authn_statement, identity, True,
+                sign_response, farg=farg,
+                session_not_on_or_after=session_not_on_or_after)
+
+        to_sign = []
+        if not encrypt_assertion:
+            if sign_assertion:
+                assertion.signature = pre_signature_part(assertion.id,
+                                                         self.sec.my_cert, 2,
+                                                         sign_alg=sign_alg,
+                                                         digest_alg=digest_alg)
+                to_sign.append((class_name(assertion), assertion.id))
+
+        args["assertion"] = assertion
+
+        if (self.support_AssertionIDRequest() or self.support_AuthnQuery()):
+            self.session_db.store_assertion(assertion, to_sign)
+
         return self._response(
-                        in_response_to, # in_response_to
-                        destination,    # consumer_url
-                        spid,           # sp_entity_id
-                        name_id=name_id,
-                        status=status,
-                        sign=sign,
-                        issuer=issuer
-                        )
+            in_response_to, consumer_url, status, issuer, sign_response,
+            to_sign, sp_entity_id=sp_entity_id,
+            encrypt_assertion=encrypt_assertion,
+            encrypt_cert_advice=encrypt_cert_advice,
+            encrypt_cert_assertion=encrypt_cert_assertion,
+            encrypt_assertion_self_contained=encrypt_assertion_self_contained,
+            encrypted_advice_attributes=encrypted_advice_attributes,
+            sign_assertion=sign_assertion,
+            pefim=pefim, sign_alg=sign_alg, digest_alg=digest_alg, **args)
 
     # ------------------------------------------------------------------------
-    #noinspection PyUnusedLocal
-    def do_aa_response(self, in_response_to, consumer_url, sp_entity_id, 
-                        identity=None, userid="", name_id=None, status=None, 
-                        sign=False, _name_id_policy=None, issuer=None):
+
+    # noinspection PyUnusedLocal
+    def create_attribute_response(self, identity, in_response_to, destination,
+                                  sp_entity_id, userid="", name_id=None,
+                                  status=None, issuer=None,
+                                  sign_assertion=False, sign_response=False,
+                                  attributes=None, sign_alg=None,
+                                  digest_alg=None, farg=None, **kwargs):
         """ Create an attribute assertion response.
-        
-        :param in_response_to: The session identifier of the request
-        :param consumer_url: The URL which should receive the response
-        :param sp_entity_id: The entity identifier of the SP
+
         :param identity: A dictionary with attributes and values that are
             expected to be the bases for the assertion in the response.
+        :param in_response_to: The session identifier of the request
+        :param destination: The URL which should receive the response
+        :param sp_entity_id: The entity identifier of the SP
         :param userid: A identifier of the user
         :param name_id: The identifier of the subject
         :param status: The status of the response
-        :param sign: Whether the assertion should be signed or not 
-        :param _name_id_policy: Policy for NameID creation.
         :param issuer: The issuer of the response
-        :return: A Response instance.
+        :param sign_assertion: Whether the assertion should be signed or not
+        :param sign_response: Whether the whole response should be signed
+        :param attributes:
+        :param kwargs: To catch extra keyword arguments
+        :return: A response instance
         """
-#        name_id = self.ident.construct_nameid(self.conf.policy, userid,
-#                                            sp_entity_id, identity)
-        
-        return self._response(in_response_to, consumer_url,
-                        sp_entity_id, identity, name_id, 
-                        status, sign, policy=self.conf.policy, issuer=issuer)
+
+        policy = self.config.getattr("policy", "aa")
+
+        if not name_id and userid:
+            try:
+                name_id = self.ident.construct_nameid(userid, policy,
+                                                      sp_entity_id)
+                logger.warning("Unspecified NameID format")
+            except Exception:
+                pass
+
+        to_sign = []
+
+        if identity:
+            farg = self.update_farg(in_response_to, sp_entity_id, farg=farg)
+
+            _issuer = self._issuer(issuer)
+            ast = Assertion(identity)
+            if policy:
+                ast.apply_policy(sp_entity_id, policy, self.metadata)
+            else:
+                policy = Policy()
+
+            if attributes:
+                restr = restriction_from_attribute_spec(attributes)
+                ast = filter_attribute_value_assertions(ast)
+
+            assertion = ast.construct(
+                sp_entity_id, self.config.attribute_converters, policy,
+                issuer=_issuer, name_id=name_id,
+                farg=farg['assertion'])
+
+            if sign_assertion:
+                assertion.signature = pre_signature_part(assertion.id,
+                                                         self.sec.my_cert, 1,
+                                                         sign_alg=sign_alg,
+                                                         digest_alg=digest_alg)
+                # Just the assertion or the response and the assertion ?
+                to_sign = [(class_name(assertion), assertion.id)]
+                kwargs['sign_assertion'] = True
+
+            kwargs["assertion"] = assertion
+
+        if sp_entity_id:
+            kwargs['sp_entity_id'] = sp_entity_id
+
+        return self._response(in_response_to, destination, status, issuer,
+                              sign_response, to_sign, sign_alg=sign_alg,
+                              digest_alg=digest_alg, **kwargs)
 
     # ------------------------------------------------------------------------
 
-    def authn_response(self, identity, in_response_to, destination,
-                        sp_entity_id, name_id_policy, userid, sign=False, 
-                        authn=None, sign_response=False, authn_decl=None,
-                        issuer=None, instance=False):
+    def gather_authn_response_args(self, sp_entity_id, name_id_policy, userid,
+                                   **kwargs):
+        param_default = {
+            'sign_assertion': False,
+            'sign_response': False,
+            'encrypt_assertion': False,
+            'encrypt_assertion_self_contained': True,
+            'encrypted_advice_attributes': False,
+            'encrypt_cert_advice': None,
+            'encrypt_cert_assertion': None
+        }
+
+        args = {}
+
+        try:
+            args["policy"] = kwargs["release_policy"]
+        except KeyError:
+            args["policy"] = self.config.getattr("policy", "idp")
+
+        try:
+            args['best_effort'] = kwargs["best_effort"]
+        except KeyError:
+            args['best_effort'] = False
+
+        for param in ['sign_assertion', 'sign_response', 'encrypt_assertion',
+                      'encrypt_assertion_self_contained',
+                      'encrypted_advice_attributes', 'encrypt_cert_advice',
+                      'encrypt_cert_assertion']:
+            try:
+                _val = kwargs[param]
+            except KeyError:
+                _val = None
+
+            if _val is None:
+                _val = self.config.getattr(param, "idp")
+
+            if _val is None:
+                args[param] = param_default[param]
+            else:
+                args[param] = _val
+
+        for arg, attr, eca, pefim in [
+            ('encrypted_advice_attributes', 'verify_encrypt_cert_advice',
+             'encrypt_cert_advice', kwargs["pefim"]),
+            ('encrypt_assertion', 'verify_encrypt_cert_assertion',
+             'encrypt_cert_assertion', False)]:
+
+            if args[arg] or pefim:
+                _enc_cert = self.config.getattr(attr, "idp")
+
+                if _enc_cert is not None:
+                    if kwargs[eca] is None:
+                        raise CertificateError(
+                            "No SPCertEncType certificate for encryption "
+                            "contained in authentication "
+                            "request.")
+                    if not _enc_cert(kwargs[eca]):
+                        raise CertificateError(
+                            "Invalid certificate for encryption!")
+
+        if 'name_id' not in kwargs or not kwargs['name_id']:
+            nid_formats = []
+            for _sp in self.metadata[sp_entity_id]["spsso_descriptor"]:
+                if "name_id_format" in _sp:
+                    nid_formats.extend([n["text"] for n in
+                                        _sp["name_id_format"]])
+            try:
+                snq = name_id_policy.sp_name_qualifier
+            except AttributeError:
+                snq = sp_entity_id
+
+            if not snq:
+                snq = sp_entity_id
+
+            kwa = {"sp_name_qualifier": snq}
+
+            try:
+                kwa["format"] = name_id_policy.format
+            except AttributeError:
+                pass
+
+            _nids = self.ident.find_nameid(userid, **kwa)
+            # either none or one
+            if _nids:
+                args['name_id'] = _nids[0]
+            else:
+                args['name_id'] = self.ident.construct_nameid(
+                    userid, args['policy'], sp_entity_id, name_id_policy)
+                logger.debug("construct_nameid: %s => %s", userid,
+                             args['name_id'])
+        else:
+            args['name_id'] = kwargs['name_id']
+
+        for param in ['status', 'farg']:
+            try:
+                args[param] = kwargs[param]
+            except KeyError:
+                pass
+
+        return args
+
+    def create_authn_response(self, identity, in_response_to, destination,
+                              sp_entity_id, name_id_policy=None, userid=None,
+                              name_id=None, authn=None, issuer=None,
+                              sign_response=None, sign_assertion=None,
+                              encrypt_cert_advice=None,
+                              encrypt_cert_assertion=None,
+                              encrypt_assertion=None,
+                              encrypt_assertion_self_contained=True,
+                              encrypted_advice_attributes=False, pefim=False,
+                              sign_alg=None, digest_alg=None,
+                              session_not_on_or_after=None,
+                              **kwargs):
         """ Constructs an AuthenticationResponse
 
         :param identity: Information about an user
@@ -607,223 +691,231 @@ class Server(object):
             this response is an answer to.
         :param destination: Where the response should be sent
         :param sp_entity_id: The entity identifier of the Service Provider
-        :param name_id_policy: ...
+        :param name_id_policy: How the NameID should be constructed
         :param userid: The subject identifier
-        :param sign: Whether the assertion should be signed or not. This is
-            different from signing the response as such.
-        :param authn: Information about the authentication
-        :param sign_response: The response can be signed separately from the 
-            assertions.
-        :param authn_decl:
+        :param name_id: The identifier of the subject. A saml.NameID instance.
+        :param authn: Dictionary with information about the authentication
+            context
         :param issuer: Issuer of the response
-        :param instance: Whether to return the instance or a string
-            representation
-        :return: A XML string representing an authentication response
+        :param sign_assertion: Whether the assertion should be signed or not.
+        :param sign_response: Whether the response should be signed or not.
+        :param encrypt_assertion: True if assertions should be encrypted.
+        :param encrypt_assertion_self_contained: True if all encrypted
+        assertions should have alla namespaces
+        selfcontained.
+        :param encrypted_advice_attributes: True if assertions in the advice
+        element should be encrypted.
+        :param encrypt_cert_advice: Certificate to be used for encryption of
+        assertions in the advice element.
+        :param encrypt_cert_assertion: Certificate to be used for encryption
+        of assertions.
+        :param sign_assertion: True if assertions should be signed.
+        :param pefim: True if a response according to the PEFIM profile
+        should be created.
+        :return: A response instance
         """
 
-        name_id = None
         try:
-            nid_formats = []
-            for _sp in self.metadata.entity[sp_entity_id]["sp_sso"]:
-                nid_formats.extend([n.text for n in _sp.name_id_format])
-
-            policy = self.conf.policy
-            name_id = self.ident.construct_nameid(policy, userid, sp_entity_id,
-                                                    identity, name_id_policy,
-                                                    nid_formats)
-        except IOError, exc:
-            response = self.error_response(in_response_to, destination, 
-                                            sp_entity_id, exc, name_id)
+            args = self.gather_authn_response_args(
+                sp_entity_id, name_id_policy=name_id_policy, userid=userid,
+                name_id=name_id, sign_response=sign_response,
+                sign_assertion=sign_assertion,
+                encrypt_cert_advice=encrypt_cert_advice,
+                encrypt_cert_assertion=encrypt_cert_assertion,
+                encrypt_assertion=encrypt_assertion,
+                encrypt_assertion_self_contained
+                =encrypt_assertion_self_contained,
+                encrypted_advice_attributes=encrypted_advice_attributes,
+                pefim=pefim, **kwargs)
+        except IOError as exc:
+            response = self.create_error_response(in_response_to,
+                                                  destination,
+                                                  sp_entity_id,
+                                                  exc, name_id)
             return ("%s" % response).split("\n")
-        
+
         try:
-            response = self.do_response(
-                            in_response_to, # in_response_to
-                            destination,    # consumer_url
-                            sp_entity_id,   # sp_entity_id
-                            identity,       # identity as dictionary
-                            name_id,
-                            sign=sign,      # If the assertion should be signed
-                            authn=authn,    # Information about the 
-                                            #   authentication
-                            authn_decl=authn_decl,
-                            issuer=issuer
-                        )
-        except MissingValue, exc:
-            response = self.error_response(in_response_to, destination, 
-                                        sp_entity_id, exc, name_id)
-        
+            _authn = authn
+            if (sign_assertion or sign_response) and \
+                    self.sec.cert_handler.generate_cert():
+                with self.lock:
+                    self.sec.cert_handler.update_cert(True)
+                    return self._authn_response(
+                        in_response_to, destination, sp_entity_id, identity,
+                        authn=_authn, issuer=issuer, pefim=pefim,
+                        sign_alg=sign_alg, digest_alg=digest_alg,
+                        session_not_on_or_after=session_not_on_or_after, **args)
+            return self._authn_response(
+                in_response_to, destination, sp_entity_id, identity,
+                authn=_authn, issuer=issuer, pefim=pefim, sign_alg=sign_alg,
+                digest_alg=digest_alg,
+                session_not_on_or_after=session_not_on_or_after, **args)
+
+        except MissingValue as exc:
+            return self.create_error_response(in_response_to, destination,
+                                              sp_entity_id, exc, name_id)
+
+    def create_authn_request_response(self, identity, in_response_to,
+                                      destination, sp_entity_id,
+                                      name_id_policy=None, userid=None,
+                                      name_id=None, authn=None, authn_decl=None,
+                                      issuer=None, sign_response=False,
+                                      sign_assertion=False,
+                                      session_not_on_or_after=None, **kwargs):
+
+        return self.create_authn_response(identity, in_response_to, destination,
+                                          sp_entity_id, name_id_policy, userid,
+                                          name_id, authn, issuer,
+                                          sign_response, sign_assertion,
+                                          authn_decl=authn_decl,
+                                          session_not_on_or_after=session_not_on_or_after)
+
+    # noinspection PyUnusedLocal
+    def create_assertion_id_request_response(self, assertion_id, sign=False,
+                                             sign_alg=None,
+                                             digest_alg=None, **kwargs):
+        """
+
+        :param assertion_id:
+        :param sign:
+        :return:
+        """
+
+        try:
+            (assertion, to_sign) = self.session_db.get_assertion(assertion_id)
+        except KeyError:
+            raise Unknown
+
+        if to_sign:
+            if assertion.signature is None:
+                assertion.signature = pre_signature_part(assertion.id,
+                                                         self.sec.my_cert, 1,
+                                                         sign_alg=sign_alg,
+                                                         digest_alg=digest_alg)
+
+            return signed_instance_factory(assertion, self.sec, to_sign)
+        else:
+            return assertion
+
+    # noinspection PyUnusedLocal
+    def create_name_id_mapping_response(self, name_id=None, encrypted_id=None,
+                                        in_response_to=None,
+                                        issuer=None, sign_response=False,
+                                        status=None, sign_alg=None,
+                                        digest_alg=None, **kwargs):
+        """
+        protocol for mapping a principal's name identifier into a
+        different name identifier for the same principal.
+        Done over soap.
+
+        :param name_id:
+        :param encrypted_id:
+        :param in_response_to:
+        :param issuer:
+        :param sign_response:
+        :param status:
+        :return:
+        """
+        # Done over SOAP
+
+        ms_args = self.message_args()
+
+        _resp = NameIDMappingResponse(name_id, encrypted_id,
+                                      in_response_to=in_response_to, **ms_args)
 
         if sign_response:
-            try:
-                response.signature = pre_signature_part(response.id,
-                                                        self.sec.my_cert, 2)
-        
-                return self.sec.sign_statement_using_xmlsec(response,
-                                                        class_name(response),
-                                                        nodeid=response.id)
-            except Exception, exc:
-                response = self.error_response(in_response_to, destination, 
-                                                sp_entity_id, exc, name_id)
-                if instance:
-                    return response
-                else:
-                    return ("%s" % response).split("\n")
+            return self.sign(_resp, sign_alg=sign_alg, digest_alg=digest_alg)
         else:
-            if instance:
-                return response
-            else:
-                return ("%s" % response).split("\n")
+            logger.info("Message: %s", _resp)
+            return _resp
 
-    def parse_logout_request(self, text, binding=BINDING_SOAP):
-        """Parse a Logout Request
-        
-        :param text: The request in its transport format, if the binding is 
-            HTTP-Redirect or HTTP-Post the text *must* be the value of the 
-            SAMLRequest attribute.
-        :return: A validated LogoutRequest instance or None if validation 
-            failed.
+    def create_authn_query_response(self, subject, session_index=None,
+                                    requested_context=None, in_response_to=None,
+                                    issuer=None, sign_response=False,
+                                    status=None, sign_alg=None, digest_alg=None,
+                                    **kwargs):
         """
-        
+        A successful <Response> will contain one or more assertions containing
+        authentication statements.
+
+        :return:
+        """
+
+        margs = self.message_args()
+        asserts = []
+        for statement in self.session_db.get_authn_statements(
+                subject.name_id, session_index, requested_context):
+            asserts.append(saml.Assertion(authn_statement=statement,
+                                          subject=subject, **margs))
+
+        if asserts:
+            args = {"assertion": asserts}
+        else:
+            args = {}
+
+        return self._response(in_response_to, "", status, issuer,
+                              sign_response, to_sign=[], sign_alg=sign_alg,
+                              digest_alg=digest_alg, **args)
+
+    # ---------
+
+    def parse_ecp_authn_request(self):
+        pass
+
+    def create_ecp_authn_request_response(self, acs_url, identity,
+                                          in_response_to, destination,
+                                          sp_entity_id, name_id_policy=None,
+                                          userid=None, name_id=None, authn=None,
+                                          issuer=None, sign_response=False,
+                                          sign_assertion=False, **kwargs):
+
+        # ----------------------------------------
+        # <ecp:Response
+        # ----------------------------------------
+
+        ecp_response = ecp.Response(assertion_consumer_service_url=acs_url)
+        header = soapenv.Header()
+        header.extension_elements = [element_to_extension_element(ecp_response)]
+
+        # ----------------------------------------
+        # <samlp:Response
+        # ----------------------------------------
+
+        response = self.create_authn_response(identity, in_response_to,
+                                              destination, sp_entity_id,
+                                              name_id_policy, userid, name_id,
+                                              authn, issuer,
+                                              sign_response, sign_assertion)
+        body = soapenv.Body()
+        body.extension_elements = [element_to_extension_element(response)]
+
+        soap_envelope = soapenv.Envelope(header=header, body=body)
+
+        return "%s" % soap_envelope
+
+    def close(self):
+        self.ident.close()
+
+    def clean_out_user(self, name_id):
+        """
+        Remove all authentication statements that belongs to a user identified
+        by a NameID instance
+
+        :param name_id: NameID instance
+        :return: The local identifier for the user
+        """
+
+        lid = self.ident.find_local_id(name_id)
+        logger.info("Clean out %s", lid)
+
+        # remove the authentications
         try:
-            slo = self.conf.endpoint("single_logout_service", binding)
-        except IndexError:
-            if self.log:
-                self.log.info("enpoints: %s" % (self.conf.endpoints,))
-                self.log.info("binding wanted: %s" % (binding,))
-            raise
+            for _nid in [decode(x) for x in self.ident.db[lid].split(" ")]:
+                try:
+                    self.session_db.remove_authn_statements(_nid)
+                except KeyError:
+                    pass
+        except KeyError:
+            pass
 
-        if not slo:
-            raise Exception("No single_logout_server for that binding")
-        
-        if self.log:
-            self.log.info("Endpoint: %s" % slo)
-        req = LogoutRequest(self.sec, slo)
-        if binding == BINDING_SOAP:
-            lreq = soap.parse_soap_enveloped_saml_logout_request(text)
-            try:
-                req = req.loads(lreq, False) # Got it over SOAP so no base64+zip
-            except Exception:
-                return None
-        else:
-            try:
-                req = req.loads(text)
-            except Exception, exc:
-                self.log.error("%s" % (exc,))
-                return None
-
-        req = req.verify()
-        
-        if not req: # Not a valid request
-            # return a error message with status code element set to
-            # urn:oasis:names:tc:SAML:2.0:status:Requester
-            return None
-        else:
-            return req
-
-
-    def logout_response(self, request, bindings, status=None,
-                            sign=False, issuer=None):
-        """ Create a LogoutResponse. What is returned depends on which binding
-        is used.
-        
-        :param request: The request this is a response to
-        :param bindings: Which bindings that can be used to send the response
-        :param status: The return status of the response operation
-        :param issuer: The issuer of the message
-        :return: A 3-tuple consisting of HTTP return code, HTTP headers and 
-            possibly a message.
-        """
-        sp_entity_id = request.issuer.text.strip()
-        
-        binding = None
-        destinations = []
-        for binding in bindings:
-            destinations = self.conf.single_logout_services(sp_entity_id,
-                                                           binding)
-            if destinations:
-                break
-                
-
-        if not destinations:
-            if self.log:
-                self.log.error("Not way to return a response !!!")
-            return ("412 Precondition Failed",
-                    [("Content-type", "text/html")],
-                    ["No return way defined"])
-        
-        # Pick the first
-        destination = destinations[0]
-        
-        if self.log:
-            self.log.info("Logout Destination: %s, binding: %s" % (destination,
-                                                                    binding))
-        if not status: 
-            status = success_status_factory()
-
-        mid = sid()
-        rcode = "200 OK"
-        
-        # response and packaging differs depending on binding
-        
-        if binding == BINDING_SOAP:
-            response = logoutresponse_factory(
-                                sign=sign,
-                                id = mid,
-                                in_response_to = request.id,
-                                status = status,
-                                )
-            if sign:
-                to_sign = [(class_name(response), mid)]
-                response = signed_instance_factory(response, self.sec, to_sign)
-                
-            (headers, message) = http_soap_message(response)
-        else:
-            _issuer = self.issuer(issuer)
-            response = logoutresponse_factory(
-                                sign=sign,
-                                id = mid,
-                                in_response_to = request.id,
-                                status = status,
-                                issuer = _issuer,
-                                destination = destination,
-                                sp_entity_id = sp_entity_id,
-                                instant=instant(),
-                                )
-            if sign:
-                to_sign = [(class_name(response), mid)]
-                response = signed_instance_factory(response, self.sec, to_sign)
-                
-            if self.log:
-                self.log.info("Response: %s" % (response,))
-            if binding == BINDING_HTTP_REDIRECT:
-                (headers, message) = http_redirect_message(response, 
-                                                            destination, 
-                                                            typ="SAMLResponse")
-                rcode = "302 Found"
-            else:
-                (headers, message) = http_post_message(response, destination,
-                                                        typ="SAMLResponse")
-                
-        return rcode, headers, message
-
-    def parse_authz_decision_query(self, xml_string):
-        """ Parse an attribute query
-
-        :param xml_string: The Authz decision Query as an XML string
-        :return: 3-Tuple containing:
-            subject - identifier of the subject
-            attribute - which attributes that the requestor wants back
-            query - the whole query
-        """
-        receiver_addresses = self.conf.endpoint("attribute_service")
-        attribute_query = AttributeQuery( self.sec, receiver_addresses)
-
-        attribute_query = attribute_query.loads(xml_string)
-        attribute_query = attribute_query.verify()
-
-        # Subject name is a BaseID,NameID or EncryptedID instance
-        subject = attribute_query.subject_id()
-        attribute = attribute_query.attribute()
-
-        return subject, attribute, attribute_query.message
+        return lid

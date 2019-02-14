@@ -6,11 +6,7 @@ from saml2.saml import NAME_FORMAT_URI
 
 BASE = "http://localhost:8088/"
 
-try:
-    from xmlsec_location import xmlsec_path
-except ImportError:
-    xmlsec_path = '/opt/local/bin/xmlsec1'
-
+from pathutils import full_path
 
 CONFIG = {
     "entityid" : "urn:mace:example.com:saml:roland:idp",
@@ -39,7 +35,7 @@ CONFIG = {
                     # }
                 }
             },
-            "subject_data": "subject_data.db",
+            "subject_data": full_path("subject_data.db"),
         },
         "sp": {
             "endpoints":{
@@ -51,13 +47,14 @@ CONFIG = {
         }
     },
     "debug" : 1,
-    "key_file" : "test.key",
-    "cert_file" : "test.pem",
-    #"xmlsec_binary" : xmlsec_path,
-    "metadata": {
-        "local": ["metadata.xml", "vo_metadata.xml"],
-    },
-    "attribute_map_dir" : "attributemaps",
+    "key_file" : full_path("test.key"),
+    "cert_file" : full_path("test.pem"),
+    "xmlsec_binary" : None,
+    "metadata": [{
+        "class": "saml2.mdstore.MetaDataFile",
+        "metadata": [(full_path("metadata.xml"), ), (full_path("vo_metadata.xml"), )],
+    }],
+    "attribute_map_dir" : full_path("attributemaps"),
     "organization": {
         "name": "Exempel AB",
         "display_name": [("Exempel AB","se"),("Example Co.","en")],

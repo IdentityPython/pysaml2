@@ -58,7 +58,7 @@ class TDocumented_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -111,7 +111,7 @@ class TImport_(TExtensibleAttributesDocumented_):
             extension_elements=None,
             extension_attributes=None,
         ):
-        TExtensibleAttributesDocumented_.__init__(self, 
+        TExtensibleAttributesDocumented_.__init__(self,
                 documentation=documentation,
                 text=text,
                 extension_elements=extension_elements,
@@ -160,7 +160,7 @@ class TPart_(TExtensibleAttributesDocumented_):
             extension_elements=None,
             extension_attributes=None,
         ):
-        TExtensibleAttributesDocumented_.__init__(self, 
+        TExtensibleAttributesDocumented_.__init__(self,
                 documentation=documentation,
                 text=text,
                 extension_elements=extension_elements,
@@ -194,7 +194,7 @@ class TOperation_(TExtensibleDocumented_):
             extension_elements=None,
             extension_attributes=None,
         ):
-        TExtensibleDocumented_.__init__(self, 
+        TExtensibleDocumented_.__init__(self,
                 documentation=documentation,
                 text=text,
                 extension_elements=extension_elements,
@@ -227,7 +227,7 @@ class TParam_(TExtensibleAttributesDocumented_):
             extension_elements=None,
             extension_attributes=None,
         ):
-        TExtensibleAttributesDocumented_.__init__(self, 
+        TExtensibleAttributesDocumented_.__init__(self,
                 documentation=documentation,
                 text=text,
                 extension_elements=extension_elements,
@@ -260,7 +260,7 @@ class TFault_(TExtensibleAttributesDocumented_):
             extension_elements=None,
             extension_attributes=None,
         ):
-        TExtensibleAttributesDocumented_.__init__(self, 
+        TExtensibleAttributesDocumented_.__init__(self,
                 documentation=documentation,
                 text=text,
                 extension_elements=extension_elements,
@@ -291,7 +291,7 @@ class TBindingOperationMessage_(TExtensibleDocumented_):
             extension_elements=None,
             extension_attributes=None,
         ):
-        TExtensibleDocumented_.__init__(self, 
+        TExtensibleDocumented_.__init__(self,
                 documentation=documentation,
                 text=text,
                 extension_elements=extension_elements,
@@ -321,7 +321,7 @@ class TBindingOperationFault_(TExtensibleDocumented_):
             extension_elements=None,
             extension_attributes=None,
         ):
-        TExtensibleDocumented_.__init__(self, 
+        TExtensibleDocumented_.__init__(self,
                 documentation=documentation,
                 text=text,
                 extension_elements=extension_elements,
@@ -400,7 +400,7 @@ class TBindingOperation_(TExtensibleDocumented_):
             extension_elements=None,
             extension_attributes=None,
         ):
-        TExtensibleDocumented_.__init__(self, 
+        TExtensibleDocumented_.__init__(self,
                 documentation=documentation,
                 text=text,
                 extension_elements=extension_elements,
@@ -435,7 +435,7 @@ class TPort_(TExtensibleDocumented_):
             extension_elements=None,
             extension_attributes=None,
         ):
-        TExtensibleDocumented_.__init__(self, 
+        TExtensibleDocumented_.__init__(self,
                 documentation=documentation,
                 text=text,
                 extension_elements=extension_elements,
@@ -465,7 +465,7 @@ class TExtensibilityElement_(SamlBase):
             extension_elements=None,
             extension_attributes=None,
         ):
-        SamlBase.__init__(self, 
+        SamlBase.__init__(self,
                 text=text,
                 extension_elements=extension_elements,
                 extension_attributes=extension_attributes,
@@ -536,7 +536,7 @@ class TMessage_(TExtensibleDocumented_):
             extension_elements=None,
             extension_attributes=None,
         ):
-        TExtensibleDocumented_.__init__(self, 
+        TExtensibleDocumented_.__init__(self,
                 documentation=documentation,
                 text=text,
                 extension_elements=extension_elements,
@@ -584,7 +584,7 @@ class TPortType_(TExtensibleAttributesDocumented_):
             extension_elements=None,
             extension_attributes=None,
         ):
-        TExtensibleAttributesDocumented_.__init__(self, 
+        TExtensibleAttributesDocumented_.__init__(self,
                 documentation=documentation,
                 text=text,
                 extension_elements=extension_elements,
@@ -634,7 +634,7 @@ class TBinding_(TExtensibleDocumented_):
             extension_elements=None,
             extension_attributes=None,
         ):
-        TExtensibleDocumented_.__init__(self, 
+        TExtensibleDocumented_.__init__(self,
                 documentation=documentation,
                 text=text,
                 extension_elements=extension_elements,
@@ -683,7 +683,7 @@ class TService_(TExtensibleDocumented_):
             extension_elements=None,
             extension_attributes=None,
         ):
-        TExtensibleDocumented_.__init__(self, 
+        TExtensibleDocumented_.__init__(self,
                 documentation=documentation,
                 text=text,
                 extension_elements=extension_elements,
@@ -791,7 +791,7 @@ class TDefinitions_(TExtensibleDocumented_):
             extension_elements=None,
             extension_attributes=None,
         ):
-        TExtensibleDocumented_.__init__(self, 
+        TExtensibleDocumented_.__init__(self,
                 documentation=documentation,
                 text=text,
                 extension_elements=extension_elements,

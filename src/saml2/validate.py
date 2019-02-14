@@ -1,86 +1,122 @@
 import calendar
-import sys
-import urlparse
+from six.moves.urllib.parse import urlparse
 import re
-import time_util
 import struct
 import base64
+import time
+
+from saml2 import time_util
+
+XSI_NAMESPACE = 'http://www.w3.org/2001/XMLSchema-instance'
+XSI_NIL = '{%s}nil' % XSI_NAMESPACE
+# ---------------------------------------------------------
 
 
 class NotValid(Exception):
     pass
 
+
 class OutsideCardinality(Exception):
     pass
 
+
+class MustValueError(ValueError):
+    pass
+
+
+class ShouldValueError(ValueError):
+    pass
+
+
+class ResponseLifetimeExceed(Exception):
+    pass
+
+
+class ToEarly(Exception):
+    pass
+
 # --------------------- validators -------------------------------------
-# 
+#
+
+NCNAME = re.compile("(?P<NCName>[a-zA-Z_](\w|[_.-])*)")
+
+
 def valid_ncname(name):
-    exp = re.compile("(?P<NCName>[a-zA-Z_](\w|[_.-])*)")
-    match = exp.match(name)
-    if not match:
-        raise NotValid("NCName")
+    match = NCNAME.match(name)
+    #if not match:                      # hack for invalid authnRequest/ID from meteor saml lib
+    #    raise NotValid("NCName")
     return True
-    
+
+
 def valid_id(oid):
     valid_ncname(oid)
-    
+
+
 def valid_any_uri(item):
     """very simplistic, ..."""
     try:
-        part = urlparse.urlparse(item)
+        part = urlparse(item)
     except Exception:
         raise NotValid("AnyURI")
 
-    if part[0] == "urn" and part[1] == "": # A urn
+    if part[0] == "urn" and part[1] == "":  # A urn
         return True
     # elif part[1] == "localhost" or part[1] == "127.0.0.1":
     #     raise NotValid("AnyURI")
 
     return True
-    
+
+
 def valid_date_time(item):
     try:
         time_util.str_to_time(item)
     except Exception:
         raise NotValid("dateTime")
     return True
-    
+
+
 def valid_url(url):
     try:
-        part = urlparse.urlparse(url)
+        _ = urlparse.urlparse(url)
     except Exception:
         raise NotValid("URL")
-        
+
     # if part[1] == "localhost" or part[1] == "127.0.0.1":
     #     raise NotValid("URL")
     return True
-    
+
+
 def validate_on_or_after(not_on_or_after, slack):
     if not_on_or_after:
         now = time_util.utc_now()
         nooa = calendar.timegm(time_util.str_to_time(not_on_or_after))
         if now > nooa + slack:
-            raise Exception("Can't use it, it's too old %d > %d" %
-                            (nooa, now))
+            now_str=time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(now))
+            raise ResponseLifetimeExceed(
+                "Can't use response, too old (now=%s + slack=%d > " \
+                "not_on_or_after=%s" % (now_str, slack, not_on_or_after))
         return nooa
     else:
         return False
+
 
 def validate_before(not_before, slack):
     if not_before:
         now = time_util.utc_now()
         nbefore = calendar.timegm(time_util.str_to_time(not_before))
         if nbefore > now + slack:
-            raise Exception("Can't use it yet %d <= %d" % (nbefore, now))
-
+            now_str = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(now))
+            raise ToEarly("Can't use response yet: (now=%s + slack=%d) "
+                          "<= notbefore=%s" % (now_str, slack, not_before))
     return True
+
 
 def valid_address(address):
     if not (valid_ipv4(address) or valid_ipv6(address)):
         raise NotValid("address")
     return True
-    
+
+
 def valid_ipv4(address):
     parts = address.split(".")
     if len(parts) != 4:
@@ -92,8 +128,8 @@ def valid_ipv4(address):
         except ValueError:
             return False
     return True
-    
-# 
+
+#
 IPV6_PATTERN = re.compile(r"""
     ^
     \s*                         # Leading whitespace
@@ -111,7 +147,7 @@ IPV6_PATTERN = re.compile(r"""
          |  (?<!:)              #
          |  (?<=:) (?<!::) :    #
          )                      # OR
-     |                          #   A v4 address with NO leading zeros 
+     |                          #   A v4 address with NO leading zeros
         (?:25[0-4]|2[0-4]\d|1\d\d|[1-9]?\d)
         (?: \.
             (?:25[0-4]|2[0-4]\d|1\d\d|[1-9]?\d)
@@ -120,10 +156,12 @@ IPV6_PATTERN = re.compile(r"""
     \s*                         # Trailing whitespace
     $
 """, re.VERBOSE | re.IGNORECASE | re.DOTALL)
-    
+
+
 def valid_ipv6(address):
     """Validates IPv6 addresses. """
     return IPV6_PATTERN.match(address) is not None
+
 
 def valid_boolean(val):
     vall = val.lower()
@@ -131,7 +169,8 @@ def valid_boolean(val):
         return True
     else:
         raise NotValid("boolean")
-        
+
+
 def valid_duration(val):
     try:
         time_util.parse_duration(val)
@@ -139,9 +178,10 @@ def valid_duration(val):
         raise NotValid("duration")
     return True
 
+
 def valid_string(val):
-    """ Expects unicode 
-    Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | 
+    """ Expects unicode
+    Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] |
                     [#x10000-#x10FFFF]
     """
     for char in val:
@@ -151,16 +191,17 @@ def valid_string(val):
             raise NotValid("string")
         if char == 0x09 or char == 0x0A or char == 0x0D:
             continue
-        elif char >= 0x20 and char <= 0xD7FF:
+        elif 0x20 <= char <= 0xD7FF:
             continue
-        elif char >= 0xE000 and char <= 0xFFFD:
+        elif 0xE000 <= char <= 0xFFFD:
             continue
-        elif char >= 0x10000 and char <= 0x10FFFF:
+        elif 0x10000 <= char <= 0x10FFFF:
             continue
         else:
             raise NotValid("string")
     return True
-    
+
+
 def valid_unsigned_short(val):
     try:
         struct.pack("H", int(val))
@@ -168,18 +209,32 @@ def valid_unsigned_short(val):
         raise NotValid("unsigned short")
     except ValueError:
         raise NotValid("unsigned short")
-        
+
     return True
-    
+
+
+def valid_positive_integer(val):
+    try:
+        integer = int(val)
+    except ValueError:
+        raise NotValid("positive integer")
+
+    if integer > 0:
+        return True
+    else:
+        raise NotValid("positive integer")
+
+
 def valid_non_negative_integer(val):
     try:
         integer = int(val)
     except ValueError:
         raise NotValid("non negative integer")
-        
+
     if integer < 0:
         raise NotValid("non negative integer")
     return True
+
 
 def valid_integer(val):
     try:
@@ -187,7 +242,8 @@ def valid_integer(val):
     except ValueError:
         raise NotValid("integer")
     return True
-    
+
+
 def valid_base64(val):
     try:
         base64.b64decode(val)
@@ -195,36 +251,40 @@ def valid_base64(val):
         raise NotValid("base64")
     return True
 
+
 def valid_qname(val):
-    """ A qname is either 
-        NCName or 
+    """ A qname is either
+        NCName or
         NCName ':' NCName
     """
-    
+
     try:
         (prefix, localpart) = val.split(":")
         return valid_ncname(prefix) and valid_ncname(localpart)
     except ValueError:
         return valid_ncname(val)
 
+
 def valid_anytype(val):
-    """ Goes through all known type validators 
-    
+    """ Goes through all known type validators
+
     :param val: The value to validate
     :return: True is value is valid otherwise an exception is raised
     """
     for validator in VALIDATOR.values():
+        if validator == valid_anytype:  # To hinder recursion
+            continue
         try:
             if validator(val):
                 return True
         except NotValid:
             pass
-    
+
     if isinstance(val, type):
         return True
-        
+
     raise NotValid("AnyType")
-    
+
 # -----------------------------------------------------------------------------
 
 VALIDATOR = {
@@ -233,6 +293,7 @@ VALIDATOR = {
     "dateTime": valid_date_time,
     "anyURI": valid_any_uri,
     "nonNegativeInteger": valid_non_negative_integer,
+    "PositiveInteger": valid_positive_integer,
     "boolean": valid_boolean,
     "unsignedShort": valid_unsigned_short,
     "duration": valid_duration,
@@ -245,30 +306,33 @@ VALIDATOR = {
 
 # -----------------------------------------------------------------------------
 
+
 def validate_value_type(value, spec):
     """
-    c_value_type = {'base': 'string', 'enumeration': ['Permit', 'Deny', 'Indeterminate']}
+    c_value_type = {'base': 'string', 'enumeration': ['Permit', 'Deny',
+                                                      'Indeterminate']}
         {'member': 'anyURI', 'base': 'list'}
         {'base': 'anyURI'}
         {'base': 'NCName'}
         {'base': 'string'}
     """
     if "maxlen" in spec:
-        return len(value) <= spec["maxlen"]
-        
+        return len(value) <= int(spec["maxlen"])
+
     if spec["base"] == "string":
         if "enumeration" in spec:
             if value not in spec["enumeration"]:
                 raise NotValid("value not in enumeration")
         else:
             return valid_string(value)
-    elif spec["base"] == "list": #comma separated list of values
+    elif spec["base"] == "list":  # comma separated list of values
         for val in [v.strip() for v in value.split(",")]:
             valid(spec["member"], val)
     else:
         return valid(spec["base"], value)
-        
+
     return True
+
 
 def valid(typ, value):
     try:
@@ -281,95 +345,120 @@ def valid(typ, value):
                 typ = "string"
         return VALIDATOR[typ](value)
 
+
 def _valid_instance(instance, val):
     try:
-        valid_instance(val)
-    except NotValid, exc:
-        raise NotValid("Class '%s' instance: %s" % \
-                            (instance.__class__.__name__,
-                            exc.args[0]))
-    except OutsideCardinality, exc:
+        val.verify()
+    except NotValid as exc:
+        raise NotValid("Class '%s' instance: %s" % (
+            instance.__class__.__name__, exc.args[0]))
+    except OutsideCardinality as exc:
         raise NotValid(
-                "Class '%s' instance cardinality error: %s" % \
-                (instance.__class__.__name__, exc.args[0]))
+            "Class '%s' instance cardinality error: %s" % (
+                instance.__class__.__name__, exc.args[0]))
 
 ERROR_TEXT = "Wrong type of value '%s' on attribute '%s' expected it to be %s"
+
 
 def valid_instance(instance):
     instclass = instance.__class__
     class_name = instclass.__name__
-    try:
-        if instclass.c_value_type and instance.text:
-            try:
-                validate_value_type(instance.text.strip(), 
-                                        instclass.c_value_type)
-            except NotValid, exc:
-                raise NotValid("Class '%s' instance: %s" % (class_name, 
-                                                            exc.args[0]))
-    except AttributeError: # No c_value_type
-        pass
-        
+
+    # if instance.text:
+    #     _has_val = True
+    # else:
+    #     _has_val = False
+
+    if instclass.c_value_type and instance.text:
+        try:
+            validate_value_type(instance.text.strip(),
+                                instclass.c_value_type)
+        except NotValid as exc:
+            raise NotValid("Class '%s' instance: %s" % (class_name,
+                                                        exc.args[0]))
+
     for (name, typ, required) in instclass.c_attributes.values():
         value = getattr(instance, name, '')
         if required and not value:
             txt = "Required value on property '%s' missing" % name
-            raise NotValid("Class '%s' instance: %s" % (class_name, txt))
-        
+            raise MustValueError("Class '%s' instance: %s" % (class_name, txt))
+
         if value:
             try:
                 if isinstance(typ, type):
                     if typ.c_value_type:
                         spec = typ.c_value_type
                     else:
-                        spec = {"base": "string"} # doI need a default
-              
+                        spec = {"base": "string"}  # do I need a default
+
                     validate_value_type(value, spec)
                 else:
                     valid(typ, value)
-            except NotValid, exc:
+            except (NotValid, ValueError) as exc:
                 txt = ERROR_TEXT % (value, name, exc.args[0])
-                raise NotValid(
-                            "Class '%s' instance: %s" % (class_name, txt))
-        
+                raise NotValid("Class '%s' instance: %s" % (class_name, txt))
+
     for (name, _spec) in instclass.c_children.values():
         value = getattr(instance, name, '')
-        
+
+        try:
+            _card = instclass.c_cardinality[name]
+            try:
+                _cmin = _card["min"]
+            except KeyError:
+                _cmin = None
+            try:
+                _cmax = _card["max"]
+            except KeyError:
+                _cmax = None
+        except KeyError:
+            _cmin = _cmax = _card = None
+
         if value:
-            if name in instclass.c_cardinality:
-                try:
-                    vlen = len(value)
-                except TypeError:
-                    vlen = 1
-                    
-                if "min" in instclass.c_cardinality[name] and \
-                    instclass.c_cardinality[name]["min"] > vlen:
-                    raise NotValid(
-                            "Class '%s' instance cardinality error: %s" % \
-                            (class_name, "less then min (%s<%s)" % \
-                                (vlen, instclass.c_cardinality[name]["min"])))
-                if "max" in instclass.c_cardinality[name] and \
-                    instclass.c_cardinality[name]["max"] < vlen:
-                    raise NotValid(
-                            "Class '%s' instance cardinality error: %s" % \
-                            (class_name, "more then max (%s>%s)" % \
-                                (vlen, instclass.c_cardinality[name]["max"])))
-            
+            #_has_val = True
             if isinstance(value, list):
+                _list = True
+                vlen = len(value)
+            else:
+                _list = False
+                vlen = 1
+
+            if _card:
+                if _cmin is not None and _cmin > vlen:
+                    raise NotValid(
+                        "Class '%s' instance cardinality error: %s" % (
+                            class_name, "less then min (%s<%s)" % (vlen,
+                                                                   _cmin)))
+                if _cmax is not None and vlen > _cmax:
+                    raise NotValid(
+                        "Class '%s' instance cardinality error: %s" % (
+                            class_name, "more then max (%s>%s)" % (vlen,
+                                                                   _cmax)))
+
+            if _list:
                 for val in value:
                     # That it is the right class is handled elsewhere
                     _valid_instance(instance, val)
             else:
                 _valid_instance(instance, value)
         else:
-            try:
-                min = instclass.c_cardinality[name]["min"]
-                if min:
-                    print >> sys.stderr, \
-                                "Min cardinality for '%s': %s" % (name, min) 
-                    raise NotValid(
-                        "Class '%s' instance cardinality error: %s" % \
-                        (class_name, "too few values on %s" % name))
-            except KeyError:
-                pass
-    
+            if _cmin:
+                raise NotValid(
+                    "Class '%s' instance cardinality error: %s" % (
+                        class_name, "too few values on %s" % name))
+
+#    if not _has_val:
+#        if class_name != "RequestedAttribute":
+#            # Not allow unless xsi:nil="true"
+#            assert instance.extension_attributes
+#            assert instance.extension_attributes[XSI_NIL] == "true"
+
     return True
+
+
+def valid_domain_name(dns_name):
+    m = re.match(
+        "^[a-z0-9]+([-.]{ 1 }[a-z0-9]+).[a-z]{2,5}(:[0-9]{1,5})?(\/.)?$",
+        dns_name, re.I)
+    if not m:
+        raise ValueError("Not a proper domain name")

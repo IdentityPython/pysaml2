@@ -11,6 +11,7 @@ from saml2 import md
 
 NAMESPACE = 'urn:oasis:names:tc:SAML:metadata:ui'
 
+
 class DisplayName(md.LocalizedNameType_):
     """The urn:oasis:names:tc:SAML:metadata:ui:DisplayName element """
 
@@ -20,6 +21,7 @@ class DisplayName(md.LocalizedNameType_):
     c_attributes = md.LocalizedNameType_.c_attributes.copy()
     c_child_order = md.LocalizedNameType_.c_child_order[:]
     c_cardinality = md.LocalizedNameType_.c_cardinality.copy()
+
 
 def display_name_from_string(xml_string):
     return saml2.create_class_from_xml_string(DisplayName, xml_string)
@@ -35,6 +37,7 @@ class Description(md.LocalizedNameType_):
     c_child_order = md.LocalizedNameType_.c_child_order[:]
     c_cardinality = md.LocalizedNameType_.c_cardinality.copy()
 
+
 def description_from_string(xml_string):
     return saml2.create_class_from_xml_string(Description, xml_string)
 
@@ -49,6 +52,7 @@ class InformationURL(md.LocalizedURIType_):
     c_child_order = md.LocalizedURIType_.c_child_order[:]
     c_cardinality = md.LocalizedURIType_.c_cardinality.copy()
 
+
 def information_url_from_string(xml_string):
     return saml2.create_class_from_xml_string(InformationURL, xml_string)
 
@@ -62,6 +66,7 @@ class PrivacyStatementURL(md.LocalizedURIType_):
     c_attributes = md.LocalizedURIType_.c_attributes.copy()
     c_child_order = md.LocalizedURIType_.c_child_order[:]
     c_cardinality = md.LocalizedURIType_.c_cardinality.copy()
+
 
 def privacy_statement_url_from_string(xml_string):
     return saml2.create_class_from_xml_string(PrivacyStatementURL, xml_string)
@@ -79,24 +84,24 @@ class LogoType_(SamlBase):
     c_cardinality = SamlBase.c_cardinality.copy()
     c_attributes['height'] = ('height', 'positiveInteger', True)
     c_attributes['width'] = ('width', 'positiveInteger', True)
-    c_attributes['{http://www.w3.org/XML/1998/namespace}lang'] = ('lang', 'anyURI', False)
+    c_attributes['{http://www.w3.org/XML/1998/namespace}lang'] = (
+        'lang', 'anyURI', False)
 
     def __init__(self,
-            height=None,
-            width=None,
-            lang=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.height=height
-        self.width=width
-        self.lang=lang
+                 height=None,
+                 width=None,
+                 lang=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.height = height
+        self.width = width
+        self.lang = lang
+
 
 def logo_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(LogoType_, xml_string)
@@ -113,6 +118,7 @@ class IPHint(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def ip_hint_from_string(xml_string):
     return saml2.create_class_from_xml_string(IPHint, xml_string)
 
@@ -127,6 +133,7 @@ class DomainHint(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
+
 
 def domain_hint_from_string(xml_string):
     return saml2.create_class_from_xml_string(DomainHint, xml_string)
@@ -143,6 +150,7 @@ class GeolocationHint(SamlBase):
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
 
+
 def geolocation_hint_from_string(xml_string):
     return saml2.create_class_from_xml_string(GeolocationHint, xml_string)
 
@@ -157,6 +165,7 @@ class Logo(LogoType_):
     c_child_order = LogoType_.c_child_order[:]
     c_cardinality = LogoType_.c_cardinality.copy()
 
+
 def logo_from_string(xml_string):
     return saml2.create_class_from_xml_string(Logo, xml_string)
 
@@ -170,30 +179,32 @@ class DiscoHintsType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:metadata:ui}IPHint'] = ('ip_hint', [IPHint])
-    c_cardinality['ip_hint'] = {"min":0}
-    c_children['{urn:oasis:names:tc:SAML:metadata:ui}DomainHint'] = ('domain_hint', [DomainHint])
-    c_cardinality['domain_hint'] = {"min":0}
-    c_children['{urn:oasis:names:tc:SAML:metadata:ui}GeolocationHint'] = ('geolocation_hint', [GeolocationHint])
-    c_cardinality['geolocation_hint'] = {"min":0}
+    c_children['{urn:oasis:names:tc:SAML:metadata:ui}IPHint'] = (
+        'ip_hint', [IPHint])
+    c_cardinality['ip_hint'] = {"min": 0}
+    c_children['{urn:oasis:names:tc:SAML:metadata:ui}DomainHint'] = (
+        'domain_hint', [DomainHint])
+    c_cardinality['domain_hint'] = {"min": 0}
+    c_children['{urn:oasis:names:tc:SAML:metadata:ui}GeolocationHint'] = (
+        'geolocation_hint', [GeolocationHint])
+    c_cardinality['geolocation_hint'] = {"min": 0}
     c_child_order.extend(['ip_hint', 'domain_hint', 'geolocation_hint'])
 
     def __init__(self,
-            ip_hint=None,
-            domain_hint=None,
-            geolocation_hint=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.ip_hint=ip_hint or []
-        self.domain_hint=domain_hint or []
-        self.geolocation_hint=geolocation_hint or []
+                 ip_hint=None,
+                 domain_hint=None,
+                 geolocation_hint=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.ip_hint = ip_hint or []
+        self.domain_hint = domain_hint or []
+        self.geolocation_hint = geolocation_hint or []
+
 
 def disco_hints_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(DiscoHintsType_, xml_string)
@@ -208,38 +219,43 @@ class UIInfoType_(SamlBase):
     c_attributes = SamlBase.c_attributes.copy()
     c_child_order = SamlBase.c_child_order[:]
     c_cardinality = SamlBase.c_cardinality.copy()
-    c_children['{urn:oasis:names:tc:SAML:metadata:ui}DisplayName'] = ('display_name', [DisplayName])
-    c_cardinality['display_name'] = {"min":0}
-    c_children['{urn:oasis:names:tc:SAML:metadata:ui}Description'] = ('description', [Description])
-    c_cardinality['description'] = {"min":0}
+    c_children['{urn:oasis:names:tc:SAML:metadata:ui}DisplayName'] = (
+        'display_name', [DisplayName])
+    c_cardinality['display_name'] = {"min": 0}
+    c_children['{urn:oasis:names:tc:SAML:metadata:ui}Description'] = (
+        'description', [Description])
+    c_cardinality['description'] = {"min": 0}
     c_children['{urn:oasis:names:tc:SAML:metadata:ui}Logo'] = ('logo', [Logo])
-    c_cardinality['logo'] = {"min":0}
-    c_children['{urn:oasis:names:tc:SAML:metadata:ui}InformationURL'] = ('information_url', [InformationURL])
-    c_cardinality['information_url'] = {"min":0}
-    c_children['{urn:oasis:names:tc:SAML:metadata:ui}PrivacyStatementURL'] = ('privacy_statement_url', [PrivacyStatementURL])
-    c_cardinality['privacy_statement_url'] = {"min":0}
-    c_child_order.extend(['display_name', 'description', 'logo', 'information_url', 'privacy_statement_url'])
+    c_cardinality['logo'] = {"min": 0}
+    c_children['{urn:oasis:names:tc:SAML:metadata:ui}InformationURL'] = (
+        'information_url', [InformationURL])
+    c_cardinality['information_url'] = {"min": 0}
+    c_children['{urn:oasis:names:tc:SAML:metadata:ui}PrivacyStatementURL'] = (
+        'privacy_statement_url', [PrivacyStatementURL])
+    c_cardinality['privacy_statement_url'] = {"min": 0}
+    c_child_order.extend(
+        ['display_name', 'description', 'logo', 'information_url',
+         'privacy_statement_url'])
 
     def __init__(self,
-            display_name=None,
-            description=None,
-            logo=None,
-            information_url=None,
-            privacy_statement_url=None,
-            text=None,
-            extension_elements=None,
-            extension_attributes=None,
-        ):
-        SamlBase.__init__(self, 
-                text=text,
-                extension_elements=extension_elements,
-                extension_attributes=extension_attributes,
-                )
-        self.display_name=display_name or []
-        self.description=description or []
-        self.logo=logo or []
-        self.information_url=information_url or []
-        self.privacy_statement_url=privacy_statement_url or []
+                 display_name=None,
+                 description=None,
+                 logo=None,
+                 information_url=None,
+                 privacy_statement_url=None,
+                 text=None,
+                 extension_elements=None,
+                 extension_attributes=None):
+        SamlBase.__init__(self,
+                          text=text,
+                          extension_elements=extension_elements,
+                          extension_attributes=extension_attributes)
+        self.display_name = display_name or []
+        self.description = description or []
+        self.logo = logo or []
+        self.information_url = information_url or []
+        self.privacy_statement_url = privacy_statement_url or []
+
 
 def ui_info_type__from_string(xml_string):
     return saml2.create_class_from_xml_string(UIInfoType_, xml_string)
@@ -255,6 +271,7 @@ class DiscoHints(DiscoHintsType_):
     c_child_order = DiscoHintsType_.c_child_order[:]
     c_cardinality = DiscoHintsType_.c_cardinality.copy()
 
+
 def disco_hints_from_string(xml_string):
     return saml2.create_class_from_xml_string(DiscoHints, xml_string)
 
@@ -268,6 +285,7 @@ class UIInfo(UIInfoType_):
     c_attributes = UIInfoType_.c_attributes.copy()
     c_child_order = UIInfoType_.c_child_order[:]
     c_cardinality = UIInfoType_.c_cardinality.copy()
+
 
 def ui_info_from_string(xml_string):
     return saml2.create_class_from_xml_string(UIInfo, xml_string)

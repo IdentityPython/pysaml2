@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema
+	xmlns="http://eidas.europa.eu/saml-extensions"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	targetNamespace="http://eidas.europa.eu/saml-extensions"
+	elementFormDefault="qualified"
+	attributeFormDefault="unqualified"
+	version="1">
+	<xsd:element name="SPType" type="SPTypeType"/>
+	<xsd:simpleType name="SPTypeType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="public"/>
+			<xsd:enumeration value="private"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+</xsd:schema>

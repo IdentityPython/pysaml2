@@ -1,7 +1,4 @@
-try:
-    from xmlsec_location import xmlsec_path
-except ImportError:
-    xmlsec_path = '/opt/local/bin/xmlsec1'
+from pathutils import full_path
 
 CONFIG = {
     "entityid" : "urn:mace:example.com:saml:roland:sp",
@@ -15,15 +12,15 @@ CONFIG = {
             "required_attributes": ["surName", "givenName", "mail"],
             "optional_attributes": ["title"],
             "idp":["urn:mace:example.com:saml:roland:idp"],
-            "subject_data": "subject_data.db",
+            "subject_data": full_path("subject_data.db"),
         }
     },
     "debug" : 1,
-    "key_file" : "test.key",
-    "cert_file" : "test.pem",
-    #"xmlsec_binary" : xmlsec_path,
+    "key_file" : full_path("test.key"),
+    "cert_file" : full_path("test.pem"),
+    "xmlsec_binary" : None,
     "metadata": {
-        "local": ["idp_aa.xml", "vo_metadata.xml"],
+        "local": [full_path("idp_aa.xml"), full_path("vo_metadata.xml")],
     },
     "virtual_organization" : {
         "urn:mace:example.com:it:tek":{
@@ -32,7 +29,7 @@ CONFIG = {
         }
     },
     "accepted_time_diff": 60,
-    "attribute_map_dir" : "attributemaps",
+    "attribute_map_dir" : full_path("attributemaps"),
     "organization": {
         "name": ("AB Exempel", "se"),
         "display_name": ("AB Exempel", "se"),

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import pytest
 
 __author__ = 'rolandh'
 
@@ -11,6 +12,7 @@ from pytest import raises
 SESSION_INFO_PATTERN = {"ava":{}, "came from":"", "not_on_or_after":0,
                     "issuer":"", "session_id":-1}
 
+@pytest.mark.mongo
 class TestMongoDBCache():
     def setup_class(self):
         try:
@@ -30,8 +32,8 @@ class TestMongoDBCache():
             info = self.cache.get("1234", "abcd")
             #{u'issuer': u'', u'came from': u'', u'ava': {u'givenName': [u'Derek']}, u'session_id': -1, u'not_on_or_after': 0}
             ava = info["ava"]
-            print ava
-            assert ava.keys() == ["givenName"]
+            print(ava)
+            assert list(ava.keys()) == ["givenName"]
             assert ava["givenName"] == ["Derek"]
 
     def test_set_get_2(self):
@@ -53,7 +55,7 @@ class TestMongoDBCache():
             self.cache.delete("1234")
 
             info = self.cache.get("1234", "abcd")
-            print info
+            print(info)
             assert info == {}
 
     def test_subjects(self):
@@ -75,7 +77,7 @@ class TestMongoDBCache():
             self.cache.set("1234", "xyzv", session_info, not_on_or_after)
 
             (ident, _) = self.cache.get_identity("1234")
-            print ident
+            print(ident)
             assert len(ident.keys()) == 2
             assert "givenName" in ident.keys()
             assert "mail" in ident.keys()
@@ -87,5 +89,5 @@ class TestMongoDBCache():
             self.cache.delete("1234")
 
             info = self.cache.get("1234", "xyzv")
-            print info
+            print(info)
             assert info == {}

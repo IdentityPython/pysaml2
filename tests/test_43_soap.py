@@ -12,9 +12,13 @@ except ImportError:
         import cElementTree as ElementTree
     except ImportError:
         from elementtree import ElementTree
+from defusedxml.common import EntitiesForbidden
+
+from pytest import raises
 
 import saml2.samlp as samlp
 from saml2.samlp import NAMESPACE as SAMLP_NAMESPACE
+from saml2 import soap
 
 NAMESPACE = "http://schemas.xmlsoap.org/soap/envelope/"
 
@@ -36,6 +40,7 @@ example = """<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
 </Envelope>
 """
 
+
 def test_parse_soap_envelope():
     envelope = ElementTree.fromstring(example)
     assert envelope.tag == '{%s}Envelope' % NAMESPACE
@@ -47,6 +52,7 @@ def test_parse_soap_envelope():
     saml_part = body[0]
     assert saml_part.tag == '{%s}Response' % SAMLP_NAMESPACE
     # {http://schemas.xmlsoap.org/soap/envelope/}Envelope
+
 
 def test_make_soap_envelope():
     envelope = ElementTree.Element('')
@@ -64,3 +70,42 @@ def test_make_soap_envelope():
     assert len(body) == 1
     saml_part = body[0]
     assert saml_part.tag == '{%s}AuthnRequest' % SAMLP_NAMESPACE
+
+
+def test_parse_soap_enveloped_saml_thingy_xxe():
+    xml = """<?xml version="1.0"?>
+    <!DOCTYPE lolz [
+    <!ENTITY lol "lol">
+    <!ELEMENT lolz (#PCDATA)>
+    <!ENTITY lol1 "&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;">
+    ]>
+    <lolz>&lol1;</lolz>
+    """
+    with raises(EntitiesForbidden):
+        soap.parse_soap_enveloped_saml_thingy(xml, None)
+
+
+def test_class_instances_from_soap_enveloped_saml_thingies_xxe():
+    xml = """<?xml version="1.0"?>
+    <!DOCTYPE lolz [
+    <!ENTITY lol "lol">
+    <!ELEMENT lolz (#PCDATA)>
+    <!ENTITY lol1 "&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;">
+    ]>
+    <lolz>&lol1;</lolz>
+    """
+    with raises(soap.XmlParseError):
+        soap.class_instances_from_soap_enveloped_saml_thingies(xml, None)
+
+
+def test_open_soap_envelope_xxe():
+    xml = """<?xml version="1.0"?>
+    <!DOCTYPE lolz [
+    <!ENTITY lol "lol">
+    <!ELEMENT lolz (#PCDATA)>
+    <!ENTITY lol1 "&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;">
+    ]>
+    <lolz>&lol1;</lolz>
+    """
+    with raises(soap.XmlParseError):
+        soap.open_soap_envelope(xml)

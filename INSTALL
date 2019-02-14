@@ -5,7 +5,7 @@ easy_install
 
 !! 2.0 or newer are missing the form plugin which is used in some instances
 
-Or from the PyPi site if you prefer to do it that way.
+Or from the PyPI site if you prefer to do it that way.
 Likewise for pyasn1.
 
 You should get the latest version, which is right now 1.0.18 .

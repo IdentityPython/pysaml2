@@ -1,77 +1,144 @@
 #!/usr/bin/env python
 
-__author__ = 'rolandh'
-
-import sys
-import os
-import re
+import copy
+import importlib
 import logging
 import logging.handlers
+import os
+import re
+import sys
 
-from importlib import import_module
+import six
 
-from saml2 import BINDING_SOAP, BINDING_HTTP_REDIRECT
-from saml2 import metadata
-from saml2 import root_logger
+from saml2 import root_logger, BINDING_URI, SAMLError
+from saml2 import BINDING_SOAP
+from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_HTTP_POST
+from saml2 import BINDING_HTTP_ARTIFACT
 
 from saml2.attribute_converter import ac_factory
 from saml2.assertion import Policy
-from saml2.sigver import get_xmlsec_binary
+from saml2.mdstore import MetadataStore
+from saml2.saml import NAME_FORMAT_URI
+from saml2.virtual_org import VirtualOrg
 
-COMMON_ARGS = ["entityid", "xmlsec_binary", "debug", "key_file", "cert_file",
-                "secret", "accepted_time_diff", "name", "ca_certs",
-                "description",
-                "organization",
-                "contact_person",
-                "name_form",
-                "virtual_organization",
-                "logger",
-                "only_use_keys_in_metadata",
-                "logout_requests_signed",
-                ]
+logger = logging.getLogger(__name__)
+
+__author__ = 'rolandh'
+
+
+COMMON_ARGS = [
+    "debug",
+    "entityid",
+    "xmlsec_binary",
+    "key_file",
+    "cert_file",
+    "encryption_keypairs",
+    "additional_cert_files",
+    "metadata_key_usage",
+    "secret",
+    "accepted_time_diff",
+    "name",
+    "ca_certs",
+    "description",
+    "valid_for",
+    "verify_ssl_cert",
+    "organization",
+    "contact_person",
+    "name_form",
+    "virtual_organization",
+    "logger",
+    "only_use_keys_in_metadata",
+    "disable_ssl_certificate_validation",
+    "preferred_binding",
+    "session_storage",
+    "entity_category",
+    "xmlsec_path",
+    "extension_schemas",
+    "cert_handler_extra_class",
+    "generate_cert_func",
+    "generate_cert_info",
+    "verify_encrypt_cert_advice",
+    "verify_encrypt_cert_assertion",
+    "tmp_cert_file",
+    "tmp_key_file",
+    "validate_certificate",
+    "extensions",
+    "allow_unknown_attributes",
+    "crypto_backend",
+    "id_attr_name",
+]
 
 SP_ARGS = [
-            "required_attributes",
-            "optional_attributes",
-            "idp",
-            "aa",
-            "subject_data",
-            "want_assertions_signed",
-            "authn_requests_signed",
-            "name_form",
-            "endpoints",
-            "ui_info",
-            "discovery_response",
-            "allow_unsolicited",
-            "ecp"
-            ]
+    "required_attributes",
+    "optional_attributes",
+    "idp",
+    "aa",
+    "subject_data",
+    "want_response_signed",
+    "want_assertions_signed",
+    "authn_requests_signed",
+    "name_form",
+    "endpoints",
+    "ui_info",
+    "discovery_response",
+    "allow_unsolicited",
+    "ecp",
+    "name_id_format",
+    "name_id_format_allow_create",
+    "logout_requests_signed",
+    "requested_attribute_name_format",
+    "hide_assertion_consumer_service",
+    "force_authn",
+    "sp_type",
+    "sp_type_in_metadata",
+    "requested_attributes",
+]
 
-AA_IDP_ARGS = ["want_authn_requests_signed",
-               "provided_attributes",
-               "subject_data",
-               "sp",
-               "scope",
-               "endpoints",
-               "metadata",
-               "ui_info"]
+AA_IDP_ARGS = [
+    "sign_assertion",
+    "sign_response",
+    "encrypt_assertion",
+    "encrypted_advice_attributes",
+    "encrypt_assertion_self_contained",
+    "want_authn_requests_signed",
+    "want_authn_requests_only_with_valid_cert",
+    "provided_attributes",
+    "subject_data",
+    "sp",
+    "scope",
+    "endpoints",
+    "metadata",
+    "ui_info",
+    "name_id_format",
+    "domain",
+    "name_qualifier",
+    "edu_person_targeted_id",
+]
 
-PDP_ARGS = ["endpoints", "name_form"]
+PDP_ARGS = ["endpoints", "name_form", "name_id_format"]
+
+AQ_ARGS = ["endpoints"]
+
+AA_ARGS = ["attribute", "attribute_profile"]
 
 COMPLEX_ARGS = ["attribute_converters", "metadata", "policy"]
-ALL = COMMON_ARGS + SP_ARGS + AA_IDP_ARGS + PDP_ARGS + COMPLEX_ARGS
-
+ALL = set(COMMON_ARGS + SP_ARGS + AA_IDP_ARGS + PDP_ARGS + COMPLEX_ARGS +
+          AA_ARGS)
 
 SPEC = {
     "": COMMON_ARGS + COMPLEX_ARGS,
     "sp": COMMON_ARGS + COMPLEX_ARGS + SP_ARGS,
     "idp": COMMON_ARGS + COMPLEX_ARGS + AA_IDP_ARGS,
-    "aa": COMMON_ARGS + COMPLEX_ARGS + AA_IDP_ARGS,
+    "aa": COMMON_ARGS + COMPLEX_ARGS + AA_IDP_ARGS + AA_ARGS,
     "pdp": COMMON_ARGS + COMPLEX_ARGS + PDP_ARGS,
+    "aq": COMMON_ARGS + COMPLEX_ARGS + AQ_ARGS,
 }
 
 # --------------- Logging stuff ---------------
 
-LOG_LEVEL = {'debug': logging.DEBUG,
+LOG_LEVEL = {
+    'debug': logging.DEBUG,
     'info': logging.INFO,
     'warning': logging.WARNING,
     'error': logging.ERROR,
@@ -81,76 +148,141 @@ LOG_HANDLER = {
     "rotating": logging.handlers.RotatingFileHandler,
     "syslog": logging.handlers.SysLogHandler,
     "timerotate": logging.handlers.TimedRotatingFileHandler,
+    "memory": logging.handlers.MemoryHandler,
 }
 
-LOG_FORMAT = "%(asctime)s %(name)s: %(levelname)s %(message)s"
-#LOG_FORMAT = "%(asctime)s %(name)s: %(levelname)s [%(sid)s][%(func)s] %
-# (message)s"
+LOG_FORMAT = "%(asctime)s %(name)s:%(levelname)s %(message)s"
 
-class ConfigurationError(Exception):
+_RPA = [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST, BINDING_HTTP_ARTIFACT]
+_PRA = [BINDING_HTTP_POST, BINDING_HTTP_REDIRECT, BINDING_HTTP_ARTIFACT]
+_SRPA = [BINDING_SOAP, BINDING_HTTP_REDIRECT, BINDING_HTTP_POST,
+         BINDING_HTTP_ARTIFACT]
+
+PREFERRED_BINDING = {
+    "single_logout_service": _SRPA,
+    "manage_name_id_service": _SRPA,
+    "assertion_consumer_service": _PRA,
+    "single_sign_on_service": _RPA,
+    "name_id_mapping_service": [BINDING_SOAP],
+    "authn_query_service": [BINDING_SOAP],
+    "attribute_service": [BINDING_SOAP],
+    "authz_service": [BINDING_SOAP],
+    "assertion_id_request_service": [BINDING_URI],
+    "artifact_resolution_service": [BINDING_SOAP],
+    "attribute_consuming_service": _RPA
+}
+
+
+class ConfigurationError(SAMLError):
     pass
 
+
 # -----------------------------------------------------------------
+
 
 class Config(object):
     def_context = ""
 
-    def __init__(self):
-        self._attr = {"": {}, "sp": {}, "idp": {}, "aa": {}, "pdp": {}}
+    def __init__(self, homedir="."):
+        self._homedir = homedir
+        self.entityid = None
+        self.xmlsec_binary = None
+        self.xmlsec_path = []
+        self.debug = False
+        self.key_file = None
+        self.cert_file = None
+        self.encryption_keypairs = None
+        self.additional_cert_files = None
+        self.metadata_key_usage = 'both'
+        self.secret = None
+        self.accepted_time_diff = None
+        self.name = None
+        self.ca_certs = None
+        self.verify_ssl_cert = False
+        self.description = None
+        self.valid_for = None
+        self.organization = None
+        self.contact_person = None
+        self.name_form = None
+        self.name_id_format = None
+        self.name_id_format_allow_create = None
+        self.virtual_organization = None
+        self.logger = None
+        self.only_use_keys_in_metadata = True
+        self.logout_requests_signed = None
+        self.disable_ssl_certificate_validation = None
         self.context = ""
-
-    def serves(self):
-        return [t for t in ["sp", "idp", "aa", "pdp"] if self._attr[t]]
-
-    def copy_into(self, typ=""):
-        if typ == "sp":
-            copy = SPConfig()
-        elif typ in ["idp", "aa"]:
-            copy = IdPConfig()
-        else:
-            copy = Config()
-        copy.context = typ
-        copy._attr = self._attr.copy()
-        return copy
-    
-    def __getattribute__(self, item):
-        if item == "context":
-            return object.__getattribute__(self, item)
-
-        _context = self.context
-        if item in ALL:
-            try:
-                return self._attr[_context][item]
-            except KeyError:
-                if _context:
-                    try:
-                        return self._attr[""][item]
-                    except KeyError:
-                        pass
-                return None
-        else:
-            return object.__getattribute__(self, item)
+        self.attribute_converters = None
+        self.metadata = None
+        self.policy = None
+        self.serves = []
+        self.vorg = {}
+        self.preferred_binding = PREFERRED_BINDING
+        self.domain = ""
+        self.name_qualifier = ""
+        self.entity_category = ""
+        self.crypto_backend = 'xmlsec1'
+        self.id_attr_name = None
+        self.scope = ""
+        self.allow_unknown_attributes = False
+        self.extension_schema = {}
+        self.cert_handler_extra_class = None
+        self.verify_encrypt_cert_advice = None
+        self.verify_encrypt_cert_assertion = None
+        self.generate_cert_func = None
+        self.generate_cert_info = None
+        self.tmp_cert_file = None
+        self.tmp_key_file = None
+        self.validate_certificate = None
+        self.extensions = {}
+        self.attribute = []
+        self.attribute_profile = []
+        self.requested_attribute_name_format = NAME_FORMAT_URI
 
     def setattr(self, context, attr, val):
-        self._attr[context][attr] = val
+        if context == "":
+            setattr(self, attr, val)
+        else:
+            setattr(self, "_%s_%s" % (context, attr), val)
+
+    def getattr(self, attr, context=None):
+        if context is None:
+            context = self.context
+
+        if context == "":
+            return getattr(self, attr, None)
+        else:
+            return getattr(self, "_%s_%s" % (context, attr), None)
 
     def load_special(self, cnf, typ, metadata_construction=False):
         for arg in SPEC[typ]:
             try:
-                self._attr[typ][arg] = cnf[arg]
+                _val = cnf[arg]
             except KeyError:
                 pass
+            else:
+                if _val == "true":
+                    _val = True
+                elif _val == "false":
+                    _val = False
+                self.setattr(typ, arg, _val)
 
         self.context = typ
         self.load_complex(cnf, typ, metadata_construction=metadata_construction)
         self.context = self.def_context
 
     def load_complex(self, cnf, typ="", metadata_construction=False):
-        _attr_typ = self._attr[typ]
         try:
-            _attr_typ["policy"] = Policy(cnf["policy"])
+            self.setattr(typ, "policy", Policy(cnf["policy"]))
         except KeyError:
             pass
+
+        # for srv, spec in cnf["service"].items():
+        #     try:
+        #         self.setattr(srv, "policy",
+        #                      Policy(cnf["service"][srv]["policy"]))
+        #     except KeyError:
+        #         pass
 
         try:
             try:
@@ -159,20 +291,38 @@ class Config(object):
                 acs = ac_factory()
 
             if not acs:
-                raise Exception(("No attribute converters, ",
-                                    "something is wrong!!"))
-            try:
-                _attr_typ["attribute_converters"].extend(acs)
-            except KeyError:
-                _attr_typ["attribute_converters"] = acs
+                raise ConfigurationError(
+                    "No attribute converters, something is wrong!!")
+
+            _acs = self.getattr("attribute_converters", typ)
+            if _acs:
+                _acs.extend(acs)
+            else:
+                self.setattr(typ, "attribute_converters", acs)
+
         except KeyError:
             pass
 
         if not metadata_construction:
             try:
-                _attr_typ["metadata"] = self.load_metadata(cnf["metadata"])
+                self.setattr(typ, "metadata",
+                             self.load_metadata(cnf["metadata"]))
             except KeyError:
                 pass
+
+    def unicode_convert(self, item):
+        try:
+            return six.text_type(item, "utf-8")
+        except TypeError:
+            _uc = self.unicode_convert
+            if isinstance(item, dict):
+                return dict([(key, _uc(val)) for key, val in item.items()])
+            elif isinstance(item, list):
+                return [_uc(v) for v in item]
+            elif isinstance(item, tuple):
+                return tuple([_uc(v) for v in item])
+            else:
+                return item
 
     def load(self, cnf, metadata_construction=False):
         """ The base load method, loads the configuration
@@ -182,74 +332,92 @@ class Config(object):
             metadata. If so some things can be left out.
         :return: The Configuration instance
         """
+        _uc = self.unicode_convert
         for arg in COMMON_ARGS:
+            if arg == "virtual_organization":
+                if "virtual_organization" in cnf:
+                    for key, val in cnf["virtual_organization"].items():
+                        self.vorg[key] = VirtualOrg(None, key, val)
+                continue
+            elif arg == "extension_schemas":
+                # List of filename of modules representing the schemas
+                if "extension_schemas" in cnf:
+                    for mod_file in cnf["extension_schemas"]:
+                        _mod = self._load(mod_file)
+                        self.extension_schema[_mod.NAMESPACE] = _mod
+
             try:
-                self._attr[""][arg] = cnf[arg]
+                setattr(self, arg, _uc(cnf[arg]))
             except KeyError:
                 pass
+            except TypeError:  # Something that can't be a string
+                setattr(self, arg, cnf[arg])
 
         if "service" in cnf:
-            for typ in ["aa", "idp", "sp", "pdp"]:
+            for typ in ["aa", "idp", "sp", "pdp", "aq"]:
                 try:
-                    self.load_special(cnf["service"][typ], typ,
-                                    metadata_construction=metadata_construction)
-
+                    self.load_special(
+                        cnf["service"][typ], typ,
+                        metadata_construction=metadata_construction)
+                    self.serves.append(typ)
                 except KeyError:
                     pass
 
-        if not metadata_construction:
-            if "xmlsec_binary" not in self._attr[""]:
-                self._attr[""]["xmlsec_binary"] = get_xmlsec_binary()
-            # verify that xmlsec is where it's supposed to be
-            if not os.access(self._attr[""]["xmlsec_binary"], os.F_OK):
-                raise Exception("xmlsec binary not in '%s' !" % (
-                                            self._attr[""]["xmlsec_binary"]))
+        if "extensions" in cnf:
+            self.do_extensions(cnf["extensions"])
 
         self.load_complex(cnf, metadata_construction=metadata_construction)
         self.context = self.def_context
 
         return self
 
-    def load_file(self, config_file, metadata_construction=False):
-        if sys.path[0] != ".":
-            sys.path.insert(0, ".")
+    def _load(self, fil):
+        head, tail = os.path.split(fil)
+        if head == "":
+            if sys.path[0] != ".":
+                sys.path.insert(0, ".")
+        else:
+            sys.path.insert(0, head)
 
+        return importlib.import_module(tail)
+
+    def load_file(self, config_file, metadata_construction=False):
         if config_file.endswith(".py"):
             config_file = config_file[:-3]
 
-        mod = import_module(config_file)
-        #return self.load(eval(open(config_file).read()))
-        return self.load(mod.CONFIG, metadata_construction)
+        mod = self._load(config_file)
+        return self.load(copy.deepcopy(mod.CONFIG), metadata_construction)
 
     def load_metadata(self, metadata_conf):
         """ Loads metadata into an internal structure """
 
-        xmlsec_binary = self.xmlsec_binary
         acs = self.attribute_converters
 
-        if xmlsec_binary is None:
-            raise Exception("Missing xmlsec1 specification")
         if acs is None:
-            raise Exception("Missing attribute converter specification")
+            raise ConfigurationError(
+                "Missing attribute converter specification")
 
-        metad = metadata.MetaData(xmlsec_binary, acs)
-        if "local" in metadata_conf:
-            for mdfile in metadata_conf["local"]:
-                metad.import_metadata(open(mdfile).read(), mdfile)
-        if "remote" in metadata_conf:
-            for spec in metadata_conf["remote"]:
-                try:
-                    cert = spec["cert"]
-                except KeyError:
-                    cert = None
-                metad.import_external_metadata(spec["url"], cert)
-        return metad
+        try:
+            ca_certs = self.ca_certs
+        except:
+            ca_certs = None
+        try:
+            disable_validation = self.disable_ssl_certificate_validation
+        except:
+            disable_validation = False
 
-    def endpoint(self, service, binding=None):
+        mds = MetadataStore(acs, self, ca_certs,
+            disable_ssl_certificate_validation=disable_validation)
+
+        mds.imp(metadata_conf)
+
+        return mds
+
+    def endpoint(self, service, binding=None, context=None):
         """ Goes through the list of endpoint specifications for the
-        given type of service and returnes the first endpoint that matches
-        the given binding. If no binding is given any endpoint for that
-        service will be returned.
+        given type of service and returns a list of endpoint that matches
+        the given binding. If no binding is given all endpoints available for
+        that service will be returned.
 
         :param service: The service the endpoint should support
         :param binding: The expected binding
@@ -257,13 +425,15 @@ class Config(object):
         """
         spec = []
         unspec = []
-        for endpspec in self.endpoints[service]:
-            try:
-                endp, bind = endpspec
-                if binding is None or bind == binding:
-                    spec.append(endp)
-            except ValueError:
-                unspec.append(endpspec)
+        endps = self.getattr("endpoints", context)
+        if endps and service in endps:
+            for endpspec in endps[service]:
+                try:
+                    endp, bind = endpspec
+                    if binding is None or bind == binding:
+                        spec.append(endp)
+                except ValueError:
+                    unspec.append(endpspec)
 
         if spec:
             return spec
@@ -288,10 +458,10 @@ class Config(object):
                         elif args["socktype"] == "stream":
                             args["socktype"] = socket.SOCK_STREAM
                         else:
-                            raise Exception("Unknown socktype!")
+                            raise ConfigurationError("Unknown socktype!")
                     try:
                         handler = LOG_HANDLER[htyp](**args)
-                    except TypeError: # difference between 2.6 and 2.7
+                    except TypeError:  # difference between 2.6 and 2.7
                         del args["socktype"]
                         handler = LOG_HANDLER[htyp](**args)
                 else:
@@ -309,104 +479,60 @@ class Config(object):
 
         handler.setFormatter(formatter)
         return handler
-    
-    def setup_logger(self):
-        try:
-            _logconf = self.logger
-        except KeyError:
-            return None
 
-        if root_logger.level != logging.NOTSET: # Someone got there before me
+    def setup_logger(self):
+        if root_logger.level != logging.NOTSET:  # Someone got there before me
             return root_logger
 
+        _logconf = self.logger
         if _logconf is None:
-            return None
+            return root_logger
 
         try:
             root_logger.setLevel(LOG_LEVEL[_logconf["loglevel"].lower()])
-        except KeyError: # reasonable default
-            root_logger.setLevel(logging.WARNING)
+        except KeyError:  # reasonable default
+            root_logger.setLevel(logging.INFO)
 
         root_logger.addHandler(self.log_handler())
         root_logger.info("Logging started")
         return root_logger
-    
-    def keys(self):
-        keys = []
 
-        for dir in ["", "sp", "idp", "aa"]:
-            keys.extend(self._attr[dir].keys())
+    def endpoint2service(self, endpoint, context=None):
+        endps = self.getattr("endpoints", context)
 
-        return list(set(keys))
+        for service, specs in endps.items():
+            for endp, binding in specs:
+                if endp == endpoint:
+                    return service, binding
 
-    def __contains__(self, item):
-        for dir in ["", "sp", "idp", "aa"]:
-            if item in self._attr[dir]:
-                return True
-        return False
-        
+        return None, None
+
+    def do_extensions(self, extensions):
+        for key, val in extensions.items():
+            self.extensions[key] = val
+
+    def service_per_endpoint(self, context=None):
+        """
+        List all endpoint this entity publishes and which service and binding
+        that are behind the endpoint
+
+        :param context: Type of entity
+        :return: Dictionary with endpoint url as key and a tuple of
+            service and binding as value
+        """
+        endps = self.getattr("endpoints", context)
+        res = {}
+        for service, specs in endps.items():
+            for endp, binding in specs:
+                res[endp] = (service, binding)
+        return res
+
+
 class SPConfig(Config):
     def_context = "sp"
 
     def __init__(self):
         Config.__init__(self)
-
-    def single_logout_services(self, entity_id, binding=BINDING_SOAP):
-        """ returns a list of endpoints to use for sending logout requests to
-
-        :param entity_id: The entity ID of the service
-        :param binding: The preferred binding (which for logout by default is
-            the SOAP binding)
-        :return: list of endpoints
-        """
-        return self.metadata.single_logout_services(entity_id, "idp",
-                                                     binding=binding)
-
-    def single_sign_on_services(self, entity_id,
-                                binding=BINDING_HTTP_REDIRECT):
-        """ returns a list of endpoints to use for sending login requests to
-
-        :param entity_id: The entity ID of the service
-        :param binding: The preferred binding 
-        :return: list of endpoints
-        """
-        return self.metadata.single_sign_on_services(entity_id,
-                                                     binding=binding)
-
-    def attribute_services(self, entity_id, binding=BINDING_SOAP):
-        """ returns a list of endpoints to use for attribute requests to
-
-        :param entity_id: The entity ID of the service
-        :param binding: The preferred binding (which for logout by default is
-            the SOAP binding)
-        :return: list of endpoints
-        """
-
-        res = []
-        if self.aa is None or entity_id in self.aa:
-            for aad in self.metadata.attribute_authority(entity_id):
-                for attrserv in aad.attribute_service:
-                    if attrserv.binding == binding:
-                        res.append(attrserv)
-
-        return res
-
-    def idps(self, langpref=None):
-        """ Returns a dictionary of usefull IdPs, the keys being the
-        entity ID of the service and the names of the services as values
-
-        :param langpref: The preferred languages of the name, the first match
-            is used.
-        :return: Dictionary
-        """
-        if langpref is None:
-            langpref = ["en"]
-            
-        if self.idp:
-            return dict([(e, nd[0]) for (e,
-                nd) in self.metadata.idps(langpref).items() if e in self.idp])
-        else:
-            return self.metadata.idps()
 
     def vo_conf(self, vo_name):
         try:
@@ -421,52 +547,30 @@ class SPConfig(Config):
         :param ipaddress: The IP address of the user client
         :return: IdP entity ID or None
         """
-        if "ecp" in self._attr["sp"]:
-            for key, eid in self._attr["sp"]["ecp"].items():
+        _ecp = self.getattr("ecp")
+        if _ecp:
+            for key, eid in _ecp.items():
                 if re.match(key, ipaddress):
                     return eid
 
         return None
 
+
 class IdPConfig(Config):
     def_context = "idp"
-    
+
     def __init__(self):
         Config.__init__(self)
-        
-    def single_logout_services(self, entity_id, binding=BINDING_SOAP):
-        """ returns a list of endpoints to use for sending logout requests to
 
-        :param entity_id: The entity ID of the service
-        :param binding: The preferred binding (which for logout by default is
-            the SOAP binding)
-        :return: list of endpoints
-        """
-    
-        return self.metadata.single_logout_services(entity_id, "sp",
-                                                     binding=binding)
 
-    def assertion_consumer_services(self, entity_id, binding):
-        typ = "assertion_consumer_service"
-        if self.sp is None or entity_id in self.sp:
-            acs = self.metadata.sp_services(entity_id, typ, binding=binding)
-            if acs:
-                return [s[binding] for s in acs]
-
-        return []
-
-    def authz_services(self, entity_id, binding=BINDING_SOAP):
-        return self.metadata.authz_services(entity_id, "pdp",
-                                                     binding=binding)
-
-def config_factory(typ, file):
+def config_factory(typ, filename):
     if typ == "sp":
-        conf = SPConfig().load_file(file)
+        conf = SPConfig().load_file(filename)
         conf.context = typ
-    elif typ in ["aa", "idp", "pdp"]:
-        conf = IdPConfig().load_file(file)
+    elif typ in ["aa", "idp", "pdp", "aq"]:
+        conf = IdPConfig().load_file(filename)
         conf.context = typ
     else:
-        conf = Config().load_file(file)
+        conf = Config().load_file(filename)
         conf.context = typ
     return conf
