@@ -1,7 +1,6 @@
 import logging
 import six
 from saml2_tophat.cache import Cache
-from saml2_tophat.ident import code
 
 logger = logging.getLogger(__name__)
 

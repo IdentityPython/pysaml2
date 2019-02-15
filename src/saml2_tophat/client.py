@@ -84,8 +84,7 @@ class Saml2Client(Base):
             nameid_format=None, scoping=None, consent=None, extensions=None,
             sign=None, response_binding=saml2_tophat.BINDING_HTTP_POST, **kwargs):
         """ Makes all necessary preparations for an authentication request
-        that negotiates
-        which binding to use for authentication.
+        that negotiates which binding to use for authentication.
 
         :param entityid: The entity ID of the IdP to send the request to
         :param relay_state: To where the user should be returned after
@@ -126,7 +125,7 @@ class Saml2Client(Base):
                 args = {}
 
             http_info = self.apply_binding(binding, _req_str, destination,
-                                           relay_state, **args)
+                                           relay_state, sign=sign, **args)
 
             return reqid, binding, http_info
         else:
@@ -241,7 +240,7 @@ class Saml2Client(Base):
                 relay_state = self._relay_state(req_id)
 
                 http_info = self.apply_binding(binding, srequest, destination,
-                                               relay_state, sigalg=sigalg)
+                                               relay_state, sign=sign, sigalg=sigalg)
 
                 if binding == BINDING_SOAP:
                     response = self.send(**http_info)
@@ -479,7 +478,7 @@ class Saml2Client(Base):
                                     "sign": sign}
             relay_state = self._relay_state(query.id)
             return self.apply_binding(binding, "%s" % query, destination,
-                                      relay_state)
+                                      relay_state, sign=sign)
         else:
             raise SAMLError("Unsupported binding")
 
@@ -536,4 +535,4 @@ class Saml2Client(Base):
 
         return self.apply_binding(rinfo["binding"], response,
                                   rinfo["destination"], relay_state,
-                                  response=True)
+                                  response=True, sign=sign)

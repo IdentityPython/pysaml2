@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import os.path
+
 from saml2_tophat import BINDING_HTTP_REDIRECT, BINDING_URI
 from saml2_tophat import BINDING_HTTP_ARTIFACT
 from saml2_tophat import BINDING_HTTP_POST
@@ -7,8 +9,6 @@ from saml2_tophat import BINDING_SOAP
 from saml2_tophat.saml import NAME_FORMAT_URI
 from saml2_tophat.saml import NAMEID_FORMAT_TRANSIENT
 from saml2_tophat.saml import NAMEID_FORMAT_PERSISTENT
-import os.path
-import saml2_tophat.xmldsig as ds
 
 try:
     from saml2_tophat.sigver import get_xmlsec_binary

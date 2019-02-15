@@ -1,10 +1,10 @@
-from saml2 import BINDING_PAOS
-from saml2 import BINDING_SOAP
-from saml2 import BINDING_HTTP_ARTIFACT
-from saml2 import BINDING_HTTP_POST
-from saml2 import BINDING_HTTP_REDIRECT
-from saml2.sigver import get_xmlsec_binary
-from saml2.extension.idpdisc import BINDING_DISCO
+from saml2_tophat import BINDING_PAOS
+from saml2_tophat import BINDING_SOAP
+from saml2_tophat import BINDING_HTTP_ARTIFACT
+from saml2_tophat import BINDING_HTTP_POST
+from saml2_tophat import BINDING_HTTP_REDIRECT
+from saml2_tophat.sigver import get_xmlsec_binary
+from saml2_tophat.extension.idpdisc import BINDING_DISCO
 try:
     XMLSEC_BINARY = get_xmlsec_binary(["/opt/local/bin"])
 except Exception:

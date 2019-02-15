@@ -1,10 +1,10 @@
-from saml2.entity_category.edugain import COC
-from saml2 import BINDING_HTTP_REDIRECT
-from saml2 import BINDING_HTTP_POST
-from saml2.saml import NAME_FORMAT_URI
+from saml2_tophat.entity_category.edugain import COC
+from saml2_tophat import BINDING_HTTP_REDIRECT
+from saml2_tophat import BINDING_HTTP_POST
+from saml2_tophat.saml import NAME_FORMAT_URI
 
 try:
-    from saml2.sigver import get_xmlsec_binary
+    from saml2_tophat.sigver import get_xmlsec_binary
 except ImportError:
     get_xmlsec_binary = None
 

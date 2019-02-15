@@ -1,26 +1,40 @@
-Changelog
-=========
+# Changelog
 
-4.6.3-2 (2019-01-15)
--------------------------
+## 4.6.5 (2018-12-04)
 
-- Cherry-picked `4530ef7fa09a68d227b967f82665339ae9ec58c2` from upstream
+- Fix for response status error case handling (introduced in v4.6.5)
+- Added assurance-certification support
+- Added entity-category-support support
 
-4.6.3-1 (2018-10-23)
--------------------------
+Thanks @rectalogic @skanct
 
-Tophat Fork.
 
-- Added the SP config parameter: valid_destination_regex
+## 4.6.4 (2018-11-22)
 
-4.6.3 (2018-10-08)
-------------------
+- Make use of the sign argument to entity.Entity::apply_binding when binding is
+  HTTP-Redirect. Reminder: use [authn_requests_signed configuration option][0]
+  to indicate that Authentication Requests sent by the SP must be signed
+- Add want_assertions_or_response_signed configuration option - see
+  [documentation][1] about the introduced behaviour
+- Fix code for idp and sp examples
+- Do not require assertion conditions
+- Fix response encoding format
+- Various code improvements for config, sigver, client_base, client,
+  ecp_client, ecp, s2repoze and entity modules
+- Support non-ascii attribute values for encryption and decryption
+
+Thanks to @johanlundberg @skoranda @yuqing0708 @erakli
+
+  [0]: https://github.com/IdentityPython/pysaml2/blob/master/docs/howto/config.rst#authn-requests-signed
+  [1]: https://github.com/IdentityPython/pysaml2/blob/master/docs/howto/config.rst#want-assertions-or-response-signed
+
+
+## 4.6.3 (2018-10-08)
 
 Do not map between attribute FriendlyName and attribute Name when no
 attributemaps are provided.
 
-4.6.2 (2018-09-06)
-------------------
+## 4.6.2 (2018-09-06)
 
 Refactor AttributeValueBase::set_text method.
 
@@ -34,8 +48,7 @@ Refactor AttributeValueBase::set_text method.
   type.
 - set_text will raise a ValueError if the type is unknown.
 
-4.6.1 (2018-08-29)
-------------------
+## 4.6.1 (2018-08-29)
 
 - Allow multiple AttributeStatement tags per Assertion
 - Raise ValueError for invalid attribute type
@@ -43,8 +56,7 @@ Refactor AttributeValueBase::set_text method.
 - tests: fix test that depended on actual datetime
 - build: Set minimum build-tool version through pyproject.toml
 
-4.6.0 (2018-08-07)
-------------------
+## 4.6.0 (2018-08-07)
 
 - Allow configuration and specification of id attribute name
 - Retrieve SLO endpoint by the appropriate service type
@@ -84,12 +96,12 @@ Refactor AttributeValueBase::set_text method.
 - examples: Fix wsgiserver usage for example sp
 - examples: Fix cherrypy.wsgiserver usage
 
-0.4.2 (2012-03-27)
-------------------
+## 0.4.2 (2012-03-27)
+
 - Add default attribute mappings
 
-0.4.1 (2012-03-18)
-------------------
+## 0.4.1 (2012-03-18)
+
 - Auto sign authentication and logout requests following config options.
 - Add backwards compatibility with ElementTree in python < 2.7.
 - Fix minor bugs in the tests.

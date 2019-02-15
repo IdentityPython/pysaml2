@@ -65,11 +65,6 @@ def test_flow():
 
     with closing(Server(config_file="idp_all_conf")) as idp:
         relay_state = "FOO"
-        # -- dummy request ---
-        orig_req = AuthnRequest(
-            issuer=sp._issuer(),
-            name_id_policy=NameIDPolicy(allow_create="true",
-                                        format=NAMEID_FORMAT_TRANSIENT))
 
         # == Create an AuthnRequest response
 

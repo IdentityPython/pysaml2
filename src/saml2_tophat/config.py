@@ -52,7 +52,9 @@ COMMON_ARGS = [
     "disable_ssl_certificate_validation",
     "preferred_binding",
     "session_storage",
+    "assurance_certification",
     "entity_category",
+    "entity_category_support",
     "xmlsec_path",
     "extension_schemas",
     "cert_handler_extra_class",
@@ -77,6 +79,7 @@ SP_ARGS = [
     "subject_data",
     "want_response_signed",
     "want_assertions_signed",
+    "want_assertions_or_response_signed",
     "authn_requests_signed",
     "name_form",
     "endpoints",
@@ -221,7 +224,9 @@ class Config(object):
         self.preferred_binding = PREFERRED_BINDING
         self.domain = ""
         self.name_qualifier = ""
-        self.entity_category = ""
+        self.assurance_certification = []
+        self.entity_category = []
+        self.entity_category_support = []
         self.crypto_backend = 'xmlsec1'
         self.id_attr_name = None
         self.scope = ""
@@ -382,11 +387,11 @@ class Config(object):
 
         return importlib.import_module(tail)
 
-    def load_file(self, config_file, metadata_construction=False):
-        if config_file.endswith(".py"):
-            config_file = config_file[:-3]
+    def load_file(self, config_filename, metadata_construction=False):
+        if config_filename.endswith(".py"):
+            config_filename = config_filename[:-3]
 
-        mod = self._load(config_file)
+        mod = self._load(config_filename)
         return self.load(copy.deepcopy(mod.CONFIG), metadata_construction)
 
     def load_metadata(self, metadata_conf):
@@ -564,14 +569,30 @@ class IdPConfig(Config):
         Config.__init__(self)
 
 
-def config_factory(typ, filename):
-    if typ == "sp":
-        conf = SPConfig().load_file(filename)
-        conf.context = typ
-    elif typ in ["aa", "idp", "pdp", "aq"]:
-        conf = IdPConfig().load_file(filename)
-        conf.context = typ
+def config_factory(_type, config):
+    """
+
+    :type _type: str
+    :param _type:
+
+    :type config: str or dict
+    :param config: Name of file with pysaml2 config or CONFIG dict
+
+    :return:
+    """
+    if _type == "sp":
+        conf = SPConfig()
+    elif _type in ["aa", "idp", "pdp", "aq"]:
+        conf = IdPConfig()
     else:
-        conf = Config().load_file(filename)
-        conf.context = typ
+        conf = Config()
+
+    if isinstance(config, dict):
+        conf.load(copy.deepcopy(config))
+    elif isinstance(config, str):
+        conf.load_file(config)
+    else:
+        raise ValueError('Unknown type of config')
+
+    conf.context = _type
     return conf

@@ -13,7 +13,7 @@ dictionary ("CONFIG") that contains the configuration directives.
 
 The basic structure of the configuration file is therefore like this::
 
-    from saml2 import BINDING_HTTP_REDIRECT
+    from saml2_tophat import BINDING_HTTP_REDIRECT
 
     CONFIG = {
         "entityid" : "http://saml.example.com:saml/idp.xml",
@@ -54,6 +54,24 @@ Configuration directives
 
 General directives
 ------------------
+
+assurance_certification
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Format::
+
+    "assurance_specification": [
+        "https://refeds.org/sirtfi",
+    ]
+
+Generates an `Attribute` element with name-format
+`urn:oasis:names:tc:SAML:2.0:attrname-format:uri` and name
+`urn:oasis:names:tc:SAML:attribute:assurance-certification` that contains
+`AttributeValue` elements with the given values from the list.
+The element is added under the generated metadata `EntityDescriptor` as an
+`Extension` element under the `EntityAttributes` element.
+
+Read more about `representing assurance information at the specification <https://wiki.oasis-open.org/security/SAML2IDAssuranceProfile>`_.
 
 attribute_map_dir
 ^^^^^^^^^^^^^^^^^
@@ -624,6 +642,33 @@ Example::
         }
     }
 
+want_assertions_or_response_signed
+""""""""""""""""""""
+
+Indicates that *either* the Authentication Response *or* the assertions
+contained within the response to this SP must be signed.
+
+Valid values are True or False. Default value is False.
+
+This configuration directive **does not** override ``want_response_signed``
+or ``want_assertions_signed``. For example, if ``want_response_signed`` is True
+and the Authentication Response is not signed an exception will be thrown
+regardless of the value for this configuration directive.
+
+Thus to configure the SP to accept either a signed response or signed assertions
+set ``want_response_signed`` and ``want_assertions_signed`` both to False and
+this directive to True.
+
+Example::
+
+    "service": {
+        "sp": {
+            "want_response_signed": False,
+            "want_assertions_signed": False,
+            "want_assertions_or_response_signed": True
+        }
+    }
+
 
 idp/aa/sp
 ^^^^^^^^^
@@ -639,7 +684,7 @@ Where the endpoints for the services provided are.
 This directive has as value a dictionary with one or more of the following keys:
 
 * artifact_resolution_service (aa, idp and sp)
-* assertion_consumer_service (sp)
+* `assertion_consumer_service <https://wiki.shibboleth.net/confluence/display/CONCEPT/AssertionConsumerService>`_ (sp)
 * assertion_id_request_service (aa, idp)
 * attribute_service (aa)
 * manage_name_id_service (aa, idp)
@@ -654,12 +699,12 @@ An endpoint specification can either be just the URL::
 
 or it can be a 2-tuple (URL+binding)::
 
-  from saml2 import BINDING_HTTP_POST
+  from saml2_tophat import BINDING_HTTP_POST
   (”http://localhost:8087/A”, BINDING_HTTP_POST)
 
 or a 3-tuple (URL+binding+index)::
 
-  from saml2 import BINDING_HTTP_POST
+  from saml2_tophat import BINDING_HTTP_POST
   (”http://lingon.catalogix.se:8087/A”, BINDING_HTTP_POST, 1)
 
 If no binding is specified, no index can be set.
@@ -739,7 +784,7 @@ Complete example
 
 We start with a simple but fairly complete Service provider configuration::
 
-    from saml2 import BINDING_HTTP_REDIRECT
+    from saml2_tophat import BINDING_HTTP_REDIRECT
 
     CONFIG = {
         "entityid" : "http://example.com/sp/metadata.xml",
@@ -780,7 +825,7 @@ contain anything from 1 up to many entity descriptions.
 
 A slightly more complex configuration::
 
-    from saml2 import BINDING_HTTP_REDIRECT
+    from saml2_tophat import BINDING_HTTP_REDIRECT
 
     CONFIG = {
         "entityid" : "http://sp.example.com/metadata.xml",

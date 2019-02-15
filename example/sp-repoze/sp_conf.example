@@ -1,5 +1,5 @@
-from saml2 import BINDING_HTTP_REDIRECT
-from saml2.saml import NAME_FORMAT_URI
+from saml2_tophat import BINDING_HTTP_REDIRECT
+from saml2_tophat.saml import NAME_FORMAT_URI
 
 HOST = 'localhost'
 PORT = 8087

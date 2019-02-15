@@ -311,6 +311,8 @@ def signed_instance_factory(instance, seccont, elements_to_sign=None):
     """
     if elements_to_sign:
         signed_xml = instance
+        if not isinstance(instance, six.string_types):
+            signed_xml = instance.to_string()
         for (node_name, nodeid) in elements_to_sign:
             signed_xml = seccont.sign_statement(
                 signed_xml, node_name=node_name, node_id=nodeid)
@@ -1485,10 +1487,10 @@ class SecurityContext(object):
                 for cert in cert_from_instance(item)
             ]
         else:
-            logger.debug('==== Certs from metadata ==== %s: %s ====', issuer, certs)
+            logger.debug('==== Certs from metadata ==== %s: %s ====', _issuer, certs)
 
         if not certs:
-            raise MissingKey(issuer)
+            raise MissingKey(_issuer)
 
         verified = False
         last_pem_file = None
@@ -1505,9 +1507,6 @@ class SecurityContext(object):
                     verified = True
                     break
             except XmlsecError as exc:
-                logger.error('check_sig: %s', exc)
-                pass
-            except SignatureError as exc:
                 logger.error('check_sig: %s', exc)
                 pass
             except Exception as exc:

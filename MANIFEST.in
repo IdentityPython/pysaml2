@@ -1,9 +1,9 @@
 include VERSION
 include LICENSE
 include README.rst
-include CHANGELOG.rst
+include CHANGELOG.md
 
-include src/saml2/xml_template/template.xml
+include src/saml2_tophat/xml_template/template.xml
 
 graft docs
 prune docs/build

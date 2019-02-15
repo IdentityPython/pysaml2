@@ -1,5 +1,5 @@
-from saml2.assertion import Policy
-import saml2.xmldsig as ds
+from saml2_tophat.assertion import Policy
+import saml2_tophat.xmldsig as ds
 
 HOST = 'localhost'
 PORT = 8087

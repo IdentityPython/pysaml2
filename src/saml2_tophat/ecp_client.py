@@ -33,6 +33,12 @@ logger = logging.getLogger(__name__)
 
 
 class Client(Entity):
+    """ECP-aware client that works on the client (application) side.
+
+    You can use this class when you want to login user through
+    ECP-aware SP and IdP.
+    """
+
     def __init__(self, user, passwd, sp="", idp=None, metadata_file=None,
                  xmlsec_binary=None, verbose=0, ca_certs="",
                  disable_ssl_certificate_validation=True, key_file=None,
@@ -221,7 +227,8 @@ class Client(Entity):
 
         return None
 
-    def add_paos_headers(self, headers=None):
+    @staticmethod
+    def add_paos_headers(headers=None):
         if headers:
             headers = set_list2dict(headers)
             headers["PAOS"] = PAOS_HEADER_INFO
@@ -283,7 +290,7 @@ class Client(Entity):
             # should by now be authenticated so this should go smoothly
             response = self.send(url, op, **opargs)
         except (soap.XmlParseError, AssertionError, KeyError):
-            pass
+            raise
 
         if response.status_code >= 400:
             raise SAMLError("Error performing operation: %s" % (

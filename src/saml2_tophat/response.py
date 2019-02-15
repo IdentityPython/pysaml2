@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-
+from future.utils import python_2_unicode_compatible
 import calendar
 import logging
 import re
@@ -271,6 +271,7 @@ class StatusResponse(object):
         self.signature_check = self.sec.correctly_signed_response
         self.require_signature = False
         self.require_response_signature = False
+        self.require_signature_or_response_signature = False
         self.not_signed = False
         self.asynchop = asynchop
         self.do_not_verify = False
@@ -319,7 +320,10 @@ class StatusResponse(object):
     def _loads(self, xmldata, decode=True, origxml=None):
 
         # own copy
-        self.xmlstr = xmldata[:]
+        if isinstance(xmldata, six.binary_type):
+            self.xmlstr = xmldata[:].decode('utf-8')
+        else:
+            self.xmlstr = xmldata[:]
         logger.debug("xmlstr: %s", self.xmlstr)
         if origxml:
             self.origxml = origxml
@@ -478,7 +482,7 @@ class ManageNameIDResponse(StatusResponse):
 
 # ----------------------------------------------------------------------------
 
-
+@python_2_unicode_compatible
 class AuthnResponse(StatusResponse):
     """ This is where all the profile compliance is checked.
     This one does saml2int compliance. """
@@ -488,8 +492,11 @@ class AuthnResponse(StatusResponse):
             return_addrs=None, outstanding_queries=None,
             timeslack=0, asynchop=True, allow_unsolicited=False,
             test=False, allow_unknown_attributes=False,
-            want_assertions_signed=False, want_response_signed=False,
-            conv_info=None, valid_destination_regex=None, **kwargs):
+            want_assertions_signed=False,
+            want_assertions_or_response_signed=False,
+            want_response_signed=False,
+            valid_destination_regex=None,
+            conv_info=None, **kwargs):
 
         StatusResponse.__init__(self, sec_context, return_addrs, timeslack,
                                 asynchop=asynchop, conv_info=conv_info)
@@ -507,6 +514,7 @@ class AuthnResponse(StatusResponse):
         self.session_not_on_or_after = 0
         self.allow_unsolicited = allow_unsolicited
         self.require_signature = want_assertions_signed
+        self.require_signature_or_response_signature = want_assertions_or_response_signed
         self.require_response_signature = want_response_signed
         self.test = test
         self.allow_unknown_attributes = allow_unknown_attributes
@@ -584,11 +592,14 @@ class AuthnResponse(StatusResponse):
         # check authn_statement.session_index
 
     def condition_ok(self, lax=False):
+        if not self.assertion.conditions:
+            # Conditions is Optional for Assertion, so, if it's absent, then we
+            # assume that its valid
+            return True
+
         if self.test:
             lax = True
 
-        # The Identity Provider MUST include a <saml:Conditions> element
-        assert self.assertion.conditions
         conditions = self.assertion.conditions
 
         logger.debug("conditions: %s", conditions)
@@ -1100,9 +1111,7 @@ class AuthnResponse(StatusResponse):
                     "session_index": authn_statement.session_index}
 
     def __str__(self):
-        if not isinstance(self.xmlstr, six.string_types):
-            return "%s" % self.xmlstr.decode("utf-8")
-        return "%s" % self.xmlstr
+        return self.xmlstr
 
     def verify_recipient(self, recipient):
         """
@@ -1290,6 +1299,14 @@ class AssertionIDResponse(object):
         self.assertion = None
         self.context = "AssertionIdResponse"
         self.signature_check = self.sec.correctly_signed_assertion_id_response
+
+        # Because this class is not a subclass of StatusResponse we need
+        # to add these attributes directly so that the _parse_response()
+        # method of the Entity class can treat instances of this class
+        # like all other responses.
+        self.require_signature = False
+        self.require_response_signature = False
+        self.require_signature_or_response_signature = False
 
     def loads(self, xmldata, decode=True, origxml=None):
         # own copy

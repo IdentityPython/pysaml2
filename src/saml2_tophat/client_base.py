@@ -7,6 +7,8 @@ to conclude its tasks.
 """
 import threading
 import six
+import time
+import logging
 
 from saml2_tophat.entity import Entity
 
@@ -94,7 +96,7 @@ class Base(Entity):
     """ The basic pySAML2 service provider class """
 
     def __init__(self, config=None, identity_cache=None, state_cache=None,
-            virtual_organization="", config_file="", msg_cb=None):
+                 virtual_organization="", config_file="", msg_cb=None):
         """
         :param config: A saml2_tophat.config.Config instance
         :param identity_cache: Where the class should store identity information
@@ -120,6 +122,7 @@ class Base(Entity):
             "want_assertions_signed": False,
             "want_response_signed": True,
             "valid_destination_regex": None,
+            "want_assertions_or_response_signed" : False
         }
 
         for attr, val_default in attribute_defaults.items():
@@ -134,10 +137,17 @@ class Base(Entity):
 
             setattr(self, attr, val)
 
-        if self.entity_type == "sp" and not any([self.want_assertions_signed,
-                                                self.want_response_signed]):
-            logger.warning("The SAML service provider accepts unsigned SAML Responses " +
-                           "and Assertions. This configuration is insecure.")
+        if self.entity_type == "sp" and not any(
+            [
+                self.want_assertions_signed,
+                self.want_response_signed,
+                self.want_assertions_or_response_signed,
+            ]
+        ):
+            logger.warning(
+                "The SAML service provider accepts unsigned SAML Responses "
+                "and Assertions. This configuration is insecure."
+            )
 
         self.artifact2response = {}
 
@@ -688,6 +698,7 @@ class Base(Entity):
             "outstanding_certs": outstanding_certs,
             "allow_unsolicited": self.allow_unsolicited,
             "want_assertions_signed": self.want_assertions_signed,
+            "want_assertions_or_response_signed": self.want_assertions_or_response_signed,
             "want_response_signed": self.want_response_signed,
             "return_addrs": self.service_urls(binding=binding),
             "entity_id": self.config.entityid,

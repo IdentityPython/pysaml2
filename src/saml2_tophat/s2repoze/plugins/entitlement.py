@@ -3,8 +3,9 @@ import shelve
 
 from zope.interface import implements
 
-#from repoze.who.interfaces import IChallenger, IIdentifier, IAuthenticator
+# from repoze.who.interfaces import IChallenger, IIdentifier, IAuthenticator
 from repoze.who.interfaces import IMetadataProvider
+
 
 class EntitlementMetadataProvider(object):
 
@@ -43,7 +44,7 @@ class EntitlementMetadataProvider(object):
 
     def store_entitlement(self, user, virtualorg, entitlement=None):
         if user not in self._store:
-            self._store[user] = {"entitlement":{}}
+            self._store[user] = {"entitlement": {}}
         elif "entitlement" not in self._store[user]:
             self._store[user]["entitlement"] = {}
 
@@ -53,9 +54,9 @@ class EntitlementMetadataProvider(object):
         self._store.sync()
 
     def add_metadata(self, environ, identity):
-        #logger = environ.get('repoze.who.logger','')
+        # logger = environ.get('repoze.who.logger','')
         try:
-            user = self._store[identity.get('repoze.who.userid')]
+            user = self._store[identity.get("repoze.who.userid")]
         except KeyError:
             return
 
@@ -63,8 +64,7 @@ class EntitlementMetadataProvider(object):
             vorg = environ["myapp.vo"]
             try:
                 ents = user["entitlement"][vorg]
-                identity["user"] = {
-                            "entitlement": ["%s:%s" % (vorg,e) for e in ents]}
+                identity["user"] = {"entitlement": ["%s:%s" % (vorg, e) for e in ents]}
             except KeyError:
                 pass
         except KeyError:
@@ -72,6 +72,7 @@ class EntitlementMetadataProvider(object):
             for vorg, ents in user["entitlement"].items():
                 res.extend(["%s:%s" % (vorg, e) for e in ents])
             identity["user"] = res
+
 
 def make_plugin(filename, key_attribute=""):
     return EntitlementMetadataProvider(filename, key_attribute)
