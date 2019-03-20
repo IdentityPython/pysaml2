@@ -944,21 +944,32 @@ class AuthnResponse(StatusResponse):
             resp = self.response
             decr_text = str(self.response)
 
-            while self.find_encrypt_data(resp):
+            decr_text_old = None
+            while self.find_encrypt_data(resp) and decr_text_old != decr_text:
+                decr_text_old = decr_text
                 try:
                     decr_text = self.sec.decrypt_keys(decr_text, keys)
                 except DecryptError as e:
                     continue
                 else:
                     resp = samlp.response_from_string(decr_text)
+                    # check and prepare for comparison between str and unicode
+                    if type(decr_text_old) != type(decr_text):
+                        if isinstance(decr_text_old, six.binary_type):
+                            decr_text_old = decr_text_old.decode("utf-8")
+                        else:
+                            decr_text_old = decr_text_old.encode("utf-8")
 
             _enc_assertions = self.decrypt_assertions(
                 resp.encrypted_assertion, decr_text
             )
+
+            decr_text_old = None
             while (
                 self.find_encrypt_data(resp)
                 or self.find_encrypt_data_assertion_list(_enc_assertions)
-            ):
+            ) and decr_text_old != decr_text:
+                decr_text_old = decr_text
                 try:
                     decr_text = self.sec.decrypt_keys(decr_text, keys)
                 except DecryptError as e:
@@ -968,6 +979,12 @@ class AuthnResponse(StatusResponse):
                     _enc_assertions = self.decrypt_assertions(
                         resp.encrypted_assertion, decr_text, verified=True
                     )
+                    # check and prepare for comparison between str and unicode
+                    if type(decr_text_old) != type(decr_text):
+                        if isinstance(decr_text_old, six.binary_type):
+                            decr_text_old = decr_text_old.decode("utf-8")
+                        else:
+                            decr_text_old = decr_text_old.encode("utf-8")
 
             all_assertions = _enc_assertions
             if resp.assertion:
