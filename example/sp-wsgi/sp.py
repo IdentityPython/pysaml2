@@ -704,13 +704,6 @@ def main(environ, start_response, sp):
     )
     body.append("<br><a href='/logout'>logout</a>")
 
-    body = [
-        item
-        if isinstance(item, six.binary_type)
-        else item.encode("utf-8")
-        for item in body
-    ]
-
     resp = Response(body)
     return resp(environ, start_response)
 
@@ -882,6 +875,28 @@ def application(environ, start_response):
         return resp(environ, start_response)
 
 
+class ToBytesMiddleware(object):
+    """Converts a message to bytes to be sent by WSGI server."""
+
+    def __init__(self, app):
+        self.app = app
+
+    def __call__(self, environ, start_response):
+        data = self.app(environ, start_response)
+
+        if isinstance(data, list):
+            return (
+                d
+                if isinstance(d, bytes)
+                else d.encode("utf-8")
+                for d in data
+            )
+        elif isinstance(data, str):
+            return data.encode("utf-8")
+
+        return data
+
+
 if __name__ == "__main__":
     try:
         from cheroot.wsgi import Server as WSGIServer
@@ -966,7 +981,7 @@ if __name__ == "__main__":
         pass
     ds.DefaultSignature(sign_alg, digest_alg)
 
-    SRV = WSGIServer((HOST, PORT), application)
+    SRV = WSGIServer((HOST, PORT), ToBytesMiddleware(application))
 
     _https = ""
     if service_conf.HTTPS:
