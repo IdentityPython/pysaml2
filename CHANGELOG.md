@@ -1,5 +1,18 @@
 # Changelog
 
+## 4.7.0 (2019-04-02)
+
+- Add support for MDQ signature verification
+- Raise XmlsecError if xmlsec1 operations do not succeed
+- Handle non standard response error status codes correctly
+- Remove the hardcoded warning filter; pass -Wd to the python
+  interpreter to enable warnings
+- Remove the python-future dependency and only use six
+- Minor python2 and python3 compatibility fixes
+  (unicode strings and example code)
+- Minor documentation fixes
+
+
 ## 4.6.5 (2018-12-04)
 
 - Fix for response status error case handling (introduced in v4.6.5)
