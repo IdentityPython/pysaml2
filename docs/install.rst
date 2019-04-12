@@ -50,7 +50,8 @@ After this you ought to be able to run the tests without an hitch.
 The tests are based on the pypy test environment, so::
 
     cd tests
-    py.test 
+    pip install -r test-requirements.txt
+    pytest 
 
 is what you should use. If you don't have py.test, get it it's part of pypy! 
 It's really good !
