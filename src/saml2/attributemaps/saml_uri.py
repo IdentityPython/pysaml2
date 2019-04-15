@@ -23,6 +23,10 @@ OPENOSI_OID = 'urn:oid:1.3.6.1.4.1.27630.2.1.1.'
 EIDAS_NATURALPERSON = 'http://eidas.europa.eu/attributes/naturalperson/'
 EIDAS_LEGALPERSON = 'http://eidas.europa.eu/attributes/legalperson/'
 
+# SAML subject id specification
+# https://docs.oasis-open.org/security/saml-subject-id-attr/v1.0/cs01/saml-subject-id-attr-v1.0-cs01.html
+SAML_SUBJECT_ID = 'urn:oasis:names:tc:SAML:attribute:'
+
 MAP = {
     'identifier': 'urn:oasis:names:tc:SAML:2.0:attrname-format:uri',
     'fro': {
@@ -109,6 +113,8 @@ MAP = {
         OPENOSI_OID+'109': 'osiOtherHomePhone',
         OPENOSI_OID+'120': 'osiWorkURL',
         PKCS_9+'1': 'email',
+        SAML_SUBJECT_ID+'subject-id': 'subject-id',
+        SAML_SUBJECT_ID+'pairwise-id': 'pairwise-id',
         SCHAC+'1': 'schacMotherTongue',
         SCHAC+'2': 'schacGender',
         SCHAC+'3': 'schacDateOfBirth',
@@ -280,6 +286,7 @@ MAP = {
         'osiWorkURL': OPENOSI_OID+'120',
         'ou': X500ATTR_OID+'11',
         'owner': X500ATTR_OID+'32',
+        'pairwise-id': SAML_SUBJECT_ID+'pairwise-id',
         'physicalDeliveryOfficeName': X500ATTR_OID+'19',
         'postOfficeBox': X500ATTR_OID+'18',
         'postalAddress': X500ATTR_OID+'16',
@@ -337,6 +344,7 @@ MAP = {
         'sn': X500ATTR_OID+'4',
         'st': X500ATTR_OID+'8',
         'street': X500ATTR_OID+'9',
+        'subject-id': SAML_SUBJECT_ID+'subject-id',
         'supportedAlgorithms': X500ATTR_OID+'52',
         'supportedApplicationContext': X500ATTR_OID+'30',
         'telephoneNumber': X500ATTR_OID+'20',
