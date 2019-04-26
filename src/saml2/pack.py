@@ -8,7 +8,10 @@ Bindings normally consists of three parts:
 """
 
 import base64
-import cgi
+# [DeprecationWarning] Fixed: cgi.escape is deprecated, use html.escape instead
+try: import html
+except: import cgi as html
+
 import logging
 
 import saml2
@@ -87,15 +90,15 @@ def http_form_post_message(message, location, relay_state="",
     _msg = _msg.decode('ascii')
 
     saml_response_input = HTML_INPUT_ELEMENT_SPEC.format(
-            name=cgi.escape(typ),
-            val=cgi.escape(_msg),
+            name=html.escape(typ),
+            val=html.escape(_msg),
             type='hidden')
 
     relay_state_input = ""
     if relay_state:
         relay_state_input = HTML_INPUT_ELEMENT_SPEC.format(
                 name='RelayState',
-                val=cgi.escape(relay_state),
+                val=html.escape(relay_state),
                 type='hidden')
 
     response = HTML_FORM_SPEC.format(
