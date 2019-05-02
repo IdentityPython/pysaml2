@@ -776,8 +776,11 @@ class CryptoBackendXmlSec1(CryptoBackend):
         return output.decode('utf-8')
 
     def decrypt(self, enctext, key_file, id_attr):
-        """
+        """ Use xmlsec to Decrypt `enctext` with `key_file`.
 
+        :param id_attr:  Applies to the xmlsec parameter 'id-attr'
+                         on the first try. If decryption fails, alternate
+                         standard values are tried: 'Id', 'ID', and 'id'.
         :param enctext: XML document containing an encrypted part
         :param key_file: The key to use for the decryption
         :return: The decrypted document
@@ -786,20 +789,30 @@ class CryptoBackendXmlSec1(CryptoBackend):
         logger.debug('Decrypt input len: %d', len(enctext))
         _, fil = make_temp(enctext, decode=False)
 
-        com_list = [
-            self.xmlsec,
-            '--decrypt',
-            '--privkey-pem', key_file,
-            '--id-attr:{id_attr}'.format(id_attr=id_attr),
-            ENC_KEY_CLASS,
-        ]
+        # Deal with the various id_attr names found in the wild
+        for id_attr_name in (id_attr, 'ID', 'Id', 'id'):
+            com_list = [
+                self.xmlsec,
+                '--decrypt',
+                '--privkey-pem', key_file,
+                '--id-attr:{id_attr}'.format(id_attr=id_attr_name),
+                ENC_KEY_CLASS,
+            ]
 
-        try:
-            (_stdout, _stderr, output) = self._run_xmlsec(com_list, [fil])
-        except XmlsecError as e:
+            try:
+                (_stdout, _stderr, output) = self._run_xmlsec(com_list, [fil])
+            except XmlsecError as e:
+                logger.exception('Error decrypting with '
+                                 'id_attr {}'.format(id_attr_name))
+            else:
+                logger.info('Successful decryption with '
+                            'id_attr {}'.format(id_attr_name))
+                e = False
+                break
+        if e:
             six.raise_from(DecryptError(com_list), e)
-
         return output.decode('utf-8')
+
 
     def sign_statement(self, statement, node_name, key_file, node_id, id_attr):
         """

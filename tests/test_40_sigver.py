@@ -890,9 +890,15 @@ def test_xbox_non_ascii_ava():
 
 
 def test_okta():
+    """Okta encrypted assertions have to be decrypted using non-default
+    parameters for xmlsec1.
+
+    This test validates that the decryption retry mechanism will try the
+    needed "id-attr=Id" parameter and successfully decrypt the message
+    with no need for special configuration.
+    """
     conf = config.Config()
     conf.load_file("server_conf")
-    conf.id_attr_name = 'Id'
     md = MetadataStore([saml, samlp], None, conf)
     md.load("local", IDP_EXAMPLE)
 
