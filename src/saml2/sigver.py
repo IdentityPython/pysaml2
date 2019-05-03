@@ -789,7 +789,8 @@ class CryptoBackendXmlSec1(CryptoBackend):
         logger.debug('Decrypt input len: %d', len(enctext))
         _, fil = make_temp(enctext, decode=False)
 
-        # Deal with the various id_attr names found in the wild
+        # Try initially with the id_attr provided as a parameter, then
+        # if that fails, retry using the common variant attr-name values.
         for id_attr_name in (id_attr, 'ID', 'Id', 'id'):
             com_list = [
                 self.xmlsec,
