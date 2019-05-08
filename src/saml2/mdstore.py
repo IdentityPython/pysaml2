@@ -720,7 +720,7 @@ class MetaDataLoader(MetaDataFile):
 class MetaDataExtern(InMemoryMetaData):
     """
     Class that handles metadata store somewhere on the net.
-    Accessible but HTTP GET.
+    Accessible by HTTP GET.
     """
 
     def __init__(self, attrc, url=None, security=None, cert=None,
