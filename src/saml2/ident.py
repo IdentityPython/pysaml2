@@ -241,7 +241,7 @@ class IdentDB(object):
     def construct_nameid(self, userid, local_policy=None,
                          sp_name_qualifier=None, name_id_policy=None,
                          name_qualifier=""):
-        """ Returns a name_id for the object. How the name_id is
+        """ Returns a name_id for the userid. How the name_id is
         constructed depends on the context.
 
         :param local_policy: The policy the server is configured to follow
