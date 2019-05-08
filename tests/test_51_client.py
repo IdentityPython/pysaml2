@@ -269,7 +269,7 @@ class TestClient:
         assert ar.provider_name == "urn:mace:example.com:saml:roland:sp"
         assert ar.issuer.text == "urn:mace:example.com:saml:roland:sp"
         nid_policy = ar.name_id_policy
-        assert nid_policy.allow_create == "false"
+        assert nid_policy.allow_create is None
         assert nid_policy.format == saml.NAMEID_FORMAT_TRANSIENT
 
         node_requested_attributes = None
@@ -1757,7 +1757,7 @@ class TestClientNonAsciiAva:
         assert ar.provider_name == "urn:mace:example.com:saml:roland:sp"
         assert ar.issuer.text == "urn:mace:example.com:saml:roland:sp"
         nid_policy = ar.name_id_policy
-        assert nid_policy.allow_create == "false"
+        assert nid_policy.allow_create is None
         assert nid_policy.format == saml.NAMEID_FORMAT_TRANSIENT
 
         node_requested_attributes = None
