@@ -785,9 +785,9 @@ class CryptoBackendXmlSec1(CryptoBackend):
         :param key_file: The key to use for the decryption
         :return: The decrypted document
         """
-
         logger.debug('Decrypt input len: %d', len(enctext))
         _, fil = make_temp(enctext, decode=False)
+        error = None
 
         # Try initially with the id_attr provided as a parameter, then
         # if that fails, retry using the common variant attr-name values.
@@ -805,15 +805,15 @@ class CryptoBackendXmlSec1(CryptoBackend):
             except XmlsecError as e:
                 logger.exception('Error decrypting with '
                                  'id_attr {}'.format(id_attr_name))
+                error = e
             else:
                 logger.info('Successful decryption with '
                             'id_attr {}'.format(id_attr_name))
-                e = False
+                error = None
                 break
-        if e:
-            six.raise_from(DecryptError(com_list), e)
+        if error:
+            six.raise_from(DecryptError(com_list), error)
         return output.decode('utf-8')
-
 
     def sign_statement(self, statement, node_name, key_file, node_id, id_attr):
         """

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import base64
+import mock
+
 from saml2.xmldsig import SIG_RSA_SHA256
 from saml2 import sigver
 from saml2 import extension_elements_to_elements
@@ -12,7 +14,6 @@ from saml2 import config
 from saml2.sigver import pre_encryption_part
 from saml2.sigver import make_temp
 from saml2.sigver import XmlsecError
-from saml2.sigver import SigverError
 from saml2.mdstore import MetadataStore
 from saml2.saml import assertion_from_string
 from saml2.saml import EncryptedAssertion
@@ -1039,6 +1040,77 @@ def test_xmlsec_output_line_parsing():
 
     output4 = "prefix\r\nFAIL\r\npostfix"
     raises(sigver.XmlsecError, sigver.parse_xmlsec_output, output4)
+
+
+def test_xmlsec_decrypt_retry_logic():
+    """Ensure the CryptoBackendXmlSec1.decrypt retry works as expected."""
+
+    from contextlib import closing
+    from saml2.authn_context import INTERNETPROTOCOLPASSWORD
+    from saml2.server import Server
+    from saml2.sigver import ASSERT_XPATH
+    from saml2.sigver import CryptoBackendXmlSec1
+    from saml2.sigver import DecryptError
+    from saml2.sigver import pre_encrypt_assertion
+    from pathutils import xmlsec_path
+    from pathutils import full_path
+
+    __author__ = 'roland'
+
+    TMPL_NO_HEADER = """<ns0:EncryptedData xmlns:ns0="http://www.w3.org/2001/04/xmlenc#" xmlns:ns1="http://www.w3.org/2000/09/xmldsig#" Id="ED" Type="http://www.w3.org/2001/04/xmlenc#Element"><ns0:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#tripledes-cbc" /><ns1:KeyInfo><ns0:EncryptedKey Id="EK"><ns0:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#rsa-1_5" /><ns1:KeyInfo><ns1:KeyName>my-rsa-key</ns1:KeyName></ns1:KeyInfo><ns0:CipherData><ns0:CipherValue /></ns0:CipherData></ns0:EncryptedKey></ns1:KeyInfo><ns0:CipherData><ns0:CipherValue /></ns0:CipherData></ns0:EncryptedData>"""
+    TMPL = "<?xml version='1.0' encoding='UTF-8'?>\n%s" % TMPL_NO_HEADER
+
+    IDENTITY = {"eduPersonAffiliation": ["staff", "member"],
+                "surName": ["Jeter"], "givenName": ["Derek"],
+                "mail": ["foo@gmail.com"],
+                "title": ["shortstop"]}
+
+    AUTHN = {
+        "class_ref": INTERNETPROTOCOLPASSWORD,
+        "authn_auth": "http://www.example.com/login"
+    }
+    conf = config.SPConfig()
+    conf.load_file("server_conf")
+    md = MetadataStore([saml, samlp], None, conf)
+    md.load("local", IDP_EXAMPLE)
+
+    conf.metadata = md
+    conf.only_use_keys_in_metadata = False
+    sec = sigver.security_context(conf)
+
+    with closing(Server("idp_conf")) as server:
+        name_id = server.ident.transient_nameid(
+            "urn:mace:example.com:saml:roland:sp", "id12")
+
+        resp_ = server.create_authn_response(
+            IDENTITY, "id12", "http://lingon.catalogix.se:8087/",
+            "urn:mace:example.com:saml:roland:sp", name_id=name_id)
+
+    statement = pre_encrypt_assertion(resp_)
+
+    tmpl = full_path("enc_tmpl.xml")
+
+    data = full_path("pre_enc.xml")
+
+    key_type = "des-192"
+    com_list = [xmlsec_path, "encrypt", "--pubkey-cert-pem", full_path("pubkey.pem"),
+                "--session-key", key_type, "--xml-data", data,
+                "--node-xpath", ASSERT_XPATH]
+
+    crypto = CryptoBackendXmlSec1(xmlsec_path)
+
+    with mock.patch('saml2.sigver.CryptoBackendXmlSec1._run_xmlsec',
+                    return_value=('', '', b'some_xml')) as mock_run_xmlsec:
+
+        output = crypto.decrypt(enctext='fadfsdfd', key_file='/nonexistent',
+                                id_attr='Id')
+        assert 'some_xml' in output
+
+        mock_run_xmlsec.side_effect = XmlsecError()
+        with pytest.raises(DecryptError):
+            crypto.decrypt(enctext='fadfsdfd',
+                                    key_file='/nonexistent',
+                                    id_attr='Id')
 
 
 if __name__ == "__main__":
