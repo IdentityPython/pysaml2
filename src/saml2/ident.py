@@ -155,6 +155,14 @@ class IdentDB(object):
             pass
 
     def get_nameid(self, userid, nformat, sp_name_qualifier, name_qualifier):
+        if nformat == NAMEID_FORMAT_PERSISTENT:
+            nameid = self.match_local_id(userid, sp_name_qualifier,
+                                         name_qualifier)
+            if nameid:
+                logger.debug("Found existing persistent NameId %s "
+                             "for user %s" % (nameid, userid))
+                return nameid
+
         _id = self.create_id(nformat, name_qualifier, sp_name_qualifier)
 
         if nformat == NAMEID_FORMAT_EMAILADDRESS:
@@ -162,9 +170,6 @@ class IdentDB(object):
                 raise SAMLError("Can't issue email nameids, unknown domain")
 
             _id = "%s@%s" % (_id, self.domain)
-
-        # if nformat == NAMEID_FORMAT_PERSISTENT:
-        #     _id = userid
 
         nameid = NameID(format=nformat, sp_name_qualifier=sp_name_qualifier,
                         name_qualifier=name_qualifier, text=_id)
