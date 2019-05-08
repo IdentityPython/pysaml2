@@ -339,6 +339,10 @@ class Base(Entity):
                     # If no nameid_format has been set in the configuration
                     # or passed in then transient is the default.
                     if nameid_format is None:
+                        # SAML 2.0 errata says AllowCreate MUST NOT be used for
+                        # transient ids - to make a conservative change this is
+                        # only applied for the default cause
+                        allow_create = None
                         nameid_format = NAMEID_FORMAT_TRANSIENT
 
                     # If a list has been configured or passed in choose the
