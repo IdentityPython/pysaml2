@@ -8,9 +8,10 @@ Bindings normally consists of three parts:
 """
 
 import base64
-# [DeprecationWarning] Fixed: cgi.escape is deprecated, use html.escape instead
-try: import html
-except: import cgi as html
+try:
+    import html
+except:
+    import cgi as html
 
 import logging
 
