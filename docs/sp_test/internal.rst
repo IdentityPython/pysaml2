@@ -53,11 +53,11 @@ Test (in the context of an operation)
   - class to be executed as part of an operation, either before ("pre") or after ("post") the sequence or inbetween a SAML request and response ("mid").
     There are standard tests with the Request class (VerifyAuthnRequest) and operation-specific tests.
   - Example for an operation-specific "mid" test: VerifyIfRequestIsSigned
-  - A test may be specified together with an argument as a tupel
+  - A test may be specified together with an argument as a tuple.
 
 Flow
 ....
-  * A tupel of classes that together implement an SAML request-response pair between IDP and SP (and possible other actors, such as a discovery service or IDP-proxy). A class can be derived from Request, Response (or other), Check or Operation.
+  * A tuple of classes that together implement an SAML request-response pair between IDP and SP (and possible other actors, such as a discovery service or IDP-proxy). A class can be derived from Request, Response (or other), Check or Operation.
   * A flow for a solicited authentication consists of 4 classes:
 
     * flow[0]: Operation (Handling a login flow such as discovery or WAYF - not implemented yet)
@@ -146,4 +146,4 @@ INFORMATION = 0, OK = 1, WARNING = 2, ERROR = 3, CRITICAL = 4, INTERACTION = 5
 
 
 There are 2 targets to write output to:
-* Test_ouput is written to conv.test_ouput during the execution of the flows.
+* Test_output is written to conv.test_output during the execution of the flows.
