@@ -167,13 +167,16 @@ class IdentMDB(IdentDB):
 
     def match_local_id(self, userid, sp_name_qualifier, name_qualifier):
         """
+        Match a local persistent identifier.
+
         Look for an existing persistent NameID matching userid,
         sp_name_qualifier and name_qualifier.
         """
-        filter = {"name_id.sp_name_qualifier": sp_name_qualifier,
-                  "name_id.name_qualifier": name_qualifier,
-                  "name_id.format": NAMEID_FORMAT_PERSISTENT,
-                  }
+        filter = {
+            "name_id.sp_name_qualifier": sp_name_qualifier,
+            "name_id.name_qualifier": name_qualifier,
+            "name_id.format": NAMEID_FORMAT_PERSISTENT,
+        }
         res = self.mdb.get(value=userid, **filter)
         if not res:
             return None

@@ -156,11 +156,13 @@ class IdentDB(object):
 
     def get_nameid(self, userid, nformat, sp_name_qualifier, name_qualifier):
         if nformat == NAMEID_FORMAT_PERSISTENT:
-            nameid = self.match_local_id(userid, sp_name_qualifier,
-                                         name_qualifier)
+            nameid = self.match_local_id(userid, sp_name_qualifier, name_qualifier)
             if nameid:
-                logger.debug("Found existing persistent NameId %s "
-                             "for user %s" % (nameid, userid))
+                logger.debug(
+                    "Found existing persistent NameId {nid} for user {uid}".format(
+                        nid=nameid, uid=userid
+                    )
+                )
                 return nameid
 
         _id = self.create_id(nformat, name_qualifier, sp_name_qualifier)
@@ -171,8 +173,12 @@ class IdentDB(object):
 
             _id = "%s@%s" % (_id, self.domain)
 
-        nameid = NameID(format=nformat, sp_name_qualifier=sp_name_qualifier,
-                        name_qualifier=name_qualifier, text=_id)
+        nameid = NameID(
+            format=nformat,
+            sp_name_qualifier=sp_name_qualifier,
+            name_qualifier=name_qualifier,
+            text=_id,
+        )
 
         self.store(userid, nameid)
         return nameid
