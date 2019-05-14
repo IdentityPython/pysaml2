@@ -21,6 +21,9 @@ provider. The distribution contains examples of both. Originally written to
 work in a WSGI environment there are extensions that allow you to use it with
 other frameworks.
 
+Install
+=======
+You can install with `pip install pysaml2`
 
 Testing
 =======
