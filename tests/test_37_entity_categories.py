@@ -152,5 +152,44 @@ def test_idp_policy_filter():
             "eduPersonTargetedID"]  # because no entity category
 
 
+def test_entity_category_import_from_path():
+    # The entity category module myentitycategory.py is in the tests
+    # directory which is on the standard module search path.
+    # The module uses a custom interpretation of the REFEDs R&S entity category
+    # by adding eduPersonUniqueId.
+    policy = Policy({
+        "default": {
+            "lifetime": {"minutes": 15},
+            "entity_categories": ["myentitycategory"]
+        }
+    })
+
+    mds = MetadataStore(ATTRCONV, sec_config,
+                        disable_ssl_certificate_validation=True)
+
+    # The file entity_cat_rs.xml contains the SAML metadata for an SP
+    # tagged with the REFEDs R&S entity category.
+    mds.imp([{"class": "saml2.mdstore.MetaDataFile",
+              "metadata": [(full_path("entity_cat_rs.xml"),)]}])
+
+    ava = {"givenName": ["Derek"], "sn": ["Jeter"],
+           "displayName": "Derek Jeter",
+           "mail": ["derek@nyy.mlb.com"], "c": ["USA"],
+           "eduPersonTargetedID": "foo!bar!xyz",
+           "eduPersonUniqueId": "R13ET7UD68K0HGR153KE@my.org",
+           "eduPersonScopedAffiliation": "member@my.org",
+           "eduPersonPrincipalName": "user01@my.org",
+           "norEduPersonNIN": "19800101134"}
+
+    ava = policy.filter(ava, "urn:mace:example.com:saml:roland:sp", mds)
+
+    # We expect c and norEduPersonNIN to be filtered out since they are not
+    # part of the custom entity category.
+    assert _eq(list(ava.keys()),
+               ["eduPersonTargetedID", "eduPersonPrincipalName",
+                "eduPersonUniqueId", "displayName", "givenName",
+                "eduPersonScopedAffiliation", "mail", "sn"])
+
+
 if __name__ == "__main__":
     test_filter_ava3()

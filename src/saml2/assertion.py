@@ -353,8 +353,11 @@ class Policy(object):
             else:
                 ecs = []
                 for cat in items:
-                    _mod = importlib.import_module(
-                        "saml2.entity_category.%s" % cat)
+                    try:
+                        _mod = importlib.import_module(cat)
+                    except ImportError:
+                        _mod = importlib.import_module(
+                            "saml2.entity_category.%s" % cat)
                     _ec = {}
                     for key, items in _mod.RELEASE.items():
                         alist = [k.lower() for k in items]
