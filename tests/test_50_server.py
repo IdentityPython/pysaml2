@@ -267,7 +267,7 @@ class TestServer1():
         assert resp_args["destination"] == "http://lingon.catalogix.se:8087/"
         assert resp_args["in_response_to"] == "id1"
         name_id_policy = resp_args["name_id_policy"]
-        assert _eq(name_id_policy.keyswv(), ["format", "allow_create"])
+        assert _eq(name_id_policy.keyswv(), ["format"])
         assert name_id_policy.format == saml.NAMEID_FORMAT_TRANSIENT
         assert resp_args[
                    "sp_entity_id"] == "urn:mace:example.com:saml:roland:sp"
@@ -1341,7 +1341,7 @@ class TestServer1NonAsciiAva():
         assert resp_args["destination"] == "http://lingon.catalogix.se:8087/"
         assert resp_args["in_response_to"] == "id1"
         name_id_policy = resp_args["name_id_policy"]
-        assert _eq(name_id_policy.keyswv(), ["format", "allow_create"])
+        assert _eq(name_id_policy.keyswv(), ["format"])
         assert name_id_policy.format == saml.NAMEID_FORMAT_TRANSIENT
         assert resp_args[
                    "sp_entity_id"] == "urn:mace:example.com:saml:roland:sp"

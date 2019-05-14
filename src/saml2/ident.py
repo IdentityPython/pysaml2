@@ -155,6 +155,16 @@ class IdentDB(object):
             pass
 
     def get_nameid(self, userid, nformat, sp_name_qualifier, name_qualifier):
+        if nformat == NAMEID_FORMAT_PERSISTENT:
+            nameid = self.match_local_id(userid, sp_name_qualifier, name_qualifier)
+            if nameid:
+                logger.debug(
+                    "Found existing persistent NameId {nid} for user {uid}".format(
+                        nid=nameid, uid=userid
+                    )
+                )
+                return nameid
+
         _id = self.create_id(nformat, name_qualifier, sp_name_qualifier)
 
         if nformat == NAMEID_FORMAT_EMAILADDRESS:
@@ -163,11 +173,12 @@ class IdentDB(object):
 
             _id = "%s@%s" % (_id, self.domain)
 
-        # if nformat == NAMEID_FORMAT_PERSISTENT:
-        #     _id = userid
-
-        nameid = NameID(format=nformat, sp_name_qualifier=sp_name_qualifier,
-                        name_qualifier=name_qualifier, text=_id)
+        nameid = NameID(
+            format=nformat,
+            sp_name_qualifier=sp_name_qualifier,
+            name_qualifier=name_qualifier,
+            text=_id,
+        )
 
         self.store(userid, nameid)
         return nameid
@@ -236,7 +247,7 @@ class IdentDB(object):
     def construct_nameid(self, userid, local_policy=None,
                          sp_name_qualifier=None, name_id_policy=None,
                          name_qualifier=""):
-        """ Returns a name_id for the object. How the name_id is
+        """ Returns a name_id for the userid. How the name_id is
         constructed depends on the context.
 
         :param local_policy: The policy the server is configured to follow
