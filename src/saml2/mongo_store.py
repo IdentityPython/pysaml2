@@ -1,3 +1,4 @@
+import datetime
 from hashlib import sha1
 import logging
 
@@ -192,6 +193,9 @@ class MDB(object):
         else:
             doc = {}
         doc.update(kwargs)
+        # Add timestamp to all documents to allow external garbage collecting
+        if "created_at" not in doc:
+            doc["created_at"] = datetime.datetime.utcnow()
         _ = self.db.insert(doc)
 
     def get(self, value=None, **kwargs):
