@@ -146,4 +146,4 @@ INFORMATION = 0, OK = 1, WARNING = 2, ERROR = 3, CRITICAL = 4, INTERACTION = 5
 
 
 There are 2 targets to write output to:
-* Test_ouput is written to conv.test_ouput during the execution of the flows.
+* Test_output is written to conv.test_output during the execution of the flows.
