@@ -913,28 +913,21 @@ class Base(Entity):
         :return: A URL
         """
 
-        args = {"entityID": entity_id}
-        for key in ["policy", "returnIDParam"]:
-            try:
-                args[key] = kwargs[key]
-            except KeyError:
-                pass
+        args = {
+            "entityID": entity_id,
+            "policy": kwargs.get("policy"),
+            "returnIDParam": kwargs.get("returnIDParam"),
+            "return": kwargs.get("return_url") or kwargs.get("return"),
+            "isPassive": (
+                None
+                if "isPassive" not in kwargs.keys()
+                else "true"
+                if kwargs.get("isPassive")
+                else "false"
+            ),
+        }
 
-        try:
-            args["return"] = kwargs["return_url"]
-        except KeyError:
-            try:
-                args["return"] = kwargs["return"]
-            except KeyError:
-                pass
-
-        if "isPassive" in kwargs:
-            if kwargs["isPassive"]:
-                args["isPassive"] = "true"
-            else:
-                args["isPassive"] = "false"
-
-        params = urlencode(args)
+        params = urlencode({k: v for k, v in args.items() if v})
         return "%s?%s" % (url, params)
 
     @staticmethod
