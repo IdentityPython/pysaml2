@@ -482,8 +482,12 @@ class SubjectConfirmationDataType_(SamlBase):
     c_any = {"namespace": "##any", "processContents": "lax", "minOccurs": "0",
              "maxOccurs": "unbounded"}
     c_any_attribute = {"namespace": "##other", "processContents": "lax"}
+    c_children['{http://www.w3.org/2000/09/xmldsig#}KeyInfo'] = ('key_info',
+                                                                 [ds.KeyInfo])
+    c_cardinality['key_info'] = {"min": 0, "max": 1}
 
     def __init__(self,
+                 key_info=None,
                  not_before=None,
                  not_on_or_after=None,
                  recipient=None,
@@ -496,6 +500,7 @@ class SubjectConfirmationDataType_(SamlBase):
                           text=text,
                           extension_elements=extension_elements,
                           extension_attributes=extension_attributes)
+        self.key_info = key_info
         self.not_before = not_before
         self.not_on_or_after = not_on_or_after
         self.recipient = recipient

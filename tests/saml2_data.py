@@ -123,6 +123,36 @@ TEST_SUBJECT_CONFIRMATION = """<?xml version="1.0" encoding="utf-8"?>
 </SubjectConfirmation>
 """
 
+TEST_HOLDER_OF_KEY_SUBJECT_CONFIRMATION = """<?xml version="1.0" encoding="utf-8"?>
+<SubjectConfirmation
+  Method="urn:oasis:names:tc:SAML:2.0:cm:holder-of-key"
+  xmlns="urn:oasis:names:tc:SAML:2.0:assertion">
+  <SubjectConfirmationData
+    InResponseTo="responseID"
+    NotOnOrAfter="2007-09-14T01:05:02Z"
+    Recipient="recipient">
+    <KeyInfo xmlns="http://www.w3.org/2000/09/xmldsig#">
+      <X509Data xmlns="http://www.w3.org/2000/09/xmldsig#">
+        <X509Certificate xmlns="http://www.w3.org/2000/09/xmldsig#">
+MIICITCCAYoCAQEwDQYJKoZIhvcNAQELBQAwWDELMAkGA1UEBhMCenoxCzAJBgNV
+BAgMAnp6MQ0wCwYDVQQHDAR6enp6MQ4wDAYDVQQKDAVaenp6ejEOMAwGA1UECwwF
+Wnp6enoxDTALBgNVBAMMBHRlc3QwIBcNMTkwNDEyMTk1MDM0WhgPMzAxODA4MTMx
+OTUwMzRaMFgxCzAJBgNVBAYTAnp6MQswCQYDVQQIDAJ6ejENMAsGA1UEBwwEenp6
+ejEOMAwGA1UECgwFWnp6enoxDjAMBgNVBAsMBVp6enp6MQ0wCwYDVQQDDAR0ZXN0
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDHcj80WU/XBsd9FlyQmfjPUdfm
+edhCFDd6TEQmZNNqP/UG+VkGa+BXjRIHMfic/WxPTbGhCjv68ci0UDNomUXagFex
+LGNpkwa7+CRVtoc/1xgq+ySE6M4nhcCutScoxNvWNn5eSQ66i3U0sTv91MgsXxqE
+dTaiZg0BIufEc3dueQIDAQABMA0GCSqGSIb3DQEBCwUAA4GBAGUV5B+USHvaRa8k
+gCNJSuNpo6ARlv0ekrk8bbdNRBiEUdCMyoGJFfuM9K0zybX6Vr25wai3nvaog294
+Vx/jWjX2g5SDbjItH6VGy6C9GCGf1A07VxFRCfJn5tA9HuJjPKiE+g/BmrV5N4Ce
+alzFxPHWYkNOzoRU8qI7OqUai1kL
+        </X509Certificate>
+      </X509Data>
+    </KeyInfo>
+  </SubjectConfirmationData>
+</SubjectConfirmation>
+"""
+
 TEST_SUBJECT = """<?xml version="1.0" encoding="utf-8"?>
 <Subject xmlns="urn:oasis:names:tc:SAML:2.0:assertion">
   <NameID Format="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress"
