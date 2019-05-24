@@ -1,23 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from saml2.response import authn_response
+from saml2.response import authn_response, VerificationError
 from saml2.config import config_factory
 
 from pathutils import dotname, full_path
 
-HOLDER_OF_KEY_RESPONSE_FILE = full_path("saml_hok.xml") 
+HOLDER_OF_KEY_RESPONSE_FILE = full_path("saml_hok.xml")
+INVALID_HOLDER_OF_KEY_RESPONSE_FILE = full_path("saml_hok_invalid.xml")
 
 
 class TestHolderOfKeyResponse:
-    def test_hok_response_is_parsed(self):
+    def test_valid_hok_response_is_parsed(self):
         """Verifies that response with 'holder-of-key' subject confirmations is parsed successfully."""
-        conf = config_factory("idp", dotname("server_conf"))
-        resp = authn_response(conf, "https://sp:443/.auth/saml/login", asynchop=False, allow_unsolicited=True)
-        with open(HOLDER_OF_KEY_RESPONSE_FILE, 'r') as fp:
-            authn_response_xml = fp.read()
-        resp.loads(authn_response_xml, False)
+        resp = self._get_test_response(HOLDER_OF_KEY_RESPONSE_FILE)
         resp.do_not_verify = True
-
         resp.parse_assertion()
 
         assert resp.get_subject() is not None
@@ -55,6 +51,25 @@ class TestHolderOfKeyResponse:
             item = item.replace(' ', '').replace('\n', '')
             certs[index] = item
         return certs
+
+    def test_invalid_hok_response_fails_verification(self):
+        """Verifies that response with invalid 'holder-of-key' subject confirmations is parsed successfully."""
+        resp = self._get_test_response(INVALID_HOLDER_OF_KEY_RESPONSE_FILE)
+        resp.do_not_verify = True
+
+        try:
+            resp.parse_assertion()
+            assert False, "parse_assertion() did not fail as expected"
+        except VerificationError as e:
+            assert e is not None
+
+    def _get_test_response(self, path):
+        conf = config_factory("idp", dotname("server_conf"))
+        resp = authn_response(conf, "https://sp:443/.auth/saml/login", asynchop=False, allow_unsolicited=True)
+        with open(path, 'r') as fp:
+            authn_response_xml = fp.read()
+        resp.loads(authn_response_xml, False)
+        return resp
 
 
 if __name__ == "__main__":

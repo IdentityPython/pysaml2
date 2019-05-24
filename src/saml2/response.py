@@ -726,7 +726,8 @@ class AuthnResponse(StatusResponse):
             return False
 
         has_keyinfo = False
-        for element in extension_elements_to_elements(data.key_info,
+        key_info = data.key_info or ()
+        for element in extension_elements_to_elements(key_info,
                                                       [samlp, saml, xenc, ds]):
             if isinstance(element, ds.KeyInfo):
                 has_keyinfo = True
