@@ -886,7 +886,8 @@ class TestSubjectConfirmation:
         assert sc.subject_confirmation_data.recipient == "recipient"
         assert sc.subject_confirmation_data.in_response_to == "responseID"
         assert sc.subject_confirmation_data.address == "127.0.0.1"
-        assert sc.subject_confirmation_data.key_info is None
+        key_info = sc.subject_confirmation_data.extensions_as_elements(ds.KeyInfo.c_tag, ds)
+        assert len(key_info) == 0
 
     def testHolderOfKeyUsingTestData(self):
         """Test subject_confirmation_from_string() using test data for 'holder-of-key' SubjectConfirmation"""
@@ -898,7 +899,7 @@ class TestSubjectConfirmation:
         assert sc.subject_confirmation_data.not_on_or_after == "2007-09-14T01:05:02Z"
         assert sc.subject_confirmation_data.recipient == "recipient"
         assert sc.subject_confirmation_data.in_response_to == "responseID"
-        key_info = sc.subject_confirmation_data.key_info
+        key_info = sc.subject_confirmation_data.extensions_as_elements(ds.KeyInfo.c_tag, ds)
         assert len(key_info) == 1
         assert len(key_info[0].x509_data) == 1
 

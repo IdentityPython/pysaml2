@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from saml2 import xmldsig as ds
 from saml2.response import authn_response, VerificationError
 from saml2.config import config_factory
 
@@ -18,8 +19,10 @@ class TestHolderOfKeyResponse:
 
         assert resp.get_subject() is not None
         assert len(resp.assertion.subject.subject_confirmation) == 2
-        actual_hok_certs = [sc.subject_confirmation_data.key_info[0].x509_data[0].x509_certificate.text.strip() 
-                            for sc in resp.assertion.subject.subject_confirmation]
+        key_infos = [sc.subject_confirmation_data.extensions_as_elements(ds.KeyInfo.c_tag, ds)[0]
+                    for sc in resp.assertion.subject.subject_confirmation]
+        actual_hok_certs = [key_info_element.x509_data[0].x509_certificate.text.strip() 
+                            for key_info_element in key_infos]
         assert actual_hok_certs == self._expected_hok_certs()
 
     def _expected_hok_certs(self):
