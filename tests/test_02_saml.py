@@ -891,31 +891,37 @@ class TestSubjectConfirmation:
 
     def testHolderOfKeyUsingTestData(self):
         """Test subject_confirmation_from_string() using test data for 'holder-of-key' SubjectConfirmation"""
+
         sc = saml.subject_confirmation_from_string(
-            saml2_data.TEST_HOLDER_OF_KEY_SUBJECT_CONFIRMATION)
+            saml2_data.TEST_HOLDER_OF_KEY_SUBJECT_CONFIRMATION
+        )
         assert sc.verify()
         assert sc.method == saml.SCM_HOLDER_OF_KEY
         assert sc.subject_confirmation_data is not None
         assert sc.subject_confirmation_data.not_on_or_after == "2007-09-14T01:05:02Z"
         assert sc.subject_confirmation_data.recipient == "recipient"
         assert sc.subject_confirmation_data.in_response_to == "responseID"
+
         key_info = sc.subject_confirmation_data.extensions_as_elements(ds.KeyInfo.c_tag, ds)
         assert len(key_info) == 1
         assert len(key_info[0].x509_data) == 1
 
-        expected_cert = """MIICITCCAYoCAQEwDQYJKoZIhvcNAQELBQAwWDELMAkGA1UEBhMCenoxCzAJBgNV
-            BAgMAnp6MQ0wCwYDVQQHDAR6enp6MQ4wDAYDVQQKDAVaenp6ejEOMAwGA1UECwwF
-            Wnp6enoxDTALBgNVBAMMBHRlc3QwIBcNMTkwNDEyMTk1MDM0WhgPMzAxODA4MTMx
-            OTUwMzRaMFgxCzAJBgNVBAYTAnp6MQswCQYDVQQIDAJ6ejENMAsGA1UEBwwEenp6
-            ejEOMAwGA1UECgwFWnp6enoxDjAMBgNVBAsMBVp6enp6MQ0wCwYDVQQDDAR0ZXN0
-            MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDHcj80WU/XBsd9FlyQmfjPUdfm
-            edhCFDd6TEQmZNNqP/UG+VkGa+BXjRIHMfic/WxPTbGhCjv68ci0UDNomUXagFex
-            LGNpkwa7+CRVtoc/1xgq+ySE6M4nhcCutScoxNvWNn5eSQ66i3U0sTv91MgsXxqE
-            dTaiZg0BIufEc3dueQIDAQABMA0GCSqGSIb3DQEBCwUAA4GBAGUV5B+USHvaRa8k
-            gCNJSuNpo6ARlv0ekrk8bbdNRBiEUdCMyoGJFfuM9K0zybX6Vr25wai3nvaog294
-            Vx/jWjX2g5SDbjItH6VGy6C9GCGf1A07VxFRCfJn5tA9HuJjPKiE+g/BmrV5N4Ce
-            alzFxPHWYkNOzoRU8qI7OqUai1kL""".replace(' ', '')
-        assert key_info[0].x509_data[0].x509_certificate.text.strip() == expected_cert
+        expected_cert = (
+            "MIICITCCAYoCAQEwDQYJKoZIhvcNAQELBQAwWDELMAkGA1UEBhMCenoxCzAJBgNV"
+            "BAgMAnp6MQ0wCwYDVQQHDAR6enp6MQ4wDAYDVQQKDAVaenp6ejEOMAwGA1UECwwF"
+            "Wnp6enoxDTALBgNVBAMMBHRlc3QwIBcNMTkwNDEyMTk1MDM0WhgPMzAxODA4MTMx"
+            "OTUwMzRaMFgxCzAJBgNVBAYTAnp6MQswCQYDVQQIDAJ6ejENMAsGA1UEBwwEenp6"
+            "ejEOMAwGA1UECgwFWnp6enoxDjAMBgNVBAsMBVp6enp6MQ0wCwYDVQQDDAR0ZXN0"
+            "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDHcj80WU/XBsd9FlyQmfjPUdfm"
+            "edhCFDd6TEQmZNNqP/UG+VkGa+BXjRIHMfic/WxPTbGhCjv68ci0UDNomUXagFex"
+            "LGNpkwa7+CRVtoc/1xgq+ySE6M4nhcCutScoxNvWNn5eSQ66i3U0sTv91MgsXxqE"
+            "dTaiZg0BIufEc3dueQIDAQABMA0GCSqGSIb3DQEBCwUAA4GBAGUV5B+USHvaRa8k"
+            "gCNJSuNpo6ARlv0ekrk8bbdNRBiEUdCMyoGJFfuM9K0zybX6Vr25wai3nvaog294"
+            "Vx/jWjX2g5SDbjItH6VGy6C9GCGf1A07VxFRCfJn5tA9HuJjPKiE+g/BmrV5N4Ce"
+            "alzFxPHWYkNOzoRU8qI7OqUai1kL"
+        )
+        xcert = key_info[0].x509_data[0].x509_certificate
+        assert xcert.text.strip().replace("\n", "") == expected_cert
 
 
 class TestSubject:
