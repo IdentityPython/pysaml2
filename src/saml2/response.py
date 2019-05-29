@@ -722,11 +722,11 @@ class AuthnResponse(StatusResponse):
         return True
 
     def _holder_of_key_confirmed(self, data):
-        if not data:
+        if not data or not data.extension_elements:
             return False
 
         has_keyinfo = False
-        for element in extension_elements_to_elements(data,
+        for element in extension_elements_to_elements(data.extension_elements,
                                                       [samlp, saml, xenc, ds]):
             if isinstance(element, ds.KeyInfo):
                 has_keyinfo = True
