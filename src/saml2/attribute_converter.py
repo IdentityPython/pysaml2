@@ -432,12 +432,7 @@ class AttributeConverter(object):
             if name:
                 if name == "urn:oid:1.3.6.1.4.1.5923.1.1.1.10":
                     # special case for eduPersonTargetedID
-                    attr_value = []
-                    for v in value:
-                        extension_element = ExtensionElement("NameID", NAMESPACE,
-                                                             attributes={'Format': NAMEID_FORMAT_PERSISTENT}, text=v)
-                        attrval = saml.AttributeValue(extension_elements=[extension_element])
-                        attr_value.append(attrval)
+                    attr_value = self.to_eptid_value(value)
                 else:
                     attr_value = do_ava(value)
                 attributes.append(factory(saml.Attribute,
@@ -451,6 +446,41 @@ class AttributeConverter(object):
                                           attribute_value=do_ava(value)))
 
         return attributes
+
+    def to_eptid_value(self, value):
+        """
+        Special handling for the attribute with name
+        urn:oid:1.3.6.1.4.1.5923.1.1.1.10, usually known by the friendly
+        name eduPersonTargetedID. Create the AttributeValue instance(s)
+        for the attribute.
+
+        value is either a string or a dictionary with keys 'value',
+        'NameQualifier', and 'SPNameQualifier'.
+
+        Returns a list of AttributeValue instances.
+        """
+        attribute_values = []
+
+        for v in value:
+            if isinstance(v, dict):
+                element_attributes = {
+                        'Format': NAMEID_FORMAT_PERSISTENT,
+                        'NameQualifier': v['NameQualifier'],
+                        'SPNameQualifier': v['SPNameQualifier']
+                        }
+                text = v['value']
+            else:
+                element_attributes = {'Format': NAMEID_FORMAT_PERSISTENT}
+                text = v
+
+            element = ExtensionElement("NameID", NAMESPACE, element_attributes,
+                                       text=text)
+
+            attrval = saml.AttributeValue(extension_elements=[element])
+
+            attribute_values.append(attrval)
+
+        return attribute_values
 
 
 class AttributeConverterNOOP(AttributeConverter):
