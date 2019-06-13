@@ -371,13 +371,12 @@ class Base(Entity):
         except KeyError:
             nsprefix = None
 
-        try:
-            force_authn = kwargs['force_authn']
-        except KeyError:
-            force_authn = self.config.getattr('force_authn', 'sp')
-        finally:
-            if force_authn:
-                args['force_authn'] = 'true'
+        force_authn = (
+            kwargs.get("force_authn")
+            or self.config.getattr('force_authn', 'sp')
+        )
+        if str(force_authn).lower() == 'true':
+            args['force_authn'] = 'true'
 
         conf_sp_type = self.config.getattr('sp_type', 'sp')
         conf_sp_type_in_md = self.config.getattr('sp_type_in_metadata', 'sp')
