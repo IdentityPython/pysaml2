@@ -447,39 +447,41 @@ class AttributeConverter(object):
 
         return attributes
 
-    def to_eptid_value(self, value):
+    def to_eptid_value(self, values):
         """
-        Special handling for the attribute with name
-        urn:oid:1.3.6.1.4.1.5923.1.1.1.10, usually known by the friendly
-        name eduPersonTargetedID. Create the AttributeValue instance(s)
-        for the attribute.
+        Create AttributeValue instances of NameID from the given values.
 
-        value is either a string or a dictionary with keys 'value',
-        'NameQualifier', and 'SPNameQualifier'.
+        Special handling for the "eptid" attribute
+        Name=urn:oid:1.3.6.1.4.1.5923.1.1.1.10
+        FriendlyName=eduPersonTargetedID
 
-        Returns a list of AttributeValue instances.
+        values is a list of items of type str or dict. When an item is a
+        dictionary it has the keys: "NameQualifier", "SPNameQualifier", and
+        "text".
+
+        Returns a list of AttributeValue instances of NameID elements.
         """
-        attribute_values = []
 
-        for v in value:
-            if isinstance(v, dict):
-                element_attributes = {
-                        'Format': NAMEID_FORMAT_PERSISTENT,
-                        'NameQualifier': v['NameQualifier'],
-                        'SPNameQualifier': v['SPNameQualifier']
-                        }
-                text = v['value']
-            else:
-                element_attributes = {'Format': NAMEID_FORMAT_PERSISTENT}
-                text = v
+        def _create_nameid_ext_el(value):
+            text = value["text"] if isinstance(value, dict) else value
+            attributes = (
+                {
+                    "Format": NAMEID_FORMAT_PERSISTENT,
+                    "NameQualifier": value["NameQualifier"],
+                    "SPNameQualifier": value["SPNameQualifier"],
+                }
+                if isinstance(value, dict)
+                else {"Format": NAMEID_FORMAT_PERSISTENT}
+            )
+            element = ExtensionElement(
+                "NameID", NAMESPACE, attributes=attributes, text=text
+            )
+            return element
 
-            element = ExtensionElement("NameID", NAMESPACE, element_attributes,
-                                       text=text)
-
-            attrval = saml.AttributeValue(extension_elements=[element])
-
-            attribute_values.append(attrval)
-
+        attribute_values = [
+            saml.AttributeValue(extension_elements=[_create_nameid_ext_el(v)])
+            for v in values
+        ]
         return attribute_values
 
 
