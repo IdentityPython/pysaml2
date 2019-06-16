@@ -221,6 +221,29 @@ class TestAC():
         assert attributes[0].attribute_value[0].extension_elements[0].text == "test value1"
         assert attributes[0].attribute_value[1].extension_elements[0].text == "test value2"
 
+    def test_from_local_eduPersonTargetedID_with_qualifiers(self):
+        IDP_ENTITY_ID = "https://some.org/idp"
+        SP_ENTITY_ID = "https://some.org/sp"
+
+        ava = {
+            "edupersontargetedid": [
+                {
+                    "text": "test value1",
+                    "NameQualifier": IDP_ENTITY_ID,
+                    "SPNameQualifier": SP_ENTITY_ID,
+                }
+            ]
+        }
+        attributes = from_local(self.acs, ava, URI_NF)
+
+        assert len(attributes) == 1
+
+        element = attributes[0].attribute_value[0].extension_elements[0]
+
+        assert element.text == "test value1"
+        assert element.attributes["NameQualifier"] == IDP_ENTITY_ID
+        assert element.attributes["SPNameQualifier"] == SP_ENTITY_ID
+
 
 def test_noop_attribute_conversion():
     ava = {"urn:oid:2.5.4.4": "Roland", "urn:oid:2.5.4.42": "Hedberg"}
