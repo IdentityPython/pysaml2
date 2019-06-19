@@ -720,7 +720,7 @@ class MetaDataLoader(MetaDataFile):
 class MetaDataExtern(InMemoryMetaData):
     """
     Class that handles metadata store somewhere on the net.
-    Accessible but HTTP GET.
+    Accessible by HTTP GET.
     """
 
     def __init__(self, attrc, url=None, security=None, cert=None,
@@ -806,6 +806,13 @@ class MetaDataMDX(InMemoryMetaData):
         if not url:
             raise SAMLError('URL for MDQ server not specified.')
 
+        # adding https tls/ssl check
+        self.disable_ssl_certificate_validation = kwargs.get('disable_ssl_certificate_validation', False)
+        self.ca_cert = kwargs.get('ca_cert', None)
+        self.ssl_verification = True if not self.disable_ssl_certificate_validation else False
+        if self.ca_cert:
+            self.ssl_verification = self.ca_cert
+
         self.url = url.rstrip('/')
 
         if entity_transform:
@@ -834,8 +841,11 @@ class MetaDataMDX(InMemoryMetaData):
             return self.entity[item]
         except KeyError:
             mdx_url = "%s/entities/%s" % (self.url, self.entity_transform(item))
-            response = requests.get(mdx_url, headers={
+            response = requests.get(mdx_url,
+                                    verify=self.ssl_verification,
+                                    headers={
                 'Accept': SAML_METADATA_CONTENT_TYPE})
+
             if response.status_code == 200:
                 _txt = response.content
 
