@@ -444,10 +444,7 @@ class Base(Entity):
                                                   **kwargs)
             args.update(_args)
 
-        try:
-            del args["id"]
-        except KeyError:
-            pass
+        args.pop("id", None)
 
         if sign is None:
             sign = self.authn_requests_signed
