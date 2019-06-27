@@ -371,13 +371,6 @@ class Base(Entity):
         except KeyError:
             nsprefix = None
 
-        force_authn = (
-            kwargs.get("force_authn")
-            or self.config.getattr('force_authn', 'sp')
-        )
-        if str(force_authn).lower() == 'true':
-            args['force_authn'] = 'true'
-
         conf_sp_type = self.config.getattr('sp_type', 'sp')
         conf_sp_type_in_md = self.config.getattr('sp_type_in_metadata', 'sp')
         if conf_sp_type and conf_sp_type_in_md is False:
@@ -439,9 +432,17 @@ class Base(Entity):
                 extension_elements=items)
             extensions.add_extension_element(item)
 
+        force_authn = str(
+            kwargs.pop("force_authn", None)
+            or self.config.getattr("force_authn", "sp")
+        ).lower() in ["true", "1"]
+        if force_authn:
+            kwargs["force_authn"] = "true"
+
         if kwargs:
-            _args, extensions = self._filter_args(AuthnRequest(), extensions,
-                                                  **kwargs)
+            _args, extensions = self._filter_args(
+                AuthnRequest(), extensions, **kwargs
+            )
             args.update(_args)
 
         args.pop("id", None)

@@ -286,16 +286,38 @@ class TestClient:
             assert c.attributes['FriendlyName']
             assert c.attributes['NameFormat']
 
-    def test_create_auth_request_unset_force_authn(self):
+    def test_create_auth_request_unset_force_authn_by_default(self):
         req_id, req = self.client.create_authn_request(
-            "http://www.example.com/sso", sign=False, message_id="id1")
-        assert bool(req.force_authn) == False
+            "http://www.example.com/sso", sign=False, message_id="id1"
+        )
+        assert req.force_authn is None
 
-    def test_create_auth_request_set_force_authn(self):
+    def test_create_auth_request_set_force_authn_not_true_or_1(self):
         req_id, req = self.client.create_authn_request(
-            "http://www.example.com/sso", sign=False, message_id="id1",
-            force_authn="true")
-        assert bool(req.force_authn) == True
+            "http://www.example.com/sso",
+            sign=False,
+            message_id="id1",
+            force_authn="0",
+        )
+        assert req.force_authn is None
+
+    def test_create_auth_request_set_force_authn_true(self):
+        req_id, req = self.client.create_authn_request(
+            "http://www.example.com/sso",
+            sign=False,
+            message_id="id1",
+            force_authn="true",
+        )
+        assert req.force_authn == "true"
+
+    def test_create_auth_request_set_force_authn_1(self):
+        req_id, req = self.client.create_authn_request(
+            "http://www.example.com/sso",
+            sign=False,
+            message_id="id1",
+            force_authn="true",
+        )
+        assert req.force_authn == "true"
 
     def test_create_auth_request_nameid_policy_allow_create(self):
         conf = config.SPConfig()
