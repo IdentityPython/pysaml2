@@ -5,10 +5,7 @@ When releasing a new version, the following steps should be taken:
 
 1. Make sure all automated tests pass.
 
-2. Fill in the release date in ``CHANGES``. Make sure the changelog is
-   complete. Commit this change.
-
-3. Make sure the package metadata in ``setup.py`` is up-to-date. You can
+2. Make sure the package metadata in ``setup.py`` is up-to-date. You can
    verify the information by re-generating the egg info::
 
     python setup.py egg_info
@@ -22,20 +19,20 @@ When releasing a new version, the following steps should be taken:
    If this will produce warning or errors, PyPI will be unable to render
    the long description nicely. It will treat it as plain text instead.
 
-4. Update the version in the VERSION_ file and report the changes in
+3. Update the version in the VERSION_ file and report the changes in
    CHANGELOG.rst_ and commit the changes.::
 
     git commit -v -s -m "Release version X.Y.Z"
 
-5. Create a release tag_::
+4. Create a release tag_::
 
     git tag -a -s vX.Y.Z -m "Version X.Y.Z"
 
-6. Push these changes to Github::
+5. Push these changes to Github::
 
     git push --follow-tags origin vX.Y.Z
 
-7. Create a source and wheel distribution and upload it to PyPI::
+6. Create a source and wheel distribution and upload it to PyPI::
 
     # generate a source and wheel distribution at once
     python setup.py sdist bdist_wheel
@@ -49,7 +46,7 @@ When releasing a new version, the following steps should be taken:
     # then, upload release on official pypi.org
     twine upload dist/pysaml2-X.Y.Z*
 
-8. Upload the documentation to PyPI. First you need to generate the html
+7. Upload the documentation to PyPI. First you need to generate the html
    version of the documentation::
 
     cd docs/
@@ -60,7 +57,7 @@ When releasing a new version, the following steps should be taken:
 
    Submit the generated pysaml2-docs.zip file.
 
-9. Send an email to the pysaml2 list announcing this release
+8. Send an email to the pysaml2 list announcing this release
 
 
 **Important:** Once released to PyPI or any other public download location,
