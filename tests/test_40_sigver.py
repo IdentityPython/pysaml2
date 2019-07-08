@@ -20,7 +20,7 @@ from saml2.samlp import response_from_string
 from saml2.s_utils import factory, do_attribute_statement
 
 import pytest
-from py.test import raises
+from pytest import raises
 
 from pathutils import full_path
 
@@ -424,8 +424,8 @@ class TestSecurity():
         response2 = response_from_string(s_response)
         # Change something that should make everything fail
         response2.id = "23456"
-        raises(sigver.SignatureError, self.sec._check_signature,
-               s_response, response2, class_name(response2))
+        with raises(sigver.SignatureError):
+            self.sec._check_signature(s_response, response2, class_name(response2))
 
 
 class TestSecurityNonAsciiAva():
@@ -719,8 +719,8 @@ class TestSecurityNonAsciiAva():
         response2 = response_from_string(s_response)
         # Change something that should make everything fail
         response2.id = "23456"
-        raises(sigver.SignatureError, self.sec._check_signature,
-               s_response, response2, class_name(response2))
+        with raises(sigver.SignatureError):
+            self.sec._check_signature(s_response, response2, class_name(response2))
 
 
 class TestSecurityMetadata():
@@ -1026,13 +1026,15 @@ def test_xmlsec_output_line_parsing():
     assert sigver.parse_xmlsec_output(output1)
 
     output2 = "prefix\nFAIL\npostfix"
-    raises(sigver.XmlsecError, sigver.parse_xmlsec_output, output2)
+    with raises(sigver.XmlsecError):
+        sigver.parse_xmlsec_output(output2)
 
     output3 = "prefix\r\nOK\r\npostfix"
     assert sigver.parse_xmlsec_output(output3)
 
     output4 = "prefix\r\nFAIL\r\npostfix"
-    raises(sigver.XmlsecError, sigver.parse_xmlsec_output, output4)
+    with raises(sigver.XmlsecError):
+        sigver.parse_xmlsec_output(output4)
 
 
 if __name__ == "__main__":

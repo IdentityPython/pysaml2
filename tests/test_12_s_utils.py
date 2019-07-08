@@ -14,9 +14,8 @@ from saml2.s_utils import do_attribute_statement
 from saml2.saml import Attribute, Subject
 from saml2.saml import NAME_FORMAT_URI
 
-from py.test import raises
-
 from pathutils import full_path
+
 
 XML_HEADER = '<?xml version=\'1.0\' encoding=\'UTF-8\'?>\n'
 
@@ -64,7 +63,7 @@ def _oeq(l1, l2):
 
 def test_inflate_then_deflate():
     txt = """Selma Lagerlöf (1858-1940) was born in Östra Emterwik, Värmland,
-    Sweden. She was brought up on Mårbacka, the family estate, which she did 
+    Sweden. She was brought up on Mårbacka, the family estate, which she did
     not leave until 1881, when she went to a teachers' college at Stockholm"""
     if not isinstance(txt, six.binary_type):
         txt = txt.encode('utf-8')

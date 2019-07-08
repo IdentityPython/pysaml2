@@ -1,6 +1,4 @@
 # coding=utf-8
-import pytest
-
 from saml2.argtree import add_path
 from saml2.authn_context import pword
 from saml2.mdie import to_dict
@@ -21,7 +19,7 @@ from saml2.s_utils import MissingValue
 from saml2 import attribute_converter
 from saml2.attribute_converter import ac_factory, AttributeConverterNOOP
 
-from py.test import raises
+from pytest import raises
 
 from saml2.extension import mdui
 from saml2.extension import idpdisc
@@ -82,7 +80,7 @@ def test_filter_on_attributes_1():
 
 
 def test_filter_on_attributes_2():
-    
+
     a = to_dict(Attribute(friendly_name="surName",name="urn:oid:2.5.4.4",
                           name_format=NAME_FORMAT_URI), ONTS)
     required = [a]
@@ -117,7 +115,7 @@ def test_filter_on_attributes_with_missing_required_attribute():
         friendly_name="eduPersonTargetedID",
         name="urn:oid:1.3.6.1.4.1.5923.1.1.1.10",
         name_format=NAME_FORMAT_URI), ONTS)
-    with pytest.raises(MissingValue):
+    with raises(MissingValue):
         filter_on_attributes(ava, required=[eptid], acs=ac_factory())
 
 
@@ -441,7 +439,8 @@ def test_filter_values_req_2():
     required = [a1, a2]
     ava = {"serialNumber": ["12345"], "givenName": ["Lars"]}
 
-    raises(MissingValue, filter_on_attributes, ava, required, acs=ac_factory())
+    with raises(MissingValue):
+        filter_on_attributes(ava, required, acs=ac_factory())
 
 
 def test_filter_values_req_3():
@@ -467,7 +466,8 @@ def test_filter_values_req_4():
     required = [a]
     ava = {"serialNumber": ["12345"]}
 
-    raises(MissingValue, filter_on_attributes, ava, required, acs=ac_factory())
+    with raises(MissingValue):
+        filter_on_attributes(ava, required, acs=ac_factory())
 
 
 def test_filter_values_req_5():
@@ -564,7 +564,8 @@ def test_filter_values_req_opt_2():
     ava = {"surname": ["Hedberg"], "givenName": ["Roland"],
            "eduPersonAffiliation": ["staff"], "uid": ["rohe0002"]}
 
-    raises(MissingValue, "filter_on_attributes(ava, r, o, acs=ac_factory())")
+    with raises(MissingValue):
+        filter_on_attributes(ava, r, o, acs=ac_factory())
 
 
 # ---------------------------------------------------------------------------

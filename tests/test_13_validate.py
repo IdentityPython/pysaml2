@@ -14,7 +14,7 @@ from saml2.validate import valid_any_uri
 from saml2.validate import NotValid
 from saml2.validate import valid_anytype
 
-from py.test import raises
+from pytest import raises
 
 
 def _eq(l1, l2):
@@ -33,23 +33,30 @@ def test_duration():
     assert valid_duration("-P1347M")
     assert valid_duration("P1Y2MT2.5H")
 
-    raises(NotValid, 'valid_duration("P-1347M")')
-    raises(NotValid, ' valid_duration("P1Y2MT")')
-    raises(NotValid, ' valid_duration("P1Y2MT2xH")')
+    with raises(NotValid):
+        valid_duration("P-1347M")
+    with raises(NotValid):
+        valid_duration("P1Y2MT")
+    with raises(NotValid):
+        valid_duration("P1Y2MT2xH")
 
 
 def test_unsigned_short():
     assert valid_unsigned_short("1234")
 
-    raises(NotValid, ' valid_unsigned_short("-1234")')
-    raises(NotValid, ' valid_unsigned_short("1234567890")')
+    with raises(NotValid):
+        valid_unsigned_short("-1234")
+    with raises(NotValid):
+        valid_unsigned_short("1234567890")
 
 
 def test_valid_non_negative_integer():
     assert valid_non_negative_integer("1234567890")
 
-    raises(NotValid, 'valid_non_negative_integer("-123")')
-    raises(NotValid, 'valid_non_negative_integer("123.56")')
+    with raises(NotValid):
+        valid_non_negative_integer("-123")
+    with raises(NotValid):
+        valid_non_negative_integer("123.56")
     assert valid_non_negative_integer("12345678901234567890")
 
 
@@ -58,9 +65,8 @@ def test_valid_string():
 
     import codecs
 
-    raises(NotValid,
-           'valid_string(codecs.getdecoder("hex_codec")'
-           '(b"02656c6c6f")[0].decode("utf-8"))')
+    with raises(NotValid):
+        valid_string(codecs.getdecoder("hex_codec")(b"02656c6c6f")[0].decode("utf-8"))
 
 
 def test_valid_anyuri():
@@ -102,7 +108,8 @@ def test_valid_instance():
     response.status = samlp.Status()
     response.assertion.append(saml.Assertion())
 
-    raises(MustValueError, 'valid_instance(response)')
+    with raises(MustValueError):
+        valid_instance(response)
 
 
 def test_valid_anytype():

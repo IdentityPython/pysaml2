@@ -9,8 +9,15 @@ from saml2.mdbcache import Cache
 from saml2.time_util import in_a_while, str_to_time
 from pytest import raises
 
-SESSION_INFO_PATTERN = {"ava":{}, "came from":"", "not_on_or_after":0,
-                    "issuer":"", "session_id":-1}
+
+SESSION_INFO_PATTERN = {
+    "ava": {},
+    "came from": "",
+    "not_on_or_after": 0,
+    "issuer": "",
+    "session_id": -1
+}
+
 
 @pytest.mark.mongo
 class TestMongoDBCache():
@@ -46,7 +53,9 @@ class TestMongoDBCache():
                             not_on_or_after)
             time.sleep(2)
 
-            raises(ToOld, 'self.cache.get("1235", "abcd")')
+            with raises(ToOld):
+                self.cache.get("1235", "abcd")
+
             info = self.cache.get("1235", "abcd", False)
             assert info != {}
 

@@ -7,7 +7,6 @@ from saml2.mdstore import MetadataStore, name
 
 from saml2 import BINDING_HTTP_REDIRECT, BINDING_SOAP, BINDING_HTTP_POST
 from saml2.config import SPConfig, IdPConfig, Config
-from py.test import raises
 
 from saml2 import root_logger
 

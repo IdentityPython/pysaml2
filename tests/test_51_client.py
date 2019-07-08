@@ -1552,10 +1552,12 @@ class TestClient:
         response = create_authn_response(**kwargs)
 
         set_client_want(True, True, True)
-        raises(SignatureError, parse_authn_response, response)
+        with raises(SignatureError):
+            parse_authn_response(response)
 
         set_client_want(True, True, False)
-        raises(SignatureError, parse_authn_response, response)
+        with raises(SignatureError):
+            parse_authn_response(response)
 
         set_client_want(True, False, True)
         parse_authn_response(response)
@@ -1564,10 +1566,12 @@ class TestClient:
         parse_authn_response(response)
 
         set_client_want(False, True, True)
-        raises(SignatureError, parse_authn_response, response)
+        with raises(SignatureError):
+            parse_authn_response(response)
 
         set_client_want(False, True, False)
-        raises(SignatureError, parse_authn_response, response)
+        with raises(SignatureError):
+            parse_authn_response(response)
 
         set_client_want(False, False, True)
         parse_authn_response(response)
@@ -1581,16 +1585,20 @@ class TestClient:
         response = create_authn_response(**kwargs)
 
         set_client_want(True, True, True)
-        raises(SignatureError, parse_authn_response, response)
+        with raises(SignatureError):
+            parse_authn_response(response)
 
         set_client_want(True, True, False)
-        raises(SignatureError, parse_authn_response, response)
+        with raises(SignatureError):
+            parse_authn_response(response)
 
         set_client_want(True, False, True)
-        raises(SignatureError, parse_authn_response, response)
+        with raises(SignatureError):
+            parse_authn_response(response)
 
         set_client_want(True, False, False)
-        raises(SignatureError, parse_authn_response, response)
+        with raises(SignatureError):
+            parse_authn_response(response)
 
         set_client_want(False, True, True)
         parse_authn_response(response)
@@ -1639,25 +1647,32 @@ class TestClient:
         response = create_authn_response(**kwargs)
 
         set_client_want(True, True, True)
-        raises(SignatureError, parse_authn_response, response)
+        with raises(SignatureError):
+            parse_authn_response(response)
 
         set_client_want(True, True, False)
-        raises(SignatureError, parse_authn_response, response)
+        with raises(SignatureError):
+            parse_authn_response(response)
 
         set_client_want(True, False, True)
-        raises(SignatureError, parse_authn_response, response)
+        with raises(SignatureError):
+            parse_authn_response(response)
 
         set_client_want(True, False, False)
-        raises(SignatureError, parse_authn_response, response)
+        with raises(SignatureError):
+            parse_authn_response(response)
 
         set_client_want(False, True, True)
-        raises(SignatureError, parse_authn_response, response)
+        with raises(SignatureError):
+            parse_authn_response(response)
 
         set_client_want(False, True, False)
-        raises(SignatureError, parse_authn_response, response)
+        with raises(SignatureError):
+            parse_authn_response(response)
 
         set_client_want(False, False, True)
-        raises(SigverError, parse_authn_response, response)
+        with raises(SigverError):
+            parse_authn_response(response)
 
         set_client_want(False, False, False)
         parse_authn_response(response)

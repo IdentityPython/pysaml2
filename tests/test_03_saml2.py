@@ -7,7 +7,7 @@ from saml2.saml import NameID, Issuer, SubjectLocality, AuthnContextClassRef
 from saml2.saml import SubjectConfirmationData, SubjectConfirmation
 from saml2.saml import Attribute
 
-from py.test import raises
+from pytest import raises
 import saml2_data
 
 try:
@@ -28,7 +28,7 @@ ITEMS = {
 </NameID>
 """, """<?xml version="1.0" encoding="utf-8"?>
 <NameID xmlns="urn:oasis:names:tc:SAML:2.0:assertion"
-  SPNameQualifier="https://foo.example.com/sp" 
+  SPNameQualifier="https://foo.example.com/sp"
   Format="urn:oasis:names:tc:SAML:2.0:nameid-format:transient">_1632879f09d08ea5ede2dc667cbed7e429ebc4335c</NameID>
 """, """<?xml version="1.0" encoding="utf-8"?>
 <NameID xmlns="urn:oasis:names:tc:SAML:2.0:assertion"
@@ -48,9 +48,9 @@ SPNameQualifier="http://auth.example.com/saml/metadata">test
     SubjectConfirmationData:
         """<?xml version="1.0" encoding="utf-8"?>
 <SubjectConfirmationData xmlns="urn:oasis:names:tc:SAML:2.0:assertion"
-InResponseTo="_1683146e27983964fbe7bf8f08961108d166a652e5" 
-NotOnOrAfter="2010-02-18T13:52:13.959Z" 
-NotBefore="2010-01-16T12:00:00Z" 
+InResponseTo="_1683146e27983964fbe7bf8f08961108d166a652e5"
+NotOnOrAfter="2010-02-18T13:52:13.959Z"
+NotBefore="2010-01-16T12:00:00Z"
 Recipient="http://192.168.0.10/saml/sp" />""",
     SubjectConfirmation:
         """<?xml version="1.0" encoding="utf-8"?>
@@ -176,7 +176,7 @@ def test_create_class_from_xml_string_xxe():
     ]>
     <lolz>&lol1;</lolz>
     """
-    with raises(EntitiesForbidden) as err:
+    with raises(EntitiesForbidden):
         create_class_from_xml_string(NameID, xml)
 
 
@@ -207,7 +207,7 @@ def test_ee_2():
 def test_ee_3():
     ee = saml2.extension_element_from_string(
         """<?xml version='1.0' encoding='UTF-8'?>
-        <foo xmlns="urn:mace:example.com:saml:ns" 
+        <foo xmlns="urn:mace:example.com:saml:ns"
         id="xyz">bar</foo>""")
     assert ee != None
     print(ee.__dict__)

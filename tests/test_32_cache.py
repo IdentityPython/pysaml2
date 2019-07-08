@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 
 import time
-import py
+
+from pytest import raises
+
 from saml2.saml import NameID, NAMEID_FORMAT_TRANSIENT
 from saml2.cache import Cache
 from saml2.time_util import in_a_while, str_to_time
 from saml2.ident import code
+
 
 SESSION_INFO_PATTERN = {"ava": {}, "came from": "", "not_on_or_after": 0,
                         "issuer": "", "session_id": -1}
@@ -64,7 +67,8 @@ class TestClass:
 
     def test_entities(self):
         assert _eq(self.cache.entities(nid[0]), ["abcd", "bcde"])
-        py.test.raises(Exception, "self.cache.entities('6666')")
+        with raises(Exception):
+            self.cache.entities('6666')
 
     def test_remove_info(self):
         self.cache.reset(nid[0], "bcde")

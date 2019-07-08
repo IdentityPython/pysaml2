@@ -19,7 +19,7 @@ from saml2 import xmldsig as ds
 
 from saml2 import saml
 
-from py.test import raises
+from pytest import raises
 
 from saml2.saml import Issuer
 from saml2.saml import Attribute
