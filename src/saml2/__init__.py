@@ -46,9 +46,27 @@ __version__ = str(saml2.version.version)
 root_logger = logging.getLogger(__name__)
 root_logger.level = logging.NOTSET
 
+
 NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:assertion'
 # TEMPLATE = '{urn:oasis:names:tc:SAML:2.0:assertion}%s'
 # XSI_NAMESPACE = 'http://www.w3.org/2001/XMLSchema-instance'
+
+# spaceone's https://github.com/IdentityPython/pysaml2/pull/326
+SAMLP_NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:protocol'
+XSI_NAMESPACE = 'http://www.w3.org/2001/XMLSchema-instance'
+XS_NAMESPACE = 'http://www.w3.org/2001/XMLSchema'
+DS_NAMESPACE = 'http://www.w3.org/2000/09/xmldsig#'
+MD_NAMESPACE = "urn:oasis:names:tc:SAML:2.0:metadata"
+MDUI_NAMESPACE = "urn:oasis:names:tc:SAML:metadata:ui"
+DEFAULT_NS_PREFIXES = {'saml': NAMESPACE, 'samlp': SAMLP_NAMESPACE,
+                       'ds': DS_NAMESPACE, 'xsi': XSI_NAMESPACE,
+                       'xs': XS_NAMESPACE,
+                       'mdui': MDUI_NAMESPACE,
+                       'md': MD_NAMESPACE,
+                       # 'alg': TODO: algsupport.DIGEST_METHODS|SIGNING_METHODS shoulb be moved before mapping them here
+                       # TODO: <ns1:EntityAttributes>
+                       }
+
 
 NAMEID_FORMAT_EMAILADDRESS = (
     "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress")
@@ -687,7 +705,7 @@ class SamlBase(ExtensionContainer):
 
         return ElementTree.tostring(elem, encoding="UTF-8")
 
-    def to_string(self, nspair=None):
+    def to_string(self, nspair=DEFAULT_NS_PREFIXES):
         """Converts the Saml object to a string containing XML.
 
         :param nspair: A dictionary of prefixes and uris to use when
