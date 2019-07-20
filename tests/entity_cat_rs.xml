@@ -1,33 +1,33 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<ns0:EntityDescriptor xmlns:ns0="urn:oasis:names:tc:SAML:2.0:metadata"
+<md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata"
                       xmlns:xs="http://www.w3.org/2001/XMLSchema"
-                      xmlns:ns1="urn:oasis:names:tc:SAML:metadata:attribute"
-                      xmlns:ns2="urn:oasis:names:tc:SAML:2.0:assertion"
-                      xmlns:ns5="http://www.w3.org/2000/09/xmldsig#"
-                      xmlns:ns4="urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol"
+                      xmlns:mdattr="urn:oasis:names:tc:SAML:metadata:attribute"
+                      xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
+                      xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+                      xmlns:idpdisc="urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol"
                       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                       entityID="urn:mace:example.com:saml:roland:sp">
-    <ns0:Extensions>
-        <ns1:EntityAttributes>
-            <ns2:Attribute Name="http://macedir.org/entity-category">
-                <ns2:AttributeValue xsi:type="xs:string">
+    <md:Extensions>
+        <mdattr:EntityAttributes>
+            <saml:Attribute Name="http://macedir.org/entity-category">
+                <saml:AttributeValue xsi:type="xs:string">
                     http://refeds.org/category/research-and-scholarship
-                </ns2:AttributeValue>
-            </ns2:Attribute>
-        </ns1:EntityAttributes>
-    </ns0:Extensions>
-    <ns0:SPSSODescriptor AuthnRequestsSigned="false" WantAssertionsSigned="true"
+                </saml:AttributeValue>
+            </saml:Attribute>
+        </mdattr:EntityAttributes>
+    </md:Extensions>
+    <md:SPSSODescriptor AuthnRequestsSigned="false" WantAssertionsSigned="true"
                          protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
-        <ns0:Extensions>
-            <ns4:DiscoveryResponse
+        <md:Extensions>
+            <idpdisc:DiscoveryResponse
                     Binding="urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol"
                     Location="https://xenosmilus2.umdc.umu.se:8086/disco"
                     index="1"/>
-        </ns0:Extensions>
-        <ns0:KeyDescriptor use="encryption">
-            <ns5:KeyInfo>
-                <ns5:X509Data>
-                    <ns5:X509Certificate>
+        </md:Extensions>
+        <md:KeyDescriptor use="encryption">
+            <ds:KeyInfo>
+                <ds:X509Data>
+                    <ds:X509Certificate>
                         MIIC8jCCAlugAwIBAgIJAJHg2V5J31I8MA0GCSqGSIb3DQEBBQUAMFoxCzAJBgNV
                         BAYTAlNFMQ0wCwYDVQQHEwRVbWVhMRgwFgYDVQQKEw9VbWVhIFVuaXZlcnNpdHkx
                         EDAOBgNVBAsTB0lUIFVuaXQxEDAOBgNVBAMTB1Rlc3QgU1AwHhcNMDkxMDI2MTMz
@@ -44,14 +44,14 @@
                         BQADgYEAMuRwwXRnsiyWzmRikpwinnhTmbooKm5TINPE7A7gSQ710RxioQePPhZO
                         zkM27NnHTrCe2rBVg0EGz7QTd1JIwLPvgoj4VTi/fSha/tXrYUaqc9AqU1kWI4WN
                         +vffBGQ09mo+6CffuFTZYeOhzP/2stAPwCTU4kxEoiy0KpZMANI=
-                    </ns5:X509Certificate>
-                </ns5:X509Data>
-            </ns5:KeyInfo>
-        </ns0:KeyDescriptor>
-        <ns0:KeyDescriptor use="signing">
-            <ns5:KeyInfo>
-                <ns5:X509Data>
-                    <ns5:X509Certificate>
+                    </ds:X509Certificate>
+                </ds:X509Data>
+            </ds:KeyInfo>
+        </md:KeyDescriptor>
+        <md:KeyDescriptor use="signing">
+            <ds:KeyInfo>
+                <ds:X509Data>
+                    <ds:X509Certificate>
                         MIIC8jCCAlugAwIBAgIJAJHg2V5J31I8MA0GCSqGSIb3DQEBBQUAMFoxCzAJBgNV
                         BAYTAlNFMQ0wCwYDVQQHEwRVbWVhMRgwFgYDVQQKEw9VbWVhIFVuaXZlcnNpdHkx
                         EDAOBgNVBAsTB0lUIFVuaXQxEDAOBgNVBAMTB1Rlc3QgU1AwHhcNMDkxMDI2MTMz
@@ -68,17 +68,17 @@
                         BQADgYEAMuRwwXRnsiyWzmRikpwinnhTmbooKm5TINPE7A7gSQ710RxioQePPhZO
                         zkM27NnHTrCe2rBVg0EGz7QTd1JIwLPvgoj4VTi/fSha/tXrYUaqc9AqU1kWI4WN
                         +vffBGQ09mo+6CffuFTZYeOhzP/2stAPwCTU4kxEoiy0KpZMANI=
-                    </ns5:X509Certificate>
-                </ns5:X509Data>
-            </ns5:KeyInfo>
-        </ns0:KeyDescriptor>
-        <ns0:AssertionConsumerService
+                    </ds:X509Certificate>
+                </ds:X509Data>
+            </ds:KeyInfo>
+        </md:KeyDescriptor>
+        <md:AssertionConsumerService
                 Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
                 Location="https://xenosmilus2.umdc.umu.se:8086/acs/sfs/re_nren/redirect"
                 index="1"/>
-        <ns0:AssertionConsumerService
+        <md:AssertionConsumerService
                 Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
                 Location="https://xenosmilus2.umdc.umu.se:8086/acs/sfs/re_nren/post"
                 index="2"/>
-    </ns0:SPSSODescriptor>
-</ns0:EntityDescriptor>
+    </md:SPSSODescriptor>
+</md:EntityDescriptor>

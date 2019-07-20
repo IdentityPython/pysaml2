@@ -1,14 +1,14 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<ns0:EntitiesDescriptor name="urn:mace:example.com:saml:test"
+<md:EntitiesDescriptor name="urn:mace:example.com:saml:test"
                         validUntil="2036-12-04T17:31:07Z"
-                        xmlns:ns0="urn:oasis:names:tc:SAML:2.0:metadata">
-  <ns0:EntityDescriptor entityID="urn:mace:example.com:saml:roland:sp">
-    <ns0:SPSSODescriptor AuthnRequestsSigned="False" WantAssertionsSigned="True"
+                        xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata">
+  <md:EntityDescriptor entityID="urn:mace:example.com:saml:roland:sp">
+    <md:SPSSODescriptor AuthnRequestsSigned="False" WantAssertionsSigned="True"
                          protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
-      <ns0:KeyDescriptor>
-        <ns1:KeyInfo xmlns:ns1="http://www.w3.org/2000/09/xmldsig#">
-          <ns1:X509Data>
-            <ns1:X509Certificate>
+      <md:KeyDescriptor>
+        <saml:KeyInfo xmlns:saml="http://www.w3.org/2000/09/xmldsig#">
+          <saml:X509Data>
+            <saml:X509Certificate>
               MIIC8jCCAlugAwIBAgIJAJHg2V5J31I8MA0GCSqGSIb3DQEBBQUAMFoxCzAJBgNV
               BAYTAlNFMQ0wCwYDVQQHEwRVbWVhMRgwFgYDVQQKEw9VbWVhIFVuaXZlcnNpdHkx
               EDAOBgNVBAsTB0lUIFVuaXQxEDAOBgNVBAMTB1Rlc3QgU1AwHhcNMDkxMDI2MTMz
@@ -25,34 +25,34 @@
               BQADgYEAMuRwwXRnsiyWzmRikpwinnhTmbooKm5TINPE7A7gSQ710RxioQePPhZO
               zkM27NnHTrCe2rBVg0EGz7QTd1JIwLPvgoj4VTi/fSha/tXrYUaqc9AqU1kWI4WN
               +vffBGQ09mo+6CffuFTZYeOhzP/2stAPwCTU4kxEoiy0KpZMANI=
-            </ns1:X509Certificate>
-          </ns1:X509Data>
-        </ns1:KeyInfo>
-      </ns0:KeyDescriptor>
-      <ns0:AssertionConsumerService
+            </saml:X509Certificate>
+          </saml:X509Data>
+        </saml:KeyInfo>
+      </md:KeyDescriptor>
+      <md:AssertionConsumerService
           Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
           Location="http://localhost:8087/" index="0"/>
-    </ns0:SPSSODescriptor>
-    <ns0:Organization>
-      <ns0:OrganizationURL xml:lang="en">http://www.example.com/
-      </ns0:OrganizationURL>
-      <ns0:OrganizationName xml:lang="en">Example Co</ns0:OrganizationName>
-      <ns0:OrganizationDisplayName xml:lang="en">Example Co
-      </ns0:OrganizationDisplayName>
-    </ns0:Organization>
-    <ns0:ContactPerson contactType="technical">
-      <ns0:GivenName>Roland</ns0:GivenName>
-      <ns0:SurName>Hedberg</ns0:SurName>
-      <ns0:EmailAddress>roland.hedberg@example.com</ns0:EmailAddress>
-    </ns0:ContactPerson>
-  </ns0:EntityDescriptor>
-  <ns0:EntityDescriptor entityID="urn:mace:example.com:saml:roland:idp">
-    <ns0:IDPSSODescriptor WantAuthnRequestsSigned="True"
+    </md:SPSSODescriptor>
+    <md:Organization>
+      <md:OrganizationURL xml:lang="en">http://www.example.com/
+      </md:OrganizationURL>
+      <md:OrganizationName xml:lang="en">Example Co</md:OrganizationName>
+      <md:OrganizationDisplayName xml:lang="en">Example Co
+      </md:OrganizationDisplayName>
+    </md:Organization>
+    <md:ContactPerson contactType="technical">
+      <md:GivenName>Roland</md:GivenName>
+      <md:SurName>Hedberg</md:SurName>
+      <md:EmailAddress>roland.hedberg@example.com</md:EmailAddress>
+    </md:ContactPerson>
+  </md:EntityDescriptor>
+  <md:EntityDescriptor entityID="urn:mace:example.com:saml:roland:idp">
+    <md:IDPSSODescriptor WantAuthnRequestsSigned="True"
                           protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
-      <ns0:KeyDescriptor>
-        <ns1:KeyInfo xmlns:ns1="http://www.w3.org/2000/09/xmldsig#">
-          <ns1:X509Data>
-            <ns1:X509Certificate>
+      <md:KeyDescriptor>
+        <saml:KeyInfo xmlns:saml="http://www.w3.org/2000/09/xmldsig#">
+          <saml:X509Data>
+            <saml:X509Certificate>
               MIIC8jCCAlugAwIBAgIJAJHg2V5J31I8MA0GCSqGSIb3DQEBBQUAMFoxCzAJBgNV
               BAYTAlNFMQ0wCwYDVQQHEwRVbWVhMRgwFgYDVQQKEw9VbWVhIFVuaXZlcnNpdHkx
               EDAOBgNVBAsTB0lUIFVuaXQxEDAOBgNVBAMTB1Rlc3QgU1AwHhcNMDkxMDI2MTMz
@@ -69,25 +69,25 @@
               BQADgYEAMuRwwXRnsiyWzmRikpwinnhTmbooKm5TINPE7A7gSQ710RxioQePPhZO
               zkM27NnHTrCe2rBVg0EGz7QTd1JIwLPvgoj4VTi/fSha/tXrYUaqc9AqU1kWI4WN
               +vffBGQ09mo+6CffuFTZYeOhzP/2stAPwCTU4kxEoiy0KpZMANI=
-            </ns1:X509Certificate>
-          </ns1:X509Data>
-        </ns1:KeyInfo>
-      </ns0:KeyDescriptor>
-      <ns0:SingleSignOnService
+            </saml:X509Certificate>
+          </saml:X509Data>
+        </saml:KeyInfo>
+      </md:KeyDescriptor>
+      <md:SingleSignOnService
           Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
           Location="http://localhost:8088/sso/"/>
-    </ns0:IDPSSODescriptor>
-    <ns0:Organization>
-      <ns0:OrganizationURL xml:lang="en">http://www.example.com/
-      </ns0:OrganizationURL>
-      <ns0:OrganizationName xml:lang="en">Example Co</ns0:OrganizationName>
-      <ns0:OrganizationDisplayName xml:lang="en">Example Co
-      </ns0:OrganizationDisplayName>
-    </ns0:Organization>
-    <ns0:ContactPerson contactType="technical">
-      <ns0:GivenName>Roland</ns0:GivenName>
-      <ns0:SurName>Hedberg</ns0:SurName>
-      <ns0:EmailAddress>roland.hedberg@example.com</ns0:EmailAddress>
-    </ns0:ContactPerson>
-  </ns0:EntityDescriptor>
-</ns0:EntitiesDescriptor>
+    </md:IDPSSODescriptor>
+    <md:Organization>
+      <md:OrganizationURL xml:lang="en">http://www.example.com/
+      </md:OrganizationURL>
+      <md:OrganizationName xml:lang="en">Example Co</md:OrganizationName>
+      <md:OrganizationDisplayName xml:lang="en">Example Co
+      </md:OrganizationDisplayName>
+    </md:Organization>
+    <md:ContactPerson contactType="technical">
+      <md:GivenName>Roland</md:GivenName>
+      <md:SurName>Hedberg</md:SurName>
+      <md:EmailAddress>roland.hedberg@example.com</md:EmailAddress>
+    </md:ContactPerson>
+  </md:EntityDescriptor>
+</md:EntitiesDescriptor>

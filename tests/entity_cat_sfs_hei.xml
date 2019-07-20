@@ -1,34 +1,34 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<ns0:EntityDescriptor xmlns:ns0="urn:oasis:names:tc:SAML:2.0:metadata"
-                      xmlns:ns1="urn:oasis:names:tc:SAML:metadata:attribute"
-                      xmlns:ns2="urn:oasis:names:tc:SAML:2.0:assertion"
-                      xmlns:ns4="urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol"
-                      xmlns:ns5="http://www.w3.org/2000/09/xmldsig#"
+<md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata"
+                      xmlns:mdattr="urn:oasis:names:tc:SAML:metadata:attribute"
+                      xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
+                      xmlns:idpdisc="urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol"
+                      xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
                       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                       entityID="urn:mace:example.com:saml:roland:sp">
-    <ns0:Extensions>
-        <ns1:EntityAttributes>
-            <ns2:Attribute Name="http://macedir.org/entity-category">
-                <ns2:AttributeValue xsi:type="xs:string">
+    <md:Extensions>
+        <mdattr:EntityAttributes>
+            <saml:Attribute Name="http://macedir.org/entity-category">
+                <saml:AttributeValue xsi:type="xs:string">
                     http://www.swamid.se/category/sfs-1993-1153
-                </ns2:AttributeValue>
-                <ns2:AttributeValue xsi:type="xs:string">
+                </saml:AttributeValue>
+                <saml:AttributeValue xsi:type="xs:string">
                     http://www.swamid.se/category/hei-service
-                </ns2:AttributeValue>
-            </ns2:Attribute>
-        </ns1:EntityAttributes>
-    </ns0:Extensions>
-    <ns0:SPSSODescriptor AuthnRequestsSigned="false" WantAssertionsSigned="true"
+                </saml:AttributeValue>
+            </saml:Attribute>
+        </mdattr:EntityAttributes>
+    </md:Extensions>
+    <md:SPSSODescriptor AuthnRequestsSigned="false" WantAssertionsSigned="true"
                          protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
-        <ns0:Extensions>
-            <ns4:DiscoveryResponse
+        <md:Extensions>
+            <idpdisc:DiscoveryResponse
                     Binding="urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol"
                     Location="http://lingon.catalogix.se:8087/disco" index="1"/>
-        </ns0:Extensions>
-        <ns0:KeyDescriptor use="encryption">
-            <ns5:KeyInfo>
-                <ns5:X509Data>
-                    <ns5:X509Certificate>
+        </md:Extensions>
+        <md:KeyDescriptor use="encryption">
+            <ds:KeyInfo>
+                <ds:X509Data>
+                    <ds:X509Certificate>
                         MIICsDCCAhmgAwIBAgIJAJrzqSSwmDY9MA0GCSqGSIb3DQEBBQUAMEUxCzAJBgNV
                         BAYTAkFVMRMwEQYDVQQIEwpTb21lLVN0YXRlMSEwHwYDVQQKExhJbnRlcm5ldCBX
                         aWRnaXRzIFB0eSBMdGQwHhcNMDkxMDA2MTk0OTQxWhcNMDkxMTA1MTk0OTQxWjBF
@@ -44,14 +44,14 @@
                         h3qh+3+JAk8HbGBW+cbX6KBCAw/mzU8flK25vnWwXS3dv2FF3Aod0/S7AWNfKib5
                         U/SA9nJaz/mWeF9S0farz9AQFc8/NSzAzaVq7YbM4F6f6N2FRl7GikdXRCed45j6
                         mrPzGzk3ECbupFnqyREH3+ZPSdk=
-                    </ns5:X509Certificate>
-                </ns5:X509Data>
-            </ns5:KeyInfo>
-        </ns0:KeyDescriptor>
-        <ns0:KeyDescriptor use="signing">
-            <ns5:KeyInfo>
-                <ns5:X509Data>
-                    <ns5:X509Certificate>
+                    </ds:X509Certificate>
+                </ds:X509Data>
+            </ds:KeyInfo>
+        </md:KeyDescriptor>
+        <md:KeyDescriptor use="signing">
+            <ds:KeyInfo>
+                <ds:X509Data>
+                    <ds:X509Certificate>
                         MIICsDCCAhmgAwIBAgIJAJrzqSSwmDY9MA0GCSqGSIb3DQEBBQUAMEUxCzAJBgNV
                         BAYTAkFVMRMwEQYDVQQIEwpTb21lLVN0YXRlMSEwHwYDVQQKExhJbnRlcm5ldCBX
                         aWRnaXRzIFB0eSBMdGQwHhcNMDkxMDA2MTk0OTQxWhcNMDkxMTA1MTk0OTQxWjBF
@@ -67,54 +67,54 @@
                         h3qh+3+JAk8HbGBW+cbX6KBCAw/mzU8flK25vnWwXS3dv2FF3Aod0/S7AWNfKib5
                         U/SA9nJaz/mWeF9S0farz9AQFc8/NSzAzaVq7YbM4F6f6N2FRl7GikdXRCed45j6
                         mrPzGzk3ECbupFnqyREH3+ZPSdk=
-                    </ns5:X509Certificate>
-                </ns5:X509Data>
-            </ns5:KeyInfo>
-        </ns0:KeyDescriptor>
-        <ns0:ArtifactResolutionService
+                    </ds:X509Certificate>
+                </ds:X509Data>
+            </ds:KeyInfo>
+        </md:KeyDescriptor>
+        <md:ArtifactResolutionService
                 Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP"
                 Location="http://lingon.catalogix.se:8087/ars" index="1"/>
-        <ns0:SingleLogoutService
+        <md:SingleLogoutService
                 Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP"
                 Location="http://lingon.catalogix.se:8087/sls"/>
-        <ns0:ManageNameIDService
+        <md:ManageNameIDService
                 Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP"
                 Location="http://lingon.catalogix.se:8087/mni/soap"/>
-        <ns0:ManageNameIDService
+        <md:ManageNameIDService
                 Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
                 Location="http://lingon.catalogix.se:8087/mni/post"/>
-        <ns0:ManageNameIDService
+        <md:ManageNameIDService
                 Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
                 Location="http://lingon.catalogix.se:8087/mni/redirect"/>
-        <ns0:ManageNameIDService
+        <md:ManageNameIDService
                 Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact"
                 Location="http://lingon.catalogix.se:8087/mni/art"/>
-        <ns0:NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient
-        </ns0:NameIDFormat>
-        <ns0:NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:persistent
-        </ns0:NameIDFormat>
-        <ns0:AssertionConsumerService
+        <md:NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient
+        </md:NameIDFormat>
+        <md:NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:persistent
+        </md:NameIDFormat>
+        <md:AssertionConsumerService
                 Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
                 Location="http://lingon.catalogix.se:8087/" index="1"/>
-        <ns0:AssertionConsumerService
+        <md:AssertionConsumerService
                 Binding="urn:oasis:names:tc:SAML:2.0:bindings:PAOS"
                 Location="http://lingon.catalogix.se:8087/paos" index="2"/>
-        <ns0:AssertionConsumerService
+        <md:AssertionConsumerService
                 Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
                 Location="http://lingon.catalogix.se:8087/redirect" index="3"/>
-    </ns0:SPSSODescriptor>
-    <ns0:Organization>
-        <ns0:OrganizationName xml:lang="se">AB Exempel</ns0:OrganizationName>
-        <ns0:OrganizationDisplayName xml:lang="se">AB Exempel
-        </ns0:OrganizationDisplayName>
-        <ns0:OrganizationURL xml:lang="en">http://www.example.org
-        </ns0:OrganizationURL>
-    </ns0:Organization>
-    <ns0:ContactPerson contactType="technical">
-        <ns0:GivenName>Roland</ns0:GivenName>
-        <ns0:SurName>Hedberg</ns0:SurName>
-        <ns0:EmailAddress>tech@eample.com</ns0:EmailAddress>
-        <ns0:EmailAddress>tech@example.org</ns0:EmailAddress>
-        <ns0:TelephoneNumber>+46 70 100 0000</ns0:TelephoneNumber>
-    </ns0:ContactPerson>
-</ns0:EntityDescriptor>
+    </md:SPSSODescriptor>
+    <md:Organization>
+        <md:OrganizationName xml:lang="se">AB Exempel</md:OrganizationName>
+        <md:OrganizationDisplayName xml:lang="se">AB Exempel
+        </md:OrganizationDisplayName>
+        <md:OrganizationURL xml:lang="en">http://www.example.org
+        </md:OrganizationURL>
+    </md:Organization>
+    <md:ContactPerson contactType="technical">
+        <md:GivenName>Roland</md:GivenName>
+        <md:SurName>Hedberg</md:SurName>
+        <md:EmailAddress>tech@eample.com</md:EmailAddress>
+        <md:EmailAddress>tech@example.org</md:EmailAddress>
+        <md:TelephoneNumber>+46 70 100 0000</md:TelephoneNumber>
+    </md:ContactPerson>
+</md:EntityDescriptor>

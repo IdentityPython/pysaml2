@@ -139,14 +139,14 @@ class TestAC():
 
     def test_to_local_name_from_unspecified(self):
         _xml = """<?xml version='1.0' encoding='UTF-8'?>
-        <ns0:AttributeStatement xmlns:ns0="urn:oasis:names:tc:SAML:2.0:assertion">
-            <ns0:Attribute
+        <saml:AttributeStatement xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion">
+            <saml:Attribute
                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                 Name="EmailAddress"
                 NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:unspecified">
-                <ns0:AttributeValue xsi:type="xs:string">foo@bar.com</ns0:AttributeValue>
-            </ns0:Attribute>
-        </ns0:AttributeStatement>
+                <saml:AttributeValue xsi:type="xs:string">foo@bar.com</saml:AttributeValue>
+            </saml:Attribute>
+        </saml:AttributeStatement>
         """
 
         attr = attribute_statement_from_string(_xml)
@@ -265,15 +265,15 @@ def test_noop_attribute_conversion():
 class BuilderAVA():
     def __init__(self, name, friendly_name, name_format):
         template = """<?xml version='1.0' encoding='UTF-8'?>
-        <ns0:Attribute xmlns:ns0="urn:oasis:names:tc:SAML:2.0:assertion"
+        <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             Name="{attr_name}"
             FriendlyName="{attr_friendly_name}"
             NameFormat="{attr_name_format}">
-            <ns0:AttributeValue xsi:nil="true" xsi:type="xs:string">
+            <saml:AttributeValue xsi:nil="true" xsi:type="xs:string">
                 uu.se
-            </ns0:AttributeValue>
-        </ns0:Attribute>
+            </saml:AttributeValue>
+        </saml:Attribute>
         """
 
         self.ava = template.format(

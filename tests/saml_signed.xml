@@ -1,30 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ns0:Response xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol" Destination="http://xenosmilus.umdc.umu.se:8087/login" ID="_5271694c3be6883137377fb076355c4bc97f28b3c1" InResponseTo="bahigehogffohiphlfmplepdpcohkhhmheppcdie" IssueInstant="2009-09-25T18:12:39Z" Version="2.0">
-  <ns1:Issuer xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion">http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php</ns1:Issuer>
-  <ns0:Status>
-    <ns0:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>
-  </ns0:Status>
-  <ns1:Assertion xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion" ID="pfx9e022535-4b38-cc7f-41ec-9a01bcd2936d" IssueInstant="2009-09-25T18:12:39Z" Version="2.0">
-    <ns1:Issuer>http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php</ns1:Issuer>
-    <ns2:Signature xmlns:ns2="http://www.w3.org/2000/09/xmldsig#">
-      <ns2:SignedInfo>
-        <ns2:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>
-        <ns2:SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"/>
-        <ns2:Reference URI="#pfx9e022535-4b38-cc7f-41ec-9a01bcd2936d">
-          <ns2:Transforms>
-            <ns2:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/>
-            <ns2:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>
-          </ns2:Transforms>
-          <ns2:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"/>
-          <ns2:DigestValue>Ij7uELbswQDq4HN6MDTFlF39Z84=</ns2:DigestValue>
-        </ns2:Reference>
-      </ns2:SignedInfo>
-      <ns2:SignatureValue>UUs1oTjqM8hgDVIrSVRPQfT/KLXar0EfXEQ2OiR+BlYzAh/3q2DQtqWHhlkP9ehs
+<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" Destination="http://xenosmilus.umdc.umu.se:8087/login" ID="_5271694c3be6883137377fb076355c4bc97f28b3c1" InResponseTo="bahigehogffohiphlfmplepdpcohkhhmheppcdie" IssueInstant="2009-09-25T18:12:39Z" Version="2.0">
+  <saml:Issuer xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion">http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php</saml:Issuer>
+  <samlp:Status>
+    <samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>
+  </samlp:Status>
+  <saml:Assertion xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" ID="pfx9e022535-4b38-cc7f-41ec-9a01bcd2936d" IssueInstant="2009-09-25T18:12:39Z" Version="2.0">
+    <saml:Issuer>http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php</saml:Issuer>
+    <xsi:Signature xmlns:xsi="http://www.w3.org/2000/09/xmldsig#">
+      <xsi:SignedInfo>
+        <xsi:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>
+        <xsi:SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"/>
+        <xsi:Reference URI="#pfx9e022535-4b38-cc7f-41ec-9a01bcd2936d">
+          <xsi:Transforms>
+            <xsi:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/>
+            <xsi:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>
+          </xsi:Transforms>
+          <xsi:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"/>
+          <xsi:DigestValue>Ij7uELbswQDq4HN6MDTFlF39Z84=</xsi:DigestValue>
+        </xsi:Reference>
+      </xsi:SignedInfo>
+      <xsi:SignatureValue>UUs1oTjqM8hgDVIrSVRPQfT/KLXar0EfXEQ2OiR+BlYzAh/3q2DQtqWHhlkP9ehs
 cncSdBB3t1mZhD2v5B5qNwnsNSuHVwEEPe3tSJ+yICVN7REXPXlm0sOsU2zSooEy
-OmuMZY0K6ERY4fNVnGEAoUZeieehC6/ljmfk14xCAlE=</ns2:SignatureValue>
-      <ns2:KeyInfo>
-        <ns2:X509Data>
-          <ns2:X509Certificate>
+OmuMZY0K6ERY4fNVnGEAoUZeieehC6/ljmfk14xCAlE=</xsi:SignatureValue>
+      <xsi:KeyInfo>
+        <xsi:X509Data>
+          <xsi:X509Certificate>
             MIICsDCCAhmgAwIBAgIJAJrzqSSwmDY9MA0GCSqGSIb3DQEBBQUAMEUxCzAJBgNV
             BAYTAkFVMRMwEQYDVQQIEwpTb21lLVN0YXRlMSEwHwYDVQQKExhJbnRlcm5ldCBX
             aWRnaXRzIFB0eSBMdGQwHhcNMDkxMDA2MTk0OTQxWhcNMDkxMTA1MTk0OTQxWjBF
@@ -40,42 +40,42 @@ OmuMZY0K6ERY4fNVnGEAoUZeieehC6/ljmfk14xCAlE=</ns2:SignatureValue>
             h3qh+3+JAk8HbGBW+cbX6KBCAw/mzU8flK25vnWwXS3dv2FF3Aod0/S7AWNfKib5
             U/SA9nJaz/mWeF9S0farz9AQFc8/NSzAzaVq7YbM4F6f6N2FRl7GikdXRCed45j6
             mrPzGzk3ECbupFnqyREH3+ZPSdk=
-          </ns2:X509Certificate>
-        </ns2:X509Data>
-      </ns2:KeyInfo>
-    </ns2:Signature>
-    <ns1:Subject>               
-      <ns1:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:transient" SPNameQualifier="xenosmilus.umdc.umu.se">
+          </xsi:X509Certificate>
+        </xsi:X509Data>
+      </xsi:KeyInfo>
+    </xsi:Signature>
+    <saml:Subject>               
+      <saml:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:transient" SPNameQualifier="xenosmilus.umdc.umu.se">
         _cddc88563d433f556d4cc70c3162deabddea3b5019
-      </ns1:NameID>
-      <ns1:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
-        <ns1:SubjectConfirmationData InResponseTo="bahigehogffohiphlfmplepdpcohkhhmheppcdie" NotOnOrAfter="2009-09-25T18:17:39Z" Recipient="http://xenosmilus.umdc.umu.se:8087/login"/>
-      </ns1:SubjectConfirmation>
-    </ns1:Subject>
-    <ns1:Conditions NotBefore="2009-09-25T18:12:09Z" NotOnOrAfter="2009-09-26T02:12:39Z">
-      <ns1:AudienceRestriction>
-        <ns1:Audience>xenosmilus.umdc.umu.se</ns1:Audience>
-      </ns1:AudienceRestriction>
-    </ns1:Conditions>
-    <ns1:AuthnStatement AuthnInstant="2009-09-25T18:12:39Z" SessionIndex="_788db107b9bb1b6ab94f00deebbfe3d92c999b3041">
-      <ns1:AuthnContext>                      
-        <ns1:AuthnContextClassRef>urn:oasis:names:tc:SAML:2.0:ac:classes:Password</ns1:AuthnContextClassRef>
-      </ns1:AuthnContext>
-    </ns1:AuthnStatement>
-    <ns1:AttributeStatement>
-      <ns1:Attribute Name="uid" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic">
-        <ns1:AttributeValue xmlns:ns2="http://www.w3.org/2001/XMLSchema-instance" ns2:type="xs:string">
+      </saml:NameID>
+      <saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
+        <saml:SubjectConfirmationData InResponseTo="bahigehogffohiphlfmplepdpcohkhhmheppcdie" NotOnOrAfter="2009-09-25T18:17:39Z" Recipient="http://xenosmilus.umdc.umu.se:8087/login"/>
+      </saml:SubjectConfirmation>
+    </saml:Subject>
+    <saml:Conditions NotBefore="2009-09-25T18:12:09Z" NotOnOrAfter="2009-09-26T02:12:39Z">
+      <saml:AudienceRestriction>
+        <saml:Audience>xenosmilus.umdc.umu.se</saml:Audience>
+      </saml:AudienceRestriction>
+    </saml:Conditions>
+    <saml:AuthnStatement AuthnInstant="2009-09-25T18:12:39Z" SessionIndex="_788db107b9bb1b6ab94f00deebbfe3d92c999b3041">
+      <saml:AuthnContext>                      
+        <saml:AuthnContextClassRef>urn:oasis:names:tc:SAML:2.0:ac:classes:Password</saml:AuthnContextClassRef>
+      </saml:AuthnContext>
+    </saml:AuthnStatement>
+    <saml:AttributeStatement>
+      <saml:Attribute Name="uid" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic">
+        <saml:AttributeValue xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:string">
           student
-        </ns1:AttributeValue>
-      </ns1:Attribute>
-      <ns1:Attribute Name="eduPersonAffiliation" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic">
-        <ns1:AttributeValue xmlns:ns2="http://www.w3.org/2001/XMLSchema-instance" ns2:type="xs:string">
+        </saml:AttributeValue>
+      </saml:Attribute>
+      <saml:Attribute Name="eduPersonAffiliation" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic">
+        <saml:AttributeValue xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:string">
           member
-        </ns1:AttributeValue>
-        <ns1:AttributeValue xmlns:ns2="http://www.w3.org/2001/XMLSchema-instance" ns2:type="xs:string">
+        </saml:AttributeValue>
+        <saml:AttributeValue xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:string">
           student
-        </ns1:AttributeValue>
-      </ns1:Attribute>
-    </ns1:AttributeStatement>
-  </ns1:Assertion>
-</ns0:Response>
+        </saml:AttributeValue>
+      </saml:Attribute>
+    </saml:AttributeStatement>
+  </saml:Assertion>
+</samlp:Response>

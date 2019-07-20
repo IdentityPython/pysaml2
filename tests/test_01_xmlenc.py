@@ -3,11 +3,11 @@ import saml2.xmlenc as xenc
 from saml2 import xmldsig
 
 data1 = """<?xml version='1.0' encoding='UTF-8'?>
-<ns0:EncryptedData MimeType="text/xml" xmlns:ns0="http://www.w3.org/2001/04/xmlenc#">
-    <ns0:CipherData>
-        <ns0:CipherValue>A23B45C56</ns0:CipherValue>
-    </ns0:CipherData>
-</ns0:EncryptedData>"""
+<xenc:EncryptedData MimeType="text/xml" xmlns:xenc="http://www.w3.org/2001/04/xmlenc#">
+    <xenc:CipherData>
+        <xenc:CipherValue>A23B45C56</xenc:CipherValue>
+    </xenc:CipherData>
+</xenc:EncryptedData>"""
 
 
 def test_1():
@@ -20,17 +20,17 @@ def test_1():
     assert cd.cipher_value.text == "A23B45C56"
     
 data2 = """<?xml version='1.0' encoding='UTF-8'?>
-<ns0:EncryptedData 
+<xenc:EncryptedData 
     Type="http://www.w3.org/2001/04/xmlenc#Element" 
-    xmlns:ns0="http://www.w3.org/2001/04/xmlenc#">
-    <ns0:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#tripledes-cbc" />
-    <ns1:KeyInfo xmlns:ns1="http://www.w3.org/2000/09/xmldsig#">
-        <ns1:KeyName>John Smith</ns1:KeyName>
-    </ns1:KeyInfo>
-    <ns0:CipherData>
-        <ns0:CipherValue>DEADBEEF</ns0:CipherValue>
-    </ns0:CipherData>
-</ns0:EncryptedData>"""
+    xmlns:xenc="http://www.w3.org/2001/04/xmlenc#">
+    <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#tripledes-cbc" />
+    <ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+        <ds:KeyName>John Smith</ds:KeyName>
+    </ds:KeyInfo>
+    <xenc:CipherData>
+        <xenc:CipherValue>DEADBEEF</xenc:CipherValue>
+    </xenc:CipherData>
+</xenc:EncryptedData>"""
 
 # data2 = """<EncryptedData xmlns='http://www.w3.org/2001/04/xmlenc#'
 #         Type='http://www.w3.org/2001/04/xmlenc#Element'>
@@ -59,19 +59,19 @@ def test_2():
     assert cd.cipher_value.text == "DEADBEEF"
 
 data3 = """<?xml version='1.0' encoding='UTF-8'?>
-<ns0:EncryptedData 
+<xenc:EncryptedData 
     Id="ED" 
-    xmlns:ns0="http://www.w3.org/2001/04/xmlenc#">
-    <ns0:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc" />
-    <ns1:KeyInfo xmlns:ns1="http://www.w3.org/2000/09/xmldsig#">
-        <ns1:RetrievalMethod URI='#EK'
+    xmlns:xenc="http://www.w3.org/2001/04/xmlenc#">
+    <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc" />
+    <ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+        <ds:RetrievalMethod URI='#EK'
             Type="http://www.w3.org/2001/04/xmlenc#EncryptedKey"/>
-        <ns1:KeyName>Sally Doe</ns1:KeyName>
-    </ns1:KeyInfo>
-    <ns0:CipherData>
-        <ns0:CipherValue>DEADBEEF</ns0:CipherValue>
-    </ns0:CipherData>
-</ns0:EncryptedData>"""
+        <ds:KeyName>Sally Doe</ds:KeyName>
+    </ds:KeyInfo>
+    <xenc:CipherData>
+        <xenc:CipherValue>DEADBEEF</xenc:CipherValue>
+    </xenc:CipherData>
+</xenc:EncryptedData>"""
 
 def test_3():
     ed = xenc.encrypted_data_from_string(data3)
@@ -93,21 +93,21 @@ def test_3():
     assert cd.cipher_value.text == "DEADBEEF"
 
 data4 = """<?xml version='1.0' encoding='UTF-8'?>
-<ns0:EncryptedKey 
+<xenc:EncryptedKey 
     Id="EK" 
-    xmlns:ns0="http://www.w3.org/2001/04/xmlenc#">
-    <ns0:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#rsa-1_5" />
-    <ns1:KeyInfo xmlns:ns1="http://www.w3.org/2000/09/xmldsig#">
-        <ns1:KeyName>John Smith</ns1:KeyName>
-    </ns1:KeyInfo>
-    <ns0:CipherData>
-        <ns0:CipherValue>xyzabc</ns0:CipherValue>
-    </ns0:CipherData>
-    <ns0:ReferenceList>
-        <ns0:DataReference URI='#ED'/>
-    </ns0:ReferenceList>
-    <ns0:CarriedKeyName>Sally Doe</ns0:CarriedKeyName>
-</ns0:EncryptedKey>"""
+    xmlns:xenc="http://www.w3.org/2001/04/xmlenc#">
+    <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#rsa-1_5" />
+    <ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+        <ds:KeyName>John Smith</ds:KeyName>
+    </ds:KeyInfo>
+    <xenc:CipherData>
+        <xenc:CipherValue>xyzabc</xenc:CipherValue>
+    </xenc:CipherData>
+    <xenc:ReferenceList>
+        <xenc:DataReference URI='#ED'/>
+    </xenc:ReferenceList>
+    <xenc:CarriedKeyName>Sally Doe</xenc:CarriedKeyName>
+</xenc:EncryptedKey>"""
 
 
 # data4 = """<EncryptedKey Id='EK' xmlns='http://www.w3.org/2001/04/xmlenc#'>

@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ns0:EntityDescriptor xmlns:ns0="urn:oasis:names:tc:SAML:2.0:metadata" xmlns:ns1="http://www.w3.org/2000/09/xmldsig#" xmlns:mdrpi="urn:oasis:names:tc:SAML:metadata:rpi" entityID="https://no-friendly-name.example.edu/saml2/metadata/">
-  <ns0:Extensions>
+<md:EntityDescriptor xmlns:ns0="urn:oasis:names:tc:SAML:2.0:metadata" xmlns:ns1="http://www.w3.org/2000/09/xmldsig#" xmlns:mdrpi="urn:oasis:names:tc:SAML:metadata:rpi" entityID="https://no-friendly-name.example.edu/saml2/metadata/">
+  <md:Extensions>
       <mdrpi:RegistrationInfo registrationAuthority="http://geant.example.eu/" registrationInstant="2018-05-10T09:45:00Z" />
       <mdattr:EntityAttributes xmlns:mdattr="urn:oasis:names:tc:SAML:metadata:attribute">
           <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="http://macedir.org/entity-category" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
               <saml:AttributeValue>http://www.geant.net/uri/dataprotection-code-of-conduct/v1</saml:AttributeValue></saml:Attribute>
-      </mdattr:EntityAttributes></ns0:Extensions>
-  <ns0:SPSSODescriptor AuthnRequestsSigned="false" WantAssertionsSigned="true" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
-    <ns0:KeyDescriptor use="encryption">
-      <ns1:KeyInfo>
-        <ns1:X509Data>
-          <ns1:X509Certificate>MIIDvDCCAqQCCQDXVjecpE8ibTANBgkqhkiG9w0BAQUFADCBnzELMAkGA1UEBhMC
+      </mdattr:EntityAttributes></md:Extensions>
+  <md:SPSSODescriptor AuthnRequestsSigned="false" WantAssertionsSigned="true" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+    <md:KeyDescriptor use="encryption">
+      <ds:KeyInfo>
+        <ds:X509Data>
+          <ds:X509Certificate>MIIDvDCCAqQCCQDXVjecpE8ibTANBgkqhkiG9w0BAQUFADCBnzELMAkGA1UEBhMC
 U0UxEjAQBgNVBAgMCVN0b2NraG9sbTESMBAGA1UEBwwJU3RvY2tob2xtMQ4wDAYD
 VQQKDAVFRFVJRDEaMBgGA1UECwwRZWR1aWQuZXhhbXBsZS5jb20xGjAYBgNVBAMM
 EWVkdWlkLmV4YW1wbGUuY29tMSAwHgYJKoZIhvcNAQkBFhFlZHVpZEBleGFtcGxl
@@ -30,14 +30,14 @@ ST6WPF+2vDJv7dGPuglzyQLvA2fd6BLnyGV6kLUc2XNOyCmD/tWuMvKvW62j4Y3B
 XZvRFZZdHNgay4Wgvs8D6wyozWpkWpawXkQ3LqbXO6GChYC4VLru+uJuMKvvKCd/
 I125dzkP2nf9zkGV0cil3oIVSBPBtSRTF/M+oZhkHTwoM6hhonRvdOLuvobKfZ2Q
 wHyaxzYldWmVC5omkgZeAdCGpJ316GQF8Zwg/yDOUzm4cvGeIESf1Q6ZxBwI6zGE
-</ns1:X509Certificate>
-        </ns1:X509Data>
-      </ns1:KeyInfo>
-    </ns0:KeyDescriptor>
-    <ns0:KeyDescriptor use="signing">
-      <ns1:KeyInfo>
-        <ns1:X509Data>
-          <ns1:X509Certificate>MIIDvDCCAqQCCQDXVjecpE8ibTANBgkqhkiG9w0BAQUFADCBnzELMAkGA1UEBhMC
+</ds:X509Certificate>
+        </ds:X509Data>
+      </ds:KeyInfo>
+    </md:KeyDescriptor>
+    <md:KeyDescriptor use="signing">
+      <ds:KeyInfo>
+        <ds:X509Data>
+          <ds:X509Certificate>MIIDvDCCAqQCCQDXVjecpE8ibTANBgkqhkiG9w0BAQUFADCBnzELMAkGA1UEBhMC
 U0UxEjAQBgNVBAgMCVN0b2NraG9sbTESMBAGA1UEBwwJU3RvY2tob2xtMQ4wDAYD
 VQQKDAVFRFVJRDEaMBgGA1UECwwRZWR1aWQuZXhhbXBsZS5jb20xGjAYBgNVBAMM
 EWVkdWlkLmV4YW1wbGUuY29tMSAwHgYJKoZIhvcNAQkBFhFlZHVpZEBleGFtcGxl
@@ -57,37 +57,37 @@ ST6WPF+2vDJv7dGPuglzyQLvA2fd6BLnyGV6kLUc2XNOyCmD/tWuMvKvW62j4Y3B
 XZvRFZZdHNgay4Wgvs8D6wyozWpkWpawXkQ3LqbXO6GChYC4VLru+uJuMKvvKCd/
 I125dzkP2nf9zkGV0cil3oIVSBPBtSRTF/M+oZhkHTwoM6hhonRvdOLuvobKfZ2Q
 wHyaxzYldWmVC5omkgZeAdCGpJ316GQF8Zwg/yDOUzm4cvGeIESf1Q6ZxBwI6zGE
-</ns1:X509Certificate>
-        </ns1:X509Data>
-      </ns1:KeyInfo>
-    </ns0:KeyDescriptor>
-    <ns0:SingleLogoutService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://no-friendly-name.example.edu/saml2/ls/"/>
-    <ns0:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://no-friendly-name.example.edu/saml2/acs/" index="1"/>
+</ds:X509Certificate>
+        </ds:X509Data>
+      </ds:KeyInfo>
+    </md:KeyDescriptor>
+    <md:SingleLogoutService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://no-friendly-name.example.edu/saml2/ls/"/>
+    <md:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://no-friendly-name.example.edu/saml2/acs/" index="1"/>
     <!-- Require eduPersonTargetedID -->
-    <ns0:AttributeConsumingService index="0">
-        <ns0:ServiceName xml:lang="en">no-friendlyName-SP</ns0:ServiceName>
-        <ns0:ServiceDescription xml:lang="en">No friendlyName SP</ns0:ServiceDescription>
-        <ns0:RequestedAttribute Name="urn:oid:1.3.6.1.4.1.5923.1.1.1.10" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri" isRequired="true" />
-    </ns0:AttributeConsumingService>
-  </ns0:SPSSODescriptor>
-  <ns0:Organization>
-    <ns0:OrganizationName xml:lang="es">Example CO</ns0:OrganizationName>
-    <ns0:OrganizationName xml:lang="en">Example CO</ns0:OrganizationName>
-    <ns0:OrganizationDisplayName xml:lang="es">Example</ns0:OrganizationDisplayName>
-    <ns0:OrganizationDisplayName xml:lang="en">Example</ns0:OrganizationDisplayName>
-    <ns0:OrganizationURL xml:lang="es">http://www.example.edu</ns0:OrganizationURL>
-    <ns0:OrganizationURL xml:lang="en">http://www.example.com</ns0:OrganizationURL>
-  </ns0:Organization>
-  <ns0:ContactPerson contactType="technical">
-    <ns0:Company>Example CO</ns0:Company>
-    <ns0:GivenName>Sysadmin</ns0:GivenName>
-    <ns0:SurName/>
-    <ns0:EmailAddress>sysadmin@example.com</ns0:EmailAddress>
-  </ns0:ContactPerson>
-  <ns0:ContactPerson contactType="administrative">
-    <ns0:Company>Example CO</ns0:Company>
-    <ns0:GivenName>Admin</ns0:GivenName>
-    <ns0:SurName>CEO</ns0:SurName>
-    <ns0:EmailAddress>admin@example.com</ns0:EmailAddress>
-  </ns0:ContactPerson>
-</ns0:EntityDescriptor>
+    <md:AttributeConsumingService index="0">
+        <md:ServiceName xml:lang="en">no-friendlyName-SP</md:ServiceName>
+        <md:ServiceDescription xml:lang="en">No friendlyName SP</md:ServiceDescription>
+        <md:RequestedAttribute Name="urn:oid:1.3.6.1.4.1.5923.1.1.1.10" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri" isRequired="true" />
+    </md:AttributeConsumingService>
+  </md:SPSSODescriptor>
+  <md:Organization>
+    <md:OrganizationName xml:lang="es">Example CO</md:OrganizationName>
+    <md:OrganizationName xml:lang="en">Example CO</md:OrganizationName>
+    <md:OrganizationDisplayName xml:lang="es">Example</md:OrganizationDisplayName>
+    <md:OrganizationDisplayName xml:lang="en">Example</md:OrganizationDisplayName>
+    <md:OrganizationURL xml:lang="es">http://www.example.edu</md:OrganizationURL>
+    <md:OrganizationURL xml:lang="en">http://www.example.com</md:OrganizationURL>
+  </md:Organization>
+  <md:ContactPerson contactType="technical">
+    <md:Company>Example CO</md:Company>
+    <md:GivenName>Sysadmin</md:GivenName>
+    <md:SurName/>
+    <md:EmailAddress>sysadmin@example.com</md:EmailAddress>
+  </md:ContactPerson>
+  <md:ContactPerson contactType="administrative">
+    <md:Company>Example CO</md:Company>
+    <md:GivenName>Admin</md:GivenName>
+    <md:SurName>CEO</md:SurName>
+    <md:EmailAddress>admin@example.com</md:EmailAddress>
+  </md:ContactPerson>
+</md:EntityDescriptor>
