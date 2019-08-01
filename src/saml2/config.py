@@ -30,6 +30,7 @@ __author__ = 'rolandh'
 COMMON_ARGS = [
     "debug",
     "entityid",
+    "xmlsec_disabled_algs",
     "xmlsec_binary",
     "key_file",
     "cert_file",
@@ -189,6 +190,7 @@ class Config(object):
     def __init__(self, homedir="."):
         self._homedir = homedir
         self.entityid = None
+        self.xmlsec_disabled_algs = []
         self.xmlsec_binary = None
         self.xmlsec_path = []
         self.debug = False

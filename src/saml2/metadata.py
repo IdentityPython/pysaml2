@@ -735,6 +735,8 @@ def entity_descriptor(confd):
         _add_attr_to_entity_attributes(entd.extensions, attr)
 
     for item in algorithm_support_in_metadata(confd.xmlsec_binary):
+        if item.algorithm in getattr(confd, 'xmlsec_disabled_algs'):
+            continue
         if not entd.extensions:
             entd.extensions = md.Extensions()
         entd.extensions.add_extension_element(item)
