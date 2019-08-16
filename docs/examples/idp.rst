@@ -4,6 +4,7 @@ An extremly simple example of a SAML2 identity provider.
 ========================================================
 
 There are 2 example IDPs in the project's example directory:
+
 * idp2 has a static definition of users:
  * user attributes are defined in idp_user.py
  * the password is defined in the PASSWD dict in idp.py
