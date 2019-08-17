@@ -157,6 +157,12 @@ Format::
 
 Whether debug information should be sent to the log file.
 
+os.environ['PYSAML2_DELETE_XMLSEC_TMP']
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If set to "False" will keep temporary xml files in `/tmp`.
+Default: True, delete temporary files.
+
 entityid
 ^^^^^^^^
 

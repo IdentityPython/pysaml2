@@ -210,6 +210,15 @@ NODE_NAME = 'urn:oasis:names:tc:SAML:2.0:assertion:Assertion'
 ENC_NODE_NAME = 'urn:oasis:names:tc:SAML:2.0:assertion:EncryptedAssertion'
 ENC_KEY_CLASS = 'EncryptedKey'
 
+def get_environ_delete_tmpfiles():
+    xmlsec_delete_tmpfiles = os.environ.get('PYSAML2_DELETE_XMLSEC_TMP', "True")
+    if xmlsec_delete_tmpfiles.upper() == 'FALSE':
+        xmlsec_delete_tmpfiles = False
+        logger.warn('PYSAML2_DELETE_XMLSEC_TMP set to False, '
+                    'temporary xml files will not be deleted.')
+    else:
+        xmlsec_delete_tmpfiles = True
+    return xmlsec_delete_tmpfiles
 
 def _make_vals(val, klass, seccont, klass_inst=None, prop=None, part=False,
                base64encode=False, elements_to_sign=None):
@@ -679,9 +688,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         CryptoBackend.__init__(self, **kwargs)
         assert (isinstance(xmlsec_binary, six.string_types))
         self.xmlsec = xmlsec_binary
-        self._xmlsec_delete_tmpfiles = os.environ.get(
-            'PYSAML2_KEEP_XMLSEC_TMP', False
-        )
+        self._xmlsec_delete_tmpfiles = get_environ_delete_tmpfiles()
 
         try:
             self.non_xml_crypto = RSACrypto(kwargs['rsa_key'])
@@ -710,8 +717,7 @@ class CryptoBackendXmlSec1(CryptoBackend):
         :return:
         """
         logger.debug('Encryption input len: %d', len(text))
-        _, fil = make_temp(text, decode=False)
-
+        f, fil = make_temp(text, decode=False)
         com_list = [
             self.xmlsec,
             '--encrypt',
@@ -748,10 +754,9 @@ class CryptoBackendXmlSec1(CryptoBackend):
         if isinstance(statement, SamlBase):
             statement = pre_encrypt_assertion(statement)
 
-        _, fil = make_temp(
-            _str(statement), decode=False, delete=self._xmlsec_delete_tmpfiles
-        )
-        _, tmpl = make_temp(_str(template), decode=False)
+        f, fil = make_temp(
+            _str(statement), decode=False)
+        t, tmpl = make_temp(_str(template), decode=False)
 
         if not node_xpath:
             node_xpath = ASSERT_XPATH
@@ -1307,10 +1312,7 @@ class SecurityContext(object):
 
         self.encrypt_key_type = encrypt_key_type
         # keep certificate files to debug xmlsec invocations
-        if os.environ.get('PYSAML2_KEEP_XMLSEC_TMP', None):
-            self._xmlsec_delete_tmpfiles = False
-        else:
-            self._xmlsec_delete_tmpfiles = True
+        self._xmlsec_delete_tmpfiles = get_environ_delete_tmpfiles()
 
     def correctly_signed(self, xml, must=False):
         logger.debug('verify correct signature')
@@ -1366,18 +1368,15 @@ class SecurityContext(object):
         for key in keys:
             if not isinstance(key, six.binary_type):
                 key = key.encode("ascii")
-            _, key_file = make_temp(key, decode=False, delete=False)
+            key_file, _ = make_temp(key, decode=False)
             key_files.append(key_file)
 
         try:
-            dectext = self.decrypt(enctext, key_file=key_files, id_attr=id_attr)
+            dectext = self.decrypt(enctext, key_file=[x.name for x in key_files], id_attr=id_attr)
         except DecryptError as e:
             raise
         else:
             return dectext
-        finally:
-            for key_file in key_files:
-                os.unlink(key_file)
 
     def decrypt(self, enctext, key_file=None, id_attr=''):
         """ Decrypting an encrypted text by the use of a private key.
