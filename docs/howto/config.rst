@@ -111,7 +111,7 @@ As you see the format is again a python dictionary where the key is the
 name to convert from, and the value is the name to convert to.
 
 Since *to* in most cases is the inverse of the *fro* file, the
-software allowes you to only specify one of them and it will
+software allows you to only specify one of them and it will
 automatically create the other.
 
 cert_file
