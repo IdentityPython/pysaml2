@@ -23,7 +23,7 @@ These files should be stored outside the saml2test package to have a clean separ
 
 Client (sp_test/__init__.py)
 .........................
-Its life cycle is responsible for following activites:
+Its life cycle is responsible for following activities:
  - read config files and command line argumants (the test driver's config is "json_config")
  - initialize the test driver IDP
  - initialize a Conversation
