@@ -162,7 +162,7 @@ class TestAuthnResponse:
                 </saml:Subject>
                 <saml:Conditions NotBefore="2016-09-23T14:00:44Z">
                     <saml:AudienceRestriction>
-                        <saml:Audience>https://sp.example.com</saml:Audience>
+                        <saml:Audience>urn:mace:example.com:saml:roland:sp</saml:Audience>
                     </saml:AudienceRestriction>
                 </saml:Conditions>
                 <saml:AuthnStatement AuthnInstant="2016-09-23T13:55:40Z"
@@ -222,7 +222,7 @@ class TestAuthnResponse:
                 </saml:Subject>
                 <saml:Conditions NotBefore="2016-09-23T14:00:44Z">
                     <saml:AudienceRestriction>
-                        <saml:Audience>https://sp.example.com</saml:Audience>
+                        <saml:Audience>urn:mace:example.com:saml:roland:sp</saml:Audience>
                     </saml:AudienceRestriction>
                 </saml:Conditions>
                 <saml:AuthnStatement AuthnInstant="2016-09-23T13:55:40Z"

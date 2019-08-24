@@ -611,10 +611,9 @@ class AuthnResponse(StatusResponse):
             else:
                 self.not_on_or_after = 0
 
-        if not self.allow_unsolicited:
-            if not for_me(conditions, self.entity_id):
-                if not lax:
-                    raise Exception("Not for me!!!")
+        if not for_me(conditions, self.entity_id):
+            if not lax:
+                raise Exception("Not for me!!!")
 
         if conditions.condition:  # extra conditions
             for cond in conditions.condition:
