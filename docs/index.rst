@@ -12,7 +12,7 @@ About PySAML2
 PySAML2 is a pure python implementation of SAML2. It contains all
 necessary pieces for building a SAML2 service provider or an identity provider.
 The distribution contains examples of both.
-Originally written to work in a WSGI environment there are extensions that
+Originally written to work in a WSGI environment, there are extensions that
 allow you to use it with other frameworks.
 
 
@@ -22,18 +22,18 @@ How to use PySAML2
 Before you can use Pysaml2, you'll need to get it installed.
 If you have not done it yet, read the :ref:`install`
 
-Well, now you have it installed and you want to do something.
+Well, now you have it installed, and you want to do something.
 
-And I'm sorry to tell you this; but there isn't really a lot you can do with
+And I'm sorry to tell you this, but there isn't really a lot you can do with
 this code on it's own.
 
-Sure you can send a AuthenticationRequest to an IdentityProvider or a
+Sure you can send a AuthenticationRequest to an IdentityProvider or an
 AttributeQuery to an AttributeAuthority but in order to get what they
-return you have to sit behind a Web server. Well that is not really true since
+return you have to sit behind a Web server. Well, that is not really true since
 the AttributeQuery would be over SOAP and you would get the result over the
 connection you have to the AttributeAuthority.
 
-But anyway, you may get my point. This is middleware stuff !
+But anyway, you may get my point. This is middleware stuff!
 
 PySAML2 is built to fit into a
 `WSGI  <http://www.python.org/dev/peps/pep-0333/>`_ application
