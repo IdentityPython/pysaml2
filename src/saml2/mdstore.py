@@ -471,7 +471,7 @@ class InMemoryMetaData(MetaData):
         if self.check_validity:
             try:
                 if not valid(entity_descr.valid_until):
-                    logger.error("Entity descriptor (entity id:%s) to old",
+                    logger.error("Entity descriptor (entity id:%s) too old",
                                  entity_descr.entity_id)
                     self.to_old.append(entity_descr.entity_id)
                     return
