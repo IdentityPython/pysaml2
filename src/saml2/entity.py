@@ -269,16 +269,8 @@ class Entity(HTTPBase):
             else:
                 descr_type = "spsso"
 
-        _url = _index = None
-        if request:
-            try:
-                _url = getattr(request, "%s_url" % service)
-            except AttributeError:
-                _url = None
-                try:
-                    _index = getattr(request, "%s_index" % service)
-                except AttributeError:
-                    pass
+        _url = getattr(request, "%s_url" % service, None)
+        _index = getattr(request, "%s_index" % service, None)
 
         for binding in bindings:
             try:
