@@ -76,6 +76,7 @@ mrPzGzk3ECbupFnqyREH3+ZPSdk=
     <ns0:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="http://lingon.catalogix.se:8087/" index="1"/>
     <ns0:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:PAOS" Location="http://lingon.catalogix.se:8087/paos" index="2"/>
     <ns0:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="http://lingon.catalogix.se:8087/redirect" index="3"/>
+    <ns0:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="http://lingon.catalogix.se:8087/another/path" index="4"/>
   </ns0:SPSSODescriptor>
   <ns0:Organization>
     <ns0:OrganizationName xml:lang="se">AB Exempel</ns0:OrganizationName>
