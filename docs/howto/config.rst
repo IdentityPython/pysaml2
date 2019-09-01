@@ -1,5 +1,15 @@
 .. _howto_config:
 
+Environment variables
+=====================
+
+PYSAML2_DELETE_TMPFILES
+^^^^^^^^^^^^^^^^^^^^^^^
+
+If set to "False" will keep temporary xml files in the system temporary storage.
+Default: "true"; delete temporary files.
+
+
 Configuration of pySAML2 entities
 =================================
 
@@ -156,12 +166,6 @@ Format::
     debug: 1
 
 Whether debug information should be sent to the log file.
-
-os.environ['PYSAML2_DELETE_XMLSEC_TMP']
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If set to "False" will keep temporary xml files in `/tmp`.
-Default: True, delete temporary files.
 
 entityid
 ^^^^^^^^
