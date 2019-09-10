@@ -185,6 +185,7 @@ metadata
 
 Contains a list of places where metadata can be found. This can be
 
+* a local directory accessible on the server the service runs on
 * a local file accessible on the server the service runs on
 * a remote URL serving aggregate metadata
 * a metadata query protocol (MDQ) service URL
@@ -193,6 +194,7 @@ For example::
 
     "metadata" : {
         "local": [
+            "/opt/metadata"
             "metadata.xml",
             "vo_metadata.xml",
         ],
@@ -467,6 +469,20 @@ Example::
     "service": {
         "sp": {
             "force_authn": True,
+        }
+    }
+
+
+name_id_format_allow_create
+"""""""""""""""""""""""""""
+
+Enable AllowCreate in NameIDPolicy.
+
+Example::
+
+    "service": {
+        "sp": {
+            "name_id_format_allow_create": True,
         }
     }
 
