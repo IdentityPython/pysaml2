@@ -140,19 +140,20 @@ def add_duration(tid, duration):
         carry = f_quotient(temp, 60)
         # hours
         temp = tid.tm_hour + dur["tm_hour"] + carry
-        hour = modulo(temp, 60)
-        carry = f_quotient(temp, 60)
+        hour = modulo(temp, 24)
+        carry = f_quotient(temp, 24)
         # days
-        if dur["tm_mday"] > maximum_day_in_month_for(year, month):
+        if tid.tm_mday > maximum_day_in_month_for(year, month):
             temp_days = maximum_day_in_month_for(year, month)
-        elif dur["tm_mday"] < 1:
+        elif tid.tm_mday < 1:
             temp_days = 1
         else:
-            temp_days = dur["tm_mday"]
-        days = temp_days + tid.tm_mday + carry
+            temp_days = tid.tm_mday
+        days = temp_days + dur["tm_mday"] + carry
         while True:
             if days < 1:
-                pass
+                days = days + maximum_day_in_month_for(year, month - 1)
+                carry = -1
             elif days > maximum_day_in_month_for(year, month):
                 days -= maximum_day_in_month_for(year, month)
                 carry = 1

@@ -92,7 +92,7 @@ def test_parse_duration_n():
         assert d == _val
 
 def test_add_duration_1():
-    #2000-01-12T12:13:14Z	P1Y3M5DT7H10M3S	2001-04-17T19:23:17Z    
+    #2000-01-12T12:13:14Z	P1Y3M5DT7H10M3S	2001-04-17T19:23:17Z
     t = add_duration(str_to_time("2000-01-12T12:13:14Z"), "P1Y3M5DT7H10M3S")
     assert t.tm_year == 2001
     assert t.tm_mon == 4
@@ -107,7 +107,7 @@ def test_add_duration_2():
     t = add_duration(str_to_time("2000-01-12T00:00:00Z"), "PT33H")
     assert t.tm_year == 2000
     assert t.tm_mon == 1
-    assert t.tm_mday == 14
+    assert t.tm_mday == 13
     assert t.tm_hour == 9
     assert t.tm_min == 0
     assert t.tm_sec == 0
@@ -119,7 +119,7 @@ def test_str_to_time():
     #t = time.mktime(str_to_time("2000-01-12T00:00:00Z"))
     #assert t == 947631600.0
     #TODO: add something to show how this time was arrived at
-    # do this as an external method in the 
+    # do this as an external method in the
     assert t == 947635200
     # some IdPs omit the trailing Z, and SAML spec is unclear if it is actually required
     t = calendar.timegm(str_to_time("2000-01-12T00:00:00"))
