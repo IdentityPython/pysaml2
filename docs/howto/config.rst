@@ -1,15 +1,5 @@
 .. _howto_config:
 
-Environment variables
-=====================
-
-PYSAML2_DELETE_TMPFILES
-^^^^^^^^^^^^^^^^^^^^^^^
-
-If set to "False" will keep temporary xml files in the system temporary storage.
-Default: "true"; delete temporary files.
-
-
 Configuration of pySAML2 entities
 =================================
 
@@ -44,6 +34,7 @@ The basic structure of the configuration file is therefore like this::
         "key_file" : "my.key",
         "cert_file" : "ca.pem",
         "xmlsec_binary" : "/usr/local/bin/xmlsec1",
+        "delete_tmpfiles": True,
         "metadata": {
             "local": ["edugain.xml"],
         },
@@ -327,6 +318,17 @@ This option defines where the binary is situated.
 Example::
 
     "xmlsec_binary": "/usr/local/bin/xmlsec1",
+
+delete_tmpfiles
+^^^^^^^^^^^^^^^
+
+In many cases temporary files will have to be created during the
+encryption/decryption/signing/validation process.
+This option defines whether these temporary files will be automatically deleted when
+they are no longer needed. Setting this to False, will keep these files until they are
+manually deleted or automatically deleted by the OS (i.e Linux rules for /tmp).
+Absence of this option, defaults to True.
+
 
 valid_for
 ^^^^^^^^^
@@ -842,6 +844,7 @@ We start with a simple but fairly complete Service provider configuration::
         "key_file" : "./mykey.pem",
         "cert_file" : "./mycert.pem",
         "xmlsec_binary" : "/usr/local/bin/xmlsec1",
+        "delete_tmpfiles": True,
         "attribute_map_dir": "./attributemaps",
         "metadata": {
             "local": ["idp.xml"]
@@ -890,6 +893,7 @@ A slightly more complex configuration::
         "key_file" : "./mykey.pem",
         "cert_file" : "./mycert.pem",
         "xmlsec_binary" : "/usr/local/bin/xmlsec1",
+        "delete_tmpfiles": True,
         "metadata" : {
             "local": ["example.xml"],
             "remote": [{

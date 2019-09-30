@@ -128,6 +128,7 @@ class FakeConfig():
     tmp_cert_file = None
     tmp_key_file = None
     validate_certificate = False
+    delete_tmpfiles = True
 
     def getattr(self, attr, default):
         return getattr(self, attr, default)

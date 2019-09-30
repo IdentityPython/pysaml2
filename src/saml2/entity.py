@@ -144,7 +144,7 @@ class Entity(HTTPBase):
             if _val.startswith("http"):
                 r = requests.request("GET", _val)
                 if r.status_code == 200:
-                    tmp = make_temp(r.text, ".pem", False)
+                    tmp = make_temp(r.text, ".pem", False, self.config.delete_tmpfiles)
                     setattr(self.config, item, tmp.name)
                 else:
                     raise Exception(
@@ -560,7 +560,9 @@ class Entity(HTTPBase):
                     _cert = "%s%s" % (begin_cert, _cert)
                 if end_cert not in _cert:
                     _cert = "%s%s" % (_cert, end_cert)
-                tmp = make_temp(_cert.encode('ascii'), decode=False)
+                tmp = make_temp(_cert.encode('ascii'),
+                                decode=False,
+                                delete_tmpfiles=self.config.delete_tmpfiles)
                 response = self.sec.encrypt_assertion(response, tmp.name,
                                                       pre_encryption_part(),
                                                       node_xpath=node_xpath)
