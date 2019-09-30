@@ -32,7 +32,7 @@ from saml2.s_utils import UnsupportedBinding
 from saml2.s_utils import UnknownSystemEntity
 from saml2.sigver import split_len
 from saml2.validate import valid_instance
-from saml2.time_util import valid
+from saml2.time_util import valid, instant, add_duration, before, str_to_time
 from saml2.validate import NotValid
 from saml2.sigver import security_context
 
@@ -791,7 +791,7 @@ class MetaDataMDX(InMemoryMetaData):
             hashlib.sha1(entity_id.encode("utf-8")).hexdigest())
 
     def __init__(self, url=None, security=None, cert=None,
-                 entity_transform=None, **kwargs):
+                 entity_transform=None, freshness_period=None, **kwargs):
         """
         :params url: mdx service url
         :params security: SecurityContext()
@@ -801,6 +801,8 @@ class MetaDataMDX(InMemoryMetaData):
         hash) the entity id. It is applied to the entity id before it is
         concatenated with the request URL sent to the MDX server. Defaults to
         sha1 transformation.
+        :params freshness_period: a duration in the format described at
+        https://www.w3.org/TR/xmlschema-2/#duration
         """
         super(MetaDataMDX, self).__init__(None, **kwargs)
         if not url:
@@ -815,6 +817,9 @@ class MetaDataMDX(InMemoryMetaData):
 
         self.cert = cert
         self.security = security
+        self.freshness_period = freshness_period
+        if freshness_period:
+            self.expiration_date = {}
 
         # We assume that the MDQ server will return a single entity
         # described by a single <EntityDescriptor> element. The protocol
@@ -829,21 +834,37 @@ class MetaDataMDX(InMemoryMetaData):
         # Do nothing
         pass
 
-    def __getitem__(self, item):
-        try:
-            return self.entity[item]
-        except KeyError:
-            mdx_url = "%s/entities/%s" % (self.url, self.entity_transform(item))
-            response = requests.get(mdx_url, headers={
-                'Accept': SAML_METADATA_CONTENT_TYPE})
-            if response.status_code == 200:
-                _txt = response.content
+    def fetch_metadata(self, item):
+        mdx_url = "%s/entities/%s" % (self.url, self.entity_transform(item))
+        response = requests.get(mdx_url, headers={
+            'Accept': SAML_METADATA_CONTENT_TYPE})
+        if response.status_code == 200:
+            _txt = response.content
+            if self.parse_and_check_signature(_txt):
+                if self.freshness_period:
+                    curr_time = str_to_time(instant())
+                    self.expiration_date[item] = add_duration(
+                        curr_time, self.freshness_period)
+                return self.entity[item]
+        else:
+            logger.info("Response status: %s", response.status_code)
+        raise KeyError
 
-                if self.parse_and_check_signature(_txt):
-                    return self.entity[item]
+    def _is_fresh(self, item):
+        return self.freshness_period and before(self.expiration_date[item])
+
+    def __getitem__(self, item):
+        if item in self.entity:
+            if self._is_fresh(item):
+                entity = self.entity[item]
             else:
-                logger.info("Response status: %s", response.status_code)
-            raise KeyError
+                logger.info("Metadata for {} have expired, refreshing "
+                            "metadata".format(item))
+                self.entity.pop(item, None)
+                entity = self.fetch_metadata(item)
+        else:
+            entity = self.fetch_metadata(item)
+        return entity
 
     def single_sign_on_service(self, entity_id, binding=None, typ="idpsso"):
         if binding is None:
@@ -930,9 +951,11 @@ class MetadataStore(MetaData):
                 key = kwargs['url']
                 url = kwargs['url']
                 cert = kwargs.get('cert')
+                freshness_period = kwargs.get('freshness_period', None)
                 security = self.security
                 entity_transform = kwargs.get('entity_transform', None)
-                _md = MetaDataMDX(url, security, cert, entity_transform)
+                _md = MetaDataMDX(url, security, cert, entity_transform,
+                                  freshness_period=freshness_period)
             else:
                 key = args[1]
                 url = args[1]

@@ -25,6 +25,7 @@ from saml2.s_utils import UnknownPrincipal
 from pathutils import full_path
 
 import responses
+import mock
 
 sec_config = config.Config()
 # sec_config.xmlsec_binary = sigver.get_xmlsec_binary(["/opt/local/bin"])
@@ -322,6 +323,29 @@ def test_mdx_single_sign_on_service():
     mdx = MetaDataMDX("http://mdx.example.com")
     sso_loc = mdx.single_sign_on_service(entity_id, BINDING_HTTP_REDIRECT)
     assert sso_loc[0]["location"] == "http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"
+
+
+@responses.activate
+@mock.patch('saml2.mdstore.before')
+def test_mdx_metadata_freshness_period(mock_datetime):
+    """Ensure that metadata is refreshed only when they have expired."""
+    entity_id = \
+        "http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"
+
+    url = "http://mdx.example.com/entities/{}".format(
+        parse.quote_plus(MetaDataMDX.sha1_entity_transform(entity_id)))
+    responses.add(responses.GET, url, body=TEST_METADATA_STRING, status=200,
+                  content_type=SAML_METADATA_CONTENT_TYPE)
+
+    mock_datetime.return_value = True
+    mdx = MetaDataMDX("http://mdx.example.com",
+                      freshness_period="P0Y0M0DT0H2M0S")
+    mdx.single_sign_on_service(entity_id, BINDING_HTTP_REDIRECT)
+    mdx.single_sign_on_service(entity_id, BINDING_HTTP_REDIRECT)
+    assert len(responses.calls) == 1
+    mock_datetime.return_value = False
+    mdx.single_sign_on_service(entity_id, BINDING_HTTP_REDIRECT)
+    assert len(responses.calls) == 2
 
 
 # pyff-test not available
