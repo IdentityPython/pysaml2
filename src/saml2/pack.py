@@ -57,14 +57,61 @@ HTML_FORM_SPEC = """<!DOCTYPE html>
         you must press the Continue button once to proceed.
       </p>
     </noscript>
-    <form action="{action}" method="post">
-      {saml_response_input}
-      {relay_state_input}
-      <noscript>
-        <input type="submit" value="Continue"/>
-      </noscript>
-    </form>
+    <div class="corner-ribbon red">Demo</div>
+    <div class="logo"></div>
+    <div class="cont_heg_50"></div>
+    <div class="cont_select_center">
+	<form action="{action}" method="post">
+	  {saml_response_input}
+	  {relay_state_input}
+	  <noscript>
+	    <input type="submit" value="Continue"/>
+	  </noscript>
+	</form>
   </body>
+</html>"""
+
+FORM_SPEC = """\
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <link rel="stylesheet" type="text/css" href="../../css/country_selection.css">
+    </head>
+    <body onload="{autosubmit}" style="{style}">
+        <noscript>
+            <p>
+                <strong>Note:</strong> Since your browser does not support JavaScript,
+                you must press the Continue button once to proceed.
+            </p>
+        </noscript>
+        <div class="corner-ribbon red">Demo</div>
+        <div class="logo"></div>
+        <div class="cont_heg_50"></div>
+        <div class="cont_select_center">
+            <form action="{action}" method="post">
+                <input type="hidden" name="RelayState" value="{relay_state}"/>
+                <input type="hidden" name="{saml_type}" value="{saml_response}"/>
+                <div class="label">
+                    <label for="country" class="text-center">Choose your country</label>
+                </div>
+                <div class="styled-select slate">
+                    <select id="country" name="country">
+                        <option value="CA">eIDAS Test Country</option>
+                        <option value="GR">Greece</option>
+                        <option value="ES">Spain</option>
+                    </select>
+                </div>
+                <div>
+                    <input type="submit" class="button_base b01_simple_rollover" value="Continue"/>
+                </div>
+            </form>
+        </div>
+        <!-- End div center   -->
+        <footer  id="footer">
+            Copyright ©2016-2018
+        </footer>
+    </body>
 </html>"""
 
 
@@ -94,22 +141,26 @@ def http_form_post_message(message, location, relay_state="",
         _msg = message
     _msg = _msg.decode('ascii')
 
-    saml_response_input = HTML_INPUT_ELEMENT_SPEC.format(
-            name=_html_escape(typ),
-            val=_html_escape(_msg),
-            type='hidden')
+    args = {
+       'action'        : location,
+       'saml_type'     : typ,
+       'relay_state'   : relay_state,
+       'saml_response' : _msg
+       }
 
-    relay_state_input = ""
-    if relay_state:
-        relay_state_input = HTML_INPUT_ELEMENT_SPEC.format(
-                name='RelayState',
-                val=_html_escape(relay_state),
-                type='hidden')
+    if typ == "SAMLRequest":
+        autosubmit = ''
+        style = ''
+    else:
+        autosubmit = 'document.forms[0].submit()'
+        style = 'display: none;'
 
-    response = HTML_FORM_SPEC.format(
-        saml_response_input=saml_response_input,
-        relay_state_input=relay_state_input,
-        action=location)
+    args.update({
+        'autosubmit': autosubmit,
+        'style': style,
+        })
+
+    response = FORM_SPEC.format(**args)
 
     return {"headers": [("Content-type", "text/html")], "data": response}
 

@@ -248,6 +248,9 @@ class AttributeValueBase(SamlBase):
             else self.get_type()
             or type_to_xsd.get(type(value)))
 
+        if xsd_string.startswith('eidas'):
+            xsd_string = type_to_xsd.get(type(value))
+
         xsd_ns, xsd_type = (
             ['', type(None)] if xsd_string is None
             else ['', ''] if xsd_string == ''
