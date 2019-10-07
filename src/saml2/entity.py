@@ -467,8 +467,6 @@ class Entity(HTTPBase):
 
         if consent:
             req.consent = "true"
-        else:
-            req.consent = "urn:oasis:names:tc:SAML:2.0:consent:unspecified"
 
         if extensions:
             req.extensions = extensions
