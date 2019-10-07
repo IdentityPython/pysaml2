@@ -96,8 +96,8 @@ def create_metadata_string(configfile, config=None, valid=None, cert=None,
     eds.append(entity_descriptor(config))
 
     conf = Config()
-    conf.key_file = config.key_file or keyfile
-    conf.cert_file = config.cert_file or cert
+    conf.key_file = keyfile or config.key_file
+    conf.cert_file = cert or config.cert_file
     conf.debug = 1
     conf.xmlsec_binary = config.xmlsec_binary
     secc = security_context(conf)
