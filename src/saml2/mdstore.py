@@ -1305,7 +1305,7 @@ class MetadataStore(MetaData):
         lang_elements = (
             element
             for element in elements
-            if element.get("lang") == langpref
+            if langpref is None or element.get("lang") == langpref
         )
         values = (
             value
@@ -1346,39 +1346,39 @@ class MetadataStore(MetaData):
         )
         return values
 
-    def _mdui_uiinfo_display_name(self, entity_id, langpref="en"):
+    def _mdui_uiinfo_display_name(self, entity_id, langpref=None):
         cls = classnames["mdui_uiinfo_display_name"]
         values = self.mdui_uiinfo_i18n_element_cls(entity_id, langpref, cls)
         return values
 
-    def mdui_uiinfo_display_name(self, entity_id, langpref="en"):
+    def mdui_uiinfo_display_name(self, entity_id, langpref=None):
         values = list(self._mdui_uiinfo_display_name(entity_id, langpref))
         return values
 
-    def _mdui_uiinfo_description(self, entity_id, langpref="en"):
+    def _mdui_uiinfo_description(self, entity_id, langpref=None):
         cls = classnames["mdui_uiinfo_description"]
         values = self.mdui_uiinfo_i18n_element_cls(entity_id, langpref, cls)
         return values
 
-    def mdui_uiinfo_description(self, entity_id, langpref="en"):
+    def mdui_uiinfo_description(self, entity_id, langpref=None):
         values = list(self._mdui_uiinfo_description(entity_id, langpref))
         return values
 
-    def _mdui_uiinfo_information_url(self, entity_id, langpref="en"):
+    def _mdui_uiinfo_information_url(self, entity_id, langpref=None):
         cls = classnames["mdui_uiinfo_information_url"]
         values = self.mdui_uiinfo_i18n_element_cls(entity_id, langpref, cls)
         return values
 
-    def mdui_uiinfo_information_url(self, entity_id, langpref="en"):
+    def mdui_uiinfo_information_url(self, entity_id, langpref=None):
         values = list(self._mdui_uiinfo_information_url(entity_id, langpref))
         return values
 
-    def _mdui_uiinfo_privacy_statement_url(self, entity_id, langpref="en"):
+    def _mdui_uiinfo_privacy_statement_url(self, entity_id, langpref=None):
         cls = classnames["mdui_uiinfo_privacy_statement_url"]
         values = self.mdui_uiinfo_i18n_element_cls(entity_id, langpref, cls)
         return values
 
-    def mdui_uiinfo_privacy_statement_url(self, entity_id, langpref="en"):
+    def mdui_uiinfo_privacy_statement_url(self, entity_id, langpref=None):
         values = list(self._mdui_uiinfo_privacy_statement_url(entity_id, langpref))
         return values
 
