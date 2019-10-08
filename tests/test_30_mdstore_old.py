@@ -17,14 +17,7 @@ from saml2 import saml
 from saml2 import config
 from saml2.attribute_converter import ac_factory
 from saml2.attribute_converter import d_to_local_name
-
-from saml2.extension import mdui
-from saml2.extension import idpdisc
-from saml2.extension import dri
-from saml2.extension import mdattr
 from saml2.s_utils import UnknownPrincipal
-from saml2 import xmldsig
-from saml2 import xmlenc
 
 from pathutils import full_path
 
