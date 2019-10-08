@@ -11,7 +11,6 @@ from saml2.extension import mdui
 from saml2.extension import idpdisc
 from saml2.extension import dri
 from saml2.extension import mdattr
-from saml2.extension import ui
 
 from pathutils import full_path
 
