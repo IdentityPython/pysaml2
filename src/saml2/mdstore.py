@@ -35,18 +35,20 @@ from saml2.validate import valid_instance
 from saml2.time_util import valid
 from saml2.validate import NotValid
 from saml2.sigver import security_context
+from saml2.extension.mdattr import NAMESPACE as NS_MDATTR
+from saml2.extension.mdattr import EntityAttributes
 
-__author__ = 'rolandh'
 
 logger = logging.getLogger(__name__)
 
+classnames = {
+    "mdattr_entityattributes": "{ns}&{tag}".format(
+        ns=NS_MDATTR, tag=EntityAttributes.c_tag
+    ),
+}
 
-class ToOld(Exception):
-    pass
-
-
-class SourceNotFound(Exception):
-    pass
+ENTITY_CATEGORY = "http://macedir.org/entity-category"
+ENTITY_CATEGORY_SUPPORT = "http://macedir.org/entity-category-support"
 
 REQ2SRV = {
     # IDP
@@ -70,12 +72,14 @@ REQ2SRV = {
     "discovery_service_request": "discovery_response"
 }
 
-ENTITYATTRIBUTES = "urn:oasis:names:tc:SAML:metadata:attribute&EntityAttributes"
-ENTITY_CATEGORY = "http://macedir.org/entity-category"
-ENTITY_CATEGORY_SUPPORT = "http://macedir.org/entity-category-support"
+
+class ToOld(Exception):
+    pass
 
 
-# ---------------------------------------------------
+class SourceNotFound(Exception):
+    pass
+
 
 def load_extensions():
     from saml2 import extension
@@ -359,7 +363,7 @@ class MetaData(object):
         res = []
         if "extensions" in self[entity_id]:
             for elem in self[entity_id]["extensions"]["extension_elements"]:
-                if elem["__class__"] == ENTITYATTRIBUTES:
+                if elem["__class__"] == classnames["mdattr_entityattributes"]:
                     for attr in elem["attribute"]:
                         res.append(attr["text"])
 
@@ -1243,7 +1247,7 @@ class MetadataStore(MetaData):
         except KeyError:
             return res
         for elem in ext["extension_elements"]:
-            if elem["__class__"] == ENTITYATTRIBUTES:
+            if elem["__class__"] == classnames["mdattr_entityattributes"]:
                 for attr in elem["attribute"]:
                     if attr["name"] not in res:
                         res[attr["name"]] = []
