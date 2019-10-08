@@ -37,6 +37,13 @@ from saml2.validate import NotValid
 from saml2.sigver import security_context
 from saml2.extension.mdattr import NAMESPACE as NS_MDATTR
 from saml2.extension.mdattr import EntityAttributes
+from saml2.extension.mdui import NAMESPACE as NS_MDUI
+from saml2.extension.mdui import UIInfo
+from saml2.extension.mdui import DisplayName
+from saml2.extension.mdui import Description
+from saml2.extension.mdui import InformationURL
+from saml2.extension.mdui import PrivacyStatementURL
+from saml2.extension.mdui import Logo
 
 
 logger = logging.getLogger(__name__)
@@ -45,6 +52,7 @@ classnames = {
     "mdattr_entityattributes": "{ns}&{tag}".format(
         ns=NS_MDATTR, tag=EntityAttributes.c_tag
     ),
+    "mdui_uiinfo": "{ns}&{tag}".format(ns=NS_MDUI, tag=UIInfo.c_tag),
 }
 
 ENTITY_CATEGORY = "http://macedir.org/entity-category"
@@ -1254,6 +1262,33 @@ class MetadataStore(MetaData):
                     res[attr["name"]] += [v["text"] for v in attr[
                         "attribute_value"]]
         return res
+
+    def _mdui_uiinfo(self, entity_id):
+        descriptor_names = (
+            item
+            for item in self[entity_id].keys()
+            if item.endswith("_descriptor")
+        )
+        descriptors = (
+            descriptor
+            for descriptor_name in descriptor_names
+            for descriptor in self[entity_id].get(descriptor_name, [])
+        )
+        extensions = (
+            extension
+            for descriptor in descriptors
+            for extension in descriptor.get("extensions", {}).get("extension_elements", [])
+        )
+        uiinfos = (
+            extension
+            for extension in extensions
+            if extension.get("__class__") == classnames["mdui_uiinfo"]
+        )
+        return uiinfos
+
+    def mdui_uiinfo(self, entity_id):
+        uiinfos = list(self._mdui_uiinfo(entity_id))
+        return uiinfos
 
     def bindings(self, entity_id, typ, service):
         for _md in self.metadata.values():
