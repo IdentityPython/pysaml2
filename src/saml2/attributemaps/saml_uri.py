@@ -29,7 +29,7 @@ SAML_SUBJECT_ID = 'urn:oasis:names:tc:SAML:attribute:'
 
 # umbrellaID specification - https://www.umbrellaid.org
 # https://github.com/Umbrella-Commiters/UmbrellaIdP3/blob/master/schema/99-user.ldif
-UMBRELLA_ID = 'urn:oid:1.3.6.1.4.1.42750.1.1'
+UMBRELLA_ID = 'urn:oid:1.3.6.1.4.1.42750.1.1.'
 
 MAP = {
     'identifier': 'urn:oasis:names:tc:SAML:2.0:attrname-format:uri',
