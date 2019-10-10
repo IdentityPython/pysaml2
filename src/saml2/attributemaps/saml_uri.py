@@ -29,7 +29,8 @@ SAML_SUBJECT_ID = 'urn:oasis:names:tc:SAML:attribute:'
 
 # umbrellaID specification - https://www.umbrellaid.org
 # https://github.com/Umbrella-Commiters/UmbrellaIdP3/blob/master/schema/99-user.ldif
-UMBRELLA_ID = 'urn:oid:1.3.6.1.4.1.42750.1.1.'
+UMBRELLA_EAAUser_ID = 'urn:oid:1.3.6.1.4.1.42750.1.1.'
+UMBRELLA_BridgeFederation_ID = 'urn:oid:1.3.6.1.4.1.42750.2.'
 
 MAP = {
     'identifier': 'urn:oasis:names:tc:SAML:2.0:attrname-format:uri',
@@ -147,7 +148,16 @@ MAP = {
         UCL_DIR_PILOT+'37': 'associatedDomain',
         UCL_DIR_PILOT+'43': 'co',
         UCL_DIR_PILOT+'60': 'jpegPhoto',
-        UMBRELLA_ID+'1': 'EAAHash',
+        UMBRELLA_EAAUser_ID+'1': 'EAAHash',
+        UMBRELLA_EAAUser_ID+'2': 'EAABirthdate',
+        UMBRELLA_EAAUser_ID+'3': 'EAAKey',
+        UMBRELLA_EAAUser_ID+'4': 'EAAResetPWUUID',
+        UMBRELLA_EAAUser_ID+'5': 'EAAResetPwDate',
+        UMBRELLA_BridgeFederation_ID+'1': 'BridgeFederationSrc',
+        UMBRELLA_BridgeFederation_ID+'2': 'BridgeFederationUID',
+        UMBRELLA_BridgeFederation_ID+'3': 'BridgeFederationUmbrellaUID',
+        UMBRELLA_BridgeFederation_ID+'4': 'BridgeFederation',
+        UMBRELLA_BridgeFederation_ID+'5': 'BridgeFederationUmbrellaUsername',
         UMICH+'57': 'labeledURI',
         X500ATTR_OID+'2': 'knowledgeInformation',
         X500ATTR_OID+'3': 'cn',
@@ -236,7 +246,16 @@ MAP = {
         'displayName': NETSCAPE_LDAP+'241',
         'dmdName': X500ATTR_OID+'54',
         'dnQualifier': X500ATTR_OID+'46',
-        'EAAHash': UMBRELLA_ID+'1',
+        'EAAHash': UMBRELLA_EAAUser_ID+'1',
+        'EAABirthdate': UMBRELLA_EAAUser_ID+'2',
+        'EAAKey': UMBRELLA_EAAUser_ID+'3',
+        'EAAResetPWUUID': UMBRELLA_EAAUser_ID+'4',
+        'EAAResetPwDate': UMBRELLA_EAAUser_ID+'5',
+        'BridgeFederationSrc': UMBRELLA_BridgeFederation_ID+'1',
+        'BridgeFederationUID': UMBRELLA_BridgeFederation_ID+'2',
+        'BridgeFederationUmbrellaUID': UMBRELLA_BridgeFederation_ID+'3',
+        'BridgeFederation': UMBRELLA_BridgeFederation_ID+'4',
+        'BridgeFederationUmbrellaUsername': UMBRELLA_BridgeFederation_ID+'5',
         'eduCourseMember': EDUCOURSE_OID+'2',
         'eduCourseOffering': EDUCOURSE_OID+'1',
         'eduPersonAffiliation': EDUPERSON_OID+'1',
