@@ -860,7 +860,7 @@ class MetaDataMDX(InMemoryMetaData):
             else:
                 logger.info("Metadata for {} have expired, refreshing "
                             "metadata".format(item))
-                self.entity.pop(item, None)
+                self.entity.pop(item)
                 entity = self.fetch_metadata(item)
         else:
             entity = self.fetch_metadata(item)
