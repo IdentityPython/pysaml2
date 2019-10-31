@@ -1272,10 +1272,35 @@ class MetadataStore(MetaData):
                         "attribute_value"]]
         return res
 
-    def _mdui_uiinfo(self, entity_id):
+    def _lookup_elements_by_cls(self, root, cls):
+        elements = (
+            element
+            for uiinfo in root
+            for element_key, elements in uiinfo.items()
+            if element_key != "__class__"
+            for element in elements
+            if element.get("__class__") == cls
+        )
+        return elements
+
+    def _lookup_elements_by_key(self, root, key):
+        elements = (
+            element
+            for uiinfo in root
+            for elements in [uiinfo.get(key, [])]
+            for element in elements
+        )
+        return elements
+
+    def mdui_uiinfo(self, entity_id):
+        try:
+            data = self[entity_id]
+        except KeyError:
+            data = {}
+
         descriptor_names = (
             item
-            for item in self[entity_id].keys()
+            for item in data.keys()
             if item.endswith("_descriptor")
         )
         descriptors = (
@@ -1295,12 +1320,8 @@ class MetadataStore(MetaData):
         )
         return uiinfos
 
-    def mdui_uiinfo(self, entity_id):
-        uiinfos = list(self._mdui_uiinfo(entity_id))
-        return uiinfos
-
-    def _mdui_uiinfo_i18n_elements(self, entity_id, langpref, element_hint, lookup):
-        uiinfos = self._mdui_uiinfo(entity_id)
+    def _mdui_uiinfo_i18n_elements_lookup(self, entity_id, langpref, element_hint, lookup):
+        uiinfos = self.mdui_uiinfo(entity_id)
         elements = lookup(uiinfos, element_hint)
         lang_elements = (
             element
@@ -1314,88 +1335,48 @@ class MetadataStore(MetaData):
         )
         return values
 
-    def _mdui_uiinfo_lookup_elements_by_cls(self, uiinfos, element_cls):
-        elements = (
-            element
-            for uiinfo in uiinfos
-            for element_key, elements in uiinfo.items()
-            if element_key != "__class__"
-            for element in elements
-            if element.get("__class__") == element_cls
-        )
-        return elements
-
-    def _mdui_uiinfo_lookup_elements_by_key(self, uiinfos, element_key):
-        elements = (
-            element
-            for uiinfo in uiinfos
-            for elements in [uiinfo.get(element_key, [])]
-            for element in elements
-        )
-        return elements
-
     def mdui_uiinfo_i18n_element_cls(self, entity_id, langpref, element_cls):
-        values = self._mdui_uiinfo_i18n_elements(
-            entity_id, langpref, element_cls, self._mdui_uiinfo_lookup_elements_by_cls
+        values = self._mdui_uiinfo_i18n_elements_lookup(
+            entity_id, langpref, element_cls, self._lookup_elements_by_cls
         )
         return values
 
     def mdui_uiinfo_i18n_element_key(self, entity_id, langpref, element_key):
-        values = self._mdui_uiinfo_i18n_elements(
-            entity_id, langpref, element_key, self._mdui_uiinfo_lookup_elements_by_key
+        values = self._mdui_uiinfo_i18n_elements_lookup(
+            entity_id, langpref, element_key, self._lookup_elements_by_key
         )
         return values
 
-    def _mdui_uiinfo_display_name(self, entity_id, langpref=None):
+    def mdui_uiinfo_display_name(self, entity_id, langpref=None):
         cls = classnames["mdui_uiinfo_display_name"]
         values = self.mdui_uiinfo_i18n_element_cls(entity_id, langpref, cls)
         return values
 
-    def mdui_uiinfo_display_name(self, entity_id, langpref=None):
-        values = list(self._mdui_uiinfo_display_name(entity_id, langpref))
-        return values
-
-    def _mdui_uiinfo_description(self, entity_id, langpref=None):
+    def mdui_uiinfo_description(self, entity_id, langpref=None):
         cls = classnames["mdui_uiinfo_description"]
         values = self.mdui_uiinfo_i18n_element_cls(entity_id, langpref, cls)
         return values
 
-    def mdui_uiinfo_description(self, entity_id, langpref=None):
-        values = list(self._mdui_uiinfo_description(entity_id, langpref))
-        return values
-
-    def _mdui_uiinfo_information_url(self, entity_id, langpref=None):
+    def mdui_uiinfo_information_url(self, entity_id, langpref=None):
         cls = classnames["mdui_uiinfo_information_url"]
         values = self.mdui_uiinfo_i18n_element_cls(entity_id, langpref, cls)
         return values
 
-    def mdui_uiinfo_information_url(self, entity_id, langpref=None):
-        values = list(self._mdui_uiinfo_information_url(entity_id, langpref))
-        return values
-
-    def _mdui_uiinfo_privacy_statement_url(self, entity_id, langpref=None):
+    def mdui_uiinfo_privacy_statement_url(self, entity_id, langpref=None):
         cls = classnames["mdui_uiinfo_privacy_statement_url"]
         values = self.mdui_uiinfo_i18n_element_cls(entity_id, langpref, cls)
         return values
 
-    def mdui_uiinfo_privacy_statement_url(self, entity_id, langpref=None):
-        values = list(self._mdui_uiinfo_privacy_statement_url(entity_id, langpref))
-        return values
-
-    def _mdui_uiinfo_logo(self, entity_id, width, height):
-        uiinfos = self._mdui_uiinfo(entity_id)
+    def mdui_uiinfo_logo(self, entity_id, width=None, height=None):
+        uiinfos = self.mdui_uiinfo(entity_id)
         cls = classnames["mdui_uiinfo_logo"]
-        elements = self._mdui_uiinfo_lookup_elements_by_cls(uiinfos, cls)
+        elements = self._lookup_elements_by_cls(uiinfos, cls)
         values = (
             element
             for element in elements
             if width is None or element.get("width") == width
             if height is None or element.get("height") == height
         )
-        return values
-
-    def mdui_uiinfo_logo(self, entity_id, width=None, height=None):
-        values = list(self._mdui_uiinfo_logo(entity_id, width, height))
         return values
 
     def bindings(self, entity_id, typ, service):
