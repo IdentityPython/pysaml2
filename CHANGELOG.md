@@ -1,5 +1,19 @@
 # Changelog
 
+## 4.9.0 (2019-11-03)
+
+- Add mdstore methods to extract mdui uiinfo elements
+- Add attribute mapping for umbrellaID attributes
+- Fix logic error in pick_binding method for Entity class
+- Validate the audience of assertions regardless of a response being unsolicited
+- Fix PKCS_9 saml_url prefix
+- docs: Fix warnings from docs generation
+- docs: Update release instructions regarding branch releases
+- docs: Fix list formatting on IdP example page
+- docs: Update pysaml2 options doc with `name_id_format_allow_create`
+- misc: fix various typos
+
+
 ## 4.8.0 (2019-07-08)
 
 - Refactor the way ForceAuthn is set: check for "true" and "1"
