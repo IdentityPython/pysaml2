@@ -1,6 +1,6 @@
 .. _example_sp:
 
-An extremely simple example of a SAML2 service provider.
+An extremely simple example of a SAML2 service provider
 =======================================================
 
 How it works
@@ -15,12 +15,12 @@ they place information in environment variables. The convention is to place
 identity information in environ["repoze.who.identity"].
 This is a dictionary with keys like 'login', and 'repoze.who.userid'.
 
-The SP follows this pattern and places the information gathered from 
+The SP follows this pattern and places the information gathered from
 the IdP that handled the authentication and possible extra information
 received from attribute authorities in the above mentioned dictionary under
 the key 'user'.
 
-So in environ["repoze.who.identity"] you will find a dictionary with 
+So in environ["repoze.who.identity"] you will find a dictionary with
 attributes and values, the attribute names used depends on what's returned
 from the IdP/AA. If there exists both a name and a friendly name, for
 instance, the friendly name is used as the key.
@@ -47,6 +47,7 @@ sp_conf.py is configured to run on localhost on port 8087. If you want to you co
 **sp-repoze:**
 
 * Go to the folder:
+
 [your path]/pysaml2/example/sp-repoze
 
 * Take the file named sp_conf.py.example and rename it sp_conf.py
@@ -61,11 +62,11 @@ sp_conf.py is configured to run on localhost on port 8087. If you want to you co
 Important files:
 
 sp_conf.py
-    The SPs configuration 
-    
+    The SPs configuration
+
 who.ini
     The repoze.who configuration file
-    
+
 Inside the folder named pki there are two files with certificates, mykey.pem with the private
 certificate and mycert.pem with the public part.
 
@@ -83,15 +84,15 @@ it line by line::
         "service": ["sp"],
 
 Tells the software what type of services the software is supposed to
-supply. It is used to check for the 
+supply. It is used to check for the
 completeness of the configuration and also when constructing metadata from
-the configuration. More about that later. Allowed values are: "sp" 
+the configuration. More about that later. Allowed values are: "sp"
 (service provider), "idp" (identity provider) and "aa" (attribute authority).
 ::
 
         "entityid" : "urn:mace:example.com:saml:sp",
         "service_url" : "http://example.com:8087/",
-        
+
 The ID of the entity and the URL on which it is listening.::
 
         "idp_url" : "https://example.com/saml2/idp/SSOService.php",
@@ -101,11 +102,11 @@ is really no need for a metadata file or a WAYF-function or anything like that.
 It needs the URL of the IdP and that's all.::
 
         "my_name" : "My first SP",
-        
+
 This is just for informal purposes, not really needed but nice to do::
 
         "debug" : 1,
-        
+
 Well, at this point in time you'd really like to have as much information
 as possible as to what's going on, right ? ::
 
@@ -122,7 +123,7 @@ xmlsec package. There are reasons for this but I won't go into them here.::
         "organization": {
             "name": "Example Co",
             #display_name
-            "url":"http://www.example.com/",            
+            "url":"http://www.example.com/",
         },
 
 Information about the organization that is behind this SP, only used when
@@ -144,12 +145,12 @@ So, now to that part. In order to allow the IdP to talk to you, you may have
 to provide the one running the IdP with a metadata file.
 If you have a SP configuration file similar to the one I've walked you
 through here, but with your information, you can make the metadata file
-by running the make_metadata script you can find in the tools directory. 
+by running the make_metadata script you can find in the tools directory.
 
 Change directory to where you have the configuration file and do ::
 
     make_metadata.py sp_conf.py > metadata.xml
-    
+
 
 
 who.ini
@@ -157,7 +158,7 @@ who.ini
 The file named ``who.ini`` is the ``sp-repoze`` folder
 
 I'm not going through the INI file format here. You should read
-`Middleware Responsibilities <http://docs.repoze.org/who/2.0/middleware.html>`_ 
+`Middleware Responsibilities <http://docs.repoze.org/who/2.0/middleware.html>`_
 to get a good introduction to the concept.
 
 The configuration of the pysaml2 part in the applications middleware are
@@ -170,10 +171,10 @@ first the special module configuration, namely::
     debug = 1
     path_logout = .*/logout.*
 
-Which contains a specification ("use") of which function in which module 
-should be used to initialize the part. After that comes the name of the 
+Which contains a specification ("use") of which function in which module
+should be used to initialize the part. After that comes the name of the
 file ("saml_conf") that contains the PySaml2 configuration. The third line
-("rememberer_name") points at the plugin that should be used to 
+("rememberer_name") points at the plugin that should be used to
 remember the user information.
 
 After this, the plugin is referenced in a couple of places::
@@ -182,7 +183,7 @@ After this, the plugin is referenced in a couple of places::
     plugins =
           saml2auth
           auth_tkt
-          
+
     [authenticators]
     plugins = saml2auth
 
@@ -216,10 +217,10 @@ The application
 
 The app is, as said before, extremely simple. The only thing that is connected to
 the PySaml2 configuration is at the bottom, namely where the server is.
-You have to ascertain that this coincides with what is specified in the 
-PySaml2 configuration. Apart from that there really is nothing in 
-application.py that demands that you use PySaml2 as middleware. If you 
-switched to using the LDAP or CAS plugins nothing would change in the 
+You have to ascertain that this coincides with what is specified in the
+PySaml2 configuration. Apart from that there really is nothing in
+application.py that demands that you use PySaml2 as middleware. If you
+switched to using the LDAP or CAS plugins nothing would change in the
 application. In the application configuration yes! But not in the application.
 And that is really how it should be done.
 

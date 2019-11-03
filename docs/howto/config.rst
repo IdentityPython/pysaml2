@@ -674,7 +674,7 @@ Example::
     }
 
 want_assertions_or_response_signed
-""""""""""""""""""""
+""""""""""""""""""""""""""""""""""
 
 Indicates that *either* the Authentication Response *or* the assertions
 contained within the response to this SP must be signed.

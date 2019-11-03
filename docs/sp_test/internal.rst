@@ -22,7 +22,7 @@ These files should be stored outside the saml2test package to have a clean separ
 ::::::::::::::::::::::::::::::
 
 Client (sp_test/__init__.py)
-.........................
+............................
 Its life cycle is responsible for following activities:
  - read config files and command line arguments (the test driver's config is "json_config")
  - initialize the test driver IDP
@@ -49,7 +49,7 @@ Sequence
   - Example: see "sequence" item in operation dict
 
 Test (in the context of an operation)
-....
+.....................................
   - class to be executed as part of an operation, either before ("pre") or after ("post") the sequence or in between a SAML request and response ("mid").
     There are standard tests with the Request class (VerifyAuthnRequest) and operation-specific tests.
   - Example for an operation-specific "mid" test: VerifyIfRequestIsSigned
@@ -66,7 +66,7 @@ Flow
     * flow[3]: Check (optional - can be None. E.g. check the response if a correct error status was raised when sending a broken response)
 
 Check (and subclasses)
-.....
+......................
   - An optional class that is executed on receiving the SP's HTTP response(s) after the SAML response. If there are redirects, it will be called for each response.
   - Writes a structured test report to conv.test_output
   - It can check for expected errors, which do not cause an exception but in contrary are reported as a success
