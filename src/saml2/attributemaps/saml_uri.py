@@ -19,6 +19,7 @@ UMICH = 'urn:oid:1.3.6.1.4.1.250.1.57.'
 
 # openosi-0.82.schema http://www.openosi.org/osi/display/ldap/Home
 OPENOSI_OID = 'urn:oid:1.3.6.1.4.1.27630.2.1.1.'
+SWISSEDUPERSON_OID = 'urn:oid:2.16.756.1.2.5.1.1.'
 
 EIDAS_NATURALPERSON = 'http://eidas.europa.eu/attributes/naturalperson/'
 EIDAS_LEGALPERSON = 'http://eidas.europa.eu/attributes/legalperson/'
@@ -199,6 +200,21 @@ MAP = {
         X500ATTR_OID+'53': 'deltaRevocationList',
         X500ATTR_OID+'54': 'dmdName',
         X500ATTR_OID+'65': 'pseudonym',
+        SWISSEDUPERSON_OID+'1': 'swissEduPersonUniqueID',
+        SWISSEDUPERSON_OID+'2': 'swissEduPersonDateOfBirth',
+        SWISSEDUPERSON_OID+'3': 'swissEduPersonGender',
+        SWISSEDUPERSON_OID+'4': 'swissEduPersonHomeOrganization',
+        SWISSEDUPERSON_OID+'5': 'swissEduPersonHomeOrganizationType',
+        SWISSEDUPERSON_OID+'6': 'swissEduPersonStudyBranch1',
+        SWISSEDUPERSON_OID+'7': 'swissEduPersonStudyBranch2',
+        SWISSEDUPERSON_OID+'8': 'swissEduPersonStudyBranch3',
+        SWISSEDUPERSON_OID+'9': 'swissEduPersonStudyLevel',
+        SWISSEDUPERSON_OID+'10': 'swissEduPersonStaffCategory',
+        SWISSEDUPERSON_OID+'11': 'swissEduPersonMatriculationNumber',
+        SWISSEDUPERSON_OID+'12': 'swissEduPersonCardUID',
+        SWISSEDUPERSON_OID+'13': 'swissEduID',
+        SWISSEDUPERSON_OID+'1023': 'swissLibraryPersonAffiliation',
+        SWISSEDUPERSON_OID+'1025': 'swissLibraryPersonResidence',
     },
     'to': {
         'LegalPersonIdentifier': EIDAS_LEGALPERSON+'LegalPersonIdentifier',
@@ -366,5 +382,20 @@ MAP = {
         'userSMIMECertificate': NETSCAPE_LDAP+'40',
         'x121Address': X500ATTR_OID+'24',
         'x500UniqueIdentifier': X500ATTR_OID+'45',
+        'swissEduPersonUniqueID': SWISSEDUPERSON_OID+'1',
+        'swissEduPersonDateOfBirth': SWISSEDUPERSON_OID+'2',
+        'swissEduPersonGender': SWISSEDUPERSON_OID+'3',
+        'swissEduPersonHomeOrganization': SWISSEDUPERSON_OID+'4',
+        'swissEduPersonHomeOrganizationType': SWISSEDUPERSON_OID+'5',
+        'swissEduPersonStudyBranch1': SWISSEDUPERSON_OID+'6',
+        'swissEduPersonStudyBranch2': SWISSEDUPERSON_OID+'7',
+        'swissEduPersonStudyBranch3': SWISSEDUPERSON_OID+'8',
+        'swissEduPersonStudyLevel': SWISSEDUPERSON_OID+'9',
+        'swissEduPersonStaffCategory': SWISSEDUPERSON_OID+'10',
+        'swissEduPersonMatriculationNumber': SWISSEDUPERSON_OID+'11',
+        'swissEduPersonCardUID': SWISSEDUPERSON_OID+'12',
+        'swissEduID': SWISSEDUPERSON_OID+'13',
+        'swissLibraryPersonAffiliation': SWISSEDUPERSON_OID+'1023',
+        'swissLibraryPersonResidence': SWISSEDUPERSON_OID+'1025',
     }
 }
