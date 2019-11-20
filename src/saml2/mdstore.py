@@ -1379,6 +1379,30 @@ class MetadataStore(MetaData):
         )
         return values
 
+    def contact_person_data(self, entity_id, contact_type=None):
+        try:
+            data = self[entity_id]
+        except KeyError:
+            data = {}
+
+        contacts = (
+            {
+                "contact_type": _contact_type,
+                "given_name": contact.get("given_name", {}).get("text", ""),
+                "email_address": [
+                    address
+                    for email in contact.get("email_address", {})
+                    for address in [email.get("text")]
+                    if address
+                ],
+            }
+            for contact in data.get("contact_person", [])
+            for _contact_type in [contact.get("contact_type", "")]
+            if contact_type is None or contact_type == _contact_type
+        )
+
+        return contacts
+
     def bindings(self, entity_id, typ, service):
         for _md in self.metadata.values():
             if entity_id in _md.items():
