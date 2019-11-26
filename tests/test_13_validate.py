@@ -13,6 +13,7 @@ from saml2.validate import valid_instance
 from saml2.validate import valid_any_uri
 from saml2.validate import NotValid
 from saml2.validate import valid_anytype
+from saml2.validate import valid_address
 
 from pytest import raises
 
@@ -120,3 +121,27 @@ def test_valid_anytype():
     assert valid_anytype("P1Y2M3DT10H30M")
     assert valid_anytype("urn:oasis:names:tc:SAML:2.0:attrname-format:uri")
 
+
+def test_valid_address():
+    assert valid_address("130.239.16.3")
+    assert valid_address("2001:8003:5555:9999:555a:5555:c77:d5c5")
+    assert valid_address("2001:8003:5555::555a:5555:c77:d5c5")
+
+    # See https://tools.ietf.org/html/rfc4038#section-5.1 regarding
+    # the inclusion of brackets in the ipv6 address below.
+    assert valid_address("[2001:8003:5555:9999:555a:5555:c77:d5c5]")
+
+    with raises(NotValid):
+        assert valid_address("127.0.0.256")
+    with raises(NotValid):
+        assert valid_address("127.0.0.")
+    with raises(NotValid):
+        assert valid_address("127.0.0")
+    with raises(NotValid):
+        assert valid_address("2001::5555:9999::5555:c77:d5c5]")
+    with raises(NotValid):
+        assert valid_address("2001:8003:5555:9999:555a:5555:c77:d5c5]")
+    with raises(NotValid):
+        assert valid_address("[2001:8003:5555:9999:555a:5555:c77:d5c5")
+    with raises(NotValid):
+        assert valid_address("[[2001:8003:5555:9999:555a:5555:c77:d5c5]")
