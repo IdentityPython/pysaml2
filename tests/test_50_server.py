@@ -563,9 +563,8 @@ class TestServer1():
 
         assert valid
 
-        _, key_file = make_temp(cert_key_str, decode=False)
-
-        decr_text = self.server.sec.decrypt(signed_resp, key_file)
+        key_fd = make_temp(cert_key_str, decode=False)
+        decr_text = self.server.sec.decrypt(signed_resp, key_fd.name)
 
         resp = samlp.response_from_string(decr_text)
 
@@ -658,9 +657,8 @@ class TestServer1():
                                                  id_attr="")
         assert valid
 
-        _, key_file = make_temp(cert_key_str, decode=False)
-
-        decr_text = self.server.sec.decrypt(signed_resp, key_file)
+        key_fd = make_temp(cert_key_str, decode=False)
+        decr_text = self.server.sec.decrypt(signed_resp, key_fd.name)
 
         resp = samlp.response_from_string(decr_text)
 
@@ -720,9 +718,8 @@ class TestServer1():
 
         assert valid
 
-        _, key_file = make_temp(cert_key_str, decode=False)
-
-        decr_text = self.server.sec.decrypt(decr_text, key_file)
+        key_fd = make_temp(cert_key_str, decode=False)
+        decr_text = self.server.sec.decrypt(decr_text, key_fd.name)
 
         resp = samlp.response_from_string(decr_text)
 
@@ -763,9 +760,8 @@ class TestServer1():
 
         assert sresponse.signature is None
 
-        _, key_file = make_temp(cert_key_str_advice, decode=False)
-
-        decr_text = self.server.sec.decrypt(_resp, key_file)
+        key_fd = make_temp(cert_key_str_advice, decode=False)
+        decr_text = self.server.sec.decrypt(_resp, key_fd.name)
 
         resp = samlp.response_from_string(decr_text)
 
@@ -795,9 +791,8 @@ class TestServer1():
 
         decr_text_1 = self.server.sec.decrypt(_resp, self.client.config.encryption_keypairs[1]["key_file"])
 
-        _, key_file = make_temp(cert_key_str_advice, decode=False)
-
-        decr_text_2 = self.server.sec.decrypt(decr_text_1, key_file)
+        key_fd = make_temp(cert_key_str_advice, decode=False)
+        decr_text_2 = self.server.sec.decrypt(decr_text_1, key_fd.name)
 
         resp = samlp.response_from_string(decr_text_2)
 
@@ -826,9 +821,8 @@ class TestServer1():
 
         assert sresponse.signature is None
 
-        _, key_file = make_temp(cert_key_str_assertion, decode=False)
-
-        decr_text = self.server.sec.decrypt(_resp, key_file)
+        key_fd = make_temp(cert_key_str_assertion, decode=False)
+        decr_text = self.server.sec.decrypt(_resp, key_fd.name)
 
         resp = samlp.response_from_string(decr_text)
 
@@ -918,13 +912,11 @@ class TestServer1():
 
         assert sresponse.signature is None
 
-        _, key_file = make_temp(cert_key_str_assertion, decode=False)
+        key_fd1 = make_temp(cert_key_str_assertion, decode=False)
+        decr_text_1 = _server.sec.decrypt(_resp, key_fd1.name)
 
-        decr_text_1 = _server.sec.decrypt(_resp, key_file)
-
-        _, key_file = make_temp(cert_key_str_advice, decode=False)
-
-        decr_text_2 = _server.sec.decrypt(decr_text_1, key_file)
+        key_fd2 = make_temp(cert_key_str_advice, decode=False)
+        decr_text_2 = _server.sec.decrypt(decr_text_1, key_fd2.name)
 
         resp = samlp.response_from_string(decr_text_2)
 
@@ -1637,9 +1629,8 @@ class TestServer1NonAsciiAva():
 
         assert valid
 
-        _, key_file = make_temp(cert_key_str, decode=False)
-
-        decr_text = self.server.sec.decrypt(signed_resp, key_file)
+        key_fd = make_temp(cert_key_str, decode=False)
+        decr_text = self.server.sec.decrypt(signed_resp, key_fd.name)
 
         resp = samlp.response_from_string(decr_text)
 
@@ -1732,9 +1723,8 @@ class TestServer1NonAsciiAva():
                                                  id_attr="")
         assert valid
 
-        _, key_file = make_temp(cert_key_str, decode=False)
-
-        decr_text = self.server.sec.decrypt(signed_resp, key_file)
+        key_fd = make_temp(cert_key_str, decode=False)
+        decr_text = self.server.sec.decrypt(signed_resp, key_fd.name)
 
         resp = samlp.response_from_string(decr_text)
 
@@ -1794,9 +1784,8 @@ class TestServer1NonAsciiAva():
 
         assert valid
 
-        _, key_file = make_temp(cert_key_str, decode=False)
-
-        decr_text = self.server.sec.decrypt(decr_text, key_file)
+        key_fd = make_temp(cert_key_str, decode=False)
+        decr_text = self.server.sec.decrypt(decr_text, key_fd.name)
 
         resp = samlp.response_from_string(decr_text)
 
@@ -1837,9 +1826,8 @@ class TestServer1NonAsciiAva():
 
         assert sresponse.signature is None
 
-        _, key_file = make_temp(cert_key_str_advice, decode=False)
-
-        decr_text = self.server.sec.decrypt(_resp, key_file)
+        key_fd = make_temp(cert_key_str_advice, decode=False)
+        decr_text = self.server.sec.decrypt(_resp, key_fd.name)
 
         resp = samlp.response_from_string(decr_text)
 
@@ -1869,9 +1857,8 @@ class TestServer1NonAsciiAva():
 
         decr_text_1 = self.server.sec.decrypt(_resp, self.client.config.encryption_keypairs[1]["key_file"])
 
-        _, key_file = make_temp(cert_key_str_advice, decode=False)
-
-        decr_text_2 = self.server.sec.decrypt(decr_text_1, key_file)
+        key_fd = make_temp(cert_key_str_advice, decode=False)
+        decr_text_2 = self.server.sec.decrypt(decr_text_1, key_fd.name)
 
         resp = samlp.response_from_string(decr_text_2)
 
@@ -1900,9 +1887,8 @@ class TestServer1NonAsciiAva():
 
         assert sresponse.signature is None
 
-        _, key_file = make_temp(cert_key_str_assertion, decode=False)
-
-        decr_text = self.server.sec.decrypt(_resp, key_file)
+        key_fd = make_temp(cert_key_str_assertion, decode=False)
+        decr_text = self.server.sec.decrypt(_resp, key_fd.name)
 
         resp = samlp.response_from_string(decr_text)
 
@@ -1992,13 +1978,11 @@ class TestServer1NonAsciiAva():
 
         assert sresponse.signature is None
 
-        _, key_file = make_temp(cert_key_str_assertion, decode=False)
+        key_fd1 = make_temp(cert_key_str_assertion, decode=False)
+        decr_text_1 = _server.sec.decrypt(_resp, key_fd1.name)
 
-        decr_text_1 = _server.sec.decrypt(_resp, key_file)
-
-        _, key_file = make_temp(cert_key_str_advice, decode=False)
-
-        decr_text_2 = _server.sec.decrypt(decr_text_1, key_file)
+        key_fd2 = make_temp(cert_key_str_advice, decode=False)
+        decr_text_2 = _server.sec.decrypt(decr_text_1, key_fd2.name)
 
         resp = samlp.response_from_string(decr_text_2)
 

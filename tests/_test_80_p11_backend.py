@@ -63,6 +63,7 @@ class FakeConfig():
         self.tmp_cert_file = None
         self.tmp_key_file = None
         self.validate_certificate = False
+        self.delete_tmpfiles = True
 
 
 class TestPKCS11():
