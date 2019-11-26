@@ -133,6 +133,7 @@ def valid_ipv4(address):
 IPV6_PATTERN = re.compile(r"""
     ^
     \s*                         # Leading whitespace
+    \[?                         # See https://tools.ietf.org/html/rfc4038#section-5.1
     (?!.*::.*::)                # Only a single wildcard allowed
     (?:(?!:)|:(?=:))            # Colon iff it would be part of a wildcard
     (?:                         # Repeat 6 times:
@@ -153,6 +154,7 @@ IPV6_PATTERN = re.compile(r"""
             (?:25[0-4]|2[0-4]\d|1\d\d|[1-9]?\d)
         ){3}
     )
+    \]?                         # See https://tools.ietf.org/html/rfc4038#section-5.1
     \s*                         # Trailing whitespace
     $
 """, re.VERBOSE | re.IGNORECASE | re.DOTALL)
