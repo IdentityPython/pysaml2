@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import datetime
+import os
 import re
 from collections import OrderedDict
+from unittest.mock import patch
 
 from six.moves.urllib import parse
 
@@ -25,6 +27,9 @@ from saml2.s_utils import UnknownPrincipal
 from pathutils import full_path
 
 import responses
+
+
+TESTS_DIR = os.path.dirname(__file__)
 
 sec_config = config.Config()
 # sec_config.xmlsec_binary = sigver.get_xmlsec_binary(["/opt/local/bin"])
@@ -362,7 +367,15 @@ def test_load_local_dir():
     assert len(mds.keys()) == 4  # number of idps
 
 
-def test_load_extern_incommon():
+@patch('saml2.httpbase.requests.request')
+def test_load_extern_incommon(mock_request):
+    filepath = os.path.join(TESTS_DIR, "remote_data/InCommon-metadata-export.xml")
+    with open(filepath) as fd:
+        data = fd.read()
+    mock_request.return_value.ok = True
+    mock_request.return_value.status_code = 200
+    mock_request.return_value.content = data
+
     sec_config.xmlsec_binary = sigver.get_xmlsec_binary(["/opt/local/bin"])
     mds = MetadataStore(ATTRCONV, sec_config,
                         disable_ssl_certificate_validation=True)
@@ -387,7 +400,15 @@ def test_load_local():
     assert cfg
 
 
-def test_load_remote_encoding():
+@patch('saml2.httpbase.requests.request')
+def test_load_remote_encoding(mock_request):
+    filepath = os.path.join(TESTS_DIR, "remote_data/metadata.aaitest.xml")
+    with open(filepath) as fd:
+        data = fd.read()
+    mock_request.return_value.ok = True
+    mock_request.return_value.status_code = 200
+    mock_request.return_value.content = data
+
     crypto = sigver._get_xmlsec_cryptobackend()
     sc = sigver.SecurityContext(crypto, key_type="", cert_type="")
     httpc = HTTPBase()
