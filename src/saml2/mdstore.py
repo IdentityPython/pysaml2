@@ -99,6 +99,10 @@ class ToOld(Exception):
     pass
 
 
+class TooOld(ToOld):
+    pass
+
+
 class SourceNotFound(Exception):
     pass
 
@@ -561,7 +565,7 @@ class InMemoryMetaData(MetaData):
             if self.check_validity:
                 try:
                     if not valid(self.entities_descr.valid_until):
-                        raise ToOld(
+                        raise TooOld(
                             "Metadata not valid anymore, it's only valid "
                             "until %s" % (
                                 self.entities_descr.valid_until,))
