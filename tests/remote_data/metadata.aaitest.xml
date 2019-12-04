@@ -1,127 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?><EntitiesDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:mdrpi="urn:oasis:names:tc:SAML:metadata:rpi" xmlns:mdui="urn:oasis:names:tc:SAML:metadata:ui" xmlns:shibmd="urn:mace:shibboleth:metadata:1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ID="AAITest-20191127170144" Name="urn:mace:switch.ch:aaitest" validUntil="2019-12-02T16:01:44Z" xsi:schemaLocation="urn:oasis:names:tc:SAML:2.0:metadata saml-schema-metadata-2.0.xsd urn:mace:shibboleth:metadata:1.0 shibboleth-metadata-1.0.xsd http://www.w3.org/2000/09/xmldsig# xmldsig-core-schema.xsd"><ds:Signature>
-<ds:SignedInfo>
-<ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>
-<ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/>
-<ds:Reference URI="#AAITest-20191127170144">
-<ds:Transforms>
-<ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/>
-<ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>
-</ds:Transforms>
-<ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
-<ds:DigestValue>MJ57JDN1u/xN/jeAbeAkNPjXrvekwF41xFFKT0TJGqk=</ds:DigestValue>
-</ds:Reference>
-</ds:SignedInfo>
-<ds:SignatureValue>
-I9WT1niRyobI2qBuG9yMQ4rOdknbCEP7x3TG25jlBKhKFK73j3ftyfNeAfxxhLx5wT9I6Ag4vduK
-wfy7BCKoPakQTmZDqstvOUJT52sneVQLZi1v1ehPiY3FglbSIaltM05Nu+NJ9kgkfw8bbZ2kvkoD
-Vyw2OchUzexyXsSQ76mziMteRzw5LNOgVww1FIrVN8Yge1z8vAGuGo+p4Mrn8kv90YdO+m3CVwFb
-jAvQ30kXdQBisXyGweJo6M/2LUf4WjJlwuCFTJ5fjOsf1xfkYpfPHwAYlLPJsiHK8+wnAI9mBiFC
-bLAq8kInWLvr10vPi9HHBDL4wXmYhehpwxhC1A==
-</ds:SignatureValue>
-<ds:KeyInfo>
-<ds:KeyValue>
-<ds:RSAKeyValue>
-<ds:Modulus>
-tLrTOviM+73OFe+Z7A5B2b7CM3sHCZIXFSthiSxMrXG5ENgXwDGCfqQTM1lIIk86QgJ4YvEB40AO
-p3+HhHTOJC+VoFUMGwTw8V4Zln+krQBmfTuNUZnTuzptXjrjaCs3cu7YOujnPfYC2iJKsIneN2sD
-UrqlH6wh/BFOTWVlRe1bgnXA+FtQJsLvMjmZ2xBFI6cFHPc0l67Tm9wu9js3Hpw3ZRXGK8XHvFHC
-/kGqSGZ+qxRoUFQLMFbjng+hvjubFb1wRMM/3YLiqm/cJlwwm3L9JrtTT39g/1e+rPhZT1hJO/sj
-8ZIdYYsA1ReO4G7R1b2NF8WqjCq+l01PfloxfQ==
-</ds:Modulus>
-<ds:Exponent>AQAB</ds:Exponent>
-</ds:RSAKeyValue>
-</ds:KeyValue>
-<ds:X509Data>
-<ds:X509Certificate>
-MIIEJjCCAw6gAwIBAgISSWITCHaaiMetadataSig2018MA0GCSqGSIb3DQEBCwUAMEYxCzAJBgNV
-BAYTAkNIMQ8wDQYDVQQKEwZTV0lUQ0gxJjAkBgNVBAMTHVNXSVRDSGFhaSBNZXRhZGF0YSBTaWdu
-aW5nIENBMB4XDTE4MDYwMTA3MDAwMFoXDTIwMDcxNTA2NTk1OVowQjELMAkGA1UEBhMCQ0gxDzAN
-BgNVBAoTBlNXSVRDSDEiMCAGA1UEAxMZU1dJVENIYWFpIE1ldGFkYXRhIFNpZ25lcjCCASIwDQYJ
-KoZIhvcNAQEBBQADggEPADCCAQoCggEBALS60zr4jPu9zhXvmewOQdm+wjN7BwmSFxUrYYksTK1x
-uRDYF8Axgn6kEzNZSCJPOkICeGLxAeNADqd/h4R0ziQvlaBVDBsE8PFeGZZ/pK0AZn07jVGZ07s6
-bV4642grN3Lu2Dro5z32AtoiSrCJ3jdrA1K6pR+sIfwRTk1lZUXtW4J1wPhbUCbC7zI5mdsQRSOn
-BRz3NJeu05vcLvY7Nx6cN2UVxivFx7xRwv5BqkhmfqsUaFBUCzBW454Pob47mxW9cETDP92C4qpv
-3CZcMJty/Sa7U09/YP9Xvqz4WU9YSTv7I/GSHWGLANUXjuBu0dW9jRfFqowqvpdNT35aMX0CAwEA
-AaOCARAwggEMMA4GA1UdDwEB/wQEAwIHgDAdBgNVHQ4EFgQU36lyRNM+aRWZwj1ZXKQ3cmLKikYw
-HwYDVR0jBBgwFoAUkAqRwu5oLhVuFP7yzr0RUYoeNd8wTAYDVR0fBEUwQzBBoD+gPYY7aHR0cDov
-L2NybC5hYWkuc3dpdGNoLmNoL1NXSVRDSGFhaU1ldGFkYXRhU2lnbmluZ0NBMjAxNS5jcmwwVgYI
-KwYBBQUHAQEESjBIMEYGCCsGAQUFBzAChjpodHRwOi8vY2EuYWFpLnN3aXRjaC5jaC9TV0lUQ0hh
-YWlNZXRhZGF0YVNpZ25pbmdDQTIwMTUuY3J0MBQGA1UdIAQNMAswCQYHYIV0AQIGBzANBgkqhkiG
-9w0BAQsFAAOCAQEANOvsxf54rvakxb8Q/dVlw/hs3BxcYh84BgzUIGxs1q8EjpIFgI62ODM9QSHy
-Ia+PXYwKcZRFw6imzNGMaDm+v34XAJEn5sn5OYx3kkDAEoLh1ZlTZCFm1NnP1lb/CbEKn2PV4cdw
-pLlvu0MipHRR17Ho5a7gGV9C9ULGIreFH8OjpX3oaE6LonvGdGZk66utOrQgD2nbRGHQRWD9+dVY
-KT3q9Vwen6AUoOVC9Ue1C7gKZ8xYWCbQu000a4csqEmWDD6LS/ZkvTgmYeFcFhZ7DztFTVOZGYbk
-5sADshjZZBSQAJhaglMaI/r/BXSng+/JcVzHq04A5oH9yggFEzjr2g==
-</ds:X509Certificate>
-<ds:X509Certificate>
-MIIESjCCAzKgAwIBAgISSWITCHaaiMetadataSignCA2MA0GCSqGSIb3DQEBCwUAMGsxCzAJBgNV
-BAYTAkNIMUAwPgYDVQQKEzdTd2l0Y2ggLSBUZWxlaW5mb3JtYXRpa2RpZW5zdGUgZnVlciBMZWhy
-ZSB1bmQgRm9yc2NodW5nMRowGAYDVQQDExFTV0lUQ0hhYWkgUm9vdCBDQTAeFw0xNTA3MTUwNzAw
-MDBaFw0yMDA3MTUwNjU5NTlaMEYxCzAJBgNVBAYTAkNIMQ8wDQYDVQQKEwZTV0lUQ0gxJjAkBgNV
-BAMTHVNXSVRDSGFhaSBNZXRhZGF0YSBTaWduaW5nIENBMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A
-MIIBCgKCAQEApYAlCv+zsEXlLR2aeX83+SaGmAInwLVa9ihgMm99xlIp/rjqzawPj6qI9OIqJSth
-P6/9FrWzc20AsL4lwUhJfm2cQEBFfzQ7bFVXqSY9+3bKdpTXz962RcPMdM1GRHfVDS/C7uJySZcU
-CfoK9IWPkdJ9KIe3gqjUWGCg9+Ghu/7K/HnduGTc2/wMrIRI2S8QuflThCvFVM2PeXDTxItQSoAJ
-4MM9v3Up1fbp5bqc5qPKqpn0D0AB46e++gZjAlNBm0vQm2Qw0/Ru3/X8xf1TKK5Za/MxHRaS4KR6
-0V2UdiTX17HApNNtvnd/cc8eQ3l/lvQkWPUe5aEgMDd/9BRn0wIDAQABo4IBCzCCAQcwDwYDVR0T
-AQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMCAQYwHwYDVR0jBBgwFoAU6ZriBljrD9eBA11cl7mxtZN9
-O4QwHQYDVR0OBBYEFJAKkcLuaC4VbhT+8s69EVGKHjXfMD0GA1UdHwQ2MDQwMqAwoC6GLGh0dHA6
-Ly9jcmwuYWFpLnN3aXRjaC5jaC9TV0lUQ0hhYWlSb290Q0EuY3JsMEcGCCsGAQUFBwEBBDswOTA3
-BggrBgEFBQcwAoYraHR0cDovL2NhLmFhaS5zd2l0Y2guY2gvU1dJVENIYWFpUm9vdENBLmNydDAc
-BgNVHSAEFTATMAYGBFUdIAAwCQYHYIV0AQIGBzANBgkqhkiG9w0BAQsFAAOCAQEAXaxkC++VrBse
-smh7TteSsvD2S8s5m7ydMw5GviGQjXLhzHQQifiJcOOsIpFO7y5/1RJZUzgf3D+O6PLY2DJhFY/F
-A2y/SRT3qNUb1EAVq+AtNXKEvmxZXcpNhdzJCONRXkNm25MvPtcfpBTfKVhW8PkSM0H5p9v5U/N2
-lU/TS7Bkwzc5deaKIoqvh+l/bjzsB3QdR6UXQ0lUcB1ve4iW4e+4SVJGCXhoMsX3QNfyKPWYsELU
-GsQCaifc7nCXtL8TuO5CwzQG5uNfQ5PRugv63S4FS788OA8ZGSIl74KMC10C84GhJsSe1C6UZgCl
-z3067iyasJWjISXYDKk3pwpZIg==
-</ds:X509Certificate>
-<ds:X509Certificate>
-MIIDnzCCAoegAwIBAgINSWITCHaai+Root+CAzANBgkqhkiG9w0BAQUFADBrMQswCQYDVQQGEwJD
-SDFAMD4GA1UEChM3U3dpdGNoIC0gVGVsZWluZm9ybWF0aWtkaWVuc3RlIGZ1ZXIgTGVocmUgdW5k
-IEZvcnNjaHVuZzEaMBgGA1UEAxMRU1dJVENIYWFpIFJvb3QgQ0EwHhcNMDgwNTE1MDYzMDAwWhcN
-MjgwNTE1MDYyOTU5WjBrMQswCQYDVQQGEwJDSDFAMD4GA1UEChM3U3dpdGNoIC0gVGVsZWluZm9y
-bWF0aWtkaWVuc3RlIGZ1ZXIgTGVocmUgdW5kIEZvcnNjaHVuZzEaMBgGA1UEAxMRU1dJVENIYWFp
-IFJvb3QgQ0EwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDUSWbn/rhWew/sLJRyciyR
-KDGyFXSgiDO/EohYuZLw6EAKLLlhZorNtEHQbbn0Oo13S33MclHMvGWTKJM0u1hG+6gLy78EPmJb
-qAE1Uv23wVEH4SX0VJfl3JVqIebiAH/CjuLubgMUspDIjOdQHNLS7pthTbm7Tgh7zMsiLPyMTZJe
-p5CGbqv8NoK6bMaF0Z+Bt7e1JRlhHFCViJJaR/+hfpzLsJ8NWVivvrpRGaGJ1XR+9FGsTkjNdMCi
-rNJJZ6XvUOe5w7pHSd9McppFP0eyLs02AMzMXI4iz6PK/w3EdzXGXpK+gSgvLxWYct4xHpv1e2NX
-hNgdJOSN9ra/wJLVAgMBAAGjQjBAMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgEGMB0G
-A1UdDgQWBBTpmuIGWOsP14EDXVyXubG1k307hDANBgkqhkiG9w0BAQUFAAOCAQEAMV/eIW6pFB+m
-bk7rD7hUPTWDRaoca3kHqmFGFnHfuY8+c0/Mqjh8Y/jyX1ybf58crTSWrbyGbUZ3oxDGQ34tuZSk
-meR32NqryiX3sP5qlNSozVguQKt8o4vhS1QeWPsXALs3em2pdKuIGSOpbuDnopPcmU2g5Zi2R5P7
-qpKDKAKtNUEwV+LW7GBMEksONj7BFXk4AFBFBijaYJGgHmoKSImVgeNIvsV+BSv5HJ4q6vcxfnwu
-vvGHM0AGphYO6f5qtHMUgvAblI8M/2QsBgethaGrirtKJ3aCRLdaR2R1QfaGRpck/Ron5/MpMxiJ
-wLT8YlW/zjx2yNABhPSAjfzeMw==
-</ds:X509Certificate>
-<ds:X509CRL>
-MIIB9jCB3wIBATANBgkqhkiG9w0BAQsFADBGMQswCQYDVQQGEwJDSDEPMA0GA1UEChMGU1dJVENI
-MSYwJAYDVQQDEx1TV0lUQ0hhYWkgTWV0YWRhdGEgU2lnbmluZyBDQRcNMTkxMTI3MDY0MzAyWhcN
-MTkxMjAyMDY0MzAyWjAzMDECEkliEwh2mojHrWnWrWkooNtNeRcNMTgwNzE2MDcwMDAwWjAMMAoG
-A1UdFQQDCgEEoDAwLjAfBgNVHSMEGDAWgBSQCpHC7mguFW4U/vLOvRFRih413zALBgNVHRQEBAIC
-BjkwDQYJKoZIhvcNAQELBQADggEBAC9jmyONf7Y7kM3L8fmD1XU2uMO/VF2Om/7cOIeE01CW6CQc
-En7nFUrM6N3H5JrTIGATLji2p5aYJ+yxUQ0uYDHW3HKNo6Byx7Hr2nNXnVEdTZ5DVVWEM7KMrLqb
-voAm86gdbveaEKM5Y/bu4tTy8Y17ydK0alfZz0KNdtCHTcbmPTaLIWfkNlJ6JdHoGBL/OYd/RZn0
-yvW1HkgzLijt/4baadaQbMgwfw5vXTdO0/0CTNaKBdeRwTILftYlutARhO9yXKWPL+jlSGIpQy9+
-IKSf8R3XrkEVcJBuI+V0esNYg0A4tKK5EfGJTEWUGfTa5wtrWJpvTxI8EwulkCQlx0g=
-</ds:X509CRL>
-<ds:X509CRL>
-MIIChTCCAW0CAQEwDQYJKoZIhvcNAQELBQAwazELMAkGA1UEBhMCQ0gxQDA+BgNVBAoTN1N3aXRj
-aCAtIFRlbGVpbmZvcm1hdGlrZGllbnN0ZSBmdWVyIExlaHJlIHVuZCBGb3JzY2h1bmcxGjAYBgNV
-BAMTEVNXSVRDSGFhaSBSb290IENBFw0xOTAzMzAxMzI0MTVaFw0yMDA5MjgxMzI0MTVaMIGcMDEC
-EkliEwh2moiJ7RXnTA0ooJwgNBcNMTUwOTAxMDcwMDAwWjAMMAoGA1UdFQQDCgEFMDECEkliEwh2
-mojHrWnWrWkooJwgNRcNMTUwOTAxMDcwMDAwWjAMMAoGA1UdFQQDCgEFMDQCFUliEwh2mojHrWnW
-rWkooJ4p4AgNcBcNMTUwOTAxMDcwMDAwWjAMMAoGA1UdFQQDCgEFoC8wLTAfBgNVHSMEGDAWgBTp
-muIGWOsP14EDXVyXubG1k307hDAKBgNVHRQEAwIBDDANBgkqhkiG9w0BAQsFAAOCAQEAWf7o16Z2
-q4O6qmJdbg+3HHJD3M4byGGgv9t4cp9fVPcDRKOxYd5BnvIp6daZV14W7GKJ7BX4K5gt9629nme0
-IVLqm+Fq8qCy38HA30Sr5tjFVGFAOzcLzzMJHuTNp+d5riK4vlMBY3VEfQeFDqZGw4CfqjIYDUPY
-49AXLwkH8Npgjjc9YDicZIh6osk2RJxHOfBaD7/5ETJPZ/0irgb3VWBjzpD6HI9DtXQnTi6DFLhs
-SUZR93T4O8wD8XuP2e6pEevpQnIaijFOSSA1c+oXO4o04zESj617VFCA1J4f2NqDV7LGZm1dT/Ro
-kTrorHQ4/wGoDIpifcLse8Rj3PZdMQ==
-</ds:X509CRL>
-</ds:X509Data>
-</ds:KeyInfo>
-</ds:Signature>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><EntitiesDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:mdrpi="urn:oasis:names:tc:SAML:metadata:rpi" xmlns:mdui="urn:oasis:names:tc:SAML:metadata:ui" xmlns:shibmd="urn:mace:shibboleth:metadata:1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ID="AAITest-20191127170144" Name="urn:mace:switch.ch:aaitest" validUntil="9999-01-01T00:00:00Z" xsi:schemaLocation="urn:oasis:names:tc:SAML:2.0:metadata saml-schema-metadata-2.0.xsd urn:mace:shibboleth:metadata:1.0 shibboleth-metadata-1.0.xsd http://www.w3.org/2000/09/xmldsig# xmldsig-core-schema.xsd">
 <!--
 		This metadata file is generated for the AAI Test federation,
 		which is for development and testing purposes only!
@@ -146,7 +23,7 @@ kTrorHQ4/wGoDIpifcLse8Rj3PZdMQ==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 			</mdattr:EntityAttributes>
 
 		</Extensions>
@@ -260,7 +137,7 @@ JLuwKIc2AqbiZQxOuWf/+la8SBstg/xzsU0cLX43tD6b5AZajCylvU1RaxEkFBRb
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 			</mdattr:EntityAttributes>
 
 		</Extensions>
@@ -369,7 +246,7 @@ yIjEdB67LkSbGlrCa0glLGKZFnAqEXxgKGgFLOZS0dZhGf0byWcVLjLtfoM8ntyN
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 			</mdattr:EntityAttributes>
 
 		</Extensions>
@@ -462,7 +339,7 @@ a1oLA25R+SSx9x3c3AwNzRByoW7HfR7SaINGhlv8z/xiFDQm53x0IOCWA1EeKozQ
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 			</mdattr:EntityAttributes>
 
 		</Extensions>
@@ -564,7 +441,7 @@ CG9Wz9KLfaxssPHaavd96MVteM8=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 			</mdattr:EntityAttributes>
 
 		</Extensions>
@@ -649,7 +526,7 @@ IoCjNOhMgMYggvZc23c=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 			</mdattr:EntityAttributes>
 
 		</Extensions>
@@ -800,7 +677,7 @@ Nc+ngn1OAVc=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				   
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:assurance-certification" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>https://refeds.org/sirtfi</saml:AttributeValue>
 				</saml:Attribute>
@@ -889,12 +766,12 @@ pa1lQomsWHiCP19hC2za2mWHu/WdtcLLphdA3t2K6+dmR9WX6O8YzcSyk6gLtZF9
 			<OrganizationName xml:lang="en">graduateinstitute.ch</OrganizationName>
 			<OrganizationDisplayName xml:lang="en">Graduate Institute - Test IdP</OrganizationDisplayName>
 			<OrganizationURL xml:lang="en">http://www.graduateinstitute.ch/</OrganizationURL>
-		</Organization>                
+		</Organization>
 		<ContactPerson xmlns:remd="http://refeds.org/metadata" contactType="other" remd:contactType="http://refeds.org/metadata/contactType/security">
 			<GivenName>Wilfred</GivenName>
 			<SurName>Gander</SurName>
 			<EmailAddress>mailto:wilfred.gander@graduateinstitute.ch</EmailAddress>
-			
+
 		</ContactPerson>
 	</EntityDescriptor>
 
@@ -909,7 +786,7 @@ pa1lQomsWHiCP19hC2za2mWHu/WdtcLLphdA3t2K6+dmR9WX6O8YzcSyk6gLtZF9
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				   
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:assurance-certification" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>https://refeds.org/sirtfi</saml:AttributeValue>
 				</saml:Attribute>
@@ -1095,12 +972,12 @@ nT2DecWFfixBKpGwMp0OfspUijtXEFbEHmVjYXavlIIm
 			<OrganizationDisplayName xml:lang="fr">HEP Vaud - TEST - Haute école pédagogique du canton de Vaud</OrganizationDisplayName>
 			<OrganizationURL xml:lang="en">http://www.hepl.ch/</OrganizationURL>
 			<OrganizationURL xml:lang="fr">http://www.hepl.ch/</OrganizationURL>
-		</Organization>                
+		</Organization>
 		<ContactPerson xmlns:remd="http://refeds.org/metadata" contactType="other" remd:contactType="http://refeds.org/metadata/contactType/security">
 			<GivenName>helpdesk HEP</GivenName>
 			<SurName>helpdesk HEP</SurName>
 			<EmailAddress>mailto:helpdesk@hepl.ch</EmailAddress>
-			
+
 		</ContactPerson>
 	</EntityDescriptor>
 
@@ -1115,7 +992,7 @@ nT2DecWFfixBKpGwMp0OfspUijtXEFbEHmVjYXavlIIm
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 			</mdattr:EntityAttributes>
 
 		</Extensions>
@@ -1261,7 +1138,7 @@ yhtEPzc4dxhh5e6U3pfMqkFkAiEKsg6TnGbEVQuDMy5922C83RMUqT4z3kA=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 			</mdattr:EntityAttributes>
 
 		</Extensions>
@@ -1358,7 +1235,7 @@ ifJgPU+WUNfbazu78ifV63eAtUl+nBkhi5gMinY7oXtD0vK69FnXB2oZJHp3o5k=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 			</mdattr:EntityAttributes>
 
 		</Extensions>
@@ -1468,7 +1345,7 @@ Ofim
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 			</mdattr:EntityAttributes>
 
 		</Extensions>
@@ -1679,7 +1556,7 @@ Pw1Zuf7Bd34xBf3BlRiN3GY0ZO0WmhPCOiyXB6g1WlyKGcoIPUsuGAg0wF0=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 			</mdattr:EntityAttributes>
 
 		</Extensions>
@@ -1789,7 +1666,7 @@ vmCeOyaeLrfAWjuUhp+l56XmsmAt2QwMhDtF7ad/WhdWvYx8fsU0da7sr44=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 			</mdattr:EntityAttributes>
 
 		</Extensions>
@@ -1903,7 +1780,7 @@ CzdA8Q==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 			</mdattr:EntityAttributes>
 
 		</Extensions>
@@ -2008,7 +1885,7 @@ m/2zNvNzNBGi9p84KZ+Fn9S9GaFIx2wm9mWFCGQ4ClGXyXL9jnNADyYlrjuN30uA
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 			</mdattr:EntityAttributes>
 
 		</Extensions>
@@ -2111,7 +1988,7 @@ K/Ry6U7sfhKgKvE76zKVzuNbTS8HqzEkLi08JNGBgWc=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 			</mdattr:EntityAttributes>
 
 		</Extensions>
@@ -2227,7 +2104,7 @@ OKNguza3bi3RRsZUlDAJHSGHm+Fc3QLUPCDLZc0+OKcQbThC
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 			</mdattr:EntityAttributes>
 
 		</Extensions>
@@ -2336,7 +2213,7 @@ yAC9nH+QiapYyPz1qWWsvFRG7/lpA2hc
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 			</mdattr:EntityAttributes>
 
 		</Extensions>
@@ -2445,7 +2322,7 @@ I+Gw1TCc5NpI1S7PWrG94x7O9SnYNL/OzyLNew==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 			</mdattr:EntityAttributes>
 
 		</Extensions>
@@ -2552,7 +2429,7 @@ iHTraMOaCZWrdTour6KckJigCYEL6t11LM0eNw==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 			</mdattr:EntityAttributes>
 
 		</Extensions>
@@ -2659,7 +2536,7 @@ PIR6n9TcuIrrjSOKccQkfLNs+WFFD0pLZgl7Qcv18y7031/mQLDi4SF2R/zZuolo
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 			</mdattr:EntityAttributes>
 
 		</Extensions>
@@ -2766,7 +2643,7 @@ NaJ5zpd0pEiy3dSqZQ==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 			</mdattr:EntityAttributes>
 
 		</Extensions>
@@ -2867,7 +2744,7 @@ sk4QDGcZTtSIzVeO
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 			</mdattr:EntityAttributes>
 
 		</Extensions>
@@ -2968,7 +2845,7 @@ NCjkP1G0q6jmwgZSDc7g6w==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 			</mdattr:EntityAttributes>
 
 		</Extensions>
@@ -3069,7 +2946,7 @@ jDWaNL4hLuMdeQEeUDGqmHTdk88UGbFeiMFW6LijnZVMrzo0XIDp8ohGO2qTLhmC
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 			</mdattr:EntityAttributes>
 
 		</Extensions>
@@ -3170,7 +3047,7 @@ GlSXPnnSHdT/1UCI/+HOaw==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 			</mdattr:EntityAttributes>
 
 		</Extensions>
@@ -3274,7 +3151,7 @@ NcoUarErBzMXXYq0rjOhBDPy01I=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 			</mdattr:EntityAttributes>
 
 		</Extensions>
@@ -3375,7 +3252,7 @@ FhIibiHtPAsQca8arbR6
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				   
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:assurance-certification" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>https://refeds.org/sirtfi</saml:AttributeValue>
 				</saml:Attribute>
@@ -3462,12 +3339,12 @@ YMyUrqQEclnRjgzYs/iwcpdKSKhPjjjkCDvOfo7lBy8x0GDV78p3pQ==
 			<OrganizationName xml:lang="en">unibas.ch</OrganizationName>
 			<OrganizationDisplayName xml:lang="en">Uni Basel Test IdP</OrganizationDisplayName>
 			<OrganizationURL xml:lang="en">http://www.unibas.ch/</OrganizationURL>
-		</Organization>                
+		</Organization>
 		<ContactPerson xmlns:remd="http://refeds.org/metadata" contactType="other" remd:contactType="http://refeds.org/metadata/contactType/security">
 			<GivenName>Security</GivenName>
 			<SurName>Team</SurName>
 			<EmailAddress>mailto:security@unibas.ch</EmailAddress>
-			
+
 		</ContactPerson>
 	</EntityDescriptor>
 
@@ -3482,7 +3359,7 @@ YMyUrqQEclnRjgzYs/iwcpdKSKhPjjjkCDvOfo7lBy8x0GDV78p3pQ==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 			</mdattr:EntityAttributes>
 
 		</Extensions>
@@ -3580,7 +3457,7 @@ qbvKmYxW/Y+CBrSxVLCBVQboAn6dFKGGIz+fCOY21W7uJCeNrioaeHCnFUB0tYZ6
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 			</mdattr:EntityAttributes>
 
 		</Extensions>
@@ -3698,7 +3575,7 @@ aPsfXmZ7vBo4IPTmvffHQuzQomY5gnOm/zeGW7TIV3626NEeAoAiaBQl3B+gCUV+
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 			</mdattr:EntityAttributes>
 
 		</Extensions>
@@ -3810,7 +3687,7 @@ S4uflpGHcODRV58B
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -3902,7 +3779,7 @@ DnnFoD+70B8yvsCOz1RN4sP9CKsdiv+Jgiyx6NSlP7MbXJtukUsEwQ==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -4013,7 +3890,7 @@ AAI4ore+ff9O8Oz/0NXl3udhOATPwF/GxLvh4VlmdPJ+3NgG3+wxxWaZPU3ojWA+
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>test.eduid.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -4108,7 +3985,7 @@ hC4qfg==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -4225,7 +4102,7 @@ r4YDetxPYOM=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -4336,7 +4213,7 @@ ciZJu9qEPrHMXi7pczCTR6JFU+y9KJP/8KkEABLKTjx6eKlw0VXLzZFT0ThUKrod
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -4435,7 +4312,7 @@ WDxdu/3U6LWYb0FSBHiSDF+448kb+TnWW+m7rg2FVbw8REZ+
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>hslu.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -4525,7 +4402,7 @@ sFxhkGA+HQFBsgPAJE+rBZvex2XsXJPKlMxe7rYghYSSC02LeAjXj9HVA0DkQu0X
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>unifr.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -4627,7 +4504,7 @@ lplRZtOu9hLRhiqLcV+onoS0Vr30aWkVmwl/553gg8MwPlDKvJJ5tt0lfICQZf7l
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -4713,7 +4590,7 @@ boK2KDYTFPRtORgmOC/nkv06BJrTDbq22rUV9J+w6hl18zgp
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-logon-bi-test.ethz.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -4803,7 +4680,7 @@ OhNudeALgFOjvkhGc0AAN5kv9D/qRtbccjshCgcvogM1UitApp5jPXH0PvtI6fEZ
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -4976,7 +4853,7 @@ N8brGjxp1aU=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -5100,7 +4977,7 @@ HJJ4O4lE26c=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -5206,7 +5083,7 @@ PcHYMK3qzwvdYkb4wKFW
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>test.eduid.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -5308,7 +5185,7 @@ Sw9y0b0FJcb/vQ9ZgLBkgd5zkF8MRBvnHyNUqVK226ndKUTHvbbI7086s/pQxBJS
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -5408,7 +5285,7 @@ SCjEkroIVql5R0QBrvaVZVc9zG2uNGV0Cj+P1eqswhswOM76i7YZrg==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -5501,7 +5378,7 @@ BbkUNprGZRQbClQFpIphIJCYOI5mLBebyFCPtLI=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>test.fhnw.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -5631,7 +5508,7 @@ lnO2RY0KgSdcEbRVCuvGqQkoO9TvwvcuNYcGS64n4LDz5h0tKvl4Ypmpv/o=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -5748,7 +5625,7 @@ UGzJ0yaTTOPxRm56QlYqRtLf8D2ahm0Yku/QGaOzqNMGQUK72Qq5Jw9oq7yPLB4C
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>test.fhnw.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -5868,7 +5745,7 @@ rusJgplvqTEOSm9kob6jvie8Ss2sqlHFy6D+LIu9+2C5+OlbpFTnfw==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -5960,7 +5837,7 @@ EgtnKDzGgZxu7md6
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -6068,7 +5945,7 @@ sji2kw==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-logon-bi-test.ethz.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -6163,7 +6040,7 @@ n3nr8Kk5Y2MKm31rRPHVDrwKva/LjrdVZNjVR3WLvTYOIuq6sSt9aYTFsluKlYzU
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>unifr.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -6265,7 +6142,7 @@ IV5ZuUy8X7M=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-logon-bi-test.ethz.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -6361,7 +6238,7 @@ y+glt00YFh3lxxFScA9PnCE5Xy28x3KWGIyZPD5Eji0=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -6462,7 +6339,7 @@ i0921Nqj
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -6581,7 +6458,7 @@ zZh57w==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -6687,7 +6564,7 @@ Mm+vaekv7c9H0wuU7+DAQk67uB6nSE+I00WmPkAmQf7CY4XEW0DGwTpRT7jfgY8O
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-logon-bi-test.ethz.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -6790,7 +6667,7 @@ MnD+vA==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -6878,7 +6755,7 @@ rIxFceXI/gMSruUflH6k1Mj7gU0VMWdkdu0QeVRudR3sbE0IB8XKtw==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -6987,7 +6864,7 @@ mYZSTcgybEm8qS6fXVfxY8NUjGLeT3y+tWCV83hvdIRLZw1+n4jkoBZlz9Dr4/D5
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -7100,7 +6977,7 @@ S3DTVbePrYjUDiMIFWw=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-logon-bi-test.ethz.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -7193,7 +7070,7 @@ pYQYt1J3CQ51NOB8QeE3OVAaRA0SOr+fI1JvLQlht9s=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>test.idph.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -7330,7 +7207,7 @@ VoKn/h3zwT0KHKkq84AYNlHf8hAIDLtzujj31Lu+ozSFucud
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -7502,7 +7379,7 @@ GmYriqXUnK+P3S5FP9oikKzKFzhgx+4xcNEroRKNHCVN3ZL2P/ORdCE0dQ==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>test.fhnw.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -7605,7 +7482,7 @@ d6aqyjeWMBJBBUxFyPI8dpOwXLk2Gq6WuWzWX3o65EOurQ==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>uzh.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -7717,7 +7594,7 @@ yW8ZqPt7fi93E14X0GydpSbfsRMHJGvIVOP3ghpYg1XZ7hLwjf6diKuH
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>hslu.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -7803,7 +7680,7 @@ WiMm7YJEVbuZ8ALrfVI7HNRy+r/u48zwo7lhLj1dNGMOSOw=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -7893,7 +7770,7 @@ CtUPT/PQDkCdBRViGmmMkYwjdaOTiHOJveWtrVXu8vLvO36pqFF4Kft0pgqlfvAE
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -7984,7 +7861,7 @@ Jl/2D2bOTCYyTQAxGEzd+vuC4Lv9FK65AT9oaXEqzL7BiQ80tRkiWPLicdGmJscx
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -8085,7 +7962,7 @@ JCbc1OVeKjnZDDfiaE1e3BmjzR1tKtU3AFDQ/WtvlRF4SPcFYX+fA0SwZPuYe22P
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -8204,7 +8081,7 @@ rT8Tv6dZrxeUgMx6RptfVl9fOOUJVjqmtLwcJAlJN2o7ktAdiQ0R9Ss1kTdafwg+
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -8308,7 +8185,7 @@ nCctsw==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -8420,7 +8297,7 @@ fv4U1rp5wFh9gSAMehiJsux5lz/HwOHXjhRQkeXqwXghJ3/E6IOa+UYrSw==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -8524,7 +8401,7 @@ U4cJPeaEWw==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -8627,7 +8504,7 @@ pRNkXchFUUUmCqA+epyoTqCpzqV4Qj39+9Q6QEJMaNNgM2o0BjIz+tdrSIHasw==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -8731,7 +8608,7 @@ veKk
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -8913,7 +8790,7 @@ dmwKUx5JvGYB6ljc1Q==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -9013,7 +8890,7 @@ PiRv7WPX8M0lHG6+ijbG9aHfLUA6KRgZCy8=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-logon-test.hes-so.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -9106,7 +8983,7 @@ fkBA1mnmJaKbQiSv
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -9227,7 +9104,7 @@ z8aXUthDX1x6whTl0k9OtmjXssc9dzvMOUPRiV6vR1v4VjWR6ch2xdu7dfoZDHyy
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>uzh.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -9342,7 +9219,7 @@ q01KneDMfLA2Mzi+VnIsuTg=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-logon-bi-test.ethz.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -9444,7 +9321,7 @@ me91BQoDuyvelrGHzDfqeamFJLCfZnfnifkzm1ppFCLUxwF1TU9SsyZFBEdpugsf
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>test.eduid.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -9537,7 +9414,7 @@ Rgr7JmK6MgW1DsdQi9j5scINQSL8B2zwHld4QxQtjG8IkRK5
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -9644,7 +9521,7 @@ XdY0wqW60Mk=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -9748,7 +9625,7 @@ xHEtsA==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -9847,7 +9724,7 @@ nbf1mljU7GsP8eVjGeDFE82RMRHFdt6ChmRGaZmbVSMn86Mvpm25I8I7fSdVIgfC
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-logon-bi-test.ethz.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -9949,7 +9826,7 @@ Dh5ejuaZiiR8K0oVgqnExC8k/aQZSwFQ+QW2dxUu
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idpv3.dlu.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -10056,7 +9933,7 @@ PdDG9svQQn1ycCI443YSP6NbCHl2VYq0
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idpv3.dlu.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -10163,7 +10040,7 @@ XOZLW1WwUBDG7lDK+Uu08imjiykOqPEF
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -10264,7 +10141,7 @@ WwosGJMeGWr+b7jN16HBHcyiW1nBievoY716tIPxU3pFJBlJuNV7dEG1qhgrdOO1
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -10353,7 +10230,7 @@ bIVYbN42zFfkorCZYF63RGhMblPb6f2ZYxufvQ==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>zhdk.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -10442,7 +10319,7 @@ gHpgqLCj9L11qJflUuxUxnL6
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -10608,7 +10485,7 @@ C/rM91xEPNTvjhjyTWBqDvbHjnHdum65YRzsdqDF9XPHW8b3IT2U+Q==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>uzh.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -10723,7 +10600,7 @@ wLvuTguOBaK/zfSU2ZwyYedB
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-logon-bi-test.ethz.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -10816,7 +10693,7 @@ NYm4Oml4lSK8qUZX2s/kS/fKsFS95buaQCs4+w==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-logon-bi-test.ethz.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -10919,7 +10796,7 @@ FLNCEBtGc6rBFu1p3LdPUtrLh/XFf/E+HWo+J88kFqdbrxKQlEYmzaU+8fY=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -11020,7 +10897,7 @@ Qdb6HPz9zlfm
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -11102,7 +10979,7 @@ eZ9A58V7IhmIRWMB8wUns5Hj33TUrKuf7MUMcqnRBqvx
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>any</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -11288,7 +11165,7 @@ QbJjc0MjiKk=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -11370,7 +11247,7 @@ E9Z+U+Ne35q+J2NuQ3Z3TXADXkPmz5i2O87MoZcKhdcm1EoZdpi3iUJAgA==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -11477,7 +11354,7 @@ wQxsZ95Jt6ReoIh/SS/e64Csg9gxEsgEWR8Gu6oodWNn773pMgUltISM7Adqx/yz
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -11576,7 +11453,7 @@ J714QESdYsEFuSA4zOJEQ8IEeu+581zs3/Vb1Oo+lXAPTWZ7C7o9xfVQ84+Yh+cq
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -11758,7 +11635,7 @@ unSI5ImZn+AaXOJ3xSvscnABWzZQ0h31RorrRXPSq3+5wj8PVlQRxA==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -11852,7 +11729,7 @@ Gn/1mq5CvltBxOlL+ew1Zl9FYq60Bzopi0KU5gXTTGfLCP5CXfktbvo5xnQZQmHN
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-logon-bi-test.ethz.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -11946,7 +11823,7 @@ kJxno3VYt+rJFgI7bbUHbkos
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>test.fhnw.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -12032,7 +11909,7 @@ YqGJzVlpnP5ZbUc=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>test.fhnw.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -12126,7 +12003,7 @@ kdFhHwVe4BOKVR1x
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-logon-bi-test.ethz.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -12219,7 +12096,7 @@ aEbzdxFhb9EqLNs3gO+uXSXLGhTO+bExcoq29StC2TY=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -12322,7 +12199,7 @@ KIFSVw==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -12421,7 +12298,7 @@ KgsLww==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -12584,7 +12461,7 @@ vGswy+4N6R+gM1ov
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>graduateinstitute.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -12682,7 +12559,7 @@ BvqQuzvof3cqlRykwg==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>uzh.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -12782,7 +12659,7 @@ FEQsk5icXliGSdyYDTCJtvFgXDVQS5Y=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-logon-bi-test.ethz.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -12871,7 +12748,7 @@ xAW6fuAzdPHpzdMzy2Cu8JjpMboVs6jgj6Lxw6dxtoU=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-logon-bi-test.ethz.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -12967,7 +12844,7 @@ ZGcKzLtj6oojf5MCeYWB5pe64FQY+FPTNj++b/79foy0sBseC7WOrFgjyKKlbL4T
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-logon-bi-test.ethz.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -13122,7 +12999,7 @@ Gf4Gupnkh8oSSqO3d3brgXvHIeU5mlKOGVw=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>libraries.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -13217,7 +13094,7 @@ SwIIfg==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>test.fhnw.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -13347,7 +13224,7 @@ hbv5MAlvUsoDH0Iib7sO+nn2zDXQpmv9AcYEe19+FpvwvoYgxt/OfFR6updDg5u9
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>test.fhnw.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -13514,7 +13391,7 @@ MIIEBDCCAmygAwIBAgIJALzqmKquhM7SMA0GCSqGSIb3DQEBCwUAMBUxEzARBgNVBAMTCmluaWxhYi5w
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>any</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -13695,7 +13572,7 @@ wUBNzlwu3rBLwurQj5KgksHwowkUYs65In9SMwK0
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -13789,7 +13666,7 @@ D57O6MI6YkhkC+l7fP6XjQlDWactU5HbspIJ43RAL75Vs+eCX8ByvjKUXfE=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>test.fhnw.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -13885,7 +13762,7 @@ xDX8FhiZk+OeuaSC1kSIoMBN2N/Xg04aIQBprjvXFT3O0Id0WJDYuicZ4TqbM7CC
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -13984,7 +13861,7 @@ P32X4rCt5tbCR1UDJ9GAl/gdtvcIjYFv26akq/MFAi0uYUqqlgx42dHt0TI=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -14066,7 +13943,7 @@ DHWlrnrvz3Lnd5nlI8PHH6Q58p84i6/WrfvIFl660a7aMQ==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-logon-bi-test.ethz.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -14159,7 +14036,7 @@ KWCUr9JKFMqvCk7eAC3xH3zuHcdthsCVUjpZvg==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>test.fhnw.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -14258,7 +14135,7 @@ dr00QyPuJY51sxffW6zDK4f9f5pb21x7MJ2Q5057CzenZg==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>uzh.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -14361,7 +14238,7 @@ wLvuTguOBaK/zfSU2ZwyYedB
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>zhdk.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -14450,7 +14327,7 @@ d19U1LsYbKFpmjxjaPmuWmnQ/OatUg==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -14636,7 +14513,7 @@ MMsBag==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>hepl.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -14738,7 +14615,7 @@ OlJomeJZUEuUDXYkhm0sU57J6Yc=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>uzh.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -14826,7 +14703,7 @@ GG3wziUc/1ajzCRcvIecCw==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>uzh.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -14952,7 +14829,7 @@ pwq4guMsm4GH6/GL6deojaTMJALgklpFPN29c5hXkxRO1OFH7J+XtLkdJcO1gQOH
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>uzh.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -15065,7 +14942,7 @@ NtrO0GTR/H/DwSt1GevRPYKUN0hi
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>test.fhnw.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -15157,7 +15034,7 @@ AdT50h3Z1hX9hsOILKY1bbWAMJH8vZuy40vnQE8z/xK0MiKoziy5/Q==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -15258,7 +15135,7 @@ q5D1dp0T2/YHNYI=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -15365,7 +15242,7 @@ HaDx
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -15465,7 +15342,7 @@ SmjfkXEKvT0M13Fm
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>graduateinstitute.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -15552,7 +15429,7 @@ EuctHkWnSZqmeikomk288g==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>graduateinstitute.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -15639,7 +15516,7 @@ g86L4u+cn8U=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>graduateinstitute.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -15727,7 +15604,7 @@ T1H/JKwX1eKjIiybfSOObrglJRDz8j8VEYmdZRsBBMeFs8f3TQPID8GdC66ihRwA
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -15818,7 +15695,7 @@ Fw0a8A==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>test.fhnw.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -15922,7 +15799,7 @@ Qsw=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>test.fhnw.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -16026,7 +15903,7 @@ pewRxzofW4caZkTnYI+D3iA1Yl08PfXIlErUbIcnhCbAcddXUx9HBryhbbmXfPVj
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -16126,7 +16003,7 @@ aKnEmfibuTg=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -16325,7 +16202,7 @@ Zy8M0DAJnUpJVCFmDc8xOvUSL0E=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -16432,7 +16309,7 @@ XHv1bFjEy5UMG069tzqyQdHozjuUcsfrZUeiYroPXHi/iGEBT9GSwnRi5tgWw99c
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-logon-bi-test.ethz.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -16531,7 +16408,7 @@ BEOVa78qwmzu1A7GoSZRC+0TbheKs1xEn+UOie2SbFAyoiOM
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -16631,7 +16508,7 @@ TQQer1M8aizF
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -16731,7 +16608,7 @@ Ap6Xurw3v4MfBChqODhSSyzr7gQojwoPulthHA==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -16826,7 +16703,7 @@ ng==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -16920,7 +16797,7 @@ ID1wm+dvDYWRn0GFeTK0lwK7tGIrW8tTI427+93f9ApPBHBxDLJTJagzm1epo4as
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>test.eduid.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -17024,7 +16901,7 @@ XTkKzPfRPzsFm01ZNL7vblpGExzQOeM2KKEY//pCbl90D8xW79srNny3extE8sB9
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>test.eduid.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -17135,7 +17012,7 @@ QlPrPKBFbKcpV5BU305xXlIqPcmLAzMitn9fEFKNdXzmGTlb
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -17323,7 +17200,7 @@ zpuv+2nB45tRTBhslfU5ZSqjr+o8ZIwQemnrOTfdDXTv9YRZ2fe+HA==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -17406,7 +17283,7 @@ nj/txK3dlmSvBMAJ5F9II3riY/3I++ULniRigQkovjgaFQ==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>hsr.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -17501,7 +17378,7 @@ JmFAiU10G5qDxkw41otxB0bOAD8/Pog6UTU8Mcxeebz7MYQS56nAHINW7k91pqAd
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -17595,7 +17472,7 @@ WacuWRhq4HzGvfrVOOMAxGxstKl3TaX+ldw6euvoQRqxuMsOXcJ1Kanhx81wgw==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -17704,7 +17581,7 @@ MRUoYUQ=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>uzh.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -17837,7 +17714,7 @@ xn/raIytWkGrLHgLu13uNhRQWQ==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-logon-test.hes-so.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -18005,7 +17882,7 @@ sWI9Feh9M8sqIVpZVEucU5KlyqLWB3B8
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -18105,7 +17982,7 @@ xc8v5rGnmQ+YgOtf0acXi6KrcBvUVb1wBuhpDQA4ZvtLGlhirv++J3JSouDVCS/O
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -18200,7 +18077,7 @@ ofwUEZfTt1P+UHRvgQLxRQ==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>graduateinstitute.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -18297,7 +18174,7 @@ yA/SXTQGwTvcdjCQukfG4NpQcNETuPPQ
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idpv3.dlu.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -18403,7 +18280,7 @@ qrsYb7Y6ej8EMQee/QqZZX8nl31SZTHLn/iabYJes0oCiA5kA32Bwj3fp8/OM4VJ
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-logon-bi-test.ethz.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -18492,7 +18369,7 @@ foX2hhUa+//EliYK0EaLADxjrINeuJjKVsfnnCCa/Ho=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>test.unisi.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -18591,7 +18468,7 @@ nYYLzbVgJkDedIxyijRucozj1fkT0qmdS9W+FZ9XSGqehnSB
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -18690,7 +18567,7 @@ CKmnorUV0ZfjvC3L8WWezd2QAG/oL6kA63HPKDVoqgKv2dU1jZ0B9yfjO0Vmw0dX
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -18784,7 +18661,7 @@ vPkvAXobDIg8O7KtfYdn6dTpsDROU4K81iyZpw0e/XngTq0A0PpViszzlgbx
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -18879,7 +18756,7 @@ f0visGFd2g5K2H8Zt5tw28gKZ0CjdshOo89DXP657nX/NRow
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -18983,7 +18860,7 @@ HZKX2Wr9HQNk0pTt1W/b0lX8spM=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>test.chuv.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -19077,7 +18954,7 @@ SM8cICCNjLcS6EqZsGsYGpJN3Eg+amSx
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -19168,7 +19045,7 @@ d1Q7HeDvHUeKAzjuAeQ=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -19269,7 +19146,7 @@ sWXM8A==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -19384,7 +19261,7 @@ UUF05LvPdz1/6ySY3A==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -19473,7 +19350,7 @@ VnFlEZQX4gb5JRM/SPKLagiwP7DNKxsz2CtsrFO9/Ha8Dk7gkKC50A==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -19573,7 +19450,7 @@ VA==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -19668,7 +19545,7 @@ jsg1TnotnnKOCSbGESMjCbSSxHLRP9bsrrq3MFOzzkKLATUxgGtsWQ==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -19754,7 +19631,7 @@ Gs4LKhcxPBUc2YgzC4gqG4iZd6iyyx287x6r3z8v3eXsnciwKaKZdbWB/e6cVIs=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -19842,7 +19719,7 @@ wn0JqU7e8hyXI+7WIvrjaKn8iz1IiIeIep3srfIOdcJW1rW4CkaN+1v1fME=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-logon-bi-test.ethz.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -19944,7 +19821,7 @@ HnbOircEYwXtdouwdM7LebpCvX3y
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>unil.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -20035,7 +19912,7 @@ q0fKfhOUIHmHceTJHJGPzRbggnlouP8MCURqSQ==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>uzh.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -20168,7 +20045,7 @@ X5Vwpsp0NZtu5G38M/hqUhxh8w==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -20350,7 +20227,7 @@ tUclN5UKp9Puok29rgZogrD4yeHLuCwgJr0yYu61nWYPBhmEy7BD7QJ1nK9tivYF
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -20442,7 +20319,7 @@ EvHedA==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -20528,7 +20405,7 @@ fnI=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -20741,7 +20618,7 @@ rxV5701po1r+usyePkjOoEyuidchMS/7nSKKaEEszEmNbGuHsnRz
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -20839,7 +20716,7 @@ ojC1Ms1zT/pwVtWzvGJsUoUuzFrU7W37
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -21104,7 +20981,7 @@ eWoY9g==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>hslu.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -21195,7 +21072,7 @@ ODQLJChJr553++xPj8mYFME=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>test.fhnw.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -21290,7 +21167,7 @@ erKpXe0gLrF6RTnmmMkXPagFeJY7IRqOLcpzi1FFut9d2QSDdd/xI2HR7urNbHJL
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>zhdk.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -21379,7 +21256,7 @@ d19U1LsYbKFpmjxjaPmuWmnQ/OatUg==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -21480,7 +21357,7 @@ r9QR9jKoZqcyhGK4qIXDnSMCnr4c7fz5X5Li1dfnkoXKzPpzCdjJqtmfgHvMx27/
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>test.idph.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -21570,7 +21447,7 @@ c1SYKWJBjqDnuP7stHvlRBIh7Mi4RyXawUSlzLdCUiFBfXqS
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -21674,7 +21551,7 @@ EGkXXgbbjQ==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -21767,7 +21644,7 @@ waRcslTXEQ==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>hftm.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -21860,7 +21737,7 @@ NAKSU8PK3wfiroNBvGYsCAVy/96o2NPB+GyQwnZrrbMRLr2quHhYgf2cpJnTDg==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-logon-bi-test.ethz.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -21956,7 +21833,7 @@ ptPr4JZ/t+aF60zObxsCm0Gl6LgW6mQPb1Y3AG/ZS67dZXVD3u5qW5TUQaulqPdL
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>test.eduid.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -22058,7 +21935,7 @@ vXStaCZ/V15/SqlAp+HUx44SETdAr7TNDmo7DQkR473haw0+OHaA4w==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>zhdk.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -22147,7 +22024,7 @@ d19U1LsYbKFpmjxjaPmuWmnQ/OatUg==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -22302,7 +22179,7 @@ YYwH9g==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -22469,7 +22346,7 @@ Ma4qvzmyvV0JAxO2k2tsQySt88gr7DSZf1fxHn/41qkjeHyntOlikgfrJgn54Iwx
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-logon-bi-test.ethz.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -22572,7 +22449,7 @@ shbPmnVTQNvZq750rhN2J9eSoZNf
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -22661,7 +22538,7 @@ La/PxeAFOt+t/WK2yRuo/hbhSsLEkJLB1GCxPsXYGCGHNjF0
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>zhdk.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -22749,7 +22626,7 @@ Sm0=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-logon-bi-test.ethz.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -22848,7 +22725,7 @@ p3MQxZWr5Hnl0joH+uoDxFUl2HDXCEZxdQOyibFsWGlrJmk7+V5goK/FIatsUyQa
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>uzh.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -22942,7 +22819,7 @@ m7XFTJeYgfvC4dbeWJ0savhfYwMtRP1UEUJYttUf6isS2sVpApdis82Vh6M=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -23115,7 +22992,7 @@ X9c=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -23297,7 +23174,7 @@ haYAgzKxj2bZR82aZ1/17db/3ZDpEBRBLrK/p2rTh9Oe
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -23387,7 +23264,7 @@ LkUkrg51aSKvxOuEMdRR/8liV6LB0QyZPeS7/HwsoqP5AWYR/5YJ
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>hepl.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -23482,7 +23359,7 @@ pNXBzfDd/QUsjzOUw35WX7WU5HYpEy2KZ6mY/7m0SGaLkAcl
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>unibas.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -23568,7 +23445,7 @@ zM5AUVkWxDGhmT2LgWn+4G7Lt1UJXrrAkoQd3w==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>test.eduid.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -23665,7 +23542,7 @@ o1CBT4V6TLS24s6mIIR0USA8J0k=
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>test.eduid.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -23752,7 +23629,7 @@ trbjv3+62t1oOpr0f+juBKur
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>idp-test.unige.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -23998,7 +23875,7 @@ dmwKUx5JvGYB6ljc1Q==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -24095,7 +23972,7 @@ jf5qRQ==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -24190,7 +24067,7 @@ Xsr4KYCZj3n7OnhHhrlmv80jj0J09XricJzSNchv
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>test.eduid.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -24283,7 +24160,7 @@ RwfCLw5ogI9FW8gRji0eU0HJ
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -24383,7 +24260,7 @@ zJ6zmTNqi1LXVbVfojN9otAPGyB6Qx66P2orpI49bhT4
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -24538,7 +24415,7 @@ ptgMlkrwRqHDvpy+uywIpg==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>test.eduid.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -24613,7 +24490,7 @@ MIIDTjCCAjagAwIBAgIEVmV/TjANBgkqhkiG9w0BAQUFADBoMQswCQYDVQQGEwJJTDEPMA0GA1UECBMG
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>test.eduid.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -24706,7 +24583,7 @@ snYlWywcXjAx6rl97jtsVzbbn2o2FGrVFSpBGwbGtrFZgw==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:attribute:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>unifr.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -24799,7 +24676,7 @@ Mxi0iKpNW8BaH4jj
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>test.eduid.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -24875,7 +24752,7 @@ MIIDUDCCAjigAwIBAgIEXBYMGjANBgkqhkiG9w0BAQsFADBqMQswCQYDVQQGEwJJTDESMBAGA1UECAwJ
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>test.eduid.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -25146,7 +25023,7 @@ sSnlHejcnMVjJ88i
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>aai-demo-idp.switch.ch</saml:AttributeValue>
 				</saml:Attribute>
@@ -25237,7 +25114,7 @@ pqfL4u5hX6BYTZDKptOnhUpODMGRA73zDQt8LM/NCBw1Uw5Lo0UjEQ==
       <saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Name="urn:oasis:names:tc:SAML:profiles:subject-id:req" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
           <saml:AttributeValue>none</saml:AttributeValue>
       </saml:Attribute>
-				
+
 				<saml:Attribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" FriendlyName="swissEduPersonHomeOrganization" Name="urn:oid:2.16.756.1.2.5.1.1.4" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 					<saml:AttributeValue>test.eduid.ch</saml:AttributeValue>
 				</saml:Attribute>
