@@ -54,6 +54,7 @@ TEST_METADATA_STRING = """
 <EntitiesDescriptor
     xmlns="urn:oasis:names:tc:SAML:2.0:metadata"
     xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata"
+    xmlns:alg="urn:oasis:names:tc:SAML:metadata:algsupport"
     xmlns:shibmeta="urn:mace:shibboleth:metadata:1.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
@@ -61,6 +62,10 @@ TEST_METADATA_STRING = """
   <EntityDescriptor
     entityID="http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"
     xml:base="swamid-1.0/idp.umu.se-saml2.xml">
+    <md:Extensions>
+        <alg:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+        <alg:SigningMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/>
+    </md:Extensions>
   <IDPSSODescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
     <KeyDescriptor>
       <ds:KeyInfo>
@@ -486,6 +491,15 @@ def test_metadata_extension_algsupport():
     mds.imp(METADATACONF["12"])
     mdf = mds.metadata[full_path("uu.xml")]
     assert mds
+
+
+def test_supported_algorithms():
+    mds = MetadataStore(ATTRCONV, sec_config,
+                        disable_ssl_certificate_validation=True)
+    mds.imp(METADATACONF["11"])
+    algs = mds.supported_algorithms(entity_id='http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php')
+    assert 'http://www.w3.org/2001/04/xmlenc#sha256' in algs['digest_methods']
+    assert 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256' in algs['signing_methods']
 
 
 def test_extension():
