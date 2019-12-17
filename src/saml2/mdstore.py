@@ -37,6 +37,8 @@ from saml2.validate import NotValid
 from saml2.sigver import security_context
 from saml2.extension.mdattr import NAMESPACE as NS_MDATTR
 from saml2.extension.mdattr import EntityAttributes
+from saml2.extension.algsupport import NAMESPACE as NS_ALGSUPPORT
+from saml2.extension.algsupport import SigningMethod, DigestMethod
 from saml2.extension.mdui import NAMESPACE as NS_MDUI
 from saml2.extension.mdui import UIInfo
 from saml2.extension.mdui import DisplayName
@@ -52,6 +54,8 @@ classnames = {
     "mdattr_entityattributes": "{ns}&{tag}".format(
         ns=NS_MDATTR, tag=EntityAttributes.c_tag
     ),
+    "algsupport_signing_method": "{ns}&{tag}".format(ns=NS_ALGSUPPORT, tag=SigningMethod.c_tag),
+    "algsupport_digest_method": "{ns}&{tag}".format(ns=NS_ALGSUPPORT, tag=DigestMethod.c_tag),
     "mdui_uiinfo": "{ns}&{tag}".format(ns=NS_MDUI, tag=UIInfo.c_tag),
     "mdui_uiinfo_display_name": "{ns}&{tag}".format(ns=NS_MDUI, tag=DisplayName.c_tag),
     "mdui_uiinfo_description": "{ns}&{tag}".format(ns=NS_MDUI, tag=Description.c_tag),
@@ -1280,6 +1284,36 @@ class MetadataStore(MetaData):
                         res[attr["name"]] = []
                     res[attr["name"]] += [v["text"] for v in attr[
                         "attribute_value"]]
+        return res
+
+    def supported_algorithms(self, entity_id):
+        """
+        Get all supported algorithms for an entry in the metadata.
+
+        Example return data:
+
+        {'digest_methods': ['http://www.w3.org/2001/04/xmldsig-more#sha224', 'http://www.w3.org/2001/04/xmlenc#sha256'],
+         'signing_methods': ['http://www.w3.org/2001/04/xmldsig-more#rsa-sha256']}
+
+        :param entity_id: Entity id
+        :return: dict with keys and value-lists from metadata
+
+        :type entity_id: string
+        :rtype: dict
+        """
+        res = {
+            'digest_methods': [],
+            'signing_methods': []
+        }
+        try:
+            ext = self.__getitem__(entity_id)["extensions"]
+        except KeyError:
+            return res
+        for elem in ext["extension_elements"]:
+            if elem["__class__"] == classnames["algsupport_digest_method"]:
+                res['digest_methods'].append(elem['algorithm'])
+            elif elem["__class__"] == classnames["algsupport_signing_method"]:
+                res['signing_methods'].append(elem['algorithm'])
         return res
 
     def _lookup_elements_by_cls(self, root, cls):
