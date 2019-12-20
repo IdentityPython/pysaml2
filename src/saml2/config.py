@@ -97,6 +97,7 @@ SP_ARGS = [
     "sp_type",
     "sp_type_in_metadata",
     "requested_attributes",
+    "node_country",
 ]
 
 AA_IDP_ARGS = [
@@ -118,6 +119,7 @@ AA_IDP_ARGS = [
     "domain",
     "name_qualifier",
     "edu_person_targeted_id",
+    "node_country",
 ]
 
 PDP_ARGS = ["endpoints", "name_form", "name_id_format"]

@@ -10,6 +10,7 @@ from saml2.extension import idpdisc
 from saml2.extension import shibmd
 from saml2.extension import mdattr
 from saml2.extension import sp_type
+from saml2.extension import node_country
 from saml2.saml import NAME_FORMAT_URI
 from saml2.saml import AttributeValue
 from saml2.saml import Attribute
@@ -769,6 +770,13 @@ def entity_descriptor(confd):
         confd.context = "aq"
         entd.authn_authority_descriptor = do_aq_descriptor(confd, mycert,
                                                            enc_cert)
+
+    conf_node_country = confd.getattr('node_country', confd.context)
+    if conf_node_country:
+        if not entd.extensions:
+            entd.extensions = md.Extensions()
+        item = node_country.NodeCountry(text=conf_node_country)
+        entd.extensions.add_extension_element(item)
 
     return entd
 
