@@ -13,7 +13,7 @@ import cryptography.hazmat.backends as _backends
 import cryptography.hazmat.primitives.ciphers as _ciphers
 
 
-class Default(object):
+class Fernet(object):
     """The default symmetric cryptography method."""
 
     @staticmethod
@@ -49,6 +49,7 @@ class Default(object):
         """
         plaintext = self._symmetric.decrypt(ciphertext)
         return plaintext
+
 
 
 class AESCipher(object):
@@ -164,3 +165,7 @@ class AESCipher(object):
             idx = bytearray(res)[-1]
             res = res[:-idx]
         return res
+
+
+class Default(Fernet):
+    """Default class is saml2.cryptography.symmetric.Fernet"""
