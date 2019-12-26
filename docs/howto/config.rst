@@ -16,29 +16,37 @@ The basic structure of the configuration file is therefore like this::
     from saml2 import BINDING_HTTP_REDIRECT
 
     CONFIG = {
-        "entityid" : "http://saml.example.com:saml/idp.xml",
-        "name" : "Rolands IdP",
+        "entityid": "http://saml.example.com:saml/idp.xml",
+        "name": "Rolands IdP",
         "service": {
             "idp": {
-                "endpoints" : {
-                    "single_sign_on_service" : [
-                            ("http://saml.example.com:saml:8088/sso",
-                                BINDING_HTTP_REDIRECT)],
+                "endpoints": {
+                    "single_sign_on_service": [
+                        (
+                            "http://saml.example.com:saml:8088/sso",
+                            BINDING_HTTP_REDIRECT,
+                        ),
+                    ],
                     "single_logout_service": [
-                            ("http://saml.example.com:saml:8088/slo",
-                                BINDING_HTTP_REDIRECT)]
+                        (
+                            "http://saml.example.com:saml:8088/slo",
+                            BINDING_HTTP_REDIRECT,
+                        ),
+                    ],
                 },
                 ...
             }
         },
-        "key_file" : "my.key",
-        "cert_file" : "ca.pem",
-        "xmlsec_binary" : "/usr/local/bin/xmlsec1",
+        "key_file": "my.key",
+        "cert_file": "ca.pem",
+        "xmlsec_binary": "/usr/local/bin/xmlsec1",
         "delete_tmpfiles": True,
         "metadata": {
-            "local": ["edugain.xml"],
+            "local": [
+                "edugain.xml",
+            ],
         },
-        "attribute_map_dir" : "attributemaps",
+        "attribute_map_dir": "attributemaps",
         ...
     }
 
@@ -93,7 +101,7 @@ A typical map file will look like this::
             'urn:mace:dir:attribute-def:associatedDomain': 'associatedDomain',
             'urn:mace:dir:attribute-def:associatedName': 'associatedName',
             ...
-            },
+        },
         "to": {
             'aRecord': 'urn:mace:dir:attribute-def:aRecord',
             'aliasedEntryName': 'urn:mace:dir:attribute-def:aliasedEntryName',
@@ -135,19 +143,22 @@ about the service or if support is needed. The possible types are according to
 the standard **technical**, **support**, **administrative**, **billing**
 and **other**.::
 
-    contact_person: [{
-        "givenname": "Derek",
-        "surname": "Jeter",
-        "company": "Example Co.",
-        "mail": ["jeter@example.com"],
-        "type": "technical",
-    },{
-        "givenname": "Joe",
-        "surname": "Girardi",
-        "company": "Example Co.",
-        "mail": "girardi@example.com",
-        "type": "administrative",
-    }]
+    contact_person: [
+        {
+            "givenname": "Derek",
+            "surname": "Jeter",
+            "company": "Example Co.",
+            "mail": ["jeter@example.com"],
+            "type": "technical",
+        },
+        {
+            "givenname": "Joe",
+            "surname": "Girardi",
+            "company": "Example Co.",
+            "mail": "girardi@example.com",
+            "type": "administrative",
+        },
+    ]
 
 debug
 ^^^^^
@@ -193,7 +204,7 @@ Contains a list of places where metadata can be found. This can be
 
 For example::
 
-    "metadata" : {
+    "metadata": {
         "local": [
             "/opt/metadata"
             "metadata.xml",
@@ -209,6 +220,7 @@ For example::
             {
                 "url": "http://mdq.ukfederation.org.uk/",
                 "cert": "ukfederation-mdq.pem",
+                "freshness_period": "P0Y0M0DT2H0M0S",
             },
         ],
     },
@@ -221,6 +233,17 @@ metadata signing certificates should be used.  These public keys must be
 acquired by some secure out-of-band method before being placed on the local
 file system.
 
+When using MDQ, the `freshness_period` option can be set to define a period for
+which the metadata fetched from the the MDQ server are considered fresh. After
+that period has passed the metadata are not valid anymore and must be fetched
+again. The period must be in the format defined in
+`ISO 8601 <https://www.iso.org/iso-8601-date-and-time-format.html>`_
+or `RFC3999 <https://tools.ietf.org/html/rfc3339#appendix-A>`_.
+
+By default, if `freshness_period` is not defined, the metadata are refreshed
+every 12 hours (`P0Y0M0DT12H0M0S`).
+
+
 organization
 ^^^^^^^^^^^^
 
@@ -228,9 +251,15 @@ Only used by *make_metadata.py*.
 Where you describe the organization responsible for the service.::
 
     "organization": {
-        "name": [("Example Company","en"), ("Exempel AB","se")],
+        "name": [
+            ("Example Company", "en"),
+            ("Exempel AB", "se")
+        ],
         "display_name": ["Exempel AB"],
-        "url": [("http://example.com","en"),("http://exempel.se","se")],
+        "url": [
+            ("http://example.com", "en"),
+            ("http://exempel.se", "se"),
+        ],
     }
 
 .. note:: You can specify the language of the name, or the language used on
@@ -280,14 +309,22 @@ So if a server is a Service Provider (SP) then the configuration
 could look something like this::
 
     "service": {
-        "sp":{
-            "name" : "Rolands SP",
-            "endpoints":{
+        "sp": {
+            "name": "Rolands SP",
+            "endpoints": {
                 "assertion_consumer_service": ["http://localhost:8087/"],
-                "single_logout_service" : [("http://localhost:8087/slo",
-                               'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect')],
+                "single_logout_service": [
+                    (
+                        "http://localhost:8087/slo",
+                        'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',
+                    ),
+                ],
             },
-            "required_attributes": ["surname", "givenname", "edupersonaffiliation"],
+            "required_attributes": [
+                "surname",
+                "givenname",
+                "edupersonaffiliation",
+            ],
             "optional_attributes": ["title"],
             "idp": {
                 "urn:mace:umu.se:saml:roland:idp": None,
@@ -384,7 +421,7 @@ An example might be::
                 },
                 "urn:mace:example.com:saml:roland:sp": {
                     "lifetime": {"minutes": 5},
-                    "attribute_restrictions":{
+                    "attribute_restrictions": {
                         "givenName": None,
                         "surName": None,
                     }
@@ -420,7 +457,7 @@ regular expressions.::
             "policy": {
                 "urn:mace:umu.se:saml:roland:sp": {
                     "lifetime": {"minutes": 5},
-                    "attribute_restrictions":{
+                    "attribute_restrictions": {
                          "mail": [".*\.umu\.se$"],
                     }
                 }
@@ -661,7 +698,11 @@ Example::
 
     "service": {
         "sp": {
-            "required_attributes": ["surname", "givenName", "mail"],
+            "required_attributes": [
+                "surname",
+                "givenName",
+                "mail",
+            ],
         }
     }
 
@@ -708,7 +749,7 @@ Example::
         "sp": {
             "want_response_signed": False,
             "want_assertions_signed": False,
-            "want_assertions_or_response_signed": True
+            "want_assertions_or_response_signed": True,
         }
     }
 
@@ -757,11 +798,13 @@ Example::
 
     "service":
         "idp": {
-            "endpoints" : {
-                "single_sign_on_service" : [
-                        ("http://localhost:8088/sso", BINDING_HTTP_REDIRECT)],
+            "endpoints": {
+                "single_sign_on_service": [
+                    ("http://localhost:8088/sso", BINDING_HTTP_REDIRECT),
+                ],
                 "single_logout_service": [
-                        ("http://localhost:8088/slo", BINDING_HTTP_REDIRECT)]
+                    ("http://localhost:8088/slo", BINDING_HTTP_REDIRECT),
+                ],
             },
         },
     },
@@ -810,9 +853,9 @@ virtual_organization
 
 Gives information about common identifiers for virtual_organizations::
 
-    "virtual_organization" : {
-        "urn:mace:example.com:it:tek":{
-            "nameid_format" : "urn:oid:1.3.6.1.4.1.1466.115.121.1.15-NameID",
+    "virtual_organization": {
+        "urn:mace:example.com:it:tek": {
+            "nameid_format": "urn:oid:1.3.6.1.4.1.1466.115.121.1.15-NameID",
             "common_identifier": "umuselin",
         }
     },
@@ -830,35 +873,38 @@ We start with a simple but fairly complete Service provider configuration::
     from saml2 import BINDING_HTTP_REDIRECT
 
     CONFIG = {
-        "entityid" : "http://example.com/sp/metadata.xml",
+        "entityid": "http://example.com/sp/metadata.xml",
         "service": {
-            "sp":{
-                "name" : "Example SP",
-                "endpoints":{
+            "sp": {
+                "name": "Example SP",
+                "endpoints": {
                     "assertion_consumer_service": ["http://example.com/sp"],
-                    "single_logout_service" : [("http://example.com/sp/slo",
-                                                BINDING_HTTP_REDIRECT)],
+                    "single_logout_service": [
+                        ("http://example.com/sp/slo", BINDING_HTTP_REDIRECT),
+                    ],
                 },
             }
         },
-        "key_file" : "./mykey.pem",
-        "cert_file" : "./mycert.pem",
-        "xmlsec_binary" : "/usr/local/bin/xmlsec1",
+        "key_file": "./mykey.pem",
+        "cert_file": "./mycert.pem",
+        "xmlsec_binary": "/usr/local/bin/xmlsec1",
         "delete_tmpfiles": True,
         "attribute_map_dir": "./attributemaps",
         "metadata": {
             "local": ["idp.xml"]
         }
         "organization": {
-            "display_name":["Example identities"]
+            "display_name": ["Example identities"]
         }
-        "contact_person": [{
-            "givenname": "Roland",
-            "surname": "Hedberg",
-            "phone": "+46 90510",
-            "mail": "roland@example.com",
-            "type": "technical",
-            }]
+        "contact_person": [
+            {
+                "givenname": "Roland",
+                "surname": "Hedberg",
+                "phone": "+46 90510",
+                "mail": "roland@example.com",
+                "type": "technical",
+            },
+        ]
     }
 
 This is the typical setup for an SP.
@@ -872,45 +918,51 @@ A slightly more complex configuration::
     from saml2 import BINDING_HTTP_REDIRECT
 
     CONFIG = {
-        "entityid" : "http://sp.example.com/metadata.xml",
+        "entityid": "http://sp.example.com/metadata.xml",
         "service": {
-            "sp":{
-                "name" : "Example SP",
-                "endpoints":{
+            "sp": {
+                "name": "Example SP",
+                "endpoints": {
                     "assertion_consumer_service": ["http://sp.example.com/"],
-                    "single_logout_service" : [("http://sp.example.com/slo",
-                                   BINDING_HTTP_REDIRECT)],
+                    "single_logout_service": [
+                        ("http://sp.example.com/slo", BINDING_HTTP_REDIRECT),
+                    ],
                 },
                 "subject_data": ("memcached", "localhost:12121"),
-                "virtual_organization" : {
-                    "urn:mace:example.com:it:tek":{
-                        "nameid_format" : "urn:oid:1.3.6.1.4.1.1466.115.121.1.15-NameID",
+                "virtual_organization": {
+                    "urn:mace:example.com:it:tek": {
+                        "nameid_format": "urn:oid:1.3.6.1.4.1.1466.115.121.1.15-NameID",
                         "common_identifier": "eduPersonPrincipalName",
                     }
                 },
             }
         },
-        "key_file" : "./mykey.pem",
-        "cert_file" : "./mycert.pem",
-        "xmlsec_binary" : "/usr/local/bin/xmlsec1",
+        "key_file": "./mykey.pem",
+        "cert_file": "./mycert.pem",
+        "xmlsec_binary": "/usr/local/bin/xmlsec1",
         "delete_tmpfiles": True,
-        "metadata" : {
+        "metadata": {
             "local": ["example.xml"],
-            "remote": [{
-                "url":"https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2",
-                "cert":"kalmar2.pem"}]
+            "remote": [
+                {
+                    "url":"https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral2&set=saml2",
+                    "cert":"kalmar2.pem",
+                }
+            ]
         },
-        "attribute_maps" : "attributemaps",
+        "attribute_maps": "attributemaps",
         "organization": {
-            "display_name":["Example identities"]
+            "display_name": ["Example identities"]
         }
-        "contact_person": [{
-            "givenname": "Roland",
-            "surname": "Hedberg",
-            "phone": "+46 90510",
-            "mail": "roland@example.com",
-            "type": "technical",
-            }]
+        "contact_person": [
+            {
+                "givenname": "Roland",
+                "surname": "Hedberg",
+                "phone": "+46 90510",
+                "mail": "roland@example.com",
+                "type": "technical",
+            },
+        ]
     }
 
 Uses metadata files, both local and remote, and will talk to whatever

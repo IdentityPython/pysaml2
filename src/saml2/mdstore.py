@@ -33,6 +33,10 @@ from saml2.s_utils import UnknownSystemEntity
 from saml2.sigver import split_len
 from saml2.validate import valid_instance
 from saml2.time_util import valid
+from saml2.time_util import instant
+from saml2.time_util import add_duration
+from saml2.time_util import before
+from saml2.time_util import str_to_time
 from saml2.validate import NotValid
 from saml2.sigver import security_context
 from saml2.extension.mdattr import NAMESPACE as NS_MDATTR
@@ -71,6 +75,11 @@ classnames = {
 ENTITY_CATEGORY = "http://macedir.org/entity-category"
 ENTITY_CATEGORY_SUPPORT = "http://macedir.org/entity-category-support"
 ASSURANCE_CERTIFICATION = "urn:oasis:names:tc:SAML:attribute:assurance-certification"
+
+SAML_METADATA_CONTENT_TYPE = "application/samlmetadata+xml"
+DEFAULT_FRESHNESS_PERIOD = "P0Y0M0DT12H0M0S"
+
+
 
 REQ2SRV = {
     # IDP
@@ -664,21 +673,20 @@ class InMemoryMetaData(MetaData):
     def parse_and_check_signature(self, txt):
         self.parse(txt)
 
-        if self.cert:
-            if not self.signed():
-                return True
-
-            node_name = self.node_name \
-                        or "%s:%s" % (md.EntitiesDescriptor.c_namespace,
-                                      md.EntitiesDescriptor.c_tag)
-
-            if self.security.verify_signature(
-                    txt, node_name=node_name, cert_file=self.cert):
-                return True
-            else:
-                return False
-        else:
+        if not self.cert:
             return True
+
+        if not self.signed():
+            return True
+
+        fallback_name = "{ns}:{tag}".format(
+            ns=md.EntitiesDescriptor.c_namespace, tag=md.EntitiesDescriptor.c_tag
+        )
+        node_name = self.node_name or fallback_name
+
+        return self.security.verify_signature(
+            txt, node_name=node_name, cert_file=self.cert
+        )
 
 
 class MetaDataFile(InMemoryMetaData):
@@ -805,9 +813,6 @@ class MetaDataMD(InMemoryMetaData):
             self.entity[key] = item
 
 
-SAML_METADATA_CONTENT_TYPE = 'application/samlmetadata+xml'
-
-
 class MetaDataMDX(InMemoryMetaData):
     """
     Uses the MDQ protocol to fetch entity information.
@@ -817,11 +822,12 @@ class MetaDataMDX(InMemoryMetaData):
 
     @staticmethod
     def sha1_entity_transform(entity_id):
-        return "{{sha1}}{}".format(
-            hashlib.sha1(entity_id.encode("utf-8")).hexdigest())
+        entity_id_sha1 = hashlib.sha1(entity_id.encode("utf-8")).hexdigest()
+        transform = "{{sha1}}{digest}".format(digest=entity_id_sha1)
+        return transform
 
     def __init__(self, url=None, security=None, cert=None,
-                 entity_transform=None, **kwargs):
+                 entity_transform=None, freshness_period=None, **kwargs):
         """
         :params url: mdx service url
         :params security: SecurityContext()
@@ -831,6 +837,8 @@ class MetaDataMDX(InMemoryMetaData):
         hash) the entity id. It is applied to the entity id before it is
         concatenated with the request URL sent to the MDX server. Defaults to
         sha1 transformation.
+        :params freshness_period: a duration in the format described at
+        https://www.w3.org/TR/xmlschema-2/#duration
         """
         super(MetaDataMDX, self).__init__(None, **kwargs)
         if not url:
@@ -845,6 +853,8 @@ class MetaDataMDX(InMemoryMetaData):
 
         self.cert = cert
         self.security = security
+        self.freshness_period = freshness_period or DEFAULT_FRESHNESS_PERIOD
+        self.expiration_date = {}
 
         # We assume that the MDQ server will return a single entity
         # described by a single <EntityDescriptor> element. The protocol
@@ -852,28 +862,53 @@ class MetaDataMDX(InMemoryMetaData):
         # <EntitiesDescriptor> element but we will not currently support
         # that use case since it is unlikely to be leveraged for most
         # flows.
-        self.node_name = "%s:%s" % (md.EntityDescriptor.c_namespace,
-                                      md.EntityDescriptor.c_tag)
+        self.node_name = "{ns}:{tag}".format(
+            ns=md.EntityDescriptor.c_namespace, tag=md.EntityDescriptor.c_tag
+        )
 
     def load(self, *args, **kwargs):
         # Do nothing
         pass
 
-    def __getitem__(self, item):
-        try:
-            return self.entity[item]
-        except KeyError:
-            mdx_url = "%s/entities/%s" % (self.url, self.entity_transform(item))
-            response = requests.get(mdx_url, headers={
-                'Accept': SAML_METADATA_CONTENT_TYPE})
-            if response.status_code == 200:
-                _txt = response.content
+    def _fetch_metadata(self, item):
+        mdx_url = "{url}/entities/{id}".format(
+            url=self.url, id=self.entity_transform(item)
+        )
 
-                if self.parse_and_check_signature(_txt):
-                    return self.entity[item]
-            else:
-                logger.info("Response status: %s", response.status_code)
-            raise KeyError
+        response = requests.get(mdx_url, headers={"Accept": SAML_METADATA_CONTENT_TYPE})
+        if response.status_code != 200:
+            error_msg = "Fething {item}: Got response status {status}".format(
+                item=item, status=response.status_code
+            )
+            logger.info(error_msg)
+            raise KeyError(error_msg)
+
+        _txt = response.content
+        if not self.parse_and_check_signature(_txt):
+            error_msg = "Fething {item}: invalid signature".format(
+                item=item, status=response.status_code
+            )
+            logger.info(error_msg)
+            raise KeyError(error_msg)
+
+        curr_time = str_to_time(instant())
+        self.expiration_date[item] = add_duration(curr_time, self.freshness_period)
+        return self.entity[item]
+
+    def _is_metadata_fresh(self, item):
+        return before(self.expiration_date[item])
+
+    def __getitem__(self, item):
+        if item not in self.entity:
+            entity = self._fetch_metadata(item)
+        elif not self._is_metadata_fresh(item):
+            msg = "Metadata for {} have expired; refreshing metadata".format(item)
+            logger.info(msg)
+            old_entity = self.entity.pop(item)
+            entity = self._fetch_metadata(item)
+        else:
+            entity = self.entity[item]
+        return entity
 
     def single_sign_on_service(self, entity_id, binding=None, typ="idpsso"):
         if binding is None:
@@ -960,9 +995,11 @@ class MetadataStore(MetaData):
                 key = kwargs['url']
                 url = kwargs['url']
                 cert = kwargs.get('cert')
+                freshness_period = kwargs.get('freshness_period', None)
                 security = self.security
                 entity_transform = kwargs.get('entity_transform', None)
-                _md = MetaDataMDX(url, security, cert, entity_transform)
+                _md = MetaDataMDX(url, security, cert, entity_transform,
+                                  freshness_period=freshness_period)
             else:
                 key = args[1]
                 url = args[1]
