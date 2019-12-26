@@ -1,4 +1,3 @@
-import warnings as _warnings
 import logging
 import six
 import time
@@ -122,15 +121,6 @@ class UsernamePasswordMako(UserAuthnMethod):
         self.active = {}
         self.query_param = "upm_answer"
         self.symmetric = saml2.cryptography.symmetric.Default(srv.symkey)
-
-    @property
-    def aes(self):
-        _deprecation_msg = (
-            'This attribute is deprecated. '
-            'It will be removed in the next version. '
-            'Use self.symmetric instead.')
-        _warnings.warn(_deprecation_msg, DeprecationWarning)
-        return self.symmetric
 
     def __call__(self, cookie=None, policy_url=None, logo_url=None,
                  query="", **kwargs):
