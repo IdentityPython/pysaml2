@@ -227,8 +227,8 @@ a period for which the metadata fetched from the the MDQ server are considered
 fresh. After that period has passed the metadata are not valid anymore and must
 be fetched again. The period must be in the format defined in `iso 8601 <https://www.iso.org/iso-8601-date-and-time-format.html>`_.
 
-By default, if `freshness_period` is not defined, the metadata are fetched
-only the first time they are requested and never refreshed.
+By default, if `freshness_period` is not defined, the metadata are refreshed
+every 12 hours (`P0Y0M0DT12H0M0S`).
 
 organization
 ^^^^^^^^^^^^

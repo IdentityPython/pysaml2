@@ -4,7 +4,10 @@ import datetime
 import os
 import re
 from collections import OrderedDict
+from unittest.mock import Mock
 from unittest.mock import patch
+
+import responses
 
 from six.moves.urllib import parse
 
@@ -25,9 +28,6 @@ from saml2.attribute_converter import ac_factory
 from saml2.attribute_converter import d_to_local_name
 from saml2.s_utils import UnknownPrincipal
 from pathutils import full_path
-
-import responses
-import mock
 
 
 TESTS_DIR = os.path.dirname(__file__)
@@ -336,24 +336,55 @@ def test_mdx_single_sign_on_service():
 
 
 @responses.activate
-@mock.patch('saml2.mdstore.before')
-def test_mdx_metadata_freshness_period(mock_datetime):
-    """Ensure that metadata is refreshed only when they have expired."""
-    entity_id = \
-        "http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"
+def test_mdx_metadata_freshness_period_not_expired():
+    """Ensure that metadata is not refreshed if not expired."""
 
+    entity_id = "http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"
     url = "http://mdx.example.com/entities/{}".format(
-        parse.quote_plus(MetaDataMDX.sha1_entity_transform(entity_id)))
-    responses.add(responses.GET, url, body=TEST_METADATA_STRING, status=200,
-                  content_type=SAML_METADATA_CONTENT_TYPE)
+        parse.quote_plus(MetaDataMDX.sha1_entity_transform(entity_id))
+    )
 
-    mock_datetime.return_value = True
-    mdx = MetaDataMDX("http://mdx.example.com",
-                      freshness_period="P0Y0M0DT0H2M0S")
+    responses.add(
+        responses.GET,
+        url,
+        body=TEST_METADATA_STRING,
+        status=200,
+        content_type=SAML_METADATA_CONTENT_TYPE,
+    )
+
+    mdx = MetaDataMDX("http://mdx.example.com", freshness_period="P0Y0M0DT0H2M0S")
+    mdx._is_metadata_fresh = Mock(return_value=True)
+
     mdx.single_sign_on_service(entity_id, BINDING_HTTP_REDIRECT)
+    assert entity_id in mdx.entity
+
     mdx.single_sign_on_service(entity_id, BINDING_HTTP_REDIRECT)
     assert len(responses.calls) == 1
-    mock_datetime.return_value = False
+
+
+@responses.activate
+def test_mdx_metadata_freshness_period_expired():
+    """Ensure that metadata is not refreshed if not expired."""
+
+    entity_id = "http://xenosmilus.umdc.umu.se/simplesaml/saml2/idp/metadata.php"
+    url = "http://mdx.example.com/entities/{}".format(
+        parse.quote_plus(MetaDataMDX.sha1_entity_transform(entity_id))
+    )
+
+    responses.add(
+        responses.GET,
+        url,
+        body=TEST_METADATA_STRING,
+        status=200,
+        content_type=SAML_METADATA_CONTENT_TYPE,
+    )
+
+    mdx = MetaDataMDX("http://mdx.example.com", freshness_period="P0Y0M0DT0H2M0S")
+    mdx._is_metadata_fresh = Mock(return_value=False)
+
+    mdx.single_sign_on_service(entity_id, BINDING_HTTP_REDIRECT)
+    assert entity_id in mdx.entity
+
     mdx.single_sign_on_service(entity_id, BINDING_HTTP_REDIRECT)
     assert len(responses.calls) == 2
 
