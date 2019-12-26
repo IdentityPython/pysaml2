@@ -1,13 +1,13 @@
 import os
 
-import saml2.aes
+from saml2.cryptography.symmetric import AESCipher
 
 
 class TestAES():
     def test_aes_defaults(self):
         original_msg = b'ToBeOrNotTobe W.S.'
         key = os.urandom(16)
-        aes = saml2.aes.AESCipher(key)
+        aes = AESCipher(key)
 
         encrypted_msg = aes.encrypt(original_msg)
         decrypted_msg = aes.decrypt(encrypted_msg)
@@ -16,7 +16,7 @@ class TestAES():
     def test_aes_128_cbc(self):
         original_msg = b'ToBeOrNotTobe W.S.'
         key = os.urandom(16)
-        aes = saml2.aes.AESCipher(key)
+        aes = AESCipher(key)
         alg = 'aes_128_cbc'
 
         encrypted_msg = aes.encrypt(original_msg, alg=alg)
@@ -26,7 +26,7 @@ class TestAES():
     def test_aes_128_cfb(self):
         original_msg = b'ToBeOrNotTobe W.S.'
         key = os.urandom(16)
-        aes = saml2.aes.AESCipher(key)
+        aes = AESCipher(key)
         alg = 'aes_128_cfb'
 
         encrypted_msg = aes.encrypt(original_msg, alg=alg)
@@ -36,7 +36,7 @@ class TestAES():
     def test_aes_192_cbc(self):
         original_msg = b'ToBeOrNotTobe W.S.'
         key = os.urandom(24)
-        aes = saml2.aes.AESCipher(key)
+        aes = AESCipher(key)
         alg = 'aes_192_cbc'
 
         encrypted_msg = aes.encrypt(original_msg, alg=alg)
@@ -46,7 +46,7 @@ class TestAES():
     def test_aes_192_cfb(self):
         original_msg = b'ToBeOrNotTobe W.S.'
         key = os.urandom(24)
-        aes = saml2.aes.AESCipher(key)
+        aes = AESCipher(key)
         alg = 'aes_192_cfb'
 
         encrypted_msg = aes.encrypt(original_msg, alg=alg)
@@ -56,7 +56,7 @@ class TestAES():
     def test_aes_256_cbc(self):
         original_msg = b'ToBeOrNotTobe W.S.'
         key = os.urandom(32)
-        aes = saml2.aes.AESCipher(key)
+        aes = AESCipher(key)
         alg = 'aes_256_cbc'
 
         encrypted_msg = aes.encrypt(original_msg, alg=alg)
@@ -66,7 +66,7 @@ class TestAES():
     def test_aes_256_cfb(self):
         original_msg = b'ToBeOrNotTobe W.S.'
         key = os.urandom(32)
-        aes = saml2.aes.AESCipher(key)
+        aes = AESCipher(key)
         alg = 'aes_256_cfb'
 
         encrypted_msg = aes.encrypt(original_msg, alg=alg)
