@@ -119,12 +119,14 @@ class Cache(object):
                                                          time.struct_time):
             timestamp = time.strftime(TIME_FORMAT, timestamp)
 
-        doc = {"subject_id": subject_id,
-               "entity_id": entity_id,
-               "info": info,
-               "timestamp": timestamp}
+        doc = {
+            "subject_id": subject_id,
+            "entity_id": entity_id,
+            "info": info,
+            "timestamp": timestamp,
+        }
 
-        _ = self._cache.insert(doc)
+        _ = self._cache.insert_one(doc)
 
     def reset(self, subject_id, entity_id):
         """ Scrap the assertions received from a IdP or an AA about a special
