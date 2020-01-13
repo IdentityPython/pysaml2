@@ -1,5 +1,26 @@
 # Changelog
 
+## 5.0.0 (2020-01-13)
+
+- Fix XML Signature Wrapping (XSW) vulnerabilities - CVE-2020-5390
+- Add freshness period feature for MetaDataMDX
+- Fix bug in duration calculation in time_util library
+- Fix ipv6 validation to accommodate for addresses with brackets
+- Fix xmlsec temporary files deletions
+- Add method to get supported algorithms from metadata
+- Add mdstore method to extract assurance certifications
+- Add mdstore method to extract contact_person data
+- Add attribute mappings from the Swiss eduPerson Schema
+- Make AESCipher and Fernet interfaces compatible
+- Remove deprecated saml2.aes module
+- Remove deprecated saml2.extensions.ui module
+- Replace deprecated mongodb operations
+- Rename ToOld error to TooOld
+- Fix pytest warnings
+- Mock tests that need a network connection
+- Start dropping python2 support
+
+
 ## 4.9.0 (2019-11-03)
 
 - Add mdstore methods to extract mdui uiinfo elements
