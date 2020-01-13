@@ -1,22 +1,30 @@
+import pytest
+import copy
+from saml2 import BINDING_HTTP_POST
 from saml2 import metadata
 from saml2 import samlp
 from saml2.client import Saml2Client
 from saml2.server import Server
-from saml2.config import SPConfig
+from saml2.config import eIDASSPConfig
 from eidas.sp_conf import CONFIG
+from saml2.utility.config import ConfigValidationError
 
 
 class TestSP:
     def setup_class(self):
         self.server = Server("idp_conf")
 
-        self.conf = SPConfig()
+        self.conf = eIDASSPConfig()
         self.conf.load_file("sp_conf")
 
         self.client = Saml2Client(self.conf)
 
     def teardown_class(self):
         self.server.close()
+
+    @pytest.fixture(scope="function")
+    def config(self):
+        return copy.deepcopy(CONFIG)
 
     def test_authn_request_force_authn(self):
         req_str = "{0}".format(self.client.create_authn_request(
@@ -35,10 +43,10 @@ class TestSP:
         assert not any(filter(lambda x: x.tag == "SPType",
                           entd.extensions.extension_elements))
 
-    def test_sp_type_in_metadata(self):
-        CONFIG["service"]["sp"]["sp_type_in_metadata"] = True
-        sconf = SPConfig()
-        sconf.load(CONFIG)
+    def test_sp_type_in_metadata(self, config):
+        config["service"]["sp"]["sp_type_in_metadata"] = True
+        sconf = eIDASSPConfig()
+        sconf.load(config)
         custom_client = Saml2Client(sconf)
 
         req_str = "{0}".format(custom_client.create_authn_request(
@@ -58,5 +66,49 @@ class TestSP:
                           entd.extensions.extension_elements))
 
 
-if __name__ == '__main__':
-    TestSP()
+class TestSPConfig:
+    @pytest.fixture(scope="function")
+    def raise_error_on_warning(self, monkeypatch):
+        def r(*args, **kwargs):
+            raise ConfigValidationError()
+        monkeypatch.setattr("saml2.utility.config.logger.warning", r)
+
+    @pytest.fixture(scope="function")
+    def config(self):
+        return copy.deepcopy(CONFIG)
+
+    def test_singlelogout_declared(self, config, raise_error_on_warning):
+        config["service"]["sp"]["endpoints"]["single_logout_service"] = \
+            [("https://example.com", BINDING_HTTP_POST)]
+        conf = eIDASSPConfig()
+        conf.load(config)
+
+        with pytest.raises(ConfigValidationError):
+            conf.validate()
+
+    def test_artifact_resolution_declared(self, config, raise_error_on_warning):
+        config["service"]["sp"]["endpoints"]["artifact_resolution_service"] = \
+            [("https://example.com", BINDING_HTTP_POST)]
+        conf = eIDASSPConfig()
+        conf.load(config)
+
+        with pytest.raises(ConfigValidationError):
+            conf.validate()
+
+    def test_manage_nameid_service_declared(self, config, raise_error_on_warning):
+        config["service"]["sp"]["endpoints"]["manage_name_id_service"] = \
+            [("https://example.com", BINDING_HTTP_POST)]
+        conf = eIDASSPConfig()
+        conf.load(config)
+
+        with pytest.raises(ConfigValidationError):
+            conf.validate()
+
+    def test_no_keydescriptor(self, config):
+        del config["cert_file"]
+        del config["encryption_keypairs"]
+        conf = eIDASSPConfig()
+        conf.load(config)
+
+        with pytest.raises(ConfigValidationError):
+            conf.validate()

@@ -7,6 +7,7 @@ import logging.handlers
 import os
 import re
 import sys
+from functools import partial
 
 import six
 
@@ -21,6 +22,7 @@ from saml2.assertion import Policy
 from saml2.mdstore import MetadataStore
 from saml2.saml import NAME_FORMAT_URI
 from saml2.virtual_org import VirtualOrg
+from saml2.utility.config import RuleValidator, should_warning, must_error
 
 logger = logging.getLogger(__name__)
 
@@ -542,6 +544,9 @@ class Config(object):
                 res[endp] = (service, binding)
         return res
 
+    def validate(self):
+        pass
+
 
 class SPConfig(Config):
     def_context = "sp"
@@ -571,11 +576,56 @@ class SPConfig(Config):
         return None
 
 
+class eIDASConfig(Config):
+    @classmethod
+    def assert_not_declared(cls, error_signal):
+        return (lambda x: x is None,
+                partial(error_signal, message="not be declared"))
+
+    @classmethod
+    def assert_declared(cls, error_signal):
+        return (lambda x: x is not None,
+                partial(error_signal, message="be declared"))
+
+
+class eIDASSPConfig(SPConfig, eIDASConfig):
+    def validate(self):
+        validators = [
+            RuleValidator(
+                "single_logout_service",
+                self._sp_endpoints.get("single_logout_service"),
+                *self.assert_not_declared(should_warning)
+            ),
+            RuleValidator(
+                "artifact_resolution_service",
+                self._sp_endpoints.get("artifact_resolution_service"),
+                *self.assert_not_declared(should_warning)
+            ),
+            RuleValidator(
+                "manage_name_id_service",
+                self._sp_endpoints.get("manage_name_id_service"),
+                *self.assert_not_declared(should_warning)
+            ),
+            RuleValidator(
+                "KeyDescriptor",
+                self.cert_file or self.encryption_keypairs,
+                *self.assert_declared(must_error)
+            )
+        ]
+
+        for validator in validators:
+            validator.validate()
+
+
 class IdPConfig(Config):
     def_context = "idp"
 
     def __init__(self):
         Config.__init__(self)
+
+
+class eIDASIdPConfig(IdPConfig):
+    pass
 
 
 def config_factory(_type, config):
