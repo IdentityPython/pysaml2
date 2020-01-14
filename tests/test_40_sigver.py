@@ -9,10 +9,10 @@ from saml2 import class_name
 from saml2 import time_util
 from saml2 import saml, samlp
 from saml2 import config
-from saml2.sigver import pre_encryption_part
+from saml2.sigver import pre_encryption_part, read_cert_from_file
 from saml2.sigver import make_temp
 from saml2.sigver import XmlsecError
-from saml2.sigver import SigverError
+from saml2.sigver import CertificateError
 from saml2.mdstore import MetadataStore
 from saml2.saml import assertion_from_string
 from saml2.saml import EncryptedAssertion
@@ -1112,6 +1112,21 @@ def test_xmlsec_output_line_parsing():
     output4 = "prefix\r\nFAIL\r\npostfix"
     with raises(sigver.XmlsecError):
         sigver.parse_xmlsec_output(output4)
+
+
+def test_cert_trailing_newlines_ignored():
+    assert read_cert_from_file(full_path("extra_lines.crt")) \
+           == read_cert_from_file(full_path("test_2.crt"))
+
+
+def test_invalid_cert_raises_error():
+    with pytest.raises(CertificateError):
+        read_cert_from_file(full_path("malformed.crt"))
+
+
+def test_der_certificate_loading():
+    assert read_cert_from_file(full_path("test_1.der"), "der") == \
+           read_cert_from_file(full_path("test_1.crt"))
 
 
 if __name__ == "__main__":
