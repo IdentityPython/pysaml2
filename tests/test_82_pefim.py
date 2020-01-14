@@ -18,7 +18,7 @@ conf.load_file("server_conf")
 client = Saml2Client(conf)
 
 # place a certificate in an authn request
-cert = read_cert_from_file(full_path("test.pem"), "pem")
+cert = read_cert_from_file(full_path("test.pem"))
 
 spcertenc = SPCertEnc(
     x509_data=ds.X509Data(

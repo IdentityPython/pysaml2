@@ -10,6 +10,10 @@ import logging
 import os
 import six
 
+from cryptography import x509
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.serialization import Encoding
+
 from time import mktime
 
 from six.moves.urllib import parse
@@ -597,7 +601,7 @@ def make_str(txt):
         return txt.decode()
 
 
-def read_cert_from_file(cert_file, cert_type):
+def read_cert_from_file(cert_file, cert_type="pem"):
     """ Reads a certificate from a file. The assumption is that there is
     only one certificate in the file
 
@@ -605,38 +609,23 @@ def read_cert_from_file(cert_file, cert_type):
     :param cert_type: The certificate type
     :return: A base64 encoded certificate as a string or the empty string
     """
-
     if not cert_file:
-        return ''
+        return ""
 
-    if cert_type == 'pem':
-        _a = read_file(cert_file, 'rb').decode()
-        _b = _a.replace('\r\n', '\n')
-        lines = _b.split('\n')
+    with open(cert_file, "rb") as fp:
+        data = fp.read()
 
-        for pattern in (
-                '-----BEGIN CERTIFICATE-----',
-                '-----BEGIN PUBLIC KEY-----'):
-            if pattern in lines:
-                lines = lines[lines.index(pattern) + 1:]
-                break
-        else:
-            raise CertificateError('Strange beginning of PEM file')
+    cert_reader = (x509.load_der_x509_certificate
+                   if cert_type == 'der'
+                   else x509.load_pem_x509_certificate)
 
-        for pattern in (
-                '-----END CERTIFICATE-----',
-                '-----END PUBLIC KEY-----'):
-            if pattern in lines:
-                lines = lines[:lines.index(pattern)]
-                break
-        else:
-            raise CertificateError('Strange end of PEM file')
-        return make_str(''.join(lines).encode())
-
-    if cert_type in ['der', 'cer', 'crt']:
-        data = read_file(cert_file, 'rb')
-        _cert = base64.b64encode(data)
-        return make_str(_cert)
+    try:
+        cert = cert_reader(data, default_backend())
+        pem_data = cert.public_bytes(Encoding.PEM)
+    except Exception as e:
+        raise CertificateError(e)
+    else:
+        return "".join(pem_data.decode().splitlines()[1:-1])
 
 
 class CryptoBackend(object):
