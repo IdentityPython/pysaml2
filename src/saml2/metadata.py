@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+from cryptography import x509
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.serialization import Encoding
 from saml2.algsupport import algorithm_support_in_metadata
 from saml2.md import AttributeProfile
 from saml2.sigver import security_context
@@ -827,6 +830,8 @@ def sign_entity_descriptor(edesc, ident, secc, sign_alg=None, digest_alg=None):
 
 
 def read_cert(path):
-    with open(path) as fp:
-        lines = fp.readlines()
-    return lines[1:-1]
+    with open(path, "rb") as fp:
+        data = fp.read()
+    cert = x509.load_pem_x509_certificate(data, default_backend())
+    pem_data = cert.public_bytes(Encoding.PEM)
+    return pem_data.decode().splitlines()[1:-1]

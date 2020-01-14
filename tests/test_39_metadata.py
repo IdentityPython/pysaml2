@@ -1,6 +1,8 @@
+import pytest
 import copy
+from pathutils import full_path
 from saml2.config import SPConfig
-from saml2.metadata import entity_descriptor
+from saml2.metadata import entity_descriptor, read_cert
 from saml2.saml import NAME_FORMAT_URI, NAME_FORMAT_BASIC
 
 __author__ = 'roland'
@@ -47,5 +49,17 @@ def test_requested_attribute_name_format():
         assert req_attr.name_format == NAME_FORMAT_BASIC
 
 
+def test_cert_trailing_newlines_ignored():
+    assert "".join(read_cert(full_path("extra_lines.crt"))) \
+           == "".join(read_cert(full_path("test_2.crt")))
+
+
+def test_invalid_cert_raises_error():
+    with pytest.raises(ValueError):
+        read_cert(full_path("malformed.crt"))
+
+
 if __name__ == '__main__':
     test_requested_attribute_name_format()
+    test_cert_trailing_newlines_ignored()
+    test_invalid_cert_raises_error()
