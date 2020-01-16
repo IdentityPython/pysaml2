@@ -25,6 +25,10 @@ You also need xmlsec1 which you can download from http://www.aleksey.com/xmlsec/
 
 If you're on macOS, you can get xmlsec1 installed from MacPorts or Fink.
 
+If you're on rhel/centos 7 you will need to install xmlsec1 and xmlsec1-openssl::
+
+    yum install xmlsec1 xmlsec1-openssl
+
 Depending on how you are going to use PySAML2 you might also need
 
 * Mako
