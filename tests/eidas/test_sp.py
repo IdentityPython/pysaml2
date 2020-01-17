@@ -112,3 +112,19 @@ class TestSPConfig:
 
         with pytest.raises(ConfigValidationError):
             conf.validate()
+
+    def test_no_nodecountry(self, config):
+        del config["service"]["sp"]["node_country"]
+        conf = eIDASSPConfig()
+        conf.load(config)
+
+        with pytest.raises(ConfigValidationError):
+            conf.validate()
+
+    def test_nodecountry_wrong_format(self, config):
+        config["service"]["sp"]["node_country"] = "gr"
+        conf = eIDASSPConfig()
+        conf.load(config)
+
+        with pytest.raises(ConfigValidationError):
+            conf.validate()

@@ -8,6 +8,7 @@ import os
 import re
 import sys
 from functools import partial
+from iso3166 import countries
 
 import six
 
@@ -587,30 +588,47 @@ class eIDASConfig(Config):
         return (lambda x: x is not None,
                 partial(error_signal, message="be declared"))
 
+    @staticmethod
+    def validate_node_country_format(node_country):
+        try:
+            return countries.get(node_country).alpha2 == node_country
+        except KeyError:
+            return False
+
 
 class eIDASSPConfig(SPConfig, eIDASConfig):
+    def get_endpoint_element(self, element):
+        return getattr(self, "_sp_endpoints", {}).get(element, None)
+
     def validate(self):
         validators = [
             RuleValidator(
                 "single_logout_service",
-                self._sp_endpoints.get("single_logout_service"),
+                self.get_endpoint_element("single_logout_service"),
                 *self.assert_not_declared(should_warning)
             ),
             RuleValidator(
                 "artifact_resolution_service",
-                self._sp_endpoints.get("artifact_resolution_service"),
+                self.get_endpoint_element("artifact_resolution_service"),
                 *self.assert_not_declared(should_warning)
             ),
             RuleValidator(
                 "manage_name_id_service",
-                self._sp_endpoints.get("manage_name_id_service"),
+                self.get_endpoint_element("manage_name_id_service"),
                 *self.assert_not_declared(should_warning)
             ),
             RuleValidator(
                 "KeyDescriptor",
                 self.cert_file or self.encryption_keypairs,
                 *self.assert_declared(must_error)
-            )
+            ),
+            RuleValidator(
+                "node_country",
+                getattr(self, "_sp_node_country", None),
+                self.validate_node_country_format,
+                partial(must_error,
+                        message="be declared in ISO 3166-1 alpha-2 format")
+            ),
         ]
 
         for validator in validators:
