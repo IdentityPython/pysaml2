@@ -65,6 +65,19 @@ class TestSP:
         assert any(filter(lambda x: x.tag == "NodeCountry",
                           entd.extensions.extension_elements))
 
+    def test_application_identifier_in_metadata(self):
+        entd = metadata.entity_descriptor(self.conf)
+        entity_attributes = next(filter(lambda x: x.tag == "EntityAttributes",
+                                        entd.extensions.extension_elements))
+        app_identifier = [
+            x for x in entity_attributes.children
+            if x.attributes["Name"] ==
+               "http://eidas.europa.eu/entity-attributes/application-identifier"
+        ]
+        assert len(app_identifier) == 1
+        assert self.conf._sp_application_identifier \
+               == next(x.text for y in app_identifier for x in y.children)
+
 
 class TestSPConfig:
     @pytest.fixture(scope="function")
@@ -128,3 +141,26 @@ class TestSPConfig:
 
         with pytest.raises(ConfigValidationError):
             conf.validate()
+
+    def test_no_application_identifier_warning(self, config, raise_error_on_warning):
+        del config["service"]["sp"]["application_identifier"]
+
+        conf = eIDASSPConfig()
+        conf.load(config)
+
+        with pytest.raises(ConfigValidationError):
+            conf.validate()
+
+    def test_application_identifier_wrong_format(self, config):
+        config["service"]["sp"]["application_identifier"] = "TEST:Node.1"
+
+        conf = eIDASSPConfig()
+        conf.load(config)
+
+        with pytest.raises(ConfigValidationError):
+            conf.validate()
+
+    def test_application_identifier_ok_format(self, config):
+        conf = eIDASSPConfig()
+        conf.load(config)
+        conf.validate()

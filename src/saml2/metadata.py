@@ -778,6 +778,16 @@ def entity_descriptor(confd):
         item = node_country.NodeCountry(text=conf_node_country)
         entd.extensions.add_extension_element(item)
 
+    app_identifer = confd.getattr("application_identifier", confd.context)
+    if app_identifer:
+        entd.extensions = entd.extensions or md.Extensions()
+        ava = AttributeValue(text=app_identifer)
+        attr = Attribute(
+            attribute_value=ava,
+            name="http://eidas.europa.eu/entity-attributes/application-identifier"
+        )
+        _add_attr_to_entity_attributes(entd.extensions, attr)
+
     return entd
 
 

@@ -8,6 +8,7 @@ import os
 import re
 import sys
 from functools import partial
+import re
 from iso3166 import countries
 
 import six
@@ -101,6 +102,7 @@ SP_ARGS = [
     "sp_type_in_metadata",
     "requested_attributes",
     "node_country",
+    "application_identifier"
 ]
 
 AA_IDP_ARGS = [
@@ -123,6 +125,7 @@ AA_IDP_ARGS = [
     "name_qualifier",
     "edu_person_targeted_id",
     "node_country",
+    "application_identifier"
 ]
 
 PDP_ARGS = ["endpoints", "name_form", "name_id_format"]
@@ -595,6 +598,14 @@ class eIDASConfig(Config):
         except KeyError:
             return False
 
+    @staticmethod
+    def validate_application_identifier_format(application_identifier):
+        if not application_identifier:
+            return True
+
+        return re.search(r"([a-zA-Z0-9])+:([a-zA-Z0-9():_\-])+:([0-9])+"
+                         r"(\.([0-9])+){1,2}", application_identifier)
+
 
 class eIDASSPConfig(SPConfig, eIDASConfig):
     def get_endpoint_element(self, element):
@@ -629,6 +640,19 @@ class eIDASSPConfig(SPConfig, eIDASConfig):
                 partial(must_error,
                         message="be declared in ISO 3166-1 alpha-2 format")
             ),
+            RuleValidator(
+                "application_identifier",
+                getattr(self, "_sp_application_identifier", None),
+                *self.assert_declared(should_warning)
+            ),
+            RuleValidator(
+                "application_identifier",
+                getattr(self, "_sp_application_identifier", None),
+                self.validate_application_identifier_format,
+                partial(must_error,
+                        message="be in the form <vendor name>:<software identifier>"
+                                ":<major-version>.<minor-version>[.<patch-version>]”")
+            )
         ]
 
         for validator in validators:

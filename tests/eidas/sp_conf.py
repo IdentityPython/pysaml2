@@ -30,7 +30,8 @@ CONFIG = {
             "sp_type": "public",
             "sp_type_in_metadata": False,
             "force_authn": True,
-            "node_country": "GR"
+            "node_country": "GR",
+            "application_identifier": "CEF:eIDAS-ref:2.0"
         }
     },
     "debug": 1,
