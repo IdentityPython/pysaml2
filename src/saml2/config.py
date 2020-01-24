@@ -102,7 +102,8 @@ SP_ARGS = [
     "sp_type_in_metadata",
     "requested_attributes",
     "node_country",
-    "application_identifier"
+    "application_identifier",
+    "protocol_version"
 ]
 
 AA_IDP_ARGS = [
@@ -126,6 +127,7 @@ AA_IDP_ARGS = [
     "edu_person_targeted_id",
     "node_country",
     "application_identifier"
+    "protocol_version"
 ]
 
 PDP_ARGS = ["endpoints", "name_form", "name_id_format"]
@@ -652,6 +654,11 @@ class eIDASSPConfig(SPConfig, eIDASConfig):
                 partial(must_error,
                         message="be in the form <vendor name>:<software identifier>"
                                 ":<major-version>.<minor-version>[.<patch-version>]”")
+            ),
+            RuleValidator(
+                "protocol_version",
+                getattr(self, "_sp_protocol_version", None),
+                *self.assert_declared(should_warning)
             )
         ]
 

@@ -21,6 +21,7 @@ from saml2 import BINDING_HTTP_REDIRECT
 from saml2 import BINDING_SOAP
 from saml2 import samlp
 from saml2 import class_name
+from saml2.utility import make_list
 
 from saml2 import xmldsig as ds
 import six
@@ -785,6 +786,16 @@ def entity_descriptor(confd):
         attr = Attribute(
             attribute_value=ava,
             name="http://eidas.europa.eu/entity-attributes/application-identifier"
+        )
+        _add_attr_to_entity_attributes(entd.extensions, attr)
+
+    protocol_version = confd.getattr("protocol_version", confd.context)
+    if protocol_version:
+        entd.extensions = entd.extensions or md.Extensions()
+        ava = [AttributeValue(text=str(c)) for c in make_list(protocol_version)]
+        attr = Attribute(
+            attribute_value=ava,
+            name="http://eidas.europa.eu/entity-attributes/protocol-version"
         )
         _add_attr_to_entity_attributes(entd.extensions, attr)
 

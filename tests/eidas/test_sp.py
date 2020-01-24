@@ -71,13 +71,43 @@ class TestSP:
                                         entd.extensions.extension_elements))
         app_identifier = [
             x for x in entity_attributes.children
-            if x.attributes["Name"] ==
+            if getattr(x, "attributes", {}).get("Name") ==
                "http://eidas.europa.eu/entity-attributes/application-identifier"
         ]
         assert len(app_identifier) == 1
         assert self.conf._sp_application_identifier \
                == next(x.text for y in app_identifier for x in y.children)
 
+    def test_multiple_protocol_version_in_metadata(self):
+        entd = metadata.entity_descriptor(self.conf)
+        entity_attributes = next(filter(lambda x: x.tag == "EntityAttributes",
+                                        entd.extensions.extension_elements))
+        protocol_version = next(
+            x for x in entity_attributes.children
+            if getattr(x, "name", "") ==
+               "http://eidas.europa.eu/entity-attributes/protocol-version"
+        )
+        assert len(protocol_version.attribute_value) == 2
+        assert set(str(x) for x in self.conf._sp_protocol_version) \
+               == set([x.text for x in protocol_version.attribute_value])
+
+    def test_protocol_version_in_metadata(self, config):
+        config["service"]["sp"]["protocol_version"] = 1.2
+
+        conf = eIDASSPConfig()
+        conf.load(config)
+
+        entd = metadata.entity_descriptor(conf)
+        entity_attributes = next(filter(lambda x: x.tag == "EntityAttributes",
+                                        entd.extensions.extension_elements))
+        protocol_version = next(
+            x for x in entity_attributes.children
+            if getattr(x, "name", "") ==
+            "http://eidas.europa.eu/entity-attributes/protocol-version"
+        )
+        assert len(protocol_version.attribute_value) == 1
+        assert {str(conf._sp_protocol_version)} \
+               == set([x.text for x in protocol_version.attribute_value])
 
 class TestSPConfig:
     @pytest.fixture(scope="function")
@@ -164,3 +194,12 @@ class TestSPConfig:
         conf = eIDASSPConfig()
         conf.load(config)
         conf.validate()
+
+    def test_no_protocol_version_warning(self, config, raise_error_on_warning):
+        del config["service"]["sp"]["protocol_version"]
+
+        conf = eIDASSPConfig()
+        conf.load(config)
+
+        with pytest.raises(ConfigValidationError):
+            conf.validate()
