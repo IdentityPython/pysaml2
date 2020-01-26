@@ -25,7 +25,7 @@ AUTHN = {
 
 
 def test_pre_enc():
-    tmpl = pre_encryption_part()
+    tmpl = pre_encryption_part(encrypted_key_id="EK", encrypted_data_id="ED")
     print(tmpl)
     assert "%s" % tmpl in (TMPL_NO_HEADER, TMPL)
 

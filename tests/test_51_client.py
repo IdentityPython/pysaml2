@@ -2679,9 +2679,6 @@ class TestClientNonAsciiAva:
         # Begin with the IdPs side
         _sec = self.server.sec
 
-        nameid_policy = samlp.NameIDPolicy(allow_create="false",
-                                           format=saml.NAMEID_FORMAT_PERSISTENT)
-
         asser_1 = Assertion({"givenName": "Dave"})
 
         farg = add_path(
