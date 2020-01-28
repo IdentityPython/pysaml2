@@ -450,7 +450,7 @@ def extract_rsa_key_from_x509_cert(pem):
 
 
 def pem_format(key):
-    return '\n'.join([
+    return os.linesep.join([
         '-----BEGIN CERTIFICATE-----',
         key,
         '-----END CERTIFICATE-----'
