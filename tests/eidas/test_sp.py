@@ -112,6 +112,20 @@ class TestSP:
 
 class TestSPConfig:
     @pytest.fixture(scope="function")
+    def technical_contacts(self, config):
+        return [
+            x for x in config["contact_person"]
+            if x["contact_type"] == "technical"
+        ]
+
+    @pytest.fixture(scope="function")
+    def support_contacts(self, config):
+        return [
+            x for x in config["contact_person"]
+            if x["contact_type"] == "support"
+        ]
+
+    @pytest.fixture(scope="function")
     def raise_error_on_warning(self, monkeypatch):
         def r(*args, **kwargs):
             raise ConfigValidationError()
@@ -182,6 +196,15 @@ class TestSPConfig:
         with pytest.raises(ConfigValidationError):
             conf.validate()
 
+    def test_empty_application_identifier_warning(self, config, raise_error_on_warning):
+        config["service"]["sp"]["application_identifier"] = ""
+
+        conf = eIDASSPConfig()
+        conf.load(config)
+
+        with pytest.raises(ConfigValidationError):
+            conf.validate()
+
     def test_application_identifier_wrong_format(self, config):
         config["service"]["sp"]["application_identifier"] = "TEST:Node.1"
 
@@ -191,13 +214,122 @@ class TestSPConfig:
         with pytest.raises(ConfigValidationError):
             conf.validate()
 
-    def test_application_identifier_ok_format(self, config):
+    def test_application_identifier_ok_format(self, config, raise_error_on_warning):
         conf = eIDASSPConfig()
         conf.load(config)
         conf.validate()
 
     def test_no_protocol_version_warning(self, config, raise_error_on_warning):
         del config["service"]["sp"]["protocol_version"]
+
+        conf = eIDASSPConfig()
+        conf.load(config)
+
+        with pytest.raises(ConfigValidationError):
+            conf.validate()
+
+    def test_empty_protocol_version_warning(self, config, raise_error_on_warning):
+        config["service"]["sp"]["protocol_version"] = ""
+
+        conf = eIDASSPConfig()
+        conf.load(config)
+
+        with pytest.raises(ConfigValidationError):
+            conf.validate()
+
+    def test_no_organization_info_warning(self, config, raise_error_on_warning):
+        del config["organization"]
+
+        conf = eIDASSPConfig()
+        conf.load(config)
+
+        with pytest.raises(ConfigValidationError):
+            conf.validate()
+
+    def test_empty_organization_info_warning(self, config, raise_error_on_warning):
+        config["organization"] = {}
+
+        conf = eIDASSPConfig()
+        conf.load(config)
+
+        with pytest.raises(ConfigValidationError):
+            conf.validate()
+
+    def test_no_technical_contact_person(self,
+                                         config,
+                                         technical_contacts,
+                                         raise_error_on_warning):
+        for contact in technical_contacts:
+            contact["contact_type"] = "other"
+
+        conf = eIDASSPConfig()
+        conf.load(config)
+
+        with pytest.raises(ConfigValidationError):
+            conf.validate()
+
+    def test_technical_contact_person_no_email(self,
+                                               config,
+                                               technical_contacts,
+                                               raise_error_on_warning):
+
+        for contact in technical_contacts:
+            del contact["email_address"]
+
+        conf = eIDASSPConfig()
+        conf.load(config)
+
+        with pytest.raises(ConfigValidationError):
+            conf.validate()
+
+    def test_technical_contact_person_empty_email(self,
+                                                  config,
+                                                  technical_contacts,
+                                                  raise_error_on_warning):
+
+        for contact in technical_contacts:
+            del contact["email_address"]
+
+        conf = eIDASSPConfig()
+        conf.load(config)
+
+        with pytest.raises(ConfigValidationError):
+            conf.validate()
+
+    def test_no_support_contact_person(self,
+                                       config,
+                                       support_contacts,
+                                       raise_error_on_warning):
+        for contact in support_contacts:
+            contact["contact_type"] = "other"
+
+        conf = eIDASSPConfig()
+        conf.load(config)
+
+        with pytest.raises(ConfigValidationError):
+            conf.validate()
+
+    def test_support_contact_person_no_email(self,
+                                             config,
+                                             support_contacts,
+                                             raise_error_on_warning):
+
+        for contact in support_contacts:
+            del contact["email_address"]
+
+        conf = eIDASSPConfig()
+        conf.load(config)
+
+        with pytest.raises(ConfigValidationError):
+            conf.validate()
+
+    def test_support_contact_person_empty_email(self,
+                                                config,
+                                                support_contacts,
+                                                raise_error_on_warning):
+
+        for contact in support_contacts:
+            del contact["email_address"]
 
         conf = eIDASSPConfig()
         conf.load(config)

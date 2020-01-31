@@ -8,3 +8,12 @@ def make_type(mtype, *args):
 
 def make_list(*args):
     return make_type(list, *args)
+
+
+def not_empty(element):
+    if isinstance(element, bool):
+        return True
+
+    if element:
+        return True
+    return False

@@ -61,14 +61,22 @@ CONFIG = {
         "display_name": ("AB Exempel", "se"),
         "url": "http://www.example.org",
     },
-    "contact_person": [{
-        "given_name": "Roland",
-        "sur_name": "Hedberg",
-        "telephone_number": "+46 70 100 0000",
-        "email_address": ["tech@eample.com",
-                          "tech@example.org"],
-        "contact_type": "technical"
-    },
+    "contact_person": [
+        {
+            "given_name": "Roland",
+            "sur_name": "Hedberg",
+            "telephone_number": "+46 70 100 0000",
+            "email_address": ["tech@eample.com",
+                              "tech@example.org"],
+            "contact_type": "technical"
+        },
+        {
+            "given_name": "Roland",
+            "sur_name": "Hedberg",
+            "telephone_number": "+46 70 100 0000",
+            "email_address": ["tech@eample.com",
+                              "tech@example.org"],
+            "contact_type": "support"}
     ],
     "logger": {
         "rotating": {

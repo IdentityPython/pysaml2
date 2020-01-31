@@ -24,6 +24,7 @@ from saml2.assertion import Policy
 from saml2.mdstore import MetadataStore
 from saml2.saml import NAME_FORMAT_URI
 from saml2.virtual_org import VirtualOrg
+from saml2.utility import not_empty
 from saml2.utility.config import ConfigValidationError
 
 logger = logging.getLogger(__name__)
@@ -610,6 +611,15 @@ class eIDASConfig(Config):
         return re.search(r"([a-zA-Z0-9])+:([a-zA-Z0-9():_\-])+:([0-9])+"
                          r"(\.([0-9])+){1,2}", application_identifier)
 
+    @staticmethod
+    def get_type_contact_person(contacts, ctype):
+        return [contact for contact in contacts
+                if contact.get("contact_type") == ctype]
+
+    @staticmethod
+    def contact_has_email_address(contact):
+        return not_empty(contact.get("email_address"))
+
 
 class eIDASSPConfig(SPConfig, eIDASConfig):
     def get_endpoint_element(self, element):
@@ -633,9 +643,21 @@ class eIDASSPConfig(SPConfig, eIDASConfig):
             "manage_name_id_service SHOULD NOT be declared":
                 self.get_endpoint_element("manage_name_id_service") is None,
             "application_identifier SHOULD be declared":
-                self.get_application_identifier() is not None,
+                not_empty(self.get_application_identifier()),
             "protocol_version SHOULD be declared":
-                self.get_protocol_version() is not None,
+                not_empty(self.get_protocol_version()),
+            "minimal organization info (name/dname/url) SHOULD be declared":
+                not_empty(self.organization),
+            "contact_person with contact_type 'technical' and at least one "
+            "email_address SHOULD be declared":
+                any(filter(self.contact_has_email_address,
+                           self.get_type_contact_person(self.contact_person,
+                                                        ctype="technical"))),
+            "contact_person with contact_type 'support' and at least one "
+            "email_address SHOULD be declared":
+                any(filter(self.contact_has_email_address,
+                           self.get_type_contact_person(self.contact_person,
+                                                        ctype="support")))
         }
 
         if not all(warning_validators.values()):
