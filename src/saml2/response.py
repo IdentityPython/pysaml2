@@ -212,10 +212,8 @@ def for_me(conditions, myself):
             if audience.text.strip() == myself:
                 return True
             else:
-                # print("Not for me: %s != %s" % (audience.text.strip(),
-                # myself))
-                pass
-
+                logger.debug("AudienceRestriction - One condition not satisfied: %s != %s" % (audience.text.strip(), myself))
+    logger.debug("AudienceRestrictions not satisfied!")
     return False
 
 
@@ -613,7 +611,7 @@ class AuthnResponse(StatusResponse):
 
         if not for_me(conditions, self.entity_id):
             if not lax:
-                raise Exception("Not for me!!!")
+                raise Exception("AudienceRestrictions conditions not satisfied! (Local entity_id=%s)" % self.entity_id)
 
         if conditions.condition:  # extra conditions
             for cond in conditions.condition:
