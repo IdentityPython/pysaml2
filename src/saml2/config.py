@@ -24,7 +24,7 @@ from saml2.assertion import Policy
 from saml2.mdstore import MetadataStore
 from saml2.saml import NAME_FORMAT_URI
 from saml2.virtual_org import VirtualOrg
-from saml2.utility.config import RuleValidator, should_warning, must_error
+from saml2.utility.config import ConfigValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -583,15 +583,17 @@ class SPConfig(Config):
 
 
 class eIDASConfig(Config):
-    @classmethod
-    def assert_not_declared(cls, error_signal):
-        return (lambda x: x is None,
-                partial(error_signal, message="not be declared"))
+    def get_endpoint_element(self, element):
+        pass
 
-    @classmethod
-    def assert_declared(cls, error_signal):
-        return (lambda x: x is not None,
-                partial(error_signal, message="be declared"))
+    def get_protocol_version(self):
+        pass
+
+    def get_application_identifier(self):
+        pass
+
+    def get_node_country(self):
+        pass
 
     @staticmethod
     def validate_node_country_format(node_country):
@@ -613,57 +615,54 @@ class eIDASSPConfig(SPConfig, eIDASConfig):
     def get_endpoint_element(self, element):
         return getattr(self, "_sp_endpoints", {}).get(element, None)
 
-    def validate(self):
-        validators = [
-            RuleValidator(
-                "single_logout_service",
-                self.get_endpoint_element("single_logout_service"),
-                *self.assert_not_declared(should_warning)
-            ),
-            RuleValidator(
-                "artifact_resolution_service",
-                self.get_endpoint_element("artifact_resolution_service"),
-                *self.assert_not_declared(should_warning)
-            ),
-            RuleValidator(
-                "manage_name_id_service",
-                self.get_endpoint_element("manage_name_id_service"),
-                *self.assert_not_declared(should_warning)
-            ),
-            RuleValidator(
-                "KeyDescriptor",
-                self.cert_file or self.encryption_keypairs,
-                *self.assert_declared(must_error)
-            ),
-            RuleValidator(
-                "node_country",
-                getattr(self, "_sp_node_country", None),
-                self.validate_node_country_format,
-                partial(must_error,
-                        message="be declared in ISO 3166-1 alpha-2 format")
-            ),
-            RuleValidator(
-                "application_identifier",
-                getattr(self, "_sp_application_identifier", None),
-                *self.assert_declared(should_warning)
-            ),
-            RuleValidator(
-                "application_identifier",
-                getattr(self, "_sp_application_identifier", None),
-                self.validate_application_identifier_format,
-                partial(must_error,
-                        message="be in the form <vendor name>:<software identifier>"
-                                ":<major-version>.<minor-version>[.<patch-version>]”")
-            ),
-            RuleValidator(
-                "protocol_version",
-                getattr(self, "_sp_protocol_version", None),
-                *self.assert_declared(should_warning)
-            )
-        ]
+    def get_application_identifier(self):
+        return getattr(self, "_sp_application_identifier", None)
 
-        for validator in validators:
-            validator.validate()
+    def get_protocol_version(self):
+        return getattr(self, "_sp_protocol_version", None)
+
+    def get_node_country(self):
+        return getattr(self, "_sp_node_country", None)
+
+    def validate(self):
+        warning_validators = {
+            "single_logout_service SHOULD NOT be declared":
+                self.get_endpoint_element("single_logout_service") is None,
+            "artifact_resolution_service SHOULD NOT be declared":
+                self.get_endpoint_element("artifact_resolution_service") is None,
+            "manage_name_id_service SHOULD NOT be declared":
+                self.get_endpoint_element("manage_name_id_service") is None,
+            "application_identifier SHOULD be declared":
+                self.get_application_identifier() is not None,
+            "protocol_version SHOULD be declared":
+                self.get_protocol_version() is not None,
+        }
+
+        if not all(warning_validators.values()):
+            logger.warning(
+                "Configuration validation warnings occurred: {}".format(
+                    [msg for msg, check in warning_validators.items()
+                     if check is not True]
+                )
+            )
+
+        error_validators = {
+            "KeyDescriptor MUST be declared":
+                self.cert_file or self.encryption_keypairs,
+            "node_country MUST be declared in ISO 3166-1 alpha-2 format":
+                self.validate_node_country_format(self.get_node_country()),
+            "application_identifier MUST be in the form <vendor name>:<software "
+            "identifier>:<major-version>.<minor-version>[.<patch-version>]":
+                self.validate_application_identifier_format(
+                    self.get_application_identifier())
+        }
+
+        if not all(error_validators.values()):
+            error = "Configuration validation errors occurred:".format(
+                    [msg for msg, check in error_validators.items()
+                     if check is not True])
+            logger.error(error)
+            raise ConfigValidationError(error)
 
 
 class IdPConfig(Config):

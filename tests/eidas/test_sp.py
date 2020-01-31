@@ -109,12 +109,13 @@ class TestSP:
         assert {str(conf._sp_protocol_version)} \
                == set([x.text for x in protocol_version.attribute_value])
 
+
 class TestSPConfig:
     @pytest.fixture(scope="function")
     def raise_error_on_warning(self, monkeypatch):
         def r(*args, **kwargs):
             raise ConfigValidationError()
-        monkeypatch.setattr("saml2.utility.config.logger.warning", r)
+        monkeypatch.setattr("saml2.config.logger.warning", r)
 
     @pytest.fixture(scope="function")
     def config(self):
