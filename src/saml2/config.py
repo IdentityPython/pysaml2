@@ -9,6 +9,7 @@ import re
 import sys
 from functools import partial
 import re
+from urllib import parse
 from iso3166 import countries
 
 import six
@@ -676,7 +677,10 @@ class eIDASSPConfig(SPConfig, eIDASConfig):
             "application_identifier MUST be in the form <vendor name>:<software "
             "identifier>:<major-version>.<minor-version>[.<patch-version>]":
                 self.validate_application_identifier_format(
-                    self.get_application_identifier())
+                    self.get_application_identifier()),
+            "entityid MUST be an HTTPS URL pointing to the location of its published "
+            "metadata":
+                parse.urlparse(self.entityid).scheme == "https"
         }
 
         if not all(error_validators.values()):

@@ -336,3 +336,12 @@ class TestSPConfig:
 
         with pytest.raises(ConfigValidationError):
             conf.validate()
+
+    def test_entityid_no_https(self, config):
+        config["entityid"] = "urn:mace:example.com:saml:roland:idp"
+
+        conf = eIDASSPConfig()
+        conf.load(config)
+
+        with pytest.raises(ConfigValidationError):
+            conf.validate()

@@ -2,7 +2,7 @@ from pathutils import full_path
 from pathutils import xmlsec_path
 
 CONFIG = {
-    "entityid": "urn:mace:example.com:saml:roland:sp",
+    "entityid": "https://example.org",
     "name": "urn:mace:example.com:saml:roland:sp",
     "description": "My own SP",
     "service": {
