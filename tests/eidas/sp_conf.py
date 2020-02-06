@@ -30,6 +30,7 @@ CONFIG = {
             "sp_type": "public",
             "sp_type_in_metadata": False,
             "force_authn": True,
+            "authn_requests_signed": True,
             "node_country": "GR",
             "application_identifier": "CEF:eIDAS-ref:2.0",
             "protocol_version": [1.1, 2.2]

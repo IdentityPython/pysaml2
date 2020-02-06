@@ -680,7 +680,9 @@ class eIDASSPConfig(SPConfig, eIDASConfig):
                     self.get_application_identifier()),
             "entityid MUST be an HTTPS URL pointing to the location of its published "
             "metadata":
-                parse.urlparse(self.entityid).scheme == "https"
+                parse.urlparse(self.entityid).scheme == "https",
+            "authn_requests_signed MUST be set to True":
+                getattr(self, "_sp_authn_requests_signed", None) is True
         }
 
         if not all(error_validators.values()):

@@ -111,6 +111,13 @@ class TestSP:
 
 
 class TestSPConfig:
+    @staticmethod
+    def assert_validation_error(config):
+        conf = eIDASSPConfig()
+        conf.load(config)
+        with pytest.raises(ConfigValidationError):
+            conf.validate()
+
     @pytest.fixture(scope="function")
     def technical_contacts(self, config):
         return [
@@ -138,81 +145,45 @@ class TestSPConfig:
     def test_singlelogout_declared(self, config, raise_error_on_warning):
         config["service"]["sp"]["endpoints"]["single_logout_service"] = \
             [("https://example.com", BINDING_HTTP_POST)]
-        conf = eIDASSPConfig()
-        conf.load(config)
-
-        with pytest.raises(ConfigValidationError):
-            conf.validate()
+        self.assert_validation_error(config)
 
     def test_artifact_resolution_declared(self, config, raise_error_on_warning):
         config["service"]["sp"]["endpoints"]["artifact_resolution_service"] = \
             [("https://example.com", BINDING_HTTP_POST)]
-        conf = eIDASSPConfig()
-        conf.load(config)
-
-        with pytest.raises(ConfigValidationError):
-            conf.validate()
+        self.assert_validation_error(config)
 
     def test_manage_nameid_service_declared(self, config, raise_error_on_warning):
         config["service"]["sp"]["endpoints"]["manage_name_id_service"] = \
             [("https://example.com", BINDING_HTTP_POST)]
-        conf = eIDASSPConfig()
-        conf.load(config)
-
-        with pytest.raises(ConfigValidationError):
-            conf.validate()
+        self.assert_validation_error(config)
 
     def test_no_keydescriptor(self, config):
         del config["cert_file"]
         del config["encryption_keypairs"]
-        conf = eIDASSPConfig()
-        conf.load(config)
-
-        with pytest.raises(ConfigValidationError):
-            conf.validate()
+        self.assert_validation_error(config)
 
     def test_no_nodecountry(self, config):
         del config["service"]["sp"]["node_country"]
-        conf = eIDASSPConfig()
-        conf.load(config)
-
-        with pytest.raises(ConfigValidationError):
-            conf.validate()
+        self.assert_validation_error(config)
 
     def test_nodecountry_wrong_format(self, config):
         config["service"]["sp"]["node_country"] = "gr"
-        conf = eIDASSPConfig()
-        conf.load(config)
-
-        with pytest.raises(ConfigValidationError):
-            conf.validate()
+        self.assert_validation_error(config)
 
     def test_no_application_identifier_warning(self, config, raise_error_on_warning):
         del config["service"]["sp"]["application_identifier"]
 
-        conf = eIDASSPConfig()
-        conf.load(config)
-
-        with pytest.raises(ConfigValidationError):
-            conf.validate()
+        self.assert_validation_error(config)
 
     def test_empty_application_identifier_warning(self, config, raise_error_on_warning):
         config["service"]["sp"]["application_identifier"] = ""
 
-        conf = eIDASSPConfig()
-        conf.load(config)
-
-        with pytest.raises(ConfigValidationError):
-            conf.validate()
+        self.assert_validation_error(config)
 
     def test_application_identifier_wrong_format(self, config):
         config["service"]["sp"]["application_identifier"] = "TEST:Node.1"
 
-        conf = eIDASSPConfig()
-        conf.load(config)
-
-        with pytest.raises(ConfigValidationError):
-            conf.validate()
+        self.assert_validation_error(config)
 
     def test_application_identifier_ok_format(self, config, raise_error_on_warning):
         conf = eIDASSPConfig()
@@ -222,38 +193,22 @@ class TestSPConfig:
     def test_no_protocol_version_warning(self, config, raise_error_on_warning):
         del config["service"]["sp"]["protocol_version"]
 
-        conf = eIDASSPConfig()
-        conf.load(config)
-
-        with pytest.raises(ConfigValidationError):
-            conf.validate()
+        self.assert_validation_error(config)
 
     def test_empty_protocol_version_warning(self, config, raise_error_on_warning):
         config["service"]["sp"]["protocol_version"] = ""
 
-        conf = eIDASSPConfig()
-        conf.load(config)
-
-        with pytest.raises(ConfigValidationError):
-            conf.validate()
+        self.assert_validation_error(config)
 
     def test_no_organization_info_warning(self, config, raise_error_on_warning):
         del config["organization"]
 
-        conf = eIDASSPConfig()
-        conf.load(config)
-
-        with pytest.raises(ConfigValidationError):
-            conf.validate()
+        self.assert_validation_error(config)
 
     def test_empty_organization_info_warning(self, config, raise_error_on_warning):
         config["organization"] = {}
 
-        conf = eIDASSPConfig()
-        conf.load(config)
-
-        with pytest.raises(ConfigValidationError):
-            conf.validate()
+        self.assert_validation_error(config)
 
     def test_no_technical_contact_person(self,
                                          config,
@@ -262,11 +217,7 @@ class TestSPConfig:
         for contact in technical_contacts:
             contact["contact_type"] = "other"
 
-        conf = eIDASSPConfig()
-        conf.load(config)
-
-        with pytest.raises(ConfigValidationError):
-            conf.validate()
+        self.assert_validation_error(config)
 
     def test_technical_contact_person_no_email(self,
                                                config,
@@ -276,11 +227,7 @@ class TestSPConfig:
         for contact in technical_contacts:
             del contact["email_address"]
 
-        conf = eIDASSPConfig()
-        conf.load(config)
-
-        with pytest.raises(ConfigValidationError):
-            conf.validate()
+        self.assert_validation_error(config)
 
     def test_technical_contact_person_empty_email(self,
                                                   config,
@@ -290,11 +237,7 @@ class TestSPConfig:
         for contact in technical_contacts:
             del contact["email_address"]
 
-        conf = eIDASSPConfig()
-        conf.load(config)
-
-        with pytest.raises(ConfigValidationError):
-            conf.validate()
+        self.assert_validation_error(config)
 
     def test_no_support_contact_person(self,
                                        config,
@@ -303,11 +246,7 @@ class TestSPConfig:
         for contact in support_contacts:
             contact["contact_type"] = "other"
 
-        conf = eIDASSPConfig()
-        conf.load(config)
-
-        with pytest.raises(ConfigValidationError):
-            conf.validate()
+        self.assert_validation_error(config)
 
     def test_support_contact_person_no_email(self,
                                              config,
@@ -317,11 +256,7 @@ class TestSPConfig:
         for contact in support_contacts:
             del contact["email_address"]
 
-        conf = eIDASSPConfig()
-        conf.load(config)
-
-        with pytest.raises(ConfigValidationError):
-            conf.validate()
+        self.assert_validation_error(config)
 
     def test_support_contact_person_empty_email(self,
                                                 config,
@@ -331,17 +266,20 @@ class TestSPConfig:
         for contact in support_contacts:
             del contact["email_address"]
 
-        conf = eIDASSPConfig()
-        conf.load(config)
-
-        with pytest.raises(ConfigValidationError):
-            conf.validate()
+        self.assert_validation_error(config)
 
     def test_entityid_no_https(self, config):
         config["entityid"] = "urn:mace:example.com:saml:roland:idp"
 
-        conf = eIDASSPConfig()
-        conf.load(config)
+        self.assert_validation_error(config)
 
-        with pytest.raises(ConfigValidationError):
-            conf.validate()
+    def test_authn_requests_signed_false(self, config):
+        config["service"]["sp"]["authn_requests_signed"] = False
+
+        self.assert_validation_error(config)
+
+    def test_authn_requests_signed_unassigned(self, config):
+        del config["service"]["sp"]["authn_requests_signed"]
+
+        self.assert_validation_error(config)
+
