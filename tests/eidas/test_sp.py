@@ -283,3 +283,13 @@ class TestSPConfig:
 
         self.assert_validation_error(config)
 
+    def test_sp_type_undeclared(self, config):
+        del config["service"]["sp"]["sp_type"]
+
+        self.assert_validation_error(config)
+
+    def test_sp_type_invalid_value(self, config):
+        config["service"]["sp"]["sp_type"] = "test value"
+
+        self.assert_validation_error(config)
+

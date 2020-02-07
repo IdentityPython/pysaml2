@@ -682,7 +682,9 @@ class eIDASSPConfig(SPConfig, eIDASConfig):
             "metadata":
                 parse.urlparse(self.entityid).scheme == "https",
             "authn_requests_signed MUST be set to True":
-                getattr(self, "_sp_authn_requests_signed", None) is True
+                getattr(self, "_sp_authn_requests_signed", None) is True,
+            "sp_type MUST be set to 'public' or 'private'":
+                getattr(self, "_sp_sp_type", None) in ("public", "private")
         }
 
         if not all(error_validators.values()):
