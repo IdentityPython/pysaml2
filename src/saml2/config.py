@@ -621,22 +621,9 @@ class eIDASConfig(Config):
     def contact_has_email_address(contact):
         return not_empty(contact.get("email_address"))
 
-
-class eIDASSPConfig(SPConfig, eIDASConfig):
-    def get_endpoint_element(self, element):
-        return getattr(self, "_sp_endpoints", {}).get(element, None)
-
-    def get_application_identifier(self):
-        return getattr(self, "_sp_application_identifier", None)
-
-    def get_protocol_version(self):
-        return getattr(self, "_sp_protocol_version", None)
-
-    def get_node_country(self):
-        return getattr(self, "_sp_node_country", None)
-
-    def validate(self):
-        warning_validators = {
+    @property
+    def warning_validators(self):
+        return {
             "single_logout_service SHOULD NOT be declared":
                 self.get_endpoint_element("single_logout_service") is None,
             "artifact_resolution_service SHOULD NOT be declared":
@@ -661,15 +648,9 @@ class eIDASSPConfig(SPConfig, eIDASConfig):
                                                         ctype="support")))
         }
 
-        if not all(warning_validators.values()):
-            logger.warning(
-                "Configuration validation warnings occurred: {}".format(
-                    [msg for msg, check in warning_validators.items()
-                     if check is not True]
-                )
-            )
-
-        error_validators = {
+    @property
+    def error_validators(self):
+        return {
             "KeyDescriptor MUST be declared":
                 self.cert_file or self.encryption_keypairs,
             "node_country MUST be declared in ISO 3166-1 alpha-2 format":
@@ -680,19 +661,53 @@ class eIDASSPConfig(SPConfig, eIDASConfig):
                     self.get_application_identifier()),
             "entityid MUST be an HTTPS URL pointing to the location of its published "
             "metadata":
-                parse.urlparse(self.entityid).scheme == "https",
+                parse.urlparse(self.entityid).scheme == "https"
+        }
+
+    def validate(self):
+        if not all(self.warning_validators.values()):
+            logger.warning(
+                "Configuration validation warnings occurred: {}".format(
+                    [msg for msg, check in self.warning_validators.items()
+                     if check is not True]
+                )
+            )
+
+        if not all(self.error_validators.values()):
+            error = "Configuration validation errors occurred:".format(
+                [msg for msg, check in self.error_validators.items()
+                 if check is not True])
+            logger.error(error)
+            raise ConfigValidationError(error)
+
+
+class eIDASSPConfig(SPConfig, eIDASConfig):
+    def get_endpoint_element(self, element):
+        return getattr(self, "_sp_endpoints", {}).get(element, None)
+
+    def get_application_identifier(self):
+        return getattr(self, "_sp_application_identifier", None)
+
+    def get_protocol_version(self):
+        return getattr(self, "_sp_protocol_version", None)
+
+    def get_node_country(self):
+        return getattr(self, "_sp_node_country", None)
+
+    @property
+    def warning_validators(self):
+        sp_warning_validators = {}
+        return {**super().warning_validators, **sp_warning_validators}
+
+    @property
+    def error_validators(self):
+        sp_error_validators = {
             "authn_requests_signed MUST be set to True":
                 getattr(self, "_sp_authn_requests_signed", None) is True,
             "sp_type MUST be set to 'public' or 'private'":
                 getattr(self, "_sp_sp_type", None) in ("public", "private")
         }
-
-        if not all(error_validators.values()):
-            error = "Configuration validation errors occurred:".format(
-                    [msg for msg, check in error_validators.items()
-                     if check is not True])
-            logger.error(error)
-            raise ConfigValidationError(error)
+        return {**super().error_validators, **sp_error_validators}
 
 
 class IdPConfig(Config):
