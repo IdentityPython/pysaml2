@@ -606,11 +606,11 @@ class eIDASConfig(Config):
 
     @staticmethod
     def validate_application_identifier_format(application_identifier):
-        if not application_identifier:
+        pattern_match = re.search(r"([a-zA-Z0-9])+:([a-zA-Z0-9():_\-])+:([0-9])+"
+                                  r"(\.([0-9])+){1,2}", application_identifier)
+        if not application_identifier or pattern_match:
             return True
-
-        return re.search(r"([a-zA-Z0-9])+:([a-zA-Z0-9():_\-])+:([0-9])+"
-                         r"(\.([0-9])+){1,2}", application_identifier)
+        return False
 
     @staticmethod
     def get_type_contact_person(contacts, ctype):
@@ -652,7 +652,7 @@ class eIDASConfig(Config):
     def error_validators(self):
         return {
             "KeyDescriptor MUST be declared":
-                self.cert_file or self.encryption_keypairs,
+                not_empty(self.cert_file or self.encryption_keypairs),
             "node_country MUST be declared in ISO 3166-1 alpha-2 format":
                 self.validate_node_country_format(self.get_node_country()),
             "application_identifier MUST be in the form <vendor name>:<software "
@@ -674,7 +674,7 @@ class eIDASConfig(Config):
             )
 
         if not all(self.error_validators.values()):
-            error = "Configuration validation errors occurred:".format(
+            error = "Configuration validation errors occurred {}:".format(
                 [msg for msg, check in self.error_validators.items()
                  if check is not True])
             logger.error(error)
