@@ -7,7 +7,7 @@
                     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                     ID="AAITest-20140205105921"
                     Name="urn:mace:switch.ch:aaitest"
-                    validUntil="2020-02-10T09:59:21Z"
+                    validUntil="2999-02-10T09:59:21Z"
                     xsi:schemaLocation="urn:oasis:names:tc:SAML:2.0:metadata saml-schema-metadata-2.0.xsd urn:mace:shibboleth:metadata:1.0 shibboleth-metadata-1.0.xsd http://www.w3.org/2000/09/xmldsig# xmldsig-core-schema.xsd">
     <ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
         <ds:SignedInfo>
@@ -135,9 +135,9 @@
         </ds:KeyInfo>
     </ds:Signature>
     <!--
-		This metadata file is generated for the AAI Test federation, 
+		This metadata file is generated for the AAI Test federation,
 		which is for development and testing purposes only!
-		Use at your own risk. SWITCH won't take responsibility 
+		Use at your own risk. SWITCH won't take responsibility
 		for the data included in this file.
 -->
     <Extensions>
