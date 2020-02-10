@@ -10,16 +10,13 @@ from pathutils import xmlsec_path
 BASE = "http://localhost:8088"
 
 CONFIG = {
-    "entityid": "urn:mace:example.com:saml:roland:idp",
+    "entityid": "https://example.org",
     "name": "Rolands IdP",
     "service": {
         "idp": {
             "endpoints": {
                 "single_sign_on_service": [
                     ("%s/sso" % BASE, BINDING_HTTP_REDIRECT)],
-                "single_logout_service": [
-                    ("%s/slo" % BASE, BINDING_SOAP),
-                    ("%s/slop" % BASE, BINDING_HTTP_POST)]
             },
             "policy": {
                 "default": {
@@ -38,7 +35,9 @@ CONFIG = {
                 }
             },
             "subject_data": full_path("subject_data.db"),
-            "node_country": "GR"
+            "node_country": "GR",
+            "application_identifier": "CEF:eIDAS-ref:2.0",
+            "protocol_version": [1.1, 2.2]
         },
     },
     "debug": 1,
@@ -53,16 +52,25 @@ CONFIG = {
     }],
     "attribute_map_dir": full_path("attributemaps"),
     "organization": {
-        "name": "Exempel AB",
-        "display_name": [("Exempel AB", "se"), ("Example Co.", "en")],
-        "url": "http://www.example.com/roland",
+        "name": ("AB Exempel", "se"),
+        "display_name": ("AB Exempel", "se"),
+        "url": "http://www.example.org",
     },
     "contact_person": [
         {
-            "given_name": "John",
-            "sur_name": "Smith",
-            "email_address": ["john.smith@example.com"],
-            "contact_type": "technical",
+            "given_name": "Roland",
+            "sur_name": "Hedberg",
+            "telephone_number": "+46 70 100 0000",
+            "email_address": ["tech@eample.com",
+                              "tech@example.org"],
+            "contact_type": "technical"
         },
+        {
+            "given_name": "Roland",
+            "sur_name": "Hedberg",
+            "telephone_number": "+46 70 100 0000",
+            "email_address": ["tech@eample.com",
+                              "tech@example.org"],
+            "contact_type": "support"}
     ],
 }

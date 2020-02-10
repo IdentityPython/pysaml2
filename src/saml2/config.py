@@ -128,7 +128,7 @@ AA_IDP_ARGS = [
     "name_qualifier",
     "edu_person_targeted_id",
     "node_country",
-    "application_identifier"
+    "application_identifier",
     "protocol_version"
 ]
 
@@ -717,8 +717,28 @@ class IdPConfig(Config):
         Config.__init__(self)
 
 
-class eIDASIdPConfig(IdPConfig):
-    pass
+class eIDASIdPConfig(IdPConfig, eIDASConfig):
+    def get_endpoint_element(self, element):
+        return getattr(self, "_idp_endpoints", {}).get(element, None)
+
+    def get_application_identifier(self):
+        return getattr(self, "_idp_application_identifier", None)
+
+    def get_protocol_version(self):
+        return getattr(self, "_idp_protocol_version", None)
+
+    def get_node_country(self):
+        return getattr(self, "_idp_node_country", None)
+
+    @property
+    def warning_validators(self):
+        idp_warning_validators = {}
+        return {**super().warning_validators, **idp_warning_validators}
+
+    @property
+    def error_validators(self):
+        idp_error_validators = {}
+        return {**super().error_validators, **idp_error_validators}
 
 
 def config_factory(_type, config):
