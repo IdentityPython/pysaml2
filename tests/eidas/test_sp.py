@@ -6,16 +6,16 @@ from saml2 import samlp
 from saml2.client import Saml2Client
 from saml2.server import Server
 from saml2.config import eIDASSPConfig
-from eidas.sp_conf import CONFIG
+from eidas.eidas_sp_conf import CONFIG
 from saml2.utility.config import ConfigValidationError
 
 
 class TestSP:
     def setup_class(self):
-        self.server = Server("idp_conf")
+        self.server = Server("eidas_idp_conf")
 
         self.conf = eIDASSPConfig()
-        self.conf.load_file("sp_conf")
+        self.conf.load_file("eidas_sp_conf")
 
         self.client = Saml2Client(self.conf)
 
