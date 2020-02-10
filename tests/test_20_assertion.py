@@ -151,7 +151,7 @@ def test_lifetime_1():
             "attribute_restrictions": {
                 "givenName": None,
                 "surName": None,
-                "mail": [".*@.*\.umu\.se"],
+                "mail": [r".*@.*\.umu\.se"],
             }
         }}
 
@@ -173,7 +173,7 @@ def test_lifetime_2():
             "attribute_restrictions": {
                 "givenName": None,
                 "surName": None,
-                "mail": [".*@.*\.umu\.se"],
+                "mail": [r".*@.*\.umu\.se"],
             }
         }}
 
@@ -195,7 +195,7 @@ def test_ava_filter_1():
             "attribute_restrictions": {
                 "givenName": None,
                 "surName": None,
-                "mail": [".*@.*\.umu\.se"],
+                "mail": [r".*@.*\.umu\.se"],
             }
         }}
 
@@ -225,7 +225,7 @@ def test_ava_filter_2():
             "attribute_restrictions": {
                 "givenName": None,
                 "sn": None,
-                "mail": [".*@.*\.umu\.se"],
+                "mail": [r".*@.*\.umu\.se"],
             }
         }}
 
@@ -261,7 +261,7 @@ def test_ava_filter_dont_fail():
             "attribute_restrictions": {
                 "givenName": None,
                 "surName": None,
-                "mail": [".*@.*\.umu\.se"],
+                "mail": [r".*@.*\.umu\.se"],
             },
             "fail_on_missing_requested": False
         }}
@@ -688,7 +688,7 @@ def test_filter_ava_3():
         "urn:mace:example.com:saml:roland:sp": {
             "lifetime": {"minutes": 5},
             "attribute_restrictions": {
-                "mail": [".*@example\.com$"],
+                "mail": [r".*@example\.com$"],
             }
         }})
 
@@ -712,7 +712,7 @@ def test_filter_ava_4():
         "urn:mace:example.com:saml:roland:sp": {
             "lifetime": {"minutes": 5},
             "attribute_restrictions": {
-                "mail": [".*@example\.com$"],
+                "mail": [r".*@example\.com$"],
             }
         }})
 

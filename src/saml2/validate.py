@@ -41,7 +41,7 @@ class ToEarly(Exception):
 # --------------------- validators -------------------------------------
 #
 
-NCNAME = re.compile("(?P<NCName>[a-zA-Z_](\w|[_.-])*)")
+NCNAME = re.compile(r"(?P<NCName>[a-zA-Z_](\w|[_.-])*)")
 
 
 def valid_ncname(name):
@@ -436,7 +436,7 @@ def valid_instance(instance):
 
 def valid_domain_name(dns_name):
     m = re.match(
-        "^[a-z0-9]+([-.]{ 1 }[a-z0-9]+).[a-z]{2,5}(:[0-9]{1,5})?(\/.)?$",
+        r"^[a-z0-9]+([-.]{ 1 }[a-z0-9]+).[a-z]{2,5}(:[0-9]{1,5})?(\/.)?$",
         dns_name, re.I)
     if not m:
         raise ValueError("Not a proper domain name")

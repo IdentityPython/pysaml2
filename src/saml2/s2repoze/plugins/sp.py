@@ -670,7 +670,7 @@ def make_plugin(
     discovery="",
     idp_query_param="",
 ):
-    if saml_conf is "":
+    if saml_conf == "":
         raise ValueError("must include saml_conf in configuration")
 
     if remember_name is None:

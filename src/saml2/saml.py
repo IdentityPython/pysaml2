@@ -256,7 +256,7 @@ class AttributeValueBase(SamlBase):
 
         xsd_ns, xsd_type = (
             ['', type(None)] if xsd_string is None
-            else ['', ''] if xsd_string is ''
+            else ['', ''] if xsd_string == ''
             else [
                 XSD if xsd_string in xsd_types_props else '',
                 xsd_string

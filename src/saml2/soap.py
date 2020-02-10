@@ -159,7 +159,7 @@ def parse_soap_enveloped_saml_thingy(text, expected_tags):
 
 import re
 
-NS_AND_TAG = re.compile("\{([^}]+)\}(.*)")
+NS_AND_TAG = re.compile(r"\{([^}]+)\}(.*)")
 
 
 def instanciate_class(item, modules):

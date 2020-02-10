@@ -196,7 +196,7 @@ class HTTPBase(object):
                 std_attr["domain"] = _domain
                 std_attr["domain_specified"] = True
 
-            if morsel["max-age"] is 0:
+            if morsel["max-age"] == 0:
                 try:
                     self.cookiejar.clear(domain=std_attr["domain"],
                                          path=std_attr["path"],
