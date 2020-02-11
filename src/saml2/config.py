@@ -739,7 +739,10 @@ class eIDASIdPConfig(IdPConfig, eIDASConfig):
     def error_validators(self):
         idp_error_validators = {
             "want_authn_requests_signed MUST be set to True":
-            getattr(self, "_idp_want_authn_requests_signed", None) is True
+            getattr(self, "_idp_want_authn_requests_signed", None) is True,
+            "provided_attributes MUST be set to denote the supported attributes by "
+            "the IdP":
+            not_empty(getattr(self, "_idp_provided_attributes", None))
         }
         return {**super().error_validators, **idp_error_validators}
 

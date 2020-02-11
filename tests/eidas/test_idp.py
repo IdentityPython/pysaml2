@@ -78,6 +78,20 @@ class TestIdP:
         assert {str(conf._idp_protocol_version)} \
                == set([x.text for x in protocol_version.attribute_value])
 
+    def test_supported_attributes(self, config):
+        entd = metadata.entity_descriptor(self.conf)
+        attributes_published = [
+            set(
+                filter(lambda x: x is not None,
+                       [attribute.name, attribute.name_format, attribute.friendly_name]
+                       )
+            )
+            for attribute in entd.idpsso_descriptor.attribute
+        ]
+        attributes_stated = [set(x.values()) for x
+                             in self.conf._idp_provided_attributes]
+        assert all(filter(lambda x: x in attributes_published, attributes_stated))
+
 
 class TestIdPConfig:
     @staticmethod
@@ -248,5 +262,10 @@ class TestIdPConfig:
 
     def test_want_authn_requests_signed_false(self, config):
         config["service"]["idp"]["want_authn_requests_signed"] = False
+
+        self.assert_validation_error(config)
+
+    def test_provided_attributes_unset(self, config):
+        del config["service"]["idp"]["provided_attributes"]
 
         self.assert_validation_error(config)

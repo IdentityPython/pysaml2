@@ -38,7 +38,22 @@ CONFIG = {
             "node_country": "GR",
             "application_identifier": "CEF:eIDAS-ref:2.0",
             "protocol_version": [1.1, 2.2],
-            "want_authn_requests_signed": True
+            "want_authn_requests_signed": True,
+            "provided_attributes": [
+                {
+                    "name": "http://eidas.europa.eu/attributes/naturalperson/PersonIdentifier",
+                    "friendly_name": "PersonIdentifier",
+                    "name_format": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
+                },
+                {
+                    "name": "http://eidas.europa.eu/attributes/naturalperson/CurrentFamilyName",
+                    "friendly_name": "FamilyName",
+                },
+                {
+                    "name": "http://eidas.europa.eu/attributes/naturalperson/CurrentGivenName",
+                    "name_format": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
+                }
+            ],
         },
     },
     "debug": 1,

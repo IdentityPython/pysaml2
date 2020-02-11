@@ -594,6 +594,14 @@ def do_idpsso_descriptor(conf, cert=None, enc_cert=None):
         except KeyError:
             setattr(idpsso, key, DEFAULTS[key])
 
+    attributes = [
+        Attribute(name=attribute.get("name", None),
+                  name_format=attribute.get("name_format", None),
+                  friendly_name=attribute.get("friendly_name", None))
+        for attribute in conf.getattr("provided_attributes", "idp")
+    ]
+    idpsso.attribute = attributes
+
     return idpsso
 
 
