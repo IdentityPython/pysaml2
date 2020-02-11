@@ -240,3 +240,13 @@ class TestIdPConfig:
         config["entityid"] = "urn:mace:example.com:saml:roland:idp"
 
         self.assert_validation_error(config)
+
+    def test_want_authn_requests_signed_unset(self, config):
+        del config["service"]["idp"]["want_authn_requests_signed"]
+
+        self.assert_validation_error(config)
+
+    def test_want_authn_requests_signed_false(self, config):
+        config["service"]["idp"]["want_authn_requests_signed"] = False
+
+        self.assert_validation_error(config)

@@ -37,7 +37,8 @@ CONFIG = {
             "subject_data": full_path("subject_data.db"),
             "node_country": "GR",
             "application_identifier": "CEF:eIDAS-ref:2.0",
-            "protocol_version": [1.1, 2.2]
+            "protocol_version": [1.1, 2.2],
+            "want_authn_requests_signed": True
         },
     },
     "debug": 1,
