@@ -2,7 +2,7 @@ import pytest
 import copy
 from saml2 import BINDING_HTTP_POST
 from saml2 import metadata
-from saml2 import samlp
+from saml2.utility import make_list
 from saml2.client import Saml2Client
 from saml2.server import Server
 from saml2.config import eIDASSPConfig, eIDASIdPConfig
@@ -91,6 +91,32 @@ class TestIdP:
         attributes_stated = [set(x.values()) for x
                              in self.conf._idp_provided_attributes]
         assert all(filter(lambda x: x in attributes_published, attributes_stated))
+
+    def test_loa_attribute_exposed(self, config):
+        entd = metadata.entity_descriptor(self.conf)
+        entity_attributes = next(filter(lambda x: x.tag == "EntityAttributes",
+                                        entd.extensions.extension_elements))
+        loa_attribute = next(
+            (x for x in entity_attributes.children
+             if getattr(x, "name", "") ==
+             "urn:oasis:names:tc:SAML:attribute:assurance-certification"), None
+        )
+        assert loa_attribute is not None
+        assert loa_attribute.name_format == "urn:oasis:names:tc:saml2:2.0:attrname-format:uri"
+
+    def test_loa_attribute_values_exposes(self, config):
+        entd = metadata.entity_descriptor(self.conf)
+        entity_attributes = next(filter(lambda x: x.tag == "EntityAttributes",
+                                        entd.extensions.extension_elements))
+        loa_attribute = next(
+            (x for x in entity_attributes.children
+             if getattr(x, "name", "") ==
+             "urn:oasis:names:tc:SAML:attribute:assurance-certification"), None
+        )
+        assert loa_attribute is not None
+        loa_values = {x.text for x in loa_attribute.attribute_value}
+        assert loa_values == set(make_list(*config["service"]["idp"][
+            "supported_loa"].values()))
 
 
 class TestIdPConfig:

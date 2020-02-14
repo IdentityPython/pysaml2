@@ -54,6 +54,10 @@ CONFIG = {
                     "name_format": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
                 }
             ],
+            "supported_loa": {
+                "notified": ["http://eidas.europa.eu/LoA/high"],
+                "non_notified": ["http://eidas.europa.eu/NotNotified/LoA/high"]
+            }
         },
     },
     "debug": 1,

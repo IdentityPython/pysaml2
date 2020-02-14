@@ -129,7 +129,8 @@ AA_IDP_ARGS = [
     "edu_person_targeted_id",
     "node_country",
     "application_identifier",
-    "protocol_version"
+    "protocol_version",
+    "supported_loa"
 ]
 
 PDP_ARGS = ["endpoints", "name_form", "name_id_format"]
