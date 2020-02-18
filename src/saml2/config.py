@@ -731,6 +731,20 @@ class eIDASIdPConfig(IdPConfig, eIDASConfig):
     def get_node_country(self):
         return getattr(self, "_idp_node_country", None)
 
+    def verify_non_notified_loa(self):
+        return not any(
+            [x.startswith("http://eidas.europa.eu/LoA/")
+             for x in getattr(self, "_idp_supported_loa", {}).get("non_notified")]
+        )
+
+    def verify_notified_loa(self):
+        return all(
+            [x in ["http://eidas.europa.eu/LoA/low",
+                   "http://eidas.europa.eu/LoA/substantial",
+                   "http://eidas.europa.eu/LoA/high"]
+             for x in getattr(self, "_idp_supported_loa", {}).get("notified")]
+        )
+
     @property
     def warning_validators(self):
         idp_warning_validators = {}
@@ -743,7 +757,15 @@ class eIDASIdPConfig(IdPConfig, eIDASConfig):
             getattr(self, "_idp_want_authn_requests_signed", None) is True,
             "provided_attributes MUST be set to denote the supported attributes by "
             "the IdP":
-            not_empty(getattr(self, "_idp_provided_attributes", None))
+            not_empty(getattr(self, "_idp_provided_attributes", None)),
+            "supported_loa for non-notified eIDs MUST NOT use an "
+            "http://eidas.europa.eu/LoA/ prefix":
+            self.verify_non_notified_loa(),
+            "supported_loa for notified eID MUST be (at least) one of "
+            "[http://eidas.europa.eu/LoA/low, "
+            "http://eidas.europa.eu/LoA/substantial, "
+            "http://eidas.europa.eu/LoA/high]":
+            self.verify_notified_loa()
         }
         return {**super().error_validators, **idp_error_validators}
 

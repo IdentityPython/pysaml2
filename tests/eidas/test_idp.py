@@ -295,3 +295,16 @@ class TestIdPConfig:
         del config["service"]["idp"]["provided_attributes"]
 
         self.assert_validation_error(config)
+
+    def test_notified_loa_in_non_notified(self, config):
+        config["service"]["idp"]["supported_loa"]["non_notified"] = \
+            ["http://eidas.europa.eu/LoA/high"]
+
+        self.assert_validation_error(config)
+
+    def test_notified_loa_wrong(self, config):
+        config["service"]["idp"]["supported_loa"]["notified"] = \
+            config["service"]["idp"]["supported_loa"]["notified"] \
+            + ["http://eidas.europa.eu/LoA/something-else"]
+
+        self.assert_validation_error(config)
