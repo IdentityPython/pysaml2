@@ -57,61 +57,14 @@ HTML_FORM_SPEC = """<!DOCTYPE html>
         you must press the Continue button once to proceed.
       </p>
     </noscript>
-    <div class="corner-ribbon red">Demo</div>
-    <div class="logo"></div>
-    <div class="cont_heg_50"></div>
-    <div class="cont_select_center">
-	<form action="{action}" method="post">
-	  {saml_response_input}
-	  {relay_state_input}
-	  <noscript>
-	    <input type="submit" value="Continue"/>
-	  </noscript>
-	</form>
+    <form action="{action}" method="post">
+      {saml_response_input}
+      {relay_state_input}
+      <noscript>
+        <input type="submit" value="Continue"/>
+      </noscript>
+    </form>
   </body>
-</html>"""
-
-FORM_SPEC = """\
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8" />
-        <link rel="stylesheet" type="text/css" href="../../css/country_selection.css">
-    </head>
-    <body onload="{autosubmit}" style="{style}">
-        <noscript>
-            <p>
-                <strong>Note:</strong> Since your browser does not support JavaScript,
-                you must press the Continue button once to proceed.
-            </p>
-        </noscript>
-        <div class="corner-ribbon red">Demo</div>
-        <div class="logo"></div>
-        <div class="cont_heg_50"></div>
-        <div class="cont_select_center">
-            <form action="{action}" method="post">
-                <input type="hidden" name="RelayState" value="{relay_state}"/>
-                <input type="hidden" name="{saml_type}" value="{saml_response}"/>
-                <div class="label">
-                    <label for="country" class="text-center">Choose your country</label>
-                </div>
-                <div class="styled-select slate">
-                    <select id="country" name="country">
-                        <option value="CA">eIDAS Test Country</option>
-                        <option value="GR">Greece</option>
-                        <option value="ES">Spain</option>
-                    </select>
-                </div>
-                <div>
-                    <input type="submit" class="button_base b01_simple_rollover" value="Continue"/>
-                </div>
-            </form>
-        </div>
-        <!-- End div center   -->
-        <footer  id="footer">
-            Copyright ©2016-2018
-        </footer>
-    </body>
 </html>"""
 
 
@@ -120,7 +73,7 @@ def _html_escape(payload):
 
 
 def http_form_post_message(message, location, relay_state="",
-                           typ="SAMLRequest", **kwargs):
+                           typ="SAMLRequest", html_form_spec=None, **kwargs):
     """The HTTP POST binding defines a mechanism by which SAML protocol
     messages may be transmitted within the base64-encoded content of a
     HTML form control.
@@ -128,8 +81,15 @@ def http_form_post_message(message, location, relay_state="",
     :param message: The message
     :param location: Where the form should be posted to
     :param relay_state: for preserving and conveying state information
+    :param html_form_spec: A string used to form the returned html. It will be
+        formated using the parameters: `action`, `saml_response_input`,
+        `relay_state_input` and the kwargs dict.
+    :param kwargs: the rest of the parameters are used for forming the returned
+        html form
     :return: A tuple containing header information and a HTML message.
     """
+    if html_form_spec is None:
+        html_form_spec = HTML_FORM_SPEC
     if not isinstance(message, six.string_types):
         message = str(message)
     if not isinstance(message, six.binary_type):
@@ -141,26 +101,26 @@ def http_form_post_message(message, location, relay_state="",
         _msg = message
     _msg = _msg.decode('ascii')
 
-    args = {
-       'action'        : location,
-       'saml_type'     : typ,
-       'relay_state'   : relay_state,
-       'saml_response' : _msg
-       }
+    saml_response_input = HTML_INPUT_ELEMENT_SPEC.format(
+        name=_html_escape(typ),
+        val=_html_escape(_msg),
+        type='hidden'
+    )
 
-    if typ == "SAMLRequest":
-        autosubmit = ''
-        style = ''
-    else:
-        autosubmit = 'document.forms[0].submit()'
-        style = 'display: none;'
+    relay_state_input = ""
+    if relay_state:
+        relay_state_input = HTML_INPUT_ELEMENT_SPEC.format(
+            name='RelayState',
+            val=_html_escape(relay_state),
+            type='hidden'
+        )
 
-    args.update({
-        'autosubmit': autosubmit,
-        'style': style,
-        })
-
-    response = FORM_SPEC.format(**args)
+    response = html_form_spec.format(
+        saml_response_input=saml_response_input,
+        relay_state_input=relay_state_input,
+        action=location,
+        **kwargs
+    )
 
     return {"headers": [("Content-type", "text/html")], "data": response}
 

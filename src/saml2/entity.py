@@ -219,7 +219,7 @@ class Entity(HTTPBase):
             #     info["method"] = "POST"
             # else:
             info = self.use_http_form_post(msg_str, destination,
-                                           relay_state, typ)
+                                           relay_state, typ, **kwargs)
             info["url"] = destination
             info["method"] = "POST"
         elif binding == BINDING_HTTP_REDIRECT:

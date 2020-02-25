@@ -273,7 +273,7 @@ class HTTPBase(object):
 
     @staticmethod
     def use_http_form_post(message, destination, relay_state,
-                           typ="SAMLRequest"):
+                           typ="SAMLRequest", **kwargs):
         """
         Return a form that will automagically execute and POST the message
         to the recipient.
@@ -287,7 +287,8 @@ class HTTPBase(object):
         if not isinstance(message, six.string_types):
             message = "%s" % (message,)
 
-        return http_form_post_message(message, destination, relay_state, typ)
+        return http_form_post_message(message, destination, relay_state, typ,
+                                      **kwargs)
 
     @staticmethod
     def use_http_artifact(message, destination="", relay_state=""):
