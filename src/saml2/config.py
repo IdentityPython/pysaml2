@@ -697,7 +697,10 @@ class eIDASSPConfig(SPConfig, eIDASConfig):
 
     @property
     def warning_validators(self):
-        sp_warning_validators = {}
+        sp_warning_validators = {
+            "hide_assertion_consumer_service SHOULD be set to True":
+                getattr(self, "_sp_hide_assertion_consumer_service", None) is True
+        }
         return {**super().warning_validators, **sp_warning_validators}
 
     @property

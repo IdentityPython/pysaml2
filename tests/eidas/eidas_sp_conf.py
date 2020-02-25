@@ -33,7 +33,8 @@ CONFIG = {
             "authn_requests_signed": True,
             "node_country": "GR",
             "application_identifier": "CEF:eIDAS-ref:2.0",
-            "protocol_version": [1.1, 2.2]
+            "protocol_version": [1.1, 2.2],
+            "hide_assertion_consumer_service": True
         }
     },
     "debug": 1,

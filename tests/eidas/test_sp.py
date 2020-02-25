@@ -185,7 +185,7 @@ class TestSPConfig:
 
         self.assert_validation_error(config)
 
-    def test_application_identifier_ok_format(self, config, raise_error_on_warning):
+    def test_config_ok(self, config, raise_error_on_warning):
         conf = eIDASSPConfig()
         conf.load(config)
         conf.validate()
@@ -293,3 +293,13 @@ class TestSPConfig:
 
         self.assert_validation_error(config)
 
+    def test_hide_assertion_consumer_service_false(self, config, raise_error_on_warning):
+        config["service"]["sp"]["hide_assertion_consumer_service"] = False
+
+        self.assert_validation_error(config)
+
+    def test_hide_assertion_consumer_service_unset(self, config,
+                                                   raise_error_on_warning):
+        del config["service"]["sp"]["hide_assertion_consumer_service"]
+
+        self.assert_validation_error(config)
