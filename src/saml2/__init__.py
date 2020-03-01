@@ -21,7 +21,7 @@ import logging
 
 import six
 
-import saml2.version
+from saml2.version import version as __version__
 from saml2.validate import valid_instance
 
 try:
@@ -38,9 +38,6 @@ except ImportError:
     except ImportError:
         from elementtree import ElementTree
 import defusedxml.ElementTree
-
-
-__version__ = str(saml2.version.version)
 
 
 root_logger = logging.getLogger(__name__)

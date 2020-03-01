@@ -7,4 +7,5 @@ def _parse_version():
     return value
 
 
-version = _parse_version()
+version_info = _parse_version()
+version = str(version_info)
