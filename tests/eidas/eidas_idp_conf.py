@@ -57,7 +57,8 @@ CONFIG = {
             "supported_loa": {
                 "notified": ["http://eidas.europa.eu/LoA/high"],
                 "non_notified": ["http://eidas.europa.eu/NotNotified/LoA/high"]
-            }
+            },
+            "sign_response": True
         },
     },
     "debug": 1,

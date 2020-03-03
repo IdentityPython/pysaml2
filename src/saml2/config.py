@@ -768,7 +768,9 @@ class eIDASIdPConfig(IdPConfig, eIDASConfig):
             "[http://eidas.europa.eu/LoA/low, "
             "http://eidas.europa.eu/LoA/substantial, "
             "http://eidas.europa.eu/LoA/high]":
-            self.verify_notified_loa()
+            self.verify_notified_loa(),
+            "sign_response MUST be set to True":
+            getattr(self, "_idp_sign_response", None) is True
         }
         return {**super().error_validators, **idp_error_validators}
 

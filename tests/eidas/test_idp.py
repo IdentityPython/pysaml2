@@ -193,7 +193,7 @@ class TestIdPConfig:
 
         self.assert_validation_error(config)
 
-    def test_application_identifier_ok_format(self, config, raise_error_on_warning):
+    def test_config_ok(self, config, raise_error_on_warning):
         conf = eIDASIdPConfig()
         conf.load(config)
         conf.validate()
@@ -306,5 +306,15 @@ class TestIdPConfig:
         config["service"]["idp"]["supported_loa"]["notified"] = \
             config["service"]["idp"]["supported_loa"]["notified"] \
             + ["http://eidas.europa.eu/LoA/something-else"]
+
+        self.assert_validation_error(config)
+
+    def test_sign_response_unset(self, config):
+        del config["service"]["idp"]["sign_response"]
+
+        self.assert_validation_error(config)
+
+    def test_sign_response_false(self, config):
+        config["service"]["idp"]["sign_response"] = False
 
         self.assert_validation_error(config)
