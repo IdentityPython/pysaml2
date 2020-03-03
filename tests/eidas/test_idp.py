@@ -318,3 +318,13 @@ class TestIdPConfig:
         config["service"]["idp"]["sign_response"] = False
 
         self.assert_validation_error(config)
+
+    def test_encrypt_assertion_unset(self, config):
+        del config["service"]["idp"]["encrypt_assertion"]
+
+        self.assert_validation_error(config)
+
+    def test_encrypt_assertion_false(self, config):
+        config["service"]["idp"]["encrypt_assertion"] = False
+
+        self.assert_validation_error(config)
