@@ -709,7 +709,9 @@ class eIDASSPConfig(SPConfig, eIDASConfig):
             "authn_requests_signed MUST be set to True":
                 getattr(self, "_sp_authn_requests_signed", None) is True,
             "sp_type MUST be set to 'public' or 'private'":
-                getattr(self, "_sp_sp_type", None) in ("public", "private")
+                getattr(self, "_sp_sp_type", None) in ("public", "private"),
+            "allow_unsolicited MUST be set to False":
+                getattr(self, "_sp_allow_unsolicited", None) is False
         }
         return {**super().error_validators, **sp_error_validators}
 

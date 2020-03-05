@@ -303,3 +303,13 @@ class TestSPConfig:
         del config["service"]["sp"]["hide_assertion_consumer_service"]
 
         self.assert_validation_error(config)
+
+    def test_allow_unsolicited_true(self, config):
+        config["service"]["sp"]["allow_unsolicited"] = True
+
+        self.assert_validation_error(config)
+
+    def test_allow_unsolicited_unse(self, config):
+        del config["service"]["sp"]["allow_unsolicited"]
+
+        self.assert_validation_error(config)

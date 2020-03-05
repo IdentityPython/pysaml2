@@ -34,7 +34,8 @@ CONFIG = {
             "node_country": "GR",
             "application_identifier": "CEF:eIDAS-ref:2.0",
             "protocol_version": [1.1, 2.2],
-            "hide_assertion_consumer_service": True
+            "hide_assertion_consumer_service": True,
+            "allow_unsolicited": False
         }
     },
     "debug": 1,
