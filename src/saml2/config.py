@@ -188,6 +188,13 @@ PREFERRED_BINDING = {
     "attribute_consuming_service": _RPA
 }
 
+EIDAS_NOTIFIED_LOA_PREFIX = "http://eidas.europa.eu/LoA/"
+
+EIDAS_NOTIFIED_LOA = [
+    "{prefix}{x}".format(prefix=EIDAS_NOTIFIED_LOA_PREFIX, x=x)
+    for x in ["low", "substantial", "high"]
+]
+
 
 class ConfigurationError(SAMLError):
     pass
@@ -737,16 +744,14 @@ class eIDASIdPConfig(IdPConfig, eIDASConfig):
 
     def verify_non_notified_loa(self):
         return not any(
-            [x.startswith("http://eidas.europa.eu/LoA/")
-             for x in getattr(self, "_idp_supported_loa", {}).get("non_notified")]
+            x.startswith(EIDAS_NOTIFIED_LOA_PREFIX)
+            for x in getattr(self, "_idp_supported_loa", {}).get("non_notified", [])
         )
 
     def verify_notified_loa(self):
         return all(
-            [x in ["http://eidas.europa.eu/LoA/low",
-                   "http://eidas.europa.eu/LoA/substantial",
-                   "http://eidas.europa.eu/LoA/high"]
-             for x in getattr(self, "_idp_supported_loa", {}).get("notified")]
+            x in EIDAS_NOTIFIED_LOA
+            for x in getattr(self, "_idp_supported_loa", {}).get("notified", [])
         )
 
     @property
@@ -763,12 +768,10 @@ class eIDASIdPConfig(IdPConfig, eIDASConfig):
             "the IdP":
             not_empty(getattr(self, "_idp_provided_attributes", None)),
             "supported_loa for non-notified eIDs MUST NOT use an "
-            "http://eidas.europa.eu/LoA/ prefix":
+            "{} prefix".format(EIDAS_NOTIFIED_LOA_PREFIX):
             self.verify_non_notified_loa(),
-            "supported_loa for notified eID MUST be (at least) one of "
-            "[http://eidas.europa.eu/LoA/low, "
-            "http://eidas.europa.eu/LoA/substantial, "
-            "http://eidas.europa.eu/LoA/high]":
+            "supported_loa for notified eID MUST be (at least) one of [{}]"
+                .format(", ".join(EIDAS_NOTIFIED_LOA)):
             self.verify_notified_loa(),
             "sign_response MUST be set to True":
             getattr(self, "_idp_sign_response", None) is True,

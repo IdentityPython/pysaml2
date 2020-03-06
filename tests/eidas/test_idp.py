@@ -120,6 +120,12 @@ class TestIdP:
 
 class TestIdPConfig:
     @staticmethod
+    def config_validate(config):
+        conf = eIDASIdPConfig()
+        conf.load(config)
+        conf.validate()
+
+    @staticmethod
     def assert_validation_error(config):
         conf = eIDASIdPConfig()
         conf.load(config)
@@ -193,9 +199,7 @@ class TestIdPConfig:
         self.assert_validation_error(config)
 
     def test_config_ok(self, config, raise_error_on_warning):
-        conf = eIDASIdPConfig()
-        conf.load(config)
-        conf.validate()
+        self.config_validate(config)
 
     def test_no_protocol_version_warning(self, config, raise_error_on_warning):
         del config["service"]["idp"]["protocol_version"]
@@ -295,11 +299,21 @@ class TestIdPConfig:
 
         self.assert_validation_error(config)
 
+    def test_notified_loa_unset(self, config, raise_error_on_warning):
+        del config["service"]["idp"]["supported_loa"]["notified"]
+
+        self.config_validate(config)
+
     def test_notified_loa_in_non_notified(self, config):
         config["service"]["idp"]["supported_loa"]["non_notified"] = \
             ["http://eidas.europa.eu/LoA/high"]
 
         self.assert_validation_error(config)
+
+    def test_non_notified_loa_unset(self, config, raise_error_on_warning):
+        del config["service"]["idp"]["supported_loa"]["non_notified"]
+
+        self.config_validate(config)
 
     def test_notified_loa_wrong(self, config):
         config["service"]["idp"]["supported_loa"]["notified"] = \
