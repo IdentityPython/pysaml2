@@ -5,9 +5,8 @@ from saml2 import metadata
 from saml2 import samlp
 from saml2.client import Saml2Client
 from saml2.server import Server
-from saml2.config import eIDASSPConfig
+from saml2.config import eIDASSPConfig, ConfigValidationError
 from eidas.eidas_sp_conf import CONFIG
-from saml2.utility.config import ConfigValidationError
 
 
 class TestSP:

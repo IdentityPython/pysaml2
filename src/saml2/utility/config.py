@@ -1,2 +1,0 @@
-class ConfigValidationError(Exception):
-    pass

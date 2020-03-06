@@ -26,7 +26,6 @@ from saml2.mdstore import MetadataStore
 from saml2.saml import NAME_FORMAT_URI
 from saml2.virtual_org import VirtualOrg
 from saml2.utility import not_empty
-from saml2.utility.config import ConfigValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -806,3 +805,7 @@ def config_factory(_type, config):
 
     conf.context = _type
     return conf
+
+
+class ConfigValidationError(Exception):
+    pass
