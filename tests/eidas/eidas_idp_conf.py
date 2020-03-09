@@ -10,6 +10,8 @@ from pathutils import xmlsec_path
 BASE = "http://localhost:8088"
 
 CONFIG = {
+    "assurance_certification": ["http://eidas.europa.eu/LoA/high",
+                                "http://eidas.europa.eu/LoA/low"],
     "entityid": "https://example.org",
     "name": "Rolands IdP",
     "service": {
@@ -54,10 +56,6 @@ CONFIG = {
                     "name_format": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
                 }
             ],
-            "supported_loa": {
-                "notified": ["http://eidas.europa.eu/LoA/high"],
-                "non_notified": ["http://eidas.europa.eu/NotNotified/LoA/high"]
-            },
             "sign_response": True,
             "encrypt_assertion": True
         },

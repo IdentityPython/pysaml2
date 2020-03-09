@@ -807,18 +807,6 @@ def entity_descriptor(confd):
         )
         _add_attr_to_entity_attributes(entd.extensions, attr)
 
-    loa = confd.getattr("supported_loa", confd.context)
-    if loa:
-        entd.extensions = entd.extensions or md.Extensions()
-        ava = [AttributeValue(text=str(c)) for c in make_list(
-            loa.get("notified", []), loa.get("non_notified", []))]
-        attr = Attribute(
-            attribute_value=ava,
-            name="urn:oasis:names:tc:SAML:attribute:assurance-certification",
-            name_format="urn:oasis:names:tc:saml2:2.0:attrname-format:uri"
-        )
-        _add_attr_to_entity_attributes(entd.extensions, attr)
-
     return entd
 
 

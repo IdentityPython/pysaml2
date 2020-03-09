@@ -39,12 +39,12 @@ class TestIdP:
                                         entd.extensions.extension_elements))
         app_identifier = [
             x for x in entity_attributes.children
-            if getattr(x, "attributes", {}).get("Name") ==
+            if getattr(x, "name", "") ==
                "http://eidas.europa.eu/entity-attributes/application-identifier"
         ]
         assert len(app_identifier) == 1
         assert self.conf._idp_application_identifier \
-               == next(x.text for y in app_identifier for x in y.children)
+               == next(x.attribute_value.text for x in app_identifier)
 
     def test_multiple_protocol_version_in_metadata(self):
         entd = metadata.entity_descriptor(self.conf)
@@ -97,25 +97,15 @@ class TestIdP:
                                         entd.extensions.extension_elements))
         loa_attribute = next(
             (x for x in entity_attributes.children
-             if getattr(x, "name", "") ==
+             if getattr(x, "attributes", {}).get("Name") ==
              "urn:oasis:names:tc:SAML:attribute:assurance-certification"), None
         )
         assert loa_attribute is not None
-        assert loa_attribute.name_format == "urn:oasis:names:tc:saml2:2.0:attrname-format:uri"
+        assert loa_attribute.attributes.get("NameFormat", "") == \
+               "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
+        loa_values = {x.text for x in loa_attribute.children}
 
-    def test_loa_attribute_values_exposes(self, config):
-        entd = metadata.entity_descriptor(self.conf)
-        entity_attributes = next(filter(lambda x: x.tag == "EntityAttributes",
-                                        entd.extensions.extension_elements))
-        loa_attribute = next(
-            (x for x in entity_attributes.children
-             if getattr(x, "name", "") ==
-             "urn:oasis:names:tc:SAML:attribute:assurance-certification"), None
-        )
-        assert loa_attribute is not None
-        loa_values = {x.text for x in loa_attribute.attribute_value}
-        assert loa_values == set(make_list(*config["service"]["idp"][
-            "supported_loa"].values()))
+        assert loa_values == set(config["assurance_certification"])
 
 
 class TestIdPConfig:
@@ -299,26 +289,19 @@ class TestIdPConfig:
 
         self.assert_validation_error(config)
 
-    def test_notified_loa_unset(self, config, raise_error_on_warning):
-        del config["service"]["idp"]["supported_loa"]["notified"]
-
-        self.config_validate(config)
-
-    def test_notified_loa_in_non_notified(self, config):
-        config["service"]["idp"]["supported_loa"]["non_notified"] = \
-            ["http://eidas.europa.eu/LoA/high"]
+    def test_assurance_certification_unset(self, config):
+        del config["assurance_certification"]
 
         self.assert_validation_error(config)
 
-    def test_non_notified_loa_unset(self, config, raise_error_on_warning):
-        del config["service"]["idp"]["supported_loa"]["non_notified"]
+    def test_non_notified_loa_invalid_prefix(self, config):
+        config["assurance_certification"] = \
+            ["http://eidas.europa.eu/LoA/something-else"]
 
-        self.config_validate(config)
+        self.assert_validation_error(config)
 
-    def test_notified_loa_wrong(self, config):
-        config["service"]["idp"]["supported_loa"]["notified"] = \
-            config["service"]["idp"]["supported_loa"]["notified"] \
-            + ["http://eidas.europa.eu/LoA/something-else"]
+    def test_no_notified_loa(self, config):
+        config["assurance_certification"] = ["http://example.com/something-else"]
 
         self.assert_validation_error(config)
 

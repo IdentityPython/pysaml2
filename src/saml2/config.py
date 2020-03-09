@@ -129,7 +129,6 @@ AA_IDP_ARGS = [
     "node_country",
     "application_identifier",
     "protocol_version",
-    "supported_loa"
 ]
 
 PDP_ARGS = ["endpoints", "name_form", "name_id_format"]
@@ -744,14 +743,13 @@ class eIDASIdPConfig(IdPConfig, eIDASConfig):
 
     def verify_non_notified_loa(self):
         return not any(
-            x.startswith(EIDAS_NOTIFIED_LOA_PREFIX)
-            for x in getattr(self, "_idp_supported_loa", {}).get("non_notified", [])
-        )
+            x.startswith(EIDAS_NOTIFIED_LOA_PREFIX) and x not in EIDAS_NOTIFIED_LOA
+            for x in getattr(self, "assurance_certification", []))
 
     def verify_notified_loa(self):
-        return all(
+        return any(
             x in EIDAS_NOTIFIED_LOA
-            for x in getattr(self, "_idp_supported_loa", {}).get("notified", [])
+            for x in getattr(self, "assurance_certification", [])
         )
 
     @property
@@ -767,10 +765,10 @@ class eIDASIdPConfig(IdPConfig, eIDASConfig):
             "provided_attributes MUST be set to denote the supported attributes by "
             "the IdP":
             not_empty(getattr(self, "_idp_provided_attributes", None)),
-            "supported_loa for non-notified eIDs MUST NOT use an "
+            "assurance_certification for non-notified eIDs MUST NOT use an "
             "{} prefix".format(EIDAS_NOTIFIED_LOA_PREFIX):
             self.verify_non_notified_loa(),
-            "supported_loa for notified eID MUST be (at least) one of [{}]"
+            "assurance_certification for notified eID MUST be (at least) one of [{}]"
                 .format(", ".join(EIDAS_NOTIFIED_LOA)):
             self.verify_notified_loa(),
             "sign_response MUST be set to True":
