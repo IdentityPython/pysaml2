@@ -87,10 +87,6 @@ XSD = "xs"
 NS_SOAP_ENC = "http://schemas.xmlsoap.org/soap/encoding/"
 
 
-_b64_decode_fn = getattr(base64, 'decodebytes', base64.decodestring)
-_b64_encode_fn = getattr(base64, 'encodebytes', base64.encodestring)
-
-
 class AttributeValueBase(SamlBase):
     def __init__(self,
                  text=None,
@@ -232,10 +228,9 @@ class AttributeValueBase(SamlBase):
             'base64Binary': {
                 'type': _str,
                 'to_type': _str,
-                'to_text': lambda x:
-                    _b64_encode_fn(x.encode())
-                    if base64encode
-                    else x,
+                'to_text': (
+                    lambda x: base64.encodebytes(x.encode()) if base64encode else x
+                ),
             },
             'anyType': {
                 'type': type(value),
