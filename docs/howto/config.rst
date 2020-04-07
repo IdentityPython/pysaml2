@@ -498,6 +498,8 @@ want_response_signed
 Indicates that Authentication Responses to this SP must be signed. If set to
 True, the SP will not consume any SAML Responses that are not signed.
 
+Valid values are True or False. Default value is True.
+
 Example::
 
     "service": {
