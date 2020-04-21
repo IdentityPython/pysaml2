@@ -40,8 +40,7 @@ except ImportError:
 import defusedxml.ElementTree
 
 
-root_logger = logging.getLogger(__name__)
-root_logger.level = logging.NOTSET
+logger = logging.getLogger(__name__)
 
 NAMESPACE = 'urn:oasis:names:tc:SAML:2.0:assertion'
 # TEMPLATE = '{urn:oasis:names:tc:SAML:2.0:assertion}%s'
