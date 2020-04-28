@@ -470,7 +470,7 @@ class SAML2Plugin(object):
 
         is_request = "SAMLRequest" in query
         is_response = "SAMLResponse" in query
-        has_content_length = "CONTENT_LENGTH" in environ or environ["CONTENT_LENGTH"]
+        has_content_length = environ.get("CONTENT_LENGTH")
 
         if not has_content_length and not is_request and not is_response:
             logger.debug("[identify] get or empty post")
