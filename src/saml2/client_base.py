@@ -925,7 +925,11 @@ class Base(Entity):
         }
 
         params = urlencode({k: v for k, v in args.items() if v})
-        return "%s?%s" % (url, params)
+        # url can already contain some parameters
+        if '?' in url:
+            return "%s&%s" % (url, params)
+        else:
+            return "%s?%s" % (url, params)
 
     @staticmethod
     def parse_discovery_service_response(url="", query="",
