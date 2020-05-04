@@ -36,9 +36,9 @@ MAP = {
     'identifier': 'urn:oasis:names:tc:SAML:2.0:attrname-format:uri',
     'fro': {
         EIDAS_LEGALPERSON+'LegalPersonIdentifier': 'LegalPersonIdentifier',
-        EIDAS_LEGALPERSON+'LegalAddress': 'LegalAddress',
+        EIDAS_LEGALPERSON+'LegalPersonAddress': 'LegalAddress',
         EIDAS_LEGALPERSON+'LegalName': 'LegalName',
-        EIDAS_LEGALPERSON+'VATRegistration': 'VATRegistration',
+        EIDAS_LEGALPERSON+'VATRegistrationNumber': 'VATRegistration',
         EIDAS_LEGALPERSON+'TaxReference': 'TaxReference',
         EIDAS_LEGALPERSON+'BusinessCodes': 'BusinessCodes',
         EIDAS_LEGALPERSON+'LEI': 'LEI',
@@ -218,9 +218,9 @@ MAP = {
     },
     'to': {
         'LegalPersonIdentifier': EIDAS_LEGALPERSON+'LegalPersonIdentifier',
-        'LegalAddress': EIDAS_LEGALPERSON+'LegalAddress',
+        'LegalAddress': EIDAS_LEGALPERSON+'LegalPersonAddress',
         'LegalName': EIDAS_LEGALPERSON+'LegalName',
-        'VATRegistration': EIDAS_LEGALPERSON+'VATRegistration',
+        'VATRegistration': EIDAS_LEGALPERSON+'VATRegistrationNumber',
         'TaxReference': EIDAS_LEGALPERSON+'TaxReference',
         'BusinessCodes': EIDAS_LEGALPERSON+'BusinessCodes',
         'LEI': EIDAS_LEGALPERSON+'LEI',
