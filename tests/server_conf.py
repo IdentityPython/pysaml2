@@ -16,15 +16,15 @@ CONFIG = {
             "idp": ["urn:mace:example.com:saml:roland:idp"],
             "requested_attributes": [
                 {
-                    "name": "http://eidas.europa.eu/attributes/naturalperson/DateOfBirth",
+                    "name": "urn:oid:1.3.6.1.4.1.5923.1.1.1.2",
                     "required": False,
                 },
                 {
-                    "friendly_name": "PersonIdentifier",
+                    "friendly_name": "eduPersonNickname",
                     "required": True,
                 },
                 {
-                    "friendly_name": "PlaceOfBirth",
+                    "friendly_name": "eduPersonScopedAffiliation",
                 },
             ],
         }

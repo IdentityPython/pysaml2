@@ -12,8 +12,6 @@ import logging
 
 from saml2.entity import Entity
 
-import saml2.attributemaps as attributemaps
-
 from saml2.mdstore import destinations
 from saml2.profile import paos, ecp
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
@@ -24,7 +22,8 @@ from saml2.samlp import AuthzDecisionQuery
 from saml2.samlp import AuthnRequest
 from saml2.samlp import Extensions
 from saml2.extension import sp_type
-from saml2.extension import requested_attributes
+from saml2.extension.requested_attributes import RequestedAttribute
+from saml2.extension.requested_attributes import RequestedAttributes
 
 import saml2
 from saml2.soap import make_soap_enveloped_saml_thingy
@@ -235,7 +234,7 @@ class Base(Entity):
             service_url_binding=None, message_id=0,
             consent=None, extensions=None, sign=None,
             allow_create=None, sign_prepare=False, sign_alg=None,
-            digest_alg=None, **kwargs):
+            digest_alg=None, requested_attributes=None, **kwargs):
         """ Creates an authentication request.
 
         :param destination: Where the request should be sent.
@@ -253,6 +252,9 @@ class Base(Entity):
         :param allow_create: If the identity provider is allowed, in the course
             of fulfilling the request, to create a new identifier to represent
             the principal.
+        :param requested_attributes: A list of dicts which contain attributes
+            to be appended to the requested_attributes config option. The
+            dicts format is similar to the requested_attributes config option.
         :param kwargs: Extra key word arguments
         :return: either a tuple of request ID and <samlp:AuthnRequest> instance
                  or a tuple of request ID and str when sign is set to True
@@ -379,17 +381,19 @@ class Base(Entity):
             item = sp_type.SPType(text=conf_sp_type)
             extensions.add_extension_element(item)
 
-        requested_attrs = self.config.getattr('requested_attributes', 'sp')
-        if requested_attrs:
+        if requested_attributes:
+            requested_attributes += \
+                self.config.getattr('requested_attributes', 'sp')
+        else:
+            requested_attributes = \
+                self.config.getattr('requested_attributes', 'sp')
+
+        if requested_attributes:
             if not extensions:
                 extensions = Extensions()
 
-            attributemapsmods = []
-            for modname in attributemaps.__all__:
-                attributemapsmods.append(getattr(attributemaps, modname))
-
             items = []
-            for attr in requested_attrs:
+            for attr in requested_attributes:
                 friendly_name = attr.get('friendly_name')
                 name = attr.get('name')
                 name_format = attr.get('name_format')
@@ -401,34 +405,34 @@ class Base(Entity):
                             'name', 'friendly_name'))
 
                 if not name:
-                    for mod in attributemapsmods:
+                    for converter in self.config.attribute_converters:
                         try:
-                            name = mod.MAP['to'][friendly_name]
+                            name = converter._to[friendly_name.lower()]
                         except KeyError:
                             continue
                         else:
                             if not name_format:
-                                name_format = mod.MAP['identifier']
+                                name_format = converter.name_format
                             break
 
                 if not friendly_name:
-                    for mod in attributemapsmods:
+                    for converter in self.config.attribute_converters:
                         try:
-                            friendly_name = mod.MAP['fro'][name]
+                            friendly_name = converter._fro[name.lower()]
                         except KeyError:
                             continue
                         else:
                             if not name_format:
-                                name_format = mod.MAP['identifier']
+                                name_format = converter.name_format
                             break
 
-                items.append(requested_attributes.RequestedAttribute(
+                items.append(RequestedAttribute(
                     is_required=is_required,
                     name_format=name_format,
                     friendly_name=friendly_name,
                     name=name))
 
-            item = requested_attributes.RequestedAttributes(
+            item = RequestedAttributes(
                 extension_elements=items)
             extensions.add_extension_element(item)
 

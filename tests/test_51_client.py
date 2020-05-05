@@ -286,6 +286,42 @@ class TestClient:
             assert c.attributes['FriendlyName']
             assert c.attributes['NameFormat']
 
+    def test_create_auth_request_requested_attributes(self):
+        req_attr = [{"friendly_name": "eduPersonOrgUnitDN", "required": True}]
+        ar_str = "%s" % self.client.create_authn_request(
+            "http://www.example.com/sso",
+            message_id="id1",
+            requested_attributes=req_attr
+        )[1]
+
+        ar = samlp.authn_request_from_string(ar_str)
+
+        node_requested_attributes = None
+        for e in ar.extensions.extension_elements:
+            if e.tag == RequestedAttributes.c_tag:
+                node_requested_attributes = e
+                break
+        assert node_requested_attributes is not None
+
+        attr = None
+        for c in node_requested_attributes.children:
+            if c.attributes['FriendlyName'] == "eduPersonOrgUnitDN":
+                attr = c
+                break
+
+        assert attr
+        assert attr.tag == RequestedAttribute.c_tag
+        assert attr.attributes['isRequired'] == 'true'
+        assert (
+            attr.attributes['Name']
+            == 'urn:mace:dir:attribute-def:eduPersonOrgUnitDN'
+        )
+        assert attr.attributes['FriendlyName'] == 'eduPersonOrgUnitDN'
+        assert (
+            attr.attributes['NameFormat']
+            == 'urn:oasis:names:tc:SAML:2.0:attrname-format:basic'
+        )
+
     def test_create_auth_request_unset_force_authn_by_default(self):
         req_id, req = self.client.create_authn_request(
             "http://www.example.com/sso", sign=False, message_id="id1"
