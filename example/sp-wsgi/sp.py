@@ -2,7 +2,10 @@
 from __future__ import print_function
 
 import argparse
-import cgi
+try:
+    import html
+except:
+    import cgi as html
 import importlib
 import logging
 import os
@@ -47,6 +50,9 @@ from saml2.s_utils import rndstr
 from saml2.s_utils import sid
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.samlp import Extensions
+
+def _html_escape(payload):
+    return html.escape(payload, quote=True)
 
 logger = logging.getLogger("")
 hdlr = logging.FileHandler("spx.log")
@@ -699,7 +705,7 @@ def main(environ, start_response, sp):
     body = dict_to_table(user.data)
     body.append(
         "<br><pre>{authn_stmt}</pre>".format(
-            authn_stmt=cgi.escape(user.authn_statement)
+            authn_stmt=_html_escape(user.authn_statement)
         )
     )
     body.append("<br><a href='/logout'>logout</a>")
