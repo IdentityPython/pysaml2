@@ -189,7 +189,7 @@ Format::
     key_file: "key.pem"
 
 *key_file* is the name of a PEM formatted file that contains the private key
-ef the service. This is currently used both to encrypt/sign assertions and as
+of the service. This is currently used both to encrypt/sign assertions and as
 the client key in an HTTPS session.
 
 metadata
