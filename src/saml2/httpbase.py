@@ -84,9 +84,10 @@ def _since_epoch(cdate):
             break
 
     if t == -1:
-        raise (Exception,
-               'ValueError: Date "{0}" does not match any of: {1}'.format(
-                   cdate,TIME_FORMAT))
+        err = 'ValueError: Date "{0}" does not match any of: {1}'.format(
+            cdate, TIME_FORMAT
+        )
+        raise Exception(err)
 
     return calendar.timegm(t)
 
@@ -328,7 +329,7 @@ class HTTPBase(object):
                 "url": "%s?%s" % (destination, query)
             }
         else:
-            raise NotImplemented
+            raise NotImplementedError
 
         return info
 

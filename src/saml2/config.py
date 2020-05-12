@@ -10,17 +10,19 @@ import sys
 
 import six
 
-from saml2 import root_logger, BINDING_URI, SAMLError
-from saml2 import BINDING_SOAP
-from saml2 import BINDING_HTTP_REDIRECT
-from saml2 import BINDING_HTTP_POST
 from saml2 import BINDING_HTTP_ARTIFACT
+from saml2 import BINDING_HTTP_POST
+from saml2 import BINDING_HTTP_REDIRECT
+from saml2 import BINDING_SOAP
+from saml2 import BINDING_URI
+from saml2 import SAMLError
 
 from saml2.attribute_converter import ac_factory
 from saml2.assertion import Policy
 from saml2.mdstore import MetadataStore
 from saml2.saml import NAME_FORMAT_URI
 from saml2.virtual_org import VirtualOrg
+
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +49,6 @@ COMMON_ARGS = [
     "contact_person",
     "name_form",
     "virtual_organization",
-    "logger",
     "only_use_keys_in_metadata",
     "disable_ssl_certificate_validation",
     "preferred_binding",
@@ -211,7 +212,6 @@ class Config(object):
         self.name_id_format = None
         self.name_id_format_allow_create = None
         self.virtual_organization = None
-        self.logger = None
         self.only_use_keys_in_metadata = True
         self.logout_requests_signed = None
         self.disable_ssl_certificate_validation = None
@@ -452,63 +452,6 @@ class Config(object):
             return spec
         else:
             return unspec
-
-    def log_handler(self):
-        try:
-            _logconf = self.logger
-        except KeyError:
-            return None
-
-        handler = None
-        for htyp in LOG_HANDLER:
-            if htyp in _logconf:
-                if htyp == "syslog":
-                    args = _logconf[htyp]
-                    if "socktype" in args:
-                        import socket
-                        if args["socktype"] == "dgram":
-                            args["socktype"] = socket.SOCK_DGRAM
-                        elif args["socktype"] == "stream":
-                            args["socktype"] = socket.SOCK_STREAM
-                        else:
-                            raise ConfigurationError("Unknown socktype!")
-                    try:
-                        handler = LOG_HANDLER[htyp](**args)
-                    except TypeError:  # difference between 2.6 and 2.7
-                        del args["socktype"]
-                        handler = LOG_HANDLER[htyp](**args)
-                else:
-                    handler = LOG_HANDLER[htyp](**_logconf[htyp])
-                break
-
-        if handler is None:
-            # default if rotating logger
-            handler = LOG_HANDLER["rotating"]()
-
-        if "format" in _logconf:
-            formatter = logging.Formatter(_logconf["format"])
-        else:
-            formatter = logging.Formatter(LOG_FORMAT)
-
-        handler.setFormatter(formatter)
-        return handler
-
-    def setup_logger(self):
-        if root_logger.level != logging.NOTSET:  # Someone got there before me
-            return root_logger
-
-        _logconf = self.logger
-        if _logconf is None:
-            return root_logger
-
-        try:
-            root_logger.setLevel(LOG_LEVEL[_logconf["loglevel"].lower()])
-        except KeyError:  # reasonable default
-            root_logger.setLevel(logging.INFO)
-
-        root_logger.addHandler(self.log_handler())
-        root_logger.info("Logging started")
-        return root_logger
 
     def endpoint2service(self, endpoint, context=None):
         endps = self.getattr("endpoints", context)

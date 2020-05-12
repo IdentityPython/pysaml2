@@ -321,7 +321,7 @@ class EptidMDB(Eptid):
             raise CorruptDatabase("Found more than one EPTID document")
 
     def __setitem__(self, key, value):
-        _ = self.mdb.store(key, **{"eptid": value})
+        self.mdb.store(key, **{"eptid": value})
 
 
 #------------------------------------------------------------------------------

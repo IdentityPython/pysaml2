@@ -89,7 +89,7 @@ class Fernet(object):
             "The 'Fernet' class does not need a build_cipher method."
             "Remove any calls to this method. "
             "In the next version, this method will be removed."
-        ).format(name=cls.__name__, type=type(cls).__name__)
+        )
         _warnings.warn(_deprecation_msg, DeprecationWarning)
 
 

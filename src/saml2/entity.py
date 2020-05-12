@@ -159,7 +159,6 @@ class Entity(HTTPBase):
                 vo.sp = self
 
         self.metadata = self.config.metadata
-        self.config.setup_logger()
         self.debug = self.config.debug
 
         self.sec = security_context(self.config)

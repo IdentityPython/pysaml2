@@ -1,4 +1,4 @@
-import urllib
+from six.moves.urllib.parse import urlencode
 
 from paste.httpheaders import CONTENT_LENGTH
 from paste.httpheaders import CONTENT_TYPE
@@ -71,7 +71,7 @@ class FormHiddenPlugin(FormPlugin):
                 return None
             del query[self.login_form_qs]
             query.update(qinfo)
-            environ["QUERY_STRING"] = urllib.urlencode(query)
+            environ["QUERY_STRING"] = urlencode(query)
             environ["repoze.who.application"] = HTTPFound(construct_url(environ))
             credentials = {"login": login, "password": password}
             max_age = form.get("max_age", None)
