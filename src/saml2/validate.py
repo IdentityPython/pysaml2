@@ -80,7 +80,7 @@ def valid_date_time(item):
 
 def valid_url(url):
     try:
-        _ = urlparse.urlparse(url)
+        _ = urlparse(url)
     except Exception:
         raise NotValid("URL")
 
