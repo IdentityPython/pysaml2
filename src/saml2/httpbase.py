@@ -329,7 +329,7 @@ class HTTPBase(object):
                 "url": "%s?%s" % (destination, query)
             }
         else:
-            raise NotImplemented
+            raise NotImplementedError
 
         return info
 
