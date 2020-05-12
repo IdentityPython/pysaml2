@@ -189,7 +189,7 @@ Format::
     key_file: "key.pem"
 
 *key_file* is the name of a PEM formatted file that contains the private key
-of the service. This is presently used both to encrypt/sign assertions and as
+ef the service. This is currently used both to encrypt/sign assertions and as
 the client key in an HTTPS session.
 
 metadata
@@ -349,7 +349,7 @@ difference you are prepared to accept.
 xmlsec_binary
 ^^^^^^^^^^^^^
 
-Presently xmlsec1 binaries are used for all the signing and encryption stuff.
+Currrently xmlsec1 binaries are used for all the signing and encryption stuff.
 This option defines where the binary is situated.
 
 Example::
@@ -846,7 +846,7 @@ or if you want to use for instance memcache::
 
     "subject_data": ("memcached", "localhost:12121"),
 
-*shelve* and *memcached* are the only database types that are presently
+*shelve* and *memcached* are the only database types that are currently
 supported.
 
 
