@@ -734,18 +734,14 @@ class CryptoBackendXmlSec1(CryptoBackend):
         :param key_type: The type of session key to use.
         :return: The encrypted text
         """
-        if six.PY2:
-            _str = unicode
-        else:
-            _str = str
 
         if isinstance(statement, SamlBase):
             statement = pre_encrypt_assertion(statement)
 
-        tmp = make_temp(_str(statement),
+        tmp = make_temp(str(statement),
                         decode=False,
                         delete_tmpfiles=self.delete_tmpfiles)
-        tmp2 = make_temp(_str(template),
+        tmp2 = make_temp(str(template),
                          decode=False,
                          delete_tmpfiles=self.delete_tmpfiles)
 
