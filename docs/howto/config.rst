@@ -270,7 +270,7 @@ Where you describe the organization responsible for the service.::
 preferred_binding
 ^^^^^^^^^^^^^^^^^
 
-Which binding should be prefered for a service.
+Which binding should be preferred for a service.
 Example configuration::
 
     "preferred_binding" = {
@@ -340,11 +340,11 @@ accepted_time_diff
 ^^^^^^^^^^^^^^^^^^
 
 If your computer and another computer that you are communicating with are not
-in synch regarding the computer clock, then here you can state how big a
+in sync regarding the computer clock, then here you can state how big a
 difference you are prepared to accept.
 
-.. note:: This will indiscriminately affect all-time comparisons.
-    Hence your server my accept a statement that in fact is too old.
+.. note:: This will indiscriminately affect all time comparisons.
+    Hence your server may accept a statement that in fact is too old.
 
 xmlsec_binary
 ^^^^^^^^^^^^^
@@ -385,7 +385,7 @@ Directives that are specific to a certain type of service.
 idp/aa
 ^^^^^^
 
-Directives that are specific to an IdP or AA service instance
+Directives that are specific to an IdP or AA service instance.
 
 sign_assertion
 """"""""""""""
@@ -631,7 +631,7 @@ name_format indicates the name format for that attribute, such as
 
 It is mandatory that at least name or friendly_name is set.
 By default attributes are assumed to be required.
-Missing attributes are infered based on the attribute maps data.
+Missing attributes are inferred based on the attribute maps data.
 
 Example::
 
