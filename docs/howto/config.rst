@@ -349,7 +349,7 @@ difference you are prepared to accept.
 xmlsec_binary
 ^^^^^^^^^^^^^
 
-Currrently xmlsec1 binaries are used for all the signing and encryption stuff.
+Currently xmlsec1 binaries are used for all the signing and encryption stuff.
 This option defines where the binary is situated.
 
 Example::
