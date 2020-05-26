@@ -468,15 +468,13 @@ class TestServer1():
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
-                                                 node_id=sresponse.id,
-                                                 id_attr="")
+                                                 node_id=sresponse.id)
         assert valid
 
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-                                                 node_id=sresponse.assertion[0].id,
-                                                 id_attr="")
+                                                 node_id=sresponse.assertion[0].id)
         assert valid
 
         self.verify_assertion(sresponse.assertion)
@@ -497,8 +495,7 @@ class TestServer1():
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
-                                                 node_id=sresponse.id,
-                                                 id_attr="")
+                                                 node_id=sresponse.id)
         assert valid
 
         assert sresponse.assertion[0].signature == None
@@ -523,8 +520,7 @@ class TestServer1():
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-                                                 node_id=sresponse.assertion[0].id,
-                                                 id_attr="")
+                                                 node_id=sresponse.assertion[0].id)
         assert valid
 
         self.verify_assertion(sresponse.assertion)
@@ -552,14 +548,16 @@ class TestServer1():
         valid = self.server.sec.verify_signature(
             signed_resp, self.server.config.cert_file,
             node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
-            node_id=sresponse.id, id_attr="")
+            node_id=sresponse.id
+        )
 
         assert valid
 
         valid = self.server.sec.verify_signature(
             signed_resp, self.server.config.cert_file,
             node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-            node_id=sresponse.assertion[0].id, id_attr="")
+            node_id=sresponse.assertion[0].id
+        )
 
         assert valid
 
@@ -583,8 +581,7 @@ class TestServer1():
         #valid = self.server.sec.verify_signature(decr_text,
         #                                         self.server.config.cert_file,
         #                                         node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-        #                                         node_id=assertion[0].id,
-        #                                         id_attr="")
+        #                                         node_id=assertion[0].id)
         assert valid
 
     def test_encrypted_signed_response_2(self):
@@ -607,8 +604,7 @@ class TestServer1():
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
-                                                 node_id=sresponse.id,
-                                                 id_attr="")
+                                                 node_id=sresponse.id)
         assert valid
 
         decr_text_old = copy.deepcopy("%s" % signed_resp)
@@ -653,8 +649,7 @@ class TestServer1():
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
-                                                 node_id=sresponse.id,
-                                                 id_attr="")
+                                                 node_id=sresponse.id)
         assert valid
 
         key_fd = make_temp(cert_key_str, decode=False)
@@ -667,8 +662,7 @@ class TestServer1():
         valid = self.server.sec.verify_signature(decr_text,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-                                                 node_id=resp.assertion[0].id,
-                                                 id_attr="")
+                                                 node_id=resp.assertion[0].id)
 
         assert valid
 
@@ -700,8 +694,7 @@ class TestServer1():
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
-                                                 node_id=sresponse.id,
-                                                 id_attr="")
+                                                 node_id=sresponse.id)
         assert valid
 
         decr_text = self.server.sec.decrypt(signed_resp, self.client.config.encryption_keypairs[1]["key_file"])
@@ -713,8 +706,7 @@ class TestServer1():
         valid = self.server.sec.verify_signature(decr_text,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-                                                 node_id=resp.assertion[0].id,
-                                                 id_attr="")
+                                                 node_id=resp.assertion[0].id)
 
         assert valid
 
@@ -733,8 +725,7 @@ class TestServer1():
         #valid = self.server.sec.verify_signature(decr_text,
         #                                         self.server.config.cert_file,
         #                                         node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-        #                                         node_id=assertion[0].id,
-        #                                         id_attr="")
+        #                                         node_id=assertion[0].id)
         assert valid
 
     def test_encrypted_response_1(self):
@@ -1534,15 +1525,13 @@ class TestServer1NonAsciiAva():
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
-                                                 node_id=sresponse.id,
-                                                 id_attr="")
+                                                 node_id=sresponse.id)
         assert valid
 
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-                                                 node_id=sresponse.assertion[0].id,
-                                                 id_attr="")
+                                                 node_id=sresponse.assertion[0].id)
         assert valid
 
         self.verify_assertion(sresponse.assertion)
@@ -1563,8 +1552,7 @@ class TestServer1NonAsciiAva():
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
-                                                 node_id=sresponse.id,
-                                                 id_attr="")
+                                                 node_id=sresponse.id)
         assert valid
 
         assert sresponse.assertion[0].signature == None
@@ -1589,8 +1577,7 @@ class TestServer1NonAsciiAva():
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-                                                 node_id=sresponse.assertion[0].id,
-                                                 id_attr="")
+                                                 node_id=sresponse.assertion[0].id)
         assert valid
 
         self.verify_assertion(sresponse.assertion)
@@ -1618,14 +1605,16 @@ class TestServer1NonAsciiAva():
         valid = self.server.sec.verify_signature(
             signed_resp, self.server.config.cert_file,
             node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
-            node_id=sresponse.id, id_attr="")
+            node_id=sresponse.id,
+        )
 
         assert valid
 
         valid = self.server.sec.verify_signature(
             signed_resp, self.server.config.cert_file,
             node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-            node_id=sresponse.assertion[0].id, id_attr="")
+            node_id=sresponse.assertion[0].id,
+        )
 
         assert valid
 
@@ -1649,8 +1638,7 @@ class TestServer1NonAsciiAva():
         #valid = self.server.sec.verify_signature(decr_text,
         #                                         self.server.config.cert_file,
         #                                         node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-        #                                         node_id=assertion[0].id,
-        #                                         id_attr="")
+        #                                         node_id=assertion[0].id)
         assert valid
 
     def test_encrypted_signed_response_2(self):
@@ -1673,8 +1661,7 @@ class TestServer1NonAsciiAva():
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
-                                                 node_id=sresponse.id,
-                                                 id_attr="")
+                                                 node_id=sresponse.id)
         assert valid
 
         decr_text_old = copy.deepcopy("%s" % signed_resp)
@@ -1719,8 +1706,7 @@ class TestServer1NonAsciiAva():
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
-                                                 node_id=sresponse.id,
-                                                 id_attr="")
+                                                 node_id=sresponse.id)
         assert valid
 
         key_fd = make_temp(cert_key_str, decode=False)
@@ -1733,8 +1719,7 @@ class TestServer1NonAsciiAva():
         valid = self.server.sec.verify_signature(decr_text,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-                                                 node_id=resp.assertion[0].id,
-                                                 id_attr="")
+                                                 node_id=resp.assertion[0].id)
 
         assert valid
 
@@ -1766,8 +1751,7 @@ class TestServer1NonAsciiAva():
         valid = self.server.sec.verify_signature(signed_resp,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:protocol:Response',
-                                                 node_id=sresponse.id,
-                                                 id_attr="")
+                                                 node_id=sresponse.id)
         assert valid
 
         decr_text = self.server.sec.decrypt(signed_resp, self.client.config.encryption_keypairs[1]["key_file"])
@@ -1779,8 +1763,7 @@ class TestServer1NonAsciiAva():
         valid = self.server.sec.verify_signature(decr_text,
                                                  self.server.config.cert_file,
                                                  node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-                                                 node_id=resp.assertion[0].id,
-                                                 id_attr="")
+                                                 node_id=resp.assertion[0].id)
 
         assert valid
 
@@ -1799,8 +1782,7 @@ class TestServer1NonAsciiAva():
         #valid = self.server.sec.verify_signature(decr_text,
         #                                         self.server.config.cert_file,
         #                                         node_name='urn:oasis:names:tc:SAML:2.0:assertion:Assertion',
-        #                                         node_id=assertion[0].id,
-        #                                         id_attr="")
+        #                                         node_id=assertion[0].id)
         assert valid
 
     def test_encrypted_response_1(self):

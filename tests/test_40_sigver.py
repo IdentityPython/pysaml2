@@ -196,10 +196,8 @@ class TestSecurity():
     def test_multiple_signatures_assertion(self):
         ass = self._assertion
         # basic test with two of the same
-        to_sign = [(ass, ass.id, ''),
-                   (ass, ass.id, '')
-        ]
-        sign_ass = self.sec.multiple_signatures("%s" % ass, to_sign)
+        to_sign = [(ass, ass.id), (ass, ass.id)]
+        sign_ass = self.sec.multiple_signatures(str(ass), to_sign)
         sass = saml.assertion_from_string(sign_ass)
         assert _eq(sass.keyswv(), ['attribute_statement', 'issue_instant',
                                    'version', 'signature', 'id'])
@@ -223,10 +221,8 @@ class TestSecurity():
 
         # order is important, we can't validate if the signatures are made
         # in the reverse order
-        to_sign = [(self._assertion, self._assertion.id, ''),
-                   (response, response.id, '')]
-
-        s_response = self.sec.multiple_signatures("%s" % response, to_sign)
+        to_sign = [(self._assertion, self._assertion.id), (response, response.id)]
+        s_response = self.sec.multiple_signatures(str(response), to_sign)
         assert s_response is not None
         response = response_from_string(s_response)
 
@@ -491,10 +487,8 @@ class TestSecurityNonAsciiAva():
     def test_multiple_signatures_assertion(self):
         ass = self._assertion
         # basic test with two of the same
-        to_sign = [(ass, ass.id, ''),
-                   (ass, ass.id, '')
-        ]
-        sign_ass = self.sec.multiple_signatures("%s" % ass, to_sign)
+        to_sign = [(ass, ass.id), (ass, ass.id)]
+        sign_ass = self.sec.multiple_signatures(str(ass), to_sign)
         sass = saml.assertion_from_string(sign_ass)
         assert _eq(sass.keyswv(), ['attribute_statement', 'issue_instant',
                                    'version', 'signature', 'id'])
@@ -518,10 +512,8 @@ class TestSecurityNonAsciiAva():
 
         # order is important, we can't validate if the signatures are made
         # in the reverse order
-        to_sign = [(self._assertion, self._assertion.id, ''),
-                   (response, response.id, '')]
-
-        s_response = self.sec.multiple_signatures("%s" % response, to_sign)
+        to_sign = [(self._assertion, self._assertion.id), (response, response.id)]
+        s_response = self.sec.multiple_signatures(str(response), to_sign)
         assert s_response is not None
         response = response_from_string(s_response)
 
