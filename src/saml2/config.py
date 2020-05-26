@@ -69,7 +69,6 @@ COMMON_ARGS = [
     "extensions",
     "allow_unknown_attributes",
     "crypto_backend",
-    "id_attr_name",
     "delete_tmpfiles",
 ]
 
@@ -228,7 +227,6 @@ class Config(object):
         self.entity_category = []
         self.entity_category_support = []
         self.crypto_backend = 'xmlsec1'
-        self.id_attr_name = None
         self.scope = ""
         self.allow_unknown_attributes = False
         self.extension_schema = {}
