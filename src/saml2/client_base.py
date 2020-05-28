@@ -381,60 +381,58 @@ class Base(Entity):
             item = sp_type.SPType(text=conf_sp_type)
             extensions.add_extension_element(item)
 
-        if requested_attributes:
-            requested_attributes += \
-                self.config.getattr('requested_attributes', 'sp')
-        else:
-            requested_attributes = \
-                self.config.getattr('requested_attributes', 'sp')
+        requested_attrs = (
+            requested_attributes
+            or self.config.getattr('requested_attributes', 'sp')
+            or []
+        )
 
-        if requested_attributes:
-            if not extensions:
-                extensions = Extensions()
+        if not extensions:
+            extensions = Extensions()
 
-            items = []
-            for attr in requested_attributes:
-                friendly_name = attr.get('friendly_name')
-                name = attr.get('name')
-                name_format = attr.get('name_format')
-                is_required = str(attr.get('required', False)).lower()
+        items = []
+        for attr in requested_attrs:
+            friendly_name = attr.get('friendly_name')
+            name = attr.get('name')
+            name_format = attr.get('name_format')
+            is_required = str(attr.get('required', False)).lower()
 
-                if not name and not friendly_name:
-                    raise ValueError(
-                        "Missing required attribute: '{}' or '{}'".format(
-                            'name', 'friendly_name'))
+            if not name and not friendly_name:
+                raise ValueError(
+                    "Missing required attribute: '{}' or '{}'".format(
+                        'name', 'friendly_name'))
 
-                if not name:
-                    for converter in self.config.attribute_converters:
-                        try:
-                            name = converter._to[friendly_name.lower()]
-                        except KeyError:
-                            continue
-                        else:
-                            if not name_format:
-                                name_format = converter.name_format
-                            break
+            if not name:
+                for converter in self.config.attribute_converters:
+                    try:
+                        name = converter._to[friendly_name.lower()]
+                    except KeyError:
+                        continue
+                    else:
+                        if not name_format:
+                            name_format = converter.name_format
+                        break
 
-                if not friendly_name:
-                    for converter in self.config.attribute_converters:
-                        try:
-                            friendly_name = converter._fro[name.lower()]
-                        except KeyError:
-                            continue
-                        else:
-                            if not name_format:
-                                name_format = converter.name_format
-                            break
+            if not friendly_name:
+                for converter in self.config.attribute_converters:
+                    try:
+                        friendly_name = converter._fro[name.lower()]
+                    except KeyError:
+                        continue
+                    else:
+                        if not name_format:
+                            name_format = converter.name_format
+                        break
 
-                items.append(RequestedAttribute(
-                    is_required=is_required,
-                    name_format=name_format,
-                    friendly_name=friendly_name,
-                    name=name))
+            items.append(RequestedAttribute(
+                is_required=is_required,
+                name_format=name_format,
+                friendly_name=friendly_name,
+                name=name))
 
-            item = RequestedAttributes(
-                extension_elements=items)
-            extensions.add_extension_element(item)
+        item = RequestedAttributes(
+            extension_elements=items)
+        extensions.add_extension_element(item)
 
         force_authn = str(
             kwargs.pop("force_authn", None)
