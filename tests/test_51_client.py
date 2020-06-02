@@ -288,39 +288,32 @@ class TestClient:
 
     def test_create_auth_request_requested_attributes(self):
         req_attr = [{"friendly_name": "eduPersonOrgUnitDN", "required": True}]
-        ar_str = "%s" % self.client.create_authn_request(
+        ar_id, ar = self.client.create_authn_request(
             "http://www.example.com/sso",
             message_id="id1",
             requested_attributes=req_attr
-        )[1]
-
-        ar = samlp.authn_request_from_string(ar_str)
-
-        node_requested_attributes = None
-        for e in ar.extensions.extension_elements:
-            if e.tag == RequestedAttributes.c_tag:
-                node_requested_attributes = e
-                break
-        assert node_requested_attributes is not None
-
-        attr = None
-        for c in node_requested_attributes.children:
-            if c.attributes['FriendlyName'] == "eduPersonOrgUnitDN":
-                attr = c
-                break
-
-        assert attr
-        assert attr.tag == RequestedAttribute.c_tag
-        assert attr.attributes['isRequired'] == 'true'
-        assert (
-            attr.attributes['Name']
-            == 'urn:mace:dir:attribute-def:eduPersonOrgUnitDN'
         )
-        assert attr.attributes['FriendlyName'] == 'eduPersonOrgUnitDN'
-        assert (
-            attr.attributes['NameFormat']
-            == 'urn:oasis:names:tc:SAML:2.0:attrname-format:basic'
+
+        req_attrs_nodes = (
+            e
+            for e in ar.extensions.extension_elements
+            if e.tag == RequestedAttributes.c_tag
         )
+        req_attrs_node = next(req_attrs_nodes, None)
+        assert req_attrs_node is not None
+
+        attrs = (
+            child
+            for child in req_attrs_node.children
+            if child.friendly_name == "eduPersonOrgUnitDN"
+        )
+        attr = next(attrs, None)
+        assert attr is not None
+        assert attr.c_tag == RequestedAttribute.c_tag
+        assert attr.is_required == 'true'
+        assert attr.name == 'urn:mace:dir:attribute-def:eduPersonOrgUnitDN'
+        assert attr.friendly_name == 'eduPersonOrgUnitDN'
+        assert attr.name_format == 'urn:oasis:names:tc:SAML:2.0:attrname-format:basic'
 
     def test_create_auth_request_unset_force_authn_by_default(self):
         req_id, req = self.client.create_authn_request(
