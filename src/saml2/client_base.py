@@ -252,9 +252,11 @@ class Base(Entity):
         :param allow_create: If the identity provider is allowed, in the course
             of fulfilling the request, to create a new identifier to represent
             the principal.
-        :param requested_attributes: A list of dicts which contain attributes
-            to be appended to the requested_attributes config option. The
-            dicts format is similar to the requested_attributes config option.
+        :param requested_attributes: A list of dicts which define attributes to
+            be used as eIDAS Requested Attributes for this request. If not
+            defined the configuration option requested_attributes will be used,
+            if defined. The format is the same as the requested_attributes
+            configuration option.
         :param kwargs: Extra key word arguments
         :return: either a tuple of request ID and <samlp:AuthnRequest> instance
                  or a tuple of request ID and str when sign is set to True
