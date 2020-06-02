@@ -402,7 +402,9 @@ class Base(Entity):
             if not name and not friendly_name:
                 raise ValueError(
                     "Missing required attribute: '{}' or '{}'".format(
-                        'name', 'friendly_name'))
+                        'name', 'friendly_name'
+                    )
+                )
 
             if not name:
                 for converter in self.config.attribute_converters:
@@ -426,14 +428,16 @@ class Base(Entity):
                             name_format = converter.name_format
                         break
 
-            items.append(RequestedAttribute(
-                is_required=is_required,
-                name_format=name_format,
-                friendly_name=friendly_name,
-                name=name))
+            items.append(
+                RequestedAttribute(
+                    is_required=is_required,
+                    name_format=name_format,
+                    friendly_name=friendly_name,
+                    name=name,
+                )
+            )
 
-        item = RequestedAttributes(
-            extension_elements=items)
+        item = RequestedAttributes(extension_elements=items)
         extensions.add_extension_element(item)
 
         force_authn = str(
@@ -454,8 +458,7 @@ class Base(Entity):
         if sign is None:
             sign = self.authn_requests_signed
 
-        if (sign and self.sec.cert_handler.generate_cert()) or \
-                        client_crt is not None:
+        if (sign and self.sec.cert_handler.generate_cert()) or client_crt is not None:
             with self.lock:
                 self.sec.cert_handler.update_cert(True, client_crt)
                 if client_crt is not None:
