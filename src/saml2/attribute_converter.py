@@ -62,7 +62,7 @@ def ac_factory(path=""):
         if path not in sys.path:
             sys.path.insert(0, path)
 
-        for fil in os.listdir(path):
+        for fil in sorted(os.listdir(path)):
             if fil.endswith(".py"):
                 mod = import_module(fil[:-3])
                 for key, item in mod.__dict__.items():
