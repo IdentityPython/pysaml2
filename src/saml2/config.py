@@ -509,50 +509,6 @@ class SPConfig(Config):
 
         return None
 
-    def load(self, cnf, metadata_construction=False):
-        super().load(cnf, metadata_construction=False)
-        self.fix_requested_attributes()
-        return self
-
-    def fix_requested_attributes(self):
-        """Add friendly_name or name if missing to the requested attributes"""
-        requested_attrs = self.getattr('requested_attributes', 'sp')
-
-        if not requested_attrs:
-            return
-
-        for attr in requested_attrs:
-            friendly_name = attr.get('friendly_name')
-            name = attr.get('name')
-            name_format = attr.get('name_format')
-
-            if not name and not friendly_name:
-                raise ValueError(
-                    "Missing required attribute: '{}' or '{}'".format(
-                        'name', 'friendly_name'))
-
-            if not name:
-                for converter in self.attribute_converters:
-                    try:
-                        attr['name'] = converter._to[friendly_name.lower()]
-                    except KeyError:
-                        continue
-                    else:
-                        if not name_format:
-                            attr['name_format'] = converter.name_format
-                        break
-
-            if not friendly_name:
-                for converter in self.attribute_converters:
-                    try:
-                        attr['friendly_name'] = converter._fro[name.lower()]
-                    except KeyError:
-                        continue
-                    else:
-                        if not name_format:
-                            attr['name_format'] = converter.name_format
-                        break
-
 
 class IdPConfig(Config):
     def_context = "idp"
