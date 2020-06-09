@@ -1,5 +1,22 @@
 # Changelog
 
+## 5.1.0 (2020-06-09)
+
+- support eIDAS RequestedAttributes per AuthnRequest
+- fix xmlsec1 --id-attr configuration option value
+- do not remove existing disco URL query params
+- load attribute maps in predictable order
+- better error message when AudienceRestriction does not validate
+- always use base64.encodebytes instead of base64.encodestring
+- update the eIDAS attribute mapping for legal person
+- fix py_compile warnings
+- fix pylint errors and warnings
+- various small fixes
+- add Python3.8 as supported
+- tests: fix validity dates
+- docs: document default value for 'want_response_signed'
+
+
 ## 5.0.0 (2020-01-13)
 
 - Fix XML Signature Wrapping (XSW) vulnerabilities - CVE-2020-5390
