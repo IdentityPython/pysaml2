@@ -313,30 +313,25 @@ class Base(Entity):
 
         args = {}
 
-        if self.config.getattr('hide_assertion_consumer_service', 'sp'):
+        # AssertionConsumerServiceURL
+        # AssertionConsumerServiceIndex
+        hide_assertion_consumer_service = self.config.getattr('hide_assertion_consumer_service', 'sp')
+        assertion_consumer_service_url = (
+            kwargs.pop("assertion_consumer_service_urls", [None])[0]
+            or kwargs.pop("assertion_consumer_service_url", None)
+        )
+        assertion_consumer_service_index = kwargs.pop("assertion_consumer_service_index", None)
+        service_url = (self.service_urls(service_url_binding or binding) or [None])[0]
+        if hide_assertion_consumer_service:
             args["assertion_consumer_service_url"] = None
             binding = None
-        else:
-            try:
-                args["assertion_consumer_service_url"] = kwargs[
-                    "assertion_consumer_service_urls"][0]
-                del kwargs["assertion_consumer_service_urls"]
-            except KeyError:
-                try:
-                    args["assertion_consumer_service_url"] = kwargs[
-                        "assertion_consumer_service_url"]
-                    del kwargs["assertion_consumer_service_url"]
-                except KeyError:
-                    try:
-                        args["assertion_consumer_service_index"] = str(
-                            kwargs["assertion_consumer_service_index"])
-                        del kwargs["assertion_consumer_service_index"]
-                    except KeyError:
-                        if service_url_binding is None:
-                            service_urls = self.service_urls(binding)
-                        else:
-                            service_urls = self.service_urls(service_url_binding)
-                        args["assertion_consumer_service_url"] = service_urls[0]
+        elif assertion_consumer_service_url:
+            args["assertion_consumer_service_url"] = assertion_consumer_service_url
+        elif assertion_consumer_service_index:
+            args["assertion_consumer_service_index"] = assertion_consumer_service_index
+        elif service_url:
+            args["assertion_consumer_service_url"] = service_url
+
 
         try:
             args["provider_name"] = kwargs["provider_name"]
