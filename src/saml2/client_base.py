@@ -352,13 +352,16 @@ class Base(Entity):
 
         # NameIDPolicy
         nameid_format_config = self.config.getattr("name_id_format", "sp")
+        nameid_format_config = (
+            nameid_format_config[0]
+            if isinstance(nameid_format_config, list)
+            else nameid_format_config
+        )
         nameid_format = (
             nameid_format
             if nameid_format is not None
             else NAMEID_FORMAT_TRANSIENT
             if nameid_format_config is None
-            else nameid_format_config[0]
-            if isinstance(nameid_format_config, list)
             else None
             if nameid_format == 'None'
             else nameid_format_config
